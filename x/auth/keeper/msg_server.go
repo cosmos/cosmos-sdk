@@ -2,9 +2,11 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"cosmossdk.io/x/auth/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ types.MsgServer = msgServer{}
@@ -18,6 +20,35 @@ func NewMsgServerImpl(ak AccountKeeper) types.MsgServer {
 	return &msgServer{
 		ak: ak,
 	}
+}
+
+func (ms msgServer) NonAtomicExec(ctx context.Context, msg *types.MsgNonAtomicExec) (*types.MsgNonAtomicExecResponse, error) {
+	if msg.Signer == "" {
+		return nil, errors.New("empty signer address string is not allowed")
+	}
+
+	signer, err := ms.ak.AddressCodec().StringToBytes(msg.Signer)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid signer address: %s", err)
+	}
+
+	if len(msg.Msgs) == 0 {
+		return nil, sdkerrors.ErrInvalidRequest.Wrapf("messages cannot be empty")
+	}
+
+	msgs, err := msg.GetMessages()
+	if err != nil {
+		return nil, err
+	}
+
+	results, err := ms.ak.NonAtomicMsgsExec(ctx, signer, msgs)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgNonAtomicExecResponse{
+		Results: results,
+	}, nil
 }
 
 func (ms msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {

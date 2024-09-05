@@ -6,6 +6,10 @@
     * [Testing](#testing)
     * [Pull Requests](#pull-requests)
     * [Pull Request Templates](#pull-request-templates)
+    * [Pull Request Accountability](#pull-request-accountability)
+        * [Owner](#owner)
+        * [Reviewer](#reviewer)
+        * [External Contributors](#external-contributors)
     * [Requesting Reviews](#requesting-reviews)
     * [Updating Documentation](#updating-documentation)
     * [RFC \& ADR](#rfc--adr)
@@ -20,10 +24,7 @@
     * [Strategy Discovery](#strategy-discovery)
     * [Concept Approval](#concept-approval)
         * [Time Bound Period](#time-bound-period)
-        * [Approval Committee \& Decision Making](#approval-committee--decision-making)
-        * [Committee Members](#committee-members)
-        * [Committee Criteria](#committee-criteria)
-    * [Implementation \& Release Approval](#implementation--release-approval)
+    * [Implementation & Release Approval](#implementation--release-approval)
 
 Thank you for considering making contributions to the Cosmos SDK and related repositories!
 
@@ -42,7 +43,7 @@ contributors, the general procedure for contributing has been established:
    1. Ensure that the proposal has been accepted.
    2. Ensure that nobody else has already begun working on this issue. If they have,
       make sure to contact them to collaborate.
-   3. If nobody has been assigned for the issue and you would like to work on it,
+   3. If nobody has been assigned to the issue and you would like to work on it,
       make a comment on the issue to inform the community of your intentions
       to begin work.
 5. To submit your work as a contribution to the repository follow standard GitHub best practices. See [pull request guideline](#pull-requests) below.
@@ -58,7 +59,7 @@ spell checks all files and will automatically open PRs for any spelling errors.
 
 ## Teams Dev Calls
 
-The Cosmos SDK has many stakeholders contributing and shaping the project. The Core SDK team is composed of Interchain GmbH and Regen Network Development developers. Any long-term contributors and additional maintainers from other projects are welcome. We use self-organizing principles to coordinate and collaborate across organizations in structured "EPIC" that focus on specific problem domains or architectural components of the Cosmos SDK.
+The Cosmos SDK has many stakeholders contributing and shaping the project. The Core SDK team is composed of Binary Builders & Zondax. Any long-term contributors and additional maintainers from other projects are welcome. We use self-organizing principles to coordinate and collaborate across organizations in structured "EPIC" that focus on specific problem domains or architectural components of the Cosmos SDK.
 
 The developers work in sprints, which are available in a [GitHub Project](https://github.com/orgs/cosmos/projects/26/views/22). The current EPICs are pinned at the top of the [issues list](https://github.com/cosmos/cosmos-sdk/issues).
 
@@ -66,14 +67,14 @@ The important development announcements are shared on [Discord](https://discord.
 
 To synchronize we have few major meetings:
 
-* Cosmos SDK Sprint Review on Monday and Thursday at 14:00 UTC (limited participation to core devs).
-* Cosmos SDK Community Call on Thursday at 16:00 UTC.
+* Cosmos SDK Standup on Monday and Thursday at 14:00 UTC (limited participation to core devs).
+* Cosmos SDK Community Call on the second Thursday of the month at 13:00 UTC.
 
-If you would like to join one of the community call, then please contact us on [Discord](https://discord.gg/interchain) or reach out directly to Marko (@tac0turtle).
+If you would like to join one of the community call, then please request to join the [Cosmos SDK Google Group](https://groups.google.com/g/cosmos-sdk-community).
 
 ## Architecture Decision Records (ADR)
 
-When proposing an architecture decision for the Cosmos SDK, please start by opening an [issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or a [discussion](https://github.com/cosmos/cosmos-sdk/discussions/new) with a summary of the proposal. Once the proposal has been discussed and there is rough alignment on a high-level approach to the design, the [ADR creation process](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/PROCESS.md) can begin. We are following this process to ensure all involved parties are in agreement before any party begins coding the proposed implementation. If you would like to see examples of how these are written, please refer to the current [ADRs](https://github.com/cosmos/cosmos-sdk/tree/main/docs/architecture).
+When proposing an architecture decision for the Cosmos SDK, please start by opening an [issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose). Once the proposal has been discussed and there is rough alignment on a high-level approach to the design, the [ADR creation process](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/PROCESS.md) can begin. We are following this process to ensure all involved parties are in agreement before any party begins coding the proposed implementation. If you would like to see examples of how these are written, please refer to the current [ADRs](https://github.com/cosmos/cosmos-sdk/tree/main/docs/architecture).
 
 ## Development Procedure
 
@@ -121,7 +122,7 @@ PRs must have a category prefix that is based on the type of changes being made 
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 Additionally, each PR should only address a single issue.
 
-Pull requests are merged automatically using [`A:automerge` action](https://mergify.io/features/auto-merge).
+Pull requests are merged automatically using the automerge functionality of Github.
 
 NOTE: when merging, GitHub will squash commits and rebase on top of the main.
 
@@ -130,6 +131,65 @@ NOTE: when merging, GitHub will squash commits and rebase on top of the main.
 There are three PR templates. The [default template](./.github/PULL_REQUEST_TEMPLATE.md) is for types `fix`, `feat`, and `refactor`. We also have a [docs template](./.github/PULL_REQUEST_TEMPLATE/docs.md) for documentation changes. When previewing a PR before it has been opened, you can change the template by adding one of the following parameters to the url:
 
 * `template=docs.md`
+
+### Pull Request Accountability
+
+#### Owner
+
+The pull request owner is responsible for ensuring that the PR is ready for review and merging after reviews are delivered. This includes:
+
+* Ensuring that the PR is up to date with the latest changes in the main branch.
+* Ensuring that the PR passes all checks.
+* Ensuring that the PR has a clear description of the changes.
+* Ensuring that the PR has a clear description of the testing strategy.
+* Ensuring that the PR has a clear description of the impact of the changes.
+* Ensuring that the PR has a clear description of the risks associated with the changes.
+* Ensuring that the PR has a clear description of the next steps.
+* Ensuring that the PR has a clear description of the dependencies.
+
+The pull request owner is responsible for assigning reviewers on the team, responding to feedback, and ensuring that the PR is merged in a timely manner. If a PR is reviewed, but an approval is not given by the reviewer the pull request owner is responsible for addressing the feedback, ensuring that the PR is ready for review again and notifying the reviewers that the PR is ready for review. 
+
+Once approvals have been given by the reviewer(s) it is the responsibility of the pull request owner to merge the PR.
+
+#### Reviewer
+
+Reviewers or other contributors should not merge main into the PR unless discussed with the pull request owner and ownership has been transferred.
+
+The reviewer is responsible for ensuring that the PR meets the following criteria:
+
+##### Code Quality
+
+* *Readability*: Ensure the code is easy to read and understand. Check for clear and concise variable names, appropriate comments, and overall readability.
+* *Coding Standards*: Verify adherence to the team’s coding standards and style guides. This includes indentation, spacing, naming conventions, and file organization.
+* *Code Structure*: Check for proper use of functions, classes, and modules. Ensure the code is organized logically and is modular.
+* *Complexity*: Look for complex code that could be simplified. Ensure there are no nested loops.
+
+##### Functionality
+
+* *Correctness*: Verify that the code performs the intended function correctly. Check the logic and ensure that edge cases are handled.
+* *Bug Fixes*: Ensure any reported bugs are adequately addressed. Verify that the fixes resolve the issues without introducing new bugs.
+* *Feature Implementation*: Confirm that new features are implemented as specified in the requirements or user stories.
+
+##### Testing
+
+* *Test Coverage*: Check that there are sufficient unit tests, integration tests and E2E tests for the new code. Ensure tests cover both normal and edge cases.
+* *Test Quality*: Review the quality of the tests. Ensure they are meaningful and not just checking trivial cases.
+* *Passing Tests*: Verify that all tests pass, including any new tests added with the PR.
+
+##### Documentation
+
+* *Code* Comments: Ensure there are comments explaining non-obvious parts of the code.
+* *API Documentation*: Verify that any new or modified public methods, classes, or modules are properly documented.
+* *User Documentation*: Check for updates to user documentation, if the PR includes changes that affect the user experience.
+
+##### Performance
+
+* *Efficiency*: Ensure the code performs efficiently and does not introduce performance bottlenecks.
+* *Resource Usage*: Check for appropriate use of resources, such as memory and CPU. Ensure there are no memory leaks or excessive resource consumption.
+
+### External Contributors
+
+External contributors can not manage getting reviewers and assigning reviewers to PRs. When an external contribution requires reviewers, they will be assigned in the team meeting or adhoc based on current workloads. One of the reviewers will be assigned the owner of the PR and will be responsible for ensuring the PR is ready for review and merging after reviews are delivered. The owner has the right to overtake the contribution if the external contributor is not responsive or the PR is not moving forward.
 
 ### Requesting Reviews
 
@@ -156,6 +216,7 @@ items. In addition, use the following review explanations:
     * If you approve the PR, you are responsible for any issues mentioned here and any issues that should have been addressed after thoroughly reviewing the reviewer checklist items in the pull request template.
 * If you sat down with the PR submitter and did a pairing review, add this information in the `Approval` or your PR comments.
 * If you are only making "surface level" reviews, submit notes as a `comment` review.
+
 
 ### Updating Documentation
 
@@ -262,11 +323,11 @@ to developers who show an aptitude towards developing with this code base.
 
 Several different kinds of privileges may be granted however most common
 privileges to be granted are merge rights to either part of, or the entirety of the
-code base (through the GitHub `CODEOWNERS` file). The on-boarding process for
+code base (through the GitHub `CODEOWNERS` file). The onboarding process for
 new code owners is as follows: On a bi-monthly basis (or more frequently if
 agreeable) all the existing code owners will privately convene to discuss
 potential new candidates as well as the potential for existing code-owners to
-exit or "pass on the torch". This private meeting is to be a held as a
+exit or "pass on the torch". This private meeting is to be held as a
 phone/video meeting.
 
 Subsequently after the meeting, and pending final approval from the ICF,
@@ -320,42 +381,11 @@ If an individual Pull Request for an ADR needs more time than 2 weeks to reach r
 in current state (`Draft` or `Proposed`), with its contents updated to summarize
 the current state of its discussion.
 
-If an ADR is taking longer than 4 weeks to reach a final conclusion, the **Concept Approval Committee**
-should convene to rectify the situation by either:
+If an ADR is taking longer than 4 weeks to reach a final conclusion, there should be a synchronous meeting with reviewers and all stake holders
 
 * unanimously setting a new time bound period for this ADR
 * making changes to the Concept Approval Process (as outlined here)
 * making changes to the members of the Concept Approval Committee
-
-#### Approval Committee & Decision Making
-
-In absence of general consensus, decision making requires 1/2 vote from the two members
-of the **Concept Approval Committee**.
-
-#### Committee Members
-
-* Core Members: **Aaron** (Regen), **Bez** (IG)
-
-#### Committee Criteria
-
-Members must:
-
-* Participate in all or almost all ADR discussions, both on GitHub as well as in bi-weekly Architecture Review
-  meetings
-* Be active contributors to the Cosmos SDK, and furthermore should be continuously making substantial contributions
-  to the project's codebase, review process, documentation and ADRs
-* Have stake in the Cosmos SDK project, represented by:
-    * Being a client / user of the Comsos SDK
-    * "[giving back](https://www.debian.org/social_contract)" to the software
-* Delegate representation in case of vacation or absence
-
-Code owners need to maintain participation in the process, ideally as members of **Concept Approval Committee**
-members, but at the very least as active participants in ADR discussions
-
-Removal criteria:
-
-* Missing 3 meetings results in ICF evaluating whether the member should be removed / replaced
-* Violation of Code of Conduct
 
 ### Implementation & Release Approval
 

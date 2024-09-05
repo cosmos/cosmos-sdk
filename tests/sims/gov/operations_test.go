@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -9,15 +10,15 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	_ "cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	_ "cosmossdk.io/x/auth/tx/config"
+	_ "cosmossdk.io/x/accounts"
 	_ "cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/testutil"
+	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/gov"
 	"cosmossdk.io/x/gov/keeper"
 	"cosmossdk.io/x/gov/simulation"
@@ -34,7 +35,9 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 var (
@@ -54,9 +57,9 @@ func (m MockWeightedProposals) DefaultWeight() int {
 	return m.n
 }
 
-func (m MockWeightedProposals) MsgSimulatorFn() simtypes.MsgSimulatorFn {
-	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
-		return nil
+func (m MockWeightedProposals) MsgSimulatorFn() simtypes.MsgSimulatorFnX {
+	return func(_ context.Context, r *rand.Rand, _ []simtypes.Account, _ address.Codec) (sdk.Msg, error) {
+		return nil, nil
 	}
 }
 
@@ -156,7 +159,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	require.Equal(t, simulation.TypeMsgSubmitProposal, sdk.MsgTypeURL(&msg))
 }
 
-// TestSimulateMsgSubmitProposal tests the normal scenario of a valid message of type TypeMsgSubmitProposal.
+// TestSimulateMsgSubmitLegacyProposal tests the normal scenario of a valid message of type TypeMsgSubmitProposal.
 // Abnormal scenarios, where errors occur, are not tested here.
 func TestSimulateMsgSubmitLegacyProposal(t *testing.T) {
 	suite, ctx := createTestSuite(t, false)
@@ -206,7 +209,8 @@ func TestSimulateMsgCancelProposal(t *testing.T) {
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, suite.AccountKeeper, suite.BankKeeper, suite.StakingKeeper, ctx, 3)
 	// setup a proposal
-	proposer := accounts[0].Address
+	proposer, err := suite.AccountKeeper.AddressCodec().BytesToString(accounts[0].Address)
+	require.NoError(t, err)
 	content := v1beta1.NewTextProposal("Test", "description")
 	contentMsg, err := v1.NewLegacyContent(content, suite.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String())
 	require.NoError(t, err)
@@ -232,7 +236,7 @@ func TestSimulateMsgCancelProposal(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, operationMsg.OK)
 	require.Equal(t, uint64(1), msg.ProposalId)
-	require.Equal(t, proposer.String(), msg.Proposer)
+	require.Equal(t, proposer, msg.Proposer)
 	require.Equal(t, simulation.TypeMsgCancelProposal, sdk.MsgTypeURL(&msg))
 }
 
@@ -258,14 +262,14 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
 	err = suite.GovKeeper.Proposals.Set(ctx, proposal.Id, proposal)
 	require.NoError(t, err)
 
 	// execute operation
-	op := simulation.SimulateMsgDeposit(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper)
+	op := simulation.SimulateMsgDeposit(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, simulation.NewSharedState())
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
@@ -302,14 +306,14 @@ func TestSimulateMsgVote(t *testing.T) {
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
 	err = suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
 	require.NoError(t, err)
 
 	// execute operation
-	op := simulation.SimulateMsgVote(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper)
+	op := simulation.SimulateMsgVote(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, simulation.NewSharedState())
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
@@ -344,14 +348,14 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	params, _ := suite.GovKeeper.Params.Get(ctx)
 	depositPeriod := params.MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "test", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "test", "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
 	err = suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
 	require.NoError(t, err)
 
 	// execute operation
-	op := simulation.SimulateMsgVoteWeighted(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper)
+	op := simulation.SimulateMsgVoteWeighted(suite.TxConfig, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, simulation.NewSharedState())
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
@@ -382,6 +386,7 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 	app, err := simtestutil.Setup(
 		depinject.Configs(
 			configurator.NewAppConfig(
+				configurator.AccountsModule(),
 				configurator.AuthModule(),
 				configurator.TxModule(),
 				configurator.BankModule(),

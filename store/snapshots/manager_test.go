@@ -4,21 +4,23 @@ import (
 	"errors"
 	"testing"
 
+	db "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/v2/snapshots"
-	"cosmossdk.io/store/v2/snapshots/types"
+	"cosmossdk.io/store/snapshots"
+	"cosmossdk.io/store/snapshots/types"
 )
 
-var opts = snapshots.NewSnapshotOptions(1500, 2)
+var opts = types.NewSnapshotOptions(1500, 2)
 
 func TestManager_List(t *testing.T) {
 	store := setupStore(t)
-	commitSnapshotter := &mockCommitSnapshotter{}
-	storageSnapshotter := &mockStorageSnapshotter{}
-	manager := snapshots.NewManager(store, opts, commitSnapshotter, storageSnapshotter, nil, log.NewNopLogger())
+	snapshotter := &mockSnapshotter{}
+	snapshotter.SetSnapshotInterval(opts.Interval)
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
+	require.Equal(t, opts.Interval, snapshotter.GetSnapshotInterval())
 
 	mgrList, err := manager.List()
 	require.NoError(t, err)
@@ -39,7 +41,7 @@ func TestManager_List(t *testing.T) {
 
 func TestManager_LoadChunk(t *testing.T) {
 	store := setupStore(t)
-	manager := snapshots.NewManager(store, opts, &mockCommitSnapshotter{}, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, &mockSnapshotter{}, nil, log.NewNopLogger())
 
 	// Existing chunk should return body
 	chunk, err := manager.LoadChunk(2, 1, 1)
@@ -65,13 +67,14 @@ func TestManager_Take(t *testing.T) {
 		{4, 5, 6},
 		{7, 8, 9},
 	}
-	commitSnapshotter := &mockCommitSnapshotter{
-		items: items,
+	snapshotter := &mockSnapshotter{
+		items:         items,
+		prunedHeights: make(map[int64]struct{}),
 	}
 	extSnapshotter := newExtSnapshotter(10)
 
 	expectChunks := snapshotItems(items, extSnapshotter)
-	manager := snapshots.NewManager(store, opts, commitSnapshotter, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 
@@ -82,14 +85,18 @@ func TestManager_Take(t *testing.T) {
 	// creating a snapshot at a lower height than the latest should error
 	_, err = manager.Create(3)
 	require.Error(t, err)
+	_, didPruneHeight := snapshotter.prunedHeights[3]
+	require.True(t, didPruneHeight)
 
 	// creating a snapshot at a higher height should be fine, and should return it
 	snapshot, err := manager.Create(5)
 	require.NoError(t, err)
+	_, didPruneHeight = snapshotter.prunedHeights[5]
+	require.True(t, didPruneHeight)
 
 	assert.Equal(t, &types.Snapshot{
 		Height: 5,
-		Format: commitSnapshotter.SnapshotFormat(),
+		Format: snapshotter.SnapshotFormat(),
 		Chunks: 1,
 		Hash:   []uint8{0xc5, 0xf7, 0xfe, 0xea, 0xd3, 0x4d, 0x3e, 0x87, 0xff, 0x41, 0xa2, 0x27, 0xfa, 0xcb, 0x38, 0x17, 0xa, 0x5, 0xeb, 0x27, 0x4e, 0x16, 0x5e, 0xf3, 0xb2, 0x8b, 0x47, 0xd1, 0xe6, 0x94, 0x7e, 0x8b},
 		Metadata: types.Metadata{
@@ -110,7 +117,9 @@ func TestManager_Take(t *testing.T) {
 
 func TestManager_Prune(t *testing.T) {
 	store := setupStore(t)
-	manager := snapshots.NewManager(store, opts, &mockCommitSnapshotter{}, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
+	snapshotter := &mockSnapshotter{}
+	snapshotter.SetSnapshotInterval(opts.Interval)
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
 
 	pruned, err := manager.Prune(2)
 	require.NoError(t, err)
@@ -128,9 +137,11 @@ func TestManager_Prune(t *testing.T) {
 
 func TestManager_Restore(t *testing.T) {
 	store := setupStore(t)
-	target := &mockCommitSnapshotter{}
+	target := &mockSnapshotter{
+		prunedHeights: make(map[int64]struct{}),
+	}
 	extSnapshotter := newExtSnapshotter(0)
-	manager := snapshots.NewManager(store, opts, target, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, target, nil, log.NewNopLogger())
 	err := manager.RegisterExtensions(extSnapshotter)
 	require.NoError(t, err)
 
@@ -180,6 +191,8 @@ func TestManager_Restore(t *testing.T) {
 	// While the restore is in progress, any other operations fail
 	_, err = manager.Create(4)
 	require.Error(t, err)
+	_, didPruneHeight := target.prunedHeights[4]
+	require.True(t, didPruneHeight)
 
 	_, err = manager.Prune(1)
 	require.Error(t, err)
@@ -235,10 +248,10 @@ func TestManager_Restore(t *testing.T) {
 }
 
 func TestManager_TakeError(t *testing.T) {
-	snapshotter := &mockErrorCommitSnapshotter{}
-	store, err := snapshots.NewStore(GetTempDir(t))
+	snapshotter := &mockErrorSnapshotter{}
+	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
 	require.NoError(t, err)
-	manager := snapshots.NewManager(store, opts, snapshotter, &mockStorageSnapshotter{}, nil, log.NewNopLogger())
+	manager := snapshots.NewManager(store, opts, snapshotter, nil, log.NewNopLogger())
 
 	_, err = manager.Create(1)
 	require.Error(t, err)

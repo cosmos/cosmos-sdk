@@ -5,20 +5,24 @@ import (
 	"fmt"
 	"time"
 
+	v1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/core/header"
-	authtypes "cosmossdk.io/x/auth/types"
-	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 func (suite *KeeperTestSuite) TestQueryBalance() {
 	ctx, queryClient := suite.ctx, suite.queryClient
 	_, _, addr := testdata.KeyTestPubAddr()
+
+	addrStr, err := suite.authKeeper.AddressCodec().BytesToString(addr)
+	suite.Require().NoError(err)
 
 	origCoins := sdk.NewCoins(newBarCoin(30))
 	suite.mockFundAccount(addr)
@@ -38,13 +42,13 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 		},
 		{
 			"invalid denom",
-			types.NewQueryBalanceRequest(addr, "0000"),
+			types.NewQueryBalanceRequest(addrStr, "0000"),
 			"invalid denom",
 			nil,
 		},
 		{
 			"empty address",
-			types.NewQueryBalanceRequest(sdk.AccAddress{}, barDenom),
+			types.NewQueryBalanceRequest("", barDenom),
 			"empty address string is not allowed",
 			nil,
 		},
@@ -56,13 +60,13 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 		},
 		{
 			"query missing denom",
-			&types.QueryBalanceRequest{Address: addr.String()},
+			&types.QueryBalanceRequest{Address: addrStr},
 			"invalid denom",
 			nil,
 		},
 		{
 			"valid query empty result",
-			types.NewQueryBalanceRequest(addr, fooDenom),
+			types.NewQueryBalanceRequest(addrStr, fooDenom),
 			"",
 			func(res *types.QueryBalanceResponse) {
 				suite.True(res.Balance.IsZero())
@@ -70,7 +74,7 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 		},
 		{
 			"valid query",
-			types.NewQueryBalanceRequest(addr, barDenom),
+			types.NewQueryBalanceRequest(addrStr, barDenom),
 			"",
 			func(res *types.QueryBalanceResponse) {
 				suite.True(res.Balance.IsEqual(newBarCoin(30)))
@@ -103,12 +107,15 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	_, err := queryClient.AllBalances(gocontext.Background(), &types.QueryAllBalancesRequest{})
 	suite.Require().Error(err)
 
+	addrStr, err := suite.authKeeper.AddressCodec().BytesToString(addr)
+	suite.Require().NoError(err)
+
 	pageReq := &query.PageRequest{
 		Key:        nil,
 		Limit:      1,
 		CountTotal: false,
 	}
-	req := types.NewQueryAllBalancesRequest(addr, pageReq, false)
+	req := types.NewQueryAllBalancesRequest(addrStr, pageReq, false)
 	res, err := queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
@@ -137,7 +144,7 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 		Limit:      1,
 		CountTotal: true,
 	}
-	req = types.NewQueryAllBalancesRequest(addr, pageReq, false)
+	req = types.NewQueryAllBalancesRequest(addrStr, pageReq, false)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Equal(res.Balances.Len(), 1)
@@ -151,7 +158,7 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 		Limit:      1,
 		CountTotal: true,
 	}
-	req = types.NewQueryAllBalancesRequest(addr, pageReq, false)
+	req = types.NewQueryAllBalancesRequest(addrStr, pageReq, false)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Equal(res.Balances.Len(), 1)
@@ -163,7 +170,7 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 		Limit:      1,
 		CountTotal: true,
 	}
-	req = types.NewQueryAllBalancesRequest(addr, pageReq, true)
+	req = types.NewQueryAllBalancesRequest(addrStr, pageReq, true)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Equal(res.Balances.Len(), 1)
@@ -173,12 +180,14 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 
 func (suite *KeeperTestSuite) TestSpendableBalances() {
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := suite.authKeeper.AddressCodec().BytesToString(addr)
+	suite.Require().NoError(err)
 
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	queryClient := suite.mockQueryClient(ctx)
 
-	_, err := queryClient.SpendableBalances(ctx, &types.QuerySpendableBalancesRequest{})
+	_, err = queryClient.SpendableBalances(ctx, &types.QuerySpendableBalancesRequest{})
 	suite.Require().Error(err)
 
 	pageReq := &query.PageRequest{
@@ -186,7 +195,7 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 		Limit:      2,
 		CountTotal: false,
 	}
-	req := types.NewQuerySpendableBalancesRequest(addr, pageReq)
+	req := types.NewQuerySpendableBalancesRequest(addrStr, pageReq)
 	acc := authtypes.NewBaseAccountWithAddress(addr)
 
 	suite.mockSpendableCoins(ctx, acc)
@@ -577,6 +586,100 @@ func (suite *KeeperTestSuite) TestQueryDenomMetadataByQueryStringRequest() {
 			ctx := suite.ctx
 
 			res, err := suite.queryClient.DenomMetadataByQueryString(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expMetadata, res.Metadata)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGRPCDenomMetadataV2() {
+	var (
+		req      *v1beta1.QueryDenomMetadataRequest
+		metadata = types.Metadata{
+			Description: "The native staking token of the Cosmos Hub.",
+			DenomUnits: []*types.DenomUnit{
+				{
+					Denom:    "uatom",
+					Exponent: 0,
+					Aliases:  []string{"microatom"},
+				},
+				{
+					Denom:    "atom",
+					Exponent: 6,
+					Aliases:  []string{"ATOM"},
+				},
+			},
+			Base:    "uatom",
+			Display: "atom",
+		}
+		expMetadata = &v1beta1.Metadata{}
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty denom",
+			func() {
+				req = &v1beta1.QueryDenomMetadataRequest{}
+			},
+			false,
+		},
+		{
+			"not found denom",
+			func() {
+				req = &v1beta1.QueryDenomMetadataRequest{
+					Denom: "foo",
+				}
+			},
+			false,
+		},
+		{
+			"success",
+			func() {
+				expMetadata = &v1beta1.Metadata{
+					Description: metadata.Description,
+					DenomUnits: []*v1beta1.DenomUnit{
+						{
+							Denom:    metadata.DenomUnits[0].Denom,
+							Exponent: metadata.DenomUnits[0].Exponent,
+							Aliases:  metadata.DenomUnits[0].Aliases,
+						},
+						{
+							Denom:    metadata.DenomUnits[1].Denom,
+							Exponent: metadata.DenomUnits[1].Exponent,
+							Aliases:  metadata.DenomUnits[1].Aliases,
+						},
+					},
+					Base:    metadata.Base,
+					Display: metadata.Display,
+				}
+
+				suite.bankKeeper.SetDenomMetaData(suite.ctx, metadata)
+				req = &v1beta1.QueryDenomMetadataRequest{
+					Denom: expMetadata.Base,
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := suite.ctx
+
+			res, err := suite.bankKeeper.DenomMetadataV2(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

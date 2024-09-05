@@ -42,7 +42,7 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
 	// we don't store directly, so multiply delegation shares * (tokens per share)
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	stake := validator.TokensFromSharesTruncated(delegation.GetShares())
-	headerinfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerinfo := k.HeaderService.HeaderInfo(ctx)
 	return k.DelegatorStartingInfo.Set(ctx, collections.Join(val, del), types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(headerinfo.Height)))
 }
 
@@ -52,12 +52,12 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val sdk.V
 ) (sdk.DecCoins, error) {
 	// sanity check
 	if startingPeriod > endingPeriod {
-		return sdk.DecCoins{}, fmt.Errorf("startingPeriod cannot be greater than endingPeriod")
+		return sdk.DecCoins{}, errors.New("startingPeriod cannot be greater than endingPeriod")
 	}
 
 	// sanity check
 	if stake.IsNegative() {
-		return sdk.DecCoins{}, fmt.Errorf("stake should not be negative")
+		return sdk.DecCoins{}, errors.New("stake should not be negative")
 	}
 
 	valBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
@@ -78,7 +78,7 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val sdk.V
 
 	difference := ending.CumulativeRewardRatio.Sub(starting.CumulativeRewardRatio)
 	if difference.IsAnyNegative() {
-		return sdk.DecCoins{}, fmt.Errorf("negative rewards should not be possible")
+		return sdk.DecCoins{}, errors.New("negative rewards should not be possible")
 	}
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	rewards := difference.MulDecTruncate(stake)
@@ -104,7 +104,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val sdk.Validato
 		return sdk.DecCoins{}, err
 	}
 
-	headerinfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerinfo := k.HeaderService.HeaderInfo(ctx)
 	if startingInfo.Height == uint64(headerinfo.Height) { // started this height, no rewards yet
 		return sdk.DecCoins{}, nil
 	}
@@ -242,8 +242,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val sdk.Validator
 	// of the decCoins due to operation order of the distribution mechanism.
 	rewards := rewardsRaw.Intersect(outstanding)
 	if !rewards.Equal(rewardsRaw) {
-		logger := k.Logger(ctx)
-		logger.Info(
+		k.Logger.Info(
 			"rounding error withdrawing rewards from validator",
 			"delegator", del.GetDelegatorAddr(),
 			"validator", val.GetOperator(),
@@ -313,7 +312,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, val sdk.Validator
 		finalRewards = sdk.Coins{sdk.NewCoin(baseDenom, math.ZeroInt())}
 	}
 
-	err = k.environment.EventService.EventManager(ctx).EmitKV(
+	err = k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeWithdrawRewards,
 		event.NewAttribute(sdk.AttributeKeyAmount, finalRewards.String()),
 		event.NewAttribute(types.AttributeKeyValidator, val.GetOperator()),

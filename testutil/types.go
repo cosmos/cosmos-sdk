@@ -1,7 +1,7 @@
 package testutil
 
 // This file contains the list of module names are that maintained by the SDK team.
-// Those constants are defined here to be used in the SDK without importing those modules
+// Those constants are defined here to be used in the SDK without importing those modules.
 
 const (
 	AccountsModuleName     = "accounts"
@@ -22,4 +22,5 @@ const (
 	StakingModuleName      = "staking"
 	TxModuleName           = "tx"
 	UpgradeModuleName      = "upgrade"
+	EpochsModuleName       = "epochs"
 )

@@ -32,7 +32,7 @@ func (k Keeper) GroupInfo(ctx context.Context, request *group.QueryGroupInfoRequ
 // getGroupInfo gets the group info of the given group id.
 func (k Keeper) getGroupInfo(ctx context.Context, id uint64) (group.GroupInfo, error) {
 	var obj group.GroupInfo
-	_, err := k.groupTable.GetOne(k.environment.KVStoreService.OpenKVStore(ctx), id, &obj)
+	_, err := k.groupTable.GetOne(k.KVStoreService.OpenKVStore(ctx), id, &obj)
 	return obj, err
 }
 
@@ -54,7 +54,7 @@ func (k Keeper) GroupPolicyInfo(ctx context.Context, request *group.QueryGroupPo
 // getGroupPolicyInfo gets the group policy info of the given account address.
 func (k Keeper) getGroupPolicyInfo(ctx context.Context, accountAddress string) (group.GroupPolicyInfo, error) {
 	var obj group.GroupPolicyInfo
-	return obj, k.groupPolicyTable.GetOne(k.environment.KVStoreService.OpenKVStore(ctx), orm.PrimaryKey(&group.GroupPolicyInfo{Address: accountAddress}), &obj)
+	return obj, k.groupPolicyTable.GetOne(k.KVStoreService.OpenKVStore(ctx), orm.PrimaryKey(&group.GroupPolicyInfo{Address: accountAddress}, k.accKeeper.AddressCodec()), &obj)
 }
 
 // GroupMembers queries all members of a group.
@@ -79,7 +79,7 @@ func (k Keeper) GroupMembers(ctx context.Context, request *group.QueryGroupMembe
 
 // getGroupMembers returns an iterator for the given group id and page request.
 func (k Keeper) getGroupMembers(ctx context.Context, id uint64, pageRequest *query.PageRequest) (orm.Iterator, error) {
-	return k.groupMemberByGroupIndex.GetPaginated(k.environment.KVStoreService.OpenKVStore(ctx), id, pageRequest)
+	return k.groupMemberByGroupIndex.GetPaginated(k.KVStoreService.OpenKVStore(ctx), id, pageRequest)
 }
 
 // GroupsByAdmin queries all groups where a given address is admin.
@@ -107,7 +107,7 @@ func (k Keeper) GroupsByAdmin(ctx context.Context, request *group.QueryGroupsByA
 
 // getGroupsByAdmin returns an iterator for the given admin account address and page request.
 func (k Keeper) getGroupsByAdmin(ctx context.Context, admin sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
-	return k.groupByAdminIndex.GetPaginated(k.environment.KVStoreService.OpenKVStore(ctx), admin.Bytes(), pageRequest)
+	return k.groupByAdminIndex.GetPaginated(k.KVStoreService.OpenKVStore(ctx), admin.Bytes(), pageRequest)
 }
 
 // GroupPoliciesByGroup queries all groups policies of a given group.
@@ -132,7 +132,7 @@ func (k Keeper) GroupPoliciesByGroup(ctx context.Context, request *group.QueryGr
 
 // getGroupPoliciesByGroup returns an iterator for the given group id and page request.
 func (k Keeper) getGroupPoliciesByGroup(ctx context.Context, id uint64, pageRequest *query.PageRequest) (orm.Iterator, error) {
-	return k.groupPolicyByGroupIndex.GetPaginated(k.environment.KVStoreService.OpenKVStore(ctx), id, pageRequest)
+	return k.groupPolicyByGroupIndex.GetPaginated(k.KVStoreService.OpenKVStore(ctx), id, pageRequest)
 }
 
 // GroupPoliciesByAdmin queries all groups policies where a given address is
@@ -161,7 +161,7 @@ func (k Keeper) GroupPoliciesByAdmin(ctx context.Context, request *group.QueryGr
 
 // getGroupPoliciesByAdmin returns an iterator for the given admin account address and page request.
 func (k Keeper) getGroupPoliciesByAdmin(ctx context.Context, admin sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
-	return k.groupPolicyByAdminIndex.GetPaginated(k.environment.KVStoreService.OpenKVStore(ctx), admin.Bytes(), pageRequest)
+	return k.groupPolicyByAdminIndex.GetPaginated(k.KVStoreService.OpenKVStore(ctx), admin.Bytes(), pageRequest)
 }
 
 // Proposal queries a proposal.
@@ -200,13 +200,13 @@ func (k Keeper) ProposalsByGroupPolicy(ctx context.Context, request *group.Query
 
 // getProposalsByGroupPolicy returns an iterator for the given account address and page request.
 func (k Keeper) getProposalsByGroupPolicy(ctx context.Context, account sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
-	return k.proposalByGroupPolicyIndex.GetPaginated(k.environment.KVStoreService.OpenKVStore(ctx), account.Bytes(), pageRequest)
+	return k.proposalByGroupPolicyIndex.GetPaginated(k.KVStoreService.OpenKVStore(ctx), account.Bytes(), pageRequest)
 }
 
 // getProposal gets the proposal info of the given proposal id.
 func (k Keeper) getProposal(ctx context.Context, proposalID uint64) (group.Proposal, error) {
 	var p group.Proposal
-	if _, err := k.proposalTable.GetOne(k.environment.KVStoreService.OpenKVStore(ctx), proposalID, &p); err != nil {
+	if _, err := k.proposalTable.GetOne(k.KVStoreService.OpenKVStore(ctx), proposalID, &p); err != nil {
 		return group.Proposal{}, errorsmod.Wrap(err, "load proposal")
 	}
 	return p, nil
@@ -214,12 +214,12 @@ func (k Keeper) getProposal(ctx context.Context, proposalID uint64) (group.Propo
 
 // VoteByProposalVoter queries a vote given a voter and a proposal ID.
 func (k Keeper) VoteByProposalVoter(ctx context.Context, request *group.QueryVoteByProposalVoterRequest) (*group.QueryVoteByProposalVoterResponse, error) {
-	addr, err := k.accKeeper.AddressCodec().StringToBytes(request.Voter)
+	_, err := k.accKeeper.AddressCodec().StringToBytes(request.Voter)
 	if err != nil {
 		return nil, err
 	}
 	proposalID := request.ProposalId
-	vote, err := k.getVote(ctx, proposalID, addr)
+	vote, err := k.getVote(ctx, proposalID, request.Voter)
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +282,7 @@ func (k Keeper) GroupsByMember(ctx context.Context, request *group.QueryGroupsBy
 		return nil, err
 	}
 
-	iter, err := k.groupMemberByMemberIndex.GetPaginated(k.environment.KVStoreService.OpenKVStore(ctx), member, request.Pagination)
+	iter, err := k.groupMemberByMemberIndex.GetPaginated(k.KVStoreService.OpenKVStore(ctx), member, request.Pagination)
 	if err != nil {
 		return nil, err
 	}
@@ -309,19 +309,19 @@ func (k Keeper) GroupsByMember(ctx context.Context, request *group.QueryGroupsBy
 }
 
 // getVote gets the vote info for the given proposal id and voter address.
-func (k Keeper) getVote(ctx context.Context, proposalID uint64, voter sdk.AccAddress) (group.Vote, error) {
+func (k Keeper) getVote(ctx context.Context, proposalID uint64, voter string) (group.Vote, error) {
 	var v group.Vote
-	return v, k.voteTable.GetOne(k.environment.KVStoreService.OpenKVStore(ctx), orm.PrimaryKey(&group.Vote{ProposalId: proposalID, Voter: voter.String()}), &v)
+	return v, k.voteTable.GetOne(k.KVStoreService.OpenKVStore(ctx), orm.PrimaryKey(&group.Vote{ProposalId: proposalID, Voter: voter}, k.accKeeper.AddressCodec()), &v)
 }
 
 // getVotesByProposal returns an iterator for the given proposal id and page request.
 func (k Keeper) getVotesByProposal(ctx context.Context, proposalID uint64, pageRequest *query.PageRequest) (orm.Iterator, error) {
-	return k.voteByProposalIndex.GetPaginated(k.environment.KVStoreService.OpenKVStore(ctx), proposalID, pageRequest)
+	return k.voteByProposalIndex.GetPaginated(k.KVStoreService.OpenKVStore(ctx), proposalID, pageRequest)
 }
 
 // getVotesByVoter returns an iterator for the given voter address and page request.
 func (k Keeper) getVotesByVoter(ctx context.Context, voter sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
-	return k.voteByVoterIndex.GetPaginated(k.environment.KVStoreService.OpenKVStore(ctx), voter.Bytes(), pageRequest)
+	return k.voteByVoterIndex.GetPaginated(k.KVStoreService.OpenKVStore(ctx), voter.Bytes(), pageRequest)
 }
 
 // TallyResult computes the live tally result of a proposal.
@@ -354,7 +354,7 @@ func (k Keeper) TallyResult(ctx context.Context, request *group.QueryTallyResult
 
 // Groups returns all the groups present in the state.
 func (k Keeper) Groups(ctx context.Context, request *group.QueryGroupsRequest) (*group.QueryGroupsResponse, error) {
-	it, err := k.groupTable.PrefixScan(k.environment.KVStoreService.OpenKVStore(ctx), 1, math.MaxUint64)
+	it, err := k.groupTable.PrefixScan(k.KVStoreService.OpenKVStore(ctx), 1, math.MaxUint64)
 	if err != nil {
 		return nil, err
 	}

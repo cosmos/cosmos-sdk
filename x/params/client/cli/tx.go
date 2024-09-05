@@ -20,7 +20,7 @@ import (
 // a parameter change proposal governance transaction.
 func NewSubmitParamChangeProposalTxCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "param-change [proposal-file]",
+		Use:   "param-change <proposal-file>",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a parameter change proposal",
 		Long: strings.TrimSpace(
@@ -67,7 +67,11 @@ Where proposal.json contains:
 				return err
 			}
 
-			from := clientCtx.GetFromAddress()
+			from, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
 			content := paramproposal.NewParameterChangeProposal(
 				proposal.Title, proposal.Description, proposal.Changes.ToParamChanges(),
 			)

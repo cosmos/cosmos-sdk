@@ -8,6 +8,7 @@ import (
 
 	banktypes "cosmossdk.io/x/bank/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -22,15 +23,21 @@ var (
 func TestGenesisStateValidate(t *testing.T) {
 	submittedAt := time.Now().UTC()
 	timeout := submittedAt.Add(time.Second * 1).UTC()
+	addressCodec := codectestutil.CodecOptions{}.GetAddressCodec()
+
+	accStrAddr, err := addressCodec.BytesToString(accAddr)
+	require.NoError(t, err)
+	memberStrAdrr, err := addressCodec.BytesToString(memberAddr)
+	require.NoError(t, err)
 
 	groupPolicy := &GroupPolicyInfo{
-		Address:  accAddr.String(),
+		Address:  accStrAddr,
 		GroupId:  1,
-		Admin:    accAddr.String(),
+		Admin:    accStrAddr,
 		Version:  1,
 		Metadata: "policy metadata",
 	}
-	err := groupPolicy.SetDecisionPolicy(&ThresholdDecisionPolicy{
+	err = groupPolicy.SetDecisionPolicy(&ThresholdDecisionPolicy{
 		Threshold: "1",
 		Windows: &DecisionPolicyWindows{
 			VotingPeriod: time.Second,
@@ -40,9 +47,9 @@ func TestGenesisStateValidate(t *testing.T) {
 
 	// create another group policy to set invalid decision policy for testing
 	groupPolicy2 := &GroupPolicyInfo{
-		Address:  accAddr.String(),
+		Address:  accStrAddr,
 		GroupId:  1,
-		Admin:    accAddr.String(),
+		Admin:    accStrAddr,
 		Version:  1,
 		Metadata: "policy metadata",
 	}
@@ -56,12 +63,12 @@ func TestGenesisStateValidate(t *testing.T) {
 
 	proposal := &Proposal{
 		Id:                 1,
-		GroupPolicyAddress: accAddr.String(),
+		GroupPolicyAddress: accStrAddr,
 		Metadata:           "proposal metadata",
 		GroupVersion:       1,
 		GroupPolicyVersion: 1,
 		Proposers: []string{
-			memberAddr.String(),
+			memberStrAdrr,
 		},
 		SubmitTime: submittedAt,
 		Status:     PROPOSAL_STATUS_ACCEPTED,
@@ -75,8 +82,8 @@ func TestGenesisStateValidate(t *testing.T) {
 		ExecutorResult:  PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 	}
 	err = proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
-		FromAddress: accAddr.String(),
-		ToAddress:   memberAddr.String(),
+		FromAddress: accStrAddr,
+		ToAddress:   memberStrAdrr,
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}})
 	require.NoError(t, err)
@@ -90,13 +97,13 @@ func TestGenesisStateValidate(t *testing.T) {
 			"valid genesisState",
 			GenesisState{
 				GroupSeq:       2,
-				Groups:         []*GroupInfo{{Id: 1, Admin: accAddr.String(), Metadata: "1", Version: 1, TotalWeight: "1"}, {Id: 2, Admin: accAddr.String(), Metadata: "2", Version: 2, TotalWeight: "2"}},
-				GroupMembers:   []*GroupMember{{GroupId: 1, Member: &Member{Address: memberAddr.String(), Weight: "1", Metadata: "member metadata"}}, {GroupId: 2, Member: &Member{Address: memberAddr.String(), Weight: "2", Metadata: "member metadata"}}},
+				Groups:         []*GroupInfo{{Id: 1, Admin: accStrAddr, Metadata: "1", Version: 1, TotalWeight: "1"}, {Id: 2, Admin: accStrAddr, Metadata: "2", Version: 2, TotalWeight: "2"}},
+				GroupMembers:   []*GroupMember{{GroupId: 1, Member: &Member{Address: memberStrAdrr, Weight: "1", Metadata: "member metadata"}}, {GroupId: 2, Member: &Member{Address: memberStrAdrr, Weight: "2", Metadata: "member metadata"}}},
 				GroupPolicySeq: 1,
 				GroupPolicies:  []*GroupPolicyInfo{groupPolicy},
 				ProposalSeq:    1,
 				Proposals:      []*Proposal{proposal},
-				Votes:          []*Vote{{ProposalId: proposal.Id, Voter: memberAddr.String(), SubmitTime: submittedAt, Option: VOTE_OPTION_YES}},
+				Votes:          []*Vote{{ProposalId: proposal.Id, Voter: memberStrAdrr, SubmitTime: submittedAt, Option: VOTE_OPTION_YES}},
 			},
 			false,
 		},
@@ -111,7 +118,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          0,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -141,7 +148,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     0,
 						TotalWeight: "1",
@@ -156,7 +163,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "-1",
@@ -171,7 +178,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -181,7 +188,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						Address:  "invalid address",
 						GroupId:  1,
-						Admin:    accAddr.String(),
+						Admin:    accStrAddr,
 						Version:  1,
 						Metadata: "policy metadata",
 					},
@@ -195,7 +202,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -203,7 +210,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				GroupPolicies: []*GroupPolicyInfo{
 					{
-						Address:  accAddr.String(),
+						Address:  accStrAddr,
 						GroupId:  1,
 						Admin:    "invalid admin",
 						Version:  1,
@@ -219,7 +226,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -227,9 +234,9 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				GroupPolicies: []*GroupPolicyInfo{
 					{
-						Address:  accAddr.String(),
+						Address:  accStrAddr,
 						GroupId:  0,
-						Admin:    accAddr.String(),
+						Admin:    accStrAddr,
 						Version:  1,
 						Metadata: "policy metadata",
 					},
@@ -243,7 +250,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -251,9 +258,9 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				GroupPolicies: []*GroupPolicyInfo{
 					{
-						Address:  accAddr.String(),
+						Address:  accStrAddr,
 						GroupId:  1,
-						Admin:    accAddr.String(),
+						Admin:    accStrAddr,
 						Version:  0,
 						Metadata: "policy metadata",
 					},
@@ -267,7 +274,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -275,9 +282,9 @@ func TestGenesisStateValidate(t *testing.T) {
 				},
 				GroupPolicies: []*GroupPolicyInfo{
 					{
-						Address:        accAddr.String(),
+						Address:        accStrAddr,
 						GroupId:        1,
-						Admin:          accAddr.String(),
+						Admin:          accStrAddr,
 						Version:        1,
 						Metadata:       "policy metadata",
 						DecisionPolicy: groupPolicy2.DecisionPolicy,
@@ -292,7 +299,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -302,7 +309,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						GroupId: 0,
 						Member: &Member{
-							Address: memberAddr.String(),
+							Address: memberStrAdrr,
 							Weight:  "1", Metadata: "member metadata",
 						},
 					},
@@ -316,7 +323,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -340,7 +347,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -350,7 +357,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					{
 						GroupId: 1,
 						Member: &Member{
-							Address: memberAddr.String(),
+							Address: memberStrAdrr,
 							Weight:  "-1", Metadata: "member metadata",
 						},
 					},
@@ -364,7 +371,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -376,7 +383,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 0,
-						GroupPolicyAddress: accAddr.String(),
+						GroupPolicyAddress: accStrAddr,
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
@@ -391,7 +398,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -418,7 +425,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -430,7 +437,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						GroupPolicyAddress: accAddr.String(),
+						GroupPolicyAddress: accStrAddr,
 						Metadata:           "proposal metadata",
 						GroupVersion:       0,
 						GroupPolicyVersion: 1,
@@ -445,7 +452,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -457,7 +464,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						GroupPolicyAddress: accAddr.String(),
+						GroupPolicyAddress: accStrAddr,
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 0,
@@ -472,7 +479,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -484,12 +491,12 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						GroupPolicyAddress: accAddr.String(),
+						GroupPolicyAddress: accStrAddr,
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
 						Proposers: []string{
-							memberAddr.String(),
+							memberStrAdrr,
 						},
 						SubmitTime: submittedAt,
 						Status:     PROPOSAL_STATUS_ACCEPTED,
@@ -510,7 +517,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -522,12 +529,12 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						GroupPolicyAddress: accAddr.String(),
+						GroupPolicyAddress: accStrAddr,
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
 						Proposers: []string{
-							memberAddr.String(),
+							memberStrAdrr,
 						},
 						SubmitTime: submittedAt,
 						Status:     PROPOSAL_STATUS_ACCEPTED,
@@ -548,7 +555,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -560,12 +567,12 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						GroupPolicyAddress: accAddr.String(),
+						GroupPolicyAddress: accStrAddr,
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
 						Proposers: []string{
-							memberAddr.String(),
+							memberStrAdrr,
 						},
 						SubmitTime: submittedAt,
 						Status:     PROPOSAL_STATUS_ACCEPTED,
@@ -586,7 +593,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -598,12 +605,12 @@ func TestGenesisStateValidate(t *testing.T) {
 				Proposals: []*Proposal{
 					{
 						Id:                 1,
-						GroupPolicyAddress: accAddr.String(),
+						GroupPolicyAddress: accStrAddr,
 						Metadata:           "proposal metadata",
 						GroupVersion:       1,
 						GroupPolicyVersion: 1,
 						Proposers: []string{
-							memberAddr.String(),
+							memberStrAdrr,
 						},
 						SubmitTime: submittedAt,
 						Status:     PROPOSAL_STATUS_ACCEPTED,
@@ -624,7 +631,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -653,7 +660,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -668,7 +675,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Votes: []*Vote{
 					{
 						ProposalId: 0,
-						Voter:      memberAddr.String(),
+						Voter:      memberStrAdrr,
 						SubmitTime: submittedAt,
 						Option:     VOTE_OPTION_YES,
 					},
@@ -682,7 +689,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -697,7 +704,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Votes: []*Vote{
 					{
 						ProposalId: 2,
-						Voter:      memberAddr.String(),
+						Voter:      memberStrAdrr,
 						SubmitTime: submittedAt,
 						Option:     VOTE_OPTION_YES,
 					},
@@ -711,7 +718,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Groups: []*GroupInfo{
 					{
 						Id:          1,
-						Admin:       accAddr.String(),
+						Admin:       accStrAddr,
 						Metadata:    "1",
 						Version:     1,
 						TotalWeight: "1",
@@ -726,7 +733,7 @@ func TestGenesisStateValidate(t *testing.T) {
 				Votes: []*Vote{
 					{
 						ProposalId: proposal.Id,
-						Voter:      memberAddr.String(),
+						Voter:      memberStrAdrr,
 						SubmitTime: submittedAt,
 						Option:     VOTE_OPTION_UNSPECIFIED,
 					},

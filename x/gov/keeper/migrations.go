@@ -36,10 +36,10 @@ func (m Migrator) Migrate3to4(ctx context.Context) error {
 
 // Migrate4to5 migrates from version 4 to 5.
 func (m Migrator) Migrate4to5(ctx context.Context) error {
-	return v5.MigrateStore(ctx, m.keeper.environment.KVStoreService, m.keeper.cdc, m.keeper.Constitution)
+	return v5.MigrateStore(ctx, m.keeper.KVStoreService, m.keeper.cdc, m.keeper.Constitution)
 }
 
-// Migrate4to5 migrates from version 5 to 6.
+// Migrate5to6 migrates from version 5 to 6.
 func (m Migrator) Migrate5to6(ctx context.Context) error {
-	return v6.MigrateStore(ctx, m.keeper.environment.KVStoreService, m.keeper.Params, m.keeper.Proposals)
+	return v6.MigrateStore(ctx, m.keeper.KVStoreService, m.keeper.Params, m.keeper.Proposals)
 }

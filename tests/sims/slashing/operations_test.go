@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
@@ -16,7 +16,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	authkeeper "cosmossdk.io/x/auth/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	distributionkeeper "cosmossdk.io/x/distribution/keeper"
@@ -37,6 +36,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 type SimTestSuite struct {
@@ -47,7 +47,6 @@ type SimTestSuite struct {
 	accounts []simtypes.Account
 
 	app               *runtime.App
-	legacyAmino       *codec.LegacyAmino
 	codec             codec.Codec
 	interfaceRegistry codectypes.InterfaceRegistry
 	txConfig          client.TxConfig
@@ -86,7 +85,6 @@ func (suite *SimTestSuite) SetupTest() {
 			depinject.Supply(log.NewNopLogger()),
 		),
 		startupCfg,
-		&suite.legacyAmino,
 		&suite.codec,
 		&suite.interfaceRegistry,
 		&suite.txConfig,
@@ -184,7 +182,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.Require().NoError(suite.distrKeeper.DelegatorStartingInfo.Set(ctx, collections.Join(val0AccAddress, sdk.AccAddress(val0AccAddress)), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	// begin a new block
-	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash, Time: blockTime})
+	_, err = suite.app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash, Time: blockTime})
 	suite.Require().NoError(err)
 
 	// execute operation

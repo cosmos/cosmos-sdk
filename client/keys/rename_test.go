@@ -51,7 +51,7 @@ func Test_runRenameCmd(t *testing.T) {
 	cmd.SetArgs([]string{fakeKeyName1, invalidName, fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome)})
 	require.ErrorContains(t, cmd.ExecuteContext(ctx), "the new name cannot be empty or consist solely of whitespace")
 
-	// rename a key 'blah' which doesnt exist
+	// rename a key 'blah' which doesn't exist
 	cmd.SetArgs([]string{"blah", "blaah", fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome)})
 	err = cmd.ExecuteContext(ctx)
 	require.Error(t, err)
@@ -101,7 +101,7 @@ func Test_runRenameCmd(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, oldAddr, renamedAddr)
 
-	// try to rename key1 but it doesnt exist anymore so error
+	// try to rename key1 but it doesn't exist anymore so error
 	cmd.SetArgs([]string{
 		fakeKeyName1,
 		fakeKeyName2,

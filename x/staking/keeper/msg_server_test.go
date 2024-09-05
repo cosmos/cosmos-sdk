@@ -4,22 +4,23 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -48,17 +49,21 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 	pubkeyInvalidLen, err := codectypes.NewAnyWithValue(ed25519pk)
 	require.NoError(err)
 
-	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
-		Validator: &cmtproto.ValidatorParams{
-			PubKeyTypes: []string{sdk.PubKeyEd25519Type},
-		},
-	})
+	invalidPk, _ := secp256r1.GenPrivKey()
+	invalidPubkey, err := codectypes.NewAnyWithValue(invalidPk.PubKey())
+	require.NoError(err)
+
+	badKey := secp256k1.GenPrivKey()
+	badPubKey, err := codectypes.NewAnyWithValue(&secp256k1.PubKey{Key: badKey.PubKey().Bytes()[:len(badKey.PubKey().Bytes())-1]})
+	require.NoError(err)
 
 	testCases := []struct {
-		name      string
-		input     *types.MsgCreateValidator
-		expErr    bool
-		expErrMsg string
+		name        string
+		input       *types.MsgCreateValidator
+		expErr      bool
+		expErrMsg   string
+		expPanic    bool
+		expPanicMsg string
 	}{
 		{
 			name: "empty description",
@@ -70,8 +75,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(1),
-				DelegatorAddress:  Addr.String(),
-				ValidatorAddress:  ValAddr.String(),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				Pubkey:            pubkey,
 				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
 			},
@@ -90,8 +95,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(1),
-				DelegatorAddress:  Addr.String(),
-				ValidatorAddress:  sdk.AccAddress([]byte("invalid")).String(),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.addressToString([]byte("invalid")),
 				Pubkey:            pubkey,
 				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
 			},
@@ -110,8 +115,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(1),
-				DelegatorAddress:  Addr.String(),
-				ValidatorAddress:  ValAddr.String(),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				Pubkey:            nil,
 				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
 			},
@@ -130,8 +135,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(1),
-				DelegatorAddress:  Addr.String(),
-				ValidatorAddress:  ValAddr.String(),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				Pubkey:            pubkeyInvalidLen,
 				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
 			},
@@ -150,8 +155,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(1),
-				DelegatorAddress:  Addr.String(),
-				ValidatorAddress:  ValAddr.String(),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				Pubkey:            pubkey,
 				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 0),
 			},
@@ -170,8 +175,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(1),
-				DelegatorAddress:  Addr.String(),
-				ValidatorAddress:  ValAddr.String(),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				Pubkey:            pubkey,
 				Value:             sdk.Coin{},
 			},
@@ -190,8 +195,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(0),
-				DelegatorAddress:  Addr.String(),
-				ValidatorAddress:  ValAddr.String(),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				Pubkey:            pubkey,
 				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
 			},
@@ -210,8 +215,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(-1),
-				DelegatorAddress:  Addr.String(),
-				ValidatorAddress:  ValAddr.String(),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				Pubkey:            pubkey,
 				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
 			},
@@ -230,13 +235,59 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(100),
-				DelegatorAddress:  Addr.String(),
-				ValidatorAddress:  ValAddr.String(),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				Pubkey:            pubkey,
 				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10),
 			},
 			expErr:    true,
 			expErrMsg: "validator's self delegation must be greater than their minimum self delegation",
+		},
+		{
+			name: "invalid pubkey type",
+			input: &types.MsgCreateValidator{
+				Description: types.Description{
+					Moniker:         "NewValidator",
+					Identity:        "xyz",
+					Website:         "xyz.com",
+					SecurityContact: "xyz@gmail.com",
+					Details:         "details",
+				},
+				Commission: types.CommissionRates{
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+					MaxChangeRate: math.LegacyNewDec(0),
+				},
+				MinSelfDelegation: math.NewInt(1),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
+				Pubkey:            invalidPubkey,
+				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
+			},
+			expErr:    true,
+			expErrMsg: "got: secp256r1, expected: [ed25519 secp256k1]: validator pubkey type is not supported",
+		},
+		{
+			name: "invalid pubkey length",
+			input: &types.MsgCreateValidator{
+				Description: types.Description{
+					Moniker:  "NewValidator",
+					Identity: "xyz",
+					Website:  "xyz.com",
+				},
+				Commission: types.CommissionRates{
+					Rate:          math.LegacyNewDecWithPrec(5, 1),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+					MaxChangeRate: math.LegacyNewDec(0),
+				},
+				MinSelfDelegation: math.NewInt(1),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
+				Pubkey:            badPubKey,
+				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
+			},
+			expPanic:    true,
+			expPanicMsg: "length of pubkey is incorrect",
 		},
 		{
 			name: "valid msg",
@@ -254,8 +305,8 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 					MaxChangeRate: math.LegacyNewDec(0),
 				},
 				MinSelfDelegation: math.NewInt(1),
-				DelegatorAddress:  Addr.String(),
-				ValidatorAddress:  ValAddr.String(),
+				DelegatorAddress:  s.addressToString(Addr),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				Pubkey:            pubkey,
 				Value:             sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000),
 			},
@@ -265,6 +316,13 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 	for _, tc := range testCases {
 		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
+			if tc.expPanic {
+				require.PanicsWithValue(tc.expPanicMsg, func() {
+					_, _ = msgServer.CreateValidator(ctx, tc.input)
+				})
+				return
+			}
+
 			_, err := msgServer.CreateValidator(ctx, tc.input)
 			if tc.expErr {
 				require.Error(err)
@@ -287,7 +345,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 	require.NotNil(pk)
 
 	comm := types.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
-	msg, err := types.NewMsgCreateValidator(ValAddr.String(), pk, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10)), types.Description{Moniker: "NewVal"}, comm, math.OneInt())
+	msg, err := types.NewMsgCreateValidator(s.valAddressToString(ValAddr), pk, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10)), types.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 
 	res, err := msgServer.CreateValidator(ctx, msg)
@@ -316,7 +374,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				Description: types.Description{
 					Moniker: "TestValidator",
 				},
-				ValidatorAddress:  sdk.AccAddress([]byte("invalid")).String(),
+				ValidatorAddress:  s.addressToString([]byte("invalid")),
 				CommissionRate:    &newRate,
 				MinSelfDelegation: &newSelfDel,
 			},
@@ -328,7 +386,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 			ctx:  newCtx,
 			input: &types.MsgEditValidator{
 				Description:       types.Description{},
-				ValidatorAddress:  ValAddr.String(),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				CommissionRate:    &newRate,
 				MinSelfDelegation: &newSelfDel,
 			},
@@ -342,7 +400,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				Description: types.Description{
 					Moniker: "TestValidator",
 				},
-				ValidatorAddress:  ValAddr.String(),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				CommissionRate:    &newRate,
 				MinSelfDelegation: &negSelfDel,
 			},
@@ -356,7 +414,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				Description: types.Description{
 					Moniker: "TestValidator",
 				},
-				ValidatorAddress:  ValAddr.String(),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				CommissionRate:    &invalidRate,
 				MinSelfDelegation: &newSelfDel,
 			},
@@ -370,7 +428,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				Description: types.Description{
 					Moniker: "TestValidator",
 				},
-				ValidatorAddress:  sdk.ValAddress([]byte("val")).String(),
+				ValidatorAddress:  s.valAddressToString([]byte("val")),
 				CommissionRate:    &newRate,
 				MinSelfDelegation: &newSelfDel,
 			},
@@ -378,13 +436,13 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 			expErrMsg: "validator does not exist",
 		},
 		{
-			name: "change commmission rate in <24hrs",
+			name: "change commission rate in <24hrs",
 			ctx:  ctx,
 			input: &types.MsgEditValidator{
 				Description: types.Description{
 					Moniker: "TestValidator",
 				},
-				ValidatorAddress:  ValAddr.String(),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				CommissionRate:    &newRate,
 				MinSelfDelegation: &newSelfDel,
 			},
@@ -398,7 +456,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				Description: types.Description{
 					Moniker: "TestValidator",
 				},
-				ValidatorAddress:  ValAddr.String(),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				CommissionRate:    &newRate,
 				MinSelfDelegation: &lowSelfDel,
 			},
@@ -412,7 +470,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				Description: types.Description{
 					Moniker: "TestValidator",
 				},
-				ValidatorAddress:  ValAddr.String(),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				CommissionRate:    &newRate,
 				MinSelfDelegation: &highSelfDel,
 			},
@@ -430,7 +488,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 					SecurityContact: "abc@gmail.com",
 					Details:         "newDetails",
 				},
-				ValidatorAddress:  ValAddr.String(),
+				ValidatorAddress:  s.valAddressToString(ValAddr),
 				CommissionRate:    &newRate,
 				MinSelfDelegation: &newSelfDel,
 			},
@@ -461,7 +519,7 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 
 	comm := types.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 
-	msg, err := types.NewMsgCreateValidator(ValAddr.String(), pk, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10)), types.Description{Moniker: "NewVal"}, comm, math.OneInt())
+	msg, err := types.NewMsgCreateValidator(s.valAddressToString(ValAddr), pk, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10)), types.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 
 	res, err := msgServer.CreateValidator(ctx, msg)
@@ -477,8 +535,8 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 		{
 			name: "invalid validator",
 			input: &types.MsgDelegate{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: sdk.AccAddress([]byte("invalid")).String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.addressToString([]byte("invalid")),
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
 			},
 			expErr:    true,
@@ -488,7 +546,7 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 			name: "empty delegator",
 			input: &types.MsgDelegate{
 				DelegatorAddress: "",
-				ValidatorAddress: ValAddr.String(),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
 			},
 			expErr:    true,
@@ -498,7 +556,7 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 			name: "invalid delegator",
 			input: &types.MsgDelegate{
 				DelegatorAddress: "invalid",
-				ValidatorAddress: ValAddr.String(),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
 			},
 			expErr:    true,
@@ -507,8 +565,8 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 		{
 			name: "validator does not exist",
 			input: &types.MsgDelegate{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: sdk.ValAddress([]byte("val")).String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString([]byte("val")),
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
 			},
 			expErr:    true,
@@ -517,8 +575,8 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 		{
 			name: "zero amount",
 			input: &types.MsgDelegate{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: ValAddr.String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(0))},
 			},
 			expErr:    true,
@@ -527,8 +585,8 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 		{
 			name: "negative amount",
 			input: &types.MsgDelegate{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: ValAddr.String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(-1))},
 			},
 			expErr:    true,
@@ -537,8 +595,8 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 		{
 			name: "invalid BondDenom",
 			input: &types.MsgDelegate{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: ValAddr.String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.Coin{Denom: "test", Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
 			},
 			expErr:    true,
@@ -547,8 +605,8 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 		{
 			name: "valid msg",
 			input: &types.MsgDelegate{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: ValAddr.String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
 			},
 			expErr: false,
@@ -586,14 +644,14 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 	comm := types.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 	amt := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))}
 
-	msg, err := types.NewMsgCreateValidator(srcValAddr.String(), pk, amt, types.Description{Moniker: "NewVal"}, comm, math.OneInt())
+	msg, err := types.NewMsgCreateValidator(s.valAddressToString(srcValAddr), pk, amt, types.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 	res, err := msgServer.CreateValidator(ctx, msg)
 	require.NoError(err)
 	require.NotNil(res)
 	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), addr2, types.NotBondedPoolName, gomock.Any()).AnyTimes()
 
-	msg, err = types.NewMsgCreateValidator(dstValAddr.String(), dstPk, amt, types.Description{Moniker: "NewVal"}, comm, math.OneInt())
+	msg, err = types.NewMsgCreateValidator(s.valAddressToString(dstValAddr), dstPk, amt, types.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 
 	res, err = msgServer.CreateValidator(ctx, msg)
@@ -601,7 +659,7 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 	require.NotNil(res)
 
 	shares := math.LegacyNewDec(100)
-	del := types.NewDelegation(Addr.String(), srcValAddr.String(), shares)
+	del := types.NewDelegation(s.addressToString(Addr), s.valAddressToString(srcValAddr), shares)
 	require.NoError(keeper.SetDelegation(ctx, del))
 	_, err = keeper.Delegations.Get(ctx, collections.Join(Addr, srcValAddr))
 	require.NoError(err)
@@ -615,9 +673,9 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 		{
 			name: "invalid source validator",
 			input: &types.MsgBeginRedelegate{
-				DelegatorAddress:    Addr.String(),
-				ValidatorSrcAddress: sdk.AccAddress([]byte("invalid")).String(),
-				ValidatorDstAddress: dstValAddr.String(),
+				DelegatorAddress:    s.addressToString(Addr),
+				ValidatorSrcAddress: s.addressToString([]byte("invalid")),
+				ValidatorDstAddress: s.valAddressToString(dstValAddr),
 				Amount:              sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 			},
 			expErr:    true,
@@ -627,8 +685,8 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 			name: "empty delegator",
 			input: &types.MsgBeginRedelegate{
 				DelegatorAddress:    "",
-				ValidatorSrcAddress: srcValAddr.String(),
-				ValidatorDstAddress: dstValAddr.String(),
+				ValidatorSrcAddress: s.valAddressToString(srcValAddr),
+				ValidatorDstAddress: s.valAddressToString(dstValAddr),
 				Amount:              sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
 			},
 			expErr:    true,
@@ -638,8 +696,8 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 			name: "invalid delegator",
 			input: &types.MsgBeginRedelegate{
 				DelegatorAddress:    "invalid",
-				ValidatorSrcAddress: srcValAddr.String(),
-				ValidatorDstAddress: dstValAddr.String(),
+				ValidatorSrcAddress: s.valAddressToString(srcValAddr),
+				ValidatorDstAddress: s.valAddressToString(dstValAddr),
 				Amount:              sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))},
 			},
 			expErr:    true,
@@ -648,9 +706,9 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 		{
 			name: "invalid destination validator",
 			input: &types.MsgBeginRedelegate{
-				DelegatorAddress:    Addr.String(),
-				ValidatorSrcAddress: srcValAddr.String(),
-				ValidatorDstAddress: sdk.AccAddress([]byte("invalid")).String(),
+				DelegatorAddress:    s.addressToString(Addr),
+				ValidatorSrcAddress: s.valAddressToString(srcValAddr),
+				ValidatorDstAddress: s.addressToString([]byte("invalid")),
 				Amount:              sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 			},
 			expErr:    true,
@@ -659,9 +717,9 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 		{
 			name: "validator does not exist",
 			input: &types.MsgBeginRedelegate{
-				DelegatorAddress:    Addr.String(),
-				ValidatorSrcAddress: sdk.ValAddress([]byte("invalid")).String(),
-				ValidatorDstAddress: dstValAddr.String(),
+				DelegatorAddress:    s.addressToString(Addr),
+				ValidatorSrcAddress: s.valAddressToString(sdk.ValAddress([]byte("invalid"))),
+				ValidatorDstAddress: s.valAddressToString(dstValAddr),
 				Amount:              sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 			},
 			expErr:    true,
@@ -670,9 +728,9 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 		{
 			name: "self redelegation",
 			input: &types.MsgBeginRedelegate{
-				DelegatorAddress:    Addr.String(),
-				ValidatorSrcAddress: srcValAddr.String(),
-				ValidatorDstAddress: srcValAddr.String(),
+				DelegatorAddress:    s.addressToString(Addr),
+				ValidatorSrcAddress: s.valAddressToString(srcValAddr),
+				ValidatorDstAddress: s.valAddressToString(srcValAddr),
 				Amount:              sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 			},
 			expErr:    true,
@@ -681,9 +739,9 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 		{
 			name: "amount greater than delegated shares amount",
 			input: &types.MsgBeginRedelegate{
-				DelegatorAddress:    Addr.String(),
-				ValidatorSrcAddress: srcValAddr.String(),
-				ValidatorDstAddress: dstValAddr.String(),
+				DelegatorAddress:    s.addressToString(Addr),
+				ValidatorSrcAddress: s.valAddressToString(srcValAddr),
+				ValidatorDstAddress: s.valAddressToString(dstValAddr),
 				Amount:              sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(101)),
 			},
 			expErr:    true,
@@ -692,9 +750,9 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 		{
 			name: "zero amount",
 			input: &types.MsgBeginRedelegate{
-				DelegatorAddress:    Addr.String(),
-				ValidatorSrcAddress: srcValAddr.String(),
-				ValidatorDstAddress: dstValAddr.String(),
+				DelegatorAddress:    s.addressToString(Addr),
+				ValidatorSrcAddress: s.valAddressToString(srcValAddr),
+				ValidatorDstAddress: s.valAddressToString(dstValAddr),
 				Amount:              sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)),
 			},
 			expErr:    true,
@@ -703,9 +761,9 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 		{
 			name: "invalid coin denom",
 			input: &types.MsgBeginRedelegate{
-				DelegatorAddress:    Addr.String(),
-				ValidatorSrcAddress: srcValAddr.String(),
-				ValidatorDstAddress: dstValAddr.String(),
+				DelegatorAddress:    s.addressToString(Addr),
+				ValidatorSrcAddress: s.valAddressToString(srcValAddr),
+				ValidatorDstAddress: s.valAddressToString(dstValAddr),
 				Amount:              sdk.NewCoin("test", shares.RoundInt()),
 			},
 			expErr:    true,
@@ -714,9 +772,9 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 		{
 			name: "valid msg",
 			input: &types.MsgBeginRedelegate{
-				DelegatorAddress:    Addr.String(),
-				ValidatorSrcAddress: srcValAddr.String(),
-				ValidatorDstAddress: dstValAddr.String(),
+				DelegatorAddress:    s.addressToString(Addr),
+				ValidatorSrcAddress: s.valAddressToString(srcValAddr),
+				ValidatorDstAddress: s.valAddressToString(dstValAddr),
 				Amount:              sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 			},
 			expErr: false,
@@ -748,14 +806,14 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 	comm := types.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 	amt := sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: keeper.TokensFromConsensusPower(s.ctx, int64(100))}
 
-	msg, err := types.NewMsgCreateValidator(ValAddr.String(), pk, amt, types.Description{Moniker: "NewVal"}, comm, math.OneInt())
+	msg, err := types.NewMsgCreateValidator(s.valAddressToString(ValAddr), pk, amt, types.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 	res, err := msgServer.CreateValidator(ctx, msg)
 	require.NoError(err)
 	require.NotNil(res)
 
 	shares := math.LegacyNewDec(100)
-	del := types.NewDelegation(Addr.String(), ValAddr.String(), shares)
+	del := types.NewDelegation(s.addressToString(Addr), s.valAddressToString(ValAddr), shares)
 	require.NoError(keeper.SetDelegation(ctx, del))
 	_, err = keeper.Delegations.Get(ctx, collections.Join(Addr, ValAddr))
 	require.NoError(err)
@@ -769,8 +827,8 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 		{
 			name: "invalid validator",
 			input: &types.MsgUndelegate{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: sdk.AccAddress([]byte("invalid")).String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.addressToString([]byte("invalid")),
 				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 			},
 			expErr:    true,
@@ -780,7 +838,7 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 			name: "empty delegator",
 			input: &types.MsgUndelegate{
 				DelegatorAddress: "",
-				ValidatorAddress: ValAddr.String(),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: shares.RoundInt()},
 			},
 			expErr:    true,
@@ -790,7 +848,7 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 			name: "invalid delegator",
 			input: &types.MsgUndelegate{
 				DelegatorAddress: "invalid",
-				ValidatorAddress: ValAddr.String(),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: shares.RoundInt()},
 			},
 			expErr:    true,
@@ -799,8 +857,8 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 		{
 			name: "validator does not exist",
 			input: &types.MsgUndelegate{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: sdk.ValAddress([]byte("invalid")).String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString([]byte("invalid")),
 				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 			},
 			expErr:    true,
@@ -809,8 +867,8 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 		{
 			name: "amount greater than delegated shares amount",
 			input: &types.MsgUndelegate{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: ValAddr.String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(101)),
 			},
 			expErr:    true,
@@ -819,8 +877,8 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 		{
 			name: "zero amount",
 			input: &types.MsgUndelegate{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: ValAddr.String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)),
 			},
 			expErr:    true,
@@ -829,8 +887,8 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 		{
 			name: "invalid coin denom",
 			input: &types.MsgUndelegate{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: ValAddr.String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.NewCoin("test", shares.RoundInt()),
 			},
 			expErr:    true,
@@ -839,8 +897,8 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 		{
 			name: "valid msg",
 			input: &types.MsgUndelegate{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: ValAddr.String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 			},
 			expErr: false,
@@ -873,14 +931,14 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 
 	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), Addr, types.NotBondedPoolName, gomock.Any()).AnyTimes()
 
-	msg, err := types.NewMsgCreateValidator(ValAddr.String(), pk, amt, types.Description{Moniker: "NewVal"}, comm, math.OneInt())
+	msg, err := types.NewMsgCreateValidator(s.valAddressToString(ValAddr), pk, amt, types.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 	res, err := msgServer.CreateValidator(ctx, msg)
 	require.NoError(err)
 	require.NotNil(res)
 
 	shares := math.LegacyNewDec(100)
-	del := types.NewDelegation(Addr.String(), ValAddr.String(), shares)
+	del := types.NewDelegation(s.addressToString(Addr), s.valAddressToString(ValAddr), shares)
 	require.NoError(keeper.SetDelegation(ctx, del))
 	resDel, err := keeper.Delegations.Get(ctx, collections.Join(Addr, ValAddr))
 	require.NoError(err)
@@ -901,8 +959,8 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 		{
 			name: "invalid validator",
 			input: &types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: sdk.AccAddress([]byte("invalid")).String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.addressToString([]byte("invalid")),
 				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 				CreationHeight:   10,
 			},
@@ -913,7 +971,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 			name: "empty delegator",
 			input: &types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: "",
-				ValidatorAddress: ValAddr.String(),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 				CreationHeight:   10,
 			},
@@ -924,7 +982,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 			name: "invalid delegator",
 			input: &types.MsgCancelUnbondingDelegation{
 				DelegatorAddress: "invalid",
-				ValidatorAddress: ValAddr.String(),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 				CreationHeight:   10,
 			},
@@ -934,8 +992,8 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 		{
 			name: "entry not found at height",
 			input: &types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: ValAddr.String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 				CreationHeight:   11,
 			},
@@ -945,8 +1003,8 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 		{
 			name: "invalid height",
 			input: &types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: ValAddr.String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 				CreationHeight:   -1,
 			},
@@ -956,8 +1014,8 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 		{
 			name: "invalid coin",
 			input: &types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: ValAddr.String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.NewCoin("test", shares.RoundInt()),
 				CreationHeight:   10,
 			},
@@ -967,8 +1025,8 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 		{
 			name: "validator does not exist",
 			input: &types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: sdk.ValAddress([]byte("invalid")).String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString([]byte("invalid")),
 				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 				CreationHeight:   10,
 			},
@@ -978,8 +1036,8 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 		{
 			name: "amount is greater than balance",
 			input: &types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: ValAddr.String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(101)),
 				CreationHeight:   10,
 			},
@@ -989,8 +1047,8 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 		{
 			name: "zero amount",
 			input: &types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: ValAddr.String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0)),
 				CreationHeight:   10,
 			},
@@ -1000,8 +1058,8 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 		{
 			name: "valid msg",
 			input: &types.MsgCancelUnbondingDelegation{
-				DelegatorAddress: Addr.String(),
-				ValidatorAddress: ValAddr.String(),
+				DelegatorAddress: s.addressToString(Addr),
+				ValidatorAddress: s.valAddressToString(ValAddr),
 				Amount:           sdk.NewCoin(sdk.DefaultBondDenom, shares.RoundInt()),
 				CreationHeight:   10,
 			},
@@ -1032,7 +1090,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	require.NotNil(pk)
 	comm := types.NewCommissionRates(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
 	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), Addr, types.NotBondedPoolName, gomock.Any()).AnyTimes()
-	msg, err := types.NewMsgCreateValidator(ValAddr.String(), pk, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10)), types.Description{Moniker: "NewVal"}, comm, math.OneInt())
+	msg, err := types.NewMsgCreateValidator(s.valAddressToString(ValAddr), pk, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10)), types.Description{Moniker: "NewVal"}, comm, math.OneInt())
 	require.NoError(err)
 	_, err = msgServer.CreateValidator(ctx, msg)
 	require.NoError(err)
@@ -1091,7 +1149,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					UnbondingTime:     types.DefaultUnbondingTime,
 					MaxValidators:     types.DefaultMaxValidators,
 					MaxEntries:        types.DefaultMaxEntries,
-					HistoricalEntries: types.DefaultHistoricalEntries,
+					HistoricalEntries: 0,
 					BondDenom:         types.BondStatusBonded,
 				},
 			},
@@ -1106,7 +1164,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					UnbondingTime:     types.DefaultUnbondingTime,
 					MaxValidators:     types.DefaultMaxValidators,
 					MaxEntries:        types.DefaultMaxEntries,
-					HistoricalEntries: types.DefaultHistoricalEntries,
+					HistoricalEntries: 0,
 					BondDenom:         types.BondStatusBonded,
 				},
 			},
@@ -1121,7 +1179,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					UnbondingTime:     types.DefaultUnbondingTime,
 					MaxValidators:     types.DefaultMaxValidators,
 					MaxEntries:        types.DefaultMaxEntries,
-					HistoricalEntries: types.DefaultHistoricalEntries,
+					HistoricalEntries: 0,
 					BondDenom:         "",
 				},
 			},
@@ -1136,7 +1194,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					UnbondingTime:     types.DefaultUnbondingTime,
 					MaxValidators:     0,
 					MaxEntries:        types.DefaultMaxEntries,
-					HistoricalEntries: types.DefaultHistoricalEntries,
+					HistoricalEntries: 0,
 					BondDenom:         types.BondStatusBonded,
 				},
 			},
@@ -1151,7 +1209,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					UnbondingTime:     types.DefaultUnbondingTime,
 					MaxValidators:     types.DefaultMaxValidators,
 					MaxEntries:        0,
-					HistoricalEntries: types.DefaultHistoricalEntries,
+					HistoricalEntries: 0,
 					BondDenom:         types.BondStatusBonded,
 				},
 			},
@@ -1165,12 +1223,12 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 					UnbondingTime:     time.Hour * 24 * 7 * 3 * -1,
 					MaxEntries:        types.DefaultMaxEntries,
 					MaxValidators:     types.DefaultMaxValidators,
-					HistoricalEntries: types.DefaultHistoricalEntries,
+					HistoricalEntries: 0,
 					MinCommissionRate: types.DefaultMinCommissionRate,
 					BondDenom:         "denom",
 				},
 			},
-			expErrMsg: "unbonding time must be positive",
+			expErrMsg: "unbonding time must not be negative",
 		},
 	}
 
@@ -1205,9 +1263,18 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 	existingPubkey, ok := validators[1].ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
 	s.Require().True(ok)
 
+	validator0PubKey, ok := validators[0].ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
+	s.Require().True(ok)
+
 	bondedPool := authtypes.NewEmptyModuleAccount(types.BondedPoolName)
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.BondedPoolName).Return(bondedPool).AnyTimes()
 	bankKeeper.EXPECT().GetBalance(gomock.Any(), bondedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
+
+	invalidPK, _ := secp256r1.GenPrivKey()
+	invalidPubkey := invalidPK.PubKey()
+
+	badKey := secp256k1.GenPrivKey()
+	badPubKey := &secp256k1.PubKey{Key: badKey.PubKey().Bytes()[:len(badKey.PubKey().Bytes())-1]}
 
 	testCases := []struct {
 		name      string
@@ -1216,6 +1283,8 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 		newPubKey cryptotypes.PubKey
 		isErr     bool
 		errMsg    string
+		isPanic   bool
+		panicMsg  string
 	}{
 		{
 			name: "1st iteration no error",
@@ -1232,10 +1301,26 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			validator: validators[0].GetOperator(),
 		},
 		{
+			name:      "invalid pubkey type",
+			malleate:  func() sdk.Context { return ctx },
+			isErr:     true,
+			errMsg:    "secp256r1, expected: [ed25519 secp256k1]: validator pubkey type is not supported",
+			newPubKey: invalidPubkey,
+			validator: validators[0].GetOperator(),
+		},
+		{
+			name:      "invalid pubkey length",
+			malleate:  func() sdk.Context { return ctx },
+			isPanic:   true,
+			panicMsg:  "length of pubkey is incorrect",
+			newPubKey: badPubKey,
+			validator: validators[0].GetOperator(),
+		},
+		{
 			name:      "pubkey already associated with another validator",
 			malleate:  func() sdk.Context { return ctx },
 			isErr:     true,
-			errMsg:    "consensus pubkey is already used for a validator",
+			errMsg:    "validator already exist for this pubkey; must use new validator pubkey",
 			newPubKey: existingPubkey,
 			validator: validators[0].GetOperator(),
 		},
@@ -1350,6 +1435,20 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			errMsg:    "exceeding maximum consensus pubkey rotations within unbonding period",
 			validator: validators[5].GetOperator(),
 		},
+		{
+			name: "try using the old pubkey of another validator that rotated",
+			malleate: func() sdk.Context {
+				val, err := stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[0].GetOperator())
+				s.Require().NoError(err)
+
+				bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), sdk.AccAddress(val), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				return ctx
+			},
+			isErr:     true,
+			errMsg:    "validator already exist for this pubkey; must use new validator pubkey",
+			newPubKey: validator0PubKey,
+			validator: validators[2].GetOperator(),
+		},
 	}
 
 	for _, tc := range testCases {
@@ -1359,7 +1458,15 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			req, err := types.NewMsgRotateConsPubKey(tc.validator, tc.newPubKey)
 			s.Require().NoError(err)
 
-			_, err = msgServer.RotateConsPubKey(newCtx, req)
+			if tc.isPanic {
+				s.Require().PanicsWithValue(tc.panicMsg, func() {
+					_, err = msgServer.RotateConsPubKey(ctx, req)
+				}, tc.isPanic)
+				return
+			} else {
+				_, err = msgServer.RotateConsPubKey(newCtx, req)
+			}
+
 			if tc.isErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.errMsg)
@@ -1377,4 +1484,31 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 			}
 		})
 	}
+}
+
+// TestConsKeyRotationInSameBlock tests the scenario where multiple validators try to
+// rotate to the **same** consensus key in the same block.
+func (s *KeeperTestSuite) TestConsKeyRotationInSameBlock() {
+	stakingKeeper, ctx := s.stakingKeeper, s.ctx
+
+	msgServer := stakingkeeper.NewMsgServerImpl(stakingKeeper)
+	s.setValidators(2)
+	validators, err := stakingKeeper.GetAllValidators(ctx)
+	s.Require().NoError(err)
+
+	s.Require().Len(validators, 2)
+
+	req, err := types.NewMsgRotateConsPubKey(validators[0].GetOperator(), PKs[444])
+	s.Require().NoError(err)
+
+	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	_, err = msgServer.RotateConsPubKey(ctx, req)
+	s.Require().NoError(err)
+
+	req, err = types.NewMsgRotateConsPubKey(validators[1].GetOperator(), PKs[444])
+	s.Require().NoError(err)
+
+	_, err = msgServer.RotateConsPubKey(ctx, req)
+	s.Require().ErrorContains(err, "public key was already used")
 }

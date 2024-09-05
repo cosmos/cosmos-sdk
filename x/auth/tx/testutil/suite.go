@@ -3,11 +3,12 @@ package testutil
 import (
 	"bytes"
 	"context"
+	"strings"
 
 	"github.com/stretchr/testify/suite"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	"cosmossdk.io/x/auth/signing"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -16,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // TxConfigTestSuite provides a test suite that can be used to test that a TxConfig implementation is correct.
@@ -74,7 +76,8 @@ func (s *TxConfigTestSuite) TestTxBuilderSetMsgs() {
 	err := txBuilder.SetMsgs(msgs...)
 	s.Require().NoError(err)
 	tx := txBuilder.GetTx()
-	s.Require().Equal(msgs, tx.GetMsgs())
+	unbuiltMsgs := tx.GetMsgs()
+	s.Require().Equal(msgs, unbuiltMsgs)
 	signers, err := tx.GetSigners()
 	s.Require().NoError(err)
 	s.Require().Equal([][]byte{addr1, addr2}, signers)
@@ -242,6 +245,8 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	gasLimit := uint64(50000)
 	memo := "foomemo"
 	msg := testdata.NewTestMsg(addr)
+	pi := "3.141590000000000000"
+	msg.DecField = math.LegacyMustNewDecFromStr(pi)
 	dummySig := []byte("dummySig")
 	sig := signingtypes.SignatureV2{
 		PubKey: pubkey,
@@ -286,6 +291,9 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	jsonTxBytes, err := s.TxConfig.TxJSONEncoder()(tx)
 	s.Require().NoError(err)
 	s.Require().NotNil(jsonTxBytes)
+	// ensure the JSON representation contains the human read-able decimal value
+	s.Require().True(strings.Contains(string(jsonTxBytes), pi),
+		"expected %s to contain %s", string(jsonTxBytes), pi)
 
 	log("JSON decode transaction")
 	tx2, err = s.TxConfig.TxJSONDecoder()(jsonTxBytes)
@@ -302,6 +310,8 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	pks, err = tx3.GetPubKeys()
 	s.Require().NoError(err)
 	s.Require().Equal([]cryptotypes.PubKey{pubkey}, pks)
+	msg2 := tx2.GetMsgs()[0].(*testdata.TestMsg)
+	s.Require().Equal(pi, msg2.DecField.String())
 }
 
 func (s *TxConfigTestSuite) TestWrapTxBuilder() {
@@ -322,5 +332,12 @@ func (s *TxConfigTestSuite) TestWrapTxBuilder() {
 	newTxBldr, err := s.TxConfig.WrapTxBuilder(tx)
 	s.Require().NoError(err)
 	txBuilder.SetFeePayer(tx.FeePayer()) // NOTE: fee payer will be populated even if empty.
-	s.Require().Equal(txBuilder.GetTx(), newTxBldr.GetTx())
+	tx1 := txBuilder.GetTx()
+	tx2 := newTxBldr.GetTx()
+
+	tx1Bytes, err := s.TxConfig.TxEncoder()(tx1)
+	s.Require().NoError(err)
+	tx2Bytes, err := s.TxConfig.TxEncoder()(tx2)
+	s.Require().NoError(err)
+	s.Require().Equal(tx1Bytes, tx2Bytes)
 }

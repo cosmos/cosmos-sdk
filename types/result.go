@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"strings"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -159,13 +160,13 @@ func ParseABCILogs(logs string) (res ABCIMessageLogs, err error) {
 	return res, err
 }
 
-var _, _ codectypes.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
+var _, _ gogoprotoany.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 //
 // types.UnpackInterfaces needs to be called for each nested Tx because
 // there are generally interfaces to unpack in Tx's
-func (s SearchTxsResult) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (s SearchTxsResult) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	for _, tx := range s.Txs {
 		err := codectypes.UnpackInterfaces(tx, unpacker)
 		if err != nil {
@@ -176,7 +177,7 @@ func (s SearchTxsResult) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (r TxResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (r TxResponse) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	if r.Tx != nil {
 		var tx HasMsgs
 		return unpacker.UnpackAny(r.Tx, &tx)

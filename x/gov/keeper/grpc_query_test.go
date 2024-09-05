@@ -19,7 +19,8 @@ import (
 func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
-
+	govAcctStr, err := suite.acctKeeper.AddressCodec().BytesToString(govAcct)
+	suite.Require().NoError(err)
 	var (
 		req         *v1.QueryProposalRequest
 		expProposal v1.Proposal
@@ -56,7 +57,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 			func() {
 				req = &v1.QueryProposalRequest{ProposalId: 1}
 				testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
-				msgContent, err := v1.NewLegacyContent(testProposal, govAcct.String())
+				msgContent, err := v1.NewLegacyContent(testProposal, govAcctStr)
 				suite.Require().NoError(err)
 				submittedProposal, err := suite.govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "", "title", "summary", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 				suite.Require().NoError(err)
@@ -102,6 +103,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryConstitution() {
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
+	govAcctStr, err := suite.acctKeeper.AddressCodec().BytesToString(govAcct)
+	suite.Require().NoError(err)
 
 	var (
 		req         *v1beta1.QueryProposalRequest
@@ -139,7 +142,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 			func() {
 				req = &v1beta1.QueryProposalRequest{ProposalId: 1}
 				testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
-				msgContent, err := v1.NewLegacyContent(testProposal, govAcct.String())
+				msgContent, err := v1.NewLegacyContent(testProposal, govAcctStr)
 				suite.Require().NoError(err)
 				submittedProposal, err := suite.govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "", "title", "summary", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 				suite.Require().NoError(err)
@@ -155,7 +158,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 			func() {
 				req = &v1beta1.QueryProposalRequest{ProposalId: 2}
 				testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
-				msgContent, err := v1.NewLegacyContent(testProposal, govAcct.String())
+				msgContent, err := v1.NewLegacyContent(testProposal, govAcctStr)
 				suite.Require().NoError(err)
 				submittedProposal, err := suite.govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "", "title", "summary", addrs[0], v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 				suite.Require().NoError(err)
@@ -191,7 +194,8 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
-
+	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	suite.Require().NoError(err)
 	testProposals := []*v1.Proposal{}
 
 	var (
@@ -216,7 +220,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 			func() {
 				// create 5 test proposals
 				for i := 0; i < 5; i++ {
-					govAddress := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
+					govAddress, err := suite.acctKeeper.AddressCodec().BytesToString(suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress())
+					suite.Require().NoError(err)
 					testProposal := []sdk.Msg{
 						v1.NewMsgVote(govAddress, uint64(i), v1.OptionYes, ""),
 					}
@@ -279,12 +284,12 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 			"request with filter of deposit address",
 			func() {
 				depositCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.stakingKeeper.TokensFromConsensusPower(ctx, 20)))
-				deposit := v1.NewDeposit(testProposals[0].Id, addrs[0], depositCoins)
+				deposit := v1.NewDeposit(testProposals[0].Id, addr0Str, depositCoins)
 				err := suite.govKeeper.SetDeposit(ctx, deposit)
 				suite.Require().NoError(err)
 
 				req = &v1.QueryProposalsRequest{
-					Depositor: addrs[0].String(),
+					Depositor: addr0Str,
 				}
 
 				expRes = &v1.QueryProposalsResponse{
@@ -302,7 +307,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 				suite.Require().NoError(suite.govKeeper.AddVote(ctx, testProposals[1].Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionAbstain), ""))
 
 				req = &v1.QueryProposalsRequest{
-					Voter: addrs[0].String(),
+					Voter: addr0Str,
 				}
 
 				expRes = &v1.QueryProposalsResponse{
@@ -406,6 +411,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposals() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
+	govAcctStr, err := suite.acctKeeper.AddressCodec().BytesToString(govAcct)
+	suite.Require().NoError(err)
 
 	var req *v1beta1.QueryProposalsRequest
 
@@ -419,7 +426,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposals() {
 			func() {
 				req = &v1beta1.QueryProposalsRequest{}
 				testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
-				msgContent, err := v1.NewLegacyContent(testProposal, govAcct.String())
+				msgContent, err := v1.NewLegacyContent(testProposal, govAcctStr)
 				suite.Require().NoError(err)
 				submittedProposal, err := suite.govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "", "title", "summary", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 				suite.Require().NoError(err)
@@ -451,6 +458,10 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposals() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
+	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	suite.Require().NoError(err)
+	addr1Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[1])
+	suite.Require().NoError(err)
 
 	var (
 		req      *v1.QueryVoteRequest
@@ -475,7 +486,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			func() {
 				req = &v1.QueryVoteRequest{
 					ProposalId: 0,
-					Voter:      addrs[0].String(),
+					Voter:      addr0Str,
 				}
 			},
 			false,
@@ -495,7 +506,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			func() {
 				req = &v1.QueryVoteRequest{
 					ProposalId: 3,
-					Voter:      addrs[0].String(),
+					Voter:      addr0Str,
 				}
 			},
 			false,
@@ -509,7 +520,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 
 				req = &v1.QueryVoteRequest{
 					ProposalId: proposal.Id,
-					Voter:      addrs[0].String(),
+					Voter:      addr0Str,
 				}
 
 				expRes = &v1.QueryVoteResponse{}
@@ -526,10 +537,10 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 
 				req = &v1.QueryVoteRequest{
 					ProposalId: proposal.Id,
-					Voter:      addrs[0].String(),
+					Voter:      addr0Str,
 				}
 
-				expRes = &v1.QueryVoteResponse{Vote: &v1.Vote{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: []*v1.WeightedVoteOption{{Option: v1.OptionAbstain, Weight: math.LegacyMustNewDecFromStr("1.0").String()}}}}
+				expRes = &v1.QueryVoteResponse{Vote: &v1.Vote{ProposalId: proposal.Id, Voter: addr0Str, Options: []*v1.WeightedVoteOption{{Option: v1.OptionAbstain, Weight: math.LegacyMustNewDecFromStr("1.0").String()}}}}
 			},
 			true,
 		},
@@ -538,7 +549,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 			func() {
 				req = &v1.QueryVoteRequest{
 					ProposalId: proposal.Id,
-					Voter:      addrs[1].String(),
+					Voter:      addr1Str,
 				}
 
 				expRes = &v1.QueryVoteResponse{}
@@ -568,7 +579,10 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
-
+	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	suite.Require().NoError(err)
+	addr1Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[1])
+	suite.Require().NoError(err)
 	var (
 		req      *v1beta1.QueryVoteRequest
 		expRes   *v1beta1.QueryVoteResponse
@@ -592,7 +606,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 			func() {
 				req = &v1beta1.QueryVoteRequest{
 					ProposalId: 0,
-					Voter:      addrs[0].String(),
+					Voter:      addr0Str,
 				}
 			},
 			false,
@@ -612,7 +626,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 			func() {
 				req = &v1beta1.QueryVoteRequest{
 					ProposalId: 3,
-					Voter:      addrs[0].String(),
+					Voter:      addr0Str,
 				}
 			},
 			false,
@@ -626,7 +640,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 
 				req = &v1beta1.QueryVoteRequest{
 					ProposalId: proposal.Id,
-					Voter:      addrs[0].String(),
+					Voter:      addr0Str,
 				}
 
 				expRes = &v1beta1.QueryVoteResponse{}
@@ -643,10 +657,10 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 
 				req = &v1beta1.QueryVoteRequest{
 					ProposalId: proposal.Id,
-					Voter:      addrs[0].String(),
+					Voter:      addr0Str,
 				}
 
-				expRes = &v1beta1.QueryVoteResponse{Vote: v1beta1.Vote{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: []v1beta1.WeightedVoteOption{{Option: v1beta1.OptionAbstain, Weight: math.LegacyMustNewDecFromStr("1.0")}}}}
+				expRes = &v1beta1.QueryVoteResponse{Vote: v1beta1.Vote{ProposalId: proposal.Id, Voter: addr0Str, Options: []v1beta1.WeightedVoteOption{{Option: v1beta1.OptionAbstain, Weight: math.LegacyMustNewDecFromStr("1.0")}}}}
 			},
 			true,
 		},
@@ -655,7 +669,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 			func() {
 				req = &v1beta1.QueryVoteRequest{
 					ProposalId: proposal.Id,
-					Voter:      addrs[1].String(),
+					Voter:      addr1Str,
 				}
 
 				expRes = &v1beta1.QueryVoteResponse{}
@@ -688,6 +702,10 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 	ctx, queryClient := suite.ctx, suite.queryClient
 
 	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, math.NewInt(30000000))
+	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	suite.Require().NoError(err)
+	addr1Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[1])
+	suite.Require().NoError(err)
 
 	var (
 		req      *v1.QueryVotesRequest
@@ -746,8 +764,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 				err := suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
 				suite.Require().NoError(err)
 				votes = []*v1.Vote{
-					{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: v1.NewNonSplitVoteOption(v1.OptionAbstain)},
-					{ProposalId: proposal.Id, Voter: addrs[1].String(), Options: v1.NewNonSplitVoteOption(v1.OptionYes)},
+					{ProposalId: proposal.Id, Voter: addr0Str, Options: v1.NewNonSplitVoteOption(v1.OptionAbstain)},
+					{ProposalId: proposal.Id, Voter: addr1Str, Options: v1.NewNonSplitVoteOption(v1.OptionYes)},
 				}
 
 				codec := address.NewBech32Codec("cosmos")
@@ -794,6 +812,10 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 	ctx, queryClient := suite.ctx, suite.legacyQueryClient
 
 	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, math.NewInt(30000000))
+	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	suite.Require().NoError(err)
+	addr1Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[1])
+	suite.Require().NoError(err)
 
 	var (
 		req      *v1beta1.QueryVotesRequest
@@ -853,8 +875,8 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 				suite.Require().NoError(err)
 
 				votes = []v1beta1.Vote{
-					{ProposalId: proposal.Id, Voter: addrs[0].String(), Options: v1beta1.NewNonSplitVoteOption(v1beta1.OptionAbstain)},
-					{ProposalId: proposal.Id, Voter: addrs[1].String(), Options: v1beta1.NewNonSplitVoteOption(v1beta1.OptionYes)},
+					{ProposalId: proposal.Id, Voter: addr0Str, Options: v1beta1.NewNonSplitVoteOption(v1beta1.OptionAbstain)},
+					{ProposalId: proposal.Id, Voter: addr1Str, Options: v1beta1.NewNonSplitVoteOption(v1beta1.OptionYes)},
 				}
 				codec := address.NewBech32Codec("cosmos")
 
@@ -1095,6 +1117,8 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryParams() {
 func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
+	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	suite.Require().NoError(err)
 
 	var (
 		req      *v1.QueryDepositRequest
@@ -1119,7 +1143,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 			func() {
 				req = &v1.QueryDepositRequest{
 					ProposalId: 0,
-					Depositor:  addrs[0].String(),
+					Depositor:  addr0Str,
 				}
 			},
 			false,
@@ -1139,7 +1163,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 			func() {
 				req = &v1.QueryDepositRequest{
 					ProposalId: 2,
-					Depositor:  addrs[0].String(),
+					Depositor:  addr0Str,
 				}
 			},
 			false,
@@ -1154,7 +1178,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 
 				req = &v1.QueryDepositRequest{
 					ProposalId: proposal.Id,
-					Depositor:  addrs[0].String(),
+					Depositor:  addr0Str,
 				}
 			},
 			false,
@@ -1163,13 +1187,13 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 			"valid request",
 			func() {
 				depositCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.stakingKeeper.TokensFromConsensusPower(ctx, 20)))
-				deposit := v1.NewDeposit(proposal.Id, addrs[0], depositCoins)
+				deposit := v1.NewDeposit(proposal.Id, addr0Str, depositCoins)
 				err := suite.govKeeper.SetDeposit(ctx, deposit)
 				suite.Require().NoError(err)
 
 				req = &v1.QueryDepositRequest{
 					ProposalId: proposal.Id,
-					Depositor:  addrs[0].String(),
+					Depositor:  addr0Str,
 				}
 
 				expRes = &v1.QueryDepositResponse{Deposit: &deposit}
@@ -1199,6 +1223,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposit() {
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
+	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	suite.Require().NoError(err)
 
 	var (
 		req      *v1beta1.QueryDepositRequest
@@ -1223,7 +1249,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposit() {
 			func() {
 				req = &v1beta1.QueryDepositRequest{
 					ProposalId: 0,
-					Depositor:  addrs[0].String(),
+					Depositor:  addr0Str,
 				}
 			},
 			false,
@@ -1243,7 +1269,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposit() {
 			func() {
 				req = &v1beta1.QueryDepositRequest{
 					ProposalId: 2,
-					Depositor:  addrs[0].String(),
+					Depositor:  addr0Str,
 				}
 			},
 			false,
@@ -1258,7 +1284,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposit() {
 
 				req = &v1beta1.QueryDepositRequest{
 					ProposalId: proposal.Id,
-					Depositor:  addrs[0].String(),
+					Depositor:  addr0Str,
 				}
 			},
 			false,
@@ -1267,14 +1293,14 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposit() {
 			"valid request",
 			func() {
 				depositCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.stakingKeeper.TokensFromConsensusPower(ctx, 20)))
-				deposit := v1beta1.NewDeposit(proposal.Id, addrs[0], depositCoins)
-				v1deposit := v1.NewDeposit(proposal.Id, addrs[0], depositCoins)
+				deposit := v1beta1.NewDeposit(proposal.Id, addr0Str, depositCoins)
+				v1deposit := v1.NewDeposit(proposal.Id, addr0Str, depositCoins)
 				err := suite.govKeeper.SetDeposit(ctx, v1deposit)
 				suite.Require().NoError(err)
 
 				req = &v1beta1.QueryDepositRequest{
 					ProposalId: proposal.Id,
-					Depositor:  addrs[0].String(),
+					Depositor:  addr0Str,
 				}
 
 				expRes = &v1beta1.QueryDepositResponse{Deposit: deposit}
@@ -1304,6 +1330,10 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposit() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
+	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	suite.Require().NoError(err)
+	addr1Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[1])
+	suite.Require().NoError(err)
 
 	var (
 		req      *v1.QueryDepositsRequest
@@ -1358,12 +1388,12 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 			"get deposits with default limit",
 			func() {
 				depositAmount1 := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.stakingKeeper.TokensFromConsensusPower(ctx, 20)))
-				deposit1 := v1.NewDeposit(proposal.Id, addrs[0], depositAmount1)
+				deposit1 := v1.NewDeposit(proposal.Id, addr0Str, depositAmount1)
 				err := suite.govKeeper.SetDeposit(ctx, deposit1)
 				suite.Require().NoError(err)
 
 				depositAmount2 := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.stakingKeeper.TokensFromConsensusPower(ctx, 30)))
-				deposit2 := v1.NewDeposit(proposal.Id, addrs[1], depositAmount2)
+				deposit2 := v1.NewDeposit(proposal.Id, addr1Str, depositAmount2)
 				err = suite.govKeeper.SetDeposit(ctx, deposit2)
 				suite.Require().NoError(err)
 
@@ -1403,6 +1433,10 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
+	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	suite.Require().NoError(err)
+	addr1Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[1])
+	suite.Require().NoError(err)
 
 	var (
 		req      *v1beta1.QueryDepositsRequest
@@ -1457,14 +1491,14 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
 			"get deposits with default limit",
 			func() {
 				depositAmount1 := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.stakingKeeper.TokensFromConsensusPower(ctx, 20)))
-				deposit1 := v1beta1.NewDeposit(proposal.Id, addrs[0], depositAmount1)
-				v1deposit1 := v1.NewDeposit(proposal.Id, addrs[0], depositAmount1)
+				deposit1 := v1beta1.NewDeposit(proposal.Id, addr0Str, depositAmount1)
+				v1deposit1 := v1.NewDeposit(proposal.Id, addr0Str, depositAmount1)
 				err := suite.govKeeper.SetDeposit(ctx, v1deposit1)
 				suite.Require().NoError(err)
 
 				depositAmount2 := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.stakingKeeper.TokensFromConsensusPower(ctx, 30)))
-				deposit2 := v1beta1.NewDeposit(proposal.Id, addrs[1], depositAmount2)
-				v1deposit2 := v1.NewDeposit(proposal.Id, addrs[1], depositAmount2)
+				deposit2 := v1beta1.NewDeposit(proposal.Id, addr1Str, depositAmount2)
+				v1deposit2 := v1.NewDeposit(proposal.Id, addr1Str, depositAmount2)
 				err = suite.govKeeper.SetDeposit(ctx, v1deposit2)
 				suite.Require().NoError(err)
 

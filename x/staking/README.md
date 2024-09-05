@@ -23,7 +23,6 @@ network.
 * [State](#state)
     * [Pool](#pool)
     * [LastTotalPower](#lasttotalpower)
-    * [ValidatorUpdates](#validatorupdates)
     * [UnbondingID](#unbondingid)
     * [Params](#params)
     * [Validator](#validator)
@@ -31,7 +30,6 @@ network.
     * [UnbondingDelegation](#unbondingdelegation)
     * [Redelegation](#redelegation)
     * [Queues](#queues)
-    * [HistoricalInfo](#historicalinfo)
     * [ConsPubkeyRotation](#conspubkeyrotation)
 * [State Transitions](#state-transitions)
     * [Validators](#validators)
@@ -47,8 +45,6 @@ network.
     * [MsgBeginRedelegate](#msgbeginredelegate)
     * [MsgUpdateParams](#msgupdateparams)
     * [MsgRotateConsPubkey](#msgrotateconspubkey)
-* [Begin-Block](#begin-block)
-    * [Historical Info Tracking](#historical-info-tracking)
 * [End-Block](#end-block)
     * [Validator Set Changes](#validator-set-changes)
     * [Queues](#queues-1)
@@ -75,13 +71,6 @@ Store entries prefixed with "Last" must remain unchanged until EndBlock.
 
 * LastTotalPower: `0x12 -> ProtocolBuffer(math.Int)`
 
-### ValidatorUpdates
-
-ValidatorUpdates contains the validator updates returned to ABCI at the end of every block.
-The values are overwritten in every block.
-
-* ValidatorUpdates `0x61 -> []abci.ValidatorUpdate`
-
 ### UnbondingID
 
 UnbondingID stores the ID of the latest unbonding operation. It enables creating unique IDs for unbonding operations, i.e., UnbondingID is incremented every time a new unbonding operation (validator unbonding, unbonding delegation, redelegation) is initiated.
@@ -96,7 +85,7 @@ it can be updated with governance or the address with authority.
 * Params: `0x51 | ProtocolBuffer(Params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L310-L333
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L300-L328
 ```
 
 ### Validator
@@ -159,11 +148,14 @@ is updated during the validator set update process which takes place in [`EndBlo
 Each validator's state is stored in a `Validator` struct:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L82-L138
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L92-L138
 ```
 
+
+The initial commission rates to be used for creating a validator are stored in a `CommissionRates` struct:
+
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L26-L80
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L30-L54
 ```
 
 ### Delegation
@@ -179,7 +171,7 @@ delegator, and is associated with the shares for one validator. The sender of
 the transaction is the owner of the bond.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L198-L216
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L196-L210
 ```
 
 #### Delegator Shares
@@ -227,7 +219,7 @@ detected.
 A UnbondingDelegation object is created every time an unbonding is initiated.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L218-L261
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L214-L253
 ```
 
 ### Redelegation
@@ -269,7 +261,7 @@ A redelegation object is created every time a redelegation occurs. To prevent
   where the source validator for this new redelegation is `Validator X`.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L263-L308
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L256-L298
 ```
 
 ## ConsPubkeyRotation
@@ -286,9 +278,9 @@ ValidatorConsensusKeyRotationRecordQueueKey: `103 | format(time) -> ProtocolBuff
 
 ValidatorConsensusKeyRotationRecordIndexKey:`104 | valAddr | format(time) -> ProtocolBuffer([]Byte{})`
 
-OldToNewConsKeyMap:`105 | byte(oldConsKey) -> byte(newConsKey)`
+OldToNewConsAddrMap:`105 | byte(oldConsAddr) -> byte(newConsAddr)`
 
-NewToOldConsKeyMap:`106 | byte(newConsKey) -> byte(oldConsKey)`
+ConsAddrToValidatorIdentifierMap:`106 | byte(newConsAddr) -> byte(initialConsAddr)`
 
 `ConsPubKeyRotationHistory` is used for querying the rotations of a validator
 
@@ -298,9 +290,9 @@ NewToOldConsKeyMap:`106 | byte(newConsKey) -> byte(oldConsKey)`
 
 A `ConsPubKeyRotationHistory` object is created every time a consensus pubkey rotation occurs.
 
-An entry is added in `OldToNewConsKeyMap` collection for every rotation (Note: this is to handle the evidences when submitted with old cons key).
+An entry is added in `OldToNewConsAddrMap` collection for every rotation (Note: this is to handle the evidences when submitted with old cons key).
 
-An entry is added in `NewToOldConsKeyMap` collection for every rotation, this entry is to block the rotation if the validator is rotating to the cons key which is invovled in the history.
+An entry is added in `ConsAddrToValidatorIdentifierMap` collection for every rotation, this entry is to block the rotation if the validator is rotating to the cons key which is involved in the history.
 
 To prevent the spam: 
 
@@ -328,7 +320,7 @@ delegations queue is kept.
 * UnbondingDelegation: `0x41 | format(time) -> []DVPair`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L162-L172
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L159-L173
 ```
 
 #### RedelegationQueue
@@ -339,7 +331,7 @@ kept.
 * RedelegationQueue: `0x42 | format(time) -> []DVVTriplet`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L179-L191
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L175-L191
 ```
 
 #### ValidatorQueue
@@ -366,23 +358,11 @@ Whenever the next item with the same waiting time comes to the queue, we will ge
 the present store info and append the `ValAddress` to the array and set it back in the store.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/8f0d5b15f0b10da7645d7fc1aa868fe44e3f3a44/proto/cosmos/staking/v1beta1/staking.proto#L429-L433
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L420-L424
 ```
 
-### HistoricalInfo
 
-HistoricalInfo objects are stored and pruned at each block such that the staking keeper persists
-the `n` most recent historical info defined by staking module parameter: `HistoricalEntries`.
 
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/staking.proto#L17-L24
-```
-
-At each BeginBlock, the staking keeper will persist the current Header and the Validators that committed
-the current block in a `HistoricalInfo` object. The Validators are sorted on their address to ensure that
-they are in a deterministic order.
-The oldest HistoricalEntries will be pruned to ensure that there only exist the parameter-defined number of
-historical entries.
 
 ## State Transitions
 
@@ -580,11 +560,11 @@ A validator is created using the `MsgCreateValidator` message.
 The validator must be created with an initial delegation from the operator.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L20-L21
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L20-L21
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L50-L73
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L57-L80
 ```
 
 This message is expected to fail if:
@@ -609,11 +589,11 @@ The `Description`, `CommissionRate` of a validator can be updated using the
 `MsgEditValidator` message.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L23-L24
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L23-L24
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L78-L97
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L85-L104
 ```
 
 This message is expected to fail if:
@@ -632,11 +612,11 @@ some amount of their validator's (newly created) delegator-shares that are
 assigned to `Delegation.Shares`.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L26-L28
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L26-L28
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L102-L114
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L109-L121
 ```
 
 This message is expected to fail if:
@@ -668,17 +648,17 @@ The `MsgUndelegate` message allows delegators to undelegate their tokens from
 validator.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L34-L36
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L34-L36
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L140-L152
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L147-L159
 ```
 
 This message returns a response containing the completion time of the undelegation:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L154-L158
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L161-L169
 ```
 
 This message is expected to fail if:
@@ -707,11 +687,11 @@ When this message is processed the following actions occur:
 The `MsgCancelUnbondingDelegation` message allows delegators to cancel the `unbondingDelegation` entry and delegate back to a previous validator. However, please note that this feature does not support canceling unbond delegations from jailed validators.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L38-L42
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L38-L42
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L160-L175
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L171-L185
 ```
 
 This message is expected to fail if:
@@ -735,17 +715,17 @@ the unbonding period has passed, the redelegation is automatically completed in
 the EndBlocker.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L30-L32
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L30-L32
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L119-L132
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L126-L139
 ```
 
 This message returns a response containing the completion time of the redelegation:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L133-L138
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L141-L145
 ```
 
 This message is expected to fail if:
@@ -779,7 +759,7 @@ The params are updated through a governance proposal where the signer is the gov
 When the `MinCommissionRate` is updated, all validators with a lower (max) commission rate than `MinCommissionRate` will be updated to `MinCommissionRate`.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/tx.proto#L182-L195
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L192-L203
 ```
 
 The message handling can fail if:
@@ -792,7 +772,7 @@ The `MsgRotateConsPubKey` updates the consensus pubkey of a validator
 with a new pubkey, the validator must pay rotation fees (default fee 1000000stake) to rotate the consensus pubkey.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/efa7636756ad0164ae5ef75f958ffec95a4201a4/proto/cosmos/staking/v1beta1/tx.proto#L213-L226
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/tx.proto#L211-L222
 ```
 
 The message handling can fail if:
@@ -804,18 +784,6 @@ The message handling can fail if:
 * The `max_cons_pubkey_rotations` limit reached within unbonding period.
 * The validator doesn't have enough balance to pay for the rotation.
 
-## Begin-Block
-
-Each abci begin block call, the historical info will get stored and pruned
-according to the `HistoricalEntries` parameter.
-
-### Historical Info Tracking
-
-If the `HistoricalEntries` parameter is 0, then the `BeginBlock` performs a no-op.
-
-Otherwise, the latest historical info is stored under the key `historicalInfoKey|height`, while any entries older than `height - HistoricalEntries` is deleted.
-In most cases, this results in a single entry being pruned per block.
-However, if the parameter `HistoricalEntries` has changed to a lower value there will be multiple entries in the store that must be pruned.
 
 ## End-Block
 
@@ -2287,84 +2255,6 @@ Example Output:
 }
 ```
 
-#### HistoricalInfo
-
-```bash
-cosmos.staking.v1beta1.Query/HistoricalInfo
-```
-
-Example:
-
-```bash
-grpcurl -plaintext -d '{"height" : 1}' localhost:9090 cosmos.staking.v1beta1.Query/HistoricalInfo
-```
-
-Example Output:
-
-```bash
-{
-  "hist": {
-    "header": {
-      "version": {
-        "block": "11",
-        "app": "0"
-      },
-      "chain_id": "simd-1",
-      "height": "140142",
-      "time": "2021-10-11T10:56:29.720079569Z",
-      "last_block_id": {
-        "hash": "9gri/4LLJUBFqioQ3NzZIP9/7YHR9QqaM6B2aJNQA7o=",
-        "part_set_header": {
-          "total": 1,
-          "hash": "Hk1+C864uQkl9+I6Zn7IurBZBKUevqlVtU7VqaZl1tc="
-        }
-      },
-      "last_commit_hash": "VxrcS27GtvGruS3I9+AlpT7udxIT1F0OrRklrVFSSKc=",
-      "data_hash": "80BjOrqNYUOkTnmgWyz9AQ8n7SoEmPVi4QmAe8RbQBY=",
-      "validators_hash": "95W49n2hw8RWpr1GPTAO5MSPi6w6Wjr3JjjS7AjpBho=",
-      "next_validators_hash": "95W49n2hw8RWpr1GPTAO5MSPi6w6Wjr3JjjS7AjpBho=",
-      "consensus_hash": "BICRvH3cKD93v7+R1zxE2ljD34qcvIZ0Bdi389qtoi8=",
-      "app_hash": "ZZaxnSY3E6Ex5Bvkm+RigYCK82g8SSUL53NymPITeOE=",
-      "last_results_hash": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
-      "evidence_hash": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
-      "proposer_address": "aH6dO428B+ItuoqPq70efFHrSMY="
-    },
-  "valset": [
-      {
-        "operator_address": "cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcqcnylw",
-        "consensus_pubkey": {
-          "@type": "/cosmos.crypto.ed25519.PubKey",
-          "key": "/O7BtNW0pafwfvomgR4ZnfldwPXiFfJs9mHg3gwfv5Q="
-        },
-        "jailed": false,
-        "status": "BOND_STATUS_BONDED",
-        "tokens": "1426045203613",
-        "delegator_shares": "1426045203613.000000000000000000",
-        "description": {
-          "moniker": "SG-1",
-          "identity": "48608633F99D1B60",
-          "website": "https://sg-1.online",
-          "security_contact": "",
-          "details": "SG-1 - your favorite validator on Witval. We offer 100% Soft Slash protection."
-        },
-        "unbonding_height": "0",
-        "unbonding_time": "1970-01-01T00:00:00Z",
-        "commission": {
-          "commission_rates": {
-            "rate": "0.037500000000000000",
-            "max_rate": "0.200000000000000000",
-            "max_change_rate": "0.030000000000000000"
-          },
-          "update_time": "2021-10-01T15:00:00Z"
-        },
-        "min_self_delegation": "1"
-      }
-    ]
-  }
-}
-
-```
-
 #### Pool
 
 The `Pool` endpoint queries the pool information.
@@ -2663,114 +2553,6 @@ Example Output:
       "update_time": "2021-10-09T19:03:54.984821705Z"
     },
     "min_self_delegation": "1"
-  }
-}
-```
-
-#### HistoricalInfo
-
-The `HistoricalInfo` REST endpoint queries the historical information for given height.
-
-```bash
-/cosmos/staking/v1beta1/historical_info/{height}
-```
-
-Example:
-
-```bash
-curl -X GET "http://localhost:1317/cosmos/staking/v1beta1/historical_info/153332" -H  "accept: application/json"
-```
-
-Example Output:
-
-```bash
-{
-  "hist": {
-    "header": {
-      "version": {
-        "block": "11",
-        "app": "0"
-      },
-      "chain_id": "cosmos-1",
-      "height": "153332",
-      "time": "2021-10-12T09:05:35.062230221Z",
-      "last_block_id": {
-        "hash": "NX8HevR5khb7H6NGKva+jVz7cyf0skF1CrcY9A0s+d8=",
-        "part_set_header": {
-          "total": 1,
-          "hash": "zLQ2FiKM5tooL3BInt+VVfgzjlBXfq0Hc8Iux/xrhdg="
-        }
-      },
-      "last_commit_hash": "P6IJrK8vSqU3dGEyRHnAFocoDGja0bn9euLuy09s350=",
-      "data_hash": "eUd+6acHWrNXYju8Js449RJ99lOYOs16KpqQl4SMrEM=",
-      "validators_hash": "mB4pravvMsJKgi+g8aYdSeNlt0kPjnRFyvtAQtaxcfw=",
-      "next_validators_hash": "mB4pravvMsJKgi+g8aYdSeNlt0kPjnRFyvtAQtaxcfw=",
-      "consensus_hash": "BICRvH3cKD93v7+R1zxE2ljD34qcvIZ0Bdi389qtoi8=",
-      "app_hash": "fuELArKRK+CptnZ8tu54h6xEleSWenHNmqC84W866fU=",
-      "last_results_hash": "p/BPexV4LxAzlVcPRvW+lomgXb6Yze8YLIQUo/4Kdgc=",
-      "evidence_hash": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
-      "proposer_address": "G0MeY8xQx7ooOsni8KE/3R/Ib3Q="
-    },
-    "valset": [
-      {
-        "operator_address": "cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcqcnylw",
-        "consensus_pubkey": {
-          "@type": "/cosmos.crypto.ed25519.PubKey",
-          "key": "/O7BtNW0pafwfvomgR4ZnfldwPXiFfJs9mHg3gwfv5Q="
-        },
-        "jailed": false,
-        "status": "BOND_STATUS_BONDED",
-        "tokens": "1416521659632",
-        "delegator_shares": "1416521659632.000000000000000000",
-        "description": {
-          "moniker": "SG-1",
-          "identity": "48608633F99D1B60",
-          "website": "https://sg-1.online",
-          "security_contact": "",
-          "details": "SG-1 - your favorite validator on cosmos. We offer 100% Soft Slash protection."
-        },
-        "unbonding_height": "0",
-        "unbonding_time": "1970-01-01T00:00:00Z",
-        "commission": {
-          "commission_rates": {
-            "rate": "0.037500000000000000",
-            "max_rate": "0.200000000000000000",
-            "max_change_rate": "0.030000000000000000"
-          },
-          "update_time": "2021-10-01T15:00:00Z"
-        },
-        "min_self_delegation": "1"
-      },
-      {
-        "operator_address": "cosmosvaloper1t8ehvswxjfn3ejzkjtntcyrqwvmvuknzmvtaaa",
-        "consensus_pubkey": {
-          "@type": "/cosmos.crypto.ed25519.PubKey",
-          "key": "uExZyjNLtr2+FFIhNDAMcQ8+yTrqE7ygYTsI7khkA5Y="
-        },
-        "jailed": false,
-        "status": "BOND_STATUS_BONDED",
-        "tokens": "1348298958808",
-        "delegator_shares": "1348298958808.000000000000000000",
-        "description": {
-          "moniker": "Cosmostation",
-          "identity": "AE4C403A6E7AA1AC",
-          "website": "https://www.cosmostation.io",
-          "security_contact": "admin@stamper.network",
-          "details": "Cosmostation validator node. Delegate your tokens and Start Earning Staking Rewards"
-        },
-        "unbonding_height": "0",
-        "unbonding_time": "1970-01-01T00:00:00Z",
-        "commission": {
-          "commission_rates": {
-            "rate": "0.050000000000000000",
-            "max_rate": "1.000000000000000000",
-            "max_change_rate": "0.200000000000000000"
-          },
-          "update_time": "2021-10-01T15:06:38.821314287Z"
-        },
-        "min_self_delegation": "1"
-      }
-    ]
   }
 }
 ```

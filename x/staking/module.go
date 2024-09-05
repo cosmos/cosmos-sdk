@@ -23,12 +23,11 @@ import (
 )
 
 const (
-	consensusVersion uint64 = 5
+	consensusVersion uint64 = 6
 )
 
 var (
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.HasInvariants       = AppModule{}
@@ -36,8 +35,6 @@ var (
 	_ module.HasABCIEndBlock     = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasBeginBlocker       = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 
@@ -71,13 +68,14 @@ func NewAppModule(
 func (am AppModule) IsAppModule() {}
 
 // Name returns the staking module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the staking module's types on the given LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterInterfaces registers the module's interface types
@@ -114,16 +112,19 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
 	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err)
+		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", types.ModuleName, err)
 	}
 	if err := mr.Register(types.ModuleName, 2, m.Migrate2to3); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err)
+		return fmt.Errorf("failed to migrate x/%s from version 2 to 3: %w", types.ModuleName, err)
 	}
 	if err := mr.Register(types.ModuleName, 3, m.Migrate3to4); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err)
+		return fmt.Errorf("failed to migrate x/%s from version 3 to 4: %w", types.ModuleName, err)
 	}
 	if err := mr.Register(types.ModuleName, 4, m.Migrate4to5); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 4 to 5: %v", types.ModuleName, err)
+		return fmt.Errorf("failed to migrate x/%s from version 4 to 5: %w", types.ModuleName, err)
+	}
+	if err := mr.Register(types.ModuleName, 5, m.Migrate5to6); err != nil {
+		return fmt.Errorf("failed to migrate x/%s from version 5 to 6: %w", types.ModuleName, err)
 	}
 
 	return nil
@@ -145,35 +146,10 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 }
 
 // InitGenesis performs genesis initialization for the staking module.
-func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]module.ValidatorUpdate, error) {
+func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]appmodule.ValidatorUpdate, error) {
 	var genesisState types.GenesisState
-
 	am.cdc.MustUnmarshalJSON(data, &genesisState)
-
-	cometValidatorUpdates, err := am.keeper.InitGenesis(ctx, &genesisState) // TODO: refactor to return ValidatorUpdate higher up the stack
-	if err != nil {
-		return nil, err
-	}
-	validatorUpdates := make([]module.ValidatorUpdate, len(cometValidatorUpdates))
-	for i, v := range cometValidatorUpdates {
-		if ed25519 := v.PubKey.GetEd25519(); len(ed25519) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     ed25519,
-				PubKeyType: "ed25519",
-				Power:      v.Power,
-			}
-		} else if secp256k1 := v.PubKey.GetSecp256K1(); len(secp256k1) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     secp256k1,
-				PubKeyType: "secp256k1",
-				Power:      v.Power,
-			}
-		} else {
-			return nil, fmt.Errorf("unexpected validator pubkey type: %T", v.PubKey)
-		}
-	}
-
-	return validatorUpdates, nil
+	return am.keeper.InitGenesis(ctx, &genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the staking module.
@@ -192,36 +168,7 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 
-// BeginBlock returns the begin blocker for the staking module.
-func (am AppModule) BeginBlock(ctx context.Context) error {
-	return am.keeper.BeginBlocker(ctx)
-}
-
 // EndBlock returns the end blocker for the staking module.
-func (am AppModule) EndBlock(ctx context.Context) ([]module.ValidatorUpdate, error) {
-	cometValidatorUpdates, err := am.keeper.EndBlocker(ctx) // TODO: refactor to return appmodule.ValidatorUpdate higher up the stack
-	if err != nil {
-		return nil, err
-	}
-
-	validatorUpdates := make([]module.ValidatorUpdate, len(cometValidatorUpdates))
-	for i, v := range cometValidatorUpdates {
-		if ed25519 := v.PubKey.GetEd25519(); len(ed25519) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     ed25519,
-				PubKeyType: "ed25519",
-				Power:      v.Power,
-			}
-		} else if secp256k1 := v.PubKey.GetSecp256K1(); len(secp256k1) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     secp256k1,
-				PubKeyType: "secp256k1",
-				Power:      v.Power,
-			}
-		} else {
-			return nil, fmt.Errorf("unexpected validator pubkey type: %T", v.PubKey)
-		}
-	}
-
-	return validatorUpdates, nil
+func (am AppModule) EndBlock(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {
+	return am.keeper.EndBlocker(ctx)
 }

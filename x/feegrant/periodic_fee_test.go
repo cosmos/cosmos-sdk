@@ -1,12 +1,15 @@
 package feegrant_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
@@ -219,7 +222,11 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 
 			ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: tc.blockTime})
 			// now try to deduct
-			remove, err := tc.allow.Accept(ctx, tc.fee, []sdk.Msg{})
+			// Set environment to ctx
+			remove, err := tc.allow.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, appmodulev2.Environment{
+				HeaderService: mockHeaderService{},
+				GasService:    mockGasService{},
+			}), tc.fee, []sdk.Msg{})
 			if !tc.accept {
 				require.Error(t, err)
 				return

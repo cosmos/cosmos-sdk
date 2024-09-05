@@ -56,20 +56,24 @@ Gas consumption can be done manually, generally by the module developer in the [
 
 ### Block Gas Meter
 
-`ctx.BlockGasMeter()` is the gas meter used to track gas consumption per block and make sure it does not go above a certain limit. A new instance of the `BlockGasMeter` is created each time [`FinalizeBlock`](../advanced/00-baseapp.md#finalizeblock) is called. The `BlockGasMeter` is finite, and the limit of gas per block is defined in the application's consensus parameters. By default, Cosmos SDK applications use the default consensus parameters provided by CometBFT:
+`ctx.BlockGasMeter()` is the gas meter used to track gas consumption per block and make sure it does not go above a certain limit. 
 
-```go reference
-https://github.com/cometbft/cometbft/blob/v0.37.0/types/params.go#L66-L105
-```
-
-When a new [transaction](../advanced/01-transactions.md) is being processed via `FinalizeBlock`, the current value of `BlockGasMeter` is checked to see if it is above the limit. If it is, the transaction fails and returned to the consensus engine as a failed transaction. This can happen even with the first transaction in a block, as `FinalizeBlock` itself can consume gas. If not, the transaction is processed normally. At the end of `FinalizeBlock`, the gas tracked by `ctx.BlockGasMeter()` is increased by the amount consumed to process the transaction:
+During the genesis phase, gas consumption is unlimited to accommodate initialisation transactions. 
 
 ```go
-ctx.BlockGasMeter().ConsumeGas(
-	ctx.GasMeter().GasConsumedToLimit(),
-	"block gas meter",
-)
+app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockGasMeter(storetypes.NewInfiniteGasMeter()))
 ```
+
+Following the genesis block, the block gas meter is set to a finite value by the SDK. This transition is facilitated by the consensus engine (e.g., CometBFT) calling the `RequestFinalizeBlock` function, which in turn triggers the SDK's `FinalizeBlock` method. Within `FinalizeBlock`, `internalFinalizeBlock` is executed, performing necessary state updates and function executions. The block gas meter, initialised each with a finite limit, is then incorporated into the context for transaction execution, ensuring gas consumption does not exceed the block's gas limit and is reset at the end of each block.
+
+Modules within the Cosmos SDK can consume block gas at any point during their execution by utilising the `ctx`. This gas consumption primarily occurs during state read/write operations and transaction processing. The block gas meter, accessible via `ctx.BlockGasMeter()`, monitors the total gas usage within a block, enforcing the gas limit to prevent excessive computation. This ensures that gas limits are adhered to on a per-block basis, starting from the first block post-genesis.
+
+```go
+gasMeter := app.getBlockGasMeter(app.finalizeBlockState.Context())
+app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockGasMeter(gasMeter))
+```
+
+This above shows the general mechanism for setting the block gas meter with a finite limit based on the block's consensus parameters.
 
 ## AnteHandler
 
@@ -90,7 +94,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/v1beta
 ```
 
 * Verify signatures for each [`message`](../../build/building-modules/02-messages-and-queries.md#messages) contained in the transaction. Each `message` should be signed by one or multiple sender(s), and these signatures must be verified in the `anteHandler`.
-* During `CheckTx`, verify that the gas prices provided with the transaction is greater than the local `min-gas-prices` (as a reminder, gas-prices can be deducted from the following equation: `fees = gas * gas-prices`). `min-gas-prices` is a parameter local to each full-node and used during `CheckTx` to discard transactions that do not provide a minimum amount of fees. This ensures that the mempool cannot be spammed with garbage transactions.
+* During `CheckTx`, verify that the gas prices provided with the transaction is greater than the local `min-gas-prices` (as a reminder, gas-prices can be deduced from the following equation: `fees = gas * gas-prices`). `min-gas-prices` is a parameter local to each full-node and used during `CheckTx` to discard transactions that do not provide a minimum amount of fees. This ensures that the mempool cannot be spammed with garbage transactions.
 * Verify that the sender of the transaction has enough funds to cover for the `fees`. When the end-user generates a transaction, they must indicate 2 of the 3 following parameters (the third one being implicit): `fees`, `gas` and `gas-prices`. This signals how much they are willing to pay for nodes to execute their transaction. The provided `gas` value is stored in a parameter called `GasWanted` for later use.
 * Set `newCtx.GasMeter` to 0, with a limit of `GasWanted`. **This step is crucial**, as it not only makes sure the transaction cannot consume infinite gas, but also that `ctx.GasMeter` is reset in-between each transaction (`ctx` is set to `newCtx` after `anteHandler` is run, and the `anteHandler` is run each time a transactions executes).
 

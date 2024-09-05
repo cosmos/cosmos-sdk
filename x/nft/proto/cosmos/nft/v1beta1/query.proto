@@ -4,6 +4,7 @@ package cosmos.nft.v1beta1;
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
 import "cosmos/nft/v1beta1/nft.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "cosmossdk.io/x/nft";
 
@@ -14,11 +15,10 @@ service Query {
     option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{owner}/{class_id}";
   }
 
-  // BalancebyQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
-  //
-  // Since: nft v0.1.1
+  // BalanceByQueryString queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
   rpc BalanceByQueryString(QueryBalanceByQueryStringRequest) returns (QueryBalanceByQueryStringResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/balance";
+    option (google.api.http).get          = "/cosmos/nft/v1beta1/balance";
+    option (cosmos_proto.method_added_in) = "nft v0.1.1";
   }
 
   // Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
@@ -27,10 +27,9 @@ service Query {
   }
 
   // OwnerByQueryString queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
-  //
-  // Since: nft v0.1.1
   rpc OwnerByQueryString(QueryOwnerByQueryStringRequest) returns (QueryOwnerByQueryStringResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/owner";
+    option (google.api.http).get          = "/cosmos/nft/v1beta1/owner";
+    option (cosmos_proto.method_added_in) = "nft v0.1.1";
   }
 
   // Supply queries the number of NFTs from the given class, same as totalSupply of ERC721.
@@ -39,10 +38,9 @@ service Query {
   }
 
   // SupplyByQueryString queries the number of NFTs from the given class, same as totalSupply of ERC721.
-  //
-  // Since: nft v0.1.1
   rpc SupplyByQueryString(QuerySupplyByQueryStringRequest) returns (QuerySupplyByQueryStringResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/supply";
+    option (google.api.http).get          = "/cosmos/nft/v1beta1/supply";
+    option (cosmos_proto.method_added_in) = "nft v0.1.1";
   }
 
   // NFTs queries all NFTs of a given class or owner,choose at least one of the two, similar to tokenByIndex in
@@ -57,10 +55,9 @@ service Query {
   }
 
   // NFTByQueryString queries an NFT based on its class and id.
-  //
-  // Since: nft v0.1.1
   rpc NFTByQueryString(QueryNFTByQueryStringRequest) returns (QueryNFTByQueryStringResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/nft";
+    option (google.api.http).get          = "/cosmos/nft/v1beta1/nft";
+    option (cosmos_proto.method_added_in) = "nft v0.1.1";
   }
 
   // Class queries an NFT class based on its id
@@ -69,10 +66,9 @@ service Query {
   }
 
   // Class queries an NFT class based on its id
-  //
-  // Since: nft v0.1.1
   rpc ClassByQueryString(QueryClassByQueryStringRequest) returns (QueryClassByQueryStringResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/class";
+    option (google.api.http).get          = "/cosmos/nft/v1beta1/class";
+    option (cosmos_proto.method_added_in) = "nft v0.1.1";
   }
 
   // Classes queries all NFT classes
@@ -91,9 +87,8 @@ message QueryBalanceRequest {
 }
 
 // QueryBalanceByQueryStringRequest is the request type for the Query/Balance RPC method
-//
-// Since: nft v0.1.1
 message QueryBalanceByQueryStringRequest {
+  option (cosmos_proto.message_added_in) = "nft v0.1.1";
   // class_id associated with the nft
   string class_id = 1;
 
@@ -108,9 +103,8 @@ message QueryBalanceResponse {
 }
 
 // QueryBalanceByQueryStringResponse is the response type for the Query/Balance RPC method
-//
-// Since: nft v0.1.1
 message QueryBalanceByQueryStringResponse {
+  option (cosmos_proto.message_added_in) = "nft v0.1.1";
   // amount is the number of all NFTs of a given class owned by the owner
   uint64 amount = 1;
 }
@@ -125,9 +119,9 @@ message QueryOwnerRequest {
 }
 
 // QueryOwnerByQueryStringRequest is the request type for the Query/Owner RPC method
-//
-// Since: nft v0.1.1
 message QueryOwnerByQueryStringRequest {
+  option (cosmos_proto.message_added_in) = "nft v0.1.1";
+
   // class_id associated with the nft
   string class_id = 1;
 
@@ -142,9 +136,9 @@ message QueryOwnerResponse {
 }
 
 // QueryOwnerByQueryStringResponse is the response type for the Query/Owner RPC method
-//
-// Since: nft v0.1.1
 message QueryOwnerByQueryStringResponse {
+  option (cosmos_proto.message_added_in) = "nft v0.1.1";
+
   // owner is the owner address of the nft
   string owner = 1;
 }
@@ -156,9 +150,9 @@ message QuerySupplyRequest {
 }
 
 // QuerySupplyByQueryStringRequest is the request type for the Query/Supply RPC method
-//
-// Since: nft v0.1.1
 message QuerySupplyByQueryStringRequest {
+  option (cosmos_proto.message_added_in) = "nft v0.1.1";
+
   // class_id associated with the nft
   string class_id = 1;
 }
@@ -170,14 +164,14 @@ message QuerySupplyResponse {
 }
 
 // QuerySupplyByQueryStringResponse is the response type for the Query/Supply RPC method
-//
-// Since: nft v0.1.1
 message QuerySupplyByQueryStringResponse {
+  option (cosmos_proto.message_added_in) = "nft v0.1.1";
+
   // amount is the number of all NFTs from the given class
   uint64 amount = 1;
 }
 
-// QueryNFTstRequest is the request type for the Query/NFTs RPC method
+// QueryNFTsRequest is the request type for the Query/NFTs RPC method
 message QueryNFTsRequest {
   // class_id associated with the nft
   string class_id = 1;
@@ -208,9 +202,9 @@ message QueryNFTRequest {
 }
 
 // QueryNFTByQueryStringRequest is the request type for the Query/NFT RPC method
-//
-// Since: nft v0.1.1
 message QueryNFTByQueryStringRequest {
+  option (cosmos_proto.message_added_in) = "nft v0.1.1";
+
   // class_id associated with the nft
   string class_id = 1;
 
@@ -225,9 +219,9 @@ message QueryNFTResponse {
 }
 
 // QueryNFTByQueryStringResponse is the response type for the Query/NFT RPC method
-//
-// Since: nft v0.1.1
 message QueryNFTByQueryStringResponse {
+  option (cosmos_proto.message_added_in) = "nft v0.1.1";
+
   // owner is the owner address of the nft
   cosmos.nft.v1beta1.NFT nft = 1;
 }
@@ -239,9 +233,9 @@ message QueryClassRequest {
 }
 
 // QueryClassByQueryStringRequest is the request type for the Query/Class RPC method
-//
-// Since: nft v0.1.1
 message QueryClassByQueryStringRequest {
+  option (cosmos_proto.message_added_in) = "nft v0.1.1";
+
   // class_id associated with the nft
   string class_id = 1;
 }
@@ -253,9 +247,9 @@ message QueryClassResponse {
 }
 
 // QueryClassByQueryStringResponse is the response type for the Query/Class RPC method
-//
-// Since: nft v0.1.1
 message QueryClassByQueryStringResponse {
+  option (cosmos_proto.message_added_in) = "nft v0.1.1";
+
   // class defines the class of the nft type.
   cosmos.nft.v1beta1.Class class = 1;
 }

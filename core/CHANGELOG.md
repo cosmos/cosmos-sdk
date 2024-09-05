@@ -38,6 +38,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#21166](https://github.com/cosmos/cosmos-sdk/pull/21166) Comment out `appmodule.HasServices` to simplify dependencies. This interface is however still supported.
+* [#19953](https://github.com/cosmos/cosmos-sdk/pull/19953) Add transaction service.
 * [#18379](https://github.com/cosmos/cosmos-sdk/pull/18379) Add branch service.
 * [#18457](https://github.com/cosmos/cosmos-sdk/pull/18457) Add branch.ExecuteWithGasLimit.
 * [#19041](https://github.com/cosmos/cosmos-sdk/pull/19041) Add `appmodule.Environment` interface to fetch different services
@@ -53,27 +55,24 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * Add `PreMsghandler`and `PostMsgHandler` for pre and post message hooks
     * Add `MsgHandler` as an alternative to grpc handlers
     * Provide separate `MigrationRegistrar` instead of grouping with `RegisterServices`
+* [#21222](https://github.com/cosmos/cosmos-sdk/pull/21222) Make `Iterator` a type alias so that `KVStore` is structurally typed.
 
 ### API Breaking Changes
 
 * [#19672](https://github.com/cosmos/cosmos-sdk/pull/19672) `PreBlock` now returns only an error for consistency with server/v2. The SDK has upgraded x/upgrade accordingly.
 * [#18857](https://github.com/cosmos/cosmos-sdk/pull/18857) Moved `FormatCoins` to `x/tx`.
-* [#18861](httpes://github.com/cosmos/cosmos-sdk/pull/18861) Moved `coin.ParseCoin` to `client/v2/internal`.
+* [#18861](https://github.com/cosmos/cosmos-sdk/pull/18861) Moved `coin.ParseCoin` to `client/v2/internal`.
 * [#18866](https://github.com/cosmos/cosmos-sdk/pull/18866) All items related to depinject have been moved to `cosmossdk.io/depinject` (`Provide`, `Invoke`, `Register`)
 * [#19041](https://github.com/cosmos/cosmos-sdk/pull/19041) `HasEventListeners` was removed from appmodule due to the fact that it was not used anywhere in the SDK nor implemented
-
-## [v0.12.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.12.0)
-
-:::note
-This release contains breaking changes and should not be used with 0.50.x or earlier versions of the Cosmos SDK.
-:::
-
 * [#17689](https://github.com/cosmos/cosmos-sdk/pull/17689) Move Comet service to return structs instead of interfaces. 
     * `BlockInfo` was renamed to `Info` and `BlockInfoService` was renamed to `CometInfoService`
 * [#17693](https://github.com/cosmos/cosmos-sdk/pull/17693) Remove `appmodule.UpgradeModule` interface in favor of preblock
 
-## [v0.11.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.0)
+## [v0.11.1](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.1)
 
+* [#21022](https://github.com/cosmos/cosmos-sdk/pull/21022) Upgrade depinject to v1.0.0.
+
+## [v0.11.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.0)
 
 * [#17468](https://github.com/cosmos/cosmos-sdk/pull/17468) Add `appmodule.HasPreBlocker` interface.
 

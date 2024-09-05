@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/simulation"
@@ -25,14 +26,12 @@ import (
 const ConsensusVersion = 4
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasBeginBlocker       = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
@@ -40,8 +39,9 @@ var (
 
 // AppModule implements an application module for the slashing module.
 type AppModule struct {
-	cdc      codec.Codec
-	registry cdctypes.InterfaceRegistry
+	cdc          codec.Codec
+	registry     cdctypes.InterfaceRegistry
+	cometService comet.Service
 
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
@@ -57,6 +57,7 @@ func NewAppModule(
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
 	registry cdctypes.InterfaceRegistry,
+	cs comet.Service,
 ) AppModule {
 	return AppModule{
 		cdc:           cdc,
@@ -65,6 +66,7 @@ func NewAppModule(
 		accountKeeper: ak,
 		bankKeeper:    bk,
 		stakingKeeper: sk,
+		cometService:  cs,
 	}
 }
 
@@ -72,28 +74,29 @@ func NewAppModule(
 func (AppModule) IsAppModule() {}
 
 // Name returns the slashing module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the slashing module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
-// RegisterInterfaces registers the module's interface types
+// RegisterInterfaces registers the slashing module's interface types
 func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	types.RegisterInterfaces(registrar)
 }
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the slashig module.
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the slashing module.
 func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
-// RegisterServices registers module services.
+// RegisterServices registers slashing module's services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(registrar, keeper.NewQuerier(am.keeper))
@@ -101,9 +104,9 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-// RegisterMigrations registers module migrations.
+// RegisterMigrations registers slashing module's migrations.
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
-	m := keeper.NewMigrator(am.keeper)
+	m := keeper.NewMigrator(am.keeper, am.stakingKeeper.ValidatorAddressCodec())
 
 	if err := mr.Register(types.ModuleName, 1, m.Migrate1to2); err != nil {
 		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", types.ModuleName, err)
@@ -158,7 +161,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the slashing module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return BeginBlocker(ctx, am.keeper)
+	return BeginBlocker(ctx, am.keeper, am.cometService)
 }
 
 // AppModuleSimulation functions

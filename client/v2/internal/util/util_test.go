@@ -3,6 +3,11 @@ package util
 import (
 	"runtime/debug"
 	"testing"
+
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
+
+	_ "cosmossdk.io/client/v2/internal/testpb"
 )
 
 func TestIsSupportedVersion(t *testing.T) {
@@ -20,73 +25,40 @@ func TestIsSupportedVersion(t *testing.T) {
 	}
 
 	cases := []struct {
-		input    string
-		expected bool
+		messageName string
+		expected    bool
 	}{
 		{
-			input:    "",
-			expected: true,
+			messageName: "testpb.Msg.Send",
+			expected:    true,
 		},
 		{
-			input:    "not a since comment",
-			expected: true,
+			messageName: "testpb.Query.Echo",
+			expected:    true,
 		},
 		{
-			input:    "// Since: cosmos-sdk v0.47",
-			expected: true,
-		},
-		{
-			input:    "// since: Cosmos-SDK 0.50",
-			expected: true,
-		},
-		{
-			input:    "// Since: cosmos-sdk v0.51",
-			expected: false,
-		},
-		{
-			input:    "// Since: cosmos-sdk v1.0.0",
-			expected: false,
-		},
-		{
-			input:    "// since: x/feegrant v0.1.0",
-			expected: true,
-		},
-		{
-			input:    "// since: feegrant v0.0.1",
-			expected: true,
-		},
-		{
-			input:    "// since: feegrant v0.1.0",
-			expected: true,
-		},
-		{
-			input:    "// since: feegrant v0.1",
-			expected: true,
-		},
-		{
-			input:    "// since: feegrant v0.1.1",
-			expected: false,
-		},
-		{
-			input:    "// since: feegrant v0.2.0",
-			expected: false,
+			messageName: "testpb.Msg.Clawback",
+			expected:    false,
 		},
 	}
 
 	for _, tc := range cases {
-		resp := isSupportedVersion(tc.input, mockBuildInfo)
-		if resp != tc.expected {
-			t.Errorf("expected %v, got %v", tc.expected, resp)
-		}
+		t.Run(tc.messageName, func(t *testing.T) {
+			desc, err := protoregistry.GlobalFiles.FindDescriptorByName(protoreflect.FullName(tc.messageName))
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		resp = isSupportedVersion(tc.input, &debug.BuildInfo{})
-		if !resp {
-			t.Errorf("expected %v, got %v", true, resp)
-		}
+			methodDesc := desc.(protoreflect.MethodDescriptor)
+			isSupported := isSupportedVersion(methodDesc, mockBuildInfo)
+			if isSupported != tc.expected {
+				t.Errorf("expected %v, got %v for %s", tc.expected, isSupported, methodDesc.FullName())
+			}
+		})
 	}
 }
 
-func TestParseSinceComment(t *testing.T) {
+func TestParseVersion(t *testing.T) {
 	cases := []struct {
 		input              string
 		expectedModuleName string
@@ -98,64 +70,56 @@ func TestParseSinceComment(t *testing.T) {
 			expectedVersion:    "",
 		},
 		{
-			input:              "not a since comment",
-			expectedModuleName: "",
-			expectedVersion:    "",
-		},
-		{
-			input:              "//            Since: Cosmos SDK 0.50",
+			input:              "Cosmos SDK 0.50",
 			expectedModuleName: "cosmos-sdk",
 			expectedVersion:    "v0.50",
 		},
 		{
-			input:              "// since: Cosmos SDK 0.50",
+			input:              "cosmos sdk 0.50",
 			expectedModuleName: "cosmos-sdk",
 			expectedVersion:    "v0.50",
 		},
 		{
-			input:              "// since: cosmos sdk 0.50",
+			input:              "Cosmos-SDK 0.50",
 			expectedModuleName: "cosmos-sdk",
 			expectedVersion:    "v0.50",
 		},
 		{
-			input:              "// since: Cosmos-SDK 0.50",
+			input:              "cosmos-sdk v0.50",
 			expectedModuleName: "cosmos-sdk",
 			expectedVersion:    "v0.50",
 		},
 		{
-			input:              "// Since: cosmos-sdk v0.50",
-			expectedModuleName: "cosmos-sdk",
-			expectedVersion:    "v0.50",
-		},
-		{
-			input:              "//since: cosmos-sdk v0.50.1",
+			input:              "cosmos-sdk v0.50.1",
 			expectedModuleName: "cosmos-sdk",
 			expectedVersion:    "v0.50.1",
 		},
 		{
-			input:              "// since: cosmos-sdk 0.47.0-veronica",
+			input:              "cosmos-sdk 0.47.0-veronica",
 			expectedModuleName: "cosmos-sdk",
 			expectedVersion:    "v0.47.0-veronica",
 		},
 		{
-			input:              "// Since: x/feegrant v0.1.0",
-			expectedModuleName: "x/feegrant",
+			input:              "x/feegrant v0.1.0",
+			expectedModuleName: "feegrant",
 			expectedVersion:    "v0.1.0",
 		},
 		{
-			input:              "// since: x/feegrant 0.1",
-			expectedModuleName: "x/feegrant",
+			input:              "x/feegrant 0.1",
+			expectedModuleName: "feegrant",
 			expectedVersion:    "v0.1",
 		},
 	}
 
 	for _, tc := range cases {
-		moduleName, version := parseSinceComment(tc.input)
-		if moduleName != tc.expectedModuleName {
-			t.Errorf("expected module name %s, got %s", tc.expectedModuleName, moduleName)
-		}
-		if version != tc.expectedVersion {
-			t.Errorf("expected version %s, got %s", tc.expectedVersion, version)
-		}
+		t.Run(tc.input, func(t *testing.T) {
+			moduleName, version := parseVersion(tc.input)
+			if moduleName != tc.expectedModuleName {
+				t.Errorf("expected module name %s, got %s", tc.expectedModuleName, moduleName)
+			}
+			if version != tc.expectedVersion {
+				t.Errorf("expected version %s, got %s", tc.expectedVersion, version)
+			}
+		})
 	}
 }

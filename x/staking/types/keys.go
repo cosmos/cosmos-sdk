@@ -57,9 +57,6 @@ var (
 	RedelegationQueueKey = collections.NewPrefix(66) // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = collections.NewPrefix(67) // prefix for the timestamps in validator queue
 
-	HistoricalInfoKey   = collections.NewPrefix(80) // prefix for the historical info
-	ValidatorUpdatesKey = collections.NewPrefix(97) // prefix for the end block validator updates key
-
 	ParamsKey = collections.NewPrefix(81) // prefix for parameters for module x/staking
 
 	DelegationByValIndexKey = collections.NewPrefix(113) // key for delegations by a validator
@@ -68,8 +65,13 @@ var (
 	BlockConsPubKeyRotationHistoryKey           = collections.NewPrefix(102) // prefix for consPubkey rotation history by height
 	ValidatorConsensusKeyRotationRecordQueueKey = collections.NewPrefix(103) // this key is used to set the unbonding period time on each rotation
 	ValidatorConsensusKeyRotationRecordIndexKey = collections.NewPrefix(104) // this key is used to restrict the validator next rotation within waiting (unbonding) period
-	NewToOldConsKeyMap                          = collections.NewPrefix(105) // prefix for rotated cons address to new cons address
-	OldToNewConsKeyMap                          = collections.NewPrefix(106) // prefix for rotated cons address to new cons address
+	ConsAddrToValidatorIdentifierMapPrefix      = collections.NewPrefix(105) // prefix for rotated cons address to new cons address
+	OldToNewConsAddrMap                         = collections.NewPrefix(106) // prefix for rotated cons address to new cons address
+)
+
+// Reserved kvstore keys
+var (
+	_ = collections.NewPrefix(97)
 )
 
 // UnbondingType defines the type of unbonding operation

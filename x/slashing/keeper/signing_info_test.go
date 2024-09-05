@@ -101,8 +101,8 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap_SmallWindow() {
 		require.NoError(err)
 		require.Len(missedBlocks, int(params.SignedBlocksWindow)-1)
 
-		// if the validator rotated it's key there will be different consKeys and a mapping will be added in the state.
-		consAddr1 := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
+		// if the validator rotated its key, there will be different consKeys and a mapping will be added in the state
+		consAddr1 := sdk.ConsAddress("addr1_______________")
 		s.stakingKeeper.EXPECT().ValidatorIdentifier(gomock.Any(), consAddr1).Return(consAddr, nil).AnyTimes()
 
 		missedBlocks, err = keeper.GetValidatorMissedBlocks(ctx, consAddr1)
@@ -121,15 +121,18 @@ func (s *KeeperTestSuite) TestPerformConsensusPubKeyUpdate() {
 	oldConsAddr := sdk.ConsAddress(pks[0].Address())
 	newConsAddr := sdk.ConsAddress(pks[1].Address())
 
+	consStrAddr, err := s.stakingKeeper.ConsensusAddressCodec().BytesToString(newConsAddr)
+	s.Require().NoError(err)
+
 	newInfo := slashingtypes.NewValidatorSigningInfo(
-		newConsAddr.String(),
+		consStrAddr,
 		int64(4),
 		time.Unix(2, 0).UTC(),
 		false,
 		int64(10),
 	)
 
-	err := slashingKeeper.ValidatorSigningInfo.Set(ctx, oldConsAddr, newInfo)
+	err = slashingKeeper.ValidatorSigningInfo.Set(ctx, oldConsAddr, newInfo)
 	require.NoError(err)
 
 	s.stakingKeeper.EXPECT().ValidatorIdentifier(gomock.Any(), oldConsAddr).Return(oldConsAddr, nil)
@@ -144,12 +147,12 @@ func (s *KeeperTestSuite) TestPerformConsensusPubKeyUpdate() {
 	require.NoError(err)
 	require.Equal(savedPubKey, pks[1])
 
-	// check validator SigningInfo is set properly to new consensus pubkey
+	// check validator's SigningInfo is set properly with new consensus pubkey
 	signingInfo, err := slashingKeeper.ValidatorSigningInfo.Get(ctx, newConsAddr)
 	require.NoError(err)
 	require.Equal(signingInfo, newInfo)
 
-	// missed blocks maps to old cons key only since there is a identifier added to get the missed blocks using the new cons key.
+	// missed blocks map corresponds only to the old cons key, as there is an identifier added to get the missed blocks using the new cons key
 	missedBlocks, err := slashingKeeper.GetValidatorMissedBlocks(ctx, oldConsAddr)
 	require.NoError(err)
 

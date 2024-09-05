@@ -19,8 +19,7 @@ func addAllowancesByExpTimeQueue(ctx context.Context, env appmodule.Environment,
 
 	for ; iterator.Valid(); iterator.Next() {
 		var grant feegrant.Grant
-		bz := iterator.Value()
-		if err := cdc.Unmarshal(bz, &grant); err != nil {
+		if err := cdc.Unmarshal(iterator.Value(), &grant); err != nil {
 			return err
 		}
 
@@ -37,12 +36,11 @@ func addAllowancesByExpTimeQueue(ctx context.Context, env appmodule.Environment,
 		if exp != nil {
 			// store key is not changed in 0.46
 			key := iterator.Key()
-			if exp.Before(env.HeaderService.GetHeaderInfo(ctx).Time) {
+			if exp.Before(env.HeaderService.HeaderInfo(ctx).Time) {
 				prefixStore.Delete(key)
 			} else {
 				grantByExpTimeQueueKey := FeeAllowancePrefixQueue(exp, key)
-				err = store.Set(grantByExpTimeQueueKey, []byte{})
-				if err != nil {
+				if err := store.Set(grantByExpTimeQueueKey, []byte{}); err != nil {
 					return err
 				}
 			}

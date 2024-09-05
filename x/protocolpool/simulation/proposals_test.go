@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"context"
 	"math/rand"
 	"testing"
 
@@ -9,6 +10,7 @@ import (
 	"cosmossdk.io/x/protocolpool/simulation"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -18,8 +20,7 @@ func TestProposalMsgs(t *testing.T) {
 	// initialize parameters
 	s := rand.NewSource(1)
 	r := rand.New(s)
-
-	ctx := sdk.NewContext(nil, true, nil)
+	addressCodec := codectestutil.CodecOptions{}.GetAddressCodec()
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalMsgs function
@@ -32,13 +33,16 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, simulation.OpWeightMsgCommunityPoolSpend, w0.AppParamsKey())
 	assert.Equal(t, simulation.DefaultWeightMsgCommunityPoolSpend, w0.DefaultWeight())
 
-	msg := w0.MsgSimulatorFn()(r, ctx, accounts)
+	msg, err := w0.MsgSimulatorFn()(context.Background(), r, accounts, addressCodec)
+	assert.NilError(t, err)
 	msgCommunityPoolSpend, ok := msg.(*pooltypes.MsgCommunityPoolSpend)
 	assert.Assert(t, ok)
 
 	coins, err := sdk.ParseCoinsNormalized("100stake,2testtoken")
 	assert.NilError(t, err)
 
-	assert.Equal(t, sdk.AccAddress(address.Module("gov")).String(), msgCommunityPoolSpend.Authority)
+	authAddr, err := addressCodec.BytesToString(address.Module("gov"))
+	assert.NilError(t, err)
+	assert.Equal(t, authAddr, msgCommunityPoolSpend.Authority)
 	assert.Assert(t, msgCommunityPoolSpend.Amount.Equal(coins))
 }

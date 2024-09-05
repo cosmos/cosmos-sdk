@@ -21,44 +21,21 @@ In the Cosmos SDK, an _account_ designates a pair of _public key_ `PubKey` and _
 
 For HD key derivation the Cosmos SDK uses a standard called [BIP32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki). The BIP32 allows users to create an HD wallet (as specified in [BIP44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)) - a set of accounts derived from an initial secret seed. A seed is usually created from a 12- or 24-word mnemonic. A single seed can derive any number of `PrivKey`s using a one-way cryptographic function. Then, a `PubKey` can be derived from the `PrivKey`. Naturally, the mnemonic is the most sensitive information, as private keys can always be re-generated if the mnemonic is preserved.
 
-```text
-     Account 0                         Account 1                         Account 2
-
-+------------------+              +------------------+               +------------------+
-|                  |              |                  |               |                  |
-|    Address 0     |              |    Address 1     |               |    Address 2     |
-|        ^         |              |        ^         |               |        ^         |
-|        |         |              |        |         |               |        |         |
-|        |         |              |        |         |               |        |         |
-|        |         |              |        |         |               |        |         |
-|        +         |              |        +         |               |        +         |
-|  Public key 0    |              |  Public key 1    |               |  Public key 2    |
-|        ^         |              |        ^         |               |        ^         |
-|        |         |              |        |         |               |        |         |
-|        |         |              |        |         |               |        |         |
-|        |         |              |        |         |               |        |         |
-|        +         |              |        +         |               |        +         |
-|  Private key 0   |              |  Private key 1   |               |  Private key 2   |
-|        ^         |              |        ^         |               |        ^         |
-+------------------+              +------------------+               +------------------+
-         |                                 |                                  |
-         |                                 |                                  |
-         |                                 |                                  |
-         +--------------------------------------------------------------------+
-                                           |
-                                           |
-                                 +---------+---------+
-                                 |                   |
-                                 |  Master PrivKey   |
-                                 |                   |
-                                 +-------------------+
-                                           |
-                                           |
-                                 +---------+---------+
-                                 |                   |
-                                 |  Mnemonic (Seed)  |
-                                 |                   |
-                                 +-------------------+
+```mermaid
+graph BT
+    A0A[Address 0] --> A0[Account 0]
+    A0PK[Public key 0] --> A0A[Address 0]
+    A0SK[Private key 0] --> A0PK[Public key 0]
+    A1A[Address 1] --> A1[Account 1]
+    A1PK[Public key 1] --> A1A[Address 1]
+    A1SK[Private key 1] --> A1PK[Public key 1]
+    A2A[Address 2] --> A2[Account 2]
+    A2PK[Public key 2] --> A2A[Address 2]
+    A2SK[Private key 2] --> A2PK[Public key 2]
+    MasterPK[Master PrivKey] --> A0SK[Private key 0]
+    MasterPK[Master PrivKey] --> A1SK[Private key 1]
+    MasterPK[Master PrivKey] --> A2SK[Private key 2]
+    Mnemonic["Mnemonic (Seed)"] --> MasterPK[Master PrivKey]
 ```
 
 In the Cosmos SDK, keys are stored and managed by using an object called a [`Keyring`](#keyring).
@@ -152,13 +129,13 @@ The default implementation of `Keyring` comes from the third-party [`99designs/k
 
 A few notes on the `Keyring` methods:
 
-* `Sign(uid string, msg []byte) ([]byte, types.PubKey, error)` strictly deals with the signature of the `msg` bytes. You must prepare and encode the transaction into a canonical `[]byte` form. Because protobuf is not deterministic, it has been decided in [ADR-020](../../build/architecture/adr-020-protobuf-transaction-encoding.md) that the canonical `payload` to sign is the `SignDoc` struct, deterministically encoded using [ADR-027](../../build/architecture/adr-027-deterministic-protobuf-serialization.md). Note that signature verification is not implemented in the Cosmos SDK by default, it is deferred to the [`anteHandler`](../advanced/00-baseapp.md#antehandler).
+* `Sign(uid string, msg []byte) ([]byte, types.PubKey, error)` strictly deals with the signature of the `msg` bytes. You must prepare and encode the transaction into a canonical `[]byte` form. Because protobuf is not deterministic, it has been decided in [ADR-020](../../architecture/adr-020-protobuf-transaction-encoding.md) that the canonical `payload` to sign is the `SignDoc` struct, deterministically encoded using [ADR-027](../../architecture/adr-027-deterministic-protobuf-serialization.md). Note that signature verification is not implemented in the Cosmos SDK by default, it is deferred to the [`anteHandler`](../advanced/00-baseapp.md#antehandler).
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/v1beta1/tx.proto#L50-L66
 ```
 
-* `NewAccount(uid, mnemonic, bip39Passphrase, hdPath string, algo SignatureAlgo) (*Record, error)` creates a new account based on the [`bip44 path`](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) and persists it on disk. The `PrivKey` is **never stored unencrypted**, instead it is [encrypted with a passphrase](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/crypto/armor.go) before being persisted. In the context of this method, the key type and sequence number refer to the segment of the BIP44 derivation path (for example, `0`, `1`, `2`, ...) that is used to derive a private and a public key from the mnemonic. Using the same mnemonic and derivation path, the same `PrivKey`, `PubKey` and `Address` is generated. The following keys are supported by the keyring:
+* `NewAccount(uid, mnemonic, bip39Passphrase, hdPath string, algo SignatureAlgo) (*Record, error)` creates a new account based on the [`bip44 path`](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) and persists it on disk. The `PrivKey` is **never stored unencrypted**, instead it is [encrypted with a passphrase](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/crypto/armor.go) before being persisted. In the context of this method, the key type and sequence number refers to the segment of the BIP44 derivation path (for example, `0`, `1`, `2`, ...) that is used to derive a private and a public key from the mnemonic. Using the same mnemonic and derivation path, the same `PrivKey`, `PubKey` and `Address` is generated. The following keys are supported by the keyring:
 
 * `secp256k1`
 * `ed25519`

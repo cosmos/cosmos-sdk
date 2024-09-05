@@ -3,10 +3,9 @@ package keeper
 import (
 	"context"
 
-	v5 "cosmossdk.io/x/auth/migrations/v5"
-	"cosmossdk.io/x/auth/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v5 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v5"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // Migrator is a struct for handling in-place store migrations.
@@ -42,16 +41,16 @@ func (m Migrator) Migrate3to4(ctx context.Context) error {
 // It migrates the GlobalAccountNumber from being a protobuf defined value to a
 // big-endian encoded uint64, it also migrates it to use a more canonical prefix.
 func (m Migrator) Migrate4To5(ctx context.Context) error {
-	return v5.Migrate(ctx, m.keeper.environment.KVStoreService, m.keeper.AccountNumber)
+	return v5.Migrate(ctx, m.keeper.KVStoreService, m.keeper.accountNumber)
 }
 
-// V45_SetAccount implements V45_SetAccount
+// V45SetAccount implements V45_SetAccount
 // set the account without map to accAddr to accNumber.
 //
 // NOTE: This is used for testing purposes only.
 func (m Migrator) V45SetAccount(ctx context.Context, acc sdk.AccountI) error {
 	addr := acc.GetAddress()
-	store := m.keeper.environment.KVStoreService.OpenKVStore(ctx)
+	store := m.keeper.KVStoreService.OpenKVStore(ctx)
 
 	bz, err := m.keeper.Accounts.ValueCodec().Encode(acc)
 	if err != nil {

@@ -13,14 +13,12 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
 	_ appmodule.AppModule = coreAppModuleAdaptor{}
 
-	_ HasName                         = coreAppModuleAdaptor{}
 	_ HasAminoCodec                   = coreAppModuleAdaptor{}
 	_ HasGRPCGateway                  = coreAppModuleAdaptor{}
 	_ appmodule.HasRegisterInterfaces = coreAppModuleAdaptor{}
@@ -154,7 +152,8 @@ func (c coreAppModuleAdaptor) InitGenesis(ctx context.Context, bz json.RawMessag
 	return nil, nil
 }
 
-// Name implements HasName
+// Name implements legacy Name() interface
+// Kept for legacy reasons
 func (c coreAppModuleAdaptor) Name() string {
 	return c.name
 }
@@ -198,9 +197,9 @@ func (c coreAppModuleAdaptor) RegisterInterfaces(reg registry.InterfaceRegistrar
 }
 
 // RegisterLegacyAminoCodec implements HasAminoCodec
-func (c coreAppModuleAdaptor) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
+func (c coreAppModuleAdaptor) RegisterLegacyAminoCodec(amino registry.AminoRegistrar) {
 	if mod, ok := c.module.(interface {
-		RegisterLegacyAminoCodec(amino *codec.LegacyAmino)
+		RegisterLegacyAminoCodec(amino registry.AminoRegistrar)
 	}); ok {
 		mod.RegisterLegacyAminoCodec(amino)
 	}
@@ -208,7 +207,7 @@ func (c coreAppModuleAdaptor) RegisterLegacyAminoCodec(amino *codec.LegacyAmino)
 
 // RegisterServices implements HasServices
 func (c coreAppModuleAdaptor) RegisterServices(cfg Configurator) {
-	if module, ok := c.module.(appmodule.HasServices); ok {
+	if module, ok := c.module.(hasServicesV1); ok {
 		err := module.RegisterServices(cfg)
 		if err != nil {
 			panic(err)

@@ -3,9 +3,9 @@ syntax = "proto3";
 package cosmos.consensus.v1;
 
 import "google/api/annotations.proto";
-import "tendermint/types/params.proto";
+import "cometbft/types/v1/params.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/consensus/types";
+option go_package = "cosmossdk.io/x/consensus/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -23,5 +23,5 @@ message QueryParamsResponse {
   // params are the tendermint consensus params stored in the consensus module.
   // Please note that `params.version` is not populated in this response, it is
   // tracked separately in the x/upgrade module.
-  tendermint.types.ConsensusParams params = 1;
+  cometbft.types.v1.ConsensusParams params = 1;
 }

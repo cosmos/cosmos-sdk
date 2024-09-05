@@ -23,12 +23,15 @@ func (k Keeper) HasValidatorSigningInfo(ctx context.Context, consAddr sdk.ConsAd
 	return err == nil && has
 }
 
-// JailUntil attempts to set a validator's JailedUntil attribute in its signing
-// info.
+// JailUntil attempts to set a validator's JailedUntil attribute in its signing info.
 func (k Keeper) JailUntil(ctx context.Context, consAddr sdk.ConsAddress, jailTime time.Time) error {
 	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
-		return errorsmod.Wrap(err, fmt.Sprintf("cannot jail validator with consensus address %s that does not have any signing information", consAddr.String()))
+		addr, err := k.sk.ConsensusAddressCodec().BytesToString(consAddr)
+		if err != nil {
+			return types.ErrNoSigningInfoFound.Wrapf("could not convert consensus address to string. Error: %s", err.Error())
+		}
+		return types.ErrNoSigningInfoFound.Wrapf("cannot jail validator with consensus address %s that does not have any signing information", addr)
 	}
 
 	signInfo.JailedUntil = jailTime
@@ -39,7 +42,11 @@ func (k Keeper) JailUntil(ctx context.Context, consAddr sdk.ConsAddress, jailTim
 func (k Keeper) Tombstone(ctx context.Context, consAddr sdk.ConsAddress) error {
 	signInfo, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
 	if err != nil {
-		return types.ErrNoSigningInfoFound.Wrap(fmt.Sprintf("cannot tombstone validator with consensus address %s that does not have any signing information", consAddr.String()))
+		addr, err := k.sk.ConsensusAddressCodec().BytesToString(consAddr)
+		if err != nil {
+			return types.ErrNoSigningInfoFound.Wrapf("could not convert consensus address to string. Error: %s", err.Error())
+		}
+		return types.ErrNoSigningInfoFound.Wrap(fmt.Sprintf("cannot tombstone validator with consensus address %s that does not have any signing information", addr))
 	}
 
 	if signInfo.Tombstoned {
@@ -76,8 +83,8 @@ func (k Keeper) SetMissedBlockBitmapChunk(ctx context.Context, addr sdk.ConsAddr
 	return k.ValidatorMissedBlockBitmap.Set(ctx, collections.Join(addr.Bytes(), uint64(chunkIndex)), chunk)
 }
 
-// getPreviousConsKey checks if the key rotated, returns the old consKey to get the missed blocks
-// because missed blocks are still pointing to the old key
+// getPreviousConsKey returns the old consensus key if it has rotated,
+// allowing retrieval of missed blocks associated with the old key.
 func (k Keeper) getPreviousConsKey(ctx context.Context, addr sdk.ConsAddress) (sdk.ConsAddress, error) {
 	oldPk, err := k.sk.ValidatorIdentifier(ctx, addr)
 	if err != nil {
@@ -98,8 +105,7 @@ func (k Keeper) getPreviousConsKey(ctx context.Context, addr sdk.ConsAddress) (s
 // IndexOffset modulo SignedBlocksWindow. This index is used to fetch the chunk
 // in the bitmap and the relative bit in that chunk.
 func (k Keeper) GetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddress, index int64) (bool, error) {
-	// check the key rotated, if rotated use the returned consKey to get the missed blocks
-	// because missed blocks are still pointing to the old key
+	// get the old consensus key if it has rotated, allowing retrieval of missed blocks associated with the old key
 	addr, err := k.getPreviousConsKey(ctx, addr)
 	if err != nil {
 		return false, err
@@ -134,8 +140,7 @@ func (k Keeper) GetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 // index is used to fetch the chunk in the bitmap and the relative bit in that
 // chunk.
 func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddress, index int64, missed bool) error {
-	// check the key rotated, if rotated use the returned consKey to get the missed blocks
-	// because missed blocks are still pointing to the old key
+	// get the old consensus key if it has rotated, allowing retrieval of missed blocks associated with the old key
 	addr, err := k.getPreviousConsKey(ctx, addr)
 	if err != nil {
 		return err
@@ -174,21 +179,14 @@ func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 
 // DeleteMissedBlockBitmap removes a validator's missed block bitmap from state.
 func (k Keeper) DeleteMissedBlockBitmap(ctx context.Context, addr sdk.ConsAddress) error {
-	// check the key rotated, if rotated use the returned consKey to delete the missed blocks
-	// because missed blocks are still pointing to the old key
+	// get the old consensus key if it has rotated, allowing retrieval of missed blocks associated with the old key
 	addr, err := k.getPreviousConsKey(ctx, addr)
 	if err != nil {
 		return err
 	}
 
 	rng := collections.NewPrefixedPairRange[[]byte, uint64](addr.Bytes())
-	return k.ValidatorMissedBlockBitmap.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value []byte) (bool, error) {
-		err := k.ValidatorMissedBlockBitmap.Remove(ctx, key)
-		if err != nil {
-			return true, err
-		}
-		return false, nil
-	})
+	return k.ValidatorMissedBlockBitmap.Clear(ctx, rng)
 }
 
 // IterateMissedBlockBitmap iterates over a validator's signed blocks window
@@ -238,8 +236,8 @@ func (k Keeper) GetValidatorMissedBlocks(ctx context.Context, addr sdk.ConsAddre
 	return missedBlocks, err
 }
 
-// performConsensusPubKeyUpdate updates cons address to its pub key relation
-// Updates signing info, missed blocks (removes old one, and sets new one)
+// performConsensusPubKeyUpdate updates the consensus address-pubkey relation
+// and refreshes the signing info by replacing the old key with the new one.
 func (k Keeper) performConsensusPubKeyUpdate(ctx context.Context, oldPubKey, newPubKey cryptotypes.PubKey) error {
 	// Connect new consensus address with PubKey
 	if err := k.AddrPubkeyRelation.Set(ctx, newPubKey.Address(), newPubKey); err != nil {

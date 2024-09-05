@@ -27,7 +27,7 @@ func TestDecodeStore(t *testing.T) {
 
 	now := time.Now().UTC()
 	e := now.Add(1)
-	sendAuthz := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("foo", 123)), nil)
+	sendAuthz := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewInt64Coin("foo", 123)), nil, codectestutil.CodecOptions{}.GetAddressCodec())
 	grant, _ := authz.NewGrant(now, sendAuthz, &e)
 	grantBz, err := encCfg.Codec.Marshal(&grant)
 	require.NoError(t, err)

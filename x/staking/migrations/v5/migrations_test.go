@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log"
+	coretesting "cosmossdk.io/core/testing"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/staking"
@@ -30,7 +30,7 @@ func TestHistoricalKeysMigration(t *testing.T) {
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
-	logger := log.NewTestLogger(t)
+	logger := coretesting.NewNopLogger()
 
 	type testCase struct {
 		oldKey, newKey []byte
@@ -81,19 +81,25 @@ func createHistoricalInfo(height int64, chainID string) *stakingtypes.Historical
 }
 
 func TestDelegationsByValidatorMigrations(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, staking.AppModule{}).Codec
+	codecOpts := codectestutil.CodecOptions{}
+	cdc := moduletestutil.MakeTestEncodingConfig(codecOpts, staking.AppModule{}).Codec
 	storeKey := storetypes.NewKVStoreKey(v5.ModuleName)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
-	logger := log.NewTestLogger(t)
+	logger := coretesting.NewNopLogger()
 
 	accAddrs := sims.CreateIncrementalAccounts(11)
 	valAddrs := sims.ConvertAddrsToValAddrs(accAddrs[0:1])
 	var addedDels []stakingtypes.Delegation
 
+	valAddr, err := codecOpts.GetValidatorCodec().BytesToString(valAddrs[0])
+	assert.NoError(t, err)
+
 	for i := 1; i < 11; i++ {
-		del1 := stakingtypes.NewDelegation(accAddrs[i].String(), valAddrs[0].String(), sdkmath.LegacyNewDec(100))
+		accAddr, err := codecOpts.GetAddressCodec().BytesToString(accAddrs[i])
+		assert.NoError(t, err)
+		del1 := stakingtypes.NewDelegation(accAddr, valAddr, sdkmath.LegacyNewDec(100))
 		store.Set(v5.GetDelegationKey(accAddrs[i], valAddrs[0]), stakingtypes.MustMarshalDelegation(cdc, del1))
 		addedDels = append(addedDels, del1)
 	}
@@ -102,7 +108,7 @@ func TestDelegationsByValidatorMigrations(t *testing.T) {
 	dels := getValDelegations(ctx, cdc, storeKey, valAddrs[0])
 	assert.Len(t, dels, 0)
 
-	err := v5.MigrateStore(ctx, store, cdc, logger)
+	err = v5.MigrateStore(ctx, store, cdc, logger)
 	assert.NoError(t, err)
 
 	// after migration the state of delegations by val index should not be empty

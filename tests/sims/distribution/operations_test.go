@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	authkeeper "cosmossdk.io/x/auth/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/distribution/keeper"
@@ -27,6 +26,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 // TestWeightedOperations tests the weights of the operations.
@@ -261,8 +261,7 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 	account := accounts[n]
 	valPubKey := account.PubKey
 	valAddr := sdk.ValAddress(account.PubKey.Address().Bytes())
-	validator, err := stakingtypes.NewValidator(valAddr.String(), valPubKey, stakingtypes.
-		Description{})
+	validator, err := stakingtypes.NewValidator(valAddr.String(), valPubKey, stakingtypes.Description{})
 	require.NoError(err)
 	validator, err = validator.SetInitialCommission(commission)
 	require.NoError(err)

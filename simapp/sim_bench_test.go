@@ -1,17 +1,23 @@
+//go:build sims
+
 package simapp
 
 import (
 	"os"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/testutils/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
@@ -30,7 +36,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	b.ReportAllocs()
 
 	config := simcli.NewConfigFromFlags()
-	config.ChainID = SimAppChainID
+	config.ChainID = sims.SimAppChainID
 
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "goleveldb-app-sim", "Simulation", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
 	if err != nil {
@@ -47,31 +53,28 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}()
 
 	appOptions := viper.New()
-	if FlagEnableStreamingValue {
-		m := make(map[string]interface{})
-		m["streaming.abci.keys"] = []string{"*"}
-		m["streaming.abci.plugin"] = "abci_v1"
-		m["streaming.abci.stop-node-on-err"] = true
-		for key, value := range m {
-			appOptions.SetDefault(key, value)
-		}
-	}
 	appOptions.SetDefault(flags.FlagHome, DefaultNodeHome)
 	appOptions.SetDefault(server.FlagInvCheckPeriod, simcli.FlagPeriodValue)
 
-	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(sims.SimAppChainID))
+
+	blockedAddrs, err := BlockedAddresses(app.InterfaceRegistry().SigningContext().AddressCodec())
+	require.NoError(b, err)
 
 	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	simParams, simErr := simulation.SimulateFromSeedX(
 		b,
+		log.NewNopLogger(),
 		os.Stdout,
 		app.BaseApp,
-		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
-		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.SimulationOperations(app, app.AppCodec(), config),
-		BlockedAddresses(),
+		simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		simtypes.RandomAccounts,
+		simtestutil.SimulationOperations(app, app.AppCodec(), config, app.txConfig),
+		blockedAddrs,
 		config,
 		app.AppCodec(),
+		app.txConfig.SigningContext().AddressCodec(),
+		&simulation.DummyLogWriter{},
 	)
 
 	// export state and simParams before the simulation error is checked
@@ -84,6 +87,6 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 
 	if config.Commit {
-		simtestutil.PrintStats(db)
+		simtestutil.PrintStats(db.(*dbm.GoLevelDB))
 	}
 }

@@ -86,9 +86,14 @@ func (k Querier) ValidatorDistributionInfo(ctx context.Context, req *types.Query
 		return nil, err
 	}
 
+	operatorAddr, err := k.authKeeper.AddressCodec().BytesToString(delAdr)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.QueryValidatorDistributionInfoResponse{
 		Commission:      validatorCommission.Commission,
-		OperatorAddress: delAdr.String(),
+		OperatorAddress: operatorAddr,
 		SelfBondRewards: rewards,
 	}, nil
 }
@@ -114,7 +119,7 @@ func (k Querier) ValidatorOutstandingRewards(ctx context.Context, req *types.Que
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, req.ValidatorAddress)
+		return nil, errors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
 	rewards, err := k.Keeper.ValidatorOutstandingRewards.Get(ctx, valAdr)
@@ -146,7 +151,7 @@ func (k Querier) ValidatorCommission(ctx context.Context, req *types.QueryValida
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, req.ValidatorAddress)
+		return nil, errors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 	commission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valAdr)
 	if err != nil && !errors.IsOf(err, collections.ErrNotFound) {
@@ -356,16 +361,24 @@ func (k Querier) DelegatorWithdrawAddress(ctx context.Context, req *types.QueryD
 		return nil, err
 	}
 
-	return &types.QueryDelegatorWithdrawAddressResponse{WithdrawAddress: withdrawAddr.String()}, nil
+	addr, err := k.authKeeper.AddressCodec().BytesToString(withdrawAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryDelegatorWithdrawAddressResponse{WithdrawAddress: addr}, nil
 }
 
 // Deprecated: DO NOT USE
 // This method uses deprecated query request. Use CommunityPool from x/protocolpool module instead.
 // CommunityPool queries the community pool coins
 func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	pool, err := k.poolKeeper.GetCommunityPool(ctx)
-	if err != nil {
-		return nil, err
+	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolModuleName)
+	if moduleAccount == nil {
+		return nil, status.Error(codes.Internal, "protocolpool module account does not exist")
 	}
-	return &types.QueryCommunityPoolResponse{Pool: sdk.NewDecCoinsFromCoins(pool...)}, nil
+
+	balances := k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress())
+
+	return &types.QueryCommunityPoolResponse{Pool: sdk.NewDecCoinsFromCoins(balances...)}, nil
 }

@@ -2,11 +2,11 @@ package client
 
 import (
 	gocontext "context"
-	"fmt"
+	"errors"
 	"reflect"
 	"strconv"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
@@ -83,7 +83,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 		ctx = ctx.WithHeight(height)
 	}
 
-	abciReq := abci.RequestQuery{
+	abciReq := abci.QueryRequest{
 		Path:   method,
 		Data:   reqBz,
 		Height: ctx.Height,
@@ -123,7 +123,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 
 // NewStream implements the grpc ClientConn.NewStream method
 func (Context) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
-	return nil, fmt.Errorf("streaming rpc not supported")
+	return nil, errors.New("streaming rpc not supported")
 }
 
 // gRPCCodec checks if Context's Codec is codec.GRPCCodecProvider

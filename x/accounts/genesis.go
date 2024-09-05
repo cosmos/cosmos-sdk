@@ -11,15 +11,7 @@ import (
 func (k Keeper) ExportState(ctx context.Context) (*v1.GenesisState, error) {
 	genState := &v1.GenesisState{}
 
-	// get account number
-	accountNumber, err := k.AccountNumber.Peek(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	genState.AccountNumber = accountNumber
-
-	err = k.AccountsByType.Walk(ctx, nil, func(accAddr []byte, accType string) (stop bool, err error) {
+	err := k.AccountsByType.Walk(ctx, nil, func(accAddr []byte, accType string) (stop bool, err error) {
 		accNum, err := k.AccountByNumber.Get(ctx, accAddr)
 		if err != nil {
 			return true, err
@@ -64,23 +56,50 @@ func (k Keeper) exportAccount(ctx context.Context, addr []byte, accType string, 
 }
 
 func (k Keeper) ImportState(ctx context.Context, genState *v1.GenesisState) error {
-	err := k.AccountNumber.Set(ctx, genState.AccountNumber)
-	if err != nil {
-		return err
-	}
-
+	lastAccountNumber := uint64(0)
+	var err error
 	// import accounts
 	for _, acc := range genState.Accounts {
 		err = k.importAccount(ctx, acc)
 		if err != nil {
 			return fmt.Errorf("%w: %s", err, acc.Address)
 		}
+
+		// update lastAccountNumber if the current account being processed
+		// has a bigger account number.
+		if lastAccountNumber < acc.AccountNumber {
+			lastAccountNumber = acc.AccountNumber
+		}
+	}
+
+	// we set the latest account number only if there were any genesis accounts, otherwise
+	// we leave it unset.
+	if len(genState.Accounts) != 0 {
+		// due to sequence semantics, we store the next account number.
+		err = k.AccountNumber.Set(ctx, lastAccountNumber+1)
+		if err != nil {
+			return err
+		}
+	}
+
+	// after this execute account creation msgs.
+	for index, msgInit := range genState.InitAccountMsgs {
+		_, _, err = k.initFromMsg(ctx, msgInit)
+		if err != nil {
+			return fmt.Errorf("invalid genesis account msg init at index %d, msg %s: %w", index, msgInit, err)
+		}
 	}
 	return nil
 }
 
 func (k Keeper) importAccount(ctx context.Context, acc *v1.GenesisAccount) error {
-	// TODO: maybe check if impl exists?
+	// Check if the account type exists in the registered accounts
+	_, ok := k.accounts[acc.AccountType]
+	if !ok {
+		// If the account type does not exist, return an error
+		return fmt.Errorf("account type %s not found in the registered accounts", acc.AccountType)
+	}
+
 	addrBytes, err := k.addressCodec.StringToBytes(acc.Address)
 	if err != nil {
 		return err

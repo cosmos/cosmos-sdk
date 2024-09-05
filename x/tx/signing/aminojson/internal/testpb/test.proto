@@ -20,6 +20,10 @@ message WithAList {
   repeated string list                = 2;
 }
 
+message WithAJson {
+  bytes field1 = 1 [(amino.encoding) = "inline_json"];
+}
+
 message ABitOfEverything {
   option (amino.name) = "ABitOfEverything";
 

@@ -1,10 +1,10 @@
 package keeper_test
 
 import (
-	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var govAcc = authtypes.NewEmptyModuleAccount(banktypes.GovModuleName, authtypes.Minter)
@@ -72,6 +72,11 @@ func (suite *KeeperTestSuite) TestMsgSend() {
 	atom0 := sdk.NewCoins(sdk.NewInt64Coin("atom", 0))
 	atom123eth0 := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 0)}
 
+	acc4Addr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[4])
+	suite.Require().NoError(err)
+	minterAccAddr, err := suite.authKeeper.AddressCodec().BytesToString(minterAcc.GetAddress())
+	suite.Require().NoError(err)
+
 	testCases := []struct {
 		name      string
 		input     *banktypes.MsgSend
@@ -81,8 +86,8 @@ func (suite *KeeperTestSuite) TestMsgSend() {
 		{
 			name: "invalid send to blocked address",
 			input: &banktypes.MsgSend{
-				FromAddress: minterAcc.GetAddress().String(),
-				ToAddress:   accAddrs[4].String(),
+				FromAddress: minterAccAddr,
+				ToAddress:   acc4Addr,
 				Amount:      origCoins,
 			},
 			expErr:    true,
@@ -91,7 +96,7 @@ func (suite *KeeperTestSuite) TestMsgSend() {
 		{
 			name: "invalid coins",
 			input: &banktypes.MsgSend{
-				FromAddress: minterAcc.GetAddress().String(),
+				FromAddress: minterAccAddr,
 				ToAddress:   baseAcc.Address,
 				Amount:      atom0,
 			},
@@ -101,7 +106,7 @@ func (suite *KeeperTestSuite) TestMsgSend() {
 		{
 			name: "123atom,0eth: invalid coins",
 			input: &banktypes.MsgSend{
-				FromAddress: minterAcc.GetAddress().String(),
+				FromAddress: minterAccAddr,
 				ToAddress:   baseAcc.Address,
 				Amount:      atom123eth0,
 			},
@@ -121,7 +126,7 @@ func (suite *KeeperTestSuite) TestMsgSend() {
 		{
 			name: "invalid to address: empty address string is not allowed: invalid address",
 			input: &banktypes.MsgSend{
-				FromAddress: minterAcc.GetAddress().String(),
+				FromAddress: minterAccAddr,
 				ToAddress:   "",
 				Amount:      origCoins,
 			},
@@ -131,7 +136,7 @@ func (suite *KeeperTestSuite) TestMsgSend() {
 		{
 			name: "all good",
 			input: &banktypes.MsgSend{
-				FromAddress: minterAcc.GetAddress().String(),
+				FromAddress: minterAccAddr,
 				ToAddress:   baseAcc.Address,
 				Amount:      origCoins,
 			},
@@ -165,6 +170,15 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin(origDenom, 50))
 	suite.bankKeeper.SetSendEnabled(suite.ctx, origDenom, true)
 
+	acc0Addr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[0])
+	suite.Require().NoError(err)
+	acc1Addr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[1])
+	suite.Require().NoError(err)
+	acc4Addr, err := suite.authKeeper.AddressCodec().BytesToString(accAddrs[4])
+	suite.Require().NoError(err)
+	minterAccAddr, err := suite.authKeeper.AddressCodec().BytesToString(minterAcc.GetAddress())
+	suite.Require().NoError(err)
+
 	testCases := []struct {
 		name      string
 		input     *banktypes.MsgMultiSend
@@ -181,7 +195,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 			name: "no inputs to send transaction",
 			input: &banktypes.MsgMultiSend{
 				Outputs: []banktypes.Output{
-					{Address: accAddrs[4].String(), Coins: sendCoins},
+					{Address: acc4Addr, Coins: sendCoins},
 				},
 			},
 			expErr:    true,
@@ -191,8 +205,8 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 			name: "more than one inputs to send transaction",
 			input: &banktypes.MsgMultiSend{
 				Inputs: []banktypes.Input{
-					{Address: minterAcc.GetAddress().String(), Coins: origCoins},
-					{Address: minterAcc.GetAddress().String(), Coins: origCoins},
+					{Address: minterAccAddr, Coins: origCoins},
+					{Address: minterAccAddr, Coins: origCoins},
 				},
 			},
 			expErr:    true,
@@ -202,7 +216,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 			name: "no outputs to send transaction",
 			input: &banktypes.MsgMultiSend{
 				Inputs: []banktypes.Input{
-					{Address: minterAcc.GetAddress().String(), Coins: origCoins},
+					{Address: minterAccAddr, Coins: origCoins},
 				},
 			},
 			expErr:    true,
@@ -212,11 +226,11 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 			name: "invalid send to blocked address",
 			input: &banktypes.MsgMultiSend{
 				Inputs: []banktypes.Input{
-					{Address: minterAcc.GetAddress().String(), Coins: origCoins},
+					{Address: minterAccAddr, Coins: origCoins},
 				},
 				Outputs: []banktypes.Output{
-					{Address: accAddrs[0].String(), Coins: sendCoins},
-					{Address: accAddrs[4].String(), Coins: sendCoins},
+					{Address: acc0Addr, Coins: sendCoins},
+					{Address: acc4Addr, Coins: sendCoins},
 				},
 			},
 			expErr:    true,
@@ -226,11 +240,11 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 			name: "invalid send to blocked address",
 			input: &banktypes.MsgMultiSend{
 				Inputs: []banktypes.Input{
-					{Address: minterAcc.GetAddress().String(), Coins: origCoins},
+					{Address: minterAccAddr, Coins: origCoins},
 				},
 				Outputs: []banktypes.Output{
-					{Address: accAddrs[0].String(), Coins: sendCoins},
-					{Address: accAddrs[1].String(), Coins: sendCoins},
+					{Address: acc0Addr, Coins: sendCoins},
+					{Address: acc1Addr, Coins: sendCoins},
 				},
 			},
 			expErr: false,
@@ -258,6 +272,8 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 }
 
 func (suite *KeeperTestSuite) TestMsgSetSendEnabled() {
+	govAccAddr, err := suite.authKeeper.AddressCodec().BytesToString(govAcc.GetAddress())
+	suite.Require().NoError(err)
 	testCases := []struct {
 		name     string
 		req      *banktypes.MsgSetSendEnabled
@@ -267,7 +283,7 @@ func (suite *KeeperTestSuite) TestMsgSetSendEnabled() {
 		{
 			name: "all good",
 			req: banktypes.NewMsgSetSendEnabled(
-				govAcc.GetAddress().String(),
+				govAccAddr,
 				[]*banktypes.SendEnabled{
 					banktypes.NewSendEnabled("atom1", true),
 				},
@@ -277,7 +293,7 @@ func (suite *KeeperTestSuite) TestMsgSetSendEnabled() {
 		{
 			name: "all good with two denoms",
 			req: banktypes.NewMsgSetSendEnabled(
-				govAcc.GetAddress().String(),
+				govAccAddr,
 				[]*banktypes.SendEnabled{
 					banktypes.NewSendEnabled("atom1", true),
 					banktypes.NewSendEnabled("atom2", true),
@@ -288,7 +304,7 @@ func (suite *KeeperTestSuite) TestMsgSetSendEnabled() {
 		{
 			name: "duplicate denoms",
 			req: banktypes.NewMsgSetSendEnabled(
-				govAcc.GetAddress().String(),
+				govAccAddr,
 				[]*banktypes.SendEnabled{
 					banktypes.NewSendEnabled("atom", true),
 					banktypes.NewSendEnabled("atom", true),
@@ -301,7 +317,7 @@ func (suite *KeeperTestSuite) TestMsgSetSendEnabled() {
 		{
 			name: "bad first denom name, (invalid send enabled denom present in list)",
 			req: banktypes.NewMsgSetSendEnabled(
-				govAcc.GetAddress().String(),
+				govAccAddr,
 				[]*banktypes.SendEnabled{
 					banktypes.NewSendEnabled("not a denom", true),
 					banktypes.NewSendEnabled("somecoin", true),
@@ -314,7 +330,7 @@ func (suite *KeeperTestSuite) TestMsgSetSendEnabled() {
 		{
 			name: "bad second denom name, (invalid send enabled denom present in list)",
 			req: banktypes.NewMsgSetSendEnabled(
-				govAcc.GetAddress().String(),
+				govAccAddr,
 				[]*banktypes.SendEnabled{
 					banktypes.NewSendEnabled("somecoin", true),
 					banktypes.NewSendEnabled("not a denom", true),
@@ -327,7 +343,7 @@ func (suite *KeeperTestSuite) TestMsgSetSendEnabled() {
 		{
 			name: "invalid UseDefaultFor denom",
 			req: banktypes.NewMsgSetSendEnabled(
-				govAcc.GetAddress().String(),
+				govAccAddr,
 				[]*banktypes.SendEnabled{
 					banktypes.NewSendEnabled("atom", true),
 				},
@@ -367,6 +383,9 @@ func (suite *KeeperTestSuite) TestMsgBurn() {
 	origCoins := sdk.NewInt64Coin("eth", 100)
 	atom0 := sdk.NewInt64Coin("atom", 0)
 
+	multiPermAccAddr, err := suite.authKeeper.AddressCodec().BytesToString(multiPermAcc.GetAddress())
+	suite.Require().NoError(err)
+
 	testCases := []struct {
 		name      string
 		input     *banktypes.MsgBurn
@@ -376,7 +395,7 @@ func (suite *KeeperTestSuite) TestMsgBurn() {
 		{
 			name: "invalid coins",
 			input: &banktypes.MsgBurn{
-				FromAddress: multiPermAcc.GetAddress().String(),
+				FromAddress: multiPermAccAddr,
 				Amount:      []*sdk.Coin{&atom0},
 			},
 			expErr:    true,
@@ -395,7 +414,7 @@ func (suite *KeeperTestSuite) TestMsgBurn() {
 		{
 			name: "all good",
 			input: &banktypes.MsgBurn{
-				FromAddress: multiPermAcc.GetAddress().String(),
+				FromAddress: multiPermAccAddr,
 				Amount:      []*sdk.Coin{&origCoins},
 			},
 			expErr: false,

@@ -8,25 +8,25 @@ import (
 	"github.com/spf13/cobra"
 
 	authv1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	stakingv1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/client/v2/autocli"
-	clientv2keyring "cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
-	"cosmossdk.io/x/auth/tx"
-	authtxconfig "cosmossdk.io/x/auth/tx/config"
-	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
@@ -39,13 +39,9 @@ func NewRootCmd() *cobra.Command {
 
 	if err := depinject.Inject(
 		depinject.Configs(simapp.AppConfig(),
-			depinject.Supply(
-				log.NewNopLogger(),
-				simtestutil.NewAppOptionsWithFlagHome(tempDir()),
-			),
+			depinject.Supply(log.NewNopLogger()),
 			depinject.Provide(
 				ProvideClientContext,
-				ProvideKeyring,
 			),
 		),
 		&autoCliOpts,
@@ -87,7 +83,11 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, clientCtx.TxConfig, clientCtx.InterfaceRegistry, clientCtx.Codec, moduleManager)
+	initRootCmd(rootCmd, moduleManager)
+
+	nodeCmds := nodeservice.NewNodeCommands()
+	autoCliOpts.ModuleOptions = make(map[string]*autocliv1.ModuleOptions)
+	autoCliOpts.ModuleOptions[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()
 
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
@@ -100,7 +100,7 @@ func ProvideClientContext(
 	appCodec codec.Codec,
 	interfaceRegistry codectypes.InterfaceRegistry,
 	txConfigOpts tx.ConfigOptions,
-	legacyAmino *codec.LegacyAmino,
+	legacyAmino registry.AminoRegistrar,
 	addressCodec address.Codec,
 	validatorAddressCodec address.ValidatorAddressCodec,
 	consensusAddressCodec address.ConsensusAddressCodec,
@@ -109,10 +109,15 @@ func ProvideClientContext(
 ) client.Context {
 	var err error
 
+	amino, ok := legacyAmino.(*codec.LegacyAmino)
+	if !ok {
+		panic("ProvideClientContext requires a *codec.LegacyAmino instance")
+	}
+
 	clientCtx := client.Context{}.
 		WithCodec(appCodec).
 		WithInterfaceRegistry(interfaceRegistry).
-		WithLegacyAmino(legacyAmino).
+		WithLegacyAmino(amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithAddressCodec(addressCodec).
@@ -125,7 +130,7 @@ func ProvideClientContext(
 
 	// Read the config to overwrite the default values with the values from the config file
 	customClientTemplate, customClientConfig := initClientConfig()
-	clientCtx, err = config.ReadDefaultValuesFromDefaultClientConfig(clientCtx, customClientTemplate, customClientConfig)
+	clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -139,13 +144,4 @@ func ProvideClientContext(
 	clientCtx = clientCtx.WithTxConfig(txConfig)
 
 	return clientCtx
-}
-
-func ProvideKeyring(clientCtx client.Context, addressCodec address.Codec) (clientv2keyring.Keyring, error) {
-	kb, err := client.NewKeyringFromBackend(clientCtx, clientCtx.Keyring.Backend())
-	if err != nil {
-		return nil, err
-	}
-
-	return keyring.NewAutoCLIKeyring(kb)
 }

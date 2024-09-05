@@ -73,8 +73,6 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 		return nil, err
 	}
 
-	// TODO: this may not always need to be proven
-	// https://github.com/cosmos/cosmos-sdk/issues/6807
 	resTx, err := node.Tx(context.Background(), hash, true)
 	if err != nil {
 		return nil, err
@@ -138,7 +136,7 @@ func mkTxResult(txConfig client.TxConfig, resTx *coretypes.ResultTx, resBlock *c
 	}
 	p, ok := txb.(*gogoTxWrapper)
 	if !ok {
-		return nil, fmt.Errorf("unexpected type, wnted gogoTxWrapper, got: %T", txb)
+		return nil, fmt.Errorf("unexpected type, wanted gogoTxWrapper, got: %T", txb)
 	}
 
 	tx, err := p.AsTx()

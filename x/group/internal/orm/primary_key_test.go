@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -21,8 +22,9 @@ import (
 func TestPrimaryKeyTablePrefixScan(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
+	ac := address.NewBech32Codec("cosmos")
 
-	tb, err := NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc)
+	tb, err := NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc, ac)
 	require.NoError(t, err)
 
 	key := storetypes.NewKVStoreKey("test")
@@ -62,49 +64,49 @@ func TestPrimaryKeyTablePrefixScan(t *testing.T) {
 			end:       EncodeSequence(2), // == PrimaryKey(&t2)
 			method:    tb.PrefixScan,
 			expResult: []testdata.TableModel{t1},
-			expRowIDs: []RowID{PrimaryKey(&t1)},
+			expRowIDs: []RowID{PrimaryKey(&t1, ac)},
 		},
 		"one result by 1st byte": {
 			start:     []byte{0},
 			end:       EncodeSequence(2), // == PrimaryKey(&t2)
 			method:    tb.PrefixScan,
 			expResult: []testdata.TableModel{t1},
-			expRowIDs: []RowID{PrimaryKey(&t1)},
+			expRowIDs: []RowID{PrimaryKey(&t1, ac)},
 		},
 		"open end query": {
 			start:     EncodeSequence(3),
 			end:       nil,
 			method:    tb.PrefixScan,
 			expResult: []testdata.TableModel{t3},
-			expRowIDs: []RowID{PrimaryKey(&t3)},
+			expRowIDs: []RowID{PrimaryKey(&t3, ac)},
 		},
 		"open end query with all": {
 			start:     EncodeSequence(1),
 			end:       nil,
 			method:    tb.PrefixScan,
 			expResult: []testdata.TableModel{t1, t2, t3},
-			expRowIDs: []RowID{PrimaryKey(&t1), PrimaryKey(&t2), PrimaryKey(&t3)},
+			expRowIDs: []RowID{PrimaryKey(&t1, ac), PrimaryKey(&t2, ac), PrimaryKey(&t3, ac)},
 		},
 		"open start query": {
 			start:     nil,
 			end:       EncodeSequence(3),
 			method:    tb.PrefixScan,
 			expResult: []testdata.TableModel{t1, t2},
-			expRowIDs: []RowID{PrimaryKey(&t1), PrimaryKey(&t2)},
+			expRowIDs: []RowID{PrimaryKey(&t1, ac), PrimaryKey(&t2, ac)},
 		},
 		"open start and end query": {
 			start:     nil,
 			end:       nil,
 			method:    tb.PrefixScan,
 			expResult: []testdata.TableModel{t1, t2, t3},
-			expRowIDs: []RowID{PrimaryKey(&t1), PrimaryKey(&t2), PrimaryKey(&t3)},
+			expRowIDs: []RowID{PrimaryKey(&t1, ac), PrimaryKey(&t2, ac), PrimaryKey(&t3, ac)},
 		},
 		"all matching 1st byte": {
 			start:     []byte{0},
 			end:       nil,
 			method:    tb.PrefixScan,
 			expResult: []testdata.TableModel{t1, t2, t3},
-			expRowIDs: []RowID{PrimaryKey(&t1), PrimaryKey(&t2), PrimaryKey(&t3)},
+			expRowIDs: []RowID{PrimaryKey(&t1, ac), PrimaryKey(&t2, ac), PrimaryKey(&t3, ac)},
 		},
 		"non matching 1st byte": {
 			start:     []byte{1},
@@ -129,49 +131,49 @@ func TestPrimaryKeyTablePrefixScan(t *testing.T) {
 			end:       EncodeSequence(2), // == PrimaryKey(&t2)
 			method:    tb.ReversePrefixScan,
 			expResult: []testdata.TableModel{t1},
-			expRowIDs: []RowID{PrimaryKey(&t1)},
+			expRowIDs: []RowID{PrimaryKey(&t1, ac)},
 		},
 		"reverse: one result by 1st byte": {
 			start:     []byte{0},
 			end:       EncodeSequence(2), // == PrimaryKey(&t2)
 			method:    tb.ReversePrefixScan,
 			expResult: []testdata.TableModel{t1},
-			expRowIDs: []RowID{PrimaryKey(&t1)},
+			expRowIDs: []RowID{PrimaryKey(&t1, ac)},
 		},
 		"reverse: open end query": {
 			start:     EncodeSequence(3),
 			end:       nil,
 			method:    tb.ReversePrefixScan,
 			expResult: []testdata.TableModel{t3},
-			expRowIDs: []RowID{PrimaryKey(&t3)},
+			expRowIDs: []RowID{PrimaryKey(&t3, ac)},
 		},
 		"reverse: open end query with all": {
 			start:     EncodeSequence(1),
 			end:       nil,
 			method:    tb.ReversePrefixScan,
 			expResult: []testdata.TableModel{t3, t2, t1},
-			expRowIDs: []RowID{PrimaryKey(&t3), PrimaryKey(&t2), PrimaryKey(&t1)},
+			expRowIDs: []RowID{PrimaryKey(&t3, ac), PrimaryKey(&t2, ac), PrimaryKey(&t1, ac)},
 		},
 		"reverse: open start query": {
 			start:     nil,
 			end:       EncodeSequence(3),
 			method:    tb.ReversePrefixScan,
 			expResult: []testdata.TableModel{t2, t1},
-			expRowIDs: []RowID{PrimaryKey(&t2), PrimaryKey(&t1)},
+			expRowIDs: []RowID{PrimaryKey(&t2, ac), PrimaryKey(&t1, ac)},
 		},
 		"reverse: open start and end query": {
 			start:     nil,
 			end:       nil,
 			method:    tb.ReversePrefixScan,
 			expResult: []testdata.TableModel{t3, t2, t1},
-			expRowIDs: []RowID{PrimaryKey(&t3), PrimaryKey(&t2), PrimaryKey(&t1)},
+			expRowIDs: []RowID{PrimaryKey(&t3, ac), PrimaryKey(&t2, ac), PrimaryKey(&t1, ac)},
 		},
 		"reverse: all matching 1st byte": {
 			start:     []byte{0},
 			end:       nil,
 			method:    tb.ReversePrefixScan,
 			expResult: []testdata.TableModel{t3, t2, t1},
-			expRowIDs: []RowID{PrimaryKey(&t3), PrimaryKey(&t2), PrimaryKey(&t1)},
+			expRowIDs: []RowID{PrimaryKey(&t3, ac), PrimaryKey(&t2, ac), PrimaryKey(&t1, ac)},
 		},
 		"reverse: non matching prefix": {
 			start:     []byte{1},
@@ -216,7 +218,7 @@ func TestContains(t *testing.T) {
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
 
-	tb, err := NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc)
+	tb, err := NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
 	require.NoError(t, err)
 
 	obj := testdata.TableModel{

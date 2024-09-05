@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
@@ -17,8 +17,6 @@ import (
 	"cosmossdk.io/depinject"
 	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/math"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authtypes "cosmossdk.io/x/auth/types"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
@@ -40,6 +38,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type SimTestSuite struct {
@@ -167,7 +167,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 // Abonormal scenarios, where the message are created by an errors are not tested here.
 func (s *SimTestSuite) TestSimulateMsgCreateValidator() {
 	require := s.Require()
-	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash})
+	_, err := s.app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash})
 	require.NoError(err)
 	// execute operation
 	op := simulation.SimulateMsgCreateValidator(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -213,7 +213,7 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	require.NoError(s.stakingKeeper.SetUnbondingDelegation(ctx, udb))
 	s.setupValidatorRewards(ctx, val0bz)
 
-	_, err = s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	_, err = s.app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 	require.NoError(err)
 	// execute operation
 	op := simulation.SimulateMsgCancelUnbondingDelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -241,7 +241,7 @@ func (s *SimTestSuite) TestSimulateMsgEditValidator() {
 	// setup accounts[0] as validator
 	_ = s.getTestingValidator0(ctx)
 
-	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	_, err := s.app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 	require.NoError(err)
 	// execute operation
 	op := simulation.SimulateMsgEditValidator(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -302,7 +302,7 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 
 	s.setupValidatorRewards(ctx, val0bz)
 
-	_, err = s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	_, err = s.app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 	require.NoError(err)
 	// execute operation
 	op := simulation.SimulateMsgUndelegate(s.txConfig, s.accountKeeper, s.bankKeeper, s.stakingKeeper)
@@ -348,7 +348,7 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	s.setupValidatorRewards(ctx, val0bz)
 	s.setupValidatorRewards(ctx, val1bz)
 
-	_, err = s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	_, err = s.app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 	require.NoError(err)
 
 	// execute operation
@@ -377,7 +377,7 @@ func (s *SimTestSuite) TestSimulateRotateConsPubKey() {
 	_ = s.getTestingValidator2(ctx)
 
 	// begin a new block
-	_, err := s.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
+	_, err := s.app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash, Time: blockTime})
 	require.NoError(err)
 
 	// execute operation

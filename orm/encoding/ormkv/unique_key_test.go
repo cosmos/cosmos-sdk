@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 

@@ -3,7 +3,7 @@ package mock
 import (
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,7 +17,7 @@ func TestGetPubKey(t *testing.T) {
 func TestSignVote(t *testing.T) {
 	pv := NewPV()
 	v := cmtproto.Vote{}
-	err := pv.SignVote("chain-id", &v)
+	err := pv.SignVote("chain-id", &v, false)
 	require.NoError(t, err)
 	require.NotNil(t, v.Signature)
 }

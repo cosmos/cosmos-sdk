@@ -10,7 +10,7 @@ This sections describes how the app-side mempool can be used and replaced.
 
 Since `v0.47` the application has its own mempool to allow much more granular
 block building than previous versions. This change was enabled by
-[ABCI 1.0](https://github.com/cometbft/cometbft/blob/v0.37.0/spec/abci).
+[ABCI 1.0](https://docs.cometbft.com/v0.37/spec/abci/).
 Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI++. For more information please see [here](../abci/00-introduction.md)
 
 :::note Pre-requisite Readings
@@ -31,7 +31,7 @@ Namely, the SDK provides the following mempools:
 * [Sender Nonce Mempool](#sender-nonce-mempool)
 * [Priority Nonce Mempool](#priority-nonce-mempool)
 
-The default SDK is a [No-op Mempool](#no-op-mempool), but it can be replaced by the application developer in [`app.go`](./01-app-go-v2.md):
+The default SDK is a [No-op Mempool](#no-op-mempool), but it can be replaced by the application developer in [`app.go`](./01-app-go-di.md):
 
 ```go
 nonceMempool := mempool.NewSenderNonceMempool()
@@ -42,7 +42,7 @@ baseAppOptions = append(baseAppOptions, mempoolOpt)
 ### No-op Mempool
 
 A no-op mempool is a mempool where transactions are completely discarded and ignored when BaseApp interacts with the mempool.
-When this mempool is used, it assumed that an application will rely on CometBFT's transaction ordering defined in `RequestPrepareProposal`,
+When this mempool is used, it is assumed that an application will rely on CometBFT's transaction ordering defined in `RequestPrepareProposal`,
 which is FIFO-ordered by default.
 
 > Note: If a NoOp mempool is used, PrepareProposal and ProcessProposal both should be aware of this as

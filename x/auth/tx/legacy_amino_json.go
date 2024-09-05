@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/auth/migrations/legacytx"
-	"cosmossdk.io/x/auth/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 const aminoNonCriticalFieldsError = "protobuf transaction contains unknown non-critical fields. This is a transaction malleability issue and SIGN_MODE_LEGACY_AMINO_JSON cannot be used."
@@ -48,11 +48,11 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 		return nil, fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	}
 
-	if protoTx.decodedTx.TxBodyHasUnknownNonCriticals {
+	if protoTx.TxBodyHasUnknownNonCriticals {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, aminoNonCriticalFieldsError)
 	}
 
-	body := protoTx.decodedTx.Tx.Body
+	body := protoTx.Tx.Body
 
 	if len(body.ExtensionOptions) != 0 || len(body.NonCriticalExtensionOptions) != 0 {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "%s does not support protobuf extension options", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
@@ -68,8 +68,8 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 		legacytx.StdFee{
 			Amount:  protoTx.GetFee(),
 			Gas:     protoTx.GetGas(),
-			Payer:   protoTx.decodedTx.Tx.AuthInfo.Fee.Payer,
-			Granter: protoTx.decodedTx.Tx.AuthInfo.Fee.Granter,
+			Payer:   protoTx.Tx.AuthInfo.Fee.Payer,
+			Granter: protoTx.Tx.AuthInfo.Fee.Granter,
 		},
 		tx.GetMsgs(), protoTx.GetMemo(),
 	), nil

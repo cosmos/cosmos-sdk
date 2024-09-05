@@ -1,9 +1,11 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
@@ -11,10 +13,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
@@ -25,6 +23,7 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -35,6 +34,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -86,10 +90,21 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 	}
 
+	// gomock initializations
+	ctrl := gomock.NewController(t)
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	accNum := uint64(0)
+	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currentNum := accNum
+		accNum++
+		return currentNum, nil
+	})
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		cdc,
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
@@ -107,9 +122,11 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		authority.String(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	assert.NilError(t, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
+
+	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
 
@@ -120,7 +137,10 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 			authtypes.ModuleName:    authModule,
 			banktypes.ModuleName:    bankModule,
 			stakingtypes.ModuleName: stakingModule,
-		})
+		},
+		baseapp.NewMsgServiceRouter(),
+		baseapp.NewGRPCQueryRouter(),
+	)
 
 	ctx := integrationApp.Context()
 
@@ -188,7 +208,7 @@ func bondTypeGenerator() *rapid.Generator[stakingtypes.BondStatus] {
 }
 
 // createValidator creates a validator with random values.
-func createValidator(t *testing.T, rt *rapid.T, f *deterministicFixture) stakingtypes.Validator {
+func createValidator(t *testing.T, rt *rapid.T, _ *deterministicFixture) stakingtypes.Validator {
 	t.Helper()
 	pubkey := pubKeyGenerator().Draw(rt, "pubkey")
 	pubkeyAny, err := codectypes.NewAnyWithValue(&pubkey)
@@ -219,7 +239,12 @@ func createValidator(t *testing.T, rt *rapid.T, f *deterministicFixture) staking
 }
 
 // createAndSetValidatorWithStatus creates a validator with random values but with given status and sets to the state
-func createAndSetValidatorWithStatus(t *testing.T, rt *rapid.T, f *deterministicFixture, status stakingtypes.BondStatus) stakingtypes.Validator {
+func createAndSetValidatorWithStatus(
+	t *testing.T,
+	rt *rapid.T,
+	f *deterministicFixture,
+	status stakingtypes.BondStatus,
+) stakingtypes.Validator {
 	t.Helper()
 	val := createValidator(t, rt, f)
 	val.Status = status
@@ -327,14 +352,26 @@ func getStaticValidator2(t *testing.T, f *deterministicFixture) stakingtypes.Val
 }
 
 // createDelegationAndDelegate funds the delegator account with a random delegation in range 100-1000 and delegates.
-func createDelegationAndDelegate(t *testing.T, rt *rapid.T, f *deterministicFixture, delegator sdk.AccAddress, validator stakingtypes.Validator) (newShares math.LegacyDec, err error) {
+func createDelegationAndDelegate(
+	t *testing.T,
+	rt *rapid.T,
+	f *deterministicFixture,
+	delegator sdk.AccAddress,
+	validator stakingtypes.Validator,
+) (newShares math.LegacyDec, err error) {
 	t.Helper()
 	amt := f.stakingKeeper.TokensFromConsensusPower(f.ctx, rapid.Int64Range(100, 1000).Draw(rt, "amount"))
 	return fundAccountAndDelegate(t, f, delegator, validator, amt)
 }
 
 // fundAccountAndDelegate funds the delegator account with the specified delegation and delegates.
-func fundAccountAndDelegate(t *testing.T, f *deterministicFixture, delegator sdk.AccAddress, validator stakingtypes.Validator, amt math.Int) (newShares math.LegacyDec, err error) {
+func fundAccountAndDelegate(
+	t *testing.T,
+	f *deterministicFixture,
+	delegator sdk.AccAddress,
+	validator stakingtypes.Validator,
+	amt math.Int,
+) (newShares math.LegacyDec, err error) {
 	t.Helper()
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))
 
@@ -435,7 +472,7 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.ValidatorDelegations, 14637, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.ValidatorDelegations, 14610, false)
 }
 
 func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
@@ -525,7 +562,7 @@ func TestGRPCDelegation(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Delegation, 4689, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Delegation, 4680, false)
 }
 
 func TestGRPCUnbondingDelegation(t *testing.T) {
@@ -608,7 +645,7 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorDelegations, 4292, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorDelegations, 4283, false)
 }
 
 func TestGRPCDelegatorValidator(t *testing.T) {
@@ -695,47 +732,6 @@ func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
 	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorUnbondingDelegations, 1302, false)
 }
 
-func TestGRPCHistoricalInfo(t *testing.T) {
-	t.Parallel()
-	f := initDeterministicFixture(t)
-
-	rapid.Check(t, func(rt *rapid.T) {
-		historical := stakingtypes.HistoricalRecord{}
-
-		height := rapid.Int64Min(0).Draw(rt, "height")
-
-		assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(
-			f.ctx,
-			uint64(height),
-			historical,
-		))
-
-		req := &stakingtypes.QueryHistoricalInfoRequest{
-			Height: height,
-		}
-
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.HistoricalInfo, 0, true)
-	})
-
-	f = initDeterministicFixture(t) // reset
-
-	historicalInfo := stakingtypes.HistoricalRecord{}
-
-	height := int64(127)
-
-	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(
-		f.ctx,
-		uint64(height),
-		historicalInfo,
-	))
-
-	req := &stakingtypes.QueryHistoricalInfoRequest{
-		Height: height,
-	}
-
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.HistoricalInfo, 1027, false)
-}
-
 func TestGRPCDelegatorValidators(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
@@ -784,7 +780,7 @@ func TestGRPCPool(t *testing.T) {
 
 	f = initDeterministicFixture(t) // reset
 	getStaticValidator(t, f)
-	testdata.DeterministicIterations(t, f.ctx, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6296, false)
+	testdata.DeterministicIterations(t, f.ctx, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6287, false)
 }
 
 func TestGRPCRedelegations(t *testing.T) {

@@ -3,6 +3,7 @@ package orm
 import (
 	"github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -20,8 +21,8 @@ type PrimaryKeyTable struct {
 }
 
 // NewPrimaryKeyTable creates a new PrimaryKeyTable.
-func NewPrimaryKeyTable(prefixData [2]byte, model PrimaryKeyed, cdc codec.Codec) (*PrimaryKeyTable, error) {
-	table, err := newTable(prefixData, model, cdc)
+func NewPrimaryKeyTable(prefixData [2]byte, model PrimaryKeyed, cdc codec.Codec, addressCodec address.Codec) (*PrimaryKeyTable, error) {
+	table, err := newTable(prefixData, model, cdc, addressCodec)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +43,7 @@ type PrimaryKeyed interface {
 	//
 	// IMPORTANT: []byte parts are encoded with a single byte length prefix,
 	// so cannot be longer than 255 bytes.
-	PrimaryKeyFields() []interface{}
+	PrimaryKeyFields(address.Codec) ([]interface{}, error)
 	proto.Message
 }
 
@@ -50,8 +51,11 @@ type PrimaryKeyed interface {
 // The primary key has to be unique within it's domain so that not two with same
 // value can exist in the same table. This means PrimaryKeyFields() has to
 // return a unique value for each object.
-func PrimaryKey(obj PrimaryKeyed) []byte {
-	fields := obj.PrimaryKeyFields()
+func PrimaryKey(obj PrimaryKeyed, addressCodec address.Codec) []byte {
+	fields, err := obj.PrimaryKeyFields(addressCodec)
+	if err != nil {
+		panic(err)
+	}
 	key, err := buildKeyFromParts(fields)
 	if err != nil {
 		panic(err)
@@ -65,7 +69,7 @@ func PrimaryKey(obj PrimaryKeyed) []byte {
 // Create iterates through the registered callbacks that may add secondary
 // index keys.
 func (a PrimaryKeyTable) Create(store storetypes.KVStore, obj PrimaryKeyed) error {
-	rowID := PrimaryKey(obj)
+	rowID := PrimaryKey(obj, a.ac)
 	return a.table.Create(store, rowID, obj)
 }
 
@@ -77,7 +81,7 @@ func (a PrimaryKeyTable) Create(store storetypes.KVStore, obj PrimaryKeyed) erro
 // Update iterates through the registered callbacks that may add or remove
 // secondary index keys.
 func (a PrimaryKeyTable) Update(store storetypes.KVStore, newValue PrimaryKeyed) error {
-	return a.table.Update(store, PrimaryKey(newValue), newValue)
+	return a.table.Update(store, PrimaryKey(newValue, a.ac), newValue)
 }
 
 // Set persists the given object under the rowID key. It does not check if the
@@ -86,7 +90,7 @@ func (a PrimaryKeyTable) Update(store storetypes.KVStore, newValue PrimaryKeyed)
 // Set iterates through the registered callbacks that may add secondary index
 // keys.
 func (a PrimaryKeyTable) Set(store storetypes.KVStore, newValue PrimaryKeyed) error {
-	return a.table.Set(store, PrimaryKey(newValue), newValue)
+	return a.table.Set(store, PrimaryKey(newValue, a.ac), newValue)
 }
 
 // Delete removes the object. It expects the primary key to exists already and
@@ -96,7 +100,7 @@ func (a PrimaryKeyTable) Set(store storetypes.KVStore, newValue PrimaryKeyed) er
 // Delete iterates through the registered callbacks that remove secondary index
 // keys.
 func (a PrimaryKeyTable) Delete(store storetypes.KVStore, obj PrimaryKeyed) error {
-	return a.table.Delete(store, PrimaryKey(obj))
+	return a.table.Delete(store, PrimaryKey(obj, a.ac))
 }
 
 // Has checks if a key exists. Always returns false on nil or empty key.
@@ -109,7 +113,7 @@ func (a PrimaryKeyTable) Contains(store storetypes.KVStore, obj PrimaryKeyed) bo
 	if err := assertCorrectType(a.table.model, obj); err != nil {
 		return false
 	}
-	return a.table.Has(store, PrimaryKey(obj))
+	return a.table.Has(store, PrimaryKey(obj, a.ac))
 }
 
 // GetOne loads the object persisted for the given primary Key into the dest parameter.

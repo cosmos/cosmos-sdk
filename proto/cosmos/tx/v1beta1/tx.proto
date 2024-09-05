@@ -1,13 +1,14 @@
 syntax = "proto3";
 package cosmos.tx.v1beta1;
 
+import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/crypto/multisig/v1beta1/multisig.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/tx/signing/v1beta1/signing.proto";
 import "google/protobuf/any.proto";
-import "cosmos_proto/cosmos.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
@@ -67,9 +68,8 @@ message SignDoc {
 
 // SignDocDirectAux is the type used for generating sign bytes for
 // SIGN_MODE_DIRECT_AUX.
-//
-// Since: cosmos-sdk 0.46
 message SignDocDirectAux {
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.46";
   // body_bytes is protobuf serialization of a TxBody that matches the
   // representation in TxRaw.
   bytes body_bytes = 1;
@@ -111,10 +111,6 @@ message TxBody {
 
   // timeout_height is the block height after which this transaction will not
   // be processed by the chain.
-  //
-  // Note, if unordered=true this value MUST be set
-  // and will act as a short-lived TTL in which the transaction is deemed valid
-  // and kept in memory to prevent duplicates.
   uint64 timeout_height = 3;
 
   // unordered, when set to true, indicates that the transaction signer(s)
@@ -123,10 +119,18 @@ message TxBody {
   // incremented, which allows for fire-and-forget as well as concurrent
   // transaction execution.
   //
-  // Note, when set to true, the existing 'timeout_height' value must be set and
-  // will be used to correspond to a height in which the transaction is deemed
+  // Note, when set to true, the existing 'timeout_height' value must
+  // be set and will be used to correspond to a time_stamp in which the transaction is deemed
   // valid.
   bool unordered = 4;
+
+  // timeout_timestamp is the block time after which this transaction will not
+  // be processed by the chain.
+  //
+  // Note, if unordered=true this value MUST be set
+  // and will act as a short-lived TTL in which the transaction is deemed valid
+  // and kept in memory to prevent duplicates.
+  google.protobuf.Timestamp timeout_timestamp = 5 [(gogoproto.nullable) = true, (gogoproto.stdtime) = true];
 
   // extension_options are arbitrary options that can be added by chains
   // when the default options are not sufficient. If any of these are present
@@ -157,9 +161,7 @@ message AuthInfo {
   //
   // This field is ignored if the chain didn't enable tips, i.e. didn't add the
   // `TipDecorator` in its posthandler.
-  //
-  // Since: cosmos-sdk 0.46
-  Tip tip = 3 [deprecated = true];
+  Tip tip = 3 [deprecated = true, (cosmos_proto.field_added_in) = "cosmos-sdk 0.46"];
 }
 
 // SignerInfo describes the public key and signing mode of a single top-level
@@ -213,7 +215,7 @@ message ModeInfo {
 
 // Fee includes the amount of coins paid in fees and the maximum
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
-// which must be above some miminum to be accepted into the mempool.
+// which must be above some minimum to be accepted into the mempool.
 message Fee {
   // amount is the amount of coins to be paid as a fee
   repeated cosmos.base.v1beta1.Coin amount = 1 [
@@ -241,10 +243,9 @@ message Fee {
 }
 
 // Tip is the tip used for meta-transactions.
-//
-// Since: cosmos-sdk 0.46
 message Tip {
-  option deprecated = true;
+  option deprecated                      = true;
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.46";
   // amount is the amount of the tip
   repeated cosmos.base.v1beta1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
@@ -260,9 +261,9 @@ message Tip {
 // tipper) builds and sends to the fee payer (who will build and broadcast the
 // actual tx). AuxSignerData is not a valid tx in itself, and will be rejected
 // by the node if sent directly as-is.
-//
-// Since: cosmos-sdk 0.46
 message AuxSignerData {
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.46";
+
   // address is the bech32-encoded address of the auxiliary signer. If using
   // AuxSignerData across different chains, the bech32 prefix of the target
   // chain (where the final transaction is broadcasted) should be used.

@@ -85,10 +85,9 @@ service Query {
   };
 
   // Groups queries all groups in state.
-  //
-  // Since: cosmos-sdk 0.47.1
   rpc Groups(QueryGroupsRequest) returns (QueryGroupsResponse) {
-    option (google.api.http).get = "/cosmos/group/v1/groups";
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.47.1";
+    option (google.api.http).get          = "/cosmos/group/v1/groups";
   };
 }
 
@@ -300,18 +299,15 @@ message QueryTallyResultResponse {
 }
 
 // QueryGroupsRequest is the Query/Groups request type.
-//
-// Since: cosmos-sdk 0.47.1
 message QueryGroupsRequest {
-
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.47.1";
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // QueryGroupsResponse is the Query/Groups response type.
-//
-// Since: cosmos-sdk 0.47.1
 message QueryGroupsResponse {
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.47.1";
   // `groups` is all the groups present in state.
   repeated GroupInfo groups = 1;
 

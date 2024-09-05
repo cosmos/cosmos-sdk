@@ -7,16 +7,13 @@ import (
 	"strings"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
-	authcli "cosmossdk.io/x/auth/client/cli"
-	authclitestutil "cosmossdk.io/x/auth/client/testutil"
-	authtestutil "cosmossdk.io/x/auth/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 	govtestutil "cosmossdk.io/x/gov/client/testutil"
 	govtypes "cosmossdk.io/x/gov/types/v1beta1"
@@ -28,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	authtestkeeper "github.com/cosmos/cosmos-sdk/tests/e2e/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -35,6 +33,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authclitestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
@@ -1293,7 +1293,7 @@ func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
 
 func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
 	var txCfg client.TxConfig
-	err := depinject.Inject(authtestutil.AppConfig, &txCfg)
+	err := depinject.Inject(authtestkeeper.AppConfig, &txCfg)
 	require.NoError(t, err)
 	clientCtx := client.Context{}
 	clientCtx = clientCtx.WithTxConfig(txCfg)

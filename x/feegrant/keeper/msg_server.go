@@ -94,7 +94,7 @@ func (k msgServer) PruneAllowances(ctx context.Context, req *feegrant.MsgPruneAl
 		return nil, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		feegrant.EventTypePruneFeeGrant,
 		event.NewAttribute(feegrant.AttributeKeyPruner, req.Pruner),
 	); err != nil {

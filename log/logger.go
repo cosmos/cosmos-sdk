@@ -30,11 +30,13 @@ func init() {
 const ModuleKey = "module"
 
 // ContextKey is used to store the logger in the context.
-var ContextKey struct{}
+var ContextKey contextKey
+
+type contextKey struct{}
 
 // Logger is the Cosmos SDK logger interface.
-// It maintains as much backward compatibility with the CometBFT logger as possible.
-// All functionalities of the logger are available through the Impl() method.
+// It extends cosmossdk.io/core/log.Logger to return a child logger.
+// Use cosmossdk.io/core/log.Logger instead in modules.
 type Logger interface {
 	// Info takes a message and a set of key/value pairs and logs with level INFO.
 	// The key of the tuple must be a string.
@@ -89,6 +91,7 @@ type zeroLogWrapper struct {
 //
 // Stderr is the typical destination for logs,
 // so that any output from your application can still be piped to other processes.
+// The returned value can be safely cast to cosmossdk.io/core/log.Logger.
 func NewLogger(dst io.Writer, options ...Option) Logger {
 	logCfg := defaultConfig
 	for _, opt := range options {
@@ -165,6 +168,12 @@ func (l zeroLogWrapper) With(keyVals ...interface{}) Logger {
 	return zeroLogWrapper{&logger}
 }
 
+// WithContext returns a new wrapped logger with additional context provided by a set.
+func (l zeroLogWrapper) WithContext(keyVals ...interface{}) any {
+	logger := l.Logger.With().Fields(keyVals).Logger()
+	return zeroLogWrapper{&logger}
+}
+
 // Impl returns the underlying zerolog logger.
 // It can be used to used zerolog structured API directly instead of the wrapper.
 func (l zeroLogWrapper) Impl() interface{} {
@@ -182,9 +191,10 @@ func NewNopLogger() Logger {
 // The custom implementation is about 3x faster.
 type nopLogger struct{}
 
-func (nopLogger) Info(string, ...any)  {}
-func (nopLogger) Warn(string, ...any)  {}
-func (nopLogger) Error(string, ...any) {}
-func (nopLogger) Debug(string, ...any) {}
-func (nopLogger) With(...any) Logger   { return nopLogger{} }
-func (nopLogger) Impl() any            { return nopLogger{} }
+func (nopLogger) Info(string, ...any)    {}
+func (nopLogger) Warn(string, ...any)    {}
+func (nopLogger) Error(string, ...any)   {}
+func (nopLogger) Debug(string, ...any)   {}
+func (nopLogger) With(...any) Logger     { return nopLogger{} }
+func (nopLogger) WithContext(...any) any { return nopLogger{} }
+func (nopLogger) Impl() any              { return nopLogger{} }

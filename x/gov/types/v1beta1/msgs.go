@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,14 +21,14 @@ const (
 var (
 	_, _, _, _ sdk.Msg = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
 
-	_ codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}
+	_ gogoprotoany.UnpackInterfacesMessage = &MsgSubmitProposal{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
-func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer string) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
-		Proposer:       proposer.String(),
+		Proposer:       proposer,
 	}
 	err := m.SetContent(content)
 	if err != nil {
@@ -54,8 +55,8 @@ func (m *MsgSubmitProposal) SetInitialDeposit(coins sdk.Coins) {
 }
 
 // SetProposer sets the given proposer address for MsgSubmitProposal.
-func (m *MsgSubmitProposal) SetProposer(address fmt.Stringer) {
-	m.Proposer = address.String()
+func (m *MsgSubmitProposal) SetProposer(address string) {
+	m.Proposer = address
 }
 
 // SetContent sets the content for MsgSubmitProposal.
@@ -73,22 +74,22 @@ func (m *MsgSubmitProposal) SetContent(content Content) error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (m MsgSubmitProposal) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var content Content
 	return unpacker.UnpackAny(m.Content, &content)
 }
 
 // NewMsgDeposit creates a new MsgDeposit instance
-func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) *MsgDeposit {
-	return &MsgDeposit{proposalID, depositor.String(), amount}
+func NewMsgDeposit(depositor string, proposalID uint64, amount sdk.Coins) *MsgDeposit {
+	return &MsgDeposit{proposalID, depositor, amount}
 }
 
 // NewMsgVote creates a message to cast a vote on an active proposal
-func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) *MsgVote {
-	return &MsgVote{proposalID, voter.String(), option}
+func NewMsgVote(voter string, proposalID uint64, option VoteOption) *MsgVote {
+	return &MsgVote{proposalID, voter, option}
 }
 
 // NewMsgVoteWeighted creates a message to cast a vote on an active proposal.
-func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions) *MsgVoteWeighted {
-	return &MsgVoteWeighted{proposalID, voter.String(), options}
+func NewMsgVoteWeighted(voter string, proposalID uint64, options WeightedVoteOptions) *MsgVoteWeighted {
+	return &MsgVoteWeighted{proposalID, voter, options}
 }

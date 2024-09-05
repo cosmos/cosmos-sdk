@@ -2,9 +2,10 @@ package baseapp
 
 import (
 	gocontext "context"
+	"errors"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc"
 
@@ -45,7 +46,7 @@ func (q *QueryServiceTestHelper) Invoke(_ gocontext.Context, method string, args
 		return err
 	}
 
-	res, err := querier(q.Ctx, &abci.RequestQuery{Data: reqBz})
+	res, err := querier(q.Ctx, &abci.QueryRequest{Data: reqBz})
 	if err != nil {
 		return err
 	}
@@ -60,5 +61,5 @@ func (q *QueryServiceTestHelper) Invoke(_ gocontext.Context, method string, args
 
 // NewStream implements the grpc ClientConn.NewStream method
 func (q *QueryServiceTestHelper) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
-	return nil, fmt.Errorf("not supported")
+	return nil, errors.New("not supported")
 }

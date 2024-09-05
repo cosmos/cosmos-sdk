@@ -246,7 +246,7 @@ func newLegacyLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, a
 	}
 }
 
-// newLegacyOfflineInfo creates a new legacyLedgerInfo instance
+// newLegacyLedgerInfo creates a new legacyLedgerInfo instance
 func newLegacyLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, algo hd.PubKeyType) LegacyInfo {
 	return &legacyLedgerInfo{
 		Name:   name,

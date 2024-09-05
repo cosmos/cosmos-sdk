@@ -17,11 +17,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil/x/counter"
+	counterkeeper "github.com/cosmos/cosmos-sdk/testutil/x/counter/keeper"
+	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/counter"
-	counterkeeper "github.com/cosmos/cosmos-sdk/x/counter/keeper"
-	countertypes "github.com/cosmos/cosmos-sdk/x/counter/types"
 )
 
 type IntegrationTestSuite struct {

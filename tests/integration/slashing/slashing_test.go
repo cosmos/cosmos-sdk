@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/slashing/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -62,6 +62,7 @@ func TestSlashingMsgs(t *testing.T) {
 	app, err := sims.SetupWithConfiguration(
 		depinject.Configs(
 			configurator.NewAppConfig(
+				configurator.AccountsModule(),
 				configurator.AuthModule(),
 				configurator.StakingModule(),
 				configurator.SlashingModule(),
@@ -113,5 +114,5 @@ func TestSlashingMsgs(t *testing.T) {
 	headerInfo = header.Info{Height: app.LastBlockHeight() + 1}
 	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, headerInfo, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, false, false, priv1)
 	require.Error(t, err)
-	require.True(t, errors.Is(types.ErrValidatorNotJailed, err))
+	require.True(t, errors.Is(err, types.ErrValidatorNotJailed))
 }

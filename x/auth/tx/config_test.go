@@ -7,21 +7,21 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
-	"cosmossdk.io/x/auth/tx"
-	txtestutil "cosmossdk.io/x/auth/tx/testutil"
+	coretransaction "cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
 )
 
 func TestGenerator(t *testing.T) {
 	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
-	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
+	interfaceRegistry.RegisterImplementations((*coretransaction.Msg)(nil), &testdata.TestMsg{})
 	protoCodec := codec.NewProtoCodec(interfaceRegistry)
 	signingCtx := protoCodec.InterfaceRegistry().SigningContext()
 	suite.Run(t, txtestutil.NewTxConfigTestSuite(tx.NewTxConfig(protoCodec, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), tx.DefaultSignModes)))

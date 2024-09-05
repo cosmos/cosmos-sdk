@@ -2,7 +2,7 @@ package flag
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -17,7 +17,7 @@ type coinValue struct {
 	value *basev1beta1.Coin
 }
 
-func (c coinType) NewValue(context.Context, *Builder) Value {
+func (c coinType) NewValue(*context.Context, *Builder) Value {
 	return &coinValue{}
 }
 
@@ -38,7 +38,7 @@ func (c *coinValue) String() string {
 
 func (c *coinValue) Set(stringValue string) error {
 	if strings.Contains(stringValue, ",") {
-		return fmt.Errorf("coin flag must be a single coin, specific multiple coins with multiple flags or spaces")
+		return errors.New("coin flag must be a single coin, specific multiple coins with multiple flags or spaces")
 	}
 
 	coin, err := coins.ParseCoin(stringValue)

@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	storetypes "cosmossdk.io/core/store"
@@ -29,7 +30,7 @@ func NewMigrator(keeper *Keeper) Migrator {
 
 // Migrate1to2 migrates from version 1 to 2.
 func (m Migrator) Migrate1to2(ctx context.Context) error {
-	return migrateDoneUpgradeKeys(ctx, m.keeper.environment.KVStoreService)
+	return migrateDoneUpgradeKeys(ctx, m.keeper.KVStoreService)
 }
 
 func migrateDoneUpgradeKeys(ctx context.Context, storeService storetypes.KVStoreService) error {
@@ -63,10 +64,10 @@ func (m Migrator) Migrate2to3(ctx context.Context) error {
 
 func migrateAppVersion(ctx context.Context, keeper *Keeper) error {
 	if keeper.versionModifier == nil {
-		return fmt.Errorf("version modifier is not set")
+		return errors.New("version modifier is not set")
 	}
 
-	store := keeper.environment.KVStoreService.OpenKVStore(ctx)
+	store := keeper.KVStoreService.OpenKVStore(ctx)
 	// if the key was never set then we don't need to migrate anything
 	exists, err := store.Has([]byte{LegacyProtocolVersionByte})
 	if err != nil {

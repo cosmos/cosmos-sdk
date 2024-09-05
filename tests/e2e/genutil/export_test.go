@@ -13,21 +13,26 @@ import (
 	"path"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
+	corectx "cosmossdk.io/core/context"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	gentestutil "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -55,8 +60,10 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 func TestExportCmd_HomeDir(t *testing.T) {
 	_, ctx, _, cmd := setupApp(t, t.TempDir())
 
-	serverCtxPtr := ctx.Value(server.ServerContextKey)
-	serverCtxPtr.(*server.Context).Config.SetRoot("foobar")
+	v := ctx.Value(corectx.ViperContextKey)
+	viper, ok := v.(*viper.Viper)
+	require.True(t, ok)
+	viper.Set(flags.FlagHome, "foobar")
 
 	err := cmd.ExecuteContext(ctx)
 	assert.ErrorContains(t, err, "stat foobar/config/genesis.json: no such file or directory")
@@ -97,7 +104,7 @@ func TestExportCmd_Height(t *testing.T) {
 
 			// Fast forward to block `tc.fastForward`.
 			for i := int64(2); i <= tc.fastForward; i++ {
-				_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+				_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
 					Height: i,
 				})
 				assert.NilError(t, err)
@@ -168,8 +175,9 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	assert.NilError(t, err)
 
-	serverCtx := server.NewDefaultContext()
-	serverCtx.Config.RootDir = tempDir
+	viper := viper.New()
+	err = gentestutil.WriteAndTrackCometConfig(viper, tempDir, cmtcfg.DefaultConfig())
+	assert.NilError(t, err)
 
 	clientCtx := client.Context{}.WithCodec(app.AppCodec())
 	appGenesis := genutiltypes.AppGenesis{
@@ -181,23 +189,23 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	}
 
 	// save genesis file
-	err = genutil.ExportGenesisFile(&appGenesis, serverCtx.Config.GenesisFile())
+	err = genutil.ExportGenesisFile(&appGenesis, client.GetConfigFromViper(viper).GenesisFile())
 	assert.NilError(t, err)
 
-	_, err = app.InitChain(&abci.RequestInitChain{
+	_, err = app.InitChain(&abci.InitChainRequest{
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: simtestutil.DefaultConsensusParams,
 		AppStateBytes:   appGenesis.AppState,
 	})
 	assert.NilError(t, err)
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: 1,
 	})
 	assert.NilError(t, err)
 	_, err = app.Commit()
 	assert.NilError(t, err)
 
-	cmd := genutilcli.ExportCmd(func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
+	cmd := genutilcli.ExportCmd(func(_ log.Logger, _ corestore.KVStoreWithBatch, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
 		var simApp *simapp.SimApp
 		if height != -1 {
 			simApp = simapp.NewSimApp(logger, db, nil, false, appOptions)
@@ -213,7 +221,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
 
 	return app, ctx, appGenesis, cmd
 }

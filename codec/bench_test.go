@@ -8,29 +8,35 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 
 	counterv1 "cosmossdk.io/api/cosmos/counter/v1"
+	"cosmossdk.io/core/address"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	countertypes "github.com/cosmos/cosmos-sdk/x/counter/types"
 )
+
+var ac = codectestutil.CodecOptions{}.GetAddressCodec()
 
 type msgCounterWrapper struct {
 	*countertypes.MsgIncreaseCounter
+	ac address.Codec
 }
 
 func (msg msgCounterWrapper) GetSigners() []sdk.AccAddress {
-	fromAddress, _ := sdk.AccAddressFromBech32(msg.Signer)
+	fromAddress, _ := msg.ac.StringToBytes(msg.Signer)
 	return []sdk.AccAddress{fromAddress}
 }
 
 func BenchmarkLegacyGetSigners(b *testing.B) {
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := ac.BytesToString(addr)
+	require.NoError(b, err)
 	msg := msgCounterWrapper{&countertypes.MsgIncreaseCounter{
-		Signer: addr.String(),
+		Signer: addrStr,
 		Count:  2,
-	}}
+	}, ac}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -42,9 +48,11 @@ func BenchmarkProtoreflectGetSigners(b *testing.B) {
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	signingCtx := cdc.InterfaceRegistry().SigningContext()
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := ac.BytesToString(addr)
+	require.NoError(b, err)
 	// use a pulsar message
 	msg := &counterv1.MsgIncreaseCounter{
-		Signer: addr.String(),
+		Signer: addrStr,
 		Count:  1,
 	}
 
@@ -60,9 +68,11 @@ func BenchmarkProtoreflectGetSigners(b *testing.B) {
 func BenchmarkProtoreflectGetSignersWithUnmarshal(b *testing.B) {
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := ac.BytesToString(addr)
+	require.NoError(b, err)
 	// start with a protoreflect message
 	msg := &countertypes.MsgIncreaseCounter{
-		Signer: addr.String(),
+		Signer: addrStr,
 		Count:  1,
 	}
 	// marshal to an any first because this is what we get from the wire
@@ -82,8 +92,10 @@ func BenchmarkProtoreflectGetSignersDynamicpb(b *testing.B) {
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	signingCtx := cdc.InterfaceRegistry().SigningContext()
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := ac.BytesToString(addr)
+	require.NoError(b, err)
 	msg := &counterv1.MsgIncreaseCounter{
-		Signer: addr.String(),
+		Signer: addrStr,
 		Count:  1,
 	}
 	bz, err := protov2.Marshal(msg)

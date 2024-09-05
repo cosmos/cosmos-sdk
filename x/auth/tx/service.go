@@ -10,8 +10,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/x/auth/migrations/legacytx"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -19,6 +17,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // baseAppSimulateFn is the signature of the Baseapp#Simulate function.
@@ -116,8 +115,6 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 		return nil, status.Error(codes.InvalidArgument, "tx hash cannot be empty")
 	}
 
-	// TODO We should also check the proof flag in gRPC header.
-	// https://github.com/cosmos/cosmos-sdk/issues/7036.
 	result, err := QueryTx(s.clientCtx, req.Hash)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -188,13 +185,13 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 	if req.Pagination != nil && req.Pagination.Reverse {
 		for i, count := offset, uint64(0); i > 0 && count != limit; i, count = i-1, count+1 {
 			if err = decodeTxAt(i); err != nil {
-				return nil, err
+				sdkCtx.Logger().Error("failed to decode tx", "error", err)
 			}
 		}
 	} else {
 		for i, count := offset, uint64(0); i < blockTxsLn && count != limit; i, count = i+1, count+1 {
 			if err = decodeTxAt(i); err != nil {
-				return nil, err
+				sdkCtx.Logger().Error("failed to decode tx", "error", err)
 			}
 		}
 	}

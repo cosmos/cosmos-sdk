@@ -9,11 +9,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/group"
@@ -30,6 +28,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const minExecutionPeriod = 5 * time.Second
@@ -37,17 +36,18 @@ const minExecutionPeriod = 5 * time.Second
 type TestSuite struct {
 	suite.Suite
 
-	sdkCtx          sdk.Context
-	ctx             context.Context
-	addrs           []sdk.AccAddress
-	groupID         uint64
-	groupPolicyAddr sdk.AccAddress
-	policy          group.DecisionPolicy
-	groupKeeper     keeper.Keeper
-	blockTime       time.Time
-	bankKeeper      *grouptestutil.MockBankKeeper
-	accountKeeper   *grouptestutil.MockAccountKeeper
-	environment     appmodule.Environment
+	sdkCtx             sdk.Context
+	ctx                context.Context
+	addrs              []sdk.AccAddress
+	addrsStr           []string
+	groupID            uint64
+	groupPolicyAddr    sdk.AccAddress
+	groupPolicyStrAddr string
+	policy             group.DecisionPolicy
+	groupKeeper        keeper.Keeper
+	blockTime          time.Time
+	bankKeeper         *grouptestutil.MockBankKeeper
+	accountKeeper      *grouptestutil.MockAccountKeeper
 }
 
 func (s *TestSuite) SetupTest() {
@@ -56,15 +56,20 @@ func (s *TestSuite) SetupTest() {
 
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{}, bank.AppModule{})
+	addressCodec := address.NewBech32Codec("cosmos")
 	s.addrs = simtestutil.CreateIncrementalAccounts(6)
+	s.addrsStr = make([]string, len(s.addrs))
 
 	// setup gomock and initialize some globally expected executions
 	ctrl := gomock.NewController(s.T())
 	s.accountKeeper = grouptestutil.NewMockAccountKeeper(ctrl)
+	var err error
 	for i := range s.addrs {
 		s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[i]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[i])).AnyTimes()
+		s.addrsStr[i], err = addressCodec.BytesToString(s.addrs[i])
+		s.Require().NoError(err)
 	}
-	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+	s.accountKeeper.EXPECT().AddressCodec().Return(addressCodec).AnyTimes()
 
 	s.bankKeeper = grouptestutil.NewMockBankKeeper(ctrl)
 
@@ -77,23 +82,21 @@ func (s *TestSuite) SetupTest() {
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	banktypes.RegisterMsgServer(bApp.MsgServiceRouter(), s.bankKeeper)
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger(), runtime.EnvWithRouterService(bApp.GRPCQueryRouter(), bApp.MsgServiceRouter()))
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger(), runtime.EnvWithQueryRouterService(bApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(bApp.MsgServiceRouter()))
 	config := group.DefaultConfig()
 	s.groupKeeper = keeper.NewKeeper(env, encCfg.Codec, s.accountKeeper, config)
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: s.blockTime})
 	s.sdkCtx = sdk.UnwrapSDKContext(s.ctx)
 
-	s.environment = env
-
 	// Initial group, group policy and balance setup
 	members := []group.MemberRequest{
-		{Address: s.addrs[4].String(), Weight: "1"}, {Address: s.addrs[1].String(), Weight: "2"},
+		{Address: s.addrsStr[4], Weight: "1"}, {Address: s.addrsStr[1], Weight: "2"},
 	}
 
 	s.setNextAccount()
 
 	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin:   s.addrs[0].String(),
+		Admin:   s.addrsStr[0],
 		Members: members,
 	})
 	s.Require().NoError(err)
@@ -105,7 +108,7 @@ func (s *TestSuite) SetupTest() {
 		minExecutionPeriod, // Must wait 5 seconds before executing proposal
 	)
 	policyReq := &group.MsgCreateGroupPolicy{
-		Admin:   s.addrs[0].String(),
+		Admin:   s.addrsStr[0],
 		GroupId: s.groupID,
 	}
 	err = policyReq.SetDecisionPolicy(policy)
@@ -118,11 +121,12 @@ func (s *TestSuite) SetupTest() {
 	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 
-	addrbz, err := address.NewBech32Codec("cosmos").StringToBytes(policyRes.Address)
+	addrbz, err := addressCodec.StringToBytes(policyRes.Address)
 	s.Require().NoError(err)
 	s.policy = policy
 	s.groupPolicyAddr = addrbz
-
+	s.groupPolicyStrAddr, err = addressCodec.BytesToString(s.groupPolicyAddr)
+	s.Require().NoError(err)
 	s.bankKeeper.EXPECT().MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)}).Return(nil).AnyTimes()
 	err = s.bankKeeper.MintCoins(s.sdkCtx, minttypes.ModuleName, sdk.Coins{sdk.NewInt64Coin("test", 100000)})
 	s.Require().NoError(err)
@@ -157,20 +161,17 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *TestSuite) TestProposalsByVPEnd() {
-	addrs := s.addrs
-	addr2 := addrs[1]
-
 	votingPeriod := s.policy.GetVotingPeriod()
 	ctx := s.sdkCtx
 	now := time.Now()
 
 	msgSend := &banktypes.MsgSend{
-		FromAddress: s.groupPolicyAddr.String(),
-		ToAddress:   addr2.String(),
+		FromAddress: s.groupPolicyStrAddr,
+		ToAddress:   s.addrsStr[1],
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
 
-	proposers := []string{addr2.String()}
+	proposers := []string{s.addrsStr[1]}
 
 	specs := map[string]struct {
 		preRun     func(sdkCtx sdk.Context) uint64
@@ -225,7 +226,7 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 		"tally after voting period (not passing)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				// `s.addrs[4]` has weight 1
-				return submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, []string{s.addrs[4].String()}, group.VOTE_OPTION_YES)
+				return submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, []string{s.addrsStr[4]}, group.VOTE_OPTION_YES)
 			},
 			admin:  proposers[0],
 			newCtx: ctx.WithHeaderInfo(header.Info{Time: now.Add(votingPeriod).Add(time.Hour)}),
@@ -297,19 +298,17 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 }
 
 func (s *TestSuite) TestPruneProposals() {
-	addrs := s.addrs
 	expirationTime := time.Hour * 24 * 15 // 15 days
 	groupID := s.groupID
-	accountAddr := s.groupPolicyAddr
 
 	msgSend := &banktypes.MsgSend{
-		FromAddress: s.groupPolicyAddr.String(),
-		ToAddress:   addrs[0].String(),
+		FromAddress: s.groupPolicyStrAddr,
+		ToAddress:   s.addrsStr[0],
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
 
 	policyReq := &group.MsgCreateGroupPolicy{
-		Admin:   addrs[0].String(),
+		Admin:   s.addrsStr[0],
 		GroupId: groupID,
 	}
 
@@ -323,8 +322,8 @@ func (s *TestSuite) TestPruneProposals() {
 	s.Require().NoError(err)
 
 	req := &group.MsgSubmitProposal{
-		GroupPolicyAddress: accountAddr.String(),
-		Proposers:          []string{addrs[1].String()},
+		GroupPolicyAddress: s.groupPolicyStrAddr,
+		Proposers:          []string{s.addrsStr[1]},
 	}
 	err = req.SetMsgs([]sdk.Msg{msgSend})
 	s.Require().NoError(err)
@@ -338,7 +337,7 @@ func (s *TestSuite) TestPruneProposals() {
 	s.sdkCtx = s.sdkCtx.WithHeaderInfo(header.Info{Time: s.sdkCtx.HeaderInfo().Time.Add(expirationTime)})
 
 	// Prune Expired Proposals
-	err = s.groupKeeper.PruneProposals(s.sdkCtx, s.environment)
+	err = s.groupKeeper.PruneProposals(s.sdkCtx)
 	s.Require().NoError(err)
 	postPrune, err := s.groupKeeper.Proposal(s.ctx, &queryProposal)
 	s.Require().Nil(postPrune)
@@ -351,7 +350,7 @@ func submitProposal(
 	proposers []string,
 ) uint64 {
 	proposalReq := &group.MsgSubmitProposal{
-		GroupPolicyAddress: s.groupPolicyAddr.String(),
+		GroupPolicyAddress: s.groupPolicyStrAddr,
 		Proposers:          proposers,
 	}
 	err := proposalReq.SetMsgs(msgs)
@@ -383,15 +382,18 @@ func (s *TestSuite) createGroupAndGroupPolicy(
 	members []group.MemberRequest,
 	policy group.DecisionPolicy,
 ) (policyAddr string, groupID uint64) {
+	adminAddr, err := s.accountKeeper.AddressCodec().BytesToString(admin)
+	s.Require().NoError(err)
+
 	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin:   admin.String(),
+		Admin:   adminAddr,
 		Members: members,
 	})
 	s.Require().NoError(err)
 
 	groupID = groupRes.GroupId
 	groupPolicy := &group.MsgCreateGroupPolicy{
-		Admin:   admin.String(),
+		Admin:   adminAddr,
 		GroupId: groupID,
 	}
 
@@ -410,17 +412,14 @@ func (s *TestSuite) createGroupAndGroupPolicy(
 }
 
 func (s *TestSuite) TestTallyProposalsAtVPEnd() {
-	addrs := s.addrs
-	addr1 := addrs[0]
-	addr2 := addrs[1]
 	votingPeriod := 4 * time.Minute
 	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
 
 	groupMsg := &group.MsgCreateGroupWithPolicy{
-		Admin: addr1.String(),
+		Admin: s.addrsStr[0],
 		Members: []group.MemberRequest{
-			{Address: addr1.String(), Weight: "1"},
-			{Address: addr2.String(), Weight: "1"},
+			{Address: s.addrsStr[0], Weight: "1"},
+			{Address: s.addrsStr[1], Weight: "1"},
 		},
 	}
 	policy := group.NewThresholdDecisionPolicy(
@@ -440,14 +439,14 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 
 	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
 		GroupPolicyAddress: accountAddr,
-		Proposers:          []string{addr1.String()},
+		Proposers:          []string{s.addrsStr[0]},
 		Messages:           nil,
 	})
 	s.Require().NoError(err)
 
 	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
 		ProposalId: proposalRes.ProposalId,
-		Voter:      addr1.String(),
+		Voter:      s.addrsStr[0],
 		Option:     group.VOTE_OPTION_YES,
 	})
 	s.Require().NoError(err)
@@ -461,7 +460,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	s.Require().Equal("1", result.Tally.YesCount)
 	s.Require().NoError(err)
 
-	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx, s.environment))
+	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
 	s.NotPanics(func() {
 		err := s.groupKeeper.EndBlocker(ctx)
 		if err != nil {
@@ -473,19 +472,15 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 // TestTallyProposalsAtVPEnd_GroupMemberLeaving test that the node doesn't
 // panic if a member leaves after the voting period end.
 func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
-	addrs := s.addrs
-	addr1 := addrs[0]
-	addr2 := addrs[1]
-	addr3 := addrs[2]
 	votingPeriod := 4 * time.Minute
 	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
 
 	groupMsg := &group.MsgCreateGroupWithPolicy{
-		Admin: addr1.String(),
+		Admin: s.addrsStr[0],
 		Members: []group.MemberRequest{
-			{Address: addr1.String(), Weight: "0.3"},
-			{Address: addr2.String(), Weight: "7"},
-			{Address: addr3.String(), Weight: "0.6"},
+			{Address: s.addrsStr[0], Weight: "0.3"},
+			{Address: s.addrsStr[1], Weight: "7"},
+			{Address: s.addrsStr[2], Weight: "0.6"},
 		},
 	}
 	policy := group.NewThresholdDecisionPolicy(
@@ -505,7 +500,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 
 	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
 		GroupPolicyAddress: accountAddr,
-		Proposers:          []string{addr1.String()},
+		Proposers:          []string{s.addrsStr[0]},
 		Messages:           nil,
 	})
 	s.Require().NoError(err)
@@ -513,13 +508,13 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	// group members vote
 	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
 		ProposalId: proposalRes.ProposalId,
-		Voter:      addr1.String(),
+		Voter:      s.addrsStr[0],
 		Option:     group.VOTE_OPTION_NO,
 	})
 	s.Require().NoError(err)
 	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
 		ProposalId: proposalRes.ProposalId,
-		Voter:      addr2.String(),
+		Voter:      s.addrsStr[1],
 		Option:     group.VOTE_OPTION_NO,
 	})
 	s.Require().NoError(err)
@@ -528,7 +523,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	ctx := s.sdkCtx.WithHeaderInfo(header.Info{Time: s.sdkCtx.HeaderInfo().Time.Add(votingPeriod + 1)})
 
 	// Tally the result. This saves the tally result to state.
-	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx, s.environment))
+	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
 	s.NotPanics(func() {
 		err := s.groupKeeper.EndBlocker(ctx)
 		if err != nil {
@@ -538,12 +533,12 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 
 	// member 2 (high weight) leaves group.
 	_, err = s.groupKeeper.LeaveGroup(ctx, &group.MsgLeaveGroup{
-		Address: addr2.String(),
+		Address: s.addrsStr[1],
 		GroupId: groupRes.GroupId,
 	})
 	s.Require().NoError(err)
 
-	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx, s.environment))
+	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
 	s.NotPanics(func() {
 		err := s.groupKeeper.EndBlocker(ctx)
 		if err != nil {

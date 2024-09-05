@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
+	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -102,6 +102,7 @@ func (plva PermanentLockingAccount) RegisterExecuteHandlers(builder *accountstd.
 	accountstd.RegisterExecuteHandler(builder, plva.Delegate)
 	accountstd.RegisterExecuteHandler(builder, plva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, plva.SendCoins)
+	accountstd.RegisterExecuteHandler(builder, plva.WithdrawReward)
 }
 
 func (plva PermanentLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

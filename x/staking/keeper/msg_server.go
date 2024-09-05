@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	consensusv1 "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -37,7 +39,8 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-// CreateValidator defines a method for creating a new validator
+// CreateValidator defines a method for creating a new validator.
+// The validator's params should not be nil for this function to execute successfully.
 func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateValidator) (*types.MsgCreateValidatorResponse, error) {
 	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
@@ -62,32 +65,36 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, types.ErrValidatorOwnerExists
 	}
 
-	pk, ok := msg.Pubkey.GetCachedValue().(cryptotypes.PubKey)
+	cv := msg.Pubkey.GetCachedValue()
+	if cv == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "Pubkey cached value is nil")
+	}
+
+	pk, ok := cv.(cryptotypes.PubKey)
 	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", msg.Pubkey.GetCachedValue())
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", cv)
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx) // TODO: remove this
-	cp := sdkCtx.ConsensusParams()
-	if cp.Validator != nil {
-		pkType := pk.Type()
-		if !slices.Contains(cp.Validator.PubKeyTypes, pkType) {
-			return nil, errorsmod.Wrapf(
-				types.ErrValidatorPubKeyTypeNotSupported,
-				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,
-			)
-		}
-
-		if pkType == sdk.PubKeyEd25519Type && len(pk.Bytes()) != ed25519.PubKeySize {
-			return nil, errorsmod.Wrapf(
-				types.ErrConsensusPubKeyLenInvalid,
-				"got: %d, expected: %d", len(pk.Bytes()), ed25519.PubKeySize,
-			)
-		}
+	resp, err := k.QueryRouterService.Invoke(ctx, &consensusv1.QueryParamsRequest{})
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
+	}
+	res, ok := resp.(*consensusv1.QueryParamsResponse)
+	if !ok {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unexpected response type: %T", resp)
 	}
 
-	if _, err := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); err == nil {
-		return nil, types.ErrValidatorPubKeyExists
+	if res.Params.Validator == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "validator params are not set")
+	}
+
+	if err = validatePubKey(pk, res.Params.Validator.PubKeyTypes); err != nil {
+		return nil, err
+	}
+
+	err = k.checkConsKeyAlreadyUsed(ctx, pk)
+	if err != nil {
+		return nil, err
 	}
 
 	bondDenom, err := k.BondDenom(ctx)
@@ -112,7 +119,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 
 	commission := types.NewCommissionWithTime(
 		msg.Commission.Rate, msg.Commission.MaxRate,
-		msg.Commission.MaxChangeRate, sdkCtx.HeaderInfo().Time,
+		msg.Commission.MaxChangeRate, k.HeaderService.HeaderInfo(ctx).Time,
 	)
 
 	validator, err = validator.SetInitialCommission(commission)
@@ -150,7 +157,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCreateValidator,
 		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 		event.NewAttribute(sdk.AttributeKeyAmount, msg.Value.String()),
@@ -239,7 +246,7 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 		return nil, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeEditValidator,
 		event.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
 		event.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
@@ -302,7 +309,7 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 		}()
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeDelegate,
 		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 		event.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
@@ -375,7 +382,7 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 		}()
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeRedelegate,
 		event.NewAttribute(types.AttributeKeySrcValidator, msg.ValidatorSrcAddress),
 		event.NewAttribute(types.AttributeKeyDstValidator, msg.ValidatorDstAddress),
@@ -445,7 +452,7 @@ func (k msgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*t
 		}()
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeUnbond,
 		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 		event.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
@@ -544,7 +551,7 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("amount is greater than the unbonding delegation entry balance")
 	}
 
-	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerInfo := k.HeaderService.HeaderInfo(ctx)
 	if unbondEntry.CompletionTime.Before(headerInfo.Time) {
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("unbonding delegation is already processed")
 	}
@@ -576,7 +583,7 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCancelUnbondingDelegation,
 		event.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
@@ -628,7 +635,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 					val.Commission.CommissionRates.MaxRate = minRate
 				}
 
-				val.Commission.UpdateTime = k.environment.HeaderService.GetHeaderInfo(ctx).Time
+				val.Commission.UpdateTime = k.HeaderService.HeaderInfo(ctx).Time
 				if err := k.SetValidator(ctx, val); err != nil {
 					return nil, fmt.Errorf("failed to set validator after MinCommissionRate param change: %w", err)
 				}
@@ -639,30 +646,41 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
+// RotateConsPubKey handles the rotation of a validator's consensus public key.
+// It validates the new key, checks for conflicts, and updates the necessary state.
+// The function requires that the validator params are not nil for successful execution.
 func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateConsPubKey) (res *types.MsgRotateConsPubKeyResponse, err error) {
 	cv := msg.NewPubkey.GetCachedValue()
+	if cv == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "new public key is nil")
+	}
+
 	pk, ok := cv.(cryptotypes.PubKey)
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", cv)
 	}
 
-	// check cons key is already present in the key rotation history.
-	rotatedTo, err := k.NewToOldConsKeyMap.Get(ctx, pk.Address())
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+	// check if the new public key type is valid
+	resp, err := k.QueryRouterService.Invoke(ctx, &consensusv1.QueryParamsRequest{})
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
+	}
+	paramsRes, ok := resp.(*consensusv1.QueryParamsResponse)
+	if !ok {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unexpected response type: %T", resp)
+	}
+
+	if paramsRes.Params.Validator == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "validator params are not set")
+	}
+
+	if err = validatePubKey(pk, paramsRes.Params.Validator.PubKeyTypes); err != nil {
 		return nil, err
 	}
 
-	if rotatedTo != nil {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress,
-			"the new public key is already present in rotation history, please try with a different one")
-	}
-
-	newConsAddr := sdk.ConsAddress(pk.Address())
-
-	// checks if NewPubKey is not duplicated on ValidatorsByConsAddr
-	_, err = k.Keeper.ValidatorByConsAddr(ctx, newConsAddr)
-	if err == nil {
-		return nil, types.ErrConsensusPubKeyAlreadyUsedForValidator
+	err = k.checkConsKeyAlreadyUsed(ctx, pk)
+	if err != nil {
+		return nil, err
 	}
 
 	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
@@ -670,16 +688,16 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, err
 	}
 
-	validator2, err := k.Keeper.GetValidator(ctx, valAddr)
+	validator, err := k.Keeper.GetValidator(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	if validator2.GetOperator() == "" {
+	if validator.GetOperator() == "" {
 		return nil, types.ErrNoValidatorFound
 	}
 
-	if status := validator2.GetStatus(); status != sdk.Bonded {
+	if status := validator.GetStatus(); status != sdk.Bonded {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "validator status is not bonded, got %x", status)
 	}
 
@@ -706,7 +724,7 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	err = k.setConsPubKeyRotationHistory(
 		ctx,
 		valAddr,
-		validator2.ConsensusPubkey,
+		validator.ConsensusPubkey,
 		msg.NewPubkey,
 		params.KeyRotationFee,
 	)
@@ -715,4 +733,64 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 	}
 
 	return res, nil
+}
+
+// checkConsKeyAlreadyUsed returns an error if the consensus public key is already used,
+// in ConsAddrToValidatorIdentifierMap, OldToNewConsAddrMap, or in the current block (RotationHistory).
+func (k msgServer) checkConsKeyAlreadyUsed(ctx context.Context, newConsPubKey cryptotypes.PubKey) error {
+	newConsAddr := sdk.ConsAddress(newConsPubKey.Address())
+	rotatedTo, err := k.ConsAddrToValidatorIdentifierMap.Get(ctx, newConsAddr)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return err
+	}
+
+	if rotatedTo != nil {
+		return sdkerrors.ErrInvalidAddress.Wrap(
+			"public key was already used")
+	}
+
+	// check in the current block
+	rotationHistory, err := k.GetBlockConsPubKeyRotationHistory(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, rotation := range rotationHistory {
+		cachedValue := rotation.NewConsPubkey.GetCachedValue()
+		if cachedValue == nil {
+			return sdkerrors.ErrInvalidAddress.Wrap("new public key is nil")
+		}
+		if bytes.Equal(cachedValue.(cryptotypes.PubKey).Address(), newConsAddr) {
+			return sdkerrors.ErrInvalidAddress.Wrap("public key was already used")
+		}
+	}
+
+	// checks if NewPubKey is not duplicated on ValidatorsByConsAddr
+	_, err = k.Keeper.ValidatorByConsAddr(ctx, newConsAddr)
+	if err == nil {
+		return types.ErrValidatorPubKeyExists
+	}
+
+	return nil
+}
+
+func validatePubKey(pk cryptotypes.PubKey, knownPubKeyTypes []string) error {
+	pkType := pk.Type()
+	if !slices.Contains(knownPubKeyTypes, pkType) {
+		return errorsmod.Wrapf(
+			types.ErrValidatorPubKeyTypeNotSupported,
+			"got: %s, expected: %s", pk.Type(), knownPubKeyTypes,
+		)
+	}
+
+	if pkType == sdk.PubKeyEd25519Type {
+		if len(pk.Bytes()) != ed25519.PubKeySize {
+			return errorsmod.Wrapf(
+				types.ErrConsensusPubKeyLenInvalid,
+				"invalid Ed25519 pubkey size: got %d, expected %d", len(pk.Bytes()), ed25519.PubKeySize,
+			)
+		}
+	}
+
+	return nil
 }

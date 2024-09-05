@@ -27,10 +27,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#20363](https://github.com/cosmos/cosmos-sdk/pull/20363) Implemented epoched minting, configurable through `MintFn`. Now `MintFn` doesn't do any assumptions on how tokens are minted, users can define their own minting logic. 
+* [#19896](https://github.com/cosmos/cosmos-sdk/pull/19896) Added a new max supply genesis param to existing params.
+
 ### Improvements
 
 ### API Breaking Changes
 
-* [#19367](https://github.com/cosmos/cosmos-sdk/pull/19398) `appmodule.Environment` is received on the Keeper to get access to different application services
+* [#20363](https://github.com/cosmos/cosmos-sdk/pull/20363) Deprecated InflationCalculationFn in favor of MintFn, `keeper.DefaultMintFn` wrapper must be used in order to continue using it in `NewAppModule`. This is not breaking for depinject users, as both `MintFn` and `InflationCalculationFn` are accepted.
+* [#19367](https://github.com/cosmos/cosmos-sdk/pull/19398) `appmodule.Environment` is received on the Keeper to get access to different application services.
 
 ### Bug Fixes

@@ -1,34 +1,37 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 
 	errorsmod "cosmossdk.io/errors"
-	authclient "cosmossdk.io/x/auth/client"
-	"cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 const (
-	flagMultisig        = "multisig"
-	flagOverwrite       = "overwrite"
-	flagSigOnly         = "signature-only"
-	flagNoAutoIncrement = "no-auto-increment"
-	flagAppend          = "append"
+	flagMultisig                  = "multisig"
+	flagOverwrite                 = "overwrite"
+	flagSigOnly                   = "signature-only"
+	flagSkipSignatureVerification = "skip-signature-verification"
+	flagNoAutoIncrement           = "no-auto-increment"
+	flagAppend                    = "append"
 )
 
 // GetSignBatchCommand returns the transaction sign-batch command.
 func GetSignBatchCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sign-batch [file] ([file2]...)",
+		Use:   "sign-batch <file> [<file2>...]",
 		Short: "Sign transaction batch files",
 		Long: `Sign batch files of transactions generated with --generate-only.
 The command processes list of transactions from a file (one StdTx each line), or multiple files.
@@ -140,7 +143,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				// append messages
 				msgs = append(msgs, unsignedStdTx.GetMsgs()...)
 			}
-			// set the new appened msgs into builder
+			// set the new appended msgs into builder
 			err = txBuilder.SetMsgs(msgs...)
 			if err != nil {
 				return err
@@ -224,9 +227,38 @@ func sign(clientCtx client.Context, txBuilder client.TxBuilder, txFactory tx.Fac
 }
 
 func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactory tx.Factory, multisig string) error {
-	multisigAddr, _, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), multisig)
+	multisigAddr, multisigName, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), multisig)
 	if err != nil {
 		return fmt.Errorf("error getting account from keybase: %w", err)
+	}
+
+	fromRecord, err := clientCtx.Keyring.Key(clientCtx.FromName)
+	if err != nil {
+		return fmt.Errorf("error getting account from keybase: %w", err)
+	}
+
+	fromPubKey, err := fromRecord.GetPubKey()
+	if err != nil {
+		return err
+	}
+
+	multisigkey, err := clientCtx.Keyring.Key(multisigName)
+	if err != nil {
+		return err
+	}
+
+	multisigPubKey, err := multisigkey.GetPubKey()
+	if err != nil {
+		return err
+	}
+
+	isSigner, err := isMultisigSigner(clientCtx, multisigPubKey, fromPubKey)
+	if err != nil {
+		return err
+	}
+
+	if !isSigner {
+		return errors.New("signing key is not a part of multisig key")
 	}
 
 	if err = authclient.SignTxWithSignerAddress(
@@ -242,6 +274,33 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 	}
 
 	return nil
+}
+
+// isMultisigSigner checks if the given pubkey is a signer in the multisig or in
+// any of the nested multisig signers.
+func isMultisigSigner(clientCtx client.Context, multisigPubKey, fromPubKey cryptotypes.PubKey) (bool, error) {
+	multisigLegacyPub := multisigPubKey.(*kmultisig.LegacyAminoPubKey)
+
+	var found bool
+	for _, pubkey := range multisigLegacyPub.GetPubKeys() {
+		if pubkey.Equals(fromPubKey) {
+			found = true
+			break
+		}
+
+		if nestedMultisig, ok := pubkey.(*kmultisig.LegacyAminoPubKey); ok {
+			var err error
+			found, err = isMultisigSigner(clientCtx, nestedMultisig, fromPubKey)
+			if err != nil {
+				return false, err
+			}
+			if found {
+				break
+			}
+		}
+	}
+
+	return found, nil
 }
 
 func setOutputFile(cmd *cobra.Command) (func(), error) {
@@ -263,7 +322,7 @@ func setOutputFile(cmd *cobra.Command) (func(), error) {
 // GetSignCommand returns the transaction sign command.
 func GetSignCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sign [file]",
+		Use:   "sign <file>",
 		Short: "Sign a transaction generated offline",
 		Long: `Sign a transaction created with the --generate-only flag.
 It will read a transaction from [file], sign it, and print its JSON encoding.
@@ -376,7 +435,6 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txFactory tx.Factory, 
 		if err != nil {
 			return err
 		}
-		multisigLegacyPub := multisigPubKey.(*kmultisig.LegacyAminoPubKey)
 
 		fromRecord, err := clientCtx.Keyring.Key(fromName)
 		if err != nil {
@@ -387,15 +445,14 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txFactory tx.Factory, 
 			return err
 		}
 
-		var found bool
-		for _, pubkey := range multisigLegacyPub.GetPubKeys() {
-			if pubkey.Equals(fromPubKey) {
-				found = true
-			}
+		isSigner, err := isMultisigSigner(clientCtx, multisigPubKey, fromPubKey)
+		if err != nil {
+			return err
 		}
-		if !found {
-			return fmt.Errorf("signing key is not a part of multisig key")
+		if !isSigner {
+			return errors.New("signing key is not a part of multisig key")
 		}
+
 		err = authclient.SignTxWithSignerAddress(
 			txFactory, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
 		if err != nil {

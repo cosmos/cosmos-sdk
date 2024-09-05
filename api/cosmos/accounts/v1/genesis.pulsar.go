@@ -12,10 +12,61 @@ import (
 	sync "sync"
 )
 
+var _ protoreflect.List = (*_GenesisState_1_list)(nil)
+
+type _GenesisState_1_list struct {
+	list *[]*GenesisAccount
+}
+
+func (x *_GenesisState_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*GenesisAccount)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*GenesisAccount)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_1_list) AppendMutable() protoreflect.Value {
+	v := new(GenesisAccount)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_1_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_1_list) NewElement() protoreflect.Value {
+	v := new(GenesisAccount)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_1_list) IsValid() bool {
+	return x.list != nil
+}
+
 var _ protoreflect.List = (*_GenesisState_2_list)(nil)
 
 type _GenesisState_2_list struct {
-	list *[]*GenesisAccount
+	list *[]*MsgInit
 }
 
 func (x *_GenesisState_2_list) Len() int {
@@ -31,18 +82,18 @@ func (x *_GenesisState_2_list) Get(i int) protoreflect.Value {
 
 func (x *_GenesisState_2_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*GenesisAccount)
+	concreteValue := valueUnwrapped.Interface().(*MsgInit)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_GenesisState_2_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*GenesisAccount)
+	concreteValue := valueUnwrapped.Interface().(*MsgInit)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_GenesisState_2_list) AppendMutable() protoreflect.Value {
-	v := new(GenesisAccount)
+	v := new(MsgInit)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -55,7 +106,7 @@ func (x *_GenesisState_2_list) Truncate(n int) {
 }
 
 func (x *_GenesisState_2_list) NewElement() protoreflect.Value {
-	v := new(GenesisAccount)
+	v := new(MsgInit)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -64,16 +115,16 @@ func (x *_GenesisState_2_list) IsValid() bool {
 }
 
 var (
-	md_GenesisState                protoreflect.MessageDescriptor
-	fd_GenesisState_account_number protoreflect.FieldDescriptor
-	fd_GenesisState_accounts       protoreflect.FieldDescriptor
+	md_GenesisState                   protoreflect.MessageDescriptor
+	fd_GenesisState_accounts          protoreflect.FieldDescriptor
+	fd_GenesisState_init_account_msgs protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_accounts_v1_genesis_proto_init()
 	md_GenesisState = File_cosmos_accounts_v1_genesis_proto.Messages().ByName("GenesisState")
-	fd_GenesisState_account_number = md_GenesisState.Fields().ByName("account_number")
 	fd_GenesisState_accounts = md_GenesisState.Fields().ByName("accounts")
+	fd_GenesisState_init_account_msgs = md_GenesisState.Fields().ByName("init_account_msgs")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -141,15 +192,15 @@ func (x *fastReflection_GenesisState) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.AccountNumber != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.AccountNumber)
-		if !f(fd_GenesisState_account_number, value) {
+	if len(x.Accounts) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_1_list{list: &x.Accounts})
+		if !f(fd_GenesisState_accounts, value) {
 			return
 		}
 	}
-	if len(x.Accounts) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_2_list{list: &x.Accounts})
-		if !f(fd_GenesisState_accounts, value) {
+	if len(x.InitAccountMsgs) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_2_list{list: &x.InitAccountMsgs})
+		if !f(fd_GenesisState_init_account_msgs, value) {
 			return
 		}
 	}
@@ -168,10 +219,10 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.GenesisState.account_number":
-		return x.AccountNumber != uint64(0)
 	case "cosmos.accounts.v1.GenesisState.accounts":
 		return len(x.Accounts) != 0
+	case "cosmos.accounts.v1.GenesisState.init_account_msgs":
+		return len(x.InitAccountMsgs) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState"))
@@ -188,10 +239,10 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.GenesisState.account_number":
-		x.AccountNumber = uint64(0)
 	case "cosmos.accounts.v1.GenesisState.accounts":
 		x.Accounts = nil
+	case "cosmos.accounts.v1.GenesisState.init_account_msgs":
+		x.InitAccountMsgs = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState"))
@@ -208,14 +259,17 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.accounts.v1.GenesisState.account_number":
-		value := x.AccountNumber
-		return protoreflect.ValueOfUint64(value)
 	case "cosmos.accounts.v1.GenesisState.accounts":
 		if len(x.Accounts) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_1_list{})
+		}
+		listValue := &_GenesisState_1_list{list: &x.Accounts}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.accounts.v1.GenesisState.init_account_msgs":
+		if len(x.InitAccountMsgs) == 0 {
 			return protoreflect.ValueOfList(&_GenesisState_2_list{})
 		}
-		listValue := &_GenesisState_2_list{list: &x.Accounts}
+		listValue := &_GenesisState_2_list{list: &x.InitAccountMsgs}
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
@@ -237,12 +291,14 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.GenesisState.account_number":
-		x.AccountNumber = value.Uint()
 	case "cosmos.accounts.v1.GenesisState.accounts":
 		lv := value.List()
-		clv := lv.(*_GenesisState_2_list)
+		clv := lv.(*_GenesisState_1_list)
 		x.Accounts = *clv.list
+	case "cosmos.accounts.v1.GenesisState.init_account_msgs":
+		lv := value.List()
+		clv := lv.(*_GenesisState_2_list)
+		x.InitAccountMsgs = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState"))
@@ -267,10 +323,14 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		if x.Accounts == nil {
 			x.Accounts = []*GenesisAccount{}
 		}
-		value := &_GenesisState_2_list{list: &x.Accounts}
+		value := &_GenesisState_1_list{list: &x.Accounts}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.accounts.v1.GenesisState.account_number":
-		panic(fmt.Errorf("field account_number of message cosmos.accounts.v1.GenesisState is not mutable"))
+	case "cosmos.accounts.v1.GenesisState.init_account_msgs":
+		if x.InitAccountMsgs == nil {
+			x.InitAccountMsgs = []*MsgInit{}
+		}
+		value := &_GenesisState_2_list{list: &x.InitAccountMsgs}
+		return protoreflect.ValueOfList(value)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.v1.GenesisState"))
@@ -284,10 +344,11 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.GenesisState.account_number":
-		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.accounts.v1.GenesisState.accounts":
 		list := []*GenesisAccount{}
+		return protoreflect.ValueOfList(&_GenesisState_1_list{list: &list})
+	case "cosmos.accounts.v1.GenesisState.init_account_msgs":
+		list := []*MsgInit{}
 		return protoreflect.ValueOfList(&_GenesisState_2_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -358,11 +419,14 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.AccountNumber != 0 {
-			n += 1 + runtime.Sov(uint64(x.AccountNumber))
-		}
 		if len(x.Accounts) > 0 {
 			for _, e := range x.Accounts {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.InitAccountMsgs) > 0 {
+			for _, e := range x.InitAccountMsgs {
 				l = options.Size(e)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
@@ -396,9 +460,9 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.Accounts) > 0 {
-			for iNdEx := len(x.Accounts) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.Accounts[iNdEx])
+		if len(x.InitAccountMsgs) > 0 {
+			for iNdEx := len(x.InitAccountMsgs) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.InitAccountMsgs[iNdEx])
 				if err != nil {
 					return protoiface.MarshalOutput{
 						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -412,10 +476,21 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				dAtA[i] = 0x12
 			}
 		}
-		if x.AccountNumber != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.AccountNumber))
-			i--
-			dAtA[i] = 0x8
+		if len(x.Accounts) > 0 {
+			for iNdEx := len(x.Accounts) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Accounts[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0xa
+			}
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -467,25 +542,6 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			}
 			switch fieldNum {
 			case 1:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AccountNumber", wireType)
-				}
-				x.AccountNumber = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.AccountNumber |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-			case 2:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Accounts", wireType)
 				}
@@ -516,6 +572,40 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				}
 				x.Accounts = append(x.Accounts, &GenesisAccount{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Accounts[len(x.Accounts)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field InitAccountMsgs", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.InitAccountMsgs = append(x.InitAccountMsgs, &MsgInit{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.InitAccountMsgs[len(x.InitAccountMsgs)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -1731,10 +1821,10 @@ type GenesisState struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// account_number is the latest account number.
-	AccountNumber uint64 `protobuf:"varint,1,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
 	// accounts are the genesis accounts.
-	Accounts []*GenesisAccount `protobuf:"bytes,2,rep,name=accounts,proto3" json:"accounts,omitempty"`
+	Accounts []*GenesisAccount `protobuf:"bytes,1,rep,name=accounts,proto3" json:"accounts,omitempty"`
+	// init_accounts_msgs defines the genesis messages that will be executed to init the account.
+	InitAccountMsgs []*MsgInit `protobuf:"bytes,2,rep,name=init_account_msgs,json=initAccountMsgs,proto3" json:"init_account_msgs,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -1757,16 +1847,16 @@ func (*GenesisState) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_v1_genesis_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *GenesisState) GetAccountNumber() uint64 {
-	if x != nil {
-		return x.AccountNumber
-	}
-	return 0
-}
-
 func (x *GenesisState) GetAccounts() []*GenesisAccount {
 	if x != nil {
 		return x.Accounts
+	}
+	return nil
+}
+
+func (x *GenesisState) GetInitAccountMsgs() []*MsgInit {
+	if x != nil {
+		return x.InitAccountMsgs
 	}
 	return nil
 }
@@ -1887,14 +1977,18 @@ var file_cosmos_accounts_v1_genesis_proto_rawDesc = []byte{
 	0x0a, 0x20, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
 	0x73, 0x2f, 0x76, 0x31, 0x2f, 0x67, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x12, 0x12, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x22, 0x75, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69,
-	0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x25, 0x0a, 0x0e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x5f, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0d,
-	0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x3e, 0x0a,
-	0x08, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32,
-	0x22, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
-	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x41, 0x63, 0x63, 0x6f,
-	0x75, 0x6e, 0x74, 0x52, 0x08, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x22, 0xa6, 0x01,
+	0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x1a, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61,
+	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x76, 0x31, 0x2f, 0x74, 0x78, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x22, 0x97, 0x01, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53,
+	0x74, 0x61, 0x74, 0x65, 0x12, 0x3e, 0x0a, 0x08, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73,
+	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x6e, 0x65,
+	0x73, 0x69, 0x73, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x08, 0x61, 0x63, 0x63, 0x6f,
+	0x75, 0x6e, 0x74, 0x73, 0x12, 0x47, 0x0a, 0x11, 0x69, 0x6e, 0x69, 0x74, 0x5f, 0x61, 0x63, 0x63,
+	0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x6d, 0x73, 0x67, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x1b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69, 0x74, 0x52, 0x0f, 0x69, 0x6e,
+	0x69, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x4d, 0x73, 0x67, 0x73, 0x22, 0xa6, 0x01,
 	0x0a, 0x0e, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
 	0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x61, 0x63,
@@ -1941,15 +2035,17 @@ var file_cosmos_accounts_v1_genesis_proto_goTypes = []interface{}{
 	(*GenesisState)(nil),   // 0: cosmos.accounts.v1.GenesisState
 	(*GenesisAccount)(nil), // 1: cosmos.accounts.v1.GenesisAccount
 	(*KVPair)(nil),         // 2: cosmos.accounts.v1.KVPair
+	(*MsgInit)(nil),        // 3: cosmos.accounts.v1.MsgInit
 }
 var file_cosmos_accounts_v1_genesis_proto_depIdxs = []int32{
 	1, // 0: cosmos.accounts.v1.GenesisState.accounts:type_name -> cosmos.accounts.v1.GenesisAccount
-	2, // 1: cosmos.accounts.v1.GenesisAccount.state:type_name -> cosmos.accounts.v1.KVPair
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	3, // 1: cosmos.accounts.v1.GenesisState.init_account_msgs:type_name -> cosmos.accounts.v1.MsgInit
+	2, // 2: cosmos.accounts.v1.GenesisAccount.state:type_name -> cosmos.accounts.v1.KVPair
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_accounts_v1_genesis_proto_init() }
@@ -1957,6 +2053,7 @@ func file_cosmos_accounts_v1_genesis_proto_init() {
 	if File_cosmos_accounts_v1_genesis_proto != nil {
 		return
 	}
+	file_cosmos_accounts_v1_tx_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_cosmos_accounts_v1_genesis_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GenesisState); i {

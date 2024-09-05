@@ -406,7 +406,7 @@ type MsgClient interface {
 	// TripCircuitBreaker pauses processing of Msg's in the state machine.
 	TripCircuitBreaker(ctx context.Context, in *MsgTripCircuitBreaker, opts ...grpc.CallOption) (*MsgTripCircuitBreakerResponse, error)
 	// ResetCircuitBreaker resumes processing of Msg's in the state machine that
-	// have been been paused using TripCircuitBreaker.
+	// have been paused using TripCircuitBreaker.
 	ResetCircuitBreaker(ctx context.Context, in *MsgResetCircuitBreaker, opts ...grpc.CallOption) (*MsgResetCircuitBreakerResponse, error)
 }
 
@@ -453,7 +453,7 @@ type MsgServer interface {
 	// TripCircuitBreaker pauses processing of Msg's in the state machine.
 	TripCircuitBreaker(context.Context, *MsgTripCircuitBreaker) (*MsgTripCircuitBreakerResponse, error)
 	// ResetCircuitBreaker resumes processing of Msg's in the state machine that
-	// have been been paused using TripCircuitBreaker.
+	// have been paused using TripCircuitBreaker.
 	ResetCircuitBreaker(context.Context, *MsgResetCircuitBreaker) (*MsgResetCircuitBreakerResponse, error)
 }
 
@@ -529,6 +529,7 @@ func _Msg_ResetCircuitBreaker_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.circuit.v1.Msg",
 	HandlerType: (*MsgServer)(nil),

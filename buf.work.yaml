@@ -7,8 +7,6 @@ directories:
   - x/bank/proto
   - x/circuit/proto
   - x/consensus/proto
-  - x/counter/proto
-  - x/crisis/proto
   - x/distribution/proto
   - x/evidence/proto
   - x/feegrant/proto

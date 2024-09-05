@@ -19,24 +19,25 @@ const (
 
 // Default governance params
 var (
-	DefaultMinDepositTokens             = sdkmath.NewInt(10000000)
-	DefaultMinExpeditedDepositTokens    = DefaultMinDepositTokens.Mul(sdkmath.NewInt(DefaultMinExpeditedDepositTokensRatio))
-	DefaultQuorum                       = sdkmath.LegacyNewDecWithPrec(334, 3)
-	DefaultYesQuorum                    = sdkmath.LegacyNewDecWithPrec(0, 1)
-	DefaultExpeditedQuorum              = sdkmath.LegacyNewDecWithPrec(500, 3)
-	DefaultThreshold                    = sdkmath.LegacyNewDecWithPrec(5, 1)
-	DefaultExpeditedThreshold           = sdkmath.LegacyNewDecWithPrec(667, 3)
-	DefaultVetoThreshold                = sdkmath.LegacyNewDecWithPrec(334, 3)
-	DefaultMinInitialDepositRatio       = sdkmath.LegacyZeroDec()
-	DefaultProposalCancelRatio          = sdkmath.LegacyMustNewDecFromStr("0.5")
-	DefaultProposalCancelDestAddress    = ""
-	DefaultProposalCancelMaxPeriod      = sdkmath.LegacyMustNewDecFromStr("0.5")
-	DefaultBurnProposalPrevote          = false // set to false to replicate behavior of when this change was made (0.47)
-	DefaultBurnVoteQuorum               = false // set to false to  replicate behavior of when this change was made (0.47)
-	DefaultBurnVoteVeto                 = true  // set to true to replicate behavior of when this change was made (0.47)
-	DefaultMinDepositRatio              = sdkmath.LegacyMustNewDecFromStr("0.01")
-	DefaultOptimisticRejectedThreshold  = sdkmath.LegacyMustNewDecFromStr("0.1")
-	DefaultOptimisticAuthorizedAddreses = []string(nil)
+	DefaultMinDepositTokens                    = sdkmath.NewInt(10000000)
+	DefaultMinExpeditedDepositTokens           = DefaultMinDepositTokens.Mul(sdkmath.NewInt(DefaultMinExpeditedDepositTokensRatio))
+	DefaultQuorum                              = sdkmath.LegacyNewDecWithPrec(334, 3)
+	DefaultYesQuorum                           = sdkmath.LegacyNewDecWithPrec(0, 1)
+	DefaultExpeditedQuorum                     = sdkmath.LegacyNewDecWithPrec(500, 3)
+	DefaultThreshold                           = sdkmath.LegacyNewDecWithPrec(5, 1)
+	DefaultExpeditedThreshold                  = sdkmath.LegacyNewDecWithPrec(667, 3)
+	DefaultVetoThreshold                       = sdkmath.LegacyNewDecWithPrec(334, 3)
+	DefaultMinInitialDepositRatio              = sdkmath.LegacyZeroDec()
+	DefaultProposalCancelRatio                 = sdkmath.LegacyMustNewDecFromStr("0.5")
+	DefaultProposalCancelDestAddress           = ""
+	DefaultProposalCancelMaxPeriod             = sdkmath.LegacyMustNewDecFromStr("0.5")
+	DefaultBurnProposalPrevote                 = false // set to false to replicate behavior of when this change was made (0.47)
+	DefaultBurnVoteQuorum                      = false // set to false to  replicate behavior of when this change was made (0.47)
+	DefaultBurnVoteVeto                        = true  // set to true to replicate behavior of when this change was made (0.47)
+	DefaultMinDepositRatio                     = sdkmath.LegacyMustNewDecFromStr("0.01")
+	DefaultOptimisticRejectedThreshold         = sdkmath.LegacyMustNewDecFromStr("0.1")
+	DefaultOptimisticAuthorizedAddreses        = []string(nil)
+	DefaultProposalExecutionGas         uint64 = 10_000_000 // ten million
 )
 
 // NewParams creates a new Params instance with given values.
@@ -47,6 +48,7 @@ func NewParams(
 	burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool,
 	minDepositRatio, optimisticRejectedThreshold string,
 	optimisticAuthorizedAddresses []string,
+	proposalExecutionGas uint64,
 ) Params {
 	return Params{
 		MinDeposit:                    minDeposit,
@@ -70,6 +72,7 @@ func NewParams(
 		MinDepositRatio:               minDepositRatio,
 		OptimisticRejectedThreshold:   optimisticRejectedThreshold,
 		OptimisticAuthorizedAddresses: optimisticAuthorizedAddresses,
+		ProposalExecutionGas:          proposalExecutionGas,
 	}
 }
 
@@ -97,6 +100,7 @@ func DefaultParams() Params {
 		DefaultMinDepositRatio.String(),
 		DefaultOptimisticRejectedThreshold.String(),
 		DefaultOptimisticAuthorizedAddreses,
+		DefaultProposalExecutionGas,
 	)
 }
 
@@ -260,10 +264,14 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 	}
 
 	if len(p.ProposalCancelDest) != 0 {
-		_, err := sdk.AccAddressFromBech32(p.ProposalCancelDest)
+		_, err := addressCodec.StringToBytes(p.ProposalCancelDest)
 		if err != nil {
 			return fmt.Errorf("deposits destination address is invalid: %s", p.ProposalCancelDest)
 		}
+	}
+
+	if p.ProposalExecutionGas == 0 {
+		return fmt.Errorf("proposal execution gas must be positive: %d", p.ProposalExecutionGas)
 	}
 
 	return nil

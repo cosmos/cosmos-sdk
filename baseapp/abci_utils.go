@@ -3,30 +3,31 @@ package baseapp
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 
-	"github.com/cockroachdb/errors"
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/comet"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 type (
-	// ValidatorStore defines the interface contract require for verifying vote
+	// ValidatorStore defines the interface contract required for verifying vote
 	// extension signatures. Typically, this will be implemented by the x/staking
 	// module, which has knowledge of the CometBFT public key.
 	ValidatorStore interface {
-		GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
+		GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cryptotypes.PubKey, error)
 	}
 
 	// GasTx defines the contract that a transaction with a gas limit must implement.
@@ -46,7 +47,7 @@ func ValidateVoteExtensions(
 	extCommit abci.ExtendedCommitInfo,
 ) error {
 	// Get values from context
-	cp := ctx.ConsensusParams()
+	cp := ctx.ConsensusParams() // nolint:staticcheck // ignore linting error
 	currentHeight := ctx.HeaderInfo().Height
 	chainID := ctx.HeaderInfo().ChainID
 	commitInfo := ctx.CometInfo().LastCommit
@@ -59,7 +60,10 @@ func ValidateVoteExtensions(
 	// Start checking vote extensions only **after** the vote extensions enable
 	// height, because when `currentHeight == VoteExtensionsEnableHeight`
 	// PrepareProposal doesn't get any vote extensions in its request.
-	extsEnabled := cp.Abci != nil && currentHeight > cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+	extsEnabled := cp.Feature != nil && cp.Feature.VoteExtensionsEnableHeight != nil && currentHeight > cp.Feature.VoteExtensionsEnableHeight.Value && cp.Feature.VoteExtensionsEnableHeight.Value != 0
+	if !extsEnabled {
+		extsEnabled = cp.Abci != nil && currentHeight > cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
+	}
 	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
 		var buf bytes.Buffer
 		if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {
@@ -80,7 +84,7 @@ func ValidateVoteExtensions(
 		totalVP += vote.Validator.Power
 
 		// Only check + include power if the vote is a commit vote. There must be super-majority, otherwise the
-		// previous block (the block vote is for) could not have been committed.
+		// previous block (the block the vote is for) could not have been committed.
 		if vote.BlockIdFlag != cmtproto.BlockIDFlagCommit {
 			continue
 		}
@@ -107,7 +111,12 @@ func ValidateVoteExtensions(
 			return fmt.Errorf("failed to get validator %X public key: %w", valConsAddr, err)
 		}
 
-		cmtPubKey, err := cryptoenc.PubKeyFromProto(pubKeyProto)
+		cmtpk, err := cryptocodec.ToCmtProtoPublicKey(pubKeyProto)
+		if err != nil {
+			return fmt.Errorf("failed to convert validator %X public key: %w", valConsAddr, err)
+		}
+
+		cmtPubKey, err := cryptoenc.PubKeyFromProto(cmtpk)
 		if err != nil {
 			return fmt.Errorf("failed to convert validator %X public key: %w", valConsAddr, err)
 		}
@@ -168,7 +177,7 @@ func validateExtendedCommitAgainstLastCommit(ec abci.ExtendedCommitInfo, lc come
 		}
 		return -int(vote1.Validator.Power - vote2.Validator.Power) // vp sorted in descending order
 	}) {
-		return fmt.Errorf("extended commit votes are not sorted by voting power")
+		return errors.New("extended commit votes are not sorted by voting power")
 	}
 
 	addressCache := make(map[string]struct{}, len(ec.Votes))
@@ -247,9 +256,9 @@ func (h *DefaultProposalHandler) SetTxSelector(ts TxSelector) {
 // requested from CometBFT will simply be returned, which, by default, are in
 // FIFO order.
 func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHandler {
-	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+	return func(ctx sdk.Context, req *abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error) {
 		var maxBlockGas uint64
-		if b := ctx.ConsensusParams().Block; b != nil {
+		if b := ctx.ConsensusParams().Block; b != nil { // nolint:staticcheck // ignore linting error
 			maxBlockGas = uint64(b.MaxGas)
 		}
 
@@ -273,17 +282,21 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				}
 			}
 
-			return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs(ctx)}, nil
+			return &abci.PrepareProposalResponse{Txs: h.txSelector.SelectedTxs(ctx)}, nil
 		}
 
-		iterator := h.mempool.Select(ctx, req.Txs)
 		selectedTxsSignersSeqs := make(map[string]uint64)
-		var selectedTxsNums int
-		for iterator != nil {
-			memTx := iterator.Tx()
+		var (
+			resError        error
+			selectedTxsNums int
+			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid dead lock
+		)
+		h.mempool.SelectBy(ctx, req.Txs, func(memTx sdk.Tx) bool {
 			signerData, err := h.signerExtAdapter.GetSigners(memTx)
 			if err != nil {
-				return nil, err
+				// propagate the error to the caller
+				resError = err
+				return false
 			}
 
 			// If the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
@@ -307,8 +320,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				txSignersSeqs[signer.Signer.String()] = signer.Sequence
 			}
 			if !shouldAdd {
-				iterator = iterator.Next()
-				continue
+				return true
 			}
 
 			// NOTE: Since transaction verification was already executed in CheckTx,
@@ -317,14 +329,11 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			// check again.
 			txBz, err := h.txVerifier.PrepareProposalVerifyTx(memTx)
 			if err != nil {
-				err := h.mempool.Remove(memTx)
-				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-					return nil, err
-				}
+				invalidTxs = append(invalidTxs, memTx)
 			} else {
 				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, memTx, txBz)
 				if stop {
-					break
+					return false
 				}
 
 				txsLen := len(h.txSelector.SelectedTxs(ctx))
@@ -345,10 +354,21 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				selectedTxsNums = txsLen
 			}
 
-			iterator = iterator.Next()
+			return true
+		})
+
+		if resError != nil {
+			return nil, resError
 		}
 
-		return &abci.ResponsePrepareProposal{Txs: h.txSelector.SelectedTxs(ctx)}, nil
+		for _, tx := range invalidTxs {
+			err := h.mempool.Remove(tx)
+			if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+				return nil, err
+			}
+		}
+
+		return &abci.PrepareProposalResponse{Txs: h.txSelector.SelectedTxs(ctx)}, nil
 	}
 }
 
@@ -371,18 +391,18 @@ func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHan
 		return NoOpProcessProposal()
 	}
 
-	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+	return func(ctx sdk.Context, req *abci.ProcessProposalRequest) (*abci.ProcessProposalResponse, error) {
 		var totalTxGas uint64
 
 		var maxBlockGas int64
-		if b := ctx.ConsensusParams().Block; b != nil {
+		if b := ctx.ConsensusParams().Block; b != nil { // nolint:staticcheck // ignore linting error
 			maxBlockGas = b.MaxGas
 		}
 
 		for _, txBytes := range req.Txs {
 			tx, err := h.txVerifier.ProcessProposalVerifyTx(txBytes)
 			if err != nil {
-				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+				return &abci.ProcessProposalResponse{Status: abci.PROCESS_PROPOSAL_STATUS_REJECT}, nil
 			}
 
 			if maxBlockGas > 0 {
@@ -392,44 +412,44 @@ func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHan
 				}
 
 				if totalTxGas > uint64(maxBlockGas) {
-					return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+					return &abci.ProcessProposalResponse{Status: abci.PROCESS_PROPOSAL_STATUS_REJECT}, nil
 				}
 			}
 		}
 
-		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
+		return &abci.ProcessProposalResponse{Status: abci.PROCESS_PROPOSAL_STATUS_ACCEPT}, nil
 	}
 }
 
 // NoOpPrepareProposal defines a no-op PrepareProposal handler. It will always
 // return the transactions sent by the client's request.
 func NoOpPrepareProposal() sdk.PrepareProposalHandler {
-	return func(_ sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
-		return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
+	return func(_ sdk.Context, req *abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error) {
+		return &abci.PrepareProposalResponse{Txs: req.Txs}, nil
 	}
 }
 
 // NoOpProcessProposal defines a no-op ProcessProposal Handler. It will always
 // return ACCEPT.
 func NoOpProcessProposal() sdk.ProcessProposalHandler {
-	return func(_ sdk.Context, _ *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
-		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
+	return func(_ sdk.Context, _ *abci.ProcessProposalRequest) (*abci.ProcessProposalResponse, error) {
+		return &abci.ProcessProposalResponse{Status: abci.PROCESS_PROPOSAL_STATUS_ACCEPT}, nil
 	}
 }
 
 // NoOpExtendVote defines a no-op ExtendVote handler. It will always return an
 // empty byte slice as the vote extension.
 func NoOpExtendVote() sdk.ExtendVoteHandler {
-	return func(_ sdk.Context, _ *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
-		return &abci.ResponseExtendVote{VoteExtension: []byte{}}, nil
+	return func(_ sdk.Context, _ *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error) {
+		return &abci.ExtendVoteResponse{VoteExtension: []byte{}}, nil
 	}
 }
 
 // NoOpVerifyVoteExtensionHandler defines a no-op VerifyVoteExtension handler. It
 // will always return an ACCEPT status with no error.
 func NoOpVerifyVoteExtensionHandler() sdk.VerifyVoteExtensionHandler {
-	return func(_ sdk.Context, _ *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
-		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+	return func(_ sdk.Context, _ *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
+		return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT}, nil
 	}
 }
 

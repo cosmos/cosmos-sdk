@@ -8,12 +8,12 @@ import (
 
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (
@@ -40,8 +40,8 @@ func TestDeposits(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			govKeeper, mocks, _, ctx := setupGovKeeper(t)
 			authKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper
-			trackMockBalances(bankKeeper)
-
+			err := trackMockBalances(bankKeeper)
+			require.NoError(t, err)
 			// With expedited proposals the minimum deposit is higher, so we must
 			// initialize and deposit an amount depositMultiplier times larger
 			// than the regular min deposit amount.
@@ -52,6 +52,11 @@ func TestDeposits(t *testing.T) {
 
 			TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000*depositMultiplier))
 			authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+
+			addr0Str, err := authKeeper.AddressCodec().BytesToString(TestAddrs[0])
+			require.NoError(t, err)
+			addr1Str, err := authKeeper.AddressCodec().BytesToString(TestAddrs[1])
+			require.NoError(t, err)
 
 			tp := TestProposal
 			proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0], tc.proposalType)
@@ -80,7 +85,7 @@ func TestDeposits(t *testing.T) {
 			deposit, err := govKeeper.Deposits.Get(ctx, collections.Join(proposalID, TestAddrs[0]))
 			require.Nil(t, err)
 			require.Equal(t, fourStake, sdk.NewCoins(deposit.Amount...))
-			require.Equal(t, TestAddrs[0].String(), deposit.Depositor)
+			require.Equal(t, addr0Str, deposit.Depositor)
 			proposal, err = govKeeper.Proposals.Get(ctx, proposalID)
 			require.Nil(t, err)
 			require.Equal(t, fourStake, sdk.NewCoins(proposal.TotalDeposit...))
@@ -93,7 +98,7 @@ func TestDeposits(t *testing.T) {
 			deposit, err = govKeeper.Deposits.Get(ctx, collections.Join(proposalID, TestAddrs[0]))
 			require.Nil(t, err)
 			require.Equal(t, fourStake.Add(fiveStake...), sdk.NewCoins(deposit.Amount...))
-			require.Equal(t, TestAddrs[0].String(), deposit.Depositor)
+			require.Equal(t, addr0Str, deposit.Depositor)
 			proposal, err = govKeeper.Proposals.Get(ctx, proposalID)
 			require.Nil(t, err)
 			require.Equal(t, fourStake.Add(fiveStake...), sdk.NewCoins(proposal.TotalDeposit...))
@@ -105,7 +110,7 @@ func TestDeposits(t *testing.T) {
 			require.True(t, votingStarted)
 			deposit, err = govKeeper.Deposits.Get(ctx, collections.Join(proposalID, TestAddrs[1]))
 			require.Nil(t, err)
-			require.Equal(t, TestAddrs[1].String(), deposit.Depositor)
+			require.Equal(t, addr1Str, deposit.Depositor)
 			require.Equal(t, fourStake, sdk.NewCoins(deposit.Amount...))
 			proposal, err = govKeeper.Proposals.Get(ctx, proposalID)
 			require.Nil(t, err)
@@ -128,9 +133,9 @@ func TestDeposits(t *testing.T) {
 			require.Len(t, deposits, 2)
 			propDeposits, _ := govKeeper.GetDeposits(ctx, proposalID)
 			require.Equal(t, deposits, propDeposits)
-			require.Equal(t, TestAddrs[0].String(), deposits[0].Depositor)
+			require.Equal(t, addr0Str, deposits[0].Depositor)
 			require.Equal(t, fourStake.Add(fiveStake...), sdk.NewCoins(deposits[0].Amount...))
-			require.Equal(t, TestAddrs[1].String(), deposits[1].Depositor)
+			require.Equal(t, addr1Str, deposits[1].Depositor)
 			require.Equal(t, fourStake, sdk.NewCoins(deposits[1].Amount...))
 
 			// Test Refund Deposits
@@ -214,7 +219,8 @@ func TestDepositAmount(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			govKeeper, mocks, _, ctx := setupGovKeeper(t)
 			authKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper
-			trackMockBalances(bankKeeper)
+			err := trackMockBalances(bankKeeper)
+			require.NoError(t, err)
 
 			testAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(1000000000000000))
 			authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
@@ -222,7 +228,7 @@ func TestDepositAmount(t *testing.T) {
 			params, _ := govKeeper.Params.Get(ctx)
 			params.MinDepositRatio = tc.minDepositRatio
 			params.MinDeposit = sdk.NewCoins(params.MinDeposit...).Add(sdk.NewCoin("zcoin", sdkmath.NewInt(10000))) // coins must be sorted by denom
-			err := govKeeper.Params.Set(ctx, params)
+			err = govKeeper.Params.Set(ctx, params)
 			require.NoError(t, err)
 
 			tp := TestProposal
@@ -410,10 +416,14 @@ func TestChargeDeposit(t *testing.T) {
 					params.ProposalCancelDest = ""
 				case 1:
 					// normal account address for proposal cancel dest address
-					params.ProposalCancelDest = TestAddrs[1].String()
+					addrStr, err := authKeeper.AddressCodec().BytesToString(TestAddrs[1])
+					require.NoError(t, err)
+					params.ProposalCancelDest = addrStr
 				default:
 					// community address for proposal cancel dest address
-					params.ProposalCancelDest = authtypes.NewModuleAddress(protocolModuleName).String()
+					addrStr, err := authKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(protocolModuleName))
+					require.NoError(t, err)
+					params.ProposalCancelDest = addrStr
 				}
 
 				err := govKeeper.Params.Set(ctx, params)
@@ -440,8 +450,11 @@ func TestChargeDeposit(t *testing.T) {
 				// get the deposits
 				allDeposits, _ := govKeeper.GetDeposits(ctx, proposalID)
 
+				addr0Str, err := authKeeper.AddressCodec().BytesToString(TestAddrs[0])
+				require.NoError(t, err)
+
 				// charge cancellation charges for cancel proposal
-				err = govKeeper.ChargeDeposit(ctx, proposalID, TestAddrs[0].String(), params.ProposalCancelRatio)
+				err = govKeeper.ChargeDeposit(ctx, proposalID, addr0Str, params.ProposalCancelRatio)
 				if tc.expectError {
 					require.Error(t, err)
 					return

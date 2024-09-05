@@ -1,7 +1,6 @@
 package accounts
 
 import (
-	"context"
 	"testing"
 
 	"github.com/cosmos/gogoproto/types"
@@ -16,9 +15,6 @@ import (
 
 func TestQueryServer(t *testing.T) {
 	k, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
-	k.queryRouter = mockQuery(func(ctx context.Context, req, resp implementation.ProtoMsg) error {
-		return nil
-	})
 
 	ms := NewMsgServer(k)
 	qs := NewQueryServer(k)
@@ -61,5 +57,21 @@ func TestQueryServer(t *testing.T) {
 		typ, err := qs.AccountType(ctx, &v1.AccountTypeRequest{Address: initResp.AccountAddress})
 		require.NoError(t, err)
 		require.Equal(t, "test", typ.AccountType)
+	})
+
+	t.Run("schema caching", func(t *testing.T) {
+		// Request schema once
+		schemaReq := &v1.SchemaRequest{AccountType: "test"}
+		schemaResp1, err := qs.Schema(ctx, schemaReq)
+		require.NoError(t, err)
+		require.NotNil(t, schemaResp1)
+
+		// Request schema again
+		schemaResp2, err := qs.Schema(ctx, schemaReq)
+		require.NoError(t, err)
+		require.NotNil(t, schemaResp2)
+
+		// Check if both responses are the same (cached)
+		require.Equal(t, schemaResp1, schemaResp2)
 	})
 }

@@ -7,16 +7,22 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestMsgSetWithdrawAddress(t *testing.T) {
 	ctx, addrs, distrKeeper, _ := initFixture(t)
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
+
+	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])
+	require.NoError(t, err)
+	addr1Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[1])
+	require.NoError(t, err)
 
 	cases := []struct {
 		name   string
@@ -26,8 +32,8 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		{
 			name: "success",
 			msg: &types.MsgSetWithdrawAddress{
-				DelegatorAddress: addrs[0].String(),
-				WithdrawAddress:  addrs[1].String(),
+				DelegatorAddress: addr0Str,
+				WithdrawAddress:  addr1Str,
 			},
 			errMsg: "",
 		},
@@ -35,14 +41,14 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 			name: "invalid delegator address",
 			msg: &types.MsgSetWithdrawAddress{
 				DelegatorAddress: "invalid",
-				WithdrawAddress:  addrs[1].String(),
+				WithdrawAddress:  addr1Str,
 			},
 			errMsg: "invalid address",
 		},
 		{
 			name: "invalid withdraw address",
 			msg: &types.MsgSetWithdrawAddress{
-				DelegatorAddress: addrs[0].String(),
+				DelegatorAddress: addr0Str,
 				WithdrawAddress:  "invalid",
 			},
 			errMsg: "invalid address",
@@ -68,6 +74,11 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	dep.stakingKeeper.EXPECT().Validator(gomock.Any(), gomock.Any()).AnyTimes()
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
 
+	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])
+	require.NoError(t, err)
+	valAddr1Str, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(addrs[1])
+	require.NoError(t, err)
+
 	cases := []struct {
 		name   string
 		preRun func()
@@ -78,14 +89,14 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 			name: "invalid delegator address",
 			msg: &types.MsgWithdrawDelegatorReward{
 				DelegatorAddress: "invalid",
-				ValidatorAddress: sdk.ValAddress(addrs[1]).String(),
+				ValidatorAddress: valAddr1Str,
 			},
 			errMsg: "invalid delegator address",
 		},
 		{
 			name: "invalid validator address",
 			msg: &types.MsgWithdrawDelegatorReward{
-				DelegatorAddress: addrs[0].String(),
+				DelegatorAddress: addr0Str,
 				ValidatorAddress: "invalid",
 			},
 			errMsg: "invalid validator address",
@@ -93,8 +104,8 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 		{
 			name: "no validator",
 			msg: &types.MsgWithdrawDelegatorReward{
-				DelegatorAddress: addrs[0].String(),
-				ValidatorAddress: sdk.ValAddress(addrs[1]).String(),
+				DelegatorAddress: addr0Str,
+				ValidatorAddress: valAddr1Str,
 			},
 			errMsg: "no validator distribution info",
 		},
@@ -121,6 +132,9 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 	ctx, addrs, distrKeeper, _ := initFixture(t)
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
 
+	valAddr1Str, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(addrs[1])
+	require.NoError(t, err)
+
 	cases := []struct {
 		name   string
 		preRun func()
@@ -137,7 +151,7 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 		{
 			name: "no validator commission to withdraw",
 			msg: &types.MsgWithdrawValidatorCommission{
-				ValidatorAddress: sdk.ValAddress(addrs[1]).String(),
+				ValidatorAddress: valAddr1Str,
 			},
 			errMsg: "no validator commission to withdraw",
 		},
@@ -162,8 +176,12 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 
 func TestMsgFundCommunityPool(t *testing.T) {
 	ctx, addrs, distrKeeper, dep := initFixture(t)
-	dep.poolKeeper.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
+
+	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])
+	require.NoError(t, err)
+
+	dep.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addrs[0], types.ProtocolPoolModuleName, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))).Return(nil)
 
 	cases := []struct {
 		name   string
@@ -181,7 +199,7 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		{
 			name: "success",
 			msg: &types.MsgFundCommunityPool{ //nolint:staticcheck // Testing deprecated method
-				Depositor: addrs[0].String(),
+				Depositor: addr0Str,
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000))),
 			},
 		},
@@ -205,6 +223,11 @@ func TestMsgUpdateParams(t *testing.T) {
 	ctx, addrs, distrKeeper, _ := initFixture(t)
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
 
+	authorityAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	require.NoError(t, err)
+	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])
+	require.NoError(t, err)
+
 	cases := []struct {
 		name   string
 		msg    *types.MsgUpdateParams
@@ -221,7 +244,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "incorrect authority",
 			msg: &types.MsgUpdateParams{
-				Authority: addrs[0].String(),
+				Authority: addr0Str,
 				Params:    types.DefaultParams(),
 			},
 			errMsg: "expected authority account as only signer for proposal message",
@@ -229,7 +252,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "invalid params",
 			msg: &types.MsgUpdateParams{
-				Authority: authtypes.NewModuleAddress("gov").String(),
+				Authority: authorityAddr,
 				Params:    types.Params{CommunityTax: math.LegacyNewDec(-1)},
 			},
 			errMsg: "community tax must be positive",
@@ -237,7 +260,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "success",
 			msg: &types.MsgUpdateParams{
-				Authority: authtypes.NewModuleAddress("gov").String(),
+				Authority: authorityAddr,
 				Params:    types.DefaultParams(),
 			},
 		},
@@ -259,8 +282,14 @@ func TestMsgUpdateParams(t *testing.T) {
 
 func TestMsgCommunityPoolSpend(t *testing.T) {
 	ctx, addrs, distrKeeper, dep := initFixture(t)
-	dep.poolKeeper.EXPECT().DistributeFromCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	msgServer := keeper.NewMsgServerImpl(distrKeeper)
+
+	authorityAddr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	require.NoError(t, err)
+	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])
+	require.NoError(t, err)
+
+	dep.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ProtocolPoolModuleName, addrs[0], sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))).Return(nil)
 
 	cases := []struct {
 		name   string
@@ -278,7 +307,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		{
 			name: "incorrect authority",
 			msg: &types.MsgCommunityPoolSpend{ //nolint:staticcheck // Testing deprecated method
-				Authority: addrs[0].String(),
+				Authority: addr0Str,
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 			},
 			errMsg: "expected authority account as only signer for proposal message",
@@ -286,7 +315,7 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		{
 			name: "invalid recipient address",
 			msg: &types.MsgCommunityPoolSpend{ //nolint:staticcheck // Testing deprecated method
-				Authority: authtypes.NewModuleAddress("gov").String(),
+				Authority: authorityAddr,
 				Recipient: "invalid",
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 			},
@@ -295,16 +324,16 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		{
 			name: "invalid amount",
 			msg: &types.MsgCommunityPoolSpend{ //nolint:staticcheck // Testing deprecated method
-				Authority: authtypes.NewModuleAddress("gov").String(),
-				Recipient: addrs[0].String(),
+				Authority: authorityAddr,
+				Recipient: addr0Str,
 			},
 			errMsg: "invalid coins",
 		},
 		{
 			name: "success",
 			msg: &types.MsgCommunityPoolSpend{ //nolint:staticcheck // Testing deprecated method
-				Authority: authtypes.NewModuleAddress("gov").String(),
-				Recipient: addrs[0].String(),
+				Authority: authorityAddr,
+				Recipient: addr0Str,
 				Amount:    sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000))),
 			},
 		},

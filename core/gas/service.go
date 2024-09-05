@@ -24,33 +24,25 @@ const NoGasLimit Gas = math.MaxUint64
 // gas.Service is a core API type that should be provided by the runtime module being used to
 // build an app via depinject.
 type Service interface {
-	// GetGasMeter returns the current transaction-level gas meter. A non-nil meter
+	// GasMeter returns the current transaction-level gas meter. A non-nil meter
 	// is always returned. When one is unavailable in the context an infinite gas meter
 	// will be returned.
-	GetGasMeter(context.Context) Meter
+	GasMeter(context.Context) Meter
 
-	// GetBlockGasMeter returns the current block-level gas meter. A non-nil meter
-	// is always returned. When one is unavailable in the context an infinite gas meter
-	// will be returned.
-	GetBlockGasMeter(context.Context) Meter
-
-	// WithGasMeter returns a new context with the provided transaction-level gas meter.
-	WithGasMeter(ctx context.Context, meter Meter) context.Context
-
-	// WithBlockGasMeter returns a new context with the provided block-level gas meter.
-	WithBlockGasMeter(ctx context.Context, meter Meter) context.Context
-
-	GetGasConfig(ctx context.Context) GasConfig
+	// GasConfig returns the gas costs.
+	GasConfig(ctx context.Context) GasConfig
 }
 
 // Meter represents a gas meter for modules consumption
 type Meter interface {
-	Consume(amount Gas, descriptor string)
-	Refund(amount Gas, descriptor string)
+	Consume(amount Gas, descriptor string) error
+	Refund(amount Gas, descriptor string) error
 	Remaining() Gas
+	Consumed() Gas
 	Limit() Gas
 }
 
+// GasConfig defines the gas costs for the application.
 type GasConfig struct {
 	HasCost          Gas
 	DeleteCost       Gas

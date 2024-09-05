@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/collections"
@@ -20,17 +19,11 @@ import (
 func createValidatorAccs(t *testing.T, f *fixture) ([]sdk.AccAddress, []types.Validator) {
 	t.Helper()
 	addrs, _, validators := createValidators(&testing.T{}, f, []int64{9, 8, 7})
-	header := cmtproto.Header{
-		ChainID: "HelloChain",
-		Height:  5,
-	}
 
 	// sort a copy of the validators, so that original validators does not
 	// have its order changed
 	sortedVals := make([]types.Validator, len(validators))
 	copy(sortedVals, validators)
-	hi := types.HistoricalRecord{Time: &header.Time, Apphash: header.AppHash, ValidatorsHash: header.NextValidatorsHash}
-	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(f.sdkCtx, uint64(5), hi))
 
 	return addrs, validators
 }
@@ -725,71 +718,11 @@ func TestGRPCQueryPoolParameters(t *testing.T) {
 func TestGRPCQueryHistoricalInfo(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
-
-	ctx := f.sdkCtx
-	_, _ = createValidatorAccs(t, f)
-
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 
-	hi, found := f.stakingKeeper.HistoricalInfo.Get(ctx, uint64(5))
-	assert.Assert(t, found)
-
-	var req *types.QueryHistoricalInfoRequest
-	testCases := []struct {
-		msg       string
-		malleate  func()
-		expPass   bool
-		expErrMsg string
-	}{
-		{
-			"empty request",
-			func() {
-				req = &types.QueryHistoricalInfoRequest{}
-			},
-			false,
-			"historical info for height 0 not found",
-		},
-		{
-			"invalid request with negative height",
-			func() {
-				req = &types.QueryHistoricalInfoRequest{Height: -1}
-			},
-			false,
-			"height cannot be negative",
-		},
-		{
-			"valid request with old height",
-			func() {
-				req = &types.QueryHistoricalInfoRequest{Height: 4}
-			},
-			false,
-			"historical info for height 4 not found",
-		},
-		{
-			"valid request with current height",
-			func() {
-				req = &types.QueryHistoricalInfoRequest{Height: 5}
-			},
-			true,
-			"",
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
-			tc.malleate()
-			res, err := queryClient.HistoricalInfo(gocontext.Background(), req)
-			if tc.expPass {
-				assert.NilError(t, err)
-				assert.Assert(t, res != nil)
-				assert.DeepEqual(t, &hi, res.HistoricalRecord)
-			} else {
-				assert.ErrorContains(t, err, tc.expErrMsg)
-				assert.Assert(t, res == nil)
-			}
-		})
-	}
+	_, err := queryClient.HistoricalInfo(gocontext.Background(), &types.QueryHistoricalInfoRequest{}) // nolint:staticcheck // SA1019: deprecated endpoint
+	assert.ErrorContains(t, err, "this endpoint has been deprecated and removed in 0.52")
 }
 
 func TestGRPCQueryRedelegations(t *testing.T) {

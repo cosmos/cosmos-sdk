@@ -11,9 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
-	authclient "cosmossdk.io/x/auth/client"
 	"cosmossdk.io/x/staking/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -22,19 +20,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // GenTxCmd builds the application's gentx command.
-func GenTxCmd(mm *module.Manager, txEncCfg client.TxEncodingConfig, genBalIterator types.GenesisBalancesIterator, valAdddressCodec address.Codec) *cobra.Command {
+func GenTxCmd(genMM genesisMM, genBalIterator types.GenesisBalancesIterator) *cobra.Command {
 	ipDefault, _ := server.ExternalIP()
 	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
 
 	cmd := &cobra.Command{
-		Use:   "gentx [key_name] [amount]",
+		Use:   "gentx <key_name> <amount>",
 		Short: "Generate a genesis tx carrying a self delegation",
 		Args:  cobra.ExactArgs(2),
 		Long: fmt.Sprintf(`Generate a genesis transaction that creates a validator with a self-delegation,
@@ -55,15 +53,19 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 `, defaultsDesc, version.AppName,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := client.GetConfigFromCmd(cmd)
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 			cdc := clientCtx.Codec
-			config := serverCtx.Config
 
-			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(serverCtx.Config)
+			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
+			if err != nil {
+				return errors.Wrap(err, "Failed to get consensus key algo")
+			}
+
+			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config, consensusKey)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize node validator files")
 			}
@@ -90,7 +92,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				return errors.Wrap(err, "failed to unmarshal genesis state")
 			}
 
-			if err = mm.ValidateGenesis(genesisState); err != nil {
+			if err = genMM.ValidateGenesis(genesisState); err != nil {
 				return errors.Wrap(err, "failed to validate genesis state")
 			}
 
@@ -122,7 +124,11 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			if err != nil {
 				return err
 			}
-			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, addr, coins, cdc)
+			strAddr, err := clientCtx.AddressCodec.BytesToString(addr)
+			if err != nil {
+				return err
+			}
+			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, strAddr, coins, cdc)
 			if err != nil {
 				return errors.Wrap(err, "failed to validate account in genesis")
 			}
@@ -132,11 +138,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				return err
 			}
 
-			pub, err := key.GetAddress()
-			if err != nil {
-				return err
-			}
-			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(pub)
+			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(addr)
 
 			// The following line comes from a discrepancy between the `gentx`
 			// and `create-validator` commands:
@@ -152,7 +154,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			createValCfg.Amount = amount
 
 			// create a 'create-validator' message
-			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txFactory, true, valAdddressCodec)
+			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txFactory, true)
 			if err != nil {
 				return errors.Wrap(err, "failed to build create-validator message")
 			}
@@ -209,6 +211,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 		},
 	}
 
+	cmd.Flags().String(FlagConsensusKeyAlgo, "ed25519", "algorithm to use for the consensus key: ed25519 | secp256k1 |  bls12_381 | sr25519 | multi")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "Write the genesis transaction JSON document to the given file instead of the default location")
 	cmd.Flags().AddFlagSet(fsCreateValidator)
 	flags.AddTxFlagsToCmd(cmd)

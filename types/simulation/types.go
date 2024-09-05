@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -8,10 +9,16 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	"cosmossdk.io/core/address"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
+
+// AppEntrypoint defines the method for delivering simulation TX to the app. This is implemented by *Baseapp
+type AppEntrypoint interface {
+	SimDeliver(_txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error)
+}
 
 // Deprecated: Use WeightedProposalMsg instead.
 type WeightedProposalContent interface {
@@ -34,12 +41,16 @@ type Content interface {
 }
 
 type WeightedProposalMsg interface {
-	AppParamsKey() string           // key used to retrieve the value of the weight from the simulation application params
-	DefaultWeight() int             // default weight
-	MsgSimulatorFn() MsgSimulatorFn // msg simulator function
+	AppParamsKey() string            // key used to retrieve the value of the weight from the simulation application params
+	DefaultWeight() int              // default weight
+	MsgSimulatorFn() MsgSimulatorFnX // msg simulator function
 }
 
-type MsgSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) sdk.Msg
+type (
+	// Deprecated: use MsgSimulatorFnX
+	MsgSimulatorFn  func(r *rand.Rand, accs []Account, cdc address.Codec) (sdk.Msg, error)
+	MsgSimulatorFnX func(ctx context.Context, r *rand.Rand, accs []Account, cdc address.Codec) (sdk.Msg, error)
+)
 
 type SimValFn func(r *rand.Rand) string
 
@@ -64,7 +75,7 @@ type WeightedOperation interface {
 //
 // Operations can optionally provide a list of "FutureOperations" to run later
 // These will be ran at the beginning of the corresponding block.
-type Operation func(r *rand.Rand, app *baseapp.BaseApp,
+type Operation func(r *rand.Rand, app AppEntrypoint,
 	ctx sdk.Context, accounts []Account, chainID string) (
 	OperationMsg OperationMsg, futureOps []FutureOperation, err error)
 

@@ -30,10 +30,10 @@ message ConfigResponse {
   uint64 halt_height         = 4;
 }
 
-// StateRequest defines the request structure for the status of a node.
+// StatusRequest defines the request structure for the status of a node.
 message StatusRequest {}
 
-// StateResponse defines the response structure for the status of a node.
+// StatusResponse defines the response structure for the status of a node.
 message StatusResponse {
   uint64                    earliest_store_height = 1; // earliest block height available in the store
   uint64                    height                = 2; // current block height

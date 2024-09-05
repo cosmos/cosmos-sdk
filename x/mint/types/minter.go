@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -79,4 +80,21 @@ func (m Minter) NextAnnualProvisions(_ Params, totalSupply math.Int) math.Legacy
 func (m Minter) BlockProvision(params Params) sdk.Coin {
 	provisionAmt := m.AnnualProvisions.QuoInt(math.NewInt(int64(params.BlocksPerYear)))
 	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
+}
+
+// IsEqual returns true if two minters are equal, it checks all the fields
+func (m Minter) IsEqual(minter Minter) bool {
+	if !m.Inflation.Equal(minter.Inflation) {
+		return false
+	}
+
+	if !m.AnnualProvisions.Equal(minter.AnnualProvisions) {
+		return false
+	}
+
+	if !bytes.Equal(m.Data, minter.Data) {
+		return false
+	}
+
+	return true
 }

@@ -2,9 +2,10 @@ syntax = "proto3";
 package cosmos.base.abci.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "tendermint/abci/types.proto";
-import "tendermint/types/block.proto";
+import "cometbft/abci/v1/types.proto";
+import "cometbft/types/v1/block.proto";
 import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/types";
 option (gogoproto.goproto_stringer_all) = false;
@@ -44,9 +45,8 @@ message TxResponse {
   // these events include those emitted by processing all the messages and those
   // emitted from the ante. Whereas Logs contains the events, with
   // additional metadata, emitted only by processing the messages.
-  //
-  // Since: cosmos-sdk 0.42.11, 0.44.5, 0.45
-  repeated tendermint.abci.Event events = 13 [(gogoproto.nullable) = false];
+  repeated cometbft.abci.v1.Event events = 13
+      [(gogoproto.nullable) = false, (cosmos_proto.field_added_in) = "cosmos-sdk 0.45"];
 }
 
 // ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
@@ -101,12 +101,10 @@ message Result {
 
   // Events contains a slice of Event objects that were emitted during message
   // or handler execution.
-  repeated tendermint.abci.Event events = 3 [(gogoproto.nullable) = false];
+  repeated cometbft.abci.v1.Event events = 3 [(gogoproto.nullable) = false];
 
   // msg_responses contains the Msg handler responses type packed in Anys.
-  //
-  // Since: cosmos-sdk 0.46
-  repeated google.protobuf.Any msg_responses = 4;
+  repeated google.protobuf.Any msg_responses = 4 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.46"];
 }
 
 // SimulationResponse defines the response generated when a transaction is
@@ -135,9 +133,7 @@ message TxMsgData {
   repeated MsgData data = 1 [deprecated = true];
 
   // msg_responses contains the Msg handler responses packed into Anys.
-  //
-  // Since: cosmos-sdk 0.46
-  repeated google.protobuf.Any msg_responses = 2;
+  repeated google.protobuf.Any msg_responses = 2 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.46"];
 }
 
 // SearchTxsResult defines a structure for querying txs pageable
@@ -173,5 +169,5 @@ message SearchBlocksResult {
   // Max count blocks per page
   int64 limit = 5;
   // List of blocks in current page
-  repeated tendermint.types.Block blocks = 6;
+  repeated cometbft.types.v1.Block blocks = 6;
 }

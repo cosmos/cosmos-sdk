@@ -7,10 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	coretesting "cosmossdk.io/core/testing"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
 	"cosmossdk.io/x/feegrant/module"
@@ -24,6 +23,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestFeegrantPruning(t *testing.T) {
@@ -49,7 +49,7 @@ func TestFeegrantPruning(t *testing.T) {
 	ac := address.NewBech32Codec("cosmos")
 	accountKeeper.EXPECT().AddressCodec().Return(ac).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	feegrantKeeper := keeper.NewKeeper(env, encCfg.Codec, accountKeeper)
 
@@ -87,13 +87,20 @@ func TestFeegrantPruning(t *testing.T) {
 	feegrant.RegisterQueryServer(queryHelper, feegrantKeeper)
 	queryClient := feegrant.NewQueryClient(queryHelper)
 
-	require.NoError(t, module.EndBlocker(testCtx.Ctx, feegrantKeeper))
-
 	granteeStr, err := ac.BytesToString(grantee)
 	require.NoError(t, err)
-	res, err := queryClient.Allowances(testCtx.Ctx.Context(), &feegrant.QueryAllowancesRequest{
+	queryRequest := &feegrant.QueryAllowancesRequest{
 		Grantee: granteeStr,
-	})
+	}
+
+	res, err := queryClient.Allowances(testCtx.Ctx.Context(), queryRequest)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res.Allowances, 3)
+
+	require.NoError(t, module.EndBlocker(testCtx.Ctx, feegrantKeeper))
+
+	res, err = queryClient.Allowances(testCtx.Ctx.Context(), queryRequest)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res.Allowances, 2)
@@ -101,9 +108,7 @@ func TestFeegrantPruning(t *testing.T) {
 	testCtx.Ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: now.AddDate(0, 0, 2)})
 	require.NoError(t, module.EndBlocker(testCtx.Ctx, feegrantKeeper))
 
-	res, err = queryClient.Allowances(testCtx.Ctx.Context(), &feegrant.QueryAllowancesRequest{
-		Grantee: granteeStr,
-	})
+	res, err = queryClient.Allowances(testCtx.Ctx.Context(), queryRequest)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res.Allowances, 1)

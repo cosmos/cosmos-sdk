@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
@@ -39,7 +40,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		}
 	}
 
-	msgs := []string{} // will hold a string slice of all Msg type URLs.
+	msgs := make([]string, 0, len(messages)) // will hold a string slice of all Msg type URLs.
 
 	// Loop through all messages and confirm that each has a handler and the gov module account as the only signer
 	for _, msg := range messages {
@@ -70,7 +71,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 			}
 		}
 
-		signers, _, err := k.cdc.GetMsgV1Signers(msg)
+		signers, _, err := k.cdc.GetMsgSigners(msg)
 		if err != nil {
 			return v1.Proposal{}, err
 		}
@@ -80,10 +81,14 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 
 		// assert that the governance module account is the only signer of the messages
 		if !bytes.Equal(signers[0], k.GetGovernanceAccount(ctx).GetAddress()) {
-			return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidSigner, sdk.AccAddress(signers[0]).String())
+			addr, err := k.authKeeper.AddressCodec().BytesToString(signers[0])
+			if err != nil {
+				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidSigner, err.Error())
+			}
+			return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidSigner, addr)
 		}
 
-		if err := k.environment.RouterService.MessageRouterService().CanInvoke(ctx, sdk.MsgTypeURL(msg)); err != nil {
+		if err := k.MsgRouterService.CanInvoke(ctx, sdk.MsgTypeURL(msg)); err != nil {
 			return v1.Proposal{}, errorsmod.Wrap(types.ErrUnroutableProposalMsg, err.Error())
 		}
 
@@ -107,9 +112,11 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 			return v1.Proposal{}, errorsmod.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
 		}
 
-		if err = k.environment.BranchService.Execute(ctx, func(ctx context.Context) error {
+		if err = k.BranchService.Execute(ctx, func(ctx context.Context) error {
 			handler := k.legacyRouter.GetRoute(content.ProposalRoute())
-			if err := handler(ctx, content); err != nil {
+			// NOTE: the support of legacy gov proposal in server/v2 is different than for baseapp.
+			// Legacy proposal in server/v2 can only access services provided by the gov module environment.
+			if err := handler(context.WithValue(ctx, corecontext.EnvironmentContextKey, k.Environment), content); err != nil {
 				return types.ErrInvalidProposalContent.Wrapf("failed to run legacy handler %s, %+v", content.ProposalRoute(), err)
 			}
 
@@ -124,8 +131,12 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		return v1.Proposal{}, err
 	}
 
-	submitTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
-	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*params.MaxDepositPeriod), metadata, title, summary, proposer, proposalType)
+	proposerAddr, err := k.authKeeper.AddressCodec().BytesToString(proposer)
+	if err != nil {
+		return v1.Proposal{}, err
+	}
+	submitTime := k.HeaderService.HeaderInfo(ctx).Time
+	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*params.MaxDepositPeriod), metadata, title, summary, proposerAddr, proposalType)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
@@ -144,9 +155,11 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		return v1.Proposal{}, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeSubmitProposal,
+		event.NewAttribute(types.AttributeKeyProposalType, proposalType.String()),
 		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
+		event.NewAttribute(types.AttributeKeyProposalProposer, proposerAddr),
 		event.NewAttribute(types.AttributeKeyProposalMessages, strings.Join(msgs, ",")),
 	); err != nil {
 		return v1.Proposal{}, fmt.Errorf("failed to emit event: %w", err)
@@ -188,7 +201,7 @@ func (k Keeper) CancelProposal(ctx context.Context, proposalID uint64, proposer 
 
 	// Check proposal is not too far in voting period to be canceled
 	if proposal.VotingEndTime != nil {
-		currentTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+		currentTime := k.HeaderService.HeaderInfo(ctx).Time
 
 		maxCancelPeriodRate := sdkmath.LegacyMustNewDecFromStr(params.ProposalCancelMaxPeriod)
 		maxCancelPeriod := time.Duration(float64(proposal.VotingEndTime.Sub(*proposal.VotingStartTime)) * maxCancelPeriodRate.MustFloat64()).Round(time.Second)
@@ -219,7 +232,7 @@ func (k Keeper) CancelProposal(ctx context.Context, proposalID uint64, proposer 
 		return err
 	}
 
-	k.Logger().Info(
+	k.Logger.Info(
 		"proposal is canceled by proposer",
 		"proposal", proposal.Id,
 		"proposer", proposal.Proposer,
@@ -253,7 +266,7 @@ func (k Keeper) DeleteProposal(ctx context.Context, proposalID uint64) error {
 
 // ActivateVotingPeriod activates the voting period of a proposal
 func (k Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Proposal) error {
-	startTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	startTime := k.HeaderService.HeaderInfo(ctx).Time
 	proposal.VotingStartTime = &startTime
 
 	params, err := k.Params.Get(ctx)

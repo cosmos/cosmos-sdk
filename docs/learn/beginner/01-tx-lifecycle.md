@@ -13,9 +13,7 @@ This document describes the lifecycle of a transaction from creation to committe
 * [Anatomy of a Cosmos SDK Application](./00-app-anatomy.md)
 :::
 
-## Creation
-
-### Transaction Creation
+## Transaction Creation
 
 One of the main application interfaces is the command-line interface. The transaction `Tx` can be created by the user inputting a command in the following format from the [command-line](../advanced/07-cli.md), providing the type of transaction in `[command]`, arguments in `[args]`, and configurations such as gas prices in `[flags]`:
 
@@ -27,7 +25,7 @@ This command automatically **creates** the transaction, **signs** it using the a
 
 There are several required and optional flags for transaction creation. The `--from` flag specifies which [account](./03-accounts.md) the transaction is originating from. For example, if the transaction is sending coins, the funds are drawn from the specified `from` address.
 
-#### Gas and Fees
+### Gas and Fees
 
 Additionally, there are several [flags](../advanced/07-cli.md) users can use to indicate how much they are willing to pay in [fees](./04-gas-fees.md):
 
@@ -41,7 +39,7 @@ The ultimate value of the fees paid is equal to the gas multiplied by the gas pr
 
 Later, validators decide whether or not to include the transaction in their block by comparing the given or calculated `gas-prices` to their local `min-gas-prices`. `Tx` is rejected if its `gas-prices` is not high enough, so users are incentivized to pay more.
 
-#### CLI Example
+### CLI Example
 
 Users of the application `app` can enter the following command into their CLI to generate a transaction to send 1000uatom from a `senderAddress` to a `recipientAddress`. The command specifies how much gas they are willing to pay: an automatic estimate scaled up by 1.5 times, with a gas price of 0.025uatom per unit gas.
 
@@ -49,45 +47,93 @@ Users of the application `app` can enter the following command into their CLI to
 appd tx send <recipientAddress> 1000uatom --from <senderAddress> --gas auto --gas-adjustment 1.5 --gas-prices 0.025uatom
 ```
 
-#### Other Transaction Creation Methods
+### Other Transaction Creation Methods
 
 The command-line is an easy way to interact with an application, but `Tx` can also be created using a [gRPC or REST interface](../advanced/06-grpc_rest.md) or some other entry point defined by the application developer. From the user's perspective, the interaction depends on the web interface or wallet they are using (e.g. creating `Tx` using [Keplr](https://www.keplr.app/) and signing it with a Ledger Nano S).
 
-## Addition to Mempool
+## Transaction Broadcasting
 
-Each full-node (running CometBFT) that receives a `Tx` sends an [ABCI message](https://docs.cometbft.com/v0.38/spec/p2p/legacy-docs/messages/),
-`CheckTx`, to the application layer to check for validity, and receives an `abci.ResponseCheckTx`. If the `Tx` passes the checks, it is held in the node's
-[**Mempool**](https://docs.cometbft.com/v0.37/spec/p2p/legacy-docs/messages/mempool/), an in-memory pool of transactions unique to each node, pending inclusion in a block - honest nodes discard a `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
+This is the next phase, where a transaction is sent from a client (such as a wallet or a command-line interface) to the network of nodes. This process is consensus-agnostic, meaning it can work with various consensus engines.
 
-### Types of Checks
+Below are the steps involved in transaction broadcasting:
 
-The full-nodes perform stateless, then stateful checks on `Tx` during `CheckTx`, with the goal to
-identify and reject an invalid transaction as early on as possible to avoid wasted computation.
+1. **Transaction Creation and Signing:**
+Transactions are created and signed using the client's private key to ensure authenticity and integrity.
 
-**_Stateless_** checks do not require nodes to access state - light clients or offline nodes can do
-them - and are thus less computationally expensive. Stateless checks include making sure addresses
-are not empty, enforcing nonnegative numbers, and other logic specified in the definitions.
+2. **Broadcasting to the Network:**
+The signed transaction is sent to the network. This is handled by the `BroadcastTx` function in the client context.
 
-**_Stateful_** checks validate transactions and messages based on a committed state. Examples
-include checking that the relevant values exist and can be transacted with, the address
-has sufficient funds, and the sender is authorized or has the correct ownership to transact.
-At any given moment, full-nodes typically have [multiple versions](../advanced/00-baseapp.md#state-updates)
-of the application's internal state for different purposes. For example, nodes execute state
-changes while in the process of verifying transactions, but still need a copy of the last committed
-state in order to answer queries - they should not respond using state with uncommitted changes.
+3. **Network Propagation:**
+Once received by a node, the transaction is propagated to other nodes in the network. This ensures that all nodes have a copy of the transaction.
 
-In order to verify a `Tx`, full-nodes call `CheckTx`, which includes both _stateless_ and _stateful_
-checks. Further validation happens later in the [`DeliverTx`](../advanced/00-baseapp.md#delivertx) stage. `CheckTx` goes
-through several steps, beginning with decoding `Tx`.
+4. **Consensus Engine Interaction:**
+The specific method of broadcasting may vary depending on the consensus engine used. The SDK's design allows for easy integration with any consensus engine by configuring the `clientCtx` appropriately.
+
+The function `BroadcastTx` in `client/tx/tx.go` demonstrates how a transaction is prepared, signed, and broadcasted. Here's the relevant part of the function that handles the broadcasting:
+
+```go
+res, err := clientCtx.BroadcastTx(txBytes)
+if err != nil {
+ return err
+}
+```
+
+**Configuration:**
+
+To adapt this function for different consensus engines, ensure that the `clientCtx` is configured with the correct network settings and transaction handling mechanisms for your chosen engine. This might involve setting up specific encoders, decoders, and network endpoints that are compatible with the engine.
+
+## Transaction Processing 
+
+After a transaction is broadcasted to the network, it undergoes several processing steps to ensure its validity. These steps are managed by the application's core transaction processing layer, which is responsible for handling transactions. Within the SDK, this core layer is wrapped with a runtime layer defined in `runtime/app.go`. This layer extends the core functionality with additional features to handle transactions, allowing for more flexibility and customization, such as the ability to swap out different consensus engines. The key steps in transaction processing are:
 
 ### Decoding
 
-When `Tx` is received by the application from the underlying consensus engine (e.g. CometBFT ), it is still in its [encoded](../advanced/05-encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the [`runTx`](../advanced/00-baseapp.md#runtx-antehandler-runmsgs-posthandler) function is called to run in `runTxModeCheck` mode, meaning the function runs all checks but exits before executing messages and writing state changes.
+The transaction is decoded from its binary format into a structured format that the application can understand.
 
-### ValidateBasic (deprecated)
+* **During Transaction Processing:** Transactions are received in the encoded `[]byte` form. Nodes first unmarshal the transaction using the configuration defined in the app, then proceed to execute the transaction, which includes state changes.
 
-Messages ([`sdk.Msg`](../advanced/01-transactions.md#messages)) are extracted from transactions (`Tx`). The `ValidateBasic` method of the `sdk.Msg` interface implemented by the module developer is run for each transaction.
-To discard obviously invalid messages, the `BaseApp` type calls the `ValidateBasic` method very early in the processing of the message in the [`CheckTx`](../advanced/00-baseapp.md#checktx) and [`DeliverTx`](../advanced/00-baseapp.md#delivertx) transactions.
+### Routing
+
+How Routing Works:
+The transaction is routed to the appropriate module based on the message type. Each message type is associated with a specific module, which is responsible for processing the message. The core transaction processing layer uses a `MsgServiceRouter` to direct the transaction to the correct module.
+
+1. **Transaction Type Identification:** 
+Each transaction contains one or more messages (`sdk.Msg`), and each message has a `Type()` method that identifies its type. This type is used to determine the appropriate module to handle the message.
+2. **Module Routing:** 
+The core transaction processing layer holds a `MsgServiceRouter` which maps each message type to a specific module's handler. When a transaction is processed, this router is used to direct the message to the correct module.
+
+### Example of Routing
+
+Let's say there is a transaction that involves transferring tokens. The message type might be `MsgSend`, and the `MsgServiceRouter` in `BaseApp` would route this message to the bank module's handler. The bank module would then validate the transaction details (like sender balance) and update the state to reflect the transfer if valid...
+
+### Validation
+
+Preliminary checks are performed. These include signature verification to ensure the transaction hasn't been tampered with and checking if the transaction meets the minimum fee requirements, which is handled by the `AnteHandler`. The `Antehandler` is invoked during the `runTx` method in `BaseApp`.
+
+#### Types of Transaction Checks
+
+During the transaction lifecycle, full-nodes perform a series of checks to validate transactions before they are finalized in a block. These checks are categorized into stateless and stateful checks.
+
+**Stateless Checks**:
+Stateless checks are validations that do not require access to the state of the blockchain. They are computationally inexpensive and can be performed by light clients or offline nodes. Examples include:
+
+* Ensuring addresses are not empty.
+* Enforcing nonnegative values for transaction fields.
+* Validating the format of the data in the transaction.
+
+**Stateful Checks**:
+Stateful checks involve validating transactions against the current committed state of the blockchain. These checks are more computationally intensive as they require access to the state. Examples include:
+
+* Verifying that the account has sufficient funds.
+* Checking that the sender has the necessary permissions for the transaction.
+* Ensuring that the transaction does not result in any state conflicts.
+
+Full-nodes use these checks during the validation process to quickly reject invalid transactions, minimizing wasted computational resources. Further validation occurs during the transaction execution phase, where transactions are fully executed.
+
+#### ValidateBasic (deprecated)
+
+* Messages ([`sdk.Msg`](../advanced/01-transactions.md#messages)) are extracted from transactions (`Tx`). The `ValidateBasic` method of the `sdk.Msg` interface implemented by the module developer is run for each transaction.
+* To discard obviously invalid messages, the `BaseApp` type calls the `ValidateBasic` method very early in the processing of the message in the [`CheckTx`](../advanced/00-baseapp.md#checktx) and [`DeliverTx`](../advanced/00-baseapp.md#delivertx) transactions.
 `ValidateBasic` can include only **stateless** checks (the checks that do not require access to the state). 
 
 :::warning
@@ -96,173 +142,86 @@ The `ValidateBasic` method on messages has been deprecated in favor of validatin
 Read [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) for more details.
 :::
 
-:::note
-`BaseApp` still calls `ValidateBasic` on messages that implements that method for backwards compatibility.
-:::
-
-#### Guideline
-
-`ValidateBasic` should not be used anymore. Message validation should be performed in the `Msg` service when [handling a message](../../build/building-modules/03-msg-services.md#validation) in a module Msg Server.
-
-### AnteHandler
-
-`AnteHandler`s even though optional, are in practice very often used to perform signature verification, gas calculation, fee deduction, and other core operations related to blockchain transactions.
-
-A copy of the cached context is provided to the `AnteHandler`, which performs limited checks specified for the transaction type. Using a copy allows the `AnteHandler` to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
-
-For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
-
-:::warning
-Ante handlers only run on a transaction. If a transaction embed multiple messages (like some x/authz, x/gov transactions for instance), the ante handlers only have awareness of the outer message. Inner messages are mostly directly routed to the [message router](https://docs.cosmos.network/main/learn/advanced/baseapp#msg-service-router) and will skip the chain of ante handlers. Keep that in mind when designing your own ante handler.
-:::
-
-### Gas
-
-The [`Context`](../advanced/02-context.md), which keeps a `GasMeter` that tracks how much gas is used during the execution of `Tx`, is initialized. The user-provided amount of gas for `Tx` is known as `GasWanted`. If `GasConsumed`, the amount of gas consumed during execution, ever exceeds `GasWanted`, the execution stops and the changes made to the cached copy of the state are not committed. Otherwise, `CheckTx` sets `GasUsed` equal to `GasConsumed` and returns it in the result. After calculating the gas and fee values, validator-nodes check that the user-specified `gas-prices` is greater than their locally defined `min-gas-prices`.
-
 ### Discard or Addition to Mempool
 
-If at any point during `CheckTx` the `Tx` fails, it is discarded and the transaction lifecycle ends
-there. Otherwise, if it passes `CheckTx` successfully, the default protocol is to relay it to peer
-nodes and add it to the Mempool so that the `Tx` becomes a candidate to be included in the next block.
+If at any point during the initial transaction validation the transaction (`Tx`) fails, it is discarded, and the transaction lifecycle ends there. Otherwise, if it passes this preliminary check successfully, the general protocol is to relay it to peer nodes and add it to the node's transaction pool (often referred to as the mempool). This makes the `Tx` a candidate for inclusion in the next block, pending further consensus processes.
 
-The **mempool** serves the purpose of keeping track of transactions seen by all full-nodes.
-Full-nodes keep a **mempool cache** of the last `mempool.cache_size` transactions they have seen, as a first line of
-defense to prevent replay attacks. Ideally, `mempool.cache_size` is large enough to encompass all
-of the transactions in the full mempool. If the mempool cache is too small to keep track of all
-the transactions, `CheckTx` is responsible for identifying and rejecting replayed transactions.
+The **app-side mempool**, serves the purpose of keeping track of transactions seen by all full-nodes. Full-nodes maintain a **mempool cache** of the last `mempool.cache_size` transactions they have seen, serving as a first line of defense to prevent replay attacks. Ideally, `mempool.cache_size` should be large enough to encompass all transactions in the full mempool. If the mempool cache is too small to track all transactions, the initial transaction validation process is responsible for identifying and rejecting replayed transactions.
 
-Currently existing preventative measures include fees and a `sequence` (nonce) counter to distinguish
-replayed transactions from identical but valid ones. If an attacker tries to spam nodes with many
-copies of a `Tx`, full-nodes keeping a mempool cache reject all identical copies instead of running
-`CheckTx` on them. Even if the copies have incremented `sequence` numbers, attackers are
-disincentivized by the need to pay fees.
+Currently existing preventative measures include fees and a `sequence` (nonce) counter to distinguish replayed transactions from identical but valid ones. If an attacker tries to spam nodes with many copies of a `Tx`, full-nodes maintaining a transaction cache reject all identical copies. Even if the copies have incremented sequence numbers, attackers are disincentivized by the need to pay fees.
 
-Validator nodes keep a mempool to prevent replay attacks, just as full-nodes do, but also use it as
-a pool of unconfirmed transactions in preparation of block inclusion. Note that even if a `Tx`
-passes all checks at this stage, it is still possible to be found invalid later on, because
-`CheckTx` does not fully validate the transaction (that is, it does not actually execute the messages).
+Validator nodes maintain a transaction pool to prevent replay attacks, similar to full-nodes, but also use it to hold unconfirmed transactions in preparation for block inclusion. It's important to note that even if a `Tx` passes all preliminary checks, it can still be found invalid later on, as these initial checks do not fully execute the transaction's logic.
+
+### Module Execution
+
+After the transaction has been appropriately routed to the correct module by the `MsgServiceRouter` and passed all necessary validations, the execution phase begins:
+
+* **Handler Activation**: Each module's handler processes the routed message, applying the necessary business logic such as updating account balances or transferring tokens.
+* **State Changes**: Handlers may modify the state as required by the business logic, which could involve writing to the module's portion of the state store. This can be seen in the next subsection.
+* **Event Emission and Logging**: During execution, modules can emit events and log information, which are crucial for monitoring and querying transaction outcomes.
+
+For messages that adhere to older standards or specific formats, a routing function retrieves the route name from the message, identifying the corresponding module. The message is then processed by the designated handler within that module, ensuring accurate and consistent application of the transaction's logic.
+
+4. During the execution, the module's handler will modify the state as required by the business logic. This could involve writing to the module's portion of the state store.
+
+5. Modules can emit events and log information during execution, which are used for monitoring and querying transaction outcomes.
+
+During the module execution phase, each message that has been routed to the appropriate module is processed according to the module-specific business logic. For example, the `handleMsgSend` function in the bank module processes `MsgSend` messages by checking balances, transferring tokens, and emitting events:
+
+```go 
+func handleMsgSend(ctx sdk.Context, keeper BankKeeper, msg MsgSend) error {
+    if keeper.GetBalance(ctx, msg.Sender).Amount < msg.Amount {
+        return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, "sender does not have enough tokens")
+    }
+    keeper.SendCoins(ctx, msg.Sender, msg.Receiver, msg.Amount)
+    ctx.EventManager().EmitEvent(
+        sdk.NewEvent("transfer", sdk.NewAttribute("from", msg.Sender.String()), sdk.NewAttribute("to", msg.Receiver.String()), sdk.NewAttribute("amount", msg.Amount.String())),
+    )
+    return nil
+}
+```
+
+This function exemplifies how a module's handler executes the transaction logic, modifies the state, and logs the transaction events, which are essential aspects of module execution.
+
+### State Changes During Consensus
+
+Before finalizing the transactions within a block, full-nodes perform a second round of checks using `validateBasicMsgs` and `AnteHandler`. This is crucial to ensure that all transactions are valid, especially since a malicious proposer might include invalid transactions. Unlike the checks during the transaction addition to the Mempool, the `AnteHandler` in this phase does not compare the transaction's `gas-prices` to the node's `min-gas-prices`. This is because `min-gas-prices` can vary between nodes, and using them here would lead to nondeterministic results across the network.
+
+* After module execution, the transactions are included in a block proposal by the proposer.
+
+* All full-nodes that receive this block proposal execute the transactions to ensure that the state changes are applied consistently across all nodes, maintaining the deterministic nature of the blockchain. This includes the execution of initial, transaction-specific, and finalizing operations.
 
 ## Inclusion in a Block
 
-Consensus, the process through which validator nodes come to agreement on which transactions to
-accept, happens in **rounds**. Each round begins with a proposer creating a block of the most
-recent transactions and ends with **validators**, special full-nodes with voting power responsible
-for consensus, agreeing to accept the block or go with a `nil` block instead. Validator nodes
-execute the consensus algorithm, such as [CometBFT](https://docs.cometbft.com/v0.37/spec/consensus/),
-confirming the transactions using ABCI requests to the application, in order to come to this agreement.
+Consensus is the process through which nodes in a blockchain network agree on which transactions to include in the blockchain. This process typically occurs in rounds, starting with a designated node (often called a proposer) compiling a block from transactions in its transaction pool (mempool). The block is then proposed to other nodes (validators) in the network.
 
-The first step of consensus is the **block proposal**. One proposer amongst the validators is chosen
-by the consensus algorithm to create and propose a block - in order for a `Tx` to be included, it
-must be in this proposer's mempool.
+Each validator independently verifies the proposed block against the blockchain's rules. If the block is accepted by a sufficient number of validators according to the network's consensus rules, it is added to the blockchain. If not, the process may repeat, potentially with a different proposer or even resulting in a block that contains no transactions (a nil block).
 
-## State Changes
+The specific mechanisms of choosing a proposer, the criteria for a valid block, and the method of achieving agreement among validators can vary depending on the consensus algorithm used by the blockchain.
 
-The next step of consensus is to execute the transactions to fully validate them. All full-nodes
-that receive a block proposal from the correct proposer execute the transactions by calling the ABCI function `FinalizeBlock`. 
-As mentioned throughout the documentation `BeginBlock`, `ExecuteTx` and `EndBlock` are called within FinalizeBlock. 
-Although every full-node operates individually and locally, the outcome is always consistent and unequivocal. This is because the state changes brought about by the messages are predictable, and the transactions are specifically sequenced in the proposed block.
 
-```text
-		--------------------------
-		| Receive Block Proposal |
-		--------------------------
-					|
-					v
-		-------------------------
-		|     FinalizeBlock	    |
-		-------------------------
-		            |
-			  		v
-			-------------------
-			|   BeginBlock	  | 
-			-------------------
-		            |
-			        v
-			--------------------
-			| ExecuteTx(tx0)   |
-			| ExecuteTx(tx1)   |
-			| ExecuteTx(tx2)   |
-			| ExecuteTx(tx3)   |
-			|	    .	       |
-			|		.		   |
-			|		.	       |
-			-------------------
-		            |
-			        v
-			--------------------
-			|    EndBlock      |
-			--------------------
-		            |
-			        v
-		-----------------------
-		|      Consensus      |
-		-----------------------
-		          |
-			      v
-		-----------------------
-		|     Commit	      |
-		-----------------------
-```
+## Post-Transaction Handling
 
-### Transaction Execution
+After execution, any additional actions that need to be taken are processed. This could include updating logs, sending events, or handling errors.
 
-The `FinalizeBlock` ABCI function defined in [`BaseApp`](../advanced/00-baseapp.md) does the bulk of the
-state transitions: it is run for each transaction in the block in sequential order as committed
-to during consensus. Under the hood, transaction execution is almost identical to `CheckTx` but calls the
-[`runTx`](../advanced/00-baseapp.md#runtx) function in deliver mode instead of check mode.
-Instead of using their `checkState`, full-nodes use `finalizeblock`:
+These steps are managed by `BaseApp` in the Cosmos SDK, which routes transactions to the appropriate handlers and manages state transitions.
 
-* **Decoding:** Since `FinalizeBlock` is an ABCI call, `Tx` is received in the encoded `[]byte` form.
-  Nodes first unmarshal the transaction, using the [`TxConfig`](./00-app-anatomy.md#register-codec) defined in the app, then call `runTx` in `execModeFinalize`, which is very similar to `CheckTx` but also executes and writes state changes.
+After a transaction is executed in the Cosmos SDK, several steps are taken to finalise the process:
 
-* **Checks and `AnteHandler`:** Full-nodes call `validateBasicMsgs` and `AnteHandler` again. This second check
-  happens because they may not have seen the same transactions during the addition to Mempool stage 
-  and a malicious proposer may have included invalid ones. One difference here is that the
-  `AnteHandler` does not compare `gas-prices` to the node's `min-gas-prices` since that value is local
-  to each node - differing values across nodes yield nondeterministic results.
+1. Event Emission: Modules emit events that can be used for logging, monitoring, or triggering other workflows. These events are collected during the transaction execution.
 
-* **`MsgServiceRouter`:** After `CheckTx` exits, `FinalizeBlock` continues to run
-  [`runMsgs`](../advanced/00-baseapp.md#runtx-antehandler-runmsgs-posthandler) to fully execute each `Msg` within the transaction.
-  Since the transaction may have messages from different modules, `BaseApp` needs to know which module
-  to find the appropriate handler. This is achieved using `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's Protobuf [`Msg` service](../../build/building-modules/03-msg-services.md).
-  For `LegacyMsg` routing, the `Route` function is called via the [module manager](../../build/building-modules/01-module-manager.md) to retrieve the route name and find the legacy [`Handler`](../../build/building-modules/03-msg-services.md#handler-type) within the module.
-  
-* **`Msg` service:** Protobuf `Msg` service is responsible for executing each message in the `Tx` and causes state transitions to persist in `finalizeBlockState`.
+2. Logging: Information about the transaction execution, such as success or failure, and any significant state changes, are logged for audit and diagnostic purposes.
 
-* **PostHandlers:** [`PostHandler`](../advanced/00-baseapp.md#posthandler)s run after the execution of the message. If they fail, the state change of `runMsgs`, as well of `PostHandlers`, are both reverted.
+3. Error Handling: If any errors occur during transaction execution, they are handled appropriately, which may include rolling back certain operations to maintain state consistency.
 
-* **Gas:** While a `Tx` is being delivered, a `GasMeter` is used to keep track of how much
-  gas is being used; if execution completes, `GasUsed` is set and returned in the
-  `abci.ExecTxResult`. If execution halts because `BlockGasMeter` or `GasMeter` has run out or something else goes
-  wrong, a deferred function at the end appropriately errors or panics.
+4. State Commitment: Changes made to the state during the transaction are finalised and written to the blockchain. This step is crucial as it ensures that all state transitions are permanently recorded.
 
-If there are any failed state changes resulting from a `Tx` being invalid or `GasMeter` running out,
-the transaction processing terminates and any state changes are reverted. Invalid transactions in a
-block proposal cause validator nodes to reject the block and vote for a `nil` block instead.
+5. PostHandlers: After the execution of the message, `PostHandlers` are run. If they fail, the state changes made during `runMsgs` and by the `PostHandlers` themselves are both reverted. This ensures that only successful transactions affect the state.
 
-### Commit
 
-The final step is for nodes to commit the block and state changes. Validator nodes
-perform the previous step of executing state transitions in order to validate the transactions,
-then sign the block to confirm it. Full nodes that are not validators do not
-participate in consensus - i.e. they cannot vote - but listen for votes to understand whether or
-not they should commit the state changes.
+After post-transaction handling, the exact sequence of the transaction lifecycle is dependent on the consensus mechanism used. This includes how transactions are grouped into blocks, how blocks are validated, and how consensus is achieved among validators to commit the block to the blockchain. Each consensus protocol may implement these steps differently to ensure network agreement and maintain the integrity of the blockchain state.
 
-When they receive enough validator votes (2/3+ _precommits_ weighted by voting power), full nodes commit to a new block to be added to the blockchain and
-finalize the state transitions in the application layer. A new state root is generated to serve as
-a merkle proof for the state transitions. Applications use the [`Commit`](../advanced/00-baseapp.md#commit)
-ABCI method inherited from [Baseapp](../advanced/00-baseapp.md); it syncs all the state transitions by
-writing the `deliverState` into the application's internal state. As soon as the state changes are
-committed, `checkState` starts afresh from the most recently committed state and `deliverState`
-resets to `nil` in order to be consistent and reflect the changes.
+## Learn More
 
-Note that not all blocks have the same number of transactions and it is possible for consensus to
-result in a `nil` block or one with none at all. In a public blockchain network, it is also possible
-for validators to be **byzantine**, or malicious, which may prevent a `Tx` from being committed in
-the blockchain. Possible malicious behaviors include the proposer deciding to censor a `Tx` by
-excluding it from the block or a validator voting against the block.
+For a deeper dive into the underlying mechanisms of transaction processing and block commitment in the Cosmos SDK, consider exploring the [BaseApp documentation](../advanced/00-baseapp.md). This advanced documentation provides detailed insights into the internal workings and state management of the Cosmos SDK.
 
-At this point, the transaction lifecycle of a `Tx` is over: nodes have verified its validity,
-delivered it by executing its state changes, and committed those changes. The `Tx` itself,
-in `[]byte` form, is stored in a block and appended to the blockchain.

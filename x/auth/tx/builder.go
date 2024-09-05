@@ -1,17 +1,19 @@
 package tx
 
 import (
+	"errors"
 	"fmt"
+	"time"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	multisigv1beta1 "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/address"
-	authsign "cosmossdk.io/x/auth/signing"
 	"cosmossdk.io/x/tx/decode"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,6 +23,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var (
@@ -32,12 +35,14 @@ func newBuilder(addressCodec address.Codec, decoder *decode.Decoder, codec codec
 	return &builder{addressCodec: addressCodec, decoder: decoder, codec: codec}
 }
 
-func newBuilderFromDecodedTx(addrCodec address.Codec, decoder *decode.Decoder, codec codec.BinaryCodec, decoded *gogoTxWrapper) (*builder, error) {
-	signatures := make([][]byte, len(decoded.decodedTx.Tx.Signatures))
-	copy(signatures, decoded.decodedTx.Tx.Signatures)
+func newBuilderFromDecodedTx(
+	addrCodec address.Codec, decoder *decode.Decoder, codec codec.BinaryCodec, decoded *gogoTxWrapper,
+) (*builder, error) {
+	signatures := make([][]byte, len(decoded.Tx.Signatures))
+	copy(signatures, decoded.Tx.Signatures)
 
-	sigInfos := make([]*tx.SignerInfo, len(decoded.decodedTx.Tx.AuthInfo.SignerInfos))
-	for i, sigInfo := range decoded.decodedTx.Tx.AuthInfo.SignerInfos {
+	sigInfos := make([]*tx.SignerInfo, len(decoded.Tx.AuthInfo.SignerInfos))
+	for i, sigInfo := range decoded.Tx.AuthInfo.SignerInfos {
 		modeInfoV1 := new(tx.ModeInfo)
 		fromV2ModeInfo(sigInfo.ModeInfo, modeInfoV1)
 		sigInfos[i] = &tx.SignerInfo{
@@ -56,7 +61,7 @@ func newBuilderFromDecodedTx(addrCodec address.Codec, decoder *decode.Decoder, c
 		addressCodec:                addrCodec,
 		decoder:                     decoder,
 		codec:                       codec,
-		msgs:                        decoded.msgsV1,
+		msgs:                        decoded.Messages,
 		timeoutHeight:               decoded.GetTimeoutHeight(),
 		granter:                     decoded.FeeGranter(),
 		payer:                       payer,
@@ -76,16 +81,17 @@ type builder struct {
 	decoder      *decode.Decoder
 	codec        codec.BinaryCodec
 
-	msgs          []sdk.Msg
-	timeoutHeight uint64
-	granter       []byte
-	payer         []byte
-	unordered     bool
-	memo          string
-	gasLimit      uint64
-	fees          sdk.Coins
-	signerInfos   []*tx.SignerInfo
-	signatures    [][]byte
+	msgs             []sdk.Msg
+	timeoutHeight    uint64
+	timeoutTimestamp time.Time
+	granter          []byte
+	payer            []byte
+	unordered        bool
+	memo             string
+	gasLimit         uint64
+	fees             sdk.Coins
+	signerInfos      []*tx.SignerInfo
+	signatures       [][]byte
 
 	extensionOptions            []*codectypes.Any
 	nonCriticalExtensionOptions []*codectypes.Any
@@ -112,6 +118,7 @@ func (w *builder) getTx() (*gogoTxWrapper, error) {
 		Messages:                    anyMsgs,
 		Memo:                        w.memo,
 		TimeoutHeight:               w.timeoutHeight,
+		TimeoutTimestamp:            timestamppb.New(w.timeoutTimestamp),
 		Unordered:                   w.unordered,
 		ExtensionOptions:            intoAnyV2(w.extensionOptions),
 		NonCriticalExtensionOptions: intoAnyV2(w.nonCriticalExtensionOptions),
@@ -186,6 +193,8 @@ func (w *builder) SetMsgs(msgs ...sdk.Msg) error {
 // SetTimeoutHeight sets the transaction's height timeout.
 func (w *builder) SetTimeoutHeight(height uint64) { w.timeoutHeight = height }
 
+func (w *builder) SetTimeoutTimestamp(timestamp time.Time) { w.timeoutTimestamp = timestamp }
+
 func (w *builder) SetUnordered(v bool) { w.unordered = v }
 
 func (w *builder) SetMemo(memo string) { w.memo = memo }
@@ -239,7 +248,7 @@ func (w *builder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	w.nonCriticalExtensionOptions = extOpts
 }
 
-func (w *builder) AddAuxSignerData(data tx.AuxSignerData) error { return fmt.Errorf("not supported") }
+func (w *builder) AddAuxSignerData(data tx.AuxSignerData) error { return errors.New("not supported") }
 
 func (w *builder) getFee() (fee *txv1beta1.Fee, err error) {
 	granterStr := ""

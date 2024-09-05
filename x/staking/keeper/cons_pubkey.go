@@ -25,7 +25,7 @@ func (k Keeper) setConsPubKeyRotationHistory(
 	ctx context.Context, valAddr sdk.ValAddress,
 	oldPubKey, newPubKey *codectypes.Any, fee sdk.Coin,
 ) error {
-	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerInfo := k.HeaderService.HeaderInfo(ctx)
 	height := uint64(headerInfo.Height)
 	history := types.ConsPubKeyRotationHistory{
 		OperatorAddress: valAddr.Bytes(),
@@ -34,7 +34,19 @@ func (k Keeper) setConsPubKeyRotationHistory(
 		Height:          height,
 		Fee:             fee,
 	}
-	err := k.RotationHistory.Set(ctx, collections.Join(valAddr.Bytes(), height), history)
+
+	// check if there's another key rotation for this same key in the same block
+	allRotations, err := k.GetBlockConsPubKeyRotationHistory(ctx)
+	if err != nil {
+		return err
+	}
+	for _, r := range allRotations {
+		if r.NewConsPubkey.Compare(newPubKey) == 0 {
+			return types.ErrValidatorPubKeyExists
+		}
+	}
+
+	err = k.RotationHistory.Set(ctx, collections.Join(valAddr.Bytes(), height), history)
 	if err != nil {
 		return err
 	}
@@ -82,48 +94,55 @@ func (k Keeper) updateToNewPubkey(ctx context.Context, val types.Validator, oldP
 		return err
 	}
 
-	oldPk, ok := oldPubKey.GetCachedValue().(cryptotypes.PubKey)
+	oldPkCached := oldPubKey.GetCachedValue()
+	if oldPkCached == nil {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidType, "OldPubKey cached value is nil")
+	}
+	oldPk, ok := oldPkCached.(cryptotypes.PubKey)
 	if !ok {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", oldPk)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", oldPkCached)
 	}
 
-	newPk, ok := newPubKey.GetCachedValue().(cryptotypes.PubKey)
+	newPkCached := newPubKey.GetCachedValue()
+	if newPkCached == nil {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidType, "NewPubKey cached value is nil")
+	}
+	newPk, ok := newPkCached.(cryptotypes.PubKey)
 	if !ok {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", newPk)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", newPkCached)
 	}
 
 	// sets a map: oldConsKey -> newConsKey
-	if err := k.OldToNewConsKeyMap.Set(ctx, oldPk.Address(), newPk.Address()); err != nil {
+	if err := k.OldToNewConsAddrMap.Set(ctx, oldPk.Address(), newPk.Address()); err != nil {
 		return err
 	}
 
-	// sets a map: newConsKey -> oldConsKey
-	if err := k.setNewToOldConsKeyMap(ctx, sdk.ConsAddress(oldPk.Address()), sdk.ConsAddress(newPk.Address())); err != nil {
+	// sets a map: newConsKey -> initialConsKey
+	if err := k.setConsAddrToValidatorIdentifierMap(ctx, sdk.ConsAddress(oldPk.Address()), sdk.ConsAddress(newPk.Address())); err != nil {
 		return err
 	}
 
 	return k.Hooks().AfterConsensusPubKeyUpdate(ctx, oldPk, newPk, fee)
 }
 
-// setNewToOldConsKeyMap adds an entry in the state with the current consKey to the initial consKey of the validator.
-// it tries to find the oldPk if there is a entry already present in the state
-func (k Keeper) setNewToOldConsKeyMap(ctx context.Context, oldPk, newPk sdk.ConsAddress) error {
-	pk, err := k.NewToOldConsKeyMap.Get(ctx, oldPk)
+// setConsAddrToValidatorIdentifierMap adds an entry in the state with the current consAddr to the initial consAddr of the validator.
+// It first tries to find the validatorIdentifier if there is a entry already present in the state.
+func (k Keeper) setConsAddrToValidatorIdentifierMap(ctx context.Context, oldConsAddr, newConsAddr sdk.ConsAddress) error {
+	validatorIdentifier, err := k.ConsAddrToValidatorIdentifierMap.Get(ctx, oldConsAddr)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
-	if pk != nil {
-		oldPk = pk
+	if validatorIdentifier != nil {
+		oldConsAddr = validatorIdentifier
 	}
-
-	return k.NewToOldConsKeyMap.Set(ctx, newPk, oldPk)
+	return k.ConsAddrToValidatorIdentifierMap.Set(ctx, newConsAddr, oldConsAddr)
 }
 
 // ValidatorIdentifier maps the new cons key to previous cons key (which is the address before the rotation).
-// (that is: newConsKey -> oldConsKey)
+// (that is: newConsAddr -> oldConsAddr)
 func (k Keeper) ValidatorIdentifier(ctx context.Context, newPk sdk.ConsAddress) (sdk.ConsAddress, error) {
-	pk, err := k.NewToOldConsKeyMap.Get(ctx, newPk)
+	pk, err := k.ConsAddrToValidatorIdentifierMap.Get(ctx, newPk)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
 	}
@@ -202,9 +221,7 @@ func (k Keeper) deleteConsKeyIndexKey(ctx context.Context, valAddr sdk.ValAddres
 		StartInclusive(collections.Join(valAddr.Bytes(), time.Time{})).
 		EndInclusive(collections.Join(valAddr.Bytes(), ts))
 
-	return k.ValidatorConsensusKeyRotationRecordIndexKey.Walk(ctx, rng, func(key collections.Pair[[]byte, time.Time]) (stop bool, err error) {
-		return false, k.ValidatorConsensusKeyRotationRecordIndexKey.Remove(ctx, key)
-	})
+	return k.ValidatorConsensusKeyRotationRecordIndexKey.Clear(ctx, rng)
 }
 
 // getAndRemoveAllMaturedRotatedKeys returns all matured valaddresses.
@@ -213,12 +230,21 @@ func (k Keeper) getAndRemoveAllMaturedRotatedKeys(ctx context.Context, matureTim
 
 	// get an iterator for all timeslices from time 0 until the current HeaderInfo time
 	rng := new(collections.Range[time.Time]).EndInclusive(matureTime)
+	keysToRemove := []time.Time{}
 	err := k.ValidatorConsensusKeyRotationRecordQueue.Walk(ctx, rng, func(key time.Time, value types.ValAddrsOfRotatedConsKeys) (stop bool, err error) {
 		valAddrs = append(valAddrs, value.Addresses...)
-		return false, k.ValidatorConsensusKeyRotationRecordQueue.Remove(ctx, key)
+		keysToRemove = append(keysToRemove, key)
+		return false, nil
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// remove all the keys from the list
+	for _, key := range keysToRemove {
+		if err := k.ValidatorConsensusKeyRotationRecordQueue.Remove(ctx, key); err != nil {
+			return nil, err
+		}
 	}
 
 	return valAddrs, nil
@@ -226,7 +252,7 @@ func (k Keeper) getAndRemoveAllMaturedRotatedKeys(ctx context.Context, matureTim
 
 // GetBlockConsPubKeyRotationHistory returns the rotation history for the current height.
 func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx context.Context) ([]types.ConsPubKeyRotationHistory, error) {
-	headerInfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerInfo := k.HeaderService.HeaderInfo(ctx)
 
 	iterator, err := k.RotationHistory.Indexes.Block.MatchExact(ctx, uint64(headerInfo.Height))
 	if err != nil {

@@ -31,11 +31,11 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/tx_msg.go#L51-L5
 It contains the following methods:
 
 * **GetMsgs:** unwraps the transaction and returns a list of contained `sdk.Msg`s - one transaction may have one or multiple messages, which are defined by module developers.
-* **ValidateBasic:** lightweight, [_stateless_](../beginner/01-tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./00-baseapp.md#checktx) and [`DeliverTx`](./00-baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth) module's `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed what the user's maximum. When [`runTx`](./00-baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
+* **ValidateBasic:** lightweight, [_stateless_](../beginner/01-tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./00-baseapp.md#checktx) and [`DeliverTx`](./00-baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth) module's `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed the user's maximum. When [`runTx`](./00-baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
 
-    :::note
-    This function is different from the deprecated `sdk.Msg` [`ValidateBasic`](../beginner/01-tx-lifecycle.md#ValidateBasic) methods, which was performing basic validity checks on messages only.
-    :::
+:::note
+This function is different from the deprecated `sdk.Msg` [`ValidateBasic`](../beginner/01-tx-lifecycle.md#ValidateBasic) methods, which was performing basic validity checks on messages only.
+:::
 
 As a developer, you should rarely manipulate `Tx` directly, as `Tx` is really an intermediate type used for transaction generation. Instead, developers should prefer the `TxBuilder` interface, which you can learn more about [below](#transaction-generation).
 
@@ -51,7 +51,7 @@ The most used implementation of the `Tx` interface is the Protobuf `Tx` message,
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/v1beta1/tx.proto#L13-L26
 ```
 
-Because Protobuf serialization is not deterministic, the Cosmos SDK uses an additional `TxRaw` type to denote the pinned bytes over which a transaction is signed. Any user can generate a valid `body` and `auth_info` for a transaction, and serialize these two messages using Protobuf. `TxRaw` then pins the user's exact binary representation of `body` and `auth_info`, called respectively `body_bytes` and `auth_info_bytes`. The document that is signed by all signers of the transaction is `SignDoc` (deterministically serialized using [ADR-027](../../build/architecture/adr-027-deterministic-protobuf-serialization.md)):
+Because Protobuf serialization is not deterministic, the Cosmos SDK uses an additional `TxRaw` type to denote the pinned bytes over which a transaction is signed. Any user can generate a valid `body` and `auth_info` for a transaction, and serialize these two messages using Protobuf. `TxRaw` then pins the user's exact binary representation of `body` and `auth_info`, called respectively `body_bytes` and `auth_info_bytes`. The document that is signed by all signers of the transaction is `SignDoc` (deterministically serialized using [ADR-027](../../architecture/adr-027-deterministic-protobuf-serialization.md)):
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/v1beta1/tx.proto#L48-L65
@@ -100,7 +100,7 @@ There are also _expert_ screens, which will only be displayed if the user has ch
 
 Data is formatted using a set of `ValueRenderer` which the SDK provides defaults for all the known messages and value types. Chain developers can also opt to implement their own `ValueRenderer` for a type/message if they'd like to display information differently.
 
-If you wish to learn more, please refer to [ADR-050](../../build/architecture/adr-050-sign-mode-textual.md).
+If you wish to learn more, please refer to [ADR-050](../../architecture/adr-050-sign-mode-textual.md).
 
 #### Custom Sign modes
 
@@ -119,7 +119,7 @@ The next paragraphs will describe each of these components, in this order.
 ### Messages
 
 :::tip
-Module `sdk.Msg`s are not to be confused with [ABCI Messages](https://docs.cometbft.com/v0.37/spec/abci/) which define interactions between the CometBFT and application layers.
+Module `sdk.Msg`s are not to be confused with [ABCI Messages](https://docs.cometbft.com/v1.0/spec/abci/) which define interactions between the CometBFT and application layers.
 :::
 
 **Messages** (or `sdk.Msg`s) are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the messages for their module by adding methods to the Protobuf [`Msg` service](../../build/building-modules/03-msg-services.md), and also implement the corresponding `MsgServer`.
@@ -187,9 +187,8 @@ simd tx send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake
 
 [gRPC](https://grpc.io) is the main component for the Cosmos SDK's RPC layer. Its principal usage is in the context of modules' [`Query` services](../../build/building-modules/04-query-services.md). However, the Cosmos SDK also exposes a few other module-agnostic gRPC services, one of them being the `Tx` service:
 
-```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/v1beta1/service.proto
-```
+
 
 The `Tx` service exposes a handful of utility functions, such as simulating a transaction or querying a transaction, and also one method to broadcast transactions.
 
@@ -203,4 +202,4 @@ An example can be seen [here](https://docs.cosmos.network/main/user/run-node/txs
 
 #### CometBFT RPC
 
-The three methods presented above are actually higher abstractions over the CometBFT RPC `/broadcast_tx_{async,sync,commit}` endpoints, documented [here](https://docs.cometbft.com/v0.37/core/rpc). This means that you can use the CometBFT RPC endpoints directly to broadcast the transaction, if you wish so.
+The three methods presented above are actually higher abstractions over the CometBFT RPC `/broadcast_tx_{async,sync,commit}` endpoints, documented [here](https://docs.cometbft.com/v1.0/explanation/core/rpc). This means that you can use the CometBFT RPC endpoints directly to broadcast the transaction, if you wish so.

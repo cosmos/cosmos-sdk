@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/x/auth/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // InitGenesis - Init store state from genesis data
@@ -29,7 +28,10 @@ func (ak AccountKeeper) InitGenesis(ctx context.Context, data types.GenesisState
 	for _, acc := range accounts {
 		accNum := acc.GetAccountNumber()
 		for lastAccNum == nil || *lastAccNum < accNum {
-			n := ak.NextAccountNumber(ctx)
+			n, err := ak.AccountsModKeeper.NextAccountNumber(ctx)
+			if err != nil {
+				return err
+			}
 			lastAccNum = &n
 		}
 		ak.SetAccount(ctx, acc)

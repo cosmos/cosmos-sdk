@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
 
 	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
@@ -59,7 +57,6 @@ func (s *CLITestSuite) SetupSuite() {
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
 		WithCodec(s.encCfg.Codec).
-		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain").
@@ -71,15 +68,15 @@ func (s *CLITestSuite) SetupSuite() {
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
-			Value: bz,
-		})
+		c := clitestutil.NewMockCometRPCWithValue(bz)
 		return s.baseCtx.WithClient(c)
 	}
 	s.clientCtx = ctxGen()
 
 	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 	s.grantee = make([]sdk.AccAddress, 6)
+	valAddr, err := s.baseCtx.AddressCodec.BytesToString(val[0].Address)
+	s.Require().NoError(err)
 
 	s.addrs = make([]sdk.AccAddress, 1)
 	s.addrs[0] = s.createAccount("validator address")
@@ -93,13 +90,15 @@ func (s *CLITestSuite) SetupSuite() {
 	s.grantee[1] = s.createAccount("grantee2")
 	// Send some funds to the new account.
 	s.msgSendExec(s.grantee[1])
+	grantee1Addr, err := s.baseCtx.AddressCodec.BytesToString(s.grantee[1])
+	s.Require().NoError(err)
 
 	// grant send authorization to grantee2
 	out, err := authzclitestutil.CreateGrant(s.clientCtx, []string{
-		s.grantee[1].String(),
+		grantee1Addr,
 		"send",
 		fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
@@ -112,13 +111,15 @@ func (s *CLITestSuite) SetupSuite() {
 
 	// Create new account in the keyring.
 	s.grantee[2] = s.createAccount("grantee3")
+	grantee2Addr, err := s.baseCtx.AddressCodec.BytesToString(s.grantee[2])
+	s.Require().NoError(err)
 
 	// grant send authorization to grantee3
 	_, err = authzclitestutil.CreateGrant(s.clientCtx, []string{
-		s.grantee[2].String(),
+		grantee2Addr,
 		"send",
 		fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(10))).String()),
@@ -129,6 +130,8 @@ func (s *CLITestSuite) SetupSuite() {
 	// Create new accounts in the keyring.
 	s.grantee[3] = s.createAccount("grantee4")
 	s.msgSendExec(s.grantee[3])
+	grantee3Addr, err := s.baseCtx.AddressCodec.BytesToString(s.grantee[3])
+	s.Require().NoError(err)
 
 	s.grantee[4] = s.createAccount("grantee5")
 	s.grantee[5] = s.createAccount("grantee6")
@@ -136,11 +139,11 @@ func (s *CLITestSuite) SetupSuite() {
 	// grant send authorization with allow list to grantee4
 	out, err = authzclitestutil.CreateGrant(s.clientCtx,
 		[]string{
-			s.grantee[3].String(),
+			grantee3Addr,
 			"send",
 			fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
 			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-			fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
@@ -170,9 +173,13 @@ func (s *CLITestSuite) msgSendExec(grantee sdk.AccAddress) {
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(200)))
 	from := val[0].Address
+	fromAddr, err := s.clientCtx.AddressCodec.BytesToString(from)
+	s.Require().NoError(err)
+	granteeAddr, err := s.clientCtx.AddressCodec.BytesToString(grantee)
+	s.Require().NoError(err)
 	msgSend := &banktypes.MsgSend{
-		FromAddress: from.String(),
-		ToAddress:   grantee.String(),
+		FromAddress: fromAddr,
+		ToAddress:   granteeAddr,
 		Amount:      coins,
 	}
 
@@ -182,8 +189,14 @@ func (s *CLITestSuite) msgSendExec(grantee sdk.AccAddress) {
 
 func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
+	valAddress, err := s.clientCtx.ValidatorAddressCodec.BytesToString(s.addrs[0])
+	s.Require().NoError(err)
+	fromAddr, err := s.baseCtx.AddressCodec.BytesToString(val[0].Address)
+	s.Require().NoError(err)
 
 	grantee := s.grantee[0]
+	granteeAddr, err := s.baseCtx.AddressCodec.BytesToString(grantee)
+	s.Require().NoError(err)
 
 	twoHours := time.Now().Add(time.Minute * 120).Unix()
 	pastHour := time.Now().Add(-time.Minute * 60).Unix()
@@ -213,7 +226,7 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 				"grantee_addr",
 				"send",
 				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
 			},
@@ -223,10 +236,10 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 		{
 			"Invalid spend limit",
 			[]string{
-				grantee.String(),
+				granteeAddr,
 				"send",
 				fmt.Sprintf("--%s=0stake", cli.FlagSpendLimit),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
 			},
@@ -236,10 +249,10 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 		{
 			"Invalid expiration time",
 			[]string{
-				grantee.String(),
+				granteeAddr,
 				"send",
 				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				fmt.Sprintf("--%s=true", flags.FlagBroadcastMode),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, pastHour),
 			},
@@ -249,10 +262,10 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 		{
 			"fail with error invalid msg-type",
 			[]string{
-				grantee.String(),
+				granteeAddr,
 				"generic",
 				fmt.Sprintf("--%s=invalid-msg-type", cli.FlagMsgType),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
@@ -264,14 +277,14 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 		{
 			"invalid bond denom for tx delegate authorization allowed validators",
 			[]string{
-				grantee.String(),
+				granteeAddr,
 				"delegate",
 				fmt.Sprintf("--%s=100xyz", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, sdk.ValAddress(s.addrs[0]).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, valAddress),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 			},
 			true,
@@ -280,14 +293,14 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 		{
 			"invalid bond denom for tx delegate authorization deny validators",
 			[]string{
-				grantee.String(),
+				granteeAddr,
 				"delegate",
 				fmt.Sprintf("--%s=100xyz", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-				fmt.Sprintf("--%s=%s", cli.FlagDenyValidators, sdk.ValAddress(s.addrs[0]).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagDenyValidators, valAddress),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 			},
 			true,
@@ -296,14 +309,14 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 		{
 			"invalid bond denom for tx undelegate authorization",
 			[]string{
-				grantee.String(),
+				granteeAddr,
 				"unbond",
 				fmt.Sprintf("--%s=100xyz", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, sdk.ValAddress(s.addrs[0]).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, valAddress),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 			},
 			true,
@@ -312,14 +325,14 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 		{
 			"invalid bond denom for tx redelegate authorization",
 			[]string{
-				grantee.String(),
+				granteeAddr,
 				"redelegate",
 				fmt.Sprintf("--%s=100xyz", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, sdk.ValAddress(s.addrs[0]).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, valAddress),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 			},
 			true,
@@ -328,14 +341,14 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 		{
 			"invalid decimal coin expression with more than single coin",
 			[]string{
-				grantee.String(),
+				granteeAddr,
 				"delegate",
 				fmt.Sprintf("--%s=100stake,20xyz", cli.FlagSpendLimit),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, sdk.ValAddress(s.addrs[0]).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowedValidators, valAddress),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))).String()),
 			},
 			true,
@@ -344,7 +357,7 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 		{
 			"invalid authorization type",
 			[]string{
-				grantee.String(),
+				granteeAddr,
 				"invalid authz type",
 			},
 			true,
@@ -353,10 +366,10 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 		{
 			"Valid tx send authorization",
 			[]string{
-				grantee.String(),
+				granteeAddr,
 				"send",
 				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -368,10 +381,10 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 		{
 			"Valid tx send authorization with allow list",
 			[]string{
-				grantee.String(),
+				granteeAddr,
 				"send",
 				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -384,10 +397,10 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 		{
 			"Invalid tx send authorization with duplicate allow list",
 			[]string{
-				grantee.String(),
+				granteeAddr,
 				"send",
 				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -400,10 +413,10 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 		{
 			"Valid tx generic authorization",
 			[]string{
-				grantee.String(),
+				granteeAddr,
 				"generic",
 				fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -415,10 +428,10 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 		{
 			"fail when granter = grantee",
 			[]string{
-				grantee.String(),
+				granteeAddr,
 				"generic",
 				fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, granteeAddr),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -430,10 +443,10 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 		{
 			"Valid tx with amino",
 			[]string{
-				grantee.String(),
+				granteeAddr,
 				"generic",
 				fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, fromAddr),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

@@ -1,0 +1,111 @@
+name: v2 core Tests
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}-v2-tests
+  cancel-in-progress: true
+
+jobs:
+  server-v2:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+          cache: true
+          cache-dependency-path: go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            server/v2/*.go
+            server/v2/go.mod
+            server/v2/go.sum
+            server/v2/testdata/*.toml
+      - name: test & coverage report creation
+        if: env.GIT_DIFF
+        run: |
+          cd server/v2 && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
+  stf:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+          cache: true
+          cache-dependency-path: go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            server/v2/stf/**/*.go
+            server/v2/stf/go.mod
+            server/v2/stf/go.sum
+      - name: test & coverage report creation
+        if: env.GIT_DIFF
+        run: |
+          cd server/v2/stf && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
+
+  appmanager:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+          cache: true
+          cache-dependency-path: go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            server/v2/appmanager/**/*.go
+            server/v2/appmanager/go.mod
+            server/v2/appmanager/go.sum
+      - name: test & coverage report creation
+        if: env.GIT_DIFF
+        run: |
+          cd server/v2/appmanager && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
+
+  cometbft:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+          cache: true
+          cache-dependency-path: go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            server/v2/cometbft/**/*.go
+            server/v2/cometbft/go.mod
+            server/v2/cometbft/go.sum
+      - name: test & coverage report creation
+        if: env.GIT_DIFF
+        run: |
+          cd server/v2/cometbft && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'

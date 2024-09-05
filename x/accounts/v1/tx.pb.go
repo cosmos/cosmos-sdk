@@ -6,14 +6,14 @@ package v1
 import (
 	context "context"
 	fmt "fmt"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types1 "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	tx "github.com/cosmos/cosmos-sdk/types/tx"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -40,7 +40,7 @@ type MsgInit struct {
 	// account_type is the type of the account to be created.
 	AccountType string `protobuf:"bytes,2,opt,name=account_type,json=accountType,proto3" json:"account_type,omitempty"`
 	// message is the message to be sent to the account.
-	Message *types.Any `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	Message *any.Any `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	// funds contains the coins that the account wants to
 	// send alongside the request.
 	Funds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=funds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"funds"`
@@ -93,7 +93,7 @@ func (m *MsgInit) GetAccountType() string {
 	return ""
 }
 
-func (m *MsgInit) GetMessage() *types.Any {
+func (m *MsgInit) GetMessage() *any.Any {
 	if m != nil {
 		return m.Message
 	}
@@ -112,7 +112,7 @@ type MsgInitResponse struct {
 	// account_address is the address of the newly created account.
 	AccountAddress string `protobuf:"bytes,1,opt,name=account_address,json=accountAddress,proto3" json:"account_address,omitempty"`
 	// response is the response returned by the account implementation.
-	Response *types.Any `protobuf:"bytes,2,opt,name=response,proto3" json:"response,omitempty"`
+	Response *any.Any `protobuf:"bytes,2,opt,name=response,proto3" json:"response,omitempty"`
 }
 
 func (m *MsgInitResponse) Reset()         { *m = MsgInitResponse{} }
@@ -155,7 +155,7 @@ func (m *MsgInitResponse) GetAccountAddress() string {
 	return ""
 }
 
-func (m *MsgInitResponse) GetResponse() *types.Any {
+func (m *MsgInitResponse) GetResponse() *any.Any {
 	if m != nil {
 		return m.Response
 	}
@@ -169,7 +169,7 @@ type MsgExecute struct {
 	// target is the address of the account to be executed.
 	Target string `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
 	// message is the message to be sent to the account.
-	Message *types.Any `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	Message *any.Any `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	// funds contains the coins that the account wants to
 	// send alongside the request.
 	Funds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=funds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"funds"`
@@ -222,7 +222,7 @@ func (m *MsgExecute) GetTarget() string {
 	return ""
 }
 
-func (m *MsgExecute) GetMessage() *types.Any {
+func (m *MsgExecute) GetMessage() *any.Any {
 	if m != nil {
 		return m.Message
 	}
@@ -239,7 +239,7 @@ func (m *MsgExecute) GetFunds() github_com_cosmos_cosmos_sdk_types.Coins {
 // MsgExecuteResponse defines the Execute response type for the Msg/Execute RPC method.
 type MsgExecuteResponse struct {
 	// response is the response returned by the account implementation.
-	Response *types.Any `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"`
+	Response *any.Any `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"`
 }
 
 func (m *MsgExecuteResponse) Reset()         { *m = MsgExecuteResponse{} }
@@ -275,7 +275,7 @@ func (m *MsgExecuteResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgExecuteResponse proto.InternalMessageInfo
 
-func (m *MsgExecuteResponse) GetResponse() *types.Any {
+func (m *MsgExecuteResponse) GetResponse() *any.Any {
 	if m != nil {
 		return m.Response
 	}
@@ -340,8 +340,8 @@ func (m *MsgExecuteBundle) GetTxs() []*tx.TxRaw {
 
 // BundledTxResponse defines the response of a bundled tx.
 type BundledTxResponse struct {
-	ExecResponses *types.Any `protobuf:"bytes,1,opt,name=exec_responses,json=execResponses,proto3" json:"exec_responses,omitempty"`
-	Error         string     `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	ExecResponses *any.Any `protobuf:"bytes,1,opt,name=exec_responses,json=execResponses,proto3" json:"exec_responses,omitempty"`
+	Error         string   `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
 }
 
 func (m *BundledTxResponse) Reset()         { *m = BundledTxResponse{} }
@@ -377,7 +377,7 @@ func (m *BundledTxResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BundledTxResponse proto.InternalMessageInfo
 
-func (m *BundledTxResponse) GetExecResponses() *types.Any {
+func (m *BundledTxResponse) GetExecResponses() *any.Any {
 	if m != nil {
 		return m.ExecResponses
 	}
@@ -631,6 +631,7 @@ func _Msg_ExecuteBundle_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.accounts.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -1253,7 +1254,7 @@ func (m *MsgInit) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Message == nil {
-				m.Message = &types.Any{}
+				m.Message = &any.Any{}
 			}
 			if err := m.Message.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1288,7 +1289,7 @@ func (m *MsgInit) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Funds = append(m.Funds, types1.Coin{})
+			m.Funds = append(m.Funds, types.Coin{})
 			if err := m.Funds[len(m.Funds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1405,7 +1406,7 @@ func (m *MsgInitResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Response == nil {
-				m.Response = &types.Any{}
+				m.Response = &any.Any{}
 			}
 			if err := m.Response.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1555,7 +1556,7 @@ func (m *MsgExecute) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Message == nil {
-				m.Message = &types.Any{}
+				m.Message = &any.Any{}
 			}
 			if err := m.Message.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1590,7 +1591,7 @@ func (m *MsgExecute) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Funds = append(m.Funds, types1.Coin{})
+			m.Funds = append(m.Funds, types.Coin{})
 			if err := m.Funds[len(m.Funds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1675,7 +1676,7 @@ func (m *MsgExecuteResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Response == nil {
-				m.Response = &types.Any{}
+				m.Response = &any.Any{}
 			}
 			if err := m.Response.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1877,7 +1878,7 @@ func (m *BundledTxResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.ExecResponses == nil {
-				m.ExecResponses = &types.Any{}
+				m.ExecResponses = &any.Any{}
 			}
 			if err := m.ExecResponses.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

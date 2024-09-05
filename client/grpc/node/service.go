@@ -1,7 +1,7 @@
 package node
 
 import (
-	context "context"
+	"context"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -32,6 +32,7 @@ type queryServer struct {
 func NewQueryServer(clientCtx client.Context, cfg config.Config) ServiceServer {
 	return queryServer{
 		clientCtx: clientCtx,
+		cfg:       cfg,
 	}
 }
 

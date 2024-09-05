@@ -1,6 +1,7 @@
 package pruning
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/rootmulti"
@@ -76,7 +78,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 
 			rootMultiStore, ok := cms.(*rootmulti.Store)
 			if !ok {
-				return fmt.Errorf("currently only support the pruning of rootmulti.Store type")
+				return errors.New("currently only support the pruning of rootmulti.Store type")
 			}
 			latestHeight := rootmulti.GetLatestVersion(db)
 			// valid heights should be greater than 0.
@@ -106,7 +108,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 	return cmd
 }
 
-func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
+func openDB(rootDir string, backendType dbm.BackendType) (corestore.KVStoreWithBatch, error) {
 	dataDir := filepath.Join(rootDir, "data")
 	return dbm.NewDB("application", backendType, dataDir)
 }

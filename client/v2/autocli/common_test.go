@@ -49,14 +49,11 @@ func initFixture(t *testing.T) *fixture {
 		}
 	}()
 
-	clientConn, err := grpc.Dial(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	clientConn, err := grpc.NewClient(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	assert.NilError(t, err)
 
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{}, bank.AppModule{})
 	kr, err := sdkkeyring.New(sdk.KeyringServiceName(), sdkkeyring.BackendMemory, home, nil, encodingConfig.Codec)
-	assert.NilError(t, err)
-
-	akr, err := sdkkeyring.NewAutoCLIKeyring(kr)
 	assert.NilError(t, err)
 
 	interfaceRegistry := encodingConfig.Codec.InterfaceRegistry()
@@ -83,7 +80,6 @@ func initFixture(t *testing.T) *fixture {
 			AddressCodec:          clientCtx.AddressCodec,
 			ValidatorAddressCodec: clientCtx.ValidatorAddressCodec,
 			ConsensusAddressCodec: clientCtx.ConsensusAddressCodec,
-			Keyring:               akr,
 		},
 		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
 			return conn, nil

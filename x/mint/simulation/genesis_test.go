@@ -20,22 +20,25 @@ import (
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
-// Abonormal scenarios are not tested here.
+// Abnormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
+	cdcOpts := codectestutil.CodecOptions{}
+	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, mint.AppModule{})
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
 	simState := module.SimulationState{
-		AppParams:    make(simtypes.AppParams),
-		Cdc:          encCfg.Codec,
-		Rand:         r,
-		NumBonded:    3,
-		BondDenom:    sdk.DefaultBondDenom,
-		Accounts:     simtypes.RandomAccounts(r, 3),
-		InitialStake: math.NewInt(1000),
-		GenState:     make(map[string]json.RawMessage),
+		AppParams:      make(simtypes.AppParams),
+		Cdc:            encCfg.Codec,
+		AddressCodec:   cdcOpts.GetAddressCodec(),
+		ValidatorCodec: cdcOpts.GetValidatorCodec(),
+		Rand:           r,
+		NumBonded:      3,
+		BondDenom:      sdk.DefaultBondDenom,
+		Accounts:       simtypes.RandomAccounts(r, 3),
+		InitialStake:   math.NewInt(1000),
+		GenState:       make(map[string]json.RawMessage),
 	}
 
 	simulation.RandomizedGenState(&simState)
@@ -59,7 +62,7 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, "0.000000000000000000", mintGenesis.Minter.AnnualProvisions.String())
 }
 
-// TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
+// TestRandomizedGenState1 tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState1(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
 
@@ -81,8 +84,6 @@ func TestRandomizedGenState1(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		require.Panicsf(t, func() { simulation.RandomizedGenState(&tt.simState) }, tt.panicMsg)
 	}
 }

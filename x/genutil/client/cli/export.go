@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -31,13 +32,15 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 		Short: "Export state to JSON",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := client.GetConfigFromCmd(cmd)
+			viper := client.GetViperFromCmd(cmd)
+			logger := client.GetLoggerFromCmd(cmd)
 
-			if _, err := os.Stat(serverCtx.Config.GenesisFile()); os.IsNotExist(err) {
+			if _, err := os.Stat(config.GenesisFile()); os.IsNotExist(err) {
 				return err
 			}
 
-			db, err := server.OpenDB(serverCtx.Config.RootDir, server.GetAppDBBackend(serverCtx.Viper))
+			db, err := server.OpenDB(config.RootDir, server.GetAppDBBackend(viper))
 			if err != nil {
 				return err
 			}
@@ -51,7 +54,7 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 				// It is possible that the genesis file is large,
 				// so we don't need to read it all into memory
 				// before we stream it out.
-				f, err := os.OpenFile(serverCtx.Config.GenesisFile(), os.O_RDONLY, 0)
+				f, err := os.OpenFile(config.GenesisFile(), os.O_RDONLY, 0)
 				if err != nil {
 					return err
 				}
@@ -65,7 +68,7 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 			}
 
 			traceWriterFile, _ := cmd.Flags().GetString(flagTraceStore)
-			traceWriter, cleanup, err := server.SetupTraceWriter(serverCtx.Logger, traceWriterFile) //resleak:notresource
+			traceWriter, cleanup, err := server.SetupTraceWriter(logger, traceWriterFile) //resleak:notresource
 			if err != nil {
 				return err
 			}
@@ -77,12 +80,12 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 			modulesToExport, _ := cmd.Flags().GetStringSlice(flagModulesToExport)
 			outputDocument, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 
-			exported, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs, serverCtx.Viper, modulesToExport)
+			exported, err := appExporter(logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs, viper, modulesToExport)
 			if err != nil {
 				return fmt.Errorf("error exporting state: %w", err)
 			}
 
-			appGenesis, err := genutiltypes.AppGenesisFromFile(serverCtx.Config.GenesisFile())
+			appGenesis, err := genutiltypes.AppGenesisFromFile(config.GenesisFile())
 			if err != nil {
 				return err
 			}

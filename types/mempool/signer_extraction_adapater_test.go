@@ -1,12 +1,15 @@
 package mempool_test
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/core/transaction"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -20,8 +23,28 @@ func (n nonVerifiableTx) GetMsgs() []sdk.Msg {
 	panic("not implemented")
 }
 
-func (n nonVerifiableTx) GetMsgsV2() ([]proto.Message, error) {
+func (n nonVerifiableTx) GetReflectMessages() ([]protoreflect.Message, error) {
 	panic("not implemented")
+}
+
+func (n nonVerifiableTx) Bytes() []byte {
+	return []byte{}
+}
+
+func (n nonVerifiableTx) Hash() [32]byte {
+	return [32]byte{}
+}
+
+func (n nonVerifiableTx) GetGasLimit() (uint64, error) {
+	return 0, nil
+}
+
+func (n nonVerifiableTx) GetMessages() ([]transaction.Msg, error) {
+	return nil, nil
+}
+
+func (n nonVerifiableTx) GetSenders() ([][]byte, error) {
+	return nil, nil
 }
 
 func TestDefaultSignerExtractor(t *testing.T) {
@@ -30,7 +53,7 @@ func TestDefaultSignerExtractor(t *testing.T) {
 	ext := mempool.NewDefaultSignerExtractionAdapter()
 	goodTx := testTx{id: 0, priority: 0, nonce: 0, address: sa}
 	badTx := &sigErrTx{getSigs: func() ([]txsigning.SignatureV2, error) {
-		return nil, fmt.Errorf("error")
+		return nil, errors.New("error")
 	}}
 	nonSigVerify := nonVerifiableTx{}
 
@@ -41,7 +64,7 @@ func TestDefaultSignerExtractor(t *testing.T) {
 		err  error
 	}{
 		{name: "valid tx extracts sigs", tx: goodTx, sea: ext, err: nil},
-		{name: "invalid tx fails on sig", tx: badTx, sea: ext, err: fmt.Errorf("err")},
+		{name: "invalid tx fails on sig", tx: badTx, sea: ext, err: errors.New("err")},
 		{name: "non-verifiable tx fails on conversion", tx: nonSigVerify, sea: ext, err: fmt.Errorf("tx of type %T does not implement SigVerifiableTx", nonSigVerify)},
 	}
 	for _, test := range tests {

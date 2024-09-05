@@ -843,7 +843,7 @@ func (*QueryConfigRequest) Descriptor() ([]byte, []int) {
 	return file_cosmos_app_v1alpha1_query_proto_rawDescGZIP(), []int{0}
 }
 
-// QueryConfigRequest is the Query/Config response type.
+// QueryConfigResponse is the Query/Config response type.
 type QueryConfigResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Configuration
 
-This documentation refers to the app.toml, if you'd like to read about the config.toml please visit [CometBFT docs](https://docs.cometbft.com/v0.37/).
+This documentation refers to the `app.toml`, if you'd like to learn more about CometBFT configuration (`config.toml`) please visit the [CometBFT Configuration Manual](https://docs.cometbft.com/v1.0/references/config/).
 
 <!-- the following is not a python reference, however syntax coloring makes the file more readable in the docs -->
 ```python reference

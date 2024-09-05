@@ -1,10 +1,9 @@
 package types
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"time"
-
-	"github.com/cometbft/cometbft/crypto/tmhash"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/comet"
@@ -27,7 +26,10 @@ func (e *Equivocation) Hash() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return tmhash.Sum(bz)
+
+	hash := sha256.Sum256(bz)
+
+	return hash[:]
 }
 
 // ValidateBasic performs basic stateless validation checks on an Equivocation object.

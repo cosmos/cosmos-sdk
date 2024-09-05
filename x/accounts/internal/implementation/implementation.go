@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
@@ -30,7 +31,7 @@ type AccountCreatorFunc = func(deps Dependencies) (string, Account, error)
 // MakeAccountsMap creates a map of account names to account implementations
 // from a list of account creator functions.
 func MakeAccountsMap(
-	cdc codec.BinaryCodec,
+	cdc codec.Codec,
 	addressCodec address.Codec,
 	env appmodule.Environment,
 	accounts []AccountCreatorFunc,
@@ -107,11 +108,11 @@ func newImplementation(schemaBuilder *collections.SchemaBuilder, account Account
 // and non-generic implementation usable by the x/accounts module.
 type Implementation struct {
 	// Init defines the initialisation handler for the smart account.
-	Init func(ctx context.Context, msg ProtoMsg) (resp ProtoMsg, err error)
+	Init func(ctx context.Context, msg transaction.Msg) (resp transaction.Msg, err error)
 	// Execute defines the execution handler for the smart account.
-	Execute func(ctx context.Context, msg ProtoMsg) (resp ProtoMsg, err error)
+	Execute func(ctx context.Context, msg transaction.Msg) (resp transaction.Msg, err error)
 	// Query defines the query handler for the smart account.
-	Query func(ctx context.Context, msg ProtoMsg) (resp ProtoMsg, err error)
+	Query func(ctx context.Context, msg transaction.Msg) (resp transaction.Msg, err error)
 	// CollectionsSchema represents the state schema.
 	CollectionsSchema collections.Schema
 	// InitHandlerSchema represents the init handler schema.
@@ -123,19 +124,19 @@ type Implementation struct {
 }
 
 // HasExec returns true if the account can execute the given msg.
-func (i Implementation) HasExec(m ProtoMsg) bool {
+func (i Implementation) HasExec(m transaction.Msg) bool {
 	_, ok := i.ExecuteHandlersSchema[MessageName(m)]
 	return ok
 }
 
 // HasQuery returns true if the account can execute the given request.
-func (i Implementation) HasQuery(m ProtoMsg) bool {
+func (i Implementation) HasQuery(m transaction.Msg) bool {
 	_, ok := i.QueryHandlersSchema[MessageName(m)]
 	return ok
 }
 
 // HasInit returns true if the account uses the provided init message.
-func (i Implementation) HasInit(m ProtoMsg) bool {
+func (i Implementation) HasInit(m transaction.Msg) bool {
 	return i.InitHandlerSchema.RequestSchema.Name == MessageName(m)
 }
 
@@ -145,7 +146,7 @@ type MessageSchema struct {
 	// Name identifies the message name, this must be queryable from some reflection service.
 	Name string
 	// New is used to create a new message instance for the schema.
-	New func() ProtoMsg
+	New func() transaction.Msg
 }
 
 // HandlerSchema defines the schema of a handler.

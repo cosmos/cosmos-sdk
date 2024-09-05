@@ -1,12 +1,13 @@
 package v1beta1
 
 import (
-	context "context"
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/gov/types"
@@ -81,7 +82,7 @@ func (p Proposal) GetTitle() string {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (p Proposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (p Proposal) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var content Content
 	return unpacker.UnpackAny(p.Content, &content)
 }
@@ -89,7 +90,7 @@ func (p Proposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // Proposals is an array of proposal
 type Proposals []Proposal
 
-var _ codectypes.UnpackInterfacesMessage = Proposals{}
+var _ gogoprotoany.UnpackInterfacesMessage = Proposals{}
 
 // Equal returns true if two slices (order-dependant) of proposals are equal.
 func (p Proposals) Equal(other Proposals) bool {
@@ -118,7 +119,7 @@ func (p Proposals) String() string {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (p Proposals) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (p Proposals) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	for _, x := range p {
 		err := x.UnpackInterfaces(unpacker)
 		if err != nil {
@@ -141,10 +142,10 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(status.String()))
+		_, _ = s.Write([]byte(status.String()))
 	default:
 		// TODO: Do this conversion more directly
-		s.Write([]byte(fmt.Sprintf("%v", byte(status))))
+		_, _ = s.Write([]byte(fmt.Sprintf("%v", byte(status))))
 	}
 }
 

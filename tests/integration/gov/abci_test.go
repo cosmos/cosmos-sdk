@@ -8,7 +8,6 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/gov/keeper"
 	"cosmossdk.io/x/gov/types"
@@ -19,18 +18,21 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestUnregisteredProposal_InactiveProposalFails(t *testing.T) {
 	suite := createTestSuite(t)
 	ctx := suite.app.BaseApp.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
+	addr0Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[0])
+	require.NoError(t, err)
 
 	// manually set proposal in store
 	startTime, endTime := time.Now().Add(-4*time.Hour), ctx.BlockHeader().Time
 	proposal, err := v1.NewProposal([]sdk.Msg{
 		&v1.Proposal{}, // invalid proposal message
-	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addr0Str, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 
 	err = suite.GovKeeper.Proposals.Set(ctx, proposal.Id, proposal)
@@ -51,12 +53,13 @@ func TestUnregisteredProposal_ActiveProposalFails(t *testing.T) {
 	suite := createTestSuite(t)
 	ctx := suite.app.BaseApp.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 10, valTokens)
-
+	addr0Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[0])
+	require.NoError(t, err)
 	// manually set proposal in store
 	startTime, endTime := time.Now().Add(-4*time.Hour), ctx.BlockHeader().Time
 	proposal, err := v1.NewProposal([]sdk.Msg{
 		&v1.Proposal{}, // invalid proposal message
-	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
+	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addr0Str, v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	require.NoError(t, err)
 	proposal.Status = v1.StatusVotingPeriod
 	proposal.VotingEndTime = &endTime
@@ -194,7 +197,9 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithHeaderInfo(newHeader)
 
-	newDepositMsg := v1.NewMsgDeposit(addrs[1], proposalID, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)})
+	addr1Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[1])
+	require.NoError(t, err)
+	newDepositMsg := v1.NewMsgDeposit(addr1Str, proposalID, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100000)})
 
 	res1, err := govMsgSvr.Deposit(ctx, newDepositMsg)
 	require.NoError(t, err)
@@ -293,7 +298,9 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
 			ctx = ctx.WithHeaderInfo(newHeader)
 
-			newDepositMsg := v1.NewMsgDeposit(addrs[1], proposalID, proposalCoins)
+			addr1Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[1])
+			require.NoError(t, err)
+			newDepositMsg := v1.NewMsgDeposit(addr1Str, proposalID, proposalCoins)
 
 			res1, err := govMsgSvr.Deposit(ctx, newDepositMsg)
 			require.NoError(t, err)
@@ -373,7 +380,9 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			require.NoError(t, err)
 
 			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10*depositMultiplier))}
-			newDepositMsg := v1.NewMsgDeposit(addrs[0], proposal.Id, proposalCoins)
+			addr0Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[0])
+			require.NoError(t, err)
+			newDepositMsg := v1.NewMsgDeposit(addr0Str, proposal.Id, proposalCoins)
 
 			res, err := govMsgSvr.Deposit(ctx, newDepositMsg)
 			require.NoError(t, err)
@@ -433,7 +442,9 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10)))
-	newDepositMsg := v1.NewMsgDeposit(addrs[0], proposal.Id, proposalCoins)
+	addr0Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[0])
+	require.NoError(t, err)
+	newDepositMsg := v1.NewMsgDeposit(addr0Str, proposal.Id, proposalCoins)
 
 	govMsgSvr := keeper.NewMsgServerImpl(suite.GovKeeper)
 	res, err := govMsgSvr.Deposit(ctx, newDepositMsg)
@@ -531,7 +542,9 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			newHeader.Time = ctx.HeaderInfo().Time.Add(time.Duration(1) * time.Second)
 			ctx = ctx.WithHeaderInfo(newHeader)
 
-			newDepositMsg := v1.NewMsgDeposit(addrs[1], proposalID, proposalCoins)
+			addr1Str, err := suite.AccountKeeper.AddressCodec().BytesToString(addrs[1])
+			require.NoError(t, err)
+			newDepositMsg := v1.NewMsgDeposit(addr1Str, proposalID, proposalCoins)
 
 			res1, err := govMsgSvr.Deposit(ctx, newDepositMsg)
 			require.NoError(t, err)

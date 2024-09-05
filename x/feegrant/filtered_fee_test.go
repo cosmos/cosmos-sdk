@@ -1,12 +1,15 @@
 package feegrant_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -138,8 +141,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 		},
 	}
 
-	for name, stc := range cases {
-		tc := stc // to make scopelint happy
+	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			err := tc.allowance.ValidateBasic()
 			require.NoError(t, err)
@@ -147,7 +149,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: tc.blockTime})
 
 			// create grant
-			var granter, grantee sdk.AccAddress
+			granter, grantee := sdk.AccAddress("granter"), sdk.AccAddress("grantee")
 			allowance, err := feegrant.NewAllowedMsgAllowance(tc.allowance, tc.msgs)
 			require.NoError(t, err)
 			granterStr, err := ac.BytesToString(granter)
@@ -156,7 +158,10 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			require.NoError(t, err)
 
 			// now try to deduct
-			removed, err := allowance.Accept(ctx, tc.fee, []sdk.Msg{&call})
+			removed, err := allowance.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, appmodulev2.Environment{
+				HeaderService: mockHeaderService{},
+				GasService:    mockGasService{},
+			}), tc.fee, []sdk.Msg{&call})
 			if !tc.accept {
 				require.Error(t, err)
 				return

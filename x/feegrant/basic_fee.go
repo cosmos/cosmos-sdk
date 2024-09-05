@@ -2,8 +2,11 @@ package feegrant
 
 import (
 	"context"
-	time "time"
+	"errors"
+	"time"
 
+	"cosmossdk.io/core/appmodule"
+	corecontext "cosmossdk.io/core/context"
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,8 +26,12 @@ var _ FeeAllowanceI = (*BasicAllowance)(nil)
 // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 // (eg. when it is used up). (See call to RevokeAllowance in Keeper.UseGrantedFees)
 func (a *BasicAllowance) Accept(ctx context.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if a.Expiration != nil && a.Expiration.Before(sdkCtx.HeaderInfo().Time) {
+	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
+	if !ok {
+		return false, errors.New("environment not set")
+	}
+	headerInfo := environment.HeaderService.HeaderInfo(ctx)
+	if a.Expiration != nil && a.Expiration.Before(headerInfo.Time) {
 		return true, errorsmod.Wrap(ErrFeeLimitExpired, "basic allowance")
 	}
 
@@ -65,4 +72,4 @@ func (a BasicAllowance) ExpiresAt() (*time.Time, error) {
 }
 
 // UpdatePeriodReset BasicAllowance does not update "PeriodReset"
-func (a BasicAllowance) UpdatePeriodReset(validTime time.Time) error { return nil }
+func (a BasicAllowance) UpdatePeriodReset(_ time.Time) error { return nil }

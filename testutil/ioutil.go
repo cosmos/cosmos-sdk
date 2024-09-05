@@ -38,7 +38,7 @@ func ApplyMockIO(c *cobra.Command) (BufferReader, BufferWriter) {
 	return mockIn, mockOut
 }
 
-// ApplyMockIODiscardOutputs replaces a cobra.Command output and error streams with a dummy io.Writer.
+// ApplyMockIODiscardOutErr replaces a cobra.Command output and error streams with a dummy io.Writer.
 // Replaces and returns the io.Reader associated to the cobra.Command input stream.
 func ApplyMockIODiscardOutErr(c *cobra.Command) BufferReader {
 	mockIn := strings.NewReader("")

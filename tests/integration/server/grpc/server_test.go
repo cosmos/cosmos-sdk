@@ -12,8 +12,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	authclient "cosmossdk.io/x/auth/client"
+	_ "cosmossdk.io/x/accounts"
+	_ "cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/consensus"
+	_ "cosmossdk.io/x/staking"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,12 +24,16 @@ import (
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	reflectionv2 "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 type IntegrationTestSuite struct {
@@ -41,7 +48,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	var err error
 	s.T().Log("setting up integration test suite")
 
-	s.cfg, err = network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
+	s.cfg, err = network.DefaultConfigWithAppConfig(configurator.NewAppConfig(
+		configurator.AccountsModule(),
+		configurator.AuthModule(),
+		configurator.BankModule(),
+		configurator.GenutilModule(),
+		configurator.StakingModule(),
+		configurator.ConsensusModule(),
+		configurator.TxModule(),
+	))
 	s.NoError(err)
 	s.cfg.NumValidators = 1
 
@@ -52,7 +67,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	val0 := s.network.GetValidators()[0]
-	s.conn, err = grpc.Dial(
+	s.conn, err = grpc.NewClient(
 		val0.GetAppConfig().GRPC.Address,
 		grpc.WithInsecure(), //nolint:staticcheck // ignore SA1019, we don't need to use a secure connection for tests
 		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(s.cfg.InterfaceRegistry).GRPCCodec())),

@@ -172,7 +172,7 @@ func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMeta
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
-	kvStore := runtime.KVStoreAdapter(k.environment.KVStoreService.OpenKVStore(c))
+	kvStore := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(c))
 	store := prefix.NewStore(kvStore, types.DenomMetadataPrefix)
 
 	metadatas := []types.Metadata{}
@@ -292,7 +292,11 @@ func (k BaseKeeper) DenomOwners(
 			if err != nil {
 				return nil, err
 			}
-			return &types.DenomOwner{Address: key.K2().String(), Balance: sdk.NewCoin(req.Denom, amt)}, nil
+			addr, err := k.ak.AddressCodec().BytesToString(key.K2())
+			if err != nil {
+				return nil, err
+			}
+			return &types.DenomOwner{Address: addr, Balance: sdk.NewCoin(req.Denom, amt)}, nil
 		},
 		query.WithCollectionPaginationPairPrefix[string, sdk.AccAddress](req.Denom),
 	)

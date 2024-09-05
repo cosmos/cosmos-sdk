@@ -25,7 +25,7 @@ func NewQuerier(keeper Keeper) Querier {
 }
 
 // CommunityPool queries the community pool coins
-func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
+func (k Querier) CommunityPool(ctx context.Context, _ *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
 	amount, err := k.Keeper.GetCommunityPool(ctx)
 	if err != nil {
 		return nil, err
@@ -50,28 +50,25 @@ func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedB
 		}
 		return nil, err
 	}
+
+	totalBudgetAmountLeftToDistribute := budget.BudgetPerTranche.Amount.Mul(math.NewIntFromUint64(budget.TranchesLeft))
+	totalBudgetAmountLeft := sdk.NewCoin(budget.BudgetPerTranche.Denom, totalBudgetAmountLeftToDistribute)
+
 	var unclaimedBudget sdk.Coin
 	if budget.ClaimedAmount == nil {
-		unclaimedBudget = *budget.TotalBudget
-		zeroCoin := sdk.NewCoin(budget.TotalBudget.Denom, math.ZeroInt())
+		unclaimedBudget = totalBudgetAmountLeft
+		zeroCoin := sdk.NewCoin(budget.BudgetPerTranche.Denom, math.ZeroInt())
 		budget.ClaimedAmount = &zeroCoin
 	} else {
-		unclaimedBudget = budget.TotalBudget.Sub(*budget.ClaimedAmount)
+		unclaimedBudget = totalBudgetAmountLeft
 	}
 
-	if budget.NextClaimFrom == nil {
-		budget.NextClaimFrom = budget.StartTime
-	}
-
-	if budget.TranchesLeft == 0 {
-		budget.TranchesLeft = budget.Tranches
-	}
+	nextClaimFrom := budget.LastClaimedAt.Add(*budget.Period)
 
 	return &types.QueryUnclaimedBudgetResponse{
-		TotalBudget:     budget.TotalBudget,
 		ClaimedAmount:   budget.ClaimedAmount,
 		UnclaimedAmount: &unclaimedBudget,
-		NextClaimFrom:   budget.NextClaimFrom,
+		NextClaimFrom:   &nextClaimFrom,
 		Period:          budget.Period,
 		TranchesLeft:    budget.TranchesLeft,
 	}, nil

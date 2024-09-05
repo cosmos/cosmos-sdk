@@ -12,20 +12,28 @@ This document explains what application-specific blockchains are, and why develo
 
 Application-specific blockchains are blockchains customized to operate a single application. Instead of building a decentralized application on top of an underlying blockchain like Ethereum, developers build their own blockchain from the ground up. This means building a full-node client, a light-client, and all the necessary interfaces (CLI, REST, ...) to interact with the nodes.
 
-```text
-                ^  +-------------------------------+  ^
-                |  |                               |  |   Built with Cosmos SDK
-                |  |  State-machine = Application  |  |
-                |  |                               |  v
-                |  +-------------------------------+
-                |  |                               |  ^
-Blockchain node |  |           Consensus           |  |
-                |  |                               |  |
-                |  +-------------------------------+  |   CometBFT
-                |  |                               |  |
-                |  |           Networking          |  |
-                |  |                               |  |
-                v  +-------------------------------+  v
+```mermaid
+flowchart TD
+    subgraph Blockchain_Node[Blockchain Node]
+        subgraph SM[State-machine]
+            direction TB
+            SM1[Cosmos SDK]
+        end
+        subgraph Consensus[Consensus]
+            direction TB
+        end
+        subgraph Networking[Networking]
+            direction TB
+        end
+    end
+
+    SM <--> Consensus
+    Consensus <--> Networking
+
+
+    Blockchain_Node -->|Includes| SM
+    Blockchain_Node -->|Includes| Consensus
+    Blockchain_Node -->|Includes| Networking
 ```
 
 ## What are the shortcomings of Smart Contracts
@@ -46,7 +54,7 @@ Application-Specific Blockchains are designed to address these shortcomings.
 
 Application-specific blockchains give maximum flexibility to developers:
 
-* In Cosmos blockchains, the state-machine is typically connected to the underlying consensus engine via an interface called the [ABCI](https://docs.cometbft.com/v0.37/spec/abci/). This interface can be wrapped in any programming language, meaning developers can build their state-machine in the programming language of their choice.
+* In Cosmos blockchains, the state-machine is typically connected to the underlying consensus engine via an interface called the [ABCI](https://docs.cometbft.com/v1.0/spec/abci/) (Application Blockchain Interface). This interface can be wrapped in any programming language, meaning developers can build their state-machine in the programming language of their choice.
 
 * Developers can choose among multiple frameworks to build their state-machine. The most widely used today is the Cosmos SDK, but others exist (e.g. [Lotion](https://github.com/nomic-io/lotion), [Weave](https://github.com/iov-one/weave), ...). Typically the choice will be made based on the programming language they want to use (Cosmos SDK and Weave are in Golang, Lotion is in Javascript, ...).
 * The ABCI also allows developers to swap the consensus engine of their application-specific blockchain. Today, only CometBFT is production-ready, but in the future other consensus engines are expected to emerge.
@@ -60,7 +68,7 @@ The list above contains a few examples that show how much flexibility applicatio
 
 Decentralized applications built with Smart Contracts are inherently capped in performance by the underlying environment. For a decentralized application to optimise performance, it needs to be built as an application-specific blockchain. Next are some of the benefits an application-specific blockchain brings in terms of performance:
 
-* Developers of application-specific blockchains can choose to operate with a novel consensus engine such as CometBFT BFT. Compared to Proof-of-Work (used by most virtual-machine blockchains today), it offers significant gains in throughput.
+* Developers of application-specific blockchains can choose to operate with a novel consensus engine such as CometBFT.
 * An application-specific blockchain only operates a single application, so that the application does not compete with others for computation and storage. This is the opposite of most non-sharded virtual-machine blockchains today, where smart contracts all compete for computation and storage.
 * Even if a virtual-machine blockchain offered application-based sharding coupled with an efficient consensus algorithm, performance would still be limited by the virtual-machine itself. The real throughput bottleneck is the state-machine, and requiring transactions to be interpreted by a virtual-machine significantly increases the computational complexity of processing them.
 

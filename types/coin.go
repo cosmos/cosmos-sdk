@@ -285,7 +285,7 @@ func (coins Coins) Validate() error {
 	}
 }
 
-// IsSorted returns true when coins are order ASC sorted with denoms.
+// IsSorted returns true when coins are sorted in ASC order by denoms.
 func (coins Coins) IsSorted() bool {
 	for i := 1; i < len(coins); i++ {
 		if coins[i-1].Denom > coins[i].Denom {
@@ -865,8 +865,6 @@ func SetCoinDenomRegex(reFn func() string) {
 // ValidateDenom is the default validation function for Coin.Denom.
 func ValidateDenom(denom string) error {
 	if reDnm == nil || reDecCoin == nil {
-		// Convert the string to a byte slice as required by the Ragel-generated function.
-
 		// Call the Ragel-generated function.
 		if !MatchDenom(denom) {
 			return fmt.Errorf("invalid denom: %s", denom)

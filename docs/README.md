@@ -1,6 +1,6 @@
 # Updating the docs
 
-::note
+:::note
 The documentation is built from [cosmos-sdk-docs repo](https://github.com/cosmos/cosmos-sdk-docs) and is hosted on [docs.cosmos.network](https://docs.cosmos.network).
 :::
 

@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"time"
 
@@ -255,7 +256,7 @@ var timeSize = len(FormatTimeBytes(time.Time{}))
 
 func (timeKeyCodec) Decode(buffer []byte) (int, time.Time, error) {
 	if len(buffer) != timeSize {
-		return 0, time.Time{}, fmt.Errorf("invalid time buffer buffer size")
+		return 0, time.Time{}, errors.New("invalid time buffer size")
 	}
 	t, err := ParseTimeBytes(buffer)
 	if err != nil {

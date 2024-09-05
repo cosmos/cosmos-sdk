@@ -2,8 +2,11 @@ package types
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appmodule"
+	corecontext "cosmossdk.io/core/context"
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,13 +14,13 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// TODO: Revisit this once we have propoer gas fee framework.
+// TODO: Revisit this once we have proper gas fee framework.
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(10)
 
 // NewStakeAuthorization creates a new StakeAuthorization object.
-func NewStakeAuthorization(allowed, denied []sdk.ValAddress, authzType AuthorizationType, amount *sdk.Coin) (*StakeAuthorization, error) {
-	allowedValidators, deniedValidators, err := validateAllowAndDenyValidators(allowed, denied)
+func NewStakeAuthorization(allowed, denied []sdk.ValAddress, authzType AuthorizationType, amount *sdk.Coin, valAddressCodec address.Codec) (*StakeAuthorization, error) {
+	allowedValidators, deniedValidators, err := validateAllowAndDenyValidators(allowed, denied, valAddressCodec)
 	if err != nil {
 		return nil, err
 	}
@@ -61,12 +64,12 @@ func (a StakeAuthorization) MsgTypeURL() string {
 // is unspecified.
 func (a StakeAuthorization) ValidateBasic() error {
 	if a.MaxTokens != nil && a.MaxTokens.IsNegative() {
-		return errorsmod.Wrapf(fmt.Errorf("max tokens should be positive"),
+		return errorsmod.Wrapf(errors.New("max tokens should be positive"),
 			"negative coin amount: %v", a.MaxTokens)
 	}
 
 	if a.AuthorizationType == AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED {
-		return fmt.Errorf("unknown authorization type")
+		return errors.New("unknown authorization type")
 	}
 
 	return nil
@@ -99,11 +102,17 @@ func (a StakeAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 		return authz.AcceptResponse{}, sdkerrors.ErrInvalidRequest.Wrap("unknown msg type")
 	}
 
+	authzEnv, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
+	if !ok {
+		return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrap("environment not set")
+	}
 	isValidatorExists := false
 	allowedList := a.GetAllowList().GetAddress()
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, validator := range allowedList {
-		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "stake authorization")
+		if err := authzEnv.GasService.GasMeter(ctx).Consume(gasCostPerIteration, "stake authorization"); err != nil {
+			return authz.AcceptResponse{}, err
+		}
+
 		if validator == validatorAddress {
 			isValidatorExists = true
 			break
@@ -112,7 +121,10 @@ func (a StakeAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 
 	denyList := a.GetDenyList().GetAddress()
 	for _, validator := range denyList {
-		sdkCtx.GasMeter().ConsumeGas(gasCostPerIteration, "stake authorization")
+		if err := authzEnv.GasService.GasMeter(ctx).Consume(gasCostPerIteration, "stake authorization"); err != nil {
+			return authz.AcceptResponse{}, err
+		}
+
 		if validator == validatorAddress {
 			return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot delegate/undelegate to %s validator", validator)
 		}
@@ -153,7 +165,7 @@ func (a StakeAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.Acce
 	}, nil
 }
 
-func validateAllowAndDenyValidators(allowed, denied []sdk.ValAddress) ([]string, []string, error) {
+func validateAllowAndDenyValidators(allowed, denied []sdk.ValAddress, valAddressCodec address.Codec) ([]string, []string, error) {
 	if len(allowed) == 0 && len(denied) == 0 {
 		return nil, nil, sdkerrors.ErrInvalidRequest.Wrap("both allowed & deny list cannot be empty")
 	}
@@ -166,11 +178,15 @@ func validateAllowAndDenyValidators(allowed, denied []sdk.ValAddress) ([]string,
 	if len(allowed) > 0 {
 		foundAllowedValidators := make(map[string]bool, len(allowed))
 		for i, validator := range allowed {
-			if foundAllowedValidators[validator.String()] {
-				return nil, nil, sdkerrors.ErrInvalidRequest.Wrapf("duplicate allowed validator address: %s", validator.String())
+			valAddr, err := valAddressCodec.BytesToString(validator)
+			if err != nil {
+				return nil, nil, sdkerrors.ErrInvalidRequest.Wrap("could not convert validator address")
 			}
-			foundAllowedValidators[validator.String()] = true
-			allowedValidators[i] = validator.String()
+			if foundAllowedValidators[valAddr] {
+				return nil, nil, sdkerrors.ErrInvalidRequest.Wrapf("duplicate allowed validator address: %s", valAddr)
+			}
+			foundAllowedValidators[valAddr] = true
+			allowedValidators[i] = valAddr
 		}
 		return allowedValidators, nil, nil
 	}
@@ -178,11 +194,15 @@ func validateAllowAndDenyValidators(allowed, denied []sdk.ValAddress) ([]string,
 	deniedValidators := make([]string, len(denied))
 	foundDeniedValidators := make(map[string]bool, len(denied))
 	for i, validator := range denied {
-		if foundDeniedValidators[validator.String()] {
-			return nil, nil, sdkerrors.ErrInvalidRequest.Wrapf("duplicate denied validator address: %s", validator.String())
+		valAddr, err := valAddressCodec.BytesToString(validator)
+		if err != nil {
+			return nil, nil, sdkerrors.ErrInvalidRequest.Wrap("could not convert validator address")
 		}
-		foundDeniedValidators[validator.String()] = true
-		deniedValidators[i] = validator.String()
+		if foundDeniedValidators[valAddr] {
+			return nil, nil, sdkerrors.ErrInvalidRequest.Wrapf("duplicate denied validator address: %s", valAddr)
+		}
+		foundDeniedValidators[valAddr] = true
+		deniedValidators[i] = valAddr
 	}
 
 	return nil, deniedValidators, nil
@@ -200,7 +220,7 @@ func normalizeAuthzType(authzType AuthorizationType) (string, error) {
 	case AuthorizationType_AUTHORIZATION_TYPE_CANCEL_UNBONDING_DELEGATION:
 		return sdk.MsgTypeURL(&MsgCancelUnbondingDelegation{}), nil
 	default:
-		return "", errorsmod.Wrapf(fmt.Errorf("unknown authorization type"),
+		return "", errorsmod.Wrapf(errors.New("unknown authorization type"),
 			"cannot normalize authz type with %T", authzType)
 	}
 }

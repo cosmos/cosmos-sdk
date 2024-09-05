@@ -78,7 +78,7 @@ Example of how to define `gen` files can be found [here](https://docs.buf.build/
 
 #### `buf.gen.swagger.yaml`
 
-`buf.gen.swagger.yaml` generates the swagger documentation for the query and messages of the chain. This will only define the REST API end points that were defined in the query and msg servers. You can find examples of this [here](https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/bank/v1beta1/query.proto#L19)
+`buf.gen.swagger.yaml` generates the swagger documentation for the query and messages of the chain. This will only define the REST API end points that were defined in the query and msg servers. You can find examples of this [here](https://github.com/cosmos/cosmos-sdk/blob/main/x/bank/proto/cosmos/bank/v1beta1/query.proto)
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.swagger.yaml#L1-L6
@@ -98,7 +98,7 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.lock#L1-L16
 
 #### `buf.yaml`
 
-`buf.yaml` defines the [name of your package](https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.yaml#L3), which [breakage checker](https://docs.buf.build/tour/detect-breaking-changes) to use and how to [lint your protobuf files](https://docs.buf.build/tour/lint-your-api). 
+`buf.yaml` defines the [name of your package](https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.yaml#L3), which [breakage checker](https://docs.buf.build/tour/detect-breaking-changes) to use and how to [lint your protobuf files](https://buf.build/docs/tutorials/getting-started-with-buf-cli#lint-your-api). 
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.yaml#L1-L24

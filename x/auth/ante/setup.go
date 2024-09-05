@@ -3,8 +3,10 @@ package ante
 import (
 	"fmt"
 
+	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
+	consensusv1 "cosmossdk.io/x/consensus/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -21,10 +23,14 @@ type GasTx interface {
 // on gas provided and gas used.
 // CONTRACT: Must be first decorator in the chain
 // CONTRACT: Tx must implement GasTx interface
-type SetUpContextDecorator struct{}
+type SetUpContextDecorator struct {
+	env appmodule.Environment
+}
 
-func NewSetUpContextDecorator() SetUpContextDecorator {
-	return SetUpContextDecorator{}
+func NewSetUpContextDecorator(env appmodule.Environment) SetUpContextDecorator {
+	return SetUpContextDecorator{
+		env: env,
+	}
 }
 
 func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
@@ -39,11 +45,22 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, 
 
 	newCtx = SetGasMeter(ctx, gasTx.GetGas())
 
-	if cp := ctx.ConsensusParams(); cp.Block != nil {
+	// TODO: possibly cache the result of this query for other antehandlers to use
+	resp, err := sud.env.QueryRouterService.Invoke(ctx, &consensusv1.QueryParamsRequest{})
+	if err != nil {
+		return newCtx, err
+	}
+
+	res, ok := resp.(*consensusv1.QueryParamsResponse)
+	if !ok {
+		return newCtx, fmt.Errorf("unexpected response type: %T", resp)
+	}
+
+	if res.Params.Block != nil {
 		// If there exists a maximum block gas limit, we must ensure that the tx
 		// does not exceed it.
-		if cp.Block.MaxGas > 0 && gasTx.GetGas() > uint64(cp.Block.MaxGas) {
-			return newCtx, errorsmod.Wrapf(sdkerrors.ErrInvalidGasLimit, "tx gas limit %d exceeds block max gas %d", gasTx.GetGas(), cp.Block.MaxGas)
+		if res.Params.Block.MaxGas > 0 && gasTx.GetGas() > uint64(res.Params.Block.MaxGas) {
+			return newCtx, errorsmod.Wrapf(sdkerrors.ErrInvalidGasLimit, "tx gas limit %d exceeds block max gas %d", gasTx.GetGas(), res.Params.Block.MaxGas)
 		}
 	}
 
@@ -67,14 +84,14 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, 
 		}
 	}()
 
-	return next(newCtx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return next(newCtx, tx, false)
 }
 
 // SetGasMeter returns a new context with a gas meter set from a given context.
 func SetGasMeter(ctx sdk.Context, gasLimit uint64) sdk.Context {
 	// In various cases such as simulation and during the genesis block, we do not
 	// meter any gas utilization.
-	if ctx.ExecMode() == sdk.ExecModeSimulate || ctx.BlockHeight() == 0 {
+	if ctx.ExecMode() == sdk.ExecModeSimulate || ctx.BlockHeight() == 0 { // NOTE: using environment here breaks the API of SetGasMeter, an alternative must be found for server/v2. ref: https://github.com/cosmos/cosmos-sdk/issues/19640
 		return ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 	}
 

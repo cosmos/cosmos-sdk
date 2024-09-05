@@ -1,16 +1,15 @@
 package v4_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -27,7 +26,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
+
+type emptyCometService struct{}
+
+// CometInfo implements comet.Service.
+func (e *emptyCometService) CometInfo(context.Context) comet.Info {
+	return comet.Info{}
+}
 
 func TestFundsMigration(t *testing.T) {
 	keys := storetypes.NewKVStoreKeys(
@@ -37,23 +47,37 @@ func TestFundsMigration(t *testing.T) {
 	cms := integration.CreateMultiStore(keys, logger)
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, bank.AppModule{}, distribution.AppModule{})
 	ctx := sdk.NewContext(cms, true, logger)
-
+	addressCodec := addresscodec.NewBech32Codec(sdk.Bech32MainPrefix)
 	maccPerms := map[string][]string{
 		pooltypes.ModuleName: nil,
 		disttypes.ModuleName: {authtypes.Minter},
 	}
 
-	authority := authtypes.NewModuleAddress("gov")
+	authority, err := addressCodec.BytesToString(authtypes.NewModuleAddress("gov"))
+	require.NoError(t, err)
+
+	// gomock initializations
+	ctrl := gomock.NewController(t)
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+
+	accNum := uint64(0)
+	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currNum := accNum
+		accNum++
+		return currNum, nil
+	})
 
 	// create account keeper
 	accountKeeper := authkeeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		encCfg.Codec,
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		maccPerms,
-		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
+		addressCodec,
 		sdk.Bech32MainPrefix,
-		authority.String(),
+		authority,
 	)
 
 	// create bank keeper
@@ -62,13 +86,8 @@ func TestFundsMigration(t *testing.T) {
 		encCfg.Codec,
 		accountKeeper,
 		map[string]bool{},
-		authority.String(),
+		authority,
 	)
-
-	// gomock initializations
-	ctrl := gomock.NewController(t)
-	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
-	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	// create distribution keeper
 	distrKeeper := keeper.NewKeeper(
@@ -77,9 +96,9 @@ func TestFundsMigration(t *testing.T) {
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		poolKeeper,
+		&emptyCometService{},
 		disttypes.ModuleName,
-		authority.String(),
+		authority,
 	)
 
 	// Set feepool
@@ -87,7 +106,7 @@ func TestFundsMigration(t *testing.T) {
 	feepool := disttypes.FeePool{
 		CommunityPool: sdk.NewDecCoinsFromCoins(poolAmount),
 	}
-	err := distrKeeper.FeePool.Set(ctx, feepool)
+	err = distrKeeper.FeePool.Set(ctx, feepool)
 	require.NoError(t, err)
 
 	distrAcc := authtypes.NewEmptyModuleAccount(disttypes.ModuleName)

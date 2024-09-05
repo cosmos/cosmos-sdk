@@ -1,25 +1,27 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/master";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     gomod2nix = {
-      url = "github:nix-community/gomod2nix";
+      # https://github.com/nix-community/gomod2nix/pull/156
+      url = "github:nix-community/gomod2nix/pull/156/head";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.utils.follows = "flake-utils";
+      inputs.flake-utils.follows = "flake-utils";
     };
   };
 
-  outputs = { self, nixpkgs, gomod2nix, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, ... }@inputs:
     {
-      overlays.default = self: super: {
+      overlays.default = self: super: rec {
         simd = self.callPackage ./simapp { rev = self.shortRev or "dev"; };
+        go = simd.go; # to build the tools (e.g. gomod2nix) using the same go version
         rocksdb = super.rocksdb.overrideAttrs (_: rec {
-          version = "8.9.1";
+          version = "8.11.3";
           src = self.fetchFromGitHub {
             owner = "facebook";
             repo = "rocksdb";
             rev = "v${version}";
-            sha256 = "sha256-Pl7t4FVOvnORWFS+gjy2EEUQlPxjLukWW5I5gzCQwkI=";
+            sha256 = "sha256-OpEiMwGxZuxb9o3RQuSrwZMQGLhe9xLT1aa3HpI4KPs=";
           };
         });
       };
@@ -35,7 +37,7 @@
             inherit system;
             config = { };
             overlays = [
-              gomod2nix.overlays.default
+              inputs.gomod2nix.overlays.default
               self.overlays.default
             ];
           };
@@ -50,11 +52,11 @@
             simd = mkApp pkgs.simd;
           };
           devShells = rec {
-            default = simd;
-            simd = with pkgs; mkShell {
+            default = with pkgs; mkShell {
               buildInputs = [
-                go_1_22 # Use Go 1.22 version
+                go_1_23 # Use Go 1.23 version
                 rocksdb
+                gomod2nix
               ];
             };
           };

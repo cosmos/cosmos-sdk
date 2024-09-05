@@ -21,6 +21,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -147,6 +148,9 @@ func TestParseSubmitLegacyProposal(t *testing.T) {
 
 func TestParseSubmitProposal(t *testing.T) {
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr)
+	require.NoError(t, err)
+
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	banktypes.RegisterInterfaces(interfaceRegistry)
@@ -191,7 +195,7 @@ func TestParseSubmitProposal(t *testing.T) {
 	badJSON := testutil.WriteToNewTempFile(t, "bad json")
 
 	// nonexistent json
-	_, _, _, err := parseSubmitProposal(cdc, "fileDoesNotExist")
+	_, _, _, err = parseSubmitProposal(cdc, "fileDoesNotExist")
 	require.Error(t, err)
 
 	// invalid json
@@ -206,17 +210,17 @@ func TestParseSubmitProposal(t *testing.T) {
 	require.Len(t, msgs, 3)
 	msg1, ok := msgs[0].(*banktypes.MsgSend)
 	require.True(t, ok)
-	require.Equal(t, addr.String(), msg1.FromAddress)
-	require.Equal(t, addr.String(), msg1.ToAddress)
+	require.Equal(t, addrStr, msg1.FromAddress)
+	require.Equal(t, addrStr, msg1.ToAddress)
 	require.Equal(t, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))), msg1.Amount)
 	msg2, ok := msgs[1].(*stakingtypes.MsgDelegate)
 	require.True(t, ok)
-	require.Equal(t, addr.String(), msg2.DelegatorAddress)
-	require.Equal(t, addr.String(), msg2.ValidatorAddress)
+	require.Equal(t, addrStr, msg2.DelegatorAddress)
+	require.Equal(t, addrStr, msg2.ValidatorAddress)
 	require.Equal(t, sdk.NewCoin("stake", sdkmath.NewInt(10)), msg2.Amount)
 	msg3, ok := msgs[2].(*v1.MsgExecLegacyContent)
 	require.True(t, ok)
-	require.Equal(t, addr.String(), msg3.Authority)
+	require.Equal(t, addrStr, msg3.Authority)
 	textProp, ok := msg3.Content.GetCachedValue().(*v1beta1.TextProposal)
 	require.True(t, ok)
 	require.Equal(t, "My awesome title", textProp.Title)
@@ -300,6 +304,8 @@ func TestReadGovPropFlags(t *testing.T) {
 	argTitle := "--" + FlagTitle
 	argSummary := "--" + FlagSummary
 
+	fromAddrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(fromAddr)
+	require.NoError(t, err)
 	// cz is a shorter way to define coins objects for these tests.
 	cz := func(coins string) sdk.Coins {
 		rv, err := sdk.ParseCoinsNormalized(coins)
@@ -332,7 +338,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			args:     []string{},
 			exp: &v1.MsgSubmitProposal{
 				InitialDeposit: nil,
-				Proposer:       fromAddr.String(),
+				Proposer:       fromAddrStr,
 				Metadata:       "",
 				Title:          "",
 				Summary:        "",
@@ -547,7 +553,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			},
 			exp: &v1.MsgSubmitProposal{
 				InitialDeposit: cz("56depcoin"),
-				Proposer:       fromAddr.String(),
+				Proposer:       fromAddrStr,
 				Metadata:       "my proposal is cool",
 				Title:          "Simple Gov Prop Title",
 				Summary:        "This is just a test summary on a simple gov prop.",
@@ -564,7 +570,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			},
 			exp: &v1.MsgSubmitProposal{
 				InitialDeposit: cz("78coolcoin"),
-				Proposer:       fromAddr.String(),
+				Proposer:       fromAddrStr,
 				Metadata:       "this proposal is cooler",
 				Title:          "This title is a *bit* more complex.",
 				Summary:        "This\nis\na\ncrazy\nsummary",
@@ -614,7 +620,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			},
 			exp: &v1.MsgSubmitProposal{
 				InitialDeposit: nil,
-				Proposer:       fromAddr.String(),
+				Proposer:       fromAddrStr,
 				Metadata:       "worthless metadata",
 				Title:          "This is a Title",
 				Summary:        "This is a useless summary",
@@ -631,7 +637,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			},
 			exp: &v1.MsgSubmitProposal{
 				InitialDeposit: cz("99mdcoin"),
-				Proposer:       fromAddr.String(),
+				Proposer:       fromAddrStr,
 				Metadata:       "",
 				Title:          "Bland Title",
 				Summary:        "Boring summary",
@@ -647,7 +653,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			},
 			exp: &v1.MsgSubmitProposal{
 				InitialDeposit: cz("71whatcoin"),
-				Proposer:       fromAddr.String(),
+				Proposer:       fromAddrStr,
 				Metadata:       "this metadata does not have the title either",
 				Title:          "",
 				Summary:        "This is a summary on a titleless proposal.",
@@ -664,7 +670,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			},
 			exp: &v1.MsgSubmitProposal{
 				InitialDeposit: cz("42musiccoin"),
-				Proposer:       fromAddr.String(),
+				Proposer:       fromAddrStr,
 				Metadata:       "28",
 				Title:          "Now This is What I Call A Governance Proposal 28",
 				Summary:        "",
@@ -687,7 +693,8 @@ func TestReadGovPropFlags(t *testing.T) {
 			flagSet := cmd.Flags()
 
 			clientCtx := client.Context{
-				FromAddress: tc.fromAddr,
+				FromAddress:  tc.fromAddr,
+				AddressCodec: codectestutil.CodecOptions{}.GetAddressCodec(),
 			}
 
 			var msg *v1.MsgSubmitProposal

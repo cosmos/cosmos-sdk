@@ -6,6 +6,7 @@ import (
 	"sort"
 	"time"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	sdkmath "cosmossdk.io/math"
 
@@ -145,6 +146,8 @@ func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simu
 type SimulationState struct {
 	AppParams         simulation.AppParams
 	Cdc               codec.JSONCodec                // application codec
+	AddressCodec      address.Codec                  // address codec
+	ValidatorCodec    address.Codec                  // validator address codec
 	TxConfig          client.TxConfig                // Shared TxConfig; this is expensive to create and stateless, so create it once up front.
 	Rand              *rand.Rand                     // random number
 	GenState          map[string]json.RawMessage     // genesis state

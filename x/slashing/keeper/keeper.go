@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
-	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/slashing/types"
 
@@ -19,8 +18,10 @@ import (
 
 // Keeper of the slashing store
 type Keeper struct {
-	environment appmodule.Environment
-	cdc         codec.BinaryCodec
+	appmodule.Environment
+
+	cdc codec.BinaryCodec
+	// deprecated!
 	legacyAmino *codec.LegacyAmino
 	sk          types.StakingKeeper
 
@@ -41,7 +42,7 @@ type Keeper struct {
 func NewKeeper(environment appmodule.Environment, cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, sk types.StakingKeeper, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(environment.KVStoreService)
 	k := Keeper{
-		environment: environment,
+		Environment: environment,
 		cdc:         cdc,
 		legacyAmino: legacyAmino,
 		sk:          sk,
@@ -83,24 +84,19 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
-// Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx context.Context) log.Logger {
-	return k.environment.Logger.With("module", "x/"+types.ModuleName)
-}
-
-// GetPubkey returns the pubkey from the adddress-pubkey relation
+// GetPubkey returns the pubkey from the address-pubkey relation
 func (k Keeper) GetPubkey(ctx context.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
 	return k.AddrPubkeyRelation.Get(ctx, a)
 }
 
 // Slash attempts to slash a validator. The slash is delegated to the staking
-// module to make the necessary validator changes. It specifies no intraction reason.
+// module to make the necessary validator changes. It specifies no infraction reason.
 func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, fraction sdkmath.LegacyDec, power, distributionHeight int64) error {
 	return k.SlashWithInfractionReason(ctx, consAddr, fraction, power, distributionHeight, st.Infraction_INFRACTION_UNSPECIFIED)
 }
 
 // SlashWithInfractionReason attempts to slash a validator. The slash is delegated to the staking
-// module to make the necessary validator changes. It specifies an intraction reason.
+// module to make the necessary validator changes. It specifies an infraction reason.
 func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.ConsAddress, fraction sdkmath.LegacyDec, power, distributionHeight int64, infraction st.Infraction) error {
 	coinsBurned, err := k.sk.SlashWithInfractionReason(ctx, consAddr, distributionHeight, power, fraction, infraction)
 	if err != nil {
@@ -120,7 +116,7 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 		return err
 	}
 
-	return k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeSlash,
 		event.NewAttribute(types.AttributeKeyAddress, consStr),
 		event.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
@@ -141,11 +137,7 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 		return err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeSlash,
-		event.NewAttribute(types.AttributeKeyJailed, consStr),
-	); err != nil {
-		return err
-	}
-	return nil
+		event.NewAttribute(types.AttributeKeyJailed, consStr))
 }

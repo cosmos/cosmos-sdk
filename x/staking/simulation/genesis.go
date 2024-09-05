@@ -34,7 +34,7 @@ func genMaxValidators(r *rand.Rand) (maxValidators uint32) {
 
 // getHistEntries returns randomized HistoricalEntries between 0-100.
 func getHistEntries(r *rand.Rand) uint32 {
-	return uint32(r.Intn(int(types.DefaultHistoricalEntries + 1)))
+	return uint32(r.Intn(int(0 + 1)))
 }
 
 // getKeyRotationFee returns randomized keyRotationFee between 10000-1000000.
@@ -64,7 +64,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	// NOTE: the slashing module need to be defined after the staking module on the
 	// NewSimulationManager constructor for this to work
 	simState.UnbondTime = unbondTime
-	params := types.NewParams(simState.UnbondTime, maxVals, 7, histEntries, simState.BondDenom, minCommissionRate, rotationFee)
+	params := types.NewParams(simState.UnbondTime, maxVals, 7, simState.BondDenom, minCommissionRate, rotationFee)
 
 	// validators & delegations
 	var (
@@ -76,6 +76,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	for i := 0; i < int(simState.NumBonded); i++ {
 		valAddr := sdk.ValAddress(simState.Accounts[i].Address)
+		ValStrAddress, err := simState.ValidatorCodec.BytesToString(valAddr)
+		if err != nil {
+			panic(err)
+		}
 		valAddrs[i] = valAddr
 
 		maxCommission := sdkmath.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(simState.Rand, 1, 100)), 2)
@@ -85,7 +89,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			simulation.RandomDecAmount(simState.Rand, maxCommission),
 		)
 
-		validator, err := types.NewValidator(valAddr.String(), simState.Accounts[i].ConsKey.PubKey(), types.Description{})
+		validator, err := types.NewValidator(ValStrAddress, simState.Accounts[i].ConsKey.PubKey(), types.Description{})
 		if err != nil {
 			panic(err)
 		}
@@ -93,7 +97,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 		validator.DelegatorShares = sdkmath.LegacyNewDecFromInt(simState.InitialStake)
 		validator.Commission = commission
 
-		delegation := types.NewDelegation(simState.Accounts[i].Address.String(), valAddr.String(), sdkmath.LegacyNewDecFromInt(simState.InitialStake))
+		accAddress, err := simState.AddressCodec.BytesToString(simState.Accounts[i].Address)
+		if err != nil {
+			panic(err)
+		}
+		delegation := types.NewDelegation(accAddress, ValStrAddress, sdkmath.LegacyNewDecFromInt(simState.InitialStake))
 
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)

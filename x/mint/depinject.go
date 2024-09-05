@@ -5,11 +5,12 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	authtypes "cosmossdk.io/x/auth/types"
+	epochstypes "cosmossdk.io/x/epochs/types"
 	"cosmossdk.io/x/mint/keeper"
 	"cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -30,7 +31,8 @@ type ModuleInputs struct {
 	Config                 *modulev1.Module
 	Environment            appmodule.Environment
 	Cdc                    codec.Codec
-	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
+	MintFn                 types.MintFn                 `optional:"true"`
+	InflationCalculationFn types.InflationCalculationFn `optional:"true"` // deprecated
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -42,6 +44,7 @@ type ModuleOutputs struct {
 
 	MintKeeper keeper.Keeper
 	Module     appmodule.AppModule
+	EpochHooks epochstypes.EpochHooksWrapper
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -71,8 +74,21 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		as,
 	)
 
-	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.InflationCalculationFn)
+	if in.MintFn != nil && in.InflationCalculationFn != nil {
+		panic("MintFn and InflationCalculationFn cannot both be set")
+	}
 
-	return ModuleOutputs{MintKeeper: k, Module: m}
+	// if no mintFn is provided, use the default minting function
+	if in.MintFn == nil {
+		// if no inflationCalculationFn is provided, use the default inflation calculation function
+		if in.InflationCalculationFn == nil {
+			in.InflationCalculationFn = types.DefaultInflationCalculationFn
+		}
+
+		in.MintFn = k.DefaultMintFn(in.InflationCalculationFn)
+	}
+
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.MintFn)
+
+	return ModuleOutputs{MintKeeper: k, Module: m, EpochHooks: epochstypes.EpochHooksWrapper{EpochHooks: m}}
 }

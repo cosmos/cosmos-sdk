@@ -339,7 +339,7 @@ func TestMap(t *testing.T) {
 	assert.ErrorContains(t, err, "invalid argument \"bar=123.9\" for \"--map-string-uint32\" flag: strconv.ParseUint: parsing \"123.9\": invalid syntax")
 }
 
-// TestEveything tests all the different types of flags are correctly read and as well as correctly returned
+// TestEverything tests all the different types of flags are correctly read and as well as correctly returned
 // This tests the flag binding and the message building
 func TestEverything(t *testing.T) {
 	fixture := initFixture(t)
@@ -684,7 +684,7 @@ func TestNotFoundErrorsQuery(t *testing.T) {
 	b.AddQueryConnFlags = nil
 	b.AddTxConnFlags = nil
 
-	buildModuleQueryCommand := func(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
+	buildModuleQueryCommand := func(_ string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
 		cmd := topLevelCmd(context.Background(), "query", "Querying subcommands")
 		err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
 		return cmd, err

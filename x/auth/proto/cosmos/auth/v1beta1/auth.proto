@@ -6,7 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 
-option go_package = "cosmossdk.io/x/auth/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 
 // BaseAccount defines a base account type. It contains all the necessary fields
 // for basic account functionality. Any custom account type should extend this
@@ -39,10 +39,9 @@ message ModuleAccount {
 }
 
 // ModuleCredential represents a unclaimable pubkey for base accounts controlled by modules.
-//
-// Since: cosmos-sdk 0.47
 message ModuleCredential {
-  option (amino.name) = "cosmos-sdk/GroupAccountCredential";
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.47";
+  option (amino.name)                    = "cosmos-sdk/GroupAccountCredential";
   // module_name is the name of the module used for address derivation (passed into address.Module).
   string module_name = 1;
   // derivation_keys is for deriving a module account address (passed into address.Module)

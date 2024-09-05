@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtabcitypes "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/core/address"
@@ -14,8 +15,8 @@ import (
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	authtx "cosmossdk.io/x/auth/tx"
-	authtypes "cosmossdk.io/x/auth/types"
+	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
+	consensusparamtypes "cosmossdk.io/x/consensus/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,8 +25,8 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
-	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const appName = "integration-app"
@@ -50,6 +51,8 @@ func NewIntegrationApp(
 	addressCodec address.Codec,
 	validatorCodec address.Codec,
 	modules map[string]appmodule.AppModule,
+	msgRouter *baseapp.MsgServiceRouter,
+	grpcRouter *baseapp.GRPCQueryRouter,
 ) *App {
 	db := dbm.NewMemDB()
 
@@ -61,16 +64,16 @@ func NewIntegrationApp(
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
 	bApp.MountKVStores(keys)
 
-	bApp.SetInitChainer(func(ctx sdk.Context, _ *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {
+	bApp.SetInitChainer(func(_ sdk.Context, _ *cmtabcitypes.InitChainRequest) (*cmtabcitypes.InitChainResponse, error) {
 		for _, mod := range modules {
 			if m, ok := mod.(module.HasGenesis); ok {
-				if err := m.InitGenesis(ctx, m.DefaultGenesis()); err != nil {
+				if err := m.InitGenesis(sdkCtx, m.DefaultGenesis()); err != nil {
 					return nil, err
 				}
 			}
 		}
 
-		return &cmtabcitypes.ResponseInitChain{}, nil
+		return &cmtabcitypes.InitChainResponse{}, nil
 	})
 
 	bApp.SetBeginBlocker(func(_ sdk.Context) (sdk.BeginBlock, error) {
@@ -80,20 +83,28 @@ func NewIntegrationApp(
 		return moduleManager.EndBlock(sdkCtx)
 	})
 
-	msgRouter := baseapp.NewMsgServiceRouter()
 	msgRouter.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetMsgServiceRouter(msgRouter)
+	grpcRouter.SetInterfaceRegistry(interfaceRegistry)
+	bApp.SetGRPCQueryRouter(grpcRouter)
 
 	if keys[consensusparamtypes.StoreKey] != nil {
 		// set baseApp param store
-		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithRouterService(baseapp.NewGRPCQueryRouter(), msgRouter)), authtypes.NewModuleAddress("gov").String())
+		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcRouter), runtime.EnvWithMsgRouterService(msgRouter)), authtypes.NewModuleAddress("gov").String())
 		bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
+		consensusparamtypes.RegisterQueryServer(grpcRouter, consensusParamsKeeper)
+
+		params := cmttypes.ConsensusParamsFromProto(*simtestutil.DefaultConsensusParams) // This fills up missing param sections
+		err := consensusParamsKeeper.ParamsStore.Set(sdkCtx, params.ToProto())
+		if err != nil {
+			panic(fmt.Errorf("failed to set consensus params: %w", err))
+		}
 
 		if err := bApp.LoadLatestVersion(); err != nil {
 			panic(fmt.Errorf("failed to load application version from store: %w", err))
 		}
 
-		if _, err := bApp.InitChain(&cmtabcitypes.RequestInitChain{ChainId: appName, ConsensusParams: simtestutil.DefaultConsensusParams}); err != nil {
+		if _, err := bApp.InitChain(&cmtabcitypes.InitChainRequest{ChainId: appName, ConsensusParams: simtestutil.DefaultConsensusParams}); err != nil {
 			panic(fmt.Errorf("failed to initialize application: %w", err))
 		}
 	} else {
@@ -101,7 +112,7 @@ func NewIntegrationApp(
 			panic(fmt.Errorf("failed to load application version from store: %w", err))
 		}
 
-		if _, err := bApp.InitChain(&cmtabcitypes.RequestInitChain{ChainId: appName}); err != nil {
+		if _, err := bApp.InitChain(&cmtabcitypes.InitChainRequest{ChainId: appName}); err != nil {
 			panic(fmt.Errorf("failed to initialize application: %w", err))
 		}
 	}
@@ -146,7 +157,7 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 
 	if cfg.AutomaticFinalizeBlock {
 		height := app.LastBlockHeight() + 1
-		if _, err := app.FinalizeBlock(&cmtabcitypes.RequestFinalizeBlock{Height: height, DecidedLastCommit: cmtabcitypes.CommitInfo{Votes: []cmtabcitypes.VoteInfo{{}}}}); err != nil {
+		if _, err := app.FinalizeBlock(&cmtabcitypes.FinalizeBlockRequest{Height: height, DecidedLastCommit: cmtabcitypes.CommitInfo{Votes: []cmtabcitypes.VoteInfo{{}}}}); err != nil {
 			return nil, fmt.Errorf("failed to run finalize block: %w", err)
 		}
 	}

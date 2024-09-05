@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/mint"
 	"cosmossdk.io/x/mint/keeper"
 	minttestutil "cosmossdk.io/x/mint/testutil"
@@ -22,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var minterAcc = authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
@@ -71,24 +71,25 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 		math.LegacyNewDecWithPrec(9, 2),
 		math.LegacyNewDecWithPrec(69, 2),
 		uint64(60*60*8766/5),
+		math.ZeroInt(),
 	)
 
 	err := s.keeper.InitGenesis(s.sdkCtx, s.accountKeeper, genesisState)
-	s.Require().NoError(err)
+	s.NoError(err)
 
 	minter, err := s.keeper.Minter.Get(s.sdkCtx)
-	s.Require().Equal(genesisState.Minter, minter)
-	s.Require().NoError(err)
+	s.Equal(genesisState.Minter, minter)
+	s.NoError(err)
 
 	invalidCtx := testutil.DefaultContextWithDB(s.T(), s.key, storetypes.NewTransientStoreKey("transient_test"))
 	_, err = s.keeper.Minter.Get(invalidCtx.Ctx)
-	s.Require().ErrorIs(err, collections.ErrNotFound)
+	s.ErrorIs(err, collections.ErrNotFound)
 
 	params, err := s.keeper.Params.Get(s.sdkCtx)
-	s.Require().Equal(genesisState.Params, params)
-	s.Require().NoError(err)
+	s.Equal(genesisState.Params, params)
+	s.NoError(err)
 
 	genesisState2, err := s.keeper.ExportGenesis(s.sdkCtx)
-	s.Require().NoError(err)
-	s.Require().Equal(genesisState, genesisState2)
+	s.NoError(err)
+	s.Equal(genesisState, genesisState2)
 }

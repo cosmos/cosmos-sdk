@@ -6,12 +6,13 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/x/auth/keeper"
-	"cosmossdk.io/x/auth/simulation"
-	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -28,13 +29,16 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config      *modulev1.Module
-	Environment appmodule.Environment
-	Cdc         codec.Codec
+	Config            *modulev1.Module
+	Environment       appmodule.Environment
+	Cdc               codec.Codec
+	AccountsModKeeper types.AccountsModKeeper
 
 	AddressCodec            address.Codec
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
 	AccountI                func() sdk.AccountI           `optional:"true"`
+
+	ExtensionOptionChecker ante.ExtensionOptionChecker `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -69,8 +73,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		panic(err)
 	}
 
-	k := keeper.NewAccountKeeper(in.Environment, in.Cdc, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, auth)
-	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn)
+	k := keeper.NewAccountKeeper(in.Environment, in.Cdc, in.AccountI, in.AccountsModKeeper, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, auth)
+	m := NewAppModule(in.Cdc, k, in.AccountsModKeeper, in.RandomGenesisAccountsFn, in.ExtensionOptionChecker)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}
 }

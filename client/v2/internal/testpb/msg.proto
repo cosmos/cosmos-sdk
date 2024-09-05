@@ -11,7 +11,13 @@ import "testpb/query.proto";
 
 service Msg {
   // Send a request and returns the request as a response.
-  rpc Send(MsgRequest) returns (MsgResponse);
+  rpc Send(MsgRequest) returns (MsgResponse) {
+    option (cosmos_proto.method_added_in) = "cosmos-sdk v0.50.0";
+  };
+
+  rpc Clawback(MsgClawbackRequest) returns (MsgClawbackResponse) {
+    option (cosmos_proto.method_added_in) = "cosmos-sdk v0.53.0 ";
+  }
 }
 
 message MsgRequest {
@@ -50,3 +56,7 @@ message MsgRequest {
 message MsgResponse {
   MsgRequest request = 1;
 }
+
+message MsgClawbackRequest {}
+
+message MsgClawbackResponse {}

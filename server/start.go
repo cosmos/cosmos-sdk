@@ -3,6 +3,8 @@ package server
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -12,14 +14,14 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/abci/server"
+	cmtstate "github.com/cometbft/cometbft/api/cometbft/state/v1"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
-	cmtstate "github.com/cometbft/cometbft/proto/tendermint/state"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/proxy"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cometbft/cometbft/rpc/client/local"
@@ -34,6 +36,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
@@ -93,10 +96,9 @@ const (
 
 	// gRPC-related flags
 
-	flagGRPCOnly      = "grpc-only"
-	flagGRPCEnable    = "grpc.enable"
-	flagGRPCAddress   = "grpc.address"
-	flagGRPCWebEnable = "grpc-web.enable"
+	flagGRPCOnly    = "grpc-only"
+	flagGRPCEnable  = "grpc.enable"
+	flagGRPCAddress = "grpc.address"
 
 	// mempool flags
 
@@ -116,7 +118,7 @@ const (
 type StartCmdOptions[T types.Application] struct {
 	// DBOpener can be used to customize db opening, for example customize db options or support different db backends,
 	// default to the builtin db opener.
-	DBOpener func(rootDir string, backendType dbm.BackendType) (dbm.DB, error)
+	DBOpener func(rootDir string, backendType dbm.BackendType) (corestore.KVStoreWithBatch, error)
 	// PostSetup can be used to setup extra services under the same cancellable context,
 	// it's not called in stand-alone mode, only for in-process mode.
 	PostSetup func(app T, svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
@@ -124,6 +126,8 @@ type StartCmdOptions[T types.Application] struct {
 	PostSetupStandalone func(app T, svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
 	// AddFlags add custom flags to start cmd
 	AddFlags func(cmd *cobra.Command)
+	// StartCommandHandler can be used to customize the start command handler
+	StartCommandHandler func(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator[T], withCMT bool, opts StartCmdOptions[T]) error
 }
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -137,6 +141,10 @@ func StartCmd[T types.Application](appCreator types.AppCreator[T]) *cobra.Comman
 func StartCmdWithOptions[T types.Application](appCreator types.AppCreator[T], opts StartCmdOptions[T]) *cobra.Command {
 	if opts.DBOpener == nil {
 		opts.DBOpener = OpenDB
+	}
+
+	if opts.StartCommandHandler == nil {
+		opts.StartCommandHandler = start
 	}
 
 	cmd := &cobra.Command{
@@ -187,7 +195,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 			}
 
 			err = wrapCPUProfile(serverCtx, func() error {
-				return start(serverCtx, clientCtx, appCreator, withCMT, opts)
+				return opts.StartCommandHandler(serverCtx, clientCtx, appCreator, withCMT, opts)
 			})
 
 			serverCtx.Logger.Debug("received quit signal")
@@ -251,7 +259,7 @@ func startStandAlone[T types.Application](svrCtx *Context, svrCfg serverconfig.C
 	if svrCfg.API.Enable || svrCfg.GRPC.Enable {
 		// create tendermint client
 		// assumes the rpc listen address is where tendermint has its rpc server
-		rpcclient, err := rpchttp.New(svrCtx.Config.RPC.ListenAddress, "/websocket")
+		rpcclient, err := rpchttp.New(svrCtx.Config.RPC.ListenAddress)
 		if err != nil {
 			return err
 		}
@@ -270,10 +278,7 @@ func startStandAlone[T types.Application](svrCtx *Context, svrCfg serverconfig.C
 		return err
 	}
 
-	cmtCfg := svrCtx.Config
-	home := cmtCfg.RootDir
-
-	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
+	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, svrCtx.Config.RootDir, grpcSrv, metrics)
 	if err != nil {
 		return err
 	}
@@ -304,8 +309,6 @@ func startInProcess[T types.Application](svrCtx *Context, svrCfg serverconfig.Co
 	metrics *telemetry.Metrics, opts StartCmdOptions[T],
 ) error {
 	cmtCfg := svrCtx.Config
-	home := cmtCfg.RootDir
-
 	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
 
 	g, ctx := getCtx(svrCtx, true)
@@ -341,7 +344,7 @@ func startInProcess[T types.Application](svrCtx *Context, svrCfg serverconfig.Co
 		return err
 	}
 
-	err = startAPIServer(ctx, g, cmtCfg, svrCfg, clientCtx, svrCtx, app, home, grpcSrv, metrics)
+	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, cmtCfg.RootDir, grpcSrv, metrics)
 	if err != nil {
 		return err
 	}
@@ -370,7 +373,7 @@ func startCmtNode(
 	}
 
 	cmtApp := NewCometABCIWrapper(app)
-	tmNode, err = node.NewNodeWithContext(
+	tmNode, err = node.NewNode(
 		ctx,
 		cfg,
 		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
@@ -411,14 +414,37 @@ func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
 }
 
 // getGenDocProvider returns a function which returns the genesis doc from the genesis file.
-func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) {
-	return func() (*cmttypes.GenesisDoc, error) {
-		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
-		if err != nil {
-			return nil, err
+func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, error) {
+	return func() (node.ChecksummedGenesisDoc, error) {
+		defaultGenesisDoc := node.ChecksummedGenesisDoc{
+			Sha256Checksum: []byte{},
 		}
 
-		return appGenesis.ToGenesisDoc()
+		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+		if err != nil {
+			return defaultGenesisDoc, err
+		}
+
+		gen, err := appGenesis.ToGenesisDoc()
+		if err != nil {
+			return defaultGenesisDoc, err
+		}
+
+		genbz, err := gen.AppState.MarshalJSON()
+		if err != nil {
+			return defaultGenesisDoc, err
+		}
+
+		bz, err := json.Marshal(genbz)
+		if err != nil {
+			return defaultGenesisDoc, err
+		}
+		sum := sha256.Sum256(bz)
+
+		return node.ChecksummedGenesisDoc{
+			GenesisDoc:     gen,
+			Sha256Checksum: sum[:],
+		}, nil
 	}
 }
 
@@ -472,7 +498,7 @@ func startGrpcServer(
 	}
 
 	// if gRPC is enabled, configure gRPC client for gRPC gateway
-	grpcClient, err := grpc.Dial(
+	grpcClient, err := grpc.NewClient(
 		config.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(
@@ -504,7 +530,6 @@ func startGrpcServer(
 func startAPIServer(
 	ctx context.Context,
 	g *errgroup.Group,
-	cmtCfg *cmtcfg.Config,
 	svrCfg serverconfig.Config,
 	clientCtx client.Context,
 	svrCtx *Context,
@@ -533,10 +558,6 @@ func startAPIServer(
 }
 
 func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
-	if !cfg.Telemetry.Enabled {
-		return nil, nil
-	}
-
 	return telemetry.New(cfg.Telemetry)
 }
 
@@ -612,7 +633,7 @@ func startApp[T types.Application](svrCtx *Context, appCreator types.AppCreator[
 
 	if isTestnet, ok := svrCtx.Viper.Get(KeyIsTestnet).(bool); ok && isTestnet {
 		var appPtr *T
-		appPtr, err = testnetify[T](svrCtx, home, appCreator, db, traceWriter)
+		appPtr, err = testnetify[T](svrCtx, appCreator, db, traceWriter)
 		if err != nil {
 			return app, traceCleanupFn, err
 		}
@@ -639,8 +660,12 @@ func InPlaceTestnetCreator[T types.Application](testnetAppCreator types.AppCreat
 		opts.DBOpener = OpenDB
 	}
 
+	if opts.StartCommandHandler == nil {
+		opts.StartCommandHandler = start
+	}
+
 	cmd := &cobra.Command{
-		Use:   "in-place-testnet [newChainID] [newOperatorAddress]",
+		Use:   "in-place-testnet <newChainID> <newOperatorAddress>",
 		Short: "Create and start a testnet from current local state",
 		Long: `Create and start a testnet from current local state.
 After utilizing this command the network will start. If the network is stopped,
@@ -703,7 +728,7 @@ you want to test the upgrade handler itself.
 			serverCtx.Viper.Set(KeyNewOpAddr, newOperatorAddress)
 
 			err = wrapCPUProfile(serverCtx, func() error {
-				return start(serverCtx, clientCtx, testnetAppCreator, withCMT, opts)
+				return opts.StartCommandHandler(serverCtx, clientCtx, testnetAppCreator, withCMT, opts)
 			})
 
 			serverCtx.Logger.Debug("received quit signal")
@@ -726,7 +751,7 @@ you want to test the upgrade handler itself.
 
 // testnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
 // that the state in the data folder represents. The chainID of the local genesis file is modified to match the provided chainID.
-func testnetify[T types.Application](ctx *Context, home string, testnetAppCreator types.AppCreator[T], db dbm.DB, traceWriter io.WriteCloser) (*T, error) {
+func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCreator[T], db corestore.KVStoreWithBatch, traceWriter io.WriteCloser) (*T, error) {
 	config := ctx.Config
 
 	newChainID, ok := ctx.Viper.Get(KeyNewChainID).(string)
@@ -772,15 +797,12 @@ func testnetify[T types.Application](ctx *Context, home string, testnetAppCreato
 		return nil, err
 	}
 	validatorAddress := userPubKey.Address()
-	if err != nil {
-		return nil, err
-	}
 
 	stateStore := sm.NewStore(stateDB, sm.StoreOptions{
 		DiscardABCIResponses: config.Storage.DiscardABCIResponses,
 	})
 
-	state, genDoc, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, genDocProvider)
+	state, genDoc, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, genDocProvider, "")
 	if err != nil {
 		return nil, err
 	}
@@ -796,14 +818,14 @@ func testnetify[T types.Application](ctx *Context, home string, testnetAppCreato
 	_, context := getCtx(ctx, true)
 	clientCreator := proxy.NewLocalClientCreator(cmtApp)
 	metrics := node.DefaultMetricsProvider(cmtcfg.DefaultConfig().Instrumentation)
-	_, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID)
+	_, _, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID) // nolint: dogsled // function from comet
 	proxyApp := proxy.NewAppConns(clientCreator, proxyMetrics)
 	if err := proxyApp.Start(); err != nil {
-		return nil, fmt.Errorf("error starting proxy app connections: %v", err)
+		return nil, fmt.Errorf("error starting proxy app connections: %w", err)
 	}
-	res, err := proxyApp.Query().Info(context, proxy.RequestInfo)
+	res, err := proxyApp.Query().Info(context, proxy.InfoRequest)
 	if err != nil {
-		return nil, fmt.Errorf("error calling Info: %v", err)
+		return nil, fmt.Errorf("error calling Info: %w", err)
 	}
 	err = proxyApp.Stop()
 	if err != nil {
@@ -815,7 +837,7 @@ func testnetify[T types.Application](ctx *Context, home string, testnetAppCreato
 	var block *cmttypes.Block
 	switch {
 	case appHeight == blockStore.Height():
-		block = blockStore.LoadBlock(blockStore.Height())
+		block, _ = blockStore.LoadBlock(blockStore.Height())
 		// If the state's last blockstore height does not match the app and blockstore height, we likely stopped with the halt height flag.
 		if state.LastBlockHeight != appHeight {
 			state.LastBlockHeight = appHeight
@@ -834,10 +856,10 @@ func testnetify[T types.Application](ctx *Context, home string, testnetAppCreato
 		if err != nil {
 			return nil, err
 		}
-		block = blockStore.LoadBlock(blockStore.Height())
+		block, _ = blockStore.LoadBlock(blockStore.Height())
 	default:
 		// If there is any other state, we just load the block
-		block = blockStore.LoadBlock(blockStore.Height())
+		block, _ = blockStore.LoadBlock(blockStore.Height())
 	}
 
 	block.ChainID = newChainID
@@ -860,7 +882,7 @@ func testnetify[T types.Application](ctx *Context, home string, testnetAppCreato
 
 	// Sign the vote, and copy the proto changes from the act of signing to the vote itself
 	voteProto := vote.ToProto()
-	err = privValidator.SignVote(newChainID, voteProto)
+	err = privValidator.SignVote(newChainID, voteProto, false)
 	if err != nil {
 		return nil, err
 	}
@@ -885,7 +907,7 @@ func testnetify[T types.Application](ctx *Context, home string, testnetAppCreato
 		return nil, err
 	}
 
-	// Create ValidatorSet struct containing just our valdiator.
+	// Create ValidatorSet struct containing just our validator.
 	newVal := &cmttypes.Validator{
 		Address:     validatorAddress,
 		PubKey:      userPubKey,
@@ -981,7 +1003,6 @@ func addStartNodeFlags[T types.Application](cmd *cobra.Command, opts StartCmdOpt
 	cmd.Flags().Bool(flagGRPCOnly, false, "Start the node in gRPC query only mode (no CometBFT process is started)")
 	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")
 	cmd.Flags().String(flagGRPCAddress, serverconfig.DefaultGRPCAddress, "the gRPC server address to listen on")
-	cmd.Flags().Bool(flagGRPCWebEnable, true, "Define if the gRPC-Web server should be enabled. (Note: gRPC must also be enabled)")
 	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")

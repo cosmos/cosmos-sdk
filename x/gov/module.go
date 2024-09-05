@@ -29,7 +29,6 @@ import (
 const ConsensusVersion = 6
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
@@ -37,7 +36,6 @@ var (
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasEndBlocker         = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
@@ -74,14 +72,15 @@ func NewAppModule(
 func (am AppModule) IsAppModule() {}
 
 // Name returns the gov module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return govtypes.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the gov module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	v1beta1.RegisterLegacyAminoCodec(cdc)
-	v1.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	v1beta1.RegisterLegacyAminoCodec(registrar)
+	v1.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the gov module.
@@ -123,7 +122,11 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	msgServer := keeper.NewMsgServerImpl(am.keeper)
-	v1beta1.RegisterMsgServer(registrar, keeper.NewLegacyMsgServerImpl(am.accountKeeper.GetModuleAddress(govtypes.ModuleName).String(), msgServer))
+	addr, err := am.accountKeeper.AddressCodec().BytesToString(am.accountKeeper.GetModuleAddress(govtypes.ModuleName))
+	if err != nil {
+		return err
+	}
+	v1beta1.RegisterMsgServer(registrar, keeper.NewLegacyMsgServerImpl(addr, msgServer))
 	v1.RegisterMsgServer(registrar, msgServer)
 
 	v1beta1.RegisterQueryServer(registrar, keeper.NewLegacyQueryServer(am.keeper))

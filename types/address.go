@@ -149,6 +149,7 @@ type Address interface {
 	Marshal() ([]byte, error)
 	MarshalJSON() ([]byte, error)
 	Bytes() []byte
+	// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 	String() string
 	Format(s fmt.State, verb rune)
 }
@@ -179,6 +180,7 @@ func AccAddressFromHexUnsafe(address string) (addr AccAddress, err error) {
 }
 
 // MustAccAddressFromBech32 calls AccAddressFromBech32 and panics on error.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func MustAccAddressFromBech32(address string) AccAddress {
 	addr, err := AccAddressFromBech32(address)
 	if err != nil {
@@ -189,6 +191,7 @@ func MustAccAddressFromBech32(address string) AccAddress {
 }
 
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
 
@@ -281,6 +284,7 @@ func (aa AccAddress) Bytes() []byte {
 }
 
 // String implements the Stringer interface.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func (aa AccAddress) String() string {
 	if aa.Empty() {
 		return ""
@@ -305,11 +309,11 @@ func (aa AccAddress) String() string {
 func (aa AccAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(aa.String()))
+		_, _ = s.Write([]byte(aa.String()))
 	case 'p':
-		s.Write([]byte(fmt.Sprintf("%p", aa)))
+		_, _ = s.Write([]byte(fmt.Sprintf("%p", aa)))
 	default:
-		s.Write([]byte(fmt.Sprintf("%X", []byte(aa))))
+		_, _ = s.Write([]byte(fmt.Sprintf("%X", []byte(aa))))
 	}
 }
 
@@ -328,6 +332,7 @@ func ValAddressFromHex(address string) (addr ValAddress, err error) {
 }
 
 // ValAddressFromBech32 creates a ValAddress from a Bech32 string.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -336,6 +341,7 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 }
 
 // MustValAddressFromBech32 calls ValAddressFromBech32 and panics on error.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func MustValAddressFromBech32(address string) ValAddress {
 	addr, err := ValAddressFromBech32(address)
 	if err != nil {
@@ -432,6 +438,7 @@ func (va ValAddress) Bytes() []byte {
 }
 
 // String implements the Stringer interface.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func (va ValAddress) String() string {
 	if va.Empty() {
 		return ""
@@ -456,11 +463,11 @@ func (va ValAddress) String() string {
 func (va ValAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(va.String()))
+		_, _ = s.Write([]byte(va.String()))
 	case 'p':
-		s.Write([]byte(fmt.Sprintf("%p", va)))
+		_, _ = s.Write([]byte(fmt.Sprintf("%p", va)))
 	default:
-		s.Write([]byte(fmt.Sprintf("%X", []byte(va))))
+		_, _ = s.Write([]byte(fmt.Sprintf("%X", []byte(va))))
 	}
 }
 
@@ -480,6 +487,7 @@ func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 }
 
 // ConsAddressFromBech32 creates a ConsAddress from a Bech32 string.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
 
@@ -579,6 +587,7 @@ func (ca ConsAddress) Bytes() []byte {
 }
 
 // String implements the Stringer interface.
+// Deprecated: Use an address.Codec to convert addresses from and to string/bytes.
 func (ca ConsAddress) String() string {
 	if ca.Empty() {
 		return ""
@@ -627,11 +636,11 @@ func MustBech32ifyAddressBytes(prefix string, bs []byte) string {
 func (ca ConsAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(ca.String()))
+		_, _ = s.Write([]byte(ca.String()))
 	case 'p':
-		s.Write([]byte(fmt.Sprintf("%p", ca)))
+		_, _ = s.Write([]byte(fmt.Sprintf("%p", ca)))
 	default:
-		s.Write([]byte(fmt.Sprintf("%X", []byte(ca))))
+		_, _ = s.Write([]byte(fmt.Sprintf("%X", []byte(ca))))
 	}
 }
 

@@ -1,28 +1,34 @@
 package integration_test
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
+	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/mint"
 	mintkeeper "cosmossdk.io/x/mint/keeper"
 	minttypes "cosmossdk.io/x/mint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // Example shows how to use the integration test framework to test the integration of SDK modules.
@@ -42,10 +48,21 @@ func Example() {
 	cms := integration.CreateMultiStore(keys, logger)
 	newCtx := sdk.NewContext(cms, true, logger)
 
+	// gomock initializations
+	ctrl := gomock.NewController(&testing.T{})
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	accNum := uint64(0)
+	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currentNum := accNum
+		accNum++
+		return currentNum, nil
+	})
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		encodingCfg.Codec,
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
@@ -53,7 +70,7 @@ func Example() {
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
-	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 
 	// here bankkeeper and staking keeper is nil because we are not testing them
 	// subspace is nil because we don't test params (which is legacy anyway)
@@ -72,6 +89,8 @@ func Example() {
 			authtypes.ModuleName: authModule,
 			minttypes.ModuleName: mintModule,
 		},
+		baseapp.NewMsgServiceRouter(),
+		baseapp.NewGRPCQueryRouter(),
 	)
 
 	// register the message and query servers
@@ -94,7 +113,7 @@ func Example() {
 	// in this example the result is an empty response, a nil check is enough
 	// in other cases, it is recommended to check the result value.
 	if result == nil {
-		panic(fmt.Errorf("unexpected nil result"))
+		panic(errors.New("unexpected nil result"))
 	}
 
 	// we now check the result
@@ -119,7 +138,7 @@ func Example() {
 	// Output: 10000
 }
 
-// ExampleOneModule shows how to use the integration test framework to test the integration of a single module.
+// Example_oneModule shows how to use the integration test framework to test the integration of a single module.
 // That module has no dependency on other modules.
 func Example_oneModule() {
 	// in this example we are testing the integration of the auth module:
@@ -133,10 +152,21 @@ func Example_oneModule() {
 	cms := integration.CreateMultiStore(keys, logger)
 	newCtx := sdk.NewContext(cms, true, logger)
 
+	// gomock initializations
+	ctrl := gomock.NewController(&testing.T{})
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	accNum := uint64(0)
+	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currentNum := accNum
+		accNum++
+		return currentNum, nil
+	})
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		encodingCfg.Codec,
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
@@ -144,7 +174,7 @@ func Example_oneModule() {
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
-	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 
 	// create the application and register all the modules from the previous step
 	integrationApp := integration.NewIntegrationApp(
@@ -157,6 +187,8 @@ func Example_oneModule() {
 		map[string]appmodule.AppModule{
 			authtypes.ModuleName: authModule,
 		},
+		baseapp.NewMsgServiceRouter(),
+		baseapp.NewGRPCQueryRouter(),
 	)
 
 	// register the message and query servers
@@ -189,7 +221,7 @@ func Example_oneModule() {
 	// in this example the result is an empty response, a nil check is enough
 	// in other cases, it is recommended to check the result value.
 	if result == nil {
-		panic(fmt.Errorf("unexpected nil result"))
+		panic(errors.New("unexpected nil result"))
 	}
 
 	// we now check the result

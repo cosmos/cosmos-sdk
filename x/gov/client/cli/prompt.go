@@ -12,13 +12,14 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 
-	authtypes "cosmossdk.io/x/auth/types"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/gov/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (
@@ -64,7 +65,7 @@ var suggestedProposalTypes = []proposalType{
 // namePrefix is the name to be displayed as "Enter <namePrefix> <field>"
 // TODO: when bringing this in autocli, use proto message instead
 // this will simplify the get address logic
-func Prompt[T any](data T, namePrefix string) (T, error) {
+func Prompt[T any](data T, namePrefix string, addressCodec address.Codec) (T, error) {
 	v := reflect.ValueOf(&data).Elem()
 	if v.Kind() == reflect.Interface {
 		v = reflect.ValueOf(data)
@@ -95,7 +96,11 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 
 		if strings.EqualFold(fieldName, "authority") {
 			// pre-fill with gov address
-			prompt.Default = authtypes.NewModuleAddress(types.ModuleName).String()
+			defaultAddr, err := addressCodec.BytesToString(authtypes.NewModuleAddress(types.ModuleName))
+			if err != nil {
+				return data, err
+			}
+			prompt.Default = defaultAddr
 			prompt.Validate = client.ValidatePromptAddress
 		}
 
@@ -158,8 +163,8 @@ type proposalType struct {
 }
 
 // Prompt the proposal type values and return the proposal and its metadata
-func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool) (*proposal, types.ProposalMetadata, error) {
-	metadata, err := PromptMetadata(skipMetadata)
+func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool, addressCodec address.Codec) (*proposal, types.ProposalMetadata, error) {
+	metadata, err := PromptMetadata(skipMetadata, addressCodec)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
 	}
@@ -185,7 +190,7 @@ func (p *proposalType) Prompt(cdc codec.Codec, skipMetadata bool) (*proposal, ty
 	}
 
 	// set messages field
-	result, err := Prompt(p.Msg, "msg")
+	result, err := Prompt(p.Msg, "msg", addressCodec)
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal message: %w", err)
 	}
@@ -209,9 +214,9 @@ func getProposalSuggestions() []string {
 }
 
 // PromptMetadata prompts for proposal metadata or only title and summary if skip is true
-func PromptMetadata(skip bool) (types.ProposalMetadata, error) {
+func PromptMetadata(skip bool, addressCodec address.Codec) (types.ProposalMetadata, error) {
 	if !skip {
-		metadata, err := Prompt(types.ProposalMetadata{}, "proposal")
+		metadata, err := Prompt(types.ProposalMetadata{}, "proposal", addressCodec)
 		if err != nil {
 			return metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
 		}
@@ -306,7 +311,7 @@ func NewCmdDraftProposal() *cobra.Command {
 
 			skipMetadataPrompt, _ := cmd.Flags().GetBool(flagSkipMetadata)
 
-			result, metadata, err := proposal.Prompt(clientCtx.Codec, skipMetadataPrompt)
+			result, metadata, err := proposal.Prompt(clientCtx.Codec, skipMetadataPrompt, clientCtx.AddressCodec)
 			if err != nil {
 				return err
 			}

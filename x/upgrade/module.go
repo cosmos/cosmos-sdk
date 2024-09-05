@@ -16,25 +16,18 @@ import (
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
-
-func init() {
-	types.RegisterLegacyAminoCodec(codec.NewLegacyAmino())
-}
 
 // ConsensusVersion defines the current x/upgrade module consensus version.
 const ConsensusVersion uint64 = 3
 
 var (
-	_ module.HasName        = AppModule{}
 	_ module.HasAminoCodec  = AppModule{}
 	_ module.HasGRPCGateway = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasPreBlocker         = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
@@ -56,13 +49,14 @@ func NewAppModule(keeper *keeper.Keeper) AppModule {
 func (AppModule) IsAppModule() {}
 
 // Name returns the ModuleName
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the upgrade types on the LegacyAmino codec
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the upgrade module.

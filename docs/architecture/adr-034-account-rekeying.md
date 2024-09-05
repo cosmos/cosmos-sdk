@@ -43,7 +43,7 @@ The MsgChangePubKey transaction needs to be signed by the existing pubkey in sta
 
 Once, approved, the handler for this message type, which takes in the AccountKeeper, will update the in-state pubkey for the account and replace it with the pubkey from the Msg.
 
-An account that has had its pubkey changed cannot be automatically pruned from state.  This is because if pruned, the original pubkey of the account would be needed to recreate the same address, but the owner of the address may not have the original pubkey anymore.  Currently, we do not automatically prune any accounts anyways, but we would like to keep this option open the road (this is the purpose of account numbers).  To resolve this, we charge an additional gas fee for this operation to compensate for this this externality (this bound gas amount is configured as parameter `PubKeyChangeCost`). The bonus gas is charged inside the handler, using the `ConsumeGas` function.  Furthermore, in the future, we can allow accounts that have rekeyed manually prune themselves using a new Msg type such as `MsgDeleteAccount`.  Manually pruning accounts can give a gas refund as an incentive for performing the action.
+An account that has had its pubkey changed cannot be automatically pruned from state.  This is because if pruned, the original pubkey of the account would be needed to recreate the same address, but the owner of the address may not have the original pubkey anymore.  Currently, we do not automatically prune any accounts anyways, but we would like to keep this option open the road (this is the purpose of account numbers).  To resolve this, we charge an additional gas fee for this operation to compensate for this externality (this bound gas amount is configured as parameter `PubKeyChangeCost`). The bonus gas is charged inside the handler, using the `ConsumeGas` function.  Furthermore, in the future, we can allow accounts that have rekeyed manually prune themselves using a new Msg type such as `MsgDeleteAccount`.  Manually pruning accounts can give a gas refund as an incentive for performing the action.
 
 ```go
 	amount := ak.GetParams(ctx).PubKeyChangeCost
@@ -68,7 +68,7 @@ Breaks the current assumed relationship between address and pubkeys as H(pubkey)
 
 ### Neutral
 
-* While the purpose of this is intended to allow the owner of an account to update to a new pubkey they own, this could technically also be used to transfer ownership of an account to a new owner.  For example, this could be use used to sell a staked position without unbonding or an account that has vesting tokens.  However, the friction of this is very high as this would essentially have to be done as a very specific OTC trade. Furthermore, additional constraints could be added to prevent accouns with Vesting tokens to use this feature.
+* While the purpose of this is intended to allow the owner of an account to update to a new pubkey they own, this could technically also be used to transfer ownership of an account to a new owner.  For example, this could be use used to sell a staked position without unbonding or an account that has vesting tokens.  However, the friction of this is very high as this would essentially have to be done as a very specific OTC trade. Furthermore, additional constraints could be added to prevent accounts with Vesting tokens to use this feature.
 * Will require that PubKeys for an account are included in the genesis exports.
 
 ## References

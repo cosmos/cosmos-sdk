@@ -20,7 +20,7 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
     * perform functional tests
     * add more tests
     * release new beta version as the bugs are discovered and fixed.
-* After the team feels that the `main` works fine we create a `release/vY` branch (going forward known a release branch), where `Y` is the version number, with the patch part substituted to `x` (eg: 0.42.x, 1.0.x). Ensure the release branch is protected so that pushes against the release branch are permitted only by the release manager or release coordinator.
+* After the team feels that the `main` works fine we create a `release/vY` branch (going forward known as release branch), where `Y` is the version number, with the patch part substituted to `x` (eg: 0.42.x, 1.0.x). Ensure the release branch is protected so that pushes against the release branch are permitted only by the release manager or release coordinator.
     * **PRs targeting this branch can be merged _only_ when exceptional circumstances arise**
     * update the GitHub mergify integration by adding instructions for automatically backporting commits from `main` to the `release/vY` using the `backport/Y` label.
 * In the release branch prepare a new version section in the `CHANGELOG.md`
@@ -31,10 +31,13 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
 * Remove GitHub workflows that should not be in the release branch
     * `test.yml`: All standalone go module tests should be removed (expect `./simapp`, and `./tests`, SDK and modules tests).
         * These packages are tracked and tested directly on main.
-    * `build.yml`: Only the SDK and SimApp needs to be built on release branches.
+    * `build.yml`: Only the SDK and SimApp need to be built on release branches.
         * Tooling is tracked and tested directly on main.
         * This does not apply for tooling depending on the SDK (e.g. `confix`)
     * Update `Dockerfile` to not use latest go.mod and go.sum files.
+* Remove all other components that do not depend on the SDK from the release branch (See [Go Monorepo Branching Strategy](#go-monorepo-branching-strategy)).
+    * Delete `log`, `core`, `errors`, ... packages
+    * Update all the remaining `go.mod` files to use the latest released versions (the ones tagged from main) or latest commits from the main branch.
 * Create a new annotated git tag for a release candidate (eg: `git tag -a v1.1.0-rc1`) in the release branch.
     * from this point we unfreeze main.
     * the SDK teams collaborate and do their best to run testnets in order to validate the release.
@@ -46,12 +49,7 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
     * create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
     * Create a GitHub release.
 
-Following _semver_ philosophy, point releases after `v1.0`:
-
-* must not break API
-* can break consensus
-
-Before `v1.0`, point release can break both point API and consensus.
+See the [Releases document](./RELEASES.md) for more information on the versioning scheme.
 
 ## Patch Release Procedure
 
@@ -71,7 +69,7 @@ After the release branch has all commits required for the next patch release:
 
 * Update `CHANGELOG.md` and `RELEASE_NOTES.md` (if applicable).
 * Create a new annotated git tag (eg `git -a v1.1.0`) in the release branch.
-    * If the release is a submodule update, first go the submodule folder and name the tag prepending the path to the version:
+    * If the release is a submodule update, first go to the submodule folder and name the tag prepending the path to the version:
       `cd core && git -a core/v1.1.0` or `cd tools/cosmovisor && git -a tools/cosmovisor/v1.4.0`
 * Create a GitHub release (if applicable).
 
@@ -82,8 +80,8 @@ Major Release series is maintained in compliance with the **Stable Release Polic
 
 Only the following major release series have a stable release status:
 
-* **0.47** is the previous major release and is supported until the release of **0.51.0**. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a not latest stable point-release.
-* **0.50** is the last major release and is supported until the release of **0.52.0**.
+* **0.47** is the previous major release and is supported until the release of **0.52.0**. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a not latest stable point-release.
+* **0.50** is the last major release and is supported until the release of **0.54.0**.
 
 The SDK team maintains the last two major releases, any other major release is considered to have reached end of life.
 The SDK team will not backport any bug fixes to releases that are not supported.
@@ -143,7 +141,7 @@ See the SDK's policy on migrations [here](https://docs.cosmos.network/main/migra
 
 * State machine changes.
 * Breaking changes in Protobuf definitions, as specified in [ADR-044](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-044-protobuf-updates-guidelines.md).
-* Changes that introduces API breakages (e.g. public functions and interfaces removal/renaming).
+* Changes that introduce API breakages (e.g. public functions and interfaces removal/renaming).
 * Client-breaking changes in gRPC and HTTP request and response types.
 * CLI-breaking changes.
 * Cosmetic fixes, such as formatting or linter warning fixes.
@@ -187,7 +185,7 @@ As rule of thumb, the following changes will **NOT** be automatically accepted i
 ```md
 #### Impact
 
-Brief xplanation of the effects of the bug on users and a justification for backporting the fix to the stable release.
+Brief explanation of the effects of the bug on users and a justification for backporting the fix to the stable release.
 
 #### Test Case
 
@@ -195,7 +193,7 @@ Detailed instructions on how to reproduce the bug on Stargate's most recently pu
 
 #### Regression Potential
 
-Explanation on how regressions might manifest - even if it's unlikely.
+Explanation of how regressions might manifest - even if it's unlikely.
 It is assumed that stable release fixes are well-tested and they come with a low risk of regressions.
 It's crucial to make the effort of thinking about what could happen in case a regression emerges.
 ```
@@ -217,7 +215,7 @@ Currently residing Stable Release Managers:
 * @tac0turtle - Marko Baricevic
 * @julienrbrt - Julien Robert
 
-## Cosmos SDK Modules
+## Cosmos SDK Modules Tagging Strategy
 
 The Cosmos SDK repository is a mono-repo where its Go modules have a different release process and cadence than the Cosmos SDK itself.
 There are two types of modules:
@@ -242,6 +240,27 @@ Those modules can be considered as part of the Cosmos SDK, but features and impr
 
 Modules that do not depend on the Cosmos SDK can be released at any time from the `main` branch of the Cosmos SDK repository.
 
-#### Exception to the rule
+## Go Monorepo Branching Strategy
 
-* Store v1 is released from `release/v0.50.x` branch.
+The Cosmos SDK uses a monorepo structure with multiple Go modules. Some components are tagged from the main branch, while others are tagged from release branches, as described above.
+
+Here's the strategy for managing this structure:
+
+All modules that do not depend on the Cosmos SDK and tagged from main in a release branch must be removed from the release branch.
+
+### Rationale
+
+This strategy provides several benefits:
+
+1. Clean separation: Release branches only contain components that are actually released from those branches.
+2. Avoid confusion: Prevents having outdated versions of standalone go modules in release branches.
+3. Accurate representation: The release branch accurately represents what's being released from that branch.
+4. Consistency: Aligns with the tagging strategy - components tagged from main aren't in release branches, and vice versa.
+
+### Additional Considerations
+
+* When backporting changes, be aware that standalone go modules changes will not be present in release branches.
+* To reference the full state of the SDK at the time of branching, consider creating a separate tag on main at the point where each release branch is created.
+* Ensure thorough testing of the release branch structure to avoid any integration issues.
+
+This branching strategy helps maintain a clear separation between components tagged from main and those tagged from release branches, while ensuring that release branches accurately represent the state of components that depend on the SDK.

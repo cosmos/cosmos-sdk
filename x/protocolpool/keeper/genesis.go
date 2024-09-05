@@ -2,15 +2,18 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error {
-	currentTime := k.environment.HeaderService.GetHeaderInfo(ctx).Time
+	currentTime := k.HeaderService.HeaderInfo(ctx).Time
 	for _, cf := range data.ContinuousFund {
 		// ignore expired ContinuousFunds
 		if cf.Expiry != nil && cf.Expiry.Before(currentTime) {
@@ -27,11 +30,16 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 	}
 	for _, budget := range data.Budget {
 		// Validate StartTime
-		if budget.StartTime == nil || budget.StartTime.IsZero() {
-			budget.StartTime = &currentTime
+		if budget.LastClaimedAt == nil || budget.LastClaimedAt.IsZero() {
+			budget.LastClaimedAt = &currentTime
 		}
+		// ignore budgets with period <= 0 || nil
+		if budget.Period == nil || (budget.Period != nil && budget.Period.Seconds() <= 0) {
+			continue
+		}
+
 		// ignore budget with start time < currentTime
-		if budget.StartTime.Before(currentTime) {
+		if budget.LastClaimedAt.Before(currentTime) {
 			continue
 		}
 
@@ -44,8 +52,21 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 		}
 	}
 
-	if err := k.ToDistribute.Set(ctx, data.ToDistribute); err != nil {
-		return fmt.Errorf("failed to set to distribute: %w", err)
+	if err := k.LastBalance.Set(ctx, data.LastBalance); err != nil {
+		return fmt.Errorf("failed to set last balance: %w", err)
+	}
+
+	totalToBeDistributed := math.ZeroInt()
+	for _, distribution := range data.Distributions {
+		totalToBeDistributed = totalToBeDistributed.Add(distribution.Amount)
+		if err := k.Distributions.Set(ctx, *distribution.Time, distribution.Amount); err != nil {
+			return fmt.Errorf("failed to set distribution: %w", err)
+		}
+	}
+
+	// sanity check to avoid trying to distribute more than what is available
+	if data.LastBalance.LT(totalToBeDistributed) {
+		return errors.New("total to be distributed is greater than the last balance")
 	}
 
 	return nil
@@ -54,8 +75,12 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) {
 	var cf []*types.ContinuousFund
 	err := k.ContinuousFund.Walk(ctx, nil, func(key sdk.AccAddress, value types.ContinuousFund) (stop bool, err error) {
+		recipient, err := k.authKeeper.AddressCodec().BytesToString(key)
+		if err != nil {
+			return true, err
+		}
 		cf = append(cf, &types.ContinuousFund{
-			Recipient:  key.String(),
+			Recipient:  recipient,
 			Percentage: value.Percentage,
 			Expiry:     value.Expiry,
 		})
@@ -67,15 +92,17 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 
 	var budget []*types.Budget
 	err = k.BudgetProposal.Walk(ctx, nil, func(key sdk.AccAddress, value types.Budget) (stop bool, err error) {
+		recipient, err := k.authKeeper.AddressCodec().BytesToString(key)
+		if err != nil {
+			return true, err
+		}
 		budget = append(budget, &types.Budget{
-			RecipientAddress: key.String(),
-			TotalBudget:      value.TotalBudget,
+			RecipientAddress: recipient,
 			ClaimedAmount:    value.ClaimedAmount,
-			StartTime:        value.StartTime,
-			NextClaimFrom:    value.NextClaimFrom,
-			Tranches:         value.Tranches,
+			LastClaimedAt:    value.LastClaimedAt,
 			TranchesLeft:     value.TranchesLeft,
 			Period:           value.Period,
+			BudgetPerTranche: value.BudgetPerTranche,
 		})
 		return false, nil
 	})
@@ -85,7 +112,19 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 
 	genState := types.NewGenesisState(cf, budget)
 
-	genState.ToDistribute, err = k.ToDistribute.Get(ctx)
+	genState.LastBalance, err = k.LastBalance.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.Distributions.Walk(ctx, nil, func(key time.Time, value math.Int) (stop bool, err error) {
+		genState.Distributions = append(genState.Distributions, &types.Distribution{
+			Time:   &key,
+			Amount: value,
+		})
+
+		return false, nil
+	})
 	if err != nil {
 		return nil, err
 	}

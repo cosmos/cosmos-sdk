@@ -1,22 +1,20 @@
 package keeper_test
 
 import (
+	"context"
 	"encoding/hex"
 	"sort"
 	"sync/atomic"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authcodec "cosmossdk.io/x/auth/codec"
-	"cosmossdk.io/x/auth/keeper"
-	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -26,6 +24,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type DeterministicTestSuite struct {
@@ -33,13 +36,14 @@ type DeterministicTestSuite struct {
 
 	accountNumberLanes uint64
 
-	key           *storetypes.KVStoreKey
-	environment   appmodule.Environment
-	ctx           sdk.Context
-	queryClient   types.QueryClient
-	accountKeeper keeper.AccountKeeper
-	encCfg        moduletestutil.TestEncodingConfig
-	maccPerms     map[string][]string
+	key            *storetypes.KVStoreKey
+	environment    appmodule.Environment
+	ctx            sdk.Context
+	queryClient    types.QueryClient
+	accountKeeper  keeper.AccountKeeper
+	acctsModKeeper *authtestutil.MockAccountsModKeeper
+	encCfg         moduletestutil.TestEncodingConfig
+	maccPerms      map[string][]string
 }
 
 var (
@@ -58,9 +62,20 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.Require()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
+
+	// gomock initializations
+	ctrl := gomock.NewController(suite.T())
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	suite.acctsModKeeper = acctsModKeeper
+	accNum := uint64(0)
+	suite.acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currNum := accNum
+		accNum++
+		return currNum, nil
+	})
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
@@ -75,6 +90,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 		env,
 		suite.encCfg.Codec,
 		types.ProtoBaseAccount,
+		suite.acctsModKeeper,
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
@@ -91,7 +107,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.accountNumberLanes = 1
 }
 
-// createAndSetAccount creates a random account and sets to the keeper store.
+// createAndSetAccounts creates a random account and sets to the keeper store.
 func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int) []sdk.AccountI {
 	accs := make([]sdk.AccountI, 0, count)
 
@@ -139,7 +155,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 }
 
 // pubkeyGenerator creates and returns a random pubkey generator using rapid.
-func pubkeyGenerator(t *rapid.T) *rapid.Generator[secp256k1.PubKey] {
+func pubkeyGenerator(_ *rapid.T) *rapid.Generator[secp256k1.PubKey] {
 	return rapid.Custom(func(t *rapid.T) secp256k1.PubKey {
 		pkBz := rapid.SliceOfN(rapid.Byte(), 33, 33).Draw(t, "hex")
 		return secp256k1.PubKey{Key: pkBz}
@@ -295,6 +311,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 			suite.environment,
 			suite.encCfg.Codec,
 			types.ProtoBaseAccount,
+			suite.acctsModKeeper,
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
 			"cosmos",
@@ -342,6 +359,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 			suite.environment,
 			suite.encCfg.Codec,
 			types.ProtoBaseAccount,
+			suite.acctsModKeeper,
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
 			"cosmos",

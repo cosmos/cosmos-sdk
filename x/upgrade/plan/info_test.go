@@ -77,6 +77,12 @@ func (s *InfoTestSuite) TestParseInfo() {
 			expectedInError: []string{"plan info must not be blank"},
 		},
 		{
+			name:            "empty JSON",
+			infoStrMaker:    makeInfoStrFuncString("{}"),
+			expectedInfo:    &Info{},
+			expectedInError: nil,
+		},
+		{
 			name:            "json binaries is wrong data type",
 			infoStrMaker:    makeInfoStrFuncString(binariesWrongJSON),
 			expectedInfo:    nil,

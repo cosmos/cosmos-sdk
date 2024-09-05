@@ -28,7 +28,6 @@ import (
 const ConsensusVersion = 2
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
@@ -36,7 +35,6 @@ var (
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasEndBlocker         = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
@@ -66,6 +64,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper,
 func (AppModule) IsAppModule() {}
 
 // Name returns the group module's name.
+// Deprecated: kept for legacy reasons.
 func (am AppModule) Name() string {
 	return group.ModuleName
 }
@@ -88,8 +87,8 @@ func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 }
 
 // RegisterLegacyAminoCodec registers the group module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	group.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	group.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterInvariants does nothing, there are no invariants to enforce
@@ -109,7 +108,7 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	m := keeper.NewMigrator(am.keeper)
 	if err := mr.Register(group.ModuleName, 1, m.Migrate1to2); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %v", group.ModuleName, err)
+		return fmt.Errorf("failed to migrate x/%s from version 1 to 2: %w", group.ModuleName, err)
 	}
 
 	return nil

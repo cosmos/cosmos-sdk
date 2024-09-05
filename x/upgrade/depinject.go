@@ -2,22 +2,23 @@ package upgrade
 
 import (
 	"github.com/spf13/cast"
+	"github.com/spf13/viper"
 
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	coreserver "cosmossdk.io/core/server"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -39,9 +40,10 @@ type ModuleInputs struct {
 	Environment        appmodule.Environment
 	Cdc                codec.Codec
 	AddressCodec       address.Codec
-	AppVersionModifier baseapp.AppVersionModifier
+	AppVersionModifier coreserver.VersionModifier
 
-	AppOpts servertypes.AppOptions `optional:"true"`
+	AppOpts servertypes.AppOptions `optional:"true"` // server v0
+	Viper   *viper.Viper           `optional:"true"` // server v2
 }
 
 type ModuleOutputs struct {
@@ -57,7 +59,13 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		skipUpgradeHeights = make(map[int64]bool)
 	)
 
-	if in.AppOpts != nil {
+	if in.Viper != nil { // viper takes precedence over app options
+		for _, h := range in.Viper.GetIntSlice(server.FlagUnsafeSkipUpgrades) {
+			skipUpgradeHeights[int64(h)] = true
+		}
+
+		homePath = in.Viper.GetString(flags.FlagHome)
+	} else if in.AppOpts != nil {
 		for _, h := range cast.ToIntSlice(in.AppOpts.Get(server.FlagUnsafeSkipUpgrades)) {
 			skipUpgradeHeights[int64(h)] = true
 		}

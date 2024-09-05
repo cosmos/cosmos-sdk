@@ -29,7 +29,7 @@ for dir in $proto_dirs; do
 
   # check if buf.gen.gogo.yaml exists in the proto directory
   if [ -f "buf.gen.gogo.yaml" ]; then
-      for file in $(find . -maxdepth 5 -name '*.proto' | grep -v '^./cosmos/store/'); do
+      for file in $(find . -maxdepth 8 -name '*.proto'); do
         # this regex checks if a proto file has its go_package set to cosmossdk.io/api/...
         # gogo proto files SHOULD ONLY be generated if this is false
         # we don't want gogo proto to run for proto files which are natively built for google.golang.org/protobuf
@@ -39,7 +39,7 @@ for dir in $proto_dirs; do
     done
 
     # move generated files to the right places
-    if [ -d "../cosmossdk.io" -a "$dir" != "./proto" ]; then
+    if [ -d "../cosmossdk.io" ]; then
       cp -r ../cosmossdk.io/* $home
       rm -rf ../cosmossdk.io
     fi

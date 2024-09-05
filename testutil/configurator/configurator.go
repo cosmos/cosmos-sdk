@@ -1,6 +1,7 @@
 package configurator
 
 import (
+	accountsmodulev1 "cosmossdk.io/api/cosmos/accounts/module/v1"
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
@@ -10,6 +11,7 @@ import (
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	countermodulev1 "cosmossdk.io/api/cosmos/counter/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
+	epochsmodulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
@@ -48,13 +50,13 @@ func defaultConfig() *Config {
 		BeginBlockersOrder: []string{
 			testutil.MintModuleName,
 			testutil.DistributionModuleName,
+			testutil.ProtocolPoolModuleName,
 			testutil.SlashingModuleName,
 			testutil.EvidenceModuleName,
 			testutil.StakingModuleName,
 			testutil.AuthModuleName,
 			testutil.BankModuleName,
 			testutil.GovModuleName,
-			"crisis",
 			"genutil",
 			testutil.AuthzModuleName,
 			testutil.FeegrantModuleName,
@@ -64,9 +66,9 @@ func defaultConfig() *Config {
 			testutil.ParamsModuleName,
 			"vesting",
 			testutil.CircuitModuleName,
+			testutil.EpochsModuleName,
 		},
 		EndBlockersOrder: []string{
-			"crisis",
 			testutil.GovModuleName,
 			testutil.StakingModuleName,
 			testutil.AuthModuleName,
@@ -87,6 +89,7 @@ func defaultConfig() *Config {
 			testutil.ProtocolPoolModuleName,
 		},
 		InitGenesisOrder: []string{
+			testutil.AccountsModuleName,
 			testutil.AuthModuleName,
 			testutil.BankModuleName,
 			testutil.DistributionModuleName,
@@ -94,7 +97,6 @@ func defaultConfig() *Config {
 			testutil.SlashingModuleName,
 			testutil.GovModuleName,
 			testutil.MintModuleName,
-			"crisis",
 			"genutil",
 			testutil.EvidenceModuleName,
 			testutil.AuthzModuleName,
@@ -106,6 +108,7 @@ func defaultConfig() *Config {
 			"vesting",
 			testutil.CircuitModuleName,
 			testutil.ProtocolPoolModuleName,
+			testutil.EpochsModuleName,
 		},
 		setInitGenesis: true,
 	}
@@ -162,6 +165,7 @@ func AuthModule() ModuleOption {
 					{Account: testutil.NFTModuleName},
 					{Account: testutil.ProtocolPoolModuleName},
 					{Account: "stream_acc"},
+					{Account: "protocolpool_distr"},
 				},
 			}),
 		}
@@ -327,11 +331,29 @@ func ProtocolPoolModule() ModuleOption {
 	}
 }
 
+func AccountsModule() ModuleOption {
+	return func(config *Config) {
+		config.ModuleConfigs[testutil.AccountsModuleName] = &appv1alpha1.ModuleConfig{
+			Name:   testutil.AccountsModuleName,
+			Config: appconfig.WrapAny(&accountsmodulev1.Module{}),
+		}
+	}
+}
+
 func CounterModule() ModuleOption {
 	return func(config *Config) {
 		config.ModuleConfigs["counter"] = &appv1alpha1.ModuleConfig{
 			Name:   "counter",
 			Config: appconfig.WrapAny(&countermodulev1.Module{}),
+		}
+	}
+}
+
+func EpochsModule() ModuleOption {
+	return func(config *Config) {
+		config.ModuleConfigs[testutil.EpochsModuleName] = &appv1alpha1.ModuleConfig{
+			Name:   testutil.EpochsModuleName,
+			Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
 		}
 	}
 }

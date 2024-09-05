@@ -30,7 +30,8 @@ func DownloadUpgrade(dstRoot, url, daemonName string) error {
 	// First try to download it as a single file. If there's no error, it's okay and we're done.
 	if err := getFile(url, target); err != nil {
 		// If it was a checksum error, no need to try as directory.
-		if _, ok := err.(*getter.ChecksumError); ok {
+		var checksumError *getter.ChecksumError
+		if errors.As(err, &checksumError) {
 			return err
 		}
 		// File download didn't work, try it as an archive.

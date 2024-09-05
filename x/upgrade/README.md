@@ -22,9 +22,9 @@ recover from.
 * [State](#state)
 * [Events](#events)
 * [Client](#client)
-  * [CLI](#cli)
-  * [REST](#rest)
-  * [gRPC](#grpc)
+    * [CLI](#cli)
+    * [REST](#rest)
+    * [gRPC](#grpc)
 * [Resources](#resources)
 
 ## Concepts
@@ -246,8 +246,6 @@ module_versions:
   version: "1"
 - name: bank
   version: "2"
-- name: crisis
-  version: "1"
 - name: distribution
   version: "2"
 - name: evidence
@@ -411,10 +409,6 @@ Example Output:
       "version": "2"
     },
     {
-      "name": "crisis",
-      "version": "1"
-    },
-    {
       "name": "distribution",
       "version": "2"
     },
@@ -551,10 +545,6 @@ Example Output:
     {
       "name": "bank",
       "version": "2"
-    },
-    {
-      "name": "crisis",
-      "version": "1"
     },
     {
       "name": "distribution",

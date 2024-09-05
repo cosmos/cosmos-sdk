@@ -38,7 +38,7 @@ Here are the steps to use AutoCLI:
 
 1. Ensure your app's modules implements the `appmodule.AppModule` interface.
 2. (optional) Configure how to behave as `autocli` command generation, by implementing the `func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions` method on the module.
-3. Use the `autocli.AppOptions` struct to specify the modules you defined. If you are using `depinject` / app v2, it can automatically create an instance of `autocli.AppOptions` based on your app's configuration.
+3. Use the `autocli.AppOptions` struct to specify the modules you defined. If you are using `depinject`, it can automatically create an instance of `autocli.AppOptions` based on your app's configuration.
 4. Use the `EnhanceRootCommand()` method provided by `autocli` to add the CLI commands for the specified modules to your root command.
 
 :::tip
@@ -75,10 +75,10 @@ if err := rootCmd.Execute(); err != nil {
 
 ### Keyring
 
-`autocli` uses a keyring for key name resolving and signing transactions. Providing a keyring is optional, but if you want to use the `autocli` generated commands to sign transactions, you must provide a keyring.
+`autocli` uses a keyring for key name resolving names and signing transactions.
 
 :::tip
-This provides a better UX as it allows to resolve key names directly from the keyring in all transactions and commands.
+AutoCLI provides a better UX than normal CLI as it allows to resolve key names directly from the keyring in all transactions and commands.
 
 ```sh
 <appd> q bank balances alice
@@ -87,8 +87,9 @@ This provides a better UX as it allows to resolve key names directly from the ke
 
 :::
 
-The keyring to be provided to `client/v2` must match the `client/v2` keyring interface.
-The keyring should be provided in the `appOptions` struct as follows, and can be gotten from the client context:
+The keyring used for resolving names and signing transactions is provided via the `client.Context`.
+The keyring is then converted to the `client/v2/autocli/keyring` interface.
+If no keyring is provided, the `autocli` generated command will not be able to sign transactions, but will still be able to query the chain.
 
 :::tip
 The Cosmos SDK keyring and Hubl keyring both implement the `client/v2/autocli/keyring` interface, thanks to the following wrapper:
@@ -99,22 +100,10 @@ keyring.NewAutoCLIKeyring(kb)
 
 :::
 
-:::warning
-When using AutoCLI the keyring will only be created once and before any command flag parsing.
-:::
-
-```go
-// Set the keyring in the appOptions
-appOptions.Keyring = keyring
-
-err := autoCliOpts.EnhanceRootCommand(rootCmd)
-...
-```
-
 ## Signing
 
 `autocli` supports signing transactions with the keyring.
-The [`cosmos.msg.v1.signer` protobuf annotation](https://github.com/cosmos/cosmos-sdk/blob/9dd34510e27376005e7e7ff3628eab9dbc8ad6dc/docs/build/building-modules/05-protobuf-annotations.md#L9) defines the signer field of the message.
+The [`cosmos.msg.v1.signer` protobuf annotation](https://docs.cosmos.network/main/build/building-modules/protobuf-annotations) defines the signer field of the message.
 This field is automatically filled when using the `--from` flag or defining the signer as a positional argument.
 
 :::warning
@@ -141,6 +130,30 @@ The `AutoCLIOptions()` method on your module allows to specify custom commands, 
 AutoCLI can create a gov proposal of any tx by simply setting the `GovProposal` field to `true` in the `autocli.RpcCommandOptions` struct.
 Users can however use the `--no-proposal` flag to disable the proposal creation (which is useful if the authority isn't the gov module on a chain).
 :::
+
+### Conventions for the `Use` field in Cobra
+
+According to the [Cobra documentation](https://pkg.go.dev/github.com/spf13/cobra#Command) the following conventions should be followed for the `Use` field in Cobra commands:
+
+1. **Required arguments**:
+   * Should not be enclosed in brackets. They can be enclosed in angle brackets `< >` for clarity.
+   * Example: `command <required_argument>`
+
+2. **Optional arguments**:
+   * Should be enclosed in square brackets `[ ]`.
+   * Example: `command [optional_argument]`
+
+3. **Alternative (mutually exclusive) arguments**:
+   * Should be enclosed in curly braces `{ }`.
+   * Example: `command {-a | -b}` for required alternatives.
+   * Example: `command [-a | -b]` for optional alternatives.
+
+4. **Multiple arguments**:
+   * Indicated with `...` after the argument.
+   * Example: `command argument...`
+
+5. **Combination of options**:
+   * Example: `command [-F file | -D dir]... [-f format] profile`
 
 ### Specifying Subcommands
 
@@ -199,6 +212,19 @@ https://github.com/cosmos/cosmos-sdk/blob/fa4d87ef7e6d87aaccc94c337ffd2fe90fcb7a
 
 If not set to true, `AutoCLI` will not generate commands for the module if there are already commands registered for the module (when `GetTxCmd()` or `GetQueryCmd()` are defined).
 
+### Skip a command
+
+AutoCLI automatically skips unsupported commands when [`cosmos_proto.method_added_in` protobuf annotation](https://docs.cosmos.network/main/build/building-modules/protobuf-annotations) is present.
+
+Additionally, a command can be manually skipped using the `autocliv1.RpcCommandOptions`:
+
+```go
+*autocliv1.RpcCommandOptions{
+  RpcMethod: "Params", // The name of the gRPC service
+  Skip: true,
+}
+```
+
 ### Use AutoCLI for non module commands
 
 It is possible to use `AutoCLI` for non module commands. The trick is still to implement the `appmodule.Module` interface and append it to the `appOptions.ModuleOptions` map.
@@ -220,14 +246,16 @@ For more information on `hubl`, including how to configure a new chain and query
 # Off-Chain
 
 Off-chain functionalities allow you to sign and verify files with two commands:
-+ `sign-file` for signing a file.
-+ `verify-file` for verifying a previously signed file.
+
+* `sign-file` for signing a file.
+* `verify-file` for verifying a previously signed file.
 
 Signing a file will result in a Tx with a `MsgSignArbitraryData` as described in the [Off-chain CIP](https://github.com/cosmos/cips/blob/main/cips/cip-X.md).
 
 ## Sign a file
 
 To sign a file `sign-file` command offers some helpful flags:
+
 ```text
       --encoding string          Choose an encoding method for the file content to be added as msg data (no-encoding|base64|hex) (default "no-encoding")
       --indent string            Choose an indent for the tx (default "  ")
@@ -237,8 +265,10 @@ To sign a file `sign-file` command offers some helpful flags:
 ```
 
 The `encoding` flag lets you choose how the contents of the file should be encoded. For example:
-+ `simd off-chain sign-file alice myFile.json`
-    + ```json
+
+* `simd off-chain sign-file alice myFile.json`
+
+    * ```json
       {
         "@type":  "/offchain.MsgSignArbitraryData",
         "appDomain":  "simd",
@@ -246,8 +276,10 @@ The `encoding` flag lets you choose how the contents of the file should be encod
         "data":  "Hello World!\n"
       }
      ```
-+ `simd off-chain sign-file alice myFile.json --encoding base64`
-    + ```json
+
+* `simd off-chain sign-file alice myFile.json --encoding base64`
+
+    * ```json
       {
         "@type":  "/offchain.MsgSignArbitraryData",
         "appDomain":  "simd",
@@ -255,8 +287,10 @@ The `encoding` flag lets you choose how the contents of the file should be encod
         "data":  "SGVsbG8gV29ybGQhCg=="
       }
      ```
-+ `simd off-chain sign-file alice myFile.json --encoding hex`
-    + ```json
+
+* `simd off-chain sign-file alice myFile.json --encoding hex`
+
+    * ```json
         {
           "@type":  "/offchain.MsgSignArbitraryData",
           "appDomain":  "simd",

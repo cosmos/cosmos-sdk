@@ -2,11 +2,15 @@ package testdata
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+	"github.com/cosmos/gogoproto/types/any/test"
+
 	"github.com/cosmos/gogoproto/proto"
-	grpc "google.golang.org/grpc"
+	"google.golang.org/grpc"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -22,9 +26,9 @@ type QueryImpl struct{}
 var _ QueryServer = QueryImpl{}
 
 func (e QueryImpl) TestAny(_ context.Context, request *TestAnyRequest) (*TestAnyResponse, error) {
-	animal, ok := request.AnyAnimal.GetCachedValue().(Animal)
+	animal, ok := request.AnyAnimal.GetCachedValue().(test.Animal)
 	if !ok {
-		return nil, fmt.Errorf("expected Animal")
+		return nil, errors.New("expected Animal")
 	}
 
 	any, err := types.NewAnyWithValue(animal.(proto.Message))
@@ -47,16 +51,16 @@ func (e QueryImpl) SayHello(_ context.Context, request *SayHelloRequest) (*SayHe
 	return &SayHelloResponse{Greeting: greeting}, nil
 }
 
-var _ types.UnpackInterfacesMessage = &TestAnyRequest{}
+var _ gogoprotoany.UnpackInterfacesMessage = &TestAnyRequest{}
 
-func (m *TestAnyRequest) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var animal Animal
+func (m *TestAnyRequest) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+	var animal test.Animal
 	return unpacker.UnpackAny(m.AnyAnimal, &animal)
 }
 
-var _ types.UnpackInterfacesMessage = &TestAnyResponse{}
+var _ gogoprotoany.UnpackInterfacesMessage = &TestAnyResponse{}
 
-func (m *TestAnyResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m *TestAnyResponse) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	return m.HasAnimal.UnpackInterfaces(unpacker)
 }
 

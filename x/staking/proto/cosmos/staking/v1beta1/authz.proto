@@ -9,9 +9,8 @@ import "amino/amino.proto";
 option go_package = "cosmossdk.io/x/staking/types";
 
 // StakeAuthorization defines authorization for delegate/undelegate/redelegate.
-//
-// Since: cosmos-sdk 0.43
 message StakeAuthorization {
+  option (cosmos_proto.message_added_in)     = "cosmos-sdk 0.43";
   option (cosmos_proto.implements_interface) = "cosmos.authz.v1beta1.Authorization";
   option (amino.name)                        = "cosmos-sdk/StakeAuthorization";
 

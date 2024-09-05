@@ -1,22 +1,21 @@
 package keeper_test
 
 import (
+	"context"
 	"math/big"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
+	consensustypes "cosmossdk.io/x/consensus/types"
 	minttypes "cosmossdk.io/x/mint/types"
 	pooltypes "cosmossdk.io/x/protocolpool/types"
 	"cosmossdk.io/x/staking"
@@ -24,6 +23,7 @@ import (
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -32,6 +32,11 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var PKs = simtestutil.CreateTestPubKeys(500)
@@ -66,7 +71,11 @@ func generateAddresses(f *fixture, numAddrs int) ([]sdk.AccAddress, []sdk.ValAdd
 	return addrDels, addrVals
 }
 
-func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
+func createValidators(
+	t *testing.T,
+	f *fixture,
+	powers []int64,
+) ([]sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
 	t.Helper()
 	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, f.sdkCtx, 5, f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, 300))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
@@ -102,10 +111,13 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 func initFixture(tb testing.TB) *fixture {
 	tb.Helper()
 	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, types.StoreKey,
+		authtypes.StoreKey, banktypes.StoreKey, types.StoreKey, consensustypes.StoreKey,
 	)
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, staking.AppModule{})
 	cdc := encodingCfg.Codec
+
+	msgRouter := baseapp.NewMsgServiceRouter()
+	queryRouter := baseapp.NewGRPCQueryRouter()
 
 	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
@@ -122,10 +134,15 @@ func initFixture(tb testing.TB) *fixture {
 		types.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 	}
 
+	// gomock initializations
+	ctrl := gomock.NewController(tb)
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+
 	accountKeeper := authkeeper.NewAccountKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter)),
 		cdc,
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
@@ -143,9 +160,11 @@ func initFixture(tb testing.TB) *fixture {
 		authority.String(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[types.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	assert.NilError(tb, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[types.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
+
+	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
 
@@ -156,7 +175,10 @@ func initFixture(tb testing.TB) *fixture {
 			authtypes.ModuleName: authModule,
 			banktypes.ModuleName: bankModule,
 			types.ModuleName:     stakingModule,
-		})
+		},
+		msgRouter,
+		queryRouter,
+	)
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
@@ -166,6 +188,12 @@ func initFixture(tb testing.TB) *fixture {
 
 	// set default staking params
 	assert.NilError(tb, stakingKeeper.Params.Set(sdkCtx, types.DefaultParams()))
+	accNum := uint64(0)
+	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currentNum := accNum
+		accNum++
+		return currentNum, nil
+	})
 
 	f := fixture{
 		app:           integrationApp,

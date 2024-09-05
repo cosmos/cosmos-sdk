@@ -11,6 +11,8 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 type cmdType int
@@ -31,11 +33,6 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		short = fmt.Sprintf("Execute the %s RPC method", descriptor.Name())
 	}
 
-	long := options.Long
-	if long == "" {
-		long = util.DescriptorDocs(descriptor)
-	}
-
 	inputDesc := descriptor.Input()
 	inputType := util.ResolveMessageType(b.TypeResolver, inputDesc)
 
@@ -47,7 +44,7 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 	cmd := &cobra.Command{
 		SilenceUsage: false,
 		Use:          use,
-		Long:         long,
+		Long:         options.Long,
 		Short:        short,
 		Example:      options.Example,
 		Aliases:      options.Alias,
@@ -56,14 +53,18 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		Version:      options.Version,
 	}
 
-	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
+	// we need to use a pointer to the context as the correct context is set in the RunE function
+	// however we need to set the flags before the RunE function is called
+	ctx := cmd.Context()
+	binder, err := b.AddMessageFlags(&ctx, cmd.Flags(), inputType, options)
 	if err != nil {
 		return nil, err
 	}
-
 	cmd.Args = binder.CobraArgs
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		ctx = cmd.Context()
+
 		input, err := binder.BuildMessage(args)
 		if err != nil {
 			return err
@@ -75,17 +76,12 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 				// the client context uses the from flag to determine the signer.
 				// this sets the signer flags to the from flag value if a custom signer flag is set.
 				// marks the custom flag as required.
-				if binder.SignerInfo.FieldName != flags.FlagFrom {
-					if err := cmd.MarkFlagRequired(binder.SignerInfo.FieldName); err != nil {
+				if binder.SignerInfo.FlagName != flags.FlagFrom {
+					if err := cmd.MarkFlagRequired(binder.SignerInfo.FlagName); err != nil {
 						return err
 					}
 
-					signer, err := cmd.Flags().GetString(binder.SignerInfo.FieldName)
-					if err != nil {
-						return fmt.Errorf("failed to get signer flag: %w", err)
-					}
-
-					if err := cmd.Flags().Set(flags.FlagFrom, signer); err != nil {
+					if err := cmd.Flags().Set(flags.FlagFrom, cmd.Flag(binder.SignerInfo.FlagName).Value.String()); err != nil {
 						return err
 					}
 				}
@@ -177,7 +173,11 @@ func (b *Builder) enhanceCommandCommon(
 // enhanceQuery enhances the provided query command with the autocli commands for a module.
 func enhanceQuery(builder *Builder, moduleName string, cmd *cobra.Command, modOpts *autocliv1.ModuleOptions) error {
 	if queryCmdDesc := modOpts.Query; queryCmdDesc != nil {
-		subCmd := topLevelCmd(cmd.Context(), moduleName, fmt.Sprintf("Querying commands for the %s module", moduleName))
+		short := queryCmdDesc.Short
+		if short == "" {
+			short = fmt.Sprintf("Querying commands for the %s module", moduleName)
+		}
+		subCmd := topLevelCmd(cmd.Context(), moduleName, short)
 		if err := builder.AddQueryServiceCommands(subCmd, queryCmdDesc); err != nil {
 			return err
 		}
@@ -191,7 +191,11 @@ func enhanceQuery(builder *Builder, moduleName string, cmd *cobra.Command, modOp
 // enhanceMsg enhances the provided msg command with the autocli commands for a module.
 func enhanceMsg(builder *Builder, moduleName string, cmd *cobra.Command, modOpts *autocliv1.ModuleOptions) error {
 	if txCmdDesc := modOpts.Tx; txCmdDesc != nil {
-		subCmd := topLevelCmd(cmd.Context(), moduleName, fmt.Sprintf("Transactions commands for the %s module", moduleName))
+		short := txCmdDesc.Short
+		if short == "" {
+			short = fmt.Sprintf("Transactions commands for the %s module", moduleName)
+		}
+		subCmd := topLevelCmd(cmd.Context(), moduleName, short)
 		if err := builder.AddMsgServiceCommands(subCmd, txCmdDesc); err != nil {
 			return err
 		}
@@ -224,11 +228,21 @@ func enhanceCustomCmd(builder *Builder, cmd *cobra.Command, cmdType cmdType, mod
 
 // outOrStdoutFormat formats the output based on the output flag and writes it to the command's output stream.
 func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
+	clientCtx := client.Context{}
+	if v := cmd.Context().Value(client.ClientContextKey); v != nil {
+		clientCtx = *(v.(*client.Context))
+	}
+	flagSet := cmd.Flags()
+	if clientCtx.OutputFormat == "" || flagSet.Changed(flags.FlagOutput) {
+		output, _ := flagSet.GetString(flags.FlagOutput)
+		clientCtx = clientCtx.WithOutputFormat(output)
+	}
+
 	var err error
-	outputType := cmd.Flag(flags.FlagOutput)
+	outputType := clientCtx.OutputFormat
 	// if the output type is text, convert the json to yaml
 	// if output type is json or nil, default to json
-	if outputType != nil && outputType.Value.String() == flags.OutputFormatText {
+	if outputType == flags.OutputFormatText {
 		out, err = yaml.JSONToYAML(out)
 		if err != nil {
 			return err

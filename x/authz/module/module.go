@@ -27,7 +27,6 @@ import (
 const ConsensusVersion = 2
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
@@ -36,7 +35,6 @@ var (
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasBeginBlocker       = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 )
 
@@ -50,7 +48,13 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak authz.AccountKeeper, bk authz.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(
+	cdc codec.Codec,
+	keeper keeper.Keeper,
+	ak authz.AccountKeeper,
+	bk authz.BankKeeper,
+	registry cdctypes.InterfaceRegistry,
+) AppModule {
 	return AppModule{
 		cdc:           cdc,
 		keeper:        keeper,
@@ -64,6 +68,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak authz.AccountKeeper,
 func (AppModule) IsAppModule() {}
 
 // Name returns the authz module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return authz.ModuleName
 }
@@ -87,8 +92,8 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 }
 
 // RegisterLegacyAminoCodec registers the authz module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	authz.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	authz.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterInterfaces registers the authz module's interface types
@@ -134,7 +139,10 @@ func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error
 
 // ExportGenesis returns the exported genesis state as raw bytes for the authz module.
 func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) {
-	gs := am.keeper.ExportGenesis(ctx)
+	gs, err := am.keeper.ExportGenesis(ctx)
+	if err != nil {
+		return nil, err
+	}
 	return am.cdc.MarshalJSON(gs)
 }
 

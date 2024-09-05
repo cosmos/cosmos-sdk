@@ -55,7 +55,8 @@ func (mock TxSearchMock) Block(ctx context.Context, height *int64) (*coretypes.R
 }
 
 func TestGetPaginatedVotes(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, gov.AppModule{})
+	cdcOpts := codectestutil.CodecOptions{}
+	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, gov.AppModule{})
 
 	type testCase struct {
 		description string
@@ -65,16 +66,20 @@ func TestGetPaginatedVotes(t *testing.T) {
 	}
 	acc1 := make(sdk.AccAddress, 20)
 	acc1[0] = 1
+	acc1Str, err := cdcOpts.GetAddressCodec().BytesToString(acc1)
+	require.NoError(t, err)
 	acc2 := make(sdk.AccAddress, 20)
 	acc2[0] = 2
+	acc2Str, err := cdcOpts.GetAddressCodec().BytesToString(acc2)
+	require.NoError(t, err)
 	acc1Msgs := []sdk.Msg{
-		v1.NewMsgVote(acc1, 0, v1.OptionYes, ""),
-		v1.NewMsgVote(acc1, 0, v1.OptionYes, ""),
-		v1.NewMsgDeposit(acc1, 0, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10)))), // should be ignored
+		v1.NewMsgVote(acc1Str, 0, v1.OptionYes, ""),
+		v1.NewMsgVote(acc1Str, 0, v1.OptionYes, ""),
+		v1.NewMsgDeposit(acc1Str, 0, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10)))), // should be ignored
 	}
 	acc2Msgs := []sdk.Msg{
-		v1.NewMsgVote(acc2, 0, v1.OptionYes, ""),
-		v1.NewMsgVoteWeighted(acc2, 0, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
+		v1.NewMsgVote(acc2Str, 0, v1.OptionYes, ""),
+		v1.NewMsgVoteWeighted(acc2Str, 0, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
 	}
 	for _, tc := range []testCase{
 		{
@@ -86,8 +91,8 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc2Msgs[:1],
 			},
 			votes: []v1.Vote{
-				v1.NewVote(0, acc1, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
-				v1.NewVote(0, acc2, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
+				v1.NewVote(0, acc1Str, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
+				v1.NewVote(0, acc2Str, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
 			},
 		},
 		{
@@ -99,8 +104,8 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc2Msgs,
 			},
 			votes: []v1.Vote{
-				v1.NewVote(0, acc1, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
-				v1.NewVote(0, acc1, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
+				v1.NewVote(0, acc1Str, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
+				v1.NewVote(0, acc1Str, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
 			},
 		},
 		{
@@ -112,8 +117,8 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc2Msgs,
 			},
 			votes: []v1.Vote{
-				v1.NewVote(0, acc2, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
-				v1.NewVote(0, acc2, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
+				v1.NewVote(0, acc2Str, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
+				v1.NewVote(0, acc2Str, v1.NewNonSplitVoteOption(v1.OptionYes), ""),
 			},
 		},
 		{
@@ -123,7 +128,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 			msgs: [][]sdk.Msg{
 				acc1Msgs[:1],
 			},
-			votes: []v1.Vote{v1.NewVote(0, acc1, v1.NewNonSplitVoteOption(v1.OptionYes), "")},
+			votes: []v1.Vote{v1.NewVote(0, acc1Str, v1.NewNonSplitVoteOption(v1.OptionYes), "")},
 		},
 		{
 			description: "InvalidPage",

@@ -11,8 +11,6 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/pflag"
 
-	authsigning "cosmossdk.io/x/auth/signing"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -20,6 +18,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
@@ -126,7 +125,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	if err = Sign(clientCtx.CmdContext, txf, clientCtx.FromName, tx, true); err != nil {
+	if err = Sign(clientCtx, txf, clientCtx.FromName, tx, true); err != nil {
 		return err
 	}
 
@@ -248,7 +247,7 @@ func checkMultipleSigners(tx authsigning.Tx) error {
 // Signing a transaction with mutltiple signers in the DIRECT mode is not supported and will
 // return an error.
 // An error is returned upon failure.
-func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuilder, overwriteSig bool) error {
+func Sign(ctx client.Context, txf Factory, name string, txBuilder client.TxBuilder, overwriteSig bool) error {
 	if txf.keybase == nil {
 		return errors.New("keybase must be set prior to signing a transaction")
 	}
@@ -273,12 +272,17 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuil
 		return err
 	}
 
+	addressStr, err := ctx.AddressCodec.BytesToString(pubKey.Address())
+	if err != nil {
+		return err
+	}
+
 	signerData := authsigning.SignerData{
 		ChainID:       txf.chainID,
 		AccountNumber: txf.accountNumber,
 		Sequence:      txf.sequence,
 		PubKey:        pubKey,
-		Address:       sdk.AccAddress(pubKey.Address()).String(),
+		Address:       addressStr,
 	}
 
 	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on
@@ -322,7 +326,7 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuil
 		return err
 	}
 
-	bytesToSign, err := authsigning.GetSignBytesAdapter(ctx, txf.txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
+	bytesToSign, err := authsigning.GetSignBytesAdapter(ctx.CmdContext, txf.txConfig.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return err
 	}
@@ -377,7 +381,12 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 		return tx.AuxSignerData{}, err
 	}
 
-	b.SetAddress(fromAddress.String())
+	fromAddrStr, err := clientCtx.AddressCodec.BytesToString(fromAddress)
+	if err != nil {
+		return tx.AuxSignerData{}, err
+	}
+
+	b.SetAddress(fromAddrStr)
 	if clientCtx.Offline {
 		b.SetAccountNumber(f.accountNumber)
 		b.SetSequence(f.sequence)

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
 
@@ -31,14 +31,14 @@ func TestRollback(t *testing.T) {
 			AppHash: app.LastCommitID().Hash,
 		}
 
-		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
 			Height: header.Height,
 		})
 		assert.NilError(t, err)
 		ctx := app.NewContextLegacy(false, header)
 		store := ctx.KVStore(app.GetKey("bank"))
 		store.Set([]byte("key"), []byte(fmt.Sprintf("value%d", i)))
-		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{
 			Height: header.Height,
 		})
 		assert.NilError(t, err)
@@ -66,12 +66,12 @@ func TestRollback(t *testing.T) {
 			Height:  ver0 + i,
 			AppHash: app.LastCommitID().Hash,
 		}
-		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: header.Height})
+		_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: header.Height})
 		assert.NilError(t, err)
 		ctx := app.NewContextLegacy(false, header)
 		store := ctx.KVStore(app.GetKey("bank"))
 		store.Set([]byte("key"), []byte(fmt.Sprintf("VALUE%d", i)))
-		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{
 			Height: header.Height,
 		})
 		assert.NilError(t, err)

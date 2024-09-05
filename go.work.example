@@ -1,6 +1,4 @@
-go 1.22
-
-toolchain go1.22
+go 1.23
 
 use (
 	.
@@ -8,23 +6,32 @@ use (
 	./client/v2
 	./collections
 	./core
+	./core/testing
 	./depinject
 	./errors
+	./indexer/postgres
 	./log
 	./math
 	./orm
 	./simapp
 	./tests
-	./tests/starship/tests
+	./tests/systemtests
+	./schema
+	./server/v2/stf
+	./server/v2/appmanager
 	./store
+	./store/v2
+	./runtime/v2
 	./tools/cosmovisor
 	./tools/confix
 	./tools/hubl
 	./x/accounts
+	./x/accounts/defaults/lockup
 	./x/auth
 	./x/authz
 	./x/bank
 	./x/circuit
+	./x/consensus
 	./x/distribution
 	./x/evidence
 	./x/feegrant
@@ -38,5 +45,5 @@ use (
 	./x/staking
 	./x/tx
 	./x/upgrade
-	./x/accounts/defaults/lockup
+	./x/epochs
 )

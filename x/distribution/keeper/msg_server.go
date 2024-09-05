@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	metrics "github.com/hashicorp/go-metrics"
+	"github.com/hashicorp/go-metrics"
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/distribution/types"
@@ -114,7 +114,7 @@ func (k msgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 		return nil, err
 	}
 
-	if err := k.poolKeeper.FundCommunityPool(ctx, msg.Amount, depositor); err != nil {
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, depositor, types.ProtocolPoolModuleName, msg.Amount); err != nil {
 		return nil, err
 	}
 
@@ -158,12 +158,11 @@ func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 		return nil, fmt.Errorf("invalid recipient address: %w", err)
 	}
 
-	if err := k.poolKeeper.DistributeFromCommunityPool(ctx, msg.Amount, recipient); err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ProtocolPoolModuleName, recipient, msg.Amount); err != nil {
 		return nil, err
 	}
 
-	logger := k.Logger(ctx)
-	logger.Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
+	k.Logger.Info("transferred from the community pool to recipient", "amount", msg.Amount.String(), "recipient", msg.Recipient)
 
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }
@@ -190,7 +189,7 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, msg.ValidatorAddress)
+		return nil, errors.Wrap(types.ErrNoValidatorExists, msg.ValidatorAddress)
 	}
 
 	// Allocate tokens from the distribution module to the validator, which are
@@ -200,8 +199,7 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 		return nil, err
 	}
 
-	logger := k.Logger(ctx)
-	logger.Info(
+	k.Logger.Info(
 		"transferred from rewards to validator rewards pool",
 		"depositor", msg.Depositor,
 		"amount", msg.Amount.String(),

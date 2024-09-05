@@ -1,7 +1,7 @@
 package testutil
 
 import (
-	context "context"
+	"context"
 
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/types"

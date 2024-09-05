@@ -27,4 +27,5 @@ var (
 	ErrInvalidDepositDenom     = errors.Register(ModuleName, 23, "invalid deposit denom")
 	ErrTitleTooLong            = errors.Register(ModuleName, 24, "title too long")
 	ErrTooLateToCancel         = errors.Register(ModuleName, 25, "too late to cancel proposal")
+	ErrTooManyVoteOptions      = errors.Register(ModuleName, 26, "too many weighted vote options")
 )

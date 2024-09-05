@@ -27,6 +27,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#20087](https://github.com/cosmos/cosmos-sdk/pull/20087) add `MaxVoteOptionsLen`
 * [#19592](https://github.com/cosmos/cosmos-sdk/pull/19592) Add custom tally function.
 * [#19304](https://github.com/cosmos/cosmos-sdk/pull/19304) Add `MsgSudoExec` for allowing executing any message as a sudo.
 * [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Add message based params configuration.
@@ -37,6 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#20521](https://github.com/cosmos/cosmos-sdk/pull/20521) Legacy proposals can now access the `appmodule.Environment` present in the `context.Context` of the handler. This is useful when migrating to server/v2 and removing the sdk context dependency.
 * [#19741](https://github.com/cosmos/cosmos-sdk/pull/19741) Add `ExpeditedQuorum` parameter specifying a minimum quorum for expedited proposals, that can differ from the regular quorum.
 * [#19352](https://github.com/cosmos/cosmos-sdk/pull/19352) `TallyResult` include vote options counts. Those counts replicates the now deprecated (but not removed) yes, no, abstain and veto count fields.
 * [#18976](https://github.com/cosmos/cosmos-sdk/pull/18976) Log and send an event when a proposal deposit refund or burn has failed.
@@ -54,6 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18762](https://github.com/cosmos/cosmos-sdk/pull/18762) Add multiple choice proposals.
 * [#18856](https://github.com/cosmos/cosmos-sdk/pull/18856) Add `ProposalCancelMaxPeriod` parameters.
 * [#19167](https://github.com/cosmos/cosmos-sdk/pull/19167) Add `YesQuorum` parameter.
+* [#20348](https://github.com/cosmos/cosmos-sdk/pull/20348) Limit gov execution of proposals to a max gas limit. The limit was added to parameters and can be modified. With this version the default is set to 10 million gas. Before it was infinite gas.
 
 ### Client Breaking Changes
 
@@ -61,6 +64,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#19850](https://github.com/cosmos/cosmos-sdk/pull/19850) Removes the use of Accounts String method: 
+    * `NewDeposit`, `NewMsgDeposit`, `NewMsgVote`, `NewMsgVoteWeighted`, `NewVote`, `NewProposal`, `NewMsgSubmitProposal` now take a string as an argument instead of an `sdk.AccAddress`.
+    * `Prompt` and `PromptMetadata` take an address.Codec as arguments.
+    * `SetProposer` takes a String as an argument instead of a `fmt.Stringer`.
 * [#19481](https://github.com/cosmos/cosmos-sdk/pull/19481) Migrate module to use `appmodule.Environment`; `NewKeeper` now takes `appmodule.Environment` instead of a store service and no `baseapp.MessageRouter` anymore.
 * [#19481](https://github.com/cosmos/cosmos-sdk/pull/19481) v1beta1 proposal handlers now take a `context.Context` instead of an `sdk.Context`.
 * [#19592](https://github.com/cosmos/cosmos-sdk/pull/19592) `types.Config` and `types.DefaultConfig` have been moved to the keeper package in order to support the custom tallying function.
@@ -68,7 +75,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) All functions that were taking an expedited bool parameter now take a `ProposalType` parameter instead.
 * [#17496](https://github.com/cosmos/cosmos-sdk/pull/17496) in `x/gov/types/v1beta1/vote.go` `NewVote` was removed, constructing the struct is required for this type.
 * [#19101](https://github.com/cosmos/cosmos-sdk/pull/19101) Move `QueryProposalVotesParams` and `QueryVoteParams` from the `types/v1` package to `utils` and remove unused `querier.go` file.
-* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) Verify `InitGenesis` and `ExportGenesis` module code and keeper code do not panic.
+* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) `InitGenesis` and `ExportGenesis` module code and keeper code do not panic but return errors.
 
 ### Deprecated
 

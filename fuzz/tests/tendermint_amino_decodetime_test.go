@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	amino "github.com/tendermint/go-amino"
+	"github.com/tendermint/go-amino"
 )
 
 func FuzzTendermintAminoDecodeTime(f *testing.F) {

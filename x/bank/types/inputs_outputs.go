@@ -51,9 +51,9 @@ func (in Input) ValidateBasic() error {
 }
 
 // NewInput - create a transaction input, used with MsgMultiSend
-func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
+func NewInput(addr string, coins sdk.Coins) Input {
 	return Input{
-		Address: addr.String(),
+		Address: addr,
 		Coins:   coins,
 	}
 }
@@ -76,9 +76,9 @@ func (out Output) ValidateBasic() error {
 }
 
 // NewOutput - create a transaction output, used with MsgMultiSend
-func NewOutput(addr sdk.AccAddress, coins sdk.Coins) Output {
+func NewOutput(addr string, coins sdk.Coins) Output {
 	return Output{
-		Address: addr.String(),
+		Address: addr,
 		Coins:   coins,
 	}
 }

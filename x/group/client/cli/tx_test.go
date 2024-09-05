@@ -7,7 +7,7 @@ import (
 	"io"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
 
@@ -72,10 +72,12 @@ func (s *CLITestSuite) SetupSuite() {
 
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 	val := accounts[0]
+	valAddr, err := s.baseCtx.AddressCodec.BytesToString(val.Address)
+	s.Require().NoError(err)
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
+		c := clitestutil.NewMockCometRPC(abci.QueryResponse{
 			Value: bz,
 		})
 		return s.baseCtx.WithClient(c)
@@ -94,9 +96,14 @@ func (s *CLITestSuite) SetupSuite() {
 	from := val.Address
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(2000)))
 
+	fromAddr, err := s.baseCtx.AddressCodec.BytesToString(from)
+	s.Require().NoError(err)
+	toAddr, err := s.baseCtx.AddressCodec.BytesToString(account)
+	s.Require().NoError(err)
+
 	msgSend := &banktypes.MsgSend{
-		FromAddress: from.String(),
-		ToAddress:   account.String(),
+		FromAddress: fromAddr,
+		ToAddress:   toAddr,
 		Amount:      coins,
 	}
 
@@ -113,12 +120,12 @@ func (s *CLITestSuite) SetupSuite() {
 				"metadata": "%s"
 			}
 		]
-	}`, val.Address.String(), validMetadata)
+	}`, valAddr, validMetadata)
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
 	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, groupcli.MsgCreateGroupCmd(),
 		append(
 			[]string{
-				val.Address.String(),
+				valAddr,
 				validMetadata,
 				validMembersFile.Name(),
 			},
@@ -131,11 +138,13 @@ func (s *CLITestSuite) SetupSuite() {
 	s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())
 
-	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: validMetadata, TotalWeight: "3", Version: 1}
+	s.group = &group.GroupInfo{Id: 1, Admin: valAddr, Metadata: validMetadata, TotalWeight: "3", Version: 1}
 }
 
 func (s *CLITestSuite) TestTxCreateGroup() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
+	account0Addr, err := s.baseCtx.AddressCodec.BytesToString(accounts[0].Address)
+	s.Require().NoError(err)
 
 	cmd := groupcli.MsgCreateGroupCmd()
 	cmd.SetOutput(io.Discard)
@@ -144,13 +153,13 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 		"address": "%s",
 		  "weight": "1",
 		  "metadata": "%s"
-	  }]}`, accounts[0].Address.String(), validMetadata)
+	  }]}`, account0Addr, validMetadata)
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
 
 	invalidMembersWeight := fmt.Sprintf(`{"members": [{
 			"address": "%s",
 			  "weight": "0"
-		  }]}`, accounts[0].Address.String())
+		  }]}`, account0Addr)
 	invalidMembersWeightFile := testutil.WriteToNewTempFile(s.T(), invalidMembersWeight)
 
 	testCases := []struct {
@@ -163,34 +172,34 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 			name: "correct data",
 			args: append(
 				[]string{
-					accounts[0].Address.String(),
+					account0Addr,
 					"",
 					validMembersFile.Name(),
 				},
 				s.commonFlags...,
 			),
-			expCmdOutput: fmt.Sprintf("%s %s %s", accounts[0].Address.String(), "", validMembersFile.Name()),
+			expCmdOutput: fmt.Sprintf("%s %s %s", account0Addr, "", validMembersFile.Name()),
 			expectErrMsg: "",
 		},
 		{
 			"with amino-json",
 			append(
 				[]string{
-					accounts[0].Address.String(),
+					account0Addr,
 					"",
 					validMembersFile.Name(),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
 				s.commonFlags...,
 			),
-			fmt.Sprintf("%s %s %s", accounts[0].Address.String(), "", validMembersFile.Name()),
+			fmt.Sprintf("%s %s %s", account0Addr, "", validMembersFile.Name()),
 			"",
 		},
 		{
 			"invalid members weight",
 			append(
 				[]string{
-					accounts[0].Address.String(),
+					account0Addr,
 					"null",
 					invalidMembersWeightFile.Name(),
 				},
@@ -203,7 +212,7 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 			"no member provided",
 			append(
 				[]string{
-					accounts[0].Address.String(),
+					account0Addr,
 					"null",
 					"doesnotexist.json",
 				},
@@ -244,6 +253,9 @@ func (s *CLITestSuite) TestTxUpdateGroupMembers() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 3)
 	groupPolicyAddress := accounts[2]
 
+	account0Addr, err := s.baseCtx.AddressCodec.BytesToString(accounts[0].Address)
+	s.Require().NoError(err)
+
 	cmd := groupcli.MsgUpdateGroupMembersCmd()
 	cmd.SetOutput(io.Discard)
 
@@ -276,53 +288,53 @@ func (s *CLITestSuite) TestTxUpdateGroupMembers() {
 			"correct data",
 			append(
 				[]string{
-					accounts[0].Address.String(),
+					account0Addr,
 					groupID,
 					validUpdatedMembersFileName,
 				},
 				s.commonFlags...,
 			),
-			fmt.Sprintf("%s %s %s", accounts[0].Address.String(), groupID, validUpdatedMembersFileName),
+			fmt.Sprintf("%s %s %s", account0Addr, groupID, validUpdatedMembersFileName),
 			"",
 		},
 		{
 			"with amino-json",
 			append(
 				[]string{
-					accounts[0].Address.String(),
+					account0Addr,
 					groupID,
 					validUpdatedMembersFileName,
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
 				s.commonFlags...,
 			),
-			fmt.Sprintf("%s %s %s --%s=%s", accounts[0].Address.String(), groupID, validUpdatedMembersFileName, flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+			fmt.Sprintf("%s %s %s --%s=%s", account0Addr, groupID, validUpdatedMembersFileName, flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 			"",
 		},
 		{
 			"group id invalid",
 			append(
 				[]string{
-					accounts[0].Address.String(),
+					account0Addr,
 					"0",
 					validUpdatedMembersFileName,
 				},
 				s.commonFlags...,
 			),
-			fmt.Sprintf("%s %s %s", accounts[0].Address.String(), "0", validUpdatedMembersFileName),
+			fmt.Sprintf("%s %s %s", account0Addr, "0", validUpdatedMembersFileName),
 			"group id cannot be 0",
 		},
 		{
 			"group member weight invalid",
 			append(
 				[]string{
-					accounts[0].Address.String(),
+					account0Addr,
 					groupID,
 					invalidMembersMetadataFileName,
 				},
 				s.commonFlags...,
 			),
-			fmt.Sprintf("%s %s %s", accounts[0].Address.String(), groupID, invalidMembersMetadataFileName),
+			fmt.Sprintf("%s %s %s", account0Addr, groupID, invalidMembersMetadataFileName),
 			"invalid weight -1",
 		},
 	}
@@ -358,6 +370,9 @@ func (s *CLITestSuite) TestTxUpdateGroupMembers() {
 func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 
+	account0Addr, err := s.baseCtx.AddressCodec.BytesToString(accounts[0].Address)
+	s.Require().NoError(err)
+
 	cmd := groupcli.MsgCreateGroupWithPolicyCmd()
 	cmd.SetOutput(io.Discard)
 
@@ -365,13 +380,13 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 		"address": "%s",
 		  "weight": "1",
 		  "metadata": "%s"
-	}]}`, accounts[0].Address.String(), validMetadata)
+	}]}`, account0Addr, validMetadata)
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
 
 	invalidMembersWeight := fmt.Sprintf(`{"members": [{
 		"address": "%s",
 		  "weight": "0"
-	}]}`, accounts[0].Address.String())
+	}]}`, account0Addr)
 	invalidMembersWeightFile := testutil.WriteToNewTempFile(s.T(), invalidMembersWeight)
 
 	thresholdDecisionPolicyFile := testutil.WriteToNewTempFile(s.T(), `{"@type": "/cosmos.group.v1.ThresholdDecisionPolicy","threshold": "1","windows": {"voting_period":"1s"}}`)
@@ -386,7 +401,7 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 			"correct data",
 			append(
 				[]string{
-					accounts[0].Address.String(),
+					account0Addr,
 					validMetadata,
 					validMetadata,
 					validMembersFile.Name(),
@@ -396,13 +411,13 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 				s.commonFlags...,
 			),
 			"",
-			fmt.Sprintf("%s %s %s %s %s --%s=%v", accounts[0].Address.String(), validMetadata, validMetadata, validMembersFile.Name(), thresholdDecisionPolicyFile.Name(), groupcli.FlagGroupPolicyAsAdmin, false),
+			fmt.Sprintf("%s %s %s %s %s --%s=%v", account0Addr, validMetadata, validMetadata, validMembersFile.Name(), thresholdDecisionPolicyFile.Name(), groupcli.FlagGroupPolicyAsAdmin, false),
 		},
 		{
 			"group-policy-as-admin is true",
 			append(
 				[]string{
-					accounts[0].Address.String(),
+					account0Addr,
 					validMetadata,
 					validMetadata,
 					validMembersFile.Name(),
@@ -412,13 +427,13 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 				s.commonFlags...,
 			),
 			"",
-			fmt.Sprintf("%s %s %s %s %s --%s=%v", accounts[0].Address.String(), validMetadata, validMetadata, validMembersFile.Name(), thresholdDecisionPolicyFile.Name(), groupcli.FlagGroupPolicyAsAdmin, true),
+			fmt.Sprintf("%s %s %s %s %s --%s=%v", account0Addr, validMetadata, validMetadata, validMembersFile.Name(), thresholdDecisionPolicyFile.Name(), groupcli.FlagGroupPolicyAsAdmin, true),
 		},
 		{
 			"with amino-json",
 			append(
 				[]string{
-					accounts[0].Address.String(),
+					account0Addr,
 					validMetadata,
 					validMetadata,
 					validMembersFile.Name(),
@@ -429,13 +444,13 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 				s.commonFlags...,
 			),
 			"",
-			fmt.Sprintf("%s %s %s %s %s --%s=%v --%s=%s", accounts[0].Address.String(), validMetadata, validMetadata, validMembersFile.Name(), thresholdDecisionPolicyFile.Name(), groupcli.FlagGroupPolicyAsAdmin, false, flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+			fmt.Sprintf("%s %s %s %s %s --%s=%v --%s=%s", account0Addr, validMetadata, validMetadata, validMembersFile.Name(), thresholdDecisionPolicyFile.Name(), groupcli.FlagGroupPolicyAsAdmin, false, flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 		},
 		{
 			"invalid members weight",
 			append(
 				[]string{
-					accounts[0].Address.String(),
+					account0Addr,
 					validMetadata,
 					validMetadata,
 					invalidMembersWeightFile.Name(),
@@ -445,7 +460,7 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 				s.commonFlags...,
 			),
 			"weight must be positive",
-			fmt.Sprintf("%s %s %s %s %s --%s=%v", accounts[0].Address.String(), validMetadata, validMetadata, invalidMembersWeightFile.Name(), thresholdDecisionPolicyFile.Name(), groupcli.FlagGroupPolicyAsAdmin, false),
+			fmt.Sprintf("%s %s %s %s %s --%s=%v", account0Addr, validMetadata, validMetadata, invalidMembersWeightFile.Name(), thresholdDecisionPolicyFile.Name(), groupcli.FlagGroupPolicyAsAdmin, false),
 		},
 	}
 	for _, tc := range testCases {
@@ -478,7 +493,8 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 
 func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 2)
-	val := accounts[0]
+	valAddr, err := s.baseCtx.AddressCodec.BytesToString(accounts[0].Address)
+	s.Require().NoError(err)
 
 	groupID := s.group.Id
 
@@ -501,7 +517,7 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 			"correct data",
 			append(
 				[]string{
-					val.Address.String(),
+					valAddr,
 					fmt.Sprintf("%v", groupID),
 					validMetadata,
 					thresholdDecisionPolicyFile.Name(),
@@ -509,13 +525,13 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 				s.commonFlags...,
 			),
 			"",
-			fmt.Sprintf("%s %s %s %s", val.Address.String(), fmt.Sprintf("%v", groupID), validMetadata, thresholdDecisionPolicyFile.Name()),
+			fmt.Sprintf("%s %s %s %s", valAddr, fmt.Sprintf("%v", groupID), validMetadata, thresholdDecisionPolicyFile.Name()),
 		},
 		{
 			"correct data with percentage decision policy",
 			append(
 				[]string{
-					val.Address.String(),
+					valAddr,
 					fmt.Sprintf("%v", groupID),
 					validMetadata,
 					percentageDecisionPolicyFile.Name(),
@@ -523,13 +539,13 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 				s.commonFlags...,
 			),
 			"",
-			fmt.Sprintf("%s %s %s %s", val.Address.String(), fmt.Sprintf("%v", groupID), validMetadata, percentageDecisionPolicyFile.Name()),
+			fmt.Sprintf("%s %s %s %s", valAddr, fmt.Sprintf("%v", groupID), validMetadata, percentageDecisionPolicyFile.Name()),
 		},
 		{
 			"with amino-json",
 			append(
 				[]string{
-					val.Address.String(),
+					valAddr,
 					fmt.Sprintf("%v", groupID),
 					validMetadata,
 					thresholdDecisionPolicyFile.Name(),
@@ -538,7 +554,7 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 				s.commonFlags...,
 			),
 			"",
-			fmt.Sprintf("%s %s %s %s --%s=%s", val.Address.String(), fmt.Sprintf("%v", groupID), validMetadata, thresholdDecisionPolicyFile.Name(), flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+			fmt.Sprintf("%s %s %s %s --%s=%s", valAddr, fmt.Sprintf("%v", groupID), validMetadata, thresholdDecisionPolicyFile.Name(), flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 		},
 		{
 			"wrong admin",
@@ -558,7 +574,7 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 			"invalid percentage decision policy with negative value",
 			append(
 				[]string{
-					val.Address.String(),
+					valAddr,
 					fmt.Sprintf("%v", groupID),
 					validMetadata,
 					invalidNegativePercentageDecisionPolicyFile.Name(),
@@ -566,13 +582,13 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 				s.commonFlags...,
 			),
 			"expected a positive decimal",
-			fmt.Sprintf("%s %s %s %s", val.Address.String(), fmt.Sprintf("%v", groupID), validMetadata, invalidNegativePercentageDecisionPolicyFile.Name()),
+			fmt.Sprintf("%s %s %s %s", valAddr, fmt.Sprintf("%v", groupID), validMetadata, invalidNegativePercentageDecisionPolicyFile.Name()),
 		},
 		{
 			"invalid percentage decision policy with value greater than 1",
 			append(
 				[]string{
-					val.Address.String(),
+					valAddr,
 					fmt.Sprintf("%v", groupID),
 					validMetadata,
 					invalidPercentageDecisionPolicyFile.Name(),
@@ -580,7 +596,7 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 				s.commonFlags...,
 			),
 			"percentage must be > 0 and <= 1",
-			fmt.Sprintf("%s %s %s %s", val.Address.String(), fmt.Sprintf("%v", groupID), validMetadata, invalidPercentageDecisionPolicyFile.Name()),
+			fmt.Sprintf("%s %s %s %s", valAddr, fmt.Sprintf("%v", groupID), validMetadata, invalidPercentageDecisionPolicyFile.Name()),
 		},
 	}
 
@@ -614,9 +630,12 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 
 func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 3)
-	newAdmin := accounts[0]
-	groupPolicyAdmin := accounts[1]
-	groupPolicyAddress := accounts[2]
+	newAdmin, err := s.baseCtx.AddressCodec.BytesToString(accounts[0].Address)
+	s.Require().NoError(err)
+	groupPolicyAdmin, err := s.baseCtx.AddressCodec.BytesToString(accounts[1].Address)
+	s.Require().NoError(err)
+	groupPolicyAddress, err := s.baseCtx.AddressCodec.BytesToString(accounts[2].Address)
+	s.Require().NoError(err)
 
 	commonFlags := s.commonFlags
 	commonFlags = append(commonFlags, fmt.Sprintf("--%s=%d", flags.FlagGas, 300000))
@@ -637,53 +656,53 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			"correct data",
 			append(
 				[]string{
-					groupPolicyAdmin.Address.String(),
-					groupPolicyAddress.Address.String(),
+					groupPolicyAdmin,
+					groupPolicyAddress,
 					thresholdDecisionPolicy.Name(),
 				},
 				commonFlags...,
 			),
-			fmt.Sprintf("%s %s %s", groupPolicyAdmin.Address.String(), groupPolicyAddress.Address.String(), thresholdDecisionPolicy.Name()),
+			fmt.Sprintf("%s %s %s", groupPolicyAdmin, groupPolicyAddress, thresholdDecisionPolicy.Name()),
 			"",
 		},
 		{
 			"correct data with percentage decision policy",
 			append(
 				[]string{
-					groupPolicyAdmin.Address.String(),
-					groupPolicyAddress.Address.String(),
+					groupPolicyAdmin,
+					groupPolicyAddress,
 					percentageDecisionPolicy.Name(),
 				},
 				commonFlags...,
 			),
-			fmt.Sprintf("%s %s %s", groupPolicyAdmin.Address.String(), groupPolicyAddress.Address.String(), percentageDecisionPolicy.Name()),
+			fmt.Sprintf("%s %s %s", groupPolicyAdmin, groupPolicyAddress, percentageDecisionPolicy.Name()),
 			"",
 		},
 		{
 			"with amino-json",
 			append(
 				[]string{
-					groupPolicyAdmin.Address.String(),
-					groupPolicyAddress.Address.String(),
+					groupPolicyAdmin,
+					groupPolicyAddress,
 					thresholdDecisionPolicy.Name(),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
 				commonFlags...,
 			),
-			fmt.Sprintf("%s %s %s --%s=%s", groupPolicyAdmin.Address.String(), groupPolicyAddress.Address.String(), thresholdDecisionPolicy.Name(), flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+			fmt.Sprintf("%s %s %s --%s=%s", groupPolicyAdmin, groupPolicyAddress, thresholdDecisionPolicy.Name(), flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 			"",
 		},
 		{
 			"wrong admin",
 			append(
 				[]string{
-					newAdmin.Address.String(),
+					newAdmin,
 					"invalid",
 					thresholdDecisionPolicy.Name(),
 				},
 				commonFlags...,
 			),
-			fmt.Sprintf("%s %s %s", newAdmin.Address.String(), "invalid", thresholdDecisionPolicy.Name()),
+			fmt.Sprintf("%s %s %s", newAdmin, "invalid", thresholdDecisionPolicy.Name()),
 			"decoding bech32 failed",
 		},
 	}
@@ -718,13 +737,17 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 
 func (s *CLITestSuite) TestTxSubmitProposal() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 2)
-	groupPolicyAddress := accounts[1].Address
+
+	groupPolicyAddress, err := s.baseCtx.AddressCodec.BytesToString(accounts[1].Address)
+	s.Require().NoError(err)
+	account0Addr, err := s.baseCtx.AddressCodec.BytesToString(accounts[0].Address)
+	s.Require().NoError(err)
 
 	p := groupcli.Proposal{
-		GroupPolicyAddress: groupPolicyAddress.String(),
+		GroupPolicyAddress: groupPolicyAddress,
 		Messages:           []json.RawMessage{},
 		Metadata:           validMetadata,
-		Proposers:          []string{accounts[0].Address.String()},
+		Proposers:          []string{account0Addr},
 	}
 	bz, err := json.Marshal(&p)
 	s.Require().NoError(err)

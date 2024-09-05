@@ -6,9 +6,9 @@ package v1
 import (
 	context "context"
 	fmt "fmt"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -33,7 +33,7 @@ type AccountQueryRequest struct {
 	// target defines the account to be queried.
 	Target string `protobuf:"bytes,1,opt,name=target,proto3" json:"target,omitempty"`
 	// request defines the query message being sent to the account.
-	Request *types.Any `protobuf:"bytes,2,opt,name=request,proto3" json:"request,omitempty"`
+	Request *any.Any `protobuf:"bytes,2,opt,name=request,proto3" json:"request,omitempty"`
 }
 
 func (m *AccountQueryRequest) Reset()         { *m = AccountQueryRequest{} }
@@ -76,7 +76,7 @@ func (m *AccountQueryRequest) GetTarget() string {
 	return ""
 }
 
-func (m *AccountQueryRequest) GetRequest() *types.Any {
+func (m *AccountQueryRequest) GetRequest() *any.Any {
 	if m != nil {
 		return m.Request
 	}
@@ -86,7 +86,7 @@ func (m *AccountQueryRequest) GetRequest() *types.Any {
 // AccountQueryResponse is the response type for the Query/AccountQuery RPC method.
 type AccountQueryResponse struct {
 	// response defines the query response of the account.
-	Response *types.Any `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"`
+	Response *any.Any `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"`
 }
 
 func (m *AccountQueryResponse) Reset()         { *m = AccountQueryResponse{} }
@@ -122,14 +122,14 @@ func (m *AccountQueryResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_AccountQueryResponse proto.InternalMessageInfo
 
-func (m *AccountQueryResponse) GetResponse() *types.Any {
+func (m *AccountQueryResponse) GetResponse() *any.Any {
 	if m != nil {
 		return m.Response
 	}
 	return nil
 }
 
-// SchemaResponse is the response type for the Query/Schema RPC method.
+// SchemaRequest is the request type for the Query/Schema RPC method.
 type SchemaRequest struct {
 	// account_type defines the account type to query the schema for.
 	AccountType string `protobuf:"bytes,1,opt,name=account_type,json=accountType,proto3" json:"account_type,omitempty"`
@@ -702,6 +702,7 @@ func _Query_AccountNumber_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.accounts.v1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -1296,7 +1297,7 @@ func (m *AccountQueryRequest) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Request == nil {
-				m.Request = &types.Any{}
+				m.Request = &any.Any{}
 			}
 			if err := m.Request.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1382,7 +1383,7 @@ func (m *AccountQueryResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Response == nil {
-				m.Response = &types.Any{}
+				m.Response = &any.Any{}
 			}
 			if err := m.Response.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

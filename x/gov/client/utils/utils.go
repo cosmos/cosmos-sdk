@@ -49,8 +49,9 @@ func NormalizeProposalType(proposalType string) v1.ProposalType {
 
 // NormalizeWeightedVoteOptions - normalize vote options param string
 func NormalizeWeightedVoteOptions(options string) string {
-	newOptions := []string{}
-	for _, option := range strings.Split(options, ",") {
+	tmpOptions := strings.Split(options, ",")
+	newOptions := make([]string, 0, len(tmpOptions))
+	for _, option := range tmpOptions {
 		fields := strings.Split(option, "=")
 		fields[0] = NormalizeVoteOption(fields[0])
 		if len(fields) < 2 {

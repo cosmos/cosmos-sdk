@@ -4,6 +4,8 @@ package cosmos.app.v1alpha1;
 
 import "cosmos/app/v1alpha1/config.proto";
 
+option go_package = "cosmossdk.io/depinject/appconfig/v1alpha1";
+
 // Query is the app module query service.
 service Query {
 
@@ -16,7 +18,7 @@ service Query {
 // QueryConfigRequest is the Query/Config request type.
 message QueryConfigRequest {}
 
-// QueryConfigRequest is the Query/Config response type.
+// QueryConfigResponse is the Query/Config response type.
 message QueryConfigResponse {
 
   // config is the current app config.

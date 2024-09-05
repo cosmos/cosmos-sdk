@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/errors"
 	"cosmossdk.io/x/group/internal/orm"
@@ -46,8 +45,8 @@ const (
 )
 
 type Keeper struct {
-	environment appmodule.Environment
-	accKeeper   group.AccountKeeper
+	appmodule.Environment
+	accKeeper group.AccountKeeper
 
 	// Group Table
 	groupTable        orm.AutoUInt64Table
@@ -82,7 +81,7 @@ type Keeper struct {
 // NewKeeper creates a new group keeper.
 func NewKeeper(env appmodule.Environment, cdc codec.Codec, accKeeper group.AccountKeeper, config group.Config) Keeper {
 	k := Keeper{
-		environment: env,
+		Environment: env,
 		accKeeper:   accKeeper,
 		cdc:         cdc,
 	}
@@ -114,7 +113,7 @@ func NewKeeper(env appmodule.Environment, cdc codec.Codec, accKeeper group.Accou
 	}
 	k.config = config
 
-	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
+	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc, k.accKeeper.AddressCodec())
 	if err != nil {
 		panic(err.Error())
 	}
@@ -131,7 +130,7 @@ func NewKeeper(env appmodule.Environment, cdc codec.Codec, accKeeper group.Accou
 	k.groupTable = *groupTable
 
 	// Group Member Table
-	groupMemberTable, err := orm.NewPrimaryKeyTable([2]byte{GroupMemberTablePrefix}, &group.GroupMember{}, cdc)
+	groupMemberTable, err := orm.NewPrimaryKeyTable([2]byte{GroupMemberTablePrefix}, &group.GroupMember{}, cdc, k.accKeeper.AddressCodec())
 	if err != nil {
 		panic(err.Error())
 	}
@@ -157,7 +156,7 @@ func NewKeeper(env appmodule.Environment, cdc codec.Codec, accKeeper group.Accou
 
 	// Group Policy Table
 	k.groupPolicySeq = orm.NewSequence(GroupPolicyTableSeqPrefix)
-	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
+	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc, k.accKeeper.AddressCodec())
 	if err != nil {
 		panic(err.Error())
 	}
@@ -181,7 +180,7 @@ func NewKeeper(env appmodule.Environment, cdc codec.Codec, accKeeper group.Accou
 	k.groupPolicyTable = *groupPolicyTable
 
 	// Proposal Table
-	proposalTable, err := orm.NewAutoUInt64Table([2]byte{ProposalTablePrefix}, ProposalTableSeqPrefix, &group.Proposal{}, cdc)
+	proposalTable, err := orm.NewAutoUInt64Table([2]byte{ProposalTablePrefix}, ProposalTableSeqPrefix, &group.Proposal{}, cdc, k.accKeeper.AddressCodec())
 	if err != nil {
 		panic(err.Error())
 	}
@@ -206,7 +205,7 @@ func NewKeeper(env appmodule.Environment, cdc codec.Codec, accKeeper group.Accou
 	k.proposalTable = *proposalTable
 
 	// Vote Table
-	voteTable, err := orm.NewPrimaryKeyTable([2]byte{VoteTablePrefix}, &group.Vote{}, cdc)
+	voteTable, err := orm.NewPrimaryKeyTable([2]byte{VoteTablePrefix}, &group.Vote{}, cdc, k.accKeeper.AddressCodec())
 	if err != nil {
 		panic(err.Error())
 	}
@@ -231,25 +230,20 @@ func NewKeeper(env appmodule.Environment, cdc codec.Codec, accKeeper group.Accou
 	return k
 }
 
-// Logger returns a module-specific logger.
-func (k Keeper) Logger() log.Logger {
-	return k.environment.Logger.With("module", fmt.Sprintf("x/%s", group.ModuleName))
-}
-
 // GetGroupSequence returns the current value of the group table sequence
 func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
-	return k.groupTable.Sequence().CurVal(k.environment.KVStoreService.OpenKVStore(ctx))
+	return k.groupTable.Sequence().CurVal(k.KVStoreService.OpenKVStore(ctx))
 }
 
 // GetGroupPolicySeq returns the current value of the group policy table sequence
 func (k Keeper) GetGroupPolicySeq(ctx sdk.Context) uint64 {
-	return k.groupPolicySeq.CurVal(k.environment.KVStoreService.OpenKVStore(ctx))
+	return k.groupPolicySeq.CurVal(k.KVStoreService.OpenKVStore(ctx))
 }
 
 // proposalsByVPEnd returns all proposals whose voting_period_end is after the `endTime` time argument.
 func (k Keeper) proposalsByVPEnd(ctx context.Context, endTime time.Time) (proposals []group.Proposal, err error) {
 	timeBytes := sdk.FormatTimeBytes(endTime)
-	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(k.environment.KVStoreService.OpenKVStore(ctx), nil, timeBytes)
+	it, err := k.proposalsByVotingPeriodEnd.PrefixScan(k.KVStoreService.OpenKVStore(ctx), nil, timeBytes)
 	if err != nil {
 		return proposals, err
 	}
@@ -281,12 +275,12 @@ func (k Keeper) proposalsByVPEnd(ctx context.Context, endTime time.Time) (propos
 
 // pruneProposal deletes a proposal from state.
 func (k Keeper) pruneProposal(ctx context.Context, proposalID uint64) error {
-	err := k.proposalTable.Delete(k.environment.KVStoreService.OpenKVStore(ctx), proposalID)
+	err := k.proposalTable.Delete(k.KVStoreService.OpenKVStore(ctx), proposalID)
 	if err != nil {
 		return err
 	}
 
-	k.Logger().Debug(fmt.Sprintf("Pruned proposal %d", proposalID))
+	k.Logger.Debug(fmt.Sprintf("Pruned proposal %d", proposalID))
 	return nil
 }
 
@@ -298,13 +292,12 @@ func (k Keeper) abortProposals(ctx context.Context, groupPolicyAddr sdk.AccAddre
 		return err
 	}
 
-	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointer on &proposalInfo)"
 	for _, proposalInfo := range proposals {
 		// Mark all proposals still in the voting phase as aborted.
 		if proposalInfo.Status == group.PROPOSAL_STATUS_SUBMITTED {
 			proposalInfo.Status = group.PROPOSAL_STATUS_ABORTED
 
-			if err := k.proposalTable.Update(k.environment.KVStoreService.OpenKVStore(ctx), proposalInfo.Id, &proposalInfo); err != nil {
+			if err := k.proposalTable.Update(k.KVStoreService.OpenKVStore(ctx), proposalInfo.Id, &proposalInfo); err != nil {
 				return err
 			}
 		}
@@ -314,7 +307,7 @@ func (k Keeper) abortProposals(ctx context.Context, groupPolicyAddr sdk.AccAddre
 
 // proposalsByGroupPolicy returns all proposals for a given group policy.
 func (k Keeper) proposalsByGroupPolicy(ctx context.Context, groupPolicyAddr sdk.AccAddress) ([]group.Proposal, error) {
-	proposalIt, err := k.proposalByGroupPolicyIndex.Get(k.environment.KVStoreService.OpenKVStore(ctx), groupPolicyAddr.Bytes())
+	proposalIt, err := k.proposalByGroupPolicyIndex.Get(k.KVStoreService.OpenKVStore(ctx), groupPolicyAddr.Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -343,9 +336,8 @@ func (k Keeper) pruneVotes(ctx context.Context, proposalID uint64) error {
 		return err
 	}
 
-	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointer on &v)"
 	for _, v := range votes {
-		err = k.voteTable.Delete(k.environment.KVStoreService.OpenKVStore(ctx), &v)
+		err = k.voteTable.Delete(k.KVStoreService.OpenKVStore(ctx), &v)
 		if err != nil {
 			return err
 		}
@@ -356,7 +348,7 @@ func (k Keeper) pruneVotes(ctx context.Context, proposalID uint64) error {
 
 // votesByProposal returns all votes for a given proposal.
 func (k Keeper) votesByProposal(ctx context.Context, proposalID uint64) ([]group.Vote, error) {
-	it, err := k.voteByProposalIndex.Get(k.environment.KVStoreService.OpenKVStore(ctx), proposalID)
+	it, err := k.voteByProposalIndex.Get(k.KVStoreService.OpenKVStore(ctx), proposalID)
 	if err != nil {
 		return nil, err
 	}
@@ -380,8 +372,8 @@ func (k Keeper) votesByProposal(ctx context.Context, proposalID uint64) ([]group
 // PruneProposals prunes all proposals that are expired, i.e. whose
 // `voting_period + max_execution_period` is greater than the current block
 // time.
-func (k Keeper) PruneProposals(ctx context.Context, env appmodule.Environment) error {
-	endTime := env.HeaderService.GetHeaderInfo(ctx).Time.Add(-k.config.MaxExecutionPeriod)
+func (k Keeper) PruneProposals(ctx context.Context) error {
+	endTime := k.HeaderService.HeaderInfo(ctx).Time.Add(-k.config.MaxExecutionPeriod)
 	proposals, err := k.proposalsByVPEnd(ctx, endTime)
 	if err != nil {
 		return nil
@@ -394,7 +386,7 @@ func (k Keeper) PruneProposals(ctx context.Context, env appmodule.Environment) e
 			return err
 		}
 		// Emit event for proposal finalized with its result
-		if err := k.environment.EventService.EventManager(ctx).Emit(
+		if err := k.EventService.EventManager(ctx).Emit(
 			&group.EventProposalPruned{
 				ProposalId:  proposal.Id,
 				Status:      proposal.Status,
@@ -411,12 +403,11 @@ func (k Keeper) PruneProposals(ctx context.Context, env appmodule.Environment) e
 // TallyProposalsAtVPEnd iterates over all proposals whose voting period
 // has ended, tallies their votes, prunes them, and updates the proposal's
 // `FinalTallyResult` field.
-func (k Keeper) TallyProposalsAtVPEnd(ctx context.Context, env appmodule.Environment) error {
-	proposals, err := k.proposalsByVPEnd(ctx, env.HeaderService.GetHeaderInfo(ctx).Time)
+func (k Keeper) TallyProposalsAtVPEnd(ctx context.Context) error {
+	proposals, err := k.proposalsByVPEnd(ctx, k.HeaderService.HeaderInfo(ctx).Time)
 	if err != nil {
 		return nil
 	}
-	//nolint:gosec // "implicit memory aliasing in the for loop (because of the pointers in the loop)"
 	for _, proposal := range proposals {
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
 		if err != nil {
@@ -437,7 +428,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx context.Context, env appmodule.Environ
 				return err
 			}
 			// Emit event for proposal finalized with its result
-			if err := k.environment.EventService.EventManager(ctx).Emit(
+			if err := k.EventService.EventManager(ctx).Emit(
 				&group.EventProposalPruned{
 					ProposalId: proposal.Id,
 					Status:     proposal.Status,
@@ -450,7 +441,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx context.Context, env appmodule.Environ
 				return errorsmod.Wrap(err, "doTallyAndUpdate")
 			}
 
-			if err := k.proposalTable.Update(k.environment.KVStoreService.OpenKVStore(ctx), proposal.Id, &proposal); err != nil {
+			if err := k.proposalTable.Update(k.KVStoreService.OpenKVStore(ctx), proposal.Id, &proposal); err != nil {
 				return errorsmod.Wrap(err, "proposal update")
 			}
 		}
@@ -464,7 +455,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx context.Context, env appmodule.Environ
 // is greater than defined MaxMetadataLen in the module configuration
 func (k Keeper) assertMetadataLength(metadata, description string) error {
 	if uint64(len(metadata)) > k.config.MaxMetadataLen {
-		return errors.ErrMetadataTooLong.Wrapf(description)
+		return errors.ErrMetadataTooLong.Wrap(description)
 	}
 	return nil
 }

@@ -2,15 +2,20 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"github.com/pkg/errors"
+	pkgerr "github.com/pkg/errors"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/distribution/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+const (
+	maxReferenceCount = 2
 )
 
 // initialize rewards for a new validator
@@ -51,7 +56,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val sdk.ValidatorI
 
 	// fetch current rewards
 	rewards, err := k.ValidatorCurrentRewards.Get(ctx, valBz)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+	if err != nil && !pkgerr.Is(err, collections.ErrNotFound) {
 		return 0, err
 	}
 
@@ -67,7 +72,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val sdk.ValidatorI
 		}
 
 		outstanding, err := k.ValidatorOutstandingRewards.Get(ctx, valBz)
-		if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		if err != nil && !pkgerr.Is(err, collections.ErrNotFound) {
 			return 0, err
 		}
 
@@ -126,8 +131,8 @@ func (k Keeper) incrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 	}
 
 	historical.ReferenceCount++
-	if historical.ReferenceCount > 2 {
-		panic("reference count should never exceed 2")
+	if historical.ReferenceCount > maxReferenceCount {
+		return fmt.Errorf("reference count should never exceed %d", maxReferenceCount)
 	}
 	return k.ValidatorHistoricalRewards.Set(ctx, collections.Join(valAddr, period), historical)
 }
@@ -140,7 +145,7 @@ func (k Keeper) decrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 	}
 
 	if historical.ReferenceCount == 0 {
-		panic("cannot set negative reference count")
+		return errors.New("cannot set negative reference count")
 	}
 	historical.ReferenceCount--
 	if historical.ReferenceCount == 0 {
@@ -152,10 +157,10 @@ func (k Keeper) decrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 
 func (k Keeper) updateValidatorSlashFraction(ctx context.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error {
 	if fraction.GT(math.LegacyOneDec()) || fraction.IsNegative() {
-		panic(fmt.Sprintf("fraction must be >=0 and <=1, current fraction: %v", fraction))
+		return fmt.Errorf("fraction must be >=0 and <=1, current fraction: %v", fraction)
 	}
 
-	headerinfo := k.environment.HeaderService.GetHeaderInfo(ctx)
+	headerinfo := k.HeaderService.HeaderInfo(ctx)
 	val, err := k.stakingKeeper.Validator(ctx, valAddr)
 	if err != nil {
 		return err

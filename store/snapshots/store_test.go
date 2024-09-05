@@ -7,16 +7,17 @@ import (
 	"testing"
 	"time"
 
+	db "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/store/v2/snapshots"
-	"cosmossdk.io/store/v2/snapshots/types"
+	"cosmossdk.io/store/snapshots"
+	"cosmossdk.io/store/snapshots/types"
 )
 
 func setupStore(t *testing.T) *snapshots.Store {
 	t.Helper()
-	store, err := snapshots.NewStore(GetTempDir(t))
+	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
 	require.NoError(t, err)
 
 	_, err = store.Save(1, 1, makeChunks([][]byte{
@@ -41,13 +42,13 @@ func setupStore(t *testing.T) *snapshots.Store {
 
 func TestNewStore(t *testing.T) {
 	tempdir := GetTempDir(t)
-	_, err := snapshots.NewStore(tempdir)
+	_, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 
 	require.NoError(t, err)
 }
 
 func TestNewStore_ErrNoDir(t *testing.T) {
-	_, err := snapshots.NewStore("")
+	_, err := snapshots.NewStore(db.NewMemDB(), "")
 	require.Error(t, err)
 }
 

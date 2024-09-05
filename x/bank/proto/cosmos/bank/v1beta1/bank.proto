@@ -106,21 +106,13 @@ message Metadata {
   // displayed in clients.
   string display = 4;
   // name defines the name of the token (eg: Cosmos Atom)
-  //
-  // Since: cosmos-sdk 0.43
-  string name = 5;
+  string name = 5 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.43"];
   // symbol is the token symbol usually shown on exchanges (eg: ATOM). This can
   // be the same as the display.
-  //
-  // Since: cosmos-sdk 0.43
-  string symbol = 6;
+  string symbol = 6 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.43"];
   // URI to a document (on or off-chain) that contains additional information. Optional.
-  //
-  // Since: cosmos-sdk 0.46
-  string uri = 7 [(gogoproto.customname) = "URI"];
+  string uri = 7 [(gogoproto.customname) = "URI", (cosmos_proto.field_added_in) = "cosmos-sdk 0.46"];
   // URIHash is a sha256 hash of a document pointed by URI. It's used to verify that
   // the document didn't change. Optional.
-  //
-  // Since: cosmos-sdk 0.46
-  string uri_hash = 8 [(gogoproto.customname) = "URIHash"];
+  string uri_hash = 8 [(gogoproto.customname) = "URIHash", (cosmos_proto.field_added_in) = "cosmos-sdk 0.46"];
 }

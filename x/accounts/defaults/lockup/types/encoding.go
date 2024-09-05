@@ -1,12 +1,13 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 	"reflect"
 	"strings"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	proto "github.com/cosmos/gogoproto/proto"
 )
 
 func UnpackAnyRaw(m *codectypes.Any) (proto.Message, error) {

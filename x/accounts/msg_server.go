@@ -2,6 +2,7 @@ package accounts
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/x/accounts/internal/implementation"
@@ -19,21 +20,9 @@ type msgServer struct {
 }
 
 func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitResponse, error) {
-	creator, err := m.k.addressCodec.StringToBytes(request.Sender)
+	resp, accAddr, err := m.k.initFromMsg(ctx, request)
 	if err != nil {
-		return nil, err
-	}
-
-	// decode message bytes into the concrete boxed message type
-	msg, err := implementation.UnpackAnyRaw(request.Message)
-	if err != nil {
-		return nil, err
-	}
-
-	// run account creation logic
-	resp, accAddr, err := m.k.Init(ctx, request.AccountType, creator, msg, request.Funds)
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to initialize account: %w", err)
 	}
 
 	// encode the address
@@ -42,7 +31,7 @@ func (m msgServer) Init(ctx context.Context, request *v1.MsgInit) (*v1.MsgInitRe
 		return nil, err
 	}
 
-	eventManager := m.k.environment.EventService.EventManager(ctx)
+	eventManager := m.k.EventService.EventManager(ctx)
 	err = eventManager.EmitKV(
 		"account_creation",
 		event.NewAttribute("address", accAddrString),

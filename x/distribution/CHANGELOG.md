@@ -29,8 +29,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 *
 
+### Improvements
+
+* [#20790](https://github.com/cosmos/cosmos-sdk/pull/20790) `x/distribution` does not depend on `x/protocolpool` anymore, now `x/distribution` only does token transfers and `x/protocolpool` does the rest.
+
 ### API Breaking Changes
 
+* [#20790](https://github.com/cosmos/cosmos-sdk/pull/20790) `x/distribution` does not depend on `x/protocolpool` anymore, meaning NewAppModule and NewKeeper do not take it as an argument.
+* [#20588](https://github.com/cosmos/cosmos-sdk/pull/20588) `x/distribution` now takes cometService in order to get consensus related information.
+* [#19868](https://github.com/cosmos/cosmos-sdk/pull/19868) Removes Accounts String method
+    * `NewMsgSetWithdrawAddress` now takes strings as argument instead of `sdk.AccAddress`.
+    * `NewGenesisState` now takes a string as argument instead of `sdk.ConsAddress`.
 * [#19445](https://github.com/cosmos/cosmos-sdk/pull/19445) `appmodule.Environment` is received on the Keeper to get access to different application services
 * [#17115](https://github.com/cosmos/cosmos-sdk/pull/17115) Use collections for `PreviousProposer` and `ValidatorSlashEvents`:
     * remove from `Keeper`: `GetPreviousProposerConsAddr`, `SetPreviousProposerConsAddr`, `GetValidatorHistoricalReferenceCount`, `GetValidatorSlashEvent`, `SetValidatorSlashEvent`.
@@ -47,9 +56,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * remove `Keeper`: `SetDelegatorWithdrawAddr`, `DeleteDelegatorWithdrawAddr`, `IterateDelegatorWithdrawAddrs`.
 * [#16459](https://github.com/cosmos/cosmos-sdk/pull/16459) use collections for `ValidatorCurrentRewards` state management:
     * remove `Keeper`: `IterateValidatorCurrentRewards`, `GetValidatorCurrentRewards`, `SetValidatorCurrentRewards`, `DeleteValidatorCurrentRewards`
-* [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) The distribution module keeper now takes a new argument `PoolKeeper` in addition.
+* [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) ~The distribution module keeper now takes a new argument `PoolKeeper` in addition.~ Reverted on #20790
 * [#17670](https://github.com/cosmos/cosmos-sdk/pull/17670) `AllocateTokens` takes `comet.VoteInfos` instead of `[]abci.VoteInfo`
-* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) Verify `InitGenesis` and `ExportGenesis` module code and keeper code do not panic.
+* [#19740](https://github.com/cosmos/cosmos-sdk/pull/19740) `InitGenesis` and `ExportGenesis` module code and keeper code do not panic but return errors.
 
 ### Improvements
 
@@ -61,6 +70,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 
+* [#20735](https://github.com/cosmos/cosmos-sdk/pull/20735) Remove PreviousProposer from the state machine.
 * [#17657](https://github.com/cosmos/cosmos-sdk/pull/17657) Migrate community pool funds from `x/distribution` to `x/protocolpool`.
 * [#17115](https://github.com/cosmos/cosmos-sdk/pull/17115) Migrate `PreviousProposer` to collections.
 * [#18539](https://github.com/cosmos/cosmos-sdk/pull/18539) Introduce `FeePool.DecimalPool` to replace `FeePool.CommunityPool`, which temporarily holds fractional rewards until they are distributed to the community pool every 1000 blocks.

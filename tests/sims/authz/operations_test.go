@@ -9,11 +9,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-	_ "cosmossdk.io/x/auth" // import as blank for app wiring
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	_ "cosmossdk.io/x/auth/tx/config" // import as blank for app wiring
+	_ "cosmossdk.io/x/accounts" // import as blank for app wiring
 	"cosmossdk.io/x/authz"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	_ "cosmossdk.io/x/authz/module" // import as blank for app wiring
@@ -22,9 +20,10 @@ import (
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
-	_ "cosmossdk.io/x/gov"     // import as blank for app wiring
-	_ "cosmossdk.io/x/mint"    // import as blank for app wiring
-	_ "cosmossdk.io/x/staking" // import as blank for app wiring
+	_ "cosmossdk.io/x/consensus" // import as blank for app wiring
+	_ "cosmossdk.io/x/gov"       // import as blank for app wiring
+	_ "cosmossdk.io/x/mint"      // import as blank for app wiring
+	_ "cosmossdk.io/x/staking"   // import as blank for app wiring
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -34,11 +33,14 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/genutil"   // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth" // import as blank for app wiring
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
 )
 
 var AppConfig = configurator.NewAppConfig(
+	configurator.AccountsModule(),
 	configurator.AuthModule(),
 	configurator.BankModule(),
 	configurator.StakingModule(),
@@ -55,7 +57,6 @@ type SimTestSuite struct {
 	ctx sdk.Context
 
 	app               *runtime.App
-	legacyAmino       *codec.LegacyAmino
 	codec             codec.Codec
 	interfaceRegistry codectypes.InterfaceRegistry
 	txConfig          client.TxConfig
@@ -68,9 +69,8 @@ func (suite *SimTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(
 		depinject.Configs(
 			AppConfig,
-			depinject.Supply(log.NewNopLogger()),
+			depinject.Supply(coretesting.NewNopLogger()),
 		),
-		&suite.legacyAmino,
 		&suite.codec,
 		&suite.interfaceRegistry,
 		&suite.txConfig,
@@ -169,7 +169,7 @@ func (suite *SimTestSuite) TestSimulateRevoke() {
 
 	granter := accounts[0]
 	grantee := accounts[1]
-	a := banktypes.NewSendAuthorization(initCoins, nil)
+	a := banktypes.NewSendAuthorization(initCoins, nil, suite.accountKeeper.AddressCodec())
 	expire := time.Now().Add(30 * time.Hour)
 
 	err := suite.authzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)
@@ -200,7 +200,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 
 	granter := accounts[0]
 	grantee := accounts[1]
-	a := banktypes.NewSendAuthorization(initCoins, nil)
+	a := banktypes.NewSendAuthorization(initCoins, nil, suite.accountKeeper.AddressCodec())
 	expire := suite.ctx.HeaderInfo().Time.Add(1 * time.Hour)
 
 	err := suite.authzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, a, &expire)

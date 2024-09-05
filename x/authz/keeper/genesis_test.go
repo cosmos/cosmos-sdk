@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -68,7 +69,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 
 	msr := suite.baseApp.MsgServiceRouter()
 	msr.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(nil, msr))
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithMsgRouterService(msr))
 
 	suite.keeper = keeper.NewKeeper(env, suite.encCfg.Codec, suite.accountKeeper)
 }
@@ -81,18 +82,20 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	grant := &bank.SendAuthorization{SpendLimit: coins}
 	err := suite.keeper.SaveGrant(suite.ctx, granteeAddr, granterAddr, grant, &expires)
 	suite.Require().NoError(err)
-	genesis := suite.keeper.ExportGenesis(suite.ctx)
-
+	genesis, err := suite.keeper.ExportGenesis(suite.ctx)
+	suite.Require().NoError(err)
 	// Clear keeper
 	err = suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MsgTypeURL())
 	suite.Require().NoError(err)
-	newGenesis := suite.keeper.ExportGenesis(suite.ctx)
+	newGenesis, err := suite.keeper.ExportGenesis(suite.ctx)
+	suite.Require().NoError(err)
 	suite.Require().NotEqual(genesis, newGenesis)
 	suite.Require().Empty(newGenesis)
 
 	err = suite.keeper.InitGenesis(suite.ctx, genesis)
 	suite.Require().NoError(err)
-	newGenesis = suite.keeper.ExportGenesis(suite.ctx)
+	newGenesis, err = suite.keeper.ExportGenesis(suite.ctx)
+	suite.Require().NoError(err)
 	suite.Require().Equal(genesis, newGenesis)
 }
 

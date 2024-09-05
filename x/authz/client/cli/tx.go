@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	authclient "cosmossdk.io/x/auth/client"
 	"cosmossdk.io/x/authz"
 	bank "cosmossdk.io/x/bank/types"
 	staking "cosmossdk.io/x/staking/types"
@@ -18,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 // Flag names and values
@@ -58,7 +58,7 @@ func GetTxCmd() *cobra.Command {
 // but it will be removed in future versions.
 func NewCmdExecAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "legacy-exec [tx-json-file] --from [grantee]",
+		Use:     "legacy-exec <tx-json-file> --from <grantee>",
 		Short:   "Execute tx on behalf of granter account. Deprecated, use exec instead.",
 		Example: fmt.Sprintf("$ %s tx authz exec tx.json --from grantee\n $ %[1]s tx bank send [granter] [recipient] [amount] --generate-only tx.json && %[1]s tx authz exec tx.json --from grantee", version.AppName),
 		Args:    cobra.ExactArgs(1),
@@ -67,7 +67,10 @@ func NewCmdExecAuthorization() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			grantee := clientCtx.GetFromAddress()
+			grantee, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
 
 			if offline, _ := cmd.Flags().GetBool(flags.FlagOffline); offline {
 				return errors.New("cannot broadcast tx during offline mode")
@@ -92,7 +95,7 @@ func NewCmdExecAuthorization() *cobra.Command {
 // Migrating this command to AutoCLI is possible but would be CLI breaking.
 func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [grantee] <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from [granter]",
+		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
 		Short: "Grant authorization to an address",
 		Long: fmt.Sprintf(`create a new grant authorization to an address to execute a transaction on your behalf:
 Examples:
@@ -106,13 +109,18 @@ Examples:
 				return err
 			}
 
-			if strings.EqualFold(args[0], clientCtx.GetFromAddress().String()) {
-				return errors.New("grantee and granter should be different")
+			grantee := args[0]
+			if _, err := clientCtx.AddressCodec.StringToBytes(grantee); err != nil {
+				return err
 			}
 
-			grantee, err := clientCtx.AddressCodec.StringToBytes(args[0])
+			granter, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
 			if err != nil {
 				return err
+			}
+
+			if strings.EqualFold(grantee, granter) {
+				return errors.New("grantee and granter should be different")
 			}
 
 			var authorization authz.Authorization
@@ -129,7 +137,7 @@ Examples:
 				}
 
 				if !spendLimit.IsAllPositive() {
-					return fmt.Errorf("spend-limit should be greater than zero")
+					return errors.New("spend-limit should be greater than zero")
 				}
 
 				allowList, err := cmd.Flags().GetStringSlice(FlagAllowList)
@@ -151,7 +159,7 @@ Examples:
 					return err
 				}
 
-				authorization = bank.NewSendAuthorization(spendLimit, allowed)
+				authorization = bank.NewSendAuthorization(spendLimit, allowed, clientCtx.AddressCodec)
 
 			case "generic":
 				msgType, err := cmd.Flags().GetString(FlagMsgType)
@@ -194,7 +202,7 @@ Examples:
 					}
 
 					if !spendLimit.IsPositive() {
-						return fmt.Errorf("spend-limit should be greater than zero")
+						return errors.New("spend-limit should be greater than zero")
 					}
 					delegateLimit = &spendLimit
 				}
@@ -211,11 +219,11 @@ Examples:
 
 				switch args[1] {
 				case delegate:
-					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, delegateLimit)
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, delegateLimit, clientCtx.ValidatorAddressCodec)
 				case unbond:
-					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, delegateLimit)
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, delegateLimit, clientCtx.ValidatorAddressCodec)
 				default:
-					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, delegateLimit)
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, delegateLimit, clientCtx.ValidatorAddressCodec)
 				}
 				if err != nil {
 					return err
@@ -230,7 +238,7 @@ Examples:
 				return err
 			}
 
-			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, expire)
+			msg, err := authz.NewMsgGrant(granter, grantee, authorization, expire)
 			if err != nil {
 				return err
 			}

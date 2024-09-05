@@ -58,6 +58,10 @@ var (
 type Keyring interface {
 	// Backend get the backend type used in the keyring config: "file", "os", "kwallet", "pass", "test", "memory".
 	Backend() string
+
+	// DB get the db keyring used in the keystore.
+	DB() keyring.Keyring
+
 	// List all keys.
 	List() ([]*Record, error)
 
@@ -254,6 +258,11 @@ func newKeystore(kr keyring.Keyring, cdc codec.Codec, backend string, opts ...Op
 // Backend returns the keyring backend option used in the config
 func (ks keystore) Backend() string {
 	return ks.backend
+}
+
+// DB returns the db keyring used in the keystore
+func (ks keystore) DB() keyring.Keyring {
+	return ks.db
 }
 
 func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {

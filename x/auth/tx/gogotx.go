@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/cosmos/gogoproto/proto"
-	protov2 "google.golang.org/protobuf/proto"
-	anypb "google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/auth/ante"
-	authsigning "cosmossdk.io/x/auth/signing"
 	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 
@@ -25,16 +24,17 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx) (w *gogoTxWrapper, err error) {
-	// set msgsv1
-	msgv1, err := decodeMsgsV1(cdc, decodedTx.Tx.Body.Messages)
-	if err != nil {
-		return nil, fmt.Errorf("unable to convert messagev2 to messagev1: %w", err)
-	}
-	// set fees
-	fees := make(sdk.Coins, len(decodedTx.Tx.AuthInfo.Fee.Amount))
+func newWrapperFromDecodedTx(
+	addrCodec address.Codec, cdc codec.BinaryCodec, decodedTx *decode.DecodedTx,
+) (*gogoTxWrapper, error) {
+	var (
+		fees = make(sdk.Coins, len(decodedTx.Tx.AuthInfo.Fee.Amount))
+		err  error
+	)
 	for i, fee := range decodedTx.Tx.AuthInfo.Fee.Amount {
 		amtInt, ok := math.NewIntFromString(fee.Amount)
 		if !ok {
@@ -71,29 +71,37 @@ func newWrapperFromDecodedTx(addrCodec address.Codec, cdc codec.BinaryCodec, dec
 			return nil, err
 		}
 	}
+
+	// reflectMsgs
+	reflectMsgs := make([]protoreflect.Message, len(decodedTx.DynamicMessages))
+	for i, msg := range decodedTx.DynamicMessages {
+		reflectMsgs[i] = msg.ProtoReflect()
+	}
+
 	return &gogoTxWrapper{
-		cdc:        cdc,
-		decodedTx:  decodedTx,
-		msgsV1:     msgv1,
-		fees:       fees,
-		feePayer:   feePayer,
-		feeGranter: feeGranter,
+		DecodedTx:   decodedTx,
+		cdc:         cdc,
+		reflectMsgs: reflectMsgs,
+		fees:        fees,
+		feePayer:    feePayer,
+		feeGranter:  feeGranter,
 	}, nil
 }
 
 // gogoTxWrapper is a gogoTxWrapper around the tx.Tx proto.Message which retain the raw
 // body and auth_info bytes.
 type gogoTxWrapper struct {
-	decodedTx *decode.DecodedTx
-	cdc       codec.BinaryCodec
+	*decode.DecodedTx
 
-	msgsV1     []proto.Message
-	fees       sdk.Coins
-	feePayer   []byte
-	feeGranter []byte
+	cdc codec.BinaryCodec
+
+	reflectMsgs []protoreflect.Message
+	fees        sdk.Coins
+	feePayer    []byte
+	feeGranter  []byte
 }
 
-func (w *gogoTxWrapper) String() string { return w.decodedTx.Tx.String() }
+func (w *gogoTxWrapper) String() string { return w.Tx.String() }
 
 var (
 	_ authsigning.Tx             = &gogoTxWrapper{}
@@ -109,32 +117,29 @@ type ExtensionOptionsTxBuilder interface {
 }
 
 func (w *gogoTxWrapper) GetMsgs() []sdk.Msg {
-	if w.msgsV1 == nil {
-		panic("fill in msgs")
-	}
-	return w.msgsV1
+	return w.Messages
 }
 
-func (w *gogoTxWrapper) GetMsgsV2() ([]protov2.Message, error) {
-	return w.decodedTx.Messages, nil
+func (w *gogoTxWrapper) GetReflectMessages() ([]protoreflect.Message, error) {
+	return w.reflectMsgs, nil
 }
 
 func (w *gogoTxWrapper) ValidateBasic() error {
-	if len(w.decodedTx.Tx.Signatures) == 0 {
+	if len(w.Tx.Signatures) == 0 {
 		return sdkerrors.ErrNoSignatures.Wrapf("empty signatures")
 	}
-	if len(w.decodedTx.Signers) != len(w.decodedTx.Tx.Signatures) {
-		return sdkerrors.ErrUnauthorized.Wrapf("invalid number of signatures: got %d signatures and %d signers", len(w.decodedTx.Tx.Signatures), len(w.decodedTx.Signers))
+	if len(w.Signers) != len(w.Tx.Signatures) {
+		return sdkerrors.ErrUnauthorized.Wrapf("invalid number of signatures: got %d signatures and %d signers", len(w.Tx.Signatures), len(w.Signers))
 	}
 	return nil
 }
 
 func (w *gogoTxWrapper) GetSigners() ([][]byte, error) {
-	return w.decodedTx.Signers, nil
+	return w.Signers, nil
 }
 
 func (w *gogoTxWrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
-	signerInfos := w.decodedTx.Tx.AuthInfo.SignerInfos
+	signerInfos := w.Tx.AuthInfo.SignerInfos
 	pks := make([]cryptotypes.PubKey, len(signerInfos))
 
 	for i, si := range signerInfos {
@@ -159,7 +164,7 @@ func (w *gogoTxWrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
 }
 
 func (w *gogoTxWrapper) GetGas() uint64 {
-	return w.decodedTx.Tx.AuthInfo.Fee.GasLimit
+	return w.Tx.AuthInfo.Fee.GasLimit
 }
 
 func (w *gogoTxWrapper) GetFee() sdk.Coins { return w.fees }
@@ -168,18 +173,23 @@ func (w *gogoTxWrapper) FeePayer() []byte { return w.feePayer }
 
 func (w *gogoTxWrapper) FeeGranter() []byte { return w.feeGranter }
 
-func (w *gogoTxWrapper) GetMemo() string { return w.decodedTx.Tx.Body.Memo }
+func (w *gogoTxWrapper) GetMemo() string { return w.Tx.Body.Memo }
 
 // GetTimeoutHeight returns the transaction's timeout height (if set).
-func (w *gogoTxWrapper) GetTimeoutHeight() uint64 { return w.decodedTx.Tx.Body.TimeoutHeight }
+func (w *gogoTxWrapper) GetTimeoutHeight() uint64 { return w.Tx.Body.TimeoutHeight }
+
+// GetTimeoutTimeStamp returns the transaction's timeout timestamp (if set).
+func (w *gogoTxWrapper) GetTimeoutTimeStamp() time.Time {
+	return w.Tx.Body.TimeoutTimestamp.AsTime()
+}
 
 // GetUnordered returns the transaction's unordered field (if set).
-func (w *gogoTxWrapper) GetUnordered() bool { return w.decodedTx.Tx.Body.Unordered }
+func (w *gogoTxWrapper) GetUnordered() bool { return w.Tx.Body.Unordered }
 
 // GetSignaturesV2 returns the signatures of the Tx.
 func (w *gogoTxWrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
-	signerInfos := w.decodedTx.Tx.AuthInfo.SignerInfos
-	sigs := w.decodedTx.Tx.Signatures
+	signerInfos := w.Tx.AuthInfo.SignerInfos
+	sigs := w.Tx.Signatures
 	pubKeys, err := w.GetPubKeys()
 	if err != nil {
 		return nil, err
@@ -216,46 +226,46 @@ func (w *gogoTxWrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 // TODO: evaluate if this is even needed considering we have decoded tx.
 func (w *gogoTxWrapper) GetSigningTxData() txsigning.TxData {
 	return txsigning.TxData{
-		Body:                       w.decodedTx.Tx.Body,
-		AuthInfo:                   w.decodedTx.Tx.AuthInfo,
-		BodyBytes:                  w.decodedTx.TxRaw.BodyBytes,
-		AuthInfoBytes:              w.decodedTx.TxRaw.AuthInfoBytes,
-		BodyHasUnknownNonCriticals: w.decodedTx.TxBodyHasUnknownNonCriticals,
+		Body:                       w.Tx.Body,
+		AuthInfo:                   w.Tx.AuthInfo,
+		BodyBytes:                  w.TxRaw.BodyBytes,
+		AuthInfoBytes:              w.TxRaw.AuthInfoBytes,
+		BodyHasUnknownNonCriticals: w.TxBodyHasUnknownNonCriticals,
 	}
 }
 
 func (w *gogoTxWrapper) GetExtensionOptions() []*codectypes.Any {
-	return intoAnyV1(w.decodedTx.Tx.Body.ExtensionOptions)
+	return intoAnyV1(w.Tx.Body.ExtensionOptions)
 }
 
 func (w *gogoTxWrapper) GetNonCriticalExtensionOptions() []*codectypes.Any {
-	return intoAnyV1(w.decodedTx.Tx.Body.NonCriticalExtensionOptions)
+	return intoAnyV1(w.Tx.Body.NonCriticalExtensionOptions)
 }
 
 func (w *gogoTxWrapper) AsTx() (*txtypes.Tx, error) {
 	body := new(txtypes.TxBody)
 	authInfo := new(txtypes.AuthInfo)
 
-	err := w.cdc.Unmarshal(w.decodedTx.TxRaw.BodyBytes, body)
+	err := w.cdc.Unmarshal(w.TxRaw.BodyBytes, body)
 	if err != nil {
 		return nil, err
 	}
-	err = w.cdc.Unmarshal(w.decodedTx.TxRaw.AuthInfoBytes, authInfo)
+	err = w.cdc.Unmarshal(w.TxRaw.AuthInfoBytes, authInfo)
 	if err != nil {
 		return nil, err
 	}
 	return &txtypes.Tx{
 		Body:       body,
 		AuthInfo:   authInfo,
-		Signatures: w.decodedTx.TxRaw.Signatures,
+		Signatures: w.TxRaw.Signatures,
 	}, nil
 }
 
 func (w *gogoTxWrapper) AsTxRaw() (*txtypes.TxRaw, error) {
 	return &txtypes.TxRaw{
-		BodyBytes:     w.decodedTx.TxRaw.BodyBytes,
-		AuthInfoBytes: w.decodedTx.TxRaw.AuthInfoBytes,
-		Signatures:    w.decodedTx.TxRaw.Signatures,
+		BodyBytes:     w.TxRaw.BodyBytes,
+		AuthInfoBytes: w.TxRaw.AuthInfoBytes,
+		Signatures:    w.TxRaw.Signatures,
 	}, nil
 }
 
@@ -268,20 +278,6 @@ func intoAnyV1(v2s []*anypb.Any) []*codectypes.Any {
 		}
 	}
 	return v1s
-}
-
-// decodeMsgsV1 will decode the given messages into
-func decodeMsgsV1(cdc codec.BinaryCodec, anyPBs []*anypb.Any) ([]proto.Message, error) {
-	v1s := make([]proto.Message, len(anyPBs))
-
-	for i, anyPB := range anyPBs {
-		v1, err := decodeFromAny(cdc, anyPB)
-		if err != nil {
-			return nil, err
-		}
-		v1s[i] = v1
-	}
-	return v1s, nil
 }
 
 func decodeFromAny(cdc codec.BinaryCodec, anyPB *anypb.Any) (proto.Message, error) {

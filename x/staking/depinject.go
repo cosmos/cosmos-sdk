@@ -2,16 +2,16 @@ package staking
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
-
-	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/simulation"
 	"cosmossdk.io/x/staking/types"
@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -44,6 +45,7 @@ type ModuleInputs struct {
 	BankKeeper            types.BankKeeper
 	Cdc                   codec.Codec
 	Environment           appmodule.Environment
+	CometInfoService      comet.Service
 }
 
 // Dependency Injection Outputs
@@ -74,6 +76,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		as,
 		in.ValidatorAddressCodec,
 		in.ConsensusAddressCodec,
+		in.CometInfoService,
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
 	return ModuleOutputs{StakingKeeper: k, Module: m}
@@ -89,7 +92,11 @@ func InvokeSetStakingHooks(
 		return nil
 	}
 
-	modNames := maps.Keys(stakingHooks)
+	if len(stakingHooks) == 0 {
+		return nil
+	}
+
+	modNames := slices.Collect(maps.Keys(stakingHooks))
 	order := config.HooksOrder
 	if len(order) == 0 {
 		order = modNames
@@ -98,10 +105,6 @@ func InvokeSetStakingHooks(
 
 	if len(order) != len(modNames) {
 		return fmt.Errorf("len(hooks_order: %v) != len(hooks modules: %v)", order, modNames)
-	}
-
-	if len(modNames) == 0 {
-		return nil
 	}
 
 	var multiHooks types.MultiStakingHooks

@@ -6,8 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/core/registry"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -16,10 +15,10 @@ import (
 )
 
 var (
-	_ module.HasName        = AppModule{}
 	_ module.HasABCIGenesis = AppModule{}
 
-	_ appmodule.AppModule = AppModule{}
+	_ appmodule.AppModule        = AppModule{}
+	_ appmodulev2.GenesisDecoder = AppModule{}
 )
 
 // AppModule implements an application module for the genutil module.
@@ -27,7 +26,7 @@ type AppModule struct {
 	cdc              codec.Codec
 	accountKeeper    types.AccountKeeper
 	stakingKeeper    types.StakingKeeper
-	deliverTx        genesis.TxHandler
+	deliverTx        TxHandler // Unnecessary in server/v2 applications
 	txEncodingConfig client.TxEncodingConfig
 	genTxValidator   types.MessageValidator
 }
@@ -37,7 +36,7 @@ func NewAppModule(
 	cdc codec.Codec,
 	accountKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper,
-	deliverTx genesis.TxHandler,
+	deliverTx TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 	genTxValidator types.MessageValidator,
 ) module.AppModule {
@@ -55,6 +54,7 @@ func NewAppModule(
 func (AppModule) IsAppModule() {}
 
 // Name returns the genutil module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
@@ -75,38 +75,26 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 }
 
 // InitGenesis performs genesis initialization for the genutil module.
+// InitGenesis is skipped in a server/v2 application as DecodeGenesisJSON takes precedence.
 func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]module.ValidatorUpdate, error) {
 	var genesisState types.GenesisState
 	am.cdc.MustUnmarshalJSON(data, &genesisState)
-	cometValidatorUpdates, err := InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
-	if err != nil {
+	return InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
+}
+
+// DecodeGenesisJSON returns the genesis transactions for the genutil module.
+// It is an alternative to InitGenesis and used in server/v2 applications.
+func (am AppModule) DecodeGenesisJSON(data json.RawMessage) ([]json.RawMessage, error) {
+	var genesisState types.GenesisState
+	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
 		return nil, err
 	}
 
-	validatorUpdates := make([]module.ValidatorUpdate, len(cometValidatorUpdates))
-	for i, v := range cometValidatorUpdates {
-		if ed25519 := v.PubKey.GetEd25519(); len(ed25519) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     ed25519,
-				PubKeyType: "ed25519",
-				Power:      v.Power,
-			}
-		} else if secp256k1 := v.PubKey.GetSecp256K1(); len(secp256k1) > 0 {
-			validatorUpdates[i] = module.ValidatorUpdate{
-				PubKey:     secp256k1,
-				PubKeyType: "secp256k1",
-				Power:      v.Power,
-			}
-		} else {
-			return nil, fmt.Errorf("unexpected validator pubkey type: %T", v.PubKey)
-		}
-	}
-
-	return validatorUpdates, nil
+	return genesisState.GenTxs, nil
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the genutil module.
-func (am AppModule) ExportGenesis(_ context.Context) (json.RawMessage, error) {
+func (am AppModule) ExportGenesis(context.Context) (json.RawMessage, error) {
 	return am.DefaultGenesis(), nil
 }
 
@@ -117,6 +105,3 @@ func (am AppModule) GenTxValidator() types.MessageValidator {
 
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return 1 }
-
-// RegisterInterfaces implements module.AppModule.
-func (AppModule) RegisterInterfaces(registry.InterfaceRegistrar) {}

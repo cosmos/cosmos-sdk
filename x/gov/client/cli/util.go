@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -28,15 +29,15 @@ type legacyProposal struct {
 // validate the legacyProposal
 func (p legacyProposal) validate() error {
 	if p.Type == "" {
-		return fmt.Errorf("proposal type is required")
+		return errors.New("proposal type is required")
 	}
 
 	if p.Title == "" {
-		return fmt.Errorf("proposal title is required")
+		return errors.New("proposal title is required")
 	}
 
 	if p.Description == "" {
-		return fmt.Errorf("proposal description is required")
+		return errors.New("proposal description is required")
 	}
 	return nil
 }
@@ -95,7 +96,7 @@ type proposal struct {
 	Summary         string            `json:"summary"`
 	ProposalTypeStr string            `json:"proposal_type,omitempty"`
 
-	proposalType govv1.ProposalType `json:"-"`
+	proposalType govv1.ProposalType
 }
 
 // parseSubmitProposal reads and parses the proposal.
@@ -201,5 +202,10 @@ func ReadGovPropCmdFlags(proposer string, flagSet *pflag.FlagSet) (*govv1.MsgSub
 // See also AddGovPropFlagsToCmd.
 // Deprecated: use ReadPropCmdFlags instead, as this depends on global bech32 prefixes.
 func ReadGovPropFlags(clientCtx client.Context, flagSet *pflag.FlagSet) (*govv1.MsgSubmitProposal, error) {
-	return ReadGovPropCmdFlags(clientCtx.GetFromAddress().String(), flagSet)
+	addr, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
+	if err != nil {
+		return nil, err
+	}
+
+	return ReadGovPropCmdFlags(addr, flagSet)
 }

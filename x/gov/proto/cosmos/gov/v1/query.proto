@@ -57,15 +57,15 @@ service Query {
   }
 
   // ProposalVoteOptions queries the valid voting options for a proposal.
-  // Since: cosmos-sdk x/gov v1.0.0
   rpc ProposalVoteOptions(QueryProposalVoteOptionsRequest) returns (QueryProposalVoteOptionsResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/vote_options";
+    option (google.api.http).get          = "/cosmos/gov/v1/proposals/{proposal_id}/vote_options";
+    option (cosmos_proto.method_added_in) = "x/gov v0.2.0";
   }
 
   // MessageBasedParams queries the message specific governance params based on a msg url.
-  // Since: cosmos-sdk x/gov v1.0.0
   rpc MessageBasedParams(QueryMessageBasedParamsRequest) returns (QueryMessageBasedParamsResponse) {
-    option (google.api.http).get = "/cosmos/gov/v1/params/{msg_url}";
+    option (google.api.http).get          = "/cosmos/gov/v1/params/{msg_url}";
+    option (cosmos_proto.method_added_in) = "x/gov v0.2.0";
   }
 }
 
@@ -168,9 +168,7 @@ message QueryParamsResponse {
   // tally_params defines the parameters related to tally.
   TallyParams tally_params = 3 [deprecated = true];
   // params defines all the parameters of x/gov module.
-  //
-  // Since: cosmos-sdk 0.47
-  Params params = 4;
+  Params params = 4 [(cosmos_proto.field_added_in) = "cosmos-sdk v0.47"];
 }
 
 // QueryDepositRequest is the request type for the Query/Deposit RPC method.
@@ -231,15 +229,11 @@ message QueryProposalVoteOptionsResponse {
 }
 
 // QueryMessageBasedParamsRequest is the request type for the Query/MessageBasedParams RPC method.
-//
-// Since: x/gov 1.0.0
 message QueryMessageBasedParamsRequest {
-  string msg_url = 1;
+  string msg_url = 1 [(cosmos_proto.field_added_in) = "x/gov 1.0.0"];
 }
 
 // QueryMessageBasedParamsResponse is the response for the Query/MessageBasedParams RPC method.
-//
-// Since: x/gov 1.0.0
 message QueryMessageBasedParamsResponse {
-  MessageBasedParams params = 1;
+  MessageBasedParams params = 1 [(cosmos_proto.field_added_in) = "x/gov 1.0.0"];
 }

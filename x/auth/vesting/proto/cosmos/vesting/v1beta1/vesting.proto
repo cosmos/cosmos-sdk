@@ -6,7 +6,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 
-option go_package = "cosmossdk.io/x/auth/vesting/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
 
 // BaseVestingAccount implements the VestingAccount interface. It contains all
 // the necessary fields needed for any vesting account implementation.
@@ -84,11 +84,10 @@ message PeriodicVestingAccount {
 // PermanentLockedAccount implements the VestingAccount interface. It does
 // not ever release coins, locking them indefinitely. Coins in this account can
 // still be used for delegating and for governance votes even while locked.
-//
-// Since: cosmos-sdk 0.43
 message PermanentLockedAccount {
-  option (amino.name)                = "cosmos-sdk/PermanentLockedAccount";
-  option (gogoproto.goproto_getters) = false;
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.43";
+  option (amino.name)                    = "cosmos-sdk/PermanentLockedAccount";
+  option (gogoproto.goproto_getters)     = false;
 
   BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
 }

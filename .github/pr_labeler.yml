@@ -16,12 +16,22 @@
   - store/**/*
 "C:collections":
   - collections/**/*
+"C:core/testing":
+  - core/testing/**/*
 "C:log":
   - log/*
 "C:orm":
   - orm/**/*
+"C:schema":
+  - schema/**/*
+"C:indexer/postgres":
+  - indexer/postgres/**/*
 "C:x/accounts":
   - x/accounts/**/*
+"C:x/accounts/multisig":
+  - x/accounts/defaults/multisig/**/*
+"C:x/accounts/lockup":
+  - x/accounts/defaults/lockup/**/*
 "C:x/auth":
   - x/auth/**/*
 "C:x/authz":
@@ -62,6 +72,18 @@
   - x/tx/**/*
 "C:x/upgrade":
   - x/upgrade/**/*
+"C:x/epochs":
+  - x/epochs/**/*
+"C:server/v2":
+  - server/v2/**/*
+"C:server/v2 stf":
+  - server/v2/stf/**/*
+"C:server/v2 appmanager":
+  - server/v2/appmanager/**/*
+"C:server/v2 cometbft":
+  - server/v2/cometbft/**/*
+"C:server/v2 api":
+  - server/v2/api/**/*
 "Type: ADR":
   - docs/architecture/**/*
 "Type: Build":

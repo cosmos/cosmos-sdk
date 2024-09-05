@@ -15,7 +15,7 @@ import (
 func initCometBFTConfig() *cmtcfg.Config {
 	cfg := cmtcfg.DefaultConfig()
 
-	// only display only error logs by default except for p2p and state
+	// display only error logs by default except for p2p and state
 	cfg.LogLevel = "*:error,p2p:info,state:info"
 
 	// these values put a higher strain on node memory
@@ -25,7 +25,7 @@ func initCometBFTConfig() *cmtcfg.Config {
 	return cfg
 }
 
-// initAppConfig helps to override default client config template and configs.
+// initClientConfig helps to override default client config template and configs.
 // return "", nil if no custom configuration is required for the application.
 func initClientConfig() (string, interface{}) {
 	type GasConfig struct {
@@ -103,7 +103,6 @@ func initAppConfig() (string, interface{}) {
 	//
 	// In simapp, we set the min gas prices to 0.
 	srvCfg.MinGasPrices = "0stake"
-	// srvCfg.BaseConfig.IAVLDisableFastNode = true // disable fastnode by default
 
 	// Now we set the custom config default values.
 	customAppConfig := CustomAppConfig{

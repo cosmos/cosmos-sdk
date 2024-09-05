@@ -2,16 +2,15 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
-
-	"github.com/cockroachdb/errors"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/x/distribution/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,12 +20,14 @@ import (
 
 // Keeper of the distribution store
 type Keeper struct {
-	environment   appmodule.Environment
+	appmodule.Environment
+
+	cometService comet.Service
+
 	cdc           codec.BinaryCodec
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
-	poolKeeper    types.PoolKeeper
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
@@ -45,11 +46,10 @@ type Keeper struct {
 	DelegatorStartingInfo collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
 	// ValidatorsAccumulatedCommission key: valAddr | value: ValidatorAccumulatedCommission
 	ValidatorsAccumulatedCommission collections.Map[sdk.ValAddress, types.ValidatorAccumulatedCommission]
-	// ValidatorOutstandingRewards key: valAddr | value: ValidatorOustandingRewards
+	// ValidatorOutstandingRewards key: valAddr | value: ValidatorOutstandingRewards
 	ValidatorOutstandingRewards collections.Map[sdk.ValAddress, types.ValidatorOutstandingRewards]
 	// ValidatorHistoricalRewards key: valAddr+period | value: ValidatorHistoricalRewards
 	ValidatorHistoricalRewards collections.Map[collections.Pair[sdk.ValAddress, uint64], types.ValidatorHistoricalRewards]
-	PreviousProposer           collections.Item[sdk.ConsAddress]
 	// ValidatorSlashEvents key: valAddr+height+period | value: ValidatorSlashEvent
 	ValidatorSlashEvents collections.Map[collections.Triple[sdk.ValAddress, uint64, uint64], types.ValidatorSlashEvent]
 
@@ -58,8 +58,12 @@ type Keeper struct {
 
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
-	cdc codec.BinaryCodec, env appmodule.Environment,
-	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, pk types.PoolKeeper,
+	cdc codec.BinaryCodec,
+	env appmodule.Environment,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	sk types.StakingKeeper,
+	cometService comet.Service,
 	feeCollectorName, authority string,
 ) Keeper {
 	// ensure distribution module account is set
@@ -69,12 +73,12 @@ func NewKeeper(
 
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := Keeper{
-		environment:      env,
+		Environment:      env,
+		cometService:     cometService,
 		cdc:              cdc,
 		authKeeper:       ak,
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
-		poolKeeper:       pk,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
@@ -122,7 +126,6 @@ func NewKeeper(
 			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.LEUint64Key), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			codec.CollValue[types.ValidatorHistoricalRewards](cdc),
 		),
-		PreviousProposer: collections.NewItem(sb, types.ProposerKey, "previous_proposer", collcodec.KeyToValueCodec(sdk.ConsAddressKey)),
 		ValidatorSlashEvents: collections.NewMap(
 			sb,
 			types.ValidatorSlashEventPrefix,
@@ -145,11 +148,6 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
-// Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx context.Context) log.Logger {
-	return k.environment.Logger.With(log.ModuleKey, "x/"+types.ModuleName)
-}
-
 // SetWithdrawAddr sets a new address that will receive the rewards upon withdrawal
 func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr sdk.AccAddress) error {
 	if k.bankKeeper.BlockedAddr(withdrawAddr) {
@@ -165,9 +163,14 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 		return types.ErrSetWithdrawAddrDisabled
 	}
 
-	if err = k.environment.EventService.EventManager(ctx).EmitKV(
+	addr, err := k.authKeeper.AddressCodec().BytesToString(withdrawAddr)
+	if err != nil {
+		return err
+	}
+
+	if err = k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeSetWithdrawAddress,
-		event.NewAttribute(types.AttributeKeyWithdrawAddress, withdrawAddr.String()),
+		event.NewAttribute(types.AttributeKeyWithdrawAddress, addr),
 	); err != nil {
 		return err
 	}
@@ -250,7 +253,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 		}
 	}
 
-	err = k.environment.EventService.EventManager(ctx).EmitKV(
+	err = k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeWithdrawCommission,
 		event.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
 	)

@@ -6,12 +6,13 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/circuit/keeper"
+	"cosmossdk.io/x/circuit/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -46,15 +47,20 @@ type ModuleOutputs struct {
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress("gov")
+	authority := authtypes.NewModuleAddress(types.GovModuleName)
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
+
+	authorityAddr, err := in.AddressCodec.BytesToString(authority)
+	if err != nil {
+		panic(err)
 	}
 
 	circuitkeeper := keeper.NewKeeper(
 		in.Environment,
 		in.Cdc,
-		authority.String(),
+		authorityAddr,
 		in.AddressCodec,
 	)
 	m := NewAppModule(in.Cdc, circuitkeeper)

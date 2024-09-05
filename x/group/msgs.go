@@ -2,6 +2,7 @@ package group
 
 import (
 	"github.com/cosmos/gogoproto/proto"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,9 +28,9 @@ var (
 	_ sdk.Msg = &MsgSubmitProposal{}
 	_ sdk.Msg = &MsgCreateGroupPolicy{}
 
-	_ types.UnpackInterfacesMessage = MsgCreateGroupPolicy{}
-	_ types.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
-	_ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
+	_ gogoprotoany.UnpackInterfacesMessage = MsgCreateGroupPolicy{}
+	_ gogoprotoany.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
+	_ gogoprotoany.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
 )
 
 // GetGroupID gets the group id of the MsgUpdateGroupMetadata.
@@ -83,16 +84,16 @@ func (m *MsgCreateGroupWithPolicy) SetDecisionPolicy(decisionPolicy DecisionPoli
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgCreateGroupWithPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m MsgCreateGroupWithPolicy) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
 
 // NewMsgUpdateGroupPolicyDecisionPolicy creates a new MsgUpdateGroupPolicyDecisionPolicy.
-func NewMsgUpdateGroupPolicyDecisionPolicy(admin, address sdk.AccAddress, decisionPolicy DecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicy, error) {
+func NewMsgUpdateGroupPolicyDecisionPolicy(admin, address string, decisionPolicy DecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicy, error) {
 	m := &MsgUpdateGroupPolicyDecisionPolicy{
-		Admin:              admin.String(),
-		GroupPolicyAddress: address.String(),
+		Admin:              admin,
+		GroupPolicyAddress: address,
 	}
 	err := m.SetDecisionPolicy(decisionPolicy)
 	if err != nil {
@@ -126,15 +127,15 @@ func (m *MsgUpdateGroupPolicyDecisionPolicy) GetDecisionPolicy() (DecisionPolicy
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgUpdateGroupPolicyDecisionPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m MsgUpdateGroupPolicyDecisionPolicy) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
 
 // NewMsgCreateGroupPolicy creates a new MsgCreateGroupPolicy.
-func NewMsgCreateGroupPolicy(admin sdk.AccAddress, group uint64, metadata string, decisionPolicy DecisionPolicy) (*MsgCreateGroupPolicy, error) {
+func NewMsgCreateGroupPolicy(admin string, group uint64, metadata string, decisionPolicy DecisionPolicy) (*MsgCreateGroupPolicy, error) {
 	m := &MsgCreateGroupPolicy{
-		Admin:    admin.String(),
+		Admin:    admin,
 		GroupId:  group,
 		Metadata: metadata,
 	}
@@ -180,7 +181,7 @@ func (m *MsgCreateGroupPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) 
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgCreateGroupPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m MsgCreateGroupPolicy) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var decisionPolicy DecisionPolicy
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
@@ -218,6 +219,6 @@ func (m MsgSubmitProposal) GetMsgs() ([]sdk.Msg, error) {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (m MsgSubmitProposal) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	return tx.UnpackInterfaces(unpacker, m.Messages)
 }

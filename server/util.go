@@ -24,6 +24,8 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
+	corectx "cosmossdk.io/core/context"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
@@ -44,7 +46,9 @@ import (
 // a command's Context.
 const ServerContextKey = sdk.ContextKey("server.context")
 
-// Context server context
+// Context is the server context.
+// Prefer using we use viper a it tracks track all config.
+// See core/context/server_context.go.
 type Context struct {
 	Viper  *viper.Viper
 	Config *cmtcfg.Config
@@ -166,7 +170,7 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 	return serverCtx, nil
 }
 
-// CreateSDKLogger creates a the default SDK logger.
+// CreateSDKLogger creates the default SDK logger.
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
@@ -223,7 +227,11 @@ func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 		cmdCtx = cmd.Context()
 	}
 
-	cmd.SetContext(context.WithValue(cmdCtx, ServerContextKey, serverCtx))
+	cmdCtx = context.WithValue(cmdCtx, ServerContextKey, serverCtx)
+	cmdCtx = context.WithValue(cmdCtx, corectx.ViperContextKey, serverCtx.Viper)
+	cmdCtx = context.WithValue(cmdCtx, corectx.LoggerContextKey, serverCtx.Logger)
+
+	cmd.SetContext(cmdCtx)
 
 	return nil
 }
@@ -285,7 +293,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 	appCfgFilePath := filepath.Join(configPath, "app.toml")
 	if _, err := os.Stat(appCfgFilePath); os.IsNotExist(err) {
 		if (customAppTemplate != "" && customConfig == nil) || (customAppTemplate == "" && customConfig != nil) {
-			return nil, fmt.Errorf("customAppTemplate and customConfig should be both nil or not nil")
+			return nil, errors.New("customAppTemplate and customConfig should be both nil or not nil")
 		}
 
 		if customAppTemplate != "" {
@@ -324,7 +332,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 }
 
 // AddCommands add server commands
-func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.AppCreator[T], addStartFlags types.ModuleInitFlags) {
+func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.AppCreator[T], opts StartCmdOptions[T]) {
 	cometCmd := &cobra.Command{
 		Use:     "comet",
 		Aliases: []string{"cometbft", "tendermint"},
@@ -341,23 +349,25 @@ func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.A
 		BootstrapStateCmd(appCreator),
 	)
 
-	startCmd := StartCmd(appCreator)
-	if addStartFlags != nil {
-		addStartFlags(startCmd)
-	}
-
+	startCmd := StartCmdWithOptions(appCreator, opts)
 	rootCmd.AddCommand(
 		startCmd,
 		cometCmd,
 		version.NewVersionCommand(),
 		NewRollbackCmd(appCreator),
+		ModuleHashByHeightQuery(appCreator),
 	)
 }
 
+// AddCommandsWithStartCmdOptions adds server commands with the provided StartCmdOptions.
+// Deprecated: Use AddCommands directly instead.
+func AddCommandsWithStartCmdOptions[T types.Application](rootCmd *cobra.Command, appCreator types.AppCreator[T], opts StartCmdOptions[T]) {
+	AddCommands(rootCmd, appCreator, opts)
+}
+
 // AddTestnetCreatorCommand allows chains to create a testnet from the state existing in their node's data directory.
-func AddTestnetCreatorCommand[T types.Application](rootCmd *cobra.Command, appCreator types.AppCreator[T], addStartFlags types.ModuleInitFlags) {
+func AddTestnetCreatorCommand[T types.Application](rootCmd *cobra.Command, appCreator types.AppCreator[T]) {
 	testnetCreateCmd := InPlaceTestnetCreator(appCreator)
-	addStartFlags(testnetCreateCmd)
 	rootCmd.AddCommand(testnetCreateCmd)
 }
 
@@ -464,7 +474,7 @@ func addrToIP(addr net.Addr) net.IP {
 }
 
 // OpenDB opens the application database using the appropriate driver.
-func OpenDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
+func OpenDB(rootDir string, backendType dbm.BackendType) (corestore.KVStoreWithBatch, error) {
 	dataDir := filepath.Join(rootDir, "data")
 	return dbm.NewDB("application", backendType, dataDir)
 }

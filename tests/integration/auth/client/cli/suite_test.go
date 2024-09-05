@@ -7,15 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/auth"
-	authcli "cosmossdk.io/x/auth/client/cli"
-	authtestutil "cosmossdk.io/x/auth/client/testutil"
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/gov"
@@ -36,6 +33,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
@@ -73,7 +73,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
+		c := clitestutil.NewMockCometRPC(abci.QueryResponse{
 			Value: bz,
 		})
 		return s.baseCtx.WithClient(c)
@@ -207,7 +207,6 @@ func (s *CLITestSuite) TestCLISignBatchTotalFees() {
 					sdk.NewCoins(sendTokens), clitestutil.TestTxConfig{GenOnly: true})
 				s.Require().NoError(err)
 				txFile := testutil.WriteToNewTempFile(s.T(), tx.String()+"\n")
-				defer txFile.Close()
 				txFiles[i] = txFile.Name()
 
 				unsignedTx, err := txCfg.TxJSONDecoder()(tx.Bytes())
@@ -215,6 +214,8 @@ func (s *CLITestSuite) TestCLISignBatchTotalFees() {
 				txBuilder, err := txCfg.WrapTxBuilder(unsignedTx)
 				s.Require().NoError(err)
 				expectedBatchedTotalFee += txBuilder.GetTx().GetFee().AmountOf(tc.denom).Int64()
+				err = txFile.Close()
+				s.NoError(err)
 			}
 
 			// Test batch sign

@@ -1,6 +1,7 @@
 package ormfield
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -69,7 +70,7 @@ func (s NonTerminalStringCodec) Decode(r Reader) (protoreflect.Value, error) {
 	var bz []byte
 	for {
 		b, err := r.ReadByte()
-		if b == 0 || err == io.EOF {
+		if b == 0 || errors.Is(err, io.EOF) {
 			return protoreflect.ValueOfString(string(bz)), err
 		}
 		bz = append(bz, b)

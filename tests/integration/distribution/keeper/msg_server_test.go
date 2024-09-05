@@ -1,9 +1,11 @@
 package keeper_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
@@ -13,13 +15,10 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
+	consensustypes "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/distribution"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	distrtypes "cosmossdk.io/x/distribution/types"
@@ -31,6 +30,7 @@ import (
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -38,6 +38,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -51,6 +56,8 @@ type fixture struct {
 	sdkCtx sdk.Context
 	cdc    codec.Codec
 	keys   map[string]*storetypes.KVStoreKey
+
+	queryClient distrtypes.QueryClient
 
 	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
@@ -66,6 +73,7 @@ func initFixture(t *testing.T) *fixture {
 	t.Helper()
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, distrtypes.StoreKey, pooltypes.StoreKey, stakingtypes.StoreKey,
+		consensustypes.StoreKey,
 	)
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, bank.AppModule{})
 	cdc := encodingCfg.Codec
@@ -78,17 +86,29 @@ func initFixture(t *testing.T) *fixture {
 	authority := authtypes.NewModuleAddress("gov")
 
 	maccPerms := map[string][]string{
-		pooltypes.ModuleName:           {},
-		pooltypes.StreamAccount:        {},
-		distrtypes.ModuleName:          {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		pooltypes.ModuleName:               {},
+		pooltypes.StreamAccount:            {},
+		pooltypes.ProtocolPoolDistrAccount: {},
+		distrtypes.ModuleName:              {authtypes.Minter},
+		stakingtypes.BondedPoolName:        {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:     {authtypes.Burner, authtypes.Staking},
 	}
+
+	// gomock initializations
+	ctrl := gomock.NewController(t)
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	accNum := uint64(0)
+	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currentNum := accNum
+		accNum++
+		return currentNum, nil
+	})
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		cdc,
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
@@ -106,19 +126,25 @@ func initFixture(t *testing.T) *fixture {
 		authority.String(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	assert.NilError(t, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
+
+	msgRouter := baseapp.NewMsgServiceRouter()
+	grpcRouter := baseapp.NewGRPCQueryRouter()
+	cometService := runtime.NewContextAwareCometInfoService()
+
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcRouter), runtime.EnvWithMsgRouterService(msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), cometService)
 	require.NoError(t, stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams()))
 
 	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[pooltypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, stakingKeeper, authority.String())
 
 	distrKeeper := distrkeeper.NewKeeper(
-		cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[distrtypes.StoreKey]), logger), accountKeeper, bankKeeper, stakingKeeper, poolKeeper, distrtypes.ModuleName, authority.String(),
+		cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[distrtypes.StoreKey]), logger), accountKeeper, bankKeeper, stakingKeeper, cometService, distrtypes.ModuleName, authority.String(),
 	)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
-	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper, poolKeeper)
+	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper)
 	poolModule := protocolpool.NewAppModule(cdc, poolKeeper, accountKeeper, bankKeeper)
 
 	addr := sdk.AccAddress(PKS[0].Address())
@@ -138,6 +164,7 @@ func initFixture(t *testing.T) *fixture {
 				},
 			},
 		},
+		ProposerAddress: valConsAddr,
 	})
 
 	integrationApp := integration.NewIntegrationApp(ctx, logger, keys, cdc,
@@ -149,13 +176,19 @@ func initFixture(t *testing.T) *fixture {
 			stakingtypes.ModuleName: stakingModule,
 			distrtypes.ModuleName:   distrModule,
 			pooltypes.ModuleName:    poolModule,
-		})
+		},
+		msgRouter,
+		grpcRouter,
+	)
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))
 	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(distrKeeper))
+
+	qr := integrationApp.QueryHelper()
+	distrQueryClient := distrtypes.NewQueryClient(qr)
 
 	return &fixture{
 		app:           integrationApp,
@@ -169,6 +202,7 @@ func initFixture(t *testing.T) *fixture {
 		poolKeeper:    poolKeeper,
 		addr:          addr,
 		valAddr:       valAddr,
+		queryClient:   distrQueryClient,
 	}
 }
 
@@ -183,7 +217,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	require.NoError(t, f.distrKeeper.Params.Set(f.sdkCtx, distrtypes.DefaultParams()))
 
 	delAddr := sdk.AccAddress(PKS[1].Address())
-	valConsAddr := sdk.ConsAddress(valConsPk0.Address())
 
 	valCommission := sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", math.LegacyNewDec(5).Quo(math.LegacyNewDec(4))),
@@ -292,9 +325,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	}
 	height := f.app.LastBlockHeight()
 
-	_, err = f.distrKeeper.PreviousProposer.Get(f.sdkCtx)
-	assert.ErrorIs(t, err, collections.ErrNotFound)
-
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -325,10 +355,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				assert.Assert(t, initBalance.IsAllLTE(curBalance))
 			}
 
-			prevProposerConsAddr, err := f.distrKeeper.PreviousProposer.Get(f.sdkCtx)
-			assert.NilError(t, err)
-			assert.Assert(t, prevProposerConsAddr.Empty() == false)
-			assert.DeepEqual(t, prevProposerConsAddr, valConsAddr)
 			var previousTotalPower int64
 			for _, vote := range f.sdkCtx.CometInfo().LastCommit.Votes {
 				previousTotalPower += vote.Validator.Power

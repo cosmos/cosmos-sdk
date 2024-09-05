@@ -24,7 +24,7 @@ func NewQuerier(keeper Keeper) Querier {
 }
 
 // Params returns parameters of x/slashing module
-func (k Querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k Querier) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	params, err := k.Keeper.Params.Get(ctx)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func (k Querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*ty
 }
 
 // SigningInfo returns signing-info of a specific validator.
-func (k Keeper) SigningInfo(ctx context.Context, req *types.QuerySigningInfoRequest) (*types.QuerySigningInfoResponse, error) {
+func (k Querier) SigningInfo(ctx context.Context, req *types.QuerySigningInfoRequest) (*types.QuerySigningInfoResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -57,12 +57,12 @@ func (k Keeper) SigningInfo(ctx context.Context, req *types.QuerySigningInfoRequ
 }
 
 // SigningInfos returns signing-infos of all validators.
-func (k Keeper) SigningInfos(ctx context.Context, req *types.QuerySigningInfosRequest) (*types.QuerySigningInfosResponse, error) {
+func (k Querier) SigningInfos(ctx context.Context, req *types.QuerySigningInfosRequest) (*types.QuerySigningInfosResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	store := k.environment.KVStoreService.OpenKVStore(ctx)
+	store := k.KVStoreService.OpenKVStore(ctx)
 	var signInfos []types.ValidatorSigningInfo
 
 	sigInfoStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.ValidatorSigningInfoKeyPrefix)

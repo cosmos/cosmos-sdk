@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -33,7 +34,7 @@ func TestNewIndex(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	myTable, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
+	myTable, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
 	require.NoError(t, err)
 	indexer := func(val interface{}) ([]interface{}, error) {
 		return []interface{}{val.(*testdata.TableModel).Metadata}, nil
@@ -91,7 +92,7 @@ func TestIndexPrefixScan(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	tb, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
+	tb, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
 	require.NoError(t, err)
 	idx, err := NewIndex(tb, AutoUInt64TableModelByMetadataPrefix, func(val interface{}) ([]interface{}, error) {
 		i := []interface{}{val.(*testdata.TableModel).Metadata}
@@ -297,8 +298,8 @@ func TestIndexPrefixScan(t *testing.T) {
 func TestUniqueIndex(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-
-	myTable, err := NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc)
+	ac := address.NewBech32Codec("cosmos")
+	myTable, err := NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc, ac)
 	require.NoError(t, err)
 	uniqueIdx, err := NewUniqueIndex(myTable, 0x10, func(val interface{}) (interface{}, error) {
 		return []byte{val.(*testdata.TableModel).Metadata[0]}, nil
@@ -330,7 +331,7 @@ func TestUniqueIndex(t *testing.T) {
 	var loaded testdata.TableModel
 	rowID, err := it.LoadNext(&loaded)
 	require.NoError(t, err)
-	require.Equal(t, RowID(PrimaryKey(&m)), rowID)
+	require.Equal(t, RowID(PrimaryKey(&m, ac)), rowID)
 	require.Equal(t, m, loaded)
 
 	// GetPaginated
@@ -357,7 +358,7 @@ func TestUniqueIndex(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, RowID(PrimaryKey(&m)), rowID)
+				require.Equal(t, RowID(PrimaryKey(&m, ac)), rowID)
 				require.Equal(t, m, loaded)
 			}
 		})
@@ -368,7 +369,7 @@ func TestUniqueIndex(t *testing.T) {
 	require.NoError(t, err)
 	rowID, err = it.LoadNext(&loaded)
 	require.NoError(t, err)
-	require.Equal(t, RowID(PrimaryKey(&m)), rowID)
+	require.Equal(t, RowID(PrimaryKey(&m, ac)), rowID)
 	require.Equal(t, m, loaded)
 
 	// PrefixScan no match
@@ -382,7 +383,7 @@ func TestUniqueIndex(t *testing.T) {
 	require.NoError(t, err)
 	rowID, err = it.LoadNext(&loaded)
 	require.NoError(t, err)
-	require.Equal(t, RowID(PrimaryKey(&m)), rowID)
+	require.Equal(t, RowID(PrimaryKey(&m, ac)), rowID)
 	require.Equal(t, m, loaded)
 
 	// ReversePrefixScan no match

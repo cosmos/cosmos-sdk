@@ -3,17 +3,15 @@ package keeper_test
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"sort"
 	"strings"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/group"
 	"cosmossdk.io/x/group/internal/math"
@@ -21,7 +19,6 @@ import (
 	minttypes "cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,8 +38,10 @@ func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMembe
 	addressPool := simtestutil.CreateIncrementalAccounts(numMembers)
 	members := make([]group.MemberRequest, numMembers)
 	for i := 0; i < len(members); i++ {
+		addr, err := s.accountKeeper.AddressCodec().BytesToString(addressPool[i])
+		s.Require().NoError(err)
 		members[i] = group.MemberRequest{
-			Address: addressPool[i].String(),
+			Address: addr,
 			Weight:  "1",
 		}
 		s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
@@ -64,17 +63,11 @@ func (s *TestSuite) createGroupAndGetMembers(numMembers int) []*group.GroupMembe
 }
 
 func (s *TestSuite) TestCreateGroup() {
-	addrs := s.addrs
-	addr1 := addrs[0]
-	addr3 := addrs[2]
-	addr5 := addrs[4]
-	addr6 := addrs[5]
-
 	members := []group.MemberRequest{{
-		Address: addr5.String(),
+		Address: s.addrsStr[4],
 		Weight:  "1",
 	}, {
-		Address: addr6.String(),
+		Address: s.addrsStr[5],
 		Weight:  "2",
 	}}
 
@@ -82,14 +75,14 @@ func (s *TestSuite) TestCreateGroup() {
 		{
 			Id:          s.groupID,
 			Version:     1,
-			Admin:       addr1.String(),
+			Admin:       s.addrsStr[0],
 			TotalWeight: "3",
 			CreatedAt:   s.blockTime,
 		},
 		{
 			Id:          2,
 			Version:     1,
-			Admin:       addr1.String(),
+			Admin:       s.addrsStr[0],
 			TotalWeight: "3",
 			CreatedAt:   s.blockTime,
 		},
@@ -103,14 +96,14 @@ func (s *TestSuite) TestCreateGroup() {
 	}{
 		"all good": {
 			req: &group.MsgCreateGroup{
-				Admin:   addr1.String(),
+				Admin:   s.addrsStr[0],
 				Members: members,
 			},
 			expGroups: expGroups,
 		},
 		"group metadata: metadata too long": {
 			req: &group.MsgCreateGroup{
-				Admin:    addr1.String(),
+				Admin:    s.addrsStr[0],
 				Members:  members,
 				Metadata: strings.Repeat("a", 256),
 			},
@@ -119,7 +112,7 @@ func (s *TestSuite) TestCreateGroup() {
 		},
 		"invalid member address": {
 			req: &group.MsgCreateGroup{
-				Admin: addr1.String(),
+				Admin: s.addrsStr[0],
 				Members: []group.MemberRequest{{
 					Address: "invalid",
 					Weight:  "1",
@@ -130,9 +123,9 @@ func (s *TestSuite) TestCreateGroup() {
 		},
 		"member metadata too long": {
 			req: &group.MsgCreateGroup{
-				Admin: addr1.String(),
+				Admin: s.addrsStr[0],
 				Members: []group.MemberRequest{{
-					Address:  addr3.String(),
+					Address:  s.addrsStr[2],
 					Weight:   "1",
 					Metadata: strings.Repeat("a", 256),
 				}},
@@ -142,9 +135,9 @@ func (s *TestSuite) TestCreateGroup() {
 		},
 		"zero member weight": {
 			req: &group.MsgCreateGroup{
-				Admin: addr1.String(),
+				Admin: s.addrsStr[0],
 				Members: []group.MemberRequest{{
-					Address: addr3.String(),
+					Address: s.addrsStr[2],
 					Weight:  "0",
 				}},
 			},
@@ -153,9 +146,9 @@ func (s *TestSuite) TestCreateGroup() {
 		},
 		"invalid member weight - Inf": {
 			req: &group.MsgCreateGroup{
-				Admin: addr1.String(),
+				Admin: s.addrsStr[0],
 				Members: []group.MemberRequest{{
-					Address: addr3.String(),
+					Address: s.addrsStr[2],
 					Weight:  "inf",
 				}},
 			},
@@ -164,9 +157,9 @@ func (s *TestSuite) TestCreateGroup() {
 		},
 		"invalid member weight - NaN": {
 			req: &group.MsgCreateGroup{
-				Admin: addr1.String(),
+				Admin: s.addrsStr[0],
 				Members: []group.MemberRequest{{
-					Address: addr3.String(),
+					Address: s.addrsStr[2],
 					Weight:  "NaN",
 				}},
 			},
@@ -225,7 +218,7 @@ func (s *TestSuite) TestCreateGroup() {
 			}
 
 			// query groups by admin
-			groupsRes, err := s.groupKeeper.GroupsByAdmin(s.ctx, &group.QueryGroupsByAdminRequest{Admin: addr1.String()})
+			groupsRes, err := s.groupKeeper.GroupsByAdmin(s.ctx, &group.QueryGroupsByAdminRequest{Admin: s.addrsStr[0]})
 			s.Require().NoError(err)
 			loadedGroups := groupsRes.Groups
 			s.Require().Equal(len(spec.expGroups), len(loadedGroups))
@@ -242,20 +235,14 @@ func (s *TestSuite) TestCreateGroup() {
 }
 
 func (s *TestSuite) TestUpdateGroupMembers() {
-	addrs := s.addrs
-	addr3 := addrs[2]
-	addr4 := addrs[3]
-	addr5 := addrs[4]
-	addr6 := addrs[5]
-
-	member1 := addr5.String()
-	member2 := addr6.String()
+	member1 := s.addrsStr[4]
+	member2 := s.addrsStr[5]
 	members := []group.MemberRequest{{
 		Address: member1,
 		Weight:  "1",
 	}}
 
-	myAdmin := addr4.String()
+	myAdmin := s.addrsStr[3]
 	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   myAdmin,
 		Members: members,
@@ -460,7 +447,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				GroupId: groupID,
 				Admin:   myAdmin,
 				MemberUpdates: []group.MemberRequest{{
-					Address: addr4.String(),
+					Address: s.addrsStr[3],
 					Weight:  "0",
 				}},
 			},
@@ -483,7 +470,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 		"with wrong admin": {
 			req: &group.MsgUpdateGroupMembers{
 				GroupId: groupID,
-				Admin:   addr3.String(),
+				Admin:   s.addrsStr[2],
 				MemberUpdates: []group.MemberRequest{{
 					Address: member1,
 					Weight:  "2",
@@ -578,18 +565,12 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 }
 
 func (s *TestSuite) TestUpdateGroupAdmin() {
-	addrs := s.addrs
-	addr1 := addrs[0]
-	addr2 := addrs[1]
-	addr3 := addrs[2]
-	addr4 := addrs[3]
-
 	members := []group.MemberRequest{{
-		Address: addr1.String(),
+		Address: s.addrsStr[0],
 		Weight:  "1",
 	}}
-	oldAdmin := addr2.String()
-	newAdmin := addr3.String()
+	oldAdmin := s.addrsStr[1]
+	newAdmin := s.addrsStr[2]
 	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   oldAdmin,
 		Members: members,
@@ -637,7 +618,7 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 		"with wrong admin": {
 			req: &group.MsgUpdateGroupAdmin{
 				GroupId:  groupID,
-				Admin:    addr4.String(),
+				Admin:    s.addrsStr[3],
 				NewAdmin: newAdmin,
 			},
 			expErr:    true,
@@ -696,11 +677,7 @@ func (s *TestSuite) TestUpdateGroupAdmin() {
 }
 
 func (s *TestSuite) TestUpdateGroupMetadata() {
-	addrs := s.addrs
-	addr1 := addrs[0]
-	addr3 := addrs[2]
-
-	oldAdmin := addr1.String()
+	oldAdmin := s.addrsStr[0]
 	groupID := s.groupID
 
 	specs := map[string]struct {
@@ -724,7 +701,7 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 		"with wrong admin": {
 			req: &group.MsgUpdateGroupMetadata{
 				GroupId: groupID,
-				Admin:   addr3.String(),
+				Admin:   s.addrsStr[2],
 			},
 			expErr: true,
 			expStored: &group.GroupInfo{
@@ -773,19 +750,13 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 }
 
 func (s *TestSuite) TestCreateGroupWithPolicy() {
-	addrs := s.addrs
-	addr1 := addrs[0]
-	addr3 := addrs[2]
-	addr5 := addrs[4]
-	addr6 := addrs[5]
-
 	s.setNextAccount()
 
 	members := []group.MemberRequest{{
-		Address: addr5.String(),
+		Address: s.addrsStr[4],
 		Weight:  "1",
 	}, {
-		Address: addr6.String(),
+		Address: s.addrsStr[5],
 		Weight:  "2",
 	}}
 
@@ -798,7 +769,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 	}{
 		"all good": {
 			req: &group.MsgCreateGroupWithPolicy{
-				Admin:              addr1.String(),
+				Admin:              s.addrsStr[0],
 				Members:            members,
 				GroupPolicyAsAdmin: false,
 			},
@@ -813,7 +784,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 		},
 		"group policy as admin is true": {
 			req: &group.MsgCreateGroupWithPolicy{
-				Admin:              addr1.String(),
+				Admin:              s.addrsStr[0],
 				Members:            members,
 				GroupPolicyAsAdmin: true,
 			},
@@ -828,7 +799,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 		},
 		"group metadata too long": {
 			req: &group.MsgCreateGroupWithPolicy{
-				Admin:              addr1.String(),
+				Admin:              s.addrsStr[0],
 				Members:            members,
 				GroupPolicyAsAdmin: false,
 				GroupMetadata:      strings.Repeat("a", 256),
@@ -843,7 +814,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 		},
 		"group policy metadata: metadata too long": {
 			req: &group.MsgCreateGroupWithPolicy{
-				Admin:               addr1.String(),
+				Admin:               s.addrsStr[0],
 				Members:             members,
 				GroupPolicyAsAdmin:  false,
 				GroupPolicyMetadata: strings.Repeat("a", 256),
@@ -858,9 +829,9 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 		},
 		"member metadata too long": {
 			req: &group.MsgCreateGroupWithPolicy{
-				Admin: addr1.String(),
+				Admin: s.addrsStr[0],
 				Members: []group.MemberRequest{{
-					Address:  addr3.String(),
+					Address:  s.addrsStr[2],
 					Weight:   "1",
 					Metadata: strings.Repeat("a", 256),
 				}},
@@ -876,9 +847,9 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 		},
 		"zero member weight": {
 			req: &group.MsgCreateGroupWithPolicy{
-				Admin: addr1.String(),
+				Admin: s.addrsStr[0],
 				Members: []group.MemberRequest{{
-					Address: addr3.String(),
+					Address: s.addrsStr[2],
 					Weight:  "0",
 				}},
 				GroupPolicyAsAdmin: false,
@@ -893,7 +864,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 		},
 		"invalid member address": {
 			req: &group.MsgCreateGroupWithPolicy{
-				Admin: addr1.String(),
+				Admin: s.addrsStr[0],
 				Members: []group.MemberRequest{{
 					Address: "invalid",
 					Weight:  "1",
@@ -910,7 +881,7 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 		},
 		"decision policy threshold > total group weight": {
 			req: &group.MsgCreateGroupWithPolicy{
-				Admin:              addr1.String(),
+				Admin:              s.addrsStr[0],
 				Members:            members,
 				GroupPolicyAsAdmin: false,
 			},
@@ -999,13 +970,9 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 }
 
 func (s *TestSuite) TestCreateGroupPolicy() {
-	addrs := s.addrs
-	addr1 := addrs[0]
-	addr4 := addrs[3]
-
 	s.setNextAccount()
 	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin:   addr1.String(),
+		Admin:   s.addrsStr[0],
 		Members: nil,
 	})
 	s.Require().NoError(err)
@@ -1019,7 +986,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 	}{
 		"all good": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:   addr1.String(),
+				Admin:   s.addrsStr[0],
 				GroupId: myGroupID,
 			},
 			policy: group.NewThresholdDecisionPolicy(
@@ -1030,7 +997,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		},
 		"all good with percentage decision policy": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:   addr1.String(),
+				Admin:   s.addrsStr[0],
 				GroupId: myGroupID,
 			},
 			policy: group.NewPercentageDecisionPolicy(
@@ -1041,7 +1008,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		},
 		"decision policy threshold > total group weight": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:   addr1.String(),
+				Admin:   s.addrsStr[0],
 				GroupId: myGroupID,
 			},
 			policy: group.NewThresholdDecisionPolicy(
@@ -1052,7 +1019,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		},
 		"group id does not exists": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:   addr1.String(),
+				Admin:   s.addrsStr[0],
 				GroupId: 9999,
 			},
 			policy: group.NewThresholdDecisionPolicy(
@@ -1065,7 +1032,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		},
 		"admin not group admin": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:   addr4.String(),
+				Admin:   s.addrsStr[3],
 				GroupId: myGroupID,
 			},
 			policy: group.NewThresholdDecisionPolicy(
@@ -1078,7 +1045,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		},
 		"metadata too long": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:    addr1.String(),
+				Admin:    s.addrsStr[0],
 				GroupId:  myGroupID,
 				Metadata: strings.Repeat("a", 256),
 			},
@@ -1092,7 +1059,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		},
 		"percentage decision policy with negative value": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:   addr1.String(),
+				Admin:   s.addrsStr[0],
 				GroupId: myGroupID,
 			},
 			policy: group.NewPercentageDecisionPolicy(
@@ -1105,7 +1072,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 		},
 		"percentage decision policy with value greater than 1": {
 			req: &group.MsgCreateGroupPolicy{
-				Admin:   addr1.String(),
+				Admin:   s.addrsStr[0],
 				GroupId: myGroupID,
 			},
 			policy: group.NewPercentageDecisionPolicy(
@@ -1162,9 +1129,13 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 	addrs := s.addrs
 	addr1 := addrs[0]
 	addr2 := addrs[1]
-	addr5 := addrs[4]
 
-	admin, newAdmin := addr1, addr2
+	admin := addr1
+	adminAddr, err := s.accountKeeper.AddressCodec().BytesToString(admin)
+	s.Require().NoError(err)
+	newAdmin, err := s.accountKeeper.AddressCodec().BytesToString(addr2)
+	s.Require().NoError(err)
+
 	policy := group.NewThresholdDecisionPolicy(
 		"1",
 		time.Second,
@@ -1181,12 +1152,12 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 	}{
 		"with wrong admin": {
 			req: &group.MsgUpdateGroupPolicyAdmin{
-				Admin:              addr5.String(),
+				Admin:              s.addrsStr[4],
 				GroupPolicyAddress: groupPolicyAddr,
-				NewAdmin:           newAdmin.String(),
+				NewAdmin:           newAdmin,
 			},
 			expGroupPolicy: &group.GroupPolicyInfo{
-				Admin:          admin.String(),
+				Admin:          adminAddr,
 				Address:        groupPolicyAddr,
 				GroupId:        myGroupID,
 				Version:        2,
@@ -1198,12 +1169,12 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 		},
 		"with wrong group policy": {
 			req: &group.MsgUpdateGroupPolicyAdmin{
-				Admin:              admin.String(),
-				GroupPolicyAddress: addr5.String(),
-				NewAdmin:           newAdmin.String(),
+				Admin:              adminAddr,
+				GroupPolicyAddress: s.addrsStr[4],
+				NewAdmin:           newAdmin,
 			},
 			expGroupPolicy: &group.GroupPolicyInfo{
-				Admin:          admin.String(),
+				Admin:          adminAddr,
 				Address:        groupPolicyAddr,
 				GroupId:        myGroupID,
 				Version:        2,
@@ -1215,12 +1186,12 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 		},
 		"correct data": {
 			req: &group.MsgUpdateGroupPolicyAdmin{
-				Admin:              admin.String(),
+				Admin:              adminAddr,
 				GroupPolicyAddress: groupPolicyAddr,
-				NewAdmin:           newAdmin.String(),
+				NewAdmin:           newAdmin,
 			},
 			expGroupPolicy: &group.GroupPolicyInfo{
-				Admin:          newAdmin.String(),
+				Admin:          newAdmin,
 				Address:        groupPolicyAddr,
 				GroupId:        myGroupID,
 				Version:        2,
@@ -1231,12 +1202,12 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 		},
 		"with invalid new admin address": {
 			req: &group.MsgUpdateGroupPolicyAdmin{
-				Admin:              admin.String(),
+				Admin:              adminAddr,
 				GroupPolicyAddress: groupPolicyAddr,
 				NewAdmin:           "%s",
 			},
 			expGroupPolicy: &group.GroupPolicyInfo{
-				Admin:          admin.String(),
+				Admin:          adminAddr,
 				Address:        groupPolicyAddr,
 				GroupId:        myGroupID,
 				Version:        2,
@@ -1271,10 +1242,11 @@ func (s *TestSuite) TestUpdateGroupPolicyAdmin() {
 
 func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 	addrs := s.addrs
-	addr1 := addrs[0]
-	addr5 := addrs[4]
 
-	admin := addr1
+	admin := addrs[0]
+	adminAddr, err := s.accountKeeper.AddressCodec().BytesToString(admin)
+	s.Require().NoError(err)
+
 	policy := group.NewThresholdDecisionPolicy(
 		"1",
 		time.Second,
@@ -1294,7 +1266,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 	}{
 		"with wrong admin": {
 			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
-				Admin:              addr5.String(),
+				Admin:              s.addrsStr[4],
 				GroupPolicyAddress: groupPolicyAddr,
 			},
 			policy:         policy,
@@ -1304,8 +1276,8 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 		},
 		"with wrong group policy": {
 			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
-				Admin:              admin.String(),
-				GroupPolicyAddress: addr5.String(),
+				Admin:              adminAddr,
+				GroupPolicyAddress: s.addrsStr[4],
 			},
 			policy:         policy,
 			expGroupPolicy: &group.GroupPolicyInfo{},
@@ -1314,7 +1286,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 		},
 		"invalid percentage decision policy with negative value": {
 			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
-				Admin:              admin.String(),
+				Admin:              adminAddr,
 				GroupPolicyAddress: groupPolicyAddr,
 			},
 			policy: group.NewPercentageDecisionPolicy(
@@ -1323,7 +1295,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 				0,
 			),
 			expGroupPolicy: &group.GroupPolicyInfo{
-				Admin:          admin.String(),
+				Admin:          adminAddr,
 				Address:        groupPolicyAddr,
 				GroupId:        myGroupID,
 				Version:        2,
@@ -1335,7 +1307,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 		},
 		"invalid percentage decision policy with value greater than 1": {
 			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
-				Admin:              admin.String(),
+				Admin:              adminAddr,
 				GroupPolicyAddress: groupPolicyAddr,
 			},
 			policy: group.NewPercentageDecisionPolicy(
@@ -1344,7 +1316,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 				0,
 			),
 			expGroupPolicy: &group.GroupPolicyInfo{
-				Admin:          admin.String(),
+				Admin:          adminAddr,
 				Address:        groupPolicyAddr,
 				GroupId:        myGroupID,
 				Version:        2,
@@ -1356,7 +1328,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 		},
 		"correct data": {
 			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
-				Admin:              admin.String(),
+				Admin:              adminAddr,
 				GroupPolicyAddress: groupPolicyAddr,
 			},
 			policy: group.NewThresholdDecisionPolicy(
@@ -1365,7 +1337,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 				0,
 			),
 			expGroupPolicy: &group.GroupPolicyInfo{
-				Admin:          admin.String(),
+				Admin:          adminAddr,
 				Address:        groupPolicyAddr,
 				GroupId:        myGroupID,
 				Version:        2,
@@ -1380,7 +1352,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 				return s.createGroupAndGroupPolicy(admin, nil, policy)
 			},
 			req: &group.MsgUpdateGroupPolicyDecisionPolicy{
-				Admin:              admin.String(),
+				Admin:              adminAddr,
 				GroupPolicyAddress: groupPolicyAddr,
 			},
 			policy: group.NewPercentageDecisionPolicy(
@@ -1389,7 +1361,7 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 				0,
 			),
 			expGroupPolicy: &group.GroupPolicyInfo{
-				Admin:          admin.String(),
+				Admin:          adminAddr,
 				DecisionPolicy: nil,
 				Version:        2,
 				CreatedAt:      s.blockTime,
@@ -1435,11 +1407,10 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 }
 
 func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
-	addrs := s.addrs
-	addr1 := addrs[0]
-	addr5 := addrs[4]
+	admin := s.addrs[0]
+	adminAddr, err := s.accountKeeper.AddressCodec().BytesToString(admin)
+	s.Require().NoError(err)
 
-	admin := addr1
 	policy := group.NewThresholdDecisionPolicy(
 		"1",
 		time.Second,
@@ -1457,7 +1428,7 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 	}{
 		"with wrong admin": {
 			req: &group.MsgUpdateGroupPolicyMetadata{
-				Admin:              addr5.String(),
+				Admin:              s.addrsStr[4],
 				GroupPolicyAddress: groupPolicyAddr,
 			},
 			expGroupPolicy: &group.GroupPolicyInfo{},
@@ -1466,8 +1437,8 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 		},
 		"with wrong group policy": {
 			req: &group.MsgUpdateGroupPolicyMetadata{
-				Admin:              admin.String(),
-				GroupPolicyAddress: addr5.String(),
+				Admin:              adminAddr,
+				GroupPolicyAddress: s.addrsStr[4],
 			},
 			expGroupPolicy: &group.GroupPolicyInfo{},
 			expErr:         true,
@@ -1475,7 +1446,7 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 		},
 		"with metadata too long": {
 			req: &group.MsgUpdateGroupPolicyMetadata{
-				Admin:              admin.String(),
+				Admin:              adminAddr,
 				GroupPolicyAddress: groupPolicyAddr,
 				Metadata:           strings.Repeat("a", 1001),
 			},
@@ -1485,11 +1456,11 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 		},
 		"correct data": {
 			req: &group.MsgUpdateGroupPolicyMetadata{
-				Admin:              admin.String(),
+				Admin:              adminAddr,
 				GroupPolicyAddress: groupPolicyAddr,
 			},
 			expGroupPolicy: &group.GroupPolicyInfo{
-				Admin:          admin.String(),
+				Admin:          adminAddr,
 				Address:        groupPolicyAddr,
 				GroupId:        myGroupID,
 				Version:        2,
@@ -1540,12 +1511,12 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 
 func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 	addrs := s.addrs
-	addr2 := addrs[1]
 
-	admin := addr2
+	admin, err := s.accountKeeper.AddressCodec().BytesToString(addrs[1])
+	s.Require().NoError(err)
 
 	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin:   admin.String(),
+		Admin:   admin,
 		Members: nil,
 	})
 	s.Require().NoError(err)
@@ -1573,7 +1544,7 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 	expectAccs := make([]*group.GroupPolicyInfo, count)
 	for i := range expectAccs {
 		req := &group.MsgCreateGroupPolicy{
-			Admin:   admin.String(),
+			Admin:   admin,
 			GroupId: myGroupID,
 		}
 		err := req.SetDecisionPolicy(policies[i])
@@ -1585,7 +1556,7 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 
 		expectAcc := &group.GroupPolicyInfo{
 			Address:   res.Address,
-			Admin:     admin.String(),
+			Admin:     admin,
 			GroupId:   myGroupID,
 			Version:   uint64(1),
 			CreatedAt: s.blockTime,
@@ -1621,7 +1592,7 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 
 	// no group policy
 	noPolicies, err := s.groupKeeper.GroupPoliciesByAdmin(s.ctx, &group.QueryGroupPoliciesByAdminRequest{
-		Admin: addrs[2].String(),
+		Admin: s.addrsStr[2],
 	})
 	s.Require().NoError(err)
 	policyAccs = noPolicies.GroupPolicies
@@ -1629,7 +1600,7 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 
 	// query group policy by admin
 	policiesByAdminRes, err := s.groupKeeper.GroupPoliciesByAdmin(s.ctx, &group.QueryGroupPoliciesByAdminRequest{
-		Admin: admin.String(),
+		Admin: admin,
 	})
 	s.Require().NoError(err)
 	policyAccs = policiesByAdminRes.GroupPolicies
@@ -1653,17 +1624,15 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 
 func (s *TestSuite) TestSubmitProposal() {
 	addrs := s.addrs
-	addr1 := addrs[0]
 	addr2 := addrs[1] // Has weight 2
-	addr4 := addrs[3]
-	addr5 := addrs[4] // Has weight 1
 
 	myGroupID := s.groupID
-	accountAddr := s.groupPolicyAddr
+	accountAddr, err := s.accountKeeper.AddressCodec().BytesToString(s.groupPolicyAddr)
+	s.Require().NoError(err)
 
 	// Create a new group policy to test TRY_EXEC
 	policyReq := &group.MsgCreateGroupPolicy{
-		Admin:   addr1.String(),
+		Admin:   s.addrsStr[0],
 		GroupId: myGroupID,
 	}
 	noMinExecPeriodPolicy := group.NewThresholdDecisionPolicy(
@@ -1671,7 +1640,7 @@ func (s *TestSuite) TestSubmitProposal() {
 		time.Second,
 		0, // no MinExecutionPeriod to test TRY_EXEC
 	)
-	err := policyReq.SetDecisionPolicy(noMinExecPeriodPolicy)
+	err = policyReq.SetDecisionPolicy(noMinExecPeriodPolicy)
 	s.Require().NoError(err)
 	s.setNextAccount()
 	res, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
@@ -1695,11 +1664,11 @@ func (s *TestSuite) TestSubmitProposal() {
 
 	msgSend := &banktypes.MsgSend{
 		FromAddress: res.Address,
-		ToAddress:   addr2.String(),
+		ToAddress:   s.addrsStr[1],
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
 	defaultProposal := group.Proposal{
-		GroupPolicyAddress: accountAddr.String(),
+		GroupPolicyAddress: accountAddr,
 		Status:             group.PROPOSAL_STATUS_SUBMITTED,
 		FinalTallyResult: group.TallyResult{
 			YesCount:        "0",
@@ -1720,20 +1689,20 @@ func (s *TestSuite) TestSubmitProposal() {
 	}{
 		"all good with minimal fields set": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr2.String()},
+				GroupPolicyAddress: accountAddr,
+				Proposers:          []string{s.addrsStr[1]},
 			},
 			expProposal: defaultProposal,
 			postRun:     func(sdkCtx sdk.Context) {},
 		},
 		"all good with good msg payload": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr2.String()},
+				GroupPolicyAddress: accountAddr,
+				Proposers:          []string{s.addrsStr[1]},
 			},
 			msgs: []sdk.Msg{&banktypes.MsgSend{
-				FromAddress: accountAddr.String(),
-				ToAddress:   addr2.String(),
+				FromAddress: accountAddr,
+				ToAddress:   s.addrsStr[1],
 				Amount:      sdk.Coins{sdk.NewInt64Coin("token", 100)},
 			}},
 			expProposal: defaultProposal,
@@ -1741,8 +1710,8 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"title != metadata.title": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr2.String()},
+				GroupPolicyAddress: accountAddr,
+				Proposers:          []string{s.addrsStr[1]},
 				Metadata:           "{\"title\":\"title\",\"summary\":\"description\"}",
 				Title:              "title2",
 				Summary:            "description",
@@ -1753,8 +1722,8 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"summary != metadata.summary": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr2.String()},
+				GroupPolicyAddress: accountAddr,
+				Proposers:          []string{s.addrsStr[1]},
 				Metadata:           "{\"title\":\"title\",\"summary\":\"description of proposal\"}",
 				Title:              "title",
 				Summary:            "description",
@@ -1765,8 +1734,8 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"metadata too long": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr2.String()},
+				GroupPolicyAddress: accountAddr,
+				Proposers:          []string{s.addrsStr[1]},
 				Metadata:           strings.Repeat("a", 256),
 			},
 			expErr:    true,
@@ -1775,8 +1744,8 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"summary too long": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr2.String()},
+				GroupPolicyAddress: accountAddr,
+				Proposers:          []string{s.addrsStr[1]},
 				Metadata:           "{\"title\":\"title\",\"summary\":\"description\"}",
 				Summary:            strings.Repeat("a", 256*40),
 			},
@@ -1786,7 +1755,7 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"group policy required": {
 			req: &group.MsgSubmitProposal{
-				Proposers: []string{addr2.String()},
+				Proposers: []string{s.addrsStr[1]},
 			},
 			expErr:    true,
 			expErrMsg: "empty address string is not allowed",
@@ -1794,8 +1763,8 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"existing group policy required": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: addr1.String(),
-				Proposers:          []string{addr2.String()},
+				GroupPolicyAddress: s.addrsStr[0],
+				Proposers:          []string{s.addrsStr[1]},
 			},
 			expErr:    true,
 			expErrMsg: "not found",
@@ -1804,7 +1773,7 @@ func (s *TestSuite) TestSubmitProposal() {
 		"decision policy threshold > total group weight": {
 			req: &group.MsgSubmitProposal{
 				GroupPolicyAddress: bigThresholdAddr,
-				Proposers:          []string{addr2.String()},
+				Proposers:          []string{s.addrsStr[1]},
 			},
 			expErr: false,
 			expProposal: group.Proposal{
@@ -1817,8 +1786,8 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"only group members can create a proposal": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr4.String()},
+				GroupPolicyAddress: accountAddr,
+				Proposers:          []string{s.addrsStr[3]},
 			},
 			expErr:    true,
 			expErrMsg: "not in group",
@@ -1826,8 +1795,8 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"all proposers must be in group": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr2.String(), addr4.String()},
+				GroupPolicyAddress: accountAddr,
+				Proposers:          []string{s.addrsStr[1], s.addrsStr[3]},
 			},
 			expErr:    true,
 			expErrMsg: "not in group",
@@ -1835,8 +1804,8 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"admin that is not a group member can not create proposal": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr1.String()},
+				GroupPolicyAddress: accountAddr,
+				Proposers:          []string{s.addrsStr[0]},
 			},
 			expErr:    true,
 			expErrMsg: "not in group",
@@ -1844,10 +1813,10 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"reject msgs that are not authz by group policy": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
-				Proposers:          []string{addr2.String()},
+				GroupPolicyAddress: accountAddr,
+				Proposers:          []string{s.addrsStr[1]},
 			},
-			msgs:      []sdk.Msg{&testdata.TestMsg{Signers: []string{addr1.String()}}},
+			msgs:      []sdk.Msg{&testdata.TestMsg{Signers: []string{s.addrsStr[0]}}},
 			expErr:    true,
 			expErrMsg: "msg does not have group policy authorization",
 			postRun:   func(sdkCtx sdk.Context) {},
@@ -1860,7 +1829,7 @@ func (s *TestSuite) TestSubmitProposal() {
 			},
 			req: &group.MsgSubmitProposal{
 				GroupPolicyAddress: res.Address,
-				Proposers:          []string{addr2.String()},
+				Proposers:          []string{s.addrsStr[1]},
 				Exec:               group.Exec_EXEC_TRY,
 			},
 			msgs: []sdk.Msg{msgSend},
@@ -1890,7 +1859,7 @@ func (s *TestSuite) TestSubmitProposal() {
 		"with try exec, not enough yes votes for proposal to pass": {
 			req: &group.MsgSubmitProposal{
 				GroupPolicyAddress: res.Address,
-				Proposers:          []string{addr5.String()},
+				Proposers:          []string{s.addrsStr[4]},
 				Exec:               group.Exec_EXEC_TRY,
 			},
 			msgs: []sdk.Msg{msgSend},
@@ -1959,17 +1928,13 @@ func (s *TestSuite) TestSubmitProposal() {
 }
 
 func (s *TestSuite) TestWithdrawProposal() {
-	addrs := s.addrs
-	addr2 := addrs[1]
-	addr5 := addrs[4]
-
 	msgSend := &banktypes.MsgSend{
-		FromAddress: s.groupPolicyAddr.String(),
-		ToAddress:   addr2.String(),
+		FromAddress: s.groupPolicyStrAddr,
+		ToAddress:   s.addrsStr[1],
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
 
-	proposers := []string{addr2.String()}
+	proposers := []string{s.addrsStr[1]}
 	proposalID := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 
 	specs := map[string]struct {
@@ -1983,7 +1948,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 			},
-			admin:     addr5.String(),
+			admin:     s.addrsStr[4],
 			expErrMsg: "unauthorized",
 			postRun:   func(sdkCtx sdk.Context) {},
 		},
@@ -2027,12 +1992,10 @@ func (s *TestSuite) TestWithdrawProposal() {
 			postRun: func(sdkCtx sdk.Context) {
 				resp, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
-				key := storetypes.NewKVStoreKey(group.StoreKey)
-				env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
 				vpe := resp.Proposal.VotingPeriodEnd
 				timeDiff := vpe.Sub(s.sdkCtx.HeaderInfo().Time)
 				ctxVPE := sdkCtx.WithHeaderInfo(header.Info{Time: s.sdkCtx.HeaderInfo().Time.Add(timeDiff).Add(time.Second * 1)})
-				s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctxVPE, env))
+				s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctxVPE))
 				events := ctxVPE.EventManager().ABCIEvents()
 
 				s.Require().True(eventTypeFound(events, EventProposalPruned))
@@ -2065,19 +2028,14 @@ func (s *TestSuite) TestWithdrawProposal() {
 }
 
 func (s *TestSuite) TestVote() {
-	addrs := s.addrs
-	addr1 := addrs[0]
-	addr2 := addrs[1]
-	addr3 := addrs[2]
-	addr4 := addrs[3]
-	addr5 := addrs[4]
+	addr5 := s.addrs[4]
 	members := []group.MemberRequest{
-		{Address: addr4.String(), Weight: "1"},
-		{Address: addr3.String(), Weight: "2"},
+		{Address: s.addrsStr[3], Weight: "1"},
+		{Address: s.addrsStr[2], Weight: "2"},
 	}
 
 	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin:   addr1.String(),
+		Admin:   s.addrsStr[0],
 		Members: members,
 	})
 	s.Require().NoError(err)
@@ -2089,7 +2047,7 @@ func (s *TestSuite) TestVote() {
 		0,
 	)
 	policyReq := &group.MsgCreateGroupPolicy{
-		Admin:   addr1.String(),
+		Admin:   s.addrsStr[0],
 		GroupId: myGroupID,
 	}
 	err = policyReq.SetDecisionPolicy(policy)
@@ -2109,12 +2067,12 @@ func (s *TestSuite) TestVote() {
 
 	req := &group.MsgSubmitProposal{
 		GroupPolicyAddress: accountAddr,
-		Proposers:          []string{addr4.String()},
+		Proposers:          []string{s.addrsStr[3]},
 		Messages:           nil,
 	}
 	msg := &banktypes.MsgSend{
 		FromAddress: accountAddr,
-		ToAddress:   addr5.String(),
+		ToAddress:   s.addrsStr[4],
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
 	err = req.SetMsgs([]sdk.Msg{msg})
@@ -2126,7 +2084,7 @@ func (s *TestSuite) TestVote() {
 
 	// no group policy
 	proposalsRes, err := s.groupKeeper.ProposalsByGroupPolicy(s.ctx, &group.QueryProposalsByGroupPolicyRequest{
-		Address: addrs[2].String(),
+		Address: s.addrsStr[2],
 	})
 	s.Require().NoError(err)
 	proposals := proposalsRes.Proposals
@@ -2174,7 +2132,7 @@ func (s *TestSuite) TestVote() {
 		"vote yes": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr4.String(),
+				Voter:      s.addrsStr[3],
 				Option:     group.VOTE_OPTION_YES,
 			},
 			expTallyResult: group.TallyResult{
@@ -2190,7 +2148,7 @@ func (s *TestSuite) TestVote() {
 		"with try exec": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr3.String(),
+				Voter:      s.addrsStr[2],
 				Option:     group.VOTE_OPTION_YES,
 				Exec:       group.Exec_EXEC_TRY,
 			},
@@ -2219,7 +2177,7 @@ func (s *TestSuite) TestVote() {
 		"with try exec, not enough yes votes for proposal to pass": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr4.String(),
+				Voter:      s.addrsStr[3],
 				Option:     group.VOTE_OPTION_YES,
 				Exec:       group.Exec_EXEC_TRY,
 			},
@@ -2236,7 +2194,7 @@ func (s *TestSuite) TestVote() {
 		"vote no": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr4.String(),
+				Voter:      s.addrsStr[3],
 				Option:     group.VOTE_OPTION_NO,
 			},
 			expTallyResult: group.TallyResult{
@@ -2252,7 +2210,7 @@ func (s *TestSuite) TestVote() {
 		"vote abstain": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr4.String(),
+				Voter:      s.addrsStr[3],
 				Option:     group.VOTE_OPTION_ABSTAIN,
 			},
 			expTallyResult: group.TallyResult{
@@ -2268,7 +2226,7 @@ func (s *TestSuite) TestVote() {
 		"vote veto": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr4.String(),
+				Voter:      s.addrsStr[3],
 				Option:     group.VOTE_OPTION_NO_WITH_VETO,
 			},
 			expTallyResult: group.TallyResult{
@@ -2284,7 +2242,7 @@ func (s *TestSuite) TestVote() {
 		"apply decision policy early": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr3.String(),
+				Voter:      s.addrsStr[2],
 				Option:     group.VOTE_OPTION_YES,
 			},
 			expTallyResult: group.TallyResult{
@@ -2300,13 +2258,13 @@ func (s *TestSuite) TestVote() {
 		"reject new votes when final decision is made already": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr4.String(),
+				Voter:      s.addrsStr[3],
 				Option:     group.VOTE_OPTION_YES,
 			},
 			doBefore: func(ctx context.Context) {
 				_, err := s.groupKeeper.Vote(ctx, &group.MsgVote{
 					ProposalId: myProposalID,
-					Voter:      addr3.String(),
+					Voter:      s.addrsStr[2],
 					Option:     group.VOTE_OPTION_NO_WITH_VETO,
 					Exec:       1, // Execute the proposal so that its status is final
 				})
@@ -2319,7 +2277,7 @@ func (s *TestSuite) TestVote() {
 		"metadata too long": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr4.String(),
+				Voter:      s.addrsStr[3],
 				Option:     group.VOTE_OPTION_NO,
 				Metadata:   strings.Repeat("a", 256),
 			},
@@ -2330,7 +2288,7 @@ func (s *TestSuite) TestVote() {
 		"existing proposal required": {
 			req: &group.MsgVote{
 				ProposalId: 999,
-				Voter:      addr4.String(),
+				Voter:      s.addrsStr[3],
 				Option:     group.VOTE_OPTION_NO,
 			},
 			expErr:    true,
@@ -2340,7 +2298,7 @@ func (s *TestSuite) TestVote() {
 		"empty vote option": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr4.String(),
+				Voter:      s.addrsStr[3],
 			},
 			expErr:    true,
 			expErrMsg: "vote option: value is empty",
@@ -2349,7 +2307,7 @@ func (s *TestSuite) TestVote() {
 		"invalid vote option": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr4.String(),
+				Voter:      s.addrsStr[3],
 				Option:     5,
 			},
 			expErr:    true,
@@ -2359,7 +2317,7 @@ func (s *TestSuite) TestVote() {
 		"voter must be in group": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr2.String(),
+				Voter:      s.addrsStr[1],
 				Option:     group.VOTE_OPTION_NO,
 			},
 			expErr:    true,
@@ -2369,7 +2327,7 @@ func (s *TestSuite) TestVote() {
 		"admin that is not a group member can not vote": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr1.String(),
+				Voter:      s.addrsStr[0],
 				Option:     group.VOTE_OPTION_NO,
 			},
 			expErr:    true,
@@ -2379,7 +2337,7 @@ func (s *TestSuite) TestVote() {
 		"on voting period end": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr4.String(),
+				Voter:      s.addrsStr[3],
 				Option:     group.VOTE_OPTION_NO,
 			},
 			srcCtx:    s.sdkCtx.WithHeaderInfo(header.Info{Time: s.sdkCtx.HeaderInfo().Time.Add(time.Second)}),
@@ -2390,7 +2348,7 @@ func (s *TestSuite) TestVote() {
 		"vote closed already": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr4.String(),
+				Voter:      s.addrsStr[3],
 				Option:     group.VOTE_OPTION_NO,
 			},
 			doBefore: func(ctx context.Context) {
@@ -2398,7 +2356,7 @@ func (s *TestSuite) TestVote() {
 
 				_, err := s.groupKeeper.Vote(ctx, &group.MsgVote{
 					ProposalId: myProposalID,
-					Voter:      addr3.String(),
+					Voter:      s.addrsStr[2],
 					Option:     group.VOTE_OPTION_YES,
 					Exec:       1, // Execute to close the proposal.
 				})
@@ -2411,13 +2369,13 @@ func (s *TestSuite) TestVote() {
 		"voted already": {
 			req: &group.MsgVote{
 				ProposalId: myProposalID,
-				Voter:      addr4.String(),
+				Voter:      s.addrsStr[3],
 				Option:     group.VOTE_OPTION_NO,
 			},
 			doBefore: func(ctx context.Context) {
 				_, err := s.groupKeeper.Vote(ctx, &group.MsgVote{
 					ProposalId: myProposalID,
-					Voter:      addr4.String(),
+					Voter:      s.addrsStr[3],
 					Option:     group.VOTE_OPTION_YES,
 				})
 				s.Require().NoError(err)
@@ -2515,12 +2473,12 @@ func (s *TestSuite) TestVote() {
 
 	s.T().Log("test tally result should not take into account the member who left the group")
 	members = []group.MemberRequest{
-		{Address: addr2.String(), Weight: "3"},
-		{Address: addr3.String(), Weight: "2"},
-		{Address: addr4.String(), Weight: "1"},
+		{Address: s.addrsStr[1], Weight: "3"},
+		{Address: s.addrsStr[2], Weight: "2"},
+		{Address: s.addrsStr[3], Weight: "1"},
 	}
 	reqCreate := &group.MsgCreateGroupWithPolicy{
-		Admin:         addr1.String(),
+		Admin:         s.addrsStr[0],
 		Members:       members,
 		GroupMetadata: "metadata",
 	}
@@ -2541,11 +2499,11 @@ func (s *TestSuite) TestVote() {
 	groupID := result.GroupId
 	reqProposal := &group.MsgSubmitProposal{
 		GroupPolicyAddress: policyAddr,
-		Proposers:          []string{addr4.String()},
+		Proposers:          []string{s.addrsStr[3]},
 	}
 	s.Require().NoError(reqProposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
 		FromAddress: policyAddr,
-		ToAddress:   addr5.String(),
+		ToAddress:   s.addrsStr[4],
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}}))
 
@@ -2554,7 +2512,7 @@ func (s *TestSuite) TestVote() {
 	s.Require().NotNil(resSubmitProposal)
 	proposalID := resSubmitProposal.ProposalId
 
-	for _, voter := range []string{addr4.String(), addr3.String(), addr2.String()} {
+	for _, voter := range []string{s.addrsStr[3], s.addrsStr[2], s.addrsStr[1]} {
 		_, err := s.groupKeeper.Vote(s.ctx,
 			&group.MsgVote{ProposalId: proposalID, Voter: voter, Option: group.VOTE_OPTION_YES},
 		)
@@ -2569,7 +2527,7 @@ func (s *TestSuite) TestVote() {
 	tallyResult, err := s.groupKeeper.Tally(s.sdkCtx, *qProposals.Proposal, groupID)
 	s.Require().NoError(err)
 
-	_, err = s.groupKeeper.LeaveGroup(s.ctx, &group.MsgLeaveGroup{Address: addr4.String(), GroupId: groupID})
+	_, err = s.groupKeeper.LeaveGroup(s.ctx, &group.MsgLeaveGroup{Address: s.addrsStr[3], GroupId: groupID})
 	s.Require().NoError(err)
 
 	tallyResult1, err := s.groupKeeper.Tally(s.sdkCtx, *qProposals.Proposal, groupID)
@@ -2579,20 +2537,19 @@ func (s *TestSuite) TestVote() {
 
 func (s *TestSuite) TestExecProposal() {
 	addrs := s.addrs
-	addr1 := addrs[0]
 	addr2 := addrs[1]
 
 	msgSend1 := &banktypes.MsgSend{
-		FromAddress: s.groupPolicyAddr.String(),
-		ToAddress:   addr2.String(),
+		FromAddress: s.groupPolicyStrAddr,
+		ToAddress:   s.addrsStr[1],
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 	}
 	msgSend2 := &banktypes.MsgSend{
-		FromAddress: s.groupPolicyAddr.String(),
-		ToAddress:   addr2.String(),
+		FromAddress: s.groupPolicyStrAddr,
+		ToAddress:   s.addrsStr[1],
 		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 10001)},
 	}
-	proposers := []string{addr2.String()}
+	proposers := []string{s.addrsStr[1]}
 
 	specs := map[string]struct {
 		srcBlockTime      time.Time
@@ -2731,7 +2688,7 @@ func (s *TestSuite) TestExecProposal() {
 				// Wait after min execution period end before Exec
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod)}) // MinExecutionPeriod is 5s
-				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
+				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: s.addrsStr[0], ProposalId: myProposalID})
 				s.Require().NoError(err)
 				return myProposalID
 			},
@@ -2749,7 +2706,7 @@ func (s *TestSuite) TestExecProposal() {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1, msgSend2}
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil)
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, fmt.Errorf("error"))
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, errors.New("error"))
 
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
@@ -2766,8 +2723,8 @@ func (s *TestSuite) TestExecProposal() {
 				// Wait after min execution period end before Exec
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod)}) // MinExecutionPeriod is 5s
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, fmt.Errorf("error"))
-				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, errors.New("error"))
+				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: s.addrsStr[0], ProposalId: myProposalID})
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, nil)
 
 				s.Require().NoError(err)
@@ -2791,7 +2748,7 @@ func (s *TestSuite) TestExecProposal() {
 				sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: spec.srcBlockTime})
 			}
 
-			_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
+			_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: s.addrsStr[0], ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), spec.expErrMsg)
@@ -2831,11 +2788,7 @@ func (s *TestSuite) TestExecProposal() {
 }
 
 func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
-	addrs := s.addrs
-	addr1 := addrs[0]
-	addr2 := addrs[1]
-
-	proposers := []string{addr2.String()}
+	proposers := []string{s.addrsStr[1]}
 	specs := map[string]struct {
 		srcBlockTime      time.Time
 		setupProposal     func(ctx context.Context) uint64
@@ -2846,8 +2799,8 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 		"proposal pruned after executor result success": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgSend1 := &banktypes.MsgSend{
-					FromAddress: s.groupPolicyAddr.String(),
-					ToAddress:   addr2.String(),
+					FromAddress: s.groupPolicyStrAddr,
+					ToAddress:   s.addrsStr[1],
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 101)},
 				}
 				msgs := []sdk.Msg{msgSend1}
@@ -2860,8 +2813,8 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 		"proposal with multiple messages pruned when executed with result success": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgSend1 := &banktypes.MsgSend{
-					FromAddress: s.groupPolicyAddr.String(),
-					ToAddress:   addr2.String(),
+					FromAddress: s.groupPolicyStrAddr,
+					ToAddress:   s.addrsStr[1],
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 102)},
 				}
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil).MaxTimes(2)
@@ -2875,8 +2828,8 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 		"proposal not pruned when not executed and rejected": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgSend1 := &banktypes.MsgSend{
-					FromAddress: s.groupPolicyAddr.String(),
-					ToAddress:   addr2.String(),
+					FromAddress: s.groupPolicyStrAddr,
+					ToAddress:   s.addrsStr[1],
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 103)},
 				}
 				msgs := []sdk.Msg{msgSend1}
@@ -2887,8 +2840,8 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 		"open proposal is not pruned which must not fail ": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgSend1 := &banktypes.MsgSend{
-					FromAddress: s.groupPolicyAddr.String(),
-					ToAddress:   addr2.String(),
+					FromAddress: s.groupPolicyStrAddr,
+					ToAddress:   s.addrsStr[1],
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 104)},
 				}
 				return submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
@@ -2898,15 +2851,15 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 		"proposal not pruned with group modified before tally": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgSend1 := &banktypes.MsgSend{
-					FromAddress: s.groupPolicyAddr.String(),
-					ToAddress:   addr2.String(),
+					FromAddress: s.groupPolicyStrAddr,
+					ToAddress:   s.addrsStr[1],
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 105)},
 				}
 				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
 
 				// then modify group
 				_, err := s.groupKeeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
-					Admin:   addr1.String(),
+					Admin:   s.addrsStr[0],
 					GroupId: s.groupID,
 				})
 				s.Require().NoError(err)
@@ -2917,15 +2870,15 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 		"proposal not pruned with group policy modified before tally": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgSend1 := &banktypes.MsgSend{
-					FromAddress: s.groupPolicyAddr.String(),
-					ToAddress:   addr2.String(),
+					FromAddress: s.groupPolicyStrAddr,
+					ToAddress:   s.addrsStr[1],
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 106)},
 				}
 
 				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
 				_, err := s.groupKeeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
-					Admin:              addr1.String(),
-					GroupPolicyAddress: s.groupPolicyAddr.String(),
+					Admin:              s.addrsStr[0],
+					GroupPolicyAddress: s.groupPolicyStrAddr,
 				})
 				s.Require().NoError(err)
 				return myProposalID
@@ -2937,19 +2890,19 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 		"proposal exists when rollback all msg updates on failure": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgSend1 := &banktypes.MsgSend{
-					FromAddress: s.groupPolicyAddr.String(),
-					ToAddress:   addr2.String(),
+					FromAddress: s.groupPolicyStrAddr,
+					ToAddress:   s.addrsStr[1],
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 107)},
 				}
 
 				msgSend2 := &banktypes.MsgSend{
-					FromAddress: s.groupPolicyAddr.String(),
-					ToAddress:   addr2.String(),
+					FromAddress: s.groupPolicyStrAddr,
+					ToAddress:   s.addrsStr[1],
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 10002)},
 				}
 
 				msgs := []sdk.Msg{msgSend1, msgSend2}
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, fmt.Errorf("error"))
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, errors.New("error"))
 
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
@@ -2958,8 +2911,8 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 		"pruned when proposal is executable when failed before": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgSend2 := &banktypes.MsgSend{
-					FromAddress: s.groupPolicyAddr.String(),
-					ToAddress:   addr2.String(),
+					FromAddress: s.groupPolicyStrAddr,
+					ToAddress:   s.addrsStr[1],
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 10003)},
 				}
 
@@ -2967,12 +2920,12 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 
 				myProposalID := submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, fmt.Errorf("error"))
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, errors.New("error"))
 
 				// Wait for min execution period end
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod)})
-				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
+				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: s.addrsStr[0], ProposalId: myProposalID})
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, nil)
 
 				s.Require().NoError(err)
@@ -2994,7 +2947,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 
 			// Wait for min execution period end
 			sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: sdkCtx.HeaderInfo().Time.Add(minExecutionPeriod)})
-			_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
+			_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: s.addrsStr[0], ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), spec.expErrMsg)
@@ -3032,26 +2985,30 @@ func (s *TestSuite) TestLeaveGroup() {
 	addrs := simtestutil.CreateIncrementalAccounts(7)
 
 	admin1 := addrs[0]
-	member1 := addrs[1]
-	member2 := addrs[2]
-	member3 := addrs[3]
-	member4 := addrs[4]
+	member1, err := s.accountKeeper.AddressCodec().BytesToString(addrs[1])
+	s.Require().NoError(err)
+	member2, err := s.accountKeeper.AddressCodec().BytesToString(addrs[2])
+	s.Require().NoError(err)
+	member3, err := s.accountKeeper.AddressCodec().BytesToString(addrs[3])
+	s.Require().NoError(err)
+	member4, err := s.accountKeeper.AddressCodec().BytesToString(addrs[4])
+	s.Require().NoError(err)
 	admin2 := addrs[5]
 	admin3 := addrs[6]
 
 	members := []group.MemberRequest{
 		{
-			Address:  member1.String(),
+			Address:  member1,
 			Weight:   "1",
 			Metadata: "metadata",
 		},
 		{
-			Address:  member2.String(),
+			Address:  member2,
 			Weight:   "2",
 			Metadata: "metadata",
 		},
 		{
-			Address:  member3.String(),
+			Address:  member3,
 			Weight:   "3",
 			Metadata: "metadata",
 		},
@@ -3066,7 +3023,7 @@ func (s *TestSuite) TestLeaveGroup() {
 
 	members = []group.MemberRequest{
 		{
-			Address:  member1.String(),
+			Address:  member1,
 			Weight:   "1",
 			Metadata: "metadata",
 		},
@@ -3077,12 +3034,12 @@ func (s *TestSuite) TestLeaveGroup() {
 
 	members = []group.MemberRequest{
 		{
-			Address:  member1.String(),
+			Address:  member1,
 			Weight:   "1",
 			Metadata: "metadata",
 		},
 		{
-			Address:  member2.String(),
+			Address:  member2,
 			Weight:   "2",
 			Metadata: "metadata",
 		},
@@ -3107,7 +3064,7 @@ func (s *TestSuite) TestLeaveGroup() {
 			"group not found",
 			&group.MsgLeaveGroup{
 				GroupId: 100000,
-				Address: member1.String(),
+				Address: member1,
 			},
 			true,
 			"group: not found",
@@ -3129,7 +3086,7 @@ func (s *TestSuite) TestLeaveGroup() {
 			"member not part of group",
 			&group.MsgLeaveGroup{
 				GroupId: groupID1,
-				Address: member4.String(),
+				Address: member4,
 			},
 			true,
 			"not part of group",
@@ -3140,7 +3097,7 @@ func (s *TestSuite) TestLeaveGroup() {
 			"valid testcase: decision policy is not present (and group total weight can be 0)",
 			&group.MsgLeaveGroup{
 				GroupId: groupID2,
-				Address: member1.String(),
+				Address: member1,
 			},
 			false,
 			"",
@@ -3151,7 +3108,7 @@ func (s *TestSuite) TestLeaveGroup() {
 			"valid testcase: threshold decision policy",
 			&group.MsgLeaveGroup{
 				GroupId: groupID1,
-				Address: member3.String(),
+				Address: member3,
 			},
 			false,
 			"",
@@ -3162,7 +3119,7 @@ func (s *TestSuite) TestLeaveGroup() {
 			"valid request: can leave group policy threshold more than group weight",
 			&group.MsgLeaveGroup{
 				GroupId: groupID1,
-				Address: member2.String(),
+				Address: member2,
 			},
 			false,
 			"",
@@ -3173,7 +3130,7 @@ func (s *TestSuite) TestLeaveGroup() {
 			"valid request: can leave group (percentage decision policy)",
 			&group.MsgLeaveGroup{
 				GroupId: groupID3,
-				Address: member2.String(),
+				Address: member2,
 			},
 			false,
 			"",
@@ -3219,7 +3176,7 @@ func (s *TestSuite) TestLeaveGroup() {
 }
 
 func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
-	proposers := []string{s.addrs[1].String()}
+	proposers := []string{s.addrsStr[1]}
 
 	specs := map[string]struct {
 		votes         []group.VoteOption
@@ -3230,11 +3187,11 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 	}{
 		"member leaves while all others vote yes: proposal accepted": {
 			members: []group.MemberRequest{
-				{Address: s.addrs[4].String(), Weight: "1"},
-				{Address: s.addrs[1].String(), Weight: "2"},
-				{Address: s.addrs[3].String(), Weight: "1"},
-				{Address: s.addrs[5].String(), Weight: "2"},
-				{Address: s.addrs[2].String(), Weight: "2"},
+				{Address: s.addrsStr[4], Weight: "1"},
+				{Address: s.addrsStr[1], Weight: "2"},
+				{Address: s.addrsStr[3], Weight: "1"},
+				{Address: s.addrsStr[5], Weight: "2"},
+				{Address: s.addrsStr[2], Weight: "2"},
 			},
 			votes: []group.VoteOption{
 				group.VOTE_OPTION_YES, group.VOTE_OPTION_YES,
@@ -3244,7 +3201,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			setupProposal: func(ctx context.Context, groupPolicyAddr string) uint64 {
 				msgSend1 := &banktypes.MsgSend{
 					FromAddress: groupPolicyAddr,
-					ToAddress:   s.addrs[1].String(),
+					ToAddress:   s.addrsStr[1],
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 				}
 
@@ -3265,16 +3222,16 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				return proposalRes.ProposalId
 			},
 			malleate: func(ctx context.Context, k keeper.Keeper, _ string, groupID uint64) error {
-				_, err := k.LeaveGroup(ctx, &group.MsgLeaveGroup{GroupId: groupID, Address: s.addrs[5].String()})
+				_, err := k.LeaveGroup(ctx, &group.MsgLeaveGroup{GroupId: groupID, Address: s.addrsStr[5]})
 				return err
 			},
 		},
 		"member leaves while all others vote yes and no: proposal rejected": {
 			members: []group.MemberRequest{
-				{Address: s.addrs[4].String(), Weight: "2"},
-				{Address: s.addrs[1].String(), Weight: "2"},
-				{Address: s.addrs[3].String(), Weight: "2"},
-				{Address: s.addrs[2].String(), Weight: "2"},
+				{Address: s.addrsStr[4], Weight: "2"},
+				{Address: s.addrsStr[1], Weight: "2"},
+				{Address: s.addrsStr[3], Weight: "2"},
+				{Address: s.addrsStr[2], Weight: "2"},
 			},
 			votes: []group.VoteOption{
 				group.VOTE_OPTION_NO, group.VOTE_OPTION_NO,
@@ -3283,7 +3240,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			setupProposal: func(ctx context.Context, groupPolicyAddr string) uint64 {
 				msgSend1 := &banktypes.MsgSend{
 					FromAddress: groupPolicyAddr,
-					ToAddress:   s.addrs[1].String(),
+					ToAddress:   s.addrsStr[1],
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 				}
 				msgs := []sdk.Msg{msgSend1, msgSend1}
@@ -3301,16 +3258,16 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				return proposalRes.ProposalId
 			},
 			malleate: func(ctx context.Context, k keeper.Keeper, _ string, groupID uint64) error {
-				_, err := k.LeaveGroup(ctx, &group.MsgLeaveGroup{GroupId: groupID, Address: s.addrs[3].String()})
+				_, err := k.LeaveGroup(ctx, &group.MsgLeaveGroup{GroupId: groupID, Address: s.addrsStr[3]})
 				return err
 			},
 		},
 		"member that leaves does affect the threshold policy outcome": {
 			members: []group.MemberRequest{
-				{Address: s.addrs[3].String(), Weight: "6"},
-				{Address: s.addrs[1].String(), Weight: "1"},
-				{Address: s.addrs[5].String(), Weight: "1"},
-				{Address: s.addrs[2].String(), Weight: "1"},
+				{Address: s.addrsStr[3], Weight: "6"},
+				{Address: s.addrsStr[1], Weight: "1"},
+				{Address: s.addrsStr[5], Weight: "1"},
+				{Address: s.addrsStr[2], Weight: "1"},
 			},
 			votes: []group.VoteOption{
 				group.VOTE_OPTION_YES, group.VOTE_OPTION_NO,
@@ -3319,7 +3276,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			setupProposal: func(ctx context.Context, addr string) uint64 {
 				msgSend1 := &banktypes.MsgSend{
 					FromAddress: addr,
-					ToAddress:   s.addrs[1].String(),
+					ToAddress:   s.addrsStr[1],
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 				}
 				msgs := []sdk.Msg{msgSend1, msgSend1}
@@ -3337,16 +3294,16 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 				return proposalRes.ProposalId
 			},
 			malleate: func(ctx context.Context, k keeper.Keeper, _ string, groupID uint64) error {
-				_, err := k.LeaveGroup(ctx, &group.MsgLeaveGroup{GroupId: groupID, Address: s.addrs[3].String()})
+				_, err := k.LeaveGroup(ctx, &group.MsgLeaveGroup{GroupId: groupID, Address: s.addrsStr[3]})
 				return err
 			},
 		},
 		"update group policy voids the proposal": {
 			members: []group.MemberRequest{
-				{Address: s.addrs[3].String(), Weight: "2"},
-				{Address: s.addrs[2].String(), Weight: "2"},
-				{Address: s.addrs[1].String(), Weight: "2"},
-				{Address: s.addrs[4].String(), Weight: "2"},
+				{Address: s.addrsStr[3], Weight: "2"},
+				{Address: s.addrsStr[2], Weight: "2"},
+				{Address: s.addrsStr[1], Weight: "2"},
+				{Address: s.addrsStr[4], Weight: "2"},
 			},
 			votes: []group.VoteOption{
 				group.VOTE_OPTION_YES, group.VOTE_OPTION_NO,
@@ -3355,7 +3312,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			setupProposal: func(ctx context.Context, groupPolicyAddr string) uint64 {
 				msgSend1 := &banktypes.MsgSend{
 					FromAddress: groupPolicyAddr,
-					ToAddress:   s.addrs[1].String(),
+					ToAddress:   s.addrsStr[1],
 					Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
 				}
 				msgs := []sdk.Msg{msgSend1, msgSend1}
@@ -3373,7 +3330,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			},
 			malleate: func(ctx context.Context, k keeper.Keeper, groupPolicyAddr string, groupID uint64) error {
 				newGroupPolicy := &group.MsgUpdateGroupPolicyDecisionPolicy{
-					Admin:              s.addrs[0].String(),
+					Admin:              s.addrsStr[0],
 					GroupPolicyAddress: groupPolicyAddr,
 				}
 				err := newGroupPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("10", time.Second, minExecutionPeriod))
@@ -3393,7 +3350,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 			s.setNextAccount()
 			groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-				Admin:   s.addrs[0].String(),
+				Admin:   s.addrsStr[0],
 				Members: spec.members,
 			})
 			s.Require().NoError(err)
@@ -3401,7 +3358,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 			policy := group.NewThresholdDecisionPolicy("4", time.Second, minExecutionPeriod)
 			policyReq := &group.MsgCreateGroupPolicy{
-				Admin:   s.addrs[0].String(),
+				Admin:   s.addrsStr[0],
 				GroupId: groupID,
 			}
 			err = policyReq.SetDecisionPolicy(policy)
@@ -3431,7 +3388,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 			// travel in time
 			sdkCtx = sdkCtx.WithHeaderInfo(header.Info{Time: s.blockTime.Add(minExecutionPeriod + 1)})
-			_, err = s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: s.addrs[1].String(), ProposalId: proposalID})
+			_, err = s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: s.addrsStr[1], ProposalId: proposalID})
 			if spec.expErrMsg != "" {
 				s.Require().Contains(err.Error(), spec.expErrMsg)
 				return

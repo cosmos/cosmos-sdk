@@ -12,7 +12,6 @@ import (
 
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/auth/migrations/legacytx"
 	"cosmossdk.io/x/authz"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -20,8 +19,10 @@ import (
 	"cosmossdk.io/x/tx/signing/aminojson"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 func TestMsgGrantGetAuthorization(t *testing.T) {
@@ -54,7 +55,7 @@ func TestAminoJSON(t *testing.T) {
 	banktypes.RegisterLegacyAminoCodec(legacyAmino)
 	stakingtypes.RegisterLegacyAminoCodec(legacyAmino)
 	legacytx.RegressionTestingAminoCodec = legacyAmino
-
+	valAddressCodec := codectestutil.CodecOptions{}.GetValidatorCodec()
 	aminoHandler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
 		FileResolver: proto.HybridResolver,
 	})
@@ -68,12 +69,12 @@ func TestAminoJSON(t *testing.T) {
 	require.NoError(t, err)
 	grant, err := authz.NewGrant(blockTime, authz.NewGenericAuthorization(typeURL), &expiresAt)
 	require.NoError(t, err)
-	sendAuthz := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000))), nil)
+	sendAuthz := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000))), nil, codectestutil.CodecOptions{}.GetValidatorCodec())
 	sendGrant, err := authz.NewGrant(blockTime, sendAuthz, &expiresAt)
 	require.NoError(t, err)
-	valAddr, err := sdk.ValAddressFromBech32("cosmosvaloper1xcy3els9ua75kdm783c3qu0rfa2eples6eavqq")
+	valAddr, err := valAddressCodec.StringToBytes("cosmosvaloper1xcy3els9ua75kdm783c3qu0rfa2eples6eavqq")
 	require.NoError(t, err)
-	stakingAuth, err := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{valAddr}, nil, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &sdk.Coin{Denom: "stake", Amount: sdkmath.NewInt(1000)})
+	stakingAuth, err := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{valAddr}, nil, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &sdk.Coin{Denom: "stake", Amount: sdkmath.NewInt(1000)}, valAddressCodec)
 	require.NoError(t, err)
 	delegateGrant, err := authz.NewGrant(blockTime, stakingAuth, nil)
 	require.NoError(t, err)

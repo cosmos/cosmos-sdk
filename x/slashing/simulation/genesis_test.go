@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/x/slashing/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -23,18 +24,21 @@ import (
 func TestRandomizedGenState(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
+	cdcOpts := codectestutil.CodecOptions{}
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
 	simState := module.SimulationState{
-		AppParams:    make(simtypes.AppParams),
-		Cdc:          cdc,
-		Rand:         r,
-		NumBonded:    3,
-		Accounts:     simtypes.RandomAccounts(r, 3),
-		InitialStake: sdkmath.NewInt(1000),
-		GenState:     make(map[string]json.RawMessage),
+		AppParams:      make(simtypes.AppParams),
+		Cdc:            cdc,
+		AddressCodec:   cdcOpts.GetAddressCodec(),
+		ValidatorCodec: cdcOpts.GetValidatorCodec(),
+		Rand:           r,
+		NumBonded:      3,
+		Accounts:       simtypes.RandomAccounts(r, 3),
+		InitialStake:   sdkmath.NewInt(1000),
+		GenState:       make(map[string]json.RawMessage),
 	}
 
 	simulation.RandomizedGenState(&simState)
@@ -55,7 +59,7 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Len(t, slashingGenesis.SigningInfos, 0)
 }
 
-// TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
+// TestRandomizedGenState1 tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState1(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
@@ -79,8 +83,6 @@ func TestRandomizedGenState1(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		require.Panicsf(t, func() { simulation.RandomizedGenState(&tt.simState) }, tt.panicMsg)
 	}
 }

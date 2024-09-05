@@ -30,7 +30,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "GranterGrants",
-					Use:       "grants-by-granter [granter-addr]",
+					Use:       "grants-by-granter <granter-addr>",
 					Short:     "Query authorization grants granted by granter",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "granter"},
@@ -38,7 +38,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "GranteeGrants",
-					Use:       "grants-by-grantee [grantee-addr]",
+					Use:       "grants-by-grantee <grantee-addr>",
 					Short:     "Query authorization grants granted to a grantee",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "grantee"},
@@ -52,7 +52,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Exec",
-					Use:       "exec [msg-json-file] --from [grantee]",
+					Use:       "exec <msg-json-file> --from <grantee>",
 					Short:     "Execute tx on behalf of granter account",
 					Example:   fmt.Sprintf("$ %s tx authz exec msg.json --from grantee\n $ %[1]s tx bank send [granter] [recipient] [amount] --generate-only | jq .body.messages > msg.json && %[1]s tx authz exec msg.json --from grantee", version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
@@ -61,7 +61,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "Revoke",
-					Use:       "revoke [grantee] [msg-type-url] --from [granter]",
+					Use:       "revoke <grantee> <msg-type-url> --from <granter>",
 					Short:     `Revoke authorization from a granter to a grantee`,
 					Example: fmt.Sprintf(`%s tx authz revoke cosmos1skj.. %s --from=cosmos1skj..`,
 						version.AppName, bank.SendAuthorization{}.MsgTypeURL()),
@@ -71,8 +71,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 				},
 				{
+					RpcMethod: "RevokeAll",
+					Use:       "revoke-all --from <signer>",
+					Short:     "Revoke all authorizations from the signer",
+					Example:   fmt.Sprintf("%s tx authz revoke-all --from=cosmos1skj..", version.AppName),
+				},
+				{
 					RpcMethod: "PruneExpiredGrants",
-					Use:       "prune-grants --from [granter]",
+					Use:       "prune-grants --from <granter>",
 					Short:     "Prune expired grants",
 					Long:      "Prune up to 75 expired grants in order to reduce the size of the store when the number of expired grants is large.",
 					Example:   fmt.Sprintf(`$ %s tx authz prune-grants --from [mykey]`, version.AppName),

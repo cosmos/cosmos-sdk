@@ -39,6 +39,12 @@ func grantStoreKey(grantee, granter sdk.AccAddress, msgType string) []byte {
 	return key
 }
 
+func granterStoreKey(granter sdk.AccAddress) []byte {
+	granter = address.MustLengthPrefix(granter)
+	key := sdk.AppendLengthPrefixedBytes(GrantKey, granter)
+	return key
+}
+
 // parseGrantStoreKey - split granter, grantee address and msg type from the authorization key
 func parseGrantStoreKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress, msgType string) {
 	// key is of format:

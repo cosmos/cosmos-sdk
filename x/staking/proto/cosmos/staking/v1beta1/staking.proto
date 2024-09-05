@@ -9,8 +9,8 @@ import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "amino/amino.proto";
-import "tendermint/types/types.proto";
-import "tendermint/abci/types.proto";
+import "cometbft/types/v1/types.proto";
+import "cometbft/abci/v1/types.proto";
 
 option go_package = "cosmossdk.io/x/staking/types";
 
@@ -21,18 +21,8 @@ option go_package = "cosmossdk.io/x/staking/types";
 message HistoricalInfo {
   option deprecated = true;
 
-  tendermint.types.Header header = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  repeated Validator      valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-}
-
-// Historical contains a set of minimum values needed for evaluating historical validator sets and blocks.
-// It is stored as part of staking module's state, which persists the `n` most
-// recent HistoricalInfo
-// (`n` is set by the staking module's `historical_entries` parameter).
-message HistoricalRecord {
-  bytes                     apphash         = 1;
-  google.protobuf.Timestamp time            = 2 [(gogoproto.stdtime) = true];
-  bytes                     validators_hash = 3;
+  cometbft.types.v1.Header header = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated Validator       valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // CommissionRates defines the initial commission rates to be used for creating
@@ -133,12 +123,11 @@ message Validator {
   // commission defines the commission parameters.
   Commission commission = 10 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // min_self_delegation is the validator's self declared minimum self delegation.
-  //
-  // Since: cosmos-sdk 0.46
   string min_self_delegation = 11 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
+    (cosmos_proto.scalar)         = "cosmos.Int",
+    (gogoproto.customtype)        = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)          = false,
+    (cosmos_proto.field_added_in) = "cosmos-sdk 0.47"
   ];
 
   // strictly positive if this validator's unbonding has been stopped by external modules
@@ -321,7 +310,7 @@ message Params {
   // max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio).
   uint32 max_entries = 3;
   // historical_entries is the number of historical entries to persist.
-  uint32 historical_entries = 4;
+  uint32 historical_entries = 4 [deprecated = true];
   // bond_denom defines the bondable coin denomination.
   string bond_denom = 5;
   // min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
@@ -406,7 +395,9 @@ enum Infraction {
 // ValidatorUpdates defines an array of abci.ValidatorUpdate objects.
 // TODO: explore moving this to proto/cosmos/base to separate modules from tendermint dependence
 message ValidatorUpdates {
-  repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  option deprecated = true;
+
+  repeated cometbft.abci.v1.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // ConsPubKeyRotationHistory contains a validator's consensus public key rotation history.

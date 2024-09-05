@@ -6,9 +6,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/group"
 	v2 "cosmossdk.io/x/group/migrations/v2"
+
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestMigrateGenState(t *testing.T) {
@@ -73,7 +75,7 @@ func TestMigrateGenState(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			require.Error(t, authtypes.ValidateGenesis(*tc.oldState))
-			actualState := v2.MigrateGenState(tc.oldState)
+			actualState := v2.MigrateGenState(tc.oldState, codectestutil.CodecOptions{}.GetAddressCodec())
 			require.Equal(t, tc.newState, actualState)
 			require.NoError(t, authtypes.ValidateGenesis(*actualState))
 		})

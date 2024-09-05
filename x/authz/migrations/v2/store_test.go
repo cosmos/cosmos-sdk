@@ -8,7 +8,7 @@ import (
 
 	govtypes "cosmossdk.io/api/cosmos/gov/v1beta1"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/authz"
 	v2 "cosmossdk.io/x/authz/migrations/v2"
@@ -42,7 +42,7 @@ func TestMigration(t *testing.T) {
 	blockTime := ctx.HeaderInfo().Time
 	oneDay := blockTime.AddDate(0, 0, 1)
 	oneYear := blockTime.AddDate(1, 0, 0)
-	sendAuthz := banktypes.NewSendAuthorization(coins100, nil)
+	sendAuthz := banktypes.NewSendAuthorization(coins100, nil, codectestutil.CodecOptions{}.GetAddressCodec())
 
 	grants := []struct {
 		granter       sdk.AccAddress
@@ -106,7 +106,7 @@ func TestMigration(t *testing.T) {
 
 	storeService := runtime.NewKVStoreService(authzKey)
 	store := storeService.OpenKVStore(ctx)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 
 	for _, g := range grants {
 		grant := g.authorization()

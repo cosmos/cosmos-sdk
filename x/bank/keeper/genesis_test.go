@@ -21,7 +21,7 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 
 	for i := range []int{1, 2} {
 		suite.bankKeeper.SetDenomMetaData(ctx, expectedMetadata[i])
-		accAddr, err1 := sdk.AccAddressFromBech32(expectedBalances[i].Address)
+		accAddr, err1 := suite.authKeeper.AddressCodec().StringToBytes(expectedBalances[i].Address)
 		if err1 != nil {
 			panic(err1)
 		}
@@ -49,17 +49,14 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 }
 
 func (suite *KeeperTestSuite) getTestBalancesAndSupply() ([]types.Balance, sdk.Coins) {
-	addr2, _ := sdk.AccAddressFromBech32("cosmos1f9xjhxm0plzrh9cskf4qee4pc2xwp0n0556gh0")
-	addr1, _ := sdk.AccAddressFromBech32("cosmos1t5u0jfg3ljsjrh2m9e47d4ny2hea7eehxrzdgd")
 	addr1Balance := sdk.Coins{sdk.NewInt64Coin("testcoin3", 10)}
 	addr2Balance := sdk.Coins{sdk.NewInt64Coin("testcoin1", 32), sdk.NewInt64Coin("testcoin2", 34)}
 
-	totalSupply := addr1Balance
-	totalSupply = totalSupply.Add(addr2Balance...)
+	totalSupply := addr1Balance.Add(addr2Balance...)
 
 	return []types.Balance{
-		{Address: addr2.String(), Coins: addr2Balance},
-		{Address: addr1.String(), Coins: addr1Balance},
+		{Address: "cosmos1f9xjhxm0plzrh9cskf4qee4pc2xwp0n0556gh0", Coins: addr2Balance},
+		{Address: "cosmos1t5u0jfg3ljsjrh2m9e47d4ny2hea7eehxrzdgd", Coins: addr1Balance},
 	}, totalSupply
 }
 

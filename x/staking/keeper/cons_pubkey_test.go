@@ -7,13 +7,13 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
-	authtypes "cosmossdk.io/x/auth/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
@@ -29,10 +29,11 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.NotBondedPoolName, types.BondedPoolName, gomock.Any())
 	_ = stakingkeeper.TestingUpdateValidator(stakingKeeper, ctx, val, true)
-	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	selfDelegation := types.NewDelegation(val0AccAddr.String(), addrVals[0].String(), issuedShares)
+	val0AccAddr, err := s.accountKeeper.AddressCodec().BytesToString(addrVals[0])
+	s.Require().NoError(err)
+	selfDelegation := types.NewDelegation(val0AccAddr, s.valAddressToString(addrVals[0]), issuedShares)
 
-	err := stakingKeeper.SetDelegation(ctx, selfDelegation)
+	err = stakingKeeper.SetDelegation(ctx, selfDelegation)
 	s.Require().NoError(err)
 
 	validators, err := stakingKeeper.GetAllValidators(ctx)
@@ -40,7 +41,7 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 	s.Require().Len(validators, 1)
 
 	validator := validators[0]
-	valAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
+	valAddr, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.OperatorAddress)
 	s.Require().NoError(err)
 
 	historyObjects, err := stakingKeeper.GetValidatorConsPubKeyRotationHistory(ctx, valAddr)
@@ -57,7 +58,7 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 	s.Require().NoError(err)
 
 	height := uint64(ctx.BlockHeight())
-	err = stakingKeeper.RotationHistory.Set(ctx, collections.Join(valAddr.Bytes(), height), types.ConsPubKeyRotationHistory{
+	err = stakingKeeper.RotationHistory.Set(ctx, collections.Join(valAddr, height), types.ConsPubKeyRotationHistory{
 		OperatorAddress: valAddr,
 		OldConsPubkey:   validator.ConsensusPubkey,
 		NewConsPubkey:   newConsPub,
@@ -74,7 +75,7 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 	s.Require().NoError(err)
 	s.Require().Len(historyObjects, 1)
 
-	err = stakingKeeper.RotationHistory.Set(ctx, collections.Join(valAddr.Bytes(), height+1), types.ConsPubKeyRotationHistory{
+	err = stakingKeeper.RotationHistory.Set(ctx, collections.Join(valAddr, height+1), types.ConsPubKeyRotationHistory{
 		OperatorAddress: valAddr,
 		OldConsPubkey:   newConsPub,
 		NewConsPubkey:   newConsPub2,
@@ -157,6 +158,9 @@ func (s *KeeperTestSuite) setValidators(n int) {
 	_, addrVals := createValAddrs(n)
 
 	for i := 0; i < n; i++ {
+		addr, err := s.stakingKeeper.ValidatorAddressCodec().BytesToString(addrVals[i])
+		s.Require().NoError(err)
+
 		val := testutil.NewValidator(s.T(), addrVals[i], PKs[i])
 		valTokens := stakingKeeper.TokensFromConsensusPower(ctx, 10)
 		val, issuedShares := val.AddTokensFromDel(valTokens)
@@ -164,9 +168,10 @@ func (s *KeeperTestSuite) setValidators(n int) {
 
 		s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.NotBondedPoolName, types.BondedPoolName, gomock.Any())
 		_ = stakingkeeper.TestingUpdateValidator(stakingKeeper, ctx, val, true)
-		val0AccAddr := sdk.AccAddress(addrVals[i].Bytes())
-		selfDelegation := types.NewDelegation(val0AccAddr.String(), addrVals[i].String(), issuedShares)
-		err := stakingKeeper.SetDelegation(ctx, selfDelegation)
+		accAddr, err := s.accountKeeper.AddressCodec().BytesToString(addrVals[i])
+		s.Require().NoError(err)
+		selfDelegation := types.NewDelegation(accAddr, addr, issuedShares)
+		err = stakingKeeper.SetDelegation(ctx, selfDelegation)
 		s.Require().NoError(err)
 
 		err = stakingKeeper.SetValidatorByConsAddr(ctx, val)

@@ -7,8 +7,7 @@ import (
 	"io"
 	"math"
 
-	dbm "github.com/cosmos/cosmos-db"
-
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
@@ -119,6 +118,19 @@ func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp
 	}
 }
 
+// SetIncludeNestedMsgsGas sets the message types for which gas costs for its nested messages are calculated when simulating.
+func SetIncludeNestedMsgsGas(msgs []sdk.Msg) func(*BaseApp) {
+	return func(app *BaseApp) {
+		app.includeNestedMsgsGas = make(map[string]struct{})
+		for _, msg := range msgs {
+			if _, ok := msg.(HasNestedMsgs); !ok {
+				continue
+			}
+			app.includeNestedMsgsGas[sdk.MsgTypeURL(msg)] = struct{}{}
+		}
+	}
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")
@@ -165,7 +177,7 @@ func (app *BaseApp) SetAppVersion(ctx context.Context, v uint64) error {
 	return nil
 }
 
-func (app *BaseApp) SetDB(db dbm.DB) {
+func (app *BaseApp) SetDB(db corestore.KVStoreWithBatch) {
 	if app.sealed {
 		panic("SetDB() on sealed BaseApp")
 	}

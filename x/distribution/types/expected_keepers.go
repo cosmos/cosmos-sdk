@@ -1,7 +1,7 @@
 package types
 
 import (
-	context "context"
+	"context"
 
 	"cosmossdk.io/core/address"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -31,14 +31,7 @@ type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 
 	BlockedAddr(addr sdk.AccAddress) bool
-}
-
-// PoolKeeper defines the expected interface needed to fund & distribute pool balances.
-type PoolKeeper interface {
-	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
-	DistributeFromCommunityPool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
-	GetCommunityPool(ctx context.Context) (sdk.Coins, error)
-	SetToDistribute(ctx context.Context, amount sdk.Coins, addr string) error
+	IsSendEnabledDenom(ctx context.Context, denom string) bool
 }
 
 // StakingKeeper expected staking keeper (noalias)

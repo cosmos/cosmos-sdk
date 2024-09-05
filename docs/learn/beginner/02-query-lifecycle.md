@@ -47,7 +47,7 @@ One such tool is [grpcurl](https://github.com/fullstorydev/grpcurl), and a gRPC 
 
 ```bash
 grpcurl \
-    -plaintext                                           # We want results in plain test
+    -plaintext                                           # We want results in plain text
     -import-path ./proto \                               # Import these .proto files
     -proto ./proto/cosmos/staking/v1beta1/query.proto \  # Look into this .proto file for the Query protobuf service
     -d '{"address":"$MY_DELEGATOR"}' \                   # Query arguments
@@ -122,7 +122,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/query.go#L79-L1
 
 With a call to `ABCIQueryWithOptions()`, `MyQuery` is received by a [full-node](../advanced/05-encoding.md) which then processes the request. Note that, while the RPC is made to the consensus engine (e.g. CometBFT) of a full-node, queries are not part of consensus and so are not broadcasted to the rest of the network, as they do not require anything the network needs to agree upon.
 
-Read more about ABCI Clients and CometBFT RPC in the [CometBFT documentation](https://docs.cometbft.com/v0.37/spec/rpc/).
+Read more about ABCI Clients and CometBFT RPC in the [CometBFT documentation](https://docs.cometbft.com/v1.0/spec/rpc/).
 
 ## Application Query Handling
 
@@ -134,7 +134,7 @@ Once a result is received from the querier, `baseapp` begins the process of retu
 
 ## Response
 
-Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://docs.cometbft.com/v0.38/spec/abci/abci++_app_requirements#query) type. The `client.Context` `Query()` routine receives the response.
+Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.QueryResponse`](https://docs.cometbft.com/v1.0/spec/abci/abci++_app_requirements#query) type. The `client.Context` `Query()` routine receives the response.
 
 ### CLI Response
 

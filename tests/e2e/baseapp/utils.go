@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -8,11 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-	_ "cosmossdk.io/x/auth"
-	_ "cosmossdk.io/x/auth/tx/config"
-	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,7 +20,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
@@ -53,4 +54,14 @@ func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *r
 	require.NoError(t, err)
 
 	return genesisState
+}
+
+type BankKeeper interface {
+	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
+}
+
+type AuthKeeper interface {
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 }

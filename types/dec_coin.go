@@ -156,7 +156,7 @@ func (coin DecCoin) IsValid() bool {
 // DecCoins defines a slice of coins with decimal values
 type DecCoins []DecCoin
 
-// NewDecCoins constructs a new coin set with with decimal values
+// NewDecCoins constructs a new coin set with decimal values
 // from DecCoins. The provided coins will be sanitized by removing
 // zero coins and sorting the coin set. A panic will occur if the coin set is not valid.
 func NewDecCoins(decCoins ...DecCoin) DecCoins {

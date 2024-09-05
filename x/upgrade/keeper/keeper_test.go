@@ -5,14 +5,15 @@ import (
 	"path/filepath"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
@@ -24,8 +25,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type KeeperTestSuite struct {
@@ -47,7 +48,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, upgrade.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 	s.key = key
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 10})
@@ -72,7 +73,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.encodedAuthority = authority
 	s.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, s.encCfg.Codec, homeDir, s.baseApp, authority)
 
-	s.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName), s.upgradeKeeper.Logger(testCtx.Ctx))
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
 
@@ -168,7 +168,7 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 				Height: 123450000,
 			},
 			setup: func() {
-				s.upgradeKeeper.SetUpgradeHandler("all-good", func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+				s.upgradeKeeper.SetUpgradeHandler("all-good", func(ctx context.Context, plan types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
 					return vm, nil
 				})
 				err := s.upgradeKeeper.ApplyUpgrade(s.ctx, types.Plan{
@@ -254,7 +254,7 @@ func (s *KeeperTestSuite) TestIsSkipHeight() {
 	s.Require().False(ok)
 	skip := map[int64]bool{skipOne: true}
 	storeService := runtime.NewKVStoreService(s.key)
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger())
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
 	upgradeKeeper := keeper.NewKeeper(env, skip, s.encCfg.Codec, s.T().TempDir(), s.baseApp, s.encodedAuthority)
 	s.Require().True(upgradeKeeper.IsSkipHeight(9))
 	s.Require().False(upgradeKeeper.IsSkipHeight(10))
@@ -290,7 +290,9 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 	err = s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
 	s.Require().EqualError(err, "ApplyUpgrade should never be called without first checking HasHandler")
 
-	s.upgradeKeeper.SetUpgradeHandler("dummy", func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) { return vm, nil })
+	s.upgradeKeeper.SetUpgradeHandler("dummy", func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
+		return vm, nil
+	})
 	err = s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
 	s.Require().NoError(err)
 	upgradedProtocolVersion, err := s.baseApp.AppVersion(s.ctx)
@@ -302,13 +304,13 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 // Tests that the underlying state of x/upgrade is set correctly after
 // an upgrade.
 func (s *KeeperTestSuite) TestMigrations() {
-	initialVM := module.VersionMap{"bank": uint64(1)}
+	initialVM := appmodule.VersionMap{"bank": uint64(1)}
 	err := s.upgradeKeeper.SetModuleVersionMap(s.ctx, initialVM)
 	s.Require().NoError(err)
 	vmBefore, err := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
 	s.Require().NoError(err)
 
-	s.upgradeKeeper.SetUpgradeHandler("dummy", func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	s.upgradeKeeper.SetUpgradeHandler("dummy", func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
 		// simulate upgrading the bank module
 		vm["bank"]++
 		return vm, nil
@@ -335,7 +337,7 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 	require.Equal(int64(0), height)
 	require.NoError(err)
 
-	keeper.SetUpgradeHandler("test0", func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	keeper.SetUpgradeHandler("test0", func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
 		return vm, nil
 	})
 
@@ -352,7 +354,7 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 	require.Equal(int64(10), height)
 	require.NoError(err)
 
-	keeper.SetUpgradeHandler("test1", func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	keeper.SetUpgradeHandler("test1", func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
 		return vm, nil
 	})
 
@@ -377,7 +379,7 @@ func (s *KeeperTestSuite) TestLastCompletedUpgradeOrdering() {
 	require := s.Require()
 
 	// apply first upgrade
-	keeper.SetUpgradeHandler("test-v0.9", func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	keeper.SetUpgradeHandler("test-v0.9", func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
 		return vm, nil
 	})
 
@@ -393,7 +395,7 @@ func (s *KeeperTestSuite) TestLastCompletedUpgradeOrdering() {
 	require.NoError(err)
 
 	// apply second upgrade
-	keeper.SetUpgradeHandler("test-v0.10", func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	keeper.SetUpgradeHandler("test-v0.10", func(_ context.Context, _ types.Plan, vm appmodule.VersionMap) (appmodule.VersionMap, error) {
 		return vm, nil
 	})
 

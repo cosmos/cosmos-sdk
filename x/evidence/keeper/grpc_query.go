@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	proto "github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -53,7 +53,7 @@ func (k Querier) Evidence(ctx context.Context, req *types.QueryEvidenceRequest) 
 
 	evidenceAny, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryEvidenceResponse{Evidence: evidenceAny}, nil

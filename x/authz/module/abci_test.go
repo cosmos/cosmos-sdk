@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/keeper"
 	authzmodule "cosmossdk.io/x/authz/module"
@@ -25,6 +25,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestExpiredGrantsQueue(t *testing.T) {
@@ -54,7 +55,7 @@ func TestExpiredGrantsQueue(t *testing.T) {
 	expiration := ctx.HeaderInfo().Time.AddDate(0, 1, 0)
 	expiration2 := expiration.AddDate(1, 0, 0)
 	smallCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
-	sendAuthz := banktypes.NewSendAuthorization(smallCoins, nil)
+	sendAuthz := banktypes.NewSendAuthorization(smallCoins, nil, codectestutil.CodecOptions{}.GetAddressCodec())
 
 	ctrl := gomock.NewController(t)
 	accountKeeper := authztestutil.NewMockAccountKeeper(ctrl)
@@ -66,12 +67,13 @@ func TestExpiredGrantsQueue(t *testing.T) {
 
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
-	env := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithRouterService(baseApp.GRPCQueryRouter(), baseApp.MsgServiceRouter()))
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(baseApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(baseApp.MsgServiceRouter()))
 	authzKeeper := keeper.NewKeeper(env, encCfg.Codec, accountKeeper)
 
 	save := func(grantee sdk.AccAddress, exp *time.Time) {
 		err := authzKeeper.SaveGrant(ctx, grantee, granter, sendAuthz, exp)
-		require.NoError(t, err, "Grant from %s", grantee.String())
+		addr, _ := accountKeeper.AddressCodec().BytesToString(grantee)
+		require.NoError(t, err, "Grant from %s", addr)
 	}
 	save(grantee1, &expiration)
 	save(grantee2, &expiration)
@@ -86,8 +88,10 @@ func TestExpiredGrantsQueue(t *testing.T) {
 		err := authzmodule.BeginBlocker(ctx, authzKeeper)
 		require.NoError(t, err)
 
+		addr, err := accountKeeper.AddressCodec().BytesToString(granter)
+		require.NoError(t, err)
 		res, err := queryClient.GranterGrants(ctx.Context(), &authz.QueryGranterGrantsRequest{
-			Granter: granter.String(),
+			Granter: addr,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, res)

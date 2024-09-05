@@ -103,7 +103,7 @@ vote extensions.
 We propose the following new handlers for applications to implement:
 
 ```go
-type ExtendVoteHandler func(sdk.Context, abci.RequestExtendVote) abci.ResponseExtendVote
+type ExtendVoteHandler func(sdk.Context, abci.ExtendVoteRequest) abci.ExtendVoteResponse
 type VerifyVoteExtensionHandler func(sdk.Context, abci.RequestVerifyVoteExtension) abci.ResponseVerifyVoteExtension
 ```
 
@@ -120,7 +120,7 @@ Recall, an implementation of `ExtendVoteHandler` does NOT need to be determinist
 however, given a set of vote extensions, `VerifyVoteExtensionHandler` must be
 deterministic, otherwise the chain may suffer from liveness faults. In addition,
 recall CometBFT proceeds in rounds for each height, so if a decision cannot be
-made about about a block proposal at a given height, CometBFT will proceed to the
+made about a block proposal at a given height, CometBFT will proceed to the
 next round and thus will execute `ExtendVote` and `VerifyVoteExtension` again for
 the new round for each validator until 2/3 valid pre-commits can be obtained.
 
@@ -144,7 +144,7 @@ type VoteExtensionHandler struct {
 
 // ExtendVoteHandler can do something with h.mk and possibly h.state to create
 // a vote extension, such as fetching a series of prices for supported assets.
-func (h VoteExtensionHandler) ExtendVoteHandler(ctx sdk.Context, req abci.RequestExtendVote) abci.ResponseExtendVote {
+func (h VoteExtensionHandler) ExtendVoteHandler(ctx sdk.Context, req abci.ExtendVoteRequest) abci.ExtendVoteResponse {
 	prices := GetPrices(ctx, h.mk.Assets())
 	bz, err := EncodePrices(h.cdc, prices)
 	if err != nil {
@@ -156,7 +156,7 @@ func (h VoteExtensionHandler) ExtendVoteHandler(ctx sdk.Context, req abci.Reques
 	// NOTE: Vote extensions can be overridden since we can timeout in a round.
 	SetPrices(h.state, req, bz)
 
-	return abci.ResponseExtendVote{VoteExtension: bz}
+	return abci.ExtendVoteResponse{VoteExtension: bz}
 }
 
 // VerifyVoteExtensionHandler can do something with h.state and req to verify
@@ -401,7 +401,7 @@ in both `BeginBlock` and `EndBlock` events`.
 
 ### Upgrading
 
-CometBFT defines a consensus parameter, [`VoteExtensionsEnableHeight`](https://github.com/cometbft/cometbft/blob/v0.38.0-alpha.1/spec/abci/abci%2B%2B_app_requirements.md#abciparamsvoteextensionsenableheight),
+CometBFT defines a consensus parameter, [`VoteExtensionsEnableHeight`](https://docs.cometbft.com/v1.0/spec/abci/abci++_app_requirements#featureparamsvoteextensionsenableheight),
 which specifies the height at which vote extensions are enabled and **required**.
 If the value is set to zero, which is the default, then vote extensions are
 disabled and an application is not required to implement and use vote extensions.

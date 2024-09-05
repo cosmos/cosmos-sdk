@@ -1,7 +1,7 @@
 package runtime
 
 import (
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +23,7 @@ type AppI interface {
 	EndBlocker(ctx sdk.Context) (sdk.EndBlock, error)
 
 	// InitChainer update at chain (i.e app) initialization.
-	InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error)
+	InitChainer(ctx sdk.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error)
 
 	// LoadHeight load the app at a given height.
 	LoadHeight(height int64) error

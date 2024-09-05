@@ -9,10 +9,9 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestBankStateCompatibility(t *testing.T) {
@@ -31,19 +31,25 @@ func TestBankStateCompatibility(t *testing.T) {
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	// gomock initializations
 	ctrl := gomock.NewController(t)
 	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
 	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
+	addr, err := ac.BytesToString(accAddrs[4])
+	require.NoError(t, err)
+	authority, err := ac.BytesToString(authtypes.NewModuleAddress(banktypes.GovModuleName))
+	require.NoError(t, err)
+
 	k := keeper.NewBaseKeeper(
 		env,
 		encCfg.Codec,
 		authKeeper,
-		map[string]bool{accAddrs[4].String(): true},
-		authtypes.NewModuleAddress(banktypes.GovModuleName).String(),
+		map[string]bool{addr: true},
+		authority,
 	)
 
 	// test we can decode balances without problems

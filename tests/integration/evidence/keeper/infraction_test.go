@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/golang/mock/gomock"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/collections"
@@ -17,13 +17,10 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
+	consensusparamtypes "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/keeper"
@@ -39,6 +36,7 @@ import (
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -49,7 +47,11 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -66,8 +68,9 @@ var (
 	}
 
 	// The default power validators are initialized to have within tests
-	initAmt   = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
-	initCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
+	initAmt          = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
+	initCoins        = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
+	cometInfoService = runtime.NewContextAwareCometInfoService()
 )
 
 type fixture struct {
@@ -90,6 +93,8 @@ func initFixture(tb testing.TB) *fixture {
 	)
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, evidence.AppModule{})
 	cdc := encodingCfg.Codec
+	msgRouter := baseapp.NewMsgServiceRouter()
+	grpcQueryRouter := baseapp.NewGRPCQueryRouter()
 
 	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
@@ -97,6 +102,16 @@ func initFixture(tb testing.TB) *fixture {
 	newCtx := sdk.NewContext(cms, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
+
+	// gomock initializations
+	ctrl := gomock.NewController(tb)
+	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	accNum := uint64(0)
+	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		currentNum := accNum
+		accNum++
+		return currentNum, nil
+	})
 
 	maccPerms := map[string][]string{
 		pooltypes.ModuleName:           {},
@@ -109,6 +124,7 @@ func initFixture(tb testing.TB) *fixture {
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
 		cdc,
 		authtypes.ProtoBaseAccount,
+		acctsModKeeper,
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
@@ -126,22 +142,24 @@ func initFixture(tb testing.TB) *fixture {
 		authority.String(),
 	)
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
+	assert.NilError(tb, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
+
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
 
 	slashingKeeper := slashingkeeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), log.NewNopLogger()), cdc, codec.NewLegacyAmino(), stakingKeeper, authority.String())
 
 	stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(slashingKeeper.Hooks()))
 
-	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), log.NewNopLogger()), stakingKeeper, slashingKeeper, addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr))
+	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter)), stakingKeeper, slashingKeeper, addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr))
 	router := evidencetypes.NewRouter()
 	router = router.AddRoute(evidencetypes.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
-	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, cdc.InterfaceRegistry())
-	evidenceModule := evidence.NewAppModule(cdc, *evidenceKeeper)
+	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, cdc.InterfaceRegistry(), cometInfoService)
+	evidenceModule := evidence.NewAppModule(cdc, *evidenceKeeper, cometInfoService)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
@@ -152,7 +170,10 @@ func initFixture(tb testing.TB) *fixture {
 			stakingtypes.ModuleName:  stakingModule,
 			slashingtypes.ModuleName: slashingModule,
 			evidencetypes.ModuleName: evidenceModule,
-		})
+		},
+		msgRouter,
+		grpcQueryRouter,
+	)
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
 
@@ -228,7 +249,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	}
 
 	ctx = ctx.WithCometInfo(nci)
-	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci)))
+	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci), cometInfoService))
 
 	// should be jailed and tombstoned
 	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
@@ -241,7 +262,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	assert.Assert(t, newTokens.LT(oldTokens))
 
 	// submit duplicate evidence
-	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx))
+	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx, cometInfoService))
 
 	// tokens should be the same (capped slash)
 	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
@@ -261,7 +282,11 @@ func TestHandleDoubleSign(t *testing.T) {
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
 	tstaking.Ctx = ctx
 	tstaking.Denom = stakingParams.BondDenom
-	tstaking.Undelegate(sdk.AccAddress(operatorAddr), operatorAddr, totalBond, true)
+	accAddr, err := f.accountKeeper.AddressCodec().BytesToString(operatorAddr)
+	assert.NilError(t, err)
+	opAddr, err := f.stakingKeeper.ValidatorAddressCodec().BytesToString(operatorAddr)
+	assert.NilError(t, err)
+	tstaking.Undelegate(accAddr, opAddr, totalBond, true)
 
 	// query evidence from store
 	iter, err := f.evidenceKeeper.Evidences.Iterate(ctx, nil)
@@ -300,7 +325,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 
 	nci := comet.Info{Evidence: []comet.Evidence{{
 		Validator: comet.Validator{Address: valpubkey.Address(), Power: power},
-		Type:      comet.MisbehaviorType(abci.MisbehaviorType_DUPLICATE_VOTE),
+		Type:      comet.DuplicateVote, //
 		Time:      ctx.HeaderInfo().Time,
 		Height:    0,
 	}}}
@@ -312,7 +337,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	ctx = ctx.WithConsensusParams(cp)
 	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.BlockHeight() + cp.Evidence.MaxAgeNumBlocks + 1, Time: ctx.HeaderInfo().Time.Add(cp.Evidence.MaxAgeDuration + 1)})
 
-	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx))
+	assert.NilError(t, f.evidenceKeeper.BeginBlocker(ctx, cometInfoService))
 
 	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
 	assert.NilError(t, err)
@@ -381,13 +406,13 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	nci := comet.Info{
 		Evidence: []comet.Evidence{{
 			Validator: comet.Validator{Address: valpubkey.Address(), Power: power},
-			Type:      comet.MisbehaviorType(abci.MisbehaviorType_DUPLICATE_VOTE),
+			Type:      comet.DuplicateVote,
 			Time:      time.Unix(0, 0),
 			Height:    0,
 		}},
 	}
 
-	err = f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci))
+	err = f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci), cometInfoService)
 	assert.NilError(t, err)
 
 	// should be jailed and tombstoned
@@ -403,7 +428,7 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	assert.Assert(t, newTokens.LT(oldTokens))
 
 	// submit duplicate evidence
-	err = f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci))
+	err = f.evidenceKeeper.BeginBlocker(ctx.WithCometInfo(nci), cometInfoService)
 	assert.NilError(t, err)
 
 	// tokens should be the same (capped slash)
@@ -424,11 +449,18 @@ func TestHandleDoubleSignAfterRotation(t *testing.T) {
 	totalBond := validator.TokensFromShares(del.GetShares()).TruncateInt()
 	tstaking.Ctx = ctx
 	tstaking.Denom = stakingParams.BondDenom
-	tstaking.Undelegate(sdk.AccAddress(operatorAddr), operatorAddr, totalBond, true)
+	accAddr, err := f.accountKeeper.AddressCodec().BytesToString(operatorAddr)
+	assert.NilError(t, err)
+	opAddr, err := f.stakingKeeper.ValidatorAddressCodec().BytesToString(operatorAddr)
+	assert.NilError(t, err)
+	tstaking.Undelegate(accAddr, opAddr, totalBond, true)
 
 	// query evidence from store
 	var evidences []exported.Evidence
-	assert.NilError(t, f.evidenceKeeper.Evidences.Walk(ctx, nil, func(key []byte, value exported.Evidence) (stop bool, err error) {
+	assert.NilError(t, f.evidenceKeeper.Evidences.Walk(ctx, nil, func(
+		key []byte,
+		value exported.Evidence,
+	) (stop bool, err error) {
 		evidences = append(evidences, value)
 		return false, nil
 	}))

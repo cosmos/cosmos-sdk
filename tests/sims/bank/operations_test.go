@@ -9,13 +9,13 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	_ "cosmossdk.io/x/auth"
-	_ "cosmossdk.io/x/auth/tx/config"
+	_ "cosmossdk.io/x/accounts"
 	_ "cosmossdk.io/x/bank"
 	"cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/simulation"
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -25,7 +25,8 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 type SimTestSuite struct {
@@ -47,6 +48,7 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.app, err = simtestutil.Setup(
 		depinject.Configs(
 			configurator.NewAppConfig(
+				configurator.AccountsModule(),
 				configurator.AuthModule(),
 				configurator.BankModule(),
 				configurator.StakingModule(),
@@ -119,7 +121,7 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	suite.Require().Len(futureOperations, 0)
 }
 
-// TestSimulateMsgSend tests the normal scenario of a valid message of type TypeMsgMultiSend.
+// TestSimulateMsgMultiSend tests the normal scenario of a valid message of type TypeMsgMultiSend.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 	// setup 3 accounts

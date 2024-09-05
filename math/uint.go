@@ -39,7 +39,7 @@ func (u Uint) IsNil() bool {
 func NewUintFromBigInt(i *big.Int) Uint {
 	u, err := checkNewUint(i)
 	if err != nil {
-		panic(fmt.Errorf("overflow: %s", err))
+		panic(fmt.Errorf("overflow: %w", err))
 	}
 	return u
 }

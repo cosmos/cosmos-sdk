@@ -10,11 +10,10 @@ import (
 	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
-	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
-	authsigning "cosmossdk.io/x/auth/signing"
-	"cosmossdk.io/x/auth/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -28,6 +27,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -47,11 +48,11 @@ func init() {
 // SignatureVerificationGasConsumer is the type of function that is used to both
 // consume gas when verifying signatures and also to accept or reject different types of pubkeys
 // This is where apps can define their own PubKey
-type SignatureVerificationGasConsumer = func(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error
+type SignatureVerificationGasConsumer = func(meter gas.Meter, sig signing.SignatureV2, params types.Params) error
 
 type AccountAbstractionKeeper interface {
 	IsAbstractedAccount(ctx context.Context, addr []byte) (bool, error)
-	AuthenticateAccount(ctx context.Context, addr []byte, msg *aa_interface_v1.MsgAuthenticate) error
+	AuthenticateAccount(ctx context.Context, signer []byte, bundler string, rawTx *tx.TxRaw, protoTx *tx.Tx, signIndex uint32) error
 }
 
 // SigVerificationDecorator verifies all signatures for a tx and returns an
@@ -63,7 +64,7 @@ type AccountAbstractionKeeper interface {
 // gas for signature verification.
 //
 // In cases where unordered or parallel transactions are desired, it is recommended
-// to to set unordered=true with a reasonable timeout_height value, in which case
+// to set unordered=true with a reasonable timeout_height value, in which case
 // this nonce verification and increment will be skipped.
 //
 // CONTRACT: Tx must implement SigVerifiableTx interface
@@ -150,31 +151,38 @@ func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
 }
 
 func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	if err := svd.ValidateTx(ctx, tx); err != nil {
+		return ctx, err
+	}
+	return next(ctx, tx, false)
+}
+
+func (svd SigVerificationDecorator) ValidateTx(ctx context.Context, tx transaction.Tx) error {
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
 	signatures, err := sigTx.GetSignaturesV2()
 	if err != nil {
-		return ctx, err
+		return err
 	}
 
 	signers, err := sigTx.GetSigners()
 	if err != nil {
-		return ctx, err
+		return err
 	}
 
 	// check that signer length and signature length are the same
 	if len(signatures) != len(signers) {
-		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(signatures))
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(signatures))
 	}
 
 	pubKeys, err := sigTx.GetPubKeys()
 	if err != nil {
-		return ctx, err
+		return err
 	}
 
 	// NOTE: the tx_wrapper implementation returns nil, in case the pubkey is not populated.
@@ -182,44 +190,46 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ boo
 	// itself. If this does not work, it's a failure in the implementation of the interface.
 	// we're erroring, but most likely we should be panicking.
 	if len(pubKeys) != len(signers) {
-		return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid number of pubkeys; expected %d, got %d", len(signers), len(pubKeys))
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid number of pubkeys; expected %d, got %d", len(signers), len(pubKeys))
 	}
 
 	for i := range signers {
 		err = svd.authenticate(ctx, sigTx, signers[i], signatures[i], pubKeys[i], i)
 		if err != nil {
-			return ctx, err
+			return err
 		}
 	}
 
-	var events sdk.Events
+	eventMgr := svd.ak.GetEnvironment().EventService.EventManager(ctx)
+	events := [][]event.Attribute{}
 	for i, sig := range signatures {
 		signerStr, err := svd.ak.AddressCodec().BytesToString(signers[i])
 		if err != nil {
-			return ctx, err
+			return err
 		}
-		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signerStr, sig.Sequence)),
-		))
+
+		events = append(events, []event.Attribute{event.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signerStr, sig.Sequence))})
 
 		sigBzs, err := signatureDataToBz(sig.Data)
 		if err != nil {
-			return ctx, err
+			return err
 		}
 		for _, sigBz := range sigBzs {
-			events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-				sdk.NewAttribute(sdk.AttributeKeySignature, base64.StdEncoding.EncodeToString(sigBz)),
-			))
+			events = append(events, []event.Attribute{event.NewAttribute(sdk.AttributeKeySignature, base64.StdEncoding.EncodeToString(sigBz))})
 		}
 	}
 
-	ctx.EventManager().EmitEvents(events)
+	for _, v := range events {
+		if err := eventMgr.EmitKV(sdk.EventTypeTx, v...); err != nil {
+			return err
+		}
+	}
 
-	return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return nil
 }
 
 // authenticate the authentication of the TX for a specific tx signer.
-func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning.Tx, signer []byte, sig signing.SignatureV2, txPubKey cryptotypes.PubKey, signerIndex int) error {
+func (svd SigVerificationDecorator) authenticate(ctx context.Context, tx authsigning.Tx, signer []byte, sig signing.SignatureV2, txPubKey cryptotypes.PubKey, signerIndex int) error {
 	// first we check if it's an AA
 	if svd.aaKeeper != nil {
 		isAa, err := svd.aaKeeper.IsAbstractedAccount(ctx, signer)
@@ -276,11 +286,11 @@ func (svd SigVerificationDecorator) authenticate(ctx sdk.Context, tx authsigning
 
 // consumeSignatureGas will consume gas according to the pub-key being verified.
 func (svd SigVerificationDecorator) consumeSignatureGas(
-	ctx sdk.Context,
+	ctx context.Context,
 	pubKey cryptotypes.PubKey,
 	signature signing.SignatureV2,
 ) error {
-	if ctx.ExecMode() == sdk.ExecModeSimulate && pubKey == nil {
+	if svd.ak.GetEnvironment().TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate && pubKey == nil {
 		pubKey = simSecp256k1Pubkey
 	}
 
@@ -291,15 +301,11 @@ func (svd SigVerificationDecorator) consumeSignatureGas(
 		Sequence: signature.Sequence,
 	}
 
-	err := svd.sigGasConsumer(ctx.GasMeter(), signature, svd.ak.GetParams(ctx))
-	if err != nil {
-		return err
-	}
-	return nil
+	return svd.sigGasConsumer(svd.ak.GetEnvironment().GasService.GasMeter(ctx), signature, svd.ak.GetParams(ctx))
 }
 
 // verifySig will verify the signature of the provided signer account.
-func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2, newlyCreated bool) error {
+func (svd SigVerificationDecorator) verifySig(ctx context.Context, tx sdk.Tx, acc sdk.AccountI, sig signing.SignatureV2, newlyCreated bool) error {
 	if sig.Sequence != acc.GetSequence() {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrWrongSequence,
@@ -310,7 +316,9 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 	// we're in simulation mode, or in ReCheckTx, or context is not
 	// on sig verify tx, then we do not need to verify the signatures
 	// in the tx.
-	if ctx.ExecMode() == sdk.ExecModeSimulate || ctx.IsReCheckTx() || !ctx.IsSigverifyTx() {
+	if svd.ak.GetEnvironment().TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate ||
+		isRecheckTx(ctx, svd.ak.GetEnvironment().TransactionService) ||
+		!isSigverifyTx(ctx) {
 		return nil
 	}
 
@@ -321,8 +329,9 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 	}
 
 	// retrieve signer data
-	genesis := ctx.BlockHeight() == 0
-	chainID := ctx.ChainID()
+	hinfo := svd.ak.GetEnvironment().HeaderService.HeaderInfo(ctx)
+	genesis := hinfo.Height == 0
+	chainID := hinfo.ChainID
 	var accNum uint64
 	// if we are not in genesis use the account number from the account
 	if !genesis {
@@ -360,7 +369,7 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 		if OnlyLegacyAminoSigners(sig.Data) {
 			// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
 			// and therefore communicate sequence number as a potential cause of error.
-			errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
+			errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s): (%s)", accNum, acc.GetSequence(), chainID, err.Error())
 		} else {
 			errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s): (%s)", accNum, chainID, err.Error())
 		}
@@ -372,9 +381,9 @@ func (svd SigVerificationDecorator) verifySig(ctx sdk.Context, tx sdk.Tx, acc sd
 
 // setPubKey will attempt to set the pubkey for the account given the list of available public keys.
 // This must be called only in case the account has not a pubkey set yet.
-func (svd SigVerificationDecorator) setPubKey(ctx sdk.Context, acc sdk.AccountI, txPubKey cryptotypes.PubKey) error {
+func (svd SigVerificationDecorator) setPubKey(ctx context.Context, acc sdk.AccountI, txPubKey cryptotypes.PubKey) error {
 	// if we're not in sig verify then we can just skip.
-	if !ctx.IsSigverifyTx() {
+	if !isSigverifyTx(ctx) {
 		return nil
 	}
 
@@ -384,7 +393,7 @@ func (svd SigVerificationDecorator) setPubKey(ctx sdk.Context, acc sdk.AccountI,
 	if txPubKey == nil {
 		// if we're not in simulation mode, and we do not have a valid pubkey
 		// for this signer, then we simply error.
-		if ctx.ExecMode() != sdk.ExecModeSimulate {
+		if svd.ak.GetEnvironment().TransactionService.ExecMode(ctx) != transaction.ExecModeSimulate {
 			return fmt.Errorf("the account %s is without a pubkey and did not provide a pubkey in the tx to set it", acc.GetAddress().String())
 		}
 		// if we're in simulation mode, then we can populate the pubkey with the
@@ -425,7 +434,7 @@ func (svd SigVerificationDecorator) increaseSequence(tx authsigning.Tx, acc sdk.
 }
 
 // authenticateAbstractedAccount computes an AA authentication instruction and invokes the auth flow on the AA.
-func (svd SigVerificationDecorator) authenticateAbstractedAccount(ctx sdk.Context, authTx authsigning.Tx, signer []byte, index int) error {
+func (svd SigVerificationDecorator) authenticateAbstractedAccount(ctx context.Context, authTx authsigning.Tx, signer []byte, index int) error {
 	// the bundler is the AA itself.
 	selfBundler, err := svd.ak.AddressCodec().BytesToString(signer)
 	if err != nil {
@@ -433,16 +442,21 @@ func (svd SigVerificationDecorator) authenticateAbstractedAccount(ctx sdk.Contex
 	}
 
 	infoTx := authTx.(interface {
-		GetRawTx() *tx.TxRaw
-		GetProtoTx() *tx.Tx
+		AsTxRaw() (*tx.TxRaw, error)
+		AsTx() (*tx.Tx, error)
 	})
 
-	return svd.aaKeeper.AuthenticateAccount(ctx, signer, &aa_interface_v1.MsgAuthenticate{
-		Bundler:     selfBundler,
-		RawTx:       infoTx.GetRawTx(),
-		Tx:          infoTx.GetProtoTx(),
-		SignerIndex: uint32(index),
-	})
+	txRaw, err := infoTx.AsTxRaw()
+	if err != nil {
+		return fmt.Errorf("unable to get raw tx: %w", err)
+	}
+
+	protoTx, err := infoTx.AsTx()
+	if err != nil {
+		return fmt.Errorf("unable to get proto tx: %w", err)
+	}
+
+	return svd.aaKeeper.AuthenticateAccount(ctx, signer, selfBundler, txRaw, protoTx, uint32(index))
 }
 
 // ValidateSigCountDecorator takes in Params and returns errors if there are too many signatures in the tx for the given params
@@ -459,47 +473,57 @@ func NewValidateSigCountDecorator(ak AccountKeeper) ValidateSigCountDecorator {
 	}
 }
 
-func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (sdk.Context, error) {
+// AnteHandle implements an ante decorator for ValidateSigCountDecorator
+func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	if err := vscd.ValidateTx(ctx, tx); err != nil {
+		return ctx, err
+	}
+
+	return next(ctx, tx, false)
+}
+
+// ValidateTx implements an TxValidator for ValidateSigCountDecorator
+func (vscd ValidateSigCountDecorator) ValidateTx(ctx context.Context, tx sdk.Tx) error {
 	sigTx, ok := tx.(authsigning.SigVerifiableTx)
 	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
+		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a sigTx")
 	}
 
 	params := vscd.ak.GetParams(ctx)
 	pubKeys, err := sigTx.GetPubKeys()
 	if err != nil {
-		return ctx, err
+		return err
 	}
 
 	sigCount := 0
 	for _, pk := range pubKeys {
 		sigCount += CountSubKeys(pk)
 		if uint64(sigCount) > params.TxSigLimit {
-			return ctx, errorsmod.Wrapf(sdkerrors.ErrTooManySignatures, "signatures: %d, limit: %d", sigCount, params.TxSigLimit)
+			return errorsmod.Wrapf(sdkerrors.ErrTooManySignatures, "signatures: %d, limit: %d", sigCount, params.TxSigLimit)
 		}
 	}
 
-	return next(ctx, tx, ctx.ExecMode() == sdk.ExecModeSimulate)
+	return nil
 }
 
 // DefaultSigVerificationGasConsumer is the default implementation of SignatureVerificationGasConsumer. It consumes gas
 // for signature verification based upon the public key type. The cost is fetched from the given params and is matched
 // by the concrete type.
-func DefaultSigVerificationGasConsumer(meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params) error {
+func DefaultSigVerificationGasConsumer(meter gas.Meter, sig signing.SignatureV2, params types.Params) error {
 	pubkey := sig.PubKey
 
 	switch pubkey := pubkey.(type) {
 	case *ed25519.PubKey:
-		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
+		if err := meter.Consume(params.SigVerifyCostED25519, "ante verify: ed25519"); err != nil {
+			return err
+		}
 		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "ED25519 public keys are unsupported")
 
 	case *secp256k1.PubKey:
-		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
-		return nil
+		return meter.Consume(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
 
 	case *secp256r1.PubKey:
-		meter.ConsumeGas(params.SigVerifyCostSecp256r1(), "ante verify: secp256r1")
-		return nil
+		return meter.Consume(params.SigVerifyCostSecp256r1(), "ante verify: secp256r1")
 
 	case multisig.PubKey:
 		multisignature, ok := sig.Data.(*signing.MultiSignatureData)
@@ -521,7 +545,7 @@ func DefaultSigVerificationGasConsumer(meter storetypes.GasMeter, sig signing.Si
 
 // ConsumeMultisignatureVerificationGas consumes gas from a GasMeter for verifying a multisig pubKey signature.
 func ConsumeMultisignatureVerificationGas(
-	meter storetypes.GasMeter, sig *signing.MultiSignatureData, pubKey multisig.PubKey,
+	meter gas.Meter, sig *signing.MultiSignatureData, pubKey multisig.PubKey,
 	params types.Params, accSeq uint64,
 ) error {
 	// if BitArray is nil, it means tx has been built for simulation.
@@ -556,7 +580,7 @@ func ConsumeMultisignatureVerificationGas(
 // multisignatureSimulationVerificationGas consume gas for verifying a simulation multisig pubKey signature. As it's
 // a simulation tx the number of signatures its equal to the multisig threshold.
 func multisignatureSimulationVerificationGas(
-	meter storetypes.GasMeter, sig *signing.MultiSignatureData, pubKey multisig.PubKey,
+	meter gas.Meter, sig *signing.MultiSignatureData, pubKey multisig.PubKey,
 	params types.Params, accSeq uint64,
 ) error {
 	for i := 0; i < len(sig.Signatures); i++ {
@@ -577,7 +601,7 @@ func multisignatureSimulationVerificationGas(
 
 // GetSignerAcc returns an account for a given address that is expected to sign
 // a transaction.
-func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) sdk.AccountI {
+func GetSignerAcc(ctx context.Context, ak AccountKeeper, addr sdk.AccAddress) sdk.AccountI {
 	return ak.GetAccount(ctx, addr)
 }
 
@@ -608,7 +632,7 @@ func CountSubKeys(pub cryptotypes.PubKey) int {
 // as well as the aggregated signature.
 func signatureDataToBz(data signing.SignatureData) ([][]byte, error) {
 	if data == nil {
-		return nil, fmt.Errorf("got empty SignatureData")
+		return nil, errors.New("got empty SignatureData")
 	}
 
 	switch data := data.(type) {
@@ -643,4 +667,20 @@ func signatureDataToBz(data signing.SignatureData) ([][]byte, error) {
 	default:
 		return nil, sdkerrors.ErrInvalidType.Wrapf("unexpected signature data type %T", data)
 	}
+}
+
+// isSigverifyTx will always return true, unless the context is a sdk.Context, in which case we will return the
+// value of IsSigverifyTx.
+func isSigverifyTx(ctx context.Context) bool {
+	if sdkCtx, ok := sdk.TryUnwrapSDKContext(ctx); ok {
+		return sdkCtx.IsSigverifyTx()
+	}
+	return true
+}
+
+func isRecheckTx(ctx context.Context, txSvc transaction.Service) bool {
+	if sdkCtx, ok := sdk.TryUnwrapSDKContext(ctx); ok {
+		return sdkCtx.IsReCheckTx()
+	}
+	return txSvc.ExecMode(ctx) == transaction.ExecModeReCheck
 }

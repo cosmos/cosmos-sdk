@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"bytes"
-	context "context"
-	fmt "fmt"
+	"context"
+	"fmt"
 	"strings"
 
 	"cosmossdk.io/collections"
@@ -63,7 +63,7 @@ func (srv msgServer) AuthorizeCircuitBreaker(ctx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	if err = srv.Keeper.env.EventService.EventManager(ctx).EmitKV(
+	if err = srv.Keeper.EventService.EventManager(ctx).EmitKV(
 		"authorize_circuit_breaker",
 		event.NewAttribute("granter", msg.Granter),
 		event.NewAttribute("grantee", msg.Grantee),
@@ -120,7 +120,7 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 
 	urls := strings.Join(msg.GetMsgTypeUrls(), ",")
 
-	if err = srv.Keeper.env.EventService.EventManager(ctx).EmitKV(
+	if err = srv.Keeper.EventService.EventManager(ctx).EmitKV(
 		"trip_circuit_breaker",
 		event.NewAttribute("authority", msg.Authority),
 		event.NewAttribute("msg_url", urls),
@@ -134,7 +134,7 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 }
 
 // ResetCircuitBreaker resumes processing of Msg's in the state machine that
-// have been been paused using TripCircuitBreaker.
+// have been paused using TripCircuitBreaker.
 func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgResetCircuitBreaker) (*types.MsgResetCircuitBreakerResponse, error) {
 	keeper := srv.Keeper
 	address, err := srv.addressCodec.StringToBytes(msg.Authority)
@@ -178,7 +178,7 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgRese
 
 	urls := strings.Join(msg.GetMsgTypeUrls(), ",")
 
-	if err = srv.Keeper.env.EventService.EventManager(ctx).EmitKV(
+	if err = srv.Keeper.EventService.EventManager(ctx).EmitKV(
 		"reset_circuit_breaker",
 		event.NewAttribute("authority", msg.Authority),
 		event.NewAttribute("msg_url", urls),

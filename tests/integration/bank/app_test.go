@@ -3,7 +3,7 @@ package bank_test
 import (
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -11,12 +11,11 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	_ "cosmossdk.io/x/auth"
-	_ "cosmossdk.io/x/auth/tx/config"
-	authtypes "cosmossdk.io/x/auth/types"
+	_ "cosmossdk.io/x/accounts"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/consensus"
 	_ "cosmossdk.io/x/distribution"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	_ "cosmossdk.io/x/gov"
@@ -34,7 +33,9 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type (
@@ -67,34 +68,6 @@ var (
 	halfCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}
 
 	sendMsg1 = types.NewMsgSend(addr1.String(), addr2.String(), coins)
-
-	multiSendMsg1 = &types.MsgMultiSend{
-		Inputs:  []types.Input{types.NewInput(addr1, coins)},
-		Outputs: []types.Output{types.NewOutput(addr2, coins)},
-	}
-	multiSendMsg2 = &types.MsgMultiSend{
-		Inputs: []types.Input{types.NewInput(addr1, coins)},
-		Outputs: []types.Output{
-			types.NewOutput(addr2, halfCoins),
-			types.NewOutput(addr3, halfCoins),
-		},
-	}
-	multiSendMsg3 = &types.MsgMultiSend{
-		Inputs: []types.Input{types.NewInput(addr2, coins)},
-		Outputs: []types.Output{
-			types.NewOutput(addr1, coins),
-		},
-	}
-	multiSendMsg4 = &types.MsgMultiSend{
-		Inputs: []types.Input{types.NewInput(addr1, coins)},
-		Outputs: []types.Output{
-			types.NewOutput(moduleAccAddr, coins),
-		},
-	}
-	invalidMultiSendMsg = &types.MsgMultiSend{
-		Inputs:  []types.Input{types.NewInput(addr1, coins), types.NewInput(addr2, coins)},
-		Outputs: []types.Output{},
-	}
 )
 
 type suite struct {
@@ -120,6 +93,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 	app, err := simtestutil.SetupWithConfiguration(
 		depinject.Configs(
 			configurator.NewAppConfig(
+				configurator.AccountsModule(),
 				configurator.AuthModule(),
 				configurator.StakingModule(),
 				configurator.TxModule(),
@@ -144,7 +118,7 @@ func checkBalance(t *testing.T, baseApp *baseapp.BaseApp, addr sdk.AccAddress, b
 	t.Helper()
 	ctxCheck := baseApp.NewContext(true)
 	keeperBalances := keeper.GetAllBalances(ctxCheck, addr)
-	require.True(t, balances.Equal(keeperBalances))
+	require.True(t, balances.Equal(keeperBalances), balances.String(), keeperBalances.String())
 }
 
 func TestSendNotEnoughBalance(t *testing.T) {
@@ -158,7 +132,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	ctx := baseApp.NewContext(false)
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
-	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	_, err := baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: baseApp.LastBlockHeight() + 1})
 	require.NoError(t, err)
 	_, err = baseApp.Commit()
 	require.NoError(t, err)
@@ -191,9 +165,17 @@ func TestSendNotEnoughBalance(t *testing.T) {
 }
 
 func TestMsgMultiSendWithAccounts(t *testing.T) {
+	addr1Str, err := cdctestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr1)
+	require.NoError(t, err)
 	acc := &authtypes.BaseAccount{
-		Address: addr1.String(),
+		Address: addr1Str,
 	}
+
+	addr2Str, err := cdctestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr2)
+	require.NoError(t, err)
+
+	moduleStrAddr, err := cdctestutil.CodecOptions{}.GetAddressCodec().BytesToString(moduleAccAddr)
+	require.NoError(t, err)
 
 	genAccs := []authtypes.GenesisAccount{acc}
 	s := createTestSuite(t, genAccs)
@@ -201,7 +183,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	ctx := baseApp.NewContext(false)
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
-	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	_, err = baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: baseApp.LastBlockHeight() + 1})
 	require.NoError(t, err)
 	_, err = baseApp.Commit()
 	require.NoError(t, err)
@@ -212,8 +194,11 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 
 	testCases := []appTestCase{
 		{
-			desc:       "make a valid tx",
-			msgs:       []sdk.Msg{multiSendMsg1},
+			desc: "make a valid tx",
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs:  []types.Input{types.NewInput(addr1Str, coins)},
+				Outputs: []types.Output{types.NewOutput(addr2Str, coins)},
+			}},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
 			expSimPass: true,
@@ -225,8 +210,11 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 			},
 		},
 		{
-			desc:       "wrong accNum should pass Simulate, but not Deliver",
-			msgs:       []sdk.Msg{multiSendMsg1},
+			desc: "wrong accNum should pass Simulate, but not Deliver",
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs:  []types.Input{types.NewInput(addr1Str, coins)},
+				Outputs: []types.Output{types.NewOutput(addr2Str, coins)},
+			}},
 			accNums:    []uint64{1}, // wrong account number
 			accSeqs:    []uint64{1},
 			expSimPass: true, // doesn't check signature
@@ -234,8 +222,13 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 			privKeys:   []cryptotypes.PrivKey{priv1},
 		},
 		{
-			desc:       "wrong accSeq should not pass Simulate",
-			msgs:       []sdk.Msg{multiSendMsg4},
+			desc: "wrong accSeq should not pass Simulate",
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs: []types.Input{types.NewInput(addr1Str, coins)},
+				Outputs: []types.Output{
+					types.NewOutput(moduleStrAddr, coins),
+				},
+			}},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0}, // wrong account sequence
 			expSimPass: false,
@@ -243,8 +236,11 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 			privKeys:   []cryptotypes.PrivKey{priv1},
 		},
 		{
-			desc:       "multiple inputs not allowed",
-			msgs:       []sdk.Msg{invalidMultiSendMsg},
+			desc: "multiple inputs not allowed",
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs:  []types.Input{types.NewInput(addr1Str, coins), types.NewInput(addr2Str, coins)},
+				Outputs: []types.Output{},
+			}},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
 			expSimPass: false,
@@ -272,12 +268,19 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 }
 
 func TestMsgMultiSendMultipleOut(t *testing.T) {
+	ac := cdctestutil.CodecOptions{}.GetAddressCodec()
+	addr1Str, err := ac.BytesToString(addr1)
+	require.NoError(t, err)
 	acc1 := &authtypes.BaseAccount{
-		Address: addr1.String(),
+		Address: addr1Str,
 	}
+	addr2Str, err := ac.BytesToString(addr2)
+	require.NoError(t, err)
 	acc2 := &authtypes.BaseAccount{
-		Address: addr2.String(),
+		Address: addr2Str,
 	}
+	addr3Str, err := ac.BytesToString(addr3)
+	require.NoError(t, err)
 
 	genAccs := []authtypes.GenesisAccount{acc1, acc2}
 	s := createTestSuite(t, genAccs)
@@ -286,14 +289,20 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	_, err = baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: baseApp.LastBlockHeight() + 1})
 	require.NoError(t, err)
 	_, err = baseApp.Commit()
 	require.NoError(t, err)
 
 	testCases := []appTestCase{
 		{
-			msgs:       []sdk.Msg{multiSendMsg2},
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs: []types.Input{types.NewInput(addr1Str, coins)},
+				Outputs: []types.Output{
+					types.NewOutput(addr2Str, halfCoins),
+					types.NewOutput(addr3Str, halfCoins),
+				},
+			}},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
 			expSimPass: true,
@@ -320,9 +329,15 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 }
 
 func TestMsgMultiSendDependent(t *testing.T) {
+	ac := cdctestutil.CodecOptions{}.GetAddressCodec()
+	addr1Str, err := ac.BytesToString(addr1)
+	require.NoError(t, err)
+	addr2Str, err := ac.BytesToString(addr2)
+	require.NoError(t, err)
+
 	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
 	acc2 := authtypes.NewBaseAccountWithAddress(addr2)
-	err := acc2.SetAccountNumber(1)
+	err = acc2.SetAccountNumber(1)
 	require.NoError(t, err)
 
 	genAccs := []authtypes.GenesisAccount{acc1, acc2}
@@ -331,14 +346,17 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	ctx := baseApp.NewContext(false)
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
-	_, err = baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: baseApp.LastBlockHeight() + 1})
+	_, err = baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: baseApp.LastBlockHeight() + 1})
 	require.NoError(t, err)
 	_, err = baseApp.Commit()
 	require.NoError(t, err)
 
 	testCases := []appTestCase{
 		{
-			msgs:       []sdk.Msg{multiSendMsg1},
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs:  []types.Input{types.NewInput(addr1Str, coins)},
+				Outputs: []types.Output{types.NewOutput(addr2Str, coins)},
+			}},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
 			expSimPass: true,
@@ -350,7 +368,12 @@ func TestMsgMultiSendDependent(t *testing.T) {
 			},
 		},
 		{
-			msgs:       []sdk.Msg{multiSendMsg3},
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs: []types.Input{types.NewInput(addr2Str, coins)},
+				Outputs: []types.Output{
+					types.NewOutput(addr1Str, coins),
+				},
+			}},
 			accNums:    []uint64{1},
 			accSeqs:    []uint64{0},
 			expSimPass: true,
@@ -453,4 +476,48 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestSendToNonExistingAccount tests sending coins to an account that does not exist, and this account
+// must not be created.
+func TestSendToNonExistingAccount(t *testing.T) {
+	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
+	genAccs := []authtypes.GenesisAccount{acc1}
+	s := createTestSuite(t, genAccs)
+	baseApp := s.App.BaseApp
+	ctx := baseApp.NewContext(false)
+
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	_, err := baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: baseApp.LastBlockHeight() + 1})
+	require.NoError(t, err)
+	_, err = baseApp.Commit()
+	require.NoError(t, err)
+
+	addr2Str, err := s.AccountKeeper.AddressCodec().BytesToString(addr2)
+	require.NoError(t, err)
+	sendMsg := types.NewMsgSend(addr1.String(), addr2Str, coins)
+	h := header.Info{Height: baseApp.LastBlockHeight() + 1}
+	txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, h, []sdk.Msg{sendMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
+	require.NoError(t, err)
+
+	// Check that the account was not created
+	acc2 := s.AccountKeeper.GetAccount(baseApp.NewContext(true), addr2)
+	require.Nil(t, acc2)
+
+	// But it does have a balance
+	checkBalance(t, baseApp, addr2, coins, s.BankKeeper)
+
+	// Now we send coins back and the account should be created
+	sendMsg = types.NewMsgSend(addr2Str, addr1.String(), coins)
+	h = header.Info{Height: baseApp.LastBlockHeight() + 1}
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, h, []sdk.Msg{sendMsg}, "", []uint64{0}, []uint64{0}, true, true, priv2)
+	require.NoError(t, err)
+
+	// Balance has been reduced
+	checkBalance(t, baseApp, addr2, sdk.NewCoins(), s.BankKeeper)
+
+	// Check that the account was created
+	acc2 = s.AccountKeeper.GetAccount(baseApp.NewContext(true), addr2)
+	require.NotNil(t, acc2, "account should have been created %s", addr2.String())
 }

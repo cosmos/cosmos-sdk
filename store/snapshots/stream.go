@@ -19,13 +19,6 @@ const (
 	snapshotCompressionLevel = 7
 )
 
-type WriteCloser interface {
-	protoio.WriteCloser
-
-	// CloseWithError closes the writer and sends an error to the reader.
-	CloseWithError(err error)
-}
-
 // StreamWriter set up a stream pipeline to serialize snapshot nodes:
 // Exported Items -> delimited Protobuf -> zlib -> buffer -> chunkWriter -> chan io.ReadCloser
 type StreamWriter struct {

@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 
-	cockroachdberrors "github.com/cockroachdb/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -174,7 +173,7 @@ func (c *ChainInfo) OpenClient() (*grpc.ClientConn, error) {
 		}
 
 		var err error
-		c.client, err = grpc.Dial(endpoint.Endpoint, grpc.WithTransportCredentials(creds))
+		c.client, err = grpc.NewClient(endpoint.Endpoint, grpc.WithTransportCredentials(creds))
 		if err != nil {
 			res = errors.Join(res, err)
 			continue
@@ -183,7 +182,7 @@ func (c *ChainInfo) OpenClient() (*grpc.ClientConn, error) {
 		return c.client, nil
 	}
 
-	return nil, cockroachdberrors.Wrapf(res, "error loading gRPC client")
+	return nil, fmt.Errorf("error loading gRPC client: %w", res)
 }
 
 // getAddressPrefix returns the address prefix of the chain.
@@ -195,7 +194,7 @@ func getAddressPrefix(ctx context.Context, conn grpc.ClientConnInterface) (strin
 	}
 
 	if resp == nil || resp.Bech32Prefix == "" {
-		return "", cockroachdberrors.New("bech32 account address prefix is not set")
+		return "", errors.New("bech32 account address prefix is not set")
 	}
 
 	return resp.Bech32Prefix, nil

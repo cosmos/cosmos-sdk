@@ -12,7 +12,9 @@ import (
 	"cosmossdk.io/x/distribution/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestQueryParams(t *testing.T) {
@@ -54,11 +56,15 @@ func TestQueryParams(t *testing.T) {
 func TestQueryValidatorDistributionInfo(t *testing.T) {
 	ctx, addrs, distrKeeper, dep := initFixture(t)
 	queryServer := keeper.NewQuerier(distrKeeper)
-
-	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
+	operatorAddr, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(valConsPk0.Address())
+	require.NoError(t, err)
+	val, err := distrtestutil.CreateValidator(valConsPk0, operatorAddr, math.NewInt(100))
 	require.NoError(t, err)
 
-	del := stakingtypes.NewDelegation(addrs[0].String(), val.OperatorAddress, val.DelegatorShares)
+	addr0Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addrs[0])
+	require.NoError(t, err)
+
+	del := stakingtypes.NewDelegation(addr0Str, val.OperatorAddress, val.DelegatorShares)
 
 	dep.stakingKeeper.EXPECT().Validator(gomock.Any(), gomock.Any()).Return(val, nil).AnyTimes()
 	dep.stakingKeeper.EXPECT().Delegation(gomock.Any(), gomock.Any(), gomock.Any()).Return(del, nil).AnyTimes()
@@ -80,7 +86,7 @@ func TestQueryValidatorDistributionInfo(t *testing.T) {
 		{
 			name: "not a validator",
 			req: &types.QueryValidatorDistributionInfoRequest{
-				ValidatorAddress: addrs[0].String(),
+				ValidatorAddress: addr0Str,
 			},
 			resp:   &types.QueryValidatorDistributionInfoResponse{},
 			errMsg: `expected 'cosmosvaloper' got 'cosmos'`,
@@ -142,9 +148,13 @@ func TestQueryCommunityPool(t *testing.T) {
 	ctx, _, distrKeeper, dep := initFixture(t)
 	queryServer := keeper.NewQuerier(distrKeeper)
 
+	poolAcc := authtypes.NewEmptyModuleAccount(types.ProtocolPoolModuleName)
+	dep.accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ProtocolPoolModuleName).Return(poolAcc).AnyTimes()
+
+	dep.bankKeeper.EXPECT().GetAllBalances(gomock.Any(), poolAcc.GetAddress()).Return(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))))
+
 	coins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))
 	decCoins := sdk.NewDecCoinsFromCoins(coins...)
-	dep.poolKeeper.EXPECT().GetCommunityPool(gomock.Any()).Return(coins, nil).AnyTimes()
 
 	cases := []struct {
 		name   string

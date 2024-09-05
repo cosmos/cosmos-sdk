@@ -165,7 +165,11 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 		deposit.Amount = sdk.NewCoins(deposit.Amount...).Add(depositAmount...)
 	case errors.IsOf(err, collections.ErrNotFound):
 		// deposit doesn't exist
-		deposit = v1.NewDeposit(proposalID, depositorAddr, depositAmount)
+		addr, err := k.authKeeper.AddressCodec().BytesToString(depositorAddr)
+		if err != nil {
+			return false, err
+		}
+		deposit = v1.NewDeposit(proposalID, addr, depositAmount)
 	default:
 		// failed to get deposit
 		return false, err
@@ -177,8 +181,14 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 		return false, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	depositorStrAddr, err := k.authKeeper.AddressCodec().BytesToString(depositorAddr)
+	if err != nil {
+		return false, err
+	}
+
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeProposalDeposit,
+		event.NewAttribute(types.AttributeKeyDepositor, depositorStrAddr),
 		event.NewAttribute(sdk.AttributeKeyAmount, depositAmount.String()),
 		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
 	); err != nil {
@@ -206,7 +216,7 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 	}
 
 	for _, deposit := range deposits {
-		depositerAddress, err := k.authKeeper.AddressCodec().StringToBytes(deposit.Depositor)
+		depositorAddress, err := k.authKeeper.AddressCodec().StringToBytes(deposit.Depositor)
 		if err != nil {
 			return err
 		}
@@ -232,13 +242,13 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 
 		if !remainingAmount.IsZero() {
 			err := k.bankKeeper.SendCoinsFromModuleToAccount(
-				ctx, types.ModuleName, depositerAddress, remainingAmount,
+				ctx, types.ModuleName, depositorAddress, remainingAmount,
 			)
 			if err != nil {
 				return err
 			}
 		}
-		err = k.Deposits.Remove(ctx, collections.Join(deposit.ProposalId, sdk.AccAddress(depositerAddress)))
+		err = k.Deposits.Remove(ctx, collections.Join(deposit.ProposalId, sdk.AccAddress(depositorAddress)))
 		if err != nil {
 			return err
 		}
@@ -247,7 +257,10 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 	// burn the cancellation fee or send the cancellation charges to destination address.
 	if !cancellationCharges.IsZero() {
 		// get the pool module account address
-		poolAddress := k.authKeeper.GetModuleAddress(pooltypes.ModuleName)
+		poolAddress, err := k.authKeeper.AddressCodec().BytesToString(k.authKeeper.GetModuleAddress(pooltypes.ModuleName))
+		if err != nil {
+			return err
+		}
 		switch {
 		case destAddress == "":
 			// burn the cancellation charges from deposits
@@ -255,7 +268,7 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 			if err != nil {
 				return err
 			}
-		case poolAddress.String() == destAddress:
+		case poolAddress == destAddress:
 			err := k.poolKeeper.FundCommunityPool(ctx, cancellationCharges, k.ModuleAccountAddress())
 			if err != nil {
 				return err
@@ -312,7 +325,7 @@ func (k Keeper) validateInitialDeposit(params v1.Params, initialDeposit sdk.Coin
 
 // validateDepositDenom validates if the deposit denom is accepted by the governance module.
 func (k Keeper) validateDepositDenom(params v1.Params, depositAmount sdk.Coins) error {
-	denoms := []string{}
+	denoms := make([]string, 0, len(params.MinDeposit))
 	acceptedDenoms := make(map[string]bool, len(params.MinDeposit))
 	for _, coin := range params.MinDeposit {
 		acceptedDenoms[coin.Denom] = true

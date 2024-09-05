@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/stretchr/testify/require"
 
-	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/bank"
 	"cosmossdk.io/x/bank/testutil"
+	"cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -20,6 +20,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var moduleAccAddr = authtypes.NewModuleAddress(stakingtypes.BondedPoolName)
@@ -75,7 +76,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false)
 
-	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err := baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(b, err)
 
 	require.NoError(b, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
@@ -105,7 +106,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 		require.NoError(b, err)
 
 		_, err = baseApp.FinalizeBlock(
-			&abci.RequestFinalizeBlock{
+			&abci.FinalizeBlockRequest{
 				Height: height,
 				Txs:    [][]byte{bz},
 			},
@@ -123,9 +124,14 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	// b.Skip("Skipping benchmark with buggy code reported at https://github.com/cosmos/cosmos-sdk/issues/10023")
 	b.ReportAllocs()
 
+	addr1Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr1)
+	require.NoError(b, err)
 	acc := authtypes.BaseAccount{
 		Address: addr1.String(),
 	}
+
+	addr2Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr2)
+	require.NoError(b, err)
 
 	// construct genesis state
 	genAccs := []authtypes.GenesisAccount{&acc}
@@ -133,7 +139,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false)
 
-	_, err := baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err = baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(b, err)
 
 	require.NoError(b, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
@@ -144,8 +150,13 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	txGen := moduletestutil.MakeTestTxConfig(codectestutil.CodecOptions{})
 	txEncoder := txGen.TxEncoder()
 
+	multiSendMsg := &types.MsgMultiSend{
+		Inputs:  []types.Input{types.NewInput(addr1Str, coins)},
+		Outputs: []types.Output{types.NewOutput(addr2Str, coins)},
+	}
+
 	// pre-compute all txs
-	txs, err := genSequenceOfTxs(txGen, []sdk.Msg{multiSendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
+	txs, err := genSequenceOfTxs(txGen, []sdk.Msg{multiSendMsg}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
 	require.NoError(b, err)
 	b.ResetTimer()
 
@@ -163,7 +174,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 		require.NoError(b, err)
 
 		_, err = baseApp.FinalizeBlock(
-			&abci.RequestFinalizeBlock{
+			&abci.FinalizeBlockRequest{
 				Height: height,
 				Txs:    [][]byte{bz},
 			},

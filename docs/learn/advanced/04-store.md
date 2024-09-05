@@ -16,46 +16,19 @@ A store is a data structure that holds the state of the application.
 
 ## Introduction to Cosmos SDK Stores
 
-The Cosmos SDK comes with a large set of stores to persist the state of applications. By default, the main store of Cosmos SDK applications is a `multistore`, i.e. a store of stores. Developers can add any number of key-value stores to the multistore, depending on their application needs. The multistore exists to support the modularity of the Cosmos SDK, as it lets each module declare and manage their own subset of the state. Key-value stores in the multistore can only be accessed with a specific capability `key`, which is typically held in the [`keeper`](../../build/building-modules/06-keeper.md) of the module that declared the store.
+The Cosmos SDK comes with a large set of stores to persist the state of applications. By default, the main store of Cosmos SDK applications is a `multistore`, i.e. a store of stores. Developers can add any number of key-value stores to the multistore, depending on their application's needs. The multistore exists to support the modularity of the Cosmos SDK, as it lets each module declare and manage their own subset of the state. Key-value stores in the multistore can only be accessed with a specific capability `key`, which is typically held in the [`keeper`](../../build/building-modules/06-keeper.md) of the module that declared the store.
 
-```text
-+-----------------------------------------------------+
-|                                                     |
-|    +--------------------------------------------+   |
-|    |                                            |   |
-|    |  KVStore 1 - Manage by keeper of Module 1  |
-|    |                                            |   |
-|    +--------------------------------------------+   |
-|                                                     |
-|    +--------------------------------------------+   |
-|    |                                            |   |
-|    |  KVStore 2 - Manage by keeper of Module 2  |   |
-|    |                                            |   |
-|    +--------------------------------------------+   |
-|                                                     |
-|    +--------------------------------------------+   |
-|    |                                            |   |
-|    |  KVStore 3 - Manage by keeper of Module 2  |   |
-|    |                                            |   |
-|    +--------------------------------------------+   |
-|                                                     |
-|    +--------------------------------------------+   |
-|    |                                            |   |
-|    |  KVStore 4 - Manage by keeper of Module 3  |   |
-|    |                                            |   |
-|    +--------------------------------------------+   |
-|                                                     |
-|    +--------------------------------------------+   |
-|    |                                            |   |
-|    |  KVStore 5 - Manage by keeper of Module 4  |   |
-|    |                                            |   |
-|    +--------------------------------------------+   |
-|                                                     |
-|                    Main Multistore                  |
-|                                                     |
-+-----------------------------------------------------+
+```mermaid
+flowchart TB
+    subgraph MainMultistore["Main Multistore"]
+        KVStore1["KVStore 1 - Managed by keeper of Module 1"]
+        KVStore2["KVStore 2 - Managed by keeper of Module 2"]
+        KVStore3["KVStore 3 - Managed by keeper of Module 2"]
+        KVStore4["KVStore 4 - Managed by keeper of Module 3"]
+        KVStore5["KVStore 5 - Managed by keeper of Module 4"]
+    end
 
-                   Application's State
+    MainMultistore --> ApplicationState["Application's State"]
 ```
 
 ### Store Interface
@@ -66,7 +39,7 @@ At its very core, a Cosmos SDK `store` is an object that holds a `CacheWrapper` 
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/store/types/store.go#L15-L18
 ```
 
-The `GetStoreType` is a simple method that returns the type of store, whereas a `CacheWrapper` is a simple interface that implements store read caching and write branching through `Write` method:
+The `GetStoreType` is a simple method that returns the type of store, whereas a `CacheWrapper` is a simple interface that implements store read caching and write branching through the `Write` method:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/store/types/store.go#L287-L320
@@ -168,13 +141,13 @@ The documentation on the IAVL Tree is located [here](https://github.com/cosmos/i
 
 ### `DbAdapter` Store
 
-`dbadapter.Store` is an adapter for `dbm.DB` making it fulfilling the `KVStore` interface.
+`dbadapter.Store` is an adapter for `corestore.KVStoreWithBatch` making it fulfilling the `KVStore` interface.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/store/dbadapter/store.go#L13-L16
 ```
 
-`dbadapter.Store` embeds `dbm.DB`, meaning most of the `KVStore` interface functions are implemented. The other functions (mostly miscellaneous) are manually implemented. This store is primarily used within [Transient Stores](#transient-store)
+`dbadapter.Store` embeds `corestore.KVStoreWithBatch`, meaning most of the `KVStore` interface functions are implemented. The other functions (mostly miscellaneous) are manually implemented. This store is primarily used within [Transient Stores](#transient-store)
 
 ### `Transient` Store 
 

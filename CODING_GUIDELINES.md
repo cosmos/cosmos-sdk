@@ -7,7 +7,7 @@ This document is an extension to [CONTRIBUTING](./CONTRIBUTING.md) and provides 
 * Code must be well structured:
     * packages must have a limited responsibility (different concerns can go to different packages),
     * types must be easy to compose,
-    * think about maintainbility and testability.
+    * think about maintainability and testability.
 * "Depend upon abstractions, [not] concretions".
 * Try to limit the number of methods you are exposing. It's easier to expose something later than to hide it.
 * Take advantage of `internal` package concept.
@@ -18,11 +18,11 @@ This document is an extension to [CONTRIBUTING](./CONTRIBUTING.md) and provides 
 * Minimize code duplication.
 * Limit third-party dependencies.
 
-Performance:
+### Performance
 
 * Avoid unnecessary operations or memory allocations.
 
-Security:
+### Security
 
 * Pay proper attention to exploits involving:
     * gas usage
@@ -30,6 +30,12 @@ Security:
     * malleability
     * code must be always deterministic
 * Thread safety. If some functionality is not thread-safe, or uses something that is not thread-safe, then clearly indicate the risk on each level.
+
+### Documentation
+
+When writing code that is complex or relies on another piece of the code, it is advised to create a diagram or a flowchart to explain the logic. This will help other developers to understand the code and will also help you to understand the logic better.
+
+The Cosmos SDK uses [Mermaid.js](https://mermaid.js.org/), you can find the documentation on how to use it [here](https://mermaid.js.org/intro/).
 
 ## Acceptance tests
 
@@ -108,14 +114,14 @@ The idea is you should be able to see the
 error message and figure out exactly what failed.
 Here is an example check:
 
-```go
-<some table>
-for tcIndex, tc := range cases {
-  <some code>
-  resp, err := doSomething()
-  require.NoError(err)
-  require.Equal(t, tc.expected, resp, "should correctly perform X")
-```
+    ```go
+        <some table>
+        for tcIndex, tc := range cases {
+        <some code>
+            resp, err := doSomething()
+            require.NoError(err)
+            require.Equal(t, tc.expected, resp, "should correctly perform X")
+    ```
 
 ## Quality Assurance
 

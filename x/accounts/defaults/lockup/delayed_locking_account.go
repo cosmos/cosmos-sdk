@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	lockuptypes "cosmossdk.io/x/accounts/lockup/types"
+	lockuptypes "cosmossdk.io/x/accounts/defaults/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -41,12 +41,6 @@ func (dva *DelayedLockingAccount) Delegate(ctx context.Context, msg *lockuptypes
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
 	return dva.BaseLockup.Delegate(ctx, msg, dva.GetLockedCoinsWithDenoms)
-}
-
-func (dva *DelayedLockingAccount) Undelegate(ctx context.Context, msg *lockuptypes.MsgUndelegate) (
-	*lockuptypes.MsgExecuteMessagesResponse, error,
-) {
-	return dva.BaseLockup.Undelegate(ctx, msg)
 }
 
 func (dva *DelayedLockingAccount) SendCoins(ctx context.Context, msg *lockuptypes.MsgSend) (
@@ -131,7 +125,7 @@ func (dva DelayedLockingAccount) QueryVestingAccountInfo(ctx context.Context, re
 	if err != nil {
 		return nil, err
 	}
-	hs := dva.headerService.GetHeaderInfo(ctx)
+	hs := dva.headerService.HeaderInfo(ctx)
 	unlockedCoins, lockedCoins, err := dva.GetLockCoinsInfo(ctx, hs.Time)
 	if err != nil {
 		return nil, err
@@ -148,9 +142,9 @@ func (dva DelayedLockingAccount) RegisterInitHandler(builder *accountstd.InitBui
 
 func (dva DelayedLockingAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, dva.Delegate)
-	accountstd.RegisterExecuteHandler(builder, dva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, dva.SendCoins)
 	accountstd.RegisterExecuteHandler(builder, dva.WithdrawUnlockedCoins)
+	dva.BaseLockup.RegisterExecuteHandlers(builder)
 }
 
 func (dva DelayedLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

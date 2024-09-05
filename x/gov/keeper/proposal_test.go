@@ -13,6 +13,7 @@ import (
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
 
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -125,9 +126,11 @@ type invalidProposalRoute struct{ v1beta1.TextProposal }
 func (invalidProposalRoute) ProposalRoute() string { return "nonexistingroute" }
 
 func (suite *KeeperTestSuite) TestSubmitProposal() {
-	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress().String()
-	_, _, randomAddr := testdata.KeyTestPubAddr()
-
+	govAcct, err := suite.acctKeeper.AddressCodec().BytesToString(suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress())
+	suite.Require().NoError(err)
+	_, _, randomAddress := testdata.KeyTestPubAddr()
+	randomAddr, err := suite.acctKeeper.AddressCodec().BytesToString(randomAddress)
+	suite.Require().NoError(err)
 	tp := v1beta1.TextProposal{Title: "title", Description: "description"}
 	legacyProposal := func(content v1beta1.Content, authority string) []sdk.Msg {
 		prop, err := v1.NewLegacyContent(content, authority)
@@ -136,7 +139,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 	}
 
 	// create custom message based params for x/gov/MsgUpdateParams
-	err := suite.govKeeper.MessageBasedParams.Set(suite.ctx, sdk.MsgTypeURL(&v1.MsgUpdateParams{}), v1.MessageBasedParams{
+	err = suite.govKeeper.MessageBasedParams.Set(suite.ctx, sdk.MsgTypeURL(&v1.MsgUpdateParams{}), v1.MessageBasedParams{
 		VotingPeriod:  func() *time.Duration { t := time.Hour * 24 * 7; return &t }(),
 		Quorum:        "0.4",
 		Threshold:     "0.5",
@@ -161,7 +164,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 		{legacyProposal(&v1beta1.TextProposal{Title: "title", Description: ""}, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
 		{legacyProposal(&v1beta1.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, nil},
 		// error when signer is not gov acct
-		{legacyProposal(&tp, randomAddr.String()), "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, types.ErrInvalidSigner},
+		{legacyProposal(&tp, randomAddr), "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, types.ErrInvalidSigner},
 		// error only when invalid route
 		{legacyProposal(&invalidProposalRoute{}, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, types.ErrNoProposalHandlerExists},
 		// error invalid multiple choice proposal
@@ -181,13 +184,19 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 }
 
 func (suite *KeeperTestSuite) TestCancelProposal() {
-	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress().String()
+	govAcct, err := suite.acctKeeper.AddressCodec().BytesToString(suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress())
+	suite.Require().NoError(err)
 	tp := v1beta1.TextProposal{Title: "title", Description: "description"}
 	prop, err := v1.NewLegacyContent(&tp, govAcct)
 	suite.Require().NoError(err)
 	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[0], v1.ProposalType_PROPOSAL_TYPE_STANDARD)
 	suite.Require().NoError(err)
 	proposalID := proposal.Id
+
+	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(suite.addrs[0])
+	suite.Require().NoError(err)
+	addr1Str, err := suite.acctKeeper.AddressCodec().BytesToString(suite.addrs[1])
+	suite.Require().NoError(err)
 
 	proposal2, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[1], v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)
 	suite.Require().NoError(err)
@@ -227,14 +236,14 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 		{
 			name: "invalid proposal id",
 			malleate: func() (uint64, string) {
-				return 10, suite.addrs[1].String()
+				return 10, addr1Str
 			},
 			expectedErrMsg: "proposal 10 doesn't exist",
 		},
 		{
 			name: "valid proposalID but invalid proposer",
 			malleate: func() (uint64, string) {
-				return proposalID, suite.addrs[1].String()
+				return proposalID, addr1Str
 			},
 			expectedErrMsg: "invalid proposer",
 		},
@@ -248,7 +257,7 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 				proposal2.Status = v1.ProposalStatus_PROPOSAL_STATUS_PASSED
 				err = suite.govKeeper.Proposals.Set(suite.ctx, proposal2.Id, proposal2)
 				suite.Require().NoError(err)
-				return proposal2ID, suite.addrs[1].String()
+				return proposal2ID, addr1Str
 			},
 			expectedErrMsg: "proposal should be in the deposit or voting period",
 		},
@@ -267,14 +276,14 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 				suite.ctx = suite.ctx.WithHeaderInfo(headerInfo)
 
 				suite.Require().NoError(err)
-				return proposal2ID, suite.addrs[1].String()
+				return proposal2ID, addr1Str
 			},
 			expectedErrMsg: "too late",
 		},
 		{
 			name: "valid proposer and proposal id",
 			malleate: func() (uint64, string) {
-				return proposalID, suite.addrs[0].String()
+				return proposalID, addr0Str
 			},
 		},
 		{
@@ -294,7 +303,7 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(vote)
 
-				return proposalID, suite.addrs[0].String()
+				return proposalID, addr0Str
 			},
 		},
 	}
@@ -321,7 +330,9 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 
 func TestMigrateProposalMessages(t *testing.T) {
 	content := v1beta1.NewTextProposal("Test", "description")
-	contentMsg, err := v1.NewLegacyContent(content, sdk.AccAddress("test1").String())
+	addr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(sdk.AccAddress("test1"))
+	require.NoError(t, err)
+	contentMsg, err := v1.NewLegacyContent(content, addr)
 	require.NoError(t, err)
 	content, err = v1.LegacyContentFromMessage(contentMsg)
 	require.NoError(t, err)

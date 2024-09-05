@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"google.golang.org/protobuf/runtime/protoiface"
-
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	govtypes "cosmossdk.io/x/gov/types"
@@ -60,7 +60,7 @@ func (k msgServer) SubmitProposal(ctx context.Context, msg *v1.MsgSubmitProposal
 	}
 
 	// This method checks that all message metadata, summary and title
-	// has te expected length defined in the module configuration.
+	// has the expected length defined in the module configuration.
 	if err := k.validateProposalLengths(msg.Metadata, msg.Title, msg.Summary); err != nil {
 		return nil, err
 	}
@@ -97,10 +97,12 @@ func (k msgServer) SubmitProposal(ctx context.Context, msg *v1.MsgSubmitProposal
 	}
 
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/9683
-	k.environment.GasService.GetGasMeter(ctx).Consume(
-		3*k.environment.GasService.GetGasConfig(ctx).WriteCostPerByte*uint64(len(bytes)),
+	if err := k.GasService.GasMeter(ctx).Consume(
+		3*k.GasService.GasConfig(ctx).WriteCostPerByte*uint64(len(bytes)),
 		"submit proposal",
-	)
+	); err != nil {
+		return nil, err
+	}
 
 	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.Id, proposer, msg.GetInitialDeposit())
 	if err != nil {
@@ -108,7 +110,7 @@ func (k msgServer) SubmitProposal(ctx context.Context, msg *v1.MsgSubmitProposal
 	}
 
 	if votingStarted {
-		if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		if err := k.EventService.EventManager(ctx).EmitKV(
 			govtypes.EventTypeSubmitProposal,
 			event.NewAttribute(govtypes.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", proposal.Id)),
 		); err != nil {
@@ -171,7 +173,7 @@ func (k msgServer) CancelProposal(ctx context.Context, msg *v1.MsgCancelProposal
 		return nil, err
 	}
 
-	if err := k.environment.EventService.EventManager(ctx).EmitKV(
+	if err := k.EventService.EventManager(ctx).EmitKV(
 		govtypes.EventTypeCancelProposal,
 		event.NewAttribute(sdk.AttributeKeySender, msg.Proposer),
 		event.NewAttribute(govtypes.AttributeKeyProposalID, fmt.Sprint(msg.ProposalId)),
@@ -181,8 +183,8 @@ func (k msgServer) CancelProposal(ctx context.Context, msg *v1.MsgCancelProposal
 
 	return &v1.MsgCancelProposalResponse{
 		ProposalId:     msg.ProposalId,
-		CanceledTime:   k.environment.HeaderService.GetHeaderInfo(ctx).Time,
-		CanceledHeight: uint64(k.environment.HeaderService.GetHeaderInfo(ctx).Height),
+		CanceledTime:   k.HeaderService.HeaderInfo(ctx).Time,
+		CanceledHeight: uint64(k.HeaderService.HeaderInfo(ctx).Height),
 	}, nil
 }
 
@@ -207,7 +209,10 @@ func (k msgServer) ExecLegacyContent(ctx context.Context, msg *v1.MsgExecLegacyC
 	}
 
 	handler := k.Keeper.legacyRouter.GetRoute(content.ProposalRoute())
-	if err := handler(ctx, content); err != nil {
+
+	// NOTE: the support of legacy gov proposal in server/v2 is different than for baseapp.
+	// Legacy proposal in server/v2 can only access services provided by the gov module environment.
+	if err := handler(context.WithValue(ctx, corecontext.EnvironmentContextKey, k.Environment), content); err != nil {
 		return nil, errors.Wrapf(govtypes.ErrInvalidProposalContent, "failed to run legacy handler %s, %+v", content.ProposalRoute(), err)
 	}
 
@@ -293,7 +298,7 @@ func (k msgServer) Deposit(ctx context.Context, msg *v1.MsgDeposit) (*v1.MsgDepo
 	}
 
 	if votingStarted {
-		if err := k.environment.EventService.EventManager(ctx).EmitKV(
+		if err := k.EventService.EventManager(ctx).EmitKV(
 			govtypes.EventTypeProposalDeposit,
 			event.NewAttribute(govtypes.AttributeKeyVotingPeriodStart, fmt.Sprintf("%d", msg.ProposalId)),
 		); err != nil {
@@ -373,14 +378,14 @@ func (k msgServer) SudoExec(ctx context.Context, msg *v1.MsgSudoExec) (*v1.MsgSu
 		}
 	}
 
-	var msgResp protoiface.MessageV1
-	if err := k.environment.BranchService.Execute(ctx, func(ctx context.Context) error {
+	var msgResp transaction.Msg
+	if err := k.BranchService.Execute(ctx, func(ctx context.Context) error {
 		// TODO add route check here
-		if err := k.environment.RouterService.MessageRouterService().CanInvoke(ctx, sdk.MsgTypeURL(sudoedMsg)); err != nil {
-			return errors.Wrapf(govtypes.ErrInvalidProposal, err.Error())
+		if err := k.MsgRouterService.CanInvoke(ctx, sdk.MsgTypeURL(sudoedMsg)); err != nil {
+			return errors.Wrap(govtypes.ErrInvalidProposal, err.Error())
 		}
 
-		msgResp, err = k.environment.RouterService.MessageRouterService().InvokeUntyped(ctx, sudoedMsg)
+		msgResp, err = k.MsgRouterService.Invoke(ctx, sudoedMsg)
 		if err != nil {
 			return errors.Wrapf(err, "failed to execute sudo-ed message; message %v", sudoedMsg)
 		}

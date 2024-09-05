@@ -1,4 +1,4 @@
-//nolint:unused,nolintlint // ignore unused code linting and directive `//nolint:unused // ignore unused code linting` is unused for linter "unused"
+//nolint:unused,nolintlint // ignore unused code linting
 package simapp
 
 import (
@@ -6,6 +6,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/durationpb"
 
+	accountsmodulev1 "cosmossdk.io/api/cosmos/accounts/module/v1"
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
@@ -14,6 +15,7 @@ import (
 	circuitmodulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
+	epochsmodulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
@@ -28,18 +30,19 @@ import (
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject/appconfig"
-	_ "cosmossdk.io/x/auth/tx/config" // import for side-effects
-	authtypes "cosmossdk.io/x/auth/types"
-	_ "cosmossdk.io/x/auth/vesting" // import for side-effects
-	vestingtypes "cosmossdk.io/x/auth/vesting/types"
+	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/authz"
 	_ "cosmossdk.io/x/authz/module" // import for side-effects
 	_ "cosmossdk.io/x/bank"         // import for side-effects
 	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
+	_ "cosmossdk.io/x/consensus" // import for side-effects
+	consensustypes "cosmossdk.io/x/consensus/types"
 	_ "cosmossdk.io/x/distribution" // import for side-effects
 	distrtypes "cosmossdk.io/x/distribution/types"
+	_ "cosmossdk.io/x/epochs" // import for side-effects
+	epochstypes "cosmossdk.io/x/epochs/types"
 	_ "cosmossdk.io/x/evidence" // import for side-effects
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
@@ -62,8 +65,12 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import for side-effects
-	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	_ "github.com/cosmos/cosmos-sdk/testutil/x/counter" // import for side-effects
+	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import for side-effects
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -74,6 +81,7 @@ var (
 		{Account: distrtypes.ModuleName},
 		{Account: pooltypes.ModuleName},
 		{Account: pooltypes.StreamAccount},
+		{Account: pooltypes.ProtocolPoolDistrAccount},
 		{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
 		{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
 		{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
@@ -112,10 +120,12 @@ var (
 					BeginBlockers: []string{
 						minttypes.ModuleName,
 						distrtypes.ModuleName,
+						pooltypes.ModuleName,
 						slashingtypes.ModuleName,
 						evidencetypes.ModuleName,
 						stakingtypes.ModuleName,
 						authz.ModuleName,
+						epochstypes.ModuleName,
 					},
 					EndBlockers: []string{
 						govtypes.ModuleName,
@@ -124,16 +134,23 @@ var (
 						group.ModuleName,
 						pooltypes.ModuleName,
 					},
+					// The following is mostly only needed when ModuleName != StoreKey name.
 					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
 						{
 							ModuleName: authtypes.ModuleName,
 							KvStoreKey: "acc",
+						},
+						{
+							ModuleName: accounts.ModuleName,
+							KvStoreKey: accounts.StoreKey,
 						},
 					},
 					// NOTE: The genutils module must occur after staking so that pools are
 					// properly initialized with tokens from genesis accounts.
 					// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
 					InitGenesis: []string{
+						consensustypes.ModuleName,
+						accounts.ModuleName,
 						authtypes.ModuleName,
 						banktypes.ModuleName,
 						distrtypes.ModuleName,
@@ -151,12 +168,18 @@ var (
 						vestingtypes.ModuleName,
 						circuittypes.ModuleName,
 						pooltypes.ModuleName,
+						epochstypes.ModuleName,
 					},
 					// When ExportGenesis is not specified, the export genesis module order
 					// is equal to the init genesis order
 					// ExportGenesis: []string{},
 					// Uncomment if you want to set a custom migration order here.
 					// OrderMigrations: []string{},
+					// SkipStoreKeys is an optional list of store keys to skip when constructing the
+					// module's keeper. This is useful when a module does not have a store key.
+					SkipStoreKeys: []string{
+						"tx",
+					},
 				}),
 			},
 			{
@@ -193,8 +216,10 @@ var (
 				Config: appconfig.WrapAny(&slashingmodulev1.Module{}),
 			},
 			{
-				Name:   "tx",
-				Config: appconfig.WrapAny(&txconfigv1.Config{}),
+				Name: "tx",
+				Config: appconfig.WrapAny(&txconfigv1.Config{
+					SkipAnteHandler: true, // SimApp is using non default AnteHandler such as circuit and unorderedtx decorators
+				}),
 			},
 			{
 				Name:   genutiltypes.ModuleName,
@@ -250,6 +275,19 @@ var (
 			{
 				Name:   pooltypes.ModuleName,
 				Config: appconfig.WrapAny(&poolmodulev1.Module{}),
+			},
+			{
+				Name:   accounts.ModuleName,
+				Config: appconfig.WrapAny(&accountsmodulev1.Module{}),
+			},
+			{
+				Name:   epochstypes.ModuleName,
+				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
+			},
+			// This module is only used for testing the depinject gogo x pulsar module registration.
+			{
+				Name:   countertypes.ModuleName,
+				Config: appconfig.WrapAny(&countertypes.Module{}),
 			},
 		},
 	})

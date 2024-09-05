@@ -17,12 +17,15 @@ This document specifies the `x/auth/tx` package of the Cosmos SDK.
 
 This package represents the Cosmos SDK implementation of the `client.TxConfig`, `client.TxBuilder`, `client.TxEncoder` and `client.TxDecoder` interfaces.
 
+It contains as well a depinject module and app module the registration of ante/post handler via `runtime` and tx validator via `runtime/v2`.
+
 ## Contents
 
 * [Transactions](#transactions)
     * [`TxConfig`](#txconfig)
     * [`TxBuilder`](#txbuilder)
     * [`TxEncoder`/ `TxDecoder`](#txencoder-txdecoder)
+* [Depinject \& App Module](#depinject--app-module)
 * [Client](#client)
     * [CLI](#cli)
     * [gRPC](#grpc)
@@ -56,6 +59,13 @@ A `client.TxBuilder` can be accessed with `TxConfig.NewTxBuilder()`.
 ### `TxEncoder`/ `TxDecoder`
 
 More information about `TxEncoder` and `TxDecoder` can be found [here](https://docs.cosmos.network/main/core/encoding#transaction-encoding).
+
+## Depinject & App Module
+
+The `x/auth/tx/config` contains a depinject module and app module.
+The depinject module is there to setup ante/post handlers on an runtime app (via baseapp options) and the tx validator on the runtime/v2 app (via app module). It as well outputs the `TxConfig` and `TxConfigOptions` for the app.
+
+The app module is purely there for registering tx validators, due to the design of tx validators (tx validator belong to modules).
 
 ## Client
 
@@ -116,7 +126,7 @@ The `x/auth/tx` module provides a convenient CLI command for decoding and encodi
 #### `encode`
 
 The `encode` command encodes a transaction created with the `--generate-only` flag or signed with the sign command.
-The transaction is seralized it to Protobuf and returned as base64.
+The transaction is serialized it to Protobuf and returned as base64.
 
 ```bash
 $ simd tx encode tx.json

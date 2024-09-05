@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/log"
-
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -105,11 +103,4 @@ func ParseLengthPrefixedBytes(key []byte, startIndex, sliceLength int) ([]byte, 
 	byteSlice := key[startIndex:neededLength]
 
 	return byteSlice, endIndex
-}
-
-// LogDeferred logs an error in a deferred function call if the returned error is non-nil.
-func LogDeferred(logger log.Logger, f func() error) {
-	if err := f(); err != nil {
-		logger.Error(err.Error())
-	}
 }

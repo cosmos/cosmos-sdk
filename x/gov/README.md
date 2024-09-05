@@ -24,7 +24,7 @@ they don't vote themselves.
 deposits if the proposal was accepted or rejected. If the proposal was vetoed, or never entered voting period (minimum deposit not reached within deposit period), the deposit is burned.
 
 This module is in use on the Cosmos Hub (a.k.a [gaia](https://github.com/cosmos/gaia)).
-Features that may be added in the future are described in [Future Improvements](#future-improvements).
+
 
 ## Contents
 
@@ -33,32 +33,32 @@ can be adapted to any Proof-Of-Stake blockchain by replacing *ATOM* with the nat
 staking token of the chain.
 
 * [Concepts](#concepts)
-  * [Proposal submission](#proposal-submission)
-  * [Deposit](#deposit)
-  * [Vote](#vote)
+    * [Proposal submission](#proposal-submission)
+    * [Deposit](#deposit)
+    * [Vote](#vote)
 * [State](#state)
-  * [Proposals](#proposals)
-  * [Parameters and base types](#parameters-and-base-types)
-  * [Deposit](#deposit-1)
-  * [ValidatorGovInfo](#validatorgovinfo)
-  * [Stores](#stores)
-  * [Proposal Processing Queue](#proposal-processing-queue)
-  * [Legacy Proposal](#legacy-proposal)
+    * [Proposals](#proposals)
+    * [Parameters and base types](#parameters-and-base-types)
+    * [Deposit](#deposit-1)
+    * [ValidatorGovInfo](#validatorgovinfo)
+    * [Stores](#stores)
+    * [Proposal Processing Queue](#proposal-processing-queue)
+    * [Legacy Proposal](#legacy-proposal)
 * [Messages](#messages)
-  * [Proposal Submission](#proposal-submission-1)
-  * [Deposit](#deposit-2)
-  * [Vote](#vote-1)
+    * [Proposal Submission](#proposal-submission-1)
+    * [Deposit](#deposit-2)
+    * [Vote](#vote-1)
 * [Events](#events)
-  * [EndBlocker](#endblocker)
-  * [Handlers](#handlers)
+    * [EndBlocker](#endblocker)
+    * [Handlers](#handlers)
 * [Parameters](#parameters)
 * [Client](#client)
-  * [CLI](#cli)
-  * [gRPC](#grpc)
-  * [REST](#rest)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
 * [Metadata](#metadata)
-  * [Proposal](#proposal-3)
-  * [Vote](#vote-5)
+    * [Proposal](#proposal-3)
+    * [Vote](#vote-5)
 * [Future Improvements](#future-improvements)
 
 ## Concepts
@@ -183,6 +183,8 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1beta1/g
 
 For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the sum of weights of all options must be equal to 1.
 
+The maximum number of weighted vote options can be limited by the developer via a config parameter, named `MaxVoteOptionsLen`, which gets passed into the gov keeper.
+
 ### Quorum
 
 Quorum is defined as the minimum percentage of voting power that needs to be
@@ -276,6 +278,12 @@ There are three parameters that define if the deposit of a proposal should be bu
 
 > Note: These parameters are modifiable via governance.
 
+#### Execution
+
+Execution is the process of executing the messages contained in a proposal. The execution phase will commence after the proposal has been accepted by the network. The messages contained in the proposal will be executed in the order they were submitted.
+
+Execution has a upper limit on how much gas can be consumed in a single block. This limit is defined by the `ProposalExecutionGas` parameter.
+
 ## State
 
 ### Constitution
@@ -290,16 +298,16 @@ There are three parameters that define if the deposit of a proposal should be bu
 Since this is more of a social feature than a technical feature, we'll now get into some items that may have been useful to have in a genesis constitution:
 
 * What limitations on governance exist, if any?
-  * is it okay for the community to slash the wallet of a whale that they no longer feel that they want around? (viz: Juno Proposal 4 and 16)
-  * can governance "socially slash" a validator who is using unapproved MEV? (viz: commonwealth.im/osmosis)
-  * In the event of an economic emergency, what should validators do?
-    * Terra crash of May, 2022, saw validators choose to run a new binary with code that had not been approved by governance, because the governance token had been inflated to nothing.
+    * is it okay for the community to slash the wallet of a whale that they no longer feel that they want around? (viz: Juno Proposal 4 and 16)
+    * can governance "socially slash" a validator who is using unapproved MEV? (viz: commonwealth.im/osmosis)
+    * In the event of an economic emergency, what should validators do?
+        * Terra crash of May, 2022, saw validators choose to run a new binary with code that had not been approved by governance, because the governance token had been inflated to nothing.
 * What is the purpose of the chain, specifically?
-  * best example of this is the Cosmos hub, where different founding groups, have different interpretations of the purpose of the network.
+    * best example of this is the Cosmos hub, where different founding groups, have different interpretations of the purpose of the network.
 
-This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expecations placed on them while operating their nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
+This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expectations placed on them while operating their nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
 
-This constitution is designed to be immutable, and placed only in genesis, though that could change over time by a pull request to the cosmos-sdk that allows for the constitution to be changed by governance.  Communities whishing to make amendments to their original constitution should use the governance mechanism and a "signaling proposal" to do exactly that.
+This constitution is designed to be immutable, and placed only in genesis, though that could change over time by a pull request to the cosmos-sdk that allows for the constitution to be changed by governance.  Communities wishing to make amendments to their original constitution should use the governance mechanism and a "signaling proposal" to do exactly that.
 
 **Ideal use scenario for a cosmos chain constitution**
 
@@ -309,7 +317,7 @@ As a chain developer, you decide that you'd like to provide clarity to your key 
 * token holders
 * developers (yourself)
 
-You use the constitution to immutably store some Markdown in genesis, so that when difficult questions come up, the constutituon can provide guidance to the community.
+You use the constitution to immutably store some Markdown in genesis, so that when difficult questions come up, the constitution can provide guidance to the community.
 
 ### Proposals
 
@@ -498,7 +506,7 @@ The `initialDeposit` must be strictly positive and conform to the accepted denom
 * Initialise `Proposal`'s attributes
 * Decrease balance of sender by `InitialDeposit`
 * If `MinDeposit` is reached:
-  * Push `proposalID` in `ProposalProcessingQueue`
+    * Push `proposalID` in `ProposalProcessingQueue`
 * Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
 
 ### Deposit
@@ -522,7 +530,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.pro
 * Add `deposit` of sender in `proposal.Deposits`
 * Increase `proposal.TotalDeposit` by sender's `deposit`
 * If `MinDeposit` is reached:
-  * Push `proposalID` in `ProposalProcessingQueueEnd`
+    * Push `proposalID` in `ProposalProcessingQueueEnd`
 * Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
 
 ### Vote
@@ -673,7 +681,7 @@ simd query gov --help
 The `deposit` command allows users to query a deposit for a given proposal from a given depositor.
 
 ```bash
-simd query gov deposit [proposal-id] [depositer-addr] [flags]
+simd query gov deposit [proposal-id] [depositor-addr] [flags]
 ```
 
 Example:
@@ -1072,7 +1080,7 @@ simd tx gov submit-legacy-proposal param-change proposal.json --from cosmos1..
 
 ##### cancel-proposal
 
-Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositers.
+Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositors.
 
 ```bash
 simd tx gov cancel-proposal [proposal-id] [flags]

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtt "github.com/cometbft/cometbft/proto/tendermint/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	cmtt "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	cmt "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"

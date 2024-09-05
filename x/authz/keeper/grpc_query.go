@@ -48,7 +48,7 @@ func (k Keeper) Grants(ctx context.Context, req *authz.QueryGrantsRequest) (*aut
 
 		authorizationAny, err := codectypes.NewAnyWithValue(authorization)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 		return &authz.QueryGrantsResponse{
 			Grants: []*authz.Grant{{
@@ -58,7 +58,7 @@ func (k Keeper) Grants(ctx context.Context, req *authz.QueryGrantsRequest) (*aut
 		}, nil
 	}
 
-	store := runtime.KVStoreAdapter(k.environment.KVStoreService.OpenKVStore(ctx))
+	store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
 	key := grantStoreKey(grantee, granter, "")
 	grantsStore := prefix.NewStore(store, key)
 
@@ -70,7 +70,7 @@ func (k Keeper) Grants(ctx context.Context, req *authz.QueryGrantsRequest) (*aut
 
 		authorizationAny, err := codectypes.NewAnyWithValue(auth1)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 		return &authz.Grant{
 			Authorization: authorizationAny,
@@ -100,7 +100,7 @@ func (k Keeper) GranterGrants(ctx context.Context, req *authz.QueryGranterGrants
 		return nil, err
 	}
 
-	store := runtime.KVStoreAdapter(k.environment.KVStoreService.OpenKVStore(ctx))
+	store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
 	authzStore := prefix.NewStore(store, grantStoreKey(nil, granter, ""))
 
 	grants, pageRes, err := query.GenericFilteredPaginate(k.cdc, authzStore, req.Pagination, func(key []byte, auth *authz.Grant) (*authz.GrantAuthorization, error) {
@@ -111,7 +111,7 @@ func (k Keeper) GranterGrants(ctx context.Context, req *authz.QueryGranterGrants
 
 		any, err := codectypes.NewAnyWithValue(auth1)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 
 		grantee := firstAddressFromGrantStoreKey(key)
@@ -151,7 +151,7 @@ func (k Keeper) GranteeGrants(ctx context.Context, req *authz.QueryGranteeGrants
 		return nil, err
 	}
 
-	store := prefix.NewStore(runtime.KVStoreAdapter(k.environment.KVStoreService.OpenKVStore(ctx)), GrantKey)
+	store := prefix.NewStore(runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx)), GrantKey)
 
 	authorizations, pageRes, err := query.GenericFilteredPaginate(k.cdc, store, req.Pagination, func(key []byte, auth *authz.Grant) (*authz.GrantAuthorization, error) {
 		auth1, err := auth.GetAuthorization()
@@ -166,7 +166,7 @@ func (k Keeper) GranteeGrants(ctx context.Context, req *authz.QueryGranteeGrants
 
 		authorizationAny, err := codectypes.NewAnyWithValue(auth1)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 
 		granterAddr, err := k.authKeeper.AddressCodec().BytesToString(granter)

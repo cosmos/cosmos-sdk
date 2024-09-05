@@ -8,7 +8,7 @@ managed:
       - buf.build/cosmos/gogo-proto
       - buf.build/cosmos/cosmos-proto
     override:
-      buf.build/tendermint/tendermint: buf.build/gen/go/tendermint/tendermint/protocolbuffers/go
+      buf.build/cometbft/cometbft: buf.build/gen/go/cometbft/cometbft/protocolbuffers/go
 plugins:
   - name: go-pulsar
     out: ../api

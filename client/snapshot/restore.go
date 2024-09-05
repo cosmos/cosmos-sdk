@@ -7,8 +7,10 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
@@ -21,7 +23,8 @@ func RestoreSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCre
 		Long:  "Restore app state from local snapshot",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := server.GetServerContextFromCmd(cmd)
+			cfg := client.GetConfigFromCmd(cmd)
+			viper := client.GetViperFromCmd(cmd)
 
 			height, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
@@ -32,13 +35,13 @@ func RestoreSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCre
 				return err
 			}
 
-			home := ctx.Config.RootDir
-			db, err := openDB(home, server.GetAppDBBackend(ctx.Viper))
+			home := cfg.RootDir
+			db, err := openDB(home, server.GetAppDBBackend(viper))
 			if err != nil {
 				return err
 			}
 			logger := log.NewLogger(cmd.OutOrStdout())
-			app := appCreator(logger, db, nil, ctx.Viper)
+			app := appCreator(logger, db, nil, viper)
 
 			sm := app.SnapshotManager()
 			return sm.RestoreLocalSnapshot(height, uint32(format))
@@ -47,7 +50,7 @@ func RestoreSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCre
 	return cmd
 }
 
-func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
+func openDB(rootDir string, backendType dbm.BackendType) (corestore.KVStoreWithBatch, error) {
 	dataDir := filepath.Join(rootDir, "data")
 	return dbm.NewDB("application", backendType, dataDir)
 }

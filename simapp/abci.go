@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +37,7 @@ func (h *VoteExtensionHandler) SetHandlers(bApp *baseapp.BaseApp) {
 }
 
 func (h *VoteExtensionHandler) ExtendVote() sdk.ExtendVoteHandler {
-	return func(_ sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+	return func(_ sdk.Context, req *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error) {
 		buf := make([]byte, 1024)
 
 		_, err := rand.Read(buf)
@@ -56,29 +56,29 @@ func (h *VoteExtensionHandler) ExtendVote() sdk.ExtendVoteHandler {
 			return nil, fmt.Errorf("failed to encode vote extension: %w", err)
 		}
 
-		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
+		return &abci.ExtendVoteResponse{VoteExtension: bz}, nil
 	}
 }
 
 func (h *VoteExtensionHandler) VerifyVoteExtension() sdk.VerifyVoteExtensionHandler {
-	return func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+	return func(ctx sdk.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
 		var ve VoteExtension
 
 		if err := json.Unmarshal(req.VoteExtension, &ve); err != nil {
-			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+			return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT}, nil
 		}
 
 		switch {
 		case req.Height != ve.Height:
-			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+			return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT}, nil
 
 		case !bytes.Equal(req.Hash, ve.Hash):
-			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+			return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT}, nil
 
 		case len(ve.Data) != 1024:
-			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+			return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_REJECT}, nil
 		}
 
-		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+		return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT}, nil
 	}
 }

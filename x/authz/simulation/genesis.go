@@ -5,6 +5,7 @@ import (
 	"time"
 
 	v1 "cosmossdk.io/api/cosmos/gov/v1"
+	"cosmossdk.io/core/address"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/authz"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -16,7 +17,7 @@ import (
 )
 
 // genGrant returns a slice of authorization grants.
-func genGrant(r *rand.Rand, accounts []simtypes.Account, genT time.Time) []authz.GrantAuthorization {
+func genGrant(r *rand.Rand, accounts []simtypes.Account, genT time.Time, cdc address.Codec) []authz.GrantAuthorization {
 	authorizations := make([]authz.GrantAuthorization, len(accounts)-1)
 	for i := 0; i < len(accounts)-1; i++ {
 		granter := accounts[i]
@@ -26,10 +27,12 @@ func genGrant(r *rand.Rand, accounts []simtypes.Account, genT time.Time) []authz
 			e := genT.AddDate(1, 0, 0)
 			expiration = &e
 		}
+		granterAddr, _ := cdc.BytesToString(granter.Address)
+		granteeAddr, _ := cdc.BytesToString(grantee.Address)
 		authorizations[i] = authz.GrantAuthorization{
-			Granter:       granter.Address.String(),
-			Grantee:       grantee.Address.String(),
-			Authorization: generateRandomGrant(r),
+			Granter:       granterAddr,
+			Grantee:       granteeAddr,
+			Authorization: generateRandomGrant(r, cdc),
 			Expiration:    expiration,
 		}
 	}
@@ -37,9 +40,9 @@ func genGrant(r *rand.Rand, accounts []simtypes.Account, genT time.Time) []authz
 	return authorizations
 }
 
-func generateRandomGrant(r *rand.Rand) *codectypes.Any {
+func generateRandomGrant(r *rand.Rand, addressCodec address.Codec) *codectypes.Any {
 	authorizations := make([]*codectypes.Any, 2)
-	sendAuthz := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000))), nil)
+	sendAuthz := banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000))), nil, addressCodec)
 	authorizations[0] = newAnyAuthorization(sendAuthz)
 	authorizations[1] = newAnyAuthorization(authz.NewGenericAuthorization(sdk.MsgTypeURL(&v1.MsgSubmitProposal{})))
 
@@ -59,7 +62,7 @@ func newAnyAuthorization(a authz.Authorization) *codectypes.Any {
 func RandomizedGenState(simState *module.SimulationState) {
 	var grants []authz.GrantAuthorization
 	simState.AppParams.GetOrGenerate("authz", &grants, simState.Rand, func(r *rand.Rand) {
-		grants = genGrant(r, simState.Accounts, simState.GenTimestamp)
+		grants = genGrant(r, simState.Accounts, simState.GenTimestamp, simState.AddressCodec)
 	})
 
 	authzGrantsGenesis := authz.NewGenesisState(grants)

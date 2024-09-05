@@ -18,27 +18,23 @@ import (
 )
 
 var (
-	md_Budget                   protoreflect.MessageDescriptor
-	fd_Budget_recipient_address protoreflect.FieldDescriptor
-	fd_Budget_total_budget      protoreflect.FieldDescriptor
-	fd_Budget_claimed_amount    protoreflect.FieldDescriptor
-	fd_Budget_start_time        protoreflect.FieldDescriptor
-	fd_Budget_next_claim_from   protoreflect.FieldDescriptor
-	fd_Budget_tranches          protoreflect.FieldDescriptor
-	fd_Budget_tranches_left     protoreflect.FieldDescriptor
-	fd_Budget_period            protoreflect.FieldDescriptor
+	md_Budget                    protoreflect.MessageDescriptor
+	fd_Budget_recipient_address  protoreflect.FieldDescriptor
+	fd_Budget_claimed_amount     protoreflect.FieldDescriptor
+	fd_Budget_last_claimed_at    protoreflect.FieldDescriptor
+	fd_Budget_tranches_left      protoreflect.FieldDescriptor
+	fd_Budget_budget_per_tranche protoreflect.FieldDescriptor
+	fd_Budget_period             protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_protocolpool_v1_types_proto_init()
 	md_Budget = File_cosmos_protocolpool_v1_types_proto.Messages().ByName("Budget")
 	fd_Budget_recipient_address = md_Budget.Fields().ByName("recipient_address")
-	fd_Budget_total_budget = md_Budget.Fields().ByName("total_budget")
 	fd_Budget_claimed_amount = md_Budget.Fields().ByName("claimed_amount")
-	fd_Budget_start_time = md_Budget.Fields().ByName("start_time")
-	fd_Budget_next_claim_from = md_Budget.Fields().ByName("next_claim_from")
-	fd_Budget_tranches = md_Budget.Fields().ByName("tranches")
+	fd_Budget_last_claimed_at = md_Budget.Fields().ByName("last_claimed_at")
 	fd_Budget_tranches_left = md_Budget.Fields().ByName("tranches_left")
+	fd_Budget_budget_per_tranche = md_Budget.Fields().ByName("budget_per_tranche")
 	fd_Budget_period = md_Budget.Fields().ByName("period")
 }
 
@@ -113,39 +109,27 @@ func (x *fastReflection_Budget) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
-	if x.TotalBudget != nil {
-		value := protoreflect.ValueOfMessage(x.TotalBudget.ProtoReflect())
-		if !f(fd_Budget_total_budget, value) {
-			return
-		}
-	}
 	if x.ClaimedAmount != nil {
 		value := protoreflect.ValueOfMessage(x.ClaimedAmount.ProtoReflect())
 		if !f(fd_Budget_claimed_amount, value) {
 			return
 		}
 	}
-	if x.StartTime != nil {
-		value := protoreflect.ValueOfMessage(x.StartTime.ProtoReflect())
-		if !f(fd_Budget_start_time, value) {
-			return
-		}
-	}
-	if x.NextClaimFrom != nil {
-		value := protoreflect.ValueOfMessage(x.NextClaimFrom.ProtoReflect())
-		if !f(fd_Budget_next_claim_from, value) {
-			return
-		}
-	}
-	if x.Tranches != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.Tranches)
-		if !f(fd_Budget_tranches, value) {
+	if x.LastClaimedAt != nil {
+		value := protoreflect.ValueOfMessage(x.LastClaimedAt.ProtoReflect())
+		if !f(fd_Budget_last_claimed_at, value) {
 			return
 		}
 	}
 	if x.TranchesLeft != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.TranchesLeft)
 		if !f(fd_Budget_tranches_left, value) {
+			return
+		}
+	}
+	if x.BudgetPerTranche != nil {
+		value := protoreflect.ValueOfMessage(x.BudgetPerTranche.ProtoReflect())
+		if !f(fd_Budget_budget_per_tranche, value) {
 			return
 		}
 	}
@@ -172,18 +156,14 @@ func (x *fastReflection_Budget) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "cosmos.protocolpool.v1.Budget.recipient_address":
 		return x.RecipientAddress != ""
-	case "cosmos.protocolpool.v1.Budget.total_budget":
-		return x.TotalBudget != nil
 	case "cosmos.protocolpool.v1.Budget.claimed_amount":
 		return x.ClaimedAmount != nil
-	case "cosmos.protocolpool.v1.Budget.start_time":
-		return x.StartTime != nil
-	case "cosmos.protocolpool.v1.Budget.next_claim_from":
-		return x.NextClaimFrom != nil
-	case "cosmos.protocolpool.v1.Budget.tranches":
-		return x.Tranches != uint64(0)
+	case "cosmos.protocolpool.v1.Budget.last_claimed_at":
+		return x.LastClaimedAt != nil
 	case "cosmos.protocolpool.v1.Budget.tranches_left":
 		return x.TranchesLeft != uint64(0)
+	case "cosmos.protocolpool.v1.Budget.budget_per_tranche":
+		return x.BudgetPerTranche != nil
 	case "cosmos.protocolpool.v1.Budget.period":
 		return x.Period != nil
 	default:
@@ -204,18 +184,14 @@ func (x *fastReflection_Budget) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "cosmos.protocolpool.v1.Budget.recipient_address":
 		x.RecipientAddress = ""
-	case "cosmos.protocolpool.v1.Budget.total_budget":
-		x.TotalBudget = nil
 	case "cosmos.protocolpool.v1.Budget.claimed_amount":
 		x.ClaimedAmount = nil
-	case "cosmos.protocolpool.v1.Budget.start_time":
-		x.StartTime = nil
-	case "cosmos.protocolpool.v1.Budget.next_claim_from":
-		x.NextClaimFrom = nil
-	case "cosmos.protocolpool.v1.Budget.tranches":
-		x.Tranches = uint64(0)
+	case "cosmos.protocolpool.v1.Budget.last_claimed_at":
+		x.LastClaimedAt = nil
 	case "cosmos.protocolpool.v1.Budget.tranches_left":
 		x.TranchesLeft = uint64(0)
+	case "cosmos.protocolpool.v1.Budget.budget_per_tranche":
+		x.BudgetPerTranche = nil
 	case "cosmos.protocolpool.v1.Budget.period":
 		x.Period = nil
 	default:
@@ -237,24 +213,18 @@ func (x *fastReflection_Budget) Get(descriptor protoreflect.FieldDescriptor) pro
 	case "cosmos.protocolpool.v1.Budget.recipient_address":
 		value := x.RecipientAddress
 		return protoreflect.ValueOfString(value)
-	case "cosmos.protocolpool.v1.Budget.total_budget":
-		value := x.TotalBudget
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "cosmos.protocolpool.v1.Budget.claimed_amount":
 		value := x.ClaimedAmount
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.protocolpool.v1.Budget.start_time":
-		value := x.StartTime
+	case "cosmos.protocolpool.v1.Budget.last_claimed_at":
+		value := x.LastClaimedAt
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.protocolpool.v1.Budget.next_claim_from":
-		value := x.NextClaimFrom
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.protocolpool.v1.Budget.tranches":
-		value := x.Tranches
-		return protoreflect.ValueOfUint64(value)
 	case "cosmos.protocolpool.v1.Budget.tranches_left":
 		value := x.TranchesLeft
 		return protoreflect.ValueOfUint64(value)
+	case "cosmos.protocolpool.v1.Budget.budget_per_tranche":
+		value := x.BudgetPerTranche
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "cosmos.protocolpool.v1.Budget.period":
 		value := x.Period
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
@@ -280,18 +250,14 @@ func (x *fastReflection_Budget) Set(fd protoreflect.FieldDescriptor, value proto
 	switch fd.FullName() {
 	case "cosmos.protocolpool.v1.Budget.recipient_address":
 		x.RecipientAddress = value.Interface().(string)
-	case "cosmos.protocolpool.v1.Budget.total_budget":
-		x.TotalBudget = value.Message().Interface().(*v1beta1.Coin)
 	case "cosmos.protocolpool.v1.Budget.claimed_amount":
 		x.ClaimedAmount = value.Message().Interface().(*v1beta1.Coin)
-	case "cosmos.protocolpool.v1.Budget.start_time":
-		x.StartTime = value.Message().Interface().(*timestamppb.Timestamp)
-	case "cosmos.protocolpool.v1.Budget.next_claim_from":
-		x.NextClaimFrom = value.Message().Interface().(*timestamppb.Timestamp)
-	case "cosmos.protocolpool.v1.Budget.tranches":
-		x.Tranches = value.Uint()
+	case "cosmos.protocolpool.v1.Budget.last_claimed_at":
+		x.LastClaimedAt = value.Message().Interface().(*timestamppb.Timestamp)
 	case "cosmos.protocolpool.v1.Budget.tranches_left":
 		x.TranchesLeft = value.Uint()
+	case "cosmos.protocolpool.v1.Budget.budget_per_tranche":
+		x.BudgetPerTranche = value.Message().Interface().(*v1beta1.Coin)
 	case "cosmos.protocolpool.v1.Budget.period":
 		x.Period = value.Message().Interface().(*durationpb.Duration)
 	default:
@@ -314,26 +280,21 @@ func (x *fastReflection_Budget) Set(fd protoreflect.FieldDescriptor, value proto
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Budget) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.protocolpool.v1.Budget.total_budget":
-		if x.TotalBudget == nil {
-			x.TotalBudget = new(v1beta1.Coin)
-		}
-		return protoreflect.ValueOfMessage(x.TotalBudget.ProtoReflect())
 	case "cosmos.protocolpool.v1.Budget.claimed_amount":
 		if x.ClaimedAmount == nil {
 			x.ClaimedAmount = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.ClaimedAmount.ProtoReflect())
-	case "cosmos.protocolpool.v1.Budget.start_time":
-		if x.StartTime == nil {
-			x.StartTime = new(timestamppb.Timestamp)
+	case "cosmos.protocolpool.v1.Budget.last_claimed_at":
+		if x.LastClaimedAt == nil {
+			x.LastClaimedAt = new(timestamppb.Timestamp)
 		}
-		return protoreflect.ValueOfMessage(x.StartTime.ProtoReflect())
-	case "cosmos.protocolpool.v1.Budget.next_claim_from":
-		if x.NextClaimFrom == nil {
-			x.NextClaimFrom = new(timestamppb.Timestamp)
+		return protoreflect.ValueOfMessage(x.LastClaimedAt.ProtoReflect())
+	case "cosmos.protocolpool.v1.Budget.budget_per_tranche":
+		if x.BudgetPerTranche == nil {
+			x.BudgetPerTranche = new(v1beta1.Coin)
 		}
-		return protoreflect.ValueOfMessage(x.NextClaimFrom.ProtoReflect())
+		return protoreflect.ValueOfMessage(x.BudgetPerTranche.ProtoReflect())
 	case "cosmos.protocolpool.v1.Budget.period":
 		if x.Period == nil {
 			x.Period = new(durationpb.Duration)
@@ -341,8 +302,6 @@ func (x *fastReflection_Budget) Mutable(fd protoreflect.FieldDescriptor) protore
 		return protoreflect.ValueOfMessage(x.Period.ProtoReflect())
 	case "cosmos.protocolpool.v1.Budget.recipient_address":
 		panic(fmt.Errorf("field recipient_address of message cosmos.protocolpool.v1.Budget is not mutable"))
-	case "cosmos.protocolpool.v1.Budget.tranches":
-		panic(fmt.Errorf("field tranches of message cosmos.protocolpool.v1.Budget is not mutable"))
 	case "cosmos.protocolpool.v1.Budget.tranches_left":
 		panic(fmt.Errorf("field tranches_left of message cosmos.protocolpool.v1.Budget is not mutable"))
 	default:
@@ -360,22 +319,17 @@ func (x *fastReflection_Budget) NewField(fd protoreflect.FieldDescriptor) protor
 	switch fd.FullName() {
 	case "cosmos.protocolpool.v1.Budget.recipient_address":
 		return protoreflect.ValueOfString("")
-	case "cosmos.protocolpool.v1.Budget.total_budget":
-		m := new(v1beta1.Coin)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.protocolpool.v1.Budget.claimed_amount":
 		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.protocolpool.v1.Budget.start_time":
+	case "cosmos.protocolpool.v1.Budget.last_claimed_at":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.protocolpool.v1.Budget.next_claim_from":
-		m := new(timestamppb.Timestamp)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.protocolpool.v1.Budget.tranches":
-		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.protocolpool.v1.Budget.tranches_left":
 		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.protocolpool.v1.Budget.budget_per_tranche":
+		m := new(v1beta1.Coin)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.protocolpool.v1.Budget.period":
 		m := new(durationpb.Duration)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
@@ -452,27 +406,20 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.TotalBudget != nil {
-			l = options.Size(x.TotalBudget)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.ClaimedAmount != nil {
 			l = options.Size(x.ClaimedAmount)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.StartTime != nil {
-			l = options.Size(x.StartTime)
+		if x.LastClaimedAt != nil {
+			l = options.Size(x.LastClaimedAt)
 			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.NextClaimFrom != nil {
-			l = options.Size(x.NextClaimFrom)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.Tranches != 0 {
-			n += 1 + runtime.Sov(uint64(x.Tranches))
 		}
 		if x.TranchesLeft != 0 {
 			n += 1 + runtime.Sov(uint64(x.TranchesLeft))
+		}
+		if x.BudgetPerTranche != nil {
+			l = options.Size(x.BudgetPerTranche)
+			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.Period != nil {
 			l = options.Size(x.Period)
@@ -519,20 +466,10 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
-			dAtA[i] = 0x42
+			dAtA[i] = 0x32
 		}
-		if x.TranchesLeft != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.TranchesLeft))
-			i--
-			dAtA[i] = 0x38
-		}
-		if x.Tranches != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Tranches))
-			i--
-			dAtA[i] = 0x30
-		}
-		if x.NextClaimFrom != nil {
-			encoded, err := options.Marshal(x.NextClaimFrom)
+		if x.BudgetPerTranche != nil {
+			encoded, err := options.Marshal(x.BudgetPerTranche)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -545,22 +482,13 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x2a
 		}
-		if x.StartTime != nil {
-			encoded, err := options.Marshal(x.StartTime)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+		if x.TranchesLeft != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.TranchesLeft))
 			i--
-			dAtA[i] = 0x22
+			dAtA[i] = 0x20
 		}
-		if x.ClaimedAmount != nil {
-			encoded, err := options.Marshal(x.ClaimedAmount)
+		if x.LastClaimedAt != nil {
+			encoded, err := options.Marshal(x.LastClaimedAt)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -573,8 +501,8 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x1a
 		}
-		if x.TotalBudget != nil {
-			encoded, err := options.Marshal(x.TotalBudget)
+		if x.ClaimedAmount != nil {
+			encoded, err := options.Marshal(x.ClaimedAmount)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -677,42 +605,6 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TotalBudget", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.TotalBudget == nil {
-					x.TotalBudget = &v1beta1.Coin{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.TotalBudget); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 3:
-				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ClaimedAmount", wireType)
 				}
 				var msglen int
@@ -747,98 +639,43 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field LastClaimedAt", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.LastClaimedAt == nil {
+					x.LastClaimedAt = &timestamppb.Timestamp{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.LastClaimedAt); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			case 4:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.StartTime == nil {
-					x.StartTime = &timestamppb.Timestamp{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.StartTime); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 5:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field NextClaimFrom", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.NextClaimFrom == nil {
-					x.NextClaimFrom = &timestamppb.Timestamp{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.NextClaimFrom); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 6:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Tranches", wireType)
-				}
-				x.Tranches = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.Tranches |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-			case 7:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TranchesLeft", wireType)
 				}
@@ -857,7 +694,43 @@ func (x *fastReflection_Budget) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-			case 8:
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BudgetPerTranche", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.BudgetPerTranche == nil {
+					x.BudgetPerTranche = &v1beta1.Coin{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.BudgetPerTranche); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 6:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Period", wireType)
 				}
@@ -1512,23 +1385,19 @@ type Budget struct {
 
 	// recipient_address is the address of the recipient who can claim the budget.
 	RecipientAddress string `protobuf:"bytes,1,opt,name=recipient_address,json=recipientAddress,proto3" json:"recipient_address,omitempty"`
-	// total_budget is the total amount allocated for the budget.
-	TotalBudget *v1beta1.Coin `protobuf:"bytes,2,opt,name=total_budget,json=totalBudget,proto3" json:"total_budget,omitempty"`
 	// claimed_amount is the total amount claimed from the total budget amount requested.
-	ClaimedAmount *v1beta1.Coin `protobuf:"bytes,3,opt,name=claimed_amount,json=claimedAmount,proto3" json:"claimed_amount,omitempty"`
-	// start_time is the time when the budget becomes claimable.
-	StartTime *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	// next_claim_from is the time when the budget was last successfully claimed or distributed.
-	// It is used to track the next starting claim time for fund distribution. If set, it cannot be less than start_time.
-	NextClaimFrom *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=next_claim_from,json=nextClaimFrom,proto3" json:"next_claim_from,omitempty"`
-	// tranches is the number of times the total budget amount is to be distributed.
-	Tranches uint64 `protobuf:"varint,6,opt,name=tranches,proto3" json:"tranches,omitempty"`
+	ClaimedAmount *v1beta1.Coin `protobuf:"bytes,2,opt,name=claimed_amount,json=claimedAmount,proto3" json:"claimed_amount,omitempty"`
+	// last_claimed_at is the time when the budget was last successfully claimed or distributed.
+	// It is used to track the next starting claim time for fund distribution.
+	LastClaimedAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=last_claimed_at,json=lastClaimedAt,proto3" json:"last_claimed_at,omitempty"`
 	// tranches_left is the number of tranches left for the amount to be distributed.
-	TranchesLeft uint64 `protobuf:"varint,7,opt,name=tranches_left,json=tranchesLeft,proto3" json:"tranches_left,omitempty"`
+	TranchesLeft uint64 `protobuf:"varint,4,opt,name=tranches_left,json=tranchesLeft,proto3" json:"tranches_left,omitempty"`
+	// budget_per_tranche is the amount allocated per tranche.
+	BudgetPerTranche *v1beta1.Coin `protobuf:"bytes,5,opt,name=budget_per_tranche,json=budgetPerTranche,proto3" json:"budget_per_tranche,omitempty"`
 	// Period is the time interval(number of seconds) at which funds distribution should be performed.
 	// For example, if a period is set to 3600, it represents an action that
 	// should occur every hour (3600 seconds).
-	Period *durationpb.Duration `protobuf:"bytes,8,opt,name=period,proto3" json:"period,omitempty"`
+	Period *durationpb.Duration `protobuf:"bytes,6,opt,name=period,proto3" json:"period,omitempty"`
 }
 
 func (x *Budget) Reset() {
@@ -1558,13 +1427,6 @@ func (x *Budget) GetRecipientAddress() string {
 	return ""
 }
 
-func (x *Budget) GetTotalBudget() *v1beta1.Coin {
-	if x != nil {
-		return x.TotalBudget
-	}
-	return nil
-}
-
 func (x *Budget) GetClaimedAmount() *v1beta1.Coin {
 	if x != nil {
 		return x.ClaimedAmount
@@ -1572,25 +1434,11 @@ func (x *Budget) GetClaimedAmount() *v1beta1.Coin {
 	return nil
 }
 
-func (x *Budget) GetStartTime() *timestamppb.Timestamp {
+func (x *Budget) GetLastClaimedAt() *timestamppb.Timestamp {
 	if x != nil {
-		return x.StartTime
+		return x.LastClaimedAt
 	}
 	return nil
-}
-
-func (x *Budget) GetNextClaimFrom() *timestamppb.Timestamp {
-	if x != nil {
-		return x.NextClaimFrom
-	}
-	return nil
-}
-
-func (x *Budget) GetTranches() uint64 {
-	if x != nil {
-		return x.Tranches
-	}
-	return 0
 }
 
 func (x *Budget) GetTranchesLeft() uint64 {
@@ -1598,6 +1446,13 @@ func (x *Budget) GetTranchesLeft() uint64 {
 		return x.TranchesLeft
 	}
 	return 0
+}
+
+func (x *Budget) GetBudgetPerTranche() *v1beta1.Coin {
+	if x != nil {
+		return x.BudgetPerTranche
+	}
+	return nil
 }
 
 func (x *Budget) GetPeriod() *durationpb.Duration {
@@ -1677,65 +1532,59 @@ var file_cosmos_protocolpool_v1_types_proto_rawDesc = []byte{
 	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74,
 	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e,
 	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f,
-	0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xd4,
+	0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x82,
 	0x03, 0x0a, 0x06, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x12, 0x45, 0x0a, 0x11, 0x72, 0x65, 0x63,
 	0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01,
 	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x10,
 	0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x12, 0x3c, 0x0a, 0x0c, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x62, 0x75, 0x64, 0x67, 0x65, 0x74,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69,
-	0x6e, 0x52, 0x0b, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x42, 0x75, 0x64, 0x67, 0x65, 0x74, 0x12, 0x40,
-	0x0a, 0x0e, 0x63, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69,
-	0x6e, 0x52, 0x0d, 0x63, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
-	0x12, 0x3f, 0x0a, 0x0a, 0x73, 0x74, 0x61, 0x72, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x04,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
-	0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x09, 0x73, 0x74, 0x61, 0x72, 0x74, 0x54, 0x69, 0x6d,
-	0x65, 0x12, 0x48, 0x0a, 0x0f, 0x6e, 0x65, 0x78, 0x74, 0x5f, 0x63, 0x6c, 0x61, 0x69, 0x6d, 0x5f,
-	0x66, 0x72, 0x6f, 0x6d, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f,
-	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d,
-	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0d, 0x6e, 0x65,
-	0x78, 0x74, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x46, 0x72, 0x6f, 0x6d, 0x12, 0x1a, 0x0a, 0x08, 0x74,
-	0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x73, 0x18, 0x06, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x74,
-	0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x73, 0x12, 0x23, 0x0a, 0x0d, 0x74, 0x72, 0x61, 0x6e, 0x63,
-	0x68, 0x65, 0x73, 0x5f, 0x6c, 0x65, 0x66, 0x74, 0x18, 0x07, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0c,
-	0x74, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x73, 0x4c, 0x65, 0x66, 0x74, 0x12, 0x37, 0x0a, 0x06,
-	0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67,
-	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44,
-	0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x04, 0x98, 0xdf, 0x1f, 0x01, 0x52, 0x06, 0x70,
-	0x65, 0x72, 0x69, 0x6f, 0x64, 0x22, 0xd5, 0x01, 0x0a, 0x0e, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e,
-	0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x12, 0x36, 0x0a, 0x09, 0x72, 0x65, 0x63, 0x69,
-	0x70, 0x69, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
-	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
-	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74,
-	0x12, 0x51, 0x0a, 0x0a, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x09, 0x42, 0x31, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e,
-	0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x52, 0x0a, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74,
-	0x61, 0x67, 0x65, 0x12, 0x38, 0x0a, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x79, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42,
-	0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x79, 0x42, 0xda, 0x01,
-	0x0a, 0x1a, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x54, 0x79,
-	0x70, 0x65, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
-	0x2f, 0x76, 0x31, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
-	0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x50, 0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x56,
-	0x31, 0xca, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f,
-	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c,
-	0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
-	0x02, 0x18, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63,
-	0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x12, 0x40, 0x0a, 0x0e, 0x63, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64, 0x5f, 0x61, 0x6d, 0x6f, 0x75,
+	0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43,
+	0x6f, 0x69, 0x6e, 0x52, 0x0d, 0x63, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75,
+	0x6e, 0x74, 0x12, 0x48, 0x0a, 0x0f, 0x6c, 0x61, 0x73, 0x74, 0x5f, 0x63, 0x6c, 0x61, 0x69, 0x6d,
+	0x65, 0x64, 0x5f, 0x61, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0d, 0x6c,
+	0x61, 0x73, 0x74, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64, 0x41, 0x74, 0x12, 0x23, 0x0a, 0x0d,
+	0x74, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x73, 0x5f, 0x6c, 0x65, 0x66, 0x74, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x0c, 0x74, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x73, 0x4c, 0x65, 0x66,
+	0x74, 0x12, 0x47, 0x0a, 0x12, 0x62, 0x75, 0x64, 0x67, 0x65, 0x74, 0x5f, 0x70, 0x65, 0x72, 0x5f,
+	0x74, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x10, 0x62, 0x75, 0x64, 0x67, 0x65, 0x74,
+	0x50, 0x65, 0x72, 0x54, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x65, 0x12, 0x37, 0x0a, 0x06, 0x70, 0x65,
+	0x72, 0x69, 0x6f, 0x64, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f,
+	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x04, 0x98, 0xdf, 0x1f, 0x01, 0x52, 0x06, 0x70, 0x65, 0x72,
+	0x69, 0x6f, 0x64, 0x22, 0xd5, 0x01, 0x0a, 0x0e, 0x43, 0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f,
+	0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x12, 0x36, 0x0a, 0x09, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69,
+	0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
+	0x69, 0x6e, 0x67, 0x52, 0x09, 0x72, 0x65, 0x63, 0x69, 0x70, 0x69, 0x65, 0x6e, 0x74, 0x12, 0x51,
+	0x0a, 0x0a, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x31, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65,
+	0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x44, 0x65, 0x63, 0x52, 0x0a, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67,
+	0x65, 0x12, 0x38, 0x0a, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x04, 0x90,
+	0xdf, 0x1f, 0x01, 0x52, 0x06, 0x65, 0x78, 0x70, 0x69, 0x72, 0x79, 0x42, 0xda, 0x01, 0x0a, 0x1a,
+	0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x54, 0x79, 0x70, 0x65,
+	0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x36, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2f, 0x76,
+	0x31, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x76, 0x31,
+	0xa2, 0x02, 0x03, 0x43, 0x50, 0x58, 0xaa, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x2e, 0x56, 0x31, 0xca,
+	0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
+	0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x22, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x70, 0x6f, 0x6f, 0x6c, 0x5c, 0x56,
+	0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x18,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c,
+	0x70, 0x6f, 0x6f, 0x6c, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1759,17 +1608,16 @@ var file_cosmos_protocolpool_v1_types_proto_goTypes = []interface{}{
 	(*durationpb.Duration)(nil),   // 4: google.protobuf.Duration
 }
 var file_cosmos_protocolpool_v1_types_proto_depIdxs = []int32{
-	2, // 0: cosmos.protocolpool.v1.Budget.total_budget:type_name -> cosmos.base.v1beta1.Coin
-	2, // 1: cosmos.protocolpool.v1.Budget.claimed_amount:type_name -> cosmos.base.v1beta1.Coin
-	3, // 2: cosmos.protocolpool.v1.Budget.start_time:type_name -> google.protobuf.Timestamp
-	3, // 3: cosmos.protocolpool.v1.Budget.next_claim_from:type_name -> google.protobuf.Timestamp
-	4, // 4: cosmos.protocolpool.v1.Budget.period:type_name -> google.protobuf.Duration
-	3, // 5: cosmos.protocolpool.v1.ContinuousFund.expiry:type_name -> google.protobuf.Timestamp
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	2, // 0: cosmos.protocolpool.v1.Budget.claimed_amount:type_name -> cosmos.base.v1beta1.Coin
+	3, // 1: cosmos.protocolpool.v1.Budget.last_claimed_at:type_name -> google.protobuf.Timestamp
+	2, // 2: cosmos.protocolpool.v1.Budget.budget_per_tranche:type_name -> cosmos.base.v1beta1.Coin
+	4, // 3: cosmos.protocolpool.v1.Budget.period:type_name -> google.protobuf.Duration
+	3, // 4: cosmos.protocolpool.v1.ContinuousFund.expiry:type_name -> google.protobuf.Timestamp
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_protocolpool_v1_types_proto_init() }

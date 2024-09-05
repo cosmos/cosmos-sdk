@@ -3,15 +3,16 @@ package v2
 import (
 	"encoding/binary"
 
-	authtypes "cosmossdk.io/x/auth/types"
+	"cosmossdk.io/core/address"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // MigrateGenState accepts exported v0.46 x/auth genesis state and migrates it to
 // v0.47 x/auth genesis state. The migration includes:
 // - If the group module is enabled, replace group policy accounts from module accounts to base accounts.
-func MigrateGenState(oldState *authtypes.GenesisState) *authtypes.GenesisState {
+func MigrateGenState(oldState *authtypes.GenesisState, addressCodec address.Codec) *authtypes.GenesisState {
 	newState := *oldState
 
 	accounts, err := authtypes.UnpackAccounts(newState.Accounts)
@@ -26,7 +27,12 @@ func MigrateGenState(oldState *authtypes.GenesisState) *authtypes.GenesisState {
 			continue
 		}
 
-		if modAcc.GetName() != modAcc.GetAddress().String() {
+		modAddr, err := addressCodec.BytesToString(modAcc.GetAddress())
+		if err != nil {
+			panic(err)
+		}
+
+		if modAcc.GetName() != modAddr {
 			continue
 		}
 

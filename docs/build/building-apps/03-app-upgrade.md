@@ -22,7 +22,7 @@ This section is currently incomplete. Track the progress of this document [here]
 
 Let's assume we are running v0.38.0 of our software in our testnet and want to upgrade to v0.40.0.
 How would this look in practice? First of all, we want to finalize the v0.40.0 release candidate
-and there install a specially named upgrade handler (eg. "testnet-v2" or even "v0.40.0"). An upgrade
+and then install a specially named upgrade handler (eg. "testnet-v2" or even "v0.40.0"). An upgrade
 handler should be defined in a new version of the software to define what migrations
 to run to migrate from the older version of the software. Naturally, this is app-specific rather
 than module specific, and  must be defined in `app.go`, even if it imports logic from various
@@ -52,9 +52,9 @@ be a matter of minutes and not even require them to be awake at that time.
 
 ## Integrating With An App
 
-::tip
-The following is not required for users using `depinject` / app v2, this is abstracted for them.
-::
+:::tip
+The following is not required for users using `depinject`, this is abstracted for them.
+:::
 
 In addition to basic module wiring, setup the upgrade Keeper for the app and then define a `PreBlocker` that calls the upgrade
 keeper's PreBlocker method:
@@ -63,7 +63,7 @@ keeper's PreBlocker method:
 func (app *myApp) PreBlocker(ctx sdk.Context, req req.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
       // For demonstration sake, the app PreBlocker only returns the upgrade module pre-blocker.
       // In a real app, the module manager should call all pre-blockers
-      // return return app.ModuleManager.PreBlock(ctx, req)
+      // return app.ModuleManager.PreBlock(ctx, req)
       return app.upgradeKeeper.PreBlocker(ctx, req)
 }
 ```

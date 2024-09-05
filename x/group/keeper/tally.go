@@ -23,7 +23,7 @@ func (k Keeper) Tally(ctx context.Context, p group.Proposal, groupID uint64) (gr
 		return p.FinalTallyResult, nil
 	}
 
-	kvStore := k.environment.KVStoreService.OpenKVStore(ctx)
+	kvStore := k.KVStoreService.OpenKVStore(ctx)
 
 	it, err := k.voteByProposalIndex.Get(kvStore, p.Id)
 	if err != nil {
@@ -47,7 +47,7 @@ func (k Keeper) Tally(ctx context.Context, p group.Proposal, groupID uint64) (gr
 		err := k.groupMemberTable.GetOne(kvStore, orm.PrimaryKey(&group.GroupMember{
 			GroupId: groupID,
 			Member:  &group.Member{Address: vote.Voter},
-		}), &member)
+		}, k.accKeeper.AddressCodec()), &member)
 
 		switch {
 		case sdkerrors.ErrNotFound.Is(err):

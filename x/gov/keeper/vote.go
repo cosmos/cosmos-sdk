@@ -35,6 +35,11 @@ func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.Ac
 		return err
 	}
 
+	err = k.assertVoteOptionsLen(options)
+	if err != nil {
+		return err
+	}
+
 	for _, option := range options {
 		switch proposal.ProposalType {
 		case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
@@ -68,7 +73,11 @@ func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.Ac
 		}
 	}
 
-	vote := v1.NewVote(proposalID, voterAddr, options, metadata)
+	voterStrAddr, err := k.authKeeper.AddressCodec().BytesToString(voterAddr)
+	if err != nil {
+		return err
+	}
+	vote := v1.NewVote(proposalID, voterStrAddr, options, metadata)
 	err = k.Votes.Set(ctx, collections.Join(proposalID, voterAddr), vote)
 	if err != nil {
 		return err
@@ -79,8 +88,8 @@ func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.Ac
 		return err
 	}
 
-	return k.environment.EventService.EventManager(ctx).EmitKV(types.EventTypeProposalVote,
-		event.NewAttribute(types.AttributeKeyVoter, voterAddr.String()),
+	return k.EventService.EventManager(ctx).EmitKV(types.EventTypeProposalVote,
+		event.NewAttribute(types.AttributeKeyVoter, voterStrAddr),
 		event.NewAttribute(types.AttributeKeyOption, options.String()),
 		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
 	)

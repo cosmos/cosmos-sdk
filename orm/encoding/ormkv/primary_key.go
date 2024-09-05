@@ -2,6 +2,7 @@ package ormkv
 
 import (
 	"bytes"
+	"errors"
 	"io"
 
 	"google.golang.org/protobuf/proto"
@@ -38,7 +39,7 @@ func (p PrimaryKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []
 	indexFields, err = p.DecodeKey(bytes.NewReader(k))
 
 	// got prefix key
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		return indexFields, nil, nil
 	} else if err != nil {
 		return nil, nil, err
@@ -54,7 +55,7 @@ func (p PrimaryKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []
 
 func (p PrimaryKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {
 	values, err := p.DecodeKey(bytes.NewReader(k))
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		return &PrimaryKeyEntry{
 			TableName: p.messageType.Descriptor().FullName(),
 			Key:       values,

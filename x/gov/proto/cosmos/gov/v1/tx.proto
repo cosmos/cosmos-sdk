@@ -35,30 +35,30 @@ service Msg {
 
   // UpdateParams defines a governance operation for updating the x/gov module
   // parameters. The authority is defined in the keeper.
-  //
-  // Since: cosmos-sdk 0.47
-  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse) {
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.47";
+  };
 
   // CancelProposal defines a method to cancel governance proposal
-  //
-  // Since: cosmos-sdk 0.50
-  rpc CancelProposal(MsgCancelProposal) returns (MsgCancelProposalResponse);
+  rpc CancelProposal(MsgCancelProposal) returns (MsgCancelProposalResponse) {
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.50";
+  };
 
   // SubmitMultipleChoiceProposal defines a method to create new multiple choice proposal.
-  //
-  // Since: x/gov 1.0.0
-  rpc SubmitMultipleChoiceProposal(MsgSubmitMultipleChoiceProposal) returns (MsgSubmitMultipleChoiceProposalResponse);
+  rpc SubmitMultipleChoiceProposal(MsgSubmitMultipleChoiceProposal) returns (MsgSubmitMultipleChoiceProposalResponse) {
+    option (cosmos_proto.method_added_in) = " x/gov 1.0.0";
+  };
 
   // UpdateMessageParams defines a method to create or update message params when used in a governance proposal.
-  //
-  // Since: x/gov 1.0.0
-  rpc UpdateMessageParams(MsgUpdateMessageParams) returns (MsgUpdateMessageParamsResponse);
+  rpc UpdateMessageParams(MsgUpdateMessageParams) returns (MsgUpdateMessageParamsResponse) {
+    option (cosmos_proto.method_added_in) = " x/gov 1.0.0";
+  };
 
   // SudoExec defines a method to execute an inner message as the governance module.
   // It permits to execute any message from a proposal, even if they weren't meant to be governance proposals.
-  //
-  // Since: x/gov 1.0.0
-  rpc SudoExec(MsgSudoExec) returns (MsgSudoExecResponse);
+  rpc SudoExec(MsgSudoExec) returns (MsgSudoExecResponse) {
+    option (cosmos_proto.method_added_in) = " x/gov 1.0.0";
+  }
 }
 
 // MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
@@ -85,28 +85,20 @@ message MsgSubmitProposal {
   string metadata = 4;
 
   // title is the title of the proposal.
-  //
-  // Since: cosmos-sdk 0.47
-  string title = 5;
+  string title = 5 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
 
   // summary is the summary of the proposal
-  //
-  // Since: cosmos-sdk 0.47
-  string summary = 6;
+  string summary = 6 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
 
   // expedited defines if the proposal is expedited or not
-  //
-  // Since: cosmos-sdk 0.50
   // Deprecated: Use the PROPOSAL_TYPE_EXPEDITED proposal type instead.
   // When this field is set and no proposal_type is set, the proposal_type
   // will be set to PROPOSAL_TYPE_EXPEDITED for backwards compatibility.
-  bool expedited = 7 [deprecated = true];
+  bool expedited = 7 [deprecated = true, (cosmos_proto.field_added_in) = "cosmos-sdk 0.50"];
 
   // proposal_type defines the type of proposal
   // When not set defaults to PROPOSAL_TYPE_STANDARD
-  //
-  // Since: x/gov v1.0.0
-  ProposalType proposal_type = 8;
+  ProposalType proposal_type = 8 [(cosmos_proto.field_added_in) = "x/gov v0.2.0"];
 }
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
@@ -191,11 +183,10 @@ message MsgDeposit {
 message MsgDepositResponse {}
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
-//
-// Since: cosmos-sdk 0.47
 message MsgUpdateParams {
-  option (cosmos.msg.v1.signer) = "authority";
-  option (amino.name)           = "cosmos-sdk/x/gov/v1/MsgUpdateParams";
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.47";
+  option (cosmos.msg.v1.signer)          = "authority";
+  option (amino.name)                    = "cosmos-sdk/x/gov/v1/MsgUpdateParams";
 
   // authority is the address that controls the module (defaults to x/gov unless overwritten).
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -208,15 +199,14 @@ message MsgUpdateParams {
 
 // MsgUpdateParamsResponse defines the response structure for executing a
 // MsgUpdateParams message.
-//
-// Since: cosmos-sdk 0.47
-message MsgUpdateParamsResponse {}
+message MsgUpdateParamsResponse {
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.47";
+}
 
 // MsgCancelProposal is the Msg/CancelProposal request type.
-//
-// Since: cosmos-sdk 0.50
 message MsgCancelProposal {
-  option (cosmos.msg.v1.signer) = "proposer";
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.50";
+  option (cosmos.msg.v1.signer)          = "proposer";
 
   // proposal_id defines the unique id of the proposal.
   uint64 proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
@@ -226,9 +216,8 @@ message MsgCancelProposal {
 
 // MsgCancelProposalResponse defines the response structure for executing a
 // MsgCancelProposal message.
-//
-// Since: cosmos-sdk 0.50
 message MsgCancelProposalResponse {
+  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.50";
   // proposal_id defines the unique id of the proposal.
   uint64 proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
   // canceled_time is the time when proposal is canceled.
@@ -238,10 +227,9 @@ message MsgCancelProposalResponse {
 }
 
 // MsgSubmitMultipleChoiceProposal defines a message to submit a multiple choice proposal.
-//
-// Since: x/gov 1.0.0
 message MsgSubmitMultipleChoiceProposal {
-  option (cosmos.msg.v1.signer) = "proposer";
+  option (cosmos_proto.message_added_in) = "x/gov 1.0.0";
+  option (cosmos.msg.v1.signer)          = "proposer";
 
   // initial_deposit is the deposit value that must be paid at proposal submission.
   repeated cosmos.base.v1beta1.Coin initial_deposit = 1 [
@@ -268,18 +256,16 @@ message MsgSubmitMultipleChoiceProposal {
 }
 
 // MsgSubmitMultipleChoiceProposalResponse defines the Msg/SubmitMultipleChoiceProposal response type.
-//
-// Since: x/gov 1.0.0
 message MsgSubmitMultipleChoiceProposalResponse {
+  option (cosmos_proto.message_added_in) = "x/gov 1.0.0";
   // proposal_id defines the unique id of the proposal.
   uint64 proposal_id = 1;
 }
 
 // MsgUpdateMessageParams defines the Msg/UpdateMessageParams response type.
-//
-// Since: x/gov 1.0.0
 message MsgUpdateMessageParams {
-  option (cosmos.msg.v1.signer) = "authority";
+  option (cosmos_proto.message_added_in) = "x/gov 1.0.0";
+  option (cosmos.msg.v1.signer)          = "authority";
 
   // authority is the address that controls the module (defaults to x/gov unless overwritten).
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -292,15 +278,14 @@ message MsgUpdateMessageParams {
 }
 
 // MsgUpdateMessageParamsResponse defines the Msg/UpdateMessageParams response type.
-//
-// Since: x/gov 1.0.0
-message MsgUpdateMessageParamsResponse {}
+message MsgUpdateMessageParamsResponse {
+  option (cosmos_proto.message_added_in) = "x/gov 1.0.0";
+}
 
 // MsgSudoExec defines a message to execute an inner message as the governance module.
-//
-// Since: x/gov 1.0.0
 message MsgSudoExec {
-  option (cosmos.msg.v1.signer) = "authority";
+  option (cosmos_proto.message_added_in) = "x/gov 1.0.0";
+  option (cosmos.msg.v1.signer)          = "authority";
 
   // authority is the address that controls the module (defaults to x/gov unless overwritten).
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -310,9 +295,8 @@ message MsgSudoExec {
 }
 
 // MsgSudoExecResponse defines the Msg/SudoExec response type.
-//
-// Since: x/gov 1.0.0
 message MsgSudoExecResponse {
+  option (cosmos_proto.message_added_in) = "x/gov 1.0.0";
   // result is the response data from the executed message.
   bytes result = 1;
 }

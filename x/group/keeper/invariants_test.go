@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/x/group/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -52,13 +53,14 @@ func (s *invariantTestSuite) SetupSuite() {
 func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 	sdkCtx, _ := s.ctx.CacheContext()
 	curCtx, cdc, key := sdkCtx, s.cdc, s.key
+	addressCodec := codectestutil.CodecOptions{}.GetAddressCodec()
 
 	// Group Table
-	groupTable, err := orm.NewAutoUInt64Table([2]byte{keeper.GroupTablePrefix}, keeper.GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
+	groupTable, err := orm.NewAutoUInt64Table([2]byte{keeper.GroupTablePrefix}, keeper.GroupTableSeqPrefix, &group.GroupInfo{}, cdc, addressCodec)
 	s.Require().NoError(err)
 
 	// Group Member Table
-	groupMemberTable, err := orm.NewPrimaryKeyTable([2]byte{keeper.GroupMemberTablePrefix}, &group.GroupMember{}, cdc)
+	groupMemberTable, err := orm.NewPrimaryKeyTable([2]byte{keeper.GroupMemberTablePrefix}, &group.GroupMember{}, cdc, addressCodec)
 	s.Require().NoError(err)
 
 	groupMemberByGroupIndex, err := orm.NewIndex(groupMemberTable, keeper.GroupMemberByGroupIndexPrefix, func(val interface{}) ([]interface{}, error) {
@@ -70,6 +72,11 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 	_, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 
+	addr1Str, err := addressCodec.BytesToString(addr1)
+	s.Require().NoError(err)
+	addr2Str, err := addressCodec.BytesToString(addr2)
+	s.Require().NoError(err)
+
 	specs := map[string]struct {
 		groupsInfo   *group.GroupInfo
 		groupMembers []*group.GroupMember
@@ -78,7 +85,7 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 		"invariant not broken": {
 			groupsInfo: &group.GroupInfo{
 				Id:          1,
-				Admin:       addr1.String(),
+				Admin:       addr1Str,
 				Version:     1,
 				TotalWeight: "3",
 			},
@@ -86,14 +93,14 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 				{
 					GroupId: 1,
 					Member: &group.Member{
-						Address: addr1.String(),
+						Address: addr1Str,
 						Weight:  "1",
 					},
 				},
 				{
 					GroupId: 1,
 					Member: &group.Member{
-						Address: addr2.String(),
+						Address: addr2Str,
 						Weight:  "2",
 					},
 				},
@@ -104,7 +111,7 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 		"group's TotalWeight must be equal to sum of its members weight ": {
 			groupsInfo: &group.GroupInfo{
 				Id:          1,
-				Admin:       addr1.String(),
+				Admin:       addr1Str,
 				Version:     1,
 				TotalWeight: "3",
 			},
@@ -112,14 +119,14 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 				{
 					GroupId: 1,
 					Member: &group.Member{
-						Address: addr1.String(),
+						Address: addr1Str,
 						Weight:  "2",
 					},
 				},
 				{
 					GroupId: 1,
 					Member: &group.Member{
-						Address: addr2.String(),
+						Address: addr2Str,
 						Weight:  "2",
 					},
 				},

@@ -4,19 +4,19 @@ import (
 	"context"
 	"testing"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/runtime/protoiface"
 
 	"cosmossdk.io/core/router"
 )
 
-type mockRouter struct {
-	router.Router
+type mockRouterService struct {
+	router.Service
 
 	panic bool
 }
 
-func (m *mockRouter) InvokeUntyped(ctx context.Context, req protoiface.MessageV1) (res protoiface.MessageV1, err error) {
+func (m *mockRouterService) Invoke(ctx context.Context, req gogoproto.Message) (res gogoproto.Message, err error) {
 	if m.panic {
 		panic("test-fail")
 	}
@@ -30,10 +30,10 @@ func TestSafeExecuteHandler(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
 
-	r, err := safeExecuteHandler(ctx, nil, &mockRouter{panic: true})
+	r, err := safeExecuteHandler(ctx, nil, &mockRouterService{panic: true})
 	require.ErrorContains(err, "test-fail")
 	require.Nil(r)
 
-	_, err = safeExecuteHandler(ctx, nil, &mockRouter{panic: false})
+	_, err = safeExecuteHandler(ctx, nil, &mockRouterService{panic: false})
 	require.Nil(err)
 }

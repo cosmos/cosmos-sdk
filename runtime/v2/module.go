@@ -17,7 +17,6 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
@@ -107,7 +106,7 @@ func init() {
 
 func ProvideAppBuilder[T transaction.Tx](
 	interfaceRegistrar registry.InterfaceRegistrar,
-	amino legacy.Amino,
+	amino registry.AminoRegistrar,
 ) (
 	*AppBuilder[T],
 	*stf.MsgRouterBuilder,
@@ -146,7 +145,7 @@ type AppInputs struct {
 	AppBuilder         *AppBuilder[transaction.Tx]
 	ModuleManager      *MM[transaction.Tx]
 	InterfaceRegistrar registry.InterfaceRegistrar
-	LegacyAmino        legacy.Amino
+	LegacyAmino        registry.AminoRegistrar
 	Logger             log.Logger
 	Viper              *viper.Viper `optional:"true"` // can be nil in client wiring
 }

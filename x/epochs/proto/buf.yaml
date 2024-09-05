@@ -1,5 +1,5 @@
 version: v1
-name: buf.build/mods/epochs
+name: buf.build/cosmos/epochs
 deps:
   - buf.build/cosmos/cosmos-sdk # pin the Cosmos SDK version
   - buf.build/cosmos/cosmos-proto

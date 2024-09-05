@@ -1,5 +1,5 @@
 version: v1
-name: buf.build/mods/params
+name: buf.build/cosmos/params # do we really need params extracted from the SDK?
 deps:
   - buf.build/cosmos/cosmos-sdk # pin the Cosmos SDK version
   - buf.build/cosmos/cosmos-proto

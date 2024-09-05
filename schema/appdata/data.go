@@ -49,9 +49,9 @@ type EventData struct {
 
 // Event represents the data for a single event.
 type Event struct {
+	BlockStage BlockStage
+
 	// TxIndex is the 1-based index of the transaction in the block to which this event is associated.
-	// The special tx indexes PreBlockTxIndex, BeginBlockTxIndex, and EndBlockTxIndex can be used
-	// to represent pre-block, begin-block, and end-block processing, respectively.
 	// If TxIndex is zero, it means that we do not know the transaction index.
 	// Otherwise, the index should start with 1.
 	TxIndex int32
@@ -76,17 +76,14 @@ type Event struct {
 	Attributes ToEventAttributes
 }
 
+type BlockStage int32
+
 const (
-	// PreBlockTxIndex is a special transaction index that represents pre-block processing.
-	PreBlockTxIndex int32 = -2
-
-	// BeginBlockTxIndex is a special transaction index that represents begin-block processing.
-	BeginBlockTxIndex int32 = -1
-
-	// EndBlockTxIndex is a special transaction index that represents end-block processing.
-	// It is set to the maximum int32 value to avoid conflicts with other transaction indexes
-	// and to be sorted last.
-	EndBlockTxIndex int32 = 0x7FFFFFFF
+	UnknownBlockStage BlockStage = iota
+	PreBlockStage
+	BeginBlockStage
+	TxProcessingStage
+	EndBlockStage
 )
 
 type EventAttribute = struct {

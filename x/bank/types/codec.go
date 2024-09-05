@@ -1,7 +1,6 @@
 package types
 
 import (
-	corelegacy "cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	coretransaction "cosmossdk.io/core/transaction"
 
@@ -11,14 +10,14 @@ import (
 
 // RegisterLegacyAminoCodec registers the necessary x/bank interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
-func RegisterLegacyAminoCodec(cdc corelegacy.Amino) {
-	legacy.RegisterAminoMsg(cdc, &MsgSend{}, "cosmos-sdk/MsgSend")
-	legacy.RegisterAminoMsg(cdc, &MsgMultiSend{}, "cosmos-sdk/MsgMultiSend")
-	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/x/bank/MsgUpdateParams")
-	legacy.RegisterAminoMsg(cdc, &MsgSetSendEnabled{}, "cosmos-sdk/MsgSetSendEnabled")
+func RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	legacy.RegisterAminoMsg(registrar, &MsgSend{}, "cosmos-sdk/MsgSend")
+	legacy.RegisterAminoMsg(registrar, &MsgMultiSend{}, "cosmos-sdk/MsgMultiSend")
+	legacy.RegisterAminoMsg(registrar, &MsgUpdateParams{}, "cosmos-sdk/x/bank/MsgUpdateParams")
+	legacy.RegisterAminoMsg(registrar, &MsgSetSendEnabled{}, "cosmos-sdk/MsgSetSendEnabled")
 
-	cdc.RegisterConcrete(&SendAuthorization{}, "cosmos-sdk/SendAuthorization")
-	cdc.RegisterConcrete(&Params{}, "cosmos-sdk/x/bank/Params")
+	registrar.RegisterConcrete(&SendAuthorization{}, "cosmos-sdk/SendAuthorization")
+	registrar.RegisterConcrete(&Params{}, "cosmos-sdk/x/bank/Params")
 }
 
 func RegisterInterfaces(registrar registry.InterfaceRegistrar) {

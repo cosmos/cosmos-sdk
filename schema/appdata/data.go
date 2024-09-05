@@ -49,18 +49,21 @@ type EventData struct {
 
 // Event represents the data for a single event.
 type Event struct {
-	// TxIndex is the index of the transaction in the block to which this event is associated.
-	// It should be set to a negative number if the event is not associated with a transaction.
-	// Canonically -1 should be used to represent begin block processing and -2 should be used to
-	// represent end block processing.
+	// TxIndex is the 1-based index of the transaction in the block to which this event is associated.
+	// The special tx indexes PreBlockTxIndex, BeginBlockTxIndex, and EndBlockTxIndex can be used
+	// to represent pre-block, begin-block, and end-block processing, respectively.
+	// If TxIndex is zero, it means that we do not know the transaction index.
+	// Otherwise, the index should start with 1.
 	TxIndex int32
 
-	// MsgIndex is the index of the message in the transaction to which this event is associated.
-	// If TxIndex is negative, this index could correspond to the index of the message in
-	// begin or end block processing if such indexes exist, or it can be set to zero.
+	// MsgIndex is the 1-based index of the message in the transaction to which this event is associated.
+	// If MsgIndex is zero, it means that we do not know the message index.
+	// Otherwise, the index should start with 1.
 	MsgIndex int32
 
-	// EventIndex is the index of the event in the message to which this event is associated.
+	// EventIndex is the 1-based index of the event in the message to which this event is associated.
+	// If EventIndex is zero, it means that we do not know the event index.
+	// Otherwise, the index should start with 1.
 	EventIndex int32
 
 	// Type is the type of the event.
@@ -72,6 +75,19 @@ type Event struct {
 	// Attributes lazily returns the key-value attribute representation of the event.
 	Attributes ToEventAttributes
 }
+
+const (
+	// PreBlockTxIndex is a special transaction index that represents pre-block processing.
+	PreBlockTxIndex int32 = -2
+
+	// BeginBlockTxIndex is a special transaction index that represents begin-block processing.
+	BeginBlockTxIndex int32 = -1
+
+	// EndBlockTxIndex is a special transaction index that represents end-block processing.
+	// It is set to the maximum int32 value to avoid conflicts with other transaction indexes
+	// and to be sorted last.
+	EndBlockTxIndex int32 = 0x7FFFFFFF
+)
 
 type EventAttribute = struct {
 	Key, Value string

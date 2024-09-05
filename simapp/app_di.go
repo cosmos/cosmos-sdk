@@ -12,12 +12,7 @@ import (
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-<<<<<<< HEAD
-	"cosmossdk.io/core/legacy"
-=======
 	"cosmossdk.io/core/registry"
-	corestore "cosmossdk.io/core/store"
->>>>>>> a57b25418 (refactor(core): move amino registrar and drop legacy package (#21531))
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"

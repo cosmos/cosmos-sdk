@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	txdecode "cosmossdk.io/x/tx/decode"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/collections"
@@ -78,6 +79,7 @@ func NewKeeper(
 type Keeper struct {
 	appmodule.Environment
 
+	txDecoder        *txdecode.Decoder
 	addressCodec     address.Codec
 	codec            codec.Codec
 	makeSendCoinsMsg coinsTransferMsgFunc
@@ -339,7 +341,6 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 
 // sendAnyMessages it a helper function that executes untyped codectypes.Any messages
 // The messages must all belong to a module.
-// nolint: unused // TODO: remove nolint when we bring back bundler payments
 func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages []*implementation.Any) ([]*implementation.Any, error) {
 	anyResponses := make([]*implementation.Any, len(anyMessages))
 	for i := range anyMessages {
@@ -358,6 +359,37 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 		anyResponses[i] = anyResp
 	}
 	return anyResponses, nil
+}
+
+func (k Keeper) sendManyMessagesReturnAnys(ctx context.Context, sender []byte, msgs []transaction.Msg) ([]*implementation.Any, error) {
+	resp, err := k.sendManyMessages(ctx, sender, msgs)
+	if err != nil {
+		return nil, err
+	}
+	anys := make([]*implementation.Any, len(resp))
+	for i := range resp {
+		anypb, err := implementation.PackAny(resp[i])
+		if err != nil {
+			return nil, err
+		}
+		anys[i] = anypb
+	}
+	return anys, nil
+}
+
+// sendManyMessages is a helper function that sends many untyped messages on behalf of the sender
+// then returns the respective results. Since the function calls into SendModuleMessage
+// it is guaranteed to disallow impersonation attacks from the sender.
+func (k Keeper) sendManyMessages(ctx context.Context, sender []byte, msgs []transaction.Msg) ([]transaction.Msg, error) {
+	resps := make([]transaction.Msg, len(msgs))
+	for i, msg := range msgs {
+		resp, err := k.SendModuleMessage(ctx, sender, msg)
+		if err != nil {
+			return nil, fmt.Errorf("failed to execute message %d: %s", i, err.Error())
+		}
+		resps[i] = resp
+	}
+	return resps, nil
 }
 
 // SendModuleMessage can be used to send a message towards a module.

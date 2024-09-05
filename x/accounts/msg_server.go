@@ -85,5 +85,14 @@ func (m msgServer) Execute(ctx context.Context, execute *v1.MsgExecute) (*v1.Msg
 }
 
 func (m msgServer) ExecuteBundle(ctx context.Context, req *v1.MsgExecuteBundle) (*v1.MsgExecuteBundleResponse, error) {
-	panic("impl")
+	_, err := m.k.addressCodec.StringToBytes(req.Bundler)
+	if err != nil {
+		return nil, err
+	}
+	responses := make([]*v1.BundledTxResponse, len(req.Txs))
+	for i, bundledTx := range req.Txs {
+		bundleRes := m.k.ExecuteBundledTx(ctx, req.Bundler, bundledTx)
+		responses[i] = bundleRes
+	}
+	return &v1.MsgExecuteBundleResponse{Responses: responses}, nil
 }

@@ -77,7 +77,7 @@ message MsgExecuteBundle {
   // to execute one or multiple UserOperations on behalf of others.
   string bundler = 1;
   // txs defines the txs to execute on behalf of other users.
-  repeated cosmos.tx.v1beta1.TxRaw txs = 2;
+  repeated bytes txs = 2;
 }
 
 // BundledTxResponse defines the response of a bundled tx.

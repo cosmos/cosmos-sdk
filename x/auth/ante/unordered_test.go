@@ -141,7 +141,7 @@ func TestUnorderedTxDecorator_UnorderedTx_ValidDeliverTx(t *testing.T) {
 	require.True(t, txm.Contains(bz))
 }
 
-func genUnorderedTx(t testing.TB, unordered bool, timestamp time.Time) (sdk.Tx, []byte) {
+func genUnorderedTx(t *testing.T, unordered bool, timestamp time.Time) (sdk.Tx, []byte) {
 	t.Helper()
 
 	s := SetupTestSuite(t, true)

@@ -60,6 +60,8 @@ func (s *KeeperTestSuite) SetupTest() {
 		s.encCfg.TxConfig.TxDecoder(),
 	)
 	s.baseApp.SetParamStore(&paramStore{params: cmttypes.DefaultConsensusParams().ToProto()})
+	s.baseApp.SetVersionModifier(newMockedVersionModifier(0))
+
 	appVersion, err := s.baseApp.AppVersion(context.Background())
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(0), appVersion)

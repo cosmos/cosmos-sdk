@@ -87,6 +87,9 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 
 	if config.Commit {
-		simtestutil.PrintStats(db.(*dbm.GoLevelDB))
+		db, ok := testInstance.DB.(dbm.DB)
+		if ok {
+			simtestutil.PrintStats(db)
+		}
 	}
 }

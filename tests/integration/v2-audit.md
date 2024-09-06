@@ -2,12 +2,11 @@
 
 ## audit usages of [NewIntegrationApp](../../testutil/integration/router.go#L46)
 
-All modules:
-- create and register query and message servers. 
-- call `App.QueryHelper` in setup, and may call in test.
-- make use of `sdk.Context`. a `context.Context` could be substituted except 
-where otherwise noted.
 
+* x/*
+    * create and register query and message servers 
+    * call `App.QueryHelper` in setup, and may call in test
+    * make use of `sdk.Context`. a `context.Context` could be substituted except where otherwise noted
 * [x/auth](./auth/keeper/msg_server_test.go#L122) 
     * calls `App.RunMsg` in test
     * calls `sdk.Context` `GasMeter()` through [testdata.DeterministicIterations](../../testutil/testdata/grpc_query.go#L73)
@@ -28,3 +27,12 @@ where otherwise noted.
     * mutates `sdk.Context` with `WithBlockHeight`, `WithHeaderInfo`
 * x/staking
     * calls `sdk.Context` `GasMeter()` through [testdata.DeterministicIterations](../../testutil/testdata/grpc_query.go#L73)
+
+## poc notes
+
+testutil/integration can (and should) be moved to tests/integration.
+
+## simulations
+
+In addition to `NewIntegrationApp` many modules also make use of [testutil/sims.SetupWithConfiguration](../../testutil/sims/app_helpers.go#L145) to create a `runtime.App` for simulation testing. For example 
+[createTestSuite in bank](bank/app_test.go#L81)

@@ -604,15 +604,16 @@ func registerServices[T transaction.Tx](s hasServicesV1, app *App[T], registry *
 		err:               nil,
 	}
 
-	err := s.RegisterServices(c)
-	if err != nil {
+	if err := s.RegisterServices(c); err != nil {
 		return fmt.Errorf("unable to register services: %w", err)
 	}
+
 	// merge maps
 	for path, decoder := range c.grpcQueryDecoders {
 		app.GRPCMethodsToMessageMap[path] = decoder
 	}
-	return nil
+
+	return c.err
 }
 
 var _ grpc.ServiceRegistrar = (*configurator)(nil)
@@ -706,7 +707,7 @@ func registerMethod(
 		return "", err
 	}
 
-	return string(requestName), stfRouter.RegisterHandler(string(requestName), func(
+	return string(requestName), stfRouter.RegisterHandler(func(
 		ctx context.Context,
 		msg transaction.Msg,
 	) (resp transaction.Msg, err error) {

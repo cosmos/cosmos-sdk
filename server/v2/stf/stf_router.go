@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -32,7 +33,12 @@ type MsgRouterBuilder struct {
 	globalPostHandlers []appmodulev2.PostMsgHandler
 }
 
-func (b *MsgRouterBuilder) RegisterHandler(msgType string, handler appmodulev2.Handler) error {
+func (b *MsgRouterBuilder) RegisterHandler(handler appmodulev2.Handler) error {
+	msgType, err := msgTypeURLFromHandler(handler)
+	if err != nil {
+		return err
+	}
+
 	// panic on override
 	if _, ok := b.handlers[msgType]; ok {
 		return fmt.Errorf("handler already registered: %s", msgType)
@@ -41,20 +47,34 @@ func (b *MsgRouterBuilder) RegisterHandler(msgType string, handler appmodulev2.H
 	return nil
 }
 
-func (b *MsgRouterBuilder) RegisterGlobalPreHandler(handler appmodulev2.PreMsgHandler) {
+func (b *MsgRouterBuilder) RegisterGlobalPreMsgHandler(handler appmodulev2.PreMsgHandler) error {
 	b.globalPreHandlers = append(b.globalPreHandlers, handler)
+	return nil
 }
 
-func (b *MsgRouterBuilder) RegisterPreHandler(msgType string, handler appmodulev2.PreMsgHandler) {
+func (b *MsgRouterBuilder) RegisterPreMsgHandler(handler appmodulev2.PreMsgHandler) error {
+	msgType, err := msgTypeURLFromHandler(handler)
+	if err != nil {
+		return err
+	}
+
 	b.preHandlers[msgType] = append(b.preHandlers[msgType], handler)
+	return nil
 }
 
-func (b *MsgRouterBuilder) RegisterPostHandler(msgType string, handler appmodulev2.PostMsgHandler) {
+func (b *MsgRouterBuilder) RegisterPostMsgHandler(handler appmodulev2.PostMsgHandler) error {
+	msgType, err := msgTypeURLFromHandler(handler)
+	if err != nil {
+		return err
+	}
+
 	b.postHandlers[msgType] = append(b.postHandlers[msgType], handler)
+	return nil
 }
 
-func (b *MsgRouterBuilder) RegisterGlobalPostHandler(handler appmodulev2.PostMsgHandler) {
+func (b *MsgRouterBuilder) RegisterGlobalPostMsgHandler(handler appmodulev2.PostMsgHandler) error {
 	b.globalPostHandlers = append(b.globalPostHandlers, handler)
+	return nil
 }
 
 func (b *MsgRouterBuilder) HandlerExists(msgType string) bool {
@@ -133,6 +153,30 @@ func buildHandler(
 		err = globalPostHandler(ctx, msg, msgResp)
 		return msgResp, err
 	}
+}
+
+func msgTypeURLFromHandler(handler any) (string, error) {
+	handlerType := reflect.TypeOf(handler)
+	if handlerType.Kind() != reflect.Func {
+		return "", fmt.Errorf("handler must be a function")
+	}
+	if handlerType.NumIn() != 2 && handlerType.NumIn() != 3 {
+		return "", fmt.Errorf("handler must have 2-3 input parameters")
+	}
+
+	// Get the type of the second parameter (transaction.Msg)
+	msgType := handlerType.In(1)
+
+	if !msgType.Implements(reflect.TypeOf((*transaction.Msg)(nil)).Elem()) {
+		return "", fmt.Errorf("second parameter must implement transaction.Msg")
+	}
+
+	msgName := msgTypeURL(*reflect.New(msgType).Interface().(*gogoproto.Message))
+	if msgName == "" {
+		return "", fmt.Errorf("could not get message name")
+	}
+
+	return msgName, nil
 }
 
 // msgTypeURL returns the TypeURL of a proto message.

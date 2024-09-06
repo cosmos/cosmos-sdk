@@ -21,10 +21,10 @@ type (
 type PreMsgRouter interface {
 	// RegisterPreHandler will register a specific message handler hooking into the message with
 	// the provided name.
-	RegisterPreHandler(handler PreMsgHandler)
+	RegisterPreMsgHandler(handler PreMsgHandler) error
 	// RegisterGlobalPreHandler will register a global message handler hooking into any message
 	// being executed.
-	RegisterGlobalPreHandler(handler PreMsgHandler)
+	RegisterGlobalPreMsgHandler(handler PreMsgHandler) error
 }
 
 // HasPreMsgHandlers is an interface that modules must implement if they want to register PreMsgHandlers.
@@ -57,54 +57,16 @@ func RegisterMsgPreHandler[Req transaction.Msg](
 		}
 		return handler(ctx, typed)
 	}
-	router.RegisterPreHandler(untypedHandler)
-}
-
-// MsgRouter is a router that allows you to register Handlers for specific message types.
-type MsgRouter interface {
-	RegisterMsgHandler(handler Handler)
-}
-
-// HasMsgHandlers is an interface that modules must implement if they want to register Handlers.
-type HasMsgHandlers interface {
-	RegisterMsgHandlers(router MsgRouter)
-}
-
-// RegisterMsgHandler is a helper function that modules can use to not lose type safety when registering handlers to the MsgRouter.
-// Example usage:
-// ```go
-//
-//	func (h Handlers) Mint(ctx context.Context, req *types.MsgMintRequest) (*types.MsgMintResponse, error) {
-//	      ... query logic ...
-//	}
-//
-//	func (m Module) RegisterMsgHandlers(router appmodule.MsgRouter) {
-//		handlers := keeper.NewHandlers(m.keeper)
-//	    appmodule.RegisterMsgHandler(router, handlers.MsgMint)
-//	}
-//
-// ```
-func RegisterMsgHandler[R MsgRouter, Req, Resp transaction.Msg](
-	router R,
-	handler func(ctx context.Context, msg Req) (msgResp Resp, err error),
-) {
-	untypedHandler := func(ctx context.Context, m transaction.Msg) (transaction.Msg, error) {
-		typed, ok := m.(Req)
-		if !ok {
-			return nil, fmt.Errorf("unexpected type %T, wanted: %T", m, *new(Req))
-		}
-		return handler(ctx, typed)
-	}
-	router.RegisterMsgHandler(untypedHandler)
+	router.RegisterPreMsgHandler(untypedHandler)
 }
 
 // PostMsgRouter is a router that allows you to register PostMsgHandlers for specific message types.
 type PostMsgRouter interface {
 	// RegisterPostHandler will register a specific message handler hooking after the execution of message with
 	// the provided name.
-	RegisterPostMsgHandler(handler PostMsgHandler)
+	RegisterPostMsgHandler(handler PostMsgHandler) error
 	// RegisterGlobalPostHandler will register a global message handler hooking after the execution of any message.
-	RegisterGlobalPostMsgHandler(handler PostMsgHandler)
+	RegisterGlobalPostMsgHandler(handler PostMsgHandler) error
 }
 
 // HasPostMsgHandlers is an interface that modules must implement if they want to register PostMsgHandlers.
@@ -144,22 +106,39 @@ func RegisterPostMsgHandler[Req, Resp transaction.Msg](
 	router.RegisterPostMsgHandler(untypedHandler)
 }
 
-// QueryRouter is a router that allows you to register QueryHandlers for specific query types.
-type QueryRouter interface {
-	RegisterQueryHandler(handler Handler)
+// MsgRouter is a router that allows you to register Handlers for specific message types.
+type MsgRouter interface {
+	RegisterHandler(handler Handler) error
 }
+
+// HasMsgHandlers is an interface that modules must implement if they want to register Handlers.
+type HasMsgHandlers interface {
+	RegisterMsgHandlers(router MsgRouter)
+}
+
+// QueryRouter is a router that allows you to register QueryHandlers for specific query types.
+type QueryRouter = MsgRouter
 
 // HasQueryHandlers is an interface that modules must implement if they want to register QueryHandlers.
 type HasQueryHandlers interface {
 	RegisterQueryHandlers(router QueryRouter)
 }
 
-// RegisterQueryHandler is a helper function that modules can use to not lose type safety when registering handlers to the Query.Router
+// RegisterMsgHandler is a helper function that modules can use to not lose type safety when registering handlers to the MsgRouter and Query Router.
 // Example usage:
 // ```go
 //
-//	func (h Handkers) QueryBalance(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
+//	func (h Handlers) Mint(ctx context.Context, req *types.MsgMint) (*types.MsgMintResponse, error) {
 //	      ... query logic ...
+//	}
+//
+//	func (h Handlers) QueryBalance(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
+//	      ... query logic ...
+//	}
+//
+//	func (m Module) RegisterMsgHandlers(router appmodule.MsgRouter) {
+//		handlers := keeper.NewHandlers(m.keeper)
+//	    appmodule.RegisterHandler(router, handlers.MsgMint)
 //	}
 //
 //	func (m Module) RegisterQueryHandlers(router appmodule.QueryRouter) {
@@ -168,7 +147,7 @@ type HasQueryHandlers interface {
 //	}
 //
 // ```
-func RegisterQueryHandler[R QueryRouter, Req, Resp transaction.Msg](
+func RegisterHandler[R MsgRouter, Req, Resp transaction.Msg](
 	router R,
 	handler func(ctx context.Context, msg Req) (msgResp Resp, err error),
 ) {
@@ -179,5 +158,5 @@ func RegisterQueryHandler[R QueryRouter, Req, Resp transaction.Msg](
 		}
 		return handler(ctx, typed)
 	}
-	router.RegisterQueryHandler(untypedHandler)
+	router.RegisterHandler(untypedHandler)
 }

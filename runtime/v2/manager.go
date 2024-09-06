@@ -711,7 +711,7 @@ func registerMethod(
 		return "", err
 	}
 
-	return string(requestName), stfRouter.RegisterHandler(func(
+	return string(requestName), stfRouter.RegisterHandler(string(requestName), func(
 		ctx context.Context,
 		msg transaction.Msg,
 	) (resp transaction.Msg, err error) {

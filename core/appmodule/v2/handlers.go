@@ -21,7 +21,7 @@ type (
 type PreMsgRouter interface {
 	// RegisterPreHandler will register a specific message handler hooking into the message with
 	// the provided name.
-	RegisterPreMsgHandler(handler PreMsgHandler) error
+	RegisterPreMsgHandler(msgName string, handler PreMsgHandler) error
 	// RegisterGlobalPreHandler will register a global message handler hooking into any message
 	// being executed.
 	RegisterGlobalPreMsgHandler(handler PreMsgHandler) error
@@ -42,12 +42,13 @@ type HasPreMsgHandlers interface {
 //
 //	func (m Module) RegisterPreMsgHandlers(router appmodule.PreMsgRouter) {
 //		handlers := keeper.NewHandlers(m.keeper)
-//	    appmodule.RegisterMsgPreHandler(router, handlers.BeforeSend)
+//	    appmodule.RegisterMsgPreHandler(router, gogoproto.MessageName(types.MsgSend{}), handlers.BeforeSend)
 //	}
 //
 // ```
 func RegisterMsgPreHandler[Req transaction.Msg](
 	router PreMsgRouter,
+	msgName string,
 	handler func(ctx context.Context, msg Req) error,
 ) {
 	untypedHandler := func(ctx context.Context, m transaction.Msg) error {
@@ -57,14 +58,14 @@ func RegisterMsgPreHandler[Req transaction.Msg](
 		}
 		return handler(ctx, typed)
 	}
-	router.RegisterPreMsgHandler(untypedHandler)
+	router.RegisterPreMsgHandler(msgName, untypedHandler)
 }
 
 // PostMsgRouter is a router that allows you to register PostMsgHandlers for specific message types.
 type PostMsgRouter interface {
 	// RegisterPostHandler will register a specific message handler hooking after the execution of message with
 	// the provided name.
-	RegisterPostMsgHandler(handler PostMsgHandler) error
+	RegisterPostMsgHandler(msgName string, handler PostMsgHandler) error
 	// RegisterGlobalPostHandler will register a global message handler hooking after the execution of any message.
 	RegisterGlobalPostMsgHandler(handler PostMsgHandler) error
 }
@@ -84,12 +85,13 @@ type HasPostMsgHandlers interface {
 //
 //	func (m Module) RegisterPostMsgHandlers(router appmodule.PostMsgRouter) {
 //		handlers := keeper.NewHandlers(m.keeper)
-//	    appmodule.RegisterPostMsgHandler(router, handlers.AfterSend)
+//	    appmodule.RegisterPostMsgHandler(router, gogoproto.MessageName(types.MsgSend{}), handlers.AfterSend)
 //	}
 //
 // ```
 func RegisterPostMsgHandler[Req, Resp transaction.Msg](
 	router PostMsgRouter,
+	msgName string,
 	handler func(ctx context.Context, msg Req, msgResp Resp) error,
 ) {
 	untypedHandler := func(ctx context.Context, m, mResp transaction.Msg) error {
@@ -103,12 +105,12 @@ func RegisterPostMsgHandler[Req, Resp transaction.Msg](
 		}
 		return handler(ctx, typed, typedResp)
 	}
-	router.RegisterPostMsgHandler(untypedHandler)
+	router.RegisterPostMsgHandler(msgName, untypedHandler)
 }
 
 // MsgRouter is a router that allows you to register Handlers for specific message types.
 type MsgRouter interface {
-	RegisterHandler(handler Handler) error
+	RegisterHandler(msgName string, handler Handler) error
 }
 
 // HasMsgHandlers is an interface that modules must implement if they want to register Handlers.
@@ -138,17 +140,18 @@ type HasQueryHandlers interface {
 //
 //	func (m Module) RegisterMsgHandlers(router appmodule.MsgRouter) {
 //		handlers := keeper.NewHandlers(m.keeper)
-//	    appmodule.RegisterHandler(router, handlers.MsgMint)
+//	    appmodule.RegisterHandler(router, gogoproto.MessageName(types.MsgMint{}), handlers.MsgMint)
 //	}
 //
 //	func (m Module) RegisterQueryHandlers(router appmodule.QueryRouter) {
 //		handlers := keeper.NewHandlers(m.keeper)
-//	    appmodule.RegisterHandler(router, handlers.QueryBalance)
+//	    appmodule.RegisterHandler(router, gogoproto.MessageName(types.QueryBalanceRequest{}), handlers.QueryBalance)
 //	}
 //
 // ```
 func RegisterHandler[R MsgRouter, Req, Resp transaction.Msg](
 	router R,
+	msgName string,
 	handler func(ctx context.Context, msg Req) (msgResp Resp, err error),
 ) {
 	untypedHandler := func(ctx context.Context, m transaction.Msg) (transaction.Msg, error) {
@@ -158,5 +161,5 @@ func RegisterHandler[R MsgRouter, Req, Resp transaction.Msg](
 		}
 		return handler(ctx, typed)
 	}
-	router.RegisterHandler(untypedHandler)
+	router.RegisterHandler(msgName, untypedHandler)
 }

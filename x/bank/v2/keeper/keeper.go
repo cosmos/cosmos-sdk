@@ -12,9 +12,10 @@ import (
 // Keeper defines the bank/v2 module keeper.
 // All fields are not exported, as they should only be accessed through the module's.
 type Keeper struct {
+	appmodulev2.Environment
+
 	authority    []byte
 	addressCodec address.Codec
-	environment  appmodulev2.Environment
 	schema       collections.Schema
 	params       collections.Item[types.Params]
 }
@@ -23,9 +24,9 @@ func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Env
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	k := &Keeper{
+		Environment:  env,
 		authority:    authority,
 		addressCodec: addressCodec, // TODO(@julienrbrt): Should we add address codec to the environment?
-		environment:  env,
 		params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 
@@ -33,7 +34,6 @@ func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Env
 	if err != nil {
 		panic(err)
 	}
-
 	k.schema = schema
 
 	return k

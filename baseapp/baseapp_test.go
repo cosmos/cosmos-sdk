@@ -23,7 +23,6 @@ import (
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
-	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -33,6 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 var (
@@ -81,6 +81,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	app.SetParamStore(paramStore{db: dbm.NewMemDB()})
 	app.SetTxDecoder(txConfig.TxDecoder())
 	app.SetTxEncoder(txConfig.TxEncoder())
+	app.SetVersionModifier(newMockedVersionModifier(0))
 
 	// mount stores and seal
 	require.Nil(t, app.LoadLatestVersion())

@@ -8,7 +8,6 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -41,7 +40,7 @@ type App[T transaction.Tx] struct {
 	// modules configuration
 	storeKeys          []string
 	interfaceRegistrar registry.InterfaceRegistrar
-	amino              legacy.Amino
+	amino              registry.AminoRegistrar
 	moduleManager      *MM[T]
 
 	// GRPCMethodsToMessageMap maps gRPC method name to a function that decodes the request

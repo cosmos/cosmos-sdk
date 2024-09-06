@@ -10,11 +10,9 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth/ante/unorderedtx"
-	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -28,6 +26,8 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 // App is a wrapper around BaseApp and ModuleManager that can be used in hybrid
@@ -50,7 +50,7 @@ type App struct {
 	storeKeys         []storetypes.StoreKey
 	interfaceRegistry codectypes.InterfaceRegistry
 	cdc               codec.Codec
-	amino             legacy.Amino
+	amino             registry.AminoRegistrar
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
 	grpcQueryRouter   *baseapp.GRPCQueryRouter

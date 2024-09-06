@@ -7,6 +7,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	anypb "google.golang.org/protobuf/types/known/anypb"
 	io "io"
 	reflect "reflect"
 	sync "sync"
@@ -88,8 +89,8 @@ func (x *fastReflection_MsgInit) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_MsgInit) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.PubKey) != 0 {
-		value := protoreflect.ValueOfBytes(x.PubKey)
+	if x.PubKey != nil {
+		value := protoreflect.ValueOfMessage(x.PubKey.ProtoReflect())
 		if !f(fd_MsgInit_pub_key, value) {
 			return
 		}
@@ -110,7 +111,7 @@ func (x *fastReflection_MsgInit) Range(f func(protoreflect.FieldDescriptor, prot
 func (x *fastReflection_MsgInit) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "cosmos.accounts.defaults.base.v1.MsgInit.pub_key":
-		return len(x.PubKey) != 0
+		return x.PubKey != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.MsgInit"))
@@ -147,7 +148,7 @@ func (x *fastReflection_MsgInit) Get(descriptor protoreflect.FieldDescriptor) pr
 	switch descriptor.FullName() {
 	case "cosmos.accounts.defaults.base.v1.MsgInit.pub_key":
 		value := x.PubKey
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.MsgInit"))
@@ -169,7 +170,7 @@ func (x *fastReflection_MsgInit) Get(descriptor protoreflect.FieldDescriptor) pr
 func (x *fastReflection_MsgInit) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.accounts.defaults.base.v1.MsgInit.pub_key":
-		x.PubKey = value.Bytes()
+		x.PubKey = value.Message().Interface().(*anypb.Any)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.MsgInit"))
@@ -191,7 +192,10 @@ func (x *fastReflection_MsgInit) Set(fd protoreflect.FieldDescriptor, value prot
 func (x *fastReflection_MsgInit) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.accounts.defaults.base.v1.MsgInit.pub_key":
-		panic(fmt.Errorf("field pub_key of message cosmos.accounts.defaults.base.v1.MsgInit is not mutable"))
+		if x.PubKey == nil {
+			x.PubKey = new(anypb.Any)
+		}
+		return protoreflect.ValueOfMessage(x.PubKey.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.MsgInit"))
@@ -206,7 +210,8 @@ func (x *fastReflection_MsgInit) Mutable(fd protoreflect.FieldDescriptor) protor
 func (x *fastReflection_MsgInit) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.accounts.defaults.base.v1.MsgInit.pub_key":
-		return protoreflect.ValueOfBytes(nil)
+		m := new(anypb.Any)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.MsgInit"))
@@ -276,8 +281,8 @@ func (x *fastReflection_MsgInit) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.PubKey)
-		if l > 0 {
+		if x.PubKey != nil {
+			l = options.Size(x.PubKey)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -309,10 +314,17 @@ func (x *fastReflection_MsgInit) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.PubKey) > 0 {
-			i -= len(x.PubKey)
-			copy(dAtA[i:], x.PubKey)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.PubKey)))
+		if x.PubKey != nil {
+			encoded, err := options.Marshal(x.PubKey)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -369,7 +381,7 @@ func (x *fastReflection_MsgInit) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PubKey", wireType)
 				}
-				var byteLen int
+				var msglen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -379,24 +391,26 @@ func (x *fastReflection_MsgInit) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					msglen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				if msglen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + msglen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.PubKey = append(x.PubKey[:0], dAtA[iNdEx:postIndex]...)
 				if x.PubKey == nil {
-					x.PubKey = []byte{}
+					x.PubKey = &anypb.Any{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PubKey); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
 			default:
@@ -866,8 +880,8 @@ func (x *fastReflection_MsgSwapPubKey) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_MsgSwapPubKey) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.NewPubKey) != 0 {
-		value := protoreflect.ValueOfBytes(x.NewPubKey)
+	if x.NewPubKey != nil {
+		value := protoreflect.ValueOfMessage(x.NewPubKey.ProtoReflect())
 		if !f(fd_MsgSwapPubKey_new_pub_key, value) {
 			return
 		}
@@ -888,7 +902,7 @@ func (x *fastReflection_MsgSwapPubKey) Range(f func(protoreflect.FieldDescriptor
 func (x *fastReflection_MsgSwapPubKey) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "cosmos.accounts.defaults.base.v1.MsgSwapPubKey.new_pub_key":
-		return len(x.NewPubKey) != 0
+		return x.NewPubKey != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.MsgSwapPubKey"))
@@ -925,7 +939,7 @@ func (x *fastReflection_MsgSwapPubKey) Get(descriptor protoreflect.FieldDescript
 	switch descriptor.FullName() {
 	case "cosmos.accounts.defaults.base.v1.MsgSwapPubKey.new_pub_key":
 		value := x.NewPubKey
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.MsgSwapPubKey"))
@@ -947,7 +961,7 @@ func (x *fastReflection_MsgSwapPubKey) Get(descriptor protoreflect.FieldDescript
 func (x *fastReflection_MsgSwapPubKey) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.accounts.defaults.base.v1.MsgSwapPubKey.new_pub_key":
-		x.NewPubKey = value.Bytes()
+		x.NewPubKey = value.Message().Interface().(*anypb.Any)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.MsgSwapPubKey"))
@@ -969,7 +983,10 @@ func (x *fastReflection_MsgSwapPubKey) Set(fd protoreflect.FieldDescriptor, valu
 func (x *fastReflection_MsgSwapPubKey) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.accounts.defaults.base.v1.MsgSwapPubKey.new_pub_key":
-		panic(fmt.Errorf("field new_pub_key of message cosmos.accounts.defaults.base.v1.MsgSwapPubKey is not mutable"))
+		if x.NewPubKey == nil {
+			x.NewPubKey = new(anypb.Any)
+		}
+		return protoreflect.ValueOfMessage(x.NewPubKey.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.MsgSwapPubKey"))
@@ -984,7 +1001,8 @@ func (x *fastReflection_MsgSwapPubKey) Mutable(fd protoreflect.FieldDescriptor) 
 func (x *fastReflection_MsgSwapPubKey) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.accounts.defaults.base.v1.MsgSwapPubKey.new_pub_key":
-		return protoreflect.ValueOfBytes(nil)
+		m := new(anypb.Any)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.MsgSwapPubKey"))
@@ -1054,8 +1072,8 @@ func (x *fastReflection_MsgSwapPubKey) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.NewPubKey)
-		if l > 0 {
+		if x.NewPubKey != nil {
+			l = options.Size(x.NewPubKey)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -1087,10 +1105,17 @@ func (x *fastReflection_MsgSwapPubKey) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.NewPubKey) > 0 {
-			i -= len(x.NewPubKey)
-			copy(dAtA[i:], x.NewPubKey)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.NewPubKey)))
+		if x.NewPubKey != nil {
+			encoded, err := options.Marshal(x.NewPubKey)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -1147,7 +1172,7 @@ func (x *fastReflection_MsgSwapPubKey) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field NewPubKey", wireType)
 				}
-				var byteLen int
+				var msglen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -1157,24 +1182,26 @@ func (x *fastReflection_MsgSwapPubKey) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					msglen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				if msglen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + msglen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.NewPubKey = append(x.NewPubKey[:0], dAtA[iNdEx:postIndex]...)
 				if x.NewPubKey == nil {
-					x.NewPubKey = []byte{}
+					x.NewPubKey = &anypb.Any{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.NewPubKey); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
 			default:
@@ -2328,6 +2355,797 @@ func (x *fastReflection_QuerySequenceResponse) ProtoMethods() *protoiface.Method
 	}
 }
 
+var (
+	md_QueryPubKey protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_cosmos_accounts_defaults_base_v1_base_proto_init()
+	md_QueryPubKey = File_cosmos_accounts_defaults_base_v1_base_proto.Messages().ByName("QueryPubKey")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryPubKey)(nil)
+
+type fastReflection_QueryPubKey QueryPubKey
+
+func (x *QueryPubKey) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryPubKey)(x)
+}
+
+func (x *QueryPubKey) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_accounts_defaults_base_v1_base_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryPubKey_messageType fastReflection_QueryPubKey_messageType
+var _ protoreflect.MessageType = fastReflection_QueryPubKey_messageType{}
+
+type fastReflection_QueryPubKey_messageType struct{}
+
+func (x fastReflection_QueryPubKey_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryPubKey)(nil)
+}
+func (x fastReflection_QueryPubKey_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryPubKey)
+}
+func (x fastReflection_QueryPubKey_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryPubKey
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryPubKey) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryPubKey
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryPubKey) Type() protoreflect.MessageType {
+	return _fastReflection_QueryPubKey_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryPubKey) New() protoreflect.Message {
+	return new(fastReflection_QueryPubKey)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryPubKey) Interface() protoreflect.ProtoMessage {
+	return (*QueryPubKey)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryPubKey) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryPubKey) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.QueryPubKey"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.defaults.base.v1.QueryPubKey does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPubKey) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.QueryPubKey"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.defaults.base.v1.QueryPubKey does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryPubKey) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.QueryPubKey"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.defaults.base.v1.QueryPubKey does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPubKey) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.QueryPubKey"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.defaults.base.v1.QueryPubKey does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPubKey) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.QueryPubKey"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.defaults.base.v1.QueryPubKey does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryPubKey) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.QueryPubKey"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.defaults.base.v1.QueryPubKey does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryPubKey) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.accounts.defaults.base.v1.QueryPubKey", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryPubKey) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPubKey) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryPubKey) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryPubKey) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryPubKey)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryPubKey)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryPubKey)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryPubKey: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryPubKey: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryPubKeyResponse         protoreflect.MessageDescriptor
+	fd_QueryPubKeyResponse_pub_key protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_accounts_defaults_base_v1_base_proto_init()
+	md_QueryPubKeyResponse = File_cosmos_accounts_defaults_base_v1_base_proto.Messages().ByName("QueryPubKeyResponse")
+	fd_QueryPubKeyResponse_pub_key = md_QueryPubKeyResponse.Fields().ByName("pub_key")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryPubKeyResponse)(nil)
+
+type fastReflection_QueryPubKeyResponse QueryPubKeyResponse
+
+func (x *QueryPubKeyResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryPubKeyResponse)(x)
+}
+
+func (x *QueryPubKeyResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_accounts_defaults_base_v1_base_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryPubKeyResponse_messageType fastReflection_QueryPubKeyResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryPubKeyResponse_messageType{}
+
+type fastReflection_QueryPubKeyResponse_messageType struct{}
+
+func (x fastReflection_QueryPubKeyResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryPubKeyResponse)(nil)
+}
+func (x fastReflection_QueryPubKeyResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryPubKeyResponse)
+}
+func (x fastReflection_QueryPubKeyResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryPubKeyResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryPubKeyResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryPubKeyResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryPubKeyResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryPubKeyResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryPubKeyResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryPubKeyResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryPubKeyResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryPubKeyResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryPubKeyResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.PubKey != nil {
+		value := protoreflect.ValueOfMessage(x.PubKey.ProtoReflect())
+		if !f(fd_QueryPubKeyResponse_pub_key, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryPubKeyResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.accounts.defaults.base.v1.QueryPubKeyResponse.pub_key":
+		return x.PubKey != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.QueryPubKeyResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.defaults.base.v1.QueryPubKeyResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPubKeyResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.accounts.defaults.base.v1.QueryPubKeyResponse.pub_key":
+		x.PubKey = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.QueryPubKeyResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.defaults.base.v1.QueryPubKeyResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryPubKeyResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.accounts.defaults.base.v1.QueryPubKeyResponse.pub_key":
+		value := x.PubKey
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.QueryPubKeyResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.defaults.base.v1.QueryPubKeyResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPubKeyResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.accounts.defaults.base.v1.QueryPubKeyResponse.pub_key":
+		x.PubKey = value.Message().Interface().(*anypb.Any)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.QueryPubKeyResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.defaults.base.v1.QueryPubKeyResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPubKeyResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.accounts.defaults.base.v1.QueryPubKeyResponse.pub_key":
+		if x.PubKey == nil {
+			x.PubKey = new(anypb.Any)
+		}
+		return protoreflect.ValueOfMessage(x.PubKey.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.QueryPubKeyResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.defaults.base.v1.QueryPubKeyResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryPubKeyResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.accounts.defaults.base.v1.QueryPubKeyResponse.pub_key":
+		m := new(anypb.Any)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.defaults.base.v1.QueryPubKeyResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.defaults.base.v1.QueryPubKeyResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryPubKeyResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.accounts.defaults.base.v1.QueryPubKeyResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryPubKeyResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPubKeyResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryPubKeyResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryPubKeyResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryPubKeyResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.PubKey != nil {
+			l = options.Size(x.PubKey)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryPubKeyResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.PubKey != nil {
+			encoded, err := options.Marshal(x.PubKey)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryPubKeyResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryPubKeyResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryPubKeyResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PubKey", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.PubKey == nil {
+					x.PubKey = &anypb.Any{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PubKey); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -2347,8 +3165,8 @@ type MsgInit struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// pub_key defines the secp256k1 pubkey for the account.
-	PubKey []byte `protobuf:"bytes,1,opt,name=pub_key,json=pubKey,proto3" json:"pub_key,omitempty"`
+	// pub_key defines a pubkey for the account arbitrary encapsulated.
+	PubKey *anypb.Any `protobuf:"bytes,1,opt,name=pub_key,json=pubKey,proto3" json:"pub_key,omitempty"`
 }
 
 func (x *MsgInit) Reset() {
@@ -2371,7 +3189,7 @@ func (*MsgInit) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_defaults_base_v1_base_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *MsgInit) GetPubKey() []byte {
+func (x *MsgInit) GetPubKey() *anypb.Any {
 	if x != nil {
 		return x.PubKey
 	}
@@ -2413,7 +3231,7 @@ type MsgSwapPubKey struct {
 	unknownFields protoimpl.UnknownFields
 
 	// new_pub_key defines the secp256k1 pubkey to swap the account to.
-	NewPubKey []byte `protobuf:"bytes,1,opt,name=new_pub_key,json=newPubKey,proto3" json:"new_pub_key,omitempty"`
+	NewPubKey *anypb.Any `protobuf:"bytes,1,opt,name=new_pub_key,json=newPubKey,proto3" json:"new_pub_key,omitempty"`
 }
 
 func (x *MsgSwapPubKey) Reset() {
@@ -2436,7 +3254,7 @@ func (*MsgSwapPubKey) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_defaults_base_v1_base_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *MsgSwapPubKey) GetNewPubKey() []byte {
+func (x *MsgSwapPubKey) GetNewPubKey() *anypb.Any {
 	if x != nil {
 		return x.NewPubKey
 	}
@@ -2535,6 +3353,69 @@ func (x *QuerySequenceResponse) GetSequence() uint64 {
 	return 0
 }
 
+// QueryPubKey is the request used to query the pubkey of an account.
+type QueryPubKey struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *QueryPubKey) Reset() {
+	*x = QueryPubKey{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_accounts_defaults_base_v1_base_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryPubKey) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryPubKey) ProtoMessage() {}
+
+// Deprecated: Use QueryPubKey.ProtoReflect.Descriptor instead.
+func (*QueryPubKey) Descriptor() ([]byte, []int) {
+	return file_cosmos_accounts_defaults_base_v1_base_proto_rawDescGZIP(), []int{6}
+}
+
+// QueryPubKeyResponse is the response returned when a QueryPubKey message is sent.
+type QueryPubKeyResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	PubKey *anypb.Any `protobuf:"bytes,1,opt,name=pub_key,json=pubKey,proto3" json:"pub_key,omitempty"`
+}
+
+func (x *QueryPubKeyResponse) Reset() {
+	*x = QueryPubKeyResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_accounts_defaults_base_v1_base_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryPubKeyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryPubKeyResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryPubKeyResponse.ProtoReflect.Descriptor instead.
+func (*QueryPubKeyResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_accounts_defaults_base_v1_base_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *QueryPubKeyResponse) GetPubKey() *anypb.Any {
+	if x != nil {
+		return x.PubKey
+	}
+	return nil
+}
+
 var File_cosmos_accounts_defaults_base_v1_base_proto protoreflect.FileDescriptor
 
 var file_cosmos_accounts_defaults_base_v1_base_proto_rawDesc = []byte{
@@ -2542,38 +3423,47 @@ var file_cosmos_accounts_defaults_base_v1_base_proto_rawDesc = []byte{
 	0x73, 0x2f, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f,
 	0x76, 0x31, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x20, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x64,
-	0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x22,
-	0x22, 0x0a, 0x07, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69, 0x74, 0x12, 0x17, 0x0a, 0x07, 0x70, 0x75,
-	0x62, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x06, 0x70, 0x75, 0x62,
-	0x4b, 0x65, 0x79, 0x22, 0x11, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69, 0x74, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2f, 0x0a, 0x0d, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x61,
-	0x70, 0x50, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x12, 0x1e, 0x0a, 0x0b, 0x6e, 0x65, 0x77, 0x5f, 0x70,
-	0x75, 0x62, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x6e, 0x65,
-	0x77, 0x50, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x22, 0x17, 0x0a, 0x15, 0x4d, 0x73, 0x67, 0x53, 0x77,
-	0x61, 0x70, 0x50, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x0f, 0x0a, 0x0d, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63,
-	0x65, 0x22, 0x33, 0x0a, 0x15, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x65, 0x71, 0x75, 0x65, 0x6e,
-	0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65,
-	0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x73, 0x65,
-	0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x42, 0x90, 0x02, 0x0a, 0x24, 0x63, 0x6f, 0x6d, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x64,
-	0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x42,
-	0x09, 0x42, 0x61, 0x73, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x38, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x64,
-	0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x3b,
-	0x62, 0x61, 0x73, 0x65, 0x76, 0x31, 0xa2, 0x02, 0x04, 0x43, 0x41, 0x44, 0x42, 0xaa, 0x02, 0x20,
-	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e,
-	0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2e, 0x42, 0x61, 0x73, 0x65, 0x2e, 0x56, 0x31,
-	0xca, 0x02, 0x20, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x73, 0x5c, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x5c, 0x42, 0x61, 0x73, 0x65,
-	0x5c, 0x56, 0x31, 0xe2, 0x02, 0x2c, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63,
-	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x5c, 0x42,
-	0x61, 0x73, 0x65, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0xea, 0x02, 0x24, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x63, 0x63,
-	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x3a, 0x3a, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x3a,
-	0x3a, 0x42, 0x61, 0x73, 0x65, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x1a,
+	0x19, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
+	0x2f, 0x61, 0x6e, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x38, 0x0a, 0x07, 0x4d, 0x73,
+	0x67, 0x49, 0x6e, 0x69, 0x74, 0x12, 0x2d, 0x0a, 0x07, 0x70, 0x75, 0x62, 0x5f, 0x6b, 0x65, 0x79,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x06, 0x70, 0x75,
+	0x62, 0x4b, 0x65, 0x79, 0x22, 0x11, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69, 0x74, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x45, 0x0a, 0x0d, 0x4d, 0x73, 0x67, 0x53, 0x77,
+	0x61, 0x70, 0x50, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x12, 0x34, 0x0a, 0x0b, 0x6e, 0x65, 0x77, 0x5f,
+	0x70, 0x75, 0x62, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e,
+	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
+	0x41, 0x6e, 0x79, 0x52, 0x09, 0x6e, 0x65, 0x77, 0x50, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x22, 0x17,
+	0x0a, 0x15, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x61, 0x70, 0x50, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x0f, 0x0a, 0x0d, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x53, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x22, 0x33, 0x0a, 0x15, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x53, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x22, 0x0d, 0x0a,
+	0x0b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x22, 0x44, 0x0a, 0x13,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x75, 0x62, 0x4b, 0x65, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x2d, 0x0a, 0x07, 0x70, 0x75, 0x62, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x06, 0x70, 0x75, 0x62, 0x4b,
+	0x65, 0x79, 0x42, 0x90, 0x02, 0x0a, 0x24, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x64, 0x65, 0x66, 0x61, 0x75,
+	0x6c, 0x74, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x42, 0x09, 0x42, 0x61, 0x73,
+	0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x38, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x64, 0x65, 0x66, 0x61, 0x75,
+	0x6c, 0x74, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x3b, 0x62, 0x61, 0x73, 0x65,
+	0x76, 0x31, 0xa2, 0x02, 0x04, 0x43, 0x41, 0x44, 0x42, 0xaa, 0x02, 0x20, 0x43, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x44, 0x65, 0x66, 0x61,
+	0x75, 0x6c, 0x74, 0x73, 0x2e, 0x42, 0x61, 0x73, 0x65, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x20, 0x43,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x44,
+	0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x5c, 0x42, 0x61, 0x73, 0x65, 0x5c, 0x56, 0x31, 0xe2,
+	0x02, 0x2c, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x73, 0x5c, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x5c, 0x42, 0x61, 0x73, 0x65, 0x5c,
+	0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
+	0x24, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x73, 0x3a, 0x3a, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x3a, 0x3a, 0x42, 0x61, 0x73,
+	0x65, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2588,7 +3478,7 @@ func file_cosmos_accounts_defaults_base_v1_base_proto_rawDescGZIP() []byte {
 	return file_cosmos_accounts_defaults_base_v1_base_proto_rawDescData
 }
 
-var file_cosmos_accounts_defaults_base_v1_base_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_cosmos_accounts_defaults_base_v1_base_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_cosmos_accounts_defaults_base_v1_base_proto_goTypes = []interface{}{
 	(*MsgInit)(nil),               // 0: cosmos.accounts.defaults.base.v1.MsgInit
 	(*MsgInitResponse)(nil),       // 1: cosmos.accounts.defaults.base.v1.MsgInitResponse
@@ -2596,13 +3486,19 @@ var file_cosmos_accounts_defaults_base_v1_base_proto_goTypes = []interface{}{
 	(*MsgSwapPubKeyResponse)(nil), // 3: cosmos.accounts.defaults.base.v1.MsgSwapPubKeyResponse
 	(*QuerySequence)(nil),         // 4: cosmos.accounts.defaults.base.v1.QuerySequence
 	(*QuerySequenceResponse)(nil), // 5: cosmos.accounts.defaults.base.v1.QuerySequenceResponse
+	(*QueryPubKey)(nil),           // 6: cosmos.accounts.defaults.base.v1.QueryPubKey
+	(*QueryPubKeyResponse)(nil),   // 7: cosmos.accounts.defaults.base.v1.QueryPubKeyResponse
+	(*anypb.Any)(nil),             // 8: google.protobuf.Any
 }
 var file_cosmos_accounts_defaults_base_v1_base_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	8, // 0: cosmos.accounts.defaults.base.v1.MsgInit.pub_key:type_name -> google.protobuf.Any
+	8, // 1: cosmos.accounts.defaults.base.v1.MsgSwapPubKey.new_pub_key:type_name -> google.protobuf.Any
+	8, // 2: cosmos.accounts.defaults.base.v1.QueryPubKeyResponse.pub_key:type_name -> google.protobuf.Any
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_accounts_defaults_base_v1_base_proto_init() }
@@ -2683,6 +3579,30 @@ func file_cosmos_accounts_defaults_base_v1_base_proto_init() {
 				return nil
 			}
 		}
+		file_cosmos_accounts_defaults_base_v1_base_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryPubKey); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_accounts_defaults_base_v1_base_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryPubKeyResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2690,7 +3610,7 @@ func file_cosmos_accounts_defaults_base_v1_base_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_accounts_defaults_base_v1_base_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

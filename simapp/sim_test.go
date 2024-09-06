@@ -12,6 +12,7 @@ import (
 	"sync"
 	"testing"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"

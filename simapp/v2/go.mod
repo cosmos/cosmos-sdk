@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/runtime/v2 v2.0.0-20240905114452-a57b25418a59 // main
 	cosmossdk.io/server/v2 v2.0.0-20240829074658-81a225e6a29b // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0-20240815194237-858ec2fcb897 // main
+	cosmossdk.io/store/v2 v2.0.0-20240906090851-36d9b25e8981 // main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000

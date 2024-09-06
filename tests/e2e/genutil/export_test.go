@@ -22,6 +22,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	corectx "cosmossdk.io/core/context"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 

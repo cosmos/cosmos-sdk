@@ -15,10 +15,8 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	"cosmossdk.io/core/app"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -99,7 +97,6 @@ func init() {
 			ProvideEnvironment[transaction.Tx],
 			ProvideModuleManager[transaction.Tx],
 			ProvideCometService,
-			ProvideAppVersionModifier[transaction.Tx],
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -107,7 +104,7 @@ func init() {
 
 func ProvideAppBuilder[T transaction.Tx](
 	interfaceRegistrar registry.InterfaceRegistrar,
-	amino legacy.Amino,
+	amino registry.AminoRegistrar,
 ) (
 	*AppBuilder[T],
 	*stf.MsgRouterBuilder,
@@ -146,9 +143,9 @@ type AppInputs struct {
 	AppBuilder         *AppBuilder[transaction.Tx]
 	ModuleManager      *MM[transaction.Tx]
 	InterfaceRegistrar registry.InterfaceRegistrar
-	LegacyAmino        legacy.Amino
+	LegacyAmino        registry.AminoRegistrar
 	Logger             log.Logger
-	Viper              *viper.Viper `optional:"true"`
+	Viper              *viper.Viper `optional:"true"` // can be nil in client wiring
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -238,10 +235,4 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 
 func ProvideCometService() comet.Service {
 	return &services.ContextAwareCometInfoService{}
-}
-
-// ProvideAppVersionModifier returns nil, `app.VersionModifier` is a feature of BaseApp and neither used nor required for runtim/v2.
-// nil is acceptable, see: https://github.com/cosmos/cosmos-sdk/blob/0a6ee406a02477ae8ccbfcbe1b51fc3930087f4c/x/upgrade/keeper/keeper.go#L438
-func ProvideAppVersionModifier[T transaction.Tx](app *AppBuilder[T]) app.VersionModifier {
-	return nil
 }

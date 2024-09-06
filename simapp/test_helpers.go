@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	minttypes "cosmossdk.io/x/mint/types"
 
@@ -30,6 +29,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // SetupOptions defines arguments that are passed into `Simapp` constructor.
@@ -64,15 +64,19 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 	validator := cmttypes.NewValidator(pubKey, 1)
 	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
+	app := NewSimApp(options.Logger, options.DB, nil, true, options.AppOpts)
+
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	accAddr, err := app.InterfaceRegistry().SigningContext().AddressCodec().BytesToString(acc.GetAddress())
+	require.NoError(t, err)
+
 	balance := banktypes.Balance{
-		Address: acc.GetAddress().String(),
+		Address: accAddr,
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
 	}
 
-	app := NewSimApp(options.Logger, options.DB, nil, true, options.AppOpts)
 	genesisState := app.DefaultGenesis()
 	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 	require.NoError(t, err)
@@ -106,11 +110,14 @@ func Setup(t *testing.T, isCheckTx bool) *SimApp {
 	validator := cmttypes.NewValidator(pubKey, 1)
 	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
+	sApp, _ := setup(true, 0)
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	accAddr, err := sApp.interfaceRegistry.SigningContext().AddressCodec().BytesToString(acc.GetAddress())
+	require.NoError(t, err)
 	balance := banktypes.Balance{
-		Address: acc.GetAddress().String(),
+		Address: accAddr,
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
 	}
 
@@ -169,9 +176,11 @@ func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	accAddr, err := app.interfaceRegistry.SigningContext().AddressCodec().BytesToString(acc.GetAddress())
+	require.NoError(t, err)
 	balances := []banktypes.Balance{
 		{
-			Address: acc.GetAddress().String(),
+			Address: accAddr,
 			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
 		},
 	}

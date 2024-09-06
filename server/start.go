@@ -36,6 +36,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
@@ -117,7 +118,7 @@ const (
 type StartCmdOptions[T types.Application] struct {
 	// DBOpener can be used to customize db opening, for example customize db options or support different db backends,
 	// default to the builtin db opener.
-	DBOpener func(rootDir string, backendType dbm.BackendType) (dbm.DB, error)
+	DBOpener func(rootDir string, backendType dbm.BackendType) (corestore.KVStoreWithBatch, error)
 	// PostSetup can be used to setup extra services under the same cancellable context,
 	// it's not called in stand-alone mode, only for in-process mode.
 	PostSetup func(app T, svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
@@ -126,7 +127,7 @@ type StartCmdOptions[T types.Application] struct {
 	// AddFlags add custom flags to start cmd
 	AddFlags func(cmd *cobra.Command)
 	// StartCommandHandler can be used to customize the start command handler
-	StartCommandHandler func(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator[T], inProcessConsensus bool, opts StartCmdOptions[T]) error
+	StartCommandHandler func(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator[T], withCMT bool, opts StartCmdOptions[T]) error
 }
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -415,31 +416,28 @@ func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
 // getGenDocProvider returns a function which returns the genesis doc from the genesis file.
 func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, error) {
 	return func() (node.ChecksummedGenesisDoc, error) {
+		defaultGenesisDoc := node.ChecksummedGenesisDoc{
+			Sha256Checksum: []byte{},
+		}
+
 		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
 		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
+			return defaultGenesisDoc, err
 		}
 
 		gen, err := appGenesis.ToGenesisDoc()
 		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
+			return defaultGenesisDoc, err
 		}
+
 		genbz, err := gen.AppState.MarshalJSON()
 		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
+			return defaultGenesisDoc, err
 		}
 
 		bz, err := json.Marshal(genbz)
 		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
+			return defaultGenesisDoc, err
 		}
 		sum := sha256.Sum256(bz)
 
@@ -753,7 +751,7 @@ you want to test the upgrade handler itself.
 
 // testnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
 // that the state in the data folder represents. The chainID of the local genesis file is modified to match the provided chainID.
-func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCreator[T], db dbm.DB, traceWriter io.WriteCloser) (*T, error) {
+func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCreator[T], db corestore.KVStoreWithBatch, traceWriter io.WriteCloser) (*T, error) {
 	config := ctx.Config
 
 	newChainID, ok := ctx.Viper.Get(KeyNewChainID).(string)
@@ -909,7 +907,7 @@ func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCr
 		return nil, err
 	}
 
-	// Create ValidatorSet struct containing just our valdiator.
+	// Create ValidatorSet struct containing just our validator.
 	newVal := &cmttypes.Validator{
 		Address:     validatorAddress,
 		PubKey:      userPubKey,

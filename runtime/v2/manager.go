@@ -20,7 +20,6 @@ import (
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -85,10 +84,10 @@ func (m *MM[T]) Modules() map[string]appmodulev2.AppModule {
 }
 
 // RegisterLegacyAminoCodec registers all module codecs
-func (m *MM[T]) RegisterLegacyAminoCodec(cdc legacy.Amino) {
+func (m *MM[T]) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
 	for _, b := range m.modules {
 		if mod, ok := b.(appmodule.HasAminoCodec); ok {
-			mod.RegisterLegacyAminoCodec(cdc)
+			mod.RegisterLegacyAminoCodec(registrar)
 		}
 	}
 }
@@ -217,7 +216,7 @@ func (m *MM[T]) ExportGenesisForModules(
 
 		if module, hasGenesis := mod.(appmodulev2.HasGenesis); hasGenesis {
 			moduleI = module.(ModuleI)
-		} else if module, hasABCIGenesis := mod.(appmodulev2.HasGenesis); hasABCIGenesis {
+		} else if module, hasABCIGenesis := mod.(appmodulev2.HasABCIGenesis); hasABCIGenesis {
 			moduleI = module.(ModuleI)
 		} else {
 			continue
@@ -357,8 +356,56 @@ func (m *MM[T]) TxValidators() func(ctx context.Context, tx T) error {
 	}
 }
 
-// TODO write as descriptive godoc as module manager v1.
-// TODO include feedback from https://github.com/cosmos/cosmos-sdk/issues/15120
+// RunMigrations performs in-place store migrations for all modules. This
+// function MUST be called inside an x/upgrade UpgradeHandler.
+//
+// Recall that in an upgrade handler, the `fromVM` VersionMap is retrieved from
+// x/upgrade's store, and the function needs to return the target VersionMap
+// that will in turn be persisted to the x/upgrade's store. In general,
+// returning RunMigrations should be enough:
+//
+// Example:
+//
+//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx context.Context, plan upgradetypes.Plan, fromVM appmodule.VersionMap) (appmodule.VersionMap, error) {
+//	    return app.ModuleManager().RunMigrations(ctx, fromVM)
+//	})
+//
+// Internally, RunMigrations will perform the following steps:
+//   - create an `updatedVM` VersionMap of module with their latest ConsensusVersion
+//   - if module implements `HasConsensusVersion` interface get the consensus version as `toVersion`,
+//     if not `toVersion` is set to 0.
+//   - get `fromVersion` from `fromVM` with module's name.
+//   - if the module's name exists in `fromVM` map, then run in-place store migrations
+//     for that module between `fromVersion` and `toVersion`.
+//   - if the module does not exist in the `fromVM` (which means that it's a new module,
+//     because it was not in the previous x/upgrade's store), then run
+//     `InitGenesis` on that module.
+//
+// - return the `updatedVM` to be persisted in the x/upgrade's store.
+//
+// Migrations are run in an order defined by `mm.config.OrderMigrations`.
+//
+// As an app developer, if you wish to skip running InitGenesis for your new
+// module "foo", you need to manually pass a `fromVM` argument to this function
+// foo's module version set to its latest ConsensusVersion. That way, the diff
+// between the function's `fromVM` and `udpatedVM` will be empty, hence not
+// running anything for foo.
+//
+// Example:
+//
+//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+//	    // Assume "foo" is a new module.
+//	    // `fromVM` is fetched from existing x/upgrade store. Since foo didn't exist
+//	    // before this upgrade, `v, exists := fromVM["foo"]; exists == false`, and RunMigration will by default
+//	    // run InitGenesis on foo.
+//	    // To skip running foo's InitGenesis, you need set `fromVM`'s foo to its latest
+//	    // consensus version:
+//	    fromVM["foo"] = foo.AppModule{}.ConsensusVersion()
+//
+//	    return app.ModuleManager().RunMigrations(ctx, fromVM)
+//	})
+//
+// Please also refer to https://docs.cosmos.network/main/core/upgrade for more information.
 func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap) (appmodulev2.VersionMap, error) {
 	updatedVM := appmodulev2.VersionMap{}
 	for _, moduleName := range m.config.OrderMigrations {
@@ -443,8 +490,8 @@ func (m *MM[T]) RegisterServices(app *App[T]) error {
 func (m *MM[T]) validateConfig() error {
 	if err := m.assertNoForgottenModules("PreBlockers", m.config.PreBlockers, func(moduleName string) bool {
 		module := m.modules[moduleName]
-		_, hasBlock := module.(appmodulev2.HasPreBlocker)
-		return !hasBlock
+		_, hasPreBlock := module.(appmodulev2.HasPreBlocker)
+		return !hasPreBlock
 	}); err != nil {
 		return err
 	}

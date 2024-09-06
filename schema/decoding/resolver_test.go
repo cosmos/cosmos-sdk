@@ -10,7 +10,7 @@ import (
 type modA struct{}
 
 func (m modA) ModuleCodec() (schema.ModuleCodec, error) {
-	modSchema, err := schema.NewModuleSchema([]schema.ObjectType{{Name: "A", KeyFields: []schema.Field{{Name: "field1", Kind: schema.StringKind}}}})
+	modSchema, err := schema.CompileModuleSchema(schema.ObjectType{Name: "A", KeyFields: []schema.Field{{Name: "field1", Kind: schema.StringKind}}})
 	if err != nil {
 		return schema.ModuleCodec{}, err
 	}
@@ -22,7 +22,7 @@ func (m modA) ModuleCodec() (schema.ModuleCodec, error) {
 type modB struct{}
 
 func (m modB) ModuleCodec() (schema.ModuleCodec, error) {
-	modSchema, err := schema.NewModuleSchema([]schema.ObjectType{{Name: "B", KeyFields: []schema.Field{{Name: "field2", Kind: schema.StringKind}}}})
+	modSchema, err := schema.CompileModuleSchema(schema.ObjectType{Name: "B", KeyFields: []schema.Field{{Name: "field2", Kind: schema.StringKind}}})
 	if err != nil {
 		return schema.ModuleCodec{}, err
 	}
@@ -44,7 +44,7 @@ var testResolver = ModuleSetDecoderResolver(moduleSet)
 func TestModuleSetDecoderResolver_IterateAll(t *testing.T) {
 	objectTypes := map[string]bool{}
 	err := testResolver.IterateAll(func(moduleName string, cdc schema.ModuleCodec) error {
-		cdc.Schema.Types(func(t schema.Type) bool {
+		cdc.Schema.AllTypes(func(t schema.Type) bool {
 			objTyp, ok := t.(schema.ObjectType)
 			if ok {
 				objectTypes[objTyp.Name] = true

@@ -25,6 +25,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	corectx "cosmossdk.io/core/context"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
@@ -45,8 +46,9 @@ import (
 // a command's Context.
 const ServerContextKey = sdk.ContextKey("server.context")
 
-// Context server context
-// Deprecated: Do not use since we use viper to track all config
+// Context is the server context.
+// Prefer using we use viper a it tracks track all config.
+// See core/context/server_context.go.
 type Context struct {
 	Viper  *viper.Viper
 	Config *cmtcfg.Config
@@ -472,7 +474,7 @@ func addrToIP(addr net.Addr) net.IP {
 }
 
 // OpenDB opens the application database using the appropriate driver.
-func OpenDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
+func OpenDB(rootDir string, backendType dbm.BackendType) (corestore.KVStoreWithBatch, error) {
 	dataDir := filepath.Join(rootDir, "data")
 	return dbm.NewDB("application", backendType, dataDir)
 }

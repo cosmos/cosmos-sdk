@@ -3,6 +3,7 @@ package baseapp_test
 import (
 	"bytes"
 	"context"
+	"cosmossdk.io/core/server"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -24,9 +25,6 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	_ "cosmossdk.io/x/auth"
-	"cosmossdk.io/x/auth/signing"
-	_ "cosmossdk.io/x/auth/tx/config"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -39,6 +37,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 var ParamStoreKey = []byte("paramstore")
@@ -444,4 +445,21 @@ func (n NestedMessgesServerImpl) Check(ctx context.Context, message *baseapptest
 	}
 	sdkCtx.GasMeter().ConsumeGas(gas, "nested messages test")
 	return nil, nil
+}
+
+func newMockedVersionModifier(startingVersion uint64) server.VersionModifier {
+	return &mockedVersionModifier{version: startingVersion}
+}
+
+type mockedVersionModifier struct {
+	version uint64
+}
+
+func (m *mockedVersionModifier) SetAppVersion(ctx context.Context, u uint64) error {
+	m.version = u
+	return nil
+}
+
+func (m *mockedVersionModifier) AppVersion(ctx context.Context) (uint64, error) {
+	return m.version, nil
 }

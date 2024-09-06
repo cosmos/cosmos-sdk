@@ -35,6 +35,10 @@ func NewMockCometRPCWithResponseQueryValue(bz []byte) MockCometRPC {
 	}}
 }
 
+func (MockCometRPC) BroadcastTxSync(context.Context, cmttypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+	return &coretypes.ResultBroadcastTx{Code: 0}, nil
+}
+
 func (m MockCometRPC) ABCIQueryWithOptions(
 	_ context.Context,
 	_ string,

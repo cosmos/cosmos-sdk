@@ -27,7 +27,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* []() Upgrade IVL to IAVL 1.2.0.
+* [#21574](https://github.com/cosmos/cosmos-sdk/pull/21574) Upgrade IVL to IAVL 1.2.0.
 
 ## v1.1.0 (March 20, 2024)
 

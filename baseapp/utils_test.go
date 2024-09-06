@@ -3,6 +3,7 @@ package baseapp_test
 import (
 	"bytes"
 	"context"
+	"cosmossdk.io/core/server"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -444,4 +445,21 @@ func (n NestedMessgesServerImpl) Check(ctx context.Context, message *baseapptest
 	}
 	sdkCtx.GasMeter().ConsumeGas(gas, "nested messages test")
 	return nil, nil
+}
+
+func newMockedVersionModifier(startingVersion uint64) server.VersionModifier {
+	return &mockedVersionModifier{version: startingVersion}
+}
+
+type mockedVersionModifier struct {
+	version uint64
+}
+
+func (m *mockedVersionModifier) SetAppVersion(ctx context.Context, u uint64) error {
+	m.version = u
+	return nil
+}
+
+func (m *mockedVersionModifier) AppVersion(ctx context.Context) (uint64, error) {
+	return m.version, nil
 }

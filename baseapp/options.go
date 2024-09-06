@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"context"
+	"cosmossdk.io/core/server"
 	"errors"
 	"fmt"
 	"io"
@@ -146,22 +147,11 @@ func (app *BaseApp) SetVersion(v string) {
 // SetAppVersion sets the application's version this is used as part of the
 // header in blocks and is returned to the consensus engine in EndBlock.
 func (app *BaseApp) SetAppVersion(ctx context.Context, v uint64) error {
-	if app.paramStore == nil {
-		return errors.New("param store must be set to set app version")
+	if app.versionModifier == nil {
+		return errors.New("version modifier must be set to set app version")
 	}
 
-	cp, err := app.paramStore.Get(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get consensus params: %w", err)
-	}
-	if cp.Version == nil {
-		return errors.New("version is not set in param store")
-	}
-	cp.Version.App = v
-	if err := app.paramStore.Set(ctx, cp); err != nil {
-		return err
-	}
-	return nil
+	return app.versionModifier.SetAppVersion(ctx, v)
 }
 
 func (app *BaseApp) SetDB(db corestore.KVStoreWithBatch) {
@@ -321,6 +311,15 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 // SetTxEncoder sets the TxEncoder if it wasn't provided in the BaseApp constructor.
 func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
 	app.txEncoder = txEncoder
+}
+
+// SetVersionModifier sets the version modifier for the BaseApp that allows to set the app version.
+func (app *BaseApp) SetVersionModifier(versionModifier server.VersionModifier) {
+	if app.sealed {
+		panic("SetVersionModifier() on sealed BaseApp")
+	}
+
+	app.versionModifier = versionModifier
 }
 
 // SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.

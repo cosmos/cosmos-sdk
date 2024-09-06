@@ -3,6 +3,7 @@ package baseapp_test
 import (
 	"bytes"
 	"context"
+	"cosmossdk.io/core/server"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -375,3 +376,92 @@ func wonkyMsg(t *testing.T, cfg client.TxConfig, tx signing.Tx) signing.Tx {
 	require.NoError(t, err)
 	return builder.GetTx()
 }
+<<<<<<< HEAD
+=======
+
+type SendServerImpl struct {
+	gas uint64
+}
+
+func (s SendServerImpl) Send(ctx context.Context, send *baseapptestutil.MsgSend) (*baseapptestutil.MsgSendResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if send.From == "" {
+		return nil, errors.New("from address cannot be empty")
+	}
+	if send.To == "" {
+		return nil, errors.New("to address cannot be empty")
+	}
+
+	_, err := sdk.ParseCoinNormalized(send.Amount)
+	if err != nil {
+		return nil, err
+	}
+	gas := s.gas
+	if gas == 0 {
+		gas = 5
+	}
+	sdkCtx.GasMeter().ConsumeGas(gas, "send test")
+	return &baseapptestutil.MsgSendResponse{}, nil
+}
+
+type NestedMessgesServerImpl struct {
+	gas uint64
+}
+
+func (n NestedMessgesServerImpl) Check(ctx context.Context, message *baseapptestutil.MsgNestedMessages) (*baseapptestutil.MsgCreateNestedMessagesResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	cdc := codectestutil.CodecOptions{}.NewCodec()
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
+	signer, _, err := cdc.GetMsgSigners(message)
+	if err != nil {
+		return nil, err
+	}
+	if len(signer) != 1 {
+		return nil, fmt.Errorf("expected 1 signer, got %d", len(signer))
+	}
+
+	msgs, err := message.GetMsgs()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, msg := range msgs {
+		s, _, err := cdc.GetMsgSigners(msg)
+		if err != nil {
+			return nil, err
+		}
+		if len(s) != 1 {
+			return nil, fmt.Errorf("expected 1 signer, got %d", len(s))
+		}
+		if !bytes.Equal(signer[0], s[0]) {
+			return nil, errors.New("signer does not match")
+		}
+
+	}
+
+	gas := n.gas
+	if gas == 0 {
+		gas = 5
+	}
+	sdkCtx.GasMeter().ConsumeGas(gas, "nested messages test")
+	return nil, nil
+}
+
+func newMockedVersionModifier(startingVersion uint64) server.VersionModifier {
+	return &mockedVersionModifier{version: startingVersion}
+}
+
+type mockedVersionModifier struct {
+	version uint64
+}
+
+func (m *mockedVersionModifier) SetAppVersion(ctx context.Context, u uint64) error {
+	m.version = u
+	return nil
+}
+
+func (m *mockedVersionModifier) AppVersion(ctx context.Context) (uint64, error) {
+	return m.version, nil
+}
+>>>>>>> dce0365c2 (feat: unify version modifier for v2 (#21508))

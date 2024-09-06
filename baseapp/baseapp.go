@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"context"
+	"cosmossdk.io/core/server"
 	"errors"
 	"fmt"
 	"maps"
@@ -89,6 +90,7 @@ type BaseApp struct {
 	verifyVoteExt      sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
 	prepareCheckStater sdk.PrepareCheckStater         // logic to run during commit using the checkState
 	precommiter        sdk.Precommiter                // logic to run during commit using the deliverState
+	versionModifier    server.VersionModifier         // interface to get and set the app version
 
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID
@@ -249,18 +251,11 @@ func (app *BaseApp) Name() string {
 
 // AppVersion returns the application's protocol version.
 func (app *BaseApp) AppVersion(ctx context.Context) (uint64, error) {
-	if app.paramStore == nil {
-		return 0, errors.New("app.paramStore is nil")
+	if app.versionModifier == nil {
+		return 0, errors.New("app.versionModifier is nil")
 	}
 
-	cp, err := app.paramStore.Get(ctx)
-	if err != nil {
-		return 0, fmt.Errorf("failed to get consensus params: %w", err)
-	}
-	if cp.Version == nil {
-		return 0, nil
-	}
-	return cp.Version.App, nil
+	return app.versionModifier.AppVersion(ctx)
 }
 
 // Version returns the application's version string.

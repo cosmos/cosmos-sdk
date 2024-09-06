@@ -6,7 +6,7 @@
 
 ## Background
 
-[RFC 002](./rfc-003-crosslang.md) introduces a specification for cross-language
+[RFC 003](./rfc-003-crosslang.md) introduces a specification for cross-language
 message passing. One large follow-up item is defining APIs for state access.
 This RFC addresses that.
 
@@ -22,6 +22,10 @@ The state API coordinates all state access and mutation.
 It is independent of any underlying storage API such as key-value storage.
 All state mutations including key-value storage and event emission should be
 coordinated with this API.
+It is expected that the module implementing this API
+also exposes a **state handler** directly to the hypervisor.
+Recall that state handler methods are _only_ called by the hypervisor,
+whereas the methods below are called by message handlers.
 
 #### `cosmos.state.v1.new_branch`
 
@@ -30,10 +34,12 @@ Takes no parameters and returns a new volatile state token which branches/caches
 #### `cosmos.state.v1.commit`
 
 Takes no parameters and commits the current branched state token in the **message packet** against the underlying state it was branched from.
+TODO: is the state token now invalid and discard, or can it be used again?
 
 #### `cosmos.state.v1.rollback`
 
 Takes no parameters and rolls back any changes to the branched state token in the **message packet**.
+TODO: is the state token now invalid and discard, or can it be used again?
 
 ### KV Store API
 
@@ -73,6 +79,8 @@ The suggested packet size is 32kb with the key at offset 16,384.
 The same packet utilization as delete is suggested.
 
 ### Ordered KV Store API
+
+TODO: what mutation can and can't happen during iteration?
 
 #### `cosmos.orderedkvstore.v1.iterator`
 
@@ -124,8 +132,8 @@ JSON can be specified as a fallback encoding in an event schema when a suitable 
 isn't available and then no special decoding step is necessary.
 
 * Volatility: Volatile
-* Input Parameter 1: `event_type` string with a maximum length of 127 bytes
-* Input Parameter 2: `event_data`
+* Input Parameter 1: `event_data`
+* Input Parameter 2: optional `event_type` string with a maximum length of 127 bytes, if it can be parsed from `event_data` then this can be omitted
 * Errors: None
 
 ## Decision

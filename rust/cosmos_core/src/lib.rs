@@ -1,3 +1,4 @@
+pub mod sync;
 use cosmos_core_macros::service;
 
 pub struct Context {}

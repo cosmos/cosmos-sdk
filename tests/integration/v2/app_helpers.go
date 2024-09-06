@@ -20,8 +20,6 @@ import (
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/runtime/v2"
-	"cosmossdk.io/x/auth/tx"
-	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	consensustypes "cosmossdk.io/x/consensus/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -34,6 +32,8 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const DefaultGenTxGas = 10000000
@@ -213,7 +213,7 @@ func SetupWithConfiguration(
 
 	ctx := context.WithValue(
 		context.Background(),
-		corecontext.InitInfoKey,
+		corecontext.CometParamsInitInfoKey,
 		&consensustypes.MsgUpdateParams{
 			Authority: "consensus",
 			Block:     DefaultConsensusParams.Block,

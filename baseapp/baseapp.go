@@ -2,7 +2,6 @@ package baseapp
 
 import (
 	"context"
-	"cosmossdk.io/core/server"
 	"errors"
 	"fmt"
 	"maps"
@@ -18,6 +17,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"

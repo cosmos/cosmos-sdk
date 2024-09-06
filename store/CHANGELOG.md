@@ -23,6 +23,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## v1.1.1 (September 06, 2024)
+
+### Improvements
+
+* []() Upgrade IVL to IAVL 1.2.0.
+
 ## v1.1.0 (March 20, 2024)
 
 ### Improvements

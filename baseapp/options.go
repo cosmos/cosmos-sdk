@@ -7,8 +7,7 @@ import (
 	"io"
 	"math"
 
-	dbm "github.com/cosmos/cosmos-db"
-
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
@@ -165,7 +164,7 @@ func (app *BaseApp) SetAppVersion(ctx context.Context, v uint64) error {
 	return nil
 }
 
-func (app *BaseApp) SetDB(db dbm.DB) {
+func (app *BaseApp) SetDB(db corestore.KVStoreWithBatch) {
 	if app.sealed {
 		panic("SetDB() on sealed BaseApp")
 	}

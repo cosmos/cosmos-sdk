@@ -1,12 +1,8 @@
-pub mod sync;
-
 use cosmos_core_macros::service;
 
-pub struct Context<Events=()> {
-    _phantom: core::marker::PhantomData<Events>,
-}
+pub struct Context {}
 
-impl<Events> Context<Events> {
+impl Context {
     pub fn self_address(&self) -> Address {
         todo!()
     }
@@ -18,26 +14,15 @@ impl<Events> Context<Events> {
         todo!()
     }
 
-    pub fn emit_event<E>(&mut self, event: E) -> Result<()>
-    where
-        E: EventOf<Events>,
-    {
+    pub fn derived_context(&self) -> Context {
         todo!()
     }
 
-    pub fn new<NewEvents>(&self) -> Context<NewEvents> {
+    pub fn set_state_token(&mut self, state_token: StateToken) {
         todo!()
     }
 
-    pub fn new_read(&self) -> ReadContext {
-        todo!()
-    }
-
-    pub unsafe fn set_state_token(&mut self, state_token: StateToken) {
-        todo!()
-    }
-
-    pub unsafe fn set_sender(&mut self, sender: Address) {
+    pub fn set_sender(&mut self, sender: Address) {
         todo!()
     }
 
@@ -46,62 +31,6 @@ impl<Events> Context<Events> {
     // This method uses interior mutability to update the gas meter so that it can
     // work from read-only references to the context.
     pub fn consume_gas(&self, gas: u64) -> Result<()> {
-        todo!()
-    }
-
-    pub fn ok<T, E>(self, value: T) -> Response<T, E> {
-        todo!()
-    }
-
-    pub fn err<T, E>(self, err: E) -> Response<T, E> {
-        todo!()
-    }
-}
-
-trait EventOf<Events> {}
-
-impl<T> EventOf<T> for T {}
-
-// impl<E1, E2> EventOf<(E1, E2)> for E1 {}
-// impl<E1, E2> EventOf<(E1, E2)> for E2 {}
-// impl<E1, E2, E3> EventOf<(E1, E2, E3)> for E1 {}
-// impl<E1, E2, E3> EventOf<(E1, E2, E3)> for E2 {}
-// impl<E1, E2, E3> EventOf<(E1, E2, E3)> for E3 {}
-// impl<E1, E2, E3, E4> EventOf<(E1, E2, E3, E4)> for E1 {}
-// impl<E1, E2, E3, E4> EventOf<(E1, E2, E3, E4)> for E2 {}
-// impl<E1, E2, E3, E4> EventOf<(E1, E2, E3, E4)> for E3 {}
-// impl<E1, E2, E3, E4> EventOf<(E1, E2, E3, E4)> for E4 {}
-// impl<E1, E2, E3, E4, E5> EventOf<(E1, E2, E3, E4, E5)> for E1 {}
-// impl<E1, E2, E3, E4, E5> EventOf<(E1, E2, E3, E4, E5)> for E2 {}
-// impl<E1, E2, E3, E4, E5> EventOf<(E1, E2, E3, E4, E5)> for E3 {}
-// impl<E1, E2, E3, E4, E5> EventOf<(E1, E2, E3, E4, E5)> for E4 {}
-// impl<E1, E2, E3, E4, E5> EventOf<(E1, E2, E3, E4, E5)> for E5 {}
-
-pub struct ReadContext {}
-
-impl ReadContext {
-    pub fn new(&self) -> ReadContext {
-        todo!()
-    }
-
-    pub fn new_read(&self) -> ReadContext {
-        todo!()
-    }
-}
-
-impl ReadContext {
-    pub fn consume_gas(&self, gas: u64) -> Result<()> {
-        todo!()
-    }
-
-    pub fn self_address(&self) -> Address {
-        todo!()
-    }
-    pub fn sender(&self) -> Address {
-        todo!()
-    }
-
-    pub fn state_token(&self) -> StateToken {
         todo!()
     }
 }
@@ -154,7 +83,7 @@ pub struct BufferRef {
 #[derive(Default, Copy, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub struct Time(u64);
 
-up#[service]
+#[service]
 pub trait BlockService {
     fn current_time(&self, ctx: &Context) -> crate::Result<Time>;
 }
@@ -169,7 +98,7 @@ pub struct Item<T> {
     _phantom: core::marker::PhantomData<T>,
 }
 
-impl<T: Default> Item<T> {
+impl <T: Default> Item<T> {
     pub fn get(&self, ctx: &Context) -> Result<T> {
         todo!()
     }
@@ -183,12 +112,12 @@ pub struct Map<K, V> {
     _phantom: core::marker::PhantomData<(K, V)>,
 }
 
-impl<K, V> Map<K, V> {
-    pub fn get(&self, ctx: ReadContext, key: &K) -> Result<Option<V>> {
+impl <K, V> Map<K, V> {
+    pub fn get(&self, ctx: &Context, key: &K) -> Result<Option<V>> {
         todo!()
     }
 
-    pub fn set(&self, ctx: Context, key: &K, value: &V) -> Result<()> {
+    pub fn set(&self, ctx: &mut Context, key: &K, value: &V) -> Result<()> {
         todo!()
     }
 }
@@ -207,16 +136,5 @@ pub trait State {}
 pub trait Service {
     fn client() -> Box<Self>;
     fn client_with_ctx<F>(ctx_fn: F) -> Box<Self>
-    where
-        F: FnOnce(&mut Context);
+        where F: FnOnce(&mut Context);
 }
-
-pub type Response<T, E=String> = core::result::Result<ResponseBody<T>, E>;
-
-impl <T> ResponseBody<T> {
-    pub fn read(&self) -> core::result::Result<&T, String> {
-        todo!()
-    }
-}
-
-pub struct ResponseBody<T> {}

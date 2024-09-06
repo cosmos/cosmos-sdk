@@ -44,6 +44,7 @@
 /x/auth/ @facundomedica @testinginprod @aaronc @cosmos/sdk-core-dev
 /x/authz/ @akhilkumarpilli @raynaudoe @cosmos/sdk-core-dev
 /x/bank/ @julienrbrt @sontrinh16 @cosmos/sdk-core-dev
+/x/bank/v2 @julienrbrt @hieuvubk @akhilkumarpilli @cosmos/sdk-core-dev
 /x/circuit/ @kocubinski @akhilkumarpilli @raynaudoe @cosmos/sdk-core-dev
 /x/consensus/ @testinginprod @raynaudoe @cosmos/sdk-core-dev
 /x/distribution/ @alpe @JulianToledano @cosmos/sdk-core-dev

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 )
 
 // AppModule is a tag interface for app module implementations to use as a basis
@@ -68,5 +68,5 @@ type HasPrecommit interface {
 // HasAminoCodec is an extension interface that module must implement to support JSON encoding and decoding of its types
 // through amino.  This is used in genesis & the CLI client.
 type HasAminoCodec interface {
-	RegisterLegacyAminoCodec(legacy.Amino)
+	RegisterLegacyAminoCodec(registry.AminoRegistrar)
 }

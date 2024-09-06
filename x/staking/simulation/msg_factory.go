@@ -342,6 +342,7 @@ func MsgUpdateParamsFactory() simsx.SimMsgFactoryFn[*types.MsgUpdateParams] {
 		params.MaxEntries = r.Uint32InRange(1, 1000)
 		params.MaxValidators = r.Uint32InRange(1, 1000)
 		params.UnbondingTime = time.Duration(r.Timestamp().UnixNano())
+		// modifying commission rate can cause issues for proposals within the same block
 		// params.MinCommissionRate = r.DecN(sdkmath.LegacyNewDec(1))
 
 		return nil, &types.MsgUpdateParams{

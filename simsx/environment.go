@@ -237,11 +237,14 @@ func WithSpendableBalance() SimAccountFilter {
 type ModuleAccountSource interface {
 	GetModuleAddress(moduleName string) sdk.AccAddress
 }
+
+// BalanceSource is an interface for retrieving balance-related information for a given account.
 type BalanceSource interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	IsSendEnabledDenom(ctx context.Context, denom string) bool
 }
 
+// ChainDataSource provides common sims test data and helper methods
 type ChainDataSource struct {
 	r                         *rand.Rand
 	addressToAccountsPosIndex map[string]int

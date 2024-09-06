@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"iter"
-
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -211,12 +209,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the gov content functions used to
-// simulate governance proposals.
-func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent { //nolint:staticcheck // used for legacy testing
-	return simulation.ProposalContents() // todo (Alex): remove
-}
-
 // RegisterStoreDecoder registers a decoder for gov module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[govtypes.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
@@ -227,14 +219,13 @@ func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
 	reg.Add(weights.Get("submit_text_proposal", 5), simulation.TextProposalFactory())
 }
 
-func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry, proposalsIter iter.Seq2[uint32, simsx.SimMsgFactoryX],
+func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry, proposalMsgIter simsx.WeightedProposalMsgIter,
 	legacyProposals []simtypes.WeightedProposalContent, //nolint:staticcheck // used for legacy proposal types
 ) {
 	// submit proposal for each payload message
-	for weight, factory := range proposalsIter {
-		// todo: pick a ratio so that we don't flood with gov ops
+	for weight, factory := range proposalMsgIter {
+		// use a ratio so that we don't flood with gov ops
 		reg.Add(weight/25, simulation.MsgSubmitProposalFactory(am.keeper, factory))
-		break // todo: support multiple entries of same msg type or refactor proposal factory
 	}
 	for _, wContent := range legacyProposals {
 		reg.Add(weights.Get(wContent.AppParamsKey(), uint32(wContent.DefaultWeight())), simulation.MsgSubmitLegacyProposalFactory(am.keeper, wContent.ContentSimulatorFn()))
@@ -245,4 +236,5 @@ func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Re
 	reg.Add(weights.Get("msg_vote", 67), simulation.MsgVoteFactory(am.keeper, state))
 	reg.Add(weights.Get("msg_weighted_vote", 33), simulation.MsgWeightedVoteFactory(am.keeper, state))
 	reg.Add(weights.Get("cancel_proposal", 5), simulation.MsgCancelProposalFactory(am.keeper, state))
+	reg.Add(weights.Get("legacy_text_proposal", 5), simulation.MsgSubmitLegacyProposalFactory(am.keeper, simulation.SimulateLegacyTextProposalContent))
 }

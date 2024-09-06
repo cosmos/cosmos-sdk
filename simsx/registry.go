@@ -2,8 +2,13 @@ package simsx
 
 import (
 	"context"
+	"iter"
 	"math/rand"
+	"slices"
+	"strings"
 	"time"
+
+	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/log"
@@ -14,21 +19,27 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// Registry is an abstract entry point to register message factories with weights
-type Registry interface {
-	Add(weight uint32, f SimMsgFactoryX)
-}
-type FutureOpsRegistry interface {
-	Add(blockTime time.Time, f SimMsgFactoryX)
-}
-type AccountSourceX interface {
-	AccountSource
-	ModuleAccountSource
-}
+type (
+	// Registry is an abstract entry point to register message factories with weights
+	Registry interface {
+		Add(weight uint32, f SimMsgFactoryX)
+	}
+	// FutureOpsRegistry register message factories for future blocks
+	FutureOpsRegistry interface {
+		Add(blockTime time.Time, f SimMsgFactoryX)
+	}
 
-var (
-	_ Registry = &WeightedOperationRegistryAdapter{}
+	// AccountSourceX Account and Module account
+	AccountSourceX interface {
+		AccountSource
+		ModuleAccountSource
+	}
 )
+
+// WeightedProposalMsgIter iterator for weighted gov proposal payload messages
+type WeightedProposalMsgIter = iter.Seq2[uint32, SimMsgFactoryX]
+
+var _ Registry = &WeightedOperationRegistryAdapter{}
 
 // common types for abstract registry without generics
 type regCommon struct {
@@ -111,7 +122,7 @@ func legacyOperationAdapter(l regCommon, fx SimMsgFactoryX) simtypes.Operation {
 		if fx, ok := fx.(HasFutureOpsRegistry); ok {
 			fx.SetFutureOpsRegistry(fOpsReg)
 		}
-		from, msg := runWithFailFast(ctx, testData, reporter, fx.Create())
+		from, msg := SafeRunFactoryMethod(ctx, testData, reporter, fx.Create())
 		futOps := fOpsReg.legacyObjs
 		weightedOpsResult := DeliverSimsMsg(ctx, reporter, app, r, l.txConfig, l.ak, chainID, msg, fx.DeliveryResultHandler(), from...)
 		err := reporter.Close()
@@ -139,41 +150,57 @@ func (l *FutureOperationRegistryAdapter) Add(blockTime time.Time, fx SimMsgFacto
 	l.legacyObjs = append(l.legacyObjs, obj)
 }
 
-type tuple struct {
-	signer []SimAccount
-	msg    sdk.Msg
+var _ Registry = &UniqueTypeRegistry{}
+
+type UniqueTypeRegistry map[string]WeightedFactory
+
+func NewUniqueTypeRegistry() UniqueTypeRegistry {
+	return make(UniqueTypeRegistry)
 }
 
-// runWithFailFast runs the factory method on a separate goroutine to abort early when the context is canceled via reporter skip
-func runWithFailFast(
-	ctx context.Context,
-	data *ChainDataSource,
-	reporter SimulationReporter,
-	f FactoryMethod,
-) (signer []SimAccount, msg sdk.Msg) {
-	r := make(chan tuple)
-	go func() {
-		defer recoverPanicForSkipped(reporter, r)
-		signer, msg := f(ctx, data, reporter)
-		r <- tuple{signer: signer, msg: msg}
-	}()
-	select {
-	case t, ok := <-r:
-		if !ok {
-			return nil, nil
+func (s UniqueTypeRegistry) Add(weight uint32, f SimMsgFactoryX) {
+	msgType := f.MsgType()
+	msgTypeURL := sdk.MsgTypeURL(msgType)
+	if _, exists := s[msgTypeURL]; exists {
+		panic("type is already registered: " + msgTypeURL)
+	}
+	s[msgTypeURL] = WeightedFactory{Weight: weight, Factory: f}
+}
+
+// Iterator returns an iterator function for a Go for loop sorted by weight desc.
+func (s UniqueTypeRegistry) Iterator() iter.Seq2[uint32, SimMsgFactoryX] {
+	x := maps.Values(s)
+	slices.SortFunc(x, func(a, b WeightedFactory) int {
+		return a.Compare(b)
+	})
+	return func(yield func(uint32, SimMsgFactoryX) bool) {
+		for _, v := range x {
+			if !yield(v.Weight, v.Factory) {
+				return
+			}
 		}
-		return t.signer, t.msg
-	case <-ctx.Done():
-		reporter.Skip("context closed")
-		return nil, nil
 	}
 }
 
-func recoverPanicForSkipped(reporter SimulationReporter, resultChan chan tuple) {
-	if r := recover(); r != nil {
-		if !reporter.IsSkipped() {
-			panic(r)
-		}
-		close(resultChan)
+// WeightedFactory is a Weight Factory tuple
+type WeightedFactory struct {
+	Weight  uint32
+	Factory SimMsgFactoryX
+}
+
+// Compare compares the WeightedFactory f with another WeightedFactory b.
+// The comparison is done by comparing the weight of f with the weight of b.
+// If the weight of f is greater than the weight of b, it returns 1.
+// If the weight of f is less than the weight of b, it returns -1.
+// If the weights are equal, it compares the TypeURL of the factories using strings.Compare.
+// Returns an integer indicating the comparison result.
+func (f WeightedFactory) Compare(b WeightedFactory) int {
+	switch {
+	case f.Weight > b.Weight:
+		return 1
+	case f.Weight < b.Weight:
+		return -1
+	default:
+		return strings.Compare(sdk.MsgTypeURL(f.Factory.MsgType()), sdk.MsgTypeURL(b.Factory.MsgType()))
 	}
 }

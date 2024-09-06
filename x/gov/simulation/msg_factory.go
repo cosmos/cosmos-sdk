@@ -215,10 +215,8 @@ func submitProposalWithVotesScheduled(
 	// didntVote := whoVotes[numVotes:]
 	whoVotes = whoVotes[:numVotes]
 	votingPeriod := params.VotingPeriod
-	if false {
-		// deactivate future ops so that votes do not flood the sims.
-		// a bug in the old sims framework prevented future-ops being executed
-		// this is fixed but we need a way to limit votes
+	// future ops so that votes do not flood the sims.
+	if r.Intn(100) == 1 { // 1% chance
 		now := simsx.BlockTime(ctx)
 		for i := 0; i < numVotes; i++ {
 			var vF simsx.SimMsgFactoryFn[*v1.MsgVote] = func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter) ([]simsx.SimAccount, *v1.MsgVote) {
@@ -235,8 +233,7 @@ func submitProposalWithVotesScheduled(
 				return []simsx.SimAccount{voter}, msg
 			}
 			whenVote := now.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)
-			_ = whenVote
-			fOpsReg.Add(now, vF)
+			fOpsReg.Add(whenVote, vF)
 		}
 	}
 	return []simsx.SimAccount{proposer}, msg

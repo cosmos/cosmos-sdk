@@ -115,45 +115,44 @@ func TestSimsMsgRegistryAdapter(t *testing.T) {
 	}
 }
 
-func TestRunWithFailFast(t *testing.T) {
-	myTestMsg := testdata.NewTestMsg()
-	mySigners := []SimAccount{SimAccountFixture()}
+func TestUniqueTypeRegistry(t *testing.T) {
+	f1 := SimMsgFactoryFn[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
+		return []SimAccount{}, nil
+	})
 	specs := map[string]struct {
-		factory    FactoryMethod
-		expSigners []SimAccount
-		expMsg     sdk.Msg
-		expSkipped bool
+		src    []WeightedFactory
+		exp    []WeightedFactory
+		expErr bool
 	}{
-		"factory completes": {
-			factory: func(ctx context.Context, _ *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
-				return mySigners, myTestMsg
-			},
-			expSigners: mySigners,
-			expMsg:     myTestMsg,
+		"unique": {
+			src: []WeightedFactory{{Weight: 1, Factory: f1}},
+			exp: []WeightedFactory{{Weight: 1, Factory: f1}},
 		},
-		"factory skips": {
-			factory: func(ctx context.Context, _ *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
-				reporter.Skip("testing")
-				return nil, nil
-			},
-			expSkipped: true,
-		},
-		"factory skips and panics": {
-			factory: func(ctx context.Context, _ *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
-				reporter.Skip("testing")
-				panic("should be handled")
-			},
-			expSkipped: true,
+		"duplicate": {
+			src:    []WeightedFactory{{Weight: 1, Factory: f1}, {Weight: 2, Factory: f1}},
+			expErr: true,
 		},
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			ctx, done := context.WithCancel(context.Background())
-			reporter := NewBasicSimulationReporter().WithScope(&testdata.TestMsg{}, SkipHookFn(func(...any) { done() }))
-			gotSigners, gotMsg := runWithFailFast(ctx, nil, reporter, spec.factory)
-			assert.Equal(t, spec.expSigners, gotSigners)
-			assert.Equal(t, spec.expMsg, gotMsg)
-			assert.Equal(t, spec.expSkipped, reporter.IsSkipped())
+			reg := NewUniqueTypeRegistry()
+			if spec.expErr {
+				require.Panics(t, func() {
+					for _, v := range spec.src {
+						reg.Add(v.Weight, v.Factory)
+					}
+				})
+				return
+			}
+			for _, v := range spec.src {
+				reg.Add(v.Weight, v.Factory)
+			}
+			// then
+			var got []WeightedFactory
+			for w, f := range reg.Iterator() {
+				got = append(got, WeightedFactory{Weight: w, Factory: f})
+			}
+			require.Len(t, got, len(spec.exp))
 		})
 	}
 }

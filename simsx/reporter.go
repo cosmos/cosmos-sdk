@@ -9,7 +9,6 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/maps"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -77,10 +76,9 @@ type BasicSimulationReporter struct {
 
 	status atomic.Uint32
 
-	cMX        sync.RWMutex
-	comments   []string
-	error      error
-	msgProtoBz []byte
+	cMX      sync.RWMutex
+	comments []string
+	error    error
 
 	summary *ExecutionSummary
 }
@@ -114,7 +112,6 @@ func (x *BasicSimulationReporter) WithScope(msg sdk.Msg, optionalSkipHook ...Ski
 		skipCallbacks:     append(x.skipCallbacks, optionalSkipHook...),
 		completedCallback: x.completedCallback,
 		error:             x.error,
-		msgProtoBz:        x.msgProtoBz,
 		msgTypeURL:        typeURL,
 		module:            sdk.GetModuleNameFromTypeURL(typeURL),
 		comments:          slices.Clone(x.comments),
@@ -144,9 +141,9 @@ func (x *BasicSimulationReporter) ToLegacyOperationMsg() simtypes.OperationMsg {
 		err := x.error
 		x.cMX.RUnlock()
 		if err == nil {
-			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, x.Comment(), true, x.msgProtoBz)
+			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, x.Comment(), true)
 		} else {
-			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, x.Comment(), false, x.msgProtoBz)
+			return simtypes.NewOperationMsgBasic(x.module, x.msgTypeURL, x.Comment(), false)
 		}
 	default:
 		x.Fail(errors.New("operation aborted before msg was executed"))
@@ -170,13 +167,6 @@ func (x *BasicSimulationReporter) Success(msg sdk.Msg, comments ...string) {
 	if msg == nil {
 		return
 	}
-	protoBz, err := proto.Marshal(msg) // todo: not great to capture the proto bytes here again but legacy test are using it.
-	if err != nil {
-		panic(err)
-	}
-	x.cMX.Lock()
-	defer x.cMX.Unlock()
-	x.msgProtoBz = protoBz
 }
 
 func (x *BasicSimulationReporter) Close() error {

@@ -110,3 +110,42 @@ func (f SimMsgFactoryFn[T]) DeliveryResultHandler() SimDeliveryResultHandler {
 func (f SimMsgFactoryFn[T]) Cast(msg sdk.Msg) T {
 	return msg.(T)
 }
+
+type tuple struct {
+	signer []SimAccount
+	msg    sdk.Msg
+}
+
+// SafeRunFactoryMethod runs the factory method on a separate goroutine to abort early when the context is canceled via reporter skip
+func SafeRunFactoryMethod(
+	ctx context.Context,
+	data *ChainDataSource,
+	reporter SimulationReporter,
+	f FactoryMethod,
+) (signer []SimAccount, msg sdk.Msg) {
+	r := make(chan tuple)
+	go func() {
+		defer recoverPanicForSkipped(reporter, r)
+		signer, msg := f(ctx, data, reporter)
+		r <- tuple{signer: signer, msg: msg}
+	}()
+	select {
+	case t, ok := <-r:
+		if !ok {
+			return nil, nil
+		}
+		return t.signer, t.msg
+	case <-ctx.Done():
+		reporter.Skip("context closed")
+		return nil, nil
+	}
+}
+
+func recoverPanicForSkipped(reporter SimulationReporter, resultChan chan tuple) {
+	if r := recover(); r != nil {
+		if !reporter.IsSkipped() {
+			panic(r)
+		}
+		close(resultChan)
+	}
+}

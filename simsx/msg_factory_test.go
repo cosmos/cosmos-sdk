@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -48,6 +50,49 @@ func TestMsgFactories(t *testing.T) {
 			require.NotNil(t, spec.src.DeliveryResultHandler())
 			gotErr := spec.src.DeliveryResultHandler()(errors.New("testing"))
 			assert.Equal(t, spec.expErrHandled, gotErr == nil)
+		})
+	}
+}
+
+func TestRunWithFailFast(t *testing.T) {
+	myTestMsg := testdata.NewTestMsg()
+	mySigners := []SimAccount{SimAccountFixture()}
+	specs := map[string]struct {
+		factory    FactoryMethod
+		expSigners []SimAccount
+		expMsg     sdk.Msg
+		expSkipped bool
+	}{
+		"factory completes": {
+			factory: func(ctx context.Context, _ *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
+				return mySigners, myTestMsg
+			},
+			expSigners: mySigners,
+			expMsg:     myTestMsg,
+		},
+		"factory skips": {
+			factory: func(ctx context.Context, _ *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
+				reporter.Skip("testing")
+				return nil, nil
+			},
+			expSkipped: true,
+		},
+		"factory skips and panics": {
+			factory: func(ctx context.Context, _ *ChainDataSource, reporter SimulationReporter) ([]SimAccount, sdk.Msg) {
+				reporter.Skip("testing")
+				panic("should be handled")
+			},
+			expSkipped: true,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			ctx, done := context.WithCancel(context.Background())
+			reporter := NewBasicSimulationReporter().WithScope(&testdata.TestMsg{}, SkipHookFn(func(...any) { done() }))
+			gotSigners, gotMsg := SafeRunFactoryMethod(ctx, nil, reporter, spec.factory)
+			assert.Equal(t, spec.expSigners, gotSigners)
+			assert.Equal(t, spec.expMsg, gotMsg)
+			assert.Equal(t, spec.expSkipped, reporter.IsSkipped())
 		})
 	}
 }

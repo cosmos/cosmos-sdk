@@ -241,7 +241,7 @@ func prepareWeightedOps(
 	weights := simsx.ParamWeightSource(simState.AppParams)
 	reporter := simsx.NewBasicSimulationReporter()
 
-	pReg := make(simsx.SimsV2Reg)
+	pReg := make(simsx.UniqueTypeRegistry)
 	wProps := make([]simtypes.WeightedProposalMsg, 0, len(sm.Modules))
 	wContent := make([]simtypes.WeightedProposalContent, 0)
 

@@ -157,10 +157,17 @@ It only exposes the following methods to the hypervisor:
 - `create(account address, state config)`: creates a new account state with the specified address and **state config**.
 - `migrate(account address, new state config)`: migrates the account state with the specified address to a new state config
 - `destroy(account address)`: destroys the account state with the specified address
-- `discard_cleanup(state token)`: called by the hypervisor when a call fails due to a fatal unwinding error (such as out of gas), with any state tokens that were used in the call stack that is unwound. This allows for a graceful cleanup of state resources in the event of fatal errors.
+- `begin_tx(state_token)`: creates a nested transaction within the specified state token
+- `commit_tx(state token)`: commits any state changes in the current nested transaction of the specified state token
+- `rollback_tx(state token)`: discards any state changes in the current nested transaction of the specified state token
+- `discard_cleanup(state token)`: cleans up and discards the current state token
+
+It is expected that _only_ the hypervisor can call the above methods.
 
 **State config** are optional bytes that each account handler's metadata can define which get passed to the **state handler** when an account is created.
 These bytes can be used by the **state handler** to determine what type of state and commitment store the **account** needs.
+
+`begin_tx`, `commit_tx`, `rollback_tx` and `discard_cleanup` are used internally by the hypervisor for error handling. See the error handling section for more details on their usage.
 
 A **state token** is an array of 32-bytes that is passed in each message request.
 It is opaque to the hypervisor except that the first bit of the first byte (the high bit)
@@ -325,16 +332,33 @@ although message handlers are free to use **output data pointer 2** if necessary
 System-level errors, if they do include additional data, will encode it as a string in **output data pointer 1**
 and will limit such messages to a maximum of 255 bytes.
 
-#### Unwinding Errors
+#### Errors and State Transactions
+
+Whenever a volatile message handler returns an error, no side effects can occur.
+If any side effects were applied to state before the error occurred, these must be rolled back.
+The hypervisor manages this using the `begin_tx`, `commit_tx`, and `rollback_tx` on the **state handler**.
+
+Before any call to a volatile method,
+the hypervisor will call `begin_tx` with the state token passed in the message request.
+If the method returns the core `0` for success, then the hypervisor will call `commit_tx` with the state token.
+If the method returns an error code, then the hypervisor will call `rollback_tx` with the state token
+and return the error to the caller.
+
+This ensures state consistency in the presence of errors.
+
+#### Unwinding Errors and Discarding State Tokens
 
 Error codes 1 (out of gas) and 2 (fatal execution error) are considered unwinding errors.
 If one of these errors is returned, the hypervisor will halt execution of the calling message handler
 and unwind the call stack up to the last recoverable message handler if there is one.
-When unwinding, the hypervisor will call the `discard_cleanup` method on the **state handler**
-with the **state token** of each message handler that is unwound.
+When unwinding, the hypervisor will call the `discard_cleanup` method of the **state handler**
+with each _new_ state token that was introduced in the unwound call stack.
+This ensures that if message handlers used new state tokens to create nested transactions,
+these transactions are properly cleaned up.
+Any state token that was used in the call stack before the unwinding target will not be cleaned up.
 
-For out-of-gas errors, the hypervisor will unwind up to the caller that set the gas limit.
-For fatal execution errors, the hypervisor will unwind up to the external caller that called the hypervisor, likely
+For out-of-gas errors (code 1), the hypervisor will unwind up to the caller that set the gas limit.
+For fatal execution errors (code 2), the hypervisor will unwind up to the external caller that called the hypervisor, likely
 resulting in process termination.
 A fatal execution error should only be returned when it is expected that the error is non-deterministic and unrecoverable.
 An example of such an error would be running out of disk space or losing network connectivity.

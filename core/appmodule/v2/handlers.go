@@ -21,10 +21,10 @@ type (
 type PreMsgRouter interface {
 	// RegisterPreHandler will register a specific message handler hooking into the message with
 	// the provided name.
-	RegisterPreMsgHandler(msgName string, handler PreMsgHandler) error
+	RegisterPreMsgHandler(msgName string, handler PreMsgHandler)
 	// RegisterGlobalPreHandler will register a global message handler hooking into any message
 	// being executed.
-	RegisterGlobalPreMsgHandler(handler PreMsgHandler) error
+	RegisterGlobalPreMsgHandler(handler PreMsgHandler)
 }
 
 // HasPreMsgHandlers is an interface that modules must implement if they want to register PreMsgHandlers.
@@ -58,6 +58,7 @@ func RegisterMsgPreHandler[Req transaction.Msg](
 		}
 		return handler(ctx, typed)
 	}
+
 	router.RegisterPreMsgHandler(msgName, untypedHandler)
 }
 
@@ -65,9 +66,9 @@ func RegisterMsgPreHandler[Req transaction.Msg](
 type PostMsgRouter interface {
 	// RegisterPostHandler will register a specific message handler hooking after the execution of message with
 	// the provided name.
-	RegisterPostMsgHandler(msgName string, handler PostMsgHandler) error
+	RegisterPostMsgHandler(msgName string, handler PostMsgHandler)
 	// RegisterGlobalPostHandler will register a global message handler hooking after the execution of any message.
-	RegisterGlobalPostMsgHandler(handler PostMsgHandler) error
+	RegisterGlobalPostMsgHandler(handler PostMsgHandler)
 }
 
 // HasPostMsgHandlers is an interface that modules must implement if they want to register PostMsgHandlers.
@@ -105,11 +106,12 @@ func RegisterPostMsgHandler[Req, Resp transaction.Msg](
 		}
 		return handler(ctx, typed, typedResp)
 	}
+
 	router.RegisterPostMsgHandler(msgName, untypedHandler)
 }
 
 // MsgRouter is a router that allows you to register Handlers for specific message types.
-type MsgRouter interface {
+type MsgRouter = interface {
 	RegisterHandler(msgName string, handler Handler) error
 }
 
@@ -140,20 +142,20 @@ type HasQueryHandlers interface {
 //
 //	func (m Module) RegisterMsgHandlers(router appmodule.MsgRouter) {
 //		handlers := keeper.NewHandlers(m.keeper)
-//	    appmodule.RegisterHandler(router, gogoproto.MessageName(types.MsgMint{}), handlers.MsgMint)
+//	    err := appmodule.RegisterHandler(router, gogoproto.MessageName(types.MsgMint{}), handlers.MsgMint)
 //	}
 //
 //	func (m Module) RegisterQueryHandlers(router appmodule.QueryRouter) {
 //		handlers := keeper.NewHandlers(m.keeper)
-//	    appmodule.RegisterHandler(router, gogoproto.MessageName(types.QueryBalanceRequest{}), handlers.QueryBalance)
+//	    err := appmodule.RegisterHandler(router, gogoproto.MessageName(types.QueryBalanceRequest{}), handlers.QueryBalance)
 //	}
 //
 // ```
-func RegisterHandler[R MsgRouter, Req, Resp transaction.Msg](
-	router R,
+func RegisterHandler[Req, Resp transaction.Msg](
+	router MsgRouter,
 	msgName string,
 	handler func(ctx context.Context, msg Req) (msgResp Resp, err error),
-) {
+) error {
 	untypedHandler := func(ctx context.Context, m transaction.Msg) (transaction.Msg, error) {
 		typed, ok := m.(Req)
 		if !ok {
@@ -161,5 +163,6 @@ func RegisterHandler[R MsgRouter, Req, Resp transaction.Msg](
 		}
 		return handler(ctx, typed)
 	}
-	router.RegisterHandler(msgName, untypedHandler)
+
+	return router.RegisterHandler(msgName, untypedHandler)
 }

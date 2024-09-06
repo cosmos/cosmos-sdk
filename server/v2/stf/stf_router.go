@@ -41,24 +41,20 @@ func (b *MsgRouterBuilder) RegisterHandler(msgType string, handler appmodulev2.H
 	return nil
 }
 
-func (b *MsgRouterBuilder) RegisterGlobalPreMsgHandler(handler appmodulev2.PreMsgHandler) error {
+func (b *MsgRouterBuilder) RegisterGlobalPreMsgHandler(handler appmodulev2.PreMsgHandler) {
 	b.globalPreHandlers = append(b.globalPreHandlers, handler)
-	return nil
 }
 
-func (b *MsgRouterBuilder) RegisterPreMsgHandler(msgType string, handler appmodulev2.PreMsgHandler) error {
+func (b *MsgRouterBuilder) RegisterPreMsgHandler(msgType string, handler appmodulev2.PreMsgHandler) {
 	b.preHandlers[msgType] = append(b.preHandlers[msgType], handler)
-	return nil
 }
 
-func (b *MsgRouterBuilder) RegisterPostMsgHandler(msgType string, handler appmodulev2.PostMsgHandler) error {
+func (b *MsgRouterBuilder) RegisterPostMsgHandler(msgType string, handler appmodulev2.PostMsgHandler) {
 	b.postHandlers[msgType] = append(b.postHandlers[msgType], handler)
-	return nil
 }
 
-func (b *MsgRouterBuilder) RegisterGlobalPostMsgHandler(handler appmodulev2.PostMsgHandler) error {
+func (b *MsgRouterBuilder) RegisterGlobalPostMsgHandler(handler appmodulev2.PostMsgHandler) {
 	b.globalPostHandlers = append(b.globalPostHandlers, handler)
-	return nil
 }
 
 func (b *MsgRouterBuilder) HandlerExists(msgType string) bool {

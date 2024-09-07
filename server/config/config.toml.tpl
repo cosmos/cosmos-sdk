@@ -224,3 +224,13 @@ stop-node-on-err = {{ .Streaming.ABCI.StopNodeOnErr }}
 # Note, this configuration only applies to SDK built-in app-side mempool
 # implementations.
 max-txs = {{ .Mempool.MaxTxs }}
+
+###############################################################################
+###                         LogMonitor Configuration                        ###
+###############################################################################
+
+[log-monitor]
+# Enable defines if the log monitor should be enabled.
+enabled = {{ .LogMonitor.Enabled }}
+# ShutdownStrings defines the strings that will trigger a shutdown if found in the logs.
+shutdown-strings = [{{ range .LogMonitor.ShutdownStrings }}{{ printf "%q, " . }}{{end}}]

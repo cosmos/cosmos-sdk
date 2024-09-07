@@ -9,6 +9,10 @@ import (
 	"sync"
 )
 
+const (
+	ConfigKey = "log-monitor"
+)
+
 var (
 	ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
 )
@@ -26,17 +30,42 @@ type multiWriter struct {
 	monitor *LogMonitor
 }
 
+// Config holds the configuration for LogMonitor
+type Config struct {
+	Enabled         bool     `mapstructure:"enabled"`
+	ShutdownStrings []string `mapstructure:"shutdown-strings"`
+}
+
+// DefaultConfig returns a default configuration for LogMonitor
+func DefaultConfig() Config {
+	return Config{
+		Enabled:         false,
+		ShutdownStrings: []string{"CONSENSUS FAILURE!", "CRITICAL ERROR"},
+	}
+}
+
+// Validate checks if the config is valid
+func (c Config) Validate() error {
+	if len(c.ShutdownStrings) == 0 {
+		return fmt.Errorf("at least one shutdown string must be provided")
+	}
+	return nil
+}
+
 // NewLogMonitor creates a new LogMonitor instance.
-func NewLogMonitor(shutdownFn func(string), shutdownStrings []string) *LogMonitor {
+func NewLogMonitor(cfg *Config, shutdownFn func(string)) *LogMonitor {
 	return &LogMonitor{
 		shutdownFn:      shutdownFn,
-		shutdownStrings: shutdownStrings,
+		shutdownStrings: cfg.ShutdownStrings,
 	}
 }
 
 // InitGlobalLogMonitor initializes the log monitoring system.
-func InitGlobalLogMonitor(shutdownFn func(string), shutdownStrings []string) (io.Writer, io.Writer) {
-	monitor := NewLogMonitor(shutdownFn, shutdownStrings)
+func InitGlobalLogMonitor(cfg Config, shutdownFn func(string)) (io.Writer, io.Writer) {
+	if !cfg.Enabled {
+		return os.Stdout, os.Stderr
+	}
+	monitor := NewLogMonitor(&cfg, shutdownFn)
 	stdout := NewMultiWriter(monitor, os.Stdout)
 	stderr := NewMultiWriter(monitor, os.Stderr)
 	return stdout, stderr

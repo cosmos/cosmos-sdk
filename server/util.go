@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/server/log/logmonitor"
 	"io"
 	"net"
 	"os"
@@ -109,6 +110,21 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 		return err
 	}
 
+	var logMonitorConfig logmonitor.Config
+	if err = serverCtx.Viper.UnmarshalKey(logmonitor.ConfigKey, &logMonitorConfig); err != nil {
+		return fmt.Errorf("failed to unmarshal log monitor config: %w", err)
+	}
+
+	if logMonitorConfig.Enabled {
+		stdout, stderr := logmonitor.InitGlobalLogMonitor(logMonitorConfig, func(reason string) {
+			fmt.Println("Shutting down due to:", reason)
+			os.Exit(1)
+		})
+
+		cmd.SetOut(stdout)
+		cmd.SetErr(stderr)
+	}
+
 	// overwrite default server logger
 	logger, err := CreateSDKLogger(serverCtx, cmd.OutOrStdout())
 	if err != nil {
@@ -174,7 +190,8 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
-	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
+	pp := ctx.Viper.GetString(flags.FlagLogFormat)
+	if pp == flags.OutputFormatJSON {
 		opts = append(opts, log.OutputJSONOption())
 	}
 	opts = append(opts,

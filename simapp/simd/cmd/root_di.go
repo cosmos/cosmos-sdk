@@ -3,8 +3,6 @@
 package cmd
 
 import (
-	"fmt"
-	"github.com/cosmos/cosmos-sdk/server/log/logmonitor"
 	"github.com/spf13/cobra"
 	"os"
 
@@ -75,18 +73,6 @@ func NewRootCmd() *cobra.Command {
 
 			customAppTemplate, customAppConfig := initAppConfig()
 			customCMTConfig := initCometBFTConfig()
-
-			// set the default command outputs
-			// TODO: Make it configurable
-			stdout, stderr := logmonitor.InitGlobalLogMonitor(func(reason string) {
-				fmt.Println("Shutting down due to:", reason)
-				os.Exit(1)
-			}, []string{"test"})
-			//
-			// Set the output of the root command to use our MultiWriter
-			cmd.SetOut(stdout)
-			cmd.SetErr(stderr)
-			//
 
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig)
 		},

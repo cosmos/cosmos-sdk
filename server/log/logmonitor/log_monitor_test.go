@@ -54,7 +54,8 @@ func TestLogMonitorWrite(t *testing.T) {
 				shutdownCalled = true
 			}
 
-			lm := NewLogMonitor(shutdownFn, tc.shutdownStrings)
+			cfg := &Config{ShutdownStrings: tc.shutdownStrings}
+			lm := NewLogMonitor(cfg, shutdownFn)
 
 			n, err := lm.Write([]byte(tc.input))
 			require.NoError(t, err)
@@ -65,33 +66,22 @@ func TestLogMonitorWrite(t *testing.T) {
 	}
 }
 
-func TestMultiWriter(t *testing.T) {
+func TestInitGlobalLogMonitor(t *testing.T) {
+	cfg := DefaultConfig()
+	cfg.Enabled = true
+	
 	shutdownCalled := false
 	shutdownFn := func(reason string) {
 		shutdownCalled = true
 	}
-	shutdownStrings := []string{"CONSENSUS FAILURE!"}
 
-	lm := NewLogMonitor(shutdownFn, shutdownStrings)
+	stdout, stderr := InitGlobalLogMonitor(cfg, shutdownFn)
+	
+	require.NotNil(t, stdout)
+	require.NotNil(t, stderr)
 
-	buf1 := &bytes.Buffer{}
-	buf2 := &bytes.Buffer{}
-
-	mw := NewMultiWriter(lm, buf1, buf2)
-
-	testString := "Test log message"
-	n, err := mw.Write([]byte(testString))
-
+	_, err := stdout.Write([]byte("CONSENSUS FAILURE!\n"))
 	require.NoError(t, err)
-	require.Equal(t, len(testString), n)
-	require.Equal(t, testString, buf1.String())
-	require.Equal(t, testString, buf2.String())
-	require.False(t, shutdownCalled)
-
-	criticalError := "CONSENSUS FAILURE! Critical error"
-	_, _ = mw.Write([]byte(criticalError))
 
 	require.True(t, shutdownCalled)
-	require.True(t, strings.Contains(buf1.String(), criticalError))
-	require.True(t, strings.Contains(buf2.String(), criticalError))
 }

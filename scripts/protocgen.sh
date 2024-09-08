@@ -57,4 +57,9 @@ done
 cp -r github.com/cosmos/cosmos-sdk/* ./
 rm -rf github.com
 
+# UNTIL WE FIGURE OUT ABOUT COSMOSSDK.IO/API, DO NOT GENERATE PULSAR FILES FOR NEW MODULES
+# unfortunately, there is no way to do it nicely directly in the buf.gen.pulsar.yaml file (https://github.com/bufbuild/buf/issues/224)
+rm -r api/cosmos/bank/v2
+rm -r api/cosmos/bank/module/v2
+
 go mod tidy

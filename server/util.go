@@ -135,6 +135,7 @@ func configureLogMonitor(serverCtx *Context, cmd *cobra.Command) error {
 
 	if logMonitorConfig.Enabled {
 		stdout, stderr := logmonitor.InitGlobalLogMonitor(logMonitorConfig, func(reason string) {
+			_, _ = fmt.Fprintf(os.Stderr, "Shutting down due to log monitor trigger: %s\n", reason)
 			os.Exit(1)
 		})
 

@@ -9,9 +9,7 @@ import (
 	"sync"
 )
 
-var (
-	ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
-)
+var ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
 
 // LogMonitor is responsible for monitoring logs and triggering actions based on specific patterns.
 type LogMonitor struct {

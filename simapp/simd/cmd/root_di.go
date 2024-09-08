@@ -3,8 +3,9 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 
 	authv1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"

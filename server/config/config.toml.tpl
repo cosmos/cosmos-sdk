@@ -233,4 +233,4 @@ max-txs = {{ .Mempool.MaxTxs }}
 # Enable defines if the log monitor should be enabled.
 enabled = {{ .LogMonitor.Enabled }}
 # ShutdownStrings defines the strings that will trigger a shutdown if found in the logs.
-shutdown-strings = [{{ range .LogMonitor.ShutdownStrings }}{{ printf "%q, " . }}{{end}}]
+shutdown-strings = [{{ range $index, $element := .LogMonitor.ShutdownStrings }}{{ if $index }}, {{ end }}"{{ $element }}"{{ end }}]

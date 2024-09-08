@@ -1,8 +1,6 @@
 package logmonitor
 
 import (
-	"bytes"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -69,14 +67,14 @@ func TestLogMonitorWrite(t *testing.T) {
 func TestInitGlobalLogMonitor(t *testing.T) {
 	cfg := DefaultConfig()
 	cfg.Enabled = true
-	
+
 	shutdownCalled := false
 	shutdownFn := func(reason string) {
 		shutdownCalled = true
 	}
 
 	stdout, stderr := InitGlobalLogMonitor(cfg, shutdownFn)
-	
+
 	require.NotNil(t, stdout)
 	require.NotNil(t, stderr)
 

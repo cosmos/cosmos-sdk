@@ -9,10 +9,6 @@ import (
 	"sync"
 )
 
-const (
-	ConfigKey = "log-monitor"
-)
-
 var (
 	ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
 )
@@ -28,28 +24,6 @@ type LogMonitor struct {
 type multiWriter struct {
 	writers []io.Writer
 	monitor *LogMonitor
-}
-
-// Config holds the configuration for LogMonitor
-type Config struct {
-	Enabled         bool     `mapstructure:"enabled"`
-	ShutdownStrings []string `mapstructure:"shutdown-strings"`
-}
-
-// DefaultConfig returns a default configuration for LogMonitor
-func DefaultConfig() Config {
-	return Config{
-		Enabled:         false,
-		ShutdownStrings: []string{"CONSENSUS FAILURE!", "CRITICAL ERROR"},
-	}
-}
-
-// Validate checks if the config is valid
-func (c Config) Validate() error {
-	if len(c.ShutdownStrings) == 0 {
-		return fmt.Errorf("at least one shutdown string must be provided")
-	}
-	return nil
 }
 
 // NewLogMonitor creates a new LogMonitor instance.

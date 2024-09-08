@@ -110,19 +110,9 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 		return err
 	}
 
-	var logMonitorConfig logmonitor.Config
-	if err = serverCtx.Viper.UnmarshalKey(logmonitor.ConfigKey, &logMonitorConfig); err != nil {
-		return fmt.Errorf("failed to unmarshal log monitor config: %w", err)
-	}
-
-	if logMonitorConfig.Enabled {
-		stdout, stderr := logmonitor.InitGlobalLogMonitor(logMonitorConfig, func(reason string) {
-			fmt.Println("Shutting down due to:", reason)
-			os.Exit(1)
-		})
-
-		cmd.SetOut(stdout)
-		cmd.SetErr(stderr)
+	// Configure log monitor before creating the logger
+	if err = configureLogMonitor(serverCtx, cmd); err != nil {
+		return err
 	}
 
 	// overwrite default server logger
@@ -134,6 +124,26 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 
 	// set server context
 	return SetCmdServerContext(cmd, serverCtx)
+}
+
+// configureLogMonitor sets up the log monitor if enabled in the configuration.
+func configureLogMonitor(serverCtx *Context, cmd *cobra.Command) error {
+	var logMonitorConfig logmonitor.Config
+	if err := serverCtx.Viper.UnmarshalKey(logmonitor.ConfigKey, &logMonitorConfig); err != nil {
+		return fmt.Errorf("failed to unmarshal log monitor config: %w", err)
+	}
+
+	if logMonitorConfig.Enabled {
+		stdout, stderr := logmonitor.InitGlobalLogMonitor(logMonitorConfig, func(reason string) {
+			os.Exit(1)
+		})
+
+		cmd.SetOut(stdout)
+		cmd.SetErr(stderr)
+		serverCtx.Logger.Info("Log monitor enabled and configured")
+	}
+
+	return nil
 }
 
 // InterceptConfigsAndCreateContext performs a pre-run function for the root daemon

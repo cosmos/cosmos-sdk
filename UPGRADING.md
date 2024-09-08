@@ -106,7 +106,7 @@ For non depinject users, simply call `RegisterLegacyAminoCodec` and `RegisterInt
 
 Additionally, thanks to the genesis simplification, as explained in [the genesis interface update](#genesis-interface), the module manager `InitGenesis` and `ExportGenesis` methods do not require the codec anymore.
 
-##### GRPC-WEB
+##### GRPC WEB
 
 Grpc-web embedded client has been removed from the server. If you would like to use grpc-web, you can use the [envoy proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start). Here's how to set it up:
 
@@ -347,6 +347,8 @@ Also, any usages of the interfaces `AnyUnpacker` and `UnpackInterfacesMessage` m
 
 #### `**all**`
 
+All modules (expect `auth`) were spun out into their own `go.mod`. Replace their imports by `cosmossdk.io/x/{moduleName}`.
+
 ##### Core API
 
 Core API has been introduced for modules since v0.47. With the deprecation of `sdk.Context`, we strongly recommend to use the `cosmossdk.io/core/appmodule` interfaces for the modules. This will allow the modules to work out of the box with server/v2 and baseapp, as well as limit their dependencies on the SDK.
@@ -375,11 +377,11 @@ The signature of the extension interface `HasRegisterInterfaces` has been change
 +func (AppModule) RegisterInterfaces(registry registry.InterfaceRegistrar) {
 ```
 
-The signature of the extension interface `HasAminoCodec` has been changed to accept a `cosmossdk.io/core/legacy.Amino` instead of a `codec.LegacyAmino`. Modules should update their `HasAminoCodec` implementation to accept a `cosmossdk.io/core/legacy.Amino` interface.
+The signature of the extension interface `HasAminoCodec` has been changed to accept a `cosmossdk.io/core/registry.AminoRegistrar` instead of a `codec.LegacyAmino`. Modules should update their `HasAminoCodec` implementation to accept a `cosmossdk.io/core/registry.AminoRegistrar` interface.
 
 ```diff
 -func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
++func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
 ```
 
 ##### Simulation
@@ -399,7 +401,7 @@ All modules using dependency injection must update their imports.
 
 ##### Params
 
-Previous module migrations have been removed. It is required to migrate to v0.50 prior to upgrading to v0.51 for not missing any module migrations.
+Previous module migrations have been removed. It is required to migrate to v0.50 prior to upgrading to v0.52 for not missing any module migrations.
 
 ##### Genesis Interface
 
@@ -428,7 +430,7 @@ For modules that have migrated, verify you are checking against `collections.Err
 Accounts's AccountNumber will be used as a global account number tracking replacing Auth legacy AccountNumber. Must set accounts's AccountNumber with auth's AccountNumber value in upgrade handler. This is done through auth keeper MigrateAccountNumber function.
 
 ```go
-import authkeeper "cosmossdk.io/x/auth/keeper" 
+import authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper" 
 ...
 err := authkeeper.MigrateAccountNumberUnsafe(ctx, &app.AuthKeeper)
 if err != nil {
@@ -436,60 +438,24 @@ if err != nil {
 }
 ```
 
-#### `x/auth`
+### `x/crisis`
 
-Auth was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/auth`
-
-#### `x/authz`
-
-Authz was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/authz`
-
-#### `x/bank`
-
-Bank was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/bank`
-
-### `x/crsis`
-
-The Crisis module was removed due to it not being supported or functional any longer. 
+The `x/crisis` module was removed due to it not being supported or functional any longer. 
 
 #### `x/distribution`
 
-Distribution was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/distribution`
-
-The existing chains using x/distribution module needs to add the new x/protocolpool module.
-
-#### `x/group`
-
-Group was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/group`
+Existing chains using `x/distribution` module must add the new `x/protocolpool` module.
 
 #### `x/gov`
-
-Gov was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/gov`
 
 Gov v1beta1 proposal handler has been changed to take in a `context.Context` instead of `sdk.Context`.
 This change was made to allow legacy proposals to be compatible with server/v2.
 If you wish to migrate to server/v2, you should update your proposal handler to take in a `context.Context` and use services.
 On the other hand, if you wish to keep using baseapp, simply unwrap the sdk context in your proposal handler.
 
-#### `x/mint`
-
-Mint was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/mint`
-
-#### `x/slashing`
-
-Slashing was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/slashing`
-
-#### `x/staking`
-
-Staking was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/staking`
-
-#### `x/params`
-
-A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".
-
 #### `x/protocolpool`
 
-Introducing a new `x/protocolpool` module to handle community pool funds. Its store must be added while upgrading to v0.51.x.
+Introducing a new `x/protocolpool` module to handle community pool funds. Its store must be added while upgrading to v0.52.x.
 
 Example:
 
@@ -506,7 +472,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 }
 ```
 
-Add `x/protocolpool` store while upgrading to v0.51.x:
+Add `x/protocolpool` store while upgrading to v0.52.x:
 
 ```go
 storetypes.StoreUpgrades{

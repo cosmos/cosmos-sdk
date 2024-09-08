@@ -2204,8 +2204,6 @@ Example Output:
 
 The `params` endpoint allows users to query all parameters for the `gov` module.
 
-<!-- TODO: #10197 Querying governance params outputs nil values -->
-
 Using legacy v1beta1:
 
 ```bash
@@ -2225,16 +2223,6 @@ Example Output:
   "voting_params": {
     "voting_period": "172800s"
   },
-  "deposit_params": {
-    "min_deposit": [
-    ],
-    "max_deposit_period": "0s"
-  },
-  "tally_params": {
-    "quorum": "0.000000000000000000",
-    "threshold": "0.000000000000000000",
-    "veto_threshold": "0.000000000000000000"
-  }
 }
 ```
 
@@ -2269,6 +2257,8 @@ Example Output:
   }
 }
 ```
+
+Note: `params_type` are deprecated in v1 since all params are stored in Params.
 
 #### deposits
 

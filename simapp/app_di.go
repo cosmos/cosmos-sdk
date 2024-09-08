@@ -10,19 +10,14 @@ import (
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
-	"cosmossdk.io/x/auth"
-	"cosmossdk.io/x/auth/ante"
-	"cosmossdk.io/x/auth/ante/unorderedtx"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtypes "cosmossdk.io/x/auth/types"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
+	bankv2keeper "cosmossdk.io/x/bank/v2/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	consensuskeeper "cosmossdk.io/x/consensus/keeper"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
@@ -50,6 +45,12 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // DefaultNodeHome default home directories for the application daemon
@@ -65,7 +66,7 @@ var (
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*runtime.App
-	legacyAmino       legacy.Amino
+	legacyAmino       registry.AminoRegistrar
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -74,6 +75,7 @@ type SimApp struct {
 	AccountsKeeper        accounts.Keeper
 	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
+	BankV2Keeper          *bankv2keeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
 	MintKeeper            mintkeeper.Keeper
@@ -184,6 +186,7 @@ func NewSimApp(
 		&app.AuthKeeper,
 		&app.AccountsKeeper,
 		&app.BankKeeper,
+		&app.BankV2Keeper,
 		&app.StakingKeeper,
 		&app.SlashingKeeper,
 		&app.MintKeeper,

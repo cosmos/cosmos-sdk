@@ -42,6 +42,7 @@ type Meter interface {
 	Limit() Gas
 }
 
+// GasConfig defines the gas costs for the application.
 type GasConfig struct {
 	HasCost          Gas
 	DeleteCost       Gas

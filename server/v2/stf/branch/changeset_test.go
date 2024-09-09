@@ -2,8 +2,6 @@ package branch
 
 import (
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func Test_memIterator(t *testing.T) {
@@ -23,6 +21,8 @@ func Test_memIterator(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		require.False(t, it.Valid())
+		if it.Valid() {
+			t.Fatal("iterator must be invalid")
+		}
 	})
 }

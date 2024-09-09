@@ -21,6 +21,10 @@ type Logger interface {
 	Debug(msg string, keyVals ...interface{})
 }
 
+type ScopeableLogger interface {
+	WithContext(keyVals ...interface{}) interface{}
+}
+
 // NoopLogger is a logger that doesn't do anything.
 type NoopLogger struct{}
 

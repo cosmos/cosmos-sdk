@@ -22,31 +22,9 @@ type Config struct {
 	Type string `json:"type"`
 
 	// Config are the indexer specific config options specified by the user.
-	Config map[string]interface{} `json:"config"`
+	Config map[string]interface{} `json:"config,omitempty"`
 
-	// ExcludeState specifies that the indexer will not receive state updates.
-	ExcludeState bool `json:"exclude_state"`
-
-	// ExcludeEvents specifies that the indexer will not receive events.
-	ExcludeEvents bool `json:"exclude_events"`
-
-	// ExcludeTxs specifies that the indexer will not receive transaction's.
-	ExcludeTxs bool `json:"exclude_txs"`
-
-	// ExcludeBlockHeaders specifies that the indexer will not receive block headers,
-	// although it will still receive StartBlock and Commit callbacks, just without
-	// the header data.
-	ExcludeBlockHeaders bool `json:"exclude_block_headers"`
-
-	// IncludeModules specifies a list of modules whose state the indexer will
-	// receive state updates for.
-	// Only one of include or exclude modules should be specified.
-	IncludeModules []string `json:"include_modules"`
-
-	// ExcludeModules specifies a list of modules whose state the indexer will not
-	// receive state updates for.
-	// Only one of include or exclude modules should be specified.
-	ExcludeModules []string `json:"exclude_modules"`
+	Filter *FilterConfig `json:"filter,omitempty"`
 }
 
 type InitFunc = func(InitParams) (InitResult, error)

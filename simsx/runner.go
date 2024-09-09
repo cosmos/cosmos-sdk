@@ -1,4 +1,4 @@
-package sims
+package simsx
 
 import (
 	"encoding/json"
@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simsx"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -48,8 +47,8 @@ type SimStateFactory struct {
 	Codec         codec.Codec
 	AppStateFn    simtypes.AppStateFn
 	BlockedAddr   map[string]bool
-	AccountSource simsx.AccountSourceX
-	BalanceSource simsx.BalanceSource
+	AccountSource AccountSourceX
+	BalanceSource BalanceSource
 }
 
 // SimulationApp abstract app that is used by sims
@@ -159,14 +158,14 @@ func RunWithSeed[T SimulationApp](
 
 type (
 	HasWeightedOperationsX interface {
-		WeightedOperationsX(weight simsx.WeightSource, reg simsx.Registry)
+		WeightedOperationsX(weight WeightSource, reg Registry)
 	}
 	HasWeightedOperationsXWithProposals interface {
-		WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry, proposals iter.Seq2[uint32, simsx.SimMsgFactoryX],
+		WeightedOperationsX(weights WeightSource, reg Registry, proposals iter.Seq2[uint32, SimMsgFactoryX],
 			legacyProposals []simtypes.WeightedProposalContent) //nolint: staticcheck // used for legacy proposal types
 	}
 	HasProposalMsgsX interface {
-		ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry)
+		ProposalMsgsX(weights WeightSource, reg Registry)
 	}
 )
 
@@ -214,7 +213,7 @@ func prepareWeightedOps(
 	config simtypes.Config,
 	txConfig client.TxConfig,
 	logger log.Logger,
-) (simulation.WeightedOperations, *simsx.BasicSimulationReporter) {
+) (simulation.WeightedOperations, *BasicSimulationReporter) {
 	cdc := stateFact.Codec
 	signingCtx := cdc.InterfaceRegistry().SigningContext()
 	simState := module.SimulationState{
@@ -238,10 +237,10 @@ func prepareWeightedOps(
 		}
 	}
 
-	weights := simsx.ParamWeightSource(simState.AppParams)
-	reporter := simsx.NewBasicSimulationReporter()
+	weights := ParamWeightSource(simState.AppParams)
+	reporter := NewBasicSimulationReporter()
 
-	pReg := make(simsx.UniqueTypeRegistry)
+	pReg := make(UniqueTypeRegistry)
 	wProps := make([]simtypes.WeightedProposalMsg, 0, len(sm.Modules))
 	wContent := make([]simtypes.WeightedProposalContent, 0)
 
@@ -263,7 +262,7 @@ func prepareWeightedOps(
 		panic("legacy proposal contents are not empty")
 	}
 
-	oReg := simsx.NewSimsMsgRegistryAdapter(reporter, stateFact.AccountSource, stateFact.BalanceSource, txConfig, logger)
+	oReg := NewSimsMsgRegistryAdapter(reporter, stateFact.AccountSource, stateFact.BalanceSource, txConfig, logger)
 	wOps := make([]simtypes.WeightedOperation, 0, len(sm.Modules))
 	for _, m := range sm.Modules {
 		// add operations

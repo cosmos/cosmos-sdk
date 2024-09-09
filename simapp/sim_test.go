@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"flag"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	"io"
 	"math/rand"
 	"strings"
@@ -29,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	"github.com/cosmos/cosmos-sdk/testutils/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -53,12 +53,12 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 }
 
 func TestFullAppSimulation(t *testing.T) {
-	sims.Run(t, NewSimApp, setupStateFactory)
+	simsx.Run(t, NewSimApp, setupStateFactory)
 }
 
-func setupStateFactory(app *SimApp) sims.SimStateFactory {
+func setupStateFactory(app *SimApp) simsx.SimStateFactory {
 	blockedAddre, _ := BlockedAddresses(app.interfaceRegistry.SigningContext().AddressCodec())
-	return sims.SimStateFactory{
+	return simsx.SimStateFactory{
 		Codec:         app.AppCodec(),
 		AppStateFn:    simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager().Modules, app.DefaultGenesis()),
 		BlockedAddr:   blockedAddre,
@@ -73,14 +73,14 @@ var (
 )
 
 func TestAppImportExport(t *testing.T) {
-	sims.Run(t, NewSimApp, setupStateFactory, func(t testing.TB, ti sims.TestInstance[*SimApp]) {
+	simsx.Run(t, NewSimApp, setupStateFactory, func(t testing.TB, ti simsx.TestInstance[*SimApp]) {
 		app := ti.App
 		t.Log("exporting genesis...\n")
 		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
 		require.NoError(t, err)
 
 		t.Log("importing genesis...\n")
-		newTestInstance := sims.NewSimulationAppInstance(t, ti.Cfg, NewSimApp)
+		newTestInstance := simsx.NewSimulationAppInstance(t, ti.Cfg, NewSimApp)
 		newApp := newTestInstance.App
 		var genesisState GenesisState
 		require.NoError(t, json.Unmarshal(exported.AppState, &genesisState))
@@ -115,20 +115,20 @@ func TestAppImportExport(t *testing.T) {
 //	set up a new node instance, Init chain from exported genesis
 //	run new instance for n blocks
 func TestAppSimulationAfterImport(t *testing.T) {
-	sims.Run(t, NewSimApp, setupStateFactory, func(t testing.TB, ti sims.TestInstance[*SimApp]) {
+	simsx.Run(t, NewSimApp, setupStateFactory, func(t testing.TB, ti simsx.TestInstance[*SimApp]) {
 		app := ti.App
 		t.Log("exporting genesis...\n")
 		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
 		require.NoError(t, err)
 
 		t.Log("importing genesis...\n")
-		importGenesisStateFactory := func(app *SimApp) sims.SimStateFactory {
-			return sims.SimStateFactory{
+		importGenesisStateFactory := func(app *SimApp) simsx.SimStateFactory {
+			return simsx.SimStateFactory{
 				Codec: app.AppCodec(),
 				AppStateFn: func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config) (json.RawMessage, []simtypes.Account, string, time.Time) {
 					_, err = app.InitChain(&abci.InitChainRequest{
 						AppStateBytes: exported.AppState,
-						ChainId:       sims.SimAppChainID,
+						ChainId:       simsx.SimAppChainID,
 					})
 					if IsEmptyValidatorSetErr(err) {
 						t.Skip("Skipping simulation as all validators have been unbonded")
@@ -144,7 +144,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 				BalanceSource: app.BankKeeper,
 			}
 		}
-		sims.RunWithSeed(t, ti.Cfg, NewSimApp, importGenesisStateFactory, ti.Cfg.Seed, ti.Cfg.FuzzSeed)
+		simsx.RunWithSeed(t, ti.Cfg, NewSimApp, importGenesisStateFactory, ti.Cfg.Seed, ti.Cfg.FuzzSeed)
 	})
 }
 
@@ -178,7 +178,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				"streaming.abci.stop-node-on-err": true,
 			}
 			others := appOpts
-			appOpts = sims.AppOptionsFn(func(k string) any {
+			appOpts = simsx.AppOptionsFn(func(k string) any {
 				if v, ok := m[k]; ok {
 					return v
 				}
@@ -190,7 +190,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	var mx sync.Mutex
 	appHashResults := make(map[int64][][]byte)
 	appSimLogger := make(map[int64][]simulation.LogWriter)
-	captureAndCheckHash := func(t testing.TB, ti sims.TestInstance[*SimApp]) {
+	captureAndCheckHash := func(t testing.TB, ti simsx.TestInstance[*SimApp]) {
 		seed, appHash := ti.Cfg.Seed, ti.App.LastCommitID().Hash
 		mx.Lock()
 		otherHashes, execWriters := appHashResults[seed], appSimLogger[seed]
@@ -216,7 +216,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		}
 	}
 	// run simulations
-	sims.RunWithSeeds(t, interBlockCachingAppFactory, setupStateFactory, seeds, []byte{}, captureAndCheckHash)
+	simsx.RunWithSeeds(t, interBlockCachingAppFactory, setupStateFactory, seeds, []byte{}, captureAndCheckHash)
 }
 
 type ComparableStoreApp interface {
@@ -264,7 +264,7 @@ func FuzzFullAppSimulation(f *testing.F) {
 			t.Skip()
 			return
 		}
-		sims.RunWithSeeds(
+		simsx.RunWithSeeds(
 			t,
 			NewSimApp,
 			setupStateFactory,

@@ -46,6 +46,8 @@ Always refer to the [UPGRADING.md](https://github.com/cosmos/cosmos-sdk/blob/mai
 * [#20490](https://github.com/cosmos/cosmos-sdk/pull/20490) Refactor simulations to make use of `testutil/sims` instead of `runsims`.
 * [#19726](https://github.com/cosmos/cosmos-sdk/pull/19726) Update APIs to match CometBFT v1.
 * [#21466](https://github.com/cosmos/cosmos-sdk/pull/21466) Allow chains to plug in their own public key types in `base.Account`
+* [#21508](https://github.com/cosmos/cosmos-sdk/pull/21508) Abstract the way we update the version of the app state in `app.go` using the interface `VersionModifier`.
+ 
 <!-- TODO: move changelog.md elements to here -->
 
 ## v0.47 to v0.50

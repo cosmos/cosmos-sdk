@@ -598,7 +598,7 @@ func TestABCI_CheckTx(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := int64(0); i < nTxs; i++ {
-		tx := newTxCounter(t, suite.txConfig, i, 0) // no messages
+		tx := newTxCounter(t, suite.txConfig, suite.ac, i, 0) // no messages
 		txBytes, err := suite.txConfig.TxEncoder()(tx)
 		require.NoError(t, err)
 
@@ -653,7 +653,7 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 		txs := [][]byte{}
 		for i := 0; i < txPerHeight; i++ {
 			counter := int64(blockN*txPerHeight + i)
-			tx := newTxCounter(t, suite.txConfig, counter, counter)
+			tx := newTxCounter(t, suite.txConfig, suite.ac, counter, counter)
 
 			txBytes, err := suite.txConfig.TxEncoder()(tx)
 			require.NoError(t, err)
@@ -701,7 +701,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 
 	// run a multi-msg tx
 	// with all msgs the same route
-	tx := newTxCounter(t, suite.txConfig, 0, 0, 1, 2)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0, 1, 2)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -722,13 +722,15 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	require.Equal(t, int64(3), msgCounter)
 
 	// replace the second message with a Counter2
-	tx = newTxCounter(t, suite.txConfig, 1, 3)
+	tx = newTxCounter(t, suite.txConfig, suite.ac, 1, 3)
 
 	builder := suite.txConfig.NewTxBuilder()
 	msgs := tx.GetMsgs()
 	_, _, addr := testdata.KeyTestPubAddr()
-	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 0, Signer: addr.String()})
-	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 1, Signer: addr.String()})
+	addrStr, err := suite.ac.BytesToString(addr)
+	require.NoError(t, err)
+	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 0, Signer: addrStr})
+	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 1, Signer: addrStr})
 
 	err = builder.SetMsgs(msgs...)
 	require.NoError(t, err)
@@ -781,7 +783,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	for blockN := 0; blockN < nBlocks; blockN++ {
 		count := int64(blockN + 1)
 
-		tx := newTxCounter(t, suite.txConfig, count, count)
+		tx := newTxCounter(t, suite.txConfig, suite.ac, count, count)
 
 		txBytes, err := suite.txConfig.TxEncoder()(tx)
 		require.Nil(t, err)
@@ -872,14 +874,14 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 			tx   signing.Tx
 			fail bool
 		}{
-			{newTxCounter(t, suite.txConfig, 0, 0), false},
-			{newTxCounter(t, suite.txConfig, -1, 0), false},
-			{newTxCounter(t, suite.txConfig, 100, 100), false},
-			{newTxCounter(t, suite.txConfig, 100, 5, 4, 3, 2, 1), false},
+			{newTxCounter(t, suite.txConfig, suite.ac, 0, 0), false},
+			{newTxCounter(t, suite.txConfig, suite.ac, -1, 0), false},
+			{newTxCounter(t, suite.txConfig, suite.ac, 100, 100), false},
+			{newTxCounter(t, suite.txConfig, suite.ac, 100, 5, 4, 3, 2, 1), false},
 
-			{newTxCounter(t, suite.txConfig, 0, -1), true},
-			{newTxCounter(t, suite.txConfig, 0, 1, -2), true},
-			{newTxCounter(t, suite.txConfig, 0, 1, 2, -10, 5), true},
+			{newTxCounter(t, suite.txConfig, suite.ac, 0, -1), true},
+			{newTxCounter(t, suite.txConfig, suite.ac, 0, 1, -2), true},
+			{newTxCounter(t, suite.txConfig, suite.ac, 0, 1, 2, -10, 5), true},
 		}
 
 		for _, testCase := range testCases {
@@ -902,7 +904,9 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	{
 		txBuilder := suite.txConfig.NewTxBuilder()
 		_, _, addr := testdata.KeyTestPubAddr()
-		err = txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{Signer: addr.String()})
+		addrStr, err := suite.ac.BytesToString(addr)
+		require.NoError(t, err)
+		err = txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{Signer: addrStr})
 		require.NoError(t, err)
 		setTxSignature(t, txBuilder, 0)
 		unknownRouteTx := txBuilder.GetTx()
@@ -917,8 +921,8 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 
 		txBuilder = suite.txConfig.NewTxBuilder()
 		err = txBuilder.SetMsgs(
-			&baseapptestutil.MsgCounter{Signer: addr.String()},
-			&baseapptestutil.MsgCounter2{Signer: addr.String()},
+			&baseapptestutil.MsgCounter{Signer: addrStr},
+			&baseapptestutil.MsgCounter2{Signer: addrStr},
 		)
 		require.NoError(t, err)
 		setTxSignature(t, txBuilder, 0)
@@ -983,19 +987,19 @@ func TestABCI_TxGasLimits(t *testing.T) {
 		gasUsed int64
 		fail    bool
 	}{
-		{newTxCounter(t, suite.txConfig, 0, 0), 0, false},
-		{newTxCounter(t, suite.txConfig, 1, 1), 2, false},
-		{newTxCounter(t, suite.txConfig, 9, 1), 10, false},
-		{newTxCounter(t, suite.txConfig, 1, 9), 10, false},
-		{newTxCounter(t, suite.txConfig, 10, 0), 10, false},
+		{newTxCounter(t, suite.txConfig, suite.ac, 0, 0), 0, false},
+		{newTxCounter(t, suite.txConfig, suite.ac, 1, 1), 2, false},
+		{newTxCounter(t, suite.txConfig, suite.ac, 9, 1), 10, false},
+		{newTxCounter(t, suite.txConfig, suite.ac, 1, 9), 10, false},
+		{newTxCounter(t, suite.txConfig, suite.ac, 10, 0), 10, false},
 
-		{newTxCounter(t, suite.txConfig, 9, 2), 11, true},
-		{newTxCounter(t, suite.txConfig, 2, 9), 11, true},
-		// {newTxCounter(t, suite.txConfig, 9, 1, 1), 11, true},
-		// {newTxCounter(t, suite.txConfig, 1, 8, 1, 1), 11, true},
-		//  {newTxCounter(t, suite.txConfig, 11, 0), 11, true},
-		//  {newTxCounter(t, suite.txConfig, 0, 11), 11, true},
-		//  {newTxCounter(t, suite.txConfig, 0, 5, 11), 16, true},
+		{newTxCounter(t, suite.txConfig, suite.ac, 9, 2), 11, true},
+		{newTxCounter(t, suite.txConfig, suite.ac, 2, 9), 11, true},
+		// {newTxCounter(t, suite.txConfig, suite.ac, 9, 1, 1), 11, true},
+		// {newTxCounter(t, suite.txConfig, suite.ac, 1, 8, 1, 1), 11, true},
+		//  {newTxCounter(t, suite.txConfig, suite.ac, 11, 0), 11, true},
+		//  {newTxCounter(t, suite.txConfig, suite.ac, 0, 11), 11, true},
+		//  {newTxCounter(t, suite.txConfig, suite.ac, 0, 5, 11), 16, true},
 	}
 
 	txs := [][]byte{}
@@ -1076,16 +1080,16 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 		fail              bool
 		failAfterDeliver  int
 	}{
-		{newTxCounter(t, suite.txConfig, 0, 0), 0, 0, false, 0},
-		{newTxCounter(t, suite.txConfig, 9, 1), 2, 10, false, 0},
-		{newTxCounter(t, suite.txConfig, 10, 0), 3, 10, false, 0},
-		{newTxCounter(t, suite.txConfig, 10, 0), 10, 10, false, 0},
-		{newTxCounter(t, suite.txConfig, 2, 7), 11, 9, false, 0},
-		// {newTxCounter(t, suite.txConfig, 10, 0), 10, 10, false, 0}, // hit the limit but pass
+		{newTxCounter(t, suite.txConfig, suite.ac, 0, 0), 0, 0, false, 0},
+		{newTxCounter(t, suite.txConfig, suite.ac, 9, 1), 2, 10, false, 0},
+		{newTxCounter(t, suite.txConfig, suite.ac, 10, 0), 3, 10, false, 0},
+		{newTxCounter(t, suite.txConfig, suite.ac, 10, 0), 10, 10, false, 0},
+		{newTxCounter(t, suite.txConfig, suite.ac, 2, 7), 11, 9, false, 0},
+		// {newTxCounter(t, suite.txConfig, suite.ac, 10, 0), 10, 10, false, 0}, // hit the limit but pass
 
-		// {newTxCounter(t, suite.txConfig, 10, 0), 11, 10, true, 10},
-		// {newTxCounter(t, suite.txConfig, 10, 0), 15, 10, true, 10},
-		// {newTxCounter(t, suite.txConfig, 9, 0), 12, 9, true, 11}, // fly past the limit
+		// {newTxCounter(t, suite.txConfig, suite.ac, 10, 0), 11, 10, true, 10},
+		// {newTxCounter(t, suite.txConfig, suite.ac, 10, 0), 15, 10, true, 10},
+		// {newTxCounter(t, suite.txConfig, suite.ac, 9, 0), 12, 9, true, 11}, // fly past the limit
 	}
 
 	for i, tc := range testCases {
@@ -1167,13 +1171,13 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	tx := newTxCounter(t, suite.txConfig, 5, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 5, 0)
 	tx = setFailOnAnte(t, suite.txConfig, tx, true)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
 	// require next tx to fail due to black gas limit
-	tx = newTxCounter(t, suite.txConfig, 5, 0)
+	tx = newTxCounter(t, suite.txConfig, suite.ac, 5, 0)
 	txBytes2, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -1209,7 +1213,7 @@ func TestABCI_Query(t *testing.T) {
 		Path: "/store/key1/key",
 		Data: key,
 	}
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 
 	// query is empty before we do anything
 	res, err := suite.baseApp.Query(context.TODO(), &query)
@@ -1420,7 +1424,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	tx := newTxCounter(t, suite.txConfig, 0, 1)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 1)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -1431,7 +1435,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	_, err = suite.baseApp.CheckTx(&reqCheckTx)
 	require.NoError(t, err)
 
-	tx2 := newTxCounter(t, suite.txConfig, 1, 1)
+	tx2 := newTxCounter(t, suite.txConfig, suite.ac, 1, 1)
 
 	tx2Bytes, err := suite.txConfig.TxEncoder()(tx2)
 	require.NoError(t, err)
@@ -1601,7 +1605,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	var expectedTxBytes int64
 
 	for i := 0; i < 100; i++ {
-		tx2 := newTxCounter(t, suite.txConfig, int64(i), int64(i))
+		tx2 := newTxCounter(t, suite.txConfig, suite.ac, int64(i), int64(i))
 		err := pool.Insert(sdk.Context{}, tx2)
 		require.NoError(t, err)
 
@@ -1637,7 +1641,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 	err = pool.Insert(sdk.Context{}, tx)
 	require.NoError(t, err)
 
@@ -1665,8 +1669,10 @@ func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
 	require.NoError(t, err)
 	// insert 100 txs, each with a gas limit of 10
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := suite.ac.BytesToString(addr)
+	require.NoError(t, err)
 	for i := int64(0); i < 100; i++ {
-		msg := &baseapptestutil.MsgCounter{Counter: i, FailOnHandler: false, Signer: addr.String()}
+		msg := &baseapptestutil.MsgCounter{Counter: i, FailOnHandler: false, Signer: addrStr}
 		msgs := []sdk.Msg{msg}
 
 		builder := suite.txConfig.NewTxBuilder()
@@ -1705,8 +1711,10 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 	require.NoError(t, err)
 	// insert 100 txs, each with a gas limit of 10
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := suite.ac.BytesToString(addr)
+	require.NoError(t, err)
 	for i := int64(0); i < 100; i++ {
-		msg := &baseapptestutil.MsgCounter{Counter: i, FailOnHandler: false, Signer: addr.String()}
+		msg := &baseapptestutil.MsgCounter{Counter: i, FailOnHandler: false, Signer: addrStr}
 		msgs := []sdk.Msg{msg}
 
 		builder := suite.txConfig.NewTxBuilder()
@@ -1744,7 +1752,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -1756,7 +1764,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, checkTxRes.IsOK())
 
-	failTx := newTxCounter(t, suite.txConfig, 1, 1)
+	failTx := newTxCounter(t, suite.txConfig, suite.ac, 1, 1)
 	failTx = setFailOnAnte(t, suite.txConfig, failTx, true)
 
 	err = pool.Insert(sdk.Context{}, failTx)
@@ -1813,7 +1821,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	pk, err := cryptocodec.FromCmtProtoPublicKey(tmPk)
 	require.NoError(t, err)
 
-	consAddr := sdk.ConsAddress(addr.String())
+	consAddr := sdk.ConsAddress(addr)
 	valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(pk, nil)
 
 	// set up baseapp
@@ -2395,7 +2403,7 @@ func TestOptimisticExecution(t *testing.T) {
 
 	// run 50 blocks
 	for i := 0; i < 50; i++ {
-		tx := newTxCounter(t, suite.txConfig, 0, 1)
+		tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 1)
 		txBytes, err := suite.txConfig.TxEncoder()(tx)
 		require.NoError(t, err)
 
@@ -2453,7 +2461,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	tx := newTxCounter(t, suite.txConfig, 0, 1)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 1)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -2464,7 +2472,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	_, err = suite.baseApp.CheckTx(&reqCheckTx)
 	require.NoError(t, err)
 
-	tx2 := newTxCounter(t, suite.txConfig, 1, 1)
+	tx2 := newTxCounter(t, suite.txConfig, suite.ac, 1, 1)
 
 	tx2Bytes, err := suite.txConfig.TxEncoder()(tx2)
 	require.NoError(t, err)

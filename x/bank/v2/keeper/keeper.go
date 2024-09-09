@@ -24,7 +24,7 @@ import (
 type Keeper struct {
 	appmodulev2.Environment
 
-	ak           types.AccountKeeper
+	ak           types.AuthKeeper
 	authority    []byte
 	addressCodec address.Codec
 	schema       collections.Schema
@@ -33,7 +33,7 @@ type Keeper struct {
 	supply       collections.Map[string, math.Int]
 }
 
-func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec, ak types.AccountKeeper) *Keeper {
+func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec, ak types.AuthKeeper) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	k := &Keeper{
@@ -58,7 +58,7 @@ func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Env
 // MintCoins creates new coins from thin air and adds it to the module account.
 // An error is returned if the module account does not exist or is unauthorized.
 func (k Keeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error {
-	
+
 	// TODO: Mint restriction
 	acc := k.ak.GetModuleAccount(ctx, moduleName)
 	if acc == nil {
@@ -129,7 +129,7 @@ func (k Keeper) SendCoins(ctx context.Context, from, to string, amt sdk.Coins) e
 			return fmt.Errorf("%s is not an address or module name", to)
 		}
 	}
-	
+
 	// TODO: Send restriction
 
 	err = k.subUnlockedCoins(ctx, fromAddr, amt)

@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"cosmossdk.io/x/bank/v2/types"
 )
@@ -21,7 +21,7 @@ func NewQuerier(k *Keeper) types.QueryServer {
 // Params implements types.QueryServer.
 func (q querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
-		return nil, fmt.Errorf("empty request")
+		return nil, errors.New("empty request")
 	}
 
 	params, err := q.params.Get(ctx)

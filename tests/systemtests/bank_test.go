@@ -53,7 +53,7 @@ func TestBankSendTxCmd(t *testing.T) {
 		},
 		{
 			"not enough fees",
-			[]string{"--fees=2stake"},
+			[]string{"--fees=0stake"},
 			true,
 			sdkerrors.ErrInsufficientFee.ABCICode(),
 		},

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
@@ -99,13 +100,35 @@ func (k Keeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Co
 }
 
 // SendCoins transfers amt coins from a sending account to a receiving account.
+// Function take sender & receipient as string.
+// They can be sdk address or module name.
 // An error is returned upon failure.
-func (k Keeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+func (k Keeper) SendCoins(ctx context.Context, from, to string, amt sdk.Coins) error {
 	if !amt.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
+	var fromAddr, toAddr sdk.AccAddress
 	var err error
+
+	// Detect from & to is address format or module name
+	fromAddr, err = sdk.AccAddressFromBech32(from)
+	if err != nil {
+		// Check if is a module name
+		fromAddr = k.ak.GetModuleAddress(from)
+		if fromAddr == nil {
+			return fmt.Errorf("%s is not an address or module name", from)
+		}
+	}
+
+	toAddr, err = sdk.AccAddressFromBech32(to)
+	if err != nil {
+		// Check if is a module name
+		toAddr = k.ak.GetModuleAddress(to)
+		if toAddr == nil {
+			return fmt.Errorf("%s is not an address or module name", to)
+		}
+	}
 	
 	// TODO: Send restriction
 
@@ -136,38 +159,6 @@ func (k Keeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, 
 	)
 }
 
-// SendCoinsFromModuleToAccount transfers coins from a ModuleAccount to an AccAddress.
-// An error is returned if the module account does not exist or if
-// the recipient address is black-listed or if sending the tokens fails.
-func (k Keeper) SendCoinsFromModuleToAccount(
-	ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
-) error {
-	senderAddr := k.ak.GetModuleAddress(senderModule)
-	if senderAddr == nil {
-		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule)
-	}
-
-	// TODO: restriction
-
-	return k.SendCoins(ctx, senderAddr, recipientAddr, amt)
-}
-
-// LockedCoins returns all the coins that are not spendable (i.e. locked) for an
-// account by address. For standard accounts, the result will always be no coins.
-// For vesting accounts, LockedCoins is delegated to the concrete vesting account
-// type.
-func (k Keeper) LockedCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
-	acc := k.ak.GetAccount(ctx, addr)
-	if acc != nil {
-		vacc, ok := acc.(types.VestingAccount)
-		if ok {
-			return vacc.LockedCoins(k.HeaderService.HeaderInfo(ctx).Time)
-		}
-	}
-
-	return sdk.NewCoins()
-}
-
 // GetSupply retrieves the Supply from store
 func (k Keeper) GetSupply(ctx context.Context, denom string) sdk.Coin {
 	amt, err := k.supply.Get(ctx, denom)
@@ -194,22 +185,12 @@ func (k Keeper) GetBalance(ctx context.Context, addr sdk.AccAddress, denom strin
 //
 // A coin_spent event is emitted after the operation.
 func (k Keeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
-	lockedCoins := k.LockedCoins(ctx, addr)
-
 	for _, coin := range amt {
 		balance := k.GetBalance(ctx, addr, coin.Denom)
-		ok, locked := lockedCoins.Find(coin.Denom)
-		if !ok {
-			locked = sdk.Coin{Denom: coin.Denom, Amount: math.ZeroInt()}
-		}
+		spendable := sdk.Coins{balance}
 
-		spendable, hasNeg := sdk.Coins{balance}.SafeSub(locked)
+		_, hasNeg := spendable.SafeSub(coin)
 		if hasNeg {
-			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds,
-				"locked amount exceeds account balance funds: %s > %s", locked, balance)
-		}
-
-		if _, hasNeg := spendable.SafeSub(coin); hasNeg {
 			if len(spendable) == 0 {
 				spendable = sdk.Coins{sdk.Coin{Denom: coin.Denom, Amount: math.ZeroInt()}}
 			}

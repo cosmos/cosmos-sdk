@@ -14,6 +14,8 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/address"
+	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
@@ -49,6 +51,7 @@ type (
 		cdc       *codec.ProtoCodec
 		txConfig  client.TxConfig
 		logBuffer *bytes.Buffer
+		ac        address.Codec
 	}
 
 	SnapshotsConfig struct {
@@ -80,6 +83,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	app.SetParamStore(paramStore{db: dbm.NewMemDB()})
 	app.SetTxDecoder(txConfig.TxDecoder())
 	app.SetTxEncoder(txConfig.TxEncoder())
+	app.SetVersionModifier(newMockedVersionModifier(0))
 
 	// mount stores and seal
 	require.Nil(t, app.LoadLatestVersion())
@@ -89,6 +93,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 		cdc:       cdc,
 		txConfig:  txConfig,
 		logBuffer: logBuffer,
+		ac:        cdc.InterfaceRegistry().SigningContext().AddressCodec(),
 	}
 }
 
@@ -150,7 +155,10 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 				_, err := r.Read(value)
 				require.NoError(t, err)
 
-				msgs = append(msgs, &baseapptestutil.MsgKeyValue{Key: key, Value: value, Signer: addr.String()})
+				addrStr, err := suite.ac.BytesToString(addr)
+				require.NoError(t, err)
+
+				msgs = append(msgs, &baseapptestutil.MsgKeyValue{Key: key, Value: value, Signer: addrStr})
 				keyCounter++
 			}
 
@@ -224,7 +232,7 @@ func TestAnteHandlerGasMeter(t *testing.T) {
 	deliverKey := []byte("deliver-key")
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
 
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
@@ -296,7 +304,7 @@ func TestSetLoader(t *testing.T) {
 		app.SetStoreLoader(baseapp.DefaultStoreLoader)
 	}
 
-	initStore := func(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
+	initStore := func(t *testing.T, db corestore.KVStoreWithBatch, storeKey string, k, v []byte) {
 		t.Helper()
 		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
@@ -317,7 +325,7 @@ func TestSetLoader(t *testing.T) {
 		require.Equal(t, int64(1), commitID.Version)
 	}
 
-	checkStore := func(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
+	checkStore := func(t *testing.T, db corestore.KVStoreWithBatch, ver int64, storeKey string, k, v []byte) {
 		t.Helper()
 		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
@@ -506,7 +514,7 @@ func TestTxDecoder(t *testing.T) {
 	// patch in TxConfig instead of using an output from x/auth/tx
 	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
 
-	tx := newTxCounter(t, txConfig, 1, 0)
+	tx := newTxCounter(t, txConfig, signingCtx.AddressCodec(), 1, 0)
 	txBytes, err := txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -550,7 +558,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 
 	// transaction should panic with custom handler above
 	{
-		tx := newTxCounter(t, suite.txConfig, 0, 0)
+		tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 
 		require.PanicsWithValue(t, customPanicMsg, func() {
 			bz, err := suite.txConfig.TxEncoder()(tx)
@@ -580,7 +588,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	//
 	// NOTE: State should not be mutated here. This will be implicitly checked by
 	// the next txs ante handler execution (anteHandlerTxTest).
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 	tx = setFailOnAnte(t, suite.txConfig, tx, true)
 
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
@@ -597,8 +605,8 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 	// execute at tx that will pass the ante handler (the checkTx state should
 	// mutate) but will fail the message handler
-	tx = newTxCounter(t, suite.txConfig, 0, 0)
-	tx = setFailOnHandler(t, suite.txConfig, tx, true)
+	tx = newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
+	tx = setFailOnHandler(t, suite.txConfig, suite.ac, tx, true)
 
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
@@ -615,7 +623,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 	// Execute a successful ante handler and message execution where state is
 	// implicitly checked by previous tx executions.
-	tx = newTxCounter(t, suite.txConfig, 1, 0)
+	tx = newTxCounter(t, suite.txConfig, suite.ac, 1, 0)
 
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
@@ -655,7 +663,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 	//
 	// NOTE: State should not be mutated here. This will be implicitly checked by
 	// the next txs ante handler execution (anteHandlerTxTest).
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -669,7 +677,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 
 	// It should also run on failed message execution
 	postHandlerRun = false
-	tx = setFailOnHandler(t, suite.txConfig, tx, true)
+	tx = setFailOnHandler(t, suite.txConfig, suite.ac, tx, true)
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 	res, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
@@ -680,7 +688,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 	require.True(t, postHandlerRun)
 
 	// regression test, should not panic when runMsgs fails
-	tx = wonkyMsg(t, suite.txConfig, tx)
+	tx = wonkyMsg(t, suite.txConfig, suite.ac, tx)
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
@@ -901,7 +909,7 @@ func TestABCI_FinalizeWithInvalidTX(t *testing.T) {
 	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{ConsensusParams: &cmtproto.ConsensusParams{}})
 	require.NoError(t, err)
 
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 	bz, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 

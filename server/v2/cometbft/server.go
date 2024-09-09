@@ -11,6 +11,8 @@ import (
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
@@ -147,10 +149,21 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 		return err
 	}
 
+	pv, err := pvm.LoadOrGenFilePV(
+		s.config.ConfigTomlConfig.PrivValidatorKeyFile(),
+		s.config.ConfigTomlConfig.PrivValidatorStateFile(),
+		func() (cmtcrypto.PrivKey, error) {
+			return cmted25519.GenPrivKey(), nil
+		},
+	)
+	if err != nil {
+		return err
+	}
+
 	s.Node, err = node.NewNode(
 		ctx,
 		s.config.ConfigTomlConfig,
-		pvm.LoadOrGenFilePV(s.config.ConfigTomlConfig.PrivValidatorKeyFile(), s.config.ConfigTomlConfig.PrivValidatorStateFile()),
+		pv,
 		nodeKey,
 		proxy.NewConsensusSyncLocalClientCreator(s.Consensus),
 		getGenDocProvider(s.config.ConfigTomlConfig),

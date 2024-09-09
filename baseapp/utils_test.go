@@ -20,6 +20,7 @@ import (
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	errorsmod "cosmossdk.io/errors"
@@ -293,17 +294,19 @@ func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {
 	return counter, failOnAnte
 }
 
-func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters ...int64) signing.Tx {
+func newTxCounter(t *testing.T, cfg client.TxConfig, ac address.Codec, counter int64, msgCounters ...int64) signing.Tx {
 	t.Helper()
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := ac.BytesToString(addr)
+	require.NoError(t, err)
 	msgs := make([]sdk.Msg, 0, len(msgCounters))
 	for _, c := range msgCounters {
-		msg := &baseapptestutil.MsgCounter{Counter: c, FailOnHandler: false, Signer: addr.String()}
+		msg := &baseapptestutil.MsgCounter{Counter: c, FailOnHandler: false, Signer: addrStr}
 		msgs = append(msgs, msg)
 	}
 
 	builder := cfg.NewTxBuilder()
-	err := builder.SetMsgs(msgs...)
+	err = builder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	builder.SetMemo("counter=" + strconv.FormatInt(counter, 10) + "&failOnAnte=false")
 	setTxSignature(t, builder, uint64(counter))
@@ -341,37 +344,58 @@ func setFailOnAnte(t *testing.T, cfg client.TxConfig, tx signing.Tx, failOnAnte 
 	return builder.GetTx()
 }
 
-func setFailOnHandler(t *testing.T, cfg client.TxConfig, tx signing.Tx, fail bool) signing.Tx {
+func setFailOnHandler(t *testing.T, cfg client.TxConfig, ac address.Codec, tx signing.Tx, fail bool) signing.Tx {
 	t.Helper()
 	builder := cfg.NewTxBuilder()
 	builder.SetMemo(tx.GetMemo())
 
 	msgs := tx.GetMsgs()
+	addr, err := ac.BytesToString(sdk.AccAddress("addr"))
+	require.NoError(t, err)
 	for i, msg := range msgs {
 		msgs[i] = &baseapptestutil.MsgCounter{
 			Counter:       msg.(*baseapptestutil.MsgCounter).Counter,
 			FailOnHandler: fail,
-			Signer:        sdk.AccAddress("addr").String(),
+			Signer:        addr,
 		}
 	}
 
-	err := builder.SetMsgs(msgs...)
+	err = builder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	return builder.GetTx()
 }
 
 // wonkyMsg is to be used to run a MsgCounter2 message when the MsgCounter2 handler is not registered.
-func wonkyMsg(t *testing.T, cfg client.TxConfig, tx signing.Tx) signing.Tx {
+func wonkyMsg(t *testing.T, cfg client.TxConfig, ac address.Codec, tx signing.Tx) signing.Tx {
 	t.Helper()
 	builder := cfg.NewTxBuilder()
 	builder.SetMemo(tx.GetMemo())
 
 	msgs := tx.GetMsgs()
+	addr, err := ac.BytesToString(sdk.AccAddress("wonky"))
+	require.NoError(t, err)
 	msgs = append(msgs, &baseapptestutil.MsgCounter2{
-		Signer: sdk.AccAddress("wonky").String(),
+		Signer: addr,
 	})
 
-	err := builder.SetMsgs(msgs...)
+	err = builder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	return builder.GetTx()
+}
+
+func newMockedVersionModifier(startingVersion uint64) server.VersionModifier {
+	return &mockedVersionModifier{version: startingVersion}
+}
+
+type mockedVersionModifier struct {
+	version uint64
+}
+
+func (m *mockedVersionModifier) SetAppVersion(ctx context.Context, u uint64) error {
+	m.version = u
+	return nil
+}
+
+func (m *mockedVersionModifier) AppVersion(ctx context.Context) (uint64, error) {
+	return m.version, nil
 }

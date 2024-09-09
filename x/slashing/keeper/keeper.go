@@ -84,7 +84,7 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
-// GetPubkey returns the pubkey from the adddress-pubkey relation
+// GetPubkey returns the pubkey from the address-pubkey relation
 func (k Keeper) GetPubkey(ctx context.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
 	return k.AddrPubkeyRelation.Get(ctx, a)
 }

@@ -406,3 +406,14 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 func (app *BaseApp) SetGRPCQueryRouter(grpcQueryRouter *GRPCQueryRouter) {
 	app.grpcQueryRouter = grpcQueryRouter
 }
+
+func (app *BaseApp) SetPrivValidatorKeyGen(keyGenF KeyGenF) {
+	if app.sealed {
+		panic("SetPrivValidatorProvider() on sealed BaseApp")
+	}
+	app.validatorKeyProvider = keyGenF
+}
+
+func (app *BaseApp) ValidatorKeyProvider() KeyGenF {
+	return app.validatorKeyProvider
+}

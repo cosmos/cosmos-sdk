@@ -12,6 +12,8 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -59,6 +61,8 @@ const (
 )
 
 var _ servertypes.ABCI = (*BaseApp)(nil)
+
+type KeyGenF = func() (cmtcrypto.PrivKey, error)
 
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
@@ -190,6 +194,8 @@ type BaseApp struct {
 
 	// includeNestedMsgsGas holds a set of message types for which gas costs for its nested messages are calculated.
 	includeNestedMsgsGas map[string]struct{}
+
+	validatorKeyProvider KeyGenF
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -210,6 +216,9 @@ func NewBaseApp(
 		fauxMerkleMode:   false,
 		sigverifyTx:      true,
 		queryGasLimit:    math.MaxUint64,
+		validatorKeyProvider: func() (cmtcrypto.PrivKey, error) {
+			return cmted25519.GenPrivKey(), nil
+		},
 	}
 
 	for _, option := range options {

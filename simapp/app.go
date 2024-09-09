@@ -828,6 +828,10 @@ func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Conf
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
 }
 
+func (app *SimApp) ValidatorKeyProvider() baseapp.KeyGenF {
+	return app.ValidatorKeyProvider()
+}
+
 // GetMaccPerms returns a copy of the module account permissions
 //
 // NOTE: This is solely to be used for testing purposes.

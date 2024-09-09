@@ -305,3 +305,7 @@ var _ servertypes.Application = &App{}
 type hasServicesV1 interface {
 	RegisterServices(grpc.ServiceRegistrar) error
 }
+
+func (a *App) ValidatorKeyPrvoder() baseapp.KeyGenF {
+	return a.ValidatorKeyProvider()
+}

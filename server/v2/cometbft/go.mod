@@ -3,12 +3,23 @@ module cosmossdk.io/server/v2/cometbft
 go 1.23
 
 replace (
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/core => cosmossdk.io/core v0.12.1-0.20240905114452-a57b25418a59 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240906090851-36d9b25e8981 // main
+=======
+	cosmossdk.io/api => ../../../api
+	cosmossdk.io/core => ../../../core
+	cosmossdk.io/core/testing => ../../../core/testing
+	cosmossdk.io/server/v2 => ../
+	cosmossdk.io/server/v2/appmanager => ../appmanager
+	cosmossdk.io/server/v2/stf => ../stf
+	cosmossdk.io/store => ../../../store
+	cosmossdk.io/store/v2 => ../../../store/v2
+>>>>>>> ac53e337a (test(server/v2/cometbft): Add abci unit tests (#21020))
 	cosmossdk.io/x/bank => ../../../x/bank
 	cosmossdk.io/x/consensus => ../../../x/consensus
 	cosmossdk.io/x/staking => ../../../x/staking
@@ -21,9 +32,16 @@ require (
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
+<<<<<<< HEAD
 	cosmossdk.io/server/v2 v2.0.0-20240829074658-81a225e6a29b // main
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240827095516-355f748add9e // main
 	cosmossdk.io/store/v2 v2.0.0-20240906090851-36d9b25e8981 // main
+=======
+	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d
+	cosmossdk.io/server/v2/stf v0.0.0-20240708142107-25e99c54bac1
+	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
+>>>>>>> ac53e337a (test(server/v2/cometbft): Add abci unit tests (#21020))
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
@@ -35,6 +53,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
+	github.com/stretchr/testify v1.9.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240604185151-ef581f913117
 	google.golang.org/grpc v1.66.0
 	google.golang.org/protobuf v1.34.2
@@ -43,7 +62,12 @@ require (
 
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
+<<<<<<< HEAD
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // indirect
+=======
+	cosmossdk.io/collections v0.4.0 // indirect
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
+>>>>>>> ac53e337a (test(server/v2/cometbft): Add abci unit tests (#21020))
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
@@ -119,6 +143,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -144,7 +169,6 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
-	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/supranational/blst v0.3.13 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect

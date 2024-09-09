@@ -57,7 +57,7 @@ require (
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.2.0 // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240827095516-355f748add9e // indirect; main
-	cosmossdk.io/server/v2/stf v0.0.0-20240827095516-355f748add9e // indirect; main
+	cosmossdk.io/server/v2/stf v0.0.0-20240909103429-ac53e337a9b5 // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240815194237-858ec2fcb897 // indirect; main
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000 // indirect

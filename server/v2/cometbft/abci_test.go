@@ -518,25 +518,6 @@ func TestConsensus_ProcessProposal(t *testing.T) {
 		Txs:    [][]byte{mockTx.Bytes()},
 	})
 	require.NoError(t, err)
-
-	// have bad encode tx
-	_, err = c.ProcessProposal(context.Background(), &abciproto.ProcessProposalRequest{
-		Height: 1,
-		Txs:    [][]byte{mockTx.Bytes(), append(mockTx.Bytes(), []byte("bad")...), mockTx.Bytes()},
-	})
-	require.Error(t, err)
-}
-
-func TestConsensus_ProcessProposal_With_Handler_OutOfGas(t *testing.T) {
-	c := setUpConsensus(t, 0, cometmock.MockMempool[mock.Tx]{})
-	c.processProposalHandler = handlers.NewDefaultProposalHandler(c.mempool).ProcessHandler()
-
-	res, err := c.ProcessProposal(context.Background(), &abciproto.ProcessProposalRequest{
-		Height: 1,
-		Txs:    [][]byte{invalidMockTx.Bytes(), invalidMockTx.Bytes(), invalidMockTx.Bytes()},
-	})
-	require.NoError(t, err)
-	require.Equal(t, res.Status, abciproto.PROCESS_PROPOSAL_STATUS_REJECT)
 }
 
 func TestConsensus_ProcessProposal_With_Handler(t *testing.T) {
@@ -553,12 +534,12 @@ func TestConsensus_ProcessProposal_With_Handler(t *testing.T) {
 	require.Equal(t, res.Status, abciproto.PROCESS_PROPOSAL_STATUS_REJECT)
 
 	// have bad encode tx
-	// should remove that tx and accept
+	// should reject
 	res, err = c.ProcessProposal(context.Background(), &abciproto.ProcessProposalRequest{
 		Height: 1,
 		Txs:    [][]byte{mockTx.Bytes(), append(mockTx.Bytes(), []byte("bad")...), mockTx.Bytes(), mockTx.Bytes()},
 	})
-	require.Equal(t, res.Status, abciproto.PROCESS_PROPOSAL_STATUS_ACCEPT)
+	require.Equal(t, res.Status, abciproto.PROCESS_PROPOSAL_STATUS_REJECT)
 }
 
 func TestConsensus_Info(t *testing.T) {

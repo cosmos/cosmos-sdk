@@ -4,11 +4,11 @@ go 1.23
 
 require (
 	cosmossdk.io/api v0.8.0
-	cosmossdk.io/core v1.0.0 // main
+	cosmossdk.io/core v1.0.0-alpha.1 // main
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
-	cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897 // main
+	cosmossdk.io/x/tx v0.13.4-0.20240909133312-50288938d1b6 // main
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/spf13/cobra v1.8.1
@@ -32,7 +32,7 @@ require (
 	cosmossdk.io/log v1.4.1 // indirect
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/schema v0.2.0 // indirect
-	cosmossdk.io/store v1.1.1-0.20240815194237-858ec2fcb897 // indirect
+	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -180,8 +180,6 @@ replace github.com/cosmos/cosmos-sdk => ./../../
 replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
-	// pseudo version lower than the latest tag
-	cosmossdk.io/core => cosmossdk.io/core v0.12.1-0.20240905114452-a57b25418a59 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240906090851-36d9b25e8981 // main
 	cosmossdk.io/x/bank => ./../../x/bank

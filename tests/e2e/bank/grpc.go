@@ -4,15 +4,94 @@ import (
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/bank/types"
 
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
+
+type E2ETestSuite struct {
+	suite.Suite
+
+	cfg     network.Config
+	ac      address.Codec
+	network network.NetworkI
+}
+
+func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
+	return &E2ETestSuite{cfg: cfg}
+}
+
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
+
+	genesisState := s.cfg.GenesisState
+	var bankGenesis types.GenesisState
+	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[types.ModuleName], &bankGenesis))
+
+	bankGenesis.DenomMetadata = []types.Metadata{
+		{
+			Name:        "Cosmos Hub Atom",
+			Symbol:      "ATOM",
+			Description: "The native staking token of the Cosmos Hub.",
+			DenomUnits: []*types.DenomUnit{
+				{
+					Denom:    "uatom",
+					Exponent: 0,
+					Aliases:  []string{"microatom"},
+				},
+				{
+					Denom:    "atom",
+					Exponent: 6,
+					Aliases:  []string{"ATOM"},
+				},
+			},
+			Base:    "uatom",
+			Display: "atom",
+		},
+		{
+			Name:        "Ethereum",
+			Symbol:      "ETH",
+			Description: "Ethereum mainnet token",
+			DenomUnits: []*types.DenomUnit{
+				{
+					Denom:    "wei",
+					Exponent: 0,
+				},
+				{
+					Denom:    "eth",
+					Exponent: 6,
+					Aliases:  []string{"ETH"},
+				},
+			},
+			Base:    "wei",
+			Display: "eth",
+		},
+	}
+
+	bankGenesisBz, err := s.cfg.Codec.MarshalJSON(&bankGenesis)
+	s.Require().NoError(err)
+	genesisState[types.ModuleName] = bankGenesisBz
+	s.cfg.GenesisState = genesisState
+
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+	s.ac = addresscodec.NewBech32Codec("cosmos")
+}
+
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
+	s.network.Cleanup()
+}
 
 func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 	val := s.network.GetValidators()[0]

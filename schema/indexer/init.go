@@ -55,9 +55,16 @@ type IndexingConfig struct {
 	ChannelBufferSize *int `json:"channel_buffer_size,omitempty"`
 }
 
+// IndexingTarget returns the indexing target listener and associated data.
+// The returned listener is the root listener to which app data should be sent.
 type IndexingTarget struct {
-	Listener     appdata.Listener
-	ModuleFilter ModuleFilterConfig
+	// Listener is the root listener to which app data should be sent.
+	// It will do all processing in the background so updates should be sent synchronously.
+	Listener appdata.Listener
+
+	// ModuleFilter returns the root module filter which an app can use to exclude modules at the storage level,
+	// if such a filter is set.
+	ModuleFilter *ModuleFilterConfig
 }
 
 // StartIndexing starts the indexer manager with the given options. The state machine should write all relevant app data to

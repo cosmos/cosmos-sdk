@@ -33,7 +33,7 @@ type FilterConfig struct {
 	// the header data.
 	ExcludeBlockHeaders bool `json:"exclude_block_headers"`
 
-	Modules ModuleFilterConfig `json:"modules"`
+	Modules *ModuleFilterConfig `json:"modules"`
 }
 
 type ModuleFilterConfig struct {

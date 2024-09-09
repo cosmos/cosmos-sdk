@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
@@ -66,10 +68,17 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	cmtApp := server.NewCometABCIWrapper(app)
+	pv, err := pvm.LoadOrGenFilePV(cmtCfg.PrivValidatorKeyFile(), cmtCfg.PrivValidatorStateFile(), func() (cmtcrypto.PrivKey, error) {
+		return ed25519.GenPrivKey(), nil
+	})
+	if err != nil {
+		return err
+	}
+
 	tmNode, err := node.NewNode( //resleak:notresource
 		context.TODO(),
 		cmtCfg,
-		pvm.LoadOrGenFilePV(cmtCfg.PrivValidatorKeyFile(), cmtCfg.PrivValidatorStateFile()),
+		pv,
 		nodeKey,
 		proxy.NewLocalClientCreator(cmtApp),
 		appGenesisProvider,

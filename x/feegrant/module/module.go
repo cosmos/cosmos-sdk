@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
@@ -68,8 +67,8 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the feegrant module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	feegrant.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	feegrant.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterInterfaces registers the feegrant module's interface types
@@ -170,7 +169,7 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 // WeightedOperations returns all the feegrant module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
-		am.registry, simState.AppParams, simState.Cdc, simState.TxConfig,
-		am.accountKeeper, am.bankKeeper, am.keeper, am.accountKeeper.AddressCodec(),
+		simState.AppParams, simState.TxConfig,
+		am.accountKeeper, am.bankKeeper, am.keeper,
 	)
 }

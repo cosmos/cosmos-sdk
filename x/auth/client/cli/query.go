@@ -7,14 +7,13 @@ import (
 
 	"github.com/spf13/cobra"
 
-	authtx "cosmossdk.io/x/auth/tx"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 const (
@@ -79,7 +78,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 // QueryTxCmd implements the default command for a tx query.
 func QueryTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tx --type=[hash|acc_seq|signature] [hash|acc_seq|signature]",
+		Use:   "tx --type={hash|acc_seq|signature} <hash|acc_seq|signature>",
 		Short: "Query for a transaction by hash, \"<addr>/<seq>\" combination or comma-separated signatures in a committed block",
 		Long: strings.TrimSpace(fmt.Sprintf(`
 Example:

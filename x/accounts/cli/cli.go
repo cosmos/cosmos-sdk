@@ -41,7 +41,7 @@ func QueryCmd(name string) *cobra.Command {
 
 func GetTxInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "init [account-type] [json-message]",
+		Use:   "init <account-type> <json-message>",
 		Short: "Initialize a new account",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -95,7 +95,7 @@ func GetTxInitCmd() *cobra.Command {
 
 func GetExecuteCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "execute [account-address] [execute-msg-type-url] [json-message]",
+		Use:   "execute <account-address> <execute-msg-type-url> <json-message>",
 		Short: "Execute state transition to account",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -132,7 +132,7 @@ func GetExecuteCmd() *cobra.Command {
 
 func GetQueryAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "query [account-address] [query-request-type-url] [json-message]",
+		Use:   "query <account-address> <query-request-type-url> <json-message>",
 		Short: "Query account state",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {

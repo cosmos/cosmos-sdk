@@ -8,10 +8,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"google.golang.org/protobuf/runtime/protoiface"
 
-	"cosmossdk.io/x/auth/types"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func (s *KeeperTestSuite) TestUpdateParams() {
@@ -185,7 +184,7 @@ func (s *KeeperTestSuite) TestNonAtomicExec() {
 		},
 	}
 
-	s.acctsModKeeper.EXPECT().SendModuleMessageUntyped(gomock.Any(), gomock.Any(), gomock.Any()).
+	s.acctsModKeeper.EXPECT().SendModuleMessage(gomock.Any(), gomock.Any(), gomock.Any()).
 		DoAndReturn(func(_ context.Context, sender []byte, msg proto.Message) (protoiface.MessageV1, error) {
 			return msg, nil
 		}).AnyTimes()

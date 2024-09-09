@@ -1,20 +1,22 @@
 package mempool_test
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"math/rand"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/auth/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func TestOutOfOrder(t *testing.T) {
@@ -71,7 +73,7 @@ func (a signerExtractionAdapter) GetSigners(tx sdk.Tx) ([]mempool.SignerData, er
 	if err != nil {
 		return nil, err
 	}
-	signerData := make([]mempool.SignerData, len(sigs))
+	signerData := make([]mempool.SignerData, 0, len(sigs))
 	for _, sig := range sigs {
 		signerData = append(signerData, mempool.SignerData{
 			Signer:   sig.PubKey.Address().Bytes(),
@@ -391,6 +393,89 @@ func (s *MempoolTestSuite) TestIterator() {
 				require.Equal(t, tt.txs[tx.id].a, tx.address)
 				iterator = iterator.Next()
 			}
+		})
+	}
+}
+
+func (s *MempoolTestSuite) TestIteratorConcurrency() {
+	t := s.T()
+	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
+	sa := accounts[0].Address
+	sb := accounts[1].Address
+
+	tests := []struct {
+		txs  []txSpec
+		fail bool
+	}{
+		{
+			txs: []txSpec{
+				{p: 20, n: 1, a: sa},
+				{p: 15, n: 1, a: sb},
+				{p: 6, n: 2, a: sa},
+				{p: 21, n: 4, a: sa},
+				{p: 8, n: 2, a: sb},
+			},
+		},
+		{
+			txs: []txSpec{
+				{p: 20, n: 1, a: sa},
+				{p: 15, n: 1, a: sb},
+				{p: 6, n: 2, a: sa},
+				{p: 21, n: 4, a: sa},
+				{p: math.MinInt64, n: 2, a: sb},
+			},
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+			pool := mempool.DefaultPriorityMempool()
+
+			// create test txs and insert into mempool
+			for i, ts := range tt.txs {
+				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
+				c := ctx.WithPriority(tx.priority)
+				err := pool.Insert(c, tx)
+				require.NoError(t, err)
+			}
+
+			// iterate through txs
+			stdCtx, cancel := context.WithCancel(context.Background())
+			var wg sync.WaitGroup
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+
+				id := len(tt.txs)
+				for {
+					select {
+					case <-stdCtx.Done():
+						return
+					default:
+						id++
+						tx := testTx{id: id, priority: int64(rand.Intn(100)), nonce: uint64(id), address: sa}
+						c := ctx.WithPriority(tx.priority)
+						err := pool.Insert(c, tx)
+						require.NoError(t, err)
+					}
+				}
+			}()
+
+			var i int
+			pool.SelectBy(ctx, nil, func(memTx sdk.Tx) bool {
+				tx := memTx.(testTx)
+				if tx.id < len(tt.txs) {
+					require.Equal(t, tt.txs[tx.id].p, int(tx.priority))
+					require.Equal(t, tt.txs[tx.id].n, int(tx.nonce))
+					require.Equal(t, tt.txs[tx.id].a, tx.address)
+					i++
+				}
+				return i < len(tt.txs)
+			})
+			require.Equal(t, i, len(tt.txs))
+			cancel()
+			wg.Wait()
 		})
 	}
 }

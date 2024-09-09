@@ -10,13 +10,13 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
@@ -315,7 +315,7 @@ func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAdd
 		}
 
 		if err := ak.BranchService.Execute(ctx, func(ctx context.Context) error {
-			result, err := ak.AccountsModKeeper.SendModuleMessageUntyped(ctx, signer, msg)
+			result, err := ak.AccountsModKeeper.SendModuleMessage(ctx, signer, msg)
 			if err != nil {
 				// If an error occurs during message execution, append error response
 				response := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}

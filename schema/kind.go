@@ -79,6 +79,8 @@ const (
 	// Go Encoding: string which matches the IntegerFormat regex
 	// JSON Encoding: base10 integer string
 	// Canonically encoded values should include no leading zeros.
+	// Equality comparison with integers should be done using numerical equality rather
+	// than string equality.
 	IntegerStringKind
 
 	// DecimalStringKind represents an arbitrary precision decimal or integer number.
@@ -87,6 +89,8 @@ const (
 	// Canonically encoded values should include no leading zeros or trailing zeros,
 	// and exponential notation with a lowercase 'e' should be used for any numbers
 	// with an absolute value less than or equal to 1e-6 or greater than or equal to 1e6.
+	// Equality comparison with decimals should be done using numerical equality rather
+	// than string equality.
 	DecimalStringKind
 
 	// BoolKind represents a boolean true or false value.
@@ -369,6 +373,18 @@ func (t Kind) ValidateValue(value interface{}) error {
 	return nil
 }
 
+// ValidKeyKind returns true if the kind is a valid key kind.
+// All kinds except Float32Kind, Float64Kind, and JSONKind are valid key kinds
+// because they do not define a strict form of equality.
+func (t Kind) ValidKeyKind() bool {
+	switch t {
+	case Float32Kind, Float64Kind, JSONKind:
+		return false
+	default:
+		return true
+	}
+}
+
 var (
 	integerRegex = regexp.MustCompile(IntegerFormat)
 	decimalRegex = regexp.MustCompile(DecimalFormat)
@@ -413,5 +429,36 @@ func KindForGoValue(value interface{}) Kind {
 		return JSONKind
 	default:
 		return InvalidKind
+	}
+}
+
+// MarshalJSON marshals the kind to a JSON string and returns an error if the kind is invalid.
+func (t Kind) MarshalJSON() ([]byte, error) {
+	if err := t.Validate(); err != nil {
+		return nil, err
+	}
+	return json.Marshal(t.String())
+}
+
+// UnmarshalJSON unmarshals the kind from a JSON string and returns an error if the kind is invalid.
+func (t *Kind) UnmarshalJSON(data []byte) error {
+	var s string
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+	k, ok := kindStrings[s]
+	if !ok {
+		return fmt.Errorf("invalid kind: %s", s)
+	}
+	*t = k
+	return nil
+}
+
+var kindStrings = map[string]Kind{}
+
+func init() {
+	for i := InvalidKind + 1; i <= MAX_VALID_KIND; i++ {
+		kindStrings[i.String()] = i
 	}
 }

@@ -448,7 +448,7 @@ func TestConsensus_PrepareProposal_With_Handler_NoOpMempool(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, len(res.Txs), 0)
 
-	// have tx exeed MaxTxBytes
+	// have tx exceed MaxTxBytes
 	// each mock tx has 128 bytes, should select 2 txs
 	res, err = c.PrepareProposal(context.Background(), &abciproto.PrepareProposalRequest{
 		Height:     1,
@@ -525,7 +525,7 @@ func TestConsensus_ProcessProposal_With_Handler(t *testing.T) {
 
 	c.processProposalHandler = handlers.NewDefaultProposalHandler(c.mempool).ProcessHandler()
 
-	// exeed max gas
+	// exceed max gas
 	res, err := c.ProcessProposal(context.Background(), &abciproto.ProcessProposalRequest{
 		Height: 1,
 		Txs:    [][]byte{mockTx.Bytes(), mockTx.Bytes(), mockTx.Bytes(), mockTx.Bytes()},

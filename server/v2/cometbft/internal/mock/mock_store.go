@@ -18,7 +18,7 @@ import (
 
 type MockStore struct {
 	Storage  storev2.VersionedDatabase
-	Commiter storev2.Committer
+	Committer storev2.Committer
 }
 
 func NewMockStorage(logger log.Logger, dir string) storev2.VersionedDatabase {
@@ -38,7 +38,7 @@ func NewMockCommiter(logger log.Logger, actors ...string) storev2.Committer {
 }
 
 func NewMockStore(ss storev2.VersionedDatabase, sc storev2.Committer) *MockStore {
-	return &MockStore{Storage: ss, Commiter: sc}
+	return &MockStore{Storage: ss, Committer: sc}
 }
 
 func (s *MockStore) GetLatestVersion() (uint64, error) {
@@ -66,18 +66,18 @@ func (s *MockStore) Commit(changeset *corestore.Changeset) (corestore.Hash, erro
 		return []byte{}, err
 	}
 
-	err = s.Commiter.WriteChangeset(changeset)
+	err = s.Committer.WriteChangeset(changeset)
 	if err != nil {
 		return []byte{}, err
 	}
 
-	commitInfo, err := s.Commiter.Commit(v + 1)
+	commitInfo, err := s.Committer.Commit(v + 1)
 	fmt.Println("commitInfo", commitInfo, err)
 	return []byte{}, err
 }
 
 func (s *MockStore) StateAt(version uint64) (corestore.ReaderMap, error) {
-	info, err := s.Commiter.GetCommitInfo(version)
+	info, err := s.Committer.GetCommitInfo(version)
 	if err != nil || info == nil {
 		return nil, fmt.Errorf("failed to get commit info for version %d: %w", version, err)
 	}
@@ -89,7 +89,7 @@ func (s *MockStore) GetStateStorage() storev2.VersionedDatabase {
 }
 
 func (s *MockStore) GetStateCommitment() storev2.Committer {
-	return s.Commiter
+	return s.Committer
 }
 
 type Result struct {
@@ -121,7 +121,7 @@ func (s *MockStore) LastCommitID() (proof.CommitID, error) {
 }
 
 func (s *MockStore) SetInitialVersion(v uint64) error {
-	return s.Commiter.SetInitialVersion(v)
+	return s.Committer.SetInitialVersion(v)
 }
 
 func (s *MockStore) WorkingHash(changeset *corestore.Changeset) (corestore.Hash, error) {
@@ -131,7 +131,7 @@ func (s *MockStore) WorkingHash(changeset *corestore.Changeset) (corestore.Hash,
 		return []byte{}, err
 	}
 
-	err = s.Commiter.WriteChangeset(changeset)
+	err = s.Committer.WriteChangeset(changeset)
 	if err != nil {
 		return []byte{}, err
 	}

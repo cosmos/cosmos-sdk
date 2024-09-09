@@ -5,12 +5,11 @@ import (
 	"errors"
 	"testing"
 
-	gogotypes "github.com/cosmos/gogoproto/types"
-
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/mock"
+	gogotypes "github.com/cosmos/gogoproto/types"
 )
 
 func TestBranchService(t *testing.T) {
@@ -71,6 +70,7 @@ func TestBranchService(t *testing.T) {
 
 	t.Run("fail - reverts state", func(t *testing.T) {
 		stfCtx := makeContext()
+		originalGas := stfCtx.meter.Remaining()
 		gasUsed, err := branchService.ExecuteWithGasLimit(stfCtx, 10000, func(ctx context.Context) error {
 			kvSet(t, ctx, "cookies")
 			return errors.New("fail")
@@ -81,6 +81,10 @@ func TestBranchService(t *testing.T) {
 		if gasUsed == 0 {
 			t.Error("expected non-zero gasUsed")
 		}
+		if stfCtx.meter.Remaining() != originalGas-gasUsed {
+			t.Error("expected gas to be reverted")
+		}
+
 		stateNotHas(t, stfCtx.state, "cookies")
 	})
 

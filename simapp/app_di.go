@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/x/accounts"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
+	bankv2keeper "cosmossdk.io/x/bank/v2/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	consensuskeeper "cosmossdk.io/x/consensus/keeper"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
@@ -74,6 +75,7 @@ type SimApp struct {
 	AccountsKeeper        accounts.Keeper
 	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
+	BankV2Keeper          *bankv2keeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
 	MintKeeper            mintkeeper.Keeper
@@ -184,6 +186,7 @@ func NewSimApp(
 		&app.AuthKeeper,
 		&app.AccountsKeeper,
 		&app.BankKeeper,
+		&app.BankV2Keeper,
 		&app.StakingKeeper,
 		&app.SlashingKeeper,
 		&app.MintKeeper,

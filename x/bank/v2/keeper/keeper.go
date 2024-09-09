@@ -57,11 +57,8 @@ func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Env
 // MintCoins creates new coins from thin air and adds it to the module account.
 // An error is returned if the module account does not exist or is unauthorized.
 func (k Keeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error {
-	// err := k.mintCoinsRestrictionFn(ctx, amounts)
-	// if err != nil {
-	// 	k.Logger.Error(fmt.Sprintf("Module %q attempted to mint coins %s it doesn't have permission for, error %v", moduleName, amounts, err))
-	// 	return err
-	// }
+	
+	// TODO: Mint restriction
 	acc := k.ak.GetModuleAccount(ctx, moduleName)
 	if acc == nil {
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName)
@@ -109,11 +106,8 @@ func (k Keeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, 
 	}
 
 	var err error
-	// TODO: handle send res
-	// toAddr, err = k.sendRestriction.apply(ctx, fromAddr, toAddr, amt)
-	// if err != nil {
-	// 	return err
-	// }
+	
+	// TODO: Send restriction
 
 	err = k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {

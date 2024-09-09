@@ -689,7 +689,7 @@ func (app *SimApp) Name() string { return app.BaseApp.Name() }
 
 // PreBlocker application updates every pre block
 func (app *SimApp) PreBlocker(ctx sdk.Context, _ *abci.FinalizeBlockRequest) error {
-	app.UnorderedTxManager.OnNewBlock(ctx.BlockTime(), uint64(ctx.BlockHeight()))
+	app.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
 	return app.ModuleManager.PreBlock(ctx)
 }
 

@@ -28,16 +28,11 @@ const (
 // TxHash defines a transaction hash type alias, which is a fixed array of 32 bytes.
 type TxHash [32]byte
 
-type BlockInfo struct {
-	Time   time.Time
-	Height uint64
-}
-
 // Manager contains the tx hash dictionary for duplicates checking, and expire
 // them when block production progresses.
 type Manager struct {
 	// blockCh defines a channel to receive newly committed block time
-	blockCh chan BlockInfo
+	blockCh chan time.Time
 	// doneCh allows us to ensure the purgeLoop has gracefully terminated prior to closing
 	doneCh chan struct{}
 
@@ -69,7 +64,7 @@ func NewManager(dataDir string) *Manager {
 
 	m := &Manager{
 		dataDir:  dataDir,
-		blockCh:  make(chan BlockInfo, 16),
+		blockCh:  make(chan time.Time, 16),
 		doneCh:   make(chan struct{}),
 		txHashes: make(map[TxHash]time.Time),
 	}
@@ -158,10 +153,10 @@ func (m *Manager) OnInit() error {
 	return nil
 }
 
-// OnNewBlock send the latest block time and height to the background purge loop,
-// which should be called in the Preblock method.
-func (m *Manager) OnNewBlock(blockTime time.Time, blockHeight uint64) {
-	m.blockCh <- BlockInfo{Time: blockTime, Height: blockHeight}
+// OnNewBlock sends the latest block time to the background purge loop, which
+// should be called in ABCI Commit event.
+func (m *Manager) OnNewBlock(blockTime time.Time) {
+	m.blockCh <- blockTime
 }
 
 func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) error) error {
@@ -268,14 +263,14 @@ func (m *Manager) batchReceive() (time.Time, bool) {
 		case <-ctx.Done():
 			return latestTime, true
 
-		case blockInfo, ok := <-m.blockCh:
+		case blockTime, ok := <-m.blockCh:
 			if !ok {
 				// channel is closed
 				return time.Time{}, false
 			}
 
-			if blockInfo.Time.After(latestTime) {
-				latestTime = blockInfo.Time
+			if blockTime.After(latestTime) {
+				latestTime = blockTime
 			}
 		}
 	}

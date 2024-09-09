@@ -110,7 +110,7 @@ func CheckExportSimulation(app runtime.AppSimI, config simtypes.Config, params s
 }
 
 // PrintStats prints the corresponding statistics from the app DB.
-func PrintStats(db *dbm.GoLevelDB) {
+func PrintStats(db dbm.DB) {
 	fmt.Println("\nLevelDB Stats")
 	fmt.Println(db.Stats()["leveldb.stats"])
 	fmt.Println("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])

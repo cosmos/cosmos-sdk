@@ -53,7 +53,7 @@ The usage of extension interfaces allows modules to define only the functionalit
 https://github.com/cosmos/cosmos-sdk/blob/eee5e21e1c8d0995b6d4f83b7f55ec0b58d27ba7/core/appmodule/module.go#L74-L78
 ```
 
-* `RegisterLegacyAminoCodec(*codec.LegacyAmino)`: Registers the `amino` codec for the module, which is used to marshal and unmarshal structs to/from `[]byte` in order to persist them in the module's `KVStore`.
+* `RegisterLegacyAminoCodec(registry.AminoRegistrar)`: Registers the `amino` codec for the module, which is used to marshal and unmarshal structs to/from `[]byte` in order to persist them in the module's `KVStore`.
 
 ### `HasRegisterInterfaces`
 

@@ -133,7 +133,7 @@ type HasQueryHandlers interface {
 // ```go
 //
 //	func (h Handlers) Mint(ctx context.Context, req *types.MsgMint) (*types.MsgMintResponse, error) {
-//	      ... query logic ...
+//	      ... msg logic ...
 //	}
 //
 //	func (h Handlers) QueryBalance(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {

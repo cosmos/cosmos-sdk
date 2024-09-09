@@ -5,7 +5,7 @@ go 1.23
 require (
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v1.0.0
+	cosmossdk.io/core v1.0.0-alpha.1
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
@@ -171,7 +171,6 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace (
 	cosmossdk.io/api => ../../api
-	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/bank => ../bank

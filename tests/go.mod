@@ -5,7 +5,7 @@ go 1.23
 require (
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v1.0.0
+	cosmossdk.io/core v1.0.0-alpha.1
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
@@ -237,7 +237,6 @@ replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/collections => ../collections
-	cosmossdk.io/core => ../core
 	cosmossdk.io/core/testing => ../core/testing
 	cosmossdk.io/store => ../store
 	cosmossdk.io/x/accounts => ../x/accounts

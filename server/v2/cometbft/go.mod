@@ -6,7 +6,7 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
 	// pseudo version lower than the latest tag
-	cosmossdk.io/core => cosmossdk.io/core v0.12.1-0.20240905114452-a57b25418a59 // main
+	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.1 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240906090851-36d9b25e8981 // main
 	cosmossdk.io/x/bank => ../../../x/bank
@@ -46,13 +46,14 @@ require (
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // indirect
+	cosmossdk.io/core/testing v0.0.0-20240909133312-50288938d1b6 // indirect
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
-	cosmossdk.io/store v1.1.1-0.20240815194237-858ec2fcb897 // indirect
+	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897 // indirect; main
+	cosmossdk.io/x/tx v0.13.4-0.20240909133312-50288938d1b6 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -173,5 +174,3 @@ require (
 	gotest.tools/v3 v3.5.1 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 )
-
-require cosmossdk.io/core/testing v0.0.0-20240903211221-70488a89a87a // indirect

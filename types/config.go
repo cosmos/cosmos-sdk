@@ -82,6 +82,13 @@ func (config *Config) assertNotSealed() {
 	}
 }
 
+func (config *Config) IsSealed() bool {
+	config.mtx.Lock()
+	defer config.mtx.Unlock()
+
+	return config.sealed
+}
+
 // SetBech32PrefixForAccount builds the Config with Bech32 addressPrefix and publKeyPrefix for accounts
 // and returns the config instance
 func (config *Config) SetBech32PrefixForAccount(addressPrefix, pubKeyPrefix string) {

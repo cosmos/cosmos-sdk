@@ -68,3 +68,10 @@ func (s *configTestSuite) TestConfig_SetFullFundraiserPath() {
 func (s *configTestSuite) TestKeyringServiceName() {
 	s.Require().Equal(sdk.DefaultKeyringServiceName, sdk.KeyringServiceName())
 }
+
+func (s *configTestSuite) TestIsConfigSealed() {
+	config := sdk.NewConfig()
+	s.Require().False(config.IsSealed())
+	config.Seal()
+	s.Require().True(config.IsSealed())
+}

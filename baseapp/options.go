@@ -2,12 +2,12 @@ package baseapp
 
 import (
 	"context"
-	"cosmossdk.io/core/server"
 	"errors"
 	"fmt"
 	"io"
 	"math"
 
+	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"

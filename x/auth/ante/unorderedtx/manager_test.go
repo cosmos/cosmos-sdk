@@ -116,12 +116,14 @@ func TestUnorderedTxManager_Flow(t *testing.T) {
 
 	// start a goroutine that mimics new blocks being made every 500ms
 	doneBlockCh := make(chan bool)
+	blockHeight := 1
 	go func() {
 		ticker := time.NewTicker(time.Millisecond * 500)
 		defer ticker.Stop()
 
 		for t := range ticker.C {
-			txm.OnNewBlock(t)
+			txm.OnNewBlock(t, uint64(blockHeight))
+			blockHeight++
 
 			if t.After(currentTime.Add(time.Millisecond * 500 * time.Duration(25))) {
 				doneBlockCh <- true

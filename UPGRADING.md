@@ -286,7 +286,7 @@ If you are still using the legacy wiring, you must enable unordered transactions
 	...
 
 	func (app *SimApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-		app.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
+		app.UnorderedTxManager.OnNewBlock(ctx.BlockTime(), ctx.BlockHeight())
 		return app.ModuleManager.PreBlock(ctx, req)
 	}
 	```

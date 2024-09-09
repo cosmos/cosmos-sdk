@@ -144,8 +144,8 @@ func (m *UnorderedTxManager) Add(hash TxHash, expire time.Time) {
   m.txHashes[hash] = expire
 }
 
-// OnNewBlock send the latest block time to the background purge loop, which
-// should be called in ABCI Commit event.
+// OnNewBlock send the latest block time and height to the background purge loop,
+// which should be called in the Preblock method.
 func (m *UnorderedTxManager) OnNewBlock(blockTime time.Time) {
   m.blockCh <- blockTime
 }

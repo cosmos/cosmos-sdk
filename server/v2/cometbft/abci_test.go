@@ -658,7 +658,7 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 	queryRouterBuilder := getQueryRouterBuilder(t, func(ctx context.Context, q *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error) {
 		cParams := &v1.ConsensusParams{
 			Block: &v1.BlockParams{
-				MaxGas: 5000000,
+				MaxGas: 300000,
 			},
 			Abci: &v1.ABCIParams{
 				VoteExtensionsEnableHeight: 2,

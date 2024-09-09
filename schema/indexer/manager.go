@@ -111,14 +111,6 @@ func StartIndexing(opts IndexingOptions) (IndexingTarget, error) {
 		}
 
 		listener := initRes.Listener
-		if initRes.View != nil {
-			// only do a sanity-check and catch-up sync if we have a view which tracks blocks committed
-			lastBlock, err := initRes.View.BlockNum()
-			if err != nil {
-				return IndexingTarget{}, fmt.Errorf("failed to get block number from view: %w", err)
-			}
-			listener = addSanityCheckAndSync(lastBlock, listener, opts, targetCfg.Filter.Modules)
-		}
 		listeners = append(listeners, listener)
 	}
 

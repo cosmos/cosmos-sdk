@@ -36,7 +36,7 @@ type HasPreMsgHandlers interface {
 // PreMsgRouter. Example usage:
 // ```go
 //
-//	func (h Handlers) BeforeSend(ctx context.Context, req *types.MsgSend) (*types.QueryBalanceResponse, error) {
+//	func (h Handlers) BeforeSend(ctx context.Context, req *types.MsgSend) error {
 //	      ... before send logic ...
 //	}
 //

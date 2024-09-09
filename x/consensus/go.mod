@@ -8,13 +8,8 @@ require (
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.0-20240903211221-70488a89a87a // main
 	cosmossdk.io/depinject v1.0.0
-<<<<<<< HEAD
-	cosmossdk.io/store v1.1.1-0.20240815194237-858ec2fcb897 // main
-	github.com/cometbft/cometbft v1.0.0-rc1
-=======
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
+	cosmossdk.io/store v1.1.1-0.20240815194237-858ec2fcb897
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
->>>>>>> d275c67d6 (build(deps): update comet (#21586))
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
@@ -120,13 +115,8 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
 	github.com/oklog/run v1.1.0 // indirect
-<<<<<<< HEAD
-	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
-	github.com/petermattis/goid v0.0.0-20240327183114-c42a807a84ba // indirect
-=======
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/petermattis/goid v0.0.0-20240813172612-4fcff4a6cae7 // indirect
->>>>>>> d275c67d6 (build(deps): update comet (#21586))
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.20.3 // indirect

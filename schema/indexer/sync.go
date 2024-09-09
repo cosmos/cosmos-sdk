@@ -7,13 +7,7 @@ import (
 	"cosmossdk.io/schema/decoding"
 )
 
-func addSyncAndSanityCheck(lastBlockPersisted uint64, listener appdata.Listener, mgrOpts ManagerOptions, moduleFilter ModuleFilterConfig) appdata.Listener {
-	if lastBlockPersisted == -1 {
-		// if last block persisted is -1 then this listener doesn't care about persisting data at all so we
-		// don't need to do a catch-up sync up or any kind of sanity check
-		return listener
-	}
-
+func addSyncAndSanityCheck(lastBlockPersisted uint64, listener appdata.Listener, mgrOpts IndexingOptions, moduleFilter ModuleFilterConfig) appdata.Listener {
 	startBlock := listener.StartBlock
 	initialized := false
 	listener.StartBlock = func(data appdata.StartBlockData) error {
@@ -31,7 +25,7 @@ func addSyncAndSanityCheck(lastBlockPersisted uint64, listener appdata.Listener,
 	return listener
 }
 
-func doSyncAndSanityCheck(lastBlockPersisted uint64, data appdata.StartBlockData, listener appdata.Listener, mgrOpts ManagerOptions, moduleFilter ModuleFilterConfig) error {
+func doSyncAndSanityCheck(lastBlockPersisted uint64, data appdata.StartBlockData, listener appdata.Listener, mgrOpts IndexingOptions, moduleFilter ModuleFilterConfig) error {
 	if lastBlockPersisted == 0 {
 		if data.Height == 1 {
 			// this is the first block anyway so nothing to sync

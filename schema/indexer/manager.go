@@ -12,10 +12,10 @@ import (
 	"cosmossdk.io/schema/logutil"
 )
 
-// ManagerOptions are the options for starting the indexer manager.
-type ManagerOptions struct {
+// IndexingOptions are the options for starting the indexer manager.
+type IndexingOptions struct {
 	// Config is the user configuration for all indexing. It should generally be an instance map[string]interface{}
-	// or json.RawMessage and match the json structure of ManagerConfig. The manager will attempt to convert it to ManagerConfig.
+	// or json.RawMessage and match the json structure of IndexingConfig. The manager will attempt to convert it to IndexingConfig.
 	Config interface{}
 
 	// Resolver is the decoder resolver that will be used to decode the data. It is required.
@@ -45,8 +45,8 @@ type ManagerOptions struct {
 	DoneWaitGroup *sync.WaitGroup
 }
 
-// ManagerConfig is the configuration of the indexer manager and contains the configuration for each indexer target.
-type ManagerConfig struct {
+// IndexingConfig is the configuration of the indexer manager and contains the configuration for each indexer target.
+type IndexingConfig struct {
 	// Target is a map of named indexer targets to their configuration.
 	Target map[string]Config
 
@@ -55,14 +55,14 @@ type ManagerConfig struct {
 	ChannelBufferSize *int `json:"channel_buffer_size"`
 }
 
-type ManagerResult struct {
+type IndexingTarget struct {
 	Listener     appdata.Listener
 	ModuleFilter ModuleFilterConfig
 }
 
-// StartManager starts the indexer manager with the given options. The state machine should write all relevant app data to
+// StartIndexing starts the indexer manager with the given options. The state machine should write all relevant app data to
 // the returned listener.
-func StartManager(opts ManagerOptions) (ManagerResult, error) {
+func StartIndexing(opts IndexingOptions) (IndexingTarget, error) {
 	logger := opts.Logger
 	if logger == nil {
 		logger = logutil.NoopLogger{}
@@ -74,7 +74,7 @@ func StartManager(opts ManagerOptions) (ManagerResult, error) {
 
 	cfg, err := unmarshalConfig(opts.Config)
 	if err != nil {
-		return ManagerResult{}, err
+		return IndexingTarget{}, err
 	}
 
 	ctx := opts.Context
@@ -88,13 +88,13 @@ func StartManager(opts ManagerOptions) (ManagerResult, error) {
 	for targetName, targetCfg := range cfg.Target {
 		init, ok := indexerRegistry[targetCfg.Type]
 		if !ok {
-			return ManagerResult{}, fmt.Errorf("indexer type %q not found", targetCfg.Type)
+			return IndexingTarget{}, fmt.Errorf("indexer type %q not found", targetCfg.Type)
 		}
 
 		logger.Info("Starting indexer", "target", targetName, "type", targetCfg.Type)
 
 		if err := targetCfg.Filter.Validate(); err != nil {
-			return ManagerResult{}, fmt.Errorf("invalid filter for target %q: %w", targetName, err)
+			return IndexingTarget{}, fmt.Errorf("invalid filter for target %q: %w", targetName, err)
 		}
 
 		childLogger := logger
@@ -108,14 +108,15 @@ func StartManager(opts ManagerOptions) (ManagerResult, error) {
 			Logger:  childLogger,
 		})
 		if err != nil {
-			return ManagerResult{}, err
+			return IndexingTarget{}, err
 		}
 
 		listener := targetCfg.Filter.Apply(initRes.Listener)
 		if initRes.View != nil {
+			// only do a sanity-check and catch-up sync if we have a view which tracks blocks committed
 			lastBlock, err := initRes.View.BlockNum()
 			if err != nil {
-				return ManagerResult{}, fmt.Errorf("failed to get block number from view: %w", err)
+				return IndexingTarget{}, fmt.Errorf("failed to get block number from view: %w", err)
 			}
 			listener = addSyncAndSanityCheck(lastBlock, listener, opts, targetCfg.Filter.Modules)
 		}
@@ -144,18 +145,18 @@ func StartManager(opts ManagerOptions) (ManagerResult, error) {
 		ModuleFilter: rootModuleFilter.ToFunction(),
 	})
 	if err != nil {
-		return ManagerResult{}, err
+		return IndexingTarget{}, err
 	}
 	rootListener = rootModuleFilter.Apply(rootListener)
 	rootListener = appdata.AsyncListener(asyncOpts, rootListener)
 
-	return ManagerResult{
+	return IndexingTarget{
 		Listener:     rootListener,
 		ModuleFilter: rootModuleFilter,
 	}, nil
 }
 
-func unmarshalConfig(cfg interface{}) (*ManagerConfig, error) {
+func unmarshalConfig(cfg interface{}) (*IndexingConfig, error) {
 	var jsonBz []byte
 	var err error
 
@@ -168,10 +169,10 @@ func unmarshalConfig(cfg interface{}) (*ManagerConfig, error) {
 	case json.RawMessage:
 		jsonBz = cfg
 	default:
-		return nil, fmt.Errorf("can't convert %T to %T", cfg, ManagerConfig{})
+		return nil, fmt.Errorf("can't convert %T to %T", cfg, IndexingConfig{})
 	}
 
-	var res ManagerConfig
+	var res IndexingConfig
 	err = json.Unmarshal(jsonBz, &res)
 	return &res, err
 }

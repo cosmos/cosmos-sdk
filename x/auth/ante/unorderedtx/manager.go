@@ -164,13 +164,9 @@ func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) erro
 	w := bufio.NewWriter(&buf)
 
 	keys := slices.SortedFunc(maps.Keys(m.txHashes), func(i, j TxHash) int { return bytes.Compare(i[:], j[:]) })
-	timestamp := time.Unix(int64(height), 0)
 	for _, txHash := range keys {
 		timeoutTime := m.txHashes[txHash]
-		if timestamp.After(timeoutTime) {
-			// skip expired txs that have yet to be purged
-			continue
-		}
+
 		// right now we dont have access block time at this flow, so we would just include the expired txs
 		// and let it be purge during purge loop
 		chunk := unorderedTxToBytes(txHash, uint64(timeoutTime.Unix()))

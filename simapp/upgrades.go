@@ -6,11 +6,11 @@ import (
 	"cosmossdk.io/core/appmodule"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts"
+	bankv2types "cosmossdk.io/x/bank/v2/types"
 	epochstypes "cosmossdk.io/x/epochs/types"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
@@ -47,7 +47,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 				accounts.StoreKey,
 				protocolpooltypes.StoreKey,
 				epochstypes.StoreKey,
-				countertypes.StoreKey, // This module is used for testing purposes only.
+				bankv2types.ModuleName,
 			},
 			Deleted: []string{"crisis"}, // The SDK discontinued the crisis module in v0.52.0
 		}

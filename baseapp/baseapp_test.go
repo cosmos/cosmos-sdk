@@ -13,6 +13,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/core/address"
 	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
@@ -50,6 +51,7 @@ type (
 		cdc       *codec.ProtoCodec
 		txConfig  client.TxConfig
 		logBuffer *bytes.Buffer
+		ac        address.Codec
 	}
 
 	SnapshotsConfig struct {
@@ -81,6 +83,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	app.SetParamStore(paramStore{db: coretesting.NewMemDB()})
 	app.SetTxDecoder(txConfig.TxDecoder())
 	app.SetTxEncoder(txConfig.TxEncoder())
+	app.SetVersionModifier(newMockedVersionModifier(0))
 
 	// mount stores and seal
 	require.Nil(t, app.LoadLatestVersion())
@@ -90,6 +93,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 		cdc:       cdc,
 		txConfig:  txConfig,
 		logBuffer: logBuffer,
+		ac:        cdc.InterfaceRegistry().SigningContext().AddressCodec(),
 	}
 }
 
@@ -151,7 +155,10 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 				_, err := r.Read(value)
 				require.NoError(t, err)
 
-				msgs = append(msgs, &baseapptestutil.MsgKeyValue{Key: key, Value: value, Signer: addr.String()})
+				addrStr, err := suite.ac.BytesToString(addr)
+				require.NoError(t, err)
+
+				msgs = append(msgs, &baseapptestutil.MsgKeyValue{Key: key, Value: value, Signer: addrStr})
 				keyCounter++
 			}
 
@@ -225,7 +232,7 @@ func TestAnteHandlerGasMeter(t *testing.T) {
 	deliverKey := []byte("deliver-key")
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
 
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
@@ -507,7 +514,7 @@ func TestTxDecoder(t *testing.T) {
 	// patch in TxConfig instead of using an output from x/auth/tx
 	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
 
-	tx := newTxCounter(t, txConfig, 1, 0)
+	tx := newTxCounter(t, txConfig, signingCtx.AddressCodec(), 1, 0)
 	txBytes, err := txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -551,7 +558,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 
 	// transaction should panic with custom handler above
 	{
-		tx := newTxCounter(t, suite.txConfig, 0, 0)
+		tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 
 		require.PanicsWithValue(t, customPanicMsg, func() {
 			bz, err := suite.txConfig.TxEncoder()(tx)
@@ -581,7 +588,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	//
 	// NOTE: State should not be mutated here. This will be implicitly checked by
 	// the next txs ante handler execution (anteHandlerTxTest).
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 	tx = setFailOnAnte(t, suite.txConfig, tx, true)
 
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
@@ -598,8 +605,8 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 	// execute at tx that will pass the ante handler (the checkTx state should
 	// mutate) but will fail the message handler
-	tx = newTxCounter(t, suite.txConfig, 0, 0)
-	tx = setFailOnHandler(t, suite.txConfig, tx, true)
+	tx = newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
+	tx = setFailOnHandler(t, suite.txConfig, suite.ac, tx, true)
 
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
@@ -616,7 +623,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 	// Execute a successful ante handler and message execution where state is
 	// implicitly checked by previous tx executions.
-	tx = newTxCounter(t, suite.txConfig, 1, 0)
+	tx = newTxCounter(t, suite.txConfig, suite.ac, 1, 0)
 
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
@@ -656,7 +663,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 	//
 	// NOTE: State should not be mutated here. This will be implicitly checked by
 	// the next txs ante handler execution (anteHandlerTxTest).
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -670,7 +677,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 
 	// It should also run on failed message execution
 	postHandlerRun = false
-	tx = setFailOnHandler(t, suite.txConfig, tx, true)
+	tx = setFailOnHandler(t, suite.txConfig, suite.ac, tx, true)
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 	res, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
@@ -681,7 +688,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 	require.True(t, postHandlerRun)
 
 	// regression test, should not panic when runMsgs fails
-	tx = wonkyMsg(t, suite.txConfig, tx)
+	tx = wonkyMsg(t, suite.txConfig, suite.ac, tx)
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 	_, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
@@ -902,7 +909,7 @@ func TestABCI_FinalizeWithInvalidTX(t *testing.T) {
 	_, err := suite.baseApp.InitChain(&abci.InitChainRequest{ConsensusParams: &cmtproto.ConsensusParams{}})
 	require.NoError(t, err)
 
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 	bz, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 

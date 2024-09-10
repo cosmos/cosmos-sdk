@@ -19,6 +19,7 @@ import (
 	authzmodule "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
+	bankv2 "cosmossdk.io/x/bank/v2"
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/epochs"
 	"cosmossdk.io/x/evidence"
@@ -201,6 +202,7 @@ func TestRunMigrations(t *testing.T) {
 				appmodule.VersionMap{
 					"accounts":     accounts.AppModule{}.ConsensusVersion(),
 					"bank":         1,
+					"bankv2":       bankv2.AppModule{}.ConsensusVersion(),
 					"auth":         auth.AppModule{}.ConsensusVersion(),
 					"authz":        authzmodule.AppModule{}.ConsensusVersion(),
 					"staking":      staking.AppModule{}.ConsensusVersion(),

@@ -1,3 +1,5 @@
+cosmossdk.io/core v1.0.0-alpha.1 h1:iElkDJhxmy51aLMSLMZcfsqcv4QG4/1UHbHiW8Llw6k=
+cosmossdk.io/core v1.0.0-alpha.1/go.mod h1:abgLjeFLhtuKIYZWSPlVUgQBrKObO7ULV35KYfexE90=
 cosmossdk.io/schema v0.2.0 h1:UH5CR1DqUq8yP+5Np8PbvG4YX0zAUsTN2Qk6yThmfMk=
 cosmossdk.io/schema v0.2.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=

@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	corestore "cosmossdk.io/core/store"
@@ -135,8 +134,11 @@ func RunWithSeeds[T SimulationApp](
 			require.NoError(t, err)
 			err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
 			require.NoError(t, err)
-			if tCfg.Commit && tCfg.DBBackend == "goleveldb" {
-				simtestutil.PrintStats(testInstance.DB.(simtestutil.DBStatsInterface))
+			if tCfg.Commit {
+				db, ok := testInstance.DB.(simtestutil.DBStatsInterface)
+				if ok {
+					simtestutil.PrintStats(db)
+				}
 			}
 			for _, step := range postRunActions {
 				step(t, testInstance)

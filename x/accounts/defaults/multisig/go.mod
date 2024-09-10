@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v1.0.0
+	cosmossdk.io/core v1.0.0-alpha.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
@@ -174,7 +174,6 @@ replace github.com/cosmos/cosmos-sdk => ../../../../.
 replace (
 	cosmossdk.io/api => ../../../../api
 	cosmossdk.io/collections => ../../../../collections // TODO tag new collections ASAP
-	cosmossdk.io/core => ../../../../core
 	cosmossdk.io/core/testing => ../../../../core/testing
 	cosmossdk.io/store => ../../../../store
 	cosmossdk.io/x/accounts => ../../.

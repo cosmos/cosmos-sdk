@@ -78,7 +78,7 @@ type Event struct {
 	Attributes ToEventAttributes
 }
 
-// BlockStage represents the stage of block processsing for an event.
+// BlockStage represents the stage of block processing for an event.
 type BlockStage int32
 
 const (

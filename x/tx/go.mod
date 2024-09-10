@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	cosmossdk.io/api v0.7.5
-	cosmossdk.io/core v0.11.0
+	cosmossdk.io/core v1.0.0-alpha.1
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.3.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -33,8 +33,6 @@ require (
 	google.golang.org/grpc v1.66.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace cosmossdk.io/core => ../../core
 
 // NOTE: we do not want to replace to the development version of cosmossdk.io/api yet
 // Until https://github.com/cosmos/cosmos-sdk/issues/19228 is resolved

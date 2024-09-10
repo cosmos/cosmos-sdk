@@ -19,11 +19,6 @@ import (
 	rootstore "cosmossdk.io/store/v2/root"
 )
 
-type configProvider interface {
-	GetString(string) string
-	UnmarshalSub(string, any) (bool, error)
-}
-
 // AppBuilder is a type that is injected into a container by the runtime/v2 module
 // (as *AppBuilder) which can be used to create an app which is compatible with
 // the existing app.go initialization conventions.

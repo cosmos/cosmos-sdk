@@ -25,6 +25,7 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 )
 
@@ -195,7 +196,7 @@ func (m *MM[T]) InitGenesisJSON(
 // ExportGenesisForModules performs export genesis functionality for modules
 func (m *MM[T]) ExportGenesisForModules(
 	ctx context.Context,
-	appStf *stf.STF[T],
+	appStf appmanager.StateTransitionFunction[T],
 	state store.ReaderMap,
 	modulesToExport ...string,
 ) (map[string]json.RawMessage, error) {

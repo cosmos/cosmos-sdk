@@ -176,7 +176,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 		ExportGenesis: func(ctx context.Context, version uint64) ([]byte, error) {
 			state, err := a.app.db.StateAt(version)
 			if err != nil {
-				return nil, fmt.Errorf("failed to export genesis: %w", err)
+				return nil, fmt.Errorf("unable to get latest state: %w", err)
 			}
 
 			genesisJson, err := a.app.moduleManager.ExportGenesisForModules(ctx, a.app.stf, state)

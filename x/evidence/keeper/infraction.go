@@ -74,11 +74,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	// parameters defined.
 
 	eviAgeBlocks, eviAgeDuration, _, err := k.consensusKeeper.EvidenceParams(ctx)
-	if err != nil {
-		return err
-	}
-
-	if ageDuration > eviAgeDuration && ageBlocks > eviAgeBlocks {
+	if err == nil && ageDuration > eviAgeDuration && ageBlocks > eviAgeBlocks {
 		k.Logger.Info(
 			"ignored equivocation; evidence too old",
 			"validator", consAddr,

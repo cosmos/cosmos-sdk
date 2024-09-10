@@ -15,9 +15,11 @@ type Config struct {
 	// Config are the indexer specific config options specified by the user.
 	Config interface{} `json:"config,omitempty"`
 
+	// Filter is the filter configuration for the indexer.
 	Filter *FilterConfig `json:"filter,omitempty"`
 }
 
+// FilterConfig specifies the configuration for filtering the data stream
 type FilterConfig struct {
 	// ExcludeState specifies that the indexer will not receive state updates.
 	ExcludeState bool `json:"exclude_state"`
@@ -36,6 +38,7 @@ type FilterConfig struct {
 	Modules *ModuleFilterConfig `json:"modules"`
 }
 
+// ModuleFilterConfig specifies the configuration for filtering modules.
 type ModuleFilterConfig struct {
 	// Include specifies a list of modules whose state the indexer will
 	// receive state updates for.

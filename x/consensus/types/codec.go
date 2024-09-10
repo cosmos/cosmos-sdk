@@ -1,7 +1,6 @@
 package types
 
 import (
-	corelegacy "cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	coretransaction "cosmossdk.io/core/transaction"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
+// RegisterInterfaces registers the interfaces types with the interface registry.
 func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	registrar.RegisterImplementations(
 		(*coretransaction.Msg)(nil),
@@ -20,6 +20,6 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 
 // RegisterLegacyAminoCodec registers the necessary x/consensus interfaces and concrete types
 // on the provided LegacyAmino codec. These types are used for Amino JSON serialization.
-func RegisterLegacyAminoCodec(cdc corelegacy.Amino) {
-	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/x/consensus/MsgUpdateParams")
+func RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	legacy.RegisterAminoMsg(registrar, &MsgUpdateParams{}, "cosmos-sdk/x/consensus/MsgUpdateParams")
 }

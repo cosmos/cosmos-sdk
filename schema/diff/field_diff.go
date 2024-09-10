@@ -3,7 +3,7 @@ package diff
 import "cosmossdk.io/schema"
 
 // FieldDiff represents the difference between two fields.
-// The KindChanged, NullableChanged, and EnumTypeChanged methods can be used to determine
+// The KindChanged, NullableChanged, and ReferenceTypeChanged methods can be used to determine
 // what specific changes were made to the field.
 type FieldDiff struct {
 	// Name is the name of the field.
@@ -21,13 +21,13 @@ type FieldDiff struct {
 	// NewNullable is the new nullable property of the field.
 	NewNullable bool
 
-	// OldEnumType is the name of the old enum type of the field.
-	// It will be empty if the field is not an enum type or if there was no change.
-	OldEnumType string
+	// OldReferencedType is the name of the old referenced type.
+	// It will be empty if the field is not a reference type or if there was no change.
+	OldReferencedType string
 
-	// NewEnumType is the name of the new enum type of the field.
-	// It will be empty if the field is not an enum type or if there was no change.
-	NewEnumType string
+	// NewReferencedType is the name of the new referenced type.
+	// It will be empty if the field is not a reference type or if there was no change.
+	NewReferencedType string
 }
 
 func compareField(oldField, newField schema.Field) FieldDiff {
@@ -42,16 +42,17 @@ func compareField(oldField, newField schema.Field) FieldDiff {
 	diff.OldNullable = oldField.Nullable
 	diff.NewNullable = newField.Nullable
 
-	if oldField.EnumType.Name != newField.EnumType.Name {
-		diff.OldEnumType = oldField.EnumType.Name
-		diff.NewEnumType = newField.EnumType.Name
+	if oldField.ReferencedType != newField.ReferencedType {
+		diff.OldReferencedType = oldField.ReferencedType
+		diff.NewReferencedType = newField.ReferencedType
 	}
+
 	return diff
 }
 
 // Empty returns true if the field diff has no changes.
 func (d FieldDiff) Empty() bool {
-	return !d.KindChanged() && !d.NullableChanged() && !d.EnumTypeChanged()
+	return !d.KindChanged() && !d.NullableChanged() && !d.ReferenceTypeChanged()
 }
 
 // KindChanged returns true if the field kind changed.
@@ -64,10 +65,7 @@ func (d FieldDiff) NullableChanged() bool {
 	return d.OldNullable != d.NewNullable
 }
 
-// EnumTypeChanged returns true if the field enum type changed.
-// Note that if the enum type name remained the same but the values of
-// the enum type changed, that won't be reported here but rather in the
-// ModuleSchemaDiff's ChangedEnumTypes field.
-func (d FieldDiff) EnumTypeChanged() bool {
-	return d.OldEnumType != d.NewEnumType
+// ReferenceTypeChanged returns true if the referenced type changed.
+func (d FieldDiff) ReferenceTypeChanged() bool {
+	return d.OldReferencedType != d.NewReferencedType
 }

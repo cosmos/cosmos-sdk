@@ -7,6 +7,7 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/appmodule"
@@ -14,9 +15,9 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
+	upgradetestutil "cosmossdk.io/x/upgrade/testutil"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -27,6 +28,7 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type KeeperTestSuite struct {
@@ -60,6 +62,8 @@ func (s *KeeperTestSuite) SetupTest() {
 		s.encCfg.TxConfig.TxDecoder(),
 	)
 	s.baseApp.SetParamStore(&paramStore{params: cmttypes.DefaultConsensusParams().ToProto()})
+	s.baseApp.SetVersionModifier(newMockedVersionModifier(0))
+
 	appVersion, err := s.baseApp.AppVersion(context.Background())
 	s.Require().NoError(err)
 	s.Require().Equal(uint64(0), appVersion)
@@ -71,7 +75,9 @@ func (s *KeeperTestSuite) SetupTest() {
 	authority, err := ac.BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
 	s.Require().NoError(err)
 	s.encodedAuthority = authority
-	s.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, s.encCfg.Codec, homeDir, s.baseApp, authority)
+
+	ctrl := gomock.NewController(s.T())
+	s.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, s.encCfg.Codec, homeDir, s.baseApp, authority, upgradetestutil.NewMockConsensusKeeper(ctrl))
 
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
@@ -255,7 +261,8 @@ func (s *KeeperTestSuite) TestIsSkipHeight() {
 	skip := map[int64]bool{skipOne: true}
 	storeService := runtime.NewKVStoreService(s.key)
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger())
-	upgradeKeeper := keeper.NewKeeper(env, skip, s.encCfg.Codec, s.T().TempDir(), s.baseApp, s.encodedAuthority)
+	ctrl := gomock.NewController(s.T())
+	upgradeKeeper := keeper.NewKeeper(env, skip, s.encCfg.Codec, s.T().TempDir(), s.baseApp, s.encodedAuthority, upgradetestutil.NewMockConsensusKeeper(ctrl))
 	s.Require().True(upgradeKeeper.IsSkipHeight(9))
 	s.Require().False(upgradeKeeper.IsSkipHeight(10))
 }

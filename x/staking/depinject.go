@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/simulation"
 	"cosmossdk.io/x/staking/types"
@@ -20,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -43,6 +43,7 @@ type ModuleInputs struct {
 	ConsensusAddressCodec address.ConsensusAddressCodec
 	AccountKeeper         types.AccountKeeper
 	BankKeeper            types.BankKeeper
+	ConsensusKeeper       types.ConsensusKeeper
 	Cdc                   codec.Codec
 	Environment           appmodule.Environment
 	CometInfoService      comet.Service
@@ -73,6 +74,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.Environment,
 		in.AccountKeeper,
 		in.BankKeeper,
+		in.ConsensusKeeper,
 		as,
 		in.ValidatorAddressCodec,
 		in.ConsensusAddressCodec,

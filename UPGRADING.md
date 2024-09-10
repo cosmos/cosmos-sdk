@@ -106,9 +106,106 @@ For non depinject users, simply call `RegisterLegacyAminoCodec` and `RegisterInt
 
 Additionally, thanks to the genesis simplification, as explained in [the genesis interface update](#genesis-interface), the module manager `InitGenesis` and `ExportGenesis` methods do not require the codec anymore.
 
-##### GRPC-WEB
+##### GRPC WEB
 
-Grpc-web embedded client has been removed from the server. If you would like to use grpc-web, you can use the [envoy proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start).
+Grpc-web embedded client has been removed from the server. If you would like to use grpc-web, you can use the [envoy proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start). Here's how to set it up:
+
+<details>
+<summary>Step by step guide</summary>
+
+1. Install Envoy following the [official installation guide](https://www.envoyproxy.io/docs/envoy/latest/start/install).
+
+2. Create an Envoy configuration file named `envoy.yaml` with the following content:
+
+   ```yaml
+	static_resources:
+	listeners:
+	- name: listener_0
+		address:
+		socket_address: { address: 0.0.0.0, port_value: 8080 }
+		filter_chains:
+		- filters:
+		- name: envoy.filters.network.http_connection_manager
+			typed_config:
+			"@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+			codec_type: auto
+			stat_prefix: ingress_http
+			route_config:
+				name: local_route
+				virtual_hosts:
+				- name: local_service
+				domains: ["*"]
+				routes:
+				- match: { prefix: "/" }
+					route:
+					cluster: grpc_service
+					timeout: 0s
+					max_stream_duration:
+						grpc_timeout_header_max: 0s
+				cors:
+					allow_origin_string_match:
+					- prefix: "*"
+					allow_methods: GET, PUT, DELETE, POST, OPTIONS
+					allow_headers: keep-alive,user-agent,cache-control,content-type,content-transfer-encoding,custom-header-1,x-accept-content-transfer-encoding,x-accept-response-streaming,x-user-agent,x-grpc-web,grpc-timeout
+					max_age: "1728000"
+					expose_headers: custom-header-1,grpc-status,grpc-message
+			http_filters:
+			- name: envoy.filters.http.grpc_web
+				typed_config:
+				"@type": type.googleapis.com/envoy.extensions.filters.http.grpc_web.v3.GrpcWeb
+			- name: envoy.filters.http.cors
+				typed_config:
+				"@type": type.googleapis.com/envoy.extensions.filters.http.cors.v3.Cors
+			- name: envoy.filters.http.router
+				typed_config:
+				"@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+	clusters:
+	- name: grpc_service
+		connect_timeout: 0.25s
+		type: logical_dns
+		http2_protocol_options: {}
+		lb_policy: round_robin
+		load_assignment:
+		cluster_name: cluster_0
+		endpoints:
+			- lb_endpoints:
+				- endpoint:
+					address:
+					socket_address:
+						address: 0.0.0.0
+						port_value: 9090
+   ```
+
+   This configuration tells Envoy to listen on port 8080 and forward requests to your gRPC service on port 9090. Note that this configuration is a starting point and can be modified according to your specific needs and preferences. You may need to adjust ports, addresses, or add additional settings based on your particular setup and requirements.
+
+3. Start your Cosmos SDK application, ensuring it's configured to serve gRPC on port 9090.
+
+4. Start Envoy with the configuration file:
+
+   ```bash
+   envoy -c envoy.yaml
+   ```
+
+5. If Envoy starts successfully, you should see output similar to this:
+
+   ```bash
+   [2024-08-29 10:47:08.753][6281320][info][config] [source/common/listener_manager/listener_manager_impl.cc:930] all dependencies initialized. starting workers
+   [2024-08-29 10:47:08.754][6281320][info][main] [source/server/server.cc:978] starting main dispatch loop
+   ```
+
+   This indicates that Envoy has started and is ready to proxy requests.
+
+6. Update your client applications to connect to Envoy (http://localhost:8080 by default).
+
+</details>
+
+By following these steps, Envoy will handle the translation between gRPC-Web and gRPC, allowing your existing gRPC-Web clients to continue functioning without modifications to your Cosmos SDK application.
+
+To test the setup, you can use a tool like [grpcurl](https://github.com/fullstorydev/grpcurl). For example:
+
+```bash
+grpcurl -plaintext localhost:8080 cosmos.base.tendermint.v1beta1.Service/GetLatestBlock
+```
 
 ##### AnteHandlers
 
@@ -119,8 +216,22 @@ need to remove them both from your app.go code, they will yield to unresolvable 
 
 The Cosmos SDK now supports unordered transactions. This means that transactions
 can be executed in any order and doesn't require the client to deal with or manage
-nonces. This also means the order of execution is not guaranteed. To enable unordered
-transactions in your application:
+nonces. This also means the order of execution is not guaranteed.
+
+Unordered transactions are automatically enabled when using `depinject` / app di, simply supply the `servertypes.AppOptions` in `app.go`:
+
+```diff
+	depinject.Supply(
++		// supply the application options
++		appOpts,
+		// supply the logger
+		logger,
+	)
+```
+
+<details>
+<summary>Step-by-step Wiring </summary>
+If you are still using the legacy wiring, you must enable unordered transactions manually:
 
 * Update the `App` constructor to create, load, and save the unordered transaction
   manager.
@@ -184,6 +295,8 @@ transactions in your application:
 	}
 	```
 
+</details>
+
 To submit an unordered transaction, the client must set the `unordered` flag to
 `true` and ensure a reasonable `timeout_height` is set. The `timeout_height` is
 used as a TTL for the transaction and is used to provide replay protection. See
@@ -234,6 +347,8 @@ Also, any usages of the interfaces `AnyUnpacker` and `UnpackInterfacesMessage` m
 
 #### `**all**`
 
+All modules (expect `auth`) were spun out into their own `go.mod`. Replace their imports by `cosmossdk.io/x/{moduleName}`.
+
 ##### Core API
 
 Core API has been introduced for modules since v0.47. With the deprecation of `sdk.Context`, we strongly recommend to use the `cosmossdk.io/core/appmodule` interfaces for the modules. This will allow the modules to work out of the box with server/v2 and baseapp, as well as limit their dependencies on the SDK.
@@ -262,11 +377,11 @@ The signature of the extension interface `HasRegisterInterfaces` has been change
 +func (AppModule) RegisterInterfaces(registry registry.InterfaceRegistrar) {
 ```
 
-The signature of the extension interface `HasAminoCodec` has been changed to accept a `cosmossdk.io/core/legacy.Amino` instead of a `codec.LegacyAmino`. Modules should update their `HasAminoCodec` implementation to accept a `cosmossdk.io/core/legacy.Amino` interface.
+The signature of the extension interface `HasAminoCodec` has been changed to accept a `cosmossdk.io/core/registry.AminoRegistrar` instead of a `codec.LegacyAmino`. Modules should update their `HasAminoCodec` implementation to accept a `cosmossdk.io/core/registry.AminoRegistrar` interface.
 
 ```diff
 -func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
++func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
 ```
 
 ##### Simulation
@@ -286,7 +401,7 @@ All modules using dependency injection must update their imports.
 
 ##### Params
 
-Previous module migrations have been removed. It is required to migrate to v0.50 prior to upgrading to v0.51 for not missing any module migrations.
+Previous module migrations have been removed. It is required to migrate to v0.50 prior to upgrading to v0.52 for not missing any module migrations.
 
 ##### Genesis Interface
 
@@ -315,7 +430,7 @@ For modules that have migrated, verify you are checking against `collections.Err
 Accounts's AccountNumber will be used as a global account number tracking replacing Auth legacy AccountNumber. Must set accounts's AccountNumber with auth's AccountNumber value in upgrade handler. This is done through auth keeper MigrateAccountNumber function.
 
 ```go
-import authkeeper "cosmossdk.io/x/auth/keeper" 
+import authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper" 
 ...
 err := authkeeper.MigrateAccountNumberUnsafe(ctx, &app.AuthKeeper)
 if err != nil {
@@ -323,60 +438,24 @@ if err != nil {
 }
 ```
 
-#### `x/auth`
+### `x/crisis`
 
-Auth was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/auth`
-
-#### `x/authz`
-
-Authz was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/authz`
-
-#### `x/bank`
-
-Bank was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/bank`
-
-### `x/crsis`
-
-The Crisis module was removed due to it not being supported or functional any longer. 
+The `x/crisis` module was removed due to it not being supported or functional any longer. 
 
 #### `x/distribution`
 
-Distribution was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/distribution`
-
-The existing chains using x/distribution module needs to add the new x/protocolpool module.
-
-#### `x/group`
-
-Group was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/group`
+Existing chains using `x/distribution` module must add the new `x/protocolpool` module.
 
 #### `x/gov`
-
-Gov was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/gov`
 
 Gov v1beta1 proposal handler has been changed to take in a `context.Context` instead of `sdk.Context`.
 This change was made to allow legacy proposals to be compatible with server/v2.
 If you wish to migrate to server/v2, you should update your proposal handler to take in a `context.Context` and use services.
 On the other hand, if you wish to keep using baseapp, simply unwrap the sdk context in your proposal handler.
 
-#### `x/mint`
-
-Mint was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/mint`
-
-#### `x/slashing`
-
-Slashing was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/slashing`
-
-#### `x/staking`
-
-Staking was spun out into its own `go.mod`. To import it use `cosmossdk.io/x/staking`
-
-#### `x/params`
-
-A standalone Go module was created and it is accessible at "cosmossdk.io/x/params".
-
 #### `x/protocolpool`
 
-Introducing a new `x/protocolpool` module to handle community pool funds. Its store must be added while upgrading to v0.51.x.
+Introducing a new `x/protocolpool` module to handle community pool funds. Its store must be added while upgrading to v0.52.x.
 
 Example:
 
@@ -393,7 +472,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 }
 ```
 
-Add `x/protocolpool` store while upgrading to v0.51.x:
+Add `x/protocolpool` store while upgrading to v0.52.x:
 
 ```go
 storetypes.StoreUpgrades{
@@ -961,7 +1040,7 @@ The `simapp` package **should not be imported in your own app**. Instead, you sh
 
 #### App Wiring
 
-SimApp's `app_v2.go` is using [App Wiring](https://docs.cosmos.network/main/build/building-apps/app-go-v2), the dependency injection framework of the Cosmos SDK.
+SimApp's `app_di.go` is using [App Wiring](https://docs.cosmos.network/main/build/building-apps/app-go-di), the dependency injection framework of the Cosmos SDK.
 This means that modules are injected directly into SimApp thanks to a [configuration file](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go).
 The previous behavior, without the dependency injection framework, is still present in [`app.go`](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app.go) and is not going anywhere.
 

@@ -23,13 +23,12 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
@@ -49,9 +48,11 @@ import (
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
@@ -167,7 +168,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config, baseappOpts ...func(
 	var (
 		appBuilder            *runtime.AppBuilder
 		txConfig              client.TxConfig
-		legacyAmino           legacy.Amino
+		legacyAmino           registry.AminoRegistrar
 		cdc                   codec.Codec
 		interfaceRegistry     codectypes.InterfaceRegistry
 		addressCodec          address.Codec
@@ -210,7 +211,10 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config, baseappOpts ...func(
 		if err := depinject.Inject(
 			depinject.Configs(
 				appConfig,
-				depinject.Supply(val.GetLogger()),
+				depinject.Supply(
+					val.GetLogger(),
+					simtestutil.NewAppOptionsWithFlagHome(val.GetViper().GetString(flags.FlagHome)),
+				),
 			),
 			&appBuilder); err != nil {
 			panic(err)
@@ -520,8 +524,23 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 			WithKeybase(kb).
 			WithTxConfig(cfg.TxConfig)
 
-		err = tx.Sign(context.Background(), txFactory, nodeDirName, txBuilder, true)
-		if err != nil {
+		clientCtx := client.Context{}.
+			WithKeyringDir(clientDir).
+			WithKeyring(kb).
+			WithHomeDir(cmtCfg.RootDir).
+			WithChainID(cfg.ChainID).
+			WithInterfaceRegistry(cfg.InterfaceRegistry).
+			WithCodec(cfg.Codec).
+			WithLegacyAmino(cfg.LegacyAmino).
+			WithTxConfig(cfg.TxConfig).
+			WithAccountRetriever(cfg.AccountRetriever).
+			WithAddressCodec(cfg.AddressCodec).
+			WithValidatorAddressCodec(cfg.ValidatorAddressCodec).
+			WithConsensusAddressCodec(cfg.ConsensusAddressCodec).
+			WithNodeURI(cmtCfg.RPC.ListenAddress).
+			WithCmdContext(context.TODO())
+
+		if err := tx.Sign(clientCtx, txFactory, nodeDirName, txBuilder, true); err != nil {
 			return nil, err
 		}
 
@@ -537,21 +556,6 @@ func New(l Logger, baseDir string, cfg Config) (NetworkI, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		clientCtx := client.Context{}.
-			WithKeyringDir(clientDir).
-			WithKeyring(kb).
-			WithHomeDir(cmtCfg.RootDir).
-			WithChainID(cfg.ChainID).
-			WithInterfaceRegistry(cfg.InterfaceRegistry).
-			WithCodec(cfg.Codec).
-			WithLegacyAmino(cfg.LegacyAmino).
-			WithTxConfig(cfg.TxConfig).
-			WithAccountRetriever(cfg.AccountRetriever).
-			WithAddressCodec(cfg.AddressCodec).
-			WithValidatorAddressCodec(cfg.ValidatorAddressCodec).
-			WithConsensusAddressCodec(cfg.ConsensusAddressCodec).
-			WithNodeURI(cmtCfg.RPC.ListenAddress)
 
 		// Provide ChainID here since we can't modify it in the Comet config.
 		viper.Set(flags.FlagChainID, cfg.ChainID)

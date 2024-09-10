@@ -1,0 +1,7 @@
+syntax = "proto3";
+package cosmos.bank.v2;
+
+option go_package = "cosmossdk.io/x/bank/v2/types";
+
+// Params defines the parameters for the bank/v2 module.
+message Params {}

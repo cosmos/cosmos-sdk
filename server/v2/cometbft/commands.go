@@ -33,7 +33,7 @@ func rpcClient(cmd *cobra.Command) (rpc.CometRPC, error) {
 		return nil, err
 	}
 	if rpcURI == "" {
-		return nil, fmt.Errorf("rpc URI is empty")
+		return nil, errors.New("rpc URI is empty")
 	}
 
 	return rpchttp.New(rpcURI)

@@ -38,7 +38,8 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-// CreateValidator defines a method for creating a new validator
+// CreateValidator defines a method for creating a new validator.
+// The validator's params should not be nil for this function to execute successfully.
 func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateValidator) (*types.MsgCreateValidatorResponse, error) {
 	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
@@ -63,9 +64,14 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, types.ErrValidatorOwnerExists
 	}
 
-	pk, ok := msg.Pubkey.GetCachedValue().(cryptotypes.PubKey)
+	cv := msg.Pubkey.GetCachedValue()
+	if cv == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "Pubkey cached value is nil")
+	}
+
+	pk, ok := cv.(cryptotypes.PubKey)
 	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", msg.Pubkey.GetCachedValue())
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", cv)
 	}
 
 	pubkeyTypes, err := k.consensusKeeper.ValidatorPubKeyTypes(ctx)
@@ -81,11 +87,12 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		)
 	}
 
-	if pkType == sdk.PubKeyEd25519Type && len(pk.Bytes()) != ed25519.PubKeySize {
-		return nil, errorsmod.Wrapf(
-			types.ErrConsensusPubKeyLenInvalid,
-			"got: %d, expected: %d", len(pk.Bytes()), ed25519.PubKeySize,
-		)
+	if pubkeyTypes == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "validator params are not set")
+	}
+
+	if err = validatePubKey(pk, pubkeyTypes); err != nil {
+		return nil, err
 	}
 
 	err = k.checkConsKeyAlreadyUsed(ctx, pk)
@@ -642,8 +649,15 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
+// RotateConsPubKey handles the rotation of a validator's consensus public key.
+// It validates the new key, checks for conflicts, and updates the necessary state.
+// The function requires that the validator params are not nil for successful execution.
 func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateConsPubKey) (res *types.MsgRotateConsPubKeyResponse, err error) {
 	cv := msg.NewPubkey.GetCachedValue()
+	if cv == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "new public key is nil")
+	}
+
 	pk, ok := cv.(cryptotypes.PubKey)
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", cv)
@@ -654,19 +668,12 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, err
 	}
 
-	pkType := pk.Type()
-	if !slices.Contains(pubkeyTypes, pkType) {
-		return nil, errorsmod.Wrapf(
-			types.ErrValidatorPubKeyTypeNotSupported,
-			"got: %s, expected: %s", pk.Type(), pubkeyTypes,
-		)
+	if pubkeyTypes == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "validator params are not set")
 	}
 
-	if pkType == sdk.PubKeyEd25519Type && len(pk.Bytes()) != ed25519.PubKeySize {
-		return nil, errorsmod.Wrapf(
-			types.ErrConsensusPubKeyLenInvalid,
-			"got: %d, expected: %d", len(pk.Bytes()), ed25519.PubKeySize,
-		)
+	if err = validatePubKey(pk, pubkeyTypes); err != nil {
+		return nil, err
 	}
 
 	err = k.checkConsKeyAlreadyUsed(ctx, pk)
@@ -760,6 +767,27 @@ func (k msgServer) checkConsKeyAlreadyUsed(ctx context.Context, newConsPubKey cr
 	_, err = k.Keeper.ValidatorByConsAddr(ctx, newConsAddr)
 	if err == nil {
 		return types.ErrValidatorPubKeyExists
+	}
+
+	return nil
+}
+
+func validatePubKey(pk cryptotypes.PubKey, knownPubKeyTypes []string) error {
+	pkType := pk.Type()
+	if !slices.Contains(knownPubKeyTypes, pkType) {
+		return errorsmod.Wrapf(
+			types.ErrValidatorPubKeyTypeNotSupported,
+			"got: %s, expected: %s", pk.Type(), knownPubKeyTypes,
+		)
+	}
+
+	if pkType == sdk.PubKeyEd25519Type {
+		if len(pk.Bytes()) != ed25519.PubKeySize {
+			return errorsmod.Wrapf(
+				types.ErrConsensusPubKeyLenInvalid,
+				"invalid Ed25519 pubkey size: got %d, expected %d", len(pk.Bytes()), ed25519.PubKeySize,
+			)
+		}
 	}
 
 	return nil

@@ -35,6 +35,9 @@ import (
 	_ "cosmossdk.io/x/authz/module" // import for side-effects
 	_ "cosmossdk.io/x/bank"         // import for side-effects
 	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/bank/v2" // import for side-effects
+	bankv2types "cosmossdk.io/x/bank/v2/types"
+	bankmodulev2 "cosmossdk.io/x/bank/v2/types/module"
 	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
 	_ "cosmossdk.io/x/consensus" // import for side-effects
@@ -138,6 +141,10 @@ var (
 							ModuleName: authtypes.ModuleName,
 							KvStoreKey: "acc",
 						},
+						{
+							ModuleName: accounts.ModuleName,
+							KvStoreKey: accounts.StoreKey,
+						},
 					},
 					// NOTE: The genutils module must occur after staking so that pools are
 					// properly initialized with tokens from genesis accounts.
@@ -147,6 +154,7 @@ var (
 						accounts.ModuleName,
 						authtypes.ModuleName,
 						banktypes.ModuleName,
+						bankv2types.ModuleName,
 						distrtypes.ModuleName,
 						stakingtypes.ModuleName,
 						slashingtypes.ModuleName,
@@ -260,7 +268,7 @@ var (
 			{
 				Name: consensustypes.ModuleName,
 				Config: appconfig.WrapAny(&consensusmodulev1.Module{
-					Authority: "consensus",
+					Authority: "consensus", // TODO remove.
 				}),
 			},
 			{
@@ -278,6 +286,10 @@ var (
 			{
 				Name:   epochstypes.ModuleName,
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
+			},
+			{
+				Name:   bankv2types.ModuleName,
+				Config: appconfig.WrapAny(&bankmodulev2.Module{}),
 			},
 		},
 	})

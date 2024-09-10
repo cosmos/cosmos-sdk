@@ -135,8 +135,11 @@ func RunWithSeeds[T SimulationApp](
 			require.NoError(t, err)
 			err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
 			require.NoError(t, err)
-			if tCfg.Commit && tCfg.DBBackend == "goleveldb" {
-				simtestutil.PrintStats(testInstance.DB.(*dbm.GoLevelDB))
+			if tCfg.Commit {
+				db, ok := testInstance.DB.(dbm.DB)
+				if ok {
+					simtestutil.PrintStats(db)
+				}
 			}
 			for _, step := range postRunActions {
 				step(t, testInstance)

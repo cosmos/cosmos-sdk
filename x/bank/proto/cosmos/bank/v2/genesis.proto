@@ -1,0 +1,14 @@
+syntax = "proto3";
+package cosmos.bank.v2;
+
+import "gogoproto/gogo.proto";
+import "cosmos/bank/v2/bank.proto";
+import "amino/amino.proto";
+
+option go_package = "cosmossdk.io/x/bank/v2/types";
+
+// GenesisState defines the bank/v2 module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}

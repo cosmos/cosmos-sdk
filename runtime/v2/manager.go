@@ -240,7 +240,6 @@ func (m *MM[T]) ExportGenesisForModules(
 				ch <- genesisResult{jm, nil}
 				return nil
 			})
-			return
 		}(moduleI, channels[moduleName])
 	}
 

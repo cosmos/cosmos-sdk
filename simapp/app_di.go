@@ -298,6 +298,7 @@ func (app *SimApp) setCustomAnteHandler() {
 			ante.HandlerOptions{
 				AccountKeeper:      app.AuthKeeper,
 				BankKeeper:         app.BankKeeper,
+				ConsensusKeeper:    app.ConsensusParamsKeeper,
 				SignModeHandler:    app.txConfig.SignModeHandler(),
 				FeegrantKeeper:     app.FeeGrantKeeper,
 				SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,

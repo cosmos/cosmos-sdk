@@ -14,7 +14,6 @@ require (
 	cosmossdk.io/schema v0.2.0
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
-	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.13.3
 	github.com/99designs/keyring v1.2.2
@@ -189,7 +188,6 @@ replace (
 	cosmossdk.io/core/testing => ./core/testing
 	cosmossdk.io/store => ./store
 	cosmossdk.io/x/bank => ./x/bank
-	cosmossdk.io/x/consensus => ./x/consensus
 	cosmossdk.io/x/staking => ./x/staking
 	cosmossdk.io/x/tx => ./x/tx
 )

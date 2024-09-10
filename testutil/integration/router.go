@@ -9,14 +9,14 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
-	consensusparamtypes "cosmossdk.io/x/consensus/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -26,10 +26,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-const appName = "integration-app"
+const (
+	appName   = "integration-app"
+	consensus = "consensus"
+)
 
 // App is a test application that can be used to test the integration of modules.
 type App struct {
@@ -88,14 +90,12 @@ func NewIntegrationApp(
 	grpcRouter.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetGRPCQueryRouter(grpcRouter)
 
-	if keys[consensusparamtypes.StoreKey] != nil {
-		// set baseApp param store
-		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcRouter), runtime.EnvWithMsgRouterService(msgRouter)), authtypes.NewModuleAddress("gov").String())
-		bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
-		consensusparamtypes.RegisterQueryServer(grpcRouter, consensusParamsKeeper)
+	if keys[consensus] != nil {
+		cps := newParamStore(runtime.NewKVStoreService(keys[consensus]), appCodec)
+		bApp.SetParamStore(cps)
 
 		params := cmttypes.ConsensusParamsFromProto(*simtestutil.DefaultConsensusParams) // This fills up missing param sections
-		err := consensusParamsKeeper.ParamsStore.Set(sdkCtx, params.ToProto())
+		err := cps.Set(sdkCtx, params.ToProto())
 		if err != nil {
 			panic(fmt.Errorf("failed to set consensus params: %w", err))
 		}
@@ -210,4 +210,27 @@ func CreateMultiStore(keys map[string]*storetypes.KVStoreKey, logger log.Logger)
 
 	_ = cms.LoadLatestVersion()
 	return cms
+}
+
+type paramStoreService struct {
+	ParamsStore collections.Item[cmtproto.ConsensusParams]
+}
+
+func newParamStore(storeService corestore.KVStoreService, cdc codec.Codec) paramStoreService {
+	sb := collections.NewSchemaBuilder(storeService)
+	return paramStoreService{
+		ParamsStore: collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
+	}
+}
+
+func (pss paramStoreService) Get(ctx context.Context) (cmtproto.ConsensusParams, error) {
+	return pss.ParamsStore.Get(ctx)
+}
+
+func (pss paramStoreService) Has(ctx context.Context) (bool, error) {
+	return pss.ParamsStore.Has(ctx)
+}
+
+func (pss paramStoreService) Set(ctx context.Context, cp cmtproto.ConsensusParams) error {
+	return pss.ParamsStore.Set(ctx, cp)
 }

@@ -33,7 +33,7 @@ func TestSetupDecorator_BlockMaxGas(t *testing.T) {
 	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	sud := ante.NewSetUpContextDecorator(suite.env)
+	sud := ante.NewSetUpContextDecorator(suite.env, suite.consensusKeeper)
 	antehandler := sdk.ChainAnteDecorators(sud)
 
 	suite.ctx = suite.ctx.
@@ -63,7 +63,7 @@ func TestSetup(t *testing.T) {
 	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	sud := ante.NewSetUpContextDecorator(suite.env)
+	sud := ante.NewSetUpContextDecorator(suite.env, suite.consensusKeeper)
 	antehandler := sdk.ChainAnteDecorators(sud)
 
 	// Set height to non-zero value for GasMeter to be set
@@ -98,7 +98,7 @@ func TestRecoverPanic(t *testing.T) {
 	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	sud := ante.NewSetUpContextDecorator(suite.env)
+	sud := ante.NewSetUpContextDecorator(suite.env, suite.consensusKeeper)
 	antehandler := sdk.ChainAnteDecorators(sud, OutOfGasDecorator{})
 
 	// Set height to non-zero value for GasMeter to be set

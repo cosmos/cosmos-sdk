@@ -75,12 +75,11 @@ func TestServer(t *testing.T) {
 	require.Equal(t, serverCfgs[mockServer.Name()].(*mockServerConfig).MockFieldOne, MockServerDefaultConfig().MockFieldOne)
 
 	// write config
-	err = server.WriteConfig(configPath)
+	tempDir := t.TempDir()
+	require.NoError(t, server.WriteConfig(tempDir))                                          // writes app.toml
+	require.NoError(t, os.WriteFile(filepath.Join(tempDir, "config.toml"), []byte{}, 0o600)) // any config.toml
+	v, err = serverv2.ReadConfig(tempDir)
 	require.NoError(t, err)
-
-	v, err = serverv2.ReadConfig(configPath)
-	require.NoError(t, err)
-
 	require.Equal(t, v.GetString(grpcServer.Name()+".address"), grpc.DefaultConfig().Address)
 
 	// start empty

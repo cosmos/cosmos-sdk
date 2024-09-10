@@ -6,7 +6,6 @@ import (
 
 	"cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
-
 	storev2 "cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
@@ -17,7 +16,7 @@ import (
 )
 
 type MockStore struct {
-	Storage  storev2.VersionedDatabase
+	Storage   storev2.VersionedDatabase
 	Committer storev2.Committer
 }
 

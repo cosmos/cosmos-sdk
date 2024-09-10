@@ -16,7 +16,6 @@ import (
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
-	consensustypes "cosmossdk.io/x/consensus/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -101,10 +100,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	grpcQueryRouter.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
 
 	suite.consensusKeeper = antetestutil.NewMockConsensusKeeper(ctrl)
-	suite.consensusKeeper.EXPECT().Params(gomock.Any(), gomock.Any()).Return(&consensustypes.QueryParamsResponse{
-		Params: simtestutil.DefaultConsensusParams,
-	}, nil).AnyTimes()
-	consensustypes.RegisterQueryServer(grpcQueryRouter, suite.consensusKeeper)
+	suite.consensusKeeper.EXPECT().BlockParams(gomock.Any()).Return(uint64(simtestutil.DefaultConsensusParams.Block.MaxGas), uint64(simtestutil.DefaultConsensusParams.Block.MaxBytes), nil).AnyTimes()
 
 	suite.env = runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter))
 	suite.accountKeeper = keeper.NewAccountKeeper(
@@ -127,6 +123,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 		ante.HandlerOptions{
 			AccountKeeper:   suite.accountKeeper,
 			BankKeeper:      suite.bankKeeper,
+			ConsensusKeeper: suite.consensusKeeper,
 			FeegrantKeeper:  suite.feeGrantKeeper,
 			SignModeHandler: suite.encCfg.TxConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,

@@ -20,6 +20,8 @@ require (
 	google.golang.org/grpc v1.66.0
 )
 
+require cosmossdk.io/schema v0.2.0 // indirect
+
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
@@ -166,7 +168,11 @@ require (
 )
 
 require (
+<<<<<<< HEAD
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
+=======
+	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
+>>>>>>> f220f8bf6 (refactor: remove consensus as a imported type in modules  (#21480))
 	github.com/google/uuid v1.6.0 // indirect
 )
 
@@ -179,6 +185,5 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240906090851-36d9b25e8981 // main
 	cosmossdk.io/x/bank => ../bank
-	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/staking => ../staking
 )

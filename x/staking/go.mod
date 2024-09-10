@@ -166,7 +166,24 @@ require (
 )
 
 require (
+<<<<<<< HEAD
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
+=======
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
+	cosmossdk.io/log v1.4.1
+	github.com/cosmos/crypto v0.1.2 // indirect
+	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/google/flatbuffers v2.0.8+incompatible // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
+	github.com/supranational/blst v0.3.13 // indirect
+	go.opencensus.io v0.24.0 // indirect
+)
+
+require (
+	cosmossdk.io/schema v0.2.0 // indirect
+	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
+>>>>>>> f220f8bf6 (refactor: remove consensus as a imported type in modules  (#21480))
 	github.com/google/uuid v1.6.0 // indirect
 )
 
@@ -179,5 +196,9 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240906090851-36d9b25e8981 // main
 	cosmossdk.io/x/bank => ../bank
+<<<<<<< HEAD
 	cosmossdk.io/x/consensus => ../consensus
+=======
+	cosmossdk.io/x/tx => ../tx
+>>>>>>> f220f8bf6 (refactor: remove consensus as a imported type in modules  (#21480))
 )

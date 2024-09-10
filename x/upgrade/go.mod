@@ -9,8 +9,12 @@ require (
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
+<<<<<<< HEAD
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
+=======
+	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
+>>>>>>> f220f8bf6 (refactor: remove consensus as a imported type in modules  (#21480))
 	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
@@ -18,6 +22,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0
+	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
@@ -96,7 +101,6 @@ require (
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/flatbuffers v24.3.25+incompatible // indirect
@@ -207,7 +211,6 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240906090851-36d9b25e8981 // main
 	cosmossdk.io/x/bank => ../bank
-	cosmossdk.io/x/consensus => ../consensus
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/staking => ../staking
 )

@@ -81,6 +81,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	// create consensus keeper
 	ck := stakingtestutil.NewMockConsensusKeeper(ctrl)
 	ck.EXPECT().ValidatorPubKeyTypes(gomock.Any()).Return(simtestutil.DefaultConsensusParams.Validator.PubKeyTypes, nil).AnyTimes()
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()))
@@ -105,6 +106,8 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.accountKeeper = accountKeeper
 
 	stakingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
+	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: keeper})
+	s.queryClient = stakingtypes.NewQueryClient(queryHelper)
 	s.msgServer = stakingkeeper.NewMsgServerImpl(keeper)
 }
 

@@ -141,8 +141,8 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	require.NoError(t, err)
 
 	ctrl := gomock.NewController(t)
-
-	s.keeper = keeper.NewKeeper(s.env, skip, s.encCfg.Codec, t.TempDir(), s.baseApp, authority, upgradetestutil.NewMockConsensusKeeper(ctrl))
+	ck := upgradetestutil.NewMockConsensusKeeper(ctrl)
+	s.keeper = keeper.NewKeeper(s.env, skip, s.encCfg.Codec, t.TempDir(), s.baseApp, authority, ck)
 
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: height})
 
@@ -535,7 +535,9 @@ func TestDowngradeVerification(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		// downgrade. now keeper does not have the handler.
-		k := keeper.NewKeeper(s.env, map[int64]bool{}, s.encCfg.Codec, t.TempDir(), nil, authority, upgradetestutil.NewMockConsensusKeeper(ctrl))
+		ck := upgradetestutil.NewMockConsensusKeeper(ctrl)
+		ck.EXPECT().AppVersion(gomock.Any()).Return(uint64(0), nil).AnyTimes()
+		k := keeper.NewKeeper(s.env, map[int64]bool{}, s.encCfg.Codec, t.TempDir(), nil, authority, ck)
 		m := upgrade.NewAppModule(k)
 
 		// assertions

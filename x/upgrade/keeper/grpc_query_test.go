@@ -50,7 +50,8 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 	suite.encodedAuthority = authority
 	ctrl := gomock.NewController(suite.T())
-	suite.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, suite.encCfg.Codec, suite.T().TempDir(), nil, authority, upgradetestutil.NewMockConsensusKeeper(ctrl))
+	ck := upgradetestutil.NewMockConsensusKeeper(ctrl)
+	suite.upgradeKeeper = keeper.NewKeeper(env, skipUpgradeHeights, suite.encCfg.Codec, suite.T().TempDir(), nil, authority, ck)
 	err = suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, appmodule.VersionMap{
 		"bank": 0,
 	})

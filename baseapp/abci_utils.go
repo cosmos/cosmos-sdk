@@ -304,9 +304,10 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			shouldAdd := true
 			txSignersSeqs := make(map[string]uint64)
 			for _, signer := range signerData {
-				seq, ok := selectedTxsSignersSeqs[signer.Signer.String()]
+				signerKey := string(signer.Signer)
+				seq, ok := selectedTxsSignersSeqs[signerKey]
 				if !ok {
-					txSignersSeqs[signer.Signer.String()] = signer.Sequence
+					txSignersSeqs[signerKey] = signer.Sequence
 					continue
 				}
 
@@ -317,7 +318,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 					shouldAdd = false
 					break
 				}
-				txSignersSeqs[signer.Signer.String()] = signer.Sequence
+				txSignersSeqs[signerKey] = signer.Sequence
 			}
 			if !shouldAdd {
 				return true

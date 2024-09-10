@@ -4,18 +4,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"sync"
 
 	"cosmossdk.io/schema/addressutil"
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/decoding"
 	"cosmossdk.io/schema/logutil"
+	"cosmossdk.io/schema/view"
 )
 
 // IndexingOptions are the options for starting the indexer manager.
 type IndexingOptions struct {
 	// Config is the user configuration for all indexing. It should generally be an instance map[string]interface{}
-	// or json.RawMessage and match the json structure of IndexingConfig. The manager will attempt to convert it to IndexingConfig.
+	// or json.RawMessage and match the json structure of IndexingConfig, or it can be an instance of IndexingConfig.
+	// The manager will attempt to convert it to IndexingConfig.
 	Config interface{}
 
 	// Resolver is the decoder resolver that will be used to decode the data. It is required.
@@ -65,6 +68,14 @@ type IndexingTarget struct {
 	// ModuleFilter returns the root module filter which an app can use to exclude modules at the storage level,
 	// if such a filter is set.
 	ModuleFilter *ModuleFilterConfig
+
+	IndexerInfos map[string]IndexerInfo
+}
+
+// IndexerInfo contains data returned by a specific indexer after initialization that maybe useful for the app.
+type IndexerInfo struct {
+	// View is the view returned by the indexer in its InitResult. It is optional and may be nil.
+	View view.AppData
 }
 
 // StartIndexing starts the indexer manager with the given options. The state machine should write all relevant app data to
@@ -79,7 +90,7 @@ func StartIndexing(opts IndexingOptions) (IndexingTarget, error) {
 
 	scopeableLogger, canScopeLogger := logger.(logutil.ScopeableLogger)
 
-	cfg, err := unmarshalConfig(opts.Config)
+	cfg, err := unmarshalIndexingConfig(opts.Config)
 	if err != nil {
 		return IndexingTarget{}, err
 	}
@@ -90,6 +101,7 @@ func StartIndexing(opts IndexingOptions) (IndexingTarget, error) {
 	}
 
 	listeners := make([]appdata.Listener, 0, len(cfg.Target))
+	indexerInfos := make(map[string]IndexerInfo, len(cfg.Target))
 
 	for targetName, targetCfg := range cfg.Target {
 		init, ok := indexerRegistry[targetCfg.Type]
@@ -108,10 +120,16 @@ func StartIndexing(opts IndexingOptions) (IndexingTarget, error) {
 			childLogger = scopeableLogger.WithContext("indexer", targetName).(logutil.Logger)
 		}
 
-		initRes, err := init(InitParams{
-			Config:  targetCfg,
-			Context: ctx,
-			Logger:  childLogger,
+		targetCfg.Config, err = unmarshalIndexerCustomConfig(targetCfg.Config, init.ConfigType)
+		if err != nil {
+			return IndexingTarget{}, fmt.Errorf("failed to unmarshal indexer config for target %q: %w", targetName, err)
+		}
+
+		initRes, err := init.InitFunc(InitParams{
+			Config:       targetCfg,
+			Context:      ctx,
+			Logger:       childLogger,
+			AddressCodec: opts.AddressCodec,
 		})
 		if err != nil {
 			return IndexingTarget{}, err
@@ -119,6 +137,10 @@ func StartIndexing(opts IndexingOptions) (IndexingTarget, error) {
 
 		listener := initRes.Listener
 		listeners = append(listeners, listener)
+
+		indexerInfos[targetName] = IndexerInfo{
+			View: initRes.View,
+		}
 	}
 
 	bufSize := 1024
@@ -143,11 +165,19 @@ func StartIndexing(opts IndexingOptions) (IndexingTarget, error) {
 	rootListener = appdata.AsyncListener(asyncOpts, rootListener)
 
 	return IndexingTarget{
-		Listener: rootListener,
+		Listener:     rootListener,
+		IndexerInfos: indexerInfos,
 	}, nil
 }
 
-func unmarshalConfig(cfg interface{}) (*IndexingConfig, error) {
+func unmarshalIndexingConfig(cfg interface{}) (*IndexingConfig, error) {
+	if x, ok := cfg.(*IndexingConfig); ok {
+		return x, nil
+	}
+	if x, ok := cfg.(IndexingConfig); ok {
+		return &x, nil
+	}
+
 	var jsonBz []byte
 	var err error
 
@@ -166,4 +196,19 @@ func unmarshalConfig(cfg interface{}) (*IndexingConfig, error) {
 	var res IndexingConfig
 	err = json.Unmarshal(jsonBz, &res)
 	return &res, err
+}
+
+func unmarshalIndexerCustomConfig(cfg interface{}, expectedType interface{}) (interface{}, error) {
+	typ := reflect.TypeOf(expectedType)
+	if reflect.TypeOf(cfg).AssignableTo(typ) {
+		return cfg, nil
+	}
+
+	res := reflect.New(typ).Interface()
+	bz, err := json.Marshal(cfg)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(bz, res)
+	return reflect.ValueOf(res).Elem(), err
 }

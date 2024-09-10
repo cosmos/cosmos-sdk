@@ -13,7 +13,7 @@ type Config struct {
 	Type string `json:"type"`
 
 	// Config are the indexer specific config options specified by the user.
-	Config map[string]interface{} `json:"config,omitempty"`
+	Config interface{} `json:"config,omitempty"`
 
 	Filter *FilterConfig `json:"filter,omitempty"`
 }

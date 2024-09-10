@@ -9,6 +9,15 @@ import (
 	"cosmossdk.io/schema/view"
 )
 
+// InitDescriptor describes an indexer initialization function and other metadata.
+type InitDescriptor struct {
+	// InitFunc is the function that initializes the indexer.
+	InitFunc InitFunc
+
+	// ConfigType is the type of the configuration object that the indexer expects.
+	ConfigType interface{}
+}
+
 type InitFunc = func(InitParams) (InitResult, error)
 
 // InitParams is the input to the indexer initialization function.

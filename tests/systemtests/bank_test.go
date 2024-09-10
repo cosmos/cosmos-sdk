@@ -1,5 +1,3 @@
-//go:build system_test
-
 package systemtests
 
 import (
@@ -32,12 +30,12 @@ func TestBankSendTxCmd(t *testing.T) {
 	sut.StartChain(t)
 
 	// query accounts balances
-	balance := cli.QueryBalance(account1Addr, "stake")
-	assert.Equal(t, int64(initialAmount), balance)
-	balance = cli.QueryBalance(account2Addr, "stake")
-	assert.Equal(t, int64(initialAmount), balance)
+	balance1 := cli.QueryBalance(account1Addr, "stake")
+	assert.Equal(t, int64(initialAmount), balance1)
+	balance2 := cli.QueryBalance(account2Addr, "stake")
+	assert.Equal(t, int64(initialAmount), balance2)
 
-	bankSendCmdArgs := []string{"tx", "bank", "send", account1Addr, account2Addr, "1000stake", "--from=" + account1Addr}
+	bankSendCmdArgs := []string{"tx", "bank", "send", account1Addr, account2Addr, "1000stake"}
 
 	testCases := []struct {
 		name         string
@@ -89,6 +87,26 @@ func TestBankSendTxCmd(t *testing.T) {
 			}
 		})
 	}
+
+	// test tx bank send with insufficient funds
+	insufficientCmdArgs := bankSendCmdArgs[0 : len(bankSendCmdArgs)-1]
+	insufficientCmdArgs = append(insufficientCmdArgs, initialBalance, "--fees=10stake")
+	rsp := cli.Run(insufficientCmdArgs...)
+	RequireTxFailure(t, rsp)
+	assert.Contains(t, rsp, sdkerrors.ErrInsufficientFunds.Error())
+
+	// test tx bank send with unauthorized signature
+	assertUnauthorizedErr := func(t assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
+		assert.Len(t, gotOutputs, 1)
+		code := gjson.Get(gotOutputs[0].(string), "code")
+		assert.True(t, code.Exists())
+		assert.Equal(t, int64(sdkerrors.ErrUnauthorized.ABCICode()), code.Int())
+		return false
+	}
+	invalidCli := cli
+	invalidCli.chainID = cli.chainID + "a" // set invalid chain-id
+	rsp = invalidCli.WithRunErrorMatcher(assertUnauthorizedErr).Run(bankSendCmdArgs...)
+	RequireTxFailure(t, rsp)
 
 	// test tx bank send generate only
 	assertGenOnlyOutput := func(t assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
@@ -213,4 +231,22 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBankGRPCQueries(t *testing.T) {
+	// scenario: test bank grpc gateway queries
+	// given a running chain
+
+	sut.ResetChain(t)
+	cli := NewCLIWrapper(t, sut, verbose)
+	// add genesis account with some tokens
+	account1Addr := cli.AddKey("account1")
+	account2Addr := cli.AddKey("account2")
+	require.NotEqual(t, account1Addr, account2Addr)
+	sut.ModifyGenesisCLI(t,
+		[]string{"genesis", "add-genesis-account", account1Addr, "10000000stake"},
+	)
+
+	sut.StartChain(t)
+
 }

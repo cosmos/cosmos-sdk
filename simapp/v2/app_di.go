@@ -104,7 +104,7 @@ func NewSimApp[T transaction.Tx](
 			AppConfig(),
 			depinject.Supply(
 				logger,
-				viper,
+				&viperWrapper{viper}, // DynamicConfig
 
 				// ADVANCED CONFIGURATION
 
@@ -234,4 +234,18 @@ func (app *SimApp[T]) GetConsensusAuthority() string {
 // GetStore gets the app store.
 func (app *SimApp[T]) GetStore() any {
 	return app.App.GetStore()
+}
+
+var _ server.DynamicConfig = &viperWrapper{}
+
+type viperWrapper struct {
+	*viper.Viper
+}
+
+func (v *viperWrapper) UnmarshalSub(key string, cfg any) (bool, error) {
+	s := v.Viper.Sub(key)
+	if s == nil {
+		return false, nil
+	}
+	return true, s.Unmarshal(cfg)
 }

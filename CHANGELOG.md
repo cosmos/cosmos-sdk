@@ -59,6 +59,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### API Breaking Changes
 
 * (baseapp) [#21413](https://github.com/cosmos/cosmos-sdk/pull/21413) Add `SelectBy` method to `Mempool` interface, which is thread-safe to use.
+* (sims)[#21613](https://github.com/cosmos/cosmos-sdk/pull/21613) Add sims2 framework and factory methods for simpler message factories in modules
 
 ### Deprecated
 

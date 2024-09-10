@@ -6,10 +6,13 @@ import (
 
 	cmtabcitypes "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
@@ -18,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -87,6 +91,15 @@ func NewIntegrationApp(
 	bApp.SetGRPCQueryRouter(grpcRouter)
 
 	if keys[consensus] != nil {
+		cps := newParamStore(runtime.NewKVStoreService(keys[consensus]), appCodec)
+		bApp.SetParamStore(cps)
+
+		params := cmttypes.ConsensusParamsFromProto(*simtestutil.DefaultConsensusParams) // This fills up missing param sections
+		err := cps.Set(sdkCtx, params.ToProto())
+		if err != nil {
+			panic(fmt.Errorf("failed to set consensus params: %w", err))
+		}
+
 		if err := bApp.LoadLatestVersion(); err != nil {
 			panic(fmt.Errorf("failed to load application version from store: %w", err))
 		}
@@ -197,4 +210,27 @@ func CreateMultiStore(keys map[string]*storetypes.KVStoreKey, logger log.Logger)
 
 	_ = cms.LoadLatestVersion()
 	return cms
+}
+
+type paramStoreService struct {
+	ParamsStore collections.Item[cmtproto.ConsensusParams]
+}
+
+func newParamStore(storeService corestore.KVStoreService, cdc codec.Codec) paramStoreService {
+	sb := collections.NewSchemaBuilder(storeService)
+	return paramStoreService{
+		ParamsStore: collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
+	}
+}
+
+func (pss paramStoreService) Get(ctx context.Context) (cmtproto.ConsensusParams, error) {
+	return pss.ParamsStore.Get(ctx)
+}
+
+func (pss paramStoreService) Has(ctx context.Context) (bool, error) {
+	return pss.ParamsStore.Has(ctx)
+}
+
+func (pss paramStoreService) Set(ctx context.Context, cp cmtproto.ConsensusParams) error {
+	return pss.ParamsStore.Set(ctx, cp)
 }

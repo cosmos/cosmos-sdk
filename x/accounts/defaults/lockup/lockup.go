@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"slices"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -295,21 +296,21 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 		return nil, err
 	}
 
-	hs := bva.headerService.HeaderInfo(ctx)
-	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msg.Denoms...)
-	if err != nil {
-		return nil, err
-	}
-
-	amount := sdk.Coins{}
-
 	// deduplicate the denoms
 	denoms := make(map[string]struct{})
 	for _, denom := range msg.Denoms {
 		denoms[denom] = struct{}{}
 	}
+	uniqueDenoms := slices.Collect(maps.Keys(denoms))
 
-	for denom := range maps.Keys(denoms) {
+	hs := bva.headerService.HeaderInfo(ctx)
+	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, uniqueDenoms...)
+	if err != nil {
+		return nil, err
+	}
+
+	amount := sdk.Coins{}
+	for _, denom := range uniqueDenoms {
 		balance, err := bva.getBalance(ctx, fromAddress, denom)
 		if err != nil {
 			return nil, err

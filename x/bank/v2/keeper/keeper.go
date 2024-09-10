@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
@@ -103,50 +102,42 @@ func (k Keeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Co
 // Function take sender & receipient as string.
 // They can be sdk address or module name.
 // An error is returned upon failure.
-func (k Keeper) SendCoins(ctx context.Context, from, to string, amt sdk.Coins) error {
+func (k Keeper) SendCoins(ctx context.Context, from, to []byte, amt sdk.Coins) error {
 	if !amt.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	var fromAddr, toAddr sdk.AccAddress
 	var err error
 
-	// Detect from & to is address format or module name
-	fromAddr, err = sdk.AccAddressFromBech32(from)
-	if err != nil {
-		// Check if is a module name
-		fromAddr = k.ak.GetModuleAddress(from)
-		if fromAddr == nil {
-			return fmt.Errorf("%s is not an address or module name", from)
-		}
+	// If from & to is []byte of module name
+	// Override with module address
+	fromAddr := k.ak.GetModuleAddress(string(from))
+	if fromAddr != nil {
+		from = fromAddr
 	}
 
-	toAddr, err = sdk.AccAddressFromBech32(to)
-	if err != nil {
-		// Check if is a module name
-		toAddr = k.ak.GetModuleAddress(to)
-		if toAddr == nil {
-			return fmt.Errorf("%s is not an address or module name", to)
-		}
+	toAddr := k.ak.GetModuleAddress(string(to))
+	if toAddr != nil {
+		to = toAddr
 	}
 
 	// TODO: Send restriction
 
-	err = k.subUnlockedCoins(ctx, fromAddr, amt)
+	err = k.subUnlockedCoins(ctx, from, amt)
 	if err != nil {
 		return err
 	}
 
-	err = k.addCoins(ctx, toAddr, amt)
+	err = k.addCoins(ctx, to, amt)
 	if err != nil {
 		return err
 	}
 
-	fromAddrString, err := k.addressCodec.BytesToString(fromAddr)
+	fromAddrString, err := k.addressCodec.BytesToString(from)
 	if err != nil {
 		return err
 	}
-	toAddrString, err := k.addressCodec.BytesToString(toAddr)
+	toAddrString, err := k.addressCodec.BytesToString(to)
 	if err != nil {
 		return err
 	}

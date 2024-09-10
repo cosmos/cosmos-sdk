@@ -256,6 +256,10 @@ func (bva *BaseLockup) SendCoins(
 
 	hs := bva.headerService.HeaderInfo(ctx)
 
+	if err := msg.Amount.Validate(); err != nil {
+		return nil, err
+	}
+
 	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msg.Amount.Denoms()...)
 	if err != nil {
 		return nil, err

@@ -13,6 +13,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO: move this to sdk types and use this instead of comet types GenesisValidator
+// then we can do pubkey conversion in ToGenesisDoc
+//
+// this is a temporary work around to avoid import comet directly in staking
 type GenesisValidator struct {
 	Address sdk.ConsAddress
 	PubKey  cryptotypes.PubKey

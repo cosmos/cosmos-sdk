@@ -8,9 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	runtimev2 "cosmossdk.io/runtime/v2"
 	_ "cosmossdk.io/x/accounts"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/testutil"
@@ -29,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	integrationv2 "github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -75,6 +78,7 @@ type suite struct {
 	AccountKeeper      types.AccountKeeper
 	DistributionKeeper distrkeeper.Keeper
 	App                *runtime.App
+	Appv2              *runtimev2.App[transaction.Tx]
 	TxConfig           client.TxConfig
 }
 
@@ -89,27 +93,31 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 
 	startupCfg := simtestutil.DefaultStartUpConfig()
 	startupCfg.GenesisAccounts = genAccounts
-
-	app, err := simtestutil.SetupWithConfiguration(
-		depinject.Configs(
-			configurator.NewAppConfig(
-				configurator.AccountsModule(),
-				configurator.AuthModule(),
-				configurator.StakingModule(),
-				configurator.TxModule(),
-				configurator.ConsensusModule(),
-				configurator.BankModule(),
-				configurator.GovModule(),
-				configurator.DistributionModule(),
-				configurator.ProtocolPoolModule(),
-			),
-			depinject.Supply(log.NewNopLogger()),
-		),
+	moduleConfigs := []configurator.ModuleOption{
+		configurator.AccountsModule(),
+		configurator.AuthModule(),
+		configurator.StakingModule(),
+		configurator.TxModule(),
+		configurator.ConsensusModule(),
+		configurator.BankModule(),
+		configurator.GovModule(),
+		configurator.DistributionModule(),
+		configurator.ProtocolPoolModule(),
+	}
+	var err error
+	res.App, err = simtestutil.SetupWithConfiguration(
+		depinject.Configs(configurator.NewAppConfig(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
 		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
-
-	res.App = app
-
 	require.NoError(t, err)
+
+	v2StartupCfg := integrationv2.DefaultStartUpConfig()
+	v2StartupCfg.HomeDir = t.TempDir()
+	res.Appv2, err = integrationv2.SetupWithConfiguration(
+		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
+		v2StartupCfg,
+		&res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
+	require.NoError(t, err)
+
 	return res
 }
 

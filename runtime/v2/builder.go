@@ -7,10 +7,9 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/spf13/viper"
-
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager"
@@ -20,13 +19,18 @@ import (
 	rootstore "cosmossdk.io/store/v2/root"
 )
 
+type configProvider interface {
+	GetString(string) string
+	UnmarshalSub(string, any) (bool, error)
+}
+
 // AppBuilder is a type that is injected into a container by the runtime/v2 module
 // (as *AppBuilder) which can be used to create an app which is compatible with
 // the existing app.go initialization conventions.
 type AppBuilder[T transaction.Tx] struct {
 	app          *App[T]
 	storeOptions *rootstore.FactoryOptions
-	viper        *viper.Viper
+	config       server.DynamicConfig
 
 	// the following fields are used to overwrite the default
 	branch      func(state store.ReaderMap) store.WriterMap
@@ -125,14 +129,13 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	a.app.stf = stf
 
 	storeOpts := rootstore.DefaultStoreOptions()
-	if s := a.viper.Sub("store.options"); s != nil {
-		if err := s.Unmarshal(&storeOpts); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal store options: %w", err)
-		}
+	ok, err := a.config.UnmarshalSub("store.options", &storeOpts)
+	if ok && err != nil {
+		return nil, fmt.Errorf("failed to unmarshal store options: %w", err)
 	}
 
-	home := a.viper.GetString(FlagHome)
-	scRawDb, err := db.NewDB(db.DBType(a.viper.GetString("store.app-db-backend")), "application", filepath.Join(home, "data"), nil)
+	home := a.config.GetString(FlagHome)
+	scRawDb, err := db.NewDB(db.DBType(a.config.GetString("store.app-db-backend")), "application", filepath.Join(home, "data"), nil)
 	if err != nil {
 		panic(err)
 	}

@@ -3,6 +3,7 @@ package integration
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,6 +31,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -93,6 +95,7 @@ type StartupConfig struct {
 	AtGenesis       bool
 	GenesisAccounts []GenesisAccount
 	DB              corestore.KVStoreWithBatch
+	HomeDir         string
 }
 
 func DefaultStartUpConfig() StartupConfig {
@@ -140,6 +143,27 @@ func SetupAtGenesis(
 	return SetupWithConfiguration(appConfig, cfg, extraOutputs...)
 }
 
+var _ server.DynamicConfig = &dynamicConfigImpl{}
+
+type dynamicConfigImpl struct {
+	homeDir string
+}
+
+func (d *dynamicConfigImpl) GetString(key string) string {
+	switch key {
+	case runtime.FlagHome:
+		return d.homeDir
+	case "store.app-db-backend":
+		return "goleveldb"
+	default:
+		panic(fmt.Sprintf("unknown key: %s", key))
+	}
+}
+
+func (d *dynamicConfigImpl) UnmarshalSub(string, any) (bool, error) {
+	return false, nil
+}
+
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
 // appConfig defines the application configuration (f.e. app_config.go).
 // extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
@@ -153,17 +177,24 @@ func SetupWithConfiguration(
 		app             *runtime.App[stateMachineTx]
 		appBuilder      *runtime.AppBuilder[stateMachineTx]
 		txConfigOptions tx.ConfigOptions
-		codec           codec.Codec
+		cdc             codec.Codec
 		err             error
 	)
 
 	if err := depinject.Inject(
-		appConfig,
-		append(extraOutputs, &appBuilder, &codec, &txConfigOptions)...); err != nil {
+		depinject.Configs(
+			appConfig,
+			codec.DefaultProviders,
+			depinject.Supply(&dynamicConfigImpl{startupConfig.HomeDir}),
+			depinject.Invoke(
+				std.RegisterInterfaces,
+			),
+		),
+		append(extraOutputs, &appBuilder, &cdc, &txConfigOptions)...); err != nil {
 		return nil, fmt.Errorf("failed to inject dependencies: %w", err)
 	}
 
-	app, err = appBuilder.Build(startupConfig.AppOption)
+	app, err = appBuilder.Build()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build app: %w", err)
 	}
@@ -193,7 +224,7 @@ func SetupWithConfiguration(
 	}
 
 	genesisState, err := genesisStateWithValSet(
-		codec,
+		cdc,
 		app.DefaultGenesis(),
 		valSet,
 		genAccounts,
@@ -225,9 +256,17 @@ func SetupWithConfiguration(
 		},
 	)
 
+	emptyHash := sha256.Sum256(nil)
 	_, _, err = app.InitGenesis(
 		ctx,
-		&server.BlockRequest[stateMachineTx]{},
+		&server.BlockRequest[stateMachineTx]{
+			Height:    1,
+			Time:      time.Now(),
+			Hash:      emptyHash[:],
+			ChainId:   "test-chain",
+			AppHash:   emptyHash[:],
+			IsGenesis: true,
+		},
 		stateBytes,
 		&genericTxDecoder{txConfigOptions},
 	)

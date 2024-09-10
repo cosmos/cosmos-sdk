@@ -3,10 +3,17 @@ package cometbft
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"io"
 	"strings"
 	"testing"
 	"time"
+
+	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
+	"github.com/stretchr/testify/require"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/store"
@@ -20,16 +27,7 @@ import (
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
-	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
-
-	"github.com/cosmos/gogoproto/proto"
-
-	"encoding/json"
-
 	consensustypes "cosmossdk.io/x/consensus/types"
-	gogotypes "github.com/cosmos/gogoproto/types"
-	"github.com/stretchr/testify/require"
 )
 
 var (

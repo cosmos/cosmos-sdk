@@ -31,11 +31,6 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
-<<<<<<< HEAD
-	cosmossdk.io/schema v0.2.0 // indirect
-	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
-=======
->>>>>>> f220f8bf6 (refactor: remove consensus as a imported type in modules  (#21480))
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.4-0.20240909133312-50288938d1b6 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -169,6 +164,7 @@ require (
 )
 
 require (
+	cosmossdk.io/schema v0.2.0 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 )
@@ -177,17 +173,9 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
 replace (
-<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240906090851-36d9b25e8981 // main
-	cosmossdk.io/x/consensus => ../consensus
-=======
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/collections => ../../collections
-	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/store => ../../store
->>>>>>> f220f8bf6 (refactor: remove consensus as a imported type in modules  (#21480))
 	cosmossdk.io/x/staking => ../staking
 )

@@ -32,12 +32,7 @@ require (
 	cosmossdk.io/log v1.4.1 // indirect
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/schema v0.2.0 // indirect
-<<<<<<< HEAD
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
-	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
-=======
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
->>>>>>> f220f8bf6 (refactor: remove consensus as a imported type in modules  (#21480))
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

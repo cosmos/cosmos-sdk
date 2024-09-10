@@ -9,12 +9,7 @@ require (
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
-<<<<<<< HEAD
-	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // main
-	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
-=======
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
->>>>>>> f220f8bf6 (refactor: remove consensus as a imported type in modules  (#21480))
+	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6
 	cosmossdk.io/x/gov v0.0.0-20230925135524-a1bc045b3190
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
 	github.com/cometbft/cometbft/api v1.0.0-rc.1

@@ -12,13 +12,7 @@ require (
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // main
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
-<<<<<<< HEAD
-	cosmossdk.io/x/tx v0.13.4-0.20240909133312-50288938d1b6 // main
-	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f // indirect
-=======
-	cosmossdk.io/x/tx v0.13.3
->>>>>>> f220f8bf6 (refactor: remove consensus as a imported type in modules  (#21480))
+	cosmossdk.io/x/tx v0.13.4-0.20240909133312-50288938d1b6
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -32,18 +26,13 @@ require (
 	google.golang.org/protobuf v1.34.2
 )
 
+require cosmossdk.io/core/testing v0.0.0-20240909133312-50288938d1b6
+
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
-<<<<<<< HEAD
-	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // indirect; main
-	cosmossdk.io/core/testing v0.0.0-20240909133312-50288938d1b6 // main
+	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // indirect
 	cosmossdk.io/schema v0.2.0 // indirect
-	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000 // indirect
-=======
-	cosmossdk.io/collections v0.4.0 // indirect
-	cosmossdk.io/schema v0.2.0 // indirect
->>>>>>> f220f8bf6 (refactor: remove consensus as a imported type in modules  (#21480))
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -55,16 +44,13 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
+	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v1.1.2 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
-<<<<<<< HEAD
-	github.com/cometbft/cometbft-db v0.15.0 // indirect
-=======
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f // indirect
-	github.com/cometbft/cometbft-db v0.14.0 // indirect
->>>>>>> f220f8bf6 (refactor: remove consensus as a imported type in modules  (#21480))
+	github.com/cometbft/cometbft-db v0.15.0 // indirect
 	github.com/cometbft/cometbft/api v1.0.0-rc.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33 // indirect
@@ -98,6 +84,7 @@ require (
 	github.com/google/flatbuffers v24.3.25+incompatible // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/handlers v1.5.2 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
@@ -179,18 +166,6 @@ require (
 	gotest.tools/v3 v3.5.1 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
-)
-
-<<<<<<< HEAD
-require (
-	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
-=======
-require cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
-
-require (
-	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
->>>>>>> f220f8bf6 (refactor: remove consensus as a imported type in modules  (#21480))
-	github.com/google/uuid v1.6.0 // indirect
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../.

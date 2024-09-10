@@ -22,15 +22,12 @@ cosmossdk.io/math v1.3.0 h1:RC+jryuKeytIiictDslBP9i1fhkVm6ZDmZEoNP316zE=
 cosmossdk.io/math v1.3.0/go.mod h1:vnRTxewy+M7BtXBNFybkuhSH4WfedVAAnERHgVFhp3k=
 cosmossdk.io/schema v0.2.0 h1:UH5CR1DqUq8yP+5Np8PbvG4YX0zAUsTN2Qk6yThmfMk=
 cosmossdk.io/schema v0.2.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
-<<<<<<< HEAD
 cosmossdk.io/store v1.0.0-rc.0.0.20240906090851-36d9b25e8981 h1:O510vQpVdyZgSlLm4NG2aQltDkKfoWcKrVCPPWQlNHs=
 cosmossdk.io/store v1.0.0-rc.0.0.20240906090851-36d9b25e8981/go.mod h1:5lnCUSlWPWQYrUcNjpqBLTnlykyz1NeGQpMmZq1DCOg=
-cosmossdk.io/x/tx v0.13.4-0.20240909133312-50288938d1b6 h1:iOy4n9nKBKaLpPMLaxpzzfHbJKxFgpHc17noeK4dHec=
-cosmossdk.io/x/tx v0.13.4-0.20240909133312-50288938d1b6/go.mod h1:D4mjFUYiNi1/r0p1kknsWhUnXxK9Y8RV1GQUdHEaBRw=
-=======
 cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 h1:XQJj9Dv9Gtze0l2TF79BU5lkP6MkUveTUuKICmxoz+o=
 cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190/go.mod h1:7WUGupOvmlHJoIMBz1JbObQxeo6/TDiuDBxmtod8HRg=
->>>>>>> f220f8bf6 (refactor: remove consensus as a imported type in modules  (#21480))
+cosmossdk.io/x/tx v0.13.4-0.20240909133312-50288938d1b6 h1:iOy4n9nKBKaLpPMLaxpzzfHbJKxFgpHc17noeK4dHec=
+cosmossdk.io/x/tx v0.13.4-0.20240909133312-50288938d1b6/go.mod h1:D4mjFUYiNi1/r0p1kknsWhUnXxK9Y8RV1GQUdHEaBRw=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
 github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 h1:/vQbFIOMbk2FiG/kXiLl8BRyzTWDw7gX/Hz7Dd5eDMs=

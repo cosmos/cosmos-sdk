@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) mockMintCoins(moduleAcc *authtypes.ModuleAccount) 
 	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
 }
 
-func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, _ sdk.AccAddress) {
+func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, recv sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetModuleAddress(moduleAcc.Name).Return(moduleAcc.GetAddress())
 }
 
@@ -127,17 +127,20 @@ func (suite *KeeperTestSuite) TestSendCoins_Acount_To_Account() {
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
 	sendAmt := sdk.NewCoins(newFooCoin(10), newBarCoin(10))
 
-	acc0Str, _ := suite.addressCodec.BytesToString(accAddrs[0])
-	acc1Str, _ := suite.addressCodec.BytesToString(accAddrs[1])
-
 	// Try send with empty balances
-	err := suite.bankKeeper.SendCoins(ctx, acc0Str, acc1Str, sendAmt)
+	suite.authKeeper.EXPECT().GetModuleAddress(string(accAddrs[0])).Return(nil)
+	suite.authKeeper.EXPECT().GetModuleAddress(string(accAddrs[1])).Return(nil)
+	err := suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendAmt)
 	require.Error(err)
 
 	// Set balances for acc0 and then try send to acc1
 	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, acc0Str, balances))
-	require.NoError(suite.bankKeeper.SendCoins(ctx, acc0Str, acc1Str, sendAmt))
+	suite.authKeeper.EXPECT().GetModuleAddress(string(accAddrs[0])).Return(nil)
+	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], balances))
+
+	suite.authKeeper.EXPECT().GetModuleAddress(string(accAddrs[0])).Return(nil)
+	suite.authKeeper.EXPECT().GetModuleAddress(string(accAddrs[1])).Return(nil)
+	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendAmt))
 
 	// Check balances
 	acc0FooBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[0], fooDenom)
@@ -162,12 +165,14 @@ func (suite *KeeperTestSuite) TestSendCoins_Module_To_Account() {
 
 	// Try send from invalid module
 	suite.authKeeper.EXPECT().GetModuleAddress("invalid").Return(nil)
-	err := suite.bankKeeper.SendCoins(ctx, "invalid", acc4Str, balances)
+	suite.authKeeper.EXPECT().GetModuleAddress(acc4Str).Return(nil)
+	err := suite.bankKeeper.SendCoins(ctx, []byte("invalid"), []byte(acc4Str), balances)
 	require.Error(err)
 
 	// Send from mint module
 	suite.authKeeper.EXPECT().GetModuleAddress(mintAcc.Name).Return(mintAcc.GetAddress())
-	err = suite.bankKeeper.SendCoins(ctx, banktypes.MintModuleName, acc4Str, balances)
+	suite.authKeeper.EXPECT().GetModuleAddress(string(accAddrs[4])).Return(nil)
+	err = suite.bankKeeper.SendCoins(ctx, []byte(banktypes.MintModuleName), accAddrs[4], balances)
 	require.NoError(err)
 
 	// Check balances
@@ -184,21 +189,22 @@ func (suite *KeeperTestSuite) TestSendCoins_Module_To_Account() {
 func (suite *KeeperTestSuite) TestSendCoins_Module_To_Module() {
 	ctx := suite.ctx
 	require := suite.Require()
-	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
+	balances := sdk.NewCoins(newFooCoin(200), newBarCoin(100))
 
 	suite.mockMintCoins(mintAcc)
 	require.NoError(suite.bankKeeper.MintCoins(ctx, banktypes.MintModuleName, balances))
 
 	// Try send to invalid module
+	// In this case it will create a new account
 	suite.authKeeper.EXPECT().GetModuleAddress(mintAcc.Name).Return(mintAcc.GetAddress())
 	suite.authKeeper.EXPECT().GetModuleAddress("invalid").Return(nil)
-	err := suite.bankKeeper.SendCoins(ctx, mintAcc.Name, "invalid", balances)
-	require.Error(err)
+	err := suite.bankKeeper.SendCoins(ctx, []byte(mintAcc.Name), []byte("invalid"), sdk.NewCoins(newFooCoin(100), newBarCoin(50)))
+	require.NoError(err)
 
 	// Send from mint module to burn module
 	suite.authKeeper.EXPECT().GetModuleAddress(mintAcc.Name).Return(mintAcc.GetAddress())
 	suite.authKeeper.EXPECT().GetModuleAddress(burnerAcc.Name).Return(burnerAcc.GetAddress())
-	err = suite.bankKeeper.SendCoins(ctx, mintAcc.Name, burnerAcc.Name, balances)
+	err = suite.bankKeeper.SendCoins(ctx, []byte(mintAcc.Name), []byte(burnerAcc.Name), sdk.NewCoins(newFooCoin(100), newBarCoin(50)))
 	require.NoError(err)
 
 	// Check balances
@@ -206,6 +212,10 @@ func (suite *KeeperTestSuite) TestSendCoins_Module_To_Module() {
 	require.Equal(burnerFooBalance.Amount, math.NewInt(100))
 	burnerBarBalance := suite.bankKeeper.GetBalance(ctx, burnerAcc.GetAddress(), barDenom)
 	require.Equal(burnerBarBalance.Amount, math.NewInt(50))
+	invalidFooBalance := suite.bankKeeper.GetBalance(ctx, []byte("invalid"), fooDenom)
+	require.Equal(invalidFooBalance.Amount, math.NewInt(100))
+	invalidBarBalance := suite.bankKeeper.GetBalance(ctx, []byte("invalid"), barDenom)
+	require.Equal(invalidBarBalance.Amount, math.NewInt(50))
 	mintFooBalance := suite.bankKeeper.GetBalance(ctx, mintAcc.GetAddress(), fooDenom)
 	require.Equal(mintFooBalance.Amount, math.NewInt(0))
 	mintBarBalance := suite.bankKeeper.GetBalance(ctx, mintAcc.GetAddress(), barDenom)

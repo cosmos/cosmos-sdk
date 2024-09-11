@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -142,4 +143,58 @@ func (k Keeper) paramCheck(ctx context.Context, consensusParams cmtproto.Consens
 	}
 
 	return &nextParams, nil
+}
+
+// BlockParams returns the maximum gas allowed in a block and the maximum bytes allowed in a block.
+func (k Keeper) BlockParams(ctx context.Context) (uint64, uint64, error) {
+	params, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return 0, 0, err
+	}
+	if params.Block == nil {
+		return 0, 0, errors.New("block gas is nil")
+	}
+
+	return uint64(params.Block.MaxGas), uint64(params.Block.MaxBytes), nil
+}
+
+// AppVersion returns the current application version.
+func (k Keeper) AppVersion(ctx context.Context) (uint64, error) {
+	params, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	if params.Version == nil {
+		return 0, errors.New("app version is nil")
+	}
+
+	return params.Version.App, nil
+}
+
+// ValidatorPubKeyTypes returns the list of public key types that are allowed to be used for validators.
+func (k Keeper) ValidatorPubKeyTypes(ctx context.Context) ([]string, error) {
+	params, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("keyhere")
+	if params.Validator == nil {
+		return []string{}, errors.New("validator pub key types is nil")
+	}
+
+	return params.Validator.PubKeyTypes, nil
+}
+
+// EvidenceParams returns the maximum age of evidence, the time duration of the maximum age, and the maximum bytes.
+func (k Keeper) EvidenceParams(ctx context.Context) (int64, time.Duration, uint64, error) {
+	params, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	if params.Evidence == nil {
+		return 0, 0, 0, errors.New("evidence age is nil")
+	}
+
+	return params.Evidence.MaxAgeNumBlocks, params.Evidence.MaxAgeDuration, uint64(params.Evidence.MaxBytes), nil
 }

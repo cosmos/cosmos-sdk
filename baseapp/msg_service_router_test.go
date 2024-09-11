@@ -155,9 +155,11 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := signingCtx.AddressCodec().BytesToString(addr)
+	require.NoError(t, err)
 	msg := testdata.MsgCreateDog{
 		Dog:   &testdata.Dog{Name: "Spot"},
-		Owner: addr.String(),
+		Owner: addrStr,
 	}
 
 	txBuilder := txConfig.NewTxBuilder()

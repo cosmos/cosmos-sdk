@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -33,8 +32,7 @@ func TestHistoricalKeysMigration(t *testing.T) {
 	logger := coretesting.NewNopLogger()
 
 	type testCase struct {
-		oldKey, newKey []byte
-		historicalInfo []byte
+		oldKey, newKey, data []byte
 	}
 
 	testCases := make(map[int64]testCase)
@@ -54,15 +52,15 @@ func TestHistoricalKeysMigration(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 	for height := range testCases {
 		testCases[height] = testCase{
-			oldKey:         v5.GetLegacyHistoricalInfoKey(height),
-			newKey:         v5.GetHistoricalInfoKey(height),
-			historicalInfo: cdc.MustMarshal(createHistoricalInfo(height, "testChainID")),
+			oldKey: v5.GetLegacyHistoricalInfoKey(height),
+			newKey: v5.GetHistoricalInfoKey(height),
+			data:   []byte("test"),
 		}
 	}
 
 	// populate store using old key format
 	for _, tc := range testCases {
-		store.Set(tc.oldKey, tc.historicalInfo)
+		store.Set(tc.oldKey, tc.data)
 	}
 
 	// migrate store to new key format
@@ -72,12 +70,8 @@ func TestHistoricalKeysMigration(t *testing.T) {
 	for _, tc := range testCases {
 		require.Nilf(t, store.Get(tc.oldKey), "old key should be deleted, seed: %d", seed)
 		require.NotNilf(t, store.Get(tc.newKey), "new key should be created, seed: %d", seed)
-		require.Equalf(t, tc.historicalInfo, store.Get(tc.newKey), "seed: %d", seed)
+		require.Equalf(t, tc.data, store.Get(tc.newKey), "seed: %d", seed)
 	}
-}
-
-func createHistoricalInfo(height int64, chainID string) *stakingtypes.HistoricalInfo {
-	return &stakingtypes.HistoricalInfo{Header: cmtproto.Header{ChainID: chainID, Height: height}}
 }
 
 func TestDelegationsByValidatorMigrations(t *testing.T) {

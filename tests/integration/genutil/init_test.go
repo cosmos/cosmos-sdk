@@ -1,4 +1,4 @@
-package cli_test
+package genutil
 
 import (
 	"bytes"
@@ -28,11 +28,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	genutilhelpers "github.com/cosmos/cosmos-sdk/testutil/x/genutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -125,7 +125,9 @@ func TestInitRecover(t *testing.T) {
 	})
 
 	// use valid mnemonic and complete recovery key generation successfully
-	mockIn.Reset("decide praise business actor peasant farm drastic weather extend front hurt later song give verb rhythm worry fun pond reform school tumble august one\n")
+	mockIn.Reset(
+		"decide praise business actor peasant farm drastic weather extend front hurt later song give verb rhythm worry fun pond reform school tumble august one\n",
+	)
 	require.NoError(t, cmd.ExecuteContext(ctx))
 }
 
@@ -213,7 +215,7 @@ func TestStartStandAlone(t *testing.T) {
 	logger := log.NewNopLogger()
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
-	err := genutiltest.ExecInitCmd(testMbm, home, marshaler)
+	err := genutilhelpers.ExecInitCmd(testMbm, home, marshaler)
 	require.NoError(t, err)
 
 	app, err := mock.NewApp(home, logger)
@@ -241,7 +243,7 @@ func TestStartStandAlone(t *testing.T) {
 
 func TestInitNodeValidatorFiles(t *testing.T) {
 	home := t.TempDir()
-	cfg, err := genutiltest.CreateDefaultCometConfig(home)
+	cfg, err := genutilhelpers.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
 
 	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg, ed25519.KeyType)
@@ -303,7 +305,7 @@ func TestInitWithHeight(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
 	viper := viper.New()
-	cfg, err := genutiltest.CreateDefaultCometConfig(home)
+	cfg, err := genutilhelpers.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
 
 	err = writeAndTrackDefaultConfig(viper, home)
@@ -340,7 +342,7 @@ func TestInitWithNegativeHeight(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
 	viper := viper.New()
-	cfg, err := genutiltest.CreateDefaultCometConfig(home)
+	cfg, err := genutilhelpers.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
 
 	err = writeAndTrackDefaultConfig(viper, home)
@@ -385,9 +387,9 @@ func makeCodec() codec.Codec {
 }
 
 func writeAndTrackDefaultConfig(v *viper.Viper, home string) error {
-	cfg, err := genutiltest.CreateDefaultCometConfig(home)
+	cfg, err := genutilhelpers.CreateDefaultCometConfig(home)
 	if err != nil {
 		return err
 	}
-	return genutiltest.WriteAndTrackCometConfig(v, home, cfg)
+	return genutilhelpers.WriteAndTrackCometConfig(v, home, cfg)
 }

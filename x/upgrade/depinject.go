@@ -2,12 +2,12 @@ package upgrade
 
 import (
 	"github.com/spf13/cast"
-	"github.com/spf13/viper"
 
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	coreserver "cosmossdk.io/core/server"
+	serverv2 "cosmossdk.io/core/server"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/upgrade/keeper"
@@ -41,9 +41,10 @@ type ModuleInputs struct {
 	Cdc                codec.Codec
 	AddressCodec       address.Codec
 	AppVersionModifier coreserver.VersionModifier
+	ConsensusKeeper    types.ConsensusKeeper
 
-	AppOpts servertypes.AppOptions `optional:"true"` // server v0
-	Viper   *viper.Viper           `optional:"true"` // server v2
+	AppOpts       servertypes.AppOptions `optional:"true"` // server v0
+	DynamicConfig serverv2.DynamicConfig `optional:"true"` // server v2
 }
 
 type ModuleOutputs struct {
@@ -59,12 +60,13 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		skipUpgradeHeights = make(map[int64]bool)
 	)
 
-	if in.Viper != nil { // viper takes precedence over app options
-		for _, h := range in.Viper.GetIntSlice(server.FlagUnsafeSkipUpgrades) {
+	if in.DynamicConfig != nil { // v2 takes precedence over v1 app options
+		skipUpgrades := cast.ToIntSlice(in.DynamicConfig.Get(server.FlagUnsafeSkipUpgrades))
+		for _, h := range skipUpgrades {
 			skipUpgradeHeights[int64(h)] = true
 		}
 
-		homePath = in.Viper.GetString(flags.FlagHome)
+		homePath = in.DynamicConfig.GetString(flags.FlagHome)
 	} else if in.AppOpts != nil {
 		for _, h := range cast.ToIntSlice(in.AppOpts.Get(server.FlagUnsafeSkipUpgrades)) {
 			skipUpgradeHeights[int64(h)] = true
@@ -85,7 +87,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(in.Environment, skipUpgradeHeights, in.Cdc, homePath, in.AppVersionModifier, authorityStr)
+	k := keeper.NewKeeper(in.Environment, skipUpgradeHeights, in.Cdc, homePath, in.AppVersionModifier, authorityStr, in.ConsensusKeeper)
 	m := NewAppModule(k)
 
 	return ModuleOutputs{UpgradeKeeper: k, Module: m}

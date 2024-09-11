@@ -30,7 +30,6 @@ const (
 	Query_Redelegations_FullMethodName                 = "/cosmos.staking.v1beta1.Query/Redelegations"
 	Query_DelegatorValidators_FullMethodName           = "/cosmos.staking.v1beta1.Query/DelegatorValidators"
 	Query_DelegatorValidator_FullMethodName            = "/cosmos.staking.v1beta1.Query/DelegatorValidator"
-	Query_HistoricalInfo_FullMethodName                = "/cosmos.staking.v1beta1.Query/HistoricalInfo"
 	Query_Pool_FullMethodName                          = "/cosmos.staking.v1beta1.Query/Pool"
 	Query_Params_FullMethodName                        = "/cosmos.staking.v1beta1.Query/Params"
 )
@@ -88,9 +87,6 @@ type QueryClient interface {
 	// DelegatorValidator queries validator info for given delegator validator
 	// pair.
 	DelegatorValidator(ctx context.Context, in *QueryDelegatorValidatorRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorResponse, error)
-	// Deprecated: Do not use.
-	// HistoricalInfo queries the historical info for given height.
-	HistoricalInfo(ctx context.Context, in *QueryHistoricalInfoRequest, opts ...grpc.CallOption) (*QueryHistoricalInfoResponse, error)
 	// Pool queries the pool info.
 	Pool(ctx context.Context, in *QueryPoolRequest, opts ...grpc.CallOption) (*QueryPoolResponse, error)
 	// Parameters queries the staking parameters.
@@ -215,17 +211,6 @@ func (c *queryClient) DelegatorValidator(ctx context.Context, in *QueryDelegator
 	return out, nil
 }
 
-// Deprecated: Do not use.
-func (c *queryClient) HistoricalInfo(ctx context.Context, in *QueryHistoricalInfoRequest, opts ...grpc.CallOption) (*QueryHistoricalInfoResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(QueryHistoricalInfoResponse)
-	err := c.cc.Invoke(ctx, Query_HistoricalInfo_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *queryClient) Pool(ctx context.Context, in *QueryPoolRequest, opts ...grpc.CallOption) (*QueryPoolResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(QueryPoolResponse)
@@ -299,9 +284,6 @@ type QueryServer interface {
 	// DelegatorValidator queries validator info for given delegator validator
 	// pair.
 	DelegatorValidator(context.Context, *QueryDelegatorValidatorRequest) (*QueryDelegatorValidatorResponse, error)
-	// Deprecated: Do not use.
-	// HistoricalInfo queries the historical info for given height.
-	HistoricalInfo(context.Context, *QueryHistoricalInfoRequest) (*QueryHistoricalInfoResponse, error)
 	// Pool queries the pool info.
 	Pool(context.Context, *QueryPoolRequest) (*QueryPoolResponse, error)
 	// Parameters queries the staking parameters.
@@ -348,9 +330,6 @@ func (UnimplementedQueryServer) DelegatorValidators(context.Context, *QueryDeleg
 }
 func (UnimplementedQueryServer) DelegatorValidator(context.Context, *QueryDelegatorValidatorRequest) (*QueryDelegatorValidatorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelegatorValidator not implemented")
-}
-func (UnimplementedQueryServer) HistoricalInfo(context.Context, *QueryHistoricalInfoRequest) (*QueryHistoricalInfoResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method HistoricalInfo not implemented")
 }
 func (UnimplementedQueryServer) Pool(context.Context, *QueryPoolRequest) (*QueryPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Pool not implemented")
@@ -577,24 +556,6 @@ func _Query_DelegatorValidator_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_HistoricalInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryHistoricalInfoRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).HistoricalInfo(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Query_HistoricalInfo_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).HistoricalInfo(ctx, req.(*QueryHistoricalInfoRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Query_Pool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryPoolRequest)
 	if err := dec(in); err != nil {
@@ -681,10 +642,6 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DelegatorValidator",
 			Handler:    _Query_DelegatorValidator_Handler,
-		},
-		{
-			MethodName: "HistoricalInfo",
-			Handler:    _Query_HistoricalInfo_Handler,
 		},
 		{
 			MethodName: "Pool",

@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/store/v2/pruning"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/pebbledb"
+	"cosmossdk.io/store/v2/storage/rocksdb"
 	"cosmossdk.io/store/v2/storage/sqlite"
 )
 
@@ -34,7 +35,7 @@ const (
 
 // app.toml config options
 type Options struct {
-	SSType          SSType               `mapstructure:"ss-type" toml:"ss-type" comment:"SState storage database type. Currently we support: \"sqlite\" and \"pebble\""`
+	SSType          SSType               `mapstructure:"ss-type" toml:"ss-type" comment:"SState storage database type. Currently we support: \"sqlite\", \"pebble\" and \"rocksdb\""`
 	SCType          SCType               `mapstructure:"sc-type" toml:"sc-type" comment:"State commitment database type. Currently we support: \"iavl\" and \"iavl-v2\""`
 	SSPruningOption *store.PruningOption `mapstructure:"ss-pruning-option" toml:"ss-pruning-option" comment:"Pruning options for state storage"`
 	SCPruningOption *store.PruningOption `mapstructure:"sc-pruning-option" toml:"sc-pruning-option" comment:"Pruning options for state commitment"`
@@ -103,8 +104,11 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		}
 		ssDb, err = pebbledb.New(dir)
 	case SSTypeRocks:
-		// TODO: rocksdb requires build tags so is not supported here by default
-		return nil, errors.New("rocksdb not supported")
+		dir := fmt.Sprintf("%s/data/ss/rocksdb", opts.RootDir)
+		if err = ensureDir(dir); err != nil {
+			return nil, err
+		}
+		ssDb, err = rocksdb.New(dir)
 	}
 	if err != nil {
 		return nil, err

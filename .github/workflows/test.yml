@@ -800,13 +800,16 @@ jobs:
             /usr/local/lib/librocksdb.*
             /usr/local/include/rocksdb
           key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
+      - name: Install rocksdb deps
+        run: |
+          sudo apt-get update && sudo apt-get install -y libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
       - name: Install rocksdb
-        if: env.GIT_DIFF && steps.cache-rocksdb.outputs.cache-hit != 'true'
+        if: steps.cache-rocksdb.outputs.cache-hit != 'true'
         id: install_rocksdb
         run: ./.github/scripts/install-rocksdb.sh
       - name: Saves rocksdb libraries cache
         if: steps.install_rocksdb.outcome == 'success'
-        uses: actions/cache/restore@v4
+        uses: actions/cache/save@v4
         with:
           path: |
             /usr/local/lib/librocksdb.*
@@ -855,13 +858,16 @@ jobs:
             /usr/local/lib/librocksdb.*
             /usr/local/include/rocksdb
           key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
+      - name: Install rocksdb deps
+        run: |
+          sudo apt-get update && sudo apt-get install -y libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
       - name: Install rocksdb
         if: env.GIT_DIFF && steps.cache-rocksdb.outputs.cache-hit != 'true'
         id: install_rocksdb
         run: ./.github/scripts/install-rocksdb.sh
       - name: Saves rocksdb libraries cache
         if: steps.install_rocksdb.outcome == 'success'
-        uses: actions/cache/restore@v4
+        uses: actions/cache/save@v4
         with:
           path: |
             /usr/local/lib/librocksdb.*

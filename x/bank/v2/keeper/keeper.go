@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/core/address"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/event"
+
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/bank/v2/types"
 

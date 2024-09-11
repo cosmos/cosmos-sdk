@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  ROCKSDB_VERSION: 8.11.3
+  ROCKSDB_VERSION: 9.6.1
 
 jobs:
   golangci:

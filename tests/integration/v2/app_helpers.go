@@ -149,6 +149,10 @@ type dynamicConfigImpl struct {
 	homeDir string
 }
 
+func (d *dynamicConfigImpl) Get(key string) any {
+	return d.GetString(key)
+}
+
 func (d *dynamicConfigImpl) GetString(key string) string {
 	switch key {
 	case runtime.FlagHome:

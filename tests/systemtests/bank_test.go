@@ -242,7 +242,7 @@ func TestBankGRPCQueries(t *testing.T) {
 	sut.ResetChain(t)
 	cli := NewCLIWrapper(t, sut, verbose)
 
-	// update denom metadata in bank genesis
+	// update bank denom metadata in genesis
 	atomDenomMetadata := `{"description":"The native staking token of the Cosmos Hub.","denom_units":[{"denom":"uatom","exponent":0,"aliases":["microatom"]},{"denom":"atom","exponent":6,"aliases":["ATOM"]}],"base":"uatom","display":"atom","name":"Cosmos Hub Atom","symbol":"ATOM","uri":"","uri_hash":""}`
 	ethDenomMetadata := `{"description":"Ethereum mainnet token","denom_units":[{"denom":"wei","exponent":0,"aliases":[]},{"denom":"eth","exponent":6,"aliases":["ETH"]}],"base":"wei","display":"eth","name":"Ethereum","symbol":"ETH","uri":"","uri_hash":""}`
 
@@ -269,7 +269,8 @@ func TestBankGRPCQueries(t *testing.T) {
 	// test supply grpc endpoint
 	supplyUrl := baseurl + "/cosmos/bank/v1beta1/supply"
 
-	defaultExpSupplyOutput := `{"supply":[{"denom":"newdenom","amount":"10000000"},{"denom":"stake","amount":"2010000191"},{"denom":"testtoken","amount":"4000000000"}],"pagination":{"next_key":null,"total":"3"}}`
+	// as supply might change for each block, can't set complete expected output
+	expTotalSupplyOutput := `{"supply":[{"denom":"newdenom","amount":"10000000"},{"denom":"stake","amount"`
 	specificDenomOutput := fmt.Sprintf(`{"denom":"%s","amount":"%s"}`, newDenom, initialAmount)
 	bogusDenomOutput := `{"denom":"foobar","amount":"0"}`
 
@@ -288,7 +289,7 @@ func TestBankGRPCQueries(t *testing.T) {
 			map[string]string{
 				blockHeightHeader: fmt.Sprintf("%d", blockHeight),
 			},
-			defaultExpSupplyOutput,
+			expTotalSupplyOutput,
 		},
 		{
 			"test GRPC total supply of a specific denom",

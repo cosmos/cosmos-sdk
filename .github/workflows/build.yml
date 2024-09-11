@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  ROCKSDB_VERSION: 9.6.3
+  ROCKSDB_VERSION: 9.6.1
 
 jobs:
   build:

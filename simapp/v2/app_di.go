@@ -1,8 +1,8 @@
 package simapp
 
 import (
-	"cosmossdk.io/store/v2/root"
 	_ "embed"
+
 
 	"github.com/spf13/viper"
 
@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
+	"cosmossdk.io/store/v2/root"
 	"cosmossdk.io/x/accounts"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"

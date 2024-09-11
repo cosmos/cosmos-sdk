@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"google.golang.org/grpc"
-
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/bank/v2/keeper"
@@ -51,14 +49,6 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 // RegisterInterfaces registers interfaces and implementations of the bank module.
 func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	types.RegisterInterfaces(registrar)
-}
-
-// RegisterServices registers module services.
-func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterMsgServer(registrar, keeper.NewMsgServer(am.keeper))
-	types.RegisterQueryServer(registrar, keeper.NewQuerier(am.keeper))
-
-	return nil
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the bank module.

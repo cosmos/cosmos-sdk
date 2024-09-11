@@ -69,6 +69,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		cdcOpts.AddressCodec,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -134,6 +135,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		cdcOpts.AddressCodec,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -272,6 +274,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		cdcOpts.AddressCodec,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -405,6 +408,7 @@ func TestAllocateTokensToValidatorWithoutCommission(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		cdcOpts.AddressCodec,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -472,6 +476,7 @@ func TestAllocateTokensWithZeroTokens(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		cdcOpts.AddressCodec,
 		"fee_collector",
 		authorityAddr,
 	)

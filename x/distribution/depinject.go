@@ -2,6 +2,7 @@ package distribution
 
 import (
 	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/depinject"
@@ -32,6 +33,7 @@ type ModuleInputs struct {
 	Environment  appmodule.Environment
 	Cdc          codec.Codec
 	CometService comet.Service
+	AddressCodec address.Codec
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -58,7 +60,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	authorityAddr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
+	authorityAddr, err := in.AddressCodec.BytesToString(authority)
 	if err != nil {
 		panic(err)
 	}
@@ -70,6 +72,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.BankKeeper,
 		in.StakingKeeper,
 		in.CometService,
+		in.AddressCodec,
 		feeCollectorName,
 		authorityAddr,
 	)

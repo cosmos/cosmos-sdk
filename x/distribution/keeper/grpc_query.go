@@ -86,7 +86,7 @@ func (k Querier) ValidatorDistributionInfo(ctx context.Context, req *types.Query
 		return nil, err
 	}
 
-	operatorAddr, err := k.authKeeper.AddressCodec().BytesToString(delAdr)
+	operatorAddr, err := k.addrCdc.BytesToString(delAdr)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func (k Querier) DelegationRewards(ctx context.Context, req *types.QueryDelegati
 		return nil, errors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
-	delAdr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddress)
+	delAdr, err := k.addrCdc.StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -264,7 +264,7 @@ func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDel
 	total := sdk.DecCoins{}
 	var delRewards []types.DelegationDelegatorReward
 
-	delAdr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddress)
+	delAdr, err := k.addrCdc.StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -322,7 +322,7 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
 
-	delAdr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddress)
+	delAdr, err := k.addrCdc.StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -351,7 +351,7 @@ func (k Querier) DelegatorWithdrawAddress(ctx context.Context, req *types.QueryD
 	if req.DelegatorAddress == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
 	}
-	delAdr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddress)
+	delAdr, err := k.addrCdc.StringToBytes(req.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -361,7 +361,7 @@ func (k Querier) DelegatorWithdrawAddress(ctx context.Context, req *types.QueryD
 		return nil, err
 	}
 
-	addr, err := k.authKeeper.AddressCodec().BytesToString(withdrawAddr)
+	addr, err := k.addrCdc.BytesToString(withdrawAddr)
 	if err != nil {
 		return nil, err
 	}

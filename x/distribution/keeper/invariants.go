@@ -80,7 +80,7 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 		}
 
 		for _, del := range allDelegations {
-			delAddr, err := k.authKeeper.AddressCodec().StringToBytes(del.GetDelegatorAddr())
+			delAddr, err := k.addrCdc.StringToBytes(del.GetDelegatorAddr())
 			if err != nil {
 				panic(err)
 			}

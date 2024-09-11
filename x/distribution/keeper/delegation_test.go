@@ -39,11 +39,12 @@ func TestCalculateRewardsBasic(t *testing.T) {
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
-	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	authorityAddr, err := addrCdc.BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 
 	distrKeeper := keeper.NewKeeper(
@@ -53,6 +54,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -70,7 +72,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	require.NoError(t, err)
 	val.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
-	addrStr, err := accountKeeper.AddressCodec().BytesToString(addr)
+	addrStr, err := addrCdc.BytesToString(addr)
 	require.NoError(t, err)
 	valAddrStr, err := stakingKeeper.ValidatorAddressCodec().BytesToString(valAddr)
 	require.NoError(t, err)
@@ -151,11 +153,10 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
-
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
-	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	authorityAddr, err := addrCdc.BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 
 	distrKeeper := keeper.NewKeeper(
@@ -165,6 +166,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -184,7 +186,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	require.NoError(t, err)
 	val.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
-	addrStr, err := accountKeeper.AddressCodec().BytesToString(addr)
+	addrStr, err := addrCdc.BytesToString(addr)
 	require.NoError(t, err)
 	valAddrStr, err := stakingKeeper.ValidatorAddressCodec().BytesToString(valAddr)
 	require.NoError(t, err)
@@ -266,11 +268,11 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
-	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	authorityAddr, err := addrCdc.BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 
 	distrKeeper := keeper.NewKeeper(
@@ -280,6 +282,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -299,7 +302,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	require.NoError(t, err)
 	val.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
-	addrStr, err := accountKeeper.AddressCodec().BytesToString(addr)
+	addrStr, err := addrCdc.BytesToString(addr)
 	require.NoError(t, err)
 	valAddrStr, err := stakingKeeper.ValidatorAddressCodec().BytesToString(valAddr)
 	require.NoError(t, err)
@@ -402,11 +405,11 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
-	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	authorityAddr, err := addrCdc.BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 
 	distrKeeper := keeper.NewKeeper(
@@ -416,6 +419,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -432,7 +436,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	val, err := distrtestutil.CreateValidator(valConsPk0, operatorAddr, math.NewInt(100))
 	require.NoError(t, err)
 
-	addrStr, err := accountKeeper.AddressCodec().BytesToString(addr0)
+	addrStr, err := addrCdc.BytesToString(addr0)
 	require.NoError(t, err)
 	valAddrStr, err := stakingKeeper.ValidatorAddressCodec().BytesToString(valAddr)
 	require.NoError(t, err)
@@ -459,7 +463,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	// second delegation
 	addr1 := sdk.AccAddress(valConsAddr1)
-	_, del1, err := distrtestutil.Delegate(ctx, distrKeeper, addr1, &val, math.NewInt(100), nil, stakingKeeper, accountKeeper.AddressCodec())
+	_, del1, err := distrtestutil.Delegate(ctx, distrKeeper, addr1, &val, math.NewInt(100), nil, stakingKeeper, addrCdc)
 	require.NoError(t, err)
 
 	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr1, valAddr).Return(del1, nil)
@@ -511,11 +515,11 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
-	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	authorityAddr, err := addrCdc.BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 
 	distrKeeper := keeper.NewKeeper(
@@ -525,6 +529,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -543,7 +548,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 	val.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
-	addrStr, err := accountKeeper.AddressCodec().BytesToString(addr)
+	addrStr, err := addrCdc.BytesToString(addr)
 	require.NoError(t, err)
 	valAddrStr, err := stakingKeeper.ValidatorAddressCodec().BytesToString(valAddr)
 	require.NoError(t, err)
@@ -598,11 +603,11 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
-	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	authorityAddr, err := addrCdc.BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 
 	distrKeeper := keeper.NewKeeper(
@@ -612,6 +617,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -630,7 +636,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 
 	val.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
-	addrStr, err := accountKeeper.AddressCodec().BytesToString(addr)
+	addrStr, err := addrCdc.BytesToString(addr)
 	require.NoError(t, err)
 	valAddrStr, err := stakingKeeper.ValidatorAddressCodec().BytesToString(valAddr)
 	require.NoError(t, err)
@@ -726,11 +732,11 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
-	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	authorityAddr, err := addrCdc.BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 
 	distrKeeper := keeper.NewKeeper(
@@ -740,6 +746,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -759,7 +766,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	require.NoError(t, err)
 	val.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
-	addrStr, err := accountKeeper.AddressCodec().BytesToString(addr)
+	addrStr, err := addrCdc.BytesToString(addr)
 	require.NoError(t, err)
 	valAddrStr, err := stakingKeeper.ValidatorAddressCodec().BytesToString(valAddr)
 	require.NoError(t, err)
@@ -809,7 +816,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
 		nil,
 		stakingKeeper,
-		accountKeeper.AddressCodec(),
+		addrCdc,
 	)
 	require.NoError(t, err)
 
@@ -878,11 +885,11 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
-	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	authorityAddr, err := addrCdc.BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 
 	distrKeeper := keeper.NewKeeper(
@@ -892,6 +899,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -909,7 +917,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.NoError(t, err)
 	val.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
-	addrStr, err := accountKeeper.AddressCodec().BytesToString(addr)
+	addrStr, err := addrCdc.BytesToString(addr)
 	require.NoError(t, err)
 	valAddrStr, err := stakingKeeper.ValidatorAddressCodec().BytesToString(valAddr)
 	require.NoError(t, err)
@@ -944,7 +952,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 		math.NewInt(100),
 		nil,
 		stakingKeeper,
-		accountKeeper.AddressCodec(),
+		addrCdc,
 	)
 	require.NoError(t, err)
 
@@ -1091,11 +1099,11 @@ func Test100PercentCommissionReward(t *testing.T) {
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	stakingKeeper.EXPECT().BondDenom(gomock.Any()).Return("stake", nil).AnyTimes()
-	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec(sdk.Bech32MainPrefix)).AnyTimes()
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
-	authorityAddr, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	authorityAddr, err := addrCdc.BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 
 	distrKeeper := keeper.NewKeeper(
@@ -1105,6 +1113,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -1122,7 +1131,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	require.NoError(t, err)
 	val.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(10, 1), math.LegacyNewDecWithPrec(10, 1), math.LegacyNewDec(0))
 
-	addrStr, err := accountKeeper.AddressCodec().BytesToString(addr)
+	addrStr, err := addrCdc.BytesToString(addr)
 	require.NoError(t, err)
 	valAddrStr, err := stakingKeeper.ValidatorAddressCodec().BytesToString(valAddr)
 	require.NoError(t, err)

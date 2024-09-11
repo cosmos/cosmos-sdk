@@ -41,6 +41,7 @@ type Options struct {
 	IavlConfig      *iavl.Config         `mapstructure:"iavl-config" toml:"iavl-config"`
 }
 
+// FactoryOptions are the options for creating a root store.
 type FactoryOptions struct {
 	Logger    log.Logger
 	RootDir   string
@@ -49,6 +50,7 @@ type FactoryOptions struct {
 	SCRawDB   corestore.KVStoreWithBatch
 }
 
+// DefaultStoreOptions returns the default options for creating a root store.
 func DefaultStoreOptions() Options {
 	return Options{
 		SSType: SSTypeSQLite,

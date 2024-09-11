@@ -26,9 +26,9 @@ app-db-backend = 'goleveldb'
 
 [store.options]
 # SState storage database type. Currently we support: "sqlite" and "pebble"
-ss-type = '0'
+ss-type = 'sqlite'
 # State commitment database type. Currently we support: "iavl" and "iavl-v2"
-sc-type = '0'
+sc-type = 'iavl'
 
 # Pruning options for state storage
 [store.options.ss-pruning-option]

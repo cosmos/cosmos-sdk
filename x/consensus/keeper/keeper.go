@@ -178,7 +178,6 @@ func (k Keeper) ValidatorPubKeyTypes(ctx context.Context) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("keyhere")
 	if params.Validator == nil {
 		return []string{}, errors.New("validator pub key types is nil")
 	}

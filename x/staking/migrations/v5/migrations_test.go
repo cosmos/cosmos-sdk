@@ -33,8 +33,7 @@ func TestHistoricalKeysMigration(t *testing.T) {
 	logger := coretesting.NewNopLogger()
 
 	type testCase struct {
-		oldKey, newKey []byte
-		historicalInfo []byte
+		oldKey, newKey, historicalInfo []byte
 	}
 
 	testCases := make(map[int64]testCase)

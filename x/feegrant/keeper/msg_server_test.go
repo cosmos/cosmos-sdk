@@ -3,24 +3,18 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/golang/mock/gomock"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/feegrant"
 
-	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func (suite *KeeperTestSuite) TestGrantAllowance() {
 	ctx := suite.ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	oneYear := ctx.HeaderInfo().Time.AddDate(1, 0, 0)
 	yesterday := ctx.HeaderInfo().Time.AddDate(0, 0, -1)
-
-	addressCodec := codecaddress.NewBech32Codec("cosmos")
 
 	testCases := []struct {
 		name      string
@@ -62,21 +56,11 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 			name: "valid: grantee account doesn't exist",
 			req: func() *feegrant.MsgGrantAllowance {
 				grantee := "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5"
-				granteeAccAddr, err := addressCodec.StringToBytes(grantee)
-				suite.Require().NoError(err)
 				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
 					SpendLimit: suite.atom,
 					Expiration: &oneYear,
 				})
 				suite.Require().NoError(err)
-
-				suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAccAddr).Return(nil).AnyTimes()
-
-				acc := authtypes.NewBaseAccountWithAddress(granteeAccAddr)
-				add, err := addressCodec.StringToBytes(grantee)
-				suite.Require().NoError(err)
-
-				suite.accountKeeper.EXPECT().NewAccountWithAddress(gomock.Any(), add).Return(acc).AnyTimes()
 
 				suite.Require().NoError(err)
 				return &feegrant.MsgGrantAllowance{

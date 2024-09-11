@@ -31,12 +31,12 @@ func (k msgServer) GrantAllowance(ctx context.Context, msg *feegrant.MsgGrantAll
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
 	}
 
-	grantee, err := k.authKeeper.AddressCodec().StringToBytes(msg.Grantee)
+	grantee, err := k.addrCdc.StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	granter, err := k.authKeeper.AddressCodec().StringToBytes(msg.Granter)
+	granter, err := k.addrCdc.StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, err
 	}
@@ -68,12 +68,12 @@ func (k msgServer) RevokeAllowance(ctx context.Context, msg *feegrant.MsgRevokeA
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "addresses must be different")
 	}
 
-	grantee, err := k.authKeeper.AddressCodec().StringToBytes(msg.Grantee)
+	grantee, err := k.addrCdc.StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	granter, err := k.authKeeper.AddressCodec().StringToBytes(msg.Granter)
+	granter, err := k.addrCdc.StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, err
 	}

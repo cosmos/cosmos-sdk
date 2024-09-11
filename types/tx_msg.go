@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	fmt "fmt"
 	strings "strings"
+	"time"
 
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
@@ -71,6 +72,14 @@ type (
 		GetMemo() string
 	}
 
+	// TxWithTimeoutTimeStamp extends the Tx interface by allowing a transaction to
+	// set a timeout timestamp.
+	TxWithTimeoutTimeStamp interface {
+		Tx
+
+		GetTimeoutTimeStamp() time.Time
+	}
+
 	// TxWithTimeoutHeight extends the Tx interface by allowing a transaction to
 	// set a height timeout.
 	TxWithTimeoutHeight interface {
@@ -80,9 +89,9 @@ type (
 	}
 
 	// TxWithUnordered extends the Tx interface by allowing a transaction to set
-	// the unordered field, which implicitly relies on TxWithTimeoutHeight.
+	// the unordered field, which implicitly relies on TxWithTimeoutTimeStamp.
 	TxWithUnordered interface {
-		TxWithTimeoutHeight
+		TxWithTimeoutTimeStamp
 
 		GetUnordered() bool
 	}

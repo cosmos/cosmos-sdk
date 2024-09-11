@@ -60,7 +60,7 @@ func ExportCmd(appExporter v2.AppExporter) *cobra.Command {
 			jailAllowedAddrs, _ := cmd.Flags().GetStringSlice(flagJailAllowedAddrs)
 			outputDocument, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 
-			exported, err := appExporter(height, jailAllowedAddrs)
+			exported, err := appExporter(cmd.Context(), height, jailAllowedAddrs)
 			if err != nil {
 				return fmt.Errorf("error exporting state: %w", err)
 			}

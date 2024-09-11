@@ -82,7 +82,7 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 		},
 	}
 
-	initRootCmd[T](rootCmd, clientCtx.TxConfig, moduleManager)
+	initRootCmd(rootCmd, clientCtx.TxConfig, moduleManager)
 
 	nodeCmds := nodeservice.NewNodeCommands()
 	autoCliOpts.ModuleOptions = make(map[string]*autocliv1.ModuleOptions)

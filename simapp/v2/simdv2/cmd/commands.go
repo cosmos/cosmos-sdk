@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
+	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
@@ -56,15 +58,14 @@ func initRootCmd[T transaction.Tx](
 		NewTestnetCmd(moduleManager),
 	)
 
-	viper := serverv2.GetViperFromCmd(rootCmd)
-	logger, err := serverv2.NewLogger(viper, rootCmd.OutOrStdout())
+	logger, err := serverv2.NewLogger(viper.New(), rootCmd.OutOrStdout())
 	if err != nil {
 		panic(fmt.Sprintf("failed to create logger: %v", err))
 	}
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
-		genesisCommand(moduleManager, newAppExporter[T](logger, viper)),
+		genesisCommand(moduleManager),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
@@ -85,16 +86,15 @@ func initRootCmd[T transaction.Tx](
 	}
 }
 
-// genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
+// genesisCommand builds genesis-related `simd genesis` command.
 func genesisCommand[T transaction.Tx](
 	moduleManager *runtimev2.MM[T],
-	appExport genutilv2.AppExporter,
 	cmds ...*cobra.Command,
 ) *cobra.Command {
 	cmd := v2.Commands(
 		moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule),
 		moduleManager,
-		appExport,
+		appExport[T],
 	)
 
 	for _, subCmd := range cmds {
@@ -146,25 +146,41 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
-func newAppExporter[T transaction.Tx](logger log.Logger, viper *viper.Viper) genutilv2.AppExporter {
-	return func(height int64, jailAllowedAddrs []string) (genutilv2.ExportedApp, error) {
-		// overwrite the FlagInvCheckPeriod
-		viper.Set(server.FlagInvCheckPeriod, 1)
-		viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
-
-		var simApp *simapp.SimApp[T]
-		if height != -1 {
-			simApp = simapp.NewSimApp[T](logger, viper)
-
-			if err := simApp.LoadHeight(uint64(height)); err != nil {
-				return genutilv2.ExportedApp{}, err
-			}
-		} else {
-			simApp = simapp.NewSimApp[T](logger, viper)
-		}
-
-		return simApp.ExportAppStateAndValidators(jailAllowedAddrs)
+// appExport creates a new simapp (optionally at a given height) and exports state.
+func appExport[T transaction.Tx](
+	ctx context.Context,
+	height int64,
+	jailAllowedAddrs []string,
+) (genutilv2.ExportedApp, error) {
+	value := ctx.Value(corectx.ViperContextKey)
+	viper, ok := value.(*viper.Viper)
+	if !ok {
+		return genutilv2.ExportedApp{},
+			fmt.Errorf("incorrect viper type %T: expected *viper.Viper in context", value)
 	}
+	value = ctx.Value(corectx.LoggerContextKey)
+	logger, ok := value.(log.Logger)
+	if !ok {
+		return genutilv2.ExportedApp{},
+			fmt.Errorf("incorrect logger type %T: expected log.Logger in context", value)
+	}
+
+	// overwrite the FlagInvCheckPeriod
+	viper.Set(server.FlagInvCheckPeriod, 1)
+	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
+
+	var simApp *simapp.SimApp[T]
+	if height != -1 {
+		simApp = simapp.NewSimApp[T](logger, viper)
+
+		if err := simApp.LoadHeight(uint64(height)); err != nil {
+			return genutilv2.ExportedApp{}, err
+		}
+	} else {
+		simApp = simapp.NewSimApp[T](logger, viper)
+	}
+
+	return simApp.ExportAppStateAndValidators(jailAllowedAddrs)
 }
 
 var _ transaction.Codec[transaction.Tx] = &genericTxDecoder[transaction.Tx]{}

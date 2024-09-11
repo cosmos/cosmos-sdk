@@ -18,7 +18,7 @@ require (
 	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cockroachdb/apd/v2 v2.0.2
-	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33
+	github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0

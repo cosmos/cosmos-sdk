@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/tidwall/btree"
 
@@ -261,12 +262,47 @@ var _ store.KVStoreWithBatch = (*MemDB)(nil)
 
 // MemDB is a simple in-memory key-value store with Batch support.
 type MemDB struct {
-	MemKV
+	kv  MemKV
+	mtx sync.RWMutex
 }
 
 // NewMemDB creates a new MemDB.
 func NewMemDB() store.KVStoreWithBatch {
-	return &MemDB{NewMemKV()}
+	return &MemDB{kv: NewMemKV()}
+}
+
+// KVStore implementation
+
+func (bt *MemDB) Get(key []byte) ([]byte, error) {
+	bt.mtx.RLock()
+	defer bt.mtx.RUnlock()
+	return bt.kv.Get(key)
+}
+
+func (bt *MemDB) Has(key []byte) (bool, error) {
+	bt.mtx.RLock()
+	defer bt.mtx.RUnlock()
+	return bt.kv.Has(key)
+}
+
+func (bt *MemDB) Set(key, value []byte) error {
+	bt.mtx.Lock()
+	defer bt.mtx.Unlock()
+	return bt.kv.Set(key, value)
+}
+
+func (bt *MemDB) Delete(key []byte) error {
+	bt.mtx.Lock()
+	defer bt.mtx.Unlock()
+	return bt.kv.Delete(key)
+}
+
+func (bt *MemDB) Iterator(start, end []byte) (store.Iterator, error) {
+	return bt.kv.Iterator(start, end)
+}
+
+func (bt *MemDB) ReverseIterator(start, end []byte) (store.Iterator, error) {
+	return bt.kv.ReverseIterator(start, end)
 }
 
 // Close closes the MemDB, releasing any resources held.
@@ -351,12 +387,15 @@ func (b *memDBBatch) Write() error {
 		return errBatchClosed
 	}
 
+	b.db.mtx.Lock()
+	defer b.db.mtx.Unlock()
+
 	for _, op := range b.ops {
 		switch op.opType {
 		case opTypeSet:
-			b.db.set(op.key, op.value)
+			b.db.kv.set(op.key, op.value)
 		case opTypeDelete:
-			b.db.delete(op.key)
+			b.db.kv.delete(op.key)
 		default:
 			return fmt.Errorf("unknown operation type %v (%v)", op.opType, op)
 		}

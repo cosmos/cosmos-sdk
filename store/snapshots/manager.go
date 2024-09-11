@@ -184,9 +184,6 @@ func (m *Manager) Create(height uint64) (*types.Snapshot, error) {
 	ch := make(chan io.ReadCloser)
 	go m.createSnapshot(height, ch)
 
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-
 	return m.store.Save(height, types.CurrentFormat, ch)
 }
 

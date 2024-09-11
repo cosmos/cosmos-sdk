@@ -56,14 +56,15 @@ func initRootCmd[T transaction.Tx](
 		NewTestnetCmd(moduleManager),
 	)
 
-	logger, err := serverv2.NewLogger(viper.New(), rootCmd.OutOrStdout())
+	viper := serverv2.GetViperFromCmd(rootCmd)
+	logger, err := serverv2.NewLogger(viper, rootCmd.OutOrStdout())
 	if err != nil {
 		panic(fmt.Sprintf("failed to create logger: %v", err))
 	}
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
-		genesisCommand(moduleManager, appExport[T]),
+		genesisCommand(moduleManager, newAppExporter[T](logger, viper)),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
@@ -90,7 +91,11 @@ func genesisCommand[T transaction.Tx](
 	appExport genutilv2.AppExporter,
 	cmds ...*cobra.Command,
 ) *cobra.Command {
-	cmd := v2.Commands(moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule), moduleManager, appExport)
+	cmd := v2.Commands(
+		moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule),
+		moduleManager,
+		appExport,
+	)
 
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)
@@ -141,29 +146,25 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
-// appExport creates a new simapp (optionally at a given height) and exports state.
-func appExport[T transaction.Tx](
-	logger log.Logger,
-	height int64,
-	jailAllowedAddrs []string,
-	viper *viper.Viper,
-) (genutilv2.ExportedApp, error) {
-	// overwrite the FlagInvCheckPeriod
-	viper.Set(server.FlagInvCheckPeriod, 1)
-	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
+func newAppExporter[T transaction.Tx](logger log.Logger, viper *viper.Viper) genutilv2.AppExporter {
+	return func(height int64, jailAllowedAddrs []string) (genutilv2.ExportedApp, error) {
+		// overwrite the FlagInvCheckPeriod
+		viper.Set(server.FlagInvCheckPeriod, 1)
+		viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
 
-	var simApp *simapp.SimApp[T]
-	if height != -1 {
-		simApp = simapp.NewSimApp[T](logger, viper)
+		var simApp *simapp.SimApp[T]
+		if height != -1 {
+			simApp = simapp.NewSimApp[T](logger, viper)
 
-		if err := simApp.LoadHeight(uint64(height)); err != nil {
-			return genutilv2.ExportedApp{}, err
+			if err := simApp.LoadHeight(uint64(height)); err != nil {
+				return genutilv2.ExportedApp{}, err
+			}
+		} else {
+			simApp = simapp.NewSimApp[T](logger, viper)
 		}
-	} else {
-		simApp = simapp.NewSimApp[T](logger, viper)
-	}
 
-	return simApp.ExportAppStateAndValidators(jailAllowedAddrs)
+		return simApp.ExportAppStateAndValidators(jailAllowedAddrs)
+	}
 }
 
 var _ transaction.Codec[transaction.Tx] = &genericTxDecoder[transaction.Tx]{}

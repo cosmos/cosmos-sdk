@@ -29,8 +29,6 @@ func ExportCmd(appExporter v2.AppExporter) *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			config := client.GetConfigFromCmd(cmd)
-			viper := client.GetViperFromCmd(cmd)
-			logger := client.GetLoggerFromCmd(cmd)
 
 			if _, err := os.Stat(config.GenesisFile()); os.IsNotExist(err) {
 				return err
@@ -62,7 +60,7 @@ func ExportCmd(appExporter v2.AppExporter) *cobra.Command {
 			jailAllowedAddrs, _ := cmd.Flags().GetStringSlice(flagJailAllowedAddrs)
 			outputDocument, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 
-			exported, err := appExporter(logger, height, jailAllowedAddrs, viper)
+			exported, err := appExporter(height, jailAllowedAddrs)
 			if err != nil {
 				return fmt.Errorf("error exporting state: %w", err)
 			}
@@ -99,8 +97,10 @@ func ExportCmd(appExporter v2.AppExporter) *cobra.Command {
 	}
 
 	cmd.Flags().Int64(flagHeight, -1, "Export state from a particular height (-1 means latest height)")
-	cmd.Flags().StringSlice(flagJailAllowedAddrs, []string{}, "Comma-separated list of operator addresses of jailed validators to unjail")
-	cmd.Flags().String(flags.FlagOutputDocument, "", "Exported state is written to the given file instead of STDOUT")
+	cmd.Flags().
+		StringSlice(flagJailAllowedAddrs, []string{}, "Comma-separated list of operator addresses of jailed validators to unjail")
+	cmd.Flags().
+		String(flags.FlagOutputDocument, "", "Exported state is written to the given file instead of STDOUT")
 
 	return cmd
 }

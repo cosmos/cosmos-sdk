@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	"cosmossdk.io/store/v2/root"
 	_ "embed"
 
 	"github.com/spf13/viper"
@@ -96,15 +97,17 @@ func NewSimApp[T transaction.Tx](
 	viper *viper.Viper,
 ) *SimApp[T] {
 	var (
-		app        = &SimApp[T]{}
-		appBuilder *runtime.AppBuilder[T]
+		app          = &SimApp[T]{}
+		appBuilder   *runtime.AppBuilder[T]
+		err          error
+		storeOptions = root.DefaultStoreOptions()
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
 			AppConfig(),
 			depinject.Supply(
 				logger,
-				&viperWrapper{viper}, // DynamicConfig
+				viper,
 
 				// ADVANCED CONFIGURATION
 
@@ -187,8 +190,13 @@ func NewSimApp[T transaction.Tx](
 		panic(err)
 	}
 
-	var err error
-	app.App, err = appBuilder.Build()
+	if sub := viper.Sub("store.options"); sub != nil {
+		err = sub.Unmarshal(&storeOptions)
+		if err != nil {
+			panic(err)
+		}
+	}
+	app.App, err = appBuilder.Build(runtime.AppBuilderWithStoreOptions[T](storeOptions))
 	if err != nil {
 		panic(err)
 	}
@@ -234,18 +242,4 @@ func (app *SimApp[T]) GetConsensusAuthority() string {
 // GetStore gets the app store.
 func (app *SimApp[T]) GetStore() any {
 	return app.App.GetStore()
-}
-
-var _ server.DynamicConfig = &viperWrapper{}
-
-type viperWrapper struct {
-	*viper.Viper
-}
-
-func (v *viperWrapper) UnmarshalSub(key string, cfg any) (bool, error) {
-	s := v.Viper.Sub(key)
-	if s == nil {
-		return false, nil
-	}
-	return true, s.Unmarshal(cfg)
 }

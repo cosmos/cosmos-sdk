@@ -24,8 +24,8 @@ import (
 // the existing app.go initialization conventions.
 type AppBuilder[T transaction.Tx] struct {
 	app          *App[T]
-	storeOptions *rootstore.FactoryOptions
 	config       server.DynamicConfig
+	storeOptions rootstore.Options
 
 	// the following fields are used to overwrite the default
 	branch      func(state store.ReaderMap) store.WriterMap
@@ -72,9 +72,6 @@ func (a *AppBuilder[T]) RegisterModules(modules map[string]appmodulev2.AppModule
 // To be used in combination of RegisterModules.
 func (a *AppBuilder[T]) RegisterStores(keys ...string) {
 	a.app.storeKeys = append(a.app.storeKeys, keys...)
-	if a.storeOptions != nil {
-		a.storeOptions.StoreKeys = append(a.storeOptions.StoreKeys, keys...)
-	}
 }
 
 // Build builds an *App instance.
@@ -123,28 +120,26 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	}
 	a.app.stf = stf
 
-	storeOpts := rootstore.DefaultStoreOptions()
-	ok, err := a.config.UnmarshalSub("store.options", &storeOpts)
-	if ok && err != nil {
-		return nil, fmt.Errorf("failed to unmarshal store options: %w", err)
-	}
-
 	home := a.config.GetString(FlagHome)
-	scRawDb, err := db.NewDB(db.DBType(a.config.GetString("store.app-db-backend")), "application", filepath.Join(home, "data"), nil)
+	scRawDb, err := db.NewDB(
+		db.DBType(a.config.GetString("store.app-db-backend")),
+		"application",
+		filepath.Join(home, "data"),
+		nil,
+	)
 	if err != nil {
 		panic(err)
 	}
 
-	storeOptions := &rootstore.FactoryOptions{
+	factoryOptions := &rootstore.FactoryOptions{
 		Logger:    a.app.logger,
 		RootDir:   home,
-		Options:   storeOpts,
+		Options:   a.storeOptions,
 		StoreKeys: append(a.app.storeKeys, "stf"),
 		SCRawDB:   scRawDb,
 	}
-	a.storeOptions = storeOptions
 
-	rs, err := rootstore.CreateRootStore(a.storeOptions)
+	rs, err := rootstore.CreateRootStore(factoryOptions)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create root store: %w", err)
 	}
@@ -207,7 +202,11 @@ func AppBuilderWithBranch[T transaction.Tx](branch func(state store.ReaderMap) s
 
 // AppBuilderWithTxValidator sets the tx validator for the app.
 // It overrides all default tx validators defined by modules.
-func AppBuilderWithTxValidator[T transaction.Tx](txValidators func(ctx context.Context, tx T) error) AppBuilderOption[T] {
+func AppBuilderWithTxValidator[T transaction.Tx](
+	txValidators func(
+		ctx context.Context, tx T,
+	) error,
+) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.txValidator = txValidators
 	}
@@ -224,5 +223,11 @@ func AppBuilderWithPostTxExec[T transaction.Tx](
 ) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.postTxExec = postTxExec
+	}
+}
+
+func AppBuilderWithStoreOptions[T transaction.Tx](opts rootstore.Options) AppBuilderOption[T] {
+	return func(a *AppBuilder[T]) {
+		a.storeOptions = opts
 	}
 }

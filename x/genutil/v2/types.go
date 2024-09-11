@@ -3,8 +3,6 @@ package v2
 import (
 	"encoding/json"
 
-	"github.com/spf13/viper"
-
 	"cosmossdk.io/log"
 )
 
@@ -14,7 +12,6 @@ type AppExporter func(
 	logger log.Logger,
 	height int64,
 	jailAllowedAddrs []string,
-	viper *viper.Viper,
 ) (ExportedApp, error)
 
 // ExportedApp represents an exported app state, along with

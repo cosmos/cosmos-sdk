@@ -9,9 +9,12 @@ on:
 permissions:
   contents: read
 
+<<<<<<< HEAD
 env:
   ROCKSDB_VERSION: 9.6.1
 
+=======
+>>>>>>> aa8bf41eb (ci: rocksdb version in makefile (#21654))
 jobs:
   golangci:
     name: golangci-lint
@@ -30,6 +33,8 @@ jobs:
             Makefile
             **/Makefile
             .golangci.yml
+      - name: Get rocksdb version
+        run: ./.github/scripts/get-rocksdb-version.sh
       - name: Fix permissions for cache
         run: sudo chown $(whoami) /usr/local/lib /usr/local/include
       - name: Restore rocksdb libraries cache

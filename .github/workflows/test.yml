@@ -799,18 +799,17 @@ jobs:
             /usr/local/lib/librocksdb.*
             /usr/local/include/rocksdb
           key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
+<<<<<<< HEAD
       - name: Install rocksdb
         if: env.GIT_DIFF && steps.cache-rocksdb.outputs.cache-hit != 'true'
         id: install_rocksdb
+=======
+      - name: Install rocksdb deps
+        run: ./.github/scripts/install-rocksdb-deps.sh
+      - name: Install rocksdb
+        if: steps.cache-rocksdb.outputs.cache-hit != 'true'
+>>>>>>> 4fe934e8a (ci: centralized job for rocksdb libaries cache (#21657))
         run: ./.github/scripts/install-rocksdb.sh
-      - name: Saves rocksdb libraries cache
-        if: steps.install_rocksdb.outcome == 'success'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            /usr/local/lib/librocksdb.*
-            /usr/local/include/rocksdb
-          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
       - name: tests
         if: env.GIT_DIFF
         run: |
@@ -856,18 +855,14 @@ jobs:
             /usr/local/lib/librocksdb.*
             /usr/local/include/rocksdb
           key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
+<<<<<<< HEAD
+=======
+      - name: Install rocksdb deps
+        run: ./.github/scripts/install-rocksdb-deps.sh
+>>>>>>> 4fe934e8a (ci: centralized job for rocksdb libaries cache (#21657))
       - name: Install rocksdb
-        if: env.GIT_DIFF && steps.cache-rocksdb.outputs.cache-hit != 'true'
-        id: install_rocksdb
+        if: steps.cache-rocksdb.outputs.cache-hit != 'true'
         run: ./.github/scripts/install-rocksdb.sh
-      - name: Saves rocksdb libraries cache
-        if: steps.install_rocksdb.outcome == 'success'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            /usr/local/lib/librocksdb.*
-            /usr/local/include/rocksdb
-          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
       - name: test & coverage report creation
         if: env.GIT_DIFF
         run: |

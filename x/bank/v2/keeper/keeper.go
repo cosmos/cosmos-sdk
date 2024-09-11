@@ -1,21 +1,21 @@
 package keeper
 
 import (
-    "context"
+	"context"
 
-    "cosmossdk.io/collections"
-    "cosmossdk.io/collections/indexes"
-    "cosmossdk.io/core/address"
-    appmodulev2 "cosmossdk.io/core/appmodule/v2"
-    "cosmossdk.io/core/event"
-    "cosmossdk.io/math"
-    "cosmossdk.io/x/bank/v2/types"
+	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/indexes"
+	"cosmossdk.io/core/address"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/event"
+	"cosmossdk.io/math"
+	"cosmossdk.io/x/bank/v2/types"
 
-    errorsmod "cosmossdk.io/errors"
-    "github.com/cosmos/cosmos-sdk/codec"
-    sdk "github.com/cosmos/cosmos-sdk/types"
-    sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-    authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // Keeper defines the bank/v2 module keeper.
@@ -28,7 +28,7 @@ type Keeper struct {
 	addressCodec address.Codec
 	schema       collections.Schema
 	params       collections.Item[types.Params]
-	balances     *collections.IndexedMap[collections.Pair[sdk.AccAddress, string], math.Int, BalancesIndexes]
+	balances     *collections.IndexedMap[collections.Pair[[]byte, string], math.Int, BalancesIndexes]
 	supply       collections.Map[string, math.Int]
 }
 
@@ -41,7 +41,7 @@ func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Env
 		authority:    authority,
 		addressCodec: addressCodec, // TODO(@julienrbrt): Should we add address codec to the environment?
 		params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		balances:     collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), types.BalanceValueCodec, newBalancesIndexes(sb)),
+		balances:     collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.PairKeyCodec(collections.BytesKey, collections.StringKey), sdk.IntValue, newBalancesIndexes(sb)),
 		supply:       collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
 	}
 
@@ -147,7 +147,7 @@ func (k Keeper) GetSupply(ctx context.Context, denom string) sdk.Coin {
 
 // GetBalance returns the balance of a specific denomination for a given account
 // by address.
-func (k Keeper) GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin {
+func (k Keeper) GetBalance(ctx context.Context, addr []byte, denom string) sdk.Coin {
 	amt, err := k.balances.Get(ctx, collections.Join(addr, denom))
 	if err != nil {
 		return sdk.NewCoin(denom, math.ZeroInt())
@@ -161,7 +161,7 @@ func (k Keeper) GetBalance(ctx context.Context, addr sdk.AccAddress, denom strin
 // CONTRACT: The provided amount (amt) must be valid, non-negative coins.
 //
 // A coin_spent event is emitted after the operation.
-func (k Keeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+func (k Keeper) subUnlockedCoins(ctx context.Context, addr []byte, amt sdk.Coins) error {
 	for _, coin := range amt {
 		balance := k.GetBalance(ctx, addr, coin.Denom)
 		spendable := sdk.Coins{balance}
@@ -202,7 +202,7 @@ func (k Keeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddress, amt s
 // CONTRACT: The provided amount (amt) must be valid, non-negative coins.
 //
 // It emits a coin_received event after the operation.
-func (k Keeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+func (k Keeper) addCoins(ctx context.Context, addr []byte, amt sdk.Coins) error {
 	for _, coin := range amt {
 		balance := k.GetBalance(ctx, addr, coin.Denom)
 		newBalance := balance.Add(coin)
@@ -236,7 +236,7 @@ func (k Keeper) setSupply(ctx context.Context, coin sdk.Coin) {
 }
 
 // setBalance sets the coin balance for an account by address.
-func (k Keeper) setBalance(ctx context.Context, addr sdk.AccAddress, balance sdk.Coin) error {
+func (k Keeper) setBalance(ctx context.Context, addr []byte, balance sdk.Coin) error {
 	if !balance.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
 	}
@@ -256,12 +256,12 @@ func newBalancesIndexes(sb *collections.SchemaBuilder) BalancesIndexes {
 	return BalancesIndexes{
 		Denom: indexes.NewReversePair[math.Int](
 			sb, types.DenomAddressPrefix, "address_by_denom_index",
-			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), collections.StringKey), //nolint:staticcheck // Note: refer to the LengthPrefixedAddressKey docs to understand why we do this.
-			indexes.WithReversePairUncheckedValue(),                                                          // denom to address indexes were stored as Key: Join(denom, address) Value: []byte{0}, this will migrate the value to []byte{} in a lazy way.
+			collections.PairKeyCodec(collections.BytesKey, collections.StringKey), //nolint:staticcheck // Note: refer to the LengthPrefixedAddressKey docs to understand why we do this.
+			indexes.WithReversePairUncheckedValue(),                               // denom to address indexes were stored as Key: Join(denom, address) Value: []byte{0}, this will migrate the value to []byte{} in a lazy way.
 		),
 	}
 }
 
 type BalancesIndexes struct {
-	Denom *indexes.ReversePair[sdk.AccAddress, string, math.Int]
+	Denom *indexes.ReversePair[[]byte, string, math.Int]
 }

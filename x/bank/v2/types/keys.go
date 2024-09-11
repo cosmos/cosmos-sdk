@@ -2,10 +2,6 @@ package types
 
 import (
 	"cosmossdk.io/collections"
-	collcodec "cosmossdk.io/collections/codec"
-	"cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -36,14 +32,3 @@ var (
 
 	SupplyKey = collections.NewPrefix(5)
 )
-
-// BalanceValueCodec is a codec for encoding bank balances in a backwards compatible way.
-// Historically, balances were represented as Coin, now they're represented as a simple math.Int
-var BalanceValueCodec = collcodec.NewAltValueCodec(sdk.IntValue, func(bytes []byte) (math.Int, error) {
-	c := new(sdk.Coin)
-	err := c.Unmarshal(bytes)
-	if err != nil {
-		return math.Int{}, err
-	}
-	return c.Amount, nil
-})

@@ -1,0 +1,18 @@
+syntax = "proto3";
+package cosmos.accounts.defaults.base.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "cosmossdk.io/x/accounts/defaults/base/keys/authn";
+
+// PubKey defines a authn public key
+message AuthnPubKey {
+  option (amino.name) = "tendermint/PubKeyAuthn";
+
+  option (amino.message_encoding)     = "key_field";
+  option (gogoproto.goproto_stringer) = false;
+
+  string key_id = 1;
+  bytes  key    = 2;
+}

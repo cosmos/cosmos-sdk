@@ -72,6 +72,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
+
 	s.config = Config{
 		ConfigTomlConfig: configTomlConfig,
 		AppTomlConfig:    appTomlConfig,

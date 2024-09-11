@@ -13,6 +13,7 @@ permissions:
 jobs:
 
   check-cache-rocksdb:
+    name: Check existing cache
     runs-on: ubuntu-latest
     outputs:
       cache-hit: ${{ steps.cache-rocksdb.outputs.cache-hit }}
@@ -37,6 +38,7 @@ jobs:
 
 
   save-cache-rocksdb:
+    name: Build rocksdb libraries and save cache
     runs-on: ubuntu-latest
     needs: check-cache-rocksdb
     if: needs.check-cache-rocksdb.outputs.cache-hit != 'true'

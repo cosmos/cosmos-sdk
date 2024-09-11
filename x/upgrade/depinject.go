@@ -41,6 +41,7 @@ type ModuleInputs struct {
 	Cdc                codec.Codec
 	AddressCodec       address.Codec
 	AppVersionModifier coreserver.VersionModifier
+	ConsensusKeeper    types.ConsensusKeeper
 
 	AppOpts       servertypes.AppOptions `optional:"true"` // server v0
 	DynamicConfig serverv2.DynamicConfig `optional:"true"` // server v2
@@ -86,7 +87,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(in.Environment, skipUpgradeHeights, in.Cdc, homePath, in.AppVersionModifier, authorityStr)
+	k := keeper.NewKeeper(in.Environment, skipUpgradeHeights, in.Cdc, homePath, in.AppVersionModifier, authorityStr, in.ConsensusKeeper)
 	m := NewAppModule(k)
 
 	return ModuleOutputs{UpgradeKeeper: k, Module: m}

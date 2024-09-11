@@ -17,6 +17,7 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/store"
 )
 
 type mockInterfaceRegistry struct{}
@@ -61,12 +62,17 @@ func TestServer(t *testing.T) {
 	err = grpcServer.Init(&mockApp[transaction.Tx]{}, v, logger)
 	require.NoError(t, err)
 
+	storeServer := store.New[transaction.Tx](nil /* nil appCreator as not using CLI commands */)
+	err = storeServer.Init(&mockApp[transaction.Tx]{}, v, logger)
+	require.NoError(t, err)
+
 	mockServer := &mockServer{name: "mock-server-1", ch: make(chan string, 100)}
 
 	server := serverv2.NewServer(
 		logger,
 		serverv2.DefaultServerConfig(),
 		grpcServer,
+		storeServer,
 		mockServer,
 	)
 

@@ -102,12 +102,14 @@ func (suite *KeeperTestSuite) SetupTest() {
 	stakingKeeper := evidencetestutil.NewMockStakingKeeper(ctrl)
 	slashingKeeper := evidencetestutil.NewMockSlashingKeeper(ctrl)
 	accountKeeper := evidencetestutil.NewMockAccountKeeper(ctrl)
+	ck := evidencetestutil.NewMockConsensusKeeper(ctrl)
 
 	evidenceKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		env,
 		stakingKeeper,
 		slashingKeeper,
+		ck,
 		address.NewBech32Codec("cosmos"),
 	)
 

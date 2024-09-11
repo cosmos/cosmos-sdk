@@ -37,3 +37,7 @@ type SlashingKeeper interface {
 type AccountKeeper interface {
 	SetAccount(ctx context.Context, acc sdk.AccountI)
 }
+
+type ConsensusKeeper interface {
+	EvidenceParams(context.Context) (maxAge int64, maxAgeDuration time.Duration, maxBytes uint64, err error)
+}

@@ -98,7 +98,6 @@ func (m *Manager) Contains(hash TxHash) bool {
 }
 
 func (m *Manager) Size() int {
-	fmt.Println("Size")
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
@@ -244,7 +243,6 @@ func (m *Manager) purgeLoop() {
 		}
 
 		hashes := m.expiredTxs(latestTime)
-		fmt.Println("Purging", len(hashes))
 		if len(hashes) > 0 {
 			m.purge(hashes)
 		}

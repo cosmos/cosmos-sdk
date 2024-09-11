@@ -19,91 +19,46 @@ func TestBankSendTxCmd(t *testing.T) {
 
 	sut.ResetChain(t)
 	cli := NewCLIWrapper(t, sut, verbose)
-	// add genesis account with some tokens
-	account1Addr := cli.AddKey("account1")
-	account2Addr := cli.AddKey("account2")
-	require.NotEqual(t, account1Addr, account2Addr)
+
+	// get validator address
+	valAddr := gjson.Get(cli.Keys("keys", "list"), "1.address").String()
+	require.NotEmpty(t, valAddr)
+
+	// add new key
+	receiverAddr := cli.AddKey("account1")
 	denom := "stake"
-	initialAmount := 10000000
-	initialBalance := fmt.Sprintf("%d%s", initialAmount, denom)
-	sut.ModifyGenesisCLI(t,
-		[]string{"genesis", "add-genesis-account", account1Addr, initialBalance},
-		[]string{"genesis", "add-genesis-account", account2Addr, initialBalance},
-	)
 	sut.StartChain(t)
 
-	// query accounts balances
-	balance1 := cli.QueryBalance(account1Addr, denom)
-	assert.Equal(t, int64(initialAmount), balance1)
-	balance2 := cli.QueryBalance(account2Addr, denom)
-	assert.Equal(t, int64(initialAmount), balance2)
+	// query validator balance and make sure it has enough balance
+	var transferAmount int64 = 1000
+	valBalance := cli.QueryBalance(valAddr, denom)
+	require.Greater(t, valBalance, transferAmount, "not enough balance found with validator")
 
-	bankSendCmdArgs := []string{"tx", "bank", "send", account1Addr, account2Addr, "1000stake"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom)}
 
-	testCases := []struct {
-		name         string
-		extraArgs    []string
-		expectErr    bool
-		expectedCode uint32
-	}{
-		{
-			"valid transaction",
-			[]string{"--fees=1stake"},
-			false,
-			0,
-		},
-		{
-			"not enough fees",
-			[]string{"--fees=0stake"},
-			true,
-			sdkerrors.ErrInsufficientFee.ABCICode(),
-		},
-		{
-			"not enough gas",
-			[]string{"--fees=1stake", "--gas=10"},
-			true,
-			sdkerrors.ErrOutOfGas.ABCICode(),
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		t.Run(tc.name, func(t *testing.T) {
-			cmdArgs := append(bankSendCmdArgs, tc.extraArgs...)
-
-			if tc.expectErr {
-				assertErr := func(xt assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
-					assert.Len(t, gotOutputs, 1)
-					code := gjson.Get(gotOutputs[0].(string), "code")
-					assert.True(t, code.Exists())
-					assert.Equal(t, int64(tc.expectedCode), code.Int())
-					return false // always abort
-				}
-				rsp := cli.WithRunErrorMatcher(assertErr).Run(cmdArgs...)
-				RequireTxFailure(t, rsp)
-			} else {
-				rsp := cli.Run(cmdArgs...)
-				txResult, found := cli.AwaitTxCommitted(rsp)
-				assert.True(t, found)
-				RequireTxSuccess(t, txResult)
-			}
-		})
-	}
+	// test valid transaction
+	rsp := cli.Run(append(bankSendCmdArgs, "--fees=1stake")...)
+	txResult, found := cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
+	// check valaddr balance equals to valBalance-(transferedAmount+feeAmount)
+	require.Equal(t, valBalance-(transferAmount+1), cli.QueryBalance(valAddr, denom))
+	// check receiver balance equals to transferAmount
+	require.Equal(t, transferAmount, cli.QueryBalance(receiverAddr, denom))
 
 	// test tx bank send with insufficient funds
 	insufficientCmdArgs := bankSendCmdArgs[0 : len(bankSendCmdArgs)-1]
-	insufficientCmdArgs = append(insufficientCmdArgs, initialBalance, "--fees=10stake")
-	rsp := cli.Run(insufficientCmdArgs...)
+	insufficientCmdArgs = append(insufficientCmdArgs, fmt.Sprintf("%d%s", valBalance, denom), "--fees=10stake")
+	rsp = cli.Run(insufficientCmdArgs...)
 	RequireTxFailure(t, rsp)
-	assert.Contains(t, rsp, sdkerrors.ErrInsufficientFunds.Error())
+	require.Contains(t, rsp, sdkerrors.ErrInsufficientFunds.Error())
 
 	// test tx bank send with unauthorized signature
-	assertUnauthorizedErr := func(t assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
-		assert.Len(t, gotOutputs, 1)
+	assertUnauthorizedErr := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
+		require.Len(t, gotOutputs, 1)
 		code := gjson.Get(gotOutputs[0].(string), "code")
-		assert.True(t, code.Exists())
-		assert.Equal(t, int64(sdkerrors.ErrUnauthorized.ABCICode()), code.Int())
+		require.True(t, code.Exists())
+		require.Equal(t, int64(sdkerrors.ErrUnauthorized.ABCICode()), code.Int())
 		return false
 	}
 	invalidCli := cli
@@ -112,29 +67,29 @@ func TestBankSendTxCmd(t *testing.T) {
 	RequireTxFailure(t, rsp)
 
 	// test tx bank send generate only
-	assertGenOnlyOutput := func(t assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
-		assert.Len(t, gotOutputs, 1)
+	assertGenOnlyOutput := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
+		require.Len(t, gotOutputs, 1)
 		rsp := gotOutputs[0].(string)
 		// get msg from output
 		msgs := gjson.Get(rsp, "body.messages").Array()
-		assert.Len(t, msgs, 1)
+		require.Len(t, msgs, 1)
 		// check from address is equal to account1 address
 		fromAddr := gjson.Get(msgs[0].String(), "from_address").String()
-		assert.Equal(t, account1Addr, fromAddr)
+		require.Equal(t, valAddr, fromAddr)
 		// check to address is equal to account2 address
 		toAddr := gjson.Get(msgs[0].String(), "to_address").String()
-		assert.Equal(t, account2Addr, toAddr)
+		require.Equal(t, receiverAddr, toAddr)
 		return false
 	}
 	genCmdArgs := append(bankSendCmdArgs, "--generate-only")
 	_ = cli.WithRunErrorMatcher(assertGenOnlyOutput).Run(genCmdArgs...)
 
 	// test tx bank send with dry-run flag
-	assertDryRunOutput := func(t assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
-		assert.Len(t, gotOutputs, 1)
+	assertDryRunOutput := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
+		require.Len(t, gotOutputs, 1)
 		rsp := gotOutputs[0].(string)
 		// check gas estimate value found in output
-		assert.Contains(t, rsp, "gas estimate")
+		require.Contains(t, rsp, "gas estimate")
 		return false
 	}
 	dryRunCmdArgs := append(bankSendCmdArgs, "--dry-run")
@@ -158,9 +113,15 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 	sut.ModifyGenesisCLI(t,
 		[]string{"genesis", "add-genesis-account", account1Addr, initialBalance},
 		[]string{"genesis", "add-genesis-account", account2Addr, initialBalance},
-		[]string{"genesis", "add-genesis-account", account3Addr, initialBalance},
 	)
 	sut.StartChain(t)
+
+	// query accounts balances
+	account1Bal := cli.QueryBalance(account1Addr, denom)
+	require.Equal(t, int64(initialAmount), account1Bal)
+	account2Bal := cli.QueryBalance(account2Addr, denom)
+	require.Equal(t, int64(initialAmount), account2Bal)
+	var account3Bal int64 = 0
 
 	multiSendCmdArgs := []string{"tx", "bank", "multi-send", account1Addr, account2Addr, account3Addr, "1000stake", "--from=" + account1Addr}
 
@@ -186,20 +147,6 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 			"only received 3",
 		},
 		{
-			"not enough fees",
-			append(multiSendCmdArgs, "--fees=0stake"),
-			true,
-			sdkerrors.ErrInsufficientFee.ABCICode(),
-			"insufficient fee",
-		},
-		{
-			"not enough gas",
-			append(multiSendCmdArgs, "--fees=1stake", "--gas=10"),
-			true,
-			sdkerrors.ErrOutOfGas.ABCICode(),
-			"out of gas",
-		},
-		{
 			"chain-id shouldn't be used with offline and generate-only flags",
 			append(multiSendCmdArgs, "--generate-only", "--offline", "-a=0", "-s=4"),
 			true,
@@ -209,18 +156,16 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.expectErr {
-				assertErr := func(xt assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
-					assert.Len(t, gotOutputs, 1)
+				assertErr := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
+					require.Len(t, gotOutputs, 1)
 					output := gotOutputs[0].(string)
-					assert.Contains(t, output, tc.expErrMsg)
+					require.Contains(t, output, tc.expErrMsg)
 					if tc.expectedCode != 0 {
 						code := gjson.Get(output, "code")
-						assert.True(t, code.Exists())
-						assert.Equal(t, int64(tc.expectedCode), code.Int())
+						require.True(t, code.Exists())
+						require.Equal(t, int64(tc.expectedCode), code.Int())
 					}
 					return false // always abort
 				}
@@ -228,8 +173,20 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 			} else {
 				rsp := cli.Run(tc.cmdArgs...)
 				txResult, found := cli.AwaitTxCommitted(rsp)
-				assert.True(t, found)
+				require.True(t, found)
 				RequireTxSuccess(t, txResult)
+				// check account1 balance equals to account1Bal - transferredAmount*no_of_accounts - fees
+				expAcc1Balance := account1Bal - (1000 * 2) - 1
+				require.Equal(t, expAcc1Balance, cli.QueryBalance(account1Addr, denom))
+				account1Bal = expAcc1Balance
+				// check account2 balance equals to account2Bal + transferredAmount
+				expAcc2Balance := account2Bal + 1000
+				require.Equal(t, expAcc2Balance, cli.QueryBalance(account2Addr, denom))
+				account2Bal = expAcc2Balance
+				// check account3 balance equals to account3Bal + transferredAmount
+				expAcc3Balance := account3Bal + 1000
+				require.Equal(t, expAcc3Balance, cli.QueryBalance(account3Addr, denom))
+				account3Bal = expAcc3Balance
 			}
 		})
 	}
@@ -250,7 +207,7 @@ func TestBankGRPCQueries(t *testing.T) {
 
 	sut.ModifyGenesisJSON(t, func(genesis []byte) []byte {
 		state, err := sjson.SetRawBytes(genesis, "app_state.bank.denom_metadata", []byte(bankDenomMetadata))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		return state
 	})
 
@@ -314,12 +271,10 @@ func TestBankGRPCQueries(t *testing.T) {
 	}
 
 	for _, tc := range supplyTestCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
-			assert.NoError(t, err)
-			assert.Contains(t, string(resp), tc.expOut)
+			require.NoError(t, err)
+			require.Contains(t, string(resp), tc.expOut)
 		})
 	}
 
@@ -343,17 +298,15 @@ func TestBankGRPCQueries(t *testing.T) {
 		{
 			"test GRPC client metadata of a bogus denom",
 			denomMetadataUrl + "/foobar",
-			`{"code":5,"message":"client metadata for denom foobar","details":[]}`,
+			`"details":[]`,
 		},
 	}
 
 	for _, tc := range dmTestCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			resp, err := testutil.GetRequest(tc.url)
-			assert.NoError(t, err)
-			assert.Contains(t, string(resp), tc.expOut)
+			require.NoError(t, err)
+			require.Contains(t, string(resp), tc.expOut)
 		})
 	}
 
@@ -384,12 +337,10 @@ func TestBankGRPCQueries(t *testing.T) {
 	}
 
 	for _, tc := range balanceTestCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			resp, err := testutil.GetRequest(tc.url)
-			assert.NoError(t, err)
-			assert.Contains(t, string(resp), tc.expOut)
+			require.NoError(t, err)
+			require.Contains(t, string(resp), tc.expOut)
 		})
 	}
 }

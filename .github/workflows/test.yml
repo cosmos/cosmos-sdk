@@ -13,6 +13,9 @@ concurrency:
   group: ci-${{ github.ref }}-tests
   cancel-in-progress: true
 
+env:
+  ROCKSDB_VERSION: 8.11.3
+
 jobs:
   split-test-files:
     runs-on: ubuntu-latest
@@ -774,11 +777,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.20"
+          go-version: "1.23"
           check-latest: true
           cache: true
           cache-dependency-path: store/go.sum
@@ -789,11 +790,33 @@ jobs:
             store/**/*.go
             store/go.mod
             store/go.sum
+      - name: Fix permissions for cache
+        run: sudo chown $(whoami) /usr/local/lib /usr/local/include
+      - name: Restore rocksdb libraries cache
+        id: cache-rocksdb
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /usr/local/lib/librocksdb.*
+            /usr/local/include/rocksdb
+          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
+      - name: Install rocksdb
+        if: env.GIT_DIFF && steps.cache-rocksdb.outputs.cache-hit != 'true'
+        id: install_rocksdb
+        run: ./.github/scripts/install-rocksdb.sh
+      - name: Saves rocksdb libraries cache
+        if: steps.install_rocksdb.outcome == 'success'
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /usr/local/lib/librocksdb.*
+            /usr/local/include/rocksdb
+          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
       - name: tests
         if: env.GIT_DIFF
         run: |
           cd store
-          nix develop .. -c go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb' ./...
+          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb' ./...
       - name: sonarcloud
         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
         uses: SonarSource/sonarcloud-github-action@master
@@ -809,8 +832,6 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23"
@@ -824,11 +845,33 @@ jobs:
             store/v2/**/*.go
             store/v2/go.mod
             store/v2/go.sum
+      - name: Fix permissions for cache
+        run: sudo chown $(whoami) /usr/local/lib /usr/local/include
+      - name: Restore rocksdb libraries cache
+        id: cache-rocksdb
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /usr/local/lib/librocksdb.*
+            /usr/local/include/rocksdb
+          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
+      - name: Install rocksdb
+        if: env.GIT_DIFF && steps.cache-rocksdb.outputs.cache-hit != 'true'
+        id: install_rocksdb
+        run: ./.github/scripts/install-rocksdb.sh
+      - name: Saves rocksdb libraries cache
+        if: steps.install_rocksdb.outcome == 'success'
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /usr/local/lib/librocksdb.*
+            /usr/local/include/rocksdb
+          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
       - name: test & coverage report creation
         if: env.GIT_DIFF
         run: |
           cd store/v2
-          nix develop ../.. -c go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb' ./...
+          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb' ./...
       - name: sonarcloud
         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft && env.SONAR_TOKEN != null }}
         uses: SonarSource/sonarcloud-github-action@master

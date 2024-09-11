@@ -222,6 +222,16 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 	sender := sig.Signer.String()
 	priority := mp.cfg.TxPriority.GetTxPriority(ctx, tx)
 	nonce := sig.Sequence
+
+	// if it's an unordered tx, we use the gas instead of the nonce
+	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
+		gasLimit, err := unordered.GetGasLimit()
+		nonce = gasLimit
+		if err != nil {
+			return err
+		}
+	}
+
 	key := txMeta[C]{nonce: nonce, priority: priority, sender: sender}
 
 	senderIndex, ok := mp.senderIndices[sender]
@@ -457,6 +467,15 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 	sig := sigs[0]
 	sender := sig.Signer.String()
 	nonce := sig.Sequence
+
+	// if it's an unordered tx, we use the gas instead of the nonce
+	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
+		gasLimit, err := unordered.GetGasLimit()
+		nonce = gasLimit
+		if err != nil {
+			return err
+		}
+	}
 
 	scoreKey := txMeta[C]{nonce: nonce, sender: sender}
 	score, ok := mp.scores[scoreKey]

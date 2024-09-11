@@ -251,6 +251,8 @@ func (m *Manager) purgeLoop() {
 	}
 }
 
+// batchReceive receives block time from the channel until the context is done
+// or the channel is closed.
 func (m *Manager) batchReceive() (time.Time, bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

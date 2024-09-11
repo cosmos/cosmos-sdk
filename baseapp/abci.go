@@ -857,8 +857,8 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 func (app *BaseApp) executeTxs(ctx context.Context, txs [][]byte) ([]*abci.ExecTxResult, error) {
 	if app.txExecutor != nil {
-		return app.txExecutor(ctx, len(txs), app.finalizeBlockState.ms, func(i int, ms storetypes.MultiStore, incarnationCache map[string]any) *abci.ExecTxResult {
-			return app.deliverTxWithMultiStore(txs[i], i, ms, incarnationCache)
+		return app.txExecutor(ctx, txs, app.finalizeBlockState.ms, func(i int, memTx sdk.Tx, ms storetypes.MultiStore, incarnationCache map[string]any) *abci.ExecTxResult {
+			return app.deliverTxWithMultiStore(txs[i], memTx, i, ms, incarnationCache)
 		})
 	}
 
@@ -866,8 +866,8 @@ func (app *BaseApp) executeTxs(ctx context.Context, txs [][]byte) ([]*abci.ExecT
 	for i, rawTx := range txs {
 		var response *abci.ExecTxResult
 
-		if _, err := app.txDecoder(rawTx); err == nil {
-			response = app.deliverTx(rawTx, i)
+		if memTx, err := app.txDecoder(rawTx); err == nil {
+			response = app.deliverTx(rawTx, memTx, i)
 		} else {
 			// In the case where a transaction included in a block proposal is malformed,
 			// we still want to return a default response to comet. This is because comet
@@ -880,7 +880,6 @@ func (app *BaseApp) executeTxs(ctx context.Context, txs [][]byte) ([]*abci.ExecT
 				false,
 			)
 		}
-
 		// check after every tx if we should abort
 		select {
 		case <-ctx.Done():

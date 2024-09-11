@@ -108,19 +108,6 @@ func (k Keeper) SendCoins(ctx context.Context, from, to []byte, amt sdk.Coins) e
 	}
 
 	var err error
-
-	// If from & to is []byte of module name
-	// Override with module address
-	fromAddr := k.ak.GetModuleAddress(string(from))
-	if fromAddr != nil {
-		from = fromAddr
-	}
-
-	toAddr := k.ak.GetModuleAddress(string(to))
-	if toAddr != nil {
-		to = toAddr
-	}
-
 	// TODO: Send restriction
 
 	err = k.subUnlockedCoins(ctx, from, amt)

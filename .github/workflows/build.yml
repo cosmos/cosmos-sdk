@@ -13,12 +13,6 @@ concurrency:
   group: ci-${{ github.ref }}-build
   cancel-in-progress: true
 
-<<<<<<< HEAD
-env:
-  ROCKSDB_VERSION: 9.6.1
-
-=======
->>>>>>> aa8bf41eb (ci: rocksdb version in makefile (#21654))
 jobs:
   build:
     runs-on: ubuntu-latest

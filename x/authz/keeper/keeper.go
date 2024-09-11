@@ -9,6 +9,7 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
 	errorsmod "cosmossdk.io/errors"
@@ -32,14 +33,16 @@ type Keeper struct {
 
 	cdc        codec.Codec
 	authKeeper authz.AccountKeeper
+	addrCdc    address.Codec
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(env appmodule.Environment, cdc codec.Codec, ak authz.AccountKeeper) Keeper {
+func NewKeeper(env appmodule.Environment, cdc codec.Codec, addrCdc address.Codec, ak authz.AccountKeeper) Keeper {
 	return Keeper{
 		Environment: env,
 		cdc:         cdc,
 		authKeeper:  ak,
+		addrCdc:     addrCdc,
 	}
 }
 

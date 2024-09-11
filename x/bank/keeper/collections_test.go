@@ -16,7 +16,6 @@ import (
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -36,7 +35,6 @@ func TestBankStateCompatibility(t *testing.T) {
 	// gomock initializations
 	ctrl := gomock.NewController(t)
 	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
-	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	addr, err := ac.BytesToString(accAddrs[4])
@@ -47,6 +45,7 @@ func TestBankStateCompatibility(t *testing.T) {
 	k := keeper.NewBaseKeeper(
 		env,
 		encCfg.Codec,
+		ac,
 		authKeeper,
 		map[string]bool{addr: true},
 		authority,

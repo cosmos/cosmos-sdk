@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
@@ -60,6 +61,7 @@ type BaseKeeper struct {
 	ak                     types.AccountKeeper
 	cdc                    codec.BinaryCodec
 	mintCoinsRestrictionFn types.MintingRestrictionFn
+	addrCdc                address.Codec
 }
 
 // GetPaginatedTotalSupply queries for the supply, ignoring 0 coins, with a given pagination
@@ -83,20 +85,22 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx context.Context, pagination *que
 func NewBaseKeeper(
 	env appmodule.Environment,
 	cdc codec.BinaryCodec,
+	addrCdc address.Codec,
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
 ) BaseKeeper {
-	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
+	if _, err := addrCdc.StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
 	return BaseKeeper{
 		Environment:            env,
-		BaseSendKeeper:         NewBaseSendKeeper(env, cdc, ak, blockedAddrs, authority),
+		BaseSendKeeper:         NewBaseSendKeeper(env, cdc, ak, addrCdc, blockedAddrs, authority),
 		ak:                     ak,
 		cdc:                    cdc,
 		mintCoinsRestrictionFn: types.NoOpMintingRestrictionFn,
+		addrCdc:                addrCdc,
 	}
 }
 
@@ -146,7 +150,7 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 		return errorsmod.Wrap(err, "failed to track delegation")
 	}
 	// emit coin spent event
-	delAddrStr, err := k.ak.AddressCodec().BytesToString(delegatorAddr)
+	delAddrStr, err := k.addrCdc.BytesToString(delegatorAddr)
 	if err != nil {
 		return err
 	}
@@ -362,7 +366,7 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 
 	k.Logger.Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
 
-	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
+	addrStr, err := k.addrCdc.BytesToString(acc.GetAddress())
 	if err != nil {
 		return err
 	}
@@ -403,7 +407,7 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		k.setSupply(ctx, supply)
 	}
 
-	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
+	addrStr, err := k.addrCdc.BytesToString(acc.GetAddress())
 	if err != nil {
 		return err
 	}

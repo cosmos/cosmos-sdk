@@ -29,11 +29,11 @@ func (k msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSend
 	)
 
 	if base, ok := k.Keeper.(BaseKeeper); ok {
-		from, err = base.ak.AddressCodec().StringToBytes(msg.FromAddress)
+		from, err = base.addrCdc.StringToBytes(msg.FromAddress)
 		if err != nil {
 			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
 		}
-		to, err = base.ak.AddressCodec().StringToBytes(msg.ToAddress)
+		to, err = base.addrCdc.StringToBytes(msg.ToAddress)
 		if err != nil {
 			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %s", err)
 		}
@@ -91,7 +91,7 @@ func (k msgServer) MultiSend(ctx context.Context, msg *types.MsgMultiSend) (*typ
 
 	for _, out := range msg.Outputs {
 		if base, ok := k.Keeper.(BaseKeeper); ok {
-			accAddr, err := base.ak.AddressCodec().StringToBytes(out.Address)
+			accAddr, err := base.addrCdc.StringToBytes(out.Address)
 			if err != nil {
 				return nil, err
 			}
@@ -174,7 +174,7 @@ func (k msgServer) Burn(ctx context.Context, msg *types.MsgBurn) (*types.MsgBurn
 	}
 
 	if base, ok := k.Keeper.(BaseKeeper); ok {
-		from, err = base.ak.AddressCodec().StringToBytes(msg.FromAddress)
+		from, err = base.addrCdc.StringToBytes(msg.FromAddress)
 		if err != nil {
 			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
 		}

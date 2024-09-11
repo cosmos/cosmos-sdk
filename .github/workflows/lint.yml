@@ -8,6 +8,10 @@ on:
   merge_group:
 permissions:
   contents: read
+
+env:
+  ROCKSDB_VERSION: 9.6.1
+
 jobs:
   golangci:
     name: golangci-lint
@@ -26,11 +30,35 @@ jobs:
             Makefile
             **/Makefile
             .golangci.yml
+      - name: Fix permissions for cache
+        run: sudo chown $(whoami) /usr/local/lib /usr/local/include
+      - name: Restore rocksdb libraries cache
+        id: cache-rocksdb
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /usr/local/lib/librocksdb.*
+            /usr/local/include/rocksdb
+          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
+      - name: Install rocksdb
+        if: env.GIT_DIFF && steps.cache-rocksdb.outputs.cache-hit != 'true'
+        id: install_rocksdb
+        run: ./.github/scripts/install-rocksdb.sh
+      - name: Saves rocksdb libraries cache
+        if: steps.install_rocksdb.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            /usr/local/lib/librocksdb.*
+            /usr/local/include/rocksdb
+          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
       - name: run linting (long)
         if: env.GIT_DIFF
         id: lint_long
         run: |
           make lint
+        env:
+          ROCKSDB: 1
       - uses: technote-space/get-diff-action@v6.1.2
         if: steps.lint_long.outcome == 'skipped'
         with:

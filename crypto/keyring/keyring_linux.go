@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
+// Linux-only backend options.
 const BackendKeyctl = "keyctl"
 
 func newKeyctlBackendConfig(appName, _ string, _ io.Reader) keyring.Config {
@@ -24,7 +25,7 @@ func newKeyctlBackendConfig(appName, _ string, _ io.Reader) keyring.Config {
 
 // New creates a new instance of a keyring.
 // Keyring options can be applied when generating the new instance.
-// Available backends are "os", "file", "kwallet", "memory", "pass", "test".
+// Available backends are "os", "file", "kwallet", "memory", "pass", "test", "keyctl".
 func New(
 	appName, backend, rootDir string, userInput io.Reader, cdc codec.Codec, opts ...Option,
 ) (Keyring, error) {

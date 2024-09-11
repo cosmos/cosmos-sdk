@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/address"
@@ -51,25 +50,11 @@ func newBarCoin(amt int64) sdk.Coin {
 	return sdk.NewInt64Coin(barDenom, amt)
 }
 
-func (suite *KeeperTestSuite) mockMintCoins(moduleAcc *authtypes.ModuleAccount) {
-	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
-}
-
-func (suite *KeeperTestSuite) mockSendCoinsFromModuleToAccount(moduleAcc *authtypes.ModuleAccount, recv sdk.AccAddress) {
-	suite.authKeeper.EXPECT().GetModuleAddress(moduleAcc.Name).Return(moduleAcc.GetAddress())
-}
-
-func (suite *KeeperTestSuite) mockFundAccount(receiver sdk.AccAddress) {
-	suite.mockMintCoins(mintAcc)
-	suite.mockSendCoinsFromModuleToAccount(mintAcc, receiver)
-}
-
 type KeeperTestSuite struct {
 	suite.Suite
 
 	ctx          context.Context
 	bankKeeper   keeper.Keeper
-	authKeeper   *banktestutil.MockAccountKeeper
 	addressCodec address.Codec
 }
 
@@ -89,17 +74,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 	authority, err := ac.BytesToString(authtypes.NewModuleAddress("gov"))
 	suite.Require().NoError(err)
 
-	// gomock initializations
-	ctrl := gomock.NewController(suite.T())
-	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
 	suite.ctx = ctx
-	suite.authKeeper = authKeeper
 	suite.bankKeeper = *keeper.NewKeeper(
 		[]byte(authority),
 		ac,
 		env,
 		encCfg.Codec,
-		authKeeper,
 	)
 	suite.addressCodec = ac
 }
@@ -115,8 +95,7 @@ func (suite *KeeperTestSuite) TestSendCoins_Acount_To_Account() {
 	require.Error(err)
 
 	// Set balances for acc0 and then try send to acc1
-	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, suite.authKeeper, accAddrs[0], balances))
+	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], balances))
 	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendAmt))
 
 	// Check balances
@@ -141,8 +120,7 @@ func (suite *KeeperTestSuite) TestSendCoins_Acount_To_Module() {
 	require.Error(err)
 
 	// Set balances for acc0 and then try send to acc1
-	suite.mockFundAccount(accAddrs[0])
-	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, suite.authKeeper, accAddrs[0], balances))
+	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], balances))
 	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[0], burnerAcc.GetAddress(), sendAmt))
 
 	// Check balances
@@ -161,8 +139,7 @@ func (suite *KeeperTestSuite) TestSendCoins_Module_To_Account() {
 	require := suite.Require()
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
 
-	suite.mockMintCoins(mintAcc)
-	require.NoError(suite.bankKeeper.MintCoins(ctx, banktypes.MintModuleName, balances))
+	require.NoError(suite.bankKeeper.MintCoins(ctx, mintAcc.GetAddress(), balances))
 
 	// Try send from burner module
 	err := suite.bankKeeper.SendCoins(ctx, burnerAcc.GetAddress(), accAddrs[4], balances)
@@ -188,8 +165,7 @@ func (suite *KeeperTestSuite) TestSendCoins_Module_To_Module() {
 	require := suite.Require()
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
 
-	suite.mockMintCoins(mintAcc)
-	require.NoError(suite.bankKeeper.MintCoins(ctx, banktypes.MintModuleName, balances))
+	require.NoError(suite.bankKeeper.MintCoins(ctx, mintAcc.GetAddress(), balances))
 
 	// Try send from burner module
 	err := suite.bankKeeper.SendCoins(ctx, burnerAcc.GetAddress(), mintAcc.GetAddress(), sdk.NewCoins(newFooCoin(100), newBarCoin(50)))

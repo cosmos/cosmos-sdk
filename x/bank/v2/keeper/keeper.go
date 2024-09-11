@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // Keeper defines the bank/v2 module keeper.
@@ -23,7 +22,6 @@ import (
 type Keeper struct {
 	appmodulev2.Environment
 
-	ak           types.AuthKeeper
 	authority    []byte
 	addressCodec address.Codec
 	schema       collections.Schema
@@ -32,12 +30,11 @@ type Keeper struct {
 	supply       collections.Map[string, math.Int]
 }
 
-func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec, ak types.AuthKeeper) *Keeper {
+func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	k := &Keeper{
 		Environment:  env,
-		ak:           ak,
 		authority:    authority,
 		addressCodec: addressCodec, // TODO(@julienrbrt): Should we add address codec to the environment?
 		params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
@@ -56,22 +53,14 @@ func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Env
 
 // MintCoins creates new coins from thin air and adds it to the module account.
 // An error is returned if the module account does not exist or is unauthorized.
-func (k Keeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error {
-	// TODO: Mint restriction
-	acc := k.ak.GetModuleAccount(ctx, moduleName)
-	if acc == nil {
-		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName)
-	}
-
-	if !acc.HasPermission(authtypes.Minter) {
-		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName)
-	}
+func (k Keeper) MintCoins(ctx context.Context, addr []byte, amounts sdk.Coins) error {
+	// TODO: Mint restriction & permission
 
 	if !amounts.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amounts.String())
 	}
 
-	err := k.addCoins(ctx, acc.GetAddress(), amounts)
+	err := k.addCoins(ctx, addr, amounts)
 	if err != nil {
 		return err
 	}
@@ -82,9 +71,7 @@ func (k Keeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Co
 		k.setSupply(ctx, supply)
 	}
 
-	k.Logger.Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
-
-	addrStr, err := k.addressCodec.BytesToString(acc.GetAddress())
+	addrStr, err := k.addressCodec.BytesToString(addr)
 	if err != nil {
 		return err
 	}
@@ -98,7 +85,7 @@ func (k Keeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Co
 }
 
 // SendCoins transfers amt coins from a sending account to a receiving account.
-// Function take sender & receipient as string.
+// Function take sender & receipient as []byte.
 // They can be sdk address or module name.
 // An error is returned upon failure.
 func (k Keeper) SendCoins(ctx context.Context, from, to []byte, amt sdk.Coins) error {

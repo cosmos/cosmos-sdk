@@ -41,8 +41,11 @@ func StatusCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			status, err := cmtservice.GetNodeStatus(context.Background(), clientCtx)
+			node, err := clientCtx.GetNode()
+			if err != nil {
+				return err
+			}
+			status, err := cmtservice.GetNodeStatus(context.Background(), node)
 			if err != nil {
 				return err
 			}

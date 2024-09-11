@@ -815,6 +815,10 @@ jobs:
             /usr/local/lib/librocksdb.*
             /usr/local/include/rocksdb
           key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
+      - name: debug
+        run: |
+          ls -l /usr/local/lib/librocksdb.*
+          ls -l /usr/local/include/rocksdb
       - name: tests
         if: env.GIT_DIFF
         run: |

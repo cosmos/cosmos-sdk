@@ -57,17 +57,15 @@ jobs:
         id: lint_long
         run: |
           make lint
-<<<<<<< HEAD
-=======
         env:
           ROCKSDB: 1
->>>>>>> c536c0f18 (ci: remove nix from gh workflows (#21572))
       - uses: technote-space/get-diff-action@v6.1.2
         if: steps.lint_long.outcome == 'skipped'
         with:
           PATTERNS: |
             **/*.go
             *.go
+            !store/**
       - name: run linting (short)
         if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
         run: |
@@ -75,8 +73,6 @@ jobs:
         env:
           GIT_DIFF: ${{ env.GIT_DIFF }}
           LINT_DIFF: 1
-<<<<<<< HEAD
-=======
       - uses: technote-space/get-diff-action@v6.1.2
         if: steps.lint_long.outcome == 'skipped'
         with:
@@ -90,4 +86,3 @@ jobs:
           GIT_DIFF: ${{ env.GIT_DIFF }}
           LINT_DIFF: 1
           ROCKSDB: 1
->>>>>>> c536c0f18 (ci: remove nix from gh workflows (#21572))

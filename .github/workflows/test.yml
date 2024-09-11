@@ -806,7 +806,7 @@ jobs:
         run: ./.github/scripts/install-rocksdb.sh
       - name: Saves rocksdb libraries cache
         if: steps.install_rocksdb.outcome == 'success'
-        uses: actions/cache/restore@v4
+        uses: actions/cache/save@v4
         with:
           path: |
             /usr/local/lib/librocksdb.*
@@ -861,7 +861,7 @@ jobs:
         run: ./.github/scripts/install-rocksdb.sh
       - name: Saves rocksdb libraries cache
         if: steps.install_rocksdb.outcome == 'success'
-        uses: actions/cache/restore@v4
+        uses: actions/cache/save@v4
         with:
           path: |
             /usr/local/lib/librocksdb.*

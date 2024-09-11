@@ -277,6 +277,20 @@ If you are still using the legacy wiring, you must enable unordered transactions
 	}
 	```
 
+* Create or update the App's `Preblocker()` method to call the unordered tx
+  manager's `OnNewBlock()` method.
+
+	```go
+	...
+	app.SetPreblocker(app.PreBlocker)
+	...
+
+	func (app *SimApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+		app.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
+		return app.ModuleManager.PreBlock(ctx, req)
+	}
+	```
+
 * Create or update the App's `Close()` method to close the unordered tx manager.
   Note, this is critical as it ensures the manager's state is written to file
   such that when the node restarts, it can recover the state to provide replay

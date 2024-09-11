@@ -3,7 +3,10 @@ package bankv2
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
@@ -20,6 +23,8 @@ var (
 	_ appmodulev2.AppModule             = AppModule{}
 	_ appmodulev2.HasGenesis            = AppModule{}
 	_ appmodulev2.HasRegisterInterfaces = AppModule{}
+	_ appmodulev2.HasQueryHandlers      = AppModule{}
+	_ appmodulev2.HasMsgHandlers        = AppModule{}
 )
 
 // AppModule implements an application module for the bank module.
@@ -84,4 +89,36 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 	}
 
 	return am.cdc.MarshalJSON(gs)
+}
+
+// RegisterMsgHandlers registers the message handlers for the bank module.
+func (am AppModule) RegisterMsgHandlers(router appmodulev2.MsgRouter) {
+	handlers := keeper.NewHandlers(am.keeper)
+
+	var errs error
+	if err := appmodulev2.RegisterHandler(
+		router, gogoproto.MessageName(&types.MsgUpdateParams{}), handlers.MsgUpdateParams,
+	); err != nil {
+		errs = errors.Join(errs, err)
+	}
+
+	if errs != nil {
+		panic(errs)
+	}
+}
+
+// RegisterQueryHandlers registers the query handlers for the bank module.
+func (am AppModule) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
+	handlers := keeper.NewHandlers(am.keeper)
+
+	var errs error
+	if err := appmodulev2.RegisterHandler(
+		router, gogoproto.MessageName(&types.QueryParamsRequest{}), handlers.QueryParams,
+	); err != nil {
+		errs = errors.Join(errs, err)
+	}
+
+	if errs != nil {
+		panic(errs)
+	}
 }

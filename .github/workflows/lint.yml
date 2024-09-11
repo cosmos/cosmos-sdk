@@ -8,14 +8,16 @@ on:
   merge_group:
 permissions:
   contents: read
+
+env:
+  ROCKSDB_VERSION: 8.11.3
+
 jobs:
   golangci:
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23"
@@ -28,13 +30,35 @@ jobs:
             Makefile
             **/Makefile
             .golangci.yml
+      - name: Fix permissions for cache
+        run: sudo chown $(whoami) /usr/local/lib /usr/local/include
+      - name: Restore rocksdb libraries cache
+        id: cache-rocksdb
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /usr/local/lib/librocksdb.*
+            /usr/local/include/rocksdb
+          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
+      - name: Install rocksdb
+        if: env.GIT_DIFF && steps.cache-rocksdb.outputs.cache-hit != 'true'
+        id: install_rocksdb
+        run: ./.github/scripts/install-rocksdb.sh
+      - name: Saves rocksdb libraries cache
+        if: steps.install_rocksdb.outcome == 'success'
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /usr/local/lib/librocksdb.*
+            /usr/local/include/rocksdb
+          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
       - name: run linting (long)
         if: env.GIT_DIFF
         id: lint_long
         run: |
-          nix develop -c make lint
+          make lint
         env:
-          NIX: 1
+          ROCKSDB: 1
       - uses: technote-space/get-diff-action@v6.1.2
         if: steps.lint_long.outcome == 'skipped'
         with:
@@ -57,8 +81,8 @@ jobs:
       - name: run linting (short)
         if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
         run: |
-          nix develop -c make lint
+          make lint
         env:
           GIT_DIFF: ${{ env.GIT_DIFF }}
           LINT_DIFF: 1
-          NIX: 1
+          ROCKSDB: 1

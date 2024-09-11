@@ -20,27 +20,28 @@ import (
 )
 
 type (
-	SSType int
-	SCType int
+	SSType string
+	SCType string
 )
 
 const (
-	SSTypeSQLite SSType = 0
-	SSTypePebble SSType = 1
-	SSTypeRocks  SSType = 2
-	SCTypeIavl   SCType = 0
-	SCTypeIavlV2 SCType = 1
+	SSTypeSQLite SSType = "sqlite"
+	SSTypePebble SSType = "pebble"
+	SSTypeRocks  SSType = "rocksdb"
+	SCTypeIavl   SCType = "iavl"
+	SCTypeIavlV2 SCType = "iavl-v2"
 )
 
 // app.toml config options
 type Options struct {
-	SSType          SSType               `mapstructure:"ss-type" toml:"ss-type" comment:"State storage database type. Currently we support: 0 for SQLite, 1 for Pebble"`
-	SCType          SCType               `mapstructure:"sc-type" toml:"sc-type" comment:"State commitment database type. Currently we support:0 for iavl, 1 for iavl v2"`
+	SSType          SSType               `mapstructure:"ss-type" toml:"ss-type" comment:"SState storage database type. Currently we support: \"sqlite\" and \"pebble\""`
+	SCType          SCType               `mapstructure:"sc-type" toml:"sc-type" comment:"State commitment database type. Currently we support: \"iavl\" and \"iavl-v2\""`
 	SSPruningOption *store.PruningOption `mapstructure:"ss-pruning-option" toml:"ss-pruning-option" comment:"Pruning options for state storage"`
 	SCPruningOption *store.PruningOption `mapstructure:"sc-pruning-option" toml:"sc-pruning-option" comment:"Pruning options for state commitment"`
 	IavlConfig      *iavl.Config         `mapstructure:"iavl-config" toml:"iavl-config"`
 }
 
+// FactoryOptions are the options for creating a root store.
 type FactoryOptions struct {
 	Logger    log.Logger
 	RootDir   string
@@ -49,10 +50,11 @@ type FactoryOptions struct {
 	SCRawDB   corestore.KVStoreWithBatch
 }
 
+// DefaultStoreOptions returns the default options for creating a root store.
 func DefaultStoreOptions() Options {
 	return Options{
-		SSType: 0,
-		SCType: 0,
+		SSType: SSTypeSQLite,
+		SCType: SCTypeIavl,
 		SCPruningOption: &store.PruningOption{
 			KeepRecent: 2,
 			Interval:   100,

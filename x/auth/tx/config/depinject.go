@@ -55,6 +55,7 @@ type ModuleInputs struct {
 	ProtoFileResolver     txsigning.ProtoFileResolver
 	Environment           appmodulev2.Environment
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers / Tx Validators
+	ConsensusKeeper          ante.ConsensusKeeper
 	BankKeeper               authtypes.BankKeeper                      `optional:"true"`
 	MetadataBankKeeper       BankKeeper                                `optional:"true"`
 	AccountKeeper            ante.AccountKeeper                        `optional:"true"`
@@ -200,6 +201,7 @@ func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler,
 		ante.HandlerOptions{
 			Environment:        in.Environment,
 			AccountKeeper:      in.AccountKeeper,
+			ConsensusKeeper:    in.ConsensusKeeper,
 			BankKeeper:         in.BankKeeper,
 			SignModeHandler:    txConfig.SignModeHandler(),
 			FeegrantKeeper:     in.FeeGrantKeeper,

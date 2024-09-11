@@ -9,21 +9,8 @@ import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "amino/amino.proto";
-import "cometbft/types/v1/types.proto";
-import "cometbft/abci/v1/types.proto";
 
 option go_package = "cosmossdk.io/x/staking/types";
-
-// HistoricalInfo contains header and validator information for a given block.
-// It is stored as part of staking module's state, which persists the `n` most
-// recent HistoricalInfo
-// (`n` is set by the staking module's `historical_entries` parameter).
-message HistoricalInfo {
-  option deprecated = true;
-
-  cometbft.types.v1.Header header = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  repeated Validator       valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-}
 
 // CommissionRates defines the initial commission rates to be used for creating
 // a validator.
@@ -390,14 +377,6 @@ enum Infraction {
   INFRACTION_DOUBLE_SIGN = 1;
   // DOWNTIME defines a validator that missed signing too many blocks.
   INFRACTION_DOWNTIME = 2;
-}
-
-// ValidatorUpdates defines an array of abci.ValidatorUpdate objects.
-// TODO: explore moving this to proto/cosmos/base to separate modules from tendermint dependence
-message ValidatorUpdates {
-  option deprecated = true;
-
-  repeated cometbft.abci.v1.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // ConsPubKeyRotationHistory contains a validator's consensus public key rotation history.

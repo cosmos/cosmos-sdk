@@ -1,22 +1,21 @@
 package keeper
 
 import (
-	"context"
+    "context"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/collections/indexes"
-	"cosmossdk.io/core/address"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/event"
+    "cosmossdk.io/collections"
+    "cosmossdk.io/collections/indexes"
+    "cosmossdk.io/core/address"
+    appmodulev2 "cosmossdk.io/core/appmodule/v2"
+    "cosmossdk.io/core/event"
+    "cosmossdk.io/math"
+    "cosmossdk.io/x/bank/v2/types"
 
-	"cosmossdk.io/math"
-	"cosmossdk.io/x/bank/v2/types"
-
-	errorsmod "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+    errorsmod "cosmossdk.io/errors"
+    "github.com/cosmos/cosmos-sdk/codec"
+    sdk "github.com/cosmos/cosmos-sdk/types"
+    sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+    authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // Keeper defines the bank/v2 module keeper.
@@ -58,7 +57,6 @@ func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Env
 // MintCoins creates new coins from thin air and adds it to the module account.
 // An error is returned if the module account does not exist or is unauthorized.
 func (k Keeper) MintCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error {
-
 	// TODO: Mint restriction
 	acc := k.ak.GetModuleAccount(ctx, moduleName)
 	if acc == nil {

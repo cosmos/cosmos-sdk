@@ -98,3 +98,11 @@ type ValidatorI interface {
 	SharesFromTokens(amt math.Int) (math.LegacyDec, error)          // shares worth of delegator's bond
 	SharesFromTokensTruncated(amt math.Int) (math.LegacyDec, error) // truncated shares worth of delegator's bond
 }
+
+// GenesisValidator is an initial validator.
+type GenesisValidator struct {
+	Address ConsAddress
+	PubKey  cryptotypes.PubKey
+	Power   int64
+	Name    string
+}

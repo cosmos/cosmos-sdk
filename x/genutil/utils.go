@@ -14,11 +14,11 @@ import (
 	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/privval"
-	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/go-bip39"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -35,7 +35,7 @@ func ExportGenesisFile(genesis *types.AppGenesis, genFile string) error {
 // ExportGenesisFileWithTime creates and writes the genesis configuration to disk.
 // An error is returned if building or writing the configuration to file fails.
 func ExportGenesisFileWithTime(
-	genFile, chainID string, validators []cmttypes.GenesisValidator, appState json.RawMessage, genTime time.Time,
+	genFile, chainID string, validators []sdk.GenesisValidator, appState json.RawMessage, genTime time.Time,
 ) error {
 	appGenesis := types.NewAppGenesisWithVersion(chainID, appState)
 	appGenesis.GenesisTime = genTime

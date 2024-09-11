@@ -9,13 +9,6 @@ import (
 	"cosmossdk.io/store/v2/storage"
 )
 
-const (
-	TimestampSize = 8
-
-	StorePrefixTpl   = "s/k:%s/"
-	latestVersionKey = "s/latest"
-)
-
 var (
 	_ storage.Database         = (*Database)(nil)
 	_ store.UpgradableDatabase = (*Database)(nil)

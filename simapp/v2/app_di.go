@@ -100,7 +100,7 @@ func NewSimApp[T transaction.Tx](
 		app          = &SimApp[T]{}
 		appBuilder   *runtime.AppBuilder[T]
 		err          error
-		storeOptions = root.DefaultStoreOptions()
+		storeOptions *root.Options
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -191,7 +191,7 @@ func NewSimApp[T transaction.Tx](
 	}
 
 	if sub := viper.Sub("store.options"); sub != nil {
-		err = sub.Unmarshal(&storeOptions)
+		err = sub.Unmarshal(storeOptions)
 		if err != nil {
 			panic(err)
 		}

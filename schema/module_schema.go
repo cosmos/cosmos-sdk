@@ -57,13 +57,13 @@ func (s ModuleSchema) Validate() error {
 }
 
 // ValidateObjectUpdate validates that the update conforms to the module schema.
-func (s ModuleSchema) ValidateObjectUpdate(update ObjectUpdate) error {
+func (s ModuleSchema) ValidateObjectUpdate(update StateObjectUpdate) error {
 	typ, ok := s.types[update.TypeName]
 	if !ok {
 		return fmt.Errorf("object type %q not found in module schema", update.TypeName)
 	}
 
-	objTyp, ok := typ.(ObjectType)
+	objTyp, ok := typ.(StateObjectType)
 	if !ok {
 		return fmt.Errorf("type %q is not an object type", update.TypeName)
 	}
@@ -93,9 +93,9 @@ func (s ModuleSchema) AllTypes(f func(Type) bool) {
 }
 
 // ObjectTypes iterators over all the object types in the schema in alphabetical order.
-func (s ModuleSchema) ObjectTypes(f func(ObjectType) bool) {
+func (s ModuleSchema) ObjectTypes(f func(StateObjectType) bool) {
 	s.AllTypes(func(t Type) bool {
-		objTyp, ok := t.(ObjectType)
+		objTyp, ok := t.(StateObjectType)
 		if ok {
 			return f(objTyp)
 		}
@@ -115,8 +115,8 @@ func (s ModuleSchema) EnumTypes(f func(EnumType) bool) {
 }
 
 type moduleSchemaJson struct {
-	ObjectTypes []ObjectType `json:"object_types"`
-	EnumTypes   []EnumType   `json:"enum_types"`
+	ObjectTypes []StateObjectType `json:"object_types"`
+	EnumTypes   []EnumType        `json:"enum_types"`
 }
 
 // MarshalJSON implements the json.Marshaler interface for ModuleSchema.
@@ -125,7 +125,7 @@ type moduleSchemaJson struct {
 func (s ModuleSchema) MarshalJSON() ([]byte, error) {
 	asJson := moduleSchemaJson{}
 
-	s.ObjectTypes(func(objType ObjectType) bool {
+	s.ObjectTypes(func(objType StateObjectType) bool {
 		asJson.ObjectTypes = append(asJson.ObjectTypes, objType)
 		return true
 	})

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var object1Type = ObjectType{
+var object1Type = StateObjectType{
 	Name: "object1",
 	KeyFields: []Field{
 		{
@@ -15,7 +15,7 @@ var object1Type = ObjectType{
 	},
 }
 
-var object2Type = ObjectType{
+var object2Type = StateObjectType{
 	KeyFields: []Field{
 		{
 			Name: "field1",
@@ -28,7 +28,7 @@ var object2Type = ObjectType{
 	},
 }
 
-var object3Type = ObjectType{
+var object3Type = StateObjectType{
 	Name: "object3",
 	ValueFields: []Field{
 		{
@@ -42,7 +42,7 @@ var object3Type = ObjectType{
 	},
 }
 
-var object4Type = ObjectType{
+var object4Type = StateObjectType{
 	Name: "object4",
 	KeyFields: []Field{
 		{
@@ -61,7 +61,7 @@ var object4Type = ObjectType{
 func TestObjectType_Validate(t *testing.T) {
 	tests := []struct {
 		name        string
-		objectType  ObjectType
+		objectType  StateObjectType
 		errContains string
 	}{
 		{
@@ -71,7 +71,7 @@ func TestObjectType_Validate(t *testing.T) {
 		},
 		{
 			name: "empty object type name",
-			objectType: ObjectType{
+			objectType: StateObjectType{
 				Name: "",
 				KeyFields: []Field{
 					{
@@ -84,7 +84,7 @@ func TestObjectType_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid key field",
-			objectType: ObjectType{
+			objectType: StateObjectType{
 				Name: "object1",
 				KeyFields: []Field{
 					{
@@ -97,7 +97,7 @@ func TestObjectType_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid value field",
-			objectType: ObjectType{
+			objectType: StateObjectType{
 				Name: "object1",
 				ValueFields: []Field{
 					{
@@ -109,12 +109,12 @@ func TestObjectType_Validate(t *testing.T) {
 		},
 		{
 			name:        "no fields",
-			objectType:  ObjectType{Name: "object0"},
+			objectType:  StateObjectType{Name: "object0"},
 			errContains: "has no key or value fields",
 		},
 		{
 			name: "duplicate field",
-			objectType: ObjectType{
+			objectType: StateObjectType{
 				Name: "object1",
 				KeyFields: []Field{
 					{
@@ -133,7 +133,7 @@ func TestObjectType_Validate(t *testing.T) {
 		},
 		{
 			name: "duplicate field 22",
-			objectType: ObjectType{
+			objectType: StateObjectType{
 				Name: "object1",
 				KeyFields: []Field{
 					{
@@ -150,7 +150,7 @@ func TestObjectType_Validate(t *testing.T) {
 		},
 		{
 			name: "nullable key field",
-			objectType: ObjectType{
+			objectType: StateObjectType{
 				Name: "objectNullKey",
 				KeyFields: []Field{
 					{
@@ -164,7 +164,7 @@ func TestObjectType_Validate(t *testing.T) {
 		},
 		{
 			name: "float32 key field",
-			objectType: ObjectType{
+			objectType: StateObjectType{
 				Name: "o1",
 				KeyFields: []Field{
 					{
@@ -177,7 +177,7 @@ func TestObjectType_Validate(t *testing.T) {
 		},
 		{
 			name: "float64 key field",
-			objectType: ObjectType{
+			objectType: StateObjectType{
 				Name: "o1",
 				KeyFields: []Field{
 					{
@@ -190,7 +190,7 @@ func TestObjectType_Validate(t *testing.T) {
 		},
 		{
 			name: "json key field",
-			objectType: ObjectType{
+			objectType: StateObjectType{
 				Name: "o1",
 				KeyFields: []Field{
 					{
@@ -222,14 +222,14 @@ func TestObjectType_Validate(t *testing.T) {
 func TestObjectType_ValidateObjectUpdate(t *testing.T) {
 	tests := []struct {
 		name        string
-		objectType  ObjectType
-		object      ObjectUpdate
+		objectType  StateObjectType
+		object      StateObjectUpdate
 		errContains string
 	}{
 		{
 			name:       "wrong name",
 			objectType: object1Type,
-			object: ObjectUpdate{
+			object: StateObjectUpdate{
 				TypeName: "object2",
 				Key:      "hello",
 			},
@@ -238,7 +238,7 @@ func TestObjectType_ValidateObjectUpdate(t *testing.T) {
 		{
 			name:       "invalid value",
 			objectType: object1Type,
-			object: ObjectUpdate{
+			object: StateObjectUpdate{
 				TypeName: "object1",
 				Key:      123,
 			},
@@ -247,7 +247,7 @@ func TestObjectType_ValidateObjectUpdate(t *testing.T) {
 		{
 			name:       "valid update",
 			objectType: object4Type,
-			object: ObjectUpdate{
+			object: StateObjectUpdate{
 				TypeName: "object4",
 				Key:      int32(123),
 				Value:    "hello",
@@ -256,7 +256,7 @@ func TestObjectType_ValidateObjectUpdate(t *testing.T) {
 		{
 			name:       "valid deletion",
 			objectType: object4Type,
-			object: ObjectUpdate{
+			object: StateObjectUpdate{
 				TypeName: "object4",
 				Key:      int32(123),
 				Value:    "ignored!",

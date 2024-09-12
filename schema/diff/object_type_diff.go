@@ -39,7 +39,7 @@ type FieldsDiff struct {
 	NewOrder []string
 }
 
-func compareObjectType(oldObj, newObj schema.ObjectType) ObjectTypeDiff {
+func compareObjectType(oldObj, newObj schema.StateObjectType) ObjectTypeDiff {
 	diff := ObjectTypeDiff{
 		Name: oldObj.TypeName(),
 	}

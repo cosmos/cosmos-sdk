@@ -5,13 +5,13 @@ import "cosmossdk.io/schema"
 // ModuleSchemaDiff represents the difference between two module schemas.
 type ModuleSchemaDiff struct {
 	// AddedObjectTypes is a list of object types that were added.
-	AddedObjectTypes []schema.ObjectType
+	AddedObjectTypes []schema.StateObjectType
 
 	// ChangedObjectTypes is a list of object types that were changed.
 	ChangedObjectTypes []ObjectTypeDiff
 
 	// RemovedObjectTypes is a list of object types that were removed.
-	RemovedObjectTypes []schema.ObjectType
+	RemovedObjectTypes []schema.StateObjectType
 
 	// AddedEnumTypes is a list of enum types that were added.
 	AddedEnumTypes []schema.EnumType
@@ -41,9 +41,9 @@ type ModuleSchemaDiff struct {
 func CompareModuleSchemas(oldSchema, newSchema schema.ModuleSchema) ModuleSchemaDiff {
 	diff := ModuleSchemaDiff{}
 
-	oldSchema.ObjectTypes(func(oldObj schema.ObjectType) bool {
+	oldSchema.ObjectTypes(func(oldObj schema.StateObjectType) bool {
 		newTyp, found := newSchema.LookupType(oldObj.Name)
-		newObj, typeMatch := newTyp.(schema.ObjectType)
+		newObj, typeMatch := newTyp.(schema.StateObjectType)
 		if !found || !typeMatch {
 			diff.RemovedObjectTypes = append(diff.RemovedObjectTypes, oldObj)
 			return true
@@ -55,9 +55,9 @@ func CompareModuleSchemas(oldSchema, newSchema schema.ModuleSchema) ModuleSchema
 		return true
 	})
 
-	newSchema.ObjectTypes(func(newObj schema.ObjectType) bool {
+	newSchema.ObjectTypes(func(newObj schema.StateObjectType) bool {
 		oldTyp, found := oldSchema.LookupType(newObj.TypeName())
-		_, typeMatch := oldTyp.(schema.ObjectType)
+		_, typeMatch := oldTyp.(schema.StateObjectType)
 		if !found || !typeMatch {
 			diff.AddedObjectTypes = append(diff.AddedObjectTypes, newObj)
 		}

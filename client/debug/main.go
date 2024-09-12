@@ -307,7 +307,7 @@ func RawBytesCmd() *cobra.Command {
 		Use:     "raw-bytes <raw-bytes>",
 		Short:   "Convert raw bytes output (eg. [10 21 13 255]) to hex",
 		Long:    "Convert raw-bytes to hex.",
-		Example: fmt.Sprintf("%s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]", version.AppName),
+		Example: fmt.Sprintf("%s debug raw-bytes '[72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]'", version.AppName),
 		Args:    cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			stringBytes := args[0]

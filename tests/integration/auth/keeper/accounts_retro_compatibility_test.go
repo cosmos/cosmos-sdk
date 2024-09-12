@@ -4,16 +4,18 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/x/accounts/accountstd"
-	basev1 "cosmossdk.io/x/accounts/defaults/base/v1"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/x/accounts/accountstd"
+	basev1 "cosmossdk.io/x/accounts/defaults/base/v1"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ accountstd.Interface = mockRetroCompatAccount{}
@@ -121,7 +123,6 @@ func TestAuthToAccountsGRPCCompat(t *testing.T) {
 		require.Error(t, err)
 		require.Equal(t, status.Code(err), codes.NotFound)
 	})
-
 }
 
 func TestAccountsBaseAccountRetroCompat(t *testing.T) {

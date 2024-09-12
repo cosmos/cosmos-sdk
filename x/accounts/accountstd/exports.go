@@ -14,8 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
-var accountsModuleAddress = address.Module("accounts")
-var ErrInvalidType = errors.New("invalid type")
+var (
+	accountsModuleAddress = address.Module("accounts")
+	ErrInvalidType        = errors.New("invalid type")
+)
 
 // Interface is the exported interface of an Account.
 type Interface = implementation.Account
@@ -93,7 +95,7 @@ func SenderIsAccountsModule(ctx context.Context) bool {
 // returns nil.
 func Funds(ctx context.Context) sdk.Coins { return implementation.Funds(ctx) }
 
-func ExecModule[MsgResp transaction.Msg, Msg transaction.Msg](ctx context.Context, msg Msg) (resp MsgResp, err error) {
+func ExecModule[MsgResp, Msg transaction.Msg](ctx context.Context, msg Msg) (resp MsgResp, err error) {
 	untyped, err := implementation.ExecModule(ctx, msg)
 	if err != nil {
 		return resp, err
@@ -102,7 +104,7 @@ func ExecModule[MsgResp transaction.Msg, Msg transaction.Msg](ctx context.Contex
 }
 
 // QueryModule can be used by an account to execute a module query.
-func QueryModule[Resp transaction.Msg, Req transaction.Msg](ctx context.Context, req Req) (resp Resp, err error) {
+func QueryModule[Resp, Req transaction.Msg](ctx context.Context, req Req) (resp Resp, err error) {
 	untyped, err := implementation.QueryModule(ctx, req)
 	if err != nil {
 		return resp, err

@@ -4,8 +4,6 @@ buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88e
 buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2/go.mod h1:HqcXMSa5qnNuakaMUo+hWhF51mKbcrZxGl9Vp5EeJXc=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-cosmossdk.io/core v1.0.0-alpha.1 h1:iElkDJhxmy51aLMSLMZcfsqcv4QG4/1UHbHiW8Llw6k=
-cosmossdk.io/core v1.0.0-alpha.1/go.mod h1:abgLjeFLhtuKIYZWSPlVUgQBrKObO7ULV35KYfexE90=
 cosmossdk.io/depinject v1.0.0 h1:dQaTu6+O6askNXO06+jyeUAnF2/ssKwrrszP9t5q050=
 cosmossdk.io/depinject v1.0.0/go.mod h1:zxK/h3HgHoA/eJVtiSsoaRaRA2D5U4cJ5thIG4ssbB8=
 cosmossdk.io/errors v1.0.1 h1:bzu+Kcr0kS/1DuPBtUFdWjzLqyUuCiyHjyJB6srBV/0=

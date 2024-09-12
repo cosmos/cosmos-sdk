@@ -57,7 +57,9 @@ type Manager struct {
 func NewManager(dataDir string) *Manager {
 	path := filepath.Join(dataDir, dirName)
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
-		_ = os.Mkdir(path, os.ModePerm)
+		if err = os.MkdirAll(path, os.ModePerm); err != nil {
+			panic(fmt.Errorf("failed to create unordered txs directory: %w", err))
+		}
 	}
 
 	m := &Manager{
@@ -157,18 +159,14 @@ func (m *Manager) OnNewBlock(blockTime time.Time) {
 	m.blockCh <- blockTime
 }
 
-func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) error) error {
+func (m *Manager) exportSnapshot(_ uint64, snapshotWriter func([]byte) error) error {
 	var buf bytes.Buffer
 	w := bufio.NewWriter(&buf)
 
 	keys := slices.SortedFunc(maps.Keys(m.txHashes), func(i, j TxHash) int { return bytes.Compare(i[:], j[:]) })
-	timestamp := time.Unix(int64(height), 0)
 	for _, txHash := range keys {
 		timeoutTime := m.txHashes[txHash]
-		if timestamp.After(timeoutTime) {
-			// skip expired txs that have yet to be purged
-			continue
-		}
+
 		// right now we dont have access block time at this flow, so we would just include the expired txs
 		// and let it be purge during purge loop
 		chunk := unorderedTxToBytes(txHash, uint64(timeoutTime.Unix()))
@@ -185,8 +183,8 @@ func (m *Manager) exportSnapshot(height uint64, snapshotWriter func([]byte) erro
 	return snapshotWriter(buf.Bytes())
 }
 
-// flushToFile writes all unexpired unordered transactions along with their TTL
-// to file, overwriting the existing file if it exists.
+// flushToFile writes all unordered transactions (including expired if not pruned yet)
+// along with their TTL to file, overwriting the existing file if it exists.
 func (m *Manager) flushToFile() error {
 	f, err := os.Create(filepath.Join(m.dataDir, dirName, fileName))
 	if err != nil {
@@ -251,6 +249,8 @@ func (m *Manager) purgeLoop() {
 	}
 }
 
+// batchReceive receives block time from the channel until the context is done
+// or the channel is closed.
 func (m *Manager) batchReceive() (time.Time, bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

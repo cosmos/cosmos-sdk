@@ -1,15 +1,11 @@
 package utils_test
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/cometbft/cometbft/rpc/client/mock"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
@@ -20,100 +16,73 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 type TxSearchMock struct {
-	txConfig client.TxConfig
-	mock.Client
-	txs []cmttypes.Tx
+	clitestutil.MockCometTxSearchRPC
 
 	// use for filter tx with query conditions
 	msgsSet [][]sdk.Msg
 }
 
-func (mock TxSearchMock) TxSearch(ctx context.Context, query string, _ bool, page, perPage *int, _ string) (*coretypes.ResultTxSearch, error) {
-	if page == nil {
-		*page = 0
-	}
-
-	if perPage == nil {
-		*perPage = 0
-	}
-
-	start, end := client.Paginate(len(mock.txs), *page, *perPage, 100)
-	if start < 0 || end < 0 {
-		// nil result with nil error crashes utils.QueryTxsByEvents
-		return &coretypes.ResultTxSearch{}, nil
-	}
-	txs, err := mock.filterTxs(query, start, end)
-	if err != nil {
-		return nil, err
-	}
-
-	rst := &coretypes.ResultTxSearch{Txs: make([]*coretypes.ResultTx, len(txs)), TotalCount: len(txs)}
-	for i := range txs {
-		rst.Txs[i] = &coretypes.ResultTx{Tx: txs[i]}
-	}
-	return rst, nil
-}
-
-func (mock TxSearchMock) Block(ctx context.Context, height *int64) (*coretypes.ResultBlock, error) {
-	// any non nil Block needs to be returned. used to get time value
-	return &coretypes.ResultBlock{Block: &cmttypes.Block{}}, nil
-}
-
 // mock applying the query string in TxSearch
-func (mock TxSearchMock) filterTxs(query string, start, end int) ([]cmttypes.Tx, error) {
-	filterTxs := []cmttypes.Tx{}
-	proposalIdStr, senderAddr := getQueryAttributes(query)
-	if senderAddr != "" {
-		proposalId, err := strconv.ParseUint(proposalIdStr, 10, 64)
-		if err != nil {
-			return nil, err
-		}
+func filterTxs(mock *TxSearchMock) clitestutil.FilterTxsFn {
+	return func(query string, start, end int) ([][]byte, error) {
+		filterTxs := [][]byte{}
+		proposalIdStr, senderAddr := getQueryAttributes(query)
+		txs := mock.Txs()
+		if senderAddr != "" {
+			proposalId, err := strconv.ParseUint(proposalIdStr, 10, 64)
+			if err != nil {
+				return nil, err
+			}
 
-		for i, msgs := range mock.msgsSet {
-			for _, msg := range msgs {
-				if voteMsg, ok := msg.(*v1beta1.MsgVote); ok {
-					if voteMsg.Voter == senderAddr && voteMsg.ProposalId == proposalId {
-						filterTxs = append(filterTxs, mock.txs[i])
-						continue
+			for i, msgs := range mock.msgsSet {
+				for _, msg := range msgs {
+					if voteMsg, ok := msg.(*v1beta1.MsgVote); ok {
+						if voteMsg.Voter == senderAddr && voteMsg.ProposalId == proposalId {
+							filterTxs = append(filterTxs, txs[i])
+							continue
+						}
 					}
-				}
 
-				if voteMsg, ok := msg.(*v1.MsgVote); ok {
-					if voteMsg.Voter == senderAddr && voteMsg.ProposalId == proposalId {
-						filterTxs = append(filterTxs, mock.txs[i])
-						continue
+					if voteMsg, ok := msg.(*v1.MsgVote); ok {
+						if voteMsg.Voter == senderAddr && voteMsg.ProposalId == proposalId {
+							filterTxs = append(filterTxs, txs[i])
+							continue
+						}
 					}
-				}
 
-				if voteWeightedMsg, ok := msg.(*v1beta1.MsgVoteWeighted); ok {
-					if voteWeightedMsg.Voter == senderAddr && voteWeightedMsg.ProposalId == proposalId {
-						filterTxs = append(filterTxs, mock.txs[i])
-						continue
+					if voteWeightedMsg, ok := msg.(*v1beta1.MsgVoteWeighted); ok {
+						if voteWeightedMsg.Voter == senderAddr && voteWeightedMsg.ProposalId == proposalId {
+							filterTxs = append(filterTxs, txs[i])
+							continue
+						}
 					}
-				}
 
-				if voteWeightedMsg, ok := msg.(*v1.MsgVoteWeighted); ok {
-					if voteWeightedMsg.Voter == senderAddr && voteWeightedMsg.ProposalId == proposalId {
-						filterTxs = append(filterTxs, mock.txs[i])
-						continue
+					if voteWeightedMsg, ok := msg.(*v1.MsgVoteWeighted); ok {
+						if voteWeightedMsg.Voter == senderAddr && voteWeightedMsg.ProposalId == proposalId {
+							filterTxs = append(filterTxs, txs[i])
+							continue
+						}
 					}
 				}
 			}
+		} else {
+			for _, tx := range txs {
+				filterTxs = append(filterTxs, tx)
+			}
 		}
-	} else {
-		filterTxs = append(filterTxs, mock.txs...)
-	}
 
-	if len(filterTxs) < end {
-		return filterTxs, nil
-	}
+		if len(filterTxs) < end {
+			return filterTxs, nil
+		}
 
-	return filterTxs[start:end], nil
+		return filterTxs[start:end], nil
+	}
 }
 
 // getQueryAttributes extracts value from query string
@@ -227,11 +196,9 @@ func TestGetPaginatedVotes(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.description, func(t *testing.T) {
-			marshaled := make([]cmttypes.Tx, len(tc.msgs))
-			cli := TxSearchMock{txs: marshaled, txConfig: encCfg.TxConfig}
+			marshaled := make([][]byte, len(tc.msgs))
 			clientCtx := client.Context{}.
 				WithLegacyAmino(encCfg.Amino).
-				WithClient(cli).
 				WithTxConfig(encCfg.TxConfig)
 
 			for i := range tc.msgs {
@@ -243,6 +210,12 @@ func TestGetPaginatedVotes(t *testing.T) {
 				require.NoError(t, err)
 				marshaled[i] = tx
 			}
+
+			cli := &TxSearchMock{msgsSet: tc.msgs}
+			cli.WithTxs(marshaled)
+			cli.WithTxConfig(encCfg.TxConfig)
+			cli.WithFilterTxsFn(filterTxs(cli))
+			clientCtx = clientCtx.WithClient(cli)
 
 			params := utils.QueryProposalVotesParams{0, tc.page, tc.limit}
 			votesData, err := utils.QueryVotesByTxQuery(clientCtx, params)
@@ -328,11 +301,9 @@ func TestGetSingleVote(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.description, func(t *testing.T) {
-			marshaled := make([]cmttypes.Tx, len(tc.msgs))
-			cli := TxSearchMock{txs: marshaled, txConfig: encCfg.TxConfig, msgsSet: tc.msgs}
+			marshaled := make([][]byte, len(tc.msgs))
 			clientCtx := client.Context{}.
 				WithLegacyAmino(encCfg.Amino).
-				WithClient(cli).
 				WithTxConfig(encCfg.TxConfig).
 				WithAddressCodec(cdcOpts.GetAddressCodec()).
 				WithCodec(encCfg.Codec)
@@ -346,6 +317,12 @@ func TestGetSingleVote(t *testing.T) {
 				require.NoError(t, err)
 				marshaled[i] = tx
 			}
+
+			cli := &TxSearchMock{msgsSet: tc.msgs}
+			cli.WithTxs(marshaled)
+			cli.WithTxConfig(encCfg.TxConfig)
+			cli.WithFilterTxsFn(filterTxs(cli))
+			clientCtx = clientCtx.WithClient(cli)
 
 			// testing query single vote
 			for i, v := range tc.votes {

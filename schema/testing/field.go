@@ -20,10 +20,7 @@ var (
 
 // FieldGen generates random Field's based on the validity criteria of fields.
 func FieldGen(typeSet schema.TypeSet) *rapid.Generator[schema.Field] {
-	enumTypes := slices.DeleteFunc(slices.Collect(typeSet.AllTypes), func(t schema.Type) bool {
-		_, ok := t.(schema.EnumType)
-		return !ok
-	})
+	enumTypes := slices.Collect(typeSet.EnumTypes)
 	enumTypeSelector := rapid.SampledFrom(enumTypes)
 
 	return rapid.Custom(func(t *rapid.T) schema.Field {
@@ -113,9 +110,8 @@ func baseFieldValue(field schema.Field, typeSet schema.TypeSet) *rapid.Generator
 	case schema.AddressKind:
 		return rapid.SliceOfN(rapid.Byte(), 20, 64).AsAny()
 	case schema.EnumKind:
-		typ, found := typeSet.LookupType(field.ReferencedType)
-		enumTyp, ok := typ.(schema.EnumType)
-		if !found || !ok {
+		enumTyp, found := typeSet.LookupEnumType(field.ReferencedType)
+		if !found {
 			panic(fmt.Errorf("enum type %q not found", field.ReferencedType))
 		}
 

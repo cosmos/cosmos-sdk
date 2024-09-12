@@ -604,14 +604,19 @@ func registerServices[T transaction.Tx](s hasServicesV1, app *App[T], registry *
 		err:               nil,
 	}
 
-	err := s.RegisterServices(c)
-	if err != nil {
+	if err := s.RegisterServices(c); err != nil {
 		return fmt.Errorf("unable to register services: %w", err)
 	}
+
+	if c.err != nil {
+		app.logger.Warn("error registering services", "error", c.err)
+	}
+
 	// merge maps
 	for path, decoder := range c.grpcQueryDecoders {
 		app.GRPCMethodsToMessageMap[path] = decoder
 	}
+
 	return nil
 }
 
@@ -654,7 +659,7 @@ func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{
 		// TODO(tip): what if a query is not deterministic?
 		requestFullName, err := registerMethod(c.stfQueryRouter, sd, md, ss)
 		if err != nil {
-			return fmt.Errorf("unable to register query handler %s: %w", md.MethodName, err)
+			return fmt.Errorf("unable to register query handler %s.%s: %w", sd.ServiceName, md.MethodName, err)
 		}
 
 		// register gRPC query method.
@@ -675,7 +680,7 @@ func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{})
 	for _, md := range sd.Methods {
 		_, err := registerMethod(c.stfMsgRouter, sd, md, ss)
 		if err != nil {
-			return fmt.Errorf("unable to register msg handler %s: %w", md.MethodName, err)
+			return fmt.Errorf("unable to register msg handler %s.%s: %w", sd.ServiceName, md.MethodName, err)
 		}
 	}
 	return nil

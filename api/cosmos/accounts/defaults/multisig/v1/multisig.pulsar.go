@@ -69,14 +69,14 @@ func (x *_MsgInit_1_list) IsValid() bool {
 var (
 	md_MsgInit         protoreflect.MessageDescriptor
 	fd_MsgInit_members protoreflect.FieldDescriptor
-	fd_MsgInit_Config  protoreflect.FieldDescriptor
+	fd_MsgInit_config  protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_accounts_defaults_multisig_v1_multisig_proto_init()
 	md_MsgInit = File_cosmos_accounts_defaults_multisig_v1_multisig_proto.Messages().ByName("MsgInit")
 	fd_MsgInit_members = md_MsgInit.Fields().ByName("members")
-	fd_MsgInit_Config = md_MsgInit.Fields().ByName("Config")
+	fd_MsgInit_config = md_MsgInit.Fields().ByName("config")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgInit)(nil)
@@ -152,7 +152,7 @@ func (x *fastReflection_MsgInit) Range(f func(protoreflect.FieldDescriptor, prot
 	}
 	if x.Config != nil {
 		value := protoreflect.ValueOfMessage(x.Config.ProtoReflect())
-		if !f(fd_MsgInit_Config, value) {
+		if !f(fd_MsgInit_config, value) {
 			return
 		}
 	}
@@ -173,7 +173,7 @@ func (x *fastReflection_MsgInit) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "cosmos.accounts.defaults.multisig.v1.MsgInit.members":
 		return len(x.Members) != 0
-	case "cosmos.accounts.defaults.multisig.v1.MsgInit.Config":
+	case "cosmos.accounts.defaults.multisig.v1.MsgInit.config":
 		return x.Config != nil
 	default:
 		if fd.IsExtension() {
@@ -193,7 +193,7 @@ func (x *fastReflection_MsgInit) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "cosmos.accounts.defaults.multisig.v1.MsgInit.members":
 		x.Members = nil
-	case "cosmos.accounts.defaults.multisig.v1.MsgInit.Config":
+	case "cosmos.accounts.defaults.multisig.v1.MsgInit.config":
 		x.Config = nil
 	default:
 		if fd.IsExtension() {
@@ -217,7 +217,7 @@ func (x *fastReflection_MsgInit) Get(descriptor protoreflect.FieldDescriptor) pr
 		}
 		listValue := &_MsgInit_1_list{list: &x.Members}
 		return protoreflect.ValueOfList(listValue)
-	case "cosmos.accounts.defaults.multisig.v1.MsgInit.Config":
+	case "cosmos.accounts.defaults.multisig.v1.MsgInit.config":
 		value := x.Config
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
@@ -244,7 +244,7 @@ func (x *fastReflection_MsgInit) Set(fd protoreflect.FieldDescriptor, value prot
 		lv := value.List()
 		clv := lv.(*_MsgInit_1_list)
 		x.Members = *clv.list
-	case "cosmos.accounts.defaults.multisig.v1.MsgInit.Config":
+	case "cosmos.accounts.defaults.multisig.v1.MsgInit.config":
 		x.Config = value.Message().Interface().(*Config)
 	default:
 		if fd.IsExtension() {
@@ -272,7 +272,7 @@ func (x *fastReflection_MsgInit) Mutable(fd protoreflect.FieldDescriptor) protor
 		}
 		value := &_MsgInit_1_list{list: &x.Members}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.accounts.defaults.multisig.v1.MsgInit.Config":
+	case "cosmos.accounts.defaults.multisig.v1.MsgInit.config":
 		if x.Config == nil {
 			x.Config = new(Config)
 		}
@@ -293,7 +293,7 @@ func (x *fastReflection_MsgInit) NewField(fd protoreflect.FieldDescriptor) proto
 	case "cosmos.accounts.defaults.multisig.v1.MsgInit.members":
 		list := []*Member{}
 		return protoreflect.ValueOfList(&_MsgInit_1_list{list: &list})
-	case "cosmos.accounts.defaults.multisig.v1.MsgInit.Config":
+	case "cosmos.accounts.defaults.multisig.v1.MsgInit.config":
 		m := new(Config)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
@@ -3543,14 +3543,14 @@ func (x *_MsgUpdateConfig_1_list) IsValid() bool {
 var (
 	md_MsgUpdateConfig                protoreflect.MessageDescriptor
 	fd_MsgUpdateConfig_update_members protoreflect.FieldDescriptor
-	fd_MsgUpdateConfig_Config         protoreflect.FieldDescriptor
+	fd_MsgUpdateConfig_config         protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_accounts_defaults_multisig_v1_multisig_proto_init()
 	md_MsgUpdateConfig = File_cosmos_accounts_defaults_multisig_v1_multisig_proto.Messages().ByName("MsgUpdateConfig")
 	fd_MsgUpdateConfig_update_members = md_MsgUpdateConfig.Fields().ByName("update_members")
-	fd_MsgUpdateConfig_Config = md_MsgUpdateConfig.Fields().ByName("Config")
+	fd_MsgUpdateConfig_config = md_MsgUpdateConfig.Fields().ByName("config")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgUpdateConfig)(nil)
@@ -3626,7 +3626,7 @@ func (x *fastReflection_MsgUpdateConfig) Range(f func(protoreflect.FieldDescript
 	}
 	if x.Config != nil {
 		value := protoreflect.ValueOfMessage(x.Config.ProtoReflect())
-		if !f(fd_MsgUpdateConfig_Config, value) {
+		if !f(fd_MsgUpdateConfig_config, value) {
 			return
 		}
 	}
@@ -3647,7 +3647,7 @@ func (x *fastReflection_MsgUpdateConfig) Has(fd protoreflect.FieldDescriptor) bo
 	switch fd.FullName() {
 	case "cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.update_members":
 		return len(x.UpdateMembers) != 0
-	case "cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.Config":
+	case "cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.config":
 		return x.Config != nil
 	default:
 		if fd.IsExtension() {
@@ -3667,7 +3667,7 @@ func (x *fastReflection_MsgUpdateConfig) Clear(fd protoreflect.FieldDescriptor) 
 	switch fd.FullName() {
 	case "cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.update_members":
 		x.UpdateMembers = nil
-	case "cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.Config":
+	case "cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.config":
 		x.Config = nil
 	default:
 		if fd.IsExtension() {
@@ -3691,7 +3691,7 @@ func (x *fastReflection_MsgUpdateConfig) Get(descriptor protoreflect.FieldDescri
 		}
 		listValue := &_MsgUpdateConfig_1_list{list: &x.UpdateMembers}
 		return protoreflect.ValueOfList(listValue)
-	case "cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.Config":
+	case "cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.config":
 		value := x.Config
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
@@ -3718,7 +3718,7 @@ func (x *fastReflection_MsgUpdateConfig) Set(fd protoreflect.FieldDescriptor, va
 		lv := value.List()
 		clv := lv.(*_MsgUpdateConfig_1_list)
 		x.UpdateMembers = *clv.list
-	case "cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.Config":
+	case "cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.config":
 		x.Config = value.Message().Interface().(*Config)
 	default:
 		if fd.IsExtension() {
@@ -3746,7 +3746,7 @@ func (x *fastReflection_MsgUpdateConfig) Mutable(fd protoreflect.FieldDescriptor
 		}
 		value := &_MsgUpdateConfig_1_list{list: &x.UpdateMembers}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.Config":
+	case "cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.config":
 		if x.Config == nil {
 			x.Config = new(Config)
 		}
@@ -3767,7 +3767,7 @@ func (x *fastReflection_MsgUpdateConfig) NewField(fd protoreflect.FieldDescripto
 	case "cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.update_members":
 		list := []*Member{}
 		return protoreflect.ValueOfList(&_MsgUpdateConfig_1_list{list: &list})
-	case "cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.Config":
+	case "cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.config":
 		m := new(Config)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
@@ -7382,14 +7382,14 @@ func (x *_QueryConfigResponse_1_list) IsValid() bool {
 var (
 	md_QueryConfigResponse         protoreflect.MessageDescriptor
 	fd_QueryConfigResponse_members protoreflect.FieldDescriptor
-	fd_QueryConfigResponse_Config  protoreflect.FieldDescriptor
+	fd_QueryConfigResponse_config  protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_accounts_defaults_multisig_v1_multisig_proto_init()
 	md_QueryConfigResponse = File_cosmos_accounts_defaults_multisig_v1_multisig_proto.Messages().ByName("QueryConfigResponse")
 	fd_QueryConfigResponse_members = md_QueryConfigResponse.Fields().ByName("members")
-	fd_QueryConfigResponse_Config = md_QueryConfigResponse.Fields().ByName("Config")
+	fd_QueryConfigResponse_config = md_QueryConfigResponse.Fields().ByName("config")
 }
 
 var _ protoreflect.Message = (*fastReflection_QueryConfigResponse)(nil)
@@ -7465,7 +7465,7 @@ func (x *fastReflection_QueryConfigResponse) Range(f func(protoreflect.FieldDesc
 	}
 	if x.Config != nil {
 		value := protoreflect.ValueOfMessage(x.Config.ProtoReflect())
-		if !f(fd_QueryConfigResponse_Config, value) {
+		if !f(fd_QueryConfigResponse_config, value) {
 			return
 		}
 	}
@@ -7486,7 +7486,7 @@ func (x *fastReflection_QueryConfigResponse) Has(fd protoreflect.FieldDescriptor
 	switch fd.FullName() {
 	case "cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.members":
 		return len(x.Members) != 0
-	case "cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.Config":
+	case "cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.config":
 		return x.Config != nil
 	default:
 		if fd.IsExtension() {
@@ -7506,7 +7506,7 @@ func (x *fastReflection_QueryConfigResponse) Clear(fd protoreflect.FieldDescript
 	switch fd.FullName() {
 	case "cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.members":
 		x.Members = nil
-	case "cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.Config":
+	case "cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.config":
 		x.Config = nil
 	default:
 		if fd.IsExtension() {
@@ -7530,7 +7530,7 @@ func (x *fastReflection_QueryConfigResponse) Get(descriptor protoreflect.FieldDe
 		}
 		listValue := &_QueryConfigResponse_1_list{list: &x.Members}
 		return protoreflect.ValueOfList(listValue)
-	case "cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.Config":
+	case "cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.config":
 		value := x.Config
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
@@ -7557,7 +7557,7 @@ func (x *fastReflection_QueryConfigResponse) Set(fd protoreflect.FieldDescriptor
 		lv := value.List()
 		clv := lv.(*_QueryConfigResponse_1_list)
 		x.Members = *clv.list
-	case "cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.Config":
+	case "cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.config":
 		x.Config = value.Message().Interface().(*Config)
 	default:
 		if fd.IsExtension() {
@@ -7585,7 +7585,7 @@ func (x *fastReflection_QueryConfigResponse) Mutable(fd protoreflect.FieldDescri
 		}
 		value := &_QueryConfigResponse_1_list{list: &x.Members}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.Config":
+	case "cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.config":
 		if x.Config == nil {
 			x.Config = new(Config)
 		}
@@ -7606,7 +7606,7 @@ func (x *fastReflection_QueryConfigResponse) NewField(fd protoreflect.FieldDescr
 	case "cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.members":
 		list := []*Member{}
 		return protoreflect.ValueOfList(&_QueryConfigResponse_1_list{list: &list})
-	case "cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.Config":
+	case "cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.config":
 		m := new(Config)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
@@ -8874,7 +8874,7 @@ type MsgInit struct {
 	unknownFields protoimpl.UnknownFields
 
 	Members []*Member `protobuf:"bytes,1,rep,name=members,proto3" json:"members,omitempty"`
-	Config  *Config   `protobuf:"bytes,2,opt,name=Config,proto3" json:"Config,omitempty"`
+	Config  *Config   `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
 }
 
 func (x *MsgInit) Reset() {
@@ -8938,6 +8938,7 @@ func (*MsgInitResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_defaults_multisig_v1_multisig_proto_rawDescGZIP(), []int{1}
 }
 
+// MsgCreateProposal creates a new proposal.
 type MsgCreateProposal struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -8973,6 +8974,7 @@ func (x *MsgCreateProposal) GetProposal() *Proposal {
 	return nil
 }
 
+// MsgCreateProposalResponse is the response returned after creating a proposal.
 type MsgCreateProposalResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9008,6 +9010,7 @@ func (x *MsgCreateProposalResponse) GetProposalId() uint64 {
 	return 0
 }
 
+// MsgVote is used to vote on a proposal.
 type MsgVote struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9051,6 +9054,7 @@ func (x *MsgVote) GetVote() VoteOption {
 	return VoteOption_VOTE_OPTION_UNSPECIFIED
 }
 
+// MsgVoteResponse is the response returned after voting on a proposal.
 type MsgVoteResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9077,6 +9081,7 @@ func (*MsgVoteResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_defaults_multisig_v1_multisig_proto_rawDescGZIP(), []int{5}
 }
 
+// MsgExecuteProposal is used to execute a proposal.
 type MsgExecuteProposal struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9112,6 +9117,7 @@ func (x *MsgExecuteProposal) GetProposalId() uint64 {
 	return 0
 }
 
+// MsgExecuteProposalResponse is the response returned after executing a proposal.
 type MsgExecuteProposalResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9156,7 +9162,7 @@ type MsgUpdateConfig struct {
 	// only the members that are changing are required, if their weight is 0, they are removed.
 	UpdateMembers []*Member `protobuf:"bytes,1,rep,name=update_members,json=updateMembers,proto3" json:"update_members,omitempty"`
 	// not all fields from Config can be changed
-	Config *Config `protobuf:"bytes,2,opt,name=Config,proto3" json:"Config,omitempty"`
+	Config *Config `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
 }
 
 func (x *MsgUpdateConfig) Reset() {
@@ -9193,6 +9199,7 @@ func (x *MsgUpdateConfig) GetConfig() *Config {
 	return nil
 }
 
+// MsgUpdateConfigResponse is the response returned after updating the config.
 type MsgUpdateConfigResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9219,6 +9226,7 @@ func (*MsgUpdateConfigResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_defaults_multisig_v1_multisig_proto_rawDescGZIP(), []int{9}
 }
 
+// Member defines the member of the multisig account.
 type Member struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9262,6 +9270,7 @@ func (x *Member) GetWeight() uint64 {
 	return 0
 }
 
+// Config defines the configuration of the multisig account.
 type Config struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9332,6 +9341,7 @@ func (x *Config) GetEarlyExecution() bool {
 	return false
 }
 
+// Proposal defines the structure of a proposal.
 type Proposal struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9464,6 +9474,7 @@ func (x *QuerySequenceResponse) GetSequence() uint64 {
 	return 0
 }
 
+// QueryConfig is the request for the account config.
 type QueryConfig struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9497,7 +9508,7 @@ type QueryConfigResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	Members []*Member `protobuf:"bytes,1,rep,name=members,proto3" json:"members,omitempty"`
-	Config  *Config   `protobuf:"bytes,2,opt,name=Config,proto3" json:"Config,omitempty"`
+	Config  *Config   `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
 }
 
 func (x *QueryConfigResponse) Reset() {
@@ -9534,6 +9545,7 @@ func (x *QueryConfigResponse) GetConfig() *Config {
 	return nil
 }
 
+// QueryProposal is the request for a proposal.
 type QueryProposal struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9569,6 +9581,7 @@ func (x *QueryProposal) GetProposalId() uint64 {
 	return 0
 }
 
+// QueryProposalResponse returns the proposal.
 type QueryProposalResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9623,10 +9636,10 @@ var file_cosmos_accounts_defaults_multisig_v1_multisig_proto_rawDesc = []byte{
 	0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c,
 	0x74, 0x73, 0x2e, 0x6d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
 	0x65, 0x6d, 0x62, 0x65, 0x72, 0x52, 0x07, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x12, 0x44,
-	0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c,
+	0x0a, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c,
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73,
 	0x2e, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2e, 0x6d, 0x75, 0x6c, 0x74, 0x69, 0x73,
-	0x69, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x06, 0x43, 0x6f,
+	0x69, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x06, 0x63, 0x6f,
 	0x6e, 0x66, 0x69, 0x67, 0x22, 0x11, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69, 0x74, 0x52,
 	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x5f, 0x0a, 0x11, 0x4d, 0x73, 0x67, 0x43, 0x72,
 	0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x4a, 0x0a, 0x08,
@@ -9662,10 +9675,10 @@ var file_cosmos_accounts_defaults_multisig_v1_multisig_proto_rawDesc = []byte{
 	0x74, 0x73, 0x2e, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2e, 0x6d, 0x75, 0x6c, 0x74,
 	0x69, 0x73, 0x69, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x52, 0x0d,
 	0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x12, 0x44, 0x0a,
-	0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e,
+	0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e,
 	0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2e, 0x6d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69,
-	0x67, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x06, 0x43, 0x6f, 0x6e,
+	0x67, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x06, 0x63, 0x6f, 0x6e,
 	0x66, 0x69, 0x67, 0x22, 0x19, 0x0a, 0x17, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
 	0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x54,
 	0x0a, 0x06, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x32, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72,
@@ -9709,11 +9722,11 @@ var file_cosmos_accounts_defaults_multisig_v1_multisig_proto_rawDesc = []byte{
 	0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f,
 	0x75, 0x6e, 0x74, 0x73, 0x2e, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2e, 0x6d, 0x75,
 	0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72,
-	0x52, 0x07, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x12, 0x44, 0x0a, 0x06, 0x43, 0x6f, 0x6e,
+	0x52, 0x07, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x12, 0x44, 0x0a, 0x06, 0x63, 0x6f, 0x6e,
 	0x66, 0x69, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x64, 0x65, 0x66, 0x61,
 	0x75, 0x6c, 0x74, 0x73, 0x2e, 0x6d, 0x75, 0x6c, 0x74, 0x69, 0x73, 0x69, 0x67, 0x2e, 0x76, 0x31,
-	0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x22,
+	0x2e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x22,
 	0x30, 0x0a, 0x0d, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c,
 	0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49,
@@ -9801,16 +9814,16 @@ var file_cosmos_accounts_defaults_multisig_v1_multisig_proto_goTypes = []interfa
 }
 var file_cosmos_accounts_defaults_multisig_v1_multisig_proto_depIdxs = []int32{
 	12, // 0: cosmos.accounts.defaults.multisig.v1.MsgInit.members:type_name -> cosmos.accounts.defaults.multisig.v1.Member
-	13, // 1: cosmos.accounts.defaults.multisig.v1.MsgInit.Config:type_name -> cosmos.accounts.defaults.multisig.v1.Config
+	13, // 1: cosmos.accounts.defaults.multisig.v1.MsgInit.config:type_name -> cosmos.accounts.defaults.multisig.v1.Config
 	14, // 2: cosmos.accounts.defaults.multisig.v1.MsgCreateProposal.proposal:type_name -> cosmos.accounts.defaults.multisig.v1.Proposal
 	1,  // 3: cosmos.accounts.defaults.multisig.v1.MsgVote.vote:type_name -> cosmos.accounts.defaults.multisig.v1.VoteOption
 	21, // 4: cosmos.accounts.defaults.multisig.v1.MsgExecuteProposalResponse.responses:type_name -> google.protobuf.Any
 	12, // 5: cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.update_members:type_name -> cosmos.accounts.defaults.multisig.v1.Member
-	13, // 6: cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.Config:type_name -> cosmos.accounts.defaults.multisig.v1.Config
+	13, // 6: cosmos.accounts.defaults.multisig.v1.MsgUpdateConfig.config:type_name -> cosmos.accounts.defaults.multisig.v1.Config
 	21, // 7: cosmos.accounts.defaults.multisig.v1.Proposal.messages:type_name -> google.protobuf.Any
 	0,  // 8: cosmos.accounts.defaults.multisig.v1.Proposal.status:type_name -> cosmos.accounts.defaults.multisig.v1.ProposalStatus
 	12, // 9: cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.members:type_name -> cosmos.accounts.defaults.multisig.v1.Member
-	13, // 10: cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.Config:type_name -> cosmos.accounts.defaults.multisig.v1.Config
+	13, // 10: cosmos.accounts.defaults.multisig.v1.QueryConfigResponse.config:type_name -> cosmos.accounts.defaults.multisig.v1.Config
 	14, // 11: cosmos.accounts.defaults.multisig.v1.QueryProposalResponse.proposal:type_name -> cosmos.accounts.defaults.multisig.v1.Proposal
 	12, // [12:12] is the sub-list for method output_type
 	12, // [12:12] is the sub-list for method input_type

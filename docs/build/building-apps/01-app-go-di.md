@@ -127,12 +127,12 @@ Previously, the `ModuleBasics` was a global variable that was used to register a
 Example ( staking ):
 
 ```go
-type StakingModule struct {
+type CustomStakingModule struct {
     staking.AppModuleBasic
 }
 
 // DefaultGenesis will override the Staking module DefaultGenesis AppModuleBasic method.
-func (StakingModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+func (CustomStakingModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
    params := stakingtypes.DefaultParams()
    params.BondDenom = "mydenom"
 
@@ -143,7 +143,7 @@ func (StakingModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 
 // option 1: using the previously removed global variable
 ModuleBasics = module.NewBasicManager(
-        StakingModule{}, // wrapped staking module	
+        CustomStakingModule{}, // wrapped staking module	
 	    auth.AppModuleBasic{},
 		
 		distr.AppModuleBasic{},

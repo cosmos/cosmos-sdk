@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	coreserver "cosmossdk.io/core/server"
-	serverv2 "cosmossdk.io/core/server"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/upgrade/keeper"

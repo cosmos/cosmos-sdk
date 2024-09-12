@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
@@ -16,6 +15,7 @@ import (
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/address"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -66,7 +66,7 @@ type ModuleInputs struct {
 	ExtraTxValidators        []appmodulev2.TxValidator[transaction.Tx] `optional:"true"`
 	UnorderedTxManager       *unorderedtx.Manager                      `optional:"true"`
 	TxFeeChecker             ante.TxFeeChecker                         `optional:"true"`
-	Viper                    *viper.Viper                              `optional:"true"` // server v2
+	DynamicConfig            server.DynamicConfig                      `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -126,8 +126,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		feeTxValidator       *ante.DeductFeeDecorator
 		unorderedTxValidator *ante.UnorderedTxDecorator
 	)
-	if in.AccountKeeper != nil && in.BankKeeper != nil && in.Viper != nil {
-		minGasPricesStr := in.Viper.GetString(flagMinGasPricesV2)
+	if in.AccountKeeper != nil && in.BankKeeper != nil && in.DynamicConfig != nil {
+		minGasPricesStr := in.DynamicConfig.GetString(flagMinGasPricesV2)
 		minGasPrices, err = sdk.ParseDecCoins(minGasPricesStr)
 		if err != nil {
 			panic(fmt.Sprintf("invalid minimum gas prices: %v", err))

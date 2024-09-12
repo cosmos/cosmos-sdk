@@ -69,6 +69,14 @@
 **/go.mod @cosmos/sdk-core-dev
 **/go.sum @cosmos/sdk-core-dev
 
+# ci & build
+
+.github/ @auricom @julienrbrt @tac0turtle
+scripts/ @auricom @julienrbrt @tac0turtle
+contrib/ @auricom @julienrbrt @tac0turtle
+*.mk @auricom @julienrbrt @tac0turtle
+Makefile @auricom @julienrbrt @tac0turtle
+
 # docs configuration
 
 /docs/ @cosmos/sdk-core-dev

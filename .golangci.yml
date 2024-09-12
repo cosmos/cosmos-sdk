@@ -3,10 +3,9 @@ run:
   timeout: 15m
   allow-parallel-runners: true
   build-tags:
-  - e2e
-  - ledger
-  - test_ledger_mock
-
+    - e2e
+    - ledger
+    - test_ledger_mock
 
 linters:
   disable-all: true
@@ -35,7 +34,7 @@ linters:
     - unused
 
 issues:
-  exclude-dirs: 
+  exclude-dirs:
     - testutil/testdata
   exclude-files:
     - server/grpc/gogoreflection/fix_registration.go
@@ -46,9 +45,6 @@ issues:
     - crypto/keys/secp256k1/internal/*
     - types/coin_regex.go
   exclude-rules:
-    - text: "Use of weak random number generator"
-      linters:
-        - gosec
     - text: "ST1003:"
       linters:
         - stylecheck
@@ -99,12 +95,11 @@ linters-settings:
         disabled: true
 
   gosec:
-    # To select a subset of rules to run.
     # Available rules: https://github.com/securego/gosec#available-rules
-    # Default: [] - means include all rules
     excludes:
-      - G101
-      - G107
+      - G101 # Potential hardcoded credentials
+      - G107 # Potential HTTP request made with variable url
+      - G404 # Use of weak random number generator (math/rand instead of crypto/rand)
     exclude-generated: true
     confidence: medium
   misspell:

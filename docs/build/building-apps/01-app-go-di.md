@@ -118,6 +118,108 @@ More information on how work `depinject.Configs` and `depinject.Supply` can be f
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_v2.go#L114-L146
 ```
 
+### Modifying the `DefaultGenesis`
+
+It is possible to modify the DefaultGenesis parameters for modules by wrapping the module and
+
+Previously, the `ModuleBasics` was a global variable that was used to register all modules' `AppModuleBasic` implementation.
+
+Example ( staking ):
+
+```go
+type StakingModule struct {
+    staking.AppModuleBasic
+}
+
+// DefaultGenesis will override the Staking module DefaultGenesis AppModuleBasic method.
+func (StakingModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+   params := stakingtypes.DefaultParams()
+   params.BondDenom = "mydenom"
+
+   return cdc.MustMarshalJSON(&stakingtypes.GenesisState{
+        Params: params,
+   })
+}
+
+// option 1: using the previously removed global variable
+ModuleBasics = module.NewBasicManager(
+        StakingModule{}, // wrapped staking module	
+	    auth.AppModuleBasic{},
+		
+		distr.AppModuleBasic{},
+		params.AppModuleBasic{},
+		feegrantmodule.AppModuleBasic{},
+		authzmodule.AppModuleBasic{},
+		ibc.AppModuleBasic{},
+		upgrade.AppModuleBasic{},
+		evidence.AppModuleBasic{},
+		...
+	)
+
+// option 2: the basic module manager can be now created from the module manager
+app.BasicModuleManager = module.NewBasicManagerFromManager(
+    app.moduleManager,
+	// override staking AppModule
+    map[string]module.AppModuleBasic{
+        stakingtypes.ModuleName: CustomStakingModule{AppModuleBasic: &sdkstaking.AppModuleBasic{}},
+    },
+)
+
+// option 3: using depinject
+depinject.Supply(
+    // supply custom module basics
+    map[string]module.AppModuleBasic{
+        stakingtypes.ModuleName: CustomStakingModule{AppModuleBasic: &sdkstaking.AppModuleBasic{}},
+     },
+)
+
+```
+The basic module manager has been deleted. It was not necessary anymore and was simplified to use the `module.Manager` directly.
+
+Example ( staking ) :
+
+```go
+type CustomStakingModule struct {
+    staking.AppModule
+    cdc codec.Codec
+}
+
+// DefaultGenesis will override the Staking module DefaultGenesis AppModuleBasic method.
+func (cm CustomStakingModule) DefaultGenesis() json.RawMessage {
+    params := stakingtypes.DefaultParams()
+    params.BondDenom = "mydenom"
+
+    return cm.cdc.MustMarshalJSON(&stakingtypes.GenesisState{
+        Params: params,
+    })
+}
+
+// option 1: use new module manager
+moduleManager := module.NewManagerFromMap(map[string]appmodule.AppModule{
+    stakingtypes.ModuleName: CustomStakingModule{cdc: appCodec, AppModule: staking.NewAppModule(...)},
+	// other modules ...
+})
+
+// option 2: override previous module manager
+oldStakingModule,_ := moduleManager.Modules()[stakingtypes.ModuleName].(staking.AppModule)
+moduleManager.Modules()[stakingtypes.ModuleName] = CustomStakingModule{
+	AppModule: oldStakingModule,
+	cdc: appCodec,
+}
+
+
+// depinject users
+depinject.Inject(
+	// ...
+	&moduleManager,
+ )
+
+// non-depinject users
+moduleManager.RegisterLegacyAminoCodec(legacyAmino)
+moduleManager.RegisterInterfaces(interfaceRegistry)
+
+```
+
 ### Registering non app wiring modules
 
 It is possible to combine app wiring / depinject enabled modules with non app wiring modules.

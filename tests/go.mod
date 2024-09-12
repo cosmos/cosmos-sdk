@@ -49,7 +49,12 @@ require (
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/google/go-cmp v0.6.0
 	github.com/google/gofuzz v1.2.0
+<<<<<<< HEAD
 	github.com/jhump/protoreflect v1.16.0
+=======
+	github.com/jhump/protoreflect v1.17.0
+	github.com/rs/zerolog v1.33.0
+>>>>>>> 57f35dcdf (refactor: remove viper as a direct dependency (#21635))
 	github.com/spf13/viper v1.19.0
 )
 
@@ -179,7 +184,6 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/cors v1.11.0 // indirect
-	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.5 // indirect
@@ -236,8 +240,15 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
 	cosmossdk.io/client/v2 => ../client/v2
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240906090851-36d9b25e8981 // main
+=======
+	cosmossdk.io/collections => ../collections
+	cosmossdk.io/core => ../core
+	cosmossdk.io/core/testing => ../core/testing
+	cosmossdk.io/store => ../store
+>>>>>>> 57f35dcdf (refactor: remove viper as a direct dependency (#21635))
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup
 	cosmossdk.io/x/accounts/defaults/multisig => ../x/accounts/defaults/multisig

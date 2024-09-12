@@ -167,13 +167,11 @@ func ensureFieldNames(x any, defaultName string, cols []schema.Field) {
 	for i, col := range cols {
 		if names != nil && i < len(names) {
 			col.Name = names[i]
-		} else {
-			if col.Name == "" {
-				if i == 0 && len(cols) == 1 {
-					col.Name = defaultName
-				} else {
-					col.Name = fmt.Sprintf("%s%d", defaultName, i+1)
-				}
+		} else if col.Name == "" {
+			if i == 0 && len(cols) == 1 {
+				col.Name = defaultName
+			} else {
+				col.Name = fmt.Sprintf("%s%d", defaultName, i+1)
 			}
 		}
 		cols[i] = col

@@ -7,9 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"sigs.k8s.io/yaml"
-
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/node"
@@ -18,6 +15,8 @@ import (
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	cmtversion "github.com/cometbft/cometbft/version"
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/cobra"
+	"sigs.k8s.io/yaml"
 
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
 

@@ -190,13 +190,15 @@ func NewSimApp[T transaction.Tx](
 		panic(err)
 	}
 
+	var builderOpts []runtime.AppBuilderOption[T]
 	if sub := viper.Sub("store.options"); sub != nil {
 		err = sub.Unmarshal(storeOptions)
 		if err != nil {
 			panic(err)
 		}
+		builderOpts = append(builderOpts, runtime.AppBuilderWithStoreOptions[T](storeOptions))
 	}
-	app.App, err = appBuilder.Build(runtime.AppBuilderWithStoreOptions[T](storeOptions))
+	app.App, err = appBuilder.Build(builderOpts...)
 	if err != nil {
 		panic(err)
 	}

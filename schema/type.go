@@ -13,6 +13,16 @@ type Type interface {
 	isType()
 }
 
+// ReferenceType is an interface that all types that can be referred to in fields of other
+// types implement.
+// Currently, this is only EnumType.
+type ReferenceType interface {
+	Type
+
+	// IsReferenceType is implemented if this is a reference type.
+	isReferenceType()
+}
+
 // TypeSet represents something that has types and allows them to be looked up by name.
 // Currently, the only implementation is ModuleSchema.
 type TypeSet interface {

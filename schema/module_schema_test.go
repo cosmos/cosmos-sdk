@@ -187,7 +187,7 @@ func TestModuleSchema_LookupType(t *testing.T) {
 		},
 	})
 
-	objectType, ok := moduleSchema.LookupObjectType("object1")
+	objectType, ok := moduleSchema.LookupStateObjectType("object1")
 	if !ok {
 		t.Fatalf("expected to find object type \"object1\"")
 	}
@@ -262,7 +262,7 @@ func TestModuleSchema_ObjectTypes(t *testing.T) {
 	moduleSchema := exampleSchema(t)
 
 	var typeNames []string
-	moduleSchema.ObjectTypes(func(typ StateObjectType) bool {
+	moduleSchema.StateObjectTypes(func(typ StateObjectType) bool {
 		typeNames = append(typeNames, typ.Name)
 		return true
 	})
@@ -274,7 +274,7 @@ func TestModuleSchema_ObjectTypes(t *testing.T) {
 
 	typeNames = nil
 	// scan just the first type and return false
-	moduleSchema.ObjectTypes(func(typ StateObjectType) bool {
+	moduleSchema.StateObjectTypes(func(typ StateObjectType) bool {
 		typeNames = append(typeNames, typ.Name)
 		return false
 	})

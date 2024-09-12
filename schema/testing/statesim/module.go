@@ -24,7 +24,7 @@ func NewModule(name string, moduleSchema schema.ModuleSchema, options Options) *
 	objectCollections := &btree.Map[string, *ObjectCollection]{}
 	var objectTypeNames []string
 
-	moduleSchema.ObjectTypes(func(objectType schema.StateObjectType) bool {
+	moduleSchema.StateObjectTypes(func(objectType schema.StateObjectType) bool {
 		objectCollection := NewObjectCollection(objectType, options, moduleSchema)
 		objectCollections.Set(objectType.Name, objectCollection)
 		objectTypeNames = append(objectTypeNames, objectType.Name)

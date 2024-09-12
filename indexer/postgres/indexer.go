@@ -31,7 +31,7 @@ type indexerImpl struct {
 }
 
 func init() {
-	indexer.Register("postgres", indexer.InitDescriptor{
+	indexer.Register("postgres", indexer.Initializer{
 		InitFunc:   startIndexer,
 		ConfigType: Config{},
 	})

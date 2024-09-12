@@ -9,8 +9,8 @@ import (
 	"cosmossdk.io/schema/view"
 )
 
-// InitDescriptor describes an indexer initialization function and other metadata.
-type InitDescriptor struct {
+// Initializer describes an indexer initialization function and other metadata.
+type Initializer struct {
 	// InitFunc is the function that initializes the indexer.
 	InitFunc InitFunc
 

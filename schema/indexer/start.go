@@ -88,8 +88,6 @@ func StartIndexing(opts IndexingOptions) (IndexingTarget, error) {
 
 	logger.Info("Starting indexer manager")
 
-	scopeableLogger, canScopeLogger := logger.(logutil.ScopeableLogger)
-
 	cfg, err := unmarshalIndexingConfig(opts.Config)
 	if err != nil {
 		return IndexingTarget{}, err
@@ -116,7 +114,7 @@ func StartIndexing(opts IndexingOptions) (IndexingTarget, error) {
 		}
 
 		childLogger := logger
-		if canScopeLogger {
+		if scopeableLogger, ok := logger.(logutil.ScopeableLogger); ok {
 			childLogger = scopeableLogger.WithContext("indexer", targetName).(logutil.Logger)
 		}
 

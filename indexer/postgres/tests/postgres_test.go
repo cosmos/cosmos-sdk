@@ -29,6 +29,8 @@ func TestPostgresIndexer(t *testing.T) {
 }
 
 func testPostgresIndexer(t *testing.T, retainDeletions bool) {
+	t.Helper()
+
 	tempDir, err := os.MkdirTemp("", "postgres-indexer-test")
 	require.NoError(t, err)
 

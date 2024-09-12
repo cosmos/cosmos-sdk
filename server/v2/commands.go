@@ -112,7 +112,7 @@ func createStartCommand[T transaction.Tx](
 				return err
 			}
 
-			if err := server.Init(newApp(l, v), v, l); err != nil {
+			if err := server.Init(newApp(l, v), v.AllSettings(), l); err != nil {
 				return err
 			}
 

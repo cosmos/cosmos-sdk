@@ -254,3 +254,43 @@ func (mr *MockAccountKeeperMockRecorder) SetAccount(ctx, acc interface{}) *gomoc
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetAccount), ctx, acc)
 }
+
+// MockConsensusKeeper is a mock of ConsensusKeeper interface.
+type MockConsensusKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockConsensusKeeperMockRecorder
+}
+
+// MockConsensusKeeperMockRecorder is the mock recorder for MockConsensusKeeper.
+type MockConsensusKeeperMockRecorder struct {
+	mock *MockConsensusKeeper
+}
+
+// NewMockConsensusKeeper creates a new mock instance.
+func NewMockConsensusKeeper(ctrl *gomock.Controller) *MockConsensusKeeper {
+	mock := &MockConsensusKeeper{ctrl: ctrl}
+	mock.recorder = &MockConsensusKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockConsensusKeeper) EXPECT() *MockConsensusKeeperMockRecorder {
+	return m.recorder
+}
+
+// EvidenceParams mocks base method.
+func (m *MockConsensusKeeper) EvidenceParams(arg0 context.Context) (int64, time.Duration, uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EvidenceParams", arg0)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(time.Duration)
+	ret2, _ := ret[2].(uint64)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// EvidenceParams indicates an expected call of EvidenceParams.
+func (mr *MockConsensusKeeperMockRecorder) EvidenceParams(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EvidenceParams", reflect.TypeOf((*MockConsensusKeeper)(nil).EvidenceParams), arg0)
+}

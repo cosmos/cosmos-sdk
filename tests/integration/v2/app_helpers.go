@@ -159,6 +159,8 @@ func (d *dynamicConfigImpl) GetString(key string) string {
 		return d.homeDir
 	case "store.app-db-backend":
 		return "goleveldb"
+	case "server.minimum-gas-prices":
+		return "0stake"
 	default:
 		panic(fmt.Sprintf("unknown key: %s", key))
 	}

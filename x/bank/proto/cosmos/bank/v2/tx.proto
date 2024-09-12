@@ -9,15 +9,6 @@ import "amino/amino.proto";
 
 option go_package = "cosmossdk.io/x/bank/v2/types";
 
-// Msg defines the bank Msg service.
-service Msg {
-  option (cosmos.msg.v1.service) = true;
-
-  // UpdateParams defines a governance operation for updating the x/bank/v2 module parameters.
-  // The authority is defined in the keeper.
-  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse) {}
-}
-
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";

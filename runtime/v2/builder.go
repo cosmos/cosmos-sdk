@@ -30,7 +30,7 @@ type configProvider interface {
 type AppBuilder[T transaction.Tx] struct {
 	app          *App[T]
 	config       server.DynamicConfig
-	storeOptions rootstore.Options
+	storeOptions *rootstore.Options
 
 	// the following fields are used to overwrite the default
 	branch      func(state store.ReaderMap) store.WriterMap
@@ -136,10 +136,16 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 		panic(err)
 	}
 
+	var storeOptions rootstore.Options
+	if a.storeOptions != nil {
+		storeOptions = *a.storeOptions
+	} else {
+		storeOptions = rootstore.DefaultStoreOptions()
+	}
 	factoryOptions := &rootstore.FactoryOptions{
 		Logger:    a.app.logger,
 		RootDir:   home,
-		Options:   a.storeOptions,
+		Options:   storeOptions,
 		StoreKeys: append(a.app.storeKeys, "stf"),
 		SCRawDB:   scRawDb,
 	}
@@ -225,7 +231,7 @@ func AppBuilderWithPostTxExec[T transaction.Tx](postTxExec func(ctx context.Cont
 	}
 }
 
-func AppBuilderWithStoreOptions[T transaction.Tx](opts rootstore.Options) AppBuilderOption[T] {
+func AppBuilderWithStoreOptions[T transaction.Tx](opts *rootstore.Options) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.storeOptions = opts
 	}

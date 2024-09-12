@@ -16,9 +16,14 @@ replace (
 )
 
 require (
+<<<<<<< HEAD
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2
 	cosmossdk.io/api v0.8.0
 	cosmossdk.io/core v1.0.0 // main
+=======
+	cosmossdk.io/api v0.7.5
+	cosmossdk.io/core v1.0.0-alpha.2
+>>>>>>> 766117c5f (refactor(server/v2/cometbft): use only protov1 and backport #21084 (#21681))
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/server/v2 v2.0.0-20240912070812-0fc06f14104b // main
@@ -43,6 +48,7 @@ require (
 )
 
 require (
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // indirect
 	cosmossdk.io/core/testing v0.0.0-20240909133312-50288938d1b6 // indirect

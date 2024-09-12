@@ -575,7 +575,7 @@ func TestConsensus_Query(t *testing.T) {
 	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
 
 	// Write data to state storage
-	c.store.GetStateStorage().ApplyChangeset(1, &store.Changeset{
+	err := c.store.GetStateStorage().ApplyChangeset(1, &store.Changeset{
 		Changes: []store.StateChanges{
 			{
 				Actor: actorName,
@@ -589,8 +589,9 @@ func TestConsensus_Query(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(t, err)
 
-	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
+	_, err = c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),
 		ChainId:       "test",
 		InitialHeight: 1,
@@ -630,6 +631,8 @@ func TestConsensus_Query(t *testing.T) {
 }
 
 func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.Tx]) *Consensus[mock.Tx] {
+	t.Helper()
+
 	msgRouterBuilder := getMsgRouterBuilder(t, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
 		return nil, nil
 	})

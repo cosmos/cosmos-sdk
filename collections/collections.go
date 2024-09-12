@@ -107,8 +107,6 @@ type collectionSchemaCodec struct {
 	objectType   schema.ObjectType
 	keyDecoder   func([]byte) (any, error)
 	valueDecoder func([]byte) (any, error)
-	keyEncoder   func(any) ([]byte, error)
-	valueEncoder func(any) ([]byte, error)
 }
 
 // Prefix defines a segregation bytes namespace for specific collections objects.

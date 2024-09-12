@@ -91,17 +91,22 @@ func (s *MockStore) GetStateCommitment() storev2.Committer {
 	return s.Committer
 }
 
-type Result struct {
-	key      []byte
-	value    []byte
-	version  uint64
-	proofOps []proof.CommitmentOp
-}
-
 func (s *MockStore) Query(storeKey []byte, version uint64, key []byte, prove bool) (storev2.QueryResult, error) {
 	state, err := s.StateAt(version)
+	if err != nil {
+		return storev2.QueryResult{}, err
+	}
+
 	reader, err := state.GetReader(storeKey)
+	if err != nil {
+		return storev2.QueryResult{}, err
+	}
+
 	value, err := reader.Get(key)
+	if err != nil {
+		return storev2.QueryResult{}, err
+	}
+
 	res := storev2.QueryResult{
 		Key:     key,
 		Value:   value,

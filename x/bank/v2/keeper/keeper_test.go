@@ -71,12 +71,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	ac := codectestutil.CodecOptions{}.GetAddressCodec()
-	authority, err := ac.BytesToString(authtypes.NewModuleAddress("gov"))
-	suite.Require().NoError(err)
+	authority := authtypes.NewModuleAddress("gov")
 
 	suite.ctx = ctx
 	suite.bankKeeper = *keeper.NewKeeper(
-		[]byte(authority),
+		authority,
 		ac,
 		env,
 		encCfg.Codec,

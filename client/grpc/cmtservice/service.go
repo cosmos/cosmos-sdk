@@ -45,6 +45,7 @@ func NewQueryServer(
 	return queryServer{
 		rpc:     clientCtx,
 		queryFn: queryFn,
+		consensusCodec: consensusAddressCodec,
 	}
 }
 

@@ -3,14 +3,13 @@ package cmtservice
 import (
 	"context"
 
+	"cosmossdk.io/core/address"
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -51,7 +50,7 @@ func NewQueryServer(
 
 // GetSyncing implements ServiceServer.GetSyncing
 func (s queryServer) GetSyncing(ctx context.Context, _ *GetSyncingRequest) (*GetSyncingResponse, error) {
-	status, err := s.rpc.Status(ctx)
+	status, err := GetNodeStatus(ctx, s.rpc)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +164,7 @@ func (s queryServer) GetValidatorSetByHeight(ctx context.Context, req *GetValida
 }
 
 func ValidatorsOutput(ctx context.Context, rpc CometRPC, consCodec address.Codec, height *int64, page, limit int) (*GetLatestValidatorSetResponse, error) {
-	vs, err := rpc.Validators(ctx, height, &page, &limit)
+	vs, err := getValidators(ctx, rpc, height, page, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +205,7 @@ func ValidatorsOutput(ctx context.Context, rpc CometRPC, consCodec address.Codec
 
 // GetNodeInfo implements ServiceServer.GetNodeInfo
 func (s queryServer) GetNodeInfo(ctx context.Context, _ *GetNodeInfoRequest) (*GetNodeInfoResponse, error) {
-	status, err := s.rpc.Status(ctx)
+	status, err := GetNodeStatus(ctx, s.rpc)
 	if err != nil {
 		return nil, err
 	}

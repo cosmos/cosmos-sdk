@@ -8,7 +8,7 @@ import (
 )
 
 func getBlockHeight(ctx context.Context, rpc CometRPC) (int64, error) {
-	status, err := rpc.Status(ctx)
+	status, err := GetNodeStatus(ctx, rpc)
 	if err != nil {
 		return 0, err
 	}

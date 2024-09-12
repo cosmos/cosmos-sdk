@@ -4,8 +4,11 @@ import (
 	"context"
 	"math/rand"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	coretransaction "cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/tx/signing"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -16,7 +19,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	"github.com/cosmos/gogoproto/proto"
 )
 
 // SimAccountFixture testing only

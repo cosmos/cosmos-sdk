@@ -17,7 +17,6 @@ func MsgSendFactory() simsx.SimMsgFactoryFn[*types.MsgSend] {
 }
 ```
 
-
 #### * [Sims registry](https://github.com/cosmos/cosmos-sdk/blob/main/simsx/registry.go)
 
 A new helper to register message factories with a default weight value. They can be overwritten by a parameters file as before. The registry is passed to the AppModule type. For example:
@@ -27,6 +26,7 @@ func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Re
     reg.Add(weights.Get("msg_multisend", 10), simulation.MsgMultiSendFactory())
 }
 ```
+
 #### * [Reporter](https://github.com/cosmos/cosmos-sdk/blob/main/simsx/reporter.go)
 The reporter is a flow control structure that can be used in message factories to skip execution at any point. The idea is similar to the testing.T Skip in Go stdlib. Internally, it converts skip, success and failure events to legacy sim messages.
 The reporter also provides some capability to print an execution summary.
@@ -36,9 +36,7 @@ Message factories may want to abort early via
 if reporter.IsSkipped() {
     return nil, nil
 }
-
 ```
 
 #### * [Test data environment](https://github.com/cosmos/cosmos-sdk/blob/main/simsx/environment.go)
 The test data environment provides simple access to accounts and other test data used in most message factories.  It also encapsulates some app internals like bank keeper or address codec.
-

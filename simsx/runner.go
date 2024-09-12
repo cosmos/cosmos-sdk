@@ -242,7 +242,7 @@ func prepareWeightedOps(
 
 	pReg := make(UniqueTypeRegistry)
 	wProps := make([]simtypes.WeightedProposalMsg, 0, len(sm.Modules))
-	wContent := make([]simtypes.WeightedProposalContent, 0)
+	wContent := make([]simtypes.WeightedProposalContent, 0) //nolint:staticcheck // required for legacy type
 
 	// add gov proposals types
 	for _, m := range sm.Modules {

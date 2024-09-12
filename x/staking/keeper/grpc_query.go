@@ -410,6 +410,15 @@ func (k Querier) DelegatorUnbondingDelegations(ctx context.Context, req *types.Q
 	}, nil
 }
 
+// HistoricalInfo queries the historical info for given height
+func (k Querier) HistoricalInfo(ctx context.Context, req *types.QueryHistoricalInfoRequest) (*types.QueryHistoricalInfoResponse, error) { // nolint:staticcheck // SA1019: deprecated endpoint
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	return nil, status.Error(codes.Internal, "this endpoint has been deprecated and removed since v0.52")
+}
+
 // Redelegations queries redelegations of given address
 func (k Querier) Redelegations(ctx context.Context, req *types.QueryRedelegationsRequest) (*types.QueryRedelegationsResponse, error) {
 	if req == nil {

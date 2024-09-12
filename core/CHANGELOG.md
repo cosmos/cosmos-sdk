@@ -37,6 +37,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 <!-- ## [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0) -->
+## [v1.0.0-alpha.2](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.2)
+
+### Features
+
+* [#21635](https://github.com/cosmos/cosmos-sdk/pull/21635) Add `server.DynamicConfig` to abstract config providers (f.e Viper)
+
 ## [v1.0.0-alpha.1](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.1)
 
 ### Features

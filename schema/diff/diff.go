@@ -41,7 +41,7 @@ type ModuleSchemaDiff struct {
 func CompareModuleSchemas(oldSchema, newSchema schema.ModuleSchema) ModuleSchemaDiff {
 	diff := ModuleSchemaDiff{}
 
-	oldSchema.ObjectTypes(func(oldObj schema.ObjectType) bool {
+	oldSchema.ObjectTypes(func(oldObj schema.StateObjectType) bool {
 		newObj, found := newSchema.LookupObjectType(oldObj.Name)
 		if !found {
 			diff.RemovedObjectTypes = append(diff.RemovedObjectTypes, oldObj)
@@ -54,7 +54,7 @@ func CompareModuleSchemas(oldSchema, newSchema schema.ModuleSchema) ModuleSchema
 		return true
 	})
 
-	newSchema.ObjectTypes(func(newObj schema.ObjectType) bool {
+	newSchema.ObjectTypes(func(newObj schema.StateObjectType) bool {
 		_, found := oldSchema.LookupObjectType(newObj.TypeName())
 		if !found {
 			diff.AddedObjectTypes = append(diff.AddedObjectTypes, newObj)

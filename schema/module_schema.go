@@ -91,14 +91,14 @@ func (s ModuleSchema) LookupEnumType(name string) (t EnumType, found bool) {
 }
 
 // LookupObjectType is a convenience method that looks up an ObjectType by name.
-func (s ModuleSchema) LookupObjectType(name string) (t ObjectType, found bool) {
+func (s ModuleSchema) LookupObjectType(name string) (t StateObjectType, found bool) {
 	typ, found := s.LookupType(name)
 	if !found {
-		return ObjectType{}, false
+		return StateObjectType{}, false
 	}
-	t, ok := typ.(ObjectType)
+	t, ok := typ.(StateObjectType)
 	if !ok {
-		return ObjectType{}, false
+		return StateObjectType{}, false
 	}
 	return t, true
 }

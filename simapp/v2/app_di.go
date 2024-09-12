@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
+	"cosmossdk.io/store/v2/root"
 	"cosmossdk.io/x/accounts"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
@@ -94,8 +95,10 @@ func NewSimApp[T transaction.Tx](
 	viper *viper.Viper,
 ) *SimApp[T] {
 	var (
-		app        = &SimApp[T]{}
-		appBuilder *runtime.AppBuilder[T]
+		app          = &SimApp[T]{}
+		appBuilder   *runtime.AppBuilder[T]
+		err          error
+		storeOptions = root.DefaultStoreOptions()
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -184,8 +187,13 @@ func NewSimApp[T transaction.Tx](
 		panic(err)
 	}
 
-	var err error
-	app.App, err = appBuilder.Build()
+	if sub := viper.Sub("store.options"); sub != nil {
+		err = sub.Unmarshal(&storeOptions)
+		if err != nil {
+			panic(err)
+		}
+	}
+	app.App, err = appBuilder.Build(runtime.AppBuilderWithStoreOptions[T](storeOptions))
 	if err != nil {
 		panic(err)
 	}

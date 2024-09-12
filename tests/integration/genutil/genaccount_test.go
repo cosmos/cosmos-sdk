@@ -1,4 +1,4 @@
-package cli_test
+package genutil
 
 import (
 	"context"
@@ -19,12 +19,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	genutilhelpers "github.com/cosmos/cosmos-sdk/testutil/x/genutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -78,10 +78,13 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			logger := log.NewNopLogger()
 			v := viper.New()
 
-			encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
+			encodingConfig := moduletestutil.MakeTestEncodingConfig(
+				codectestutil.CodecOptions{},
+				auth.AppModule{},
+			)
 			appCodec := encodingConfig.Codec
 			txConfig := encodingConfig.TxConfig
-			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
+			err = genutilhelpers.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
 			err := writeAndTrackDefaultConfig(v, home)
@@ -93,7 +96,13 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 				path := hd.CreateHDPath(118, 0, 0).String()
 				kr, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, home, nil, appCodec)
 				require.NoError(t, err)
-				_, _, err = kr.NewMnemonic(tc.addr, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+				_, _, err = kr.NewMnemonic(
+					tc.addr,
+					keyring.English,
+					path,
+					keyring.DefaultBIP39Passphrase,
+					hd.Secp256k1,
+				)
 				require.NoError(t, err)
 				clientCtx = clientCtx.WithKeyring(kr)
 			}
@@ -214,10 +223,13 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 			logger := log.NewNopLogger()
 			v := viper.New()
 
-			encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
+			encodingConfig := moduletestutil.MakeTestEncodingConfig(
+				codectestutil.CodecOptions{},
+				auth.AppModule{},
+			)
 			appCodec := encodingConfig.Codec
 			txConfig := encodingConfig.TxConfig
-			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
+			err = genutilhelpers.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
 			err = writeAndTrackDefaultConfig(v, home)
@@ -269,7 +281,13 @@ func TestBulkAddGenesisAccountCmd(t *testing.T) {
 
 			require.EqualValues(t, len(tc.expected), len(bankState.Balances))
 			for _, acc := range bankState.Balances {
-				require.True(t, tc.expected[acc.Address].Equal(acc.Coins), "expected: %v, got: %v", tc.expected[acc.Address], acc.Coins)
+				require.True(
+					t,
+					tc.expected[acc.Address].Equal(acc.Coins),
+					"expected: %v, got: %v",
+					tc.expected[acc.Address],
+					acc.Coins,
+				)
 			}
 
 			expectedSupply := sdk.NewCoins()

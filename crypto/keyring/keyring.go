@@ -147,23 +147,6 @@ type Exporter interface {
 // Option overrides keyring configuration options.
 type Option func(options *Options)
 
-// Options define the options of the Keyring.
-type Options struct {
-	// supported signing algorithms for keyring
-	SupportedAlgos SigningAlgoList
-	// supported signing algorithms for Ledger
-	SupportedAlgosLedger SigningAlgoList
-	// define Ledger Derivation function
-	LedgerDerivation func() (ledger.SECP256K1, error)
-	// define Ledger key generation function
-	LedgerCreateKey func([]byte) types.PubKey
-	// define Ledger app name
-	LedgerAppName string
-	// indicate whether Ledger should skip DER Conversion on signature,
-	// depending on which format (DER or BER) the Ledger app returns signatures
-	LedgerSigSkipDERConv bool
-}
-
 // NewInMemory creates a transient keyring useful for testing
 // purposes and on-the-fly key generation.
 // Keybase options can be applied when generating this new Keybase.

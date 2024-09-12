@@ -219,13 +219,7 @@ func AppBuilderWithTxValidator[T transaction.Tx](
 
 // AppBuilderWithPostTxExec sets logic that will be executed after each transaction.
 // When not provided, a no-op function will be used.
-func AppBuilderWithPostTxExec[T transaction.Tx](
-	postTxExec func(
-		ctx context.Context,
-		tx T,
-		success bool,
-	) error,
-) AppBuilderOption[T] {
+func AppBuilderWithPostTxExec[T transaction.Tx](postTxExec func(ctx context.Context, tx T, success bool) error) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.postTxExec = postTxExec
 	}

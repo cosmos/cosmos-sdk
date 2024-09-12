@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -43,8 +42,7 @@ type ModuleInputs struct {
 	AppVersionModifier coreserver.VersionModifier
 	ConsensusKeeper    types.ConsensusKeeper
 
-	AppOpts       servertypes.AppOptions `optional:"true"` // server v0
-	DynamicConfig serverv2.DynamicConfig `optional:"true"` // server v2
+	DynamicConfig coreserver.DynamicConfig `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -60,19 +58,13 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		skipUpgradeHeights = make(map[int64]bool)
 	)
 
-	if in.DynamicConfig != nil { // v2 takes precedence over v1 app options
+	if in.DynamicConfig != nil {
 		skipUpgrades := cast.ToIntSlice(in.DynamicConfig.Get(server.FlagUnsafeSkipUpgrades))
 		for _, h := range skipUpgrades {
 			skipUpgradeHeights[int64(h)] = true
 		}
 
 		homePath = in.DynamicConfig.GetString(flags.FlagHome)
-	} else if in.AppOpts != nil {
-		for _, h := range cast.ToIntSlice(in.AppOpts.Get(server.FlagUnsafeSkipUpgrades)) {
-			skipUpgradeHeights[int64(h)] = true
-		}
-
-		homePath = cast.ToString(in.AppOpts.Get(flags.FlagHome))
 	}
 
 	// default to governance authority if not provided

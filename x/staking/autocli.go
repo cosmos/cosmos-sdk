@@ -117,6 +117,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 				},
 				{
+					RpcMethod: "HistoricalInfo", // Deprecated query
+					Skip:      true,
+				},
+				{
 					RpcMethod: "Pool",
 					Use:       "pool",
 					Short:     "Query the current staking pool values",

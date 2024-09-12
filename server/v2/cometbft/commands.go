@@ -223,7 +223,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 // QueryBlockCmd implements the default command for a Block query.
 func QueryBlockCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "block --type={height|hash} <height|hash>",
+		Use:   "block --type={height|hash} [height|hash]",
 		Short: "Query for a committed block by height, hash, or event(s)",
 		Long:  "Query for a specific committed block using the CometBFT RPC `block` and `block_by_hash` method",
 		Example: strings.TrimSpace(fmt.Sprintf(`
@@ -232,32 +232,45 @@ $ %s query block --%s=%s <hash>
 `,
 			version.AppName, FlagType, TypeHeight,
 			version.AppName, FlagType, TypeHash)),
-		Args: cobra.ExactArgs(1),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			typ, _ := cmd.Flags().GetString(FlagType)
-
 			rpcclient, err := rpcClient(cmd)
-			fmt.Println("rpcclient", rpcclient, err)
 			if err != nil {
 				return err
 			}
 
+			typ, _ := cmd.Flags().GetString(FlagType)
+			if len(args) == 0 {
+				// do not break default v0.50 behavior of block hash
+				// if no args are provided, set the type to height
+				typ = TypeHeight
+			}
+
 			switch typ {
 			case TypeHeight:
-				if args[0] == "" {
-					return errors.New("argument should be a block height")
+				var (
+					err    error
+					height int64
+				)
+				heightStr := ""
+				if len(args) > 0 {
+					heightStr = args[0]
 				}
 
-				// optional height
-				var height *int64
-				if len(args) > 0 {
-					height, err = parseOptionalHeight(args[0])
+				if heightStr == "" {
+					cmd.Println("Falling back to latest block height:")
+					height, err = rpc.GetChainHeight(cmd.Context(), rpcclient)
 					if err != nil {
-						return err
+						return fmt.Errorf("failed to get chain height: %w", err)
+					}
+				} else {
+					height, err = strconv.ParseInt(heightStr, 10, 64)
+					if err != nil {
+						return fmt.Errorf("failed to parse block height: %w", err)
 					}
 				}
 
-				output, err := rpc.GetBlockByHeight(cmd.Context(), rpcclient, height)
+				output, err := rpc.GetBlockByHeight(cmd.Context(), rpcclient, &height)
 				if err != nil {
 					return err
 				}
@@ -272,7 +285,6 @@ $ %s query block --%s=%s <hash>
 				}
 
 				return printOutput(cmd, bz)
-
 			case TypeHash:
 
 				if args[0] == "" {

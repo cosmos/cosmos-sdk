@@ -1,10 +1,96 @@
 package indexer
 
 import (
+	"context"
 	"encoding/json"
 	"reflect"
+	"sync"
 	"testing"
+
+	"cosmossdk.io/schema/appdata"
 )
+
+func TestStart(t *testing.T) {
+	ctx, cancelFn := context.WithCancel(context.Background())
+	var test1CommitCalled, test2CommitCalled int
+	Register("test1", Initializer{
+		InitFunc: func(params InitParams) (InitResult, error) {
+			if params.Config.Config.(testConfig).SomeParam != "foobar" {
+				t.Fatalf("expected %q, got %q", "foobar", params.Config.Config.(testConfig).SomeParam)
+			}
+			return InitResult{
+				Listener: appdata.Listener{
+					Commit: func(data appdata.CommitData) (completionCallback func() error, err error) {
+						test1CommitCalled++
+						return nil, nil
+					},
+				},
+			}, nil
+		},
+		ConfigType: testConfig{},
+	})
+	Register("test2", Initializer{
+		InitFunc: func(params InitParams) (InitResult, error) {
+			if params.Config.Config.(testConfig2).Foo != "bar" {
+				t.Fatalf("expected %q, got %q", "bar", params.Config.Config.(testConfig2).Foo)
+			}
+			return InitResult{
+				Listener: appdata.Listener{
+					Commit: func(data appdata.CommitData) (completionCallback func() error, err error) {
+						test2CommitCalled++
+						return nil, nil
+					},
+				},
+			}, nil
+		},
+		ConfigType: testConfig2{},
+	})
+
+	var wg sync.WaitGroup
+	target, err := StartIndexing(IndexingOptions{
+		Config: IndexingConfig{Target: map[string]Config{
+			"t1": {Type: "test1", Config: testConfig{SomeParam: "foobar"}},
+			"t2": {Type: "test2", Config: testConfig2{Foo: "bar"}},
+		}},
+		Resolver:      nil,
+		SyncSource:    nil,
+		Logger:        nil,
+		Context:       ctx,
+		AddressCodec:  nil,
+		DoneWaitGroup: &wg,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	const COMMIT_COUNT = 10
+	for i := 0; i < COMMIT_COUNT; i++ {
+		callCommit(t, target.Listener)
+	}
+
+	cancelFn()
+	wg.Wait()
+
+	if test1CommitCalled != COMMIT_COUNT {
+		t.Fatalf("expected %d, got %d", COMMIT_COUNT, test1CommitCalled)
+	}
+	if test2CommitCalled != COMMIT_COUNT {
+		t.Fatalf("expected %d, got %d", COMMIT_COUNT, test2CommitCalled)
+	}
+}
+
+func callCommit(t *testing.T, listener appdata.Listener) {
+	cb, err := listener.Commit(appdata.CommitData{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cb != nil {
+		err = cb()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+}
 
 func TestUnmarshalIndexingConfig(t *testing.T) {
 	cfg := &IndexingConfig{Target: map[string]Config{"target": {Type: "type"}}}
@@ -126,4 +212,8 @@ func TestUnmarshalIndexerConfig(t *testing.T) {
 
 type testConfig struct {
 	SomeParam string `json:"some_param"`
+}
+
+type testConfig2 struct {
+	Foo string `json:"foo"`
 }

@@ -19,7 +19,6 @@ import (
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -58,23 +57,31 @@ func New[T transaction.Tx](txCodec transaction.Codec[T], serverOptions ServerOpt
 	}
 }
 
-func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
+func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
+	home, _ := cfg[serverv2.FlagHome].(string)
+
 	// get configs (app.toml + config.toml) from viper
 	appTomlConfig := s.Config().(*AppTomlConfig)
-	if v != nil {
-		if err := serverv2.UnmarshalSubConfig(v, s.Name(), &appTomlConfig); err != nil {
+	configTomlConfig := cmtcfg.DefaultConfig().SetRoot(home)
+	if len(cfg) > 0 {
+		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &appTomlConfig); err != nil {
+			return fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+
+		if err := serverv2.UnmarshalSubConfig(cfg, "", &configTomlConfig); err != nil {
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
+
 	s.config = Config{
-		ConfigTomlConfig: getConfigTomlFromViper(v),
+		ConfigTomlConfig: configTomlConfig,
 		AppTomlConfig:    appTomlConfig,
 	}
 
-	chainID := v.GetString(FlagChainID)
+	chainID, _ := cfg[FlagChainID].(string)
 	if chainID == "" {
 		// fallback to genesis chain-id
-		reader, err := os.Open(filepath.Join(v.GetString(serverv2.FlagHome), "config", "genesis.json"))
+		reader, err := os.Open(filepath.Join(home, "config", "genesis.json"))
 		if err != nil {
 			panic(err)
 		}

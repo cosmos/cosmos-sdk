@@ -214,8 +214,8 @@ cosmossdk.io/runtime/v2 v2.0.0-20240912070812-0fc06f14104b h1:usuxpv4UZLKOXHK+L3
 cosmossdk.io/runtime/v2 v2.0.0-20240912070812-0fc06f14104b/go.mod h1:kV5J0FOZvQIH6o23pCmkl5h+UdIAbQ1WU/BgVgrvbKQ=
 cosmossdk.io/schema v0.2.0 h1:UH5CR1DqUq8yP+5Np8PbvG4YX0zAUsTN2Qk6yThmfMk=
 cosmossdk.io/schema v0.2.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
-cosmossdk.io/server/v2 v2.0.0-20240829074658-81a225e6a29b h1:FFixNVq2SbtRlYvr1fB/WikfYTRrA0o/35ImIhhZzrE=
-cosmossdk.io/server/v2 v2.0.0-20240829074658-81a225e6a29b/go.mod h1:MgjYKtPEW4FPEYxh1h0idVBjgblFgdrAWkeqn7UOrVA=
+cosmossdk.io/server/v2 v2.0.0-20240912070812-0fc06f14104b h1:rG8VQF/3yAEJOQewDgrcBWwr1xKzu+VwhrILW5hui/Y=
+cosmossdk.io/server/v2 v2.0.0-20240912070812-0fc06f14104b/go.mod h1:9JRqMZOt9JaSLnmfcaAZ/wV3t5PVA1SlK0QgVuU3T9k=
 cosmossdk.io/server/v2/appmanager v0.0.0-20240827095516-355f748add9e h1:9eB2si1gT6c5ea8Jsh498Ei6E3Th1yMyuJgSLiT6D4Y=
 cosmossdk.io/server/v2/appmanager v0.0.0-20240827095516-355f748add9e/go.mod h1:fJDDnWJCBRxLLIyu2byqtf3KTRYIVS4OxKwdZozJi20=
 cosmossdk.io/server/v2/stf v0.0.0-20240909103429-ac53e337a9b5 h1:lrq7/YrEflKv3enDm5jMHHz1GsfmBzHM4FGgjSt1ZmQ=
@@ -620,8 +620,8 @@ github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:
 github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
-github.com/jhump/protoreflect v1.15.3 h1:6SFRuqU45u9hIZPJAoZ8c28T3nK64BNdp9w6jFonzls=
-github.com/jhump/protoreflect v1.15.3/go.mod h1:4ORHmSBmlCW8fh3xHmJMGyul1zNqZK4Elxc8qKP+p1k=
+github.com/jhump/protoreflect v1.17.0 h1:qOEr613fac2lOuTgWN4tPAtLL7fUSbuJL5X5XumQh94=
+github.com/jhump/protoreflect v1.17.0/go.mod h1:h9+vUUL38jiBzck8ck+6G/aeMX8Z4QUY/NiJPwPNi+8=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1 h1:shLQSRRSCCPj3f2gpwzGwWFoC7ycTf1rcQZHOlsJ6N8=

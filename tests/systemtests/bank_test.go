@@ -108,9 +108,10 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 	account1Addr := cli.AddKey("account1")
 	account2Addr := cli.AddKey("account2")
 	account3Addr := cli.AddKey("account3")
-	require.NotEqual(t, account1Addr, account2Addr, account3Addr)
+	require.NotEqual(t, account1Addr, account2Addr)
+	require.NotEqual(t, account1Addr, account3Addr)
 	denom := "stake"
-	initialAmount := 10000000
+	var initialAmount int64 = 10000000
 	initialBalance := fmt.Sprintf("%d%s", initialAmount, denom)
 	sut.ModifyGenesisCLI(t,
 		[]string{"genesis", "add-genesis-account", account1Addr, initialBalance},
@@ -120,9 +121,9 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 
 	// query accounts balances
 	account1Bal := cli.QueryBalance(account1Addr, denom)
-	require.Equal(t, int64(initialAmount), account1Bal)
+	require.Equal(t, initialAmount, account1Bal)
 	account2Bal := cli.QueryBalance(account2Addr, denom)
-	require.Equal(t, int64(initialAmount), account2Bal)
+	require.Equal(t, initialAmount, account2Bal)
 	var account3Bal int64 = 0
 
 	multiSendCmdArgs := []string{"tx", "bank", "multi-send", account1Addr, account2Addr, account3Addr, "1000stake", "--from=" + account1Addr}

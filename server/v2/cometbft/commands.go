@@ -7,6 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/spf13/cobra"
+	"sigs.k8s.io/yaml"
+
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/node"
@@ -14,9 +17,7 @@ import (
 	pvm "github.com/cometbft/cometbft/privval"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	cmtversion "github.com/cometbft/cometbft/version"
-	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/encoding/protojson"
-	"sigs.k8s.io/yaml"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/server/v2/cometbft/client/rpc"
 
@@ -200,7 +201,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 				return err
 			}
 
-			bz, err := protojson.Marshal(blocks)
+			bz, err := gogoproto.Marshal(blocks)
 			if err != nil {
 				return err
 			}

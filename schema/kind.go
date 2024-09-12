@@ -76,9 +76,8 @@ const (
 	Uint64Kind
 
 	// IntegerKind represents an arbitrary precision integer number.
-	// Support for expressing the maximum bit precision of values using SizeLimit
-	// will be added in the future.
-	// Go Encoding: string which matches the IntegerFormat regex (note this is subject to change).
+	// Support for expressing the maximum bit precision of values will be added in the future.
+	// Go Encoding: string which matches the IntegerFormat regex (unstable, subject to change).
 	// JSON Encoding: base10 integer string
 	// Canonically encoded values should include no leading zeros.
 	// Equality comparison with integers should be done using numerical equality rather

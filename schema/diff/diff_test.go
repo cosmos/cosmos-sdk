@@ -38,7 +38,7 @@ func TestCompareModuleSchemas(t *testing.T) {
 				KeyFields: []schema.Field{{Name: "key1", Kind: schema.StringKind}},
 			}),
 			diff: ModuleSchemaDiff{
-				AddedObjectTypes: []schema.StateObjectType{
+				AddedStateObjectTypes: []schema.StateObjectType{
 					{
 						Name:      "object1",
 						KeyFields: []schema.Field{{Name: "key1", Kind: schema.StringKind}},
@@ -55,7 +55,7 @@ func TestCompareModuleSchemas(t *testing.T) {
 			}),
 			newSchema: requireModuleSchema(t),
 			diff: ModuleSchemaDiff{
-				RemovedObjectTypes: []schema.StateObjectType{
+				RemovedStateObjectTypes: []schema.StateObjectType{
 					{
 						Name:      "object1",
 						KeyFields: []schema.Field{{Name: "key1", Kind: schema.StringKind}},
@@ -75,7 +75,7 @@ func TestCompareModuleSchemas(t *testing.T) {
 				KeyFields: []schema.Field{{Name: "key1", Kind: schema.StringKind}, {Name: "key2", Kind: schema.StringKind}},
 			}),
 			diff: ModuleSchemaDiff{
-				ChangedObjectTypes: []ObjectTypeDiff{
+				ChangedStateObjectTypes: []StateObjectTypeDiff{
 					{
 						Name: "object1",
 						KeyFieldsDiff: FieldsDiff{
@@ -100,7 +100,7 @@ func TestCompareModuleSchemas(t *testing.T) {
 				ValueFields: []schema.Field{{Name: "value1", Kind: schema.StringKind, Nullable: true}},
 			}),
 			diff: ModuleSchemaDiff{
-				ChangedObjectTypes: []ObjectTypeDiff{
+				ChangedStateObjectTypes: []StateObjectTypeDiff{
 					{
 						Name: "object1",
 						ValueFieldsDiff: FieldsDiff{
@@ -123,7 +123,7 @@ func TestCompareModuleSchemas(t *testing.T) {
 				ValueFields: []schema.Field{{Name: "value1", Kind: schema.StringKind}},
 			}),
 			diff: ModuleSchemaDiff{
-				ChangedObjectTypes: []ObjectTypeDiff{
+				ChangedStateObjectTypes: []StateObjectTypeDiff{
 					{
 						Name: "object1",
 						ValueFieldsDiff: FieldsDiff{
@@ -145,7 +145,7 @@ func TestCompareModuleSchemas(t *testing.T) {
 				KeyFields: []schema.Field{{Name: "key2", Kind: schema.StringKind}, {Name: "key1", Kind: schema.StringKind}},
 			}),
 			diff: ModuleSchemaDiff{
-				ChangedObjectTypes: []ObjectTypeDiff{
+				ChangedStateObjectTypes: []StateObjectTypeDiff{
 					{
 						Name: "object1",
 						KeyFieldsDiff: FieldsDiff{
@@ -177,7 +177,7 @@ func TestCompareModuleSchemas(t *testing.T) {
 			},
 				schema.EnumType{Name: "enum1", Values: []schema.EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}}}),
 			diff: ModuleSchemaDiff{
-				ChangedObjectTypes: []ObjectTypeDiff{
+				ChangedStateObjectTypes: []StateObjectTypeDiff{
 					{
 						Name: "object1",
 						ValueFieldsDiff: FieldsDiff{
@@ -218,7 +218,7 @@ func TestCompareModuleSchemas(t *testing.T) {
 				KeyFields: []schema.Field{{Name: "key1", Kind: schema.Int32Kind}},
 			}),
 			diff: ModuleSchemaDiff{
-				ChangedObjectTypes: []ObjectTypeDiff{
+				ChangedStateObjectTypes: []StateObjectTypeDiff{
 					{
 						Name: "object1",
 						ValueFieldsDiff: FieldsDiff{
@@ -291,13 +291,13 @@ func TestCompareModuleSchemas(t *testing.T) {
 				schema.EnumType{Name: "foo", Values: []schema.EnumValueDefinition{{Name: "a", Value: 1}}},
 			),
 			diff: ModuleSchemaDiff{
-				RemovedObjectTypes: []schema.StateObjectType{
+				RemovedStateObjectTypes: []schema.StateObjectType{
 					{
 						Name:      "foo",
 						KeyFields: []schema.Field{{Name: "key1", Kind: schema.EnumKind, ReferencedType: "bar"}},
 					},
 				},
-				AddedObjectTypes: []schema.StateObjectType{
+				AddedStateObjectTypes: []schema.StateObjectType{
 					{
 						Name:      "bar",
 						KeyFields: []schema.Field{{Name: "key1", Kind: schema.EnumKind, ReferencedType: "foo"}},

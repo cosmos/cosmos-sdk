@@ -7,8 +7,8 @@ import (
 	"cosmossdk.io/schema"
 )
 
-// ObjectTypeGen generates random StateObjectType's based on the validity criteria of object types.
-func ObjectTypeGen(typeSet schema.TypeSet) *rapid.Generator[schema.StateObjectType] {
+// StateObjectTypeGen generates random StateObjectType's based on the validity criteria of object types.
+func StateObjectTypeGen(typeSet schema.TypeSet) *rapid.Generator[schema.StateObjectType] {
 	keyFieldsGen := rapid.SliceOfNDistinct(KeyFieldGen(typeSet), 1, 6, func(f schema.Field) string {
 		return f.Name
 	})
@@ -55,14 +55,14 @@ func hasDuplicateFieldNames(typeNames map[string]bool, fields []schema.Field) bo
 	return false
 }
 
-// ObjectInsertGen generates object updates that are valid for insertion.
-func ObjectInsertGen(objectType schema.StateObjectType, typeSet schema.TypeSet) *rapid.Generator[schema.StateObjectUpdate] {
-	return ObjectUpdateGen(objectType, nil, typeSet)
+// StateObjectInsertGen generates object updates that are valid for insertion.
+func StateObjectInsertGen(objectType schema.StateObjectType, typeSet schema.TypeSet) *rapid.Generator[schema.StateObjectUpdate] {
+	return StateObjectUpdateGen(objectType, nil, typeSet)
 }
 
-// ObjectUpdateGen generates object updates that are valid for updates using the provided state map as a source
+// StateObjectUpdateGen generates object updates that are valid for updates using the provided state map as a source
 // of valid existing keys.
-func ObjectUpdateGen(objectType schema.StateObjectType, state *btree.Map[string, schema.StateObjectUpdate], sch schema.TypeSet) *rapid.Generator[schema.StateObjectUpdate] {
+func StateObjectUpdateGen(objectType schema.StateObjectType, state *btree.Map[string, schema.StateObjectUpdate], sch schema.TypeSet) *rapid.Generator[schema.StateObjectUpdate] {
 	keyGen := ObjectKeyGen(objectType.KeyFields, sch).Filter(func(key interface{}) bool {
 		// filter out keys that exist in the state
 		if state != nil {

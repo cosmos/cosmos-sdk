@@ -12,8 +12,8 @@ func Test_objectTypeDiff(t *testing.T) {
 		name                 string
 		oldType              schema.StateObjectType
 		newType              schema.StateObjectType
-		diff                 ObjectTypeDiff
-		trueF                func(ObjectTypeDiff) bool
+		diff                 StateObjectTypeDiff
+		trueF                func(StateObjectTypeDiff) bool
 		hasCompatibleChanges bool
 	}{
 		{
@@ -24,8 +24,8 @@ func Test_objectTypeDiff(t *testing.T) {
 			newType: schema.StateObjectType{
 				KeyFields: []schema.Field{{Name: "id", Kind: schema.Int32Kind}},
 			},
-			diff:                 ObjectTypeDiff{},
-			trueF:                ObjectTypeDiff.Empty,
+			diff:                 StateObjectTypeDiff{},
+			trueF:                StateObjectTypeDiff.Empty,
 			hasCompatibleChanges: true,
 		},
 		{
@@ -36,7 +36,7 @@ func Test_objectTypeDiff(t *testing.T) {
 			newType: schema.StateObjectType{
 				KeyFields: []schema.Field{{Name: "id", Kind: schema.StringKind}},
 			},
-			diff: ObjectTypeDiff{
+			diff: StateObjectTypeDiff{
 				KeyFieldsDiff: FieldsDiff{
 					Changed: []FieldDiff{
 						{
@@ -47,7 +47,7 @@ func Test_objectTypeDiff(t *testing.T) {
 					},
 				},
 			},
-			trueF:                func(d ObjectTypeDiff) bool { return !d.KeyFieldsDiff.Empty() },
+			trueF:                func(d StateObjectTypeDiff) bool { return !d.KeyFieldsDiff.Empty() },
 			hasCompatibleChanges: false,
 		},
 		{
@@ -58,7 +58,7 @@ func Test_objectTypeDiff(t *testing.T) {
 			newType: schema.StateObjectType{
 				ValueFields: []schema.Field{{Name: "name", Kind: schema.Int32Kind}},
 			},
-			diff: ObjectTypeDiff{
+			diff: StateObjectTypeDiff{
 				ValueFieldsDiff: FieldsDiff{
 					Changed: []FieldDiff{
 						{
@@ -69,7 +69,7 @@ func Test_objectTypeDiff(t *testing.T) {
 					},
 				},
 			},
-			trueF:                func(d ObjectTypeDiff) bool { return !d.ValueFieldsDiff.Empty() },
+			trueF:                func(d StateObjectTypeDiff) bool { return !d.ValueFieldsDiff.Empty() },
 			hasCompatibleChanges: false,
 		},
 		{
@@ -80,12 +80,12 @@ func Test_objectTypeDiff(t *testing.T) {
 			newType: schema.StateObjectType{
 				ValueFields: []schema.Field{{Name: "id", Kind: schema.Int32Kind}, {Name: "name", Kind: schema.StringKind, Nullable: true}},
 			},
-			diff: ObjectTypeDiff{
+			diff: StateObjectTypeDiff{
 				ValueFieldsDiff: FieldsDiff{
 					Added: []schema.Field{{Name: "name", Kind: schema.StringKind, Nullable: true}},
 				},
 			},
-			trueF:                func(d ObjectTypeDiff) bool { return !d.ValueFieldsDiff.Empty() },
+			trueF:                func(d StateObjectTypeDiff) bool { return !d.ValueFieldsDiff.Empty() },
 			hasCompatibleChanges: true,
 		},
 		{
@@ -96,12 +96,12 @@ func Test_objectTypeDiff(t *testing.T) {
 			newType: schema.StateObjectType{
 				ValueFields: []schema.Field{{Name: "id", Kind: schema.Int32Kind}, {Name: "name", Kind: schema.StringKind}},
 			},
-			diff: ObjectTypeDiff{
+			diff: StateObjectTypeDiff{
 				ValueFieldsDiff: FieldsDiff{
 					Added: []schema.Field{{Name: "name", Kind: schema.StringKind}},
 				},
 			},
-			trueF:                func(d ObjectTypeDiff) bool { return !d.ValueFieldsDiff.Empty() },
+			trueF:                func(d StateObjectTypeDiff) bool { return !d.ValueFieldsDiff.Empty() },
 			hasCompatibleChanges: false,
 		},
 		{
@@ -114,7 +114,7 @@ func Test_objectTypeDiff(t *testing.T) {
 				KeyFields:   []schema.Field{{Name: "name", Kind: schema.StringKind}, {Name: "id", Kind: schema.Int32Kind}},
 				ValueFields: []schema.Field{{Name: "y", Kind: schema.StringKind}, {Name: "x", Kind: schema.Int32Kind}},
 			},
-			diff: ObjectTypeDiff{
+			diff: StateObjectTypeDiff{
 				KeyFieldsDiff: FieldsDiff{
 					OldOrder: []string{"id", "name"},
 					NewOrder: []string{"name", "id"},
@@ -124,7 +124,7 @@ func Test_objectTypeDiff(t *testing.T) {
 					NewOrder: []string{"y", "x"},
 				},
 			},
-			trueF:                func(d ObjectTypeDiff) bool { return !d.KeyFieldsDiff.Empty() && !d.ValueFieldsDiff.Empty() },
+			trueF:                func(d StateObjectTypeDiff) bool { return !d.KeyFieldsDiff.Empty() && !d.ValueFieldsDiff.Empty() },
 			hasCompatibleChanges: false,
 		},
 	}

@@ -10,7 +10,7 @@ import (
 	schematesting "cosmossdk.io/schema/testing"
 )
 
-// ObjectCollection is a collection of objects of a specific type for testing purposes.
+// ObjectCollection is a collection of state objects of a specific type for testing purposes.
 type ObjectCollection struct {
 	options           Options
 	objectType        schema.StateObjectType
@@ -23,7 +23,7 @@ type ObjectCollection struct {
 // NewObjectCollection creates a new ObjectCollection for the given object type.
 func NewObjectCollection(objectType schema.StateObjectType, options Options, typeSet schema.TypeSet) *ObjectCollection {
 	objects := &btree.Map[string, schema.StateObjectUpdate]{}
-	updateGen := schematesting.ObjectUpdateGen(objectType, objects, typeSet)
+	updateGen := schematesting.StateObjectUpdateGen(objectType, objects, typeSet)
 	valueFieldIndices := make(map[string]int, len(objectType.ValueFields))
 	for i, field := range objectType.ValueFields {
 		valueFieldIndices[field.Name] = i

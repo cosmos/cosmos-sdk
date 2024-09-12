@@ -4,7 +4,7 @@ go 1.23.1
 
 require (
 	cosmossdk.io/api v0.8.0
-	cosmossdk.io/core v1.0.0-alpha.1 // main
+	cosmossdk.io/core v1.0.0-alpha.2 // main
 	cosmossdk.io/core/testing v0.0.0-20240909133312-50288938d1b6 // main
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
@@ -201,17 +201,10 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 replace (
-<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240906090851-36d9b25e8981 // main
-=======
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/core => ../../core
-	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/store => ../../store
->>>>>>> 57f35dcdf (refactor: remove viper as a direct dependency (#21635))
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/staking => ../staking

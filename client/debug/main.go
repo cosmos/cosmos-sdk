@@ -298,6 +298,7 @@ $ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 
 func RawBytesCmd() *cobra.Command {
 	return &cobra.Command{
+<<<<<<< HEAD
 		Use:   "raw-bytes [raw-bytes]",
 		Short: "Convert raw bytes output (eg. [10 21 13 255]) to hex",
 		Long: fmt.Sprintf(`Convert raw-bytes to hex.
@@ -306,6 +307,13 @@ Example:
 $ %s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]
 			`, version.AppName),
 		Args: cobra.ExactArgs(1),
+=======
+		Use:     "raw-bytes <raw-bytes>",
+		Short:   "Convert raw bytes output (eg. [10 21 13 255]) to hex",
+		Long:    "Convert raw-bytes to hex.",
+		Example: fmt.Sprintf("%s debug raw-bytes '[72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]'", version.AppName),
+		Args:    cobra.ExactArgs(1),
+>>>>>>> 0fc06f141 (docs(client/debug): correct `debug raw-bytes` command example (#21671))
 		RunE: func(_ *cobra.Command, args []string) error {
 			stringBytes := args[0]
 			stringBytes = strings.Trim(stringBytes, "[")

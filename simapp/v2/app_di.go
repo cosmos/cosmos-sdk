@@ -100,7 +100,7 @@ func NewSimApp[T transaction.Tx](
 		app          = &SimApp[T]{}
 		appBuilder   *runtime.AppBuilder[T]
 		err          error
-		storeOptions *root.Options
+		storeOptions = &root.Options{}
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(

@@ -2,6 +2,15 @@
 
 The x/accounts module provides module and facilities for writing smart cosmos-sdk accounts.
 
+# Supporting the account in the x/auth gRPC server
+
+If you want your custom account type to be exposed via the auth's `Account` and `AccountInfo` query, which is useful
+to ensure existing wallets which have not integrated with x/accounts yet can still parse the accounts post migration
+
+It is sufficient to make it implement the `auth.QueryLegacyAccount` handler.
+
+One example lives in the `x/accounts` implementation of `BaseAccount`: 
+
 # Genesis
 
 ## Creating accounts on genesis

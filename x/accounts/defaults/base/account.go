@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	gogotypes "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -168,17 +170,12 @@ func (a Account) computeSignerData(ctx context.Context) (PubKey, signing.SignerD
 }
 
 func (a Account) getNumber(ctx context.Context, addrStr string) (uint64, error) {
-	accNum, err := accountstd.QueryModule(ctx, &accountsv1.AccountNumberRequest{Address: addrStr})
+	accNum, err := accountstd.QueryModule[*accountsv1.AccountNumberResponse](ctx, &accountsv1.AccountNumberRequest{Address: addrStr})
 	if err != nil {
 		return 0, err
 	}
 
-	resp, ok := accNum.(*accountsv1.AccountNumberResponse)
-	if !ok {
-		return 0, fmt.Errorf("unexpected response type: %T", accNum)
-	}
-
-	return resp.Number, nil
+	return accNum.Number, nil
 }
 
 func (a Account) getTxData(msg *aa_interface_v1.MsgAuthenticate) (signing.TxData, error) {
@@ -261,6 +258,48 @@ func (a Account) QuerySequence(ctx context.Context, _ *v1.QuerySequence) (*v1.Qu
 	return &v1.QuerySequenceResponse{Sequence: seq}, nil
 }
 
+func (a Account) AuthRetroCompatibility(ctx context.Context, _ *authtypes.QueryLegacyAccount) (*authtypes.QueryLegacyAccountResponse, error) {
+	addr, err := a.addrCodec.BytesToString(accountstd.Whoami(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	accNumber, err := accountstd.QueryModule[*accountsv1.AccountNumberResponse](ctx, &accountsv1.AccountNumberRequest{Address: addr})
+	if err != nil {
+		return nil, err
+	}
+	pk, err := a.loadPubKey(ctx)
+	if err != nil {
+		return nil, err
+	}
+	anyPk, err := gogotypes.NewAnyWithCacheWithValue(pk)
+	if err != nil {
+		return nil, err
+	}
+
+	seq, err := a.Sequence.Peek(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	baseAccount := &authtypes.BaseAccount{
+		Address:       addr,
+		PubKey:        anyPk,
+		AccountNumber: accNumber.Number,
+		Sequence:      seq,
+	}
+
+	baseAccountAny, err := gogotypes.NewAnyWithCacheWithValue(baseAccount)
+	if err != nil {
+		return nil, err
+	}
+
+	return &authtypes.QueryLegacyAccountResponse{
+		Account: baseAccountAny,
+		Info:    baseAccount,
+	}, nil
+}
+
 func (a Account) RegisterInitHandler(builder *accountstd.InitBuilder) {
 	accountstd.RegisterInitHandler(builder, a.Init)
 }
@@ -272,4 +311,5 @@ func (a Account) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 
 func (a Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, a.QuerySequence)
+	accountstd.RegisterQueryHandler(builder, a.AuthRetroCompatibility)
 }

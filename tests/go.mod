@@ -35,6 +35,7 @@ require (
 require (
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
+	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
@@ -241,6 +242,7 @@ replace (
 	cosmossdk.io/core/testing => ../core/testing
 	cosmossdk.io/store => ../store
 	cosmossdk.io/x/accounts => ../x/accounts
+	cosmossdk.io/x/accounts/defaults/base => ../x/accounts/defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup
 	cosmossdk.io/x/accounts/defaults/multisig => ../x/accounts/defaults/multisig
 	cosmossdk.io/x/authz => ../x/authz

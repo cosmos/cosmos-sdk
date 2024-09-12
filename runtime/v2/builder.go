@@ -7,10 +7,9 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/spf13/viper"
-
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager"
@@ -25,8 +24,8 @@ import (
 // the existing app.go initialization conventions.
 type AppBuilder[T transaction.Tx] struct {
 	app          *App[T]
-	storeOptions *rootstore.FactoryOptions
-	viper        *viper.Viper
+	config       server.DynamicConfig
+	storeOptions rootstore.Options
 
 	// the following fields are used to overwrite the default
 	branch      func(state store.ReaderMap) store.WriterMap
@@ -73,9 +72,6 @@ func (a *AppBuilder[T]) RegisterModules(modules map[string]appmodulev2.AppModule
 // To be used in combination of RegisterModules.
 func (a *AppBuilder[T]) RegisterStores(keys ...string) {
 	a.app.storeKeys = append(a.app.storeKeys, keys...)
-	if a.storeOptions != nil {
-		a.storeOptions.StoreKeys = append(a.storeOptions.StoreKeys, keys...)
-	}
 }
 
 // Build builds an *App instance.
@@ -124,29 +120,26 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	}
 	a.app.stf = stf
 
-	storeOpts := rootstore.DefaultStoreOptions()
-	if s := a.viper.Sub("store.options"); s != nil {
-		if err := s.Unmarshal(&storeOpts); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal store options: %w", err)
-		}
-	}
-
-	home := a.viper.GetString(FlagHome)
-	scRawDb, err := db.NewDB(db.DBType(a.viper.GetString("store.app-db-backend")), "application", filepath.Join(home, "data"), nil)
+	home := a.config.GetString(FlagHome)
+	scRawDb, err := db.NewDB(
+		db.DBType(a.config.GetString("store.app-db-backend")),
+		"application",
+		filepath.Join(home, "data"),
+		nil,
+	)
 	if err != nil {
 		panic(err)
 	}
 
-	storeOptions := &rootstore.FactoryOptions{
+	factoryOptions := &rootstore.FactoryOptions{
 		Logger:    a.app.logger,
 		RootDir:   home,
-		Options:   storeOpts,
+		Options:   a.storeOptions,
 		StoreKeys: append(a.app.storeKeys, "stf"),
 		SCRawDB:   scRawDb,
 	}
-	a.storeOptions = storeOptions
 
-	rs, err := rootstore.CreateRootStore(a.storeOptions)
+	rs, err := rootstore.CreateRootStore(factoryOptions)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create root store: %w", err)
 	}
@@ -217,14 +210,14 @@ func AppBuilderWithTxValidator[T transaction.Tx](txValidators func(ctx context.C
 
 // AppBuilderWithPostTxExec sets logic that will be executed after each transaction.
 // When not provided, a no-op function will be used.
-func AppBuilderWithPostTxExec[T transaction.Tx](
-	postTxExec func(
-		ctx context.Context,
-		tx T,
-		success bool,
-	) error,
-) AppBuilderOption[T] {
+func AppBuilderWithPostTxExec[T transaction.Tx](postTxExec func(ctx context.Context, tx T, success bool) error) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.postTxExec = postTxExec
+	}
+}
+
+func AppBuilderWithStoreOptions[T transaction.Tx](opts rootstore.Options) AppBuilderOption[T] {
+	return func(a *AppBuilder[T]) {
+		a.storeOptions = opts
 	}
 }

@@ -77,7 +77,33 @@ func (s ModuleSchema) LookupType(name string) (Type, bool) {
 	return typ, ok
 }
 
-// Types calls the provided function for each type in the module schema and stops if the function returns false.
+// LookupEnumType is a convenience method that looks up an EnumType by name.
+func (s ModuleSchema) LookupEnumType(name string) (t EnumType, found bool) {
+	typ, found := s.LookupType(name)
+	if !found {
+		return EnumType{}, false
+	}
+	t, ok := typ.(EnumType)
+	if !ok {
+		return EnumType{}, false
+	}
+	return t, true
+}
+
+// LookupObjectType is a convenience method that looks up an ObjectType by name.
+func (s ModuleSchema) LookupObjectType(name string) (t ObjectType, found bool) {
+	typ, found := s.LookupType(name)
+	if !found {
+		return ObjectType{}, false
+	}
+	t, ok := typ.(ObjectType)
+	if !ok {
+		return ObjectType{}, false
+	}
+	return t, true
+}
+
+// AllTypes calls the provided function for each type in the module schema and stops if the function returns false.
 // The types are iterated over in sorted order by name. This function is compatible with go 1.23 iterators.
 func (s ModuleSchema) AllTypes(f func(Type) bool) {
 	keys := make([]string, 0, len(s.types))

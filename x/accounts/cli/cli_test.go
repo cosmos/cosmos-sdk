@@ -83,7 +83,7 @@ func (s *CLITestSuite) TestTxInitCmd() {
 				Response: sdk.MsgTypeURL(&types.Empty{})[1:],
 			},
 		})
-		c := clitestutil.NewMockCometRPCWithValue(bz)
+		c := clitestutil.NewMockCometRPCWithResponseQueryValue(bz)
 		return s.baseCtx.WithClient(c)
 	}
 	s.clientCtx = ctxGen()

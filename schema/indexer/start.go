@@ -208,5 +208,5 @@ func unmarshalIndexerCustomConfig(cfg interface{}, expectedType interface{}) (in
 		return nil, err
 	}
 	err = json.Unmarshal(bz, res)
-	return reflect.ValueOf(res).Elem(), err
+	return reflect.ValueOf(res).Elem().Interface(), err
 }

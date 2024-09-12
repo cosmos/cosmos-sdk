@@ -61,7 +61,67 @@ func TestUnmarshalIndexingConfig(t *testing.T) {
 }
 
 func TestUnmarshalIndexerConfig(t *testing.T) {
+	t.Run("struct", func(t *testing.T) {
+		cfg := testConfig{SomeParam: "foobar"}
+		cfg2, err := unmarshalIndexerCustomConfig(cfg, testConfig{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(cfg, cfg2) {
+			t.Fatalf("expected %v, got %v", cfg, cfg2)
+		}
+	})
 
+	t.Run("ptr", func(t *testing.T) {
+		cfg := &testConfig{SomeParam: "foobar"}
+		cfg2, err := unmarshalIndexerCustomConfig(cfg, &testConfig{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(cfg, cfg2) {
+			t.Fatalf("expected %v, got %v", cfg, cfg2)
+		}
+	})
+
+	t.Run("map -> struct", func(t *testing.T) {
+		cfg := testConfig{SomeParam: "foobar"}
+		jzonBz, err := json.Marshal(cfg)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var m map[string]interface{}
+		err = json.Unmarshal(jzonBz, &m)
+		if err != nil {
+			t.Fatal(err)
+		}
+		cfg2, err := unmarshalIndexerCustomConfig(m, testConfig{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(cfg, cfg2) {
+			t.Fatalf("expected %v, got %v", cfg, cfg2)
+		}
+	})
+
+	t.Run("map -> ptr", func(t *testing.T) {
+		cfg := &testConfig{SomeParam: "foobar"}
+		jzonBz, err := json.Marshal(cfg)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var m map[string]interface{}
+		err = json.Unmarshal(jzonBz, &m)
+		if err != nil {
+			t.Fatal(err)
+		}
+		cfg2, err := unmarshalIndexerCustomConfig(m, &testConfig{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(cfg, cfg2) {
+			t.Fatalf("expected %v, got %v", cfg, cfg2)
+		}
+	})
 }
 
 type testConfig struct {

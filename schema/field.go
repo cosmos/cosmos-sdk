@@ -17,6 +17,11 @@ type Field struct {
 
 	// ReferencedType is the referenced type name when Kind is EnumKind.
 	ReferencedType string `json:"referenced_type,omitempty"`
+
+	// SizeLimit specifies a size limit for certain types.
+	// For IntegerKind, this is the number of bits of precision that can be represented.
+	// Currently, support for this is NOT IMPLEMENTED yet, and it is invalid to have a non-zero value.
+	SizeLimit uint32
 }
 
 // Validate validates the field.
@@ -47,6 +52,10 @@ func (c Field) Validate(typeSet TypeSet) error {
 		if c.ReferencedType != "" {
 			return fmt.Errorf("field %q with kind %q cannot have a referenced type", c.Name, c.Kind)
 		}
+	}
+
+	if c.SizeLimit != 0 {
+		return fmt.Errorf("field %q has a non-zero size limit, support for this is NOT IMPLEMENTED yet", c.Name)
 	}
 
 	return nil

@@ -9,8 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 func TestNewKeyctlKeyring(t *testing.T) {

@@ -64,7 +64,6 @@ func newKeyctlBackendConfig(appName, _ string, _ io.Reader, opts ...Option) keyr
 func New(
 	appName, backend, rootDir string, userInput io.Reader, cdc codec.Codec, opts ...Option,
 ) (Keyring, error) {
-
 	if backend != BackendKeyctl {
 		return newKeyringGeneric(appName, backend, rootDir, userInput, cdc, opts...)
 	}

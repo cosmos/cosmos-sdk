@@ -2,16 +2,62 @@
 
 The x/accounts module provides module and facilities for writing smart cosmos-sdk accounts.
 
-# Supporting the account in the x/auth gRPC server
+# Supporting Custom Accounts in the x/auth gRPC Server
 
-If you want your custom account type to be exposed via the auth's `Account` and `AccountInfo` query, which is useful
-to ensure existing wallets which have not integrated with x/accounts yet can still parse the accounts post migration
+## Overview
 
-It is sufficient to make it implement the `auth.QueryLegacyAccount` handler.
+The x/auth module provides a mechanism for custom account types to be exposed via its `Account` and `AccountInfo` gRPC
+queries. This feature is particularly useful for ensuring compatibility with existing wallets that have not yet integrated 
+with x/accounts but still need to parse account information post-migration.
 
-One example lives in the `x/accounts` implementation of `BaseAccount`: 
+## Implementation
 
-# Genesis
+To support this feature, your custom account type needs to implement the `auth.QueryLegacyAccount` handler. Here are some important points to consider:
+
+1. **Selective Implementation**: This implementation is not required for every account type. It's only necessary for accounts you want to expose through the x/auth gRPC `Account` and `AccountInfo` methods.
+2. **Flexible Response**: The `info` field in the `QueryLegacyAccountResponse` is optional. If your custom account cannot be represented as a `BaseAccount`, you can leave this field empty.
+
+## Example Implementation
+
+A concrete example of implementation can be found in `defaults/base/account.go`. Here's a simplified version:
+
+```go
+func (a Account) AuthRetroCompatibility(ctx context.Context, _ *authtypes.QueryLegacyAccount) (*authtypes.QueryLegacyAccountResponse, error) {
+    seq := a.GetSequence()
+    num := a.GetNumber()
+    address := a.GetAddress()
+    pubKey := a.GetPubKey()
+
+    baseAccount := &authtypes.BaseAccount{
+        AccountNumber: num,
+        Sequence:      seq,
+        Address:       address,
+    }
+
+    // Convert pubKey to Any type
+    pubKeyAny, err := gogotypes.NewAnyWithValue(pubKey)
+    if err != nil {
+        return nil, err
+    }
+    baseAccount.PubKey = pubKeyAny
+
+    // Convert the entire baseAccount to Any type
+    accountAny, err := gogotypes.NewAnyWithValue(baseAccount)
+    if err != nil {
+        return nil, err
+    }
+
+    return &authtypes.QueryLegacyAccountResponse{
+        Account: accountAny,
+        Info:    baseAccount,
+    }, nil
+}
+```
+
+## Usage Notes
+
+- Implement this handler only for account types you want to expose via x/auth gRPC methods.
+- The `info` field in the response can be nil if your account doesn't fit the `BaseAccount` structure.
 
 ## Creating accounts on genesis
 

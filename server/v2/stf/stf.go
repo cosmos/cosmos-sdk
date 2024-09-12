@@ -338,11 +338,8 @@ func (s STF[T]) preBlock(
 		return nil, err
 	}
 
-	for i, e := range ctx.events {
-		ctx.events[i].Attributes = append(
-			e.Attributes,
-			event.Attribute{Key: "mode", Value: "PreBlock"},
-		)
+	for i := range ctx.events {
+		ctx.events[i].BlockStage = event.PreBlockStage
 	}
 
 	return ctx.events, nil
@@ -357,11 +354,8 @@ func (s STF[T]) beginBlock(
 		return nil, err
 	}
 
-	for i, e := range ctx.events {
-		ctx.events[i].Attributes = append(
-			e.Attributes,
-			event.Attribute{Key: "mode", Value: "BeginBlock"},
-		)
+	for i := range ctx.events {
+		ctx.events[i].BlockStage = event.BeginBlockStage
 	}
 
 	return ctx.events, nil
@@ -383,11 +377,8 @@ func (s STF[T]) endBlock(
 
 	ctx.events = append(ctx.events, events...)
 
-	for i, e := range ctx.events {
-		ctx.events[i].Attributes = append(
-			e.Attributes,
-			event.Attribute{Key: "mode", Value: "BeginBlock"},
-		)
+	for i := range ctx.events {
+		ctx.events[i].BlockStage = event.EndBlockStage
 	}
 
 	return ctx.events, valsetUpdates, nil

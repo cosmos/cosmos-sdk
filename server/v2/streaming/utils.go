@@ -9,8 +9,11 @@ func IntoStreamingEvents(events []event.Event) []*Event {
 		strEvent := &Event{
 			Type: event.Type,
 		}
-
-		for _, eventValue := range event.Attributes {
+		attrs, err := event.Attributes()
+		if err != nil {
+			continue
+		}
+		for _, eventValue := range attrs {
 			strEvent.Attributes = append(strEvent.Attributes, &EventAttribute{
 				Key:   eventValue.Key,
 				Value: eventValue.Value,

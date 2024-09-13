@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	rootstore "cosmossdk.io/store/v2/root"
 	"fmt"
 	"os"
 	"slices"
@@ -38,19 +39,19 @@ type appModule[T transaction.Tx] struct {
 func (m appModule[T]) IsOnePerModuleType() {}
 func (m appModule[T]) IsAppModule()        {}
 
-func (m appModule[T]) RegisterServices(registar grpc.ServiceRegistrar) error {
+func (m appModule[T]) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	autoCliQueryService, err := services.NewAutoCLIQueryService(m.app.moduleManager.modules)
 	if err != nil {
 		return err
 	}
 
-	autocliv1.RegisterQueryServer(registar, autoCliQueryService)
+	autocliv1.RegisterQueryServer(registrar, autoCliQueryService)
 
 	reflectionSvc, err := services.NewReflectionService()
 	if err != nil {
 		return err
 	}
-	reflectionv1.RegisterReflectionServiceServer(registar, reflectionSvc)
+	reflectionv1.RegisterReflectionServiceServer(registrar, reflectionSvc)
 
 	return nil
 }
@@ -95,6 +96,7 @@ func init() {
 			ProvideAppBuilder[transaction.Tx],
 			ProvideEnvironment[transaction.Tx],
 			ProvideModuleManager[transaction.Tx],
+			ProvideStoreBuilder,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -143,7 +145,9 @@ type AppInputs struct {
 	InterfaceRegistrar registry.InterfaceRegistrar
 	LegacyAmino        registry.AminoRegistrar
 	Logger             log.Logger
+	StoreBuilder       *StoreBuilder
 	DynamicConfig      server.DynamicConfig `optional:"true"` // can be nil in client wiring
+	StoreOptions       *rootstore.Options   `optional:"true"` // if unset defaults will be used
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -154,8 +158,17 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 
-	if inputs.DynamicConfig != nil {
-		inputs.AppBuilder.config = inputs.DynamicConfig
+	if inputs.DynamicConfig == nil {
+		return
+	}
+	storeOptions := rootstore.DefaultStoreOptions()
+	if inputs.StoreOptions != nil {
+		storeOptions = *inputs.StoreOptions
+	}
+	var err error
+	app.db, err = inputs.StoreBuilder.Build(inputs.Logger, app.storeKeys, inputs.DynamicConfig, storeOptions)
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -217,8 +230,8 @@ func ProvideEnvironment[T transaction.Tx](
 	return env, kvService, memKvService
 }
 
-func registerStoreKey[T transaction.Tx](wrapper *AppBuilder[T], key string) {
-	wrapper.app.storeKeys = append(wrapper.app.storeKeys, key)
+func registerStoreKey[T transaction.Tx](builder *AppBuilder[T], key string) {
+	builder.app.storeKeys = append(builder.app.storeKeys, key)
 }
 
 func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.StoreKeyConfig {

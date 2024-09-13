@@ -102,7 +102,6 @@ func NewSimApp[T transaction.Tx](
 		app          = &SimApp[T]{}
 		appBuilder   *runtime.AppBuilder[T]
 		err          error
-		storeOptions               = &root.Options{}
 		cometService comet.Service = &services.ContextAwareCometInfoService{}
 
 		// merge the AppConfig and other configuration in one config
@@ -166,6 +165,15 @@ func NewSimApp[T transaction.Tx](
 		)
 	)
 
+	if sub := viper.Sub("store.options"); sub != nil {
+		storeOptions := &root.Options{}
+		err := sub.Unmarshal(storeOptions)
+		if err != nil {
+			panic(err)
+		}
+		appConfig = depinject.Configs(appConfig, depinject.Supply(storeOptions))
+	}
+
 	if err := depinject.Inject(appConfig,
 		&appBuilder,
 		&app.appCodec,
@@ -194,15 +202,7 @@ func NewSimApp[T transaction.Tx](
 		panic(err)
 	}
 
-	var builderOpts []runtime.AppBuilderOption[T]
-	if sub := viper.Sub("store.options"); sub != nil {
-		err = sub.Unmarshal(storeOptions)
-		if err != nil {
-			panic(err)
-		}
-		builderOpts = append(builderOpts, runtime.AppBuilderWithStoreOptions[T](storeOptions))
-	}
-	app.App, err = appBuilder.Build(builderOpts...)
+	app.App, err = appBuilder.Build()
 	if err != nil {
 		panic(err)
 	}

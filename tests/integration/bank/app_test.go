@@ -198,7 +198,7 @@ func TestSendNotEnoughBalance_v2(t *testing.T) {
 	})
 	require.NoError(t, err)
 	_, _, err = s.AppV2.DeliverBlock(ctx, &server.BlockRequest[transaction.Tx]{
-		Height:  1,
+		Height:  2, // TODO how to auto-advance height with app v2 interface?
 		Hash:    make([]byte, 32),
 		AppHash: make([]byte, 32),
 	})

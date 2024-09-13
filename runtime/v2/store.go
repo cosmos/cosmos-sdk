@@ -1,10 +1,16 @@
 package runtime
 
 import (
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/stf"
 	storev2 "cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/proof"
+	"cosmossdk.io/store/v2/root"
+	"fmt"
+	"path/filepath"
 )
 
 // NewKVStoreService creates a new KVStoreService.
@@ -54,4 +60,52 @@ type Store interface {
 
 	// LastCommitID returns the latest commit ID
 	LastCommitID() (proof.CommitID, error)
+}
+
+type StoreBuilder struct {
+	store Store
+}
+
+func (sb *StoreBuilder) Build(
+	logger log.Logger,
+	storeKeys []string,
+	config server.DynamicConfig,
+	options root.Options,
+) (Store, error) {
+	if sb.store != nil {
+		return sb.store, nil
+	}
+	home := config.GetString(FlagHome)
+	scRawDb, err := db.NewDB(
+		db.DBType(config.GetString("store.app-db-backend")),
+		"application",
+		filepath.Join(home, "data"),
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create SCRawDB: %w", err)
+	}
+
+	factoryOptions := &root.FactoryOptions{
+		Logger:    logger,
+		RootDir:   home,
+		Options:   options,
+		StoreKeys: append(storeKeys, "stf"),
+		SCRawDB:   scRawDb,
+	}
+
+	rs, err := root.CreateRootStore(factoryOptions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create root store: %w", err)
+	}
+	sb.store = rs
+	return sb.store, nil
+}
+
+func (sb *StoreBuilder) Get() Store {
+	return sb.store
+}
+
+func ProvideStoreBuilder() *StoreBuilder {
+	return &StoreBuilder{}
 }

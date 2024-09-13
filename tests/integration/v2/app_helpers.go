@@ -3,6 +3,7 @@ package integration
 
 import (
 	"context"
+	"cosmossdk.io/core/comet"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -170,6 +171,14 @@ func (d *dynamicConfigImpl) UnmarshalSub(string, any) (bool, error) {
 	return false, nil
 }
 
+var _ comet.Service = &cometServiceImpl{}
+
+type cometServiceImpl struct{}
+
+func (c cometServiceImpl) CometInfo(context.Context) comet.Info {
+	return comet.Info{}
+}
+
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
 // appConfig defines the application configuration (f.e. app_config.go).
 // extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
@@ -182,7 +191,9 @@ func SetupWithConfiguration(
 	var (
 		app             *runtime.App[stateMachineTx]
 		appBuilder      *runtime.AppBuilder[stateMachineTx]
+		storeBuilder    *runtime.StoreBuilder
 		txConfigOptions tx.ConfigOptions
+		cometService    comet.Service = &cometServiceImpl{}
 		cdc             codec.Codec
 		err             error
 	)
@@ -191,12 +202,15 @@ func SetupWithConfiguration(
 		depinject.Configs(
 			appConfig,
 			codec.DefaultProviders,
-			depinject.Supply(&dynamicConfigImpl{startupConfig.HomeDir}),
+			depinject.Supply(
+				&dynamicConfigImpl{startupConfig.HomeDir},
+				cometService,
+			),
 			depinject.Invoke(
 				std.RegisterInterfaces,
 			),
 		),
-		append(extraOutputs, &appBuilder, &cdc, &txConfigOptions)...); err != nil {
+		append(extraOutputs, &appBuilder, &cdc, &txConfigOptions, &storeBuilder)...); err != nil {
 		return nil, fmt.Errorf("failed to inject dependencies: %w", err)
 	}
 
@@ -263,7 +277,7 @@ func SetupWithConfiguration(
 	)
 
 	emptyHash := sha256.Sum256(nil)
-	_, _, err = app.InitGenesis(
+	_, state, err := app.InitGenesis(
 		ctx,
 		&server.BlockRequest[stateMachineTx]{
 			Height:    1,
@@ -280,17 +294,23 @@ func SetupWithConfiguration(
 		return nil, fmt.Errorf("failed to init genesis: %w", err)
 	}
 
-	// commit genesis changes
-	// not sure if this is needed yet
-	// if !startupConfig.AtGenesis {
-	// 	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{
-	// 		Height:             app.LastBlockHeight() + 1,
-	// 		NextValidatorsHash: valSet.Hash(),
-	// 	})
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("failed to finalize block: %w", err)
-	// 	}
-	// }
+	store := storeBuilder.Get()
+	if store == nil {
+		return nil, fmt.Errorf("failed to build store: %w", err)
+	}
+	err = store.SetInitialVersion(1)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set initial version: %w", err)
+	}
+	genesisChanges, err := state.GetStateChanges()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get genesis state changes: %w", err)
+	}
+	cs := &corestore.Changeset{Changes: genesisChanges}
+	_, err = store.Commit(cs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to commit initial version: %w", err)
+	}
 
 	return app, nil
 }

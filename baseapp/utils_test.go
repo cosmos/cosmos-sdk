@@ -14,13 +14,13 @@ import (
 	"unsafe"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/server"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	errorsmod "cosmossdk.io/errors"
@@ -206,7 +206,7 @@ func setIntOnStore(store storetypes.KVStore, key []byte, i int64) {
 }
 
 type paramStore struct {
-	db *dbm.MemDB
+	db corestore.KVStoreWithBatch
 }
 
 var _ baseapp.ParamStore = (*paramStore)(nil)

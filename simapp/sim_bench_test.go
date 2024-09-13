@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/log"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/testutils/sims"
 
 	flag "github.com/spf13/pflag"
@@ -87,7 +86,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 
 	if config.Commit {
-		db, ok := db.(dbm.DB)
+		db, ok := db.(simtestutil.DBStatsInterface)
 		if ok {
 			simtestutil.PrintStats(db)
 		}

@@ -181,12 +181,12 @@ func (ag *AppGenesis) ToGenesisDoc() (*cmttypes.GenesisDoc, error) {
 	cmtValidators := []cmttypes.GenesisValidator{}
 	for _, val := range ag.Consensus.Validators {
 		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(val.PubKey)
-		if err != nil {
-			return nil, err
-		}
+		// if err != nil {
+		// 	return nil, err
+		// }
 		cmtVal := cmttypes.GenesisValidator{
 			Address: val.Address.Bytes(),
-			PubKey:  cmtPk,
+			PubKey:  val.PubKey,
 			Power:   val.Power,
 			Name:    val.Name,
 		}

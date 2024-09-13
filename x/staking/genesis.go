@@ -27,7 +27,7 @@ func WriteValidators(ctx context.Context, keeper *keeper.Keeper) (vals []sdk.Gen
 		}
 
 		vals = append(vals, sdk.GenesisValidator{
-			Address: sdk.ValAddress(pk.Address()),
+			Address: sdk.ConsAddress(pk.Address()).Bytes(),
 			PubKey:  pk,
 			Power:   validator.GetConsensusPower(keeper.PowerReduction(ctx)),
 			Name:    validator.GetMoniker(),

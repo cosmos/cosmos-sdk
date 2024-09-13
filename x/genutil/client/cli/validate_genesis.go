@@ -49,28 +49,19 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 
 			var genState map[string]json.RawMessage
 			if err = json.Unmarshal(appGenesis.AppState, &genState); err != nil {
-<<<<<<< HEAD
+				if strings.Contains(err.Error(), "unexpected end of JSON input") {
+					return fmt.Errorf("app_state is missing in the genesis file: %s", err.Error())
+				}
+
 				return fmt.Errorf("error unmarshalling genesis doc %s: %s", genesis, err.Error())
 			}
 
 			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, genState); err != nil {
-				return fmt.Errorf("error validating genesis file %s: %s", genesis, err.Error())
-=======
-				if strings.Contains(err.Error(), "unexpected end of JSON input") {
-					return fmt.Errorf("app_state is missing in the genesis file: %s", err.Error())
+				errStr := fmt.Sprintf("error validating genesis file %s: %s", genesis, err.Error())
+				if errors.Is(err, io.EOF) {
+					errStr = fmt.Sprintf("%s: section is missing in the app_state", errStr)
 				}
-				return fmt.Errorf("error unmarshalling genesis doc %s: %w", genesis, err)
-			}
-
-			if genMM != nil {
-				if err = genMM.ValidateGenesis(genState); err != nil {
-					errStr := fmt.Sprintf("error validating genesis file %s: %s", genesis, err.Error())
-					if errors.Is(err, io.EOF) {
-						errStr = fmt.Sprintf("%s: section is missing in the app_state", errStr)
-					}
-					return fmt.Errorf("%s", errStr)
-				}
->>>>>>> 9c5cea08c (feat(x/genutil): add better error messages for genesis validation (#21701))
+				return fmt.Errorf("%s", errStr)
 			}
 
 			fmt.Fprintf(cmd.OutOrStdout(), "File at %s is a valid genesis file\n", genesis)

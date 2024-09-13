@@ -6,17 +6,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/x/staking"
-
 	"github.com/cosmos/cosmos-sdk/client"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // An example exported genesis file from a 0.37 chain. Note that evidence
@@ -39,18 +36,18 @@ var v037Exported = `{
 }`
 
 func TestValidateGenesis(t *testing.T) {
-	cdc := testutilmod.MakeTestEncodingConfig(codectestutil.CodecOptions{}, genutil.AppModule{}).Codec
+	cdc := testutilmod.MakeTestEncodingConfig(genutil.AppModule{}).Codec
 	testCases := []struct {
 		name      string
 		genesis   string
 		expErrStr string
-		genMM     *module.Manager
+		genMM     module.BasicManager
 	}{
 		{
 			"invalid json",
 			`{"app_state": {x,}}`,
 			"error at offset 16: invalid character",
-			module.NewManagerFromMap(nil),
+			module.NewBasicManager(),
 		},
 		{
 			"invalid: missing module config in app_state",
@@ -61,15 +58,13 @@ func TestValidateGenesis(t *testing.T) {
 				return string(bz)
 			}(),
 			"section is missing in the app_state",
-			module.NewManagerFromMap(map[string]appmodulev2.AppModule{
-				"custommod": staking.NewAppModule(cdc, nil, nil, nil),
-			}),
+			module.NewBasicManager(staking.NewAppModule(cdc, nil, nil, nil, nil)),
 		},
 		{
 			"exported 0.37 genesis file",
 			v037Exported,
 			"make sure that you have correctly migrated all CometBFT consensus params",
-			module.NewManagerFromMap(nil),
+			module.NewBasicManager(),
 		},
 		{
 			"valid 0.50 genesis file",
@@ -80,7 +75,7 @@ func TestValidateGenesis(t *testing.T) {
 				return string(bz)
 			}(),
 			"",
-			module.NewManagerFromMap(nil),
+			module.NewBasicManager(),
 		},
 	}
 

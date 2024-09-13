@@ -76,7 +76,7 @@ func V2UpgradeStoreLoader(upgradeHeight int64, storeUpgrades *store.StoreUpgrade
 		if uint64(upgradeHeight) == latestVersion+1 {
 			if len(storeUpgrades.Deleted) > 0 || len(storeUpgrades.Added) > 0 {
 				if upgrader, ok := store.(storev2.UpgradeableStore); ok {
-					return upgrader.LoadVersionAndUpgrade(uint64(upgradeHeight), storeUpgrades)
+					return upgrader.LoadVersionAndUpgrade(latestVersion, storeUpgrades)
 				}
 
 				return fmt.Errorf("store does not support upgrades")

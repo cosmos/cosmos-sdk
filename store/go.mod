@@ -1,9 +1,10 @@
 module cosmossdk.io/store
 
 go 1.22.2
+toolchain go1.23.1
 
 require (
-	cosmossdk.io/core v0.12.1-0.20240813134434-072a29c838a5
+	cosmossdk.io/core v1.0.0-alpha.2
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0

@@ -3,6 +3,7 @@
 mod context;
 mod response;
 mod events;
+mod message;
 
 pub use context::Context;
 pub use response::Response;

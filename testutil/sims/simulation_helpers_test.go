@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/rootmulti"
@@ -115,7 +115,7 @@ func checkDiffResults(t *testing.T, store1, store2 storetypes.KVStore, noDiff bo
 
 func initTestStores(t *testing.T) (storetypes.KVStore, storetypes.KVStore) {
 	t.Helper()
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	ms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 
 	key1 := storetypes.NewKVStoreKey("store1")

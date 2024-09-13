@@ -13,30 +13,20 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/store/v2/root"
+<<<<<<< HEAD
 	"cosmossdk.io/x/accounts"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
+=======
+>>>>>>> 7ee7c207d (refactor(simapp): simplify simapp di (#21718))
 	consensuskeeper "cosmossdk.io/x/consensus/keeper"
-	distrkeeper "cosmossdk.io/x/distribution/keeper"
-	epochskeeper "cosmossdk.io/x/epochs/keeper"
-	evidencekeeper "cosmossdk.io/x/evidence/keeper"
-	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	govkeeper "cosmossdk.io/x/gov/keeper"
-	groupkeeper "cosmossdk.io/x/group/keeper"
-	mintkeeper "cosmossdk.io/x/mint/keeper"
-	nftkeeper "cosmossdk.io/x/nft/keeper"
-	_ "cosmossdk.io/x/protocolpool"
-	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
-	slashingkeeper "cosmossdk.io/x/slashing/keeper"
-	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
@@ -53,6 +43,7 @@ type SimApp[T transaction.Tx] struct {
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
 
+<<<<<<< HEAD
 	// keepers
 	AccountsKeeper        accounts.Keeper
 	AuthKeeper            authkeeper.AccountKeeper
@@ -62,16 +53,12 @@ type SimApp[T transaction.Tx] struct {
 	MintKeeper            mintkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
 	GovKeeper             *govkeeper.Keeper
+=======
+	// required keepers during wiring
+	// others keepers are all in the app
+>>>>>>> 7ee7c207d (refactor(simapp): simplify simapp di (#21718))
 	UpgradeKeeper         *upgradekeeper.Keeper
-	AuthzKeeper           authzkeeper.Keeper
-	EvidenceKeeper        evidencekeeper.Keeper
-	FeeGrantKeeper        feegrantkeeper.Keeper
-	GroupKeeper           groupkeeper.Keeper
-	NFTKeeper             nftkeeper.Keeper
 	ConsensusParamsKeeper consensuskeeper.Keeper
-	CircuitBreakerKeeper  circuitkeeper.Keeper
-	PoolKeeper            poolkeeper.Keeper
-	EpochsKeeper          *epochskeeper.Keeper
 }
 
 func init() {
@@ -166,6 +153,7 @@ func NewSimApp[T transaction.Tx](
 		&app.legacyAmino,
 		&app.txConfig,
 		&app.interfaceRegistry,
+<<<<<<< HEAD
 		&app.AuthKeeper,
 		&app.BankKeeper,
 		&app.StakingKeeper,
@@ -173,16 +161,10 @@ func NewSimApp[T transaction.Tx](
 		&app.MintKeeper,
 		&app.DistrKeeper,
 		&app.GovKeeper,
+=======
+>>>>>>> 7ee7c207d (refactor(simapp): simplify simapp di (#21718))
 		&app.UpgradeKeeper,
-		&app.AuthzKeeper,
-		&app.EvidenceKeeper,
-		&app.FeeGrantKeeper,
-		&app.GroupKeeper,
-		&app.NFTKeeper,
 		&app.ConsensusParamsKeeper,
-		&app.CircuitBreakerKeeper,
-		&app.PoolKeeper,
-		&app.EpochsKeeper,
 	); err != nil {
 		panic(err)
 	}

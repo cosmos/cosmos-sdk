@@ -47,6 +47,8 @@ type App[T transaction.Tx] struct {
 	// GRPCMethodsToMessageMap maps gRPC method name to a function that decodes the request
 	// bytes into a gogoproto.Message, which then can be passed to appmanager.
 	GRPCMethodsToMessageMap map[string]func() gogoproto.Message
+
+	storeLoader StoreLoader
 }
 
 // Name returns the app name.
@@ -69,9 +71,14 @@ func (a *App[T]) DefaultGenesis() map[string]json.RawMessage {
 	return a.moduleManager.DefaultGenesis()
 }
 
+// SetStoreLoader sets the store loader.
+func (a *App[T]) SetStoreLoader(loader StoreLoader) {
+	a.storeLoader = loader
+}
+
 // LoadLatest loads the latest version.
 func (a *App[T]) LoadLatest() error {
-	return a.db.LoadLatestVersion()
+	return a.storeLoader(a.db)
 }
 
 // LoadHeight loads a particular height

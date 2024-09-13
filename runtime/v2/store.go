@@ -1,6 +1,8 @@
 package runtime
 
 import (
+	"fmt"
+
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/server/v2/stf"
 	storev2 "cosmossdk.io/store/v2"
@@ -53,4 +55,33 @@ type Store interface {
 	LoadLatestVersion() error
 
 	LastCommitID() (proof.CommitID, error)
+}
+
+// StoreLoader allows for custom loading of the store, this is useful when upgrading the store from a previous version
+type StoreLoader func(store Store) error
+
+// DefaultStoreLoader just calls LoadLatestVersion on the store
+func DefaultStoreLoader(store Store) error {
+	return store.LoadLatestVersion()
+}
+
+func V2UpgradeStoreLoader(upgradeHeight int64, storeUpgrades *store.StoreUpgrades) StoreLoader {
+	return func(store Store) error {
+		latestVersion, err := store.GetLatestVersion()
+		if err != nil {
+			return err
+		}
+
+		if uint64(upgradeHeight) == latestVersion+1 {
+			if len(storeUpgrades.Deleted) > 0 || len(storeUpgrades.Added) > 0 {
+				if upgrader, ok := store.(storev2.UpgradeableStore); ok {
+					return upgrader.LoadVersionAndUpgrade(uint64(upgradeHeight), storeUpgrades)
+				}
+
+				return fmt.Errorf("store does not support upgrades")
+			}
+		}
+
+		return DefaultStoreLoader(store)
+	}
 }

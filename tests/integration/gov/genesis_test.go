@@ -5,11 +5,12 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/header"
+	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -122,7 +123,7 @@ func TestImportExportQueues(t *testing.T) {
 	assert.NilError(t, err)
 
 	s2 := suite{}
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	conf2 := simtestutil.DefaultStartUpConfig()
 	conf2.DB = db
 	s2.app, err = simtestutil.SetupWithConfiguration(
@@ -188,7 +189,7 @@ func TestImportExportQueues(t *testing.T) {
 	assert.Assert(t, proposal2.Status == v1.StatusRejected)
 }
 
-func clearDB(t *testing.T, db *dbm.MemDB) {
+func clearDB(t *testing.T, db corestore.KVStoreWithBatch) {
 	t.Helper()
 	iter, err := db.Iterator(nil, nil)
 	assert.NilError(t, err)

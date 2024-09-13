@@ -22,11 +22,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			Service: counterv1.Msg_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
-					RpcMethod:      "IncreaseCount",
-					Use:            "increase-count <count>",
-					Alias:          []string{"increase-counter", "increase", "inc", "bump"},
-					Short:          "Increase the counter by the specified amount",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "count"}},
+					RpcMethod: "IncreaseCount",
+					Use:       "increase-count <donation> <count>",
+					Alias:     []string{"increase-counter", "increase", "inc", "bump"},
+					Short:     "Increase the counter by the specified amount",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "donation"},
+						{ProtoField: "count"},
+					},
 				},
 			},
 		},

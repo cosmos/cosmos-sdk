@@ -5,6 +5,7 @@ package cosmos.counter.v1;
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/testutil/x/counter/types";
 
@@ -18,14 +19,17 @@ service Msg {
 
 // MsgIncreaseCounter defines a count Msg service counter.
 message MsgIncreaseCounter {
-  option (amino.name)           = "cosmos-sdk/increase_counter"; // TODO: remove amino
+  option (amino.name)           = "cosmos-sdk/increase_counter";
   option (cosmos.msg.v1.signer) = "signer";
 
   // signer is the address that controls the module (defaults to x/gov unless overwritten).
   string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
+  // donation is the amount to donate when incrementing the counter.
+  cosmos.base.v1beta1.Coin donation = 2;
+
   // count is the number of times to increment the counter.
-  int64 count = 2;
+  int64 count = 3;
 }
 
 // MsgIncreaseCountResponse is the Msg/Counter response type.

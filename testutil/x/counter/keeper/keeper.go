@@ -54,6 +54,17 @@ func (k Keeper) GetCount(ctx context.Context, _ *types.QueryGetCountRequest) (*t
 var _ types.MsgServer = Keeper{}
 
 func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter) (*types.MsgIncreaseCountResponse, error) {
+	// process donation
+	if !msg.Donation.IsValid() {
+		return nil, status.Error(codes.InvalidArgument, "donation is invalid")
+	} else if msg.Donation.IsZero() {
+		return nil, status.Error(codes.InvalidArgument, "donation is zero")
+	} else {
+		k.Logger.Info("User wants to donate", "donation", msg.Donation)
+		k.Logger.Info("We don't need your money, so we won't take it")
+	}
+
+	// increase counter
 	var num int64
 	num, err := k.CountStore.Get(ctx)
 	if err != nil {

@@ -1,10 +1,10 @@
 module cosmossdk.io/x/accounts/defaults/multisig
 
-go 1.23
+go 1.23.1
 
 require (
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v1.0.0-alpha.1
+	cosmossdk.io/core v1.0.0-alpha.2
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91

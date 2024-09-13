@@ -45,6 +45,6 @@ func (app *SimApp[T]) RegisterUpgradeHandlers() {
 			Deleted: []string{"crisis"}, // The SDK discontinued the crisis module in v0.52.0
 		}
 
-		app.SetStoreLoader(runtime.V2UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+		app.SetStoreLoader(runtime.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 }

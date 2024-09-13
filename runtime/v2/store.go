@@ -66,7 +66,9 @@ func DefaultStoreLoader(store Store) error {
 	return store.LoadLatestVersion()
 }
 
-func V2UpgradeStoreLoader(upgradeHeight int64, storeUpgrades *store.StoreUpgrades) StoreLoader {
+// UpgradeStoreLoader upgrades the store if the upgrade height matches the current version, it is used as a replacement
+// for the DefaultStoreLoader when there are store upgrades
+func UpgradeStoreLoader(upgradeHeight int64, storeUpgrades *store.StoreUpgrades) StoreLoader {
 	return func(store Store) error {
 		latestVersion, err := store.GetLatestVersion()
 		if err != nil {

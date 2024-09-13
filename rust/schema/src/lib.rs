@@ -1,6 +1,6 @@
 //! This crate defines the basic traits and types for schema and encoding.
-mod value;
-mod types;
+// mod value;
+// mod types;
 mod r#struct;
 
 pub use r#struct::{StructCodec};

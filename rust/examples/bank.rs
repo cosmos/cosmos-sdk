@@ -1,6 +1,6 @@
-#[interchain_prelude::module_handler(Bank)]
+#[interchain_sdk::module_handler(Bank)]
 pub mod bank {
-    use interchain_prelude::*;
+    use interchain_sdk::*;
 
     pub struct Bank {
         balances: Map<(Address, String), u128>,

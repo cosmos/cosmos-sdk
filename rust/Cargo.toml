@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "prelude",
     "core",
     "core_macros",
     "message_api",
@@ -20,13 +19,18 @@ missing_docs = "deny"
 
 # The settings below are for this root package which mainly contains examples:
 [package]
-name = "interchain_sdk_rust"
+name = "interchain_sdk"
 edition = "2021"
-publish = false
-
-[lib]
-path = "examples.rs"
+version.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
-interchain_prelude = { path = "prelude" }
+interchain_core = { path = "core" }
+state_objects = { path = "state_objects" }
+
+[dev-dependencies]
 arrayvec = "0.7.6"
+
+[lints]
+workspace = true

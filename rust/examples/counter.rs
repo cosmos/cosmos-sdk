@@ -1,9 +1,9 @@
-#[interchain_prelude::account_handler]
+#[interchain_sdk::account_handler]
 pub mod counter {
-    use interchain_prelude::*;
+    use interchain_sdk::*;
 
     pub struct Counter {
-        value: Item<u64>
+        value: Item<u64>,
     }
 
     #[publish]

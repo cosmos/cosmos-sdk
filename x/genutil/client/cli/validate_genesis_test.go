@@ -1,19 +1,18 @@
 package cli_test
 
 import (
+	"encoding/json"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // An example exported genesis file from a 0.37 chain. Note that evidence
@@ -36,12 +35,11 @@ var v037Exported = `{
 }`
 
 func TestValidateGenesis(t *testing.T) {
-	cdc := testutilmod.MakeTestEncodingConfig(genutil.AppModule{}).Codec
 	testCases := []struct {
-		name      string
-		genesis   string
-		expErrStr string
-		genMM     module.BasicManager
+		name         string
+		genesis      string
+		expErrStr    string
+		basicManager module.BasicManager
 	}{
 		{
 			"invalid json",
@@ -58,7 +56,7 @@ func TestValidateGenesis(t *testing.T) {
 				return string(bz)
 			}(),
 			"section is missing in the app_state",
-			module.NewBasicManager(staking.NewAppModule(cdc, nil, nil, nil, nil)),
+			module.NewBasicManager(mockModule{}),
 		},
 		{
 			"exported 0.37 genesis file",
@@ -84,7 +82,7 @@ func TestValidateGenesis(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 			genesisFile := testutil.WriteToNewTempFile(t, tc.genesis)
-			_, err := clitestutil.ExecTestCLICmd(client.Context{}, cli.ValidateGenesisCmd(tc.genMM), []string{genesisFile.Name()})
+			_, err := clitestutil.ExecTestCLICmd(client.Context{}, cli.ValidateGenesisCmd(tc.basicManager), []string{genesisFile.Name()})
 			if tc.expErrStr != "" {
 				require.Contains(t, err.Error(), tc.expErrStr)
 			} else {
@@ -92,4 +90,20 @@ func TestValidateGenesis(t *testing.T) {
 			}
 		})
 	}
+}
+
+type mockModule struct {
+	module.AppModuleBasic
+}
+
+func (mockModule) Name() string {
+	return "mock"
+}
+
+func (mockModule) DefaultGenesis(codec.JSONCodec) json.RawMessage {
+	return json.RawMessage(`{"foo": "bar"}`)
+}
+
+func (mockModule) ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error {
+	return nil
 }

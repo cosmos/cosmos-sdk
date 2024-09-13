@@ -185,7 +185,7 @@ func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer, isAny bool, useTypeUrl bool) error {
+func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer, isAny, useTypeUrl bool) error {
 	var (
 		name  string
 		named bool

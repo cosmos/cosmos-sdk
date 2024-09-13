@@ -13,13 +13,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/store/v2/root"
-<<<<<<< HEAD
-	"cosmossdk.io/x/accounts"
-	authzkeeper "cosmossdk.io/x/authz/keeper"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	circuitkeeper "cosmossdk.io/x/circuit/keeper"
-=======
->>>>>>> 7ee7c207d (refactor(simapp): simplify simapp di (#21718))
 	consensuskeeper "cosmossdk.io/x/consensus/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
@@ -43,20 +36,8 @@ type SimApp[T transaction.Tx] struct {
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
 
-<<<<<<< HEAD
-	// keepers
-	AccountsKeeper        accounts.Keeper
-	AuthKeeper            authkeeper.AccountKeeper
-	BankKeeper            bankkeeper.Keeper
-	StakingKeeper         *stakingkeeper.Keeper
-	SlashingKeeper        slashingkeeper.Keeper
-	MintKeeper            mintkeeper.Keeper
-	DistrKeeper           distrkeeper.Keeper
-	GovKeeper             *govkeeper.Keeper
-=======
 	// required keepers during wiring
 	// others keepers are all in the app
->>>>>>> 7ee7c207d (refactor(simapp): simplify simapp di (#21718))
 	UpgradeKeeper         *upgradekeeper.Keeper
 	ConsensusParamsKeeper consensuskeeper.Keeper
 }
@@ -153,16 +134,6 @@ func NewSimApp[T transaction.Tx](
 		&app.legacyAmino,
 		&app.txConfig,
 		&app.interfaceRegistry,
-<<<<<<< HEAD
-		&app.AuthKeeper,
-		&app.BankKeeper,
-		&app.StakingKeeper,
-		&app.SlashingKeeper,
-		&app.MintKeeper,
-		&app.DistrKeeper,
-		&app.GovKeeper,
-=======
->>>>>>> 7ee7c207d (refactor(simapp): simplify simapp di (#21718))
 		&app.UpgradeKeeper,
 		&app.ConsensusParamsKeeper,
 	); err != nil {

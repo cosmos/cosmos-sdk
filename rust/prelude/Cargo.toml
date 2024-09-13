@@ -11,5 +11,4 @@ workspace = true
 [dependencies]
 interchain_core = { path = "../core" }
 interchain_message_api = { path = "../message_api" }
-interchain_context = { path = "../context" }
 state_objects = { path = "../state_objects" }

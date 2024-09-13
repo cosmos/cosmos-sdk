@@ -12,3 +12,6 @@ workspace = true
 proc-macro = true
 
 [dependencies]
+syn = { version = "2.0.77", features = ["full"] }
+quote = "1.0.37"
+

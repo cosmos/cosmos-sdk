@@ -1,12 +1,15 @@
 [package]
-name = "interchain_context"
+name = "interchain_schema_macros"
 edition = "2021"
 version.workspace = true
 repository.workspace = true
 license.workspace = true
 
+[dependencies]
+
+[lib]
+proc-macro = true
+
 [lints]
 workspace = true
 
-[dependencies]
-interchain_message_api = { path = "../message_api" }

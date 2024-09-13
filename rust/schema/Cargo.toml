@@ -5,7 +5,14 @@ version.workspace = true
 repository.workspace = true
 license.workspace = true
 
-[dependencies]
-
 [lints]
 workspace = true
+
+[dependencies]
+interchain_message_api = { path = "../message_api" }
+interchain_schema_macros = { path = "../schema_macros" }
+
+[features]
+default = ["address", "macros"]
+address = []
+macros = []

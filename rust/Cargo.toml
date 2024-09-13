@@ -1,10 +1,12 @@
 [workspace]
-members = [ "context",
+members = [
+    "prelude",
     "core",
-    "core_macros", "message_api",
-    "prelude"
-, "schema", "state_objects"]
-resolver = "2"
+    "core_macros",
+    "message_api",
+    "schema",
+    "state_objects"
+, "schema_macros"]
 
 [workspace.package]
 version = "0.0.1"
@@ -15,3 +17,16 @@ license = "Apache-2.0"
 
 [workspace.lints.rust]
 missing_docs = "deny"
+
+# The settings below are for this root package which mainly contains examples:
+[package]
+name = "interchain_sdk_rust"
+edition = "2021"
+publish = false
+
+[lib]
+path = "examples.rs"
+
+[dependencies]
+interchain_prelude = { path = "prelude" }
+arrayvec = "0.7.6"

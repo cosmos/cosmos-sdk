@@ -10,10 +10,11 @@ workspace = true
 
 [dependencies]
 interchain_message_api = { path = "../message_api" }
-interchain_context = { path = "../context" }
 interchain_schema = { path = "../schema" }
 interchain_core_macros = { path = "../core_macros" }
+interchain_schema_macros = { path = "../schema_macros" }
 
 [features]
-default = ["core_macros"]
+default = ["core_macros", "schema_macros"]
 core_macros = []
+schema_macros = []

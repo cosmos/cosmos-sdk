@@ -2,10 +2,10 @@ package simapp
 
 import (
 	"context"
-	"cosmossdk.io/runtime/v2"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/x/accounts"
 	bankv2types "cosmossdk.io/x/bank/v2/types"
 	epochstypes "cosmossdk.io/x/epochs/types"

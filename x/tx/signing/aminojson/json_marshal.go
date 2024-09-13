@@ -192,11 +192,12 @@ func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer, isAn
 		named bool
 	)
 
-	if useTypeUrl {
+	switch {
+	case useTypeUrl:
 		name, named = getMessageTypeURL(msg), true
-	} else if isAny {
+	case isAny:
 		name, named = getMessageAminoNameAny(msg), true
-	} else {
+	default:
 		name, named = getMessageAminoName(msg)
 	}
 

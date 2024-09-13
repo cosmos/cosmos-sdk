@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	consensusv1 "cosmossdk.io/x/consensus/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -24,12 +23,14 @@ type GasTx interface {
 // CONTRACT: Must be first decorator in the chain
 // CONTRACT: Tx must implement GasTx interface
 type SetUpContextDecorator struct {
-	env appmodule.Environment
+	env             appmodule.Environment
+	consensusKeeper ConsensusKeeper
 }
 
-func NewSetUpContextDecorator(env appmodule.Environment) SetUpContextDecorator {
+func NewSetUpContextDecorator(env appmodule.Environment, consensusKeeper ConsensusKeeper) SetUpContextDecorator {
 	return SetUpContextDecorator{
-		env: env,
+		env:             env,
+		consensusKeeper: consensusKeeper,
 	}
 }
 
@@ -45,18 +46,13 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, _ bool, 
 
 	newCtx = SetGasMeter(ctx, gasTx.GetGas())
 
-	// TODO: possibly cache the result of this query for other antehandlers to use
-	var res consensusv1.QueryParamsResponse
-	if err := sud.env.QueryRouterService.InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
+	maxGas, _, err := sud.consensusKeeper.BlockParams(ctx)
+	if err != nil {
 		return newCtx, err
 	}
 
-	if res.Params.Block != nil {
-		// If there exists a maximum block gas limit, we must ensure that the tx
-		// does not exceed it.
-		if res.Params.Block.MaxGas > 0 && gasTx.GetGas() > uint64(res.Params.Block.MaxGas) {
-			return newCtx, errorsmod.Wrapf(sdkerrors.ErrInvalidGasLimit, "tx gas limit %d exceeds block max gas %d", gasTx.GetGas(), res.Params.Block.MaxGas)
-		}
+	if maxGas > 0 && gasTx.GetGas() > maxGas {
+		return newCtx, errorsmod.Wrapf(sdkerrors.ErrInvalidGasLimit, "tx gas limit %d exceeds block max gas %d", gasTx.GetGas(), maxGas)
 	}
 
 	// Decorator will catch an OutOfGasPanic caused in the next antehandler

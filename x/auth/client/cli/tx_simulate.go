@@ -5,18 +5,17 @@ import (
 
 	"github.com/spf13/cobra"
 
-	authclient "cosmossdk.io/x/auth/client"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 // GetSimulateCmd returns a command that simulates whether a transaction will be
 // successful.
 func GetSimulateCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "simulate /path/to/unsigned-tx.json --from keyname",
+		Use:   "simulate <path/to/unsigned-tx.json> --from <keyname>",
 		Short: "Simulate the gas usage of a transaction",
 		Long: strings.TrimSpace(`Simulate whether a transaction will be successful:
 

@@ -35,7 +35,7 @@ func (q Keeper) Allowance(ctx context.Context, req *feegrant.QueryAllowanceReque
 
 	feeAllowance, err := q.GetAllowance(ctx, granterAddr, granteeAddr)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	msg, ok := feeAllowance.(proto.Message)
@@ -45,7 +45,7 @@ func (q Keeper) Allowance(ctx context.Context, req *feegrant.QueryAllowanceReque
 
 	feeAllowanceAny, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &feegrant.QueryAllowanceResponse{

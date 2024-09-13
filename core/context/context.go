@@ -12,8 +12,8 @@ var (
 	ExecModeKey = execModeKey{}
 	// CometInfoKey is the context key for allowing modules to get CometInfo.
 	CometInfoKey = cometInfoKey{}
-	// InitInfoKey is the context key for setting consensus params from genesis in the consensus module.
-	InitInfoKey = initInfoKey{}
+	// CometParamsInitInfoKey is the context key for setting consensus params from genesis in the consensus module.
+	CometParamsInitInfoKey = initInfoKey{}
 
 	// EnvironmentContextKey is the context key for the environment.
 	// A caller should not assume the environment is available in each context.

@@ -14,6 +14,7 @@ import (
 	app2 "cosmossdk.io/core/app"
 	"cosmossdk.io/core/comet"
 	context2 "cosmossdk.io/core/context"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -28,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
@@ -53,8 +55,10 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	accAddr, err := app.txConfig.SigningContext().AddressCodec().BytesToString(acc.GetAddress())
+	require.NoError(t, err)
 	balance := banktypes.Balance{
-		Address: acc.GetAddress().String(),
+		Address: accAddr,
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
 	}
 
@@ -80,7 +84,7 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 
 	_, newState, err := app.InitGenesis(
 		ctx,
-		&app2.BlockRequest[transaction.Tx]{
+		&server.BlockRequest[transaction.Tx]{
 			Time:      time.Now(),
 			Hash:      bz[:],
 			ChainId:   "theChain",
@@ -123,7 +127,7 @@ func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Contex
 
 	_, newState, err := app.DeliverBlock(
 		ctx,
-		&app2.BlockRequest[transaction.Tx]{
+		&server.BlockRequest[transaction.Tx]{
 			Height:  height + 1,
 			Time:    time.Now(),
 			Hash:    bz[:],

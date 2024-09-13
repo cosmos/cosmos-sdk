@@ -27,7 +27,6 @@ func GetSignBytesAdapter(
 	ctx context.Context,
 	handlerMap *txsigning.HandlerMap,
 	mode signing.SignMode,
-
 	signerData SignerData,
 	tx sdk.Tx,
 ) ([]byte, error) {

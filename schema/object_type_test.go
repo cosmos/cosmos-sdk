@@ -163,37 +163,49 @@ func TestObjectType_Validate(t *testing.T) {
 			errContains: "key field \"field1\" cannot be nullable",
 		},
 		{
-			name: "duplicate incompatible enum",
+			name: "float32 key field",
 			objectType: ObjectType{
-				Name: "objectWithEnums",
+				Name: "o1",
 				KeyFields: []Field{
 					{
-						Name: "key",
-						Kind: EnumKind,
-						EnumType: EnumType{
-							Name:   "enum1",
-							Values: []string{"a", "b"},
-						},
-					},
-				},
-				ValueFields: []Field{
-					{
-						Name: "value",
-						Kind: EnumKind,
-						EnumType: EnumType{
-							Name:   "enum1",
-							Values: []string{"c", "b"},
-						},
+						Name: "field1",
+						Kind: Float32Kind,
 					},
 				},
 			},
-			errContains: "enum \"enum1\" has different values",
+			errContains: "invalid key field kind",
+		},
+		{
+			name: "float64 key field",
+			objectType: ObjectType{
+				Name: "o1",
+				KeyFields: []Field{
+					{
+						Name: "field1",
+						Kind: Float64Kind,
+					},
+				},
+			},
+			errContains: "invalid key field kind",
+		},
+		{
+			name: "json key field",
+			objectType: ObjectType{
+				Name: "o1",
+				KeyFields: []Field{
+					{
+						Name: "field1",
+						Kind: JSONKind,
+					},
+				},
+			},
+			errContains: "invalid key field kind",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.objectType.Validate()
+			err := tt.objectType.Validate(EmptyTypeSet())
 			if tt.errContains == "" {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
@@ -255,7 +267,7 @@ func TestObjectType_ValidateObjectUpdate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.objectType.ValidateObjectUpdate(tt.object)
+			err := tt.objectType.ValidateObjectUpdate(tt.object, EmptyTypeSet())
 			if tt.errContains == "" {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)

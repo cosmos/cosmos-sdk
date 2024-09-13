@@ -25,7 +25,7 @@ type Store interface {
 	StateLatest() (uint64, store.ReaderMap, error)
 
 	// StateAt returns a readonly view over the provided
-	// state. Must error when the version does not exist.
+	// version. Must error when the version does not exist.
 	StateAt(version uint64) (store.ReaderMap, error)
 
 	// SetInitialVersion sets the initial version of the store.
@@ -54,6 +54,7 @@ type Store interface {
 	// latest version implicitly.
 	LoadLatestVersion() error
 
+	// LastCommitID returns the latest commit ID
 	LastCommitID() (proof.CommitID, error)
 }
 

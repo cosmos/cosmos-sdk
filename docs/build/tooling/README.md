@@ -17,3 +17,10 @@ This includes tools for development, operating a node, and ease of use of a Cosm
 ## Other Tools
 
 * [Protocol Buffers](./00-protobuf.md)
+
+## External Tools
+
+This section highlights tools that are not maintained by the SDK team, but are useful for Cosmos SDK development.
+
+* [Ignite](https://docs.ignite.com)
+* [Spawn](https://github.com/rollchains/spawn)

@@ -367,7 +367,7 @@ func NewSuperPrefixedQuadRange[K1, K2, K3, K4 any](k1 K1, k2 K2) Ranger[Quad[K1,
 	}
 }
 
-// NewSuperPrefixedQuadRange provides a Range for all keys prefixed with the given
+// NewSuperPrefixedQuadRange3 provides a Range for all keys prefixed with the given
 // first, second and third parts of the Quad key.
 func NewSuperPrefixedQuadRange3[K1, K2, K3, K4 any](k1 K1, k2 K2, k3 K3) Ranger[Quad[K1, K2, K3, K4]] {
 	key := QuadSuperPrefix3[K1, K2, K3, K4](k1, k2, k3)

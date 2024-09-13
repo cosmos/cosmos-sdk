@@ -38,13 +38,14 @@ func AddCommands[T transaction.Tx](
 	rootCmd *cobra.Command,
 	newApp AppCreator[T],
 	logger log.Logger,
+	serverCfg ServerConfig,
 	components ...ServerComponent[T],
 ) error {
 	if len(components) == 0 {
 		return errors.New("no components provided")
 	}
 
-	server := NewServer(logger, components...)
+	server := NewServer(logger, serverCfg, components...)
 	originalPersistentPreRunE := rootCmd.PersistentPreRunE
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		// set the default command outputs
@@ -111,7 +112,7 @@ func createStartCommand[T transaction.Tx](
 				return err
 			}
 
-			if err := server.Init(newApp(l, v), v, l); err != nil {
+			if err := server.Init(newApp(l, v), v.AllSettings(), l); err != nil {
 				return err
 			}
 

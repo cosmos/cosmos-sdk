@@ -25,7 +25,7 @@ func NewModule(name string, moduleSchema schema.ModuleSchema, options Options) *
 	var objectTypeNames []string
 
 	moduleSchema.ObjectTypes(func(objectType schema.ObjectType) bool {
-		objectCollection := NewObjectCollection(objectType, options)
+		objectCollection := NewObjectCollection(objectType, options, moduleSchema)
 		objectCollections.Set(objectType.Name, objectCollection)
 		objectTypeNames = append(objectTypeNames, objectType.Name)
 		return true

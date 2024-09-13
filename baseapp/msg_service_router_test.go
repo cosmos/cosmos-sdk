@@ -10,8 +10,6 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	authsigning "cosmossdk.io/x/auth/signing"
-	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,6 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 func TestRegisterMsgService(t *testing.T) {
@@ -155,9 +155,11 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := signingCtx.AddressCodec().BytesToString(addr)
+	require.NoError(t, err)
 	msg := testdata.MsgCreateDog{
 		Dog:   &testdata.Dog{Name: "Spot"},
-		Owner: addr.String(),
+		Owner: addrStr,
 	}
 
 	txBuilder := txConfig.NewTxBuilder()

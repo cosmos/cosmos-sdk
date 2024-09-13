@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	pruningtypes "cosmossdk.io/store/pruning/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -21,15 +23,29 @@ func TestDefaultConfig(t *testing.T) {
 func TestGetAndSetMinimumGas(t *testing.T) {
 	cfg := DefaultConfig()
 
+	// Test case 1: Single coin
 	input := sdk.DecCoins{sdk.NewInt64DecCoin("foo", 5)}
 	cfg.SetMinGasPrices(input)
 	require.Equal(t, "5.000000000000000000foo", cfg.MinGasPrices)
 	require.EqualValues(t, cfg.GetMinGasPrices(), input)
 
+	// Test case 2: Multiple coins
 	input = sdk.DecCoins{sdk.NewInt64DecCoin("bar", 1), sdk.NewInt64DecCoin("foo", 5)}
 	cfg.SetMinGasPrices(input)
 	require.Equal(t, "1.000000000000000000bar,5.000000000000000000foo", cfg.MinGasPrices)
 	require.EqualValues(t, cfg.GetMinGasPrices(), input)
+
+	// Test case 4: Empty DecCoins
+	input = sdk.DecCoins{}
+	cfg.SetMinGasPrices(input)
+	require.Equal(t, "", cfg.MinGasPrices)
+	require.EqualValues(t, cfg.GetMinGasPrices(), input)
+
+	// Test case 5: Invalid string (should panic)
+	cfg.MinGasPrices = "invalid,gas,prices"
+	require.Panics(t, func() {
+		cfg.GetMinGasPrices()
+	}, "GetMinGasPrices should panic with invalid input")
 }
 
 func TestIndexEventsMarshalling(t *testing.T) {
@@ -237,4 +253,41 @@ func TestAppConfig(t *testing.T) {
 	appCfg := new(Config)
 	require.NoError(t, v.Unmarshal(appCfg))
 	require.EqualValues(t, appCfg, defAppConfig)
+}
+
+func TestValidateBasic(t *testing.T) {
+	cfg := DefaultConfig()
+
+	// Test case 1: Valid MinGasPrices
+	cfg.MinGasPrices = "0.01stake"
+	err := cfg.ValidateBasic()
+	require.NoError(t, err)
+
+	// Test case 2: Default configuration (MinGasPrices is empty)
+	cfg.MinGasPrices = ""
+	err = cfg.ValidateBasic()
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "set min gas price in app.toml or flag or env variable")
+
+	// Test case 3: Invalid pruning and state sync combination
+	cfg = DefaultConfig()
+	cfg.MinGasPrices = "0.01stake"
+	cfg.Pruning = pruningtypes.PruningOptionEverything
+	cfg.StateSync.SnapshotInterval = 1000
+	err = cfg.ValidateBasic()
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "cannot enable state sync snapshots with 'everything' pruning setting")
+}
+
+func TestGetConfig(t *testing.T) {
+	v := viper.New()
+	v.Set("minimum-gas-prices", "0.01stake")
+	v.Set("api.enable", true)
+	v.Set("grpc.max-recv-msg-size", 5*1024*1024)
+
+	cfg, err := GetConfig(v)
+	require.NoError(t, err)
+	require.Equal(t, "0.01stake", cfg.MinGasPrices)
+	require.True(t, cfg.API.Enable)
+	require.Equal(t, 5*1024*1024, cfg.GRPC.MaxRecvMsgSize)
 }

@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"maps"
 	"slices"
 
 	"github.com/cosmos/gogoproto/jsonpb"
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/core/event"
-	transaction "cosmossdk.io/core/transaction"
+	"cosmossdk.io/core/transaction"
 )
 
 func NewEventService() event.Service {
@@ -22,7 +22,12 @@ type eventService struct{}
 
 // EventManager implements event.Service.
 func (eventService) EventManager(ctx context.Context) event.Manager {
-	return &eventManager{ctx.(*executionContext)}
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	return &eventManager{exCtx}
 }
 
 var _ event.Manager = (*eventManager)(nil)
@@ -49,12 +54,6 @@ func (em *eventManager) EmitKV(eventType string, attrs ...event.Attribute) error
 	return nil
 }
 
-// EmitNonConsensus emits an typed event that is defined in the protobuf file.
-// These events will not be added to consensus.
-func (em *eventManager) EmitNonConsensus(event transaction.Msg) error {
-	return em.Emit(event)
-}
-
 // TypedEventToEvent takes typed event and converts to Event object
 func TypedEventToEvent(tev transaction.Msg) (event.Event, error) {
 	evtType := gogoproto.MessageName(tev)
@@ -70,9 +69,7 @@ func TypedEventToEvent(tev transaction.Msg) (event.Event, error) {
 	}
 
 	// sort the keys to ensure the order is always the same
-	keys := maps.Keys(attrMap)
-	slices.Sort(keys)
-
+	keys := slices.Sorted(maps.Keys(attrMap))
 	attrs := make([]event.Attribute, 0, len(attrMap))
 	for _, k := range keys {
 		v := attrMap[k]

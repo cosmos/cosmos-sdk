@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
+	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
@@ -17,7 +19,6 @@ import (
 	"cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
-	authcmd "cosmossdk.io/x/auth/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
@@ -25,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -63,7 +65,7 @@ func initRootCmd[T transaction.Tx](
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
-		genesisCommand(moduleManager, appExport[T]),
+		genesisCommand(moduleManager),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
@@ -75,6 +77,7 @@ func initRootCmd[T transaction.Tx](
 		rootCmd,
 		newApp,
 		logger,
+		initServerConfig(),
 		cometbft.New(&genericTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
 		grpc.New[T](),
 		store.New[T](newApp),
@@ -83,13 +86,16 @@ func initRootCmd[T transaction.Tx](
 	}
 }
 
-// genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
+// genesisCommand builds genesis-related `simd genesis` command.
 func genesisCommand[T transaction.Tx](
 	moduleManager *runtimev2.MM[T],
-	appExport genutilv2.AppExporter,
 	cmds ...*cobra.Command,
 ) *cobra.Command {
-	cmd := v2.Commands(moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule), moduleManager, appExport)
+	cmd := v2.Commands(
+		moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule),
+		moduleManager,
+		appExport[T],
+	)
 
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)
@@ -109,11 +115,8 @@ func queryCommand() *cobra.Command {
 
 	cmd.AddCommand(
 		rpc.QueryEventForTxCmd(),
-		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
-		server.QueryBlocksCmd(),
 		authcmd.QueryTxCmd(),
-		server.QueryBlockResultsCmd(),
 	)
 
 	return cmd
@@ -145,11 +148,23 @@ func txCommand() *cobra.Command {
 
 // appExport creates a new simapp (optionally at a given height) and exports state.
 func appExport[T transaction.Tx](
-	logger log.Logger,
+	ctx context.Context,
 	height int64,
 	jailAllowedAddrs []string,
-	viper *viper.Viper,
 ) (genutilv2.ExportedApp, error) {
+	value := ctx.Value(corectx.ViperContextKey)
+	viper, ok := value.(*viper.Viper)
+	if !ok {
+		return genutilv2.ExportedApp{},
+			fmt.Errorf("incorrect viper type %T: expected *viper.Viper in context", value)
+	}
+	value = ctx.Value(corectx.LoggerContextKey)
+	logger, ok := value.(log.Logger)
+	if !ok {
+		return genutilv2.ExportedApp{},
+			fmt.Errorf("incorrect logger type %T: expected log.Logger in context", value)
+	}
+
 	// overwrite the FlagInvCheckPeriod
 	viper.Set(server.FlagInvCheckPeriod, 1)
 	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)

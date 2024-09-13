@@ -63,11 +63,12 @@ func (a *AllowedMsgAllowance) GetAllowance() (FeeAllowanceI, error) {
 
 // SetAllowance sets allowed fee allowance.
 func (a *AllowedMsgAllowance) SetAllowance(allowance FeeAllowanceI) error {
-	var err error
-	a.Allowance, err = types.NewAnyWithValue(allowance.(proto.Message))
+	newAllowance, err := types.NewAnyWithValue(allowance.(proto.Message))
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", allowance)
 	}
+
+	a.Allowance = newAllowance
 
 	return nil
 }
@@ -96,8 +97,8 @@ func (a *AllowedMsgAllowance) Accept(ctx context.Context, fee sdk.Coins, msgs []
 	return remove, err
 }
 
-func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) (map[string]bool, error) {
-	msgsMap := make(map[string]bool, len(a.AllowedMessages))
+func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) (map[string]struct{}, error) {
+	msgsMap := make(map[string]struct{}, len(a.AllowedMessages))
 	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
 	if !ok {
 		return nil, errors.New("environment not set")
@@ -107,7 +108,7 @@ func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx context.Context) (map[string]
 		if err := gasMeter.Consume(gasCostPerIteration, "check msg"); err != nil {
 			return nil, err
 		}
-		msgsMap[msg] = true
+		msgsMap[msg] = struct{}{}
 	}
 
 	return msgsMap, nil
@@ -127,7 +128,7 @@ func (a *AllowedMsgAllowance) allMsgTypesAllowed(ctx context.Context, msgs []sdk
 		if err := gasMeter.Consume(gasCostPerIteration, "check msg"); err != nil {
 			return false, err
 		}
-		if !msgsMap[sdk.MsgTypeURL(msg)] {
+		if _, allowed := msgsMap[sdk.MsgTypeURL(msg)]; !allowed {
 			return false, nil
 		}
 	}

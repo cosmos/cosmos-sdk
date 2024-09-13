@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -29,6 +30,7 @@ type Keeper struct {
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
 
+// NewKeeper creates a new Keeper instance.
 func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority string) Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	return Keeper{
@@ -38,19 +40,17 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, authority strin
 	}
 }
 
+// GetAuthority returns the authority address for the consensus module.
+// This address has the permission to update consensus parameters.
 func (k *Keeper) GetAuthority() string {
 	return k.authority
 }
 
 // InitGenesis initializes the initial state of the module
 func (k *Keeper) InitGenesis(ctx context.Context) error {
-	value, ok := ctx.Value(corecontext.InitInfoKey).(*types.MsgUpdateParams)
-	if !ok {
+	value, ok := ctx.Value(corecontext.CometParamsInitInfoKey).(*types.MsgUpdateParams)
+	if !ok || value == nil {
 		// no error for appv1 and appv2
-		return nil
-	}
-	if value == nil {
-		// no error for appv1
 		return nil
 	}
 
@@ -85,6 +85,7 @@ func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types
 
 var _ types.MsgServer = Keeper{}
 
+// UpdateParams updates the consensus parameters.
 func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if k.GetAuthority() != msg.Authority {
 		return nil, fmt.Errorf("invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
@@ -116,17 +117,19 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 
 // paramCheck validates the consensus params
 func (k Keeper) paramCheck(ctx context.Context, consensusParams cmtproto.ConsensusParams) (*cmttypes.ConsensusParams, error) {
-	paramsProto, err := k.ParamsStore.Get(ctx)
-
 	var params cmttypes.ConsensusParams
-	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			params = cmttypes.ConsensusParams{}
-		} else {
-			return nil, err
+
+	paramsProto, err := k.ParamsStore.Get(ctx)
+	if err == nil {
+		// initialize version params with zero value if not set
+		if paramsProto.Version == nil {
+			paramsProto.Version = &cmtproto.VersionParams{}
 		}
-	} else {
 		params = cmttypes.ConsensusParamsFromProto(paramsProto)
+	} else if errors.Is(err, collections.ErrNotFound) {
+		params = cmttypes.ConsensusParams{}
+	} else {
+		return nil, err
 	}
 
 	nextParams := params.Update(&consensusParams)
@@ -140,4 +143,57 @@ func (k Keeper) paramCheck(ctx context.Context, consensusParams cmtproto.Consens
 	}
 
 	return &nextParams, nil
+}
+
+// BlockParams returns the maximum gas allowed in a block and the maximum bytes allowed in a block.
+func (k Keeper) BlockParams(ctx context.Context) (uint64, uint64, error) {
+	params, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return 0, 0, err
+	}
+	if params.Block == nil {
+		return 0, 0, errors.New("block gas is nil")
+	}
+
+	return uint64(params.Block.MaxGas), uint64(params.Block.MaxBytes), nil
+}
+
+// AppVersion returns the current application version.
+func (k Keeper) AppVersion(ctx context.Context) (uint64, error) {
+	params, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	if params.Version == nil {
+		return 0, errors.New("app version is nil")
+	}
+
+	return params.Version.App, nil
+}
+
+// ValidatorPubKeyTypes returns the list of public key types that are allowed to be used for validators.
+func (k Keeper) ValidatorPubKeyTypes(ctx context.Context) ([]string, error) {
+	params, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if params.Validator == nil {
+		return []string{}, errors.New("validator pub key types is nil")
+	}
+
+	return params.Validator.PubKeyTypes, nil
+}
+
+// EvidenceParams returns the maximum age of evidence, the time duration of the maximum age, and the maximum bytes.
+func (k Keeper) EvidenceParams(ctx context.Context) (int64, time.Duration, uint64, error) {
+	params, err := k.ParamsStore.Get(ctx)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	if params.Evidence == nil {
+		return 0, 0, 0, errors.New("evidence age is nil")
+	}
+
+	return params.Evidence.MaxAgeNumBlocks, params.Evidence.MaxAgeDuration, uint64(params.Evidence.MaxBytes), nil
 }

@@ -40,17 +40,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.
 
-<<<<<<< HEAD
-=======
-### Features
-
-* (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
-* (runtime) [#21704](https://github.com/cosmos/cosmos-sdk/pull/21704) Add StoreLoader in simappv2.
-
->>>>>>> 7d6ff0df5 (feat(runtime/v2): store loader on simappv2 (#21704))
 ### Improvements
 
 * (genutil) [#21701](https://github.com/cosmos/cosmos-sdk/pull/21701) Improved error messages for genesis validation.
+* (runtime) [#21704](https://github.com/cosmos/cosmos-sdk/pull/21704) Move `upgradetypes.StoreLoader` to runtime and alias it in upgrade for backward compatibility.
 
 ## [v0.52.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0) - 2024-XX-XX
 

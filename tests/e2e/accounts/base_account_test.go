@@ -26,7 +26,7 @@ func TestBaseAccount(t *testing.T) {
 	ctx := sdk.NewContext(app.CommitMultiStore(), false, app.Logger())
 
 	_, baseAccountAddr, err := ak.Init(ctx, "base", accCreator, &baseaccountv1.MsgInit{
-		PubKey: toAnyPb(privKey.PubKey().Bytes()),
+		PubKey: toAnyPb(t, privKey.PubKey()),
 	}, nil)
 	require.NoError(t, err)
 

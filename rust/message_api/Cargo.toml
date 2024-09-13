@@ -1,0 +1,11 @@
+[package]
+name = "interchain_message_api"
+edition = "2021"
+version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]

@@ -1,0 +1,19 @@
+[package]
+name = "interchain_core"
+edition = "2021"
+version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+interchain_message_api = { path = "../message_api" }
+interchain_context = { path = "../context" }
+interchain_schema = { path = "../schema" }
+interchain_core_macros = { path = "../core_macros" }
+
+[features]
+default = ["core_macros"]
+core_macros = []

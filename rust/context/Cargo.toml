@@ -1,0 +1,12 @@
+[package]
+name = "interchain_context"
+edition = "2021"
+version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+interchain_message_api = { path = "../message_api" }

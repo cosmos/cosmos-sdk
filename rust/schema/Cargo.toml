@@ -1,0 +1,11 @@
+[package]
+name = "interchain_schema"
+edition = "2021"
+version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

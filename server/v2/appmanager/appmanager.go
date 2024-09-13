@@ -204,6 +204,17 @@ func (a AppManager[T]) Simulate(
 	return result, cs, nil
 }
 
+func (a AppManager[T]) Exec(
+	ctx context.Context,
+	fn func(ctx context.Context) error,
+) (corestore.WriterMap, error) {
+	_, state, err := a.db.StateLatest()
+	if err != nil {
+		return nil, err
+	}
+	return a.stf.RunWithCtx(ctx, state, fn)
+}
+
 // Query queries the application at the provided version.
 // CONTRACT: Version must always be provided, if 0, get latest
 func (a AppManager[T]) Query(

@@ -32,6 +32,11 @@
 
 testutil/integration can (and should) be moved to tests/integration.
 
+## differences from v1
+
+- a v1 app calls commit only after cometbft has committed a block and calls the ABCI life cycle function Commit() 
+- a v2 app calls commit within FinalizeBlock.
+
 ## simulations
 
 In addition to `NewIntegrationApp` many modules also make use of [testutil/sims.SetupWithConfiguration](../../testutil/sims/app_helpers.go#L145) to create a `runtime.App` for simulation testing. For example 

@@ -1,6 +1,8 @@
 package bank_test
 
 import (
+	"context"
+	"cosmossdk.io/core/server"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
@@ -78,9 +80,11 @@ type suite struct {
 	AccountKeeper      types.AccountKeeper
 	DistributionKeeper distrkeeper.Keeper
 	App                *runtime.App
-	Appv2              *runtimev2.App[transaction.Tx]
+	AppV2              *runtimev2.App[transaction.Tx]
 	TxConfig           client.TxConfig
 }
+
+var testAppV2 = false
 
 func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) suite {
 	t.Helper()
@@ -105,24 +109,28 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 		configurator.ProtocolPoolModule(),
 	}
 	var err error
-	res.App, err = simtestutil.SetupWithConfiguration(
-		depinject.Configs(configurator.NewAppConfig(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
-		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
-	require.NoError(t, err)
-
-	v2StartupCfg := integrationv2.DefaultStartUpConfig()
-	v2StartupCfg.HomeDir = t.TempDir()
-	res.Appv2, err = integrationv2.SetupWithConfiguration(
-		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
-		v2StartupCfg,
-		&res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
-	require.NoError(t, err)
+	if testAppV2 {
+		v2StartupCfg := integrationv2.DefaultStartUpConfig()
+		v2StartupCfg.HomeDir = t.TempDir()
+		res.AppV2, err = integrationv2.SetupWithConfiguration(
+			depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
+			v2StartupCfg,
+			&res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
+		require.NoError(t, err)
+	} else {
+		res.App, err = simtestutil.SetupWithConfiguration(
+			depinject.Configs(configurator.NewAppConfig(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
+			startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
+		require.NoError(t, err)
+	}
 
 	return res
 }
 
 // CheckBalance checks the balance of an account.
-func checkBalance(t *testing.T, baseApp *baseapp.BaseApp, addr sdk.AccAddress, balances sdk.Coins, keeper bankkeeper.Keeper) {
+func checkBalance(
+	t *testing.T, baseApp *baseapp.BaseApp, addr sdk.AccAddress, balances sdk.Coins, keeper bankkeeper.Keeper,
+) {
 	t.Helper()
 	ctxCheck := baseApp.NewContext(true)
 	keeperBalances := keeper.GetAllBalances(ctxCheck, addr)
@@ -130,6 +138,7 @@ func checkBalance(t *testing.T, baseApp *baseapp.BaseApp, addr sdk.AccAddress, b
 }
 
 func TestSendNotEnoughBalance(t *testing.T) {
+	testAppV2 = false
 	acc := &authtypes.BaseAccount{
 		Address: addr1.String(),
 	}
@@ -170,6 +179,62 @@ func TestSendNotEnoughBalance(t *testing.T) {
 
 	require.Equal(t, origAccNum, res2.GetAccountNumber())
 	require.Equal(t, origSeq+1, res2.GetSequence())
+}
+
+func TestSendNotEnoughBalance_v2(t *testing.T) {
+	testAppV2 = true
+	acc := &authtypes.BaseAccount{
+		Address: addr1.String(),
+	}
+
+	genAccs := []authtypes.GenesisAccount{acc}
+	s := createTestSuite(t, genAccs)
+	ctx := context.Background()
+
+	_, err := s.AppV2.Exec(ctx, func(ctx context.Context) error {
+		return testutil.FundAccount(
+			ctx, s.BankKeeper, addr1,
+			sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67)))
+	})
+	require.NoError(t, err)
+	_, _, err = s.AppV2.DeliverBlock(ctx, &server.BlockRequest[transaction.Tx]{
+		Height:  1,
+		Hash:    make([]byte, 32),
+		AppHash: make([]byte, 32),
+	})
+	require.NoError(t, err)
+	/*
+		_, err := baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: baseApp.LastBlockHeight() + 1})
+		require.NoError(t, err)
+		_, err = baseApp.Commit()
+		require.NoError(t, err)
+
+		res1 := s.AccountKeeper.GetAccount(ctx, addr1)
+		require.NotNil(t, res1)
+		require.Equal(t, acc, res1.(*authtypes.BaseAccount))
+
+		origAccNum := res1.GetAccountNumber()
+		origSeq := res1.GetSequence()
+
+		addr1Str, err := s.AccountKeeper.AddressCodec().BytesToString(addr1)
+		require.NoError(t, err)
+		addr2Str, err := s.AccountKeeper.AddressCodec().BytesToString(addr2)
+		require.NoError(t, err)
+		sendMsg := types.NewMsgSend(addr1Str, addr2Str, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
+		header := header.Info{Height: baseApp.LastBlockHeight() + 1}
+		txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
+		_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+		require.Error(t, err)
+
+		checkBalance(t, baseApp, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)}, s.BankKeeper)
+
+		ctx2 := baseApp.NewContext(true)
+		res2 := s.AccountKeeper.GetAccount(ctx2, addr1)
+		require.NotNil(t, res2)
+
+		require.Equal(t, origAccNum, res2.GetAccountNumber())
+		require.Equal(t, origSeq+1, res2.GetSequence())
+	*/
 }
 
 func TestMsgMultiSendWithAccounts(t *testing.T) {

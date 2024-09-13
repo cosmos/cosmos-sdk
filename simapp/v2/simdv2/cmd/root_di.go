@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/runtime/v2/services"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -32,12 +34,16 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 		autoCliOpts   autocli.AppOptions
 		moduleManager *runtime.MM[T]
 		clientCtx     client.Context
+		cometService  comet.Service = &services.ContextAwareCometInfoService{}
 	)
 
 	if err := depinject.Inject(
 		depinject.Configs(
 			simapp.AppConfig(),
-			depinject.Supply(log.NewNopLogger()),
+			depinject.Supply(
+				log.NewNopLogger(),
+				cometService,
+			),
 			depinject.Provide(
 				codec.ProvideInterfaceRegistry,
 				codec.ProvideAddressCodec,

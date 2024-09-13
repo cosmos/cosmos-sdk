@@ -1,8 +1,9 @@
 package simapp
 
 import (
+	"cosmossdk.io/core/comet"
+	"cosmossdk.io/runtime/v2/services"
 	_ "embed"
-
 
 	"github.com/spf13/viper"
 
@@ -101,7 +102,8 @@ func NewSimApp[T transaction.Tx](
 		app          = &SimApp[T]{}
 		appBuilder   *runtime.AppBuilder[T]
 		err          error
-		storeOptions = &root.Options{}
+		storeOptions               = &root.Options{}
+		cometService comet.Service = &services.ContextAwareCometInfoService{}
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -109,6 +111,7 @@ func NewSimApp[T transaction.Tx](
 			depinject.Supply(
 				logger,
 				viper,
+				cometService,
 
 				// ADVANCED CONFIGURATION
 
@@ -155,9 +158,6 @@ func NewSimApp[T transaction.Tx](
 				codec.ProvideAddressCodec,
 				codec.ProvideProtoCodec,
 				codec.ProvideLegacyAmino,
-				func() server.DynamicConfig {
-					return &viperWrapper{viper}
-				},
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,
@@ -248,18 +248,4 @@ func (app *SimApp[T]) GetConsensusAuthority() string {
 // GetStore gets the app store.
 func (app *SimApp[T]) GetStore() any {
 	return app.App.GetStore()
-}
-
-var _ server.DynamicConfig = &viperWrapper{}
-
-type viperWrapper struct {
-	*viper.Viper
-}
-
-func (v *viperWrapper) UnmarshalSub(key string, cfg any) (bool, error) {
-	s := v.Viper.Sub(key)
-	if s == nil {
-		return false, nil
-	}
-	return true, s.Unmarshal(cfg)
 }

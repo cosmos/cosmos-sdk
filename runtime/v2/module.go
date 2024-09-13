@@ -15,7 +15,6 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
@@ -96,7 +95,6 @@ func init() {
 			ProvideAppBuilder[transaction.Tx],
 			ProvideEnvironment[transaction.Tx],
 			ProvideModuleManager[transaction.Tx],
-			ProvideCometService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -231,8 +229,4 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 	}
 
 	return nil
-}
-
-func ProvideCometService() comet.Service {
-	return &services.ContextAwareCometInfoService{}
 }

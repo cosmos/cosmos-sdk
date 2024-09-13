@@ -1,0 +1,54 @@
+---
+sidebar_position: 1
+---
+
+
+### Modifying the `DefaultGenesis`
+
+It is possible to modify the DefaultGenesis parameters for modules by wrapping the module, providing it to the `*module.Manager` and injecting it with `depinject`.
+
+
+Example ( staking ) :
+
+```go
+type CustomStakingModule struct {
+    staking.AppModule
+    cdc codec.Codec
+}
+
+// DefaultGenesis will override the Staking module DefaultGenesis AppModuleBasic method.
+func (cm CustomStakingModule) DefaultGenesis() json.RawMessage {
+    params := stakingtypes.DefaultParams()
+    params.BondDenom = "mydenom"
+
+    return cm.cdc.MustMarshalJSON(&stakingtypes.GenesisState{
+        Params: params,
+    })
+}
+
+// option 1: use new module manager
+moduleManager := module.NewManagerFromMap(map[string]appmodule.AppModule{
+    stakingtypes.ModuleName: CustomStakingModule{cdc: appCodec, AppModule: staking.NewAppModule(...)},
+	// other modules ...
+})
+
+// option 2: override previous module manager
+oldStakingModule,_ := moduleManager.Modules()[stakingtypes.ModuleName].(staking.AppModule)
+moduleManager.Modules()[stakingtypes.ModuleName] = CustomStakingModule{
+	AppModule: oldStakingModule,
+	cdc: appCodec,
+}
+
+
+// depinject users
+depinject.Inject(
+	// ...
+	&moduleManager,
+ )
+
+// non-depinject users
+moduleManager.RegisterLegacyAminoCodec(legacyAmino)
+moduleManager.RegisterInterfaces(interfaceRegistry)
+
+```
+

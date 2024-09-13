@@ -19,7 +19,7 @@ import (
 // NOTE: This upgrade defines a reference implementation of what an upgrade
 // could look like when an application is migrating from Cosmos SDK version
 // v0.50.x to v0.51.x.
-const UpgradeName = "v047-to-v050"
+const UpgradeName = "v050-to-v051"
 
 func (app *SimApp[T]) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(

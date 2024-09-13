@@ -2,6 +2,8 @@ package cli_test
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"os"
 	"testing"
 
@@ -92,18 +94,20 @@ func TestValidateGenesis(t *testing.T) {
 	}
 }
 
+var _ module.HasGenesisBasics = mockModule{}
+
 type mockModule struct {
 	module.AppModuleBasic
 }
 
-func (mockModule) Name() string {
+func (m mockModule) Name() string {
 	return "mock"
 }
 
-func (mockModule) DefaultGenesis(codec.JSONCodec) json.RawMessage {
+func (m mockModule) DefaultGenesis(codec.JSONCodec) json.RawMessage {
 	return json.RawMessage(`{"foo": "bar"}`)
 }
 
-func (mockModule) ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error {
-	return nil
+func (m mockModule) ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error {
+	return fmt.Errorf("mock section is missing: %w", io.EOF)
 }

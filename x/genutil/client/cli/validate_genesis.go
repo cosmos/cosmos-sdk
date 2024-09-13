@@ -48,12 +48,11 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 			}
 
 			var genState map[string]json.RawMessage
-			if err = json.Unmarshal(appGenesis.AppState, &genState); err != nil {
+			if err := json.Unmarshal(appGenesis.AppState, &genState); err != nil {
 				if strings.Contains(err.Error(), "unexpected end of JSON input") {
 					return fmt.Errorf("app_state is missing in the genesis file: %s", err.Error())
 				}
-
-				return fmt.Errorf("error unmarshalling genesis doc %s: %s", genesis, err.Error())
+				return fmt.Errorf("error unmarshalling genesis doc %s: %w", genesis, err)
 			}
 
 			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, genState); err != nil {

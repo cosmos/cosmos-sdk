@@ -20,7 +20,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server/types"
@@ -40,8 +39,11 @@ func StatusCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			status, err := cmtservice.GetNodeStatus(context.Background(), clientCtx)
+			node, err := clientCtx.GetNode()
+			if err != nil {
+				return err
+			}
+			status, err := node.Status(context.Background())
 			if err != nil {
 				return err
 			}

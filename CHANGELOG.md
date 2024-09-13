@@ -43,8 +43,11 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Features
 
 * (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
+* (runtime) [#21704](https://github.com/cosmos/cosmos-sdk/pull/21704) Add StoreLoader in simappv2.
 
 ### Improvements
+
+* (genutil) [#21701](https://github.com/cosmos/cosmos-sdk/pull/21701) Improved error messages for genesis validation.
 
 ### Bug Fixes
 

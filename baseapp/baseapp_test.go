@@ -11,11 +11,11 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/address"
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
@@ -70,7 +70,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	signingCtx := cdc.InterfaceRegistry().SigningContext()
 
 	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	logBuffer := new(bytes.Buffer)
 	logger := log.NewLogger(logBuffer, log.ColorOption(false))
 
@@ -80,7 +80,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	app.SetInterfaceRegistry(cdc.InterfaceRegistry())
 	app.MsgServiceRouter().SetInterfaceRegistry(cdc.InterfaceRegistry())
 	app.MountStores(capKey1, capKey2)
-	app.SetParamStore(paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(paramStore{db: coretesting.NewMemDB()})
 	app.SetTxDecoder(txConfig.TxDecoder())
 	app.SetTxEncoder(txConfig.TxEncoder())
 	app.SetVersionModifier(newMockedVersionModifier(0))
@@ -100,7 +100,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 func getQueryBaseapp(t *testing.T) *baseapp.BaseApp {
 	t.Helper()
 
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
@@ -120,7 +120,7 @@ func getQueryBaseapp(t *testing.T) *baseapp.BaseApp {
 func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...func(*baseapp.BaseApp)) *BaseAppSuite {
 	t.Helper()
 	snapshotTimeout := 1 * time.Minute
-	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
+	snapshotStore, err := snapshots.NewStore(coretesting.NewMemDB(), testutil.GetTempDir(t))
 	require.NoError(t, err)
 
 	suite := NewBaseAppSuite(
@@ -242,7 +242,7 @@ func TestAnteHandlerGasMeter(t *testing.T) {
 func TestLoadVersion(t *testing.T) {
 	logger := log.NewTestLogger(t)
 	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 
@@ -365,7 +365,7 @@ func TestSetLoader(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			// prepare a db with some data
-			db := dbm.NewMemDB()
+			db := coretesting.NewMemDB()
 			initStore(t, db, tc.origStoreKey, k, v)
 
 			// load the app with the existing db
@@ -394,7 +394,7 @@ func TestSetLoader(t *testing.T) {
 
 func TestVersionSetterGetter(t *testing.T) {
 	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil, pruningOpt)
 
@@ -417,7 +417,7 @@ func TestVersionSetterGetter(t *testing.T) {
 func TestLoadVersionInvalid(t *testing.T) {
 	logger := log.NewNopLogger()
 	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 
@@ -454,7 +454,7 @@ func TestOptionFunction(t *testing.T) {
 		}
 	}
 
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	bap := baseapp.NewBaseApp("starting name", log.NewTestLogger(t), db, nil, testChangeNameHelper("new name"))
 	require.Equal(t, bap.Name(), "new name", "BaseApp should have had name changed via option function")
 }
@@ -703,7 +703,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 func TestABCI_CreateQueryContext(t *testing.T) {
 	t.Parallel()
 
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
@@ -849,7 +849,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	logger := log.NewNopLogger()
 	pruningOptions := pruningtypes.NewCustomPruningOptions(10, 15)
 	pruningOpt := baseapp.SetPruning(pruningOptions)
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 

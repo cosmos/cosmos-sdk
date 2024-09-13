@@ -6,15 +6,17 @@ import (
 	"github.com/spf13/viper"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
+	"cosmossdk.io/store/v2/root"
 	"cosmossdk.io/x/accounts"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
+	bankv2keeper "cosmossdk.io/x/bank/v2/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	consensuskeeper "cosmossdk.io/x/consensus/keeper"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
@@ -47,7 +49,7 @@ var DefaultNodeHome string
 // capabilities aren't needed for testing.
 type SimApp[T transaction.Tx] struct {
 	*runtime.App[T]
-	legacyAmino       legacy.Amino
+	legacyAmino       registry.AminoRegistrar
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -56,6 +58,7 @@ type SimApp[T transaction.Tx] struct {
 	AccountsKeeper        accounts.Keeper
 	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
+	BankV2Keeper          *bankv2keeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
 	MintKeeper            mintkeeper.Keeper
@@ -94,8 +97,10 @@ func NewSimApp[T transaction.Tx](
 	viper *viper.Viper,
 ) *SimApp[T] {
 	var (
-		app        = &SimApp[T]{}
-		appBuilder *runtime.AppBuilder[T]
+		app          = &SimApp[T]{}
+		appBuilder   *runtime.AppBuilder[T]
+		err          error
+		storeOptions = root.DefaultStoreOptions()
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -165,6 +170,7 @@ func NewSimApp[T transaction.Tx](
 		&app.interfaceRegistry,
 		&app.AuthKeeper,
 		&app.BankKeeper,
+		&app.BankV2Keeper,
 		&app.StakingKeeper,
 		&app.SlashingKeeper,
 		&app.MintKeeper,
@@ -184,8 +190,13 @@ func NewSimApp[T transaction.Tx](
 		panic(err)
 	}
 
-	var err error
-	app.App, err = appBuilder.Build()
+	if sub := viper.Sub("store.options"); sub != nil {
+		err = sub.Unmarshal(&storeOptions)
+		if err != nil {
+			panic(err)
+		}
+	}
+	app.App, err = appBuilder.Build(runtime.AppBuilderWithStoreOptions[T](storeOptions))
 	if err != nil {
 		panic(err)
 	}

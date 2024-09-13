@@ -44,6 +44,7 @@
 /x/auth/ @facundomedica @testinginprod @aaronc @cosmos/sdk-core-dev
 /x/authz/ @akhilkumarpilli @raynaudoe @cosmos/sdk-core-dev
 /x/bank/ @julienrbrt @sontrinh16 @cosmos/sdk-core-dev
+/x/bank/v2 @julienrbrt @hieuvubk @akhilkumarpilli @cosmos/sdk-core-dev
 /x/circuit/ @kocubinski @akhilkumarpilli @raynaudoe @cosmos/sdk-core-dev
 /x/consensus/ @testinginprod @raynaudoe @cosmos/sdk-core-dev
 /x/distribution/ @alpe @JulianToledano @cosmos/sdk-core-dev
@@ -67,6 +68,14 @@
 
 **/go.mod @cosmos/sdk-core-dev
 **/go.sum @cosmos/sdk-core-dev
+
+# ci & build
+
+.github/ @auricom @julienrbrt @tac0turtle
+scripts/ @auricom @julienrbrt @tac0turtle
+contrib/ @auricom @julienrbrt @tac0turtle
+*.mk @auricom @julienrbrt @tac0turtle
+Makefile @auricom @julienrbrt @tac0turtle
 
 # docs configuration
 

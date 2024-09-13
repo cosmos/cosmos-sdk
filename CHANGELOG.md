@@ -43,40 +43,16 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Features
 
 * (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
-* (cli) [#21372](https://github.com/cosmos/cosmos-sdk/pull/21372) Add a `bulk-add-genesis-account` genesis command to add many genesis accounts at once.
-* (x/staking/types) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) Create metadata type and add metadata field in validator details proto
-* (x/staking/cli) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) Add parsing of `metadata-profile-pic-uri` in `create-validator` JSON.
-    * Add cli flag: `metadata-profile-pic-uri` to `edit-validator` cmd.
-* (types) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) New function `RandURIOfLength` to generate random valid URIs for sims.
 
 ### Improvements
-
-* (client) [#21436](https://github.com/cosmos/cosmos-sdk/pull/21436) Use `address.Codec` from client.Context in `tx.Sign`.
-* (internal) [#21412](https://github.com/cosmos/cosmos-sdk/pull/21412) Using unsafe.String and unsafe.SliceData.
-* (x/staking/types) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) Add a `Validate` method to the `Description` type that validates the metadata as well as other description details.
-
 
 ### Bug Fixes
 
 * (baseapp) [#21256](https://github.com/cosmos/cosmos-sdk/pull/21256) Halt height will not commit the block indicated, meaning that if halt-height is set to 10, only blocks until 9 (included) will be committed. This is to go back to the original behavior before a change was introduced in v0.50.0.
-* (baseapp) [#21413](https://github.com/cosmos/cosmos-sdk/pull/21413) Fix data race in sdk mempool.
-
-### Client Breaking
-
-* (x/staking/types) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) `Description` now has a new field `Metadata`.
-
 
 ### API Breaking Changes
 
-* (baseapp) [#21413](https://github.com/cosmos/cosmos-sdk/pull/21413) Add `SelectBy` method to `Mempool` interface, which is thread-safe to use.
-* (types) [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) New struct `Metadata` to store extra validator information.
-    * The signature of `NewDescription` has changed to accept an extra argument of type `Metadata`.
-    * `Description` now has a new field , `Metadata` of type `Metadata`.
-
-
 ### Deprecated
-
-* (types) [#21435](https://github.com/cosmos/cosmos-sdk/pull/21435) The `String()` method on `AccAddress`, `ValAddress` and `ConsAddress` have been deprecated. This is done because those are still using the deprecated global `sdk.Config`. Use an `address.Codec` instead.
 
 ## [v0.52.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0) - 2024-XX-XX
 
@@ -148,6 +124,9 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (baseapp) [#20380](https://github.com/cosmos/cosmos-sdk/pull/20380) Enhanced OfferSnapshot documentation.
 * (client) [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Remove `ReadDefaultValuesFromDefaultClientConfig` from `client` package. (It was introduced in `v0.50.6` as a quick fix).
 * (grpcserver) [#20945](https://github.com/cosmos/cosmos-sdk/pull/20945) Adds error handling for out-of-gas panics in grpc query handlers.
+* (internal) [#21412](https://github.com/cosmos/cosmos-sdk/pull/21412) Using unsafe.String and unsafe.SliceData.
+* (client) [#21436](https://github.com/cosmos/cosmos-sdk/pull/21436) Use `address.Codec` from client.Context in `tx.Sign`.
+* (x/genutil) [#21249](https://github.com/cosmos/cosmos-sdk/pull/21249) Incremental JSON parsing for AppGenesis where possible.
 
 ### Bug Fixes
 
@@ -168,7 +147,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (client) [#17215](https://github.com/cosmos/cosmos-sdk/pull/17215) `server.StartCmd`,`server.ExportCmd`,`server.NewRollbackCmd`,`pruning.Cmd`,`genutilcli.InitCmd`,`genutilcli.GenTxCmd`,`genutilcli.CollectGenTxsCmd`,`genutilcli.AddGenesisAccountCmd`, do not take a home directory anymore. It is inferred from the root command.
 * (client) [#17259](https://github.com/cosmos/cosmos-sdk/pull/17259) Remove deprecated `clientCtx.PrintObjectLegacy`. Use `clientCtx.PrintProto` or `clientCtx.PrintRaw` instead.
 * (types) [#17348](https://github.com/cosmos/cosmos-sdk/pull/17348) Remove the `WrapServiceResult` function.
-    * The `*sdk.Result` returned by the msg server router will not contain the `.Data` field.
+    * The `*sdk.Result` returned by the msg server router will not contain the `.Data` field. 
 * (types) [#17426](https://github.com/cosmos/cosmos-sdk/pull/17426) `NewContext` does not take a `cmtproto.Header{}` any longer.
     * `WithChainID` / `WithBlockHeight` / `WithBlockHeader` must be used to set values on the context
 * (client/keys) [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503) `clientkeys.NewKeyOutput`, `MkConsKeyOutput`, `MkValKeyOutput`, `MkAccKeyOutput`, `MkAccKeysOutput` now take their corresponding address codec instead of using the global SDK config.
@@ -222,7 +201,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (x/crisis) [#20043](https://github.com/cosmos/cosmos-sdk/pull/20043) Changed `NewMsgVerifyInvariant` to accept a string as argument instead of an `AccAddress`.
 * (x/simulation)[#20056](https://github.com/cosmos/cosmos-sdk/pull/20056) `SimulateFromSeed` now takes an address codec as argument.
 * (server) [#20140](https://github.com/cosmos/cosmos-sdk/pull/20140) Remove embedded grpc-web proxy in favor of standalone grpc-web proxy. [Envoy Proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start)
-* (client) [#20255](https://github.com/cosmos/cosmos-sdk/pull/20255) Use comet proofOp proto type instead of sdk version to avoid needing to translate to later be proven in the merkle proof runtime.
+* (client) [#20255](https://github.com/cosmos/cosmos-sdk/pull/20255) Use comet proofOp proto type instead of sdk version to avoid needing to translate to later be proven in the merkle proof runtime. 
 * (types)[#20369](https://github.com/cosmos/cosmos-sdk/pull/20369) The signature of `HasAminoCodec` has changed to accept a `core/legacy.Amino` interface instead of `codec.LegacyAmino`.
 * (server) [#20422](https://github.com/cosmos/cosmos-sdk/pull/20422) Deprecated `ServerContext`. To get `cmtcfg.Config` from cmd, use `client.GetCometConfigFromCmd(cmd)` instead of `server.GetServerContextFromCmd(cmd).Config`
 * (x/genutil) [#20740](https://github.com/cosmos/cosmos-sdk/pull/20740) Update `genutilcli.Commands` and `genutilcli.CommandsWithCustomMigrationMap` to take the genesis module and abstract the module manager.
@@ -231,10 +210,12 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
     * Remove parameter `txConfig` from `genutilcli.Commands`,`genutilcli.CommandsWithCustomMigrationMap`,`genutilcli.GenTxCmd`.
     * Remove parameter `addressCodec` from `genutilcli.GenTxCmd`,`genutilcli.AddGenesisAccountCmd`,`stakingcli.BuildCreateValidatorMsg`.
 * (sims) [#21039](https://github.com/cosmos/cosmos-sdk/pull/21039): Remove Baseapp from sims by a new interface `simtypes.AppEntrypoint`.
+* (x/genutil) [#21372](https://github.com/cosmos/cosmos-sdk/pull/21372) Remove `AddGenesisAccount` for `AddGenesisAccounts`.
+* (baseapp) [#21413](https://github.com/cosmos/cosmos-sdk/pull/21413) Add `SelectBy` method to `Mempool` interface, which is thread-safe to use.
 
 ### Client Breaking Changes
 
-* (runtime) [#19040](https://github.com/cosmos/cosmos-sdk/pull/19040) Simplify app config implementation and deprecate `/cosmos/app/v1alpha1/config` query.
+* (runtime) [#19040](https://github.com/cosmos/cosmos-sdk/pull/19040) Simplify app config implementation and deprecate `/cosmos/app/v1alpha1/config` query. 
 
 ### CLI Breaking Changes
 
@@ -246,6 +227,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 * (simapp) [#19146](https://github.com/cosmos/cosmos-sdk/pull/19146) Replace `--v` CLI option with `--validator-count`/`-n`.
 * (module) [#19370](https://github.com/cosmos/cosmos-sdk/pull/19370) Deprecate `module.Configurator`, use `appmodule.HasMigrations` and `appmodule.HasServices` instead from Core API.
+* (types) [#21435](https://github.com/cosmos/cosmos-sdk/pull/21435) The `String()` method on `AccAddress`, `ValAddress` and `ConsAddress` have been deprecated. This is done because those are still using the deprecated global `sdk.Config`. Use an `address.Codec` instead.
 
 ## [v0.50.9](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.9) - 2024-08-07
 

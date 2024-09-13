@@ -10,13 +10,14 @@ import (
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
 	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
+	bankv2keeper "cosmossdk.io/x/bank/v2/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	consensuskeeper "cosmossdk.io/x/consensus/keeper"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
@@ -65,7 +66,7 @@ var (
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*runtime.App
-	legacyAmino       legacy.Amino
+	legacyAmino       registry.AminoRegistrar
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -74,6 +75,7 @@ type SimApp struct {
 	AccountsKeeper        accounts.Keeper
 	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
+	BankV2Keeper          *bankv2keeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
 	MintKeeper            mintkeeper.Keeper
@@ -184,6 +186,7 @@ func NewSimApp(
 		&app.AuthKeeper,
 		&app.AccountsKeeper,
 		&app.BankKeeper,
+		&app.BankV2Keeper,
 		&app.StakingKeeper,
 		&app.SlashingKeeper,
 		&app.MintKeeper,
@@ -295,6 +298,7 @@ func (app *SimApp) setCustomAnteHandler() {
 			ante.HandlerOptions{
 				AccountKeeper:      app.AuthKeeper,
 				BankKeeper:         app.BankKeeper,
+				ConsensusKeeper:    app.ConsensusParamsKeeper,
 				SignModeHandler:    app.txConfig.SignModeHandler(),
 				FeegrantKeeper:     app.FeeGrantKeeper,
 				SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,

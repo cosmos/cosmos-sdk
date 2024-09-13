@@ -187,14 +187,9 @@ func TestModuleSchema_LookupType(t *testing.T) {
 		},
 	})
 
-	typ, ok := moduleSchema.LookupType("object1")
+	objectType, ok := moduleSchema.LookupObjectType("object1")
 	if !ok {
 		t.Fatalf("expected to find object type \"object1\"")
-	}
-
-	objectType, ok := typ.(ObjectType)
-	if !ok {
-		t.Fatalf("expected object type, got %T", typ)
 	}
 
 	if objectType.Name != "object1" {

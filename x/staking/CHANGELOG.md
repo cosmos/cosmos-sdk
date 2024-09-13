@@ -100,6 +100,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#17335](https://github.com/cosmos/cosmos-sdk/pull/17335) Remove usage of `"cosmossdk.io/x/staking/types".Infraction_*` in favour of `"cosmossdk.io/api/cosmos/staking/v1beta1".Infraction_` in order to remove dependency between modules on staking
 * [#20295](https://github.com/cosmos/cosmos-sdk/pull/20295) `GetValidatorByConsAddr` now returns the Cosmos SDK `cryptotypes.Pubkey` instead of `cometcrypto.Publickey`. The caller is responsible to translate the returned value to the expected type. 
     * Remove `CmtConsPublicKey()` and `TmConsPublicKey()` from `Validator` interface and as methods on the `Validator` struct.
+* [#21480](https://github.com/cosmos/cosmos-sdk/pull/21480) ConsensusKeeper is required to be passed to the keeper.
 * [#21315](https://github.com/cosmos/cosmos-sdk/pull/21315) New struct `Metadata` to store extra validator information.
     * New field `Metadata` introduced in `types`: `Description`.
     * The signature of `NewDescription` has changed to accept an extra argument of type `Metadata`.

@@ -71,6 +71,7 @@ func TestBranchService(t *testing.T) {
 
 	t.Run("fail - reverts state", func(t *testing.T) {
 		stfCtx := makeContext()
+		originalGas := stfCtx.meter.Remaining()
 		gasUsed, err := branchService.ExecuteWithGasLimit(stfCtx, 10000, func(ctx context.Context) error {
 			kvSet(t, ctx, "cookies")
 			return errors.New("fail")
@@ -81,6 +82,10 @@ func TestBranchService(t *testing.T) {
 		if gasUsed == 0 {
 			t.Error("expected non-zero gasUsed")
 		}
+		if stfCtx.meter.Remaining() != originalGas-gasUsed {
+			t.Error("expected gas to be reverted")
+		}
+
 		stateNotHas(t, stfCtx.state, "cookies")
 	})
 

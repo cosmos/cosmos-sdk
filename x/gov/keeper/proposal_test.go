@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -17,38 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// TODO(tip): remove this
-func (suite *KeeperTestSuite) TestDeleteProposal() {
-	testCases := map[string]struct {
-		proposalType v1.ProposalType
-	}{
-		"unspecified proposal type": {},
-		"regular proposal": {
-			proposalType: v1.ProposalType_PROPOSAL_TYPE_STANDARD,
-		},
-		"expedited proposal": {
-			proposalType: v1.ProposalType_PROPOSAL_TYPE_EXPEDITED,
-		},
-	}
-
-	for _, tc := range testCases {
-		// delete non-existing proposal
-		suite.Require().ErrorIs(suite.govKeeper.DeleteProposal(suite.ctx, 10), collections.ErrNotFound)
-
-		tp := TestProposal
-		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.proposalType)
-		suite.Require().NoError(err)
-		proposalID := proposal.Id
-		err = suite.govKeeper.Proposals.Set(suite.ctx, proposal.Id, proposal)
-		suite.Require().NoError(err)
-
-		suite.Require().NotPanics(func() {
-			err := suite.govKeeper.DeleteProposal(suite.ctx, proposalID)
-			suite.Require().NoError(err)
-		}, "")
-	}
-}
 
 func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 	testCases := []struct {
@@ -147,6 +116,24 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 	})
 	suite.Require().NoError(err)
 
+	// add 1 more messageBasedParams with the same value as above
+	err = suite.govKeeper.MessageBasedParams.Set(suite.ctx, sdk.MsgTypeURL(&v1.MsgSudoExec{}), v1.MessageBasedParams{
+		VotingPeriod:  func() *time.Duration { t := time.Hour * 24 * 7; return &t }(),
+		Quorum:        "0.4",
+		Threshold:     "0.50",
+		VetoThreshold: "0.66",
+	})
+	suite.Require().NoError(err)
+
+	// add 1 more messageBasedParams with different value as above
+	err = suite.govKeeper.MessageBasedParams.Set(suite.ctx, sdk.MsgTypeURL(&v1.MsgCancelProposal{}), v1.MessageBasedParams{
+		VotingPeriod:  func() *time.Duration { t := time.Hour * 24 * 7; return &t }(),
+		Quorum:        "0.2",
+		Threshold:     "0.4",
+		VetoThreshold: "0.7",
+	})
+	suite.Require().NoError(err)
+
 	testCases := []struct {
 		msgs         []sdk.Msg
 		metadata     string
@@ -156,6 +143,12 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 		{legacyProposal(&tp, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
 		// normal proposal with msg with custom params
 		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}}, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
+		// normal proposal with 2 identical msgs with custom params
+		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}, &v1.MsgUpdateParams{Authority: govAcct}}, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
+		// normal proposal with 2 msgs with custom params shared the same value
+		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}, &v1.MsgSudoExec{Authority: govAcct}}, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, nil},
+		// normal proposal with 2 msgs with different custom params
+		{[]sdk.Msg{&v1.MsgUpdateParams{Authority: govAcct}, &v1.MsgCancelProposal{}}, "", v1.ProposalType_PROPOSAL_TYPE_STANDARD, errors.New("cannot submit multiple messages proposal with different message based params")},
 		{legacyProposal(&tp, govAcct), "", v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, nil},
 		{nil, "", v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE, nil},
 		// Keeper does not check the validity of title and description, no error

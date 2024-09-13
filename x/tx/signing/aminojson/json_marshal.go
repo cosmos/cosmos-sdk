@@ -32,6 +32,9 @@ type EncoderOptions struct {
 	// EnumAsString when set will encode enums as strings instead of integers.
 	// Caution: Enabling this option produce different sign bytes.
 	EnumAsString bool
+	// AminoNameAsTypeURL when set will use the amino name as the type URL in the JSON output.
+	// It is useful when using the Amino JSON encoder for non Amino purposes
+	AminoNameAsTypeURL bool
 	// TypeResolver is used to resolve protobuf message types by TypeURL when marshaling any packed messages.
 	TypeResolver signing.TypeResolver
 	// FileResolver is used to resolve protobuf file descriptors TypeURL when TypeResolver fails.
@@ -50,6 +53,7 @@ type Encoder struct {
 	doNotSortFields           bool
 	indent                    string
 	enumsAsString             bool
+	aminoNameAsTypeURL        bool
 }
 
 // NewEncoder returns a new Encoder capable of serializing protobuf messages to JSON using the Amino JSON encoding
@@ -80,11 +84,12 @@ func NewEncoder(options EncoderOptions) Encoder {
 			"google.protobuf.Duration":  marshalDuration,
 			"google.protobuf.Any":       marshalAny,
 		},
-		fileResolver:    options.FileResolver,
-		typeResolver:    options.TypeResolver,
-		doNotSortFields: options.DoNotSortFields,
-		indent:          options.Indent,
-		enumsAsString:   options.EnumAsString,
+		fileResolver:       options.FileResolver,
+		typeResolver:       options.TypeResolver,
+		doNotSortFields:    options.DoNotSortFields,
+		indent:             options.Indent,
+		enumsAsString:      options.EnumAsString,
+		aminoNameAsTypeURL: options.AminoNameAsTypeURL,
 	}
 	return enc
 }
@@ -163,7 +168,7 @@ func (enc Encoder) DefineTypeEncoding(typeURL string, encoder MessageEncoder) En
 // Marshal serializes a protobuf message to JSON.
 func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	err := enc.beginMarshal(message.ProtoReflect(), buf, false)
+	err := enc.beginMarshal(message.ProtoReflect(), buf, false, enc.aminoNameAsTypeURL)
 	if err != nil {
 		return nil, err
 	}
@@ -180,13 +185,15 @@ func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer, isAny bool) error {
+func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer, isAny bool, useTypeUrl bool) error {
 	var (
 		name  string
 		named bool
 	)
 
-	if isAny {
+	if useTypeUrl {
+		name, named = getMessageTypeURL(msg), true
+	} else if isAny {
 		name, named = getMessageAminoNameAny(msg), true
 	} else {
 		name, named = getMessageAminoName(msg)

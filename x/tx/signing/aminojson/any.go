@@ -50,7 +50,7 @@ func marshalAny(enc *Encoder, message protoreflect.Message, writer io.Writer) er
 		protoMessage = valueMsg.ProtoReflect()
 	}
 
-	return enc.beginMarshal(protoMessage, writer, true)
+	return enc.beginMarshal(protoMessage, writer, true, enc.aminoNameAsTypeURL)
 }
 
 const (
@@ -73,5 +73,5 @@ func marshalDynamic(enc *Encoder, message protoreflect.Message, writer io.Writer
 		return err
 	}
 
-	return enc.beginMarshal(valueMsg.ProtoReflect(), writer, true)
+	return enc.beginMarshal(valueMsg.ProtoReflect(), writer, true, enc.aminoNameAsTypeURL)
 }

@@ -136,7 +136,7 @@ func RunWithSeeds[T SimulationApp](
 			err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
 			require.NoError(t, err)
 			if tCfg.Commit {
-				db, ok := testInstance.DB.(dbm.DB)
+				db, ok := testInstance.DB.(simtestutil.DBStatsInterface)
 				if ok {
 					simtestutil.PrintStats(db)
 				}

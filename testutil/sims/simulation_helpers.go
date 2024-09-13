@@ -109,8 +109,13 @@ func CheckExportSimulation(app runtime.AppSimI, config simtypes.Config, params s
 	return nil
 }
 
+// DBStatsInterface defines the interface for the app DB statistics.
+type DBStatsInterface interface {
+	Stats() map[string]string
+}
+
 // PrintStats prints the corresponding statistics from the app DB.
-func PrintStats(db dbm.DB) {
+func PrintStats(db DBStatsInterface) {
 	fmt.Println("\nLevelDB Stats")
 	fmt.Println(db.Stats()["leveldb.stats"])
 	fmt.Println("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])
@@ -216,7 +221,7 @@ func getDiffFromKVPair(kvAs, kvBs []kv.Pair) (diffA, diffB []kv.Pair) {
 	return diffA, diffB
 }
 
-func getKVPairs(iter dbm.Iterator, prefixesToSkip [][]byte) (kvs []kv.Pair) {
+func getKVPairs(iter corestore.Iterator, prefixesToSkip [][]byte) (kvs []kv.Pair) {
 	for iter.Valid() {
 		key, value := iter.Key(), iter.Value()
 

@@ -6,10 +6,13 @@ import (
 	"os"
 	"testing"
 
+<<<<<<< HEAD
 	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/testutils/sims"
 
+=======
+>>>>>>> aaf72f20c (feat: replace the cosmos-db usecases in the tests with `core/testing` (#21525))
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -87,7 +90,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 
 	if config.Commit {
-		db, ok := db.(dbm.DB)
+		db, ok := db.(simtestutil.DBStatsInterface)
 		if ok {
 			simtestutil.PrintStats(db)
 		}

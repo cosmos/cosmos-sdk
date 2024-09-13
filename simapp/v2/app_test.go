@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	app2 "cosmossdk.io/core/app"
 	"cosmossdk.io/core/comet"
 	context2 "cosmossdk.io/core/context"
 	"cosmossdk.io/core/server"
@@ -22,7 +21,6 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	comettypes "cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/db"
-	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

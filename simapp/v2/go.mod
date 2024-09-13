@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/runtime/v2 v2.0.0-20240913142214-7d6ff0df5642 // main
 	cosmossdk.io/server/v2 v2.0.0-20240912070812-0fc06f14104b // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0-20240906090851-36d9b25e8981 // main
+	cosmossdk.io/store/v2 v2.0.0-20240913190136-3bc707a5a214 // main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
@@ -251,7 +251,7 @@ replace (
 	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.2 // main
 	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 	// pseudo version lower than the latest tag
-	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240906090851-36d9b25e8981 // main
+	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214 // main
 	cosmossdk.io/tools/confix => ../../tools/confix
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/accounts/defaults/lockup => ../../x/accounts/defaults/lockup

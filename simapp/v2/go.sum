@@ -220,10 +220,10 @@ cosmossdk.io/server/v2/appmanager v0.0.0-20240827095516-355f748add9e h1:9eB2si1g
 cosmossdk.io/server/v2/appmanager v0.0.0-20240827095516-355f748add9e/go.mod h1:fJDDnWJCBRxLLIyu2byqtf3KTRYIVS4OxKwdZozJi20=
 cosmossdk.io/server/v2/stf v0.0.0-20240909103429-ac53e337a9b5 h1:lrq7/YrEflKv3enDm5jMHHz1GsfmBzHM4FGgjSt1ZmQ=
 cosmossdk.io/server/v2/stf v0.0.0-20240909103429-ac53e337a9b5/go.mod h1:Y0cRRjdM5JcXqFsGYgZgWkiG7fA4eN8oNBP1vSEE8Gc=
-cosmossdk.io/store v1.0.0-rc.0.0.20240906090851-36d9b25e8981 h1:O510vQpVdyZgSlLm4NG2aQltDkKfoWcKrVCPPWQlNHs=
-cosmossdk.io/store v1.0.0-rc.0.0.20240906090851-36d9b25e8981/go.mod h1:5lnCUSlWPWQYrUcNjpqBLTnlykyz1NeGQpMmZq1DCOg=
-cosmossdk.io/store/v2 v2.0.0-20240906090851-36d9b25e8981 h1:Z6I2YbnF6b6mRD63hMQ5DA2efQ4Ip9Ujf1y/r31egWk=
-cosmossdk.io/store/v2 v2.0.0-20240906090851-36d9b25e8981/go.mod h1:1BzXr3CaYqwRkO3IbQuaeTvoFaILl3SarIL/r3DCsF0=
+cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214 h1:UUW0+2UgbDwQ452o2aw4DrVSWmowcad7DB7Vln+N94I=
+cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214/go.mod h1:ct8HATr+s48YYTRXEyP3HF33v9qEVWHMxwOL8P/v4iQ=
+cosmossdk.io/store/v2 v2.0.0-20240913190136-3bc707a5a214 h1:KWYy5n6/gOQMFpG+4tjpAwMW1/MT+717sJNee3+Yk5M=
+cosmossdk.io/store/v2 v2.0.0-20240913190136-3bc707a5a214/go.mod h1:YX8zzjSheu3YOaaYWaDlnjSAQAvgkZEC6xbywdnWYKE=
 cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897 h1:J3vS3G41JtTWkUX3wVKcXdy1yPUca0d3QnexCR52PeY=
 cosmossdk.io/x/tx v0.13.4-0.20240815194237-858ec2fcb897/go.mod h1:5+Hpds6bhT6CdR7DqPh0dVOqyqL7NJkq+x+yjLdYSQU=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=

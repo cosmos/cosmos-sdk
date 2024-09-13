@@ -492,4 +492,8 @@ func (m mapGetter) Get(key string) interface{} {
 	return m[key]
 }
 
+func (m mapGetter) GetString(key string) string {
+	return m[key].(string)
+}
+
 var _ servertypes.AppOptions = mapGetter{}

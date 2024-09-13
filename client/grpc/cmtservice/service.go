@@ -3,13 +3,14 @@ package cmtservice
 import (
 	"context"
 
-	"cosmossdk.io/core/address"
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -42,8 +43,8 @@ func NewQueryServer(
 	consensusAddressCodec address.Codec,
 ) ServiceServer {
 	return queryServer{
-		rpc:     clientCtx,
-		queryFn: queryFn,
+		rpc:            clientCtx,
+		queryFn:        queryFn,
 		consensusCodec: consensusAddressCodec,
 	}
 }

@@ -33,7 +33,8 @@ type EncoderOptions struct {
 	// Caution: Enabling this option produce different sign bytes.
 	EnumAsString bool
 	// AminoNameAsTypeURL when set will use the amino name as the type URL in the JSON output.
-	// It is useful when using the Amino JSON encoder for non Amino purposes
+	// It is useful when using the Amino JSON encoder for non Amino purposes,
+	// such as JSON RPC.
 	AminoNameAsTypeURL bool
 	// TypeResolver is used to resolve protobuf message types by TypeURL when marshaling any packed messages.
 	TypeResolver signing.TypeResolver

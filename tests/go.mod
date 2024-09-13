@@ -33,7 +33,7 @@ require (
 )
 
 require (
-	cosmossdk.io/core/testing v0.0.0-20240909133312-50288938d1b6 // main
+	cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b // main
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000

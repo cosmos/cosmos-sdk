@@ -3,14 +3,8 @@ module cosmossdk.io/x/group
 go 1.23.1
 
 require (
-<<<<<<< HEAD
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/core v1.0.0-alpha.2 // main
-=======
-	cosmossdk.io/api v0.7.5
-	cosmossdk.io/core v1.0.0-alpha.2
-	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
->>>>>>> aaf72f20c (feat: replace the cosmos-db usecases in the tests with `core/testing` (#21525))
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
@@ -42,12 +36,8 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
-<<<<<<< HEAD
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // indirect; main
-	cosmossdk.io/core/testing v0.0.0-20240909133312-50288938d1b6 // indirect; main
-=======
-	cosmossdk.io/collections v0.4.0 // indirect
->>>>>>> aaf72f20c (feat: replace the cosmos-db usecases in the tests with `core/testing` (#21525))
+	cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b // main
 	cosmossdk.io/schema v0.2.0 // indirect
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000 // indirect

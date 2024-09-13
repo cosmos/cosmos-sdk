@@ -15,6 +15,7 @@ require (
 
 require (
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
+	github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 )
 
@@ -22,7 +23,7 @@ require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
 	cosmossdk.io/api v0.8.0 // indirect
-	cosmossdk.io/core/testing v0.0.0-20240909133312-50288938d1b6 // indirect; main
+	cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b // indirect; main
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1

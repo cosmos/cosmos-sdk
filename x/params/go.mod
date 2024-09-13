@@ -3,14 +3,9 @@ module cosmossdk.io/x/params
 go 1.23.1
 
 require (
-<<<<<<< HEAD
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/core v1.0.0-alpha.2 // main
-=======
-	cosmossdk.io/api v0.7.5
-	cosmossdk.io/core v1.0.0-alpha.2
-	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
->>>>>>> aaf72f20c (feat: replace the cosmos-db usecases in the tests with `core/testing` (#21525))
+	cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b // main
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1

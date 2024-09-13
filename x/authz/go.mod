@@ -26,7 +26,7 @@ require (
 	google.golang.org/protobuf v1.34.2
 )
 
-require cosmossdk.io/core/testing v0.0.0-20240909133312-50288938d1b6
+require cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect

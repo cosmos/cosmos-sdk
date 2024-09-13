@@ -5,15 +5,9 @@ go 1.23.1
 require (
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
-<<<<<<< HEAD
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/core v1.0.0-alpha.2 // main
-	cosmossdk.io/core/testing v0.0.0-20240909133312-50288938d1b6 // indirect; main
-=======
-	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v1.0.0-alpha.2
-	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
->>>>>>> aaf72f20c (feat: replace the cosmos-db usecases in the tests with `core/testing` (#21525))
+	cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b // main
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0

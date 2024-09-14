@@ -1,5 +1,5 @@
 use interchain_message_api::Address;
-use crate::handler::{AccountHandler, AccountRef, ModuleAPI};
+use crate::handler::{AccountAPI, AccountFactory, AccountHandler, AccountRef, ModuleAPI};
 use crate::message::Message;
 use crate::Response;
 
@@ -40,14 +40,14 @@ impl Context {
     }
 
     /// Create a new account with the given initialization data.
-    pub fn new_account<H: AccountHandler>(&mut self, init: H::Init) -> Response<H::Ref> {
+    pub fn new_account<H: AccountHandler>(&mut self, init: H::Init) -> Response<<<H as AccountAPI>::Factory as AccountFactory>::Ref> {
         unimplemented!()
     }
 
     /// Create a temporary account with the given initialization data.
     /// Its address will be empty from the perspective of all observers,
     /// and it will not be persisted.
-    pub fn new_temp_account<H: AccountHandler>(&mut self, init: H::Init) -> Response<H::Ref> {
+    pub fn new_temp_account<H: AccountHandler>(&mut self, init: H::Init) -> Response<<<H as AccountAPI>::Factory as AccountFactory>::Ref> {
         unimplemented!()
     }
 }

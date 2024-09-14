@@ -1,4 +1,4 @@
-pub unsafe trait Resource {
+pub unsafe trait Resource: Sized {
     unsafe fn new(initializer: &mut Initializer) -> Result<Self, InitializationError>;
 }
 

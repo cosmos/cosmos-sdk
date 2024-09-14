@@ -1,0 +1,12 @@
+[package]
+name = "interchain_sdk_testing"
+edition = "2021"
+version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+interchain_core = { path = "../core" }
+
+[lints]
+workspace = true

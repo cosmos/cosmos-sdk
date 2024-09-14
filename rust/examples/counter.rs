@@ -45,4 +45,19 @@ pub mod counter {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use interchain_sdk_testing::*;
+    use super::counter::*;
+
+    #[test]
+    fn test_counter() {
+        let mut app = TestApp::default();
+        let mut alice = app.new_client_context();
+        let mut bob = app.new_client_context();
+        let (counter, _) = app.new_account::<OwnedCounter>(&mut alice, ());
+        assert_eq!(counter.get(&mut alice).unwrap(), 0);
+    }
+}
+
 fn main() {}

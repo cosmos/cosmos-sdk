@@ -5,8 +5,8 @@ mod response;
 mod events;
 mod message;
 pub mod self_destruct;
-mod handler;
-mod resource;
+pub mod handler;
+pub mod resource;
 
 pub use context::Context;
 pub use response::Response;

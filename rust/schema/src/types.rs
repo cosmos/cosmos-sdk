@@ -14,6 +14,8 @@ pub struct I128T;
 pub struct Bool;
 pub struct StrT;
 pub struct AddressT;
+pub struct TimeT;
+pub struct DurationT;
 pub struct NullableT<T> {
     _phantom: std::marker::PhantomData<T>,
 }

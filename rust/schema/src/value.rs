@@ -18,6 +18,8 @@ impl<'a> Value<'a, I64T> for i64 {}
 impl<'a> Value<'a, I128T> for i128 {}
 impl<'a> Value<'a, Bool> for bool {}
 impl<'a> Value<'a, StrT> for &'a str {}
+impl<'a> Value<'a, TimeT> for simple_time::Time {}
+impl<'a> Value<'a, DurationT> for simple_time::Duration {}
 impl<'a, T: Type, V: Value<'a, T>> Value<'a, NullableT<T>> for Option<T> {}
 impl<'a, S: StructCodec> Value<'a, StructT<S>> for S {}
 impl<'a, T: Type, V: Value<'a, T>> Value<'a, ListT<T>> for &'a [T] {}

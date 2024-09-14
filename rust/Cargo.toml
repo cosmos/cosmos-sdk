@@ -5,7 +5,7 @@ members = [
     "message_api",
     "schema",
     "state_objects"
-, "schema_macros"]
+, "schema_macros", "util/simple_time"]
 
 [workspace.package]
 version = "0.0.1"

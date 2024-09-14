@@ -9,15 +9,23 @@ impl TestApp {
         todo!()
     }
 
+    pub fn add_mock_module(&mut self, module_name: &str, mock: MockModule) {
+        todo!()
+    }
+
     pub fn add_account<H: AccountHandler>(&mut self, ctx: &mut Context, init: H::Init) -> Response<AccountInstance<H>> {
         todo!()
     }
 
-    pub fn add_mock_module(&mut self, module_name: &str) -> MockModule {
+    pub fn add_account_with_address<H: AccountHandler>(&mut self, ctx: &mut Context, address: &Address, init: H::Init) -> Response<AccountInstance<H>> {
         todo!()
     }
 
-    pub fn add_mock_account(&mut self, ctx: &mut Context) -> Response<(Address, MockAccount)> {
+    pub fn add_mock_account(&mut self, ctx: &mut Context, mock: MockAccount) -> Response<Address> {
+        todo!()
+    }
+
+    pub fn add_mock_account_with_address(&mut self, ctx: &mut Context, address: &Address, mock: MockAccount) -> Response<Address> {
         todo!()
     }
 
@@ -57,15 +65,21 @@ impl TestStorage {
 pub struct AccountInstance<'a, H: Handler> {}
 
 impl <'a, H: Handler> AccountInstance<'a, H> {
-    fn context(&self) -> &Context {
+    fn address(&self) -> &Address {
         todo!()
     }
 
-    fn mut_context(&mut self) -> &mut Context {
+    fn with_context<F, R>(&self, f: F) -> R
+    where
+        F: FnOnce(&Context) -> R
+    {
         todo!()
     }
 
-    fn instance(&self) -> &H {
+    fn with_context_mut<F, R>(&mut self, f: F) -> R
+    where
+        F: FnOnce(&Context) -> R
+    {
         todo!()
     }
 }
@@ -73,19 +87,11 @@ impl <'a, H: Handler> AccountInstance<'a, H> {
 pub struct MockModule<'a> { }
 
 impl MockModule {
-    fn context(&self) -> &Context {
+    fn add_mock_module_api<A: ModuleAPI>(&mut self, mock: A) {
         todo!()
     }
 
-    fn mut_context(&mut self) -> &mut Context {
-        todo!()
-    }
-
-    fn add_mock_module_api<A: ModuleAPI>(&mut self, mock: &A) {
-        todo!()
-    }
-
-    fn add_mock_account_api<A: ModuleAPI>(&mut self, mock: &A) {
+    fn add_mock_account_api<A: AccountAPI>(&mut self, mock: A) {
         todo!()
     }
 }
@@ -93,15 +99,7 @@ impl MockModule {
 pub struct MockAccount<'a> {}
 
 impl MockAccount {
-    fn context(&self) -> &Context {
-        todo!()
-    }
-
-    fn mut_context(&mut self) -> &mut Context {
-        todo!()
-    }
-
-    fn add_mock_account_api<A: ModuleAPI>(&mut self, mock: &A) {
+    fn add_mock_account_api<A: AccountAPI>(&mut self, mock: A) {
         todo!()
     }
 }

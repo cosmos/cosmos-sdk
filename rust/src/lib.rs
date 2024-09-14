@@ -5,3 +5,5 @@
 pub use interchain_core::*;
 #[doc(inline)]
 pub use state_objects::*;
+#[doc(inline)]
+pub use simple_time::{Time, Duration};

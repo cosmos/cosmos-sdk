@@ -5,7 +5,7 @@ members = [
     "message_api",
     "schema",
     "state_objects"
-, "schema_macros", "util/simple_time"]
+    , "schema_macros", "util/simple_time"]
 
 [workspace.package]
 version = "0.0.1"
@@ -28,6 +28,7 @@ license.workspace = true
 [dependencies]
 interchain_core = { path = "core" }
 state_objects = { path = "state_objects" }
+simple_time = { path = "util/simple_time" }
 
 [dev-dependencies]
 arrayvec = "0.7.6"

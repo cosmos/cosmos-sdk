@@ -27,5 +27,9 @@ impl Context {
     {
         unimplemented!()
     }
+
+    pub fn get_module_address<T>(&self) -> Response<&Address> {
+        unimplemented!()
+    }
 }
 

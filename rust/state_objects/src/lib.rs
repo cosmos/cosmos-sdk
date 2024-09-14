@@ -3,6 +3,7 @@
 mod map;
 mod set;
 mod item;
+mod errors;
 
 pub use map::{Map};
 pub use set::{Set};

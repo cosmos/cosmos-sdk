@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 #[interchain_sdk::module_handler(Bank)]
 pub mod bank {
     use interchain_sdk::*;

@@ -18,16 +18,23 @@ impl Context {
         unimplemented!()
     }
 
+    /// Dynamically invokes a module message.
+    /// Static module client instances should be preferred wherever possible,
+    /// so that static dependency analysis can be performed.
     pub fn dynamic_invoke_module<M: Message<true>>(&self, message: M) -> Response<M::Response, M::Error>
     {
         unimplemented!()
     }
 
+    /// Dynamically invokes an account message.
+    /// Static account client instances should be preferred wherever possible,
+    /// so that static dependency analysis can be performed.
     pub fn dynamic_invoke_account<M: Message<false>>(&self, account: &Address, message: M) -> Response<M::Response, M::Error>
     {
         unimplemented!()
     }
 
+    /// Get the address of the module implementing the given trait, client type or module message, if any.
     pub fn get_module_address<T>(&self) -> Response<&Address> {
         unimplemented!()
     }

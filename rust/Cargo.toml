@@ -2,10 +2,12 @@
 members = [
     "core",
     "core_macros",
-    "message_api",
+    "state_objects",
     "schema",
-    "state_objects"
-    , "schema_macros", "util/simple_time"]
+    "schema_macros",
+    "message_api",
+    "util/simple_time"
+]
 
 [workspace.package]
 version = "0.0.1"
@@ -17,7 +19,6 @@ license = "Apache-2.0"
 [workspace.lints.rust]
 missing_docs = "deny"
 
-# The settings below are for this root package which mainly contains examples:
 [package]
 name = "interchain_sdk"
 edition = "2021"
@@ -32,6 +33,7 @@ simple_time = { path = "util/simple_time" }
 
 [dev-dependencies]
 arrayvec = "0.7.6"
+thiserror = "1.0.63"
 
 [lints]
 workspace = true

@@ -1,5 +1,12 @@
 //! This crate provides a low-level implementation of the Cosmos SDK RFC 003 message passing API.
 
 /// A globally unique identifier for an account or message.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Address {}
+
+impl Address {
+    /// Returns true if the address is empty and does not represent a valid account or message.
+    pub const fn is_empty(&self) -> bool {
+        unimplemented!()
+    }
+}

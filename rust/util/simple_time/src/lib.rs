@@ -1,3 +1,11 @@
+//! A very simple, no_std friendly time library for Rust that provides:
+//! - a Time type that wraps a i128 representing nanoseconds since the Unix epoch
+//! - a Duration type that wraps a i128 representing a number of nanoseconds
+//! - const fn math operations for Time and Duration, plus basic core::ops trait implementations
+//!
+//! Any conversion to calendar time and parsing and formatting of date/time strings
+//! should be accomplished with other libraries.
+//! This library just supports very simple high precision time calculations and nothing more.
 use core::ops::{Add, Sub, Neg, AddAssign, SubAssign, Mul, MulAssign};
 
 /// Time is as the number of nanoseconds since the Unix epoch.
@@ -18,20 +26,29 @@ impl Time {
         Time(time as i128 * 1_000_000_000)
     }
 
+    /// Returns the number of nanoseconds since the Unix epoch.
     pub const fn unix_nanos(&self) -> i128 {
         self.0
     }
 
+    /// Adds a duration to the time.
     pub const fn add(self, duration: Duration) -> Self {
         Time(self.0 + duration.0)
     }
 
+    /// Subtracts a duration from the time.
     pub const fn sub(self, duration: Duration) -> Self {
         Time(self.0 - duration.0)
     }
 
-    pub const fn diff(self, time: Time) -> Duration {
+    /// Returns the duration elapsed since the other time.
+    pub const fn since(self, time: Time) -> Duration {
         Duration(self.0 - time.0)
+    }
+
+    /// Returns the duration until the other time.
+    pub const fn until(self, time: Time) -> Duration {
+        Duration(time.0 - self.0)
     }
 }
 
@@ -56,14 +73,24 @@ impl Duration {
         self.0
     }
 
+    /// Multiplies the duration by a scalar.
     pub const fn times(self, rhs: i128) -> Self {
         Duration(self.0 * rhs)
     }
 
+    /// One second.
     pub const SECOND: Duration = Duration(1_000_000_000);
+
+    /// One minute.
     pub const MINUTE: Duration = Duration::SECOND.times(60);
+
+    /// One hour.
     pub const HOUR: Duration = Duration::MINUTE.times(60);
+
+    /// One day calculated simply as 24 hours, no DST or leap seconds.
     pub const DAY: Duration = Duration::HOUR.times(24);
+
+    /// One week calculated simply as 7 days, no DST or leap seconds.
     pub const WEEK: Duration = Duration::DAY.times(7);
 }
 

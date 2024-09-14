@@ -1,5 +1,4 @@
-use core::ops::{Add, Sub, Neg, AddAssign, SubAssign, Mul};
-use std::ops::MulAssign;
+use core::ops::{Add, Sub, Neg, AddAssign, SubAssign, Mul, MulAssign};
 
 /// Time is as the number of nanoseconds since the Unix epoch.
 /// The default value of Time is the Unix epoch 1970-01-01 00:00:00 UTC.

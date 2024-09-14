@@ -1,4 +1,5 @@
 use interchain_message_api::Address;
+use crate::handler::{AccountHandler, AccountRef, ModuleAPI};
 use crate::message::Message;
 use crate::Response;
 
@@ -29,13 +30,24 @@ impl Context {
     /// Dynamically invokes an account message.
     /// Static account client instances should be preferred wherever possible,
     /// so that static dependency analysis can be performed.
-    pub fn dynamic_invoke_account<M: Message<false>>(&self, account: &Address, message: M) -> Response<M::Response, M::Error>
-    {
+    pub fn dynamic_invoke_account<M: Message<false>>(&self, account: &Address, message: M) -> Response<M::Response, M::Error> {
         unimplemented!()
     }
 
     /// Get the address of the module implementing the given trait, client type or module message, if any.
-    pub fn get_module_address<T>(&self) -> Response<&Address> {
+    pub fn get_module_address<T: ModuleAPI>(&self) -> Response<&Address> {
+        unimplemented!()
+    }
+
+    /// Create a new account with the given initialization data.
+    pub fn new_account<H: AccountHandler>(&mut self, init: H::Init) -> Response<H::Ref> {
+        unimplemented!()
+    }
+
+    /// Create a temporary account with the given initialization data.
+    /// Its address will be empty from the perspective of all observers,
+    /// and it will not be persisted.
+    pub fn new_temp_account<H: AccountHandler>(&mut self, init: H::Init) -> Response<H::Ref> {
         unimplemented!()
     }
 }

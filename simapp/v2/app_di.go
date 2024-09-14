@@ -186,11 +186,6 @@ func (app *SimApp[T]) TxConfig() client.TxConfig {
 	return app.txConfig
 }
 
-// GetConsensusAuthority gets the consensus authority.
-func (app *SimApp[T]) GetConsensusAuthority() string {
-	return app.ConsensusParamsKeeper.GetAuthority()
-}
-
 // GetStore gets the app store.
 func (app *SimApp[T]) GetStore() any {
 	return app.App.GetStore()

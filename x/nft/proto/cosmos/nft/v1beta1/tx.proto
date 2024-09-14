@@ -12,23 +12,61 @@ service Msg {
 
   // Send defines a method to send a nft from one account to another account.
   rpc Send(MsgSend) returns (MsgSendResponse);
+
+  // MintNFT defines a method to mint a new NFT.
+  rpc MintNFT(MsgMintNFT) returns (MsgMintNFTResponse);
+
+  // BurnNFT defines a method to burn an NFT.
+  rpc BurnNFT(MsgBurnNFT) returns (MsgBurnNFTResponse);
+
+  // StakeNFT defines a method to stake an NFT.
+  rpc StakeNFT(MsgStakeNFT) returns (MsgStakeNFTResponse);
 }
 
 // MsgSend represents a message to send a nft from one account to another account.
 message MsgSend {
   option (cosmos.msg.v1.signer) = "sender";
-
-  // class_id defines the unique identifier of the nft classification, similar to the contract address of ERC721
-  string class_id = 1;
-
-  // id defines the unique identification of nft
-  string id = 2;
-
-  // sender is the address of the owner of nft
-  string sender = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-
-  // receiver is the receiver address of nft
-  string receiver = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string class_id               = 1;
+  string id                     = 2;
+  string sender                 = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string receiver               = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
+
 // MsgSendResponse defines the Msg/Send response type.
 message MsgSendResponse {}
+
+// MsgMintNFT represents a message to mint a new NFT.
+message MsgMintNFT {
+  option (cosmos.msg.v1.signer) = "sender";
+  string class_id               = 1;
+  string id                     = 2;
+  string uri                    = 3;
+  string uri_hash               = 4;
+  string sender                 = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgMintNFTResponse defines the Msg/MintNFT response type.
+message MsgMintNFTResponse {}
+
+// MsgBurnNFT represents a message to burn an NFT.
+message MsgBurnNFT {
+  option (cosmos.msg.v1.signer) = "sender";
+  string class_id               = 1;
+  string id                     = 2;
+  string sender                 = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgBurnNFTResponse defines the Msg/BurnNFT response type.
+message MsgBurnNFTResponse {}
+
+// MsgStakeNFT represents a message to stake an NFT.
+message MsgStakeNFT {
+  option (cosmos.msg.v1.signer) = "sender";
+  string class_id               = 1;
+  string id                     = 2;
+  string sender                 = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 stake_duration         = 4; // Duration in seconds
+}
+
+// MsgStakeNFTResponse defines the Msg/StakeNFT response type.
+message MsgStakeNFTResponse {}

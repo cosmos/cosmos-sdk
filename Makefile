@@ -8,7 +8,7 @@ include scripts/build/testing.mk
 include scripts/build/documentation.mk
 include scripts/build/build.mk
 
-.DEFAULT_GOAL := help
+
 
 #? go.sum: Run go mod tidy and ensure dependencies have not been modified
 go.sum: go.mod

@@ -1,3 +1,4 @@
+
 syntax = "proto3";
 package cosmos.nft.v1beta1;
 

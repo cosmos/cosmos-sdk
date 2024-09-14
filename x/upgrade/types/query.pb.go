@@ -764,7 +764,6 @@ func _Query_Authority_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.upgrade.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),

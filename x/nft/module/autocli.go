@@ -87,13 +87,42 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "Send",
 					Use:       "send <class-id> <nft-id> <receiver> --from <sender>",
-					Short:     "Transfer ownership of NFT",
+					Short:     "Transfer ownership of an NFT.",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "class_id"},
 						{ProtoField: "id"},
 						{ProtoField: "receiver"},
 					},
-					// Sender is the signer of the transaction and is automatically added as from flag by AutoCLI.
+				},
+				{
+					RpcMethod: "MintNFT",
+					Use:       "mint <class-id> <nft-id> <uri> <uri-hash> --from <sender>",
+					Short:     "Mint a new NFT.",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "class_id"},
+						{ProtoField: "id"},
+						{ProtoField: "uri"},
+						{ProtoField: "uri_hash"},
+					},
+				},
+				{
+					RpcMethod: "BurnNFT",
+					Use:       "burn <class-id> <nft-id> --from <sender>",
+					Short:     "Burn an NFT.",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "class_id"},
+						{ProtoField: "id"},
+					},
+				},
+				{
+					RpcMethod: "StakeNFT",
+					Use:       "stake <class-id> <nft-id> <stake-duration> --from <sender>",
+					Short:     "Stake an NFT for a specified duration.",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "class_id"},
+						{ProtoField: "id"},
+						{ProtoField: "stake_duration"},
+					},
 				},
 			},
 		},

@@ -1,6 +1,7 @@
-protoVer=0.15.0
+
+protoVer=0.14.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
-protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace -u $(shell id -u):$(shell id -g) $(protoImageName)
 
 #? proto-all: Run make proto-format proto-lint proto-gen
 proto-all: proto-format proto-lint proto-gen

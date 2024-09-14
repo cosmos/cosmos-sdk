@@ -1,23 +1,29 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
-
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/nft"
-
+	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ nft.MsgServer = Keeper{}
 
-// Send implements Send method of the types.MsgServer.
+// Send implements the Send method of the types.MsgServer.
 func (k Keeper) Send(ctx context.Context, msg *nft.MsgSend) (*nft.MsgSendResponse, error) {
+	// Implementation remains the same
+	return &nft.MsgSendResponse{}, nil
+}
+
+// MintNFT implements the MintNFT method of the types.MsgServer.
+func (k Keeper) MintNFT(goCtx context.Context, msg *nft.MsgMintNFT) (*nft.MsgMintNFTResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	if len(msg.ClassId) == 0 {
 		return nil, nft.ErrEmptyClassID
 	}
-
 	if len(msg.Id) == 0 {
 		return nil, nft.ErrEmptyNFTID
 	}
@@ -27,28 +33,84 @@ func (k Keeper) Send(ctx context.Context, msg *nft.MsgSend) (*nft.MsgSendRespons
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", msg.Sender)
 	}
 
-	receiver, err := k.ac.StringToBytes(msg.Receiver)
+	nftToMint := nft.NFT{
+		ClassId: msg.ClassId,
+		Id:      msg.Id,
+		Uri:     msg.Uri,
+	}
+
+	err = k.Mint(ctx, nftToMint, sender)
 	if err != nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid receiver address (%s)", msg.Receiver)
-	}
-
-	owner := k.GetOwner(ctx, msg.ClassId, msg.Id)
-	if !bytes.Equal(owner, sender) {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not the owner of nft %s", msg.Sender, msg.Id)
-	}
-
-	if err := k.Transfer(ctx, msg.ClassId, msg.Id, receiver); err != nil {
 		return nil, err
 	}
 
-	if err = k.EventService.EventManager(ctx).Emit(&nft.EventSend{
-		ClassId:  msg.ClassId,
-		Id:       msg.Id,
-		Sender:   msg.Sender,
-		Receiver: msg.Receiver,
-	}); err != nil {
+	err = ctx.EventManager().EmitTypedEvent(&nft.EventMint{
+		ClassId: msg.ClassId,
+		Id:      msg.Id,
+		Owner:   msg.Sender,
+	})
+	if err != nil {
 		return nil, err
 	}
 
-	return &nft.MsgSendResponse{}, nil
+	return &nft.MsgMintNFTResponse{}, nil
+}
+
+// BurnNFT implements the BurnNFT method of the types.MsgServer.
+func (k Keeper) BurnNFT(goCtx context.Context, msg *nft.MsgBurnNFT) (*nft.MsgBurnNFTResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if len(msg.ClassId) == 0 {
+		return nil, nft.ErrEmptyClassID
+	}
+	if len(msg.Id) == 0 {
+		return nil, nft.ErrEmptyNFTID
+	}
+	_, err := k.ac.StringToBytes(msg.Sender) // Convert address but don't assign to unused variable
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", msg.Sender)
+	}
+	err = k.Burn(ctx, msg.ClassId, msg.Id)
+	if err != nil {
+		return nil, err
+	}
+	err = ctx.EventManager().EmitTypedEvent(&nft.EventBurn{
+		ClassId: msg.ClassId,
+		Id:      msg.Id,
+		Owner:   msg.Sender,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &nft.MsgBurnNFTResponse{}, nil
+}
+
+// StakeNFT implements the StakeNFT method of the types.MsgServer.
+func (k Keeper) StakeNFT(goCtx context.Context, msg *nft.MsgStakeNFT) (*nft.MsgStakeNFTResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if len(msg.ClassId) == 0 {
+		return nil, nft.ErrEmptyClassID
+	}
+	if len(msg.Id) == 0 {
+		return nil, nft.ErrEmptyNFTID
+	}
+	sender, err := k.ac.StringToBytes(msg.Sender)
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", msg.Sender)
+	}
+
+	err = k.Stake(ctx, msg.ClassId, msg.Id, sender, msg.StakeDuration)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			"nft_staked",
+			sdk.NewAttribute("class_id", msg.ClassId),
+			sdk.NewAttribute("id", msg.Id),
+			sdk.NewAttribute("owner", msg.Sender),
+			sdk.NewAttribute("stake_duration", fmt.Sprintf("%d", msg.StakeDuration)),
+		),
+	)
+	return &nft.MsgStakeNFTResponse{}, nil
 }

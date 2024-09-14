@@ -36,6 +36,7 @@ message MsgSend {
 message MsgSendResponse {}
 
 // MsgMintNFT represents a message to mint a new NFT.
+// MsgMintNFT represents a message to mint a new NFT.
 message MsgMintNFT {
   option (cosmos.msg.v1.signer) = "sender";
   string class_id               = 1;
@@ -43,6 +44,10 @@ message MsgMintNFT {
   string uri                    = 3;
   string uri_hash               = 4;
   string sender                 = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // Optional fields for class creation if it doesn't exist
+  string class_name        = 6;
+  string class_symbol      = 7;
+  string class_description = 8;
 }
 
 // MsgMintNFTResponse defines the Msg/MintNFT response type.

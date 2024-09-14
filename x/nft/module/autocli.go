@@ -96,8 +96,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "MintNFT",
-					Use:       "mint <class-id> <nft-id> <uri> <uri-hash> --from <sender>",
-					Short:     "Mint a new NFT.",
+					Use:       "mint [class-id] [nft-id] [uri] [uri-hash] --from [sender]",
+					Short:     "Mint a new NFT",
+					Long:      "Mint a new NFT, automatically creating the class if it doesn't exist. Class name, symbol, and description are optional.",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "class_id"},
 						{ProtoField: "id"},

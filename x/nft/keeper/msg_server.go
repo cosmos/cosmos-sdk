@@ -18,37 +18,36 @@ func (k Keeper) Send(ctx context.Context, msg *nft.MsgSend) (*nft.MsgSendRespons
 }
 
 // MintNFT implements the MintNFT method of the types.MsgServer.
-func (k Keeper) MintNFT(goCtx context.Context, msg *nft.MsgMintNFT) (*nft.MsgMintNFTResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	if len(msg.ClassId) == 0 {
-		return nil, nft.ErrEmptyClassID
+func (k Keeper) MintNFT(ctx context.Context, msg *nft.MsgMintNFT) (*nft.MsgMintNFTResponse, error) {
+	if !k.HasClass(ctx, msg.ClassId) {
+		// Create class if it doesn't exist
+		class := nft.Class{
+			Id:          msg.ClassId,
+			Name:        msg.ClassId, // Using ClassId as Name for simplicity
+			Symbol:      msg.ClassId, // Using ClassId as Symbol for simplicity
+			Description: "Automatically created class",
+			Uri:         msg.Uri,
+			UriHash:     msg.UriHash,
+		}
+		if err := k.SaveClass(ctx, class); err != nil {
+			return nil, err
+		}
 	}
-	if len(msg.Id) == 0 {
-		return nil, nft.ErrEmptyNFTID
+
+	// Continue with the existing mint logic
+	token := nft.NFT{
+		ClassId: msg.ClassId,
+		Id:      msg.Id,
+		Uri:     msg.Uri,
+		UriHash: msg.UriHash,
 	}
 
 	sender, err := k.ac.StringToBytes(msg.Sender)
 	if err != nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", msg.Sender)
-	}
-
-	nftToMint := nft.NFT{
-		ClassId: msg.ClassId,
-		Id:      msg.Id,
-		Uri:     msg.Uri,
-	}
-
-	err = k.Mint(ctx, nftToMint, sender)
-	if err != nil {
 		return nil, err
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&nft.EventMint{
-		ClassId: msg.ClassId,
-		Id:      msg.Id,
-		Owner:   msg.Sender,
-	})
+	err = k.Mint(ctx, token, sender)
 	if err != nil {
 		return nil, err
 	}

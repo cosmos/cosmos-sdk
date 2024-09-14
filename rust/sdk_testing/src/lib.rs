@@ -1,19 +1,19 @@
 use interchain_core::{Address, Context, Response};
-use interchain_core::handler::{AccountAPI, AccountHandler, ModuleAPI, ModuleHandler};
+use interchain_core::handler::{AccountAPI, AccountHandler, Handler, ModuleAPI, ModuleHandler};
 
 #[derive(Default)]
 pub struct TestApp {}
 
 impl TestApp {
-    pub fn add_module<H: ModuleHandler>(&mut self, init: H::Init) -> Response<H> {
+    pub fn add_module<H: ModuleHandler>(&mut self, init: H::Init) -> Response<AccountInstance<H>> {
+        todo!()
+    }
+
+    pub fn add_account<H: AccountHandler>(&mut self, ctx: &mut Context, init: H::Init) -> Response<AccountInstance<H>> {
         todo!()
     }
 
     pub fn add_mock_module(&mut self, module_name: &str) -> MockModule {
-        todo!()
-    }
-
-    pub fn add_account<H: AccountHandler>(&mut self, ctx: &mut Context, init: H::Init) -> Response<(Address, H)> {
         todo!()
     }
 
@@ -22,6 +22,10 @@ impl TestApp {
     }
 
     pub fn new_client_context(&mut self) -> Context {
+        todo!()
+    }
+
+    pub fn new_client_context_with_address(&mut self, address: &Address) -> Context {
         todo!()
     }
 
@@ -50,10 +54,33 @@ impl TestStorage {
     }
 }
 
+pub struct AccountInstance<'a, H: Handler> {}
+
+impl <'a, H: Handler> AccountInstance<'a, H> {
+    fn context(&self) -> &Context {
+        todo!()
+    }
+
+    fn mut_context(&mut self) -> &mut Context {
+        todo!()
+    }
+
+    fn instance(&self) -> &H {
+        todo!()
+    }
+}
 
 pub struct MockModule<'a> { }
 
 impl MockModule {
+    fn context(&self) -> &Context {
+        todo!()
+    }
+
+    fn mut_context(&mut self) -> &mut Context {
+        todo!()
+    }
+
     fn add_mock_module_api<A: ModuleAPI>(&mut self, mock: &A) {
         todo!()
     }
@@ -66,7 +93,11 @@ impl MockModule {
 pub struct MockAccount<'a> {}
 
 impl MockAccount {
-    fn address(&self) -> &Address {
+    fn context(&self) -> &Context {
+        todo!()
+    }
+
+    fn mut_context(&mut self) -> &mut Context {
         todo!()
     }
 

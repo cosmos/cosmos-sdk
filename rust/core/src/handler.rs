@@ -1,8 +1,11 @@
 use interchain_message_api::Address;
 use crate::resource::{InitializationError, Initializer, Resource};
 
-pub trait AccountHandler: AccountAPI {
+pub trait Handler {
     type Init;
+}
+
+pub trait AccountHandler: AccountAPI + Handler {
 }
 
 pub trait AccountAPI {
@@ -18,8 +21,7 @@ pub trait AccountRef {
     fn address(&self) -> &Address;
 }
 
-pub trait ModuleHandler: ModuleAPI {
-    type Init;
+pub trait ModuleHandler: ModuleAPI + Handler {
 }
 
 pub trait ModuleAPI {

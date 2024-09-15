@@ -317,10 +317,13 @@ func (k Keeper) StreamPayment(ctx context.Context, classID string, nftID string,
 
 	_, _ = k.GetNFT(ctx, classID, nftID)
 
+	// Calculate royalties as a percentage of the actual payment
+	totalAmount := payment.Amount // use the actual payment amount
+
 	// Calculate royalties
-	creatorShare := sdk.NewCoin(payment.Denom, payment.Amount.MulRaw(10).QuoRaw(100))
-	platformShare := sdk.NewCoin(payment.Denom, payment.Amount.MulRaw(10).QuoRaw(100))
-	ownerShare := sdk.NewCoin(payment.Denom, payment.Amount.MulRaw(80).QuoRaw(100))
+	creatorShare := sdk.NewCoin(payment.Denom, totalAmount.MulRaw(10).QuoRaw(100))
+	platformShare := sdk.NewCoin(payment.Denom, totalAmount.MulRaw(10).QuoRaw(100))
+	ownerShare := sdk.NewCoin(payment.Denom, totalAmount.MulRaw(80).QuoRaw(100))
 
 	// Update accumulated royalties
 	k.updateAccumulatedRoyalties(ctx, classID, nftID, creatorShare, platformShare, ownerShare)

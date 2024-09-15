@@ -33,6 +33,8 @@ const (
 	Query_Classes_FullMethodName                = "/cosmos.nft.v1beta1.Query/Classes"
 	Query_Royalties_FullMethodName              = "/cosmos.nft.v1beta1.Query/Royalties"
 	Query_RoyaltiesByQueryString_FullMethodName = "/cosmos.nft.v1beta1.Query/RoyaltiesByQueryString"
+	Query_TotalPlays_FullMethodName             = "/cosmos.nft.v1beta1.Query/TotalPlays"
+	Query_TotalRoyalties_FullMethodName         = "/cosmos.nft.v1beta1.Query/TotalRoyalties"
 )
 
 // QueryClient is the client API for Query service.
@@ -68,6 +70,10 @@ type QueryClient interface {
 	Royalties(ctx context.Context, in *QueryRoyaltiesRequest, opts ...grpc.CallOption) (*QueryRoyaltiesResponse, error)
 	// RoyaltiesByQueryString queries the royalties of an NFT
 	RoyaltiesByQueryString(ctx context.Context, in *QueryRoyaltiesByQueryStringRequest, opts ...grpc.CallOption) (*QueryRoyaltiesByQueryStringResponse, error)
+	// TotalPlays queries the total number of plays for an NFT
+	TotalPlays(ctx context.Context, in *QueryTotalPlaysRequest, opts ...grpc.CallOption) (*QueryTotalPlaysResponse, error)
+	// TotalRoyalties queries the total royalties generated for an NFT
+	TotalRoyalties(ctx context.Context, in *QueryTotalRoyaltiesRequest, opts ...grpc.CallOption) (*QueryTotalRoyaltiesResponse, error)
 }
 
 type queryClient struct {
@@ -204,6 +210,24 @@ func (c *queryClient) RoyaltiesByQueryString(ctx context.Context, in *QueryRoyal
 	return out, nil
 }
 
+func (c *queryClient) TotalPlays(ctx context.Context, in *QueryTotalPlaysRequest, opts ...grpc.CallOption) (*QueryTotalPlaysResponse, error) {
+	out := new(QueryTotalPlaysResponse)
+	err := c.cc.Invoke(ctx, Query_TotalPlays_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TotalRoyalties(ctx context.Context, in *QueryTotalRoyaltiesRequest, opts ...grpc.CallOption) (*QueryTotalRoyaltiesResponse, error) {
+	out := new(QueryTotalRoyaltiesResponse)
+	err := c.cc.Invoke(ctx, Query_TotalRoyalties_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -237,6 +261,10 @@ type QueryServer interface {
 	Royalties(context.Context, *QueryRoyaltiesRequest) (*QueryRoyaltiesResponse, error)
 	// RoyaltiesByQueryString queries the royalties of an NFT
 	RoyaltiesByQueryString(context.Context, *QueryRoyaltiesByQueryStringRequest) (*QueryRoyaltiesByQueryStringResponse, error)
+	// TotalPlays queries the total number of plays for an NFT
+	TotalPlays(context.Context, *QueryTotalPlaysRequest) (*QueryTotalPlaysResponse, error)
+	// TotalRoyalties queries the total royalties generated for an NFT
+	TotalRoyalties(context.Context, *QueryTotalRoyaltiesRequest) (*QueryTotalRoyaltiesResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -285,6 +313,12 @@ func (UnimplementedQueryServer) Royalties(context.Context, *QueryRoyaltiesReques
 }
 func (UnimplementedQueryServer) RoyaltiesByQueryString(context.Context, *QueryRoyaltiesByQueryStringRequest) (*QueryRoyaltiesByQueryStringResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RoyaltiesByQueryString not implemented")
+}
+func (UnimplementedQueryServer) TotalPlays(context.Context, *QueryTotalPlaysRequest) (*QueryTotalPlaysResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TotalPlays not implemented")
+}
+func (UnimplementedQueryServer) TotalRoyalties(context.Context, *QueryTotalRoyaltiesRequest) (*QueryTotalRoyaltiesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TotalRoyalties not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -551,6 +585,42 @@ func _Query_RoyaltiesByQueryString_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_TotalPlays_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTotalPlaysRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TotalPlays(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_TotalPlays_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TotalPlays(ctx, req.(*QueryTotalPlaysRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TotalRoyalties_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTotalRoyaltiesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TotalRoyalties(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_TotalRoyalties_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TotalRoyalties(ctx, req.(*QueryTotalRoyaltiesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -613,6 +683,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RoyaltiesByQueryString",
 			Handler:    _Query_RoyaltiesByQueryString_Handler,
+		},
+		{
+			MethodName: "TotalPlays",
+			Handler:    _Query_TotalPlays_Handler,
+		},
+		{
+			MethodName: "TotalRoyalties",
+			Handler:    _Query_TotalRoyalties_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

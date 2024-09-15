@@ -91,6 +91,7 @@ message MsgStreamNFT {
   string id                     = 2;
   string sender                 = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string payment                = 4; // Amount to pay for streaming, e.g., "10stake"
+  uint64 play_count             = 5;
 }
 
 // MsgStreamNFTResponse defines the Msg/StreamNFT response type.

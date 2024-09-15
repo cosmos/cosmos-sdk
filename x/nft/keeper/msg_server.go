@@ -183,6 +183,18 @@ func (k Keeper) StreamNFT(goCtx context.Context, msg *nft.MsgStreamNFT) (*nft.Ms
 		return nil, err
 	}
 
+	// Increment total plays
+	err = k.IncrementTotalPlays(ctx, msg.ClassId, msg.Id, msg.PlayCount)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add to total royalties
+	err = k.AddToTotalRoyalties(ctx, msg.ClassId, msg.Id, payment)
+	if err != nil {
+		return nil, err
+	}
+
 	err = k.StreamPayment(ctx, msg.ClassId, msg.Id, payment)
 	if err != nil {
 		return nil, err
@@ -194,6 +206,20 @@ func (k Keeper) StreamNFT(goCtx context.Context, msg *nft.MsgStreamNFT) (*nft.Ms
 // WithdrawRoyalties handles the MsgWithdrawRoyalties message
 func (k Keeper) WithdrawRoyalties(goCtx context.Context, msg *nft.MsgWithdrawRoyalties) (*nft.MsgWithdrawRoyaltiesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// Extract necessary variables
+	classID := msg.ClassId
+	nftID := msg.Id
+	role := msg.Role
+	caller, err := sdk.AccAddressFromBech32(msg.Recipient) // Use msg.Recipient as the caller
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrap("Invalid recipient address")
+	}
+
+	// Check if the caller can withdraw royalties
+	if !k.canWithdrawRoyalties(ctx, classID, nftID, role, caller) {
+		return nil, sdkerrors.ErrUnauthorized.Wrap("caller cannot withdraw royalties for this role")
+	}
 
 	recipient, err := k.ac.StringToBytes(msg.Recipient)
 	if err != nil {
@@ -208,4 +234,20 @@ func (k Keeper) WithdrawRoyalties(goCtx context.Context, msg *nft.MsgWithdrawRoy
 	return &nft.MsgWithdrawRoyaltiesResponse{
 		Amount: amount.String(),
 	}, nil
+}
+
+func (k Keeper) canWithdrawRoyalties(ctx context.Context, classID, nftID, role string, caller sdk.AccAddress) bool {
+	nft, found := k.GetNFT(ctx, classID, nftID)
+	if !found {
+		return false
+	}
+
+	switch role {
+	case "creator":
+		return nft.Creator == caller.String()
+	case "owner":
+		return nft.Owner == caller.String()
+	default:
+		return false
+	}
 }

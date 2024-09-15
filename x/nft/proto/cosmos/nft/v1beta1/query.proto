@@ -87,6 +87,16 @@ service Query {
     option (google.api.http).get          = "/cosmos/nft/v1beta1/royalties";
     option (cosmos_proto.method_added_in) = "nft v0.1.1";
   }
+
+  // TotalPlays queries the total number of plays for an NFT
+  rpc TotalPlays(QueryTotalPlaysRequest) returns (QueryTotalPlaysResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/total_plays/{class_id}/{id}";
+  }
+
+  // TotalRoyalties queries the total royalties generated for an NFT
+  rpc TotalRoyalties(QueryTotalRoyaltiesRequest) returns (QueryTotalRoyaltiesResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/total_royalties/{class_id}/{id}";
+  }
 }
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method
@@ -313,4 +323,26 @@ message QueryRoyaltiesByQueryStringResponse {
 
   // royalties contains the accumulated royalties for the NFT
   cosmos.nft.v1beta1.AccumulatedRoyalties royalties = 1;
+}
+
+// QueryTotalPlaysRequest is the request type for the Query/TotalPlays RPC method
+message QueryTotalPlaysRequest {
+  string class_id = 1;
+  string id       = 2;
+}
+
+// QueryTotalPlaysResponse is the response type for the Query/TotalPlays RPC method
+message QueryTotalPlaysResponse {
+  uint64 total_plays = 1;
+}
+
+// QueryTotalRoyaltiesRequest is the request type for the Query/TotalRoyalties RPC method
+message QueryTotalRoyaltiesRequest {
+  string class_id = 1;
+  string id       = 2;
+}
+
+// QueryTotalRoyaltiesResponse is the response type for the Query/TotalRoyalties RPC method
+message QueryTotalRoyaltiesResponse {
+  string total_royalties = 1; // Using string to represent sdk.Coin
 }

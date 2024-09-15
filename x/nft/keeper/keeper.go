@@ -72,11 +72,20 @@ func (k Keeper) WithdrawRoyaltiesInternal(ctx context.Context, classID string, n
 	k.cdc.MustUnmarshal(bz, &accumulatedRoyalties)
 
 	var amount sdk.Coin
+	platformWalletAddress, err := sdk.AccAddressFromBech32("cosmos1d9ms9wf4yx3vky2kp6fc7t3qm9p8ps33g49c9s")
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("invalid platform wallet address format")
+	}
+
 	switch role {
 	case "creator":
 		amount, err = sdk.ParseCoinNormalized(accumulatedRoyalties.CreatorRoyalties)
 		accumulatedRoyalties.CreatorRoyalties = sdk.NewCoin(amount.Denom, math.ZeroInt()).String()
 	case "platform":
+		// Check if the recipient matches the platform wallet address
+		if !recipient.Equals(platformWalletAddress) {
+			return sdk.Coin{}, fmt.Errorf("unauthorized withdrawal attempt for platform royalties")
+		}
 		amount, err = sdk.ParseCoinNormalized(accumulatedRoyalties.PlatformRoyalties)
 		accumulatedRoyalties.PlatformRoyalties = sdk.NewCoin(amount.Denom, math.ZeroInt()).String()
 	case "owner":
@@ -131,4 +140,46 @@ func (k Keeper) GetAccumulatedRoyalties(ctx context.Context, classID, nftID stri
 	var royalties nft.AccumulatedRoyalties
 	k.cdc.MustUnmarshal(bz, &royalties)
 	return royalties, true
+}
+
+func (k Keeper) IncrementTotalPlays(ctx context.Context, classID, nftID string, playCount uint64) error {
+	nft, found := k.GetNFT(ctx, classID, nftID)
+	if !found {
+		return fmt.Errorf("NFT not found: %s/%s", classID, nftID)
+	}
+
+	nft.TotalPlays += playCount
+	return k.updateNFT(ctx, nft)
+}
+
+// AddToTotalRoyalties adds to the total royalties generated for an NFT
+func (k Keeper) AddToTotalRoyalties(ctx context.Context, classID, nftID string, amount sdk.Coin) error {
+	nft, found := k.GetNFT(ctx, classID, nftID)
+	if !found {
+		return fmt.Errorf("NFT not found: %s/%s", classID, nftID)
+	}
+
+	currentTotal, err := sdk.ParseCoinsNormalized(nft.TotalRoyaltiesGenerated)
+	if err != nil {
+		return err
+	}
+
+	newTotal := currentTotal.Add(amount)
+	nft.TotalRoyaltiesGenerated = newTotal.String()
+
+	return k.updateNFT(ctx, nft)
+}
+
+func (k Keeper) updateNFT(ctx context.Context, nft nft.NFT) error {
+	k.setNFT(ctx, nft)
+	return nil
+}
+func (k Keeper) TotalPlays(ctx context.Context, r *nft.QueryTotalPlaysRequest) (*nft.QueryTotalPlaysResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (k Keeper) TotalRoyalties(ctx context.Context, request *nft.QueryTotalRoyaltiesRequest) (*nft.QueryTotalRoyaltiesResponse, error) {
+	//TODO implement me
+	panic("implement me")
 }

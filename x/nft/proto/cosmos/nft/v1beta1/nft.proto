@@ -51,6 +51,12 @@ message NFT {
   // royalty_info contains information about royalties for this NFT
   RoyaltyInfo royalty_info = 7;
 
+  // total_plays is the counter for total number of plays/streams
+  uint64 total_plays = 8;
+
+  // total_royalties_generated is the total amount of royalties ever generated
+  string total_royalties_generated = 9;
+
   // data is an app specific data of the NFT. Optional
   google.protobuf.Any data = 10;
 }

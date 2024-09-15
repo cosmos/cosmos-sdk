@@ -90,6 +90,28 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:     "Query all NFT classes.",
 					Example:   fmt.Sprintf(`%s query %s classes`, version.AppName, nft.ModuleName),
 				},
+				{
+					RpcMethod: "TotalPlays",
+					Use:       "total-plays <class-id> <nft-id>",
+					Short:     "Query the total number of plays for an NFT",
+					Long:      "Query the total number of plays for a specific NFT based on its class and id.",
+					Example:   fmt.Sprintf(`%s query %s total-plays my-music-nfts song-001`, version.AppName, nft.ModuleName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "class_id"},
+						{ProtoField: "id"},
+					},
+				},
+				{
+					RpcMethod: "TotalRoyalties",
+					Use:       "total-royalties <class-id> <nft-id>",
+					Short:     "Query the total royalties generated for an NFT",
+					Long:      "Query the total royalties generated for a specific NFT based on its class and id.",
+					Example:   fmt.Sprintf(`%s query %s total-royalties my-music-nfts song-001`, version.AppName, nft.ModuleName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "class_id"},
+						{ProtoField: "id"},
+					},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{

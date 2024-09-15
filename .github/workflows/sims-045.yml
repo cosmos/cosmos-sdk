@@ -102,8 +102,18 @@ jobs:
 
   sims-notify-success:
     needs:
+<<<<<<< HEAD:.github/workflows/sims-045.yml
       [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
     runs-on: ubuntu-latest
+=======
+      [
+        test-sim-multi-seed-short,
+        test-sim-after-import,
+        test-sim-import-export,
+        test-sim-deterministic,
+      ]
+    runs-on: large-sdk-runner
+>>>>>>> 01473479c (test: fix sims (#21735)):.github/workflows/sims-052.yml
     if: ${{ success() }}
     steps:
       - uses: actions/checkout@v3
@@ -129,8 +139,18 @@ jobs:
     permissions:
       contents: none
     needs:
+<<<<<<< HEAD:.github/workflows/sims-045.yml
       [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
     runs-on: ubuntu-latest
+=======
+      [
+        test-sim-multi-seed-short,
+        test-sim-after-import,
+        test-sim-import-export,
+        test-sim-deterministic,
+      ]
+    runs-on: large-sdk-runner
+>>>>>>> 01473479c (test: fix sims (#21735)):.github/workflows/sims-052.yml
     if: ${{ failure() }}
     steps:
       - name: Notify Slack on failure

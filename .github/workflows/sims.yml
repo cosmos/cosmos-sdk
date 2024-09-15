@@ -86,8 +86,18 @@ jobs:
 
   sims-notify-success:
     needs:
+<<<<<<< HEAD
       [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
     runs-on: ubuntu-latest
+=======
+      [
+        test-sim-multi-seed-short,
+        test-sim-after-import,
+        test-sim-import-export,
+        test-sim-deterministic,
+      ]
+    runs-on: large-sdk-runner
+>>>>>>> 01473479c (test: fix sims (#21735))
     if: ${{ success() }}
     steps:
       - name: Check out repository
@@ -114,8 +124,18 @@ jobs:
     permissions:
       contents: none
     needs:
+<<<<<<< HEAD
       [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
     runs-on: ubuntu-latest
+=======
+      [
+        test-sim-multi-seed-short,
+        test-sim-after-import,
+        test-sim-import-export,
+        test-sim-deterministic,
+      ]
+    runs-on: large-sdk-runner
+>>>>>>> 01473479c (test: fix sims (#21735))
     if: ${{ failure() }}
     steps:
       - name: Notify Slack on failure

@@ -462,4 +462,16 @@ func (m mapGetter) Get(key string) interface{} {
 	return m[key]
 }
 
+<<<<<<< HEAD
+=======
+func (m mapGetter) GetString(key string) string {
+	str, ok := m[key]
+	if !ok {
+		return ""
+	}
+
+	return str.(string)
+}
+
+>>>>>>> 01473479c (test: fix sims (#21735))
 var _ servertypes.AppOptions = mapGetter{}

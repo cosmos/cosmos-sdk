@@ -39,9 +39,8 @@ func (g *genesisContext) Run(
 }
 
 type GenesisKVStoreServie struct {
-	genesisCapable bool
-	actor          []byte
-	execution      store.KVStoreService
+	actor            []byte
+	executionService store.KVStoreService
 }
 
 func NewGenesisKVService(
@@ -49,28 +48,23 @@ func NewGenesisKVService(
 	execution store.KVStoreService,
 ) *GenesisKVStoreServie {
 	return &GenesisKVStoreServie{
-		genesisCapable: true,
-		actor:          actor,
-		execution:      execution,
+		actor:            actor,
+		executionService: execution,
 	}
 }
 
 // OpenKVStore implements store.KVStoreService.
 func (g *GenesisKVStoreServie) OpenKVStore(ctx context.Context) store.KVStore {
-	if !g.genesisCapable {
-		return g.execution.OpenKVStore(ctx)
-	}
 	v := ctx.Value(genesisContextKey)
 	if v == nil {
-		return g.execution.OpenKVStore(ctx)
+		return g.executionService.OpenKVStore(ctx)
 	}
 	genCtx, ok := v.(*genesisContext)
 	if !ok {
 		panic(fmt.Errorf("unexpected genesis context type: %T", v))
 	}
 	if genCtx.didRun {
-		g.genesisCapable = false
-		return g.execution.OpenKVStore(ctx)
+		return g.executionService.OpenKVStore(ctx)
 	}
 	state, err := genCtx.state.GetWriter(g.actor)
 	if err != nil {
@@ -80,15 +74,11 @@ func (g *GenesisKVStoreServie) OpenKVStore(ctx context.Context) store.KVStore {
 }
 
 type GenesisHeaderService struct {
-	genesisCapable   bool
 	executionService header.Service
 }
 
 // HeaderInfo implements header.Service.
 func (g *GenesisHeaderService) HeaderInfo(ctx context.Context) header.Info {
-	if !g.genesisCapable {
-		return g.executionService.HeaderInfo(ctx)
-	}
 	v := ctx.Value(genesisContextKey)
 	if v == nil {
 		return g.executionService.HeaderInfo(ctx)
@@ -98,7 +88,6 @@ func (g *GenesisHeaderService) HeaderInfo(ctx context.Context) header.Info {
 		panic(fmt.Errorf("unexpected genesis context type: %T", v))
 	}
 	if genCtx.didRun {
-		g.genesisCapable = false
 		return g.executionService.HeaderInfo(ctx)
 	}
 	return header.Info{}
@@ -106,7 +95,6 @@ func (g *GenesisHeaderService) HeaderInfo(ctx context.Context) header.Info {
 
 func NewGenesisHeaderService(executionService header.Service) *GenesisHeaderService {
 	return &GenesisHeaderService{
-		genesisCapable:   true,
 		executionService: executionService,
 	}
 }

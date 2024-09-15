@@ -202,7 +202,14 @@ func (s STF[T]) deliverTx(
 		}
 	}
 
-	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
+	execResp, execGas, execEvents, err := s.execTx(
+		ctx,
+		state,
+		gasLimit-validateGas,
+		tx,
+		execMode,
+		hi,
+	)
 	return server.TxResult{
 		Events:    append(validationEvents, execEvents...),
 		GasUsed:   execGas + validateGas,
@@ -250,7 +257,14 @@ func (s STF[T]) execTx(
 ) ([]transaction.Msg, uint64, []event.Event, error) {
 	execState := s.branchFn(state)
 
-	msgsResp, gasUsed, runTxMsgsEvents, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode, hi)
+	msgsResp, gasUsed, runTxMsgsEvents, txErr := s.runTxMsgs(
+		ctx,
+		execState,
+		gasLimit,
+		tx,
+		execMode,
+		hi,
+	)
 	if txErr != nil {
 		// in case of error during message execution, we do not apply the exec state.
 		// instead we run the post exec handler in a new branchFn from the initial state.
@@ -430,7 +444,13 @@ func (s STF[T]) ValidateTx(
 	tx T,
 ) server.TxResult {
 	validationState := s.branchFn(state)
-	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx, transaction.ExecModeCheck)
+	gasUsed, events, err := s.validateTx(
+		ctx,
+		validationState,
+		gasLimit,
+		tx,
+		transaction.ExecModeCheck,
+	)
 	return server.TxResult{
 		Events:  events,
 		GasUsed: gasUsed,
@@ -454,19 +474,6 @@ func (s STF[T]) Query(
 	queryCtx.setHeaderInfo(hi)
 	queryCtx.setGasLimit(gasLimit)
 	return s.queryRouter.Invoke(queryCtx, req)
-}
-
-// RunWithCtx is made to support genesis, if genesis was just the execution of messages instead
-// of being something custom then we would not need this. PLEASE DO NOT USE.
-// TODO: Remove
-func (s STF[T]) RunWithCtx(
-	ctx context.Context,
-	state store.ReaderMap,
-	closure func(ctx context.Context) error,
-) (store.WriterMap, error) {
-	branchedState := s.branchFn(state)
-	stfCtx := s.makeContext(ctx, nil, branchedState, internal.ExecModeFinalize)
-	return branchedState, closure(stfCtx)
 }
 
 // clone clones STF.

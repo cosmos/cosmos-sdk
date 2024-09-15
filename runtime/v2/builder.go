@@ -198,7 +198,17 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 			return genesisState, err
 		},
 		ExportGenesis: func(ctx context.Context, version uint64) ([]byte, error) {
-			genesisJson, err := a.app.moduleManager.ExportGenesisForModules(ctx)
+			_, state, err := a.app.db.StateLatest()
+			if err != nil {
+				return nil, fmt.Errorf("unable to get latest state: %w", err)
+			}
+			genesisCtx := makeGenesisContext(a.branch(state))
+
+			var genesisJson map[string]json.RawMessage
+			_, err = genesisCtx.Run(ctx, func(ctx context.Context) error {
+				genesisJson, err = a.app.moduleManager.ExportGenesisForModules(ctx)
+				return err
+			})
 			if err != nil {
 				return nil, fmt.Errorf("failed to export genesis: %w", err)
 			}

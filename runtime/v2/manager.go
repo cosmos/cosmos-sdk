@@ -480,6 +480,14 @@ func (m *MM[T]) RegisterServices(app *App[T]) error {
 		if module, ok := module.(appmodulev2.HasPostMsgHandlers); ok {
 			module.RegisterPostMsgHandlers(app.msgRouterBuilder)
 		}
+
+		if module, ok := module.(appmodulev2.HasMsgHandlers); ok {
+			module.RegisterMsgHandlers(app.msgRouterBuilder)
+		}
+
+		if module, ok := module.(appmodulev2.HasQueryHandlers); ok {
+			module.RegisterQueryHandlers(app.queryRouterBuilder)
+		}
 	}
 
 	return nil

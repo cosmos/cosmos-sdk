@@ -15,9 +15,8 @@ type genesisContextKeyType struct{}
 var genesisContextKey = genesisContextKeyType{}
 
 type genesisContext struct {
-	state      store.WriterMap
-	headerInfo header.Info
-	didRun     bool
+	state  store.WriterMap
+	didRun bool
 }
 
 func makeGenesisContext(state store.WriterMap) genesisContext {
@@ -45,7 +44,7 @@ type GenesisKVStoreServie struct {
 	execution      store.KVStoreService
 }
 
-func NewGenesisCapableKVStoreService(
+func NewGenesisKVService(
 	actor []byte,
 	execution store.KVStoreService,
 ) *GenesisKVStoreServie {
@@ -63,7 +62,7 @@ func (g *GenesisKVStoreServie) OpenKVStore(ctx context.Context) store.KVStore {
 	}
 	v := ctx.Value(genesisContextKey)
 	if v == nil {
-		panic("genesis context not found")
+		return g.execution.OpenKVStore(ctx)
 	}
 	genCtx, ok := v.(*genesisContext)
 	if !ok {
@@ -81,20 +80,35 @@ func (g *GenesisKVStoreServie) OpenKVStore(ctx context.Context) store.KVStore {
 }
 
 type GenesisHeaderService struct {
-	genesisCapable bool
+	genesisCapable   bool
+	executionService header.Service
 }
 
 // HeaderInfo implements header.Service.
 func (g *GenesisHeaderService) HeaderInfo(ctx context.Context) header.Info {
+	if !g.genesisCapable {
+		return g.executionService.HeaderInfo(ctx)
+	}
 	v := ctx.Value(genesisContextKey)
 	if v == nil {
-		panic("genesis context not found")
+		return g.executionService.HeaderInfo(ctx)
 	}
 	genCtx, ok := v.(*genesisContext)
 	if !ok {
 		panic(fmt.Errorf("unexpected genesis context type: %T", v))
 	}
-	return genCtx.headerInfo
+	if genCtx.didRun {
+		g.genesisCapable = false
+		return g.executionService.HeaderInfo(ctx)
+	}
+	return header.Info{}
+}
+
+func NewGenesisHeaderService(executionService header.Service) *GenesisHeaderService {
+	return &GenesisHeaderService{
+		genesisCapable:   true,
+		executionService: executionService,
+	}
 }
 
 var _ header.Service = (*GenesisHeaderService)(nil)

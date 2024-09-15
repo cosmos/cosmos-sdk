@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/header"
 	rootstore "cosmossdk.io/store/v2/root"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -195,6 +196,7 @@ func ProvideEnvironment[T transaction.Tx](
 	appBuilder *AppBuilder[T],
 	kvFactory store.KVStoreServiceFactory,
 	memFactory store.MemoryStoreServiceFactory,
+	headerFactory header.HeaderServiceFactory,
 ) (
 	appmodulev2.Environment,
 	store.KVStoreService,
@@ -228,7 +230,7 @@ func ProvideEnvironment[T transaction.Tx](
 		BranchService:      stf.BranchService{},
 		EventService:       stf.NewEventService(),
 		GasService:         stf.NewGasMeterService(),
-		HeaderService:      stf.HeaderService{},
+		HeaderService:      headerFactory(),
 		QueryRouterService: stf.NewQueryRouterService(),
 		MsgRouterService:   stf.NewMsgRouterService([]byte(key.Name())),
 		TransactionService: services.NewContextAwareTransactionService(),
@@ -256,13 +258,14 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 func DefaultServiceBindings() depinject.Config {
 	var (
 		kvServiceFactory store.KVStoreServiceFactory = func(actor []byte) store.KVStoreService {
-			return NewGenesisService(
+			return NewGenesisKVService(
 				actor,
 				stf.NewKVStoreService(actor),
 			)
 		}
-		memStoreServiceFactory store.MemoryStoreServiceFactory = func(actor []byte) store.MemoryStoreService {
-			return stf.NewMemoryStoreService(actor)
+		memStoreServiceFactory store.MemoryStoreServiceFactory = stf.NewMemoryStoreService
+		headerServiceFactory   header.HeaderServiceFactory     = func() header.Service {
+			return NewGenesisHeaderService(stf.HeaderService{})
 		}
 		cometService comet.Service = &services.ContextAwareCometInfoService{}
 	)
@@ -270,5 +273,6 @@ func DefaultServiceBindings() depinject.Config {
 		kvServiceFactory,
 		memStoreServiceFactory,
 		cometService,
+		headerServiceFactory,
 	)
 }

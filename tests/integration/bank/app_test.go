@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	runtimev2 "cosmossdk.io/runtime/v2"
 	_ "cosmossdk.io/x/accounts"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/testutil"
@@ -80,10 +79,11 @@ type suite struct {
 	AccountKeeper      types.AccountKeeper
 	DistributionKeeper distrkeeper.Keeper
 	App                *runtime.App
-	AppV2              *runtimev2.App[transaction.Tx]
+	AppV2              *integrationv2.App
 	TxConfig           client.TxConfig
 }
 
+// TODO move to param
 var testAppV2 = false
 
 func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) suite {

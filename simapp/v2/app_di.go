@@ -1,8 +1,6 @@
 package simapp
 
 import (
-	"cosmossdk.io/core/comet"
-	"cosmossdk.io/runtime/v2/services"
 	_ "embed"
 
 	"github.com/spf13/viper"
@@ -99,18 +97,17 @@ func NewSimApp[T transaction.Tx](
 	viper *viper.Viper,
 ) *SimApp[T] {
 	var (
-		app          = &SimApp[T]{}
-		appBuilder   *runtime.AppBuilder[T]
-		err          error
-		cometService comet.Service = &services.ContextAwareCometInfoService{}
+		app        = &SimApp[T]{}
+		appBuilder *runtime.AppBuilder[T]
+		err        error
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
 			AppConfig(),
+			runtime.DefaultServiceBindings(),
 			depinject.Supply(
 				logger,
 				viper,
-				cometService,
 
 				// ADVANCED CONFIGURATION
 

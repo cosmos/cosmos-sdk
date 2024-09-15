@@ -43,34 +43,17 @@ func (a AppManager[T]) InitGenesis(
 	initGenesisJSON []byte,
 	txCodec transaction.Codec[T],
 ) (*server.BlockResponse, corestore.WriterMap, error) {
-	v, zeroState, err := a.db.StateLatest()
-	if err != nil {
-		return nil, nil, fmt.Errorf("unable to get latest state: %w", err)
-	}
-	if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
-		return nil, nil, errors.New("cannot init genesis on non-zero state")
-	}
-
 	var genTxs []T
-	genesisState, err := a.stf.RunWithCtx(
+	genesisState, err := a.initGenesis(
 		ctx,
-		zeroState,
-		func(ctx context.Context) error {
-			return a.initGenesis(
-				ctx,
-				bytes.NewBuffer(initGenesisJSON),
-				func(jsonTx json.RawMessage) error {
-					genTx, err := txCodec.DecodeJSON(jsonTx)
-					if err != nil {
-						return fmt.Errorf(
-							"failed to decode genesis transaction: %w",
-							err,
-						)
-					}
-					genTxs = append(genTxs, genTx)
-					return nil
-				},
-			)
+		bytes.NewBuffer(initGenesisJSON),
+		func(jsonTx json.RawMessage) error {
+			genTx, err := txCodec.DecodeJSON(jsonTx)
+			if err != nil {
+				return fmt.Errorf("failed to decode genesis transaction: %w", err)
+			}
+			genTxs = append(genTxs, genTx)
+			return nil
 		},
 	)
 	if err != nil {
@@ -204,6 +187,10 @@ func (a AppManager[T]) Simulate(
 	return result, cs, nil
 }
 
+// Exec executes a function within the context of the latest state.
+// It is required for integration testing.
+// Alternative #1: Provide STF directly to the test. Blocking: STF is not exported.
+// Alternative #2: Provide parallel implementation of all services provided by STF for testing.
 func (a AppManager[T]) Exec(
 	ctx context.Context,
 	fn func(ctx context.Context) error,

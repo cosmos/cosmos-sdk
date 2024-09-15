@@ -1,10 +1,12 @@
 package runtime
 
 import (
-	rootstore "cosmossdk.io/store/v2/root"
 	"fmt"
 	"os"
 	"slices"
+
+	"cosmossdk.io/core/comet"
+	rootstore "cosmossdk.io/store/v2/root"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
@@ -166,7 +168,12 @@ func SetupAppBuilder(inputs AppInputs) {
 		storeOptions = *inputs.StoreOptions
 	}
 	var err error
-	app.db, err = inputs.StoreBuilder.Build(inputs.Logger, app.storeKeys, inputs.DynamicConfig, storeOptions)
+	app.db, err = inputs.StoreBuilder.Build(
+		inputs.Logger,
+		app.storeKeys,
+		inputs.DynamicConfig,
+		storeOptions,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -186,6 +193,8 @@ func ProvideEnvironment[T transaction.Tx](
 	config *runtimev2.Module,
 	key depinject.ModuleKey,
 	appBuilder *AppBuilder[T],
+	kvFactory store.KVStoreServiceFactory,
+	memFactory store.MemoryStoreServiceFactory,
 ) (
 	appmodulev2.Environment,
 	store.KVStoreService,
@@ -207,11 +216,11 @@ func ProvideEnvironment[T transaction.Tx](
 		}
 
 		registerStoreKey(appBuilder, kvStoreKey)
-		kvService = stf.NewKVStoreService([]byte(kvStoreKey))
+		kvService = kvFactory([]byte(kvStoreKey))
 
 		memStoreKey := fmt.Sprintf("memory:%s", key.Name())
 		registerStoreKey(appBuilder, memStoreKey)
-		memKvService = stf.NewMemoryStoreService([]byte(memStoreKey))
+		memKvService = memFactory([]byte(memStoreKey))
 	}
 
 	env := appmodulev2.Environment{
@@ -242,4 +251,24 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 	}
 
 	return nil
+}
+
+func DefaultServiceBindings() depinject.Config {
+	var (
+		kvServiceFactory store.KVStoreServiceFactory = func(actor []byte) store.KVStoreService {
+			return NewGenesisService(
+				actor,
+				stf.NewKVStoreService(actor),
+			)
+		}
+		memStoreServiceFactory store.MemoryStoreServiceFactory = func(actor []byte) store.MemoryStoreService {
+			return stf.NewMemoryStoreService(actor)
+		}
+		cometService comet.Service = &services.ContextAwareCometInfoService{}
+	)
+	return depinject.Supply(
+		kvServiceFactory,
+		memStoreServiceFactory,
+		cometService,
+	)
 }

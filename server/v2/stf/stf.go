@@ -550,7 +550,7 @@ func (e *executionContext) Value(key any) any {
 func (s STF[T]) makeContext(
 	ctx context.Context,
 	sender transaction.Identity,
-	store store.WriterMap,
+	state store.WriterMap,
 	execMode transaction.ExecMode,
 ) *executionContext {
 	valuedCtx := context.WithValue(ctx, corecontext.ExecModeKey, execMode)
@@ -560,7 +560,7 @@ func (s STF[T]) makeContext(
 		s.makeGasMeteredState,
 		s.branchFn,
 		sender,
-		store,
+		state,
 		execMode,
 		s.msgRouter,
 		s.queryRouter,

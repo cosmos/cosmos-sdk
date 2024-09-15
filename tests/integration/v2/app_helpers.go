@@ -10,11 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
-	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
-
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
@@ -25,13 +20,14 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	consensustypes "cosmossdk.io/x/consensus/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	cmttypes "github.com/cometbft/cometbft/types"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -95,7 +91,6 @@ type StartupConfig struct {
 	AppOption       runtime.AppBuilderOption[stateMachineTx]
 	AtGenesis       bool
 	GenesisAccounts []GenesisAccount
-	DB              corestore.KVStoreWithBatch
 	HomeDir         string
 }
 
@@ -117,7 +112,6 @@ func DefaultStartUpConfig() StartupConfig {
 		ValidatorSet:    CreateRandomValidatorSet,
 		AtGenesis:       false,
 		GenesisAccounts: []GenesisAccount{ga},
-		DB:              dbm.NewMemDB(),
 	}
 }
 
@@ -126,7 +120,7 @@ func DefaultStartUpConfig() StartupConfig {
 func Setup(
 	appConfig depinject.Config,
 	extraOutputs ...interface{},
-) (*runtime.App[stateMachineTx], error) {
+) (*App, error) {
 	return SetupWithConfiguration(
 		appConfig,
 		DefaultStartUpConfig(),
@@ -138,7 +132,7 @@ func Setup(
 func SetupAtGenesis(
 	appConfig depinject.Config,
 	extraOutputs ...interface{},
-) (*runtime.App[transaction.Tx], error) {
+) (*App, error) {
 	cfg := DefaultStartUpConfig()
 	cfg.AtGenesis = true
 	return SetupWithConfiguration(appConfig, cfg, extraOutputs...)
@@ -186,16 +180,22 @@ func SetupWithConfiguration(
 	appConfig depinject.Config,
 	startupConfig StartupConfig,
 	extraOutputs ...interface{},
-) (*runtime.App[stateMachineTx], error) {
+) (*App, error) {
 	// create the app with depinject
 	var (
 		app             *runtime.App[stateMachineTx]
 		appBuilder      *runtime.AppBuilder[stateMachineTx]
 		storeBuilder    *runtime.StoreBuilder
 		txConfigOptions tx.ConfigOptions
-		cometService    comet.Service = &cometServiceImpl{}
-		cdc             codec.Codec
-		err             error
+		cometService    comet.Service                   = &cometServiceImpl{}
+		kvFactory       corestore.KVStoreServiceFactory = func(actor []byte) corestore.KVStoreService {
+			return &storeService{actor}
+		}
+		memFactory corestore.MemoryStoreServiceFactory = func(actor []byte) corestore.MemoryStoreService {
+			return &storeService{actor}
+		}
+		cdc codec.Codec
+		err error
 	)
 
 	if err := depinject.Inject(
@@ -205,6 +205,8 @@ func SetupWithConfiguration(
 			depinject.Supply(
 				&dynamicConfigImpl{startupConfig.HomeDir},
 				cometService,
+				kvFactory,
+				memFactory,
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,
@@ -312,7 +314,7 @@ func SetupWithConfiguration(
 		return nil, fmt.Errorf("failed to commit initial version: %w", err)
 	}
 
-	return app, nil
+	return &App{App: app, Store: store}, nil
 }
 
 // genesisStateWithValSet returns a new genesis state with the validator set
@@ -453,28 +455,36 @@ func (t *genericTxDecoder) DecodeJSON(bz []byte) (stateMachineTx, error) {
 	return out, nil
 }
 
-// EmptyAppOptions is a stub implementing AppOptions
-type EmptyAppOptions struct{}
-
-// Get implements AppOptions
-func (ao EmptyAppOptions) Get(o string) interface{} {
-	return nil
+type App struct {
+	*runtime.App[stateMachineTx]
+	Store runtime.Store
 }
 
-// AppOptionsMap is a stub implementing AppOptions which can get data from a map
-type AppOptionsMap map[string]interface{}
+type storeService struct {
+	actor []byte
+}
 
-func (m AppOptionsMap) Get(key string) interface{} {
-	v, ok := m[key]
+type contextKeyType struct{}
+
+var contextKey = contextKeyType{}
+
+type integrationContext struct {
+	state corestore.WriterMap
+}
+
+func (s storeService) OpenKVStore(ctx context.Context) corestore.KVStore {
+	iCtx, ok := ctx.Value(contextKey).(integrationContext)
 	if !ok {
-		return interface{}(nil)
+		panic("failed to get integration context")
 	}
 
-	return v
+	state, err := iCtx.state.GetWriter(s.actor)
+	if err != nil {
+		panic(err)
+	}
+	return state
 }
 
-func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {
-	return AppOptionsMap{
-		flags.FlagHome: homePath,
-	}
+func (s storeService) OpenMemoryStore(ctx context.Context) corestore.KVStore {
+	return s.OpenKVStore(ctx)
 }

@@ -259,3 +259,37 @@ func (k Keeper) Classes(ctx context.Context, r *nft.QueryClassesRequest) (*nft.Q
 		Pagination: pageRes,
 	}, nil
 }
+
+// Royalties queries the royalties of an NFT
+func (k Keeper) Royalties(ctx context.Context, r *nft.QueryRoyaltiesRequest) (*nft.QueryRoyaltiesResponse, error) {
+	if r == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+
+	if len(r.ClassId) == 0 {
+		return nil, nft.ErrEmptyClassID
+	}
+
+	if len(r.Id) == 0 {
+		return nil, nft.ErrEmptyNFTID
+	}
+
+	royalties, found := k.GetAccumulatedRoyalties(ctx, r.ClassId, r.Id)
+	if !found {
+		return nil, sdkerrors.ErrNotFound.Wrapf("royalties not found for NFT %s in class %s", r.Id, r.ClassId)
+	}
+
+	return &nft.QueryRoyaltiesResponse{Royalties: &royalties}, nil
+}
+
+// RoyaltiesByQueryString queries the royalties of an NFT by query string
+func (k Keeper) RoyaltiesByQueryString(ctx context.Context, r *nft.QueryRoyaltiesByQueryStringRequest) (*nft.QueryRoyaltiesByQueryStringResponse, error) {
+	res, err := k.Royalties(ctx, &nft.QueryRoyaltiesRequest{
+		ClassId: r.ClassId,
+		Id:      r.Id,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &nft.QueryRoyaltiesByQueryStringResponse{Royalties: res.Royalties}, nil
+}

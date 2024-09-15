@@ -135,6 +135,8 @@ type NFT struct {
 	UriHash string `protobuf:"bytes,4,opt,name=uri_hash,json=uriHash,proto3" json:"uri_hash,omitempty"`
 	Creator string `protobuf:"bytes,5,opt,name=creator,proto3" json:"creator,omitempty"`
 	Owner   string `protobuf:"bytes,6,opt,name=owner,proto3" json:"owner,omitempty"`
+	// royalty_info contains information about royalties for this NFT
+	RoyaltyInfo *RoyaltyInfo `protobuf:"bytes,7,opt,name=royalty_info,json=royaltyInfo,proto3" json:"royalty_info,omitempty"`
 	// data is an app specific data of the NFT. Optional
 	Data *any.Any `protobuf:"bytes,10,opt,name=data,proto3" json:"data,omitempty"`
 }
@@ -214,6 +216,13 @@ func (m *NFT) GetOwner() string {
 	return ""
 }
 
+func (m *NFT) GetRoyaltyInfo() *RoyaltyInfo {
+	if m != nil {
+		return m.RoyaltyInfo
+	}
+	return nil
+}
+
 func (m *NFT) GetData() *any.Any {
 	if m != nil {
 		return m.Data
@@ -221,36 +230,321 @@ func (m *NFT) GetData() *any.Any {
 	return nil
 }
 
+// RoyaltyInfo defines the royalty information for an NFT
+type RoyaltyInfo struct {
+	CreatorAddress  string `protobuf:"bytes,1,opt,name=creator_address,json=creatorAddress,proto3" json:"creator_address,omitempty"`
+	CreatorShare    string `protobuf:"bytes,2,opt,name=creator_share,json=creatorShare,proto3" json:"creator_share,omitempty"`
+	PlatformAddress string `protobuf:"bytes,3,opt,name=platform_address,json=platformAddress,proto3" json:"platform_address,omitempty"`
+	PlatformShare   string `protobuf:"bytes,4,opt,name=platform_share,json=platformShare,proto3" json:"platform_share,omitempty"`
+	OwnerShare      string `protobuf:"bytes,5,opt,name=owner_share,json=ownerShare,proto3" json:"owner_share,omitempty"`
+}
+
+func (m *RoyaltyInfo) Reset()         { *m = RoyaltyInfo{} }
+func (m *RoyaltyInfo) String() string { return proto.CompactTextString(m) }
+func (*RoyaltyInfo) ProtoMessage()    {}
+func (*RoyaltyInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eb8ebf8e8053172c, []int{2}
+}
+func (m *RoyaltyInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RoyaltyInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RoyaltyInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RoyaltyInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RoyaltyInfo.Merge(m, src)
+}
+func (m *RoyaltyInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *RoyaltyInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_RoyaltyInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RoyaltyInfo proto.InternalMessageInfo
+
+func (m *RoyaltyInfo) GetCreatorAddress() string {
+	if m != nil {
+		return m.CreatorAddress
+	}
+	return ""
+}
+
+func (m *RoyaltyInfo) GetCreatorShare() string {
+	if m != nil {
+		return m.CreatorShare
+	}
+	return ""
+}
+
+func (m *RoyaltyInfo) GetPlatformAddress() string {
+	if m != nil {
+		return m.PlatformAddress
+	}
+	return ""
+}
+
+func (m *RoyaltyInfo) GetPlatformShare() string {
+	if m != nil {
+		return m.PlatformShare
+	}
+	return ""
+}
+
+func (m *RoyaltyInfo) GetOwnerShare() string {
+	if m != nil {
+		return m.OwnerShare
+	}
+	return ""
+}
+
+// AccumulatedRoyalties defines the accumulated royalties for an NFT
+type AccumulatedRoyalties struct {
+	CreatorRoyalties  string `protobuf:"bytes,1,opt,name=creator_royalties,json=creatorRoyalties,proto3" json:"creator_royalties,omitempty"`
+	PlatformRoyalties string `protobuf:"bytes,2,opt,name=platform_royalties,json=platformRoyalties,proto3" json:"platform_royalties,omitempty"`
+	OwnerRoyalties    string `protobuf:"bytes,3,opt,name=owner_royalties,json=ownerRoyalties,proto3" json:"owner_royalties,omitempty"`
+}
+
+func (m *AccumulatedRoyalties) Reset()         { *m = AccumulatedRoyalties{} }
+func (m *AccumulatedRoyalties) String() string { return proto.CompactTextString(m) }
+func (*AccumulatedRoyalties) ProtoMessage()    {}
+func (*AccumulatedRoyalties) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eb8ebf8e8053172c, []int{3}
+}
+func (m *AccumulatedRoyalties) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AccumulatedRoyalties) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AccumulatedRoyalties.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AccumulatedRoyalties) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccumulatedRoyalties.Merge(m, src)
+}
+func (m *AccumulatedRoyalties) XXX_Size() int {
+	return m.Size()
+}
+func (m *AccumulatedRoyalties) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccumulatedRoyalties.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AccumulatedRoyalties proto.InternalMessageInfo
+
+func (m *AccumulatedRoyalties) GetCreatorRoyalties() string {
+	if m != nil {
+		return m.CreatorRoyalties
+	}
+	return ""
+}
+
+func (m *AccumulatedRoyalties) GetPlatformRoyalties() string {
+	if m != nil {
+		return m.PlatformRoyalties
+	}
+	return ""
+}
+
+func (m *AccumulatedRoyalties) GetOwnerRoyalties() string {
+	if m != nil {
+		return m.OwnerRoyalties
+	}
+	return ""
+}
+
+type EventRoyaltyWithdraw struct {
+	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
+	Id      string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	Role    string `protobuf:"bytes,3,opt,name=role,proto3" json:"role,omitempty"`
+	Amount  string `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
+}
+
+func (m *EventRoyaltyWithdraw) Reset()         { *m = EventRoyaltyWithdraw{} }
+func (m *EventRoyaltyWithdraw) String() string { return proto.CompactTextString(m) }
+func (*EventRoyaltyWithdraw) ProtoMessage()    {}
+func (*EventRoyaltyWithdraw) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eb8ebf8e8053172c, []int{4}
+}
+func (m *EventRoyaltyWithdraw) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventRoyaltyWithdraw) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventRoyaltyWithdraw.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventRoyaltyWithdraw) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventRoyaltyWithdraw.Merge(m, src)
+}
+func (m *EventRoyaltyWithdraw) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventRoyaltyWithdraw) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventRoyaltyWithdraw.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventRoyaltyWithdraw proto.InternalMessageInfo
+
+func (m *EventRoyaltyWithdraw) GetClassId() string {
+	if m != nil {
+		return m.ClassId
+	}
+	return ""
+}
+
+func (m *EventRoyaltyWithdraw) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *EventRoyaltyWithdraw) GetRole() string {
+	if m != nil {
+		return m.Role
+	}
+	return ""
+}
+
+func (m *EventRoyaltyWithdraw) GetAmount() string {
+	if m != nil {
+		return m.Amount
+	}
+	return ""
+}
+
+type EventStreamPayment struct {
+	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
+	Id      string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	Payment string `protobuf:"bytes,3,opt,name=payment,proto3" json:"payment,omitempty"`
+}
+
+func (m *EventStreamPayment) Reset()         { *m = EventStreamPayment{} }
+func (m *EventStreamPayment) String() string { return proto.CompactTextString(m) }
+func (*EventStreamPayment) ProtoMessage()    {}
+func (*EventStreamPayment) Descriptor() ([]byte, []int) {
+	return fileDescriptor_eb8ebf8e8053172c, []int{5}
+}
+func (m *EventStreamPayment) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventStreamPayment) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventStreamPayment.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventStreamPayment) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventStreamPayment.Merge(m, src)
+}
+func (m *EventStreamPayment) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventStreamPayment) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventStreamPayment.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventStreamPayment proto.InternalMessageInfo
+
+func (m *EventStreamPayment) GetClassId() string {
+	if m != nil {
+		return m.ClassId
+	}
+	return ""
+}
+
+func (m *EventStreamPayment) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *EventStreamPayment) GetPayment() string {
+	if m != nil {
+		return m.Payment
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*Class)(nil), "cosmos.nft.v1beta1.Class")
 	proto.RegisterType((*NFT)(nil), "cosmos.nft.v1beta1.NFT")
+	proto.RegisterType((*RoyaltyInfo)(nil), "cosmos.nft.v1beta1.RoyaltyInfo")
+	proto.RegisterType((*AccumulatedRoyalties)(nil), "cosmos.nft.v1beta1.AccumulatedRoyalties")
+	proto.RegisterType((*EventRoyaltyWithdraw)(nil), "cosmos.nft.v1beta1.EventRoyaltyWithdraw")
+	proto.RegisterType((*EventStreamPayment)(nil), "cosmos.nft.v1beta1.EventStreamPayment")
 }
 
 func init() { proto.RegisterFile("cosmos/nft/v1beta1/nft.proto", fileDescriptor_eb8ebf8e8053172c) }
 
 var fileDescriptor_eb8ebf8e8053172c = []byte{
-	// 329 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x91, 0xcd, 0x4a, 0x03, 0x31,
-	0x14, 0x85, 0x9b, 0x99, 0x69, 0x47, 0x6f, 0x41, 0x24, 0x14, 0x49, 0x45, 0x86, 0xd2, 0x55, 0x17,
-	0x32, 0x43, 0xf5, 0x09, 0x54, 0x10, 0xdd, 0xb8, 0x28, 0xae, 0xdc, 0x94, 0xcc, 0x4f, 0xdb, 0x60,
-	0x9b, 0x94, 0x24, 0xa3, 0xf6, 0x2d, 0x7c, 0x1b, 0x37, 0x3e, 0x80, 0xcb, 0x2e, 0x5d, 0x4a, 0xfb,
-	0x22, 0x92, 0x4c, 0x3a, 0x28, 0x08, 0xee, 0xee, 0x39, 0xe7, 0x72, 0xf9, 0x0e, 0x17, 0x4e, 0x32,
-	0xa1, 0x16, 0x42, 0x25, 0x7c, 0xa2, 0x93, 0xa7, 0x61, 0x5a, 0x68, 0x3a, 0x34, 0x73, 0xbc, 0x94,
-	0x42, 0x0b, 0x8c, 0xab, 0x34, 0x36, 0x8e, 0x4b, 0x8f, 0xbb, 0x53, 0x21, 0xa6, 0xf3, 0x22, 0xb1,
-	0x1b, 0x69, 0x39, 0x49, 0x28, 0x5f, 0x55, 0xeb, 0xfd, 0x77, 0x04, 0xcd, 0xab, 0x39, 0x55, 0x0a,
-	0x1f, 0x80, 0xc7, 0x72, 0x82, 0x7a, 0x68, 0xb0, 0x3f, 0xf2, 0x58, 0x8e, 0x31, 0x04, 0x9c, 0x2e,
-	0x0a, 0xe2, 0x59, 0xc7, 0xce, 0xf8, 0x08, 0x5a, 0x6a, 0xb5, 0x48, 0xc5, 0x9c, 0xf8, 0xd6, 0x75,
-	0x0a, 0xf7, 0xa0, 0x9d, 0x17, 0x2a, 0x93, 0x6c, 0xa9, 0x99, 0xe0, 0x24, 0xb0, 0xe1, 0x4f, 0x0b,
-	0x1f, 0x82, 0x5f, 0x4a, 0x46, 0x9a, 0x36, 0x31, 0x23, 0xee, 0xc2, 0x5e, 0x29, 0xd9, 0x78, 0x46,
-	0xd5, 0x8c, 0xb4, 0xac, 0x1d, 0x96, 0x92, 0xdd, 0x50, 0x35, 0xc3, 0x03, 0x08, 0x72, 0xaa, 0x29,
-	0x09, 0x7b, 0x68, 0xd0, 0x3e, 0xeb, 0xc4, 0x15, 0x7e, 0xbc, 0xc3, 0x8f, 0x2f, 0xf8, 0x6a, 0x64,
-	0x37, 0xfa, 0x6f, 0x08, 0xfc, 0xbb, 0xeb, 0x7b, 0x73, 0x2c, 0x33, 0x2d, 0xc6, 0x75, 0x85, 0xd0,
-	0xea, 0xdb, 0xdc, 0xf5, 0xf2, 0xea, 0x5e, 0x8e, 0xc4, 0xff, 0x9b, 0x24, 0xf8, 0x4d, 0x42, 0x20,
-	0xcc, 0x64, 0x41, 0xb5, 0x90, 0x0e, 0x7d, 0x27, 0x71, 0x07, 0x9a, 0xe2, 0x99, 0x17, 0xd2, 0xb1,
-	0x57, 0xa2, 0x26, 0x87, 0xff, 0xc8, 0x2f, 0x4f, 0x3f, 0x36, 0x11, 0x5a, 0x6f, 0x22, 0xf4, 0xb5,
-	0x89, 0xd0, 0xeb, 0x36, 0x6a, 0xac, 0xb7, 0x51, 0xe3, 0x73, 0x1b, 0x35, 0x1e, 0xdc, 0x07, 0x55,
-	0xfe, 0x18, 0x33, 0x91, 0xbc, 0x98, 0xdf, 0xa6, 0x2d, 0x7b, 0xe1, 0xfc, 0x3b, 0x00, 0x00, 0xff,
-	0xff, 0xa0, 0xa2, 0xf9, 0x7d, 0xfc, 0x01, 0x00, 0x00,
+	// 564 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0xcd, 0x6e, 0xd3, 0x40,
+	0x10, 0xae, 0xf3, 0x0b, 0x93, 0x36, 0x49, 0x57, 0x11, 0x72, 0x11, 0x72, 0xa3, 0x20, 0xd4, 0x20,
+	0xc0, 0x51, 0xe1, 0x09, 0x52, 0x04, 0xa2, 0x17, 0x84, 0x52, 0x24, 0x04, 0x97, 0x68, 0x63, 0x6f,
+	0x9a, 0x15, 0xf6, 0x6e, 0xb4, 0xbb, 0x6e, 0xf1, 0x5b, 0x70, 0xe7, 0x55, 0x78, 0x00, 0x4e, 0xa8,
+	0x47, 0x8e, 0x28, 0x79, 0x0c, 0x2e, 0xc8, 0xfb, 0x63, 0x17, 0x81, 0x84, 0x7a, 0x9b, 0xf9, 0xe6,
+	0xf3, 0xcc, 0xf7, 0xcd, 0xae, 0x17, 0xee, 0x45, 0x5c, 0xa6, 0x5c, 0x4e, 0xd8, 0x52, 0x4d, 0x2e,
+	0x8e, 0x17, 0x44, 0xe1, 0xe3, 0x22, 0x0e, 0xd7, 0x82, 0x2b, 0x8e, 0x90, 0xa9, 0x86, 0x05, 0x62,
+	0xab, 0x77, 0x0f, 0xce, 0x39, 0x3f, 0x4f, 0xc8, 0x44, 0x33, 0x16, 0xd9, 0x72, 0x82, 0x59, 0x6e,
+	0xe8, 0xa3, 0xaf, 0x1e, 0x34, 0x9f, 0x27, 0x58, 0x4a, 0xd4, 0x85, 0x1a, 0x8d, 0x7d, 0x6f, 0xe8,
+	0x8d, 0x6f, 0xcf, 0x6a, 0x34, 0x46, 0x08, 0x1a, 0x0c, 0xa7, 0xc4, 0xaf, 0x69, 0x44, 0xc7, 0xe8,
+	0x0e, 0xb4, 0x64, 0x9e, 0x2e, 0x78, 0xe2, 0xd7, 0x35, 0x6a, 0x33, 0x34, 0x84, 0x4e, 0x4c, 0x64,
+	0x24, 0xe8, 0x5a, 0x51, 0xce, 0xfc, 0x86, 0x2e, 0x5e, 0x87, 0x50, 0x1f, 0xea, 0x99, 0xa0, 0x7e,
+	0x53, 0x57, 0x8a, 0x10, 0x1d, 0xc0, 0xad, 0x4c, 0xd0, 0xf9, 0x0a, 0xcb, 0x95, 0xdf, 0xd2, 0x70,
+	0x3b, 0x13, 0xf4, 0x15, 0x96, 0x2b, 0x34, 0x86, 0x46, 0x8c, 0x15, 0xf6, 0xdb, 0x43, 0x6f, 0xdc,
+	0x79, 0x3a, 0x08, 0x8d, 0xfc, 0xd0, 0xc9, 0x0f, 0xa7, 0x2c, 0x9f, 0x69, 0xc6, 0xe8, 0x97, 0x07,
+	0xf5, 0xd7, 0x2f, 0xdf, 0x16, 0xcd, 0xa2, 0xc2, 0xc5, 0xbc, 0xb4, 0xd0, 0xd6, 0xf9, 0x69, 0x6c,
+	0x7d, 0xd5, 0x4a, 0x5f, 0x56, 0x49, 0xfd, 0xdf, 0x4a, 0x1a, 0x7f, 0x2a, 0xf1, 0xa1, 0x1d, 0x09,
+	0x82, 0x15, 0x17, 0x56, 0xba, 0x4b, 0xd1, 0x00, 0x9a, 0xfc, 0x92, 0x11, 0x61, 0xb5, 0x9b, 0x04,
+	0x9d, 0xc0, 0xae, 0xe0, 0x39, 0x4e, 0x54, 0x3e, 0xa7, 0x6c, 0xc9, 0xad, 0x83, 0xc3, 0xf0, 0xef,
+	0x43, 0x09, 0x67, 0x86, 0x77, 0xca, 0x96, 0x7c, 0xd6, 0x11, 0x55, 0x52, 0xba, 0x87, 0xff, 0xba,
+	0xff, 0xee, 0x41, 0xe7, 0x5a, 0x1b, 0x74, 0x04, 0x3d, 0x2b, 0x6f, 0x8e, 0xe3, 0x58, 0x10, 0x29,
+	0xed, 0x32, 0xba, 0x16, 0x9e, 0x1a, 0x14, 0xdd, 0x87, 0x3d, 0x47, 0x94, 0x2b, 0x2c, 0xdc, 0x21,
+	0xef, 0x5a, 0xf0, 0xac, 0xc0, 0xd0, 0x43, 0xe8, 0xaf, 0x13, 0xac, 0x96, 0x5c, 0xa4, 0x65, 0x3b,
+	0xb3, 0xb5, 0x9e, 0xc3, 0x5d, 0xbf, 0x07, 0xd0, 0x2d, 0xa9, 0xa6, 0xa1, 0xd9, 0xe3, 0x9e, 0x43,
+	0x4d, 0xc7, 0x43, 0xe8, 0xe8, 0x35, 0x59, 0x8e, 0xd9, 0x28, 0x68, 0x48, 0x13, 0x46, 0x5f, 0x3c,
+	0x18, 0x4c, 0xa3, 0x28, 0x4b, 0xb3, 0x04, 0x2b, 0x12, 0x1b, 0x6f, 0x94, 0x48, 0xf4, 0x08, 0xf6,
+	0x9d, 0x60, 0xe1, 0x40, 0xeb, 0xad, 0x6f, 0x0b, 0x15, 0xf9, 0x09, 0xa0, 0x52, 0x4d, 0xc5, 0x36,
+	0x16, 0xf7, 0x5d, 0xa5, 0xa2, 0x1f, 0x41, 0xcf, 0xa8, 0xaa, 0xb8, 0xc6, 0x66, 0x57, 0xc3, 0x25,
+	0x71, 0x94, 0xc2, 0xe0, 0xc5, 0x05, 0x61, 0xca, 0xae, 0xfc, 0x1d, 0x55, 0xab, 0x58, 0xe0, 0xcb,
+	0x9b, 0x5c, 0x3e, 0x04, 0x0d, 0xc1, 0x13, 0x62, 0x07, 0xe8, 0xb8, 0xf8, 0xa9, 0x70, 0xca, 0x33,
+	0xa6, 0xec, 0xd2, 0x6c, 0x36, 0x7a, 0x0f, 0x48, 0x8f, 0x3b, 0x53, 0x82, 0xe0, 0xf4, 0x0d, 0xce,
+	0x53, 0xc2, 0xd4, 0x4d, 0x86, 0xf9, 0xd0, 0x5e, 0x9b, 0xaf, 0xec, 0x3c, 0x97, 0x9e, 0x3c, 0xfe,
+	0xb6, 0x09, 0xbc, 0xab, 0x4d, 0xe0, 0xfd, 0xdc, 0x04, 0xde, 0xe7, 0x6d, 0xb0, 0x73, 0xb5, 0x0d,
+	0x76, 0x7e, 0x6c, 0x83, 0x9d, 0x0f, 0xf6, 0xf9, 0x90, 0xf1, 0xc7, 0x90, 0xf2, 0xc9, 0xa7, 0xe2,
+	0x61, 0x59, 0xb4, 0xf4, 0xd5, 0x7b, 0xf6, 0x3b, 0x00, 0x00, 0xff, 0xff, 0xf7, 0x42, 0xb4, 0xb7,
+	0x79, 0x04, 0x00, 0x00,
 }
 
 func (m *Class) Marshal() (dAtA []byte, err error) {
@@ -362,6 +656,18 @@ func (m *NFT) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x52
 	}
+	if m.RoyaltyInfo != nil {
+		{
+			size, err := m.RoyaltyInfo.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintNft(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x3a
+	}
 	if len(m.Owner) > 0 {
 		i -= len(m.Owner)
 		copy(dAtA[i:], m.Owner)
@@ -387,6 +693,203 @@ func (m *NFT) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.Uri)
 		copy(dAtA[i:], m.Uri)
 		i = encodeVarintNft(dAtA, i, uint64(len(m.Uri)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintNft(dAtA, i, uint64(len(m.Id)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ClassId) > 0 {
+		i -= len(m.ClassId)
+		copy(dAtA[i:], m.ClassId)
+		i = encodeVarintNft(dAtA, i, uint64(len(m.ClassId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RoyaltyInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RoyaltyInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RoyaltyInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.OwnerShare) > 0 {
+		i -= len(m.OwnerShare)
+		copy(dAtA[i:], m.OwnerShare)
+		i = encodeVarintNft(dAtA, i, uint64(len(m.OwnerShare)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.PlatformShare) > 0 {
+		i -= len(m.PlatformShare)
+		copy(dAtA[i:], m.PlatformShare)
+		i = encodeVarintNft(dAtA, i, uint64(len(m.PlatformShare)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.PlatformAddress) > 0 {
+		i -= len(m.PlatformAddress)
+		copy(dAtA[i:], m.PlatformAddress)
+		i = encodeVarintNft(dAtA, i, uint64(len(m.PlatformAddress)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.CreatorShare) > 0 {
+		i -= len(m.CreatorShare)
+		copy(dAtA[i:], m.CreatorShare)
+		i = encodeVarintNft(dAtA, i, uint64(len(m.CreatorShare)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.CreatorAddress) > 0 {
+		i -= len(m.CreatorAddress)
+		copy(dAtA[i:], m.CreatorAddress)
+		i = encodeVarintNft(dAtA, i, uint64(len(m.CreatorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AccumulatedRoyalties) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AccumulatedRoyalties) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AccumulatedRoyalties) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.OwnerRoyalties) > 0 {
+		i -= len(m.OwnerRoyalties)
+		copy(dAtA[i:], m.OwnerRoyalties)
+		i = encodeVarintNft(dAtA, i, uint64(len(m.OwnerRoyalties)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.PlatformRoyalties) > 0 {
+		i -= len(m.PlatformRoyalties)
+		copy(dAtA[i:], m.PlatformRoyalties)
+		i = encodeVarintNft(dAtA, i, uint64(len(m.PlatformRoyalties)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.CreatorRoyalties) > 0 {
+		i -= len(m.CreatorRoyalties)
+		copy(dAtA[i:], m.CreatorRoyalties)
+		i = encodeVarintNft(dAtA, i, uint64(len(m.CreatorRoyalties)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventRoyaltyWithdraw) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventRoyaltyWithdraw) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventRoyaltyWithdraw) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Amount) > 0 {
+		i -= len(m.Amount)
+		copy(dAtA[i:], m.Amount)
+		i = encodeVarintNft(dAtA, i, uint64(len(m.Amount)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Role) > 0 {
+		i -= len(m.Role)
+		copy(dAtA[i:], m.Role)
+		i = encodeVarintNft(dAtA, i, uint64(len(m.Role)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintNft(dAtA, i, uint64(len(m.Id)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ClassId) > 0 {
+		i -= len(m.ClassId)
+		copy(dAtA[i:], m.ClassId)
+		i = encodeVarintNft(dAtA, i, uint64(len(m.ClassId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventStreamPayment) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventStreamPayment) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventStreamPayment) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Payment) > 0 {
+		i -= len(m.Payment)
+		copy(dAtA[i:], m.Payment)
+		i = encodeVarintNft(dAtA, i, uint64(len(m.Payment)))
 		i--
 		dAtA[i] = 0x1a
 	}
@@ -485,8 +988,108 @@ func (m *NFT) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovNft(uint64(l))
 	}
+	if m.RoyaltyInfo != nil {
+		l = m.RoyaltyInfo.Size()
+		n += 1 + l + sovNft(uint64(l))
+	}
 	if m.Data != nil {
 		l = m.Data.Size()
+		n += 1 + l + sovNft(uint64(l))
+	}
+	return n
+}
+
+func (m *RoyaltyInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.CreatorAddress)
+	if l > 0 {
+		n += 1 + l + sovNft(uint64(l))
+	}
+	l = len(m.CreatorShare)
+	if l > 0 {
+		n += 1 + l + sovNft(uint64(l))
+	}
+	l = len(m.PlatformAddress)
+	if l > 0 {
+		n += 1 + l + sovNft(uint64(l))
+	}
+	l = len(m.PlatformShare)
+	if l > 0 {
+		n += 1 + l + sovNft(uint64(l))
+	}
+	l = len(m.OwnerShare)
+	if l > 0 {
+		n += 1 + l + sovNft(uint64(l))
+	}
+	return n
+}
+
+func (m *AccumulatedRoyalties) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.CreatorRoyalties)
+	if l > 0 {
+		n += 1 + l + sovNft(uint64(l))
+	}
+	l = len(m.PlatformRoyalties)
+	if l > 0 {
+		n += 1 + l + sovNft(uint64(l))
+	}
+	l = len(m.OwnerRoyalties)
+	if l > 0 {
+		n += 1 + l + sovNft(uint64(l))
+	}
+	return n
+}
+
+func (m *EventRoyaltyWithdraw) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ClassId)
+	if l > 0 {
+		n += 1 + l + sovNft(uint64(l))
+	}
+	l = len(m.Id)
+	if l > 0 {
+		n += 1 + l + sovNft(uint64(l))
+	}
+	l = len(m.Role)
+	if l > 0 {
+		n += 1 + l + sovNft(uint64(l))
+	}
+	l = len(m.Amount)
+	if l > 0 {
+		n += 1 + l + sovNft(uint64(l))
+	}
+	return n
+}
+
+func (m *EventStreamPayment) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ClassId)
+	if l > 0 {
+		n += 1 + l + sovNft(uint64(l))
+	}
+	l = len(m.Id)
+	if l > 0 {
+		n += 1 + l + sovNft(uint64(l))
+	}
+	l = len(m.Payment)
+	if l > 0 {
 		n += 1 + l + sovNft(uint64(l))
 	}
 	return n
@@ -997,6 +1600,42 @@ func (m *NFT) Unmarshal(dAtA []byte) error {
 			}
 			m.Owner = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RoyaltyInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.RoyaltyInfo == nil {
+				m.RoyaltyInfo = &RoyaltyInfo{}
+			}
+			if err := m.RoyaltyInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 10:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
@@ -1032,6 +1671,686 @@ func (m *NFT) Unmarshal(dAtA []byte) error {
 			if err := m.Data.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthNft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RoyaltyInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RoyaltyInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RoyaltyInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CreatorAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CreatorAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CreatorShare", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CreatorShare = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PlatformAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PlatformAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PlatformShare", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PlatformShare = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OwnerShare", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OwnerShare = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthNft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AccumulatedRoyalties) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AccumulatedRoyalties: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AccumulatedRoyalties: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CreatorRoyalties", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CreatorRoyalties = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PlatformRoyalties", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PlatformRoyalties = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OwnerRoyalties", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OwnerRoyalties = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthNft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventRoyaltyWithdraw) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventRoyaltyWithdraw: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventRoyaltyWithdraw: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Id = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Role", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Role = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNft(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthNft
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventStreamPayment) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNft
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventStreamPayment: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventStreamPayment: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClassId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClassId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Id = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Payment", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNft
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthNft
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthNft
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Payment = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

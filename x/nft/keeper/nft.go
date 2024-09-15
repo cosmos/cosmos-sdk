@@ -301,3 +301,60 @@ func (k Keeper) updateTotalSupply(ctx context.Context, classID string, supply ui
 		panic(err)
 	}
 }
+
+// RoyaltyInfo stores the accumulated royalties for each role
+type RoyaltyInfo struct {
+	Creator  sdk.Coin
+	Platform sdk.Coin
+	Owner    sdk.Coin
+}
+
+// StreamPayment handles the payment for streaming an NFT and distributes royalties
+func (k Keeper) StreamPayment(ctx context.Context, classID string, nftID string, payment sdk.Coin) error {
+	if !k.HasNFT(ctx, classID, nftID) {
+		return errors.Wrap(nft.ErrNFTNotExists, nftID)
+	}
+
+	_, _ = k.GetNFT(ctx, classID, nftID)
+
+	// Calculate royalties
+	creatorShare := sdk.NewCoin(payment.Denom, payment.Amount.MulRaw(10).QuoRaw(100))
+	platformShare := sdk.NewCoin(payment.Denom, payment.Amount.MulRaw(10).QuoRaw(100))
+	ownerShare := sdk.NewCoin(payment.Denom, payment.Amount.MulRaw(80).QuoRaw(100))
+
+	// Update accumulated royalties
+	k.updateAccumulatedRoyalties(ctx, classID, nftID, creatorShare, platformShare, ownerShare)
+
+	// Emit an event for the stream payment
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return sdkCtx.EventManager().EmitTypedEvent(&nft.EventStreamPayment{
+		ClassId: classID,
+		Id:      nftID,
+		Payment: payment.String(),
+	})
+}
+
+func (k Keeper) updateAccumulatedRoyalties(ctx context.Context, classID string, nftID string, creatorShare, platformShare, ownerShare sdk.Coin) {
+	store := k.KVStoreService.OpenKVStore(ctx)
+	key := royaltyStoreKey(classID, nftID)
+
+	var accumulatedRoyalties nft.AccumulatedRoyalties
+	bz, _ := store.Get(key)
+	if bz != nil {
+		k.cdc.MustUnmarshal(bz, &accumulatedRoyalties)
+	}
+
+	creatorRoyalties, _ := sdk.ParseCoinsNormalized(accumulatedRoyalties.CreatorRoyalties)
+	platformRoyalties, _ := sdk.ParseCoinsNormalized(accumulatedRoyalties.PlatformRoyalties)
+	ownerRoyalties, _ := sdk.ParseCoinsNormalized(accumulatedRoyalties.OwnerRoyalties)
+
+	accumulatedRoyalties.CreatorRoyalties = creatorRoyalties.Add(creatorShare).String()
+	accumulatedRoyalties.PlatformRoyalties = platformRoyalties.Add(platformShare).String()
+	accumulatedRoyalties.OwnerRoyalties = ownerRoyalties.Add(ownerShare).String()
+
+	store.Set(key, k.cdc.MustMarshal(&accumulatedRoyalties))
+}
+
+func royaltyStoreKey(classID, nftID string) []byte {
+	return []byte(classID + "/" + nftID + "/royalties")
+}

@@ -2,9 +2,7 @@ package nft
 
 import (
 	"context"
-
 	"cosmossdk.io/core/address"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -12,6 +10,8 @@ import (
 // dependencies.
 type BankKeeper interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 }
 
 // AccountKeeper defines the contract required for account APIs.

@@ -48,6 +48,38 @@ message NFT {
 
   string owner = 6;
 
+  // royalty_info contains information about royalties for this NFT
+  RoyaltyInfo royalty_info = 7;
+
   // data is an app specific data of the NFT. Optional
   google.protobuf.Any data = 10;
+}
+
+// RoyaltyInfo defines the royalty information for an NFT
+message RoyaltyInfo {
+  string creator_address  = 1;
+  string creator_share    = 2; // Percentage as a string, e.g., "10.00"
+  string platform_address = 3;
+  string platform_share   = 4; // Percentage as a string, e.g., "10.00"
+  string owner_share      = 5; // Percentage as a string, e.g., "80.00"
+}
+
+// AccumulatedRoyalties defines the accumulated royalties for an NFT
+message AccumulatedRoyalties {
+  string creator_royalties  = 1;
+  string platform_royalties = 2;
+  string owner_royalties    = 3;
+}
+
+message EventRoyaltyWithdraw {
+  string class_id = 1;
+  string id       = 2;
+  string role     = 3;
+  string amount   = 4;
+}
+
+message EventStreamPayment {
+  string class_id = 1;
+  string id       = 2;
+  string payment  = 3;
 }

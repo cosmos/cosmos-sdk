@@ -19,10 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_Send_FullMethodName     = "/cosmos.nft.v1beta1.Msg/Send"
-	Msg_MintNFT_FullMethodName  = "/cosmos.nft.v1beta1.Msg/MintNFT"
-	Msg_BurnNFT_FullMethodName  = "/cosmos.nft.v1beta1.Msg/BurnNFT"
-	Msg_StakeNFT_FullMethodName = "/cosmos.nft.v1beta1.Msg/StakeNFT"
+	Msg_Send_FullMethodName              = "/cosmos.nft.v1beta1.Msg/Send"
+	Msg_MintNFT_FullMethodName           = "/cosmos.nft.v1beta1.Msg/MintNFT"
+	Msg_BurnNFT_FullMethodName           = "/cosmos.nft.v1beta1.Msg/BurnNFT"
+	Msg_StakeNFT_FullMethodName          = "/cosmos.nft.v1beta1.Msg/StakeNFT"
+	Msg_StreamNFT_FullMethodName         = "/cosmos.nft.v1beta1.Msg/StreamNFT"
+	Msg_WithdrawRoyalties_FullMethodName = "/cosmos.nft.v1beta1.Msg/WithdrawRoyalties"
 )
 
 // MsgClient is the client API for Msg service.
@@ -37,6 +39,10 @@ type MsgClient interface {
 	BurnNFT(ctx context.Context, in *MsgBurnNFT, opts ...grpc.CallOption) (*MsgBurnNFTResponse, error)
 	// StakeNFT defines a method to stake an NFT.
 	StakeNFT(ctx context.Context, in *MsgStakeNFT, opts ...grpc.CallOption) (*MsgStakeNFTResponse, error)
+	// StreamNFT defines a method to stream an NFT and pay royalties.
+	StreamNFT(ctx context.Context, in *MsgStreamNFT, opts ...grpc.CallOption) (*MsgStreamNFTResponse, error)
+	// WithdrawRoyalties defines a method to withdraw accumulated royalties.
+	WithdrawRoyalties(ctx context.Context, in *MsgWithdrawRoyalties, opts ...grpc.CallOption) (*MsgWithdrawRoyaltiesResponse, error)
 }
 
 type msgClient struct {
@@ -83,6 +89,24 @@ func (c *msgClient) StakeNFT(ctx context.Context, in *MsgStakeNFT, opts ...grpc.
 	return out, nil
 }
 
+func (c *msgClient) StreamNFT(ctx context.Context, in *MsgStreamNFT, opts ...grpc.CallOption) (*MsgStreamNFTResponse, error) {
+	out := new(MsgStreamNFTResponse)
+	err := c.cc.Invoke(ctx, Msg_StreamNFT_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) WithdrawRoyalties(ctx context.Context, in *MsgWithdrawRoyalties, opts ...grpc.CallOption) (*MsgWithdrawRoyaltiesResponse, error) {
+	out := new(MsgWithdrawRoyaltiesResponse)
+	err := c.cc.Invoke(ctx, Msg_WithdrawRoyalties_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -95,6 +119,10 @@ type MsgServer interface {
 	BurnNFT(context.Context, *MsgBurnNFT) (*MsgBurnNFTResponse, error)
 	// StakeNFT defines a method to stake an NFT.
 	StakeNFT(context.Context, *MsgStakeNFT) (*MsgStakeNFTResponse, error)
+	// StreamNFT defines a method to stream an NFT and pay royalties.
+	StreamNFT(context.Context, *MsgStreamNFT) (*MsgStreamNFTResponse, error)
+	// WithdrawRoyalties defines a method to withdraw accumulated royalties.
+	WithdrawRoyalties(context.Context, *MsgWithdrawRoyalties) (*MsgWithdrawRoyaltiesResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -113,6 +141,12 @@ func (UnimplementedMsgServer) BurnNFT(context.Context, *MsgBurnNFT) (*MsgBurnNFT
 }
 func (UnimplementedMsgServer) StakeNFT(context.Context, *MsgStakeNFT) (*MsgStakeNFTResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StakeNFT not implemented")
+}
+func (UnimplementedMsgServer) StreamNFT(context.Context, *MsgStreamNFT) (*MsgStreamNFTResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StreamNFT not implemented")
+}
+func (UnimplementedMsgServer) WithdrawRoyalties(context.Context, *MsgWithdrawRoyalties) (*MsgWithdrawRoyaltiesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawRoyalties not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -199,6 +233,42 @@ func _Msg_StakeNFT_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_StreamNFT_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgStreamNFT)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).StreamNFT(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_StreamNFT_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).StreamNFT(ctx, req.(*MsgStreamNFT))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_WithdrawRoyalties_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawRoyalties)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawRoyalties(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_WithdrawRoyalties_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawRoyalties(ctx, req.(*MsgWithdrawRoyalties))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -221,6 +291,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StakeNFT",
 			Handler:    _Msg_StakeNFT_Handler,
+		},
+		{
+			MethodName: "StreamNFT",
+			Handler:    _Msg_StreamNFT_Handler,
+		},
+		{
+			MethodName: "WithdrawRoyalties",
+			Handler:    _Msg_WithdrawRoyalties_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

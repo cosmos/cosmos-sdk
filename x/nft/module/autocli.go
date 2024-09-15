@@ -74,6 +74,17 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 				},
 				{
+					RpcMethod: "Royalties",
+					Use:       "royalties <class-id> <nft-id>",
+					Short:     "Query the royalties of an NFT",
+					Long:      "Query the accumulated royalties for a specific NFT based on its class and id.",
+					Example:   fmt.Sprintf(`%s query %s royalties my-music-nfts song-001`, version.AppName, nft.ModuleName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "class_id"},
+						{ProtoField: "id"},
+					},
+				},
+				{
 					RpcMethod: "Classes",
 					Use:       "classes",
 					Short:     "Query all NFT classes.",
@@ -123,6 +134,31 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "class_id"},
 						{ProtoField: "id"},
 						{ProtoField: "stake_duration"},
+					},
+				},
+
+				{
+					RpcMethod: "StreamNFT",
+					Use:       "stream <class-id> <nft-id> <payment> --from <sender>",
+					Short:     "Stream an NFT and pay royalties.",
+					Long:      "Stream an NFT by paying the specified amount. Royalties will be automatically distributed among creator, platform, and owner.",
+					Example:   fmt.Sprintf(`%s tx %s stream my-music-nfts song-001 10token --from alice`, version.AppName, nft.ModuleName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "class_id"},
+						{ProtoField: "id"},
+						{ProtoField: "payment"},
+					},
+				},
+				{
+					RpcMethod: "WithdrawRoyalties",
+					Use:       "withdraw-royalties <class-id> <nft-id> <role> --from <recipient>",
+					Short:     "Withdraw accumulated royalties for a specific role.",
+					Long:      "Withdraw accumulated royalties for a specific role (creator, platform, or owner) from an NFT.",
+					Example:   fmt.Sprintf(`%s tx %s withdraw-royalties my-music-nfts song-001 creator --from alice`, version.AppName, nft.ModuleName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "class_id"},
+						{ProtoField: "id"},
+						{ProtoField: "role"},
 					},
 				},
 			},

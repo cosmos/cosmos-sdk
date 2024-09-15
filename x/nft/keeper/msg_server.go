@@ -163,3 +163,49 @@ func (k Keeper) StakeNFT(goCtx context.Context, msg *nft.MsgStakeNFT) (*nft.MsgS
 	)
 	return &nft.MsgStakeNFTResponse{}, nil
 }
+
+// StreamNFT handles the MsgStreamNFT message
+func (k Keeper) StreamNFT(goCtx context.Context, msg *nft.MsgStreamNFT) (*nft.MsgStreamNFTResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	payment, err := sdk.ParseCoinNormalized(msg.Payment)
+	if err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, err.Error())
+	}
+
+	sender, err := k.ac.StringToBytes(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.bk.SendCoinsFromAccountToModule(ctx, sender, nft.ModuleName, sdk.NewCoins(payment))
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.StreamPayment(ctx, msg.ClassId, msg.Id, payment)
+	if err != nil {
+		return nil, err
+	}
+
+	return &nft.MsgStreamNFTResponse{}, nil
+}
+
+// WithdrawRoyalties handles the MsgWithdrawRoyalties message
+func (k Keeper) WithdrawRoyalties(goCtx context.Context, msg *nft.MsgWithdrawRoyalties) (*nft.MsgWithdrawRoyaltiesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	recipient, err := k.ac.StringToBytes(msg.Recipient)
+	if err != nil {
+		return nil, err
+	}
+
+	amount, err := k.WithdrawRoyaltiesInternal(ctx, msg.ClassId, msg.Id, msg.Role, recipient)
+	if err != nil {
+		return nil, err
+	}
+
+	return &nft.MsgWithdrawRoyaltiesResponse{
+		Amount: amount.String(),
+	}, nil
+}

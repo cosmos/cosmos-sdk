@@ -76,6 +76,17 @@ service Query {
   rpc Classes(QueryClassesRequest) returns (QueryClassesResponse) {
     option (google.api.http).get = "/cosmos/nft/v1beta1/classes";
   }
+
+  // Royalties queries the royalties of an NFT
+  rpc Royalties(QueryRoyaltiesRequest) returns (QueryRoyaltiesResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/royalties/{class_id}/{id}";
+  }
+
+  // RoyaltiesByQueryString queries the royalties of an NFT
+  rpc RoyaltiesByQueryString(QueryRoyaltiesByQueryStringRequest) returns (QueryRoyaltiesByQueryStringResponse) {
+    option (google.api.http).get          = "/cosmos/nft/v1beta1/royalties";
+    option (cosmos_proto.method_added_in) = "nft v0.1.1";
+  }
 }
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method
@@ -268,4 +279,38 @@ message QueryClassesResponse {
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryRoyaltiesRequest is the request type for the Query/Royalties RPC method
+message QueryRoyaltiesRequest {
+  // class_id associated with the nft
+  string class_id = 1;
+
+  // id is a unique identifier of the NFT
+  string id = 2;
+}
+
+// QueryRoyaltiesByQueryStringRequest is the request type for the Query/Royalties RPC method
+message QueryRoyaltiesByQueryStringRequest {
+  option (cosmos_proto.message_added_in) = "nft v0.1.1";
+
+  // class_id associated with the nft
+  string class_id = 1;
+
+  // id is a unique identifier of the NFT
+  string id = 2;
+}
+
+// QueryRoyaltiesResponse is the response type for the Query/Royalties RPC method
+message QueryRoyaltiesResponse {
+  // royalties contains the accumulated royalties for the NFT
+  cosmos.nft.v1beta1.AccumulatedRoyalties royalties = 1;
+}
+
+// QueryRoyaltiesByQueryStringResponse is the response type for the Query/Royalties RPC method
+message QueryRoyaltiesByQueryStringResponse {
+  option (cosmos_proto.message_added_in) = "nft v0.1.1";
+
+  // royalties contains the accumulated royalties for the NFT
+  cosmos.nft.v1beta1.AccumulatedRoyalties royalties = 1;
 }

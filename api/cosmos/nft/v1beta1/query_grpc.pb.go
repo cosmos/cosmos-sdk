@@ -19,18 +19,20 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_Balance_FullMethodName              = "/cosmos.nft.v1beta1.Query/Balance"
-	Query_BalanceByQueryString_FullMethodName = "/cosmos.nft.v1beta1.Query/BalanceByQueryString"
-	Query_Owner_FullMethodName                = "/cosmos.nft.v1beta1.Query/Owner"
-	Query_OwnerByQueryString_FullMethodName   = "/cosmos.nft.v1beta1.Query/OwnerByQueryString"
-	Query_Supply_FullMethodName               = "/cosmos.nft.v1beta1.Query/Supply"
-	Query_SupplyByQueryString_FullMethodName  = "/cosmos.nft.v1beta1.Query/SupplyByQueryString"
-	Query_NFTs_FullMethodName                 = "/cosmos.nft.v1beta1.Query/NFTs"
-	Query_NFT_FullMethodName                  = "/cosmos.nft.v1beta1.Query/NFT"
-	Query_NFTByQueryString_FullMethodName     = "/cosmos.nft.v1beta1.Query/NFTByQueryString"
-	Query_Class_FullMethodName                = "/cosmos.nft.v1beta1.Query/Class"
-	Query_ClassByQueryString_FullMethodName   = "/cosmos.nft.v1beta1.Query/ClassByQueryString"
-	Query_Classes_FullMethodName              = "/cosmos.nft.v1beta1.Query/Classes"
+	Query_Balance_FullMethodName                = "/cosmos.nft.v1beta1.Query/Balance"
+	Query_BalanceByQueryString_FullMethodName   = "/cosmos.nft.v1beta1.Query/BalanceByQueryString"
+	Query_Owner_FullMethodName                  = "/cosmos.nft.v1beta1.Query/Owner"
+	Query_OwnerByQueryString_FullMethodName     = "/cosmos.nft.v1beta1.Query/OwnerByQueryString"
+	Query_Supply_FullMethodName                 = "/cosmos.nft.v1beta1.Query/Supply"
+	Query_SupplyByQueryString_FullMethodName    = "/cosmos.nft.v1beta1.Query/SupplyByQueryString"
+	Query_NFTs_FullMethodName                   = "/cosmos.nft.v1beta1.Query/NFTs"
+	Query_NFT_FullMethodName                    = "/cosmos.nft.v1beta1.Query/NFT"
+	Query_NFTByQueryString_FullMethodName       = "/cosmos.nft.v1beta1.Query/NFTByQueryString"
+	Query_Class_FullMethodName                  = "/cosmos.nft.v1beta1.Query/Class"
+	Query_ClassByQueryString_FullMethodName     = "/cosmos.nft.v1beta1.Query/ClassByQueryString"
+	Query_Classes_FullMethodName                = "/cosmos.nft.v1beta1.Query/Classes"
+	Query_Royalties_FullMethodName              = "/cosmos.nft.v1beta1.Query/Royalties"
+	Query_RoyaltiesByQueryString_FullMethodName = "/cosmos.nft.v1beta1.Query/RoyaltiesByQueryString"
 )
 
 // QueryClient is the client API for Query service.
@@ -62,6 +64,10 @@ type QueryClient interface {
 	ClassByQueryString(ctx context.Context, in *QueryClassByQueryStringRequest, opts ...grpc.CallOption) (*QueryClassByQueryStringResponse, error)
 	// Classes queries all NFT classes
 	Classes(ctx context.Context, in *QueryClassesRequest, opts ...grpc.CallOption) (*QueryClassesResponse, error)
+	// Royalties queries the royalties of an NFT
+	Royalties(ctx context.Context, in *QueryRoyaltiesRequest, opts ...grpc.CallOption) (*QueryRoyaltiesResponse, error)
+	// RoyaltiesByQueryString queries the royalties of an NFT
+	RoyaltiesByQueryString(ctx context.Context, in *QueryRoyaltiesByQueryStringRequest, opts ...grpc.CallOption) (*QueryRoyaltiesByQueryStringResponse, error)
 }
 
 type queryClient struct {
@@ -180,6 +186,24 @@ func (c *queryClient) Classes(ctx context.Context, in *QueryClassesRequest, opts
 	return out, nil
 }
 
+func (c *queryClient) Royalties(ctx context.Context, in *QueryRoyaltiesRequest, opts ...grpc.CallOption) (*QueryRoyaltiesResponse, error) {
+	out := new(QueryRoyaltiesResponse)
+	err := c.cc.Invoke(ctx, Query_Royalties_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) RoyaltiesByQueryString(ctx context.Context, in *QueryRoyaltiesByQueryStringRequest, opts ...grpc.CallOption) (*QueryRoyaltiesByQueryStringResponse, error) {
+	out := new(QueryRoyaltiesByQueryStringResponse)
+	err := c.cc.Invoke(ctx, Query_RoyaltiesByQueryString_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -209,6 +233,10 @@ type QueryServer interface {
 	ClassByQueryString(context.Context, *QueryClassByQueryStringRequest) (*QueryClassByQueryStringResponse, error)
 	// Classes queries all NFT classes
 	Classes(context.Context, *QueryClassesRequest) (*QueryClassesResponse, error)
+	// Royalties queries the royalties of an NFT
+	Royalties(context.Context, *QueryRoyaltiesRequest) (*QueryRoyaltiesResponse, error)
+	// RoyaltiesByQueryString queries the royalties of an NFT
+	RoyaltiesByQueryString(context.Context, *QueryRoyaltiesByQueryStringRequest) (*QueryRoyaltiesByQueryStringResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -251,6 +279,12 @@ func (UnimplementedQueryServer) ClassByQueryString(context.Context, *QueryClassB
 }
 func (UnimplementedQueryServer) Classes(context.Context, *QueryClassesRequest) (*QueryClassesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Classes not implemented")
+}
+func (UnimplementedQueryServer) Royalties(context.Context, *QueryRoyaltiesRequest) (*QueryRoyaltiesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Royalties not implemented")
+}
+func (UnimplementedQueryServer) RoyaltiesByQueryString(context.Context, *QueryRoyaltiesByQueryStringRequest) (*QueryRoyaltiesByQueryStringResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RoyaltiesByQueryString not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -481,6 +515,42 @@ func _Query_Classes_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Royalties_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRoyaltiesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Royalties(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Royalties_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Royalties(ctx, req.(*QueryRoyaltiesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_RoyaltiesByQueryString_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRoyaltiesByQueryStringRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RoyaltiesByQueryString(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_RoyaltiesByQueryString_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RoyaltiesByQueryString(ctx, req.(*QueryRoyaltiesByQueryStringRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -535,6 +605,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Classes",
 			Handler:    _Query_Classes_Handler,
+		},
+		{
+			MethodName: "Royalties",
+			Handler:    _Query_Royalties_Handler,
+		},
+		{
+			MethodName: "RoyaltiesByQueryString",
+			Handler:    _Query_RoyaltiesByQueryString_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

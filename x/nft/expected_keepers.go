@@ -12,6 +12,7 @@ type BankKeeper interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoins(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 // AccountKeeper defines the contract required for account APIs.

@@ -3,7 +3,10 @@ package keeper
 import (
 	"context"
 	"cosmossdk.io/math"
+	"cosmossdk.io/store/prefix"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -333,4 +336,278 @@ func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) erro
 		Id:      nftID,
 		Owner:   ownerStr,
 	})
+}
+
+func listedNFTKey(classID, nftID string) []byte {
+	return []byte(fmt.Sprintf("listed_nft/%s/%s", classID, nftID))
+}
+
+// GetListedNFT returns a single listed NFT
+func (k Keeper) GetListedNFT(ctx context.Context, classID, nftID string) (nft.ListedNFT, bool) {
+	store := k.KVStoreService.OpenKVStore(ctx)
+	key := listedNFTKey(classID, nftID)
+	bz, err := store.Get(key)
+	if err != nil {
+		return nft.ListedNFT{}, false
+	}
+	if bz == nil {
+		return nft.ListedNFT{}, false
+	}
+
+	var listedNFT nft.ListedNFT
+	k.cdc.MustUnmarshal(bz, &listedNFT)
+	return listedNFT, true
+}
+
+// GetListedNFTs returns all NFTs currently listed on the marketplace
+func (k Keeper) GetListedNFTs(ctx context.Context, pagination *query.PageRequest) ([]*nft.ListedNFT, *query.PageResponse, error) {
+	var listedNFTs []*nft.ListedNFT
+	store := k.KVStoreService.OpenKVStore(ctx)
+
+	pageRes, err := query.Paginate(prefix.NewStore(runtime.KVStoreAdapter(store), []byte("listed_nft/")), pagination, func(key []byte, value []byte) error {
+		var listedNFT nft.ListedNFT
+		k.cdc.MustUnmarshal(value, &listedNFT)
+		listedNFTs = append(listedNFTs, &listedNFT)
+		return nil
+	})
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return listedNFTs, pageRes, nil
+}
+
+// ListNFTOnMarketplace handles the MsgListNFT message
+func (k Keeper) ListNFTOnMarketplace(ctx context.Context, classID, nftID string, owner sdk.AccAddress, price sdk.Coin) error {
+	if !k.HasNFT(ctx, classID, nftID) {
+		return errors.Wrap(nft.ErrNFTNotExists, nftID)
+	}
+
+	nftData, _ := k.GetNFT(ctx, classID, nftID)
+	nftData.Listed = true
+	k.setNFT(ctx, nftData)
+	if nftData.Owner != owner.String() {
+		return errors.Wrap(sdkerrors.ErrUnauthorized, "not the owner of the NFT")
+
+	}
+
+	listedNFT := nft.ListedNFT{
+		ClassId: classID,
+		Id:      nftID,
+		Owner:   owner.String(),
+		Price:   price.String(),
+	}
+
+	store := k.KVStoreService.OpenKVStore(ctx)
+	key := listedNFTKey(classID, nftID)
+	bz := k.cdc.MustMarshal(&listedNFT)
+	err := store.Set(key, bz)
+	if err != nil {
+		return err
+	}
+
+	return k.EventService.EventManager(ctx).Emit(&nft.EventMarketplace{
+		ClassId: classID,
+		Id:      nftID,
+		Seller:  owner.String(),
+		Price:   price.String(),
+		Action:  "list",
+	})
+}
+
+// BuyNFTFromMarketplace allows a user to buy an NFT from the marketplace
+func (k Keeper) BuyNFTFromMarketplace(ctx context.Context, classID, nftID string, buyer sdk.AccAddress) error {
+	store := k.KVStoreService.OpenKVStore(ctx)
+	key := listedNFTKey(classID, nftID)
+	bz, err := store.Get(key)
+	if err != nil {
+		return err
+	}
+	if bz == nil {
+		return errors.Wrap(sdkerrors.ErrNotFound, "NFT not listed")
+	}
+
+	var listedNFT nft.ListedNFT
+	k.cdc.MustUnmarshal(bz, &listedNFT)
+
+	price, err := sdk.ParseCoinsNormalized(listedNFT.Price)
+	if err != nil {
+		return err
+	}
+
+	seller, err := sdk.AccAddressFromBech32(listedNFT.Owner)
+	if err != nil {
+		return err
+	}
+
+	// Transfer funds from buyer to seller
+	err = k.bk.SendCoins(ctx, buyer, seller, price)
+	if err != nil {
+		return err
+	}
+
+	// Transfer NFT ownership
+	err = k.Transfer(ctx, classID, nftID, seller, buyer)
+	if err != nil {
+		return err
+	}
+
+	// Remove NFT from listing
+	err = store.Delete(key)
+	if err != nil {
+		return err
+	}
+
+	nftData, _ := k.GetNFT(ctx, classID, nftID)
+	nftData.Listed = false
+	k.setNFT(ctx, nftData)
+
+	return k.EventService.EventManager(ctx).Emit(&nft.EventMarketplace{
+		ClassId: classID,
+		Id:      nftID,
+		Seller:  listedNFT.Owner,
+		Buyer:   buyer.String(),
+		Price:   listedNFT.Price,
+		Action:  "buy",
+	})
+}
+
+// ListedNFTs implements the ListedNFTs gRPC method
+func (k Keeper) ListedNFTs(ctx context.Context, req *nft.QueryListedNFTsRequest) (*nft.QueryListedNFTsResponse, error) {
+	listedNFTs, pageRes, err := k.GetListedNFTs(ctx, req.Pagination)
+	if err != nil {
+		return nil, err
+	}
+
+	return &nft.QueryListedNFTsResponse{
+		ListedNfts: listedNFTs,
+		Pagination: pageRes,
+	}, nil
+}
+
+// ListedNFT implements the ListedNFT gRPC method
+func (k Keeper) ListedNFT(ctx context.Context, req *nft.QueryListedNFTRequest) (*nft.QueryListedNFTResponse, error) {
+	listedNFT, found := k.GetListedNFT(ctx, req.ClassId, req.Id)
+	if !found {
+		return nil, errors.Wrap(sdkerrors.ErrNotFound, "listed NFT not found")
+	}
+
+	return &nft.QueryListedNFTResponse{
+		ListedNft: &listedNFT,
+	}, nil
+}
+
+// ListNFT handles the MsgListNFT message
+func (k Keeper) ListNFT(goCtx context.Context, msg *nft.MsgListNFT) (*nft.MsgListNFTResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	// Additional check to ensure the sender is the owner
+	nftData, found := k.GetNFT(ctx, msg.ClassId, msg.Id)
+	if !found {
+		return nil, errors.Wrap(nft.ErrNFTNotExists, msg.Id)
+	}
+	if nftData.Owner != msg.Sender {
+		return nil, errors.Wrap(sdkerrors.ErrUnauthorized, "not the owner of the NFT")
+	}
+
+	price, err := sdk.ParseCoinNormalized(msg.Price)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.ListNFTOnMarketplace(ctx, msg.ClassId, msg.Id, sender, price)
+	if err != nil {
+		return nil, err
+	}
+
+	return &nft.MsgListNFTResponse{}, nil
+}
+
+// BuyNFT handles the MsgBuyNFT message
+func (k Keeper) BuyNFT(goCtx context.Context, msg *nft.MsgBuyNFT) (*nft.MsgBuyNFTResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	buyer, err := sdk.AccAddressFromBech32(msg.Buyer)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.BuyNFTFromMarketplace(ctx, msg.ClassId, msg.Id, buyer)
+	if err != nil {
+		return nil, err
+	}
+
+	return &nft.MsgBuyNFTResponse{}, nil
+}
+
+// DelistNFTFromMarketplace removes an NFT from the marketplace listing
+func (k Keeper) DelistNFTFromMarketplace(ctx context.Context, classID, nftID string, owner sdk.AccAddress) error {
+	store := k.KVStoreService.OpenKVStore(ctx)
+	key := listedNFTKey(classID, nftID)
+
+	// Check if the NFT is listed
+	bz, err := store.Get(key)
+	if err != nil {
+		return err
+	}
+	if bz == nil {
+		return errors.Wrap(sdkerrors.ErrNotFound, "NFT not listed")
+	}
+
+	var listedNFT nft.ListedNFT
+	k.cdc.MustUnmarshal(bz, &listedNFT)
+
+	// Check if the sender is the owner of the NFT
+	if listedNFT.Owner != owner.String() {
+		return errors.Wrap(sdkerrors.ErrUnauthorized, "not the owner of the NFT")
+	}
+
+	// Remove NFT from listing
+	err = store.Delete(key)
+	if err != nil {
+		return err
+	}
+
+	// Update the NFT's Listed status
+	nftData, found := k.GetNFT(ctx, classID, nftID)
+	if found {
+		nftData.Listed = false
+		k.setNFT(ctx, nftData)
+	}
+
+	return k.EventService.EventManager(ctx).Emit(&nft.EventMarketplace{
+		ClassId: classID,
+		Id:      nftID,
+		Seller:  owner.String(),
+		Action:  "delist",
+	})
+}
+
+// DelistNFT handles the MsgDelistNFT message
+func (k Keeper) DelistNFT(goCtx context.Context, msg *nft.MsgDelistNFT) (*nft.MsgDelistNFTResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	// Additional check to ensure the sender is the owner
+	nftData, found := k.GetNFT(ctx, msg.ClassId, msg.Id)
+	if !found {
+		return nil, errors.Wrap(nft.ErrNFTNotExists, msg.Id)
+	}
+	if nftData.Owner != msg.Sender {
+		return nil, errors.Wrap(sdkerrors.ErrUnauthorized, "not the owner of the NFT")
+	}
+
+	err = k.DelistNFTFromMarketplace(ctx, msg.ClassId, msg.Id, sender)
+	if err != nil {
+		return nil, err
+	}
+
+	return &nft.MsgDelistNFTResponse{}, nil
 }

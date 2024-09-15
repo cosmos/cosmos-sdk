@@ -59,6 +59,8 @@ message NFT {
 
   // data is an app specific data of the NFT. Optional
   google.protobuf.Any data = 10;
+
+  bool listed = 11;
 }
 
 // RoyaltyInfo defines the royalty information for an NFT
@@ -88,4 +90,14 @@ message EventStreamPayment {
   string class_id = 1;
   string id       = 2;
   string payment  = 3;
+}
+
+// Add this message to define marketplace-related events
+message EventMarketplace {
+  string class_id = 1;
+  string id       = 2;
+  string seller   = 3;
+  string buyer    = 4;
+  string price    = 5;
+  string action   = 6; // "list" or "buy"
 }

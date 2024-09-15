@@ -27,6 +27,14 @@ service Msg {
 
   // WithdrawRoyalties defines a method to withdraw accumulated royalties.
   rpc WithdrawRoyalties(MsgWithdrawRoyalties) returns (MsgWithdrawRoyaltiesResponse);
+
+  // ListNFT defines a method to list an NFT on the marketplace.
+  rpc ListNFT(MsgListNFT) returns (MsgListNFTResponse);
+
+  // BuyNFT defines a method to buy an NFT from the marketplace.
+  rpc BuyNFT(MsgBuyNFT) returns (MsgBuyNFTResponse);
+
+  rpc DelistNFT(MsgDelistNFT) returns (MsgDelistNFTResponse);
 }
 
 // MsgSend represents a message to send a nft from one account to another account.
@@ -110,3 +118,36 @@ message MsgWithdrawRoyalties {
 message MsgWithdrawRoyaltiesResponse {
   string amount = 1; // Amount withdrawn, e.g., "5stake"
 }
+
+// MsgListNFT represents a message to list an NFT on the marketplace.
+message MsgListNFT {
+  option (cosmos.msg.v1.signer) = "sender";
+  string class_id               = 1;
+  string id                     = 2;
+  string sender                 = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string price                  = 4; // String representation of sdk.Coin
+}
+
+// MsgListNFTResponse defines the Msg/ListNFT response type.
+message MsgListNFTResponse {}
+
+// MsgBuyNFT represents a message to buy an NFT from the marketplace.
+message MsgBuyNFT {
+  option (cosmos.msg.v1.signer) = "buyer";
+  string class_id               = 1;
+  string id                     = 2;
+  string buyer                  = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgBuyNFTResponse defines the Msg/BuyNFT response type.
+message MsgBuyNFTResponse {}
+
+// Add these messages
+message MsgDelistNFT {
+  option (cosmos.msg.v1.signer) = "sender";
+  string class_id               = 1;
+  string id                     = 2;
+  string sender                 = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgDelistNFTResponse {}

@@ -200,6 +200,7 @@ func (k Keeper) NFT(ctx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNFTR
 		RoyaltyInfo:             n.RoyaltyInfo,
 		TotalPlays:              n.TotalPlays,
 		TotalRoyaltiesGenerated: n.TotalRoyaltiesGenerated,
+		Listed:                  n.Listed,
 	}
 
 	return &nft.QueryNFTResponse{Nft: nftResponse}, nil

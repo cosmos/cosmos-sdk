@@ -112,6 +112,22 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "id"},
 					},
 				},
+				{
+					RpcMethod: "ListedNFTs",
+					Use:       "listed-nfts",
+					Short:     "Query all NFTs listed on the marketplace",
+					Long:      "Query all NFTs that are currently listed for sale on the marketplace",
+				},
+				{
+					RpcMethod: "ListedNFT",
+					Use:       "listed-nft [class-id] [nft-id]",
+					Short:     "Query a single listed NFT on the marketplace",
+					Long:      "Query details of a specific NFT listed for sale on the marketplace",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "class_id"},
+						{ProtoField: "id"},
+					},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
@@ -181,6 +197,37 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "class_id"},
 						{ProtoField: "id"},
 						{ProtoField: "role"},
+					},
+				},
+				{
+					RpcMethod: "ListNFT",
+					Use:       "list-nft [class-id] [nft-id] [price]",
+					Short:     "List an NFT for sale on the marketplace",
+					Long:      "List an NFT for sale on the marketplace with a specified price",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "class_id"},
+						{ProtoField: "id"},
+						{ProtoField: "price"},
+					},
+				},
+				{
+					RpcMethod: "BuyNFT",
+					Use:       "buy-nft [class-id] [nft-id]",
+					Short:     "Buy an NFT from the marketplace",
+					Long:      "Purchase an NFT that is listed for sale on the marketplace",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "class_id"},
+						{ProtoField: "id"},
+					},
+				},
+				{
+					RpcMethod: "DelistNFT",
+					Use:       "delist-nft [class-id] [nft-id]",
+					Short:     "Delist an NFT from the marketplace",
+					Long:      "Remove an NFT from the marketplace listing",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "class_id"},
+						{ProtoField: "id"},
 					},
 				},
 			},

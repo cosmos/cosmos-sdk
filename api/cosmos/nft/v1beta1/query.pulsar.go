@@ -14569,6 +14569,2545 @@ func (x *fastReflection_QueryTotalRoyaltiesResponse) ProtoMethods() *protoiface.
 	}
 }
 
+var (
+	md_QueryListedNFTsRequest            protoreflect.MessageDescriptor
+	fd_QueryListedNFTsRequest_pagination protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_nft_v1beta1_query_proto_init()
+	md_QueryListedNFTsRequest = File_cosmos_nft_v1beta1_query_proto.Messages().ByName("QueryListedNFTsRequest")
+	fd_QueryListedNFTsRequest_pagination = md_QueryListedNFTsRequest.Fields().ByName("pagination")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryListedNFTsRequest)(nil)
+
+type fastReflection_QueryListedNFTsRequest QueryListedNFTsRequest
+
+func (x *QueryListedNFTsRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryListedNFTsRequest)(x)
+}
+
+func (x *QueryListedNFTsRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_nft_v1beta1_query_proto_msgTypes[32]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryListedNFTsRequest_messageType fastReflection_QueryListedNFTsRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryListedNFTsRequest_messageType{}
+
+type fastReflection_QueryListedNFTsRequest_messageType struct{}
+
+func (x fastReflection_QueryListedNFTsRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryListedNFTsRequest)(nil)
+}
+func (x fastReflection_QueryListedNFTsRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryListedNFTsRequest)
+}
+func (x fastReflection_QueryListedNFTsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryListedNFTsRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryListedNFTsRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryListedNFTsRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryListedNFTsRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryListedNFTsRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryListedNFTsRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryListedNFTsRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryListedNFTsRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryListedNFTsRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryListedNFTsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Pagination != nil {
+		value := protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+		if !f(fd_QueryListedNFTsRequest_pagination, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryListedNFTsRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTsRequest.pagination":
+		return x.Pagination != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTsRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTsRequest.pagination":
+		x.Pagination = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryListedNFTsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTsRequest.pagination":
+		value := x.Pagination
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTsRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTsRequest.pagination":
+		x.Pagination = value.Message().Interface().(*v1beta1.PageRequest)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTsRequest.pagination":
+		if x.Pagination == nil {
+			x.Pagination = new(v1beta1.PageRequest)
+		}
+		return protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryListedNFTsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTsRequest.pagination":
+		m := new(v1beta1.PageRequest)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryListedNFTsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.nft.v1beta1.QueryListedNFTsRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryListedNFTsRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTsRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryListedNFTsRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryListedNFTsRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryListedNFTsRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Pagination != nil {
+			l = options.Size(x.Pagination)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryListedNFTsRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Pagination != nil {
+			encoded, err := options.Marshal(x.Pagination)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryListedNFTsRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryListedNFTsRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryListedNFTsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Pagination == nil {
+					x.Pagination = &v1beta1.PageRequest{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Pagination); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var _ protoreflect.List = (*_QueryListedNFTsResponse_1_list)(nil)
+
+type _QueryListedNFTsResponse_1_list struct {
+	list *[]*ListedNFT
+}
+
+func (x *_QueryListedNFTsResponse_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_QueryListedNFTsResponse_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_QueryListedNFTsResponse_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*ListedNFT)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_QueryListedNFTsResponse_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*ListedNFT)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_QueryListedNFTsResponse_1_list) AppendMutable() protoreflect.Value {
+	v := new(ListedNFT)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryListedNFTsResponse_1_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_QueryListedNFTsResponse_1_list) NewElement() protoreflect.Value {
+	v := new(ListedNFT)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryListedNFTsResponse_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_QueryListedNFTsResponse             protoreflect.MessageDescriptor
+	fd_QueryListedNFTsResponse_listed_nfts protoreflect.FieldDescriptor
+	fd_QueryListedNFTsResponse_pagination  protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_nft_v1beta1_query_proto_init()
+	md_QueryListedNFTsResponse = File_cosmos_nft_v1beta1_query_proto.Messages().ByName("QueryListedNFTsResponse")
+	fd_QueryListedNFTsResponse_listed_nfts = md_QueryListedNFTsResponse.Fields().ByName("listed_nfts")
+	fd_QueryListedNFTsResponse_pagination = md_QueryListedNFTsResponse.Fields().ByName("pagination")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryListedNFTsResponse)(nil)
+
+type fastReflection_QueryListedNFTsResponse QueryListedNFTsResponse
+
+func (x *QueryListedNFTsResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryListedNFTsResponse)(x)
+}
+
+func (x *QueryListedNFTsResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_nft_v1beta1_query_proto_msgTypes[33]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryListedNFTsResponse_messageType fastReflection_QueryListedNFTsResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryListedNFTsResponse_messageType{}
+
+type fastReflection_QueryListedNFTsResponse_messageType struct{}
+
+func (x fastReflection_QueryListedNFTsResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryListedNFTsResponse)(nil)
+}
+func (x fastReflection_QueryListedNFTsResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryListedNFTsResponse)
+}
+func (x fastReflection_QueryListedNFTsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryListedNFTsResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryListedNFTsResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryListedNFTsResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryListedNFTsResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryListedNFTsResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryListedNFTsResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryListedNFTsResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryListedNFTsResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryListedNFTsResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryListedNFTsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.ListedNfts) != 0 {
+		value := protoreflect.ValueOfList(&_QueryListedNFTsResponse_1_list{list: &x.ListedNfts})
+		if !f(fd_QueryListedNFTsResponse_listed_nfts, value) {
+			return
+		}
+	}
+	if x.Pagination != nil {
+		value := protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+		if !f(fd_QueryListedNFTsResponse_pagination, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryListedNFTsResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTsResponse.listed_nfts":
+		return len(x.ListedNfts) != 0
+	case "cosmos.nft.v1beta1.QueryListedNFTsResponse.pagination":
+		return x.Pagination != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTsResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTsResponse.listed_nfts":
+		x.ListedNfts = nil
+	case "cosmos.nft.v1beta1.QueryListedNFTsResponse.pagination":
+		x.Pagination = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryListedNFTsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTsResponse.listed_nfts":
+		if len(x.ListedNfts) == 0 {
+			return protoreflect.ValueOfList(&_QueryListedNFTsResponse_1_list{})
+		}
+		listValue := &_QueryListedNFTsResponse_1_list{list: &x.ListedNfts}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.nft.v1beta1.QueryListedNFTsResponse.pagination":
+		value := x.Pagination
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTsResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTsResponse.listed_nfts":
+		lv := value.List()
+		clv := lv.(*_QueryListedNFTsResponse_1_list)
+		x.ListedNfts = *clv.list
+	case "cosmos.nft.v1beta1.QueryListedNFTsResponse.pagination":
+		x.Pagination = value.Message().Interface().(*v1beta1.PageResponse)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTsResponse.listed_nfts":
+		if x.ListedNfts == nil {
+			x.ListedNfts = []*ListedNFT{}
+		}
+		value := &_QueryListedNFTsResponse_1_list{list: &x.ListedNfts}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.nft.v1beta1.QueryListedNFTsResponse.pagination":
+		if x.Pagination == nil {
+			x.Pagination = new(v1beta1.PageResponse)
+		}
+		return protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryListedNFTsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTsResponse.listed_nfts":
+		list := []*ListedNFT{}
+		return protoreflect.ValueOfList(&_QueryListedNFTsResponse_1_list{list: &list})
+	case "cosmos.nft.v1beta1.QueryListedNFTsResponse.pagination":
+		m := new(v1beta1.PageResponse)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryListedNFTsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.nft.v1beta1.QueryListedNFTsResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryListedNFTsResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTsResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryListedNFTsResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryListedNFTsResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryListedNFTsResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if len(x.ListedNfts) > 0 {
+			for _, e := range x.ListedNfts {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.Pagination != nil {
+			l = options.Size(x.Pagination)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryListedNFTsResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Pagination != nil {
+			encoded, err := options.Marshal(x.Pagination)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.ListedNfts) > 0 {
+			for iNdEx := len(x.ListedNfts) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.ListedNfts[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0xa
+			}
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryListedNFTsResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryListedNFTsResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryListedNFTsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ListedNfts", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ListedNfts = append(x.ListedNfts, &ListedNFT{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ListedNfts[len(x.ListedNfts)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Pagination == nil {
+					x.Pagination = &v1beta1.PageResponse{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Pagination); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryListedNFTRequest          protoreflect.MessageDescriptor
+	fd_QueryListedNFTRequest_class_id protoreflect.FieldDescriptor
+	fd_QueryListedNFTRequest_id       protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_nft_v1beta1_query_proto_init()
+	md_QueryListedNFTRequest = File_cosmos_nft_v1beta1_query_proto.Messages().ByName("QueryListedNFTRequest")
+	fd_QueryListedNFTRequest_class_id = md_QueryListedNFTRequest.Fields().ByName("class_id")
+	fd_QueryListedNFTRequest_id = md_QueryListedNFTRequest.Fields().ByName("id")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryListedNFTRequest)(nil)
+
+type fastReflection_QueryListedNFTRequest QueryListedNFTRequest
+
+func (x *QueryListedNFTRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryListedNFTRequest)(x)
+}
+
+func (x *QueryListedNFTRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_nft_v1beta1_query_proto_msgTypes[34]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryListedNFTRequest_messageType fastReflection_QueryListedNFTRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryListedNFTRequest_messageType{}
+
+type fastReflection_QueryListedNFTRequest_messageType struct{}
+
+func (x fastReflection_QueryListedNFTRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryListedNFTRequest)(nil)
+}
+func (x fastReflection_QueryListedNFTRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryListedNFTRequest)
+}
+func (x fastReflection_QueryListedNFTRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryListedNFTRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryListedNFTRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryListedNFTRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryListedNFTRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryListedNFTRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryListedNFTRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryListedNFTRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryListedNFTRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryListedNFTRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryListedNFTRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.ClassId != "" {
+		value := protoreflect.ValueOfString(x.ClassId)
+		if !f(fd_QueryListedNFTRequest_class_id, value) {
+			return
+		}
+	}
+	if x.Id != "" {
+		value := protoreflect.ValueOfString(x.Id)
+		if !f(fd_QueryListedNFTRequest_id, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryListedNFTRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTRequest.class_id":
+		return x.ClassId != ""
+	case "cosmos.nft.v1beta1.QueryListedNFTRequest.id":
+		return x.Id != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTRequest.class_id":
+		x.ClassId = ""
+	case "cosmos.nft.v1beta1.QueryListedNFTRequest.id":
+		x.Id = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryListedNFTRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTRequest.class_id":
+		value := x.ClassId
+		return protoreflect.ValueOfString(value)
+	case "cosmos.nft.v1beta1.QueryListedNFTRequest.id":
+		value := x.Id
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTRequest.class_id":
+		x.ClassId = value.Interface().(string)
+	case "cosmos.nft.v1beta1.QueryListedNFTRequest.id":
+		x.Id = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTRequest.class_id":
+		panic(fmt.Errorf("field class_id of message cosmos.nft.v1beta1.QueryListedNFTRequest is not mutable"))
+	case "cosmos.nft.v1beta1.QueryListedNFTRequest.id":
+		panic(fmt.Errorf("field id of message cosmos.nft.v1beta1.QueryListedNFTRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryListedNFTRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTRequest.class_id":
+		return protoreflect.ValueOfString("")
+	case "cosmos.nft.v1beta1.QueryListedNFTRequest.id":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryListedNFTRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.nft.v1beta1.QueryListedNFTRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryListedNFTRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryListedNFTRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryListedNFTRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryListedNFTRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.ClassId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Id)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryListedNFTRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Id) > 0 {
+			i -= len(x.Id)
+			copy(dAtA[i:], x.Id)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Id)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.ClassId) > 0 {
+			i -= len(x.ClassId)
+			copy(dAtA[i:], x.ClassId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ClassId)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryListedNFTRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryListedNFTRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryListedNFTRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ClassId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ClassId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Id = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryListedNFTResponse            protoreflect.MessageDescriptor
+	fd_QueryListedNFTResponse_listed_nft protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_nft_v1beta1_query_proto_init()
+	md_QueryListedNFTResponse = File_cosmos_nft_v1beta1_query_proto.Messages().ByName("QueryListedNFTResponse")
+	fd_QueryListedNFTResponse_listed_nft = md_QueryListedNFTResponse.Fields().ByName("listed_nft")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryListedNFTResponse)(nil)
+
+type fastReflection_QueryListedNFTResponse QueryListedNFTResponse
+
+func (x *QueryListedNFTResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryListedNFTResponse)(x)
+}
+
+func (x *QueryListedNFTResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_nft_v1beta1_query_proto_msgTypes[35]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryListedNFTResponse_messageType fastReflection_QueryListedNFTResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryListedNFTResponse_messageType{}
+
+type fastReflection_QueryListedNFTResponse_messageType struct{}
+
+func (x fastReflection_QueryListedNFTResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryListedNFTResponse)(nil)
+}
+func (x fastReflection_QueryListedNFTResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryListedNFTResponse)
+}
+func (x fastReflection_QueryListedNFTResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryListedNFTResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryListedNFTResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryListedNFTResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryListedNFTResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryListedNFTResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryListedNFTResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryListedNFTResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryListedNFTResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryListedNFTResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryListedNFTResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.ListedNft != nil {
+		value := protoreflect.ValueOfMessage(x.ListedNft.ProtoReflect())
+		if !f(fd_QueryListedNFTResponse_listed_nft, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryListedNFTResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTResponse.listed_nft":
+		return x.ListedNft != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTResponse.listed_nft":
+		x.ListedNft = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryListedNFTResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTResponse.listed_nft":
+		value := x.ListedNft
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTResponse.listed_nft":
+		x.ListedNft = value.Message().Interface().(*ListedNFT)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTResponse.listed_nft":
+		if x.ListedNft == nil {
+			x.ListedNft = new(ListedNFT)
+		}
+		return protoreflect.ValueOfMessage(x.ListedNft.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryListedNFTResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.QueryListedNFTResponse.listed_nft":
+		m := new(ListedNFT)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.QueryListedNFTResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.QueryListedNFTResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryListedNFTResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.nft.v1beta1.QueryListedNFTResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryListedNFTResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryListedNFTResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryListedNFTResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryListedNFTResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryListedNFTResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.ListedNft != nil {
+			l = options.Size(x.ListedNft)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryListedNFTResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.ListedNft != nil {
+			encoded, err := options.Marshal(x.ListedNft)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryListedNFTResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryListedNFTResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryListedNFTResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ListedNft", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.ListedNft == nil {
+					x.ListedNft = &ListedNFT{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ListedNft); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_ListedNFT          protoreflect.MessageDescriptor
+	fd_ListedNFT_class_id protoreflect.FieldDescriptor
+	fd_ListedNFT_id       protoreflect.FieldDescriptor
+	fd_ListedNFT_owner    protoreflect.FieldDescriptor
+	fd_ListedNFT_price    protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_nft_v1beta1_query_proto_init()
+	md_ListedNFT = File_cosmos_nft_v1beta1_query_proto.Messages().ByName("ListedNFT")
+	fd_ListedNFT_class_id = md_ListedNFT.Fields().ByName("class_id")
+	fd_ListedNFT_id = md_ListedNFT.Fields().ByName("id")
+	fd_ListedNFT_owner = md_ListedNFT.Fields().ByName("owner")
+	fd_ListedNFT_price = md_ListedNFT.Fields().ByName("price")
+}
+
+var _ protoreflect.Message = (*fastReflection_ListedNFT)(nil)
+
+type fastReflection_ListedNFT ListedNFT
+
+func (x *ListedNFT) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_ListedNFT)(x)
+}
+
+func (x *ListedNFT) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_nft_v1beta1_query_proto_msgTypes[36]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_ListedNFT_messageType fastReflection_ListedNFT_messageType
+var _ protoreflect.MessageType = fastReflection_ListedNFT_messageType{}
+
+type fastReflection_ListedNFT_messageType struct{}
+
+func (x fastReflection_ListedNFT_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_ListedNFT)(nil)
+}
+func (x fastReflection_ListedNFT_messageType) New() protoreflect.Message {
+	return new(fastReflection_ListedNFT)
+}
+func (x fastReflection_ListedNFT_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_ListedNFT
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_ListedNFT) Descriptor() protoreflect.MessageDescriptor {
+	return md_ListedNFT
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_ListedNFT) Type() protoreflect.MessageType {
+	return _fastReflection_ListedNFT_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_ListedNFT) New() protoreflect.Message {
+	return new(fastReflection_ListedNFT)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_ListedNFT) Interface() protoreflect.ProtoMessage {
+	return (*ListedNFT)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_ListedNFT) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.ClassId != "" {
+		value := protoreflect.ValueOfString(x.ClassId)
+		if !f(fd_ListedNFT_class_id, value) {
+			return
+		}
+	}
+	if x.Id != "" {
+		value := protoreflect.ValueOfString(x.Id)
+		if !f(fd_ListedNFT_id, value) {
+			return
+		}
+	}
+	if x.Owner != "" {
+		value := protoreflect.ValueOfString(x.Owner)
+		if !f(fd_ListedNFT_owner, value) {
+			return
+		}
+	}
+	if x.Price != "" {
+		value := protoreflect.ValueOfString(x.Price)
+		if !f(fd_ListedNFT_price, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_ListedNFT) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.ListedNFT.class_id":
+		return x.ClassId != ""
+	case "cosmos.nft.v1beta1.ListedNFT.id":
+		return x.Id != ""
+	case "cosmos.nft.v1beta1.ListedNFT.owner":
+		return x.Owner != ""
+	case "cosmos.nft.v1beta1.ListedNFT.price":
+		return x.Price != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.ListedNFT"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.ListedNFT does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ListedNFT) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.ListedNFT.class_id":
+		x.ClassId = ""
+	case "cosmos.nft.v1beta1.ListedNFT.id":
+		x.Id = ""
+	case "cosmos.nft.v1beta1.ListedNFT.owner":
+		x.Owner = ""
+	case "cosmos.nft.v1beta1.ListedNFT.price":
+		x.Price = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.ListedNFT"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.ListedNFT does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_ListedNFT) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.nft.v1beta1.ListedNFT.class_id":
+		value := x.ClassId
+		return protoreflect.ValueOfString(value)
+	case "cosmos.nft.v1beta1.ListedNFT.id":
+		value := x.Id
+		return protoreflect.ValueOfString(value)
+	case "cosmos.nft.v1beta1.ListedNFT.owner":
+		value := x.Owner
+		return protoreflect.ValueOfString(value)
+	case "cosmos.nft.v1beta1.ListedNFT.price":
+		value := x.Price
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.ListedNFT"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.ListedNFT does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ListedNFT) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.ListedNFT.class_id":
+		x.ClassId = value.Interface().(string)
+	case "cosmos.nft.v1beta1.ListedNFT.id":
+		x.Id = value.Interface().(string)
+	case "cosmos.nft.v1beta1.ListedNFT.owner":
+		x.Owner = value.Interface().(string)
+	case "cosmos.nft.v1beta1.ListedNFT.price":
+		x.Price = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.ListedNFT"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.ListedNFT does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ListedNFT) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.ListedNFT.class_id":
+		panic(fmt.Errorf("field class_id of message cosmos.nft.v1beta1.ListedNFT is not mutable"))
+	case "cosmos.nft.v1beta1.ListedNFT.id":
+		panic(fmt.Errorf("field id of message cosmos.nft.v1beta1.ListedNFT is not mutable"))
+	case "cosmos.nft.v1beta1.ListedNFT.owner":
+		panic(fmt.Errorf("field owner of message cosmos.nft.v1beta1.ListedNFT is not mutable"))
+	case "cosmos.nft.v1beta1.ListedNFT.price":
+		panic(fmt.Errorf("field price of message cosmos.nft.v1beta1.ListedNFT is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.ListedNFT"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.ListedNFT does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_ListedNFT) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.nft.v1beta1.ListedNFT.class_id":
+		return protoreflect.ValueOfString("")
+	case "cosmos.nft.v1beta1.ListedNFT.id":
+		return protoreflect.ValueOfString("")
+	case "cosmos.nft.v1beta1.ListedNFT.owner":
+		return protoreflect.ValueOfString("")
+	case "cosmos.nft.v1beta1.ListedNFT.price":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.ListedNFT"))
+		}
+		panic(fmt.Errorf("message cosmos.nft.v1beta1.ListedNFT does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_ListedNFT) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.nft.v1beta1.ListedNFT", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_ListedNFT) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ListedNFT) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_ListedNFT) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_ListedNFT) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*ListedNFT)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.ClassId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Id)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Owner)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Price)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*ListedNFT)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Price) > 0 {
+			i -= len(x.Price)
+			copy(dAtA[i:], x.Price)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Price)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.Owner) > 0 {
+			i -= len(x.Owner)
+			copy(dAtA[i:], x.Owner)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Owner)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.Id) > 0 {
+			i -= len(x.Id)
+			copy(dAtA[i:], x.Id)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Id)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.ClassId) > 0 {
+			i -= len(x.ClassId)
+			copy(dAtA[i:], x.ClassId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ClassId)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*ListedNFT)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ListedNFT: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ListedNFT: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ClassId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ClassId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Id = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Owner = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Price", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Price = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -15886,6 +18425,226 @@ func (x *QueryTotalRoyaltiesResponse) GetTotalRoyalties() string {
 	return ""
 }
 
+// QueryListedNFTsRequest is the request type for the Query/ListedNFTs RPC method
+type QueryListedNFTsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Pagination *v1beta1.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (x *QueryListedNFTsRequest) Reset() {
+	*x = QueryListedNFTsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_nft_v1beta1_query_proto_msgTypes[32]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryListedNFTsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryListedNFTsRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryListedNFTsRequest.ProtoReflect.Descriptor instead.
+func (*QueryListedNFTsRequest) Descriptor() ([]byte, []int) {
+	return file_cosmos_nft_v1beta1_query_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *QueryListedNFTsRequest) GetPagination() *v1beta1.PageRequest {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// QueryListedNFTsResponse is the response type for the Query/ListedNFTs RPC method
+type QueryListedNFTsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ListedNfts []*ListedNFT          `protobuf:"bytes,1,rep,name=listed_nfts,json=listedNfts,proto3" json:"listed_nfts,omitempty"`
+	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (x *QueryListedNFTsResponse) Reset() {
+	*x = QueryListedNFTsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_nft_v1beta1_query_proto_msgTypes[33]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryListedNFTsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryListedNFTsResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryListedNFTsResponse.ProtoReflect.Descriptor instead.
+func (*QueryListedNFTsResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_nft_v1beta1_query_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *QueryListedNFTsResponse) GetListedNfts() []*ListedNFT {
+	if x != nil {
+		return x.ListedNfts
+	}
+	return nil
+}
+
+func (x *QueryListedNFTsResponse) GetPagination() *v1beta1.PageResponse {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// QueryListedNFTRequest is the request type for the Query/ListedNFT RPC method
+type QueryListedNFTRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
+	Id      string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (x *QueryListedNFTRequest) Reset() {
+	*x = QueryListedNFTRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_nft_v1beta1_query_proto_msgTypes[34]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryListedNFTRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryListedNFTRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryListedNFTRequest.ProtoReflect.Descriptor instead.
+func (*QueryListedNFTRequest) Descriptor() ([]byte, []int) {
+	return file_cosmos_nft_v1beta1_query_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *QueryListedNFTRequest) GetClassId() string {
+	if x != nil {
+		return x.ClassId
+	}
+	return ""
+}
+
+func (x *QueryListedNFTRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+// QueryListedNFTResponse is the response type for the Query/ListedNFT RPC method
+type QueryListedNFTResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ListedNft *ListedNFT `protobuf:"bytes,1,opt,name=listed_nft,json=listedNft,proto3" json:"listed_nft,omitempty"`
+}
+
+func (x *QueryListedNFTResponse) Reset() {
+	*x = QueryListedNFTResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_nft_v1beta1_query_proto_msgTypes[35]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryListedNFTResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryListedNFTResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryListedNFTResponse.ProtoReflect.Descriptor instead.
+func (*QueryListedNFTResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_nft_v1beta1_query_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *QueryListedNFTResponse) GetListedNft() *ListedNFT {
+	if x != nil {
+		return x.ListedNft
+	}
+	return nil
+}
+
+// ListedNFT represents an NFT listed on the marketplace
+type ListedNFT struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
+	Id      string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	Owner   string `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
+	Price   string `protobuf:"bytes,4,opt,name=price,proto3" json:"price,omitempty"` // String representation of sdk.Coin
+}
+
+func (x *ListedNFT) Reset() {
+	*x = ListedNFT{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_nft_v1beta1_query_proto_msgTypes[36]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListedNFT) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListedNFT) ProtoMessage() {}
+
+// Deprecated: Use ListedNFT.ProtoReflect.Descriptor instead.
+func (*ListedNFT) Descriptor() ([]byte, []int) {
+	return file_cosmos_nft_v1beta1_query_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *ListedNFT) GetClassId() string {
+	if x != nil {
+		return x.ClassId
+	}
+	return ""
+}
+
+func (x *ListedNFT) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *ListedNFT) GetOwner() string {
+	if x != nil {
+		return x.Owner
+	}
+	return ""
+}
+
+func (x *ListedNFT) GetPrice() string {
+	if x != nil {
+		return x.Price
+	}
+	return ""
+}
+
 var File_cosmos_nft_v1beta1_query_proto protoreflect.FileDescriptor
 
 var file_cosmos_nft_v1beta1_query_proto_rawDesc = []byte{
@@ -16064,178 +18823,230 @@ var file_cosmos_nft_v1beta1_query_proto_rawDesc = []byte{
 	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x27, 0x0a, 0x0f, 0x74, 0x6f, 0x74, 0x61,
 	0x6c, 0x5f, 0x72, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x09, 0x52, 0x0e, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x52, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65,
-	0x73, 0x32, 0xe6, 0x13, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x94, 0x01, 0x0a, 0x07,
-	0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x12, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x42, 0x61, 0x6c, 0x61, 0x6e,
-	0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x36, 0x82, 0xd3, 0xe4, 0x93,
-	0x02, 0x30, 0x12, 0x2e, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x2f,
-	0x7b, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x7d, 0x2f, 0x7b, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69,
-	0x64, 0x7d, 0x12, 0xb6, 0x01, 0x0a, 0x14, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x42, 0x79,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x12, 0x34, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x42, 0x79, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x35, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x42, 0x61, 0x6c, 0x61,
-	0x6e, 0x63, 0x65, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x31, 0xca, 0xb4, 0x2d, 0x0a, 0x6e, 0x66,
-	0x74, 0x20, 0x76, 0x30, 0x2e, 0x31, 0x2e, 0x31, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12, 0x1b,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2f, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x12, 0x89, 0x01, 0x0a, 0x05,
-	0x4f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e,
-	0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x4f, 0x77, 0x6e, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x31, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2b, 0x12, 0x29, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2f, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x2f, 0x7b, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69,
-	0x64, 0x7d, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x12, 0xae, 0x01, 0x0a, 0x12, 0x4f, 0x77, 0x6e, 0x65,
-	0x72, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x12, 0x32,
+	0x73, 0x22, 0x60, 0x0a, 0x16, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x64,
+	0x4e, 0x46, 0x54, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a, 0x70,
+	0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75,
+	0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x22, 0xa2, 0x01, 0x0a, 0x17, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4c, 0x69, 0x73,
+	0x74, 0x65, 0x64, 0x4e, 0x46, 0x54, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x3e, 0x0a, 0x0b, 0x6c, 0x69, 0x73, 0x74, 0x65, 0x64, 0x5f, 0x6e, 0x66, 0x74, 0x73, 0x18, 0x01,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66,
+	0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x64,
+	0x4e, 0x46, 0x54, 0x52, 0x0a, 0x6c, 0x69, 0x73, 0x74, 0x65, 0x64, 0x4e, 0x66, 0x74, 0x73, 0x12,
+	0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73,
+	0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61,
+	0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x42, 0x0a, 0x15, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x64, 0x4e, 0x46, 0x54, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x19, 0x0a, 0x08, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x49, 0x64, 0x12, 0x0e, 0x0a, 0x02,
+	0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x22, 0x56, 0x0a, 0x16,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x64, 0x4e, 0x46, 0x54, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3c, 0x0a, 0x0a, 0x6c, 0x69, 0x73, 0x74, 0x65, 0x64,
+	0x5f, 0x6e, 0x66, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x4c, 0x69, 0x73, 0x74, 0x65, 0x64, 0x4e, 0x46, 0x54, 0x52, 0x09, 0x6c, 0x69, 0x73, 0x74, 0x65,
+	0x64, 0x4e, 0x66, 0x74, 0x22, 0x62, 0x0a, 0x09, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x64, 0x4e, 0x46,
+	0x54, 0x12, 0x19, 0x0a, 0x08, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x49, 0x64, 0x12, 0x0e, 0x0a, 0x02,
+	0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x14, 0x0a, 0x05,
+	0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e,
+	0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x32, 0xa3, 0x16, 0x0a, 0x05, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x12, 0x94, 0x01, 0x0a, 0x07, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x12, 0x27,
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x42, 0x79,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x77, 0x6e,
-	0x65, 0x72, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2f, 0xca, 0xb4, 0x2d, 0x0a, 0x6e, 0x66, 0x74,
-	0x20, 0x76, 0x30, 0x2e, 0x31, 0x2e, 0x31, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1b, 0x12, 0x19, 0x2f,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2f, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x88, 0x01, 0x0a, 0x06, 0x53, 0x75, 0x70,
-	0x70, 0x6c, 0x79, 0x12, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x75,
-	0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x27, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2d, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x27, 0x12, 0x25, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2f, 0x73, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x2f, 0x7b, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f,
-	0x69, 0x64, 0x7d, 0x12, 0xb2, 0x01, 0x0a, 0x13, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x42, 0x79,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x12, 0x33, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x42, 0x79, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x34, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x75, 0x70, 0x70, 0x6c,
-	0x79, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x30, 0xca, 0xb4, 0x2d, 0x0a, 0x6e, 0x66, 0x74, 0x20,
-	0x76, 0x30, 0x2e, 0x31, 0x2e, 0x31, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1c, 0x12, 0x1a, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2f, 0x73, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x12, 0x75, 0x0a, 0x04, 0x4e, 0x46, 0x54, 0x73,
-	0x12, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4e, 0x46, 0x54, 0x73, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x4e, 0x46, 0x54, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x20, 0x82,
-	0xd3, 0xe4, 0x93, 0x02, 0x1a, 0x12, 0x18, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e,
-	0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x6e, 0x66, 0x74, 0x73, 0x12,
-	0x82, 0x01, 0x0a, 0x03, 0x4e, 0x46, 0x54, 0x12, 0x23, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x4e, 0x46, 0x54, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x24, 0x2e, 0x63,
+	0x72, 0x79, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x36, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x30, 0x12, 0x2e, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x62,
+	0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x2f, 0x7b, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x7d, 0x2f, 0x7b,
+	0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0xb6, 0x01, 0x0a, 0x14, 0x42, 0x61,
+	0x6c, 0x61, 0x6e, 0x63, 0x65, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x12, 0x34, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x42, 0x61, 0x6c,
+	0x61, 0x6e, 0x63, 0x65, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x35, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x31, 0xca, 0xb4, 0x2d, 0x0a, 0x6e, 0x66, 0x74, 0x20, 0x76, 0x30, 0x2e, 0x31, 0x2e, 0x31, 0x82,
+	0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12, 0x1b, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e,
+	0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x62, 0x61, 0x6c, 0x61, 0x6e,
+	0x63, 0x65, 0x12, 0x89, 0x01, 0x0a, 0x05, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x25, 0x2e, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4e, 0x46, 0x54, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x30, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2a, 0x12, 0x28, 0x2f, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f,
-	0x6e, 0x66, 0x74, 0x73, 0x2f, 0x7b, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69, 0x64, 0x7d, 0x2f,
-	0x7b, 0x69, 0x64, 0x7d, 0x12, 0xa6, 0x01, 0x0a, 0x10, 0x4e, 0x46, 0x54, 0x42, 0x79, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x12, 0x30, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x77,
+	0x6e, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x31, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x2b, 0x12, 0x29, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74,
+	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x2f, 0x7b,
+	0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x12, 0xae,
+	0x01, 0x0a, 0x12, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53,
+	0x74, 0x72, 0x69, 0x6e, 0x67, 0x12, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e,
+	0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x4f, 0x77, 0x6e, 0x65, 0x72, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x4e, 0x46, 0x54, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74,
-	0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x31, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4e, 0x46, 0x54, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2d,
+	0x75, 0x65, 0x72, 0x79, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2f,
 	0xca, 0xb4, 0x2d, 0x0a, 0x6e, 0x66, 0x74, 0x20, 0x76, 0x30, 0x2e, 0x31, 0x2e, 0x31, 0x82, 0xd3,
-	0xe4, 0x93, 0x02, 0x19, 0x12, 0x17, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66,
-	0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x6e, 0x66, 0x74, 0x12, 0x86, 0x01,
-	0x0a, 0x05, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x12, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0xe4, 0x93, 0x02, 0x1b, 0x12, 0x19, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66,
+	0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12,
+	0x88, 0x01, 0x0a, 0x06, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x12, 0x26, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x75, 0x70,
+	0x70, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2d, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x27, 0x12, 0x25, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74,
+	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x73, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x2f,
+	0x7b, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0xb2, 0x01, 0x0a, 0x13, 0x53,
+	0x75, 0x70, 0x70, 0x6c, 0x79, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x12, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x75, 0x70,
+	0x70, 0x6c, 0x79, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x34, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26,
+	0x72, 0x79, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53,
+	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x30, 0xca,
+	0xb4, 0x2d, 0x0a, 0x6e, 0x66, 0x74, 0x20, 0x76, 0x30, 0x2e, 0x31, 0x2e, 0x31, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x1c, 0x12, 0x1a, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74,
+	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x73, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x12,
+	0x75, 0x0a, 0x04, 0x4e, 0x46, 0x54, 0x73, 0x12, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x4e, 0x46, 0x54, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4e, 0x46, 0x54, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x20, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1a, 0x12, 0x18, 0x2f, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2f, 0x6e, 0x66, 0x74, 0x73, 0x12, 0x82, 0x01, 0x0a, 0x03, 0x4e, 0x46, 0x54, 0x12, 0x23,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4e, 0x46, 0x54, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4e, 0x46,
+	0x54, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x30, 0x82, 0xd3, 0xe4, 0x93, 0x02,
+	0x2a, 0x12, 0x28, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x6e, 0x66, 0x74, 0x73, 0x2f, 0x7b, 0x63, 0x6c, 0x61,
+	0x73, 0x73, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x12, 0xa6, 0x01, 0x0a, 0x10,
+	0x4e, 0x46, 0x54, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
+	0x12, 0x30, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4e, 0x46, 0x54, 0x42, 0x79,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x31, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4e, 0x46, 0x54,
+	0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2d, 0xca, 0xb4, 0x2d, 0x0a, 0x6e, 0x66, 0x74, 0x20, 0x76,
+	0x30, 0x2e, 0x31, 0x2e, 0x31, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x19, 0x12, 0x17, 0x2f, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2f, 0x6e, 0x66, 0x74, 0x12, 0x86, 0x01, 0x0a, 0x05, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x12, 0x25,
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65,
 	0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x28, 0x12, 0x26,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2f, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73, 0x2f, 0x7b, 0x63, 0x6c, 0x61,
-	0x73, 0x73, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0xae, 0x01, 0x0a, 0x12, 0x43, 0x6c, 0x61, 0x73, 0x73,
-	0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x12, 0x32, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x42, 0x79, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6c, 0x61, 0x73,
-	0x73, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2f, 0xca, 0xb4, 0x2d, 0x0a, 0x6e, 0x66, 0x74, 0x20,
-	0x76, 0x30, 0x2e, 0x31, 0x2e, 0x31, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1b, 0x12, 0x19, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2f, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x12, 0x81, 0x01, 0x0a, 0x07, 0x43, 0x6c, 0x61, 0x73,
-	0x73, 0x65, 0x73, 0x12, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6c,
-	0x61, 0x73, 0x73, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x23, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12, 0x1b,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2f, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73, 0x12, 0x99, 0x01, 0x0a, 0x09,
-	0x52, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x12, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x52, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66,
-	0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x52,
-	0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x35, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2f, 0x12, 0x2d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x72, 0x6f,
-	0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x2f, 0x7b, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69,
-	0x64, 0x7d, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x12, 0xbe, 0x01, 0x0a, 0x16, 0x52, 0x6f, 0x79, 0x61,
-	0x6c, 0x74, 0x69, 0x65, 0x73, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69,
-	0x6e, 0x67, 0x12, 0x36, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x6f, 0x79,
-	0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72,
-	0x69, 0x6e, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e,
+	0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x43, 0x6c, 0x61, 0x73, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2e, 0x82,
+	0xd3, 0xe4, 0x93, 0x02, 0x28, 0x12, 0x26, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e,
+	0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6c, 0x61, 0x73, 0x73,
+	0x65, 0x73, 0x2f, 0x7b, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0xae, 0x01,
+	0x0a, 0x12, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74,
+	0x72, 0x69, 0x6e, 0x67, 0x12, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66,
+	0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43,
+	0x6c, 0x61, 0x73, 0x73, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53,
+	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2f, 0xca,
+	0xb4, 0x2d, 0x0a, 0x6e, 0x66, 0x74, 0x20, 0x76, 0x30, 0x2e, 0x31, 0x2e, 0x31, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x1b, 0x12, 0x19, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74,
+	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x12, 0x81,
+	0x01, 0x0a, 0x07, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73, 0x12, 0x27, 0x2e, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x42, 0x79,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x22, 0x33, 0xca, 0xb4, 0x2d, 0x0a, 0x6e, 0x66, 0x74, 0x20, 0x76, 0x30, 0x2e,
-	0x31, 0x2e, 0x31, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1f, 0x12, 0x1d, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x72,
-	0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x12, 0x9e, 0x01, 0x0a, 0x0a, 0x54, 0x6f, 0x74,
-	0x61, 0x6c, 0x50, 0x6c, 0x61, 0x79, 0x73, 0x12, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x50, 0x6c, 0x61, 0x79, 0x73, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6c,
+	0x61, 0x73, 0x73, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x23, 0x82,
+	0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12, 0x1b, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e,
+	0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6c, 0x61, 0x73, 0x73,
+	0x65, 0x73, 0x12, 0x99, 0x01, 0x0a, 0x09, 0x52, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73,
+	0x12, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x6f, 0x79, 0x61, 0x6c,
+	0x74, 0x69, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x35, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2f, 0x12,
+	0x2d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2f, 0x72, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x2f, 0x7b,
+	0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x12, 0xbe,
+	0x01, 0x0a, 0x16, 0x52, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x42, 0x79, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x12, 0x36, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x52, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x42, 0x79, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x6f, 0x79, 0x61,
+	0x6c, 0x74, 0x69, 0x65, 0x73, 0x42, 0x79, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x33, 0xca, 0xb4, 0x2d, 0x0a,
+	0x6e, 0x66, 0x74, 0x20, 0x76, 0x30, 0x2e, 0x31, 0x2e, 0x31, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1f,
+	0x12, 0x1d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x72, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x12,
+	0x9e, 0x01, 0x0a, 0x0a, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x50, 0x6c, 0x61, 0x79, 0x73, 0x12, 0x2a,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x50, 0x6c,
+	0x61, 0x79, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x50, 0x6c, 0x61, 0x79, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x37, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x31, 0x12,
+	0x2f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x70, 0x6c, 0x61, 0x79, 0x73,
+	0x2f, 0x7b, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b, 0x69, 0x64, 0x7d,
+	0x12, 0xae, 0x01, 0x0a, 0x0e, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x52, 0x6f, 0x79, 0x61, 0x6c, 0x74,
+	0x69, 0x65, 0x73, 0x12, 0x2e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74,
 	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f,
-	0x74, 0x61, 0x6c, 0x50, 0x6c, 0x61, 0x79, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x37, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x31, 0x12, 0x2f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x6f,
-	0x74, 0x61, 0x6c, 0x5f, 0x70, 0x6c, 0x61, 0x79, 0x73, 0x2f, 0x7b, 0x63, 0x6c, 0x61, 0x73, 0x73,
-	0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x12, 0xae, 0x01, 0x0a, 0x0e, 0x54, 0x6f,
-	0x74, 0x61, 0x6c, 0x52, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x12, 0x2e, 0x2e, 0x63,
+	0x74, 0x61, 0x6c, 0x52, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f,
+	0x74, 0x61, 0x6c, 0x52, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3b, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x35, 0x12, 0x33, 0x2f, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2f, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x72, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65,
+	0x73, 0x2f, 0x7b, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b, 0x69, 0x64,
+	0x7d, 0x12, 0x95, 0x01, 0x0a, 0x0a, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x64, 0x4e, 0x46, 0x54, 0x73,
+	0x12, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4c, 0x69, 0x73, 0x74, 0x65,
+	0x64, 0x4e, 0x46, 0x54, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x52, 0x6f, 0x79, 0x61,
-	0x6c, 0x74, 0x69, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x52, 0x6f, 0x79, 0x61,
-	0x6c, 0x74, 0x69, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3b, 0x82,
-	0xd3, 0xe4, 0x93, 0x02, 0x35, 0x12, 0x33, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e,
-	0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x6f, 0x74, 0x61, 0x6c,
-	0x5f, 0x72, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x69, 0x65, 0x73, 0x2f, 0x7b, 0x63, 0x6c, 0x61, 0x73,
-	0x73, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x42, 0xbe, 0x01, 0x0a, 0x16, 0x63,
-	0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
-	0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74,
-	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x6e, 0x66, 0x74, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x4e, 0x58, 0xaa, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x4e, 0x66, 0x74, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02,
-	0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x4e, 0x66, 0x74, 0x5c, 0x56, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0xe2, 0x02, 0x1e, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x4e, 0x66, 0x74,
-	0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x4e,
-	0x66, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x64, 0x4e, 0x46, 0x54,
+	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2e, 0x82, 0xd3, 0xe4, 0x93, 0x02,
+	0x28, 0x12, 0x26, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x70, 0x6c, 0x61,
+	0x63, 0x65, 0x2f, 0x6c, 0x69, 0x73, 0x74, 0x65, 0x64, 0x12, 0xa2, 0x01, 0x0a, 0x09, 0x4c, 0x69,
+	0x73, 0x74, 0x65, 0x64, 0x4e, 0x46, 0x54, 0x12, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x6e, 0x66, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x64, 0x4e, 0x46, 0x54, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66, 0x74, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4c, 0x69, 0x73,
+	0x74, 0x65, 0x64, 0x4e, 0x46, 0x54, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3e,
+	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x38, 0x12, 0x36, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
+	0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x6d, 0x61, 0x72, 0x6b,
+	0x65, 0x74, 0x70, 0x6c, 0x61, 0x63, 0x65, 0x2f, 0x6c, 0x69, 0x73, 0x74, 0x65, 0x64, 0x2f, 0x7b,
+	0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x42, 0xbe,
+	0x01, 0x0a, 0x16, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x6e, 0x66,
+	0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,
+	0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2f, 0x6e, 0x66, 0x74, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x6e, 0x66, 0x74,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x4e, 0x58, 0xaa, 0x02, 0x12,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x4e, 0x66, 0x74, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0xca, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x4e, 0x66, 0x74, 0x5c,
+	0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x1e, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x5c, 0x4e, 0x66, 0x74, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42,
+	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x3a, 0x3a, 0x4e, 0x66, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -16250,7 +19061,7 @@ func file_cosmos_nft_v1beta1_query_proto_rawDescGZIP() []byte {
 	return file_cosmos_nft_v1beta1_query_proto_rawDescData
 }
 
-var file_cosmos_nft_v1beta1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
+var file_cosmos_nft_v1beta1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 37)
 var file_cosmos_nft_v1beta1_query_proto_goTypes = []interface{}{
 	(*QueryBalanceRequest)(nil),                 // 0: cosmos.nft.v1beta1.QueryBalanceRequest
 	(*QueryBalanceByQueryStringRequest)(nil),    // 1: cosmos.nft.v1beta1.QueryBalanceByQueryStringRequest
@@ -16284,62 +19095,75 @@ var file_cosmos_nft_v1beta1_query_proto_goTypes = []interface{}{
 	(*QueryTotalPlaysResponse)(nil),             // 29: cosmos.nft.v1beta1.QueryTotalPlaysResponse
 	(*QueryTotalRoyaltiesRequest)(nil),          // 30: cosmos.nft.v1beta1.QueryTotalRoyaltiesRequest
 	(*QueryTotalRoyaltiesResponse)(nil),         // 31: cosmos.nft.v1beta1.QueryTotalRoyaltiesResponse
-	(*v1beta1.PageRequest)(nil),                 // 32: cosmos.base.query.v1beta1.PageRequest
-	(*NFT)(nil),                                 // 33: cosmos.nft.v1beta1.NFT
-	(*v1beta1.PageResponse)(nil),                // 34: cosmos.base.query.v1beta1.PageResponse
-	(*Class)(nil),                               // 35: cosmos.nft.v1beta1.Class
-	(*AccumulatedRoyalties)(nil),                // 36: cosmos.nft.v1beta1.AccumulatedRoyalties
+	(*QueryListedNFTsRequest)(nil),              // 32: cosmos.nft.v1beta1.QueryListedNFTsRequest
+	(*QueryListedNFTsResponse)(nil),             // 33: cosmos.nft.v1beta1.QueryListedNFTsResponse
+	(*QueryListedNFTRequest)(nil),               // 34: cosmos.nft.v1beta1.QueryListedNFTRequest
+	(*QueryListedNFTResponse)(nil),              // 35: cosmos.nft.v1beta1.QueryListedNFTResponse
+	(*ListedNFT)(nil),                           // 36: cosmos.nft.v1beta1.ListedNFT
+	(*v1beta1.PageRequest)(nil),                 // 37: cosmos.base.query.v1beta1.PageRequest
+	(*NFT)(nil),                                 // 38: cosmos.nft.v1beta1.NFT
+	(*v1beta1.PageResponse)(nil),                // 39: cosmos.base.query.v1beta1.PageResponse
+	(*Class)(nil),                               // 40: cosmos.nft.v1beta1.Class
+	(*AccumulatedRoyalties)(nil),                // 41: cosmos.nft.v1beta1.AccumulatedRoyalties
 }
 var file_cosmos_nft_v1beta1_query_proto_depIdxs = []int32{
-	32, // 0: cosmos.nft.v1beta1.QueryNFTsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	33, // 1: cosmos.nft.v1beta1.QueryNFTsResponse.nfts:type_name -> cosmos.nft.v1beta1.NFT
-	34, // 2: cosmos.nft.v1beta1.QueryNFTsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	33, // 3: cosmos.nft.v1beta1.QueryNFTResponse.nft:type_name -> cosmos.nft.v1beta1.NFT
-	33, // 4: cosmos.nft.v1beta1.QueryNFTByQueryStringResponse.nft:type_name -> cosmos.nft.v1beta1.NFT
-	35, // 5: cosmos.nft.v1beta1.QueryClassResponse.class:type_name -> cosmos.nft.v1beta1.Class
-	35, // 6: cosmos.nft.v1beta1.QueryClassByQueryStringResponse.class:type_name -> cosmos.nft.v1beta1.Class
-	32, // 7: cosmos.nft.v1beta1.QueryClassesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	35, // 8: cosmos.nft.v1beta1.QueryClassesResponse.classes:type_name -> cosmos.nft.v1beta1.Class
-	34, // 9: cosmos.nft.v1beta1.QueryClassesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	36, // 10: cosmos.nft.v1beta1.QueryRoyaltiesResponse.royalties:type_name -> cosmos.nft.v1beta1.AccumulatedRoyalties
-	36, // 11: cosmos.nft.v1beta1.QueryRoyaltiesByQueryStringResponse.royalties:type_name -> cosmos.nft.v1beta1.AccumulatedRoyalties
-	0,  // 12: cosmos.nft.v1beta1.Query.Balance:input_type -> cosmos.nft.v1beta1.QueryBalanceRequest
-	1,  // 13: cosmos.nft.v1beta1.Query.BalanceByQueryString:input_type -> cosmos.nft.v1beta1.QueryBalanceByQueryStringRequest
-	4,  // 14: cosmos.nft.v1beta1.Query.Owner:input_type -> cosmos.nft.v1beta1.QueryOwnerRequest
-	5,  // 15: cosmos.nft.v1beta1.Query.OwnerByQueryString:input_type -> cosmos.nft.v1beta1.QueryOwnerByQueryStringRequest
-	8,  // 16: cosmos.nft.v1beta1.Query.Supply:input_type -> cosmos.nft.v1beta1.QuerySupplyRequest
-	9,  // 17: cosmos.nft.v1beta1.Query.SupplyByQueryString:input_type -> cosmos.nft.v1beta1.QuerySupplyByQueryStringRequest
-	12, // 18: cosmos.nft.v1beta1.Query.NFTs:input_type -> cosmos.nft.v1beta1.QueryNFTsRequest
-	14, // 19: cosmos.nft.v1beta1.Query.NFT:input_type -> cosmos.nft.v1beta1.QueryNFTRequest
-	15, // 20: cosmos.nft.v1beta1.Query.NFTByQueryString:input_type -> cosmos.nft.v1beta1.QueryNFTByQueryStringRequest
-	18, // 21: cosmos.nft.v1beta1.Query.Class:input_type -> cosmos.nft.v1beta1.QueryClassRequest
-	19, // 22: cosmos.nft.v1beta1.Query.ClassByQueryString:input_type -> cosmos.nft.v1beta1.QueryClassByQueryStringRequest
-	22, // 23: cosmos.nft.v1beta1.Query.Classes:input_type -> cosmos.nft.v1beta1.QueryClassesRequest
-	24, // 24: cosmos.nft.v1beta1.Query.Royalties:input_type -> cosmos.nft.v1beta1.QueryRoyaltiesRequest
-	25, // 25: cosmos.nft.v1beta1.Query.RoyaltiesByQueryString:input_type -> cosmos.nft.v1beta1.QueryRoyaltiesByQueryStringRequest
-	28, // 26: cosmos.nft.v1beta1.Query.TotalPlays:input_type -> cosmos.nft.v1beta1.QueryTotalPlaysRequest
-	30, // 27: cosmos.nft.v1beta1.Query.TotalRoyalties:input_type -> cosmos.nft.v1beta1.QueryTotalRoyaltiesRequest
-	2,  // 28: cosmos.nft.v1beta1.Query.Balance:output_type -> cosmos.nft.v1beta1.QueryBalanceResponse
-	3,  // 29: cosmos.nft.v1beta1.Query.BalanceByQueryString:output_type -> cosmos.nft.v1beta1.QueryBalanceByQueryStringResponse
-	6,  // 30: cosmos.nft.v1beta1.Query.Owner:output_type -> cosmos.nft.v1beta1.QueryOwnerResponse
-	7,  // 31: cosmos.nft.v1beta1.Query.OwnerByQueryString:output_type -> cosmos.nft.v1beta1.QueryOwnerByQueryStringResponse
-	10, // 32: cosmos.nft.v1beta1.Query.Supply:output_type -> cosmos.nft.v1beta1.QuerySupplyResponse
-	11, // 33: cosmos.nft.v1beta1.Query.SupplyByQueryString:output_type -> cosmos.nft.v1beta1.QuerySupplyByQueryStringResponse
-	13, // 34: cosmos.nft.v1beta1.Query.NFTs:output_type -> cosmos.nft.v1beta1.QueryNFTsResponse
-	16, // 35: cosmos.nft.v1beta1.Query.NFT:output_type -> cosmos.nft.v1beta1.QueryNFTResponse
-	17, // 36: cosmos.nft.v1beta1.Query.NFTByQueryString:output_type -> cosmos.nft.v1beta1.QueryNFTByQueryStringResponse
-	20, // 37: cosmos.nft.v1beta1.Query.Class:output_type -> cosmos.nft.v1beta1.QueryClassResponse
-	21, // 38: cosmos.nft.v1beta1.Query.ClassByQueryString:output_type -> cosmos.nft.v1beta1.QueryClassByQueryStringResponse
-	23, // 39: cosmos.nft.v1beta1.Query.Classes:output_type -> cosmos.nft.v1beta1.QueryClassesResponse
-	26, // 40: cosmos.nft.v1beta1.Query.Royalties:output_type -> cosmos.nft.v1beta1.QueryRoyaltiesResponse
-	27, // 41: cosmos.nft.v1beta1.Query.RoyaltiesByQueryString:output_type -> cosmos.nft.v1beta1.QueryRoyaltiesByQueryStringResponse
-	29, // 42: cosmos.nft.v1beta1.Query.TotalPlays:output_type -> cosmos.nft.v1beta1.QueryTotalPlaysResponse
-	31, // 43: cosmos.nft.v1beta1.Query.TotalRoyalties:output_type -> cosmos.nft.v1beta1.QueryTotalRoyaltiesResponse
-	28, // [28:44] is the sub-list for method output_type
-	12, // [12:28] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	37, // 0: cosmos.nft.v1beta1.QueryNFTsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	38, // 1: cosmos.nft.v1beta1.QueryNFTsResponse.nfts:type_name -> cosmos.nft.v1beta1.NFT
+	39, // 2: cosmos.nft.v1beta1.QueryNFTsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	38, // 3: cosmos.nft.v1beta1.QueryNFTResponse.nft:type_name -> cosmos.nft.v1beta1.NFT
+	38, // 4: cosmos.nft.v1beta1.QueryNFTByQueryStringResponse.nft:type_name -> cosmos.nft.v1beta1.NFT
+	40, // 5: cosmos.nft.v1beta1.QueryClassResponse.class:type_name -> cosmos.nft.v1beta1.Class
+	40, // 6: cosmos.nft.v1beta1.QueryClassByQueryStringResponse.class:type_name -> cosmos.nft.v1beta1.Class
+	37, // 7: cosmos.nft.v1beta1.QueryClassesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	40, // 8: cosmos.nft.v1beta1.QueryClassesResponse.classes:type_name -> cosmos.nft.v1beta1.Class
+	39, // 9: cosmos.nft.v1beta1.QueryClassesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	41, // 10: cosmos.nft.v1beta1.QueryRoyaltiesResponse.royalties:type_name -> cosmos.nft.v1beta1.AccumulatedRoyalties
+	41, // 11: cosmos.nft.v1beta1.QueryRoyaltiesByQueryStringResponse.royalties:type_name -> cosmos.nft.v1beta1.AccumulatedRoyalties
+	37, // 12: cosmos.nft.v1beta1.QueryListedNFTsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	36, // 13: cosmos.nft.v1beta1.QueryListedNFTsResponse.listed_nfts:type_name -> cosmos.nft.v1beta1.ListedNFT
+	39, // 14: cosmos.nft.v1beta1.QueryListedNFTsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	36, // 15: cosmos.nft.v1beta1.QueryListedNFTResponse.listed_nft:type_name -> cosmos.nft.v1beta1.ListedNFT
+	0,  // 16: cosmos.nft.v1beta1.Query.Balance:input_type -> cosmos.nft.v1beta1.QueryBalanceRequest
+	1,  // 17: cosmos.nft.v1beta1.Query.BalanceByQueryString:input_type -> cosmos.nft.v1beta1.QueryBalanceByQueryStringRequest
+	4,  // 18: cosmos.nft.v1beta1.Query.Owner:input_type -> cosmos.nft.v1beta1.QueryOwnerRequest
+	5,  // 19: cosmos.nft.v1beta1.Query.OwnerByQueryString:input_type -> cosmos.nft.v1beta1.QueryOwnerByQueryStringRequest
+	8,  // 20: cosmos.nft.v1beta1.Query.Supply:input_type -> cosmos.nft.v1beta1.QuerySupplyRequest
+	9,  // 21: cosmos.nft.v1beta1.Query.SupplyByQueryString:input_type -> cosmos.nft.v1beta1.QuerySupplyByQueryStringRequest
+	12, // 22: cosmos.nft.v1beta1.Query.NFTs:input_type -> cosmos.nft.v1beta1.QueryNFTsRequest
+	14, // 23: cosmos.nft.v1beta1.Query.NFT:input_type -> cosmos.nft.v1beta1.QueryNFTRequest
+	15, // 24: cosmos.nft.v1beta1.Query.NFTByQueryString:input_type -> cosmos.nft.v1beta1.QueryNFTByQueryStringRequest
+	18, // 25: cosmos.nft.v1beta1.Query.Class:input_type -> cosmos.nft.v1beta1.QueryClassRequest
+	19, // 26: cosmos.nft.v1beta1.Query.ClassByQueryString:input_type -> cosmos.nft.v1beta1.QueryClassByQueryStringRequest
+	22, // 27: cosmos.nft.v1beta1.Query.Classes:input_type -> cosmos.nft.v1beta1.QueryClassesRequest
+	24, // 28: cosmos.nft.v1beta1.Query.Royalties:input_type -> cosmos.nft.v1beta1.QueryRoyaltiesRequest
+	25, // 29: cosmos.nft.v1beta1.Query.RoyaltiesByQueryString:input_type -> cosmos.nft.v1beta1.QueryRoyaltiesByQueryStringRequest
+	28, // 30: cosmos.nft.v1beta1.Query.TotalPlays:input_type -> cosmos.nft.v1beta1.QueryTotalPlaysRequest
+	30, // 31: cosmos.nft.v1beta1.Query.TotalRoyalties:input_type -> cosmos.nft.v1beta1.QueryTotalRoyaltiesRequest
+	32, // 32: cosmos.nft.v1beta1.Query.ListedNFTs:input_type -> cosmos.nft.v1beta1.QueryListedNFTsRequest
+	34, // 33: cosmos.nft.v1beta1.Query.ListedNFT:input_type -> cosmos.nft.v1beta1.QueryListedNFTRequest
+	2,  // 34: cosmos.nft.v1beta1.Query.Balance:output_type -> cosmos.nft.v1beta1.QueryBalanceResponse
+	3,  // 35: cosmos.nft.v1beta1.Query.BalanceByQueryString:output_type -> cosmos.nft.v1beta1.QueryBalanceByQueryStringResponse
+	6,  // 36: cosmos.nft.v1beta1.Query.Owner:output_type -> cosmos.nft.v1beta1.QueryOwnerResponse
+	7,  // 37: cosmos.nft.v1beta1.Query.OwnerByQueryString:output_type -> cosmos.nft.v1beta1.QueryOwnerByQueryStringResponse
+	10, // 38: cosmos.nft.v1beta1.Query.Supply:output_type -> cosmos.nft.v1beta1.QuerySupplyResponse
+	11, // 39: cosmos.nft.v1beta1.Query.SupplyByQueryString:output_type -> cosmos.nft.v1beta1.QuerySupplyByQueryStringResponse
+	13, // 40: cosmos.nft.v1beta1.Query.NFTs:output_type -> cosmos.nft.v1beta1.QueryNFTsResponse
+	16, // 41: cosmos.nft.v1beta1.Query.NFT:output_type -> cosmos.nft.v1beta1.QueryNFTResponse
+	17, // 42: cosmos.nft.v1beta1.Query.NFTByQueryString:output_type -> cosmos.nft.v1beta1.QueryNFTByQueryStringResponse
+	20, // 43: cosmos.nft.v1beta1.Query.Class:output_type -> cosmos.nft.v1beta1.QueryClassResponse
+	21, // 44: cosmos.nft.v1beta1.Query.ClassByQueryString:output_type -> cosmos.nft.v1beta1.QueryClassByQueryStringResponse
+	23, // 45: cosmos.nft.v1beta1.Query.Classes:output_type -> cosmos.nft.v1beta1.QueryClassesResponse
+	26, // 46: cosmos.nft.v1beta1.Query.Royalties:output_type -> cosmos.nft.v1beta1.QueryRoyaltiesResponse
+	27, // 47: cosmos.nft.v1beta1.Query.RoyaltiesByQueryString:output_type -> cosmos.nft.v1beta1.QueryRoyaltiesByQueryStringResponse
+	29, // 48: cosmos.nft.v1beta1.Query.TotalPlays:output_type -> cosmos.nft.v1beta1.QueryTotalPlaysResponse
+	31, // 49: cosmos.nft.v1beta1.Query.TotalRoyalties:output_type -> cosmos.nft.v1beta1.QueryTotalRoyaltiesResponse
+	33, // 50: cosmos.nft.v1beta1.Query.ListedNFTs:output_type -> cosmos.nft.v1beta1.QueryListedNFTsResponse
+	35, // 51: cosmos.nft.v1beta1.Query.ListedNFT:output_type -> cosmos.nft.v1beta1.QueryListedNFTResponse
+	34, // [34:52] is the sub-list for method output_type
+	16, // [16:34] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_nft_v1beta1_query_proto_init() }
@@ -16733,6 +19557,66 @@ func file_cosmos_nft_v1beta1_query_proto_init() {
 				return nil
 			}
 		}
+		file_cosmos_nft_v1beta1_query_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryListedNFTsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_nft_v1beta1_query_proto_msgTypes[33].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryListedNFTsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_nft_v1beta1_query_proto_msgTypes[34].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryListedNFTRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_nft_v1beta1_query_proto_msgTypes[35].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryListedNFTResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_nft_v1beta1_query_proto_msgTypes[36].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListedNFT); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -16740,7 +19624,7 @@ func file_cosmos_nft_v1beta1_query_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_nft_v1beta1_query_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   32,
+			NumMessages:   37,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

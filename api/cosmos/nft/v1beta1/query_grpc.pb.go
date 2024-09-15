@@ -35,6 +35,8 @@ const (
 	Query_RoyaltiesByQueryString_FullMethodName = "/cosmos.nft.v1beta1.Query/RoyaltiesByQueryString"
 	Query_TotalPlays_FullMethodName             = "/cosmos.nft.v1beta1.Query/TotalPlays"
 	Query_TotalRoyalties_FullMethodName         = "/cosmos.nft.v1beta1.Query/TotalRoyalties"
+	Query_ListedNFTs_FullMethodName             = "/cosmos.nft.v1beta1.Query/ListedNFTs"
+	Query_ListedNFT_FullMethodName              = "/cosmos.nft.v1beta1.Query/ListedNFT"
 )
 
 // QueryClient is the client API for Query service.
@@ -74,6 +76,10 @@ type QueryClient interface {
 	TotalPlays(ctx context.Context, in *QueryTotalPlaysRequest, opts ...grpc.CallOption) (*QueryTotalPlaysResponse, error)
 	// TotalRoyalties queries the total royalties generated for an NFT
 	TotalRoyalties(ctx context.Context, in *QueryTotalRoyaltiesRequest, opts ...grpc.CallOption) (*QueryTotalRoyaltiesResponse, error)
+	// ListedNFTs queries all NFTs currently listed on the marketplace
+	ListedNFTs(ctx context.Context, in *QueryListedNFTsRequest, opts ...grpc.CallOption) (*QueryListedNFTsResponse, error)
+	// ListedNFT queries a single listed NFT on the marketplace
+	ListedNFT(ctx context.Context, in *QueryListedNFTRequest, opts ...grpc.CallOption) (*QueryListedNFTResponse, error)
 }
 
 type queryClient struct {
@@ -228,6 +234,24 @@ func (c *queryClient) TotalRoyalties(ctx context.Context, in *QueryTotalRoyaltie
 	return out, nil
 }
 
+func (c *queryClient) ListedNFTs(ctx context.Context, in *QueryListedNFTsRequest, opts ...grpc.CallOption) (*QueryListedNFTsResponse, error) {
+	out := new(QueryListedNFTsResponse)
+	err := c.cc.Invoke(ctx, Query_ListedNFTs_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ListedNFT(ctx context.Context, in *QueryListedNFTRequest, opts ...grpc.CallOption) (*QueryListedNFTResponse, error) {
+	out := new(QueryListedNFTResponse)
+	err := c.cc.Invoke(ctx, Query_ListedNFT_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -265,6 +289,10 @@ type QueryServer interface {
 	TotalPlays(context.Context, *QueryTotalPlaysRequest) (*QueryTotalPlaysResponse, error)
 	// TotalRoyalties queries the total royalties generated for an NFT
 	TotalRoyalties(context.Context, *QueryTotalRoyaltiesRequest) (*QueryTotalRoyaltiesResponse, error)
+	// ListedNFTs queries all NFTs currently listed on the marketplace
+	ListedNFTs(context.Context, *QueryListedNFTsRequest) (*QueryListedNFTsResponse, error)
+	// ListedNFT queries a single listed NFT on the marketplace
+	ListedNFT(context.Context, *QueryListedNFTRequest) (*QueryListedNFTResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -319,6 +347,12 @@ func (UnimplementedQueryServer) TotalPlays(context.Context, *QueryTotalPlaysRequ
 }
 func (UnimplementedQueryServer) TotalRoyalties(context.Context, *QueryTotalRoyaltiesRequest) (*QueryTotalRoyaltiesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TotalRoyalties not implemented")
+}
+func (UnimplementedQueryServer) ListedNFTs(context.Context, *QueryListedNFTsRequest) (*QueryListedNFTsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListedNFTs not implemented")
+}
+func (UnimplementedQueryServer) ListedNFT(context.Context, *QueryListedNFTRequest) (*QueryListedNFTResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListedNFT not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -621,6 +655,42 @@ func _Query_TotalRoyalties_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_ListedNFTs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryListedNFTsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ListedNFTs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_ListedNFTs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ListedNFTs(ctx, req.(*QueryListedNFTsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ListedNFT_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryListedNFTRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ListedNFT(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_ListedNFT_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ListedNFT(ctx, req.(*QueryListedNFTRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -691,6 +761,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TotalRoyalties",
 			Handler:    _Query_TotalRoyalties_Handler,
+		},
+		{
+			MethodName: "ListedNFTs",
+			Handler:    _Query_ListedNFTs_Handler,
+		},
+		{
+			MethodName: "ListedNFT",
+			Handler:    _Query_ListedNFT_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

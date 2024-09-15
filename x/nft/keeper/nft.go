@@ -155,9 +155,16 @@ func (k Keeper) GetNFT(ctx context.Context, classID, nftID string) (nft.NFT, boo
 	if len(bz) == 0 {
 		return nft.NFT{}, false
 	}
-	var nft nft.NFT
-	k.cdc.MustUnmarshal(bz, &nft)
-	return nft, true
+	var nftData nft.NFT
+	k.cdc.MustUnmarshal(bz, &nftData)
+
+	// Check if the NFT is listed
+	listedKey := listedNFTKey(classID, nftID)
+	listedStore := k.KVStoreService.OpenKVStore(ctx)
+	listedBz, _ := listedStore.Get(listedKey)
+	nftData.Listed = listedBz != nil
+
+	return nftData, true
 }
 
 // GetNFTsOfClassByOwner returns all nft information of the specified classID under the specified owner

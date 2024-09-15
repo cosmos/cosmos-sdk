@@ -97,6 +97,16 @@ service Query {
   rpc TotalRoyalties(QueryTotalRoyaltiesRequest) returns (QueryTotalRoyaltiesResponse) {
     option (google.api.http).get = "/cosmos/nft/v1beta1/total_royalties/{class_id}/{id}";
   }
+
+  // ListedNFTs queries all NFTs currently listed on the marketplace
+  rpc ListedNFTs(QueryListedNFTsRequest) returns (QueryListedNFTsResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/marketplace/listed";
+  }
+
+  // ListedNFT queries a single listed NFT on the marketplace
+  rpc ListedNFT(QueryListedNFTRequest) returns (QueryListedNFTResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/marketplace/listed/{class_id}/{id}";
+  }
 }
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method
@@ -345,4 +355,34 @@ message QueryTotalRoyaltiesRequest {
 // QueryTotalRoyaltiesResponse is the response type for the Query/TotalRoyalties RPC method
 message QueryTotalRoyaltiesResponse {
   string total_royalties = 1; // Using string to represent sdk.Coin
+}
+
+// QueryListedNFTsRequest is the request type for the Query/ListedNFTs RPC method
+message QueryListedNFTsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryListedNFTsResponse is the response type for the Query/ListedNFTs RPC method
+message QueryListedNFTsResponse {
+  repeated ListedNFT                     listed_nfts = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination  = 2;
+}
+
+// QueryListedNFTRequest is the request type for the Query/ListedNFT RPC method
+message QueryListedNFTRequest {
+  string class_id = 1;
+  string id       = 2;
+}
+
+// QueryListedNFTResponse is the response type for the Query/ListedNFT RPC method
+message QueryListedNFTResponse {
+  ListedNFT listed_nft = 1;
+}
+
+// ListedNFT represents an NFT listed on the marketplace
+message ListedNFT {
+  string class_id = 1;
+  string id       = 2;
+  string owner    = 3;
+  string price    = 4; // String representation of sdk.Coin
 }

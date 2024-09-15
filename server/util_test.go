@@ -493,7 +493,12 @@ func (m mapGetter) Get(key string) interface{} {
 }
 
 func (m mapGetter) GetString(key string) string {
-	return m[key].(string)
+	str, ok := m[key]
+	if !ok {
+		return ""
+	}
+
+	return str.(string)
 }
 
 var _ servertypes.AppOptions = mapGetter{}

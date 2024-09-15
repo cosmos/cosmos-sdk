@@ -189,12 +189,6 @@ func (k Keeper) StreamNFT(goCtx context.Context, msg *nft.MsgStreamNFT) (*nft.Ms
 		return nil, err
 	}
 
-	// Add to total royalties
-	err = k.AddToTotalRoyalties(ctx, msg.ClassId, msg.Id, payment)
-	if err != nil {
-		return nil, err
-	}
-
 	err = k.StreamPayment(ctx, msg.ClassId, msg.Id, payment)
 	if err != nil {
 		return nil, err
@@ -247,6 +241,9 @@ func (k Keeper) canWithdrawRoyalties(ctx context.Context, classID, nftID, role s
 		return nft.Creator == caller.String()
 	case "owner":
 		return nft.Owner == caller.String()
+	case "platform":
+		platformAddress := sdk.MustAccAddressFromBech32("cosmos1d9ms9wf4yx3vky2kp6fc7t3qm9p8ps33g49c9s")
+		return caller.Equals(platformAddress)
 	default:
 		return false
 	}

@@ -188,7 +188,21 @@ func (k Keeper) NFT(ctx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNFTR
 	if !has {
 		return nil, nft.ErrNFTNotExists.Wrapf("not found nft: class: %s, id: %s", r.ClassId, r.Id)
 	}
-	return &nft.QueryNFTResponse{Nft: &n}, nil
+
+	// Ensure that total_plays and total_royalties_generated are set
+	nftResponse := &nft.NFT{
+		ClassId:                 n.ClassId,
+		Id:                      n.Id,
+		Uri:                     n.Uri,
+		UriHash:                 n.UriHash,
+		Creator:                 n.Creator,
+		Owner:                   n.Owner,
+		RoyaltyInfo:             n.RoyaltyInfo,
+		TotalPlays:              n.TotalPlays,
+		TotalRoyaltiesGenerated: n.TotalRoyaltiesGenerated,
+	}
+
+	return &nft.QueryNFTResponse{Nft: nftResponse}, nil
 }
 
 // NFTByQueryString return an NFT based on its class and id.

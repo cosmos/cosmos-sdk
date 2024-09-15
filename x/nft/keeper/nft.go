@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"context"
+	"fmt"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"cosmossdk.io/errors"
@@ -18,16 +19,36 @@ func (k Keeper) Mint(ctx context.Context, token nft.NFT, receiver sdk.AccAddress
 	if !k.HasClass(ctx, token.ClassId) {
 		return errors.Wrap(nft.ErrClassNotExists, token.ClassId)
 	}
-
 	if k.HasNFT(ctx, token.ClassId, token.Id) {
 		return errors.Wrap(nft.ErrNFTExists, token.Id)
 	}
-
 	k.setOwner(ctx, token.ClassId, token.Id, receiver)
-
 	k.setCreator(ctx, token.ClassId, token.Id, token.Creator)
 
+	// Initialize fresh royalty data
+	if err := k.InitializeRoyalties(ctx, token.ClassId, token.Id); err != nil {
+		return err
+	}
+
 	return k.mintWithNoCheck(ctx, token, receiver)
+}
+
+func (k Keeper) InitializeRoyalties(ctx context.Context, classID string, nftID string) error {
+	store := k.KVStoreService.OpenKVStore(ctx)
+	key := royaltyStoreKey(classID, nftID)
+
+	initialRoyalties := nft.AccumulatedRoyalties{
+		CreatorRoyalties:  "0stake",
+		PlatformRoyalties: "0stake",
+		OwnerRoyalties:    "0stake",
+	}
+
+	bz := k.cdc.MustMarshal(&initialRoyalties)
+	if err := store.Set(key, bz); err != nil {
+		return fmt.Errorf("failed to initialize royalties: %w", err)
+	}
+
+	return nil
 }
 
 // mintWithNoCheck defines a method for minting a new nft
@@ -47,47 +68,6 @@ func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk
 		ClassId: token.ClassId,
 		Id:      token.Id,
 		Owner:   recStr,
-	})
-}
-
-// Burn defines a method for burning a nft from a specific account.
-// Note: When the upper module uses this method, it needs to authenticate nft
-func (k Keeper) Burn(ctx context.Context, classID, nftID string) error {
-	if !k.HasClass(ctx, classID) {
-		return errors.Wrap(nft.ErrClassNotExists, classID)
-	}
-
-	if !k.HasNFT(ctx, classID, nftID) {
-		return errors.Wrap(nft.ErrNFTNotExists, nftID)
-	}
-
-	err := k.burnWithNoCheck(ctx, classID, nftID)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// burnWithNoCheck defines a method for burning a nft from a specific account.
-// Note: this method does not check whether the class already exists in nft.
-// The upper-layer application needs to check it when it needs to use it
-func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) error {
-	owner := k.GetOwner(ctx, classID, nftID)
-	nftStore := k.getNFTStore(ctx, classID)
-	nftStore.Delete([]byte(nftID))
-
-	k.deleteOwner(ctx, classID, nftID, owner)
-	k.decrTotalSupply(ctx, classID)
-
-	ownerStr, err := k.ac.BytesToString(owner.Bytes())
-	if err != nil {
-		return err
-	}
-
-	return k.EventService.EventManager(ctx).Emit(&nft.EventBurn{
-		ClassId: classID,
-		Id:      nftID,
-		Owner:   ownerStr,
 	})
 }
 
@@ -312,10 +292,16 @@ type RoyaltyInfo struct {
 // StreamPayment handles the payment for streaming an NFT and distributes royalties
 func (k Keeper) StreamPayment(ctx context.Context, classID string, nftID string, payment sdk.Coin) error {
 	if !k.HasNFT(ctx, classID, nftID) {
-		return errors.Wrap(nft.ErrNFTNotExists, nftID)
+		return errors.Wrapf(sdkerrors.ErrNotFound, "NFT not found: %s/%s", classID, nftID)
 	}
 
-	_, _ = k.GetNFT(ctx, classID, nftID)
+	nft, found := k.GetNFT(ctx, classID, nftID)
+	if !found {
+		return errors.Wrapf(sdkerrors.ErrNotFound, "NFT not found: %s/%s", classID, nftID)
+	}
+
+	// Increment total_plays
+	nft.TotalPlays++
 
 	// Calculate royalties as a percentage of the actual payment
 	totalAmount := payment.Amount // use the actual payment amount
@@ -328,13 +314,29 @@ func (k Keeper) StreamPayment(ctx context.Context, classID string, nftID string,
 	// Update accumulated royalties
 	k.updateAccumulatedRoyalties(ctx, classID, nftID, creatorShare, platformShare, ownerShare)
 
+	// Update total royalties generated
+	currentTotal, err := sdk.ParseCoinsNormalized(nft.TotalRoyaltiesGenerated)
+	if err != nil {
+		return err
+	}
+	newTotal := currentTotal.Add(payment)
+	nft.TotalRoyaltiesGenerated = newTotal.String()
+
+	// Save the updated NFT
+	k.setNFT(ctx, nft)
+
 	// Emit an event for the stream payment
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return sdkCtx.EventManager().EmitTypedEvent(&nft.EventStreamPayment{
-		ClassId: classID,
-		Id:      nftID,
-		Payment: payment.String(),
-	})
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			"stream_payment",
+			sdk.NewAttribute("class_id", classID),
+			sdk.NewAttribute("nft_id", nftID),
+			sdk.NewAttribute("payment", payment.String()),
+		),
+	)
+
+	return nil
 }
 
 func (k Keeper) updateAccumulatedRoyalties(ctx context.Context, classID string, nftID string, creatorShare, platformShare, ownerShare sdk.Coin) {

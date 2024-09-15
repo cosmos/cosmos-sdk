@@ -236,7 +236,12 @@ func (f AppOptionsFn) Get(k string) any {
 }
 
 func (f AppOptionsFn) GetString(k string) string {
-	return f(k).(string)
+	str, ok := f(k).(string)
+	if !ok {
+		return ""
+	}
+
+	return str
 }
 
 // FauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of

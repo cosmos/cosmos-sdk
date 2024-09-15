@@ -137,8 +137,8 @@ func RunWithSeeds[T SimulationApp](
 			require.NoError(t, err)
 			err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
 			require.NoError(t, err)
-			if tCfg.Commit && tCfg.DBBackend == "goleveldb" {
-				simtestutil.PrintStats(testInstance.DB.(*dbm.GoLevelDB))
+			if tCfg.Commit {
+				simtestutil.PrintStats(testInstance.DB)
 			}
 			for _, step := range postRunActions {
 				step(t, testInstance)
@@ -224,17 +224,4 @@ func WriteToDebugLog(logger log.Logger) io.Writer {
 		logger.Debug(string(p))
 		return len(p), nil
 	})
-}
-
-// AppOptionsFn is an adapter to the single method AppOptions interface
-type AppOptionsFn func(string) any
-
-func (f AppOptionsFn) Get(k string) any {
-	return f(k)
-}
-
-// FauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
-// an IAVLStore for faster simulation speed.
-func FauxMerkleModeOpt(bapp *baseapp.BaseApp) {
-	bapp.SetFauxMerkleMode()
 }

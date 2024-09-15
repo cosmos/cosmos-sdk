@@ -180,7 +180,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				"streaming.abci.stop-node-on-err": true,
 			}
 			others := appOpts
-			appOpts = sims.AppOptionsFn(func(k string) any {
+			appOpts = appOptionsFn(func(k string) any {
 				if v, ok := m[k]; ok {
 					return v
 				}
@@ -260,6 +260,19 @@ func AssertEqualStores(t *testing.T, app, newApp ComparableStoreApp, storeDecode
 			t.FailNow()
 		}
 	}
+}
+
+// appOptionsFn is an adapter to the single method AppOptions interface
+type appOptionsFn func(string) any
+
+func (f appOptionsFn) Get(k string) any {
+	return f(k)
+}
+
+// FauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
+// an IAVLStore for faster simulation speed.
+func FauxMerkleModeOpt(bapp *baseapp.BaseApp) {
+	bapp.SetFauxMerkleMode()
 }
 
 func FuzzFullAppSimulation(f *testing.F) {

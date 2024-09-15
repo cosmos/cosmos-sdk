@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
@@ -33,7 +33,7 @@ func TestRegisterMsgService(t *testing.T) {
 			depinject.Supply(log.NewTestLogger(t)),
 		), &appBuilder, &registry)
 	require.NoError(t, err)
-	app := appBuilder.Build(dbm.NewMemDB(), nil)
+	app := appBuilder.Build(coretesting.NewMemDB(), nil)
 
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
@@ -65,7 +65,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 			depinject.Supply(log.NewTestLogger(t)),
 		), &appBuilder, &registry)
 	require.NoError(t, err)
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := appBuilder.Build(db, nil)
 	testdata.RegisterInterfaces(registry)
 
@@ -98,7 +98,7 @@ func TestHybridHandlerByMsgName(t *testing.T) {
 			depinject.Supply(log.NewTestLogger(t)),
 		), &appBuilder, &registry)
 	require.NoError(t, err)
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := appBuilder.Build(db, nil)
 	testdata.RegisterInterfaces(registry)
 
@@ -135,7 +135,7 @@ func TestMsgService(t *testing.T) {
 			depinject.Supply(log.NewNopLogger()),
 		), &appBuilder, &cdc, &interfaceRegistry)
 	require.NoError(t, err)
-	app := appBuilder.Build(dbm.NewMemDB(), nil)
+	app := appBuilder.Build(coretesting.NewMemDB(), nil)
 	signingCtx := interfaceRegistry.SigningContext()
 
 	// patch in TxConfig instead of using an output from x/auth/tx

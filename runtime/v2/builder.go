@@ -3,6 +3,7 @@ package runtime
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -45,7 +46,13 @@ func (a *AppBuilder[T]) RegisterModules(modules map[string]appmodulev2.AppModule
 		// if a (legacy) module implements the HasName interface, check that the name matches
 		if mod, ok := appModule.(interface{ Name() string }); ok {
 			if name != mod.Name() {
-				a.app.logger.Warn(fmt.Sprintf("module name %q does not match name returned by HasName: %q", name, mod.Name()))
+				a.app.logger.Warn(
+					fmt.Sprintf(
+						"module name %q does not match name returned by HasName: %q",
+						name,
+						mod.Name(),
+					),
+				)
 			}
 		}
 
@@ -157,20 +164,38 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 		ValidateTxGasLimit: a.app.config.GasConfig.ValidateTxGasLimit,
 		QueryGasLimit:      a.app.config.GasConfig.QueryGasLimit,
 		SimulationGasLimit: a.app.config.GasConfig.SimulationGasLimit,
-		InitGenesis: func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) error {
+		InitGenesis: func(
+			ctx context.Context,
+			src io.Reader,
+			txHandler func(json.RawMessage) error,
+		) (store.WriterMap, error) {
 			// this implementation assumes that the state is a JSON object
 			bz, err := io.ReadAll(src)
 			if err != nil {
-				return fmt.Errorf("failed to read import state: %w", err)
+				return nil, fmt.Errorf("failed to read import state: %w", err)
 			}
-			var genesisState map[string]json.RawMessage
-			if err = json.Unmarshal(bz, &genesisState); err != nil {
-				return err
+			var genesisJSON map[string]json.RawMessage
+			if err = json.Unmarshal(bz, &genesisJSON); err != nil {
+				return nil, err
 			}
-			if err = a.app.moduleManager.InitGenesisJSON(ctx, genesisState, txHandler); err != nil {
-				return fmt.Errorf("failed to init genesis: %w", err)
+
+			v, zeroState, err := a.app.db.StateLatest()
+			if err != nil {
+				return nil, fmt.Errorf("unable to get latest state: %w", err)
 			}
-			return nil
+			if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
+				return nil, errors.New("cannot init genesis on non-zero state")
+			}
+			genesisCtx := makeGenesisContext(a.branch(zeroState))
+			genesisState, err := genesisCtx.Run(ctx, func(ctx context.Context) error {
+				err = a.app.moduleManager.InitGenesisJSON(ctx, genesisJSON, txHandler)
+				if err != nil {
+					return fmt.Errorf("failed to init genesis: %w", err)
+				}
+				return nil
+			})
+
+			return genesisState, err
 		},
 		ExportGenesis: func(ctx context.Context, version uint64) ([]byte, error) {
 			genesisJson, err := a.app.moduleManager.ExportGenesisForModules(ctx)
@@ -200,7 +225,9 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 type AppBuilderOption[T transaction.Tx] func(*AppBuilder[T])
 
 // AppBuilderWithBranch sets a custom branch implementation for the app.
-func AppBuilderWithBranch[T transaction.Tx](branch func(state store.ReaderMap) store.WriterMap) AppBuilderOption[T] {
+func AppBuilderWithBranch[T transaction.Tx](
+	branch func(state store.ReaderMap) store.WriterMap,
+) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.branch = branch
 	}
@@ -208,7 +235,9 @@ func AppBuilderWithBranch[T transaction.Tx](branch func(state store.ReaderMap) s
 
 // AppBuilderWithTxValidator sets the tx validator for the app.
 // It overrides all default tx validators defined by modules.
-func AppBuilderWithTxValidator[T transaction.Tx](txValidators func(ctx context.Context, tx T) error) AppBuilderOption[T] {
+func AppBuilderWithTxValidator[T transaction.Tx](
+	txValidators func(ctx context.Context, tx T) error,
+) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.txValidator = txValidators
 	}
@@ -216,7 +245,9 @@ func AppBuilderWithTxValidator[T transaction.Tx](txValidators func(ctx context.C
 
 // AppBuilderWithPostTxExec sets logic that will be executed after each transaction.
 // When not provided, a no-op function will be used.
-func AppBuilderWithPostTxExec[T transaction.Tx](postTxExec func(ctx context.Context, tx T, success bool) error) AppBuilderOption[T] {
+func AppBuilderWithPostTxExec[T transaction.Tx](
+	postTxExec func(ctx context.Context, tx T, success bool) error,
+) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.postTxExec = postTxExec
 	}

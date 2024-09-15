@@ -16,6 +16,7 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
@@ -96,7 +97,6 @@ func init() {
 			ProvideAppBuilder[transaction.Tx],
 			ProvideEnvironment[transaction.Tx],
 			ProvideModuleManager[transaction.Tx],
-			ProvideCometService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -176,6 +176,9 @@ func ProvideEnvironment[T transaction.Tx](
 	config *runtimev2.Module,
 	key depinject.ModuleKey,
 	appBuilder *AppBuilder[T],
+	kvFactory store.KVStoreServiceFactory,
+	memFactory store.MemoryStoreServiceFactory,
+	headerFactory header.HeaderServiceFactory,
 ) (
 	appmodulev2.Environment,
 	store.KVStoreService,
@@ -197,11 +200,11 @@ func ProvideEnvironment[T transaction.Tx](
 		}
 
 		registerStoreKey(appBuilder, kvStoreKey)
-		kvService = stf.NewKVStoreService([]byte(kvStoreKey))
+		kvService = kvFactory([]byte(kvStoreKey))
 
 		memStoreKey := fmt.Sprintf("memory:%s", key.Name())
 		registerStoreKey(appBuilder, memStoreKey)
-		memKvService = stf.NewMemoryStoreService([]byte(memStoreKey))
+		memKvService = memFactory([]byte(memStoreKey))
 	}
 
 	env := appmodulev2.Environment{
@@ -209,7 +212,7 @@ func ProvideEnvironment[T transaction.Tx](
 		BranchService:      stf.BranchService{},
 		EventService:       stf.NewEventService(),
 		GasService:         stf.NewGasMeterService(),
-		HeaderService:      stf.HeaderService{},
+		HeaderService:      headerFactory(),
 		QueryRouterService: stf.NewQueryRouterService(),
 		MsgRouterService:   stf.NewMsgRouterService([]byte(key.Name())),
 		TransactionService: services.NewContextAwareTransactionService(),
@@ -220,8 +223,8 @@ func ProvideEnvironment[T transaction.Tx](
 	return env, kvService, memKvService
 }
 
-func registerStoreKey[T transaction.Tx](wrapper *AppBuilder[T], key string) {
-	wrapper.app.storeKeys = append(wrapper.app.storeKeys, key)
+func registerStoreKey[T transaction.Tx](builder *AppBuilder[T], key string) {
+	builder.app.storeKeys = append(builder.app.storeKeys, key)
 }
 
 func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.StoreKeyConfig {
@@ -234,6 +237,24 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 	return nil
 }
 
-func ProvideCometService() comet.Service {
-	return &services.ContextAwareCometInfoService{}
+func DefaultServiceBindings() depinject.Config {
+	var (
+		kvServiceFactory store.KVStoreServiceFactory = func(actor []byte) store.KVStoreService {
+			return NewGenesisKVService(
+				actor,
+				stf.NewKVStoreService(actor),
+			)
+		}
+		memStoreServiceFactory store.MemoryStoreServiceFactory = stf.NewMemoryStoreService
+		headerServiceFactory   header.HeaderServiceFactory     = func() header.Service {
+			return NewGenesisHeaderService(stf.HeaderService{})
+		}
+		cometService comet.Service = &services.ContextAwareCometInfoService{}
+	)
+	return depinject.Supply(
+		kvServiceFactory,
+		memStoreServiceFactory,
+		cometService,
+		headerServiceFactory,
+	)
 }

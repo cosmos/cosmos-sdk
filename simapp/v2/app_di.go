@@ -71,6 +71,7 @@ func NewSimApp[T transaction.Tx](
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
 			AppConfig(),
+			runtime.DefaultServiceBindings(),
 			depinject.Supply(
 				logger,
 				viper,

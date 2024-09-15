@@ -43,25 +43,19 @@ func (a AppManager[T]) InitGenesis(
 	initGenesisJSON []byte,
 	txDecoder transaction.Codec[T],
 ) (*server.BlockResponse, corestore.WriterMap, error) {
-	v, zeroState, err := a.db.StateLatest()
-	if err != nil {
-		return nil, nil, fmt.Errorf("unable to get latest state: %w", err)
-	}
-	if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
-		return nil, nil, errors.New("cannot init genesis on non-zero state")
-	}
-
 	var genTxs []T
-	genesisState, err := a.stf.RunWithCtx(ctx, zeroState, func(ctx context.Context) error {
-		return a.initGenesis(ctx, bytes.NewBuffer(initGenesisJSON), func(jsonTx json.RawMessage) error {
+	genesisState, err := a.initGenesis(
+		ctx,
+		bytes.NewBuffer(initGenesisJSON),
+		func(jsonTx json.RawMessage) error {
 			genTx, err := txDecoder.DecodeJSON(jsonTx)
 			if err != nil {
 				return fmt.Errorf("failed to decode genesis transaction: %w", err)
 			}
 			genTxs = append(genTxs, genTx)
 			return nil
-		})
-	})
+		},
+	)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to import genesis state: %w", err)
 	}
@@ -70,7 +64,11 @@ func (a AppManager[T]) InitGenesis(
 
 	blockResponse, blockZeroState, err := a.stf.DeliverBlock(ctx, blockRequest, genesisState)
 	if err != nil {
-		return blockResponse, nil, fmt.Errorf("failed to deliver block %d: %w", blockRequest.Height, err)
+		return blockResponse, nil, fmt.Errorf(
+			"failed to deliver block %d: %w",
+			blockRequest.Height,
+			err,
+		)
 	}
 
 	// after executing block 0, we extract the changes and apply them to the genesis state.
@@ -81,7 +79,10 @@ func (a AppManager[T]) InitGenesis(
 
 	err = genesisState.ApplyStateChanges(stateChanges)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to apply block zero state changes to genesis state: %w", err)
+		return nil, nil, fmt.Errorf(
+			"failed to apply block zero state changes to genesis state: %w",
+			err,
+		)
 	}
 
 	return blockResponse, genesisState, err
@@ -120,11 +121,19 @@ func (a AppManager[T]) DeliverBlock(
 ) (*server.BlockResponse, corestore.WriterMap, error) {
 	latestVersion, currentState, err := a.db.StateLatest()
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
+		return nil, nil, fmt.Errorf(
+			"unable to create new state for height %d: %w",
+			block.Height,
+			err,
+		)
 	}
 
 	if latestVersion+1 != block.Height {
-		return nil, nil, fmt.Errorf("invalid DeliverBlock height wanted %d, got %d", latestVersion+1, block.Height)
+		return nil, nil, fmt.Errorf(
+			"invalid DeliverBlock height wanted %d, got %d",
+			latestVersion+1,
+			block.Height,
+		)
 	}
 
 	blockResponse, newState, err := a.stf.DeliverBlock(ctx, block, currentState)
@@ -148,18 +157,30 @@ func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (server.TxResult, e
 }
 
 // Simulate runs validation and execution flow of a Tx.
-func (a AppManager[T]) Simulate(ctx context.Context, tx T) (server.TxResult, corestore.WriterMap, error) {
+func (a AppManager[T]) Simulate(
+	ctx context.Context,
+	tx T,
+) (server.TxResult, corestore.WriterMap, error) {
 	_, state, err := a.db.StateLatest()
 	if err != nil {
 		return server.TxResult{}, nil, err
 	}
-	result, cs := a.stf.Simulate(ctx, state, a.config.SimulationGasLimit, tx) // TODO: check if this is done in the antehandler
+	result, cs := a.stf.Simulate(
+		ctx,
+		state,
+		a.config.SimulationGasLimit,
+		tx,
+	) // TODO: check if this is done in the antehandler
 	return result, cs, nil
 }
 
 // Query queries the application at the provided version.
 // CONTRACT: Version must always be provided, if 0, get latest
-func (a AppManager[T]) Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error) {
+func (a AppManager[T]) Query(
+	ctx context.Context,
+	version uint64,
+	request transaction.Msg,
+) (transaction.Msg, error) {
 	// if version is provided attempt to do a height query.
 	if version != 0 {
 		queryState, err := a.db.StateAt(version)

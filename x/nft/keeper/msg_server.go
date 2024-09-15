@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/nft"
@@ -11,9 +12,39 @@ import (
 
 var _ nft.MsgServer = Keeper{}
 
-// Send implements the Send method of the types.MsgServer.
+// Send implements Send method of the types.MsgServer.
 func (k Keeper) Send(ctx context.Context, msg *nft.MsgSend) (*nft.MsgSendResponse, error) {
-	// Implementation remains the same
+	if len(msg.ClassId) == 0 {
+		return nil, nft.ErrEmptyClassID
+	}
+
+	if len(msg.Id) == 0 {
+		return nil, nft.ErrEmptyNFTID
+	}
+
+	sender, err := k.ac.StringToBytes(msg.Sender)
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", msg.Sender)
+	}
+
+	receiver, err := k.ac.StringToBytes(msg.Receiver)
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid receiver address (%s)", msg.Receiver)
+	}
+
+	if err := k.Transfer(ctx, msg.ClassId, msg.Id, sender, receiver); err != nil {
+		return nil, err
+	}
+
+	if err = k.EventService.EventManager(ctx).Emit(&nft.EventSend{
+		ClassId:  msg.ClassId,
+		Id:       msg.Id,
+		Sender:   msg.Sender,
+		Receiver: msg.Receiver,
+	}); err != nil {
+		return nil, err
+	}
+
 	return &nft.MsgSendResponse{}, nil
 }
 
@@ -40,11 +71,23 @@ func (k Keeper) MintNFT(ctx context.Context, msg *nft.MsgMintNFT) (*nft.MsgMintN
 		Id:      msg.Id,
 		Uri:     msg.Uri,
 		UriHash: msg.UriHash,
+		Creator: msg.Creator,
+		Owner:   msg.Owner,
 	}
 
 	sender, err := k.ac.StringToBytes(msg.Sender)
 	if err != nil {
 		return nil, err
+	}
+
+	// If owner is not specified, set it to the sender
+	if token.Owner == "" {
+		token.Owner = msg.Sender
+	}
+
+	// If creator is not specified, set it to the sender
+	if token.Creator == "" {
+		token.Creator = msg.Sender
 	}
 
 	err = k.Mint(ctx, token, sender)
@@ -64,10 +107,17 @@ func (k Keeper) BurnNFT(goCtx context.Context, msg *nft.MsgBurnNFT) (*nft.MsgBur
 	if len(msg.Id) == 0 {
 		return nil, nft.ErrEmptyNFTID
 	}
-	_, err := k.ac.StringToBytes(msg.Sender) // Convert address but don't assign to unused variable
+	sender, err := k.ac.StringToBytes(msg.Sender)
 	if err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", msg.Sender)
 	}
+
+	// Check if the sender is the owner of the NFT
+	owner := k.GetOwner(ctx, msg.ClassId, msg.Id)
+	if !bytes.Equal(owner, sender) {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "Sender is not the owner of the NFT")
+	}
+
 	err = k.Burn(ctx, msg.ClassId, msg.Id)
 	if err != nil {
 		return nil, err

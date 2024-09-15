@@ -838,6 +838,8 @@ var (
 	fd_NFT_id       protoreflect.FieldDescriptor
 	fd_NFT_uri      protoreflect.FieldDescriptor
 	fd_NFT_uri_hash protoreflect.FieldDescriptor
+	fd_NFT_creator  protoreflect.FieldDescriptor
+	fd_NFT_owner    protoreflect.FieldDescriptor
 	fd_NFT_data     protoreflect.FieldDescriptor
 )
 
@@ -848,6 +850,8 @@ func init() {
 	fd_NFT_id = md_NFT.Fields().ByName("id")
 	fd_NFT_uri = md_NFT.Fields().ByName("uri")
 	fd_NFT_uri_hash = md_NFT.Fields().ByName("uri_hash")
+	fd_NFT_creator = md_NFT.Fields().ByName("creator")
+	fd_NFT_owner = md_NFT.Fields().ByName("owner")
 	fd_NFT_data = md_NFT.Fields().ByName("data")
 }
 
@@ -940,6 +944,18 @@ func (x *fastReflection_NFT) Range(f func(protoreflect.FieldDescriptor, protoref
 			return
 		}
 	}
+	if x.Creator != "" {
+		value := protoreflect.ValueOfString(x.Creator)
+		if !f(fd_NFT_creator, value) {
+			return
+		}
+	}
+	if x.Owner != "" {
+		value := protoreflect.ValueOfString(x.Owner)
+		if !f(fd_NFT_owner, value) {
+			return
+		}
+	}
 	if x.Data != nil {
 		value := protoreflect.ValueOfMessage(x.Data.ProtoReflect())
 		if !f(fd_NFT_data, value) {
@@ -969,6 +985,10 @@ func (x *fastReflection_NFT) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.Uri != ""
 	case "cosmos.nft.v1beta1.NFT.uri_hash":
 		return x.UriHash != ""
+	case "cosmos.nft.v1beta1.NFT.creator":
+		return x.Creator != ""
+	case "cosmos.nft.v1beta1.NFT.owner":
+		return x.Owner != ""
 	case "cosmos.nft.v1beta1.NFT.data":
 		return x.Data != nil
 	default:
@@ -995,6 +1015,10 @@ func (x *fastReflection_NFT) Clear(fd protoreflect.FieldDescriptor) {
 		x.Uri = ""
 	case "cosmos.nft.v1beta1.NFT.uri_hash":
 		x.UriHash = ""
+	case "cosmos.nft.v1beta1.NFT.creator":
+		x.Creator = ""
+	case "cosmos.nft.v1beta1.NFT.owner":
+		x.Owner = ""
 	case "cosmos.nft.v1beta1.NFT.data":
 		x.Data = nil
 	default:
@@ -1024,6 +1048,12 @@ func (x *fastReflection_NFT) Get(descriptor protoreflect.FieldDescriptor) protor
 		return protoreflect.ValueOfString(value)
 	case "cosmos.nft.v1beta1.NFT.uri_hash":
 		value := x.UriHash
+		return protoreflect.ValueOfString(value)
+	case "cosmos.nft.v1beta1.NFT.creator":
+		value := x.Creator
+		return protoreflect.ValueOfString(value)
+	case "cosmos.nft.v1beta1.NFT.owner":
+		value := x.Owner
 		return protoreflect.ValueOfString(value)
 	case "cosmos.nft.v1beta1.NFT.data":
 		value := x.Data
@@ -1056,6 +1086,10 @@ func (x *fastReflection_NFT) Set(fd protoreflect.FieldDescriptor, value protoref
 		x.Uri = value.Interface().(string)
 	case "cosmos.nft.v1beta1.NFT.uri_hash":
 		x.UriHash = value.Interface().(string)
+	case "cosmos.nft.v1beta1.NFT.creator":
+		x.Creator = value.Interface().(string)
+	case "cosmos.nft.v1beta1.NFT.owner":
+		x.Owner = value.Interface().(string)
 	case "cosmos.nft.v1beta1.NFT.data":
 		x.Data = value.Message().Interface().(*anypb.Any)
 	default:
@@ -1091,6 +1125,10 @@ func (x *fastReflection_NFT) Mutable(fd protoreflect.FieldDescriptor) protorefle
 		panic(fmt.Errorf("field uri of message cosmos.nft.v1beta1.NFT is not mutable"))
 	case "cosmos.nft.v1beta1.NFT.uri_hash":
 		panic(fmt.Errorf("field uri_hash of message cosmos.nft.v1beta1.NFT is not mutable"))
+	case "cosmos.nft.v1beta1.NFT.creator":
+		panic(fmt.Errorf("field creator of message cosmos.nft.v1beta1.NFT is not mutable"))
+	case "cosmos.nft.v1beta1.NFT.owner":
+		panic(fmt.Errorf("field owner of message cosmos.nft.v1beta1.NFT is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.nft.v1beta1.NFT"))
@@ -1111,6 +1149,10 @@ func (x *fastReflection_NFT) NewField(fd protoreflect.FieldDescriptor) protorefl
 	case "cosmos.nft.v1beta1.NFT.uri":
 		return protoreflect.ValueOfString("")
 	case "cosmos.nft.v1beta1.NFT.uri_hash":
+		return protoreflect.ValueOfString("")
+	case "cosmos.nft.v1beta1.NFT.creator":
+		return protoreflect.ValueOfString("")
+	case "cosmos.nft.v1beta1.NFT.owner":
 		return protoreflect.ValueOfString("")
 	case "cosmos.nft.v1beta1.NFT.data":
 		m := new(anypb.Any)
@@ -1200,6 +1242,14 @@ func (x *fastReflection_NFT) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		l = len(x.Creator)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Owner)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.Data != nil {
 			l = options.Size(x.Data)
 			n += 1 + l + runtime.Sov(uint64(l))
@@ -1246,6 +1296,20 @@ func (x *fastReflection_NFT) ProtoMethods() *protoiface.Methods {
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
 			dAtA[i] = 0x52
+		}
+		if len(x.Owner) > 0 {
+			i -= len(x.Owner)
+			copy(dAtA[i:], x.Owner)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Owner)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.Creator) > 0 {
+			i -= len(x.Creator)
+			copy(dAtA[i:], x.Creator)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Creator)))
+			i--
+			dAtA[i] = 0x2a
 		}
 		if len(x.UriHash) > 0 {
 			i -= len(x.UriHash)
@@ -1452,6 +1516,70 @@ func (x *fastReflection_NFT) ProtoMethods() *protoiface.Methods {
 				}
 				x.UriHash = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Creator = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Owner = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
 			case 10:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
@@ -1641,6 +1769,8 @@ type NFT struct {
 	Uri string `protobuf:"bytes,3,opt,name=uri,proto3" json:"uri,omitempty"`
 	// uri_hash is a hash of the document pointed by uri
 	UriHash string `protobuf:"bytes,4,opt,name=uri_hash,json=uriHash,proto3" json:"uri_hash,omitempty"`
+	Creator string `protobuf:"bytes,5,opt,name=creator,proto3" json:"creator,omitempty"`
+	Owner   string `protobuf:"bytes,6,opt,name=owner,proto3" json:"owner,omitempty"`
 	// data is an app specific data of the NFT. Optional
 	Data *anypb.Any `protobuf:"bytes,10,opt,name=data,proto3" json:"data,omitempty"`
 }
@@ -1693,6 +1823,20 @@ func (x *NFT) GetUriHash() string {
 	return ""
 }
 
+func (x *NFT) GetCreator() string {
+	if x != nil {
+		return x.Creator
+	}
+	return ""
+}
+
+func (x *NFT) GetOwner() string {
+	if x != nil {
+		return x.Owner
+	}
+	return ""
+}
+
 func (x *NFT) GetData() *anypb.Any {
 	if x != nil {
 		return x.Data
@@ -1719,13 +1863,16 @@ var file_cosmos_nft_v1beta1_nft_proto_rawDesc = []byte{
 	0x61, 0x73, 0x68, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x75, 0x72, 0x69, 0x48, 0x61,
 	0x73, 0x68, 0x12, 0x28, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b,
 	0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
-	0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0x87, 0x01, 0x0a,
+	0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0xb7, 0x01, 0x0a,
 	0x03, 0x4e, 0x46, 0x54, 0x12, 0x19, 0x0a, 0x08, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x5f, 0x69, 0x64,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x49, 0x64, 0x12,
 	0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12,
 	0x10, 0x0a, 0x03, 0x75, 0x72, 0x69, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x75, 0x72,
 	0x69, 0x12, 0x19, 0x0a, 0x08, 0x75, 0x72, 0x69, 0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x04, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x07, 0x75, 0x72, 0x69, 0x48, 0x61, 0x73, 0x68, 0x12, 0x28, 0x0a, 0x04,
+	0x01, 0x28, 0x09, 0x52, 0x07, 0x75, 0x72, 0x69, 0x48, 0x61, 0x73, 0x68, 0x12, 0x18, 0x0a, 0x07,
+	0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63,
+	0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18,
+	0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x28, 0x0a, 0x04,
 	0x64, 0x61, 0x74, 0x61, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f,
 	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79,
 	0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x42, 0xbc, 0x01, 0x0a, 0x16, 0x63, 0x6f, 0x6d, 0x2e, 0x63,

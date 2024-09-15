@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -39,6 +40,18 @@ func (k Keeper) Stake(ctx context.Context, classId string, nftId string, owner s
 	// Implementation of staking logic
 	// This is a placeholder and needs to be implemented based on your requirements
 	return nil
+}
+
+// New method to set the creator
+func (k Keeper) setCreator(ctx context.Context, classID string, nftID string, creator string) {
+	store := k.KVStoreService.OpenKVStore(ctx)
+	key := creatorStoreKey(classID, nftID)
+	store.Set(key, []byte(creator))
+}
+
+// Helper function to generate the creator store key
+func creatorStoreKey(classID, nftID string) []byte {
+	return []byte(fmt.Sprintf("%s/creator/%s/%s", nft.ModuleName, classID, nftID))
 }
 
 // You can add any additional methods or logic here that are not already defined in nft.go or msg_server.go

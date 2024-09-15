@@ -44,6 +44,10 @@ message NFT {
   // uri_hash is a hash of the document pointed by uri
   string uri_hash = 4;
 
+  string creator = 5;
+
+  string owner = 6;
+
   // data is an app specific data of the NFT. Optional
   google.protobuf.Any data = 10;
 }

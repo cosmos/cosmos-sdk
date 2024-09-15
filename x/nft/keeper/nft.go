@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
@@ -20,6 +22,10 @@ func (k Keeper) Mint(ctx context.Context, token nft.NFT, receiver sdk.AccAddress
 	if k.HasNFT(ctx, token.ClassId, token.Id) {
 		return errors.Wrap(nft.ErrNFTExists, token.Id)
 	}
+
+	k.setOwner(ctx, token.ClassId, token.Id, receiver)
+
+	k.setCreator(ctx, token.ClassId, token.Id, token.Creator)
 
 	return k.mintWithNoCheck(ctx, token, receiver)
 }
@@ -111,20 +117,40 @@ func (k Keeper) updateWithNoCheck(ctx context.Context, token nft.NFT) {
 func (k Keeper) Transfer(ctx context.Context,
 	classID string,
 	nftID string,
+	sender sdk.AccAddress,
 	receiver sdk.AccAddress,
 ) error {
+	owner := k.GetOwner(ctx, classID, nftID)
+
+	// Check if the class exists
 	if !k.HasClass(ctx, classID) {
 		return errors.Wrap(nft.ErrClassNotExists, classID)
 	}
 
+	// Check if the NFT exists
 	if !k.HasNFT(ctx, classID, nftID) {
 		return errors.Wrap(nft.ErrNFTNotExists, nftID)
+	}
+
+	// Check if the sender is the current owner
+	if !bytes.Equal(owner, sender) {
+		return errors.Wrap(sdkerrors.ErrUnauthorized, "sender is not the owner of the NFT")
 	}
 
 	err := k.transferWithNoCheck(ctx, classID, nftID, receiver)
 	if err != nil {
 		return err
 	}
+
+	// Update the NFT's owner
+	nft, _ := k.GetNFT(ctx, classID, nftID)
+	receiverStr, err := k.ac.BytesToString(receiver)
+	if err != nil {
+		return err
+	}
+	nft.Owner = receiverStr
+	k.setNFT(ctx, nft)
+
 	return nil
 }
 

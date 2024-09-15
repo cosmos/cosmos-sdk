@@ -7,9 +7,11 @@ import (
 	"fmt"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/cobra"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/x/bank/v2/client/cli"
 	"cosmossdk.io/x/bank/v2/keeper"
 	"cosmossdk.io/x/bank/v2/types"
 
@@ -102,6 +104,12 @@ func (am AppModule) RegisterMsgHandlers(router appmodulev2.MsgRouter) {
 		errs = errors.Join(errs, err)
 	}
 
+	if err := appmodulev2.RegisterHandler(
+		router, gogoproto.MessageName(&types.MsgSend{}), handlers.MsgSend,
+	); err != nil {
+		errs = errors.Join(errs, err)
+	}
+
 	if errs != nil {
 		panic(errs)
 	}
@@ -122,3 +130,16 @@ func (am AppModule) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
 		panic(errs)
 	}
 }
+
+// GetTxCmd returns the root tx command for the bank module.
+func (AppModule) GetTxCmd() *cobra.Command {
+	return cli.NewTxCmd()
+}
+
+// // RegisterServices registers module services.
+// func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+// 	am.RegisterMsgHandlers(registrar)
+
+// 	return nil
+// }
+

@@ -4,7 +4,7 @@ pub mod bank {
     use interchain_sdk::*;
 
     pub struct Bank {
-        balances: Map<(Address, String), u128>,
+        balances: UInt128Map<(Address, String)>,
     }
 
     #[derive(StructCodec)]
@@ -27,7 +27,16 @@ pub mod bank {
 
     impl BankAPI for Bank {
         fn send(&self, ctx: &mut Context, to: Address, amount: &[Coin], evt: &mut EventBus<EventSend>) -> Response<()> {
-            todo!()
+            for coin in amount {
+                self.balances.safe_sub(ctx, (ctx.sender(), coin.denom), coin.amount)?;
+                self.balances.add(ctx, (to, coin.denom), coin.amount)?;
+                evt.emit(EventSend {
+                    from: ctx.sender(),
+                    to,
+                    coin: coin.clone(),
+                })?;
+            }
+            Ok(())
         }
     }
 }

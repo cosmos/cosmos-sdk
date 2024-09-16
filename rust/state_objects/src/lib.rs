@@ -17,3 +17,4 @@ pub use item::{Item};
 pub use index::{Index};
 pub use unique::{UniqueIndex};
 pub use seq::{Seq};
+pub use uint_map::{UInt128Map};

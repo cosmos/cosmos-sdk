@@ -15,8 +15,12 @@ pub trait ObjectValueField<'a> {
 }
 pub trait ObjectKeyField<'a>: ObjectValueField<'a> {}
 
-impl<'a, V: Value<'a>> ObjectValueField<'a> for V {
-    type Value = V;
+// impl<'a, V: Value<'a>> ObjectValueField<'a> for V {
+//     type Value = V;
+// }
+
+impl<'a> ObjectValueField<'a> for u8 {
+    type Value = u8;
 }
 impl<'a> ObjectValueField<'a> for str {
     type Value = &'a str;
@@ -24,19 +28,19 @@ impl<'a> ObjectValueField<'a> for str {
 
 impl<'a> ObjectKeyField<'a> for str {}
 impl <'a> ObjectKeyField<'a> for u8 {}
-impl <'a> ObjectKeyField<'a> for u16 {}
-impl <'a> ObjectKeyField<'a> for u32 {}
-impl <'a> ObjectKeyField<'a> for u64 {}
-impl <'a> ObjectKeyField<'a> for u128 {}
-impl <'a> ObjectKeyField<'a> for i8 {}
-impl <'a> ObjectKeyField<'a> for i16 {}
-impl <'a> ObjectKeyField<'a> for i32 {}
-impl <'a> ObjectKeyField<'a> for i64 {}
-impl <'a> ObjectKeyField<'a> for i128 {}
-impl <'a> ObjectKeyField<'a> for bool {}
-impl <'a> ObjectKeyField<'a> for simple_time::Time {}
-impl <'a> ObjectKeyField<'a> for simple_time::Duration {}
-impl <'a> ObjectKeyField<'a> for interchain_core::Address {}
+// impl <'a> ObjectKeyField<'a> for u16 {}
+// impl <'a> ObjectKeyField<'a> for u32 {}
+// impl <'a> ObjectKeyField<'a> for u64 {}
+// impl <'a> ObjectKeyField<'a> for u128 {}
+// impl <'a> ObjectKeyField<'a> for i8 {}
+// impl <'a> ObjectKeyField<'a> for i16 {}
+// impl <'a> ObjectKeyField<'a> for i32 {}
+// impl <'a> ObjectKeyField<'a> for i64 {}
+// impl <'a> ObjectKeyField<'a> for i128 {}
+// impl <'a> ObjectKeyField<'a> for bool {}
+// impl <'a> ObjectKeyField<'a> for simple_time::Time {}
+// impl <'a> ObjectKeyField<'a> for simple_time::Duration {}
+// impl <'a> ObjectKeyField<'a> for interchain_core::Address {}
 
 pub trait ObjectValue<'a> {
     type Value;

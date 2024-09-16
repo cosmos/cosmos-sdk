@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/core/store"
 )
 
-var _ store.KVStoreService = (*GenesisKVStoreServie)(nil)
+var _ store.KVStoreService = (*GenesisKVStoreService)(nil)
 
 type genesisContextKeyType struct{}
 
@@ -36,7 +36,7 @@ func (g *genesisContext) Run(
 	return g.state, nil
 }
 
-type GenesisKVStoreServie struct {
+type GenesisKVStoreService struct {
 	actor            []byte
 	executionService store.KVStoreService
 }
@@ -44,15 +44,15 @@ type GenesisKVStoreServie struct {
 func NewGenesisKVService(
 	actor []byte,
 	execution store.KVStoreService,
-) *GenesisKVStoreServie {
-	return &GenesisKVStoreServie{
+) *GenesisKVStoreService {
+	return &GenesisKVStoreService{
 		actor:            actor,
 		executionService: execution,
 	}
 }
 
 // OpenKVStore implements store.KVStoreService.
-func (g *GenesisKVStoreServie) OpenKVStore(ctx context.Context) store.KVStore {
+func (g *GenesisKVStoreService) OpenKVStore(ctx context.Context) store.KVStore {
 	v := ctx.Value(genesisContextKey)
 	if v == nil {
 		return g.executionService.OpenKVStore(ctx)

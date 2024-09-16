@@ -43,6 +43,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Features
 
 * (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
+* (cli) [#21372](https://github.com/cosmos/cosmos-sdk/pull/21372) Add a `bulk-add-genesis-account` genesis command to add many genesis accounts at once.
+* (crypto/keyring) [#21653](https://github.com/cosmos/cosmos-sdk/pull/21653) New Linux-only backend that adds Linux kernel's `keyctl` support.
 * (runtime) [#21704](https://github.com/cosmos/cosmos-sdk/pull/21704) Add StoreLoader in simappv2.
 
 ### Improvements

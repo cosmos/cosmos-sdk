@@ -37,6 +37,8 @@ issues:
   exclude-dirs:
     - testutil/testdata
   exclude-files:
+    - server/grpc/gogoreflection/fix_registration.go
+    - "fix_registration.go"
     - ".*\\.pb\\.go$"
     - ".*\\.pb\\.gw\\.go$"
     - ".*\\.pulsar\\.go$"
@@ -73,6 +75,9 @@ issues:
     - text: "G115: integer overflow conversion" # We are doing this everywhere.
       linters:
         - gosec
+    - text: "leading space"
+      linters:
+        - nolintlint
   max-issues-per-linter: 10000
   max-same-issues: 10000
 

@@ -3,13 +3,11 @@ package simsx
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
-	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
-
-	"golang.org/x/exp/maps"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -238,13 +236,15 @@ func (s *ExecutionSummary) String() string {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
 	keys := maps.Keys(s.counts)
-	sort.Strings(keys)
+	slices.Sorted(keys)
 	var sb strings.Builder
-	for _, key := range keys {
+	for key := range keys {
 		sb.WriteString(fmt.Sprintf("%s: %d\n", key, s.counts[key]))
 	}
 	for m, c := range s.skipReasons {
-		sb.WriteString(fmt.Sprintf("%d\t%s: %q\n", sum(maps.Values(c)), m, maps.Keys(c)))
+		values := maps.Values(c)
+		keys := maps.Keys(c)
+		sb.WriteString(fmt.Sprintf("%d\t%s: %q\n", sum(slices.Collect(values)), m, slices.Collect(keys)))
 	}
 	return sb.String()
 }

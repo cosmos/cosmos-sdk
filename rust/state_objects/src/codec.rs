@@ -10,80 +10,72 @@ impl<A: Type, B: Type, C: Type> FieldTypes for (A, B, C) {}
 impl<A: Type, B: Type, C: Type, D: Type> FieldTypes for (A, B, C, D) {}
 
 
-pub trait ObjectValueField<T: Type> {
-    type Value<'a>: Value<'a, T>;
+pub trait ObjectValueField {
+    type Value<'a>: Value<'a>;
 }
-pub trait ObjectKeyField<T: Type>: ObjectValueField<T> {}
+pub trait ObjectKeyField: ObjectValueField {}
 
-impl ObjectValueField<U8T> for u8 {
+impl ObjectValueField for u8 {
     type Value<'a> = u8;
 }
-impl ObjectKeyField<U8T> for u8 {}
-impl ObjectValueField<U16T> for u16 {
+impl ObjectKeyField for u8 {}
+impl ObjectValueField for u16 {
     type Value<'a> = u16;
 }
-impl ObjectKeyField<U16T> for u16 {}
-impl ObjectValueField<U32T> for u32 {
+impl ObjectKeyField for u16 {}
+impl ObjectValueField for u32 {
     type Value<'a> = u32;
 }
-impl ObjectKeyField<U32T> for u32 {}
-impl ObjectValueField<U64T> for u64 {
+impl ObjectKeyField for u32 {}
+impl ObjectValueField for u64 {
     type Value<'a> = u64;
 }
-impl ObjectKeyField<U64T> for u64 {}
-impl ObjectValueField<UIntNT<16>> for u128 {
+impl ObjectKeyField for u64 {}
+impl ObjectValueField for u128 {
     type Value<'a> = u128;
 }
-impl ObjectKeyField<UIntNT<16>> for u128 {}
-impl ObjectValueField<I8T> for i8 {
+impl ObjectKeyField for u128 {}
+impl ObjectValueField for i8 {
     type Value<'a> = i8;
 }
-impl ObjectKeyField<I8T> for i8 {}
-impl ObjectValueField<I16T> for i16 {
+impl ObjectKeyField for i8 {}
+impl ObjectValueField for i16 {
     type Value<'a> = i16;
 }
-impl ObjectKeyField<I16T> for i16 {}
-impl ObjectValueField<I32T> for i32 {
+impl ObjectKeyField for i16 {}
+impl ObjectValueField for i32 {
     type Value<'a> = i32;
 }
-impl ObjectKeyField<I32T> for i32 {}
-impl ObjectValueField<I64T> for i64 {
+impl ObjectKeyField for i32 {}
+impl ObjectValueField for i64 {
     type Value<'a> = i64;
 }
-impl ObjectKeyField<I64T> for i64 {}
-impl ObjectValueField<IntNT<16>> for i128 {
+impl ObjectKeyField for i64 {}
+impl ObjectValueField for i128 {
     type Value<'a> = i128;
 }
-impl ObjectKeyField<IntNT<16>> for i128 {}
-impl ObjectValueField<Bool> for bool {
+impl ObjectKeyField for i128 {}
+impl ObjectValueField for bool {
     type Value<'a> = bool;
 }
-impl ObjectKeyField<Bool> for bool {}
-impl ObjectValueField<StrT> for str {
+impl ObjectKeyField for bool {}
+impl ObjectValueField for str {
     type Value<'a> = &'a str;
 }
-impl ObjectKeyField<StrT> for str {}
-impl ObjectValueField<AddressT> for interchain_core::Address {
-    type Value<'a> = interchain_core::Address;
-}
-impl ObjectKeyField<AddressT> for interchain_core::Address {}
-impl ObjectValueField<TimeT> for simple_time::Time {
+impl ObjectKeyField for str {}
+impl ObjectValueField for simple_time::Time {
     type Value<'a> = simple_time::Time;
 }
-impl ObjectKeyField<TimeT> for simple_time::Time {}
-impl ObjectValueField<DurationT> for simple_time::Duration {
+impl ObjectKeyField for simple_time::Time {}
+impl ObjectValueField for simple_time::Duration {
     type Value<'a> = simple_time::Duration;
 }
+impl ObjectKeyField for simple_time::Duration {}
+// impl<V> ObjectValueField for Option<V>
+// {
+//     type Value<'a> = Option<V>;
+// }
 
-impl<T: Type, V: ObjectValueField<T>> ObjectValueField<NullableT<T>> for Option<V> {
-    type Value<'a> = Option<V::Value<'a>>;
-}
-impl<S> ObjectValueField<StructT<S>> for S
-where
-        for<'a> S: StructCodec + 'a,
-{
-    type Value<'a> = S;
-}
 
 pub trait ObjectValue {
     type Value<'a>;

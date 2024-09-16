@@ -473,7 +473,7 @@ func (c *Consensus[T]) FinalizeBlock(
 	// remove txs from the mempool
 	for _, tx := range decodedTxs {
 		if err = c.mempool.Remove(tx); err != nil {
-			return nil, fmt.Errorf("unable to remove txs: %w", err)
+			return nil, fmt.Errorf("unable to remove tx: %w", err)
 		}
 	}
 

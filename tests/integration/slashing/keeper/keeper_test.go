@@ -126,7 +126,7 @@ func initFixture(tb testing.TB) *fixture {
 	slashingKeeper := slashingkeeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[slashingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter)), cdc, &codec.LegacyAmino{}, stakingKeeper, authority.String())
 
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper)
 	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, cdc.InterfaceRegistry(), cometInfoService)
 	consensusModule := consensus.NewAppModule(cdc, consensusParamsKeeper)
 

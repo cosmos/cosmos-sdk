@@ -43,24 +43,15 @@ var (
 
 // AppModule implements an application module for the staking module.
 type AppModule struct {
-	cdc           codec.Codec
-	keeper        *keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
+	cdc    codec.Codec
+	keeper *keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(
-	cdc codec.Codec,
-	keeper *keeper.Keeper,
-	ak types.AccountKeeper,
-	bk types.BankKeeper,
-) AppModule {
+func NewAppModule(cdc codec.Codec, keeper *keeper.Keeper) AppModule {
 	return AppModule{
-		cdc:           cdc,
-		keeper:        keeper,
-		accountKeeper: ak,
-		bankKeeper:    bk,
+		cdc:    cdc,
+		keeper: keeper,
 	}
 }
 

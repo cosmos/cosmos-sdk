@@ -15,8 +15,7 @@ type genesisContextKeyType struct{}
 var genesisContextKey = genesisContextKeyType{}
 
 type genesisContext struct {
-	state  store.WriterMap
-	didRun bool
+	state store.WriterMap
 }
 
 func NewGenesisContext(state store.WriterMap) genesisContext {
@@ -34,7 +33,6 @@ func (g *genesisContext) Run(
 	if err != nil {
 		return nil, err
 	}
-	g.didRun = true
 	return g.state, nil
 }
 
@@ -63,9 +61,6 @@ func (g *GenesisKVStoreServie) OpenKVStore(ctx context.Context) store.KVStore {
 	if !ok {
 		panic(fmt.Errorf("unexpected genesis context type: %T", v))
 	}
-	if genCtx.didRun {
-		return g.executionService.OpenKVStore(ctx)
-	}
 	state, err := genCtx.state.GetWriter(g.actor)
 	if err != nil {
 		panic(err)
@@ -81,13 +76,6 @@ type GenesisHeaderService struct {
 func (g *GenesisHeaderService) HeaderInfo(ctx context.Context) header.Info {
 	v := ctx.Value(genesisContextKey)
 	if v == nil {
-		return g.executionService.HeaderInfo(ctx)
-	}
-	genCtx, ok := v.(*genesisContext)
-	if !ok {
-		panic(fmt.Errorf("unexpected genesis context type: %T", v))
-	}
-	if genCtx.didRun {
 		return g.executionService.HeaderInfo(ctx)
 	}
 	return header.Info{}

@@ -471,9 +471,10 @@ func (c *Consensus[T]) FinalizeBlock(
 	}
 
 	// remove txs from the mempool
-	err = c.mempool.Remove(decodedTxs)
-	if err != nil {
-		return nil, fmt.Errorf("unable to remove txs: %w", err)
+	for _, tx := range decodedTxs {
+		if err = c.mempool.Remove(tx); err != nil {
+			return nil, fmt.Errorf("unable to remove txs: %w", err)
+		}
 	}
 
 	c.lastCommittedHeight.Store(req.Height)

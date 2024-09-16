@@ -43,6 +43,13 @@ var defaultSeeds = []int64{
 	977367484, 491163361, 424254581, 673398983,
 }
 
+// SimStateFactory is a factory type that provides a convenient way to create a simulation state for testing.
+// It contains the following fields:
+// - Codec: a codec used for serializing other objects
+// - AppStateFn: a function that returns the app state JSON bytes and the genesis accounts
+// - BlockedAddr: a map of blocked addresses
+// - AccountSource: an interface for retrieving accounts
+// - BalanceSource: an interface for retrieving balance-related information
 type SimStateFactory struct {
 	Codec         codec.Codec
 	AppStateFn    simtypes.AppStateFn
@@ -117,6 +124,12 @@ func RunWithSeeds[T SimulationApp](
 	}
 }
 
+// RunWithSeed is a helper function that runs a simulation test with the given parameters.
+// It iterates over the provided seeds and runs the simulation test for each seed in parallel.
+//
+// It sets up the environment, creates an instance of the simulation app,
+// calls the simulation.SimulateFromSeed function to run the simulation, and performs post-run actions for the seed.
+// The execution is deterministic and can be used for fuzz tests as well.
 func RunWithSeed[T SimulationApp](
 	tb testing.TB,
 	cfg simtypes.Config,

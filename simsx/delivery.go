@@ -43,7 +43,7 @@ type (
 // The function returns a simtypes.OperationMsg, which is a legacy representation of the result
 // of the delivery.
 func DeliverSimsMsg(
-	ctx sdk.Context,
+	ctx context.Context,
 	reporter SimulationReporter,
 	app AppEntrypoint,
 	r *rand.Rand,

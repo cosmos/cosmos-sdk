@@ -2,9 +2,6 @@ package cometbft
 
 import (
 	cmtcfg "github.com/cometbft/cometbft/config"
-	"github.com/spf13/viper"
-
-	serverv2 "cosmossdk.io/server/v2"
 )
 
 // Config is the configuration for the CometBFT application
@@ -52,15 +49,4 @@ func OverwriteDefaultAppTomlConfig(newCfg *AppTomlConfig) CfgOption {
 	return func(cfg *Config) {
 		cfg.AppTomlConfig = newCfg
 	}
-}
-
-func getConfigTomlFromViper(v *viper.Viper) *cmtcfg.Config {
-	rootDir := v.GetString(serverv2.FlagHome)
-
-	conf := cmtcfg.DefaultConfig()
-	if err := v.Unmarshal(conf); err != nil {
-		return cmtcfg.DefaultConfig().SetRoot(rootDir)
-	}
-
-	return conf.SetRoot(rootDir)
 }

@@ -7,6 +7,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cosmos/gogoproto/grpc"
 
+	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots"
@@ -26,9 +27,7 @@ type (
 	// literal defined on the server Context. Note, casting Get calls may not yield
 	// the expected types and could result in type assertion errors. It is recommend
 	// to either use the cast package or perform manual conversion for safety.
-	AppOptions interface {
-		Get(string) interface{}
-	}
+	AppOptions = server.DynamicConfig
 
 	// Application defines an application interface that wraps abci.Application.
 	// The interface defines the necessary contracts to be implemented in order

@@ -15,7 +15,7 @@ func TestModuleSchema_Validate(t *testing.T) {
 		{
 			name: "valid module schema",
 			types: []Type{
-				ObjectType{
+				StateObjectType{
 					Name: "object1",
 					KeyFields: []Field{
 						{
@@ -30,7 +30,7 @@ func TestModuleSchema_Validate(t *testing.T) {
 		{
 			name: "invalid object type",
 			types: []Type{
-				ObjectType{
+				StateObjectType{
 					Name: "",
 					KeyFields: []Field{
 						{
@@ -45,7 +45,7 @@ func TestModuleSchema_Validate(t *testing.T) {
 		{
 			name: "duplicate type name",
 			types: []Type{
-				ObjectType{
+				StateObjectType{
 					Name: "type1",
 					ValueFields: []Field{
 						{
@@ -85,13 +85,13 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 	tests := []struct {
 		name         string
 		moduleSchema ModuleSchema
-		objectUpdate ObjectUpdate
+		objectUpdate StateObjectUpdate
 		errContains  string
 	}{
 		{
 			name: "valid object update",
 			moduleSchema: requireModuleSchema(t,
-				ObjectType{
+				StateObjectType{
 					Name: "object1",
 					KeyFields: []Field{
 						{
@@ -101,7 +101,7 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 					},
 				},
 			),
-			objectUpdate: ObjectUpdate{
+			objectUpdate: StateObjectUpdate{
 				TypeName: "object1",
 				Key:      "abc",
 			},
@@ -110,7 +110,7 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 		{
 			name: "object type not found",
 			moduleSchema: requireModuleSchema(t,
-				ObjectType{
+				StateObjectType{
 					Name: "object1",
 					KeyFields: []Field{
 						{
@@ -120,7 +120,7 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 					},
 				},
 			),
-			objectUpdate: ObjectUpdate{
+			objectUpdate: StateObjectUpdate{
 				TypeName: "object2",
 				Key:      "abc",
 			},
@@ -128,7 +128,7 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 		},
 		{
 			name: "type name refers to an enum",
-			moduleSchema: requireModuleSchema(t, ObjectType{
+			moduleSchema: requireModuleSchema(t, StateObjectType{
 				Name: "obj1",
 				KeyFields: []Field{
 					{
@@ -143,7 +143,7 @@ func TestModuleSchema_ValidateObjectUpdate(t *testing.T) {
 					Values: []EnumValueDefinition{{Name: "a", Value: 1}, {Name: "b", Value: 2}},
 				},
 			),
-			objectUpdate: ObjectUpdate{
+			objectUpdate: StateObjectUpdate{
 				TypeName: "enum1",
 				Key:      "a",
 			},
@@ -177,7 +177,7 @@ func requireModuleSchema(t *testing.T, types ...Type) ModuleSchema {
 }
 
 func TestModuleSchema_LookupType(t *testing.T) {
-	moduleSchema := requireModuleSchema(t, ObjectType{
+	moduleSchema := requireModuleSchema(t, StateObjectType{
 		Name: "object1",
 		KeyFields: []Field{
 			{
@@ -187,7 +187,7 @@ func TestModuleSchema_LookupType(t *testing.T) {
 		},
 	})
 
-	objectType, ok := moduleSchema.LookupObjectType("object1")
+	objectType, ok := moduleSchema.LookupStateObjectType("object1")
 	if !ok {
 		t.Fatalf("expected to find object type \"object1\"")
 	}
@@ -200,7 +200,7 @@ func TestModuleSchema_LookupType(t *testing.T) {
 func exampleSchema(t *testing.T) ModuleSchema {
 	t.Helper()
 	return requireModuleSchema(t,
-		ObjectType{
+		StateObjectType{
 			Name: "object1",
 			KeyFields: []Field{
 				{
@@ -210,7 +210,7 @@ func exampleSchema(t *testing.T) ModuleSchema {
 				},
 			},
 		},
-		ObjectType{
+		StateObjectType{
 			Name: "object2",
 			KeyFields: []Field{
 				{
@@ -262,7 +262,7 @@ func TestModuleSchema_ObjectTypes(t *testing.T) {
 	moduleSchema := exampleSchema(t)
 
 	var typeNames []string
-	moduleSchema.ObjectTypes(func(typ ObjectType) bool {
+	moduleSchema.StateObjectTypes(func(typ StateObjectType) bool {
 		typeNames = append(typeNames, typ.Name)
 		return true
 	})
@@ -274,7 +274,7 @@ func TestModuleSchema_ObjectTypes(t *testing.T) {
 
 	typeNames = nil
 	// scan just the first type and return false
-	moduleSchema.ObjectTypes(func(typ ObjectType) bool {
+	moduleSchema.StateObjectTypes(func(typ StateObjectType) bool {
 		typeNames = append(typeNames, typ.Name)
 		return false
 	})

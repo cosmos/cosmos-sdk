@@ -3365,7 +3365,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 			s.setNextAccount()
 
-			s.groupKeeper.GetGroupSequence(s.sdkCtx)
+			s.groupKeeper.GetGroupSequence(s.ctx)
 			policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 			s.Require().NoError(err)
 

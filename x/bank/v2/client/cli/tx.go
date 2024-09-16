@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO: Use NewTxCmd for all x/bank/v2 transaction until AutoCLI is fixed
+// TODO: Use AutoCLI commands
 // https://github.com/cosmos/cosmos-sdk/issues/21682
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{

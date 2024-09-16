@@ -3,14 +3,14 @@ package mock
 import (
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 )
 
 func TestStore(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 
 	cms := NewCommitMultiStore()
 

@@ -169,7 +169,18 @@ func (c CLIWrapper) Run(args ...string) string {
 	return rsp
 }
 
+// RunAndWait runs a cli command and waits for the server result when the TX is executed
+// It returns the result of the transaction.
+func (c CLIWrapper) RunAndWait(args ...string) string {
+	rsp := c.Run(args...)
+	RequireTxSuccess(c.t, rsp)
+	txResult, found := c.AwaitTxCommitted(rsp)
+	require.True(c.t, found)
+	return txResult
+}
+
 // AwaitTxCommitted wait for tx committed on chain
+// returns the server execution result and true when found within 3 blocks.
 func (c CLIWrapper) AwaitTxCommitted(submitResp string, timeout ...time.Duration) (string, bool) {
 	c.t.Helper()
 	RequireTxSuccess(c.t, submitResp)

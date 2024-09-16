@@ -6,10 +6,9 @@ import (
 	"sort"
 	"sync"
 
-	dbm "github.com/cosmos/cosmos-db"
-
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/cachekv/internal"
+	dbm "cosmossdk.io/store/db"
 	"cosmossdk.io/store/internal/conv"
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/tracekv"

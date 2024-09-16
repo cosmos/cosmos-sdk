@@ -242,7 +242,7 @@ func (tm *objectIndexer) readCol(field schema.Field, value interface{}) (interfa
 	str := nullStr.String
 
 	switch field.Kind {
-	case schema.StringKind, schema.EnumKind, schema.IntegerStringKind, schema.DecimalStringKind:
+	case schema.StringKind, schema.EnumKind, schema.IntegerKind, schema.DecimalKind:
 		return str, nil
 	case schema.Uint8Kind:
 		value, err := strconv.ParseUint(str, 10, 8)

@@ -8,6 +8,7 @@ license.workspace = true
 [dependencies]
 interchain_core = { path = "../core" }
 interchain_schema = { path = "../schema" }
+simple_time = { path = "../util/simple_time" }
 
 [lints]
 workspace = true

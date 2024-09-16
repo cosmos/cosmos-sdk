@@ -1,33 +1,48 @@
+//! Handler traits for account and module handlers.
 use interchain_message_api::Address;
+use interchain_schema::StructCodec;
 use crate::resource::{InitializationError, Initializer, Resource};
 
+/// Handler trait for account and module handlers.
 pub trait Handler {
-    type Init;
+    /// The parameter used for initializing the handler.
+    type Init: StructCodec;
 }
 
-pub trait AccountHandler: AccountAPI + Handler {
-}
+/// Account handler trait.
+pub trait AccountHandler: AccountAPI + Handler {}
 
+/// Account API trait.
 pub trait AccountAPI {
+    /// Account factory type.
     type Factory: AccountFactory;
 }
 
+/// Account factory trait.
 pub trait AccountFactory: Resource {
-    type Ref;
-    fn new_client(address: &Address) -> Self::Ref;
+    /// Account client type.
+    type Client;
+
+    /// Create a new account client with the given address.
+    fn new_client(address: &Address) -> Self::Client;
 }
 
-pub trait AccountRef {
+/// Account client trait.
+pub trait AccountClient {
+    /// Get the address of the account.
     fn address(&self) -> &Address;
 }
 
-pub trait ModuleHandler: ModuleAPI + Handler {
-}
+/// Module handler trait.
+pub trait ModuleHandler: ModuleAPI + Handler {}
 
+/// Module API trait.
 pub trait ModuleAPI {
-    type Ref: Resource;
+    /// Module client type.
+    type Client: Resource;
 }
 
+/// Mixes in an account handler into another account handler.
 pub struct AccountMixin<H: AccountHandler>(H);
 
 unsafe impl<H: AccountHandler> Resource for AccountMixin<H> {
@@ -44,6 +59,7 @@ impl<H: AccountHandler> core::ops::Deref for AccountMixin<H> {
     }
 }
 
+/// Mixes in a module handler into another module handler.
 pub struct ModuleMixin<H: ModuleHandler>(H);
 
 unsafe impl<H: ModuleHandler> Resource for ModuleMixin<H> {

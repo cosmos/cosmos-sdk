@@ -1,25 +1,38 @@
+//! Resource module.
+
+/// A resource is anything that an account or module can use to store its own
+/// state or interact with other accounts and modules.
 pub unsafe trait Resource: Sized {
+    /// Creates a new resource.
+    /// This should only be called in generated code.
+    /// Do not call this function directly.
     unsafe fn new(initializer: &mut Initializer) -> Result<Self, InitializationError>;
 }
 
+/// A resource initializer.
 pub struct Initializer {}
 
+/// An error that occurs during resource initialization.
 pub enum InitializationError {}
 
 impl Initializer {
-    pub fn new() -> Self {
+    /// Creates a new resource initializer.
+    pub unsafe fn new() -> Self {
         Self {}
     }
 
-    pub fn state_prefix(&self) -> &[u8] {
+    /// The current state prefix.
+    pub unsafe fn state_prefix(&self) -> &[u8] {
         todo!()
     }
 
-    pub fn auto_state_prefix(&mut self) -> Result<&[u8], InitializationError> {
+    /// Automatically generates a new state prefix for a state object.
+    pub unsafe fn auto_state_prefix(&mut self) -> Result<&[u8], InitializationError> {
         todo!()
     }
 
-    pub fn reserve_state_prefix(&mut self, prefix: &[u8]) -> Result<&[u8], InitializationError> {
+    /// Reserves a new state prefix for a state object.
+    pub unsafe fn reserve_state_prefix(&mut self, prefix: &[u8]) -> Result<&[u8], InitializationError> {
         todo!()
     }
 }

@@ -40,7 +40,7 @@ func (m *moduleIndexer) initializeSchema(ctx context.Context, conn dbConn) error
 	}
 
 	// create tables for all object types
-	m.schema.ObjectTypes(func(typ schema.ObjectType) bool {
+	m.schema.StateObjectTypes(func(typ schema.StateObjectType) bool {
 		tm := newObjectIndexer(m.moduleName, typ, m.options)
 		m.tables[typ.Name] = tm
 		err = tm.createTable(ctx, conn)

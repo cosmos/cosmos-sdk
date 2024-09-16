@@ -3,14 +3,9 @@ package types
 import (
 	coretransaction "cosmossdk.io/core/transaction"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	errorsmod "cosmossdk.io/errors"
-)
-
-// bank message types
-const (
-	TypeMsgSend           = "send"
 )
 
 var (
@@ -41,10 +36,4 @@ func (msg MsgSend) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// GetSigners Implements Msg.
-func (msg MsgSend) GetSigners() []sdk.AccAddress {
-	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
-	return []sdk.AccAddress{fromAddress}
 }

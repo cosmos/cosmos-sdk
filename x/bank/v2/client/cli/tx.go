@@ -13,13 +13,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var FlagSplit = "split"
-
-// NewTxCmd returns a root CLI command handler for all x/bank transaction commands.
+// TODO: Use NewTxCmd for all x/bank/v2 transaction until AutoCLI is fixed
+// https://github.com/cosmos/cosmos-sdk/issues/21682
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Bank transaction subcommands",
+		Short:                      "Bank v2 transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,

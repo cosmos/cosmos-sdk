@@ -463,6 +463,15 @@ func (m *MM[T]) RegisterServices(app *App[T]) error {
 			if err := registerServices(services, app, protoregistry.GlobalFiles); err != nil {
 				return err
 			}
+		} else {
+			// If module not implement RegisterServices, register msg & query handler.
+			if module, ok := module.(appmodulev2.HasMsgHandlers); ok {
+				module.RegisterMsgHandlers(app.msgRouterBuilder)
+			}
+	
+			if module, ok := module.(appmodulev2.HasQueryHandlers); ok {
+				module.RegisterQueryHandlers(app.queryRouterBuilder)
+			}
 		}
 
 		// register migrations
@@ -479,14 +488,6 @@ func (m *MM[T]) RegisterServices(app *App[T]) error {
 
 		if module, ok := module.(appmodulev2.HasPostMsgHandlers); ok {
 			module.RegisterPostMsgHandlers(app.msgRouterBuilder)
-		}
-
-		if module, ok := module.(appmodulev2.HasMsgHandlers); ok {
-			module.RegisterMsgHandlers(app.msgRouterBuilder)
-		}
-
-		if module, ok := module.(appmodulev2.HasQueryHandlers); ok {
-			module.RegisterQueryHandlers(app.queryRouterBuilder)
 		}
 	}
 

@@ -28,9 +28,6 @@ message MsgUpdateParamsResponse {}
 
 // MsgSend represents a message to send coins from one account to another.
 message MsgSend {
-  option (cosmos.msg.v1.signer) = "from_address";
-  option (amino.name)           = "cosmos-sdk/MsgSend";
-
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -43,3 +40,6 @@ message MsgSend {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
+
+// MsgSendResponse defines the response structure for executing a MsgSend message.
+message MsgSendResponse {}

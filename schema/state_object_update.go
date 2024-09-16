@@ -2,8 +2,8 @@ package schema
 
 import "sort"
 
-// ObjectUpdate represents an update operation on an object in a module's state.
-type ObjectUpdate struct {
+// StateObjectUpdate represents an update operation on an object in a module's state.
+type StateObjectUpdate struct {
 	// TypeName is the name of the object type in the module's schema.
 	TypeName string
 
@@ -19,7 +19,7 @@ type ObjectUpdate struct {
 	Key interface{}
 
 	// Value returns the non-primary key fields of the object and can either conform to the same constraints
-	// as ObjectUpdate.Key or it may be and instance of ValueUpdates. ValueUpdates can be used as a performance
+	// as StateObjectUpdate.Key or it may be and instance of ValueUpdates. ValueUpdates can be used as a performance
 	// optimization to avoid copying the values of the object into the update and/or to omit unchanged fields.
 	// If this is a delete operation, then this value is ignored and can be nil.
 	Value interface{}

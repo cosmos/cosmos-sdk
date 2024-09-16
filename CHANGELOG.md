@@ -42,6 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (cli) [#20779](https://github.com/cosmos/cosmos-sdk/pull/20779) Added `module-hash-by-height` command to query and retrieve module hashes at a specified blockchain height, enhancing debugging capabilities.
 * (cli) [#21372](https://github.com/cosmos/cosmos-sdk/pull/21372) Added a `bulk-add-genesis-account` genesis command to add many genesis accounts at once.
+* (types/collections) [#21724](https://github.com/cosmos/cosmos-sdk/pull/21724) Added `LegacyDec` collection value.
 
 ### Improvements
 

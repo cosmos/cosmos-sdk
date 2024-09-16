@@ -6,6 +6,8 @@ import (
 	"slices"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"google.golang.org/grpc"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
@@ -309,6 +311,8 @@ type hasServicesV1 interface {
 	RegisterServices(grpc.ServiceRegistrar) error
 }
 
-func (a *App) ValidatorKeyPrvoder() baseapp.KeyGenF {
-	return a.ValidatorKeyProvider()
+func (a *App) ValidatorKeyProvider() baseapp.KeyGenF {
+	return func() (cmtcrypto.PrivKey, error) {
+		return cmted25519.GenPrivKey(), nil
+	}
 }

@@ -7,11 +7,6 @@ import (
 	"io"
 	"math"
 
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	cmtBLS12381 "github.com/cometbft/cometbft/crypto/bls12381"
-	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
-	cmtsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
-
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/metrics"
@@ -410,37 +405,4 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 // SetGRPCQueryRouter sets the GRPCQueryRouter of the BaseApp.
 func (app *BaseApp) SetGRPCQueryRouter(grpcQueryRouter *GRPCQueryRouter) {
 	app.grpcQueryRouter = grpcQueryRouter
-}
-
-// SetPrivValidatorKeyGen sets the function that generates the private validator key.
-// Only comet keys are supported: Ed25519, Secp256k1, BLS12-381.
-func (app *BaseApp) SetPrivValidatorKeyGen(keyGenF KeyGenF) {
-	if app.sealed {
-		panic("SetPrivValidatorProvider() on sealed BaseApp")
-	}
-	key, err := keyGenF()
-	if err != nil {
-		panic(err)
-	}
-	switch key.(type) {
-	case cmted25519.PrivKey:
-		app.validatorKeyProvider = func() (cmtcrypto.PrivKey, error) {
-			return key, nil
-		}
-	case cmtsecp256k1.PrivKey:
-		app.validatorKeyProvider = func() (cmtcrypto.PrivKey, error) {
-			return key, nil
-		}
-	case cmtBLS12381.PrivKey:
-		app.validatorKeyProvider = func() (cmtcrypto.PrivKey, error) {
-			return key, nil
-		}
-	default:
-		panic(fmt.Errorf("unsupported priv validator key type %T", key))
-	}
-	app.validatorKeyProvider = keyGenF
-}
-
-func (app *BaseApp) ValidatorKeyProvider() KeyGenF {
-	return app.validatorKeyProvider
 }

@@ -4,8 +4,11 @@ import (
 	"context"
 
 	"cosmossdk.io/core/transaction"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var _ Mempool[sdk.Tx] = (*NoOpMempool[sdk.Tx])(nil) // verify interface at compile time
 var _ Mempool[transaction.Tx] = (*NoOpMempool[transaction.Tx])(nil)
 
 // NoOpMempool defines a no-op mempool. Transactions are completely discarded and

@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -18,7 +19,7 @@ func (tm *objectIndexer) bindKeyParams(key interface{}) ([]interface{}, []string
 	} else {
 		key, ok := key.([]interface{})
 		if !ok {
-			return nil, nil, fmt.Errorf("expected key to be a slice")
+			return nil, nil, errors.New("expected key to be a slice")
 		}
 
 		return tm.bindParams(tm.typ.KeyFields, key)
@@ -55,7 +56,7 @@ func (tm *objectIndexer) bindValueParams(value interface{}) (params []interface{
 	} else {
 		values, ok := value.([]interface{})
 		if !ok {
-			return nil, nil, fmt.Errorf("expected values to be a slice")
+			return nil, nil, errors.New("expected values to be a slice")
 		}
 
 		return tm.bindParams(tm.typ.ValueFields, values)

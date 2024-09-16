@@ -57,13 +57,13 @@ func (s ModuleSchema) Validate() error {
 }
 
 // ValidateObjectUpdate validates that the update conforms to the module schema.
-func (s ModuleSchema) ValidateObjectUpdate(update ObjectUpdate) error {
+func (s ModuleSchema) ValidateObjectUpdate(update StateObjectUpdate) error {
 	typ, ok := s.types[update.TypeName]
 	if !ok {
 		return fmt.Errorf("object type %q not found in module schema", update.TypeName)
 	}
 
-	objTyp, ok := typ.(ObjectType)
+	objTyp, ok := typ.(StateObjectType)
 	if !ok {
 		return fmt.Errorf("type %q is not an object type", update.TypeName)
 	}
@@ -77,7 +77,33 @@ func (s ModuleSchema) LookupType(name string) (Type, bool) {
 	return typ, ok
 }
 
-// Types calls the provided function for each type in the module schema and stops if the function returns false.
+// LookupEnumType is a convenience method that looks up an EnumType by name.
+func (s ModuleSchema) LookupEnumType(name string) (t EnumType, found bool) {
+	typ, found := s.LookupType(name)
+	if !found {
+		return EnumType{}, false
+	}
+	t, ok := typ.(EnumType)
+	if !ok {
+		return EnumType{}, false
+	}
+	return t, true
+}
+
+// LookupObjectType is a convenience method that looks up an ObjectType by name.
+func (s ModuleSchema) LookupStateObjectType(name string) (t StateObjectType, found bool) {
+	typ, found := s.LookupType(name)
+	if !found {
+		return StateObjectType{}, false
+	}
+	t, ok := typ.(StateObjectType)
+	if !ok {
+		return StateObjectType{}, false
+	}
+	return t, true
+}
+
+// AllTypes calls the provided function for each type in the module schema and stops if the function returns false.
 // The types are iterated over in sorted order by name. This function is compatible with go 1.23 iterators.
 func (s ModuleSchema) AllTypes(f func(Type) bool) {
 	keys := make([]string, 0, len(s.types))
@@ -93,9 +119,9 @@ func (s ModuleSchema) AllTypes(f func(Type) bool) {
 }
 
 // ObjectTypes iterators over all the object types in the schema in alphabetical order.
-func (s ModuleSchema) ObjectTypes(f func(ObjectType) bool) {
+func (s ModuleSchema) StateObjectTypes(f func(StateObjectType) bool) {
 	s.AllTypes(func(t Type) bool {
-		objTyp, ok := t.(ObjectType)
+		objTyp, ok := t.(StateObjectType)
 		if ok {
 			return f(objTyp)
 		}
@@ -115,8 +141,8 @@ func (s ModuleSchema) EnumTypes(f func(EnumType) bool) {
 }
 
 type moduleSchemaJson struct {
-	ObjectTypes []ObjectType `json:"object_types"`
-	EnumTypes   []EnumType   `json:"enum_types"`
+	ObjectTypes []StateObjectType `json:"object_types"`
+	EnumTypes   []EnumType        `json:"enum_types"`
 }
 
 // MarshalJSON implements the json.Marshaler interface for ModuleSchema.
@@ -125,7 +151,7 @@ type moduleSchemaJson struct {
 func (s ModuleSchema) MarshalJSON() ([]byte, error) {
 	asJson := moduleSchemaJson{}
 
-	s.ObjectTypes(func(objType ObjectType) bool {
+	s.StateObjectTypes(func(objType StateObjectType) bool {
 		asJson.ObjectTypes = append(asJson.ObjectTypes, objType)
 		return true
 	})

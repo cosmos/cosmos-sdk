@@ -12,7 +12,6 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -47,10 +46,10 @@ func New[T transaction.Tx](cfgOptions ...CfgOption) *Server[T] {
 
 // Init returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server.
-func (s *Server[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
-	cfg := s.Config().(*Config)
-	if v != nil {
-		if err := serverv2.UnmarshalSubConfig(v, s.Name(), &cfg); err != nil {
+func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
+	serverCfg := s.Config().(*Config)
+	if len(cfg) > 0 {
+		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
@@ -58,8 +57,8 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logge
 
 	grpcSrv := grpc.NewServer(
 		grpc.ForceServerCodec(newProtoCodec(appI.InterfaceRegistry()).GRPCCodec()),
-		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
-		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
+		grpc.MaxSendMsgSize(serverCfg.MaxSendMsgSize),
+		grpc.MaxRecvMsgSize(serverCfg.MaxRecvMsgSize),
 		grpc.UnknownServiceHandler(
 			makeUnknownServiceHandler(methodsMap, appI.GetAppManager()),
 		),
@@ -69,7 +68,7 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logge
 	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(methodsMap)), logger.With("sub-module", "grpc-reflection"))
 
 	s.grpcSrv = grpcSrv
-	s.config = cfg
+	s.config = serverCfg
 	s.logger = logger.With(log.ModuleKey, s.Name())
 
 	return nil

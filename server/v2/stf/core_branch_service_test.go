@@ -5,11 +5,12 @@ import (
 	"errors"
 	"testing"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/mock"
-	gogotypes "github.com/cosmos/gogoproto/types"
 )
 
 func TestBranchService(t *testing.T) {

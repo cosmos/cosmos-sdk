@@ -687,7 +687,9 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		QueryGasLimit:      gasLimit,
 		SimulationGasLimit: gasLimit,
 		InitGenesis: func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {
-			return nil, nil
+			_, st, err := mockStore.StateLatest()
+			require.NoError(t, err)
+			return branch.DefaultNewWriterMap(st), nil
 		},
 	}
 

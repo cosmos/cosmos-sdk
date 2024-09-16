@@ -37,7 +37,7 @@ import (
 )
 
 var testMbm = module.NewManager(
-	staking.NewAppModule(makeCodec(), nil, nil, nil),
+	staking.NewAppModule(makeCodec(), nil),
 	genutil.NewAppModule(makeCodec(), nil, nil, nil, nil, nil),
 )
 

@@ -36,8 +36,8 @@ func TestObjectKeyString(t *testing.T) {
 				KeyFields: []schema.Field{
 					{Name: "Bz", Kind: schema.BytesKind},
 					{Name: "Addr", Kind: schema.AddressKind},
-					{Name: "Dec", Kind: schema.DecimalStringKind},
-					{Name: "Int", Kind: schema.IntegerStringKind},
+					{Name: "Dec", Kind: schema.DecimalKind},
+					{Name: "Int", Kind: schema.IntegerKind},
 				},
 			},
 			key: []interface{}{

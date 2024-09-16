@@ -44,7 +44,7 @@ To be able to simulate nested messages within a transaction, message types conta
 the nested messages. By implementing this interface, the BaseApp can simulate these nested messages during
 transaction simulation. 
 
-## [v0.52.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-alpha.0)
+## [v0.52.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-beta.1)
 
 Documentation to migrate an application from v0.50.x to server/v2 is available elsewhere.
 It is additional to the changes described here.
@@ -53,7 +53,7 @@ It is additional to the changes described here.
 
 In this section we describe the changes made in Cosmos SDK' SimApp.
 **These changes are directly applicable to your application wiring.**
-Please read this section first, but for an exhaustive list of changes, refer to the [CHANGELOG](./simapp/CHANGELOG.md).
+Please read this section first, but for an exhaustive list of changes, refer to the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/CHANGELOG.md).
 
 #### Client (`root.go`)
 
@@ -195,7 +195,9 @@ Grpc-web embedded client has been removed from the server. If you would like to 
 
    This indicates that Envoy has started and is ready to proxy requests.
 
+	<!-- markdown-link-check-disable -->
 6. Update your client applications to connect to Envoy (http://localhost:8080 by default).
+	<!-- markdown-link-check-enable -->
 
 </details>
 

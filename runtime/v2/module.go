@@ -177,8 +177,7 @@ func ProvideEnvironment[T transaction.Tx](
 	key depinject.ModuleKey,
 	appBuilder *AppBuilder[T],
 	kvFactory store.KVStoreServiceFactory,
-	memFactory store.MemoryStoreServiceFactory,
-	headerFactory header.HeaderServiceFactory,
+	headerService header.Service,
 ) (
 	appmodulev2.Environment,
 	store.KVStoreService,
@@ -204,7 +203,7 @@ func ProvideEnvironment[T transaction.Tx](
 
 		memStoreKey := fmt.Sprintf("memory:%s", key.Name())
 		registerStoreKey(appBuilder, memStoreKey)
-		memKvService = memFactory([]byte(memStoreKey))
+		memKvService = stf.NewMemoryStoreService([]byte(memStoreKey))
 	}
 
 	env := appmodulev2.Environment{
@@ -212,7 +211,7 @@ func ProvideEnvironment[T transaction.Tx](
 		BranchService:      stf.BranchService{},
 		EventService:       stf.NewEventService(),
 		GasService:         stf.NewGasMeterService(),
-		HeaderService:      headerFactory(),
+		HeaderService:      headerService,
 		QueryRouterService: stf.NewQueryRouterService(),
 		MsgRouterService:   stf.NewMsgRouterService([]byte(key.Name())),
 		TransactionService: services.NewContextAwareTransactionService(),
@@ -245,16 +244,12 @@ func DefaultServiceBindings() depinject.Config {
 				stf.NewKVStoreService(actor),
 			)
 		}
-		memStoreServiceFactory store.MemoryStoreServiceFactory = stf.NewMemoryStoreService
-		headerServiceFactory   header.HeaderServiceFactory     = func() header.Service {
-			return services.NewGenesisHeaderService(stf.HeaderService{})
-		}
-		cometService comet.Service = &services.ContextAwareCometInfoService{}
+		headerService header.Service = services.NewGenesisHeaderService(stf.HeaderService{})
+		cometService  comet.Service  = &services.ContextAwareCometInfoService{}
 	)
 	return depinject.Supply(
 		kvServiceFactory,
-		memStoreServiceFactory,
+		headerService,
 		cometService,
-		headerServiceFactory,
 	)
 }

@@ -46,13 +46,7 @@ func (a *AppBuilder[T]) RegisterModules(modules map[string]appmodulev2.AppModule
 		// if a (legacy) module implements the HasName interface, check that the name matches
 		if mod, ok := appModule.(interface{ Name() string }); ok {
 			if name != mod.Name() {
-				a.app.logger.Warn(
-					fmt.Sprintf(
-						"module name %q does not match name returned by HasName: %q",
-						name,
-						mod.Name(),
-					),
-				)
+				a.app.logger.Warn(fmt.Sprintf("module name %q does not match name returned by HasName: %q", name, mod.Name()))
 			}
 		}
 
@@ -235,9 +229,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 type AppBuilderOption[T transaction.Tx] func(*AppBuilder[T])
 
 // AppBuilderWithBranch sets a custom branch implementation for the app.
-func AppBuilderWithBranch[T transaction.Tx](
-	branch func(state store.ReaderMap) store.WriterMap,
-) AppBuilderOption[T] {
+func AppBuilderWithBranch[T transaction.Tx](branch func(state store.ReaderMap) store.WriterMap) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.branch = branch
 	}
@@ -245,9 +237,7 @@ func AppBuilderWithBranch[T transaction.Tx](
 
 // AppBuilderWithTxValidator sets the tx validator for the app.
 // It overrides all default tx validators defined by modules.
-func AppBuilderWithTxValidator[T transaction.Tx](
-	txValidators func(ctx context.Context, tx T) error,
-) AppBuilderOption[T] {
+func AppBuilderWithTxValidator[T transaction.Tx](txValidators func(ctx context.Context, tx T) error) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.txValidator = txValidators
 	}
@@ -255,9 +245,7 @@ func AppBuilderWithTxValidator[T transaction.Tx](
 
 // AppBuilderWithPostTxExec sets logic that will be executed after each transaction.
 // When not provided, a no-op function will be used.
-func AppBuilderWithPostTxExec[T transaction.Tx](
-	postTxExec func(ctx context.Context, tx T, success bool) error,
-) AppBuilderOption[T] {
+func AppBuilderWithPostTxExec[T transaction.Tx](postTxExec func(ctx context.Context, tx T, success bool) error) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.postTxExec = postTxExec
 	}

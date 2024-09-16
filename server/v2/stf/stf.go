@@ -202,14 +202,7 @@ func (s STF[T]) deliverTx(
 		}
 	}
 
-	execResp, execGas, execEvents, err := s.execTx(
-		ctx,
-		state,
-		gasLimit-validateGas,
-		tx,
-		execMode,
-		hi,
-	)
+	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
 	return server.TxResult{
 		Events:    append(validationEvents, execEvents...),
 		GasUsed:   execGas + validateGas,
@@ -257,14 +250,7 @@ func (s STF[T]) execTx(
 ) ([]transaction.Msg, uint64, []event.Event, error) {
 	execState := s.branchFn(state)
 
-	msgsResp, gasUsed, runTxMsgsEvents, txErr := s.runTxMsgs(
-		ctx,
-		execState,
-		gasLimit,
-		tx,
-		execMode,
-		hi,
-	)
+	msgsResp, gasUsed, runTxMsgsEvents, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode, hi)
 	if txErr != nil {
 		// in case of error during message execution, we do not apply the exec state.
 		// instead we run the post exec handler in a new branchFn from the initial state.
@@ -444,13 +430,7 @@ func (s STF[T]) ValidateTx(
 	tx T,
 ) server.TxResult {
 	validationState := s.branchFn(state)
-	gasUsed, events, err := s.validateTx(
-		ctx,
-		validationState,
-		gasLimit,
-		tx,
-		transaction.ExecModeCheck,
-	)
+	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx, transaction.ExecModeCheck)
 	return server.TxResult{
 		Events:  events,
 		GasUsed: gasUsed,

@@ -135,8 +135,11 @@ func RunWithSeeds[T SimulationApp](
 			require.NoError(t, err)
 			err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
 			require.NoError(t, err)
-			if tCfg.Commit && tCfg.DBBackend == "goleveldb" {
-				simtestutil.PrintStats(testInstance.DB.(*dbm.GoLevelDB))
+			if tCfg.Commit {
+				db, ok := testInstance.DB.(simtestutil.DBStatsInterface)
+				if ok {
+					simtestutil.PrintStats(db)
+				}
 			}
 			for _, step := range postRunActions {
 				step(t, testInstance)
@@ -230,6 +233,15 @@ type AppOptionsFn func(string) any
 
 func (f AppOptionsFn) Get(k string) any {
 	return f(k)
+}
+
+func (f AppOptionsFn) GetString(k string) string {
+	str, ok := f(k).(string)
+	if !ok {
+		return ""
+	}
+
+	return str
 }
 
 // FauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of

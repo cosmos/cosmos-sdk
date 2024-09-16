@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/listenkv"
@@ -38,7 +38,7 @@ func newListenKVStore(listener *types.MemoryListener) *listenkv.Store {
 }
 
 func newEmptyListenKVStore(listener *types.MemoryListener) *listenkv.Store {
-	memDB := dbadapter.Store{DB: dbm.NewMemDB()}
+	memDB := dbadapter.Store{DB: coretesting.NewMemDB()}
 
 	return listenkv.NewStore(memDB, testStoreKey, listener)
 }
@@ -265,7 +265,7 @@ func TestListenKVStorePrefix(t *testing.T) {
 }
 
 func TestListenKVStoreGetStoreType(t *testing.T) {
-	memDB := dbadapter.Store{DB: dbm.NewMemDB()}
+	memDB := dbadapter.Store{DB: coretesting.NewMemDB()}
 	store := newEmptyListenKVStore(nil)
 	require.Equal(t, memDB.GetStoreType(), store.GetStoreType())
 }

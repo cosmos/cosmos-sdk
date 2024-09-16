@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	consensustypes "cosmossdk.io/x/consensus/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -29,5 +28,5 @@ type FeegrantKeeper interface {
 }
 
 type ConsensusKeeper interface {
-	Params(context.Context, *consensustypes.QueryParamsRequest) (*consensustypes.QueryParamsResponse, error)
+	BlockParams(context.Context) (uint64, uint64, error)
 }

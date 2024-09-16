@@ -127,4 +127,4 @@ The module is now ready to be used with `depinject` by a chain developer.
 
 ## Integrate in an application
 
-The App Wiring is done in `app_config.go` / `app.yaml` and `app_di.go` and is explained in detail in the [overview of `app_di.go`](https://docs.cosmos.network/main/build/building-apps/app-go-v2).
+The App Wiring is done in `app_config.go` / `app.yaml` and `app_di.go` and is explained in detail in the [overview of `app_di.go`](https://docs.cosmos.network/main/build/building-apps/app-go-di).

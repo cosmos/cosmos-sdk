@@ -6,7 +6,6 @@ import (
 	"slices"
 
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -98,7 +97,6 @@ func init() {
 			ProvideEnvironment[transaction.Tx],
 			ProvideModuleManager[transaction.Tx],
 			ProvideCometService,
-			ProvideAppVersionModifier[transaction.Tx],
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -132,6 +130,7 @@ func ProvideAppBuilder[T transaction.Tx](
 		msgRouterBuilder:        msgRouterBuilder,
 		queryRouterBuilder:      stf.NewMsgRouterBuilder(), // TODO dedicated query router
 		GRPCMethodsToMessageMap: map[string]func() proto.Message{},
+		storeLoader:             DefaultStoreLoader,
 	}
 	appBuilder := &AppBuilder[T]{app: app}
 
@@ -147,7 +146,7 @@ type AppInputs struct {
 	InterfaceRegistrar registry.InterfaceRegistrar
 	LegacyAmino        registry.AminoRegistrar
 	Logger             log.Logger
-	Viper              *viper.Viper `optional:"true"` // can be nil in client wiring
+	DynamicConfig      server.DynamicConfig `optional:"true"` // can be nil in client wiring
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -158,8 +157,8 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 
-	if inputs.Viper != nil {
-		inputs.AppBuilder.viper = inputs.Viper
+	if inputs.DynamicConfig != nil {
+		inputs.AppBuilder.config = inputs.DynamicConfig
 	}
 }
 
@@ -237,10 +236,4 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 
 func ProvideCometService() comet.Service {
 	return &services.ContextAwareCometInfoService{}
-}
-
-// ProvideAppVersionModifier returns nil, `app.VersionModifier` is a feature of BaseApp and neither used nor required for runtime/v2.
-// nil is acceptable, see: https://github.com/cosmos/cosmos-sdk/blob/0a6ee406a02477ae8ccbfcbe1b51fc3930087f4c/x/upgrade/keeper/keeper.go#L438
-func ProvideAppVersionModifier[T transaction.Tx](app *AppBuilder[T]) server.VersionModifier {
-	return nil
 }

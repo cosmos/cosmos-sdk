@@ -65,56 +65,58 @@ func (t Tx) Bytes() []byte {
 	return tx
 }
 
-func (t *Tx) Decode(b []byte) {
+func (t *Tx) Decode(b []byte) error {
 	rawTx := new(encodedTx)
 	err := json.Unmarshal(b, rawTx)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	msgName, err := gogoproto.AnyMessageName(rawTx.Msg)
 	msgType := proto.MessageType(msgName).Elem()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	msg := reflect.New(msgType).Interface().(proto.Message)
 	if err := gogoproto.UnmarshalAny(rawTx.Msg, msg); err != nil {
-		panic(err)
+		return err
 	}
 	t.Msg = msg
 	t.Sender = rawTx.Sender
 	t.GasLimit = rawTx.GasLimit
+	return nil
 }
 
-func (t *Tx) DecodeJSON(b []byte) {
+func (t *Tx) DecodeJSON(b []byte) error {
 	rawTx := new(encodedTx)
 	err := json.Unmarshal(b, rawTx)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	msgName, err := gogoproto.AnyMessageName(rawTx.Msg)
 	msgType := proto.MessageType(msgName).Elem()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	msg := reflect.New(msgType).Interface().(transaction.Msg)
 	if err := gogoproto.UnmarshalAny(rawTx.Msg, msg); err != nil {
-		panic(err)
+		return err
 	}
 	t.Msg = msg
 	t.Sender = rawTx.Sender
 	t.GasLimit = rawTx.GasLimit
+	return nil
 }
 
 type TxCodec struct{}
 
 func (TxCodec) Decode(bytes []byte) (Tx, error) {
 	t := new(Tx)
-	t.Decode(bytes)
-	return *t, nil
+	err := t.Decode(bytes)
+	return *t, err
 }
 
 func (TxCodec) DecodeJSON(bytes []byte) (Tx, error) {
 	t := new(Tx)
-	t.DecodeJSON(bytes)
-	return *t, nil
+	err := t.DecodeJSON(bytes)
+	return *t, err
 }

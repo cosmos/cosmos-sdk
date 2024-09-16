@@ -8,11 +8,11 @@ import (
 	"sort"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
 
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/internal/kv"
@@ -59,7 +59,7 @@ func newAlohaTree(t *testing.T, db corestore.KVStoreWithBatch) (*iavl.MutableTre
 }
 
 func TestLoadStore(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
 	store := UnsafeNewStore(tree)
 
@@ -121,7 +121,7 @@ func TestLoadStore(t *testing.T) {
 }
 
 func TestGetImmutable(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
 	store := UnsafeNewStore(tree)
 
@@ -154,7 +154,7 @@ func TestGetImmutable(t *testing.T) {
 }
 
 func TestTestGetImmutableIterator(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	tree, cID := newAlohaTree(t, db)
 	store := UnsafeNewStore(tree)
 
@@ -177,7 +177,7 @@ func TestTestGetImmutableIterator(t *testing.T) {
 }
 
 func TestIAVLStoreGetSetHasDelete(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
 	iavlStore := UnsafeNewStore(tree)
 
@@ -202,7 +202,7 @@ func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 }
 
 func TestIAVLStoreNoNilSet(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
 	iavlStore := UnsafeNewStore(tree)
 
@@ -213,7 +213,7 @@ func TestIAVLStoreNoNilSet(t *testing.T) {
 }
 
 func TestIAVLIterator(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
 	iavlStore := UnsafeNewStore(tree)
 	iter := iavlStore.Iterator([]byte("aloha"), []byte("hellz"))
@@ -286,7 +286,7 @@ func TestIAVLIterator(t *testing.T) {
 }
 
 func TestIAVLReverseIterator(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 
 	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
 
@@ -320,7 +320,7 @@ func TestIAVLReverseIterator(t *testing.T) {
 }
 
 func TestIAVLPrefixIterator(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
 
 	iavlStore := UnsafeNewStore(tree)
@@ -383,7 +383,7 @@ func TestIAVLPrefixIterator(t *testing.T) {
 }
 
 func TestIAVLReversePrefixIterator(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
 
 	iavlStore := UnsafeNewStore(tree)
@@ -450,7 +450,7 @@ func nextVersion(iavl *Store) {
 }
 
 func TestIAVLNoPrune(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
 
 	iavlStore := UnsafeNewStore(tree)
@@ -468,7 +468,7 @@ func TestIAVLNoPrune(t *testing.T) {
 }
 
 func TestIAVLStoreQuery(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
 
 	iavlStore := UnsafeNewStore(tree)
@@ -580,7 +580,7 @@ func TestIAVLStoreQuery(t *testing.T) {
 
 func BenchmarkIAVLIteratorNext(b *testing.B) {
 	b.ReportAllocs()
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	treeSize := 1000
 	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
 
@@ -610,12 +610,12 @@ func BenchmarkIAVLIteratorNext(b *testing.B) {
 func TestSetInitialVersion(t *testing.T) {
 	testCases := []struct {
 		name     string
-		storeFn  func(db *dbm.MemDB) *Store
+		storeFn  func(db corestore.KVStoreWithBatch) *Store
 		expPanic bool
 	}{
 		{
 			"works with a mutable tree",
-			func(db *dbm.MemDB) *Store {
+			func(db corestore.KVStoreWithBatch) *Store {
 				tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
 				store := UnsafeNewStore(tree)
 
@@ -624,7 +624,7 @@ func TestSetInitialVersion(t *testing.T) {
 		},
 		{
 			"throws error on immutable tree",
-			func(db *dbm.MemDB) *Store {
+			func(db corestore.KVStoreWithBatch) *Store {
 				tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
 				store := UnsafeNewStore(tree)
 				_, version, err := store.tree.SaveVersion()
@@ -642,7 +642,7 @@ func TestSetInitialVersion(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			db := dbm.NewMemDB()
+			db := coretesting.NewMemDB()
 			store := tc.storeFn(db)
 
 			if tc.expPanic {
@@ -657,7 +657,7 @@ func TestSetInitialVersion(t *testing.T) {
 }
 
 func TestCacheWraps(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
 	store := UnsafeNewStore(tree)
 
@@ -669,7 +669,7 @@ func TestCacheWraps(t *testing.T) {
 }
 
 func TestChangeSets(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	treeSize := 1000
 	treeVersion := int64(10)
 	targetVersion := int64(6)

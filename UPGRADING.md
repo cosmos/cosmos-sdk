@@ -277,6 +277,20 @@ If you are still using the legacy wiring, you must enable unordered transactions
 	}
 	```
 
+* Create or update the App's `Preblocker()` method to call the unordered tx
+  manager's `OnNewBlock()` method.
+
+	```go
+	...
+	app.SetPreblocker(app.PreBlocker)
+	...
+
+	func (app *SimApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+		app.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
+		return app.ModuleManager.PreBlock(ctx, req)
+	}
+	```
+
 * Create or update the App's `Close()` method to close the unordered tx manager.
   Note, this is critical as it ensures the manager's state is written to file
   such that when the node restarts, it can recover the state to provide replay
@@ -424,6 +438,11 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.network/main/build/packages/collections).
 Many functions have been removed due to this changes as the API can be smaller thanks to collections.
 For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
+
+#### `x/auth`
+
+Vesting accounts messages (and CLIs) have been removed. Existing vesting accounts will keep working but no new vesting accounts can be created.
+Use `x/accounts` lockup accounts or implement an `x/accounts` vesting account instead.
 
 #### `x/accounts`
 
@@ -1040,7 +1059,7 @@ The `simapp` package **should not be imported in your own app**. Instead, you sh
 
 #### App Wiring
 
-SimApp's `app_v2.go` is using [App Wiring](https://docs.cosmos.network/main/build/building-apps/app-go-v2), the dependency injection framework of the Cosmos SDK.
+SimApp's `app_di.go` is using [App Wiring](https://docs.cosmos.network/main/build/building-apps/app-go-di), the dependency injection framework of the Cosmos SDK.
 This means that modules are injected directly into SimApp thanks to a [configuration file](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go).
 The previous behavior, without the dependency injection framework, is still present in [`app.go`](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app.go) and is not going anywhere.
 

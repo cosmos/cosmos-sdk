@@ -11,6 +11,14 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 )
 
+var (
+	_ serverv2.ServerComponent[transaction.Tx] = (*StoreComponent[transaction.Tx])(nil)
+	_ serverv2.HasConfig                       = (*StoreComponent[transaction.Tx])(nil)
+	_ serverv2.HasCLICommands                  = (*StoreComponent[transaction.Tx])(nil)
+)
+
+const ServerName = "store"
+
 // StoreComponent manages store config
 // and contains prune & snapshot commands
 type StoreComponent[T transaction.Tx] struct {
@@ -35,7 +43,7 @@ func (s *StoreComponent[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 }
 
 func (s *StoreComponent[T]) Name() string {
-	return "store"
+	return ServerName
 }
 
 func (s *StoreComponent[T]) Start(ctx context.Context) error {

@@ -62,7 +62,7 @@ func TestValidateGenesis(t *testing.T) {
 			}(),
 			"section is missing in the app_state",
 			module.NewManagerFromMap(map[string]appmodulev2.AppModule{
-				"custommod": staking.NewAppModule(cdc, nil, nil, nil),
+				"custommod": staking.NewAppModule(cdc, nil),
 			}),
 		},
 		{

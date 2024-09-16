@@ -11,7 +11,7 @@ import (
 // ObjectKeyString formats the object key as a string deterministically for storage in a map.
 // The key must be valid for the object type and the object type must be valid.
 // No validation is performed here.
-func ObjectKeyString(objectType schema.ObjectType, key any) string {
+func ObjectKeyString(objectType schema.StateObjectType, key any) string {
 	keyFields := objectType.KeyFields
 	n := len(keyFields)
 	switch n {

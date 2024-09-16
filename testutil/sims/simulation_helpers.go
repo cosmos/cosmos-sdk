@@ -7,8 +7,7 @@ import (
 	"os"
 	"sync"
 
-	dbm "github.com/cosmos/cosmos-db"
-
+	corestore "cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -45,8 +44,13 @@ func CheckExportSimulation(app runtime.AppSimI, config simtypes.Config, params s
 	return nil
 }
 
+// DBStatsInterface defines the interface for the app DB statistics.
+type DBStatsInterface interface {
+	Stats() map[string]string
+}
+
 // PrintStats prints the corresponding statistics from the app DB.
-func PrintStats(db *dbm.GoLevelDB, logLine func(args ...any)) {
+func PrintStats(db DBStatsInterface, logLine func(args ...any)) {
 	logLine("\nLevelDB Stats")
 	logLine(db.Stats()["leveldb.stats"])
 	logLine("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])
@@ -152,7 +156,7 @@ func getDiffFromKVPair(kvAs, kvBs []kv.Pair) (diffA, diffB []kv.Pair) {
 	return diffA, diffB
 }
 
-func getKVPairs(iter dbm.Iterator, prefixesToSkip [][]byte) (kvs []kv.Pair) {
+func getKVPairs(iter corestore.Iterator, prefixesToSkip [][]byte) (kvs []kv.Pair) {
 	for iter.Valid() {
 		key, value := iter.Key(), iter.Value()
 

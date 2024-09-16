@@ -38,7 +38,7 @@ func fmtValue(kind schema.Kind, value any) string {
 	switch kind {
 	case schema.BytesKind, schema.AddressKind:
 		return fmt.Sprintf("0x%x", value)
-	case schema.DecimalStringKind, schema.IntegerStringKind:
+	case schema.DecimalKind, schema.IntegerKind:
 		// we need to normalize decimal & integer strings to remove leading & trailing zeros
 		d, _, err := apd.NewFromString(value.(string))
 		if err != nil {

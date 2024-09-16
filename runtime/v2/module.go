@@ -130,6 +130,7 @@ func ProvideAppBuilder[T transaction.Tx](
 		msgRouterBuilder:        msgRouterBuilder,
 		queryRouterBuilder:      stf.NewMsgRouterBuilder(), // TODO dedicated query router
 		GRPCMethodsToMessageMap: map[string]func() proto.Message{},
+		storeLoader:             DefaultStoreLoader,
 	}
 	appBuilder := &AppBuilder[T]{app: app}
 

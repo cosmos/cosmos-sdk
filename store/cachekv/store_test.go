@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math/unsafe"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
@@ -15,7 +15,7 @@ import (
 )
 
 func newCacheKVStore() types.CacheKVStore {
-	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	mem := dbadapter.Store{DB: coretesting.NewMemDB()}
 	return cachekv.NewStore(mem)
 }
 
@@ -23,7 +23,7 @@ func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
 func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
 func TestCacheKVStore(t *testing.T) {
-	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	mem := dbadapter.Store{DB: coretesting.NewMemDB()}
 	st := cachekv.NewStore(mem)
 
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
@@ -66,7 +66,7 @@ func TestCacheKVStore(t *testing.T) {
 }
 
 func TestCacheKVStoreNoNilSet(t *testing.T) {
-	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	mem := dbadapter.Store{DB: coretesting.NewMemDB()}
 	st := cachekv.NewStore(mem)
 	require.Panics(t, func() { st.Set([]byte("key"), nil) }, "setting a nil value should panic")
 	require.Panics(t, func() { st.Set(nil, []byte("value")) }, "setting a nil key should panic")
@@ -74,7 +74,7 @@ func TestCacheKVStoreNoNilSet(t *testing.T) {
 }
 
 func TestCacheKVStoreNested(t *testing.T) {
-	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	mem := dbadapter.Store{DB: coretesting.NewMemDB()}
 	st := cachekv.NewStore(mem)
 
 	// set. check its there on st and not on mem.
@@ -290,7 +290,7 @@ func TestCacheKVMergeIteratorDeleteLast(t *testing.T) {
 
 func TestCacheKVMergeIteratorDeletes(t *testing.T) {
 	st := newCacheKVStore()
-	truth := dbm.NewMemDB()
+	truth := coretesting.NewMemDB()
 
 	// set some items and write them
 	nItems := 10
@@ -307,7 +307,7 @@ func TestCacheKVMergeIteratorDeletes(t *testing.T) {
 
 	// reset
 	st = newCacheKVStore()
-	truth = dbm.NewMemDB()
+	truth = coretesting.NewMemDB()
 
 	// set some items and write them
 	for i := 0; i < nItems; i++ {
@@ -326,7 +326,7 @@ func TestCacheKVMergeIteratorChunks(t *testing.T) {
 	st := newCacheKVStore()
 
 	// Use the truth to check values on the merge iterator
-	truth := dbm.NewMemDB()
+	truth := coretesting.NewMemDB()
 
 	// sets to the parent
 	setRange(t, st, truth, 0, 20)
@@ -374,7 +374,7 @@ func TestCacheKVMergeIteratorDomain(t *testing.T) {
 
 func TestCacheKVMergeIteratorRandom(t *testing.T) {
 	st := newCacheKVStore()
-	truth := dbm.NewMemDB()
+	truth := coretesting.NewMemDB()
 
 	start, end := 25, 975
 	max := 1000
@@ -434,7 +434,7 @@ func TestNilEndIterator(t *testing.T) {
 
 // TestIteratorDeadlock demonstrate the deadlock issue in cache store.
 func TestIteratorDeadlock(t *testing.T) {
-	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	mem := dbadapter.Store{DB: coretesting.NewMemDB()}
 	store := cachekv.NewStore(mem)
 	// the channel buffer is 64 and received once, so put at least 66 elements.
 	for i := 0; i < 66; i++ {

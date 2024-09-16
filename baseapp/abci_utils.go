@@ -281,7 +281,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 		// Note, we still need to ensure the transactions returned respect req.MaxTxBytes.
 		_, isNoOp := h.mempool.(mempool.NoOpMempool)
 		if h.mempool == nil || isNoOp {
-			for _, tx := range decodedTxs {
+			for i, tx := range decodedTxs {
 				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, tx, req.Txs[i])
 				if stop {
 					break

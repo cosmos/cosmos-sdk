@@ -32,22 +32,17 @@ var (
 	// IntValue represents a collections.ValueCodec to work with Int.
 	IntValue collcodec.ValueCodec[math.Int] = intValueCodec{}
 
-<<<<<<< HEAD
-=======
 	// UintValue represents a collections.ValueCodec to work with Uint.
 	UintValue collcodec.ValueCodec[math.Uint] = uintValueCodec{}
 
 	// LegacyDecValue represents a collections.ValueCodec to work with LegacyDec.
 	LegacyDecValue collcodec.ValueCodec[math.LegacyDec] = legacyDecValueCodec{}
 
->>>>>>> 3bc707a5a (feat(types/collections): add `LegacyDec` collection value (#21693))
 	// TimeKey represents a collections.KeyCodec to work with time.Time
 	// Deprecated: exists only for state compatibility reasons, should not
 	// be used for new storage keys using time. Please use the time KeyCodec
 	// provided in the collections package.
 	TimeKey collcodec.KeyCodec[time.Time] = timeKeyCodec{}
-<<<<<<< HEAD
-=======
 
 	// LEUint64Key is a collections KeyCodec that encodes uint64 using little endian.
 	// NOTE: it MUST NOT be used by other modules, distribution relies on this only for
@@ -66,7 +61,6 @@ const (
 	Int       string = "math.Int"
 	Uint      string = "math.Uint"
 	LegacyDec string = "math.LegacyDec"
->>>>>>> 3bc707a5a (feat(types/collections): add `LegacyDec` collection value (#21693))
 )
 
 type addressUnion interface {

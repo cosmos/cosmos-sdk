@@ -9,7 +9,7 @@ import (
 )
 
 // ServerOptions defines the options for the CometBFT server.
-// When an options takes a map[string]any, it is able to access the app.tom's cometbft section and the config.toml config.
+// When an option takes a map[string]any, it can access the app.tom's cometbft section and the config.toml config.
 type ServerOptions[T transaction.Tx] struct {
 	PrepareProposalHandler     handlers.PrepareHandler[T]
 	ProcessProposalHandler     handlers.ProcessHandler[T]

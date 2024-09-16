@@ -100,7 +100,6 @@ func TestBuilderWithAux(t *testing.T) {
 		{"happy case", func() {}, false},
 	}
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			txBuilder, txSig = makeTxBuilder(t)
 

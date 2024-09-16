@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
@@ -180,7 +181,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 			if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
 				return nil, errors.New("cannot init genesis on non-zero state")
 			}
-			genesisCtx := makeGenesisContext(a.branch(zeroState))
+			genesisCtx := services.NewGenesisContext(a.branch(zeroState))
 			genesisState, err := genesisCtx.Run(ctx, func(ctx context.Context) error {
 				err = a.app.moduleManager.InitGenesisJSON(ctx, genesisJSON, txHandler)
 				if err != nil {
@@ -196,7 +197,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 			if err != nil {
 				return nil, fmt.Errorf("unable to get latest state: %w", err)
 			}
-			genesisCtx := makeGenesisContext(a.branch(state))
+			genesisCtx := services.NewGenesisContext(a.branch(state))
 
 			var genesisJson map[string]json.RawMessage
 			_, err = genesisCtx.Run(ctx, func(ctx context.Context) error {

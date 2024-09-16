@@ -240,14 +240,14 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 func DefaultServiceBindings() depinject.Config {
 	var (
 		kvServiceFactory store.KVStoreServiceFactory = func(actor []byte) store.KVStoreService {
-			return NewGenesisKVService(
+			return services.NewGenesisKVService(
 				actor,
 				stf.NewKVStoreService(actor),
 			)
 		}
 		memStoreServiceFactory store.MemoryStoreServiceFactory = stf.NewMemoryStoreService
 		headerServiceFactory   header.HeaderServiceFactory     = func() header.Service {
-			return NewGenesisHeaderService(stf.HeaderService{})
+			return services.NewGenesisHeaderService(stf.HeaderService{})
 		}
 		cometService comet.Service = &services.ContextAwareCometInfoService{}
 	)

@@ -1,4 +1,4 @@
-package runtime
+package services
 
 import (
 	"context"
@@ -19,7 +19,7 @@ type genesisContext struct {
 	didRun bool
 }
 
-func makeGenesisContext(state store.WriterMap) genesisContext {
+func NewGenesisContext(state store.WriterMap) genesisContext {
 	return genesisContext{
 		state: state,
 	}

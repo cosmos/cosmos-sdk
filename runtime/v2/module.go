@@ -5,10 +5,6 @@ import (
 	"os"
 	"slices"
 
-	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/header"
-	rootstore "cosmossdk.io/store/v2/root"
-
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -19,6 +15,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
@@ -29,6 +26,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
+	rootstore "cosmossdk.io/store/v2/root"
 )
 
 var (
@@ -223,7 +221,7 @@ func ProvideEnvironment[T transaction.Tx](
 
 		memStoreKey := fmt.Sprintf("memory:%s", key.Name())
 		registerStoreKey(appBuilder, memStoreKey)
-		memKvService = memFactory([]byte(memStoreKey))
+		memKvService = stf.NewMemoryStoreService([]byte(memStoreKey))
 	}
 
 	env := appmodulev2.Environment{

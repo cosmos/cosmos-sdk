@@ -154,7 +154,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 			if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
 				return nil, errors.New("cannot init genesis on non-zero state")
 			}
-			genesisCtx := makeGenesisContext(a.branch(zeroState))
+			genesisCtx := services.NewGenesisContext(a.branch(zeroState))
 			genesisState, err := genesisCtx.Run(ctx, func(ctx context.Context) error {
 				err = a.app.moduleManager.InitGenesisJSON(ctx, genesisJSON, txHandler)
 				if err != nil {

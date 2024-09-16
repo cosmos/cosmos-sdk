@@ -2,12 +2,9 @@ package runtime
 
 import (
 	"fmt"
-
-	"cosmossdk.io/core/server"
-
-	"fmt"
 	"path/filepath"
 
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/stf"

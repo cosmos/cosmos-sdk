@@ -99,8 +99,8 @@ impl <T> Type for NullableT<T> {}
 pub struct ListT<T: ListElementType> {
     _phantom: std::marker::PhantomData<T>,
 }
-impl <T> Private for ListT<T> {}
-impl <T> Type for ListT<T> {}
+impl <T:ListElementType> Private for ListT<T> {}
+impl <T:ListElementType> Type for ListT<T> {}
 
 /// The `StructT` type represents a struct type.
 pub struct StructT<T> {
@@ -109,4 +109,5 @@ pub struct StructT<T> {
 impl <T> Private for StructT<T> {}
 impl <T> Type for StructT<T> {}
 
+/// Represents a type that can be used as an element in a list.
 pub trait ListElementType {}

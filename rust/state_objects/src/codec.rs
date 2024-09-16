@@ -10,83 +10,66 @@ impl<A: Type, B: Type, C: Type> FieldTypes for (A, B, C) {}
 impl<A: Type, B: Type, C: Type, D: Type> FieldTypes for (A, B, C, D) {}
 
 
-pub trait ObjectValueField {
-    type Value<'a>: Value<'a>;
+pub trait ObjectValueField<'a> {
+    type Value: Value<'a>;
 }
-pub trait ObjectKeyField: ObjectValueField {}
+pub trait ObjectKeyField<'a>: ObjectValueField<'a> {}
 
-impl ObjectValueField for u8 {
-    type Value<'a> = u8;
+impl<'a, V: Value<'a>> ObjectValueField<'a> for V {
+    type Value = V;
 }
-impl ObjectKeyField for u8 {}
-impl ObjectValueField for u16 {
-    type Value<'a> = u16;
-}
-impl ObjectKeyField for u16 {}
-impl ObjectValueField for u32 {
-    type Value<'a> = u32;
-}
-impl ObjectKeyField for u32 {}
-impl ObjectValueField for u64 {
-    type Value<'a> = u64;
-}
-impl ObjectKeyField for u64 {}
-impl ObjectValueField for u128 {
-    type Value<'a> = u128;
-}
-impl ObjectKeyField for u128 {}
-impl ObjectValueField for i8 {
-    type Value<'a> = i8;
-}
-impl ObjectKeyField for i8 {}
-impl ObjectValueField for i16 {
-    type Value<'a> = i16;
-}
-impl ObjectKeyField for i16 {}
-impl ObjectValueField for i32 {
-    type Value<'a> = i32;
-}
-impl ObjectKeyField for i32 {}
-impl ObjectValueField for i64 {
-    type Value<'a> = i64;
-}
-impl ObjectKeyField for i64 {}
-impl ObjectValueField for i128 {
-    type Value<'a> = i128;
-}
-impl ObjectKeyField for i128 {}
-impl ObjectValueField for bool {
-    type Value<'a> = bool;
-}
-impl ObjectKeyField for bool {}
-impl ObjectValueField for str {
-    type Value<'a> = &'a str;
-}
-impl ObjectKeyField for str {}
-impl ObjectValueField for simple_time::Time {
-    type Value<'a> = simple_time::Time;
-}
-impl ObjectKeyField for simple_time::Time {}
-impl ObjectValueField for simple_time::Duration {
-    type Value<'a> = simple_time::Duration;
-}
-impl ObjectKeyField for simple_time::Duration {}
-// impl<V> ObjectValueField for Option<V>
-// {
-//     type Value<'a> = Option<V>;
-// }
-
-
-pub trait ObjectValue {
-    type Value<'a>;
+impl<'a> ObjectValueField<'a> for str {
+    type Value = &'a str;
 }
 
-pub trait ObjectKey: ObjectValue {}
+impl<'a> ObjectKeyField<'a> for str {}
+impl <'a> ObjectKeyField<'a> for u8 {}
+impl <'a> ObjectKeyField<'a> for u16 {}
+impl <'a> ObjectKeyField<'a> for u32 {}
+impl <'a> ObjectKeyField<'a> for u64 {}
+impl <'a> ObjectKeyField<'a> for u128 {}
+impl <'a> ObjectKeyField<'a> for i8 {}
+impl <'a> ObjectKeyField<'a> for i16 {}
+impl <'a> ObjectKeyField<'a> for i32 {}
+impl <'a> ObjectKeyField<'a> for i64 {}
+impl <'a> ObjectKeyField<'a> for i128 {}
+impl <'a> ObjectKeyField<'a> for bool {}
+impl <'a> ObjectKeyField<'a> for simple_time::Time {}
+impl <'a> ObjectKeyField<'a> for simple_time::Duration {}
+impl <'a> ObjectKeyField<'a> for interchain_core::Address {}
 
-// impl ObjectValue<()> for () {
-//     type Value<'a> = ();
-// }
-// impl ObjectKey<()> for () {}
+pub trait ObjectValue<'a> {
+    type Value;
+}
+
+impl <'a> ObjectValue<'a> for () {
+    type Value = ();
+}
+impl <'a, A: ObjectValueField<'a>> ObjectValue<'a> for A {
+    type Value = A::Value;
+}
+impl <'a, A: ObjectValueField<'a>> ObjectValue<'a> for (A,) {
+    type Value = (A::Value,);
+}
+impl <'a, A: ObjectValueField<'a>, B: ObjectValueField<'a>> ObjectValue<'a> for (A, B) {
+    type Value = (A::Value, B::Value);
+}
+impl <'a, A: ObjectValueField<'a>, B: ObjectValueField<'a>, C: ObjectValueField<'a>> ObjectValue<'a> for (A, B, C) {
+    type Value = (A::Value, B::Value, C::Value);
+}
+impl <'a, A: ObjectValueField<'a>, B: ObjectValueField<'a>, C: ObjectValueField<'a>, D: ObjectValueField<'a>> ObjectValue<'a> for (A, B, C, D) {
+    type Value = (A::Value, B::Value, C::Value, D::Value);
+}
+
+pub trait ObjectKey<'a>: ObjectValue<'a> {}
+impl <'a> ObjectKey<'a> for () {}
+impl <'a, A: ObjectKeyField<'a>> ObjectKey<'a> for A {}
+impl <'a, A: ObjectKeyField<'a>> ObjectKey<'a> for (A,) {}
+impl <'a, A: ObjectKeyField<'a>, B: ObjectKeyField<'a>> ObjectKey<'a> for (A, B) {}
+impl <'a, A: ObjectKeyField<'a>, B: ObjectKeyField<'a>, C: ObjectKeyField<'a>> ObjectKey<'a> for (A, B, C) {}
+impl <'a, A: ObjectKeyField<'a>, B: ObjectKeyField<'a>, C: ObjectKeyField<'a>, D: ObjectKeyField<'a>> ObjectKey<'a> for (A, B, C, D) {}
+
+
 // impl<T1: Type, A: ObjectValueField<T1>> ObjectValue<(T1,)> for A {
 //     type Value<'a> = A::Value<'a>;
 // }
@@ -118,8 +101,8 @@ pub trait ObjectKey: ObjectValue {}
 // }
 // impl<A: ObjectKey, B: ObjectKey, C: ObjectKey, D: ObjectKey> ObjectKey for (A, B, C, D) {}
 //
-pub trait PrefixKey<K: ObjectKey> {
-    type Value<'a>;
+pub trait PrefixKey<'a, K: ObjectKey<'a>> {
+    type Value;
 }
 // impl<K: ObjectKey> PrefixKey<K> for () {
 //     type Value<'a> = ();

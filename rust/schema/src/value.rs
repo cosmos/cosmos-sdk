@@ -7,8 +7,10 @@ pub trait Value<'a>
 where
     Self: 'a,
 {
+    /// The type of the value.
     type Type: Type;
 }
+
 impl<'a> Value<'a> for u8 {
     type Type = U8T;
 }

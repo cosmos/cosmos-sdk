@@ -5,19 +5,19 @@ pub struct Index<IndexKey, PrimaryKey> {
     _phantom: std::marker::PhantomData<(IndexKey, PrimaryKey)>,
 }
 
-impl<'a, IndexKey: ObjectKey, PrimaryKey: ObjectKey> Index<IndexKey, PrimaryKey> {
-    pub fn iterate<Start, End>(&'a self, ctx: &Context, start: Start::Value<'a>, end: End::Value<'a>) -> Response<Iter<'a, IndexKey, PrimaryKey>>
+impl<'a, IndexKey: ObjectKey<'a>, PrimaryKey: ObjectKey<'a>> Index<IndexKey, PrimaryKey> {
+    pub fn iterate<Start, End>(&'a self, ctx: &Context, start: Start::Value, end: End::Value) -> Response<Iter<'a, IndexKey, PrimaryKey>>
     where
-        Start: PrefixKey<IndexKey>,
-        End: PrefixKey<IndexKey>,
+        Start: PrefixKey<'a, IndexKey>,
+        End: PrefixKey<'a, IndexKey>,
     {
         todo!()
     }
 
-    pub fn iterate_reverse<Start, End>(&'a self, ctx: &Context, start: Start::Value<'a>, end: End::Value<'a>) -> Response<Iter<'a, IndexKey, PrimaryKey>>
+    pub fn iterate_reverse<Start, End>(&'a self, ctx: &Context, start: Start::Value, end: End::Value) -> Response<Iter<'a, IndexKey, PrimaryKey>>
     where
-        Start: PrefixKey<IndexKey>,
-        End: PrefixKey<IndexKey>,
+        Start: PrefixKey<'a, IndexKey>,
+        End: PrefixKey<'a, IndexKey>,
     {
         todo!()
     }

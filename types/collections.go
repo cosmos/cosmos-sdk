@@ -32,9 +32,6 @@ var (
 	// IntValue represents a collections.ValueCodec to work with Int.
 	IntValue collcodec.ValueCodec[math.Int] = intValueCodec{}
 
-	// UintValue represents a collections.ValueCodec to work with Uint.
-	UintValue collcodec.ValueCodec[math.Uint] = uintValueCodec{}
-
 	// LegacyDecValue represents a collections.ValueCodec to work with LegacyDec.
 	LegacyDecValue collcodec.ValueCodec[math.LegacyDec] = legacyDecValueCodec{}
 
@@ -43,23 +40,9 @@ var (
 	// be used for new storage keys using time. Please use the time KeyCodec
 	// provided in the collections package.
 	TimeKey collcodec.KeyCodec[time.Time] = timeKeyCodec{}
-
-	// LEUint64Key is a collections KeyCodec that encodes uint64 using little endian.
-	// NOTE: it MUST NOT be used by other modules, distribution relies on this only for
-	// state backwards compatibility.
-	// Deprecated: use collections.Uint64Key instead.
-	LEUint64Key collcodec.KeyCodec[uint64] = leUint64Key{}
-
-	// LengthPrefixedBytesKey is a collections KeyCodec to work with []byte.
-	// Deprecated: exists only for state compatibility reasons, should not be
-	// used for new storage keys using []byte. Please use the BytesKey provided
-	// in the collections package.
-	LengthPrefixedBytesKey collcodec.KeyCodec[[]byte] = lengthPrefixedBytesKey{collections.BytesKey}
 )
 
 const (
-	Int       string = "math.Int"
-	Uint      string = "math.Uint"
 	LegacyDec string = "math.LegacyDec"
 )
 

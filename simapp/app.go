@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cast"
 
@@ -832,7 +834,9 @@ func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Conf
 }
 
 func (app *SimApp) ValidatorKeyProvider() baseapp.KeyGenF {
-	return app.ValidatorKeyProvider()
+	return func() (cmtcrypto.PrivKey, error) {
+		return cmted25519.GenPrivKey(), nil
+	}
 }
 
 // GetMaccPerms returns a copy of the module account permissions

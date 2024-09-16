@@ -1,12 +1,17 @@
 package cometbft
 
 import (
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmted22519 "github.com/cometbft/cometbft/crypto/ed25519"
+
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/cometbft/handlers"
 	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 )
+
+type keyGenF = func() (cmtcrypto.PrivKey, error)
 
 // ServerOptions defines the options for the CometBFT server.
 type ServerOptions[T transaction.Tx] struct {
@@ -15,6 +20,7 @@ type ServerOptions[T transaction.Tx] struct {
 	ProcessProposalHandler     handlers.ProcessHandler[T]
 	VerifyVoteExtensionHandler handlers.VerifyVoteExtensionhandler
 	ExtendVoteHandler          handlers.ExtendVoteHandler
+	KeygenF                    keyGenF
 
 	SnapshotOptions snapshots.SnapshotOptions
 
@@ -34,5 +40,6 @@ func DefaultServerOptions[T transaction.Tx]() ServerOptions[T] {
 		SnapshotOptions:            snapshots.NewSnapshotOptions(0, 0),
 		AddrPeerFilter:             nil,
 		IdPeerFilter:               nil,
+		KeygenF:                    func() (cmtcrypto.PrivKey, error) { return cmted22519.GenPrivKey(), nil },
 	}
 }

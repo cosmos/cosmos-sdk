@@ -29,7 +29,7 @@ func TestNewWeightedProposalContent(t *testing.T) {
 	key := "theKey"
 	weight := 1
 	content := &testContent{}
-	f := func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content { //nolint:staticcheck // used for legacy testing
+	f := func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content { 
 		return content
 	}
 

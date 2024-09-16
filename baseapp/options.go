@@ -7,6 +7,11 @@ import (
 	"io"
 	"math"
 
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmtBLS12381 "github.com/cometbft/cometbft/crypto/bls12381"
+	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
+	cmtsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
+
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/metrics"
@@ -14,10 +19,6 @@ import (
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	cmtBLS12381 "github.com/cometbft/cometbft/crypto/bls12381"
-	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
-	cmtsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/codec"

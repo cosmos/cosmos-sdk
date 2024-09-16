@@ -19,6 +19,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
@@ -133,6 +134,7 @@ func ProvideAppBuilder[T transaction.Tx](
 		msgRouterBuilder:        msgRouterBuilder,
 		queryRouterBuilder:      stf.NewMsgRouterBuilder(), // TODO dedicated query router
 		GRPCMethodsToMessageMap: map[string]func() proto.Message{},
+		storeLoader:             DefaultStoreLoader,
 	}
 	appBuilder := &AppBuilder[T]{app: app}
 
@@ -195,8 +197,7 @@ func ProvideEnvironment[T transaction.Tx](
 	key depinject.ModuleKey,
 	appBuilder *AppBuilder[T],
 	kvFactory store.KVStoreServiceFactory,
-	memFactory store.MemoryStoreServiceFactory,
-	headerFactory header.HeaderServiceFactory,
+	headerService header.Service,
 ) (
 	appmodulev2.Environment,
 	store.KVStoreService,
@@ -230,7 +231,7 @@ func ProvideEnvironment[T transaction.Tx](
 		BranchService:      stf.BranchService{},
 		EventService:       stf.NewEventService(),
 		GasService:         stf.NewGasMeterService(),
-		HeaderService:      headerFactory(),
+		HeaderService:      headerService,
 		QueryRouterService: stf.NewQueryRouterService(),
 		MsgRouterService:   stf.NewMsgRouterService([]byte(key.Name())),
 		TransactionService: services.NewContextAwareTransactionService(),
@@ -258,21 +259,17 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 func DefaultServiceBindings() depinject.Config {
 	var (
 		kvServiceFactory store.KVStoreServiceFactory = func(actor []byte) store.KVStoreService {
-			return NewGenesisKVService(
+			return services.NewGenesisKVService(
 				actor,
 				stf.NewKVStoreService(actor),
 			)
 		}
-		memStoreServiceFactory store.MemoryStoreServiceFactory = stf.NewMemoryStoreService
-		headerServiceFactory   header.HeaderServiceFactory     = func() header.Service {
-			return NewGenesisHeaderService(stf.HeaderService{})
-		}
-		cometService comet.Service = &services.ContextAwareCometInfoService{}
+		headerService header.Service = services.NewGenesisHeaderService(stf.HeaderService{})
+		cometService  comet.Service  = &services.ContextAwareCometInfoService{}
 	)
 	return depinject.Supply(
 		kvServiceFactory,
-		memStoreServiceFactory,
+		headerService,
 		cometService,
-		headerServiceFactory,
 	)
 }

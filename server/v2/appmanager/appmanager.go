@@ -96,33 +96,12 @@ func (a AppManager[T]) InitGenesis(
 }
 
 // ExportGenesis exports the genesis state of the application.
-func (a AppManager[T]) ExportGenesis(
-	ctx context.Context,
-	version uint64,
-) ([]byte, error) {
-	zeroState, err := a.db.StateAt(version)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get latest state: %w", err)
+func (a AppManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byte, error) {
+	if a.exportGenesis == nil {
+		return nil, errors.New("export genesis function not set")
 	}
 
-	bz := make([]byte, 0)
-	_, err = a.stf.RunWithCtx(ctx, zeroState, func(ctx context.Context) error {
-		if a.exportGenesis == nil {
-			return errors.New("export genesis function not set")
-		}
-
-		bz, err = a.exportGenesis(ctx, version)
-		if err != nil {
-			return fmt.Errorf("failed to export genesis state: %w", err)
-		}
-
-		return nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to export genesis state: %w", err)
-	}
-
-	return bz, nil
+	return a.exportGenesis(ctx, version)
 }
 
 func (a AppManager[T]) DeliverBlock(
@@ -187,21 +166,6 @@ func (a AppManager[T]) Simulate(
 	return result, cs, nil
 }
 
-// Exec executes a function within the context of the latest state.
-// It is required for integration testing.
-// Alternative #1: Provide STF directly to the test. Blocking: STF is not exported.
-// Alternative #2: Provide parallel implementation of all services provided by STF for testing.
-func (a AppManager[T]) Exec(
-	ctx context.Context,
-	fn func(ctx context.Context) error,
-) (corestore.WriterMap, error) {
-	_, state, err := a.db.StateLatest()
-	if err != nil {
-		return nil, err
-	}
-	return a.stf.RunWithCtx(ctx, state, fn)
-}
-
 // Query queries the application at the provided version.
 // CONTRACT: Version must always be provided, if 0, get latest
 func (a AppManager[T]) Query(
@@ -229,10 +193,6 @@ func (a AppManager[T]) Query(
 // QueryWithState executes a query with the provided state. This allows to process a query
 // independently of the db state. For example, it can be used to process a query with temporary
 // and uncommitted state
-func (a AppManager[T]) QueryWithState(
-	ctx context.Context,
-	state corestore.ReaderMap,
-	request transaction.Msg,
-) (transaction.Msg, error) {
+func (a AppManager[T]) QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Msg) (transaction.Msg, error) {
 	return a.stf.Query(ctx, state, a.config.QueryGasLimit, request)
 }

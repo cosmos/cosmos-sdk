@@ -1,7 +1,13 @@
 package runtime
 
 import (
+	"fmt"
+
 	"cosmossdk.io/core/server"
+
+	"fmt"
+	"path/filepath"
+
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/stf"
@@ -9,8 +15,6 @@ import (
 	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/root"
-	"fmt"
-	"path/filepath"
 )
 
 // NewKVStoreService creates a new KVStoreService.
@@ -108,4 +112,35 @@ func (sb *StoreBuilder) Get() Store {
 
 func ProvideStoreBuilder() *StoreBuilder {
 	return &StoreBuilder{}
+}
+
+// StoreLoader allows for custom loading of the store, this is useful when upgrading the store from a previous version
+type StoreLoader func(store Store) error
+
+// DefaultStoreLoader just calls LoadLatestVersion on the store
+func DefaultStoreLoader(store Store) error {
+	return store.LoadLatestVersion()
+}
+
+// UpgradeStoreLoader upgrades the store if the upgrade height matches the current version, it is used as a replacement
+// for the DefaultStoreLoader when there are store upgrades
+func UpgradeStoreLoader(upgradeHeight int64, storeUpgrades *store.StoreUpgrades) StoreLoader {
+	return func(store Store) error {
+		latestVersion, err := store.GetLatestVersion()
+		if err != nil {
+			return err
+		}
+
+		if uint64(upgradeHeight) == latestVersion+1 {
+			if len(storeUpgrades.Deleted) > 0 || len(storeUpgrades.Added) > 0 {
+				if upgrader, ok := store.(storev2.UpgradeableStore); ok {
+					return upgrader.LoadVersionAndUpgrade(latestVersion, storeUpgrades)
+				}
+
+				return fmt.Errorf("store does not support upgrades")
+			}
+		}
+
+		return DefaultStoreLoader(store)
+	}
 }

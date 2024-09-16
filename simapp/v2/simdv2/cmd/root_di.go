@@ -38,9 +38,7 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 		depinject.Configs(
 			simapp.AppConfig(),
 			runtime.DefaultServiceBindings(),
-			depinject.Supply(
-				log.NewNopLogger(),
-			),
+			depinject.Supply(log.NewNopLogger()),
 			depinject.Provide(
 				codec.ProvideInterfaceRegistry,
 				codec.ProvideAddressCodec,

@@ -41,7 +41,8 @@ func (e EnumType) TypeName() string {
 	return e.Name
 }
 
-func (EnumType) isType() {}
+func (EnumType) isType()          {}
+func (EnumType) isReferenceType() {}
 
 // Validate validates the enum definition.
 func (e EnumType) Validate(TypeSet) error {

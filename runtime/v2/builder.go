@@ -11,6 +11,7 @@ import (
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
@@ -165,7 +166,17 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 			return genesisState, err
 		},
 		ExportGenesis: func(ctx context.Context, version uint64) ([]byte, error) {
-			genesisJson, err := a.app.moduleManager.ExportGenesisForModules(ctx)
+			_, state, err := a.app.db.StateLatest()
+			if err != nil {
+				return nil, fmt.Errorf("unable to get latest state: %w", err)
+			}
+			genesisCtx := services.NewGenesisContext(a.branch(state))
+
+			var genesisJson map[string]json.RawMessage
+			_, err = genesisCtx.Run(ctx, func(ctx context.Context) error {
+				genesisJson, err = a.app.moduleManager.ExportGenesisForModules(ctx)
+				return err
+			})
 			if err != nil {
 				return nil, fmt.Errorf("failed to export genesis: %w", err)
 			}

@@ -1,9 +1,9 @@
 package cometbft
 
 import (
-	"cosmossdk.io/server/v2/cometbft/mempool"
-
 	cmtcfg "github.com/cometbft/cometbft/config"
+
+	"cosmossdk.io/server/v2/cometbft/mempool"
 )
 
 // Config is the configuration for the CometBFT application

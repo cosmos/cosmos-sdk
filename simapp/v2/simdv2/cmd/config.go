@@ -91,13 +91,17 @@ func initCometConfig() cometbft.CfgOption {
 func initCometOptions[T transaction.Tx]() cometbft.ServerOptions[T] {
 	serverOptions := cometbft.DefaultServerOptions[T]()
 
-	// TOOD mempool interface doesn't match!
+	// TODO mempool interface doesn't match!
 
 	// overwrite app mempool, using max-txs option
-	// if maxTxs := cast.ToInt(cfg.Get(cometbft.FlagMempoolMaxTxs)); maxTxs >= 0 {
-	// 	serverOptions.Mempool = mempool.NewSenderNonceMempool(
-	// 		mempool.SenderNonceMaxTxOpt(maxTxs),
-	// 	)
+	// serverOptions.Mempool = func(cfg map[string]any) mempool.Mempool[T] {
+	// 	if maxTxs := cast.ToInt(cfg[cometbft.FlagMempoolMaxTxs]); maxTxs >= 0 {
+	// 		return mempool.NewSenderNonceMempool(
+	// 			mempool.SenderNonceMaxTxOpt(maxTxs),
+	// 		)
+	// 	}
+
+	// 	return mempool.NoOpMempool[T]{}
 	// }
 
 	return serverOptions

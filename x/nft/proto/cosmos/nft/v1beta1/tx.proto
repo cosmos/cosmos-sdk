@@ -35,6 +35,8 @@ service Msg {
   rpc BuyNFT(MsgBuyNFT) returns (MsgBuyNFTResponse);
 
   rpc DelistNFT(MsgDelistNFT) returns (MsgDelistNFTResponse);
+
+  rpc UnstakeNFT(MsgUnstakeNFT) returns (MsgUnstakeNFTResponse);
 }
 
 // MsgSend represents a message to send a nft from one account to another account.
@@ -151,3 +153,12 @@ message MsgDelistNFT {
 }
 
 message MsgDelistNFTResponse {}
+
+message MsgUnstakeNFT {
+  option (cosmos.msg.v1.signer) = "sender";
+  string class_id               = 1;
+  string id                     = 2;
+  string sender                 = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgUnstakeNFTResponse {}

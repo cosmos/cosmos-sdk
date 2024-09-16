@@ -28,6 +28,7 @@ const (
 	Msg_ListNFT_FullMethodName           = "/cosmos.nft.v1beta1.Msg/ListNFT"
 	Msg_BuyNFT_FullMethodName            = "/cosmos.nft.v1beta1.Msg/BuyNFT"
 	Msg_DelistNFT_FullMethodName         = "/cosmos.nft.v1beta1.Msg/DelistNFT"
+	Msg_UnstakeNFT_FullMethodName        = "/cosmos.nft.v1beta1.Msg/UnstakeNFT"
 )
 
 // MsgClient is the client API for Msg service.
@@ -51,6 +52,7 @@ type MsgClient interface {
 	// BuyNFT defines a method to buy an NFT from the marketplace.
 	BuyNFT(ctx context.Context, in *MsgBuyNFT, opts ...grpc.CallOption) (*MsgBuyNFTResponse, error)
 	DelistNFT(ctx context.Context, in *MsgDelistNFT, opts ...grpc.CallOption) (*MsgDelistNFTResponse, error)
+	UnstakeNFT(ctx context.Context, in *MsgUnstakeNFT, opts ...grpc.CallOption) (*MsgUnstakeNFTResponse, error)
 }
 
 type msgClient struct {
@@ -142,6 +144,15 @@ func (c *msgClient) DelistNFT(ctx context.Context, in *MsgDelistNFT, opts ...grp
 	return out, nil
 }
 
+func (c *msgClient) UnstakeNFT(ctx context.Context, in *MsgUnstakeNFT, opts ...grpc.CallOption) (*MsgUnstakeNFTResponse, error) {
+	out := new(MsgUnstakeNFTResponse)
+	err := c.cc.Invoke(ctx, Msg_UnstakeNFT_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -163,6 +174,7 @@ type MsgServer interface {
 	// BuyNFT defines a method to buy an NFT from the marketplace.
 	BuyNFT(context.Context, *MsgBuyNFT) (*MsgBuyNFTResponse, error)
 	DelistNFT(context.Context, *MsgDelistNFT) (*MsgDelistNFTResponse, error)
+	UnstakeNFT(context.Context, *MsgUnstakeNFT) (*MsgUnstakeNFTResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -196,6 +208,9 @@ func (UnimplementedMsgServer) BuyNFT(context.Context, *MsgBuyNFT) (*MsgBuyNFTRes
 }
 func (UnimplementedMsgServer) DelistNFT(context.Context, *MsgDelistNFT) (*MsgDelistNFTResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelistNFT not implemented")
+}
+func (UnimplementedMsgServer) UnstakeNFT(context.Context, *MsgUnstakeNFT) (*MsgUnstakeNFTResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnstakeNFT not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -372,6 +387,24 @@ func _Msg_DelistNFT_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UnstakeNFT_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUnstakeNFT)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UnstakeNFT(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UnstakeNFT_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UnstakeNFT(ctx, req.(*MsgUnstakeNFT))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -414,6 +447,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DelistNFT",
 			Handler:    _Msg_DelistNFT_Handler,
+		},
+		{
+			MethodName: "UnstakeNFT",
+			Handler:    _Msg_UnstakeNFT_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

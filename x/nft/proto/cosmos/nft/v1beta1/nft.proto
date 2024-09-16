@@ -60,7 +60,9 @@ message NFT {
   // data is an app specific data of the NFT. Optional
   google.protobuf.Any data = 10;
 
-  bool listed = 11;
+  bool   listed         = 11;
+  bool   staked         = 12; // Replace Y with the next available field number
+  uint64 stake_end_time = 13; // Replace Z with the next available field number
 }
 
 // RoyaltyInfo defines the royalty information for an NFT

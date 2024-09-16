@@ -5,7 +5,6 @@ import (
 	"context"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/nft"
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -131,37 +130,6 @@ func (k Keeper) BurnNFT(goCtx context.Context, msg *nft.MsgBurnNFT) (*nft.MsgBur
 		return nil, err
 	}
 	return &nft.MsgBurnNFTResponse{}, nil
-}
-
-// StakeNFT implements the StakeNFT method of the types.MsgServer.
-func (k Keeper) StakeNFT(goCtx context.Context, msg *nft.MsgStakeNFT) (*nft.MsgStakeNFTResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	if len(msg.ClassId) == 0 {
-		return nil, nft.ErrEmptyClassID
-	}
-	if len(msg.Id) == 0 {
-		return nil, nft.ErrEmptyNFTID
-	}
-	sender, err := k.ac.StringToBytes(msg.Sender)
-	if err != nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", msg.Sender)
-	}
-
-	err = k.Stake(ctx, msg.ClassId, msg.Id, sender, msg.StakeDuration)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			"nft_staked",
-			sdk.NewAttribute("class_id", msg.ClassId),
-			sdk.NewAttribute("id", msg.Id),
-			sdk.NewAttribute("owner", msg.Sender),
-			sdk.NewAttribute("stake_duration", fmt.Sprintf("%d", msg.StakeDuration)),
-		),
-	)
-	return &nft.MsgStakeNFTResponse{}, nil
 }
 
 // StreamNFT handles the MsgStreamNFT message

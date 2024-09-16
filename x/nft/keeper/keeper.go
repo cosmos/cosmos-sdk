@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"time"
+
 	"context"
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
@@ -26,6 +28,153 @@ type Keeper struct {
 	cdc codec.BinaryCodec
 	bk  nft.BankKeeper
 	ac  address.Codec
+}
+
+func (k Keeper) StakeNFT(goCtx context.Context, msg *nft.MsgStakeNFT) (*nft.MsgStakeNFTResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	sender, err := k.ac.StringToBytes(msg.Sender)
+	if err != nil {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", msg.Sender)
+	}
+
+	err = k.StakeNFTInternal(ctx, msg.ClassId, msg.Id, sender, msg.StakeDuration)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			"nft_staked",
+			sdk.NewAttribute("class_id", msg.ClassId),
+			sdk.NewAttribute("id", msg.Id),
+			sdk.NewAttribute("owner", msg.Sender),
+			sdk.NewAttribute("stake_duration", fmt.Sprintf("%d", msg.StakeDuration)),
+		),
+	)
+	return &nft.MsgStakeNFTResponse{}, nil
+}
+
+// StakeNFT stakes an NFT for a specified duration
+func (k Keeper) StakeNFTInternal(ctx context.Context, classID string, nftID string, owner sdk.AccAddress, stakeDuration uint64) error {
+	nftData, found := k.GetNFT(ctx, classID, nftID)
+	if !found {
+		return errors.Wrap(nft.ErrNFTNotExists, nftID)
+	}
+	if nftData.Owner != owner.String() {
+		return errors.Wrap(sdkerrors.ErrUnauthorized, "only the owner can stake the NFT")
+	}
+	if nftData.Staked {
+		return errors.Wrap(sdkerrors.ErrInvalidRequest, "NFT is already staked")
+	}
+
+	// Get current time
+	currentTime := uint64(time.Now().Unix())
+
+	// Set staking status
+	nftData.Staked = true
+	nftData.StakeEndTime = currentTime + stakeDuration
+
+	// Save updated NFT
+	k.setNFT(ctx, nftData)
+
+	return nil
+}
+
+// HandleStakeNFTMsg handles the MsgStakeNFT message
+func (k Keeper) HandleStakeNFTMsg(goCtx context.Context, msg *nft.MsgStakeNFT) (*nft.MsgStakeNFTResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	sender, err := k.ac.StringToBytes(msg.Sender)
+	if err != nil {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", msg.Sender)
+	}
+
+	err = k.StakeNFTInternal(ctx, msg.ClassId, msg.Id, sender, msg.StakeDuration)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			"nft_staked",
+			sdk.NewAttribute("class_id", msg.ClassId),
+			sdk.NewAttribute("id", msg.Id),
+			sdk.NewAttribute("owner", msg.Sender),
+			sdk.NewAttribute("stake_duration", fmt.Sprintf("%d", msg.StakeDuration)),
+		),
+	)
+	return &nft.MsgStakeNFTResponse{}, nil
+}
+
+func (k Keeper) UnstakeNFT(goCtx context.Context, msg *nft.MsgUnstakeNFT) (*nft.MsgUnstakeNFTResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	sender, err := k.ac.StringToBytes(msg.Sender)
+	if err != nil {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", msg.Sender)
+	}
+
+	err = k.UnstakeNFTInternal(ctx, msg.ClassId, msg.Id, sender)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			"nft_unstaked",
+			sdk.NewAttribute("class_id", msg.ClassId),
+			sdk.NewAttribute("id", msg.Id),
+			sdk.NewAttribute("owner", msg.Sender),
+		),
+	)
+
+	return &nft.MsgUnstakeNFTResponse{}, nil
+}
+
+// UnstakeNFT unstakes a previously staked NFT
+func (k Keeper) UnstakeNFTInternal(ctx context.Context, classID string, nftID string, owner sdk.AccAddress) error {
+	nftData, found := k.GetNFT(ctx, classID, nftID)
+	if !found {
+		return errors.Wrap(nft.ErrNFTNotExists, nftID)
+	}
+	if nftData.Owner != owner.String() {
+		return errors.Wrap(sdkerrors.ErrUnauthorized, "only the owner can unstake the NFT")
+	}
+	if !nftData.Staked {
+		return errors.Wrap(sdkerrors.ErrInvalidRequest, "NFT is not staked")
+	}
+
+	// Unstake the NFT
+	nftData.Staked = false
+	nftData.StakeEndTime = 0
+
+	// Save updated NFT
+	k.setNFT(ctx, nftData)
+
+	return nil
+}
+
+// HandleUnstakeNFTMsg handles the MsgUnstakeNFT message
+func (k Keeper) HandleUnstakeNFTMsg(goCtx context.Context, msg *nft.MsgUnstakeNFT) (*nft.MsgUnstakeNFTResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	sender, err := k.ac.StringToBytes(msg.Sender)
+	if err != nil {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", msg.Sender)
+	}
+
+	err = k.UnstakeNFTInternal(ctx, msg.ClassId, msg.Id, sender)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			"nft_unstaked",
+			sdk.NewAttribute("class_id", msg.ClassId),
+			sdk.NewAttribute("id", msg.Id),
+			sdk.NewAttribute("owner", msg.Sender),
+		),
+	)
+
+	return &nft.MsgUnstakeNFTResponse{}, nil
 }
 
 // NewKeeper creates a new nft Keeper instance

@@ -166,12 +166,23 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "StakeNFT",
-					Use:       "stake <class-id> <nft-id> <stake-duration> --from <sender>",
-					Short:     "Stake an NFT for a specified duration.",
+					Use:       "stake-nft [class-id] [nft-id] [stake-duration]",
+					Short:     "Stake an NFT",
+					Long:      "Stake an NFT for a specified duration (in seconds)",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "class_id"},
 						{ProtoField: "id"},
 						{ProtoField: "stake_duration"},
+					},
+				},
+				{
+					RpcMethod: "UnstakeNFT",
+					Use:       "unstake-nft [class-id] [nft-id]",
+					Short:     "Unstake an NFT",
+					Long:      "Unstake a previously staked NFT",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "class_id"},
+						{ProtoField: "id"},
 					},
 				},
 

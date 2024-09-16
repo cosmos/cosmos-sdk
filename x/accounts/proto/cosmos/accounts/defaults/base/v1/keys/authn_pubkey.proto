@@ -7,12 +7,16 @@ import "gogoproto/gogo.proto";
 option go_package = "cosmossdk.io/x/accounts/defaults/base/keys/authn";
 
 // PubKey defines a authn public key
-message AuthnPubKey {
-  option (amino.name) = "tendermint/PubKeyAuthn";
+message authnpubkey {
+  option (amino.name) = "cosmos-sdk/accounts/pubkeyauthn";
 
   option (amino.message_encoding)     = "key_field";
   option (gogoproto.goproto_stringer) = false;
 
+  // The key_id (or credential ID) is a unique identifier for a passkey.
+  // This ID is provided by the authenticator when the passkey is created.
+  // As it is not possible to retrieve the public key from the authenticator after the passkey is created,
+  // if the user loses the public key - id association, the key_id can be used to retrieve the public key.
   string key_id = 1;
   bytes  key    = 2;
 }

@@ -13,6 +13,7 @@ import (
 	"errors"
 	"testing"
 
+	cometcrypto "github.com/cometbft/cometbft/crypto"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	types "github.com/cosmos/gogoproto/types/any"
 	dcrd_secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
@@ -20,12 +21,11 @@ import (
 
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/accounts/accountstd"
+	authn "cosmossdk.io/x/accounts/defaults/base/keys/authn"
 	v1 "cosmossdk.io/x/accounts/defaults/base/v1"
 	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	"cosmossdk.io/x/tx/signing"
 
-	authn "cosmossdk.io/x/accounts/defaults/base/keys/authn"
-	cometcrypto "github.com/cometbft/cometbft/crypto"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -45,7 +45,7 @@ type CollectedClientData struct {
 	// Type the string "webauthn.create" when creating new credentials,
 	// and "webauthn.get" when getting an assertion from an existing credential. The
 	// purpose of this member is to prevent certain types of signature confusion attacks
-	//(where an attacker substitutes one legitimate signature for another).
+	// (where an attacker substitutes one legitimate signature for another).
 	Type         CeremonyType  `json:"type"`
 	Challenge    string        `json:"challenge"`
 	Origin       string        `json:"origin"`
@@ -61,7 +61,7 @@ func GenerateAuthnKey(t *testing.T) (*ecdsa.PrivateKey, authn.AuthnPubKey) {
 	require.NoError(t, err)
 	pkBytes := elliptic.MarshalCompressed(curve, privateKey.PublicKey.X, privateKey.PublicKey.Y)
 	pk := authn.AuthnPubKey{
-		KeyId: "a099eda0fb05e5783379f73a06acca726673b8e07e436edcd0d71645982af65c",
+		KeyId: "f482bd153df0ca2ea17d7b1e0178c14ff959628f",
 		Key:   pkBytes,
 	}
 
@@ -71,11 +71,11 @@ func GenerateAuthnKey(t *testing.T) (*ecdsa.PrivateKey, authn.AuthnPubKey) {
 func GenerateClientData(t *testing.T, msg []byte) []byte {
 	t.Helper()
 	clientData := CollectedClientData{
-		// purpose of this member is to prevent certain types of signature confusion attacks
-		//(where an attacker substitutes one legitimate signature for another).
+		// Purpose of this member is to prevent certain types of signature confusion attacks
+		// (Where an attacker substitutes one legitimate signature for another).
 		Type:         "webauthn.create",
 		Challenge:    base64.RawURLEncoding.EncodeToString(msg),
-		Origin:       "https://blue.kujira.network",
+		Origin:       "https://cosmos.network",
 		TokenBinding: nil,
 		Hint:         "",
 	}
@@ -406,6 +406,8 @@ func TestAuthenticateAuthn(t *testing.T) {
 	}
 
 	sigBytes, err := json.Marshal(cborSig)
+
+	require.NoError(t, err)
 
 	transaction.Signatures = append(transaction.Signatures, sigBytes)
 

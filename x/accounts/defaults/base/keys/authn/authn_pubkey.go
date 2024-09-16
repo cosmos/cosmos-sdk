@@ -3,6 +3,7 @@ package authn
 import (
 	"bytes"
 	"crypto"
+	ecdsa "crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/sha256"
 	"encoding/base64"
@@ -11,15 +12,10 @@ import (
 	"fmt"
 
 	cometcrypto "github.com/cometbft/cometbft/crypto"
+	"github.com/cosmos/gogoproto/proto"
 
-	ecdsa "crypto/ecdsa"
-
-	errorsmod "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/gogoproto/proto"
 )
 
 type Signature struct {
@@ -34,8 +30,7 @@ const (
 )
 
 var (
-	_ cryptotypes.PubKey   = &AuthnPubKey{}
-	_ codec.AminoMarshaler = &AuthnPubKey{}
+	_ cryptotypes.PubKey = (*AuthnPubKey)(nil)
 )
 
 const AuthnPubKeySize = 33
@@ -62,31 +57,6 @@ func (pubKey *AuthnPubKey) Type() string {
 
 func (pubKey *AuthnPubKey) Equals(other cryptotypes.PubKey) bool {
 	return pubKey.Type() == other.Type() && bytes.Equal(pubKey.Bytes(), other.Bytes())
-}
-
-func (pubKey AuthnPubKey) MarshalAmino() ([]byte, error) {
-	return pubKey.Key, nil
-}
-
-func (pubKey *AuthnPubKey) UnmarshalAmino(bz []byte) error {
-	if len(bz) != AuthnPubKeySize {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "invalid pubkey size")
-	}
-	pubKey.Key = bz
-
-	return nil
-}
-
-// MarshalAminoJSON overrides Amino JSON marshaling.
-func (pubKey AuthnPubKey) MarshalAminoJSON() ([]byte, error) {
-	// When we marshal to Amino JSON, we don't marshal the "key" field itself,
-	// just its contents (i.e. the key bytes).
-	return pubKey.MarshalAmino()
-}
-
-// UnmarshalAminoJSON overrides Amino JSON marshaling.
-func (pubKey *AuthnPubKey) UnmarshalAminoJSON(bz []byte) error {
-	return pubKey.UnmarshalAmino(bz)
 }
 
 func (pubKey *AuthnPubKey) VerifySignature(msg, sigStr []byte) bool {

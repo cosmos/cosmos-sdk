@@ -2,8 +2,8 @@ package schema
 
 import "fmt"
 
-// ObjectType describes an object type a module schema.
-type ObjectType struct {
+// StateObjectType describes an object type a module schema.
+type StateObjectType struct {
 	// Name is the name of the object type. It must be unique within the module schema amongst all object and enum
 	// types and conform to the NameFormat regular expression.
 	Name string `json:"name"`
@@ -30,14 +30,14 @@ type ObjectType struct {
 }
 
 // TypeName implements the Type interface.
-func (o ObjectType) TypeName() string {
+func (o StateObjectType) TypeName() string {
 	return o.Name
 }
 
-func (ObjectType) isType() {}
+func (StateObjectType) isType() {}
 
 // Validate validates the object type.
-func (o ObjectType) Validate(typeSet TypeSet) error {
+func (o StateObjectType) Validate(typeSet TypeSet) error {
 	if !ValidateName(o.Name) {
 		return fmt.Errorf("invalid object type name %q", o.Name)
 	}
@@ -82,7 +82,7 @@ func (o ObjectType) Validate(typeSet TypeSet) error {
 }
 
 // ValidateObjectUpdate validates that the update conforms to the object type.
-func (o ObjectType) ValidateObjectUpdate(update ObjectUpdate, typeSet TypeSet) error {
+func (o StateObjectType) ValidateObjectUpdate(update StateObjectUpdate, typeSet TypeSet) error {
 	if o.Name != update.TypeName {
 		return fmt.Errorf("object type name %q does not match update type name %q", o.Name, update.TypeName)
 	}

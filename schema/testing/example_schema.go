@@ -11,7 +11,7 @@ import (
 var ExampleAppSchema = map[string]schema.ModuleSchema{
 	"all_kinds": mkAllKindsModule(),
 	"test_cases": schema.MustCompileModuleSchema(
-		schema.ObjectType{
+		schema.StateObjectType{
 			Name:      "Singleton",
 			KeyFields: []schema.Field{},
 			ValueFields: []schema.Field{
@@ -25,7 +25,7 @@ var ExampleAppSchema = map[string]schema.ModuleSchema{
 				},
 			},
 		},
-		schema.ObjectType{
+		schema.StateObjectType{
 			Name: "Simple",
 			KeyFields: []schema.Field{
 				{
@@ -44,7 +44,7 @@ var ExampleAppSchema = map[string]schema.ModuleSchema{
 				},
 			},
 		},
-		schema.ObjectType{
+		schema.StateObjectType{
 			Name: "TwoKeys",
 			KeyFields: []schema.Field{
 				{
@@ -57,7 +57,7 @@ var ExampleAppSchema = map[string]schema.ModuleSchema{
 				},
 			},
 		},
-		schema.ObjectType{
+		schema.StateObjectType{
 			Name: "ThreeKeys",
 			KeyFields: []schema.Field{
 				{
@@ -80,7 +80,7 @@ var ExampleAppSchema = map[string]schema.ModuleSchema{
 				},
 			},
 		},
-		schema.ObjectType{
+		schema.StateObjectType{
 			Name: "ManyValues",
 			KeyFields: []schema.Field{
 				{
@@ -107,7 +107,7 @@ var ExampleAppSchema = map[string]schema.ModuleSchema{
 				},
 			},
 		},
-		schema.ObjectType{
+		schema.StateObjectType{
 			Name: "RetainDeletions",
 			KeyFields: []schema.Field{
 				{
@@ -141,7 +141,7 @@ func mkAllKindsModule() schema.ModuleSchema {
 	return schema.MustCompileModuleSchema(types...)
 }
 
-func mkTestObjectType(kind schema.Kind) schema.ObjectType {
+func mkTestObjectType(kind schema.Kind) schema.StateObjectType {
 	field := schema.Field{
 		Kind: kind,
 	}
@@ -161,7 +161,7 @@ func mkTestObjectType(kind schema.Kind) schema.ObjectType {
 	val2Field.Name = "valNullable"
 	val2Field.Nullable = true
 
-	return schema.ObjectType{
+	return schema.StateObjectType{
 		Name:        fmt.Sprintf("test_%v", kind),
 		KeyFields:   []schema.Field{keyField},
 		ValueFields: []schema.Field{val1Field, val2Field},

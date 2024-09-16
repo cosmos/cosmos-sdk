@@ -10,33 +10,33 @@ import (
 func Test_objectTypeDiff(t *testing.T) {
 	tt := []struct {
 		name                 string
-		oldType              schema.ObjectType
-		newType              schema.ObjectType
-		diff                 ObjectTypeDiff
-		trueF                func(ObjectTypeDiff) bool
+		oldType              schema.StateObjectType
+		newType              schema.StateObjectType
+		diff                 StateObjectTypeDiff
+		trueF                func(StateObjectTypeDiff) bool
 		hasCompatibleChanges bool
 	}{
 		{
 			name: "no change",
-			oldType: schema.ObjectType{
+			oldType: schema.StateObjectType{
 				KeyFields: []schema.Field{{Name: "id", Kind: schema.Int32Kind}},
 			},
-			newType: schema.ObjectType{
+			newType: schema.StateObjectType{
 				KeyFields: []schema.Field{{Name: "id", Kind: schema.Int32Kind}},
 			},
-			diff:                 ObjectTypeDiff{},
-			trueF:                ObjectTypeDiff.Empty,
+			diff:                 StateObjectTypeDiff{},
+			trueF:                StateObjectTypeDiff.Empty,
 			hasCompatibleChanges: true,
 		},
 		{
 			name: "key fields changed",
-			oldType: schema.ObjectType{
+			oldType: schema.StateObjectType{
 				KeyFields: []schema.Field{{Name: "id", Kind: schema.Int32Kind}},
 			},
-			newType: schema.ObjectType{
+			newType: schema.StateObjectType{
 				KeyFields: []schema.Field{{Name: "id", Kind: schema.StringKind}},
 			},
-			diff: ObjectTypeDiff{
+			diff: StateObjectTypeDiff{
 				KeyFieldsDiff: FieldsDiff{
 					Changed: []FieldDiff{
 						{
@@ -47,18 +47,18 @@ func Test_objectTypeDiff(t *testing.T) {
 					},
 				},
 			},
-			trueF:                func(d ObjectTypeDiff) bool { return !d.KeyFieldsDiff.Empty() },
+			trueF:                func(d StateObjectTypeDiff) bool { return !d.KeyFieldsDiff.Empty() },
 			hasCompatibleChanges: false,
 		},
 		{
 			name: "value fields changed",
-			oldType: schema.ObjectType{
+			oldType: schema.StateObjectType{
 				ValueFields: []schema.Field{{Name: "name", Kind: schema.StringKind}},
 			},
-			newType: schema.ObjectType{
+			newType: schema.StateObjectType{
 				ValueFields: []schema.Field{{Name: "name", Kind: schema.Int32Kind}},
 			},
-			diff: ObjectTypeDiff{
+			diff: StateObjectTypeDiff{
 				ValueFieldsDiff: FieldsDiff{
 					Changed: []FieldDiff{
 						{
@@ -69,52 +69,52 @@ func Test_objectTypeDiff(t *testing.T) {
 					},
 				},
 			},
-			trueF:                func(d ObjectTypeDiff) bool { return !d.ValueFieldsDiff.Empty() },
+			trueF:                func(d StateObjectTypeDiff) bool { return !d.ValueFieldsDiff.Empty() },
 			hasCompatibleChanges: false,
 		},
 		{
 			name: "nullable value field added",
-			oldType: schema.ObjectType{
+			oldType: schema.StateObjectType{
 				ValueFields: []schema.Field{{Name: "id", Kind: schema.Int32Kind}},
 			},
-			newType: schema.ObjectType{
+			newType: schema.StateObjectType{
 				ValueFields: []schema.Field{{Name: "id", Kind: schema.Int32Kind}, {Name: "name", Kind: schema.StringKind, Nullable: true}},
 			},
-			diff: ObjectTypeDiff{
+			diff: StateObjectTypeDiff{
 				ValueFieldsDiff: FieldsDiff{
 					Added: []schema.Field{{Name: "name", Kind: schema.StringKind, Nullable: true}},
 				},
 			},
-			trueF:                func(d ObjectTypeDiff) bool { return !d.ValueFieldsDiff.Empty() },
+			trueF:                func(d StateObjectTypeDiff) bool { return !d.ValueFieldsDiff.Empty() },
 			hasCompatibleChanges: true,
 		},
 		{
 			name: "non-nullable value field added",
-			oldType: schema.ObjectType{
+			oldType: schema.StateObjectType{
 				ValueFields: []schema.Field{{Name: "id", Kind: schema.Int32Kind}},
 			},
-			newType: schema.ObjectType{
+			newType: schema.StateObjectType{
 				ValueFields: []schema.Field{{Name: "id", Kind: schema.Int32Kind}, {Name: "name", Kind: schema.StringKind}},
 			},
-			diff: ObjectTypeDiff{
+			diff: StateObjectTypeDiff{
 				ValueFieldsDiff: FieldsDiff{
 					Added: []schema.Field{{Name: "name", Kind: schema.StringKind}},
 				},
 			},
-			trueF:                func(d ObjectTypeDiff) bool { return !d.ValueFieldsDiff.Empty() },
+			trueF:                func(d StateObjectTypeDiff) bool { return !d.ValueFieldsDiff.Empty() },
 			hasCompatibleChanges: false,
 		},
 		{
 			name: "fields reordered",
-			oldType: schema.ObjectType{
+			oldType: schema.StateObjectType{
 				KeyFields:   []schema.Field{{Name: "id", Kind: schema.Int32Kind}, {Name: "name", Kind: schema.StringKind}},
 				ValueFields: []schema.Field{{Name: "x", Kind: schema.Int32Kind}, {Name: "y", Kind: schema.StringKind}},
 			},
-			newType: schema.ObjectType{
+			newType: schema.StateObjectType{
 				KeyFields:   []schema.Field{{Name: "name", Kind: schema.StringKind}, {Name: "id", Kind: schema.Int32Kind}},
 				ValueFields: []schema.Field{{Name: "y", Kind: schema.StringKind}, {Name: "x", Kind: schema.Int32Kind}},
 			},
-			diff: ObjectTypeDiff{
+			diff: StateObjectTypeDiff{
 				KeyFieldsDiff: FieldsDiff{
 					OldOrder: []string{"id", "name"},
 					NewOrder: []string{"name", "id"},
@@ -124,7 +124,7 @@ func Test_objectTypeDiff(t *testing.T) {
 					NewOrder: []string{"y", "x"},
 				},
 			},
-			trueF:                func(d ObjectTypeDiff) bool { return !d.KeyFieldsDiff.Empty() && !d.ValueFieldsDiff.Empty() },
+			trueF:                func(d StateObjectTypeDiff) bool { return !d.KeyFieldsDiff.Empty() && !d.ValueFieldsDiff.Empty() },
 			hasCompatibleChanges: false,
 		},
 	}

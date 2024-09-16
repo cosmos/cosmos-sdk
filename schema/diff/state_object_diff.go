@@ -2,10 +2,10 @@ package diff
 
 import "cosmossdk.io/schema"
 
-// ObjectTypeDiff represents the difference between two object types.
+// StateObjectTypeDiff represents the difference between two object types.
 // The Empty method of KeyFieldsDiff and ValueFieldsDiff can be used to determine
 // if there were any changes to the key fields or value fields.
-type ObjectTypeDiff struct {
+type StateObjectTypeDiff struct {
 	// Name is the name of the object type.
 	Name string
 
@@ -39,8 +39,8 @@ type FieldsDiff struct {
 	NewOrder []string
 }
 
-func compareObjectType(oldObj, newObj schema.ObjectType) ObjectTypeDiff {
-	diff := ObjectTypeDiff{
+func compareObjectType(oldObj, newObj schema.StateObjectType) StateObjectTypeDiff {
+	diff := StateObjectTypeDiff{
 		Name: oldObj.TypeName(),
 	}
 
@@ -101,13 +101,13 @@ func compareFields(oldFields, newFields []schema.Field) FieldsDiff {
 }
 
 // Empty returns true if the object type diff has no changes.
-func (o ObjectTypeDiff) Empty() bool {
+func (o StateObjectTypeDiff) Empty() bool {
 	return o.KeyFieldsDiff.Empty() && o.ValueFieldsDiff.Empty()
 }
 
 // HasCompatibleChanges returns true if the diff contains only compatible changes.
 // The only supported compatible change is adding nullable value fields.
-func (o ObjectTypeDiff) HasCompatibleChanges() bool {
+func (o StateObjectTypeDiff) HasCompatibleChanges() bool {
 	if !o.KeyFieldsDiff.Empty() {
 		return false
 	}

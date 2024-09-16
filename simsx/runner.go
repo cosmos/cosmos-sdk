@@ -361,6 +361,15 @@ func (f AppOptionsFn) Get(k string) any {
 	return f(k)
 }
 
+func (f AppOptionsFn) GetString(k string) string {
+	val := f(k)
+	ret, ok := val.(string)
+	if !ok {
+		panic(fmt.Sprintf("app options value is not a string: %T", val))
+	}
+	return ret
+}
+
 // FauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
 // an IAVLStore for faster simulation speed.
 func FauxMerkleModeOpt(bapp *baseapp.BaseApp) {

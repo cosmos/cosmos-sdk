@@ -157,7 +157,7 @@ It only exposes the following methods to the hypervisor:
 - `create(account address, state config)`: creates a new account state with the specified address and **state config**.
 - `migrate(account address, new state config)`: migrates the account state with the specified address to a new state config
 - `destroy(account address)`: destroys the account state with the specified address
-- `begin_tx(state_token)`: creates a nested transaction within the specified state token
+- `begin_tx(state_token, account address)`: creates a nested transaction within the specified state token for the specified account address
 - `commit_tx(state token)`: commits any state changes in the current nested transaction of the specified state token
 - `rollback_tx(state token)`: discards any state changes in the current nested transaction of the specified state token
 - `discard_cleanup(state token)`: cleans up and discards the current state token
@@ -332,17 +332,21 @@ although message handlers are free to use **output data pointer 2** if necessary
 System-level errors, if they do include additional data, will encode it as a string in **output data pointer 1**
 and will limit such messages to a maximum of 255 bytes.
 
-#### Errors and State Transactions
+#### State Transactions and Errors
 
 Whenever a volatile message handler returns an error, no side effects can occur.
 If any side effects were applied to state before the error occurred, these must be rolled back.
 The hypervisor manages this using the `begin_tx`, `commit_tx`, and `rollback_tx` on the **state handler**.
 
-Before any call to a volatile method,
-the hypervisor will call `begin_tx` with the state token passed in the message request.
+Before any call to a method,
+the hypervisor will call `begin_tx` with the state token passed in the message request
+and the authenticated caller address tracked by the hypervisor.
 If the method returns the core `0` for success, then the hypervisor will call `commit_tx` with the state token.
 If the method returns an error code, then the hypervisor will call `rollback_tx` with the state token
 and return the error to the caller.
+The state handler should use the account address passed in `begin_tx` to identify the state
+location that is being modified, rather than the caller address because the
+caller address can be impersonated with authorization middleware.
 
 This ensures state consistency in the presence of errors.
 

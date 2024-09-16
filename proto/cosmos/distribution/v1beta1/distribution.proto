@@ -41,6 +41,13 @@ message Params {
   ];
 
   bool withdraw_addr_enabled = 4;
+
+  string mca_tax = 5 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (amino.dont_omitempty) = true,
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // ValidatorHistoricalRewards represents historical rewards for a validator.

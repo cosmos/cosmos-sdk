@@ -221,7 +221,6 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-
 		t.Run(tc.name, func(t *testing.T) {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 

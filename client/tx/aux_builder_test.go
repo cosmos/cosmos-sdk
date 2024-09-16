@@ -214,7 +214,6 @@ func TestAuxTxBuilder(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-
 		t.Run(tc.name, func(t *testing.T) {
 			b = tx.NewAuxTxBuilder()
 			err := tc.malleate()

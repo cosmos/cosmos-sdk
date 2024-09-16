@@ -140,7 +140,6 @@ func TestCollectionPagination(t *testing.T) {
 	}
 
 	for name, tc := range tcs {
-
 		t.Run(name, func(t *testing.T) {
 			gotResults, gotResponse, err := CollectionFilteredPaginate(
 				ctx,

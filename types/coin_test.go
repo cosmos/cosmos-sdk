@@ -178,7 +178,6 @@ func (s *coinTestSuite) TestAddCoin() {
 	}
 
 	for tcIndex, tc := range cases {
-
 		if tc.shouldPanic {
 			s.Require().Panics(func() { tc.inputOne.Add(tc.inputTwo) })
 		} else {
@@ -218,7 +217,6 @@ func (s *coinTestSuite) TestSubCoin() {
 	}
 
 	for tcIndex, tc := range cases {
-
 		if tc.shouldPanic {
 			s.Require().Panics(func() { tc.inputOne.Sub(tc.inputTwo) })
 		} else {
@@ -274,7 +272,6 @@ func (s *coinTestSuite) TestMulIntCoins() {
 
 	assert := s.Assert()
 	for i, tc := range testCases {
-
 		if tc.shouldPanic {
 			assert.Panics(func() { tc.input.MulInt(tc.multiplier) })
 		} else {
@@ -301,7 +298,6 @@ func (s *coinTestSuite) TestQuoIntCoins() {
 
 	assert := s.Assert()
 	for i, tc := range testCases {
-
 		if tc.shouldPanic {
 			assert.Panics(func() { tc.input.QuoInt(tc.divisor) })
 		} else {
@@ -326,7 +322,6 @@ func (s *coinTestSuite) TestIsGTCoin() {
 	}
 
 	for tcIndex, tc := range cases {
-
 		if tc.panics {
 			s.Require().Panics(func() { tc.inputOne.IsGT(tc.inputTwo) })
 		} else {
@@ -350,7 +345,6 @@ func (s *coinTestSuite) TestIsGTECoin() {
 	}
 
 	for tcIndex, tc := range cases {
-
 		if tc.panics {
 			s.Require().Panics(func() { tc.inputOne.IsGTE(tc.inputTwo) })
 		} else {
@@ -374,7 +368,6 @@ func (s *coinTestSuite) TestIsLTECoin() {
 	}
 
 	for tcIndex, tc := range cases {
-
 		if tc.panics {
 			s.Require().Panics(func() { tc.inputOne.IsLTE(tc.inputTwo) })
 		} else {
@@ -400,7 +393,6 @@ func (s *coinTestSuite) TestIsLTCoin() {
 	}
 
 	for tcIndex, tc := range cases {
-
 		if tc.panics {
 			s.Require().Panics(func() { tc.inputOne.IsLT(tc.inputTwo) })
 		} else {
@@ -683,7 +675,6 @@ func (s *coinTestSuite) TestSubCoins() {
 
 	assert := s.Assert()
 	for i, tc := range testCases {
-
 		if tc.shouldPanic {
 			assert.Panics(func() { tc.inputOne.Sub(tc.inputTwo...) })
 		} else {

@@ -116,7 +116,6 @@ func (s *utilsTestSuite) TestParseTime() {
 	}
 
 	for _, tc := range testCases {
-
 		s.Run(tc.name, func() {
 			tm, err := sdk.ParseTime(tc.input)
 			if tc.expectErr {

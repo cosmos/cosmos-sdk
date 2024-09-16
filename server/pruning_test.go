@@ -49,7 +49,6 @@ func TestGetPruningOptionsFromFlags(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-
 		t.Run(tt.name, func(j *testing.T) {
 			viper.Reset()
 			viper.SetDefault(FlagPruning, pruningtypes.PruningOptionDefault)

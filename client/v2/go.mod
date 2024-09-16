@@ -13,7 +13,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
-	google.golang.org/grpc v1.66.1
+	google.golang.org/grpc v1.66.2
 	google.golang.org/protobuf v1.34.2
 	gotest.tools/v3 v3.5.1
 	sigs.k8s.io/yaml v1.4.0
@@ -168,6 +168,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 )
+
+require cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000 // indirect
 
 replace github.com/cosmos/cosmos-sdk => ./../../
 

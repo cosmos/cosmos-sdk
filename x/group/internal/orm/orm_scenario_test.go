@@ -281,7 +281,6 @@ func TestGasCostsPrimaryKeyTable(t *testing.T) {
 	for i, m := range tms {
 		testCtx.Ctx = testCtx.Ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 
-		m := m
 		err = k.primaryKeyTable.Delete(store, &m)
 
 		require.NoError(t, err)

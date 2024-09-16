@@ -24,6 +24,7 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
+	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
@@ -105,7 +106,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		appI.Name(),
 		appI.GetConsensusAuthority(),
 		appI.GetAppManager(),
-		s.serverOptions.Mempool,
+		s.serverOptions.Mempool(cfg),
 		indexEvents,
 		appI.GetGPRCMethodsToMessageMap(),
 		store,
@@ -127,7 +128,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	if err != nil {
 		return err
 	}
-	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.serverOptions.SnapshotOptions, sc, ss, nil, s.logger)
+	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.serverOptions.SnapshotOptions(cfg), sc, ss, nil, s.logger)
 
 	s.Consensus = consensus
 
@@ -240,6 +241,7 @@ func (s *CometBFTServer[T]) StartCmdFlags() *pflag.FlagSet {
 	flags.Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
 	flags.Bool(FlagTrace, false, "Provide full stack traces for errors in ABCI Log")
 	flags.Bool(Standalone, false, "Run app without CometBFT")
+	flags.Int(FlagMempoolMaxTxs, mempool.DefaultMaxTx, "Sets MaxTx value for the app-side mempool")
 
 	// add comet flags, we use an empty command to avoid duplicating CometBFT's AddNodeFlags.
 	// we can then merge the flag sets.

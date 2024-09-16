@@ -102,7 +102,7 @@ func TestABCIInfoSerializeErr(t *testing.T) {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
+
 		_, _, log := ABCIInfo(spec.src, spec.debug)
 		if log != spec.exp {
 			t.Errorf("%s: expected log %s, got %s", msg, spec.exp, log)

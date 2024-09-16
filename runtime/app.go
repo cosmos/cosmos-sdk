@@ -10,7 +10,7 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -50,7 +50,7 @@ type App struct {
 	storeKeys         []storetypes.StoreKey
 	interfaceRegistry codectypes.InterfaceRegistry
 	cdc               codec.Codec
-	amino             legacy.Amino
+	amino             registry.AminoRegistrar
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
 	grpcQueryRouter   *baseapp.GRPCQueryRouter
@@ -173,6 +173,9 @@ func (a *App) Close() error {
 
 // PreBlocker application updates every pre block
 func (a *App) PreBlocker(ctx sdk.Context, _ *abci.FinalizeBlockRequest) error {
+	if a.UnorderedTxManager != nil {
+		a.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
+	}
 	return a.ModuleManager.PreBlock(ctx)
 }
 

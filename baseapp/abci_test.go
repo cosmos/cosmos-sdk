@@ -19,7 +19,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
@@ -28,6 +27,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -39,6 +39,7 @@ import (
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -104,7 +105,7 @@ func TestABCI_First_block_Height(t *testing.T) {
 
 func TestABCI_InitChain(t *testing.T) {
 	name := t.Name()
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	logger := log.NewTestLogger(t)
 	app := baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetChainID("test-chain-id"))
 
@@ -204,7 +205,7 @@ func TestABCI_InitChain(t *testing.T) {
 
 func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	_, err := app.InitChain(
@@ -221,7 +222,7 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 
 func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 	name := t.Name()
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	_, err := app.InitChain(
@@ -243,7 +244,7 @@ func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 
 func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 	name := t.Name()
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
@@ -310,7 +311,7 @@ func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 
 func TestABCI_ExtendVote(t *testing.T) {
 	name := t.Name()
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error) {
@@ -328,7 +329,7 @@ func TestABCI_ExtendVote(t *testing.T) {
 		return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT}, nil
 	})
 
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(&paramStore{db: coretesting.NewMemDB()})
 	_, err := app.InitChain(
 		&abci.InitChainRequest{
 			InitialHeight: 1,
@@ -393,7 +394,7 @@ func TestABCI_ExtendVote(t *testing.T) {
 // without having called ExtendVote before.
 func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 	name := t.Name()
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
@@ -406,7 +407,7 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 		return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT}, nil
 	})
 
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(&paramStore{db: coretesting.NewMemDB()})
 	_, err := app.InitChain(
 		&abci.InitChainRequest{
 			InitialHeight: 1,
@@ -526,7 +527,7 @@ func TestABCI_P2PQuery(t *testing.T) {
 }
 
 func TestBaseApp_PrepareCheckState(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	logger := log.NewTestLogger(t)
 
@@ -537,7 +538,7 @@ func TestBaseApp_PrepareCheckState(t *testing.T) {
 	}
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(&paramStore{db: coretesting.NewMemDB()})
 	_, err := app.InitChain(&abci.InitChainRequest{
 		ConsensusParams: cp,
 	})
@@ -555,7 +556,7 @@ func TestBaseApp_PrepareCheckState(t *testing.T) {
 }
 
 func TestBaseApp_Precommit(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	logger := log.NewTestLogger(t)
 
@@ -566,7 +567,7 @@ func TestBaseApp_Precommit(t *testing.T) {
 	}
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(&paramStore{db: coretesting.NewMemDB()})
 	_, err := app.InitChain(&abci.InitChainRequest{
 		ConsensusParams: cp,
 	})
@@ -600,7 +601,7 @@ func TestABCI_CheckTx(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := int64(0); i < nTxs; i++ {
-		tx := newTxCounter(t, suite.txConfig, i, 0) // no messages
+		tx := newTxCounter(t, suite.txConfig, suite.ac, i, 0) // no messages
 		txBytes, err := suite.txConfig.TxEncoder()(tx)
 		require.NoError(t, err)
 
@@ -655,7 +656,7 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 		txs := [][]byte{}
 		for i := 0; i < txPerHeight; i++ {
 			counter := int64(blockN*txPerHeight + i)
-			tx := newTxCounter(t, suite.txConfig, counter, counter)
+			tx := newTxCounter(t, suite.txConfig, suite.ac, counter, counter)
 
 			txBytes, err := suite.txConfig.TxEncoder()(tx)
 			require.NoError(t, err)
@@ -703,7 +704,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 
 	// run a multi-msg tx
 	// with all msgs the same route
-	tx := newTxCounter(t, suite.txConfig, 0, 0, 1, 2)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0, 1, 2)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -724,13 +725,15 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	require.Equal(t, int64(3), msgCounter)
 
 	// replace the second message with a Counter2
-	tx = newTxCounter(t, suite.txConfig, 1, 3)
+	tx = newTxCounter(t, suite.txConfig, suite.ac, 1, 3)
 
 	builder := suite.txConfig.NewTxBuilder()
 	msgs := tx.GetMsgs()
 	_, _, addr := testdata.KeyTestPubAddr()
-	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 0, Signer: addr.String()})
-	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 1, Signer: addr.String()})
+	addrStr, err := suite.ac.BytesToString(addr)
+	require.NoError(t, err)
+	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 0, Signer: addrStr})
+	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 1, Signer: addrStr})
 
 	err = builder.SetMsgs(msgs...)
 	require.NoError(t, err)
@@ -789,8 +792,13 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 	baseapptestutil.RegisterNestedMessagesServer(suite.baseApp.MsgServiceRouter(), NestedMessgesServerImpl{})
 	baseapptestutil.RegisterSendServer(suite.baseApp.MsgServiceRouter(), SendServerImpl{})
 
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	_, _, addr := testdata.KeyTestPubAddr()
 	_, _, toAddr := testdata.KeyTestPubAddr()
+	addrStr, err := ac.BytesToString(addr)
+	require.NoError(t, err)
+	toAddrStr, err := ac.BytesToString(toAddr)
+	require.NoError(t, err)
 	tests := []struct {
 		name    string
 		message sdk.Msg
@@ -799,16 +807,16 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 		{
 			name: "ok nested message",
 			message: &baseapptestutil.MsgSend{
-				From:   addr.String(),
-				To:     toAddr.String(),
+				From:   addrStr,
+				To:     toAddrStr,
 				Amount: "10000stake",
 			},
 		},
 		{
 			name: "different signers",
 			message: &baseapptestutil.MsgSend{
-				From:   toAddr.String(),
-				To:     addr.String(),
+				From:   toAddrStr,
+				To:     addrStr,
 				Amount: "10000stake",
 			},
 			wantErr: true,
@@ -817,7 +825,7 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 			name: "empty from",
 			message: &baseapptestutil.MsgSend{
 				From:   "",
-				To:     toAddr.String(),
+				To:     toAddrStr,
 				Amount: "10000stake",
 			},
 			wantErr: true,
@@ -825,7 +833,7 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 		{
 			name: "empty to",
 			message: &baseapptestutil.MsgSend{
-				From:   addr.String(),
+				From:   addrStr,
 				To:     "",
 				Amount: "10000stake",
 			},
@@ -834,8 +842,8 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 		{
 			name: "negative amount",
 			message: &baseapptestutil.MsgSend{
-				From:   addr.String(),
-				To:     toAddr.String(),
+				From:   addrStr,
+				To:     toAddrStr,
 				Amount: "-10000stake",
 			},
 			wantErr: true,
@@ -843,11 +851,11 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 		{
 			name: "with nested messages",
 			message: &baseapptestutil.MsgNestedMessages{
-				Signer: addr.String(),
+				Signer: addrStr,
 				Messages: []*any.Any{
 					anyMessage(t, suite.cdc, &baseapptestutil.MsgSend{
-						From:   addr.String(),
-						To:     toAddr.String(),
+						From:   addrStr,
+						To:     toAddrStr,
 						Amount: "10000stake",
 					}),
 				},
@@ -856,11 +864,11 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 		{
 			name: "with invalid nested messages",
 			message: &baseapptestutil.MsgNestedMessages{
-				Signer: addr.String(),
+				Signer: addrStr,
 				Messages: []*any.Any{
 					anyMessage(t, suite.cdc, &baseapptestutil.MsgSend{
 						From:   "",
-						To:     toAddr.String(),
+						To:     toAddrStr,
 						Amount: "10000stake",
 					}),
 				},
@@ -870,11 +878,11 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 		{
 			name: "with different signer ",
 			message: &baseapptestutil.MsgNestedMessages{
-				Signer: addr.String(),
+				Signer: addrStr,
 				Messages: []*any.Any{
 					anyMessage(t, suite.cdc, &baseapptestutil.MsgSend{
-						From:   toAddr.String(),
-						To:     addr.String(),
+						From:   toAddrStr,
+						To:     addrStr,
 						Amount: "10000stake",
 					}),
 				},
@@ -894,7 +902,7 @@ func TestABCI_Query_SimulateNestedMessagesTx(t *testing.T) {
 
 			msg := &baseapptestutil.MsgNestedMessages{
 				Messages: nestedMessages,
-				Signer:   addr.String(),
+				Signer:   addrStr,
 			}
 
 			builder := suite.txConfig.NewTxBuilder()
@@ -926,9 +934,13 @@ func TestABCI_Query_SimulateNestedMessagesGas(t *testing.T) {
 		})
 	}
 
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	_, _, addr := testdata.KeyTestPubAddr()
 	_, _, toAddr := testdata.KeyTestPubAddr()
-
+	addrStr, err := ac.BytesToString(addr)
+	require.NoError(t, err)
+	toAddrStr, err := ac.BytesToString(toAddr)
+	require.NoError(t, err)
 	tests := []struct {
 		name        string
 		suite       *BaseAppSuite
@@ -939,8 +951,8 @@ func TestABCI_Query_SimulateNestedMessagesGas(t *testing.T) {
 			name:  "don't add gas",
 			suite: NewBaseAppSuite(t, anteOpt),
 			message: &baseapptestutil.MsgSend{
-				From:   addr.String(),
-				To:     toAddr.String(),
+				From:   addrStr,
+				To:     toAddrStr,
 				Amount: "10000stake",
 			},
 			consumedGas: 5,
@@ -949,8 +961,8 @@ func TestABCI_Query_SimulateNestedMessagesGas(t *testing.T) {
 			name:  "add gas",
 			suite: NewBaseAppSuite(t, anteOpt, baseapp.SetIncludeNestedMsgsGas([]sdk.Msg{&baseapptestutil.MsgNestedMessages{}})),
 			message: &baseapptestutil.MsgSend{
-				From:   addr.String(),
-				To:     toAddr.String(),
+				From:   addrStr,
+				To:     toAddrStr,
 				Amount: "10000stake",
 			},
 			consumedGas: 10,
@@ -976,7 +988,7 @@ func TestABCI_Query_SimulateNestedMessagesGas(t *testing.T) {
 
 			msg := &baseapptestutil.MsgNestedMessages{
 				Messages: nestedMessages,
-				Signer:   addr.String(),
+				Signer:   addrStr,
 			}
 
 			builder := tt.suite.txConfig.NewTxBuilder()
@@ -1017,7 +1029,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	for blockN := 0; blockN < nBlocks; blockN++ {
 		count := int64(blockN + 1)
 
-		tx := newTxCounter(t, suite.txConfig, count, count)
+		tx := newTxCounter(t, suite.txConfig, suite.ac, count, count)
 
 		txBytes, err := suite.txConfig.TxEncoder()(tx)
 		require.Nil(t, err)
@@ -1108,14 +1120,14 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 			tx   signing.Tx
 			fail bool
 		}{
-			{newTxCounter(t, suite.txConfig, 0, 0), false},
-			{newTxCounter(t, suite.txConfig, -1, 0), false},
-			{newTxCounter(t, suite.txConfig, 100, 100), false},
-			{newTxCounter(t, suite.txConfig, 100, 5, 4, 3, 2, 1), false},
+			{newTxCounter(t, suite.txConfig, suite.ac, 0, 0), false},
+			{newTxCounter(t, suite.txConfig, suite.ac, -1, 0), false},
+			{newTxCounter(t, suite.txConfig, suite.ac, 100, 100), false},
+			{newTxCounter(t, suite.txConfig, suite.ac, 100, 5, 4, 3, 2, 1), false},
 
-			{newTxCounter(t, suite.txConfig, 0, -1), true},
-			{newTxCounter(t, suite.txConfig, 0, 1, -2), true},
-			{newTxCounter(t, suite.txConfig, 0, 1, 2, -10, 5), true},
+			{newTxCounter(t, suite.txConfig, suite.ac, 0, -1), true},
+			{newTxCounter(t, suite.txConfig, suite.ac, 0, 1, -2), true},
+			{newTxCounter(t, suite.txConfig, suite.ac, 0, 1, 2, -10, 5), true},
 		}
 
 		for _, testCase := range testCases {
@@ -1138,7 +1150,9 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 	{
 		txBuilder := suite.txConfig.NewTxBuilder()
 		_, _, addr := testdata.KeyTestPubAddr()
-		err = txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{Signer: addr.String()})
+		addrStr, err := suite.ac.BytesToString(addr)
+		require.NoError(t, err)
+		err = txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{Signer: addrStr})
 		require.NoError(t, err)
 		setTxSignature(t, txBuilder, 0)
 		unknownRouteTx := txBuilder.GetTx()
@@ -1153,8 +1167,8 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 
 		txBuilder = suite.txConfig.NewTxBuilder()
 		err = txBuilder.SetMsgs(
-			&baseapptestutil.MsgCounter{Signer: addr.String()},
-			&baseapptestutil.MsgCounter2{Signer: addr.String()},
+			&baseapptestutil.MsgCounter{Signer: addrStr},
+			&baseapptestutil.MsgCounter2{Signer: addrStr},
 		)
 		require.NoError(t, err)
 		setTxSignature(t, txBuilder, 0)
@@ -1219,19 +1233,19 @@ func TestABCI_TxGasLimits(t *testing.T) {
 		gasUsed int64
 		fail    bool
 	}{
-		{newTxCounter(t, suite.txConfig, 0, 0), 0, false},
-		{newTxCounter(t, suite.txConfig, 1, 1), 2, false},
-		{newTxCounter(t, suite.txConfig, 9, 1), 10, false},
-		{newTxCounter(t, suite.txConfig, 1, 9), 10, false},
-		{newTxCounter(t, suite.txConfig, 10, 0), 10, false},
+		{newTxCounter(t, suite.txConfig, suite.ac, 0, 0), 0, false},
+		{newTxCounter(t, suite.txConfig, suite.ac, 1, 1), 2, false},
+		{newTxCounter(t, suite.txConfig, suite.ac, 9, 1), 10, false},
+		{newTxCounter(t, suite.txConfig, suite.ac, 1, 9), 10, false},
+		{newTxCounter(t, suite.txConfig, suite.ac, 10, 0), 10, false},
 
-		{newTxCounter(t, suite.txConfig, 9, 2), 11, true},
-		{newTxCounter(t, suite.txConfig, 2, 9), 11, true},
-		// {newTxCounter(t, suite.txConfig, 9, 1, 1), 11, true},
-		// {newTxCounter(t, suite.txConfig, 1, 8, 1, 1), 11, true},
-		//  {newTxCounter(t, suite.txConfig, 11, 0), 11, true},
-		//  {newTxCounter(t, suite.txConfig, 0, 11), 11, true},
-		//  {newTxCounter(t, suite.txConfig, 0, 5, 11), 16, true},
+		{newTxCounter(t, suite.txConfig, suite.ac, 9, 2), 11, true},
+		{newTxCounter(t, suite.txConfig, suite.ac, 2, 9), 11, true},
+		// {newTxCounter(t, suite.txConfig, suite.ac, 9, 1, 1), 11, true},
+		// {newTxCounter(t, suite.txConfig, suite.ac, 1, 8, 1, 1), 11, true},
+		//  {newTxCounter(t, suite.txConfig, suite.ac, 11, 0), 11, true},
+		//  {newTxCounter(t, suite.txConfig, suite.ac, 0, 11), 11, true},
+		//  {newTxCounter(t, suite.txConfig, suite.ac, 0, 5, 11), 16, true},
 	}
 
 	txs := [][]byte{}
@@ -1312,16 +1326,16 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 		fail              bool
 		failAfterDeliver  int
 	}{
-		{newTxCounter(t, suite.txConfig, 0, 0), 0, 0, false, 0},
-		{newTxCounter(t, suite.txConfig, 9, 1), 2, 10, false, 0},
-		{newTxCounter(t, suite.txConfig, 10, 0), 3, 10, false, 0},
-		{newTxCounter(t, suite.txConfig, 10, 0), 10, 10, false, 0},
-		{newTxCounter(t, suite.txConfig, 2, 7), 11, 9, false, 0},
-		// {newTxCounter(t, suite.txConfig, 10, 0), 10, 10, false, 0}, // hit the limit but pass
+		{newTxCounter(t, suite.txConfig, suite.ac, 0, 0), 0, 0, false, 0},
+		{newTxCounter(t, suite.txConfig, suite.ac, 9, 1), 2, 10, false, 0},
+		{newTxCounter(t, suite.txConfig, suite.ac, 10, 0), 3, 10, false, 0},
+		{newTxCounter(t, suite.txConfig, suite.ac, 10, 0), 10, 10, false, 0},
+		{newTxCounter(t, suite.txConfig, suite.ac, 2, 7), 11, 9, false, 0},
+		// {newTxCounter(t, suite.txConfig, suite.ac, 10, 0), 10, 10, false, 0}, // hit the limit but pass
 
-		// {newTxCounter(t, suite.txConfig, 10, 0), 11, 10, true, 10},
-		// {newTxCounter(t, suite.txConfig, 10, 0), 15, 10, true, 10},
-		// {newTxCounter(t, suite.txConfig, 9, 0), 12, 9, true, 11}, // fly past the limit
+		// {newTxCounter(t, suite.txConfig, suite.ac, 10, 0), 11, 10, true, 10},
+		// {newTxCounter(t, suite.txConfig, suite.ac, 10, 0), 15, 10, true, 10},
+		// {newTxCounter(t, suite.txConfig, suite.ac, 9, 0), 12, 9, true, 11}, // fly past the limit
 	}
 
 	for i, tc := range testCases {
@@ -1403,13 +1417,13 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	tx := newTxCounter(t, suite.txConfig, 5, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 5, 0)
 	tx = setFailOnAnte(t, suite.txConfig, tx, true)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
 	// require next tx to fail due to black gas limit
-	tx = newTxCounter(t, suite.txConfig, 5, 0)
+	tx = newTxCounter(t, suite.txConfig, suite.ac, 5, 0)
 	txBytes2, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -1445,7 +1459,7 @@ func TestABCI_Query(t *testing.T) {
 		Path: "/store/key1/key",
 		Data: key,
 	}
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 
 	// query is empty before we do anything
 	res, err := suite.baseApp.Query(context.TODO(), &query)
@@ -1485,10 +1499,10 @@ func TestABCI_Query(t *testing.T) {
 
 func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 	logger := log.NewTestLogger(t)
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 
-	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
+	snapshotStore, err := snapshots.NewStore(coretesting.NewMemDB(), testutil.GetTempDir(t))
 	require.NoError(t, err)
 
 	testCases := map[string]struct {
@@ -1577,7 +1591,7 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 
-		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+		tc.bapp.SetParamStore(&paramStore{db: coretesting.NewMemDB()})
 		_, err := tc.bapp.InitChain(&abci.InitChainRequest{
 			ConsensusParams: &cmtproto.ConsensusParams{
 				Evidence: &cmtproto.EvidenceParams{
@@ -1598,7 +1612,7 @@ func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 	t.Parallel()
 
 	logger := log.NewTestLogger(t)
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 
@@ -1621,7 +1635,7 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 	t.Parallel()
 
 	logger := log.NewTestLogger(t)
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 
@@ -1656,7 +1670,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	tx := newTxCounter(t, suite.txConfig, 0, 1)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 1)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -1667,7 +1681,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	_, err = suite.baseApp.CheckTx(&reqCheckTx)
 	require.NoError(t, err)
 
-	tx2 := newTxCounter(t, suite.txConfig, 1, 1)
+	tx2 := newTxCounter(t, suite.txConfig, suite.ac, 1, 1)
 
 	tx2Bytes, err := suite.txConfig.TxEncoder()(tx2)
 	require.NoError(t, err)
@@ -1837,7 +1851,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	var expectedTxBytes int64
 
 	for i := 0; i < 100; i++ {
-		tx2 := newTxCounter(t, suite.txConfig, int64(i), int64(i))
+		tx2 := newTxCounter(t, suite.txConfig, suite.ac, int64(i), int64(i))
 		err := pool.Insert(sdk.Context{}, tx2)
 		require.NoError(t, err)
 
@@ -1873,7 +1887,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 	err = pool.Insert(sdk.Context{}, tx)
 	require.NoError(t, err)
 
@@ -1901,8 +1915,10 @@ func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
 	require.NoError(t, err)
 	// insert 100 txs, each with a gas limit of 10
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := suite.ac.BytesToString(addr)
+	require.NoError(t, err)
 	for i := int64(0); i < 100; i++ {
-		msg := &baseapptestutil.MsgCounter{Counter: i, FailOnHandler: false, Signer: addr.String()}
+		msg := &baseapptestutil.MsgCounter{Counter: i, FailOnHandler: false, Signer: addrStr}
 		msgs := []sdk.Msg{msg}
 
 		builder := suite.txConfig.NewTxBuilder()
@@ -1941,8 +1957,10 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 	require.NoError(t, err)
 	// insert 100 txs, each with a gas limit of 10
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := suite.ac.BytesToString(addr)
+	require.NoError(t, err)
 	for i := int64(0); i < 100; i++ {
-		msg := &baseapptestutil.MsgCounter{Counter: i, FailOnHandler: false, Signer: addr.String()}
+		msg := &baseapptestutil.MsgCounter{Counter: i, FailOnHandler: false, Signer: addrStr}
 		msgs := []sdk.Msg{msg}
 
 		builder := suite.txConfig.NewTxBuilder()
@@ -1980,7 +1998,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 0)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -1992,7 +2010,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, checkTxRes.IsOK())
 
-	failTx := newTxCounter(t, suite.txConfig, 1, 1)
+	failTx := newTxCounter(t, suite.txConfig, suite.ac, 1, 1)
 	failTx = setFailOnAnte(t, suite.txConfig, failTx, true)
 
 	err = pool.Insert(sdk.Context{}, failTx)
@@ -2049,7 +2067,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	pk, err := cryptocodec.FromCmtProtoPublicKey(tmPk)
 	require.NoError(t, err)
 
-	consAddr := sdk.ConsAddress(addr.String())
+	consAddr := sdk.ConsAddress(addr)
 	valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(pk, nil)
 
 	// set up baseapp
@@ -2289,7 +2307,7 @@ func TestABCI_HaltChain(t *testing.T) {
 }
 
 func TestBaseApp_PreBlocker(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	logger := log.NewTestLogger(t)
 
@@ -2631,7 +2649,7 @@ func TestOptimisticExecution(t *testing.T) {
 
 	// run 50 blocks
 	for i := 0; i < 50; i++ {
-		tx := newTxCounter(t, suite.txConfig, 0, 1)
+		tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 1)
 		txBytes, err := suite.txConfig.TxEncoder()(tx)
 		require.NoError(t, err)
 
@@ -2689,7 +2707,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	tx := newTxCounter(t, suite.txConfig, 0, 1)
+	tx := newTxCounter(t, suite.txConfig, suite.ac, 0, 1)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -2700,7 +2718,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	_, err = suite.baseApp.CheckTx(&reqCheckTx)
 	require.NoError(t, err)
 
-	tx2 := newTxCounter(t, suite.txConfig, 1, 1)
+	tx2 := newTxCounter(t, suite.txConfig, suite.ac, 1, 1)
 
 	tx2Bytes, err := suite.txConfig.TxEncoder()(tx2)
 	require.NoError(t, err)

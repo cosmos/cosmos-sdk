@@ -81,8 +81,9 @@ func (s *Snapshotter) restore(height uint64, payloadReader snapshot.ExtensionPay
 
 		timestamp := binary.BigEndian.Uint64(payload[i+txHashSize : i+chunkSize])
 
-		// purge any expired txs
-		if timestamp != 0 && timestamp > height {
+		// add all txs, we don't care at this point if they are expired,
+		// we'll let the purge loop handle that
+		if timestamp != 0 {
 			s.m.Add(txHash, time.Unix(int64(timestamp), 0))
 		}
 

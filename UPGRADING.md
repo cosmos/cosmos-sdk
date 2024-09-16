@@ -44,7 +44,7 @@ To be able to simulate nested messages within a transaction, message types conta
 the nested messages. By implementing this interface, the BaseApp can simulate these nested messages during
 transaction simulation. 
 
-## [v0.52.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-alpha.0)
+## [v0.52.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0-beta.1)
 
 Documentation to migrate an application from v0.50.x to server/v2 is available elsewhere.
 It is additional to the changes described here.
@@ -53,7 +53,7 @@ It is additional to the changes described here.
 
 In this section we describe the changes made in Cosmos SDK' SimApp.
 **These changes are directly applicable to your application wiring.**
-Please read this section first, but for an exhaustive list of changes, refer to the [CHANGELOG](./simapp/CHANGELOG.md).
+Please read this section first, but for an exhaustive list of changes, refer to the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/CHANGELOG.md).
 
 #### Client (`root.go`)
 
@@ -195,7 +195,9 @@ Grpc-web embedded client has been removed from the server. If you would like to 
 
    This indicates that Envoy has started and is ready to proxy requests.
 
+	<!-- markdown-link-check-disable -->
 6. Update your client applications to connect to Envoy (http://localhost:8080 by default).
+	<!-- markdown-link-check-enable -->
 
 </details>
 
@@ -274,6 +276,20 @@ If you are still using the legacy wiring, you must enable unordered transactions
 		if err != nil {
 			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
 		}
+	}
+	```
+
+* Create or update the App's `Preblocker()` method to call the unordered tx
+  manager's `OnNewBlock()` method.
+
+	```go
+	...
+	app.SetPreblocker(app.PreBlocker)
+	...
+
+	func (app *SimApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+		app.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
+		return app.ModuleManager.PreBlock(ctx, req)
 	}
 	```
 
@@ -377,11 +393,11 @@ The signature of the extension interface `HasRegisterInterfaces` has been change
 +func (AppModule) RegisterInterfaces(registry registry.InterfaceRegistrar) {
 ```
 
-The signature of the extension interface `HasAminoCodec` has been changed to accept a `cosmossdk.io/core/legacy.Amino` instead of a `codec.LegacyAmino`. Modules should update their `HasAminoCodec` implementation to accept a `cosmossdk.io/core/legacy.Amino` interface.
+The signature of the extension interface `HasAminoCodec` has been changed to accept a `cosmossdk.io/core/registry.AminoRegistrar` instead of a `codec.LegacyAmino`. Modules should update their `HasAminoCodec` implementation to accept a `cosmossdk.io/core/registry.AminoRegistrar` interface.
 
 ```diff
 -func (AppModule) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-+func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
++func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
 ```
 
 ##### Simulation
@@ -424,6 +440,11 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 Most of Cosmos SDK modules have migrated to [collections](https://docs.cosmos.network/main/build/packages/collections).
 Many functions have been removed due to this changes as the API can be smaller thanks to collections.
 For modules that have migrated, verify you are checking against `collections.ErrNotFound` when applicable.
+
+#### `x/auth`
+
+Vesting accounts messages (and CLIs) have been removed. Existing vesting accounts will keep working but no new vesting accounts can be created.
+Use `x/accounts` lockup accounts or implement an `x/accounts` vesting account instead.
 
 #### `x/accounts`
 
@@ -1040,7 +1061,7 @@ The `simapp` package **should not be imported in your own app**. Instead, you sh
 
 #### App Wiring
 
-SimApp's `app_v2.go` is using [App Wiring](https://docs.cosmos.network/main/build/building-apps/app-go-v2), the dependency injection framework of the Cosmos SDK.
+SimApp's `app_di.go` is using [App Wiring](https://docs.cosmos.network/main/build/building-apps/app-go-di), the dependency injection framework of the Cosmos SDK.
 This means that modules are injected directly into SimApp thanks to a [configuration file](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go).
 The previous behavior, without the dependency injection framework, is still present in [`app.go`](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app.go) and is not going anywhere.
 

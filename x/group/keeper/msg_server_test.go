@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/golang/mock/gomock"
 
 	"cosmossdk.io/core/header"
@@ -1852,7 +1851,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
 				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
-				events := sdkCtx.EventManager().ABCIEvents()
+				events := sdkCtx.EventManager().Events()
 				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
 		},
@@ -1996,7 +1995,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 				timeDiff := vpe.Sub(s.sdkCtx.HeaderInfo().Time)
 				ctxVPE := sdkCtx.WithHeaderInfo(header.Info{Time: s.sdkCtx.HeaderInfo().Time.Add(timeDiff).Add(time.Second * 1)})
 				s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctxVPE))
-				events := ctxVPE.EventManager().ABCIEvents()
+				events := ctxVPE.EventManager().Events()
 
 				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
@@ -2576,7 +2575,7 @@ func (s *TestSuite) TestExecProposal() {
 			expFromBalances:   sdk.NewInt64Coin("test", 9900),
 			expToBalances:     sdk.NewInt64Coin("test", 100),
 			postRun: func(sdkCtx sdk.Context) {
-				events := sdkCtx.EventManager().ABCIEvents()
+				events := sdkCtx.EventManager().Events()
 				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
 		},
@@ -2594,7 +2593,7 @@ func (s *TestSuite) TestExecProposal() {
 			expFromBalances:   sdk.NewInt64Coin("test", 9800),
 			expToBalances:     sdk.NewInt64Coin("test", 200),
 			postRun: func(sdkCtx sdk.Context) {
-				events := sdkCtx.EventManager().ABCIEvents()
+				events := sdkCtx.EventManager().Events()
 				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
 		},
@@ -2607,7 +2606,7 @@ func (s *TestSuite) TestExecProposal() {
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			postRun: func(sdkCtx sdk.Context) {
-				events := sdkCtx.EventManager().ABCIEvents()
+				events := sdkCtx.EventManager().Events()
 				s.Require().False(eventTypeFound(events, EventProposalPruned))
 			},
 		},
@@ -2618,7 +2617,7 @@ func (s *TestSuite) TestExecProposal() {
 			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 			postRun: func(sdkCtx sdk.Context) {
-				events := sdkCtx.EventManager().ABCIEvents()
+				events := sdkCtx.EventManager().Events()
 				s.Require().False(eventTypeFound(events, EventProposalPruned))
 			},
 		},
@@ -2676,7 +2675,7 @@ func (s *TestSuite) TestExecProposal() {
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			postRun: func(sdkCtx sdk.Context) {
-				events := sdkCtx.EventManager().ABCIEvents()
+				events := sdkCtx.EventManager().Events()
 				s.Require().True(eventTypeFound(events, EventProposalPruned))
 			},
 		},
@@ -2962,7 +2961,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				res, err := s.groupKeeper.VotesByProposal(sdkCtx, &group.QueryVotesByProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
 				s.Require().Empty(res.GetVotes())
-				events := sdkCtx.EventManager().ABCIEvents()
+				events := sdkCtx.EventManager().Events()
 				s.Require().True(eventTypeFound(events, EventProposalPruned))
 
 			} else {
@@ -3366,7 +3365,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 
 			s.setNextAccount()
 
-			s.groupKeeper.GetGroupSequence(s.sdkCtx)
+			s.groupKeeper.GetGroupSequence(s.ctx)
 			policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 			s.Require().NoError(err)
 
@@ -3398,7 +3397,7 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 	}
 }
 
-func eventTypeFound(events []abci.Event, eventType string) bool {
+func eventTypeFound(events []sdk.Event, eventType string) bool {
 	eventTypeFound := false
 	for _, e := range events {
 		if e.Type == eventType {

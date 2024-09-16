@@ -416,7 +416,7 @@ func (k Querier) HistoricalInfo(ctx context.Context, req *types.QueryHistoricalI
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	return nil, status.Error(codes.Internal, "this endpoint has been deprecated and removed in 0.52")
+	return nil, status.Error(codes.Internal, "this endpoint has been deprecated and removed since v0.52")
 }
 
 // Redelegations queries redelegations of given address

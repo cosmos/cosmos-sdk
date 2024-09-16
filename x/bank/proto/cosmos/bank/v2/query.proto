@@ -1,0 +1,17 @@
+syntax = "proto3";
+package cosmos.bank.v2;
+
+import "gogoproto/gogo.proto";
+import "amino/amino.proto";
+import "cosmos/bank/v2/bank.proto";
+
+option go_package = "cosmossdk.io/x/bank/v2/types";
+
+// QueryParamsRequest defines the request type for querying x/bank/v2 parameters.
+message QueryParamsRequest {}
+
+// QueryParamsResponse defines the response type for querying x/bank/v2 parameters.
+message QueryParamsResponse {
+  // params provides the parameters of the bank module.
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}

@@ -75,7 +75,7 @@ func (c Field) ValidateValue(value interface{}, typeSet TypeSet) error {
 		}
 		err := enumType.ValidateValue(value.(string))
 		if err != nil {
-			return fmt.Errorf("invalid value for enum field %q: %v", c.Name, err)
+			return fmt.Errorf("invalid value for enum field %q: %v", c.Name, err) //nolint:errorlint // false positive due to using go1.12
 		}
 	default:
 	}

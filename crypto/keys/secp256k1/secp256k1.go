@@ -12,7 +12,7 @@ import (
 	"github.com/cometbft/cometbft/crypto"
 	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"gitlab.com/yawning/secp256k1-voi/secec"
-	"golang.org/x/crypto/ripemd160" //nolint: staticcheck // keep around for backwards compatibility
+	"golang.org/x/crypto/ripemd160" //nolint:staticcheck,gosec // keep around for backwards compatibility
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -173,8 +173,8 @@ func (pubKey *PubKey) Address() crypto.Address {
 	}
 
 	sha := sha256.Sum256(pubKey.Key)
-	hasherRIPEMD160 := ripemd160.New()
-	hasherRIPEMD160.Write(sha[:]) // does not error
+	hasherRIPEMD160 := ripemd160.New() //nolint:gosec // keep around for backwards compatibility
+	hasherRIPEMD160.Write(sha[:])      // does not error
 	return crypto.Address(hasherRIPEMD160.Sum(nil))
 }
 

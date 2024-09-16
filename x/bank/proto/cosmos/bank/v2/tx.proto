@@ -28,6 +28,7 @@ message MsgUpdateParamsResponse {}
 
 // MsgSend represents a message to send coins from one account to another.
 message MsgSend {
+  option (cosmos.msg.v1.signer)      = "from_address";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 

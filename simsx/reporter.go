@@ -235,10 +235,9 @@ func (s *ExecutionSummary) Add(module, url string, status ReporterStatus, commen
 func (s *ExecutionSummary) String() string {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
-	keys := maps.Keys(s.counts)
-	slices.Sorted(keys)
+	keys := slices.Sorted(maps.Keys(s.counts))
 	var sb strings.Builder
-	for key := range keys {
+	for _, key := range keys {
 		sb.WriteString(fmt.Sprintf("%s: %d\n", key, s.counts[key]))
 	}
 	for m, c := range s.skipReasons {

@@ -833,7 +833,7 @@ func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Conf
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
 }
 
-func (app *SimApp) ValidatorKeyProvider() baseapp.KeyGenF {
+func (app *SimApp) ValidatorKeyProvider() runtime.KeyGenF {
 	return func() (cmtcrypto.PrivKey, error) {
 		return cmted25519.GenPrivKey(), nil
 	}

@@ -32,6 +32,8 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
+type KeyGenF = func() (cmtcrypto.PrivKey, error)
+
 // App is a wrapper around BaseApp and ModuleManager that can be used in hybrid
 // app.go/app config scenarios or directly as a servertypes.Application instance.
 // To get an instance of *App, *AppBuilder must be requested as a dependency
@@ -311,7 +313,7 @@ type hasServicesV1 interface {
 	RegisterServices(grpc.ServiceRegistrar) error
 }
 
-func (a *App) ValidatorKeyProvider() baseapp.KeyGenF {
+func (a *App) ValidatorKeyProvider() KeyGenF {
 	return func() (cmtcrypto.PrivKey, error) {
 		return cmted25519.GenPrivKey(), nil
 	}

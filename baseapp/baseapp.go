@@ -12,7 +12,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -60,8 +59,6 @@ const (
 )
 
 var _ servertypes.ABCI = (*BaseApp)(nil)
-
-type KeyGenF = func() (cmtcrypto.PrivKey, error)
 
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {

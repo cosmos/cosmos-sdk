@@ -42,7 +42,7 @@ func NewApp(appSchema map[string]schema.ModuleSchema, options Options) *App {
 		moduleState, ok := app.moduleStates.Get(moduleName)
 		require.True(t, ok)
 		numUpdates := numUpdatesGen.Draw(t, "numUpdates")
-		updates := make([]schema.ObjectUpdate, numUpdates)
+		updates := make([]schema.StateObjectUpdate, numUpdates)
 		for i := 0; i < numUpdates; i++ {
 			update := moduleState.UpdateGen().Draw(t, fmt.Sprintf("update[%d]", i))
 			updates[i] = update

@@ -1249,6 +1249,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 					ante.HandlerOptions{
 						AccountKeeper:   suite.accountKeeper,
 						BankKeeper:      suite.bankKeeper,
+						ConsensusKeeper: suite.consensusKeeper,
 						FeegrantKeeper:  suite.feeGrantKeeper,
 						SignModeHandler: suite.clientCtx.TxConfig.SignModeHandler(),
 						SigGasConsumer: func(meter gas.Meter, sig signing.SignatureV2, params authtypes.Params) error {

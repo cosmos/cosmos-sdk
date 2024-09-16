@@ -3,7 +3,7 @@ module cosmossdk.io/store/v2
 go 1.23
 
 require (
-	cosmossdk.io/core v1.0.0
+	cosmossdk.io/core v1.0.0-alpha.2
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.4.1
@@ -14,7 +14,7 @@ require (
 	github.com/cosmos/ics23/go v0.11.0
 	github.com/google/btree v1.1.2
 	github.com/hashicorp/go-metrics v0.5.3
-	github.com/linxGnu/grocksdb v1.8.14
+	github.com/linxGnu/grocksdb v1.9.3
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/spf13/cast v1.7.0
 	github.com/stretchr/testify v1.9.0
@@ -63,7 +63,5 @@ require (
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace cosmossdk.io/core => ../../core
 
 replace cosmossdk.io/core/testing => ../../core/testing

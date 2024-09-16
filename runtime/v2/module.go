@@ -6,7 +6,6 @@ import (
 	"slices"
 
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -18,6 +17,7 @@ import (
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
@@ -130,6 +130,7 @@ func ProvideAppBuilder[T transaction.Tx](
 		msgRouterBuilder:        msgRouterBuilder,
 		queryRouterBuilder:      stf.NewMsgRouterBuilder(), // TODO dedicated query router
 		GRPCMethodsToMessageMap: map[string]func() proto.Message{},
+		storeLoader:             DefaultStoreLoader,
 	}
 	appBuilder := &AppBuilder[T]{app: app}
 
@@ -145,7 +146,7 @@ type AppInputs struct {
 	InterfaceRegistrar registry.InterfaceRegistrar
 	LegacyAmino        registry.AminoRegistrar
 	Logger             log.Logger
-	Viper              *viper.Viper `optional:"true"` // can be nil in client wiring
+	DynamicConfig      server.DynamicConfig `optional:"true"` // can be nil in client wiring
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -156,8 +157,8 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 
-	if inputs.Viper != nil {
-		inputs.AppBuilder.viper = inputs.Viper
+	if inputs.DynamicConfig != nil {
+		inputs.AppBuilder.config = inputs.DynamicConfig
 	}
 }
 

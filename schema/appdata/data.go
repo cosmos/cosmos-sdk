@@ -78,7 +78,7 @@ type Event struct {
 	Attributes ToEventAttributes
 }
 
-// BlockStage represents the stage of block processsing for an event.
+// BlockStage represents the stage of block processing for an event.
 type BlockStage int32
 
 const (
@@ -131,7 +131,7 @@ type ObjectUpdateData struct {
 	ModuleName string
 
 	// Updates are the object updates.
-	Updates []schema.ObjectUpdate
+	Updates []schema.StateObjectUpdate
 }
 
 // CommitData represents commit data. It is empty for now, but fields could be added later.

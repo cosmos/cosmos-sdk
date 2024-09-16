@@ -64,7 +64,7 @@ func (s *GRPCQueryTestSuite) TestQueryParamsGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequest(tc.url)
 		s.Run(tc.name, func() {
 			s.Require().NoError(err)
@@ -99,7 +99,7 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorDistributionInfoGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequest(tc.url)
 		s.Run(tc.name, func() {
 			if tc.expErr {
@@ -152,7 +152,7 @@ func (s *GRPCQueryTestSuite) TestQueryOutstandingRewardsGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 		s.Run(tc.name, func() {
 			if tc.expErr {
@@ -206,7 +206,7 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorCommissionGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 		s.Run(tc.name, func() {
 			if tc.expErr {
@@ -264,7 +264,7 @@ func (s *GRPCQueryTestSuite) TestQuerySlashesGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequest(tc.url)
 
 		s.Run(tc.name, func() {
@@ -340,7 +340,7 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 
 		s.Run(tc.name, func() {
@@ -392,7 +392,7 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorValidatorsGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequest(tc.url)
 
 		s.Run(tc.name, func() {
@@ -444,7 +444,7 @@ func (s *GRPCQueryTestSuite) TestQueryWithdrawAddressGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequest(tc.url)
 
 		s.Run(tc.name, func() {

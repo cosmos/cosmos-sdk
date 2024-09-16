@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"path/filepath"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	dbm "cosmossdk.io/store/db"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/rootmulti"
 
@@ -108,7 +108,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 	return cmd
 }
 
-func openDB(rootDir string, backendType dbm.BackendType) (corestore.KVStoreWithBatch, error) {
+func openDB(rootDir string, backendType dbm.DBType) (corestore.KVStoreWithBatch, error) {
 	dataDir := filepath.Join(rootDir, "data")
-	return dbm.NewDB("application", backendType, dataDir)
+	return dbm.NewDB("application", backendType, dataDir, nil)
 }

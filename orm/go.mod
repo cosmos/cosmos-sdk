@@ -5,16 +5,17 @@ go 1.23
 require (
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/core v1.0.0-alpha.2
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
-	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33
+	cosmossdk.io/store v1.1.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.6.0
 	github.com/iancoleman/strcase v0.3.0
 	github.com/regen-network/gocuke v1.1.1
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
+	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
 	google.golang.org/grpc v1.66.2
 	google.golang.org/protobuf v1.34.2
 	gotest.tools/v3 v3.5.1
@@ -42,7 +43,6 @@ require (
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/btree v1.1.2 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -50,7 +50,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/onsi/gomega v1.20.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.20.3 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.59.1 // indirect
@@ -59,6 +59,7 @@ require (
 	github.com/spf13/cast v1.7.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
+	github.com/tidwall/btree v1.7.0 // indirect
 	golang.org/x/net v0.29.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
@@ -67,3 +68,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
+
+replace cosmossdk.io/core/testing => ../core/testing
+
+replace cosmossdk.io/store => ../store

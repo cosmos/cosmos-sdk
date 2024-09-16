@@ -3,10 +3,10 @@ package testkv
 import (
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/orm/model/ormtable"
+	dbm "cosmossdk.io/store/db"
 )
 
 func NewGoLevelDBBackend(tb testing.TB) ormtable.Backend {

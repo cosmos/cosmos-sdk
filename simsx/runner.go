@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	dbm "cosmossdk.io/store/db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -312,7 +312,7 @@ func NewSimulationAppInstance[T SimulationApp](
 		logger = log.NewTestLoggerError(tb)
 	}
 	logger = logger.With("seed", tCfg.Seed)
-	db, err := dbm.NewDB("Simulation", dbm.BackendType(tCfg.DBBackend), dbDir)
+	db, err := dbm.NewDB("Simulation", dbm.DBType(tCfg.DBBackend), dbDir, nil)
 	require.NoError(tb, err)
 	tb.Cleanup(func() {
 		_ = db.Close() // ensure db is closed

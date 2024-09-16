@@ -211,7 +211,7 @@ func (s *decCoinTestSuite) TestIsValid() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
+
 		if tc.expectPass {
 			s.Require().True(tc.coin.IsValid(), tc.msg)
 		} else {
@@ -246,7 +246,7 @@ func (s *decCoinTestSuite) TestSubDecCoin() {
 	decCoin := sdk.NewDecCoin("mytoken", math.NewInt(10))
 
 	for _, tc := range tests {
-		tc := tc
+
 		if tc.expectPass {
 			equal := tc.coin.Sub(decCoin)
 			s.Require().Equal(equal, decCoin, tc.msg)
@@ -282,7 +282,7 @@ func (s *decCoinTestSuite) TestSubDecCoins() {
 	decCoins := sdk.NewDecCoinsFromCoins(sdk.NewCoin("btc", math.NewInt(10)), sdk.NewCoin("eth", math.NewInt(15)), sdk.NewCoin("mytoken", math.NewInt(5)))
 
 	for _, tc := range tests {
-		tc := tc
+
 		if tc.expectPass {
 			equal := tc.coins.Sub(decCoins)
 			s.Require().Equal(equal, decCoins, tc.msg)
@@ -527,7 +527,7 @@ func (s *decCoinTestSuite) TestDecCoinsQuoDecTruncate() {
 	}
 
 	for i, tc := range testCases {
-		tc := tc
+
 		if tc.panics {
 			s.Require().Panics(func() { tc.coins.QuoDecTruncate(tc.input) })
 		} else {
@@ -564,7 +564,7 @@ func (s *decCoinTestSuite) TestNewDecCoinsWithIsValid() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
+
 		if tc.expectPass {
 			s.Require().True(tc.coin.IsValid(), tc.msg)
 		} else {
@@ -591,7 +591,7 @@ func (s *decCoinTestSuite) TestNewDecCoinsWithZeroCoins() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
+
 		s.Require().Equal(sdk.NewDecCoinsFromCoins(tc.coins...).Len(), tc.expectLength)
 	}
 }
@@ -623,7 +623,7 @@ func (s *decCoinTestSuite) TestDecCoins_AddDecCoinWithIsValid() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
+
 		if tc.expectPass {
 			s.Require().True(tc.coin.IsValid(), tc.msg)
 		} else {
@@ -679,7 +679,7 @@ func (s *decCoinTestSuite) TestDecCoins_GetDenomByIndex() {
 	}
 
 	for i, tc := range testCases {
-		tc := tc
+
 		s.T().Run(tc.name, func(t *testing.T) {
 			if tc.expectedErr {
 				s.Require().Panics(func() { tc.input.GetDenomByIndex(tc.index) }, "Test should have panicked")
@@ -721,7 +721,7 @@ func (s *decCoinTestSuite) TestDecCoins_IsAllPositive() {
 	}
 
 	for i, tc := range testCases {
-		tc := tc
+
 		s.T().Run(tc.name, func(t *testing.T) {
 			if tc.expectedResult {
 				s.Require().True(tc.input.IsAllPositive(), "Test case #%d: %s", i, tc.name)
@@ -791,7 +791,7 @@ func (s *decCoinTestSuite) TestDecCoin_IsGTE() {
 	}
 
 	for i, tc := range testCases {
-		tc := tc
+
 		s.T().Run(tc.name, func(t *testing.T) {
 			if tc.expectedPanic {
 				s.Require().Panics(func() { tc.coin.IsGTE(tc.otherCoin) }, "Test case #%d: %s", i, tc.name)
@@ -835,7 +835,7 @@ func (s *decCoinTestSuite) TestDecCoins_IsZero() {
 	}
 
 	for i, tc := range testCases {
-		tc := tc
+
 		s.T().Run(tc.name, func(t *testing.T) {
 			if tc.expectedResult {
 				s.Require().True(tc.coins.IsZero(), "Test case #%d: %s", i, tc.name)
@@ -890,7 +890,7 @@ func (s *decCoinTestSuite) TestDecCoins_MulDec() {
 	}
 
 	for i, tc := range testCases {
-		tc := tc
+
 		s.T().Run(tc.name, func(t *testing.T) {
 			res := tc.coins.MulDec(tc.multiplier)
 			s.Require().Equal(tc.expectedResult, res, "Test case #%d: %s", i, tc.name)
@@ -939,7 +939,7 @@ func (s *decCoinTestSuite) TestDecCoins_MulDecTruncate() {
 	}
 
 	for i, tc := range testCases {
-		tc := tc
+
 		s.T().Run(tc.name, func(t *testing.T) {
 			if tc.expectedPanic {
 				s.Require().Panics(func() { tc.coins.MulDecTruncate(tc.multiplier) }, "Test case #%d: %s", i, tc.name)
@@ -992,7 +992,7 @@ func (s *decCoinTestSuite) TestDecCoins_QuoDec() {
 	}
 
 	for i, tc := range testCases {
-		tc := tc
+
 		s.T().Run(tc.name, func(t *testing.T) {
 			if tc.panics {
 				s.Require().Panics(func() { tc.coins.QuoDec(tc.input) }, "Test case #%d: %s", i, tc.name)

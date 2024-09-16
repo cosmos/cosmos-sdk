@@ -178,7 +178,7 @@ func (s *coinTestSuite) TestAddCoin() {
 	}
 
 	for tcIndex, tc := range cases {
-		tc := tc
+
 		if tc.shouldPanic {
 			s.Require().Panics(func() { tc.inputOne.Add(tc.inputTwo) })
 		} else {
@@ -218,7 +218,7 @@ func (s *coinTestSuite) TestSubCoin() {
 	}
 
 	for tcIndex, tc := range cases {
-		tc := tc
+
 		if tc.shouldPanic {
 			s.Require().Panics(func() { tc.inputOne.Sub(tc.inputTwo) })
 		} else {
@@ -274,7 +274,7 @@ func (s *coinTestSuite) TestMulIntCoins() {
 
 	assert := s.Assert()
 	for i, tc := range testCases {
-		tc := tc
+
 		if tc.shouldPanic {
 			assert.Panics(func() { tc.input.MulInt(tc.multiplier) })
 		} else {
@@ -301,7 +301,7 @@ func (s *coinTestSuite) TestQuoIntCoins() {
 
 	assert := s.Assert()
 	for i, tc := range testCases {
-		tc := tc
+
 		if tc.shouldPanic {
 			assert.Panics(func() { tc.input.QuoInt(tc.divisor) })
 		} else {
@@ -326,7 +326,7 @@ func (s *coinTestSuite) TestIsGTCoin() {
 	}
 
 	for tcIndex, tc := range cases {
-		tc := tc
+
 		if tc.panics {
 			s.Require().Panics(func() { tc.inputOne.IsGT(tc.inputTwo) })
 		} else {
@@ -350,7 +350,7 @@ func (s *coinTestSuite) TestIsGTECoin() {
 	}
 
 	for tcIndex, tc := range cases {
-		tc := tc
+
 		if tc.panics {
 			s.Require().Panics(func() { tc.inputOne.IsGTE(tc.inputTwo) })
 		} else {
@@ -374,7 +374,7 @@ func (s *coinTestSuite) TestIsLTECoin() {
 	}
 
 	for tcIndex, tc := range cases {
-		tc := tc
+
 		if tc.panics {
 			s.Require().Panics(func() { tc.inputOne.IsLTE(tc.inputTwo) })
 		} else {
@@ -400,7 +400,7 @@ func (s *coinTestSuite) TestIsLTCoin() {
 	}
 
 	for tcIndex, tc := range cases {
-		tc := tc
+
 		if tc.panics {
 			s.Require().Panics(func() { tc.inputOne.IsLT(tc.inputTwo) })
 		} else {
@@ -683,7 +683,7 @@ func (s *coinTestSuite) TestSubCoins() {
 
 	assert := s.Assert()
 	for i, tc := range testCases {
-		tc := tc
+
 		if tc.shouldPanic {
 			assert.Panics(func() { tc.inputOne.Sub(tc.inputTwo...) })
 		} else {
@@ -708,7 +708,7 @@ func (s *coinTestSuite) TestSafeSubCoin() {
 	}
 
 	for _, tc := range cases {
-		tc := tc
+
 		res, err := tc.inputOne.SafeSub(tc.inputTwo)
 		if err != nil {
 			s.Require().Contains(err.Error(), tc.expErrMsg)
@@ -1373,7 +1373,7 @@ func (s *coinTestSuite) TestCoinValidate() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		t := s.T()
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.coin.Validate()

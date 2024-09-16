@@ -12,7 +12,7 @@ import (
 	"github.com/cometbft/cometbft/crypto"
 	secp256k1dcrd "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"gitlab.com/yawning/secp256k1-voi/secec"
-	"golang.org/x/crypto/ripemd160" //nolint: staticcheck // keep around for backwards compatibility
+	"golang.org/x/crypto/ripemd160" //nolint:staticcheck // keep around for backwards compatibility
 
 	errorsmod "cosmossdk.io/errors"
 

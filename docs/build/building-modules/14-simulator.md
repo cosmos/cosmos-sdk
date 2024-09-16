@@ -117,7 +117,7 @@ func NewCustomApp(...) {
     gov.NewAppModule(app.govKeeper, app.accountKeeper, app.supplyKeeper),
     mint.NewAppModule(app.mintKeeper),
     distr.NewAppModule(app.distrKeeper, app.accountKeeper, app.supplyKeeper, app.stakingKeeper),
-    staking.NewAppModule(app.stakingKeeper, app.accountKeeper, app.supplyKeeper),
+    staking.NewAppModule(cdc, app.stakingKeeper),
     slashing.NewAppModule(app.slashingKeeper, app.accountKeeper, app.stakingKeeper),
   )
 

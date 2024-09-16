@@ -58,7 +58,7 @@ type GatherResponse struct {
 }
 
 // New creates a new instance of Metrics
-func New(cfg Config) (_ *Metrics, rerr error) {
+func NewMetrics(cfg *Config) (*Metrics, error) {
 	if !cfg.Enabled {
 		return nil, nil
 	}
@@ -89,7 +89,7 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		sink = memSink
 		inMemSig := metrics.DefaultInmemSignal(memSink)
 		defer func() {
-			if rerr != nil {
+			if err != nil {
 				inMemSig.Stop()
 			}
 		}()

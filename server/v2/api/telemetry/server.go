@@ -1,47 +1,62 @@
 package telemetry
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"net/http"
-	"strings"
 
-	"github.com/gorilla/mux"
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
+	serverv2 "cosmossdk.io/server/v2"
 )
 
-func RegisterMetrics(r mux.Router, cfg Config) (*Metrics, error) {
-	m, err := New(cfg)
-	if err != nil {
-		return nil, err
-	}
+var (
+	_ serverv2.ServerComponent[transaction.Tx] = (*TelemetryServer[transaction.Tx])(nil)
+	_ serverv2.HasConfig                       = (*TelemetryServer[transaction.Tx])(nil)
+)
 
-	metricsHandler := func(w http.ResponseWriter, r *http.Request) {
-		format := strings.TrimSpace(r.FormValue("format"))
+const ServerName = "telemetry"
 
-		gr, err := m.Gather(format)
-		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			bz, err := json.Marshal(errorResponse{Code: 400, Error: fmt.Sprintf("failed to gather metrics: %s", err)})
-			if err != nil {
-				return
-			}
-			_, _ = w.Write(bz)
-
-			return
-		}
-
-		w.Header().Set("Content-Type", gr.ContentType)
-		_, _ = w.Write(gr.Metrics)
-	}
-
-	r.HandleFunc("/metrics", metricsHandler).Methods("GET")
-
-	return m, nil
+type TelemetryServer[T transaction.Tx] struct {
+	config *Config
+	logger log.Logger
 }
 
-// errorResponse defines the attributes of a JSON error response.
-type errorResponse struct {
-	Code  int    `json:"code,omitempty"`
-	Error string `json:"error"`
+// New creates a new telemtry server.
+func New[T transaction.Tx]() *TelemetryServer[T] {
+	return &TelemetryServer[T]{}
+}
+
+// Name returns the server name.
+func (s *TelemetryServer[T]) Name() string {
+	return ServerName
+}
+
+func (s *TelemetryServer[T]) Config() any {
+	if s.config == nil || s.config == (&Config{}) {
+		return DefaultConfig()
+	}
+
+	return s.config
+}
+
+// Init implements serverv2.ServerComponent.
+func (s *TelemetryServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
+	serverCfg := s.Config().(*Config)
+	if len(cfg) > 0 {
+		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
+			return fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+	}
+	s.config = serverCfg
+	s.logger = logger
+
+	return nil
+}
+
+func (s *TelemetryServer[T]) Start(context.Context) error {
+	return nil
+}
+
+func (s *TelemetryServer[T]) Stop(context.Context) error {
+	return nil
 }

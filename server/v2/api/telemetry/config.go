@@ -1,5 +1,20 @@
 package telemetry
 
+func DefaultConfig() *Config {
+	return &Config{
+		ServiceName:             "",
+		Enabled:                 true,
+		EnableHostname:          false,
+		EnableHostnameLabel:     false,
+		EnableServiceLabel:      false,
+		PrometheusRetentionTime: 0,
+		GlobalLabels:            nil,
+		MetricsSink:             "",
+		StatsdAddr:              "",
+		DatadogHostname:         "",
+	}
+}
+
 type Config struct {
 	// Prefixed with keys to separate services
 	ServiceName string `mapstructure:"service-name" toml:"service-name" comment:"Prefixed with keys to separate services."`

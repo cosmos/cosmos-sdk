@@ -17,7 +17,10 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 )
 
-var _ serverv2.ServerComponent[transaction.Tx] = (*GRPCGatewayServer[transaction.Tx])(nil)
+var (
+	_ serverv2.ServerComponent[transaction.Tx] = (*GRPCGatewayServer[transaction.Tx])(nil)
+	_ serverv2.HasConfig                       = (*GRPCGatewayServer[transaction.Tx])(nil)
+)
 
 const (
 	ServerName = "grpc-gateway"

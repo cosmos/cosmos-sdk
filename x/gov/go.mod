@@ -30,9 +30,8 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20240604185151-ef581f913117
 	google.golang.org/grpc v1.66.2
 	google.golang.org/protobuf v1.34.2
+	gotest.tools/v3 v3.5.1
 )
-
-require gotest.tools/v3 v3.5.1 // indirect
 
 require (
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect

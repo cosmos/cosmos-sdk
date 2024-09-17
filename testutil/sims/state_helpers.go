@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"math/rand"
 	"os"
@@ -258,11 +258,7 @@ func AccountsFromAppState(cdc codec.JSONCodec, appStateJSON json.RawMessage) ([]
 
 		a, ok := acc.GetCachedValue().(sdk.AccountI)
 		if !ok {
-<<<<<<< HEAD
-			return *genesis, nil, fmt.Errorf("expected account")
-=======
 			return nil, errors.New("expected account")
->>>>>>> bf7768006 (feat(sims): Add sims2 framework and factory methods (#21613))
 		}
 
 		// create simulator accounts

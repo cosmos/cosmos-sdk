@@ -4,25 +4,8 @@ package simapp
 
 import (
 	"github.com/cosmos/cosmos-sdk/simsx"
-	"testing"
-
-<<<<<<< HEAD
-	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/testutils/sims"
-
-	flag "github.com/spf13/pflag"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/server"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
-=======
->>>>>>> bf7768006 (feat(sims): Add sims2 framework and factory methods (#21613))
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
+	"testing"
 )
 
 // Profile with:

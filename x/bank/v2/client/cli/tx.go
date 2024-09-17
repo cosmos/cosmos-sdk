@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/x/bank/v2/types"
@@ -44,7 +42,6 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Flags().Set(flags.FlagFrom, args[0])
 			clientCtx, err := client.GetClientTxContext(cmd)
-			fmt.Println("errs", err)
 			if err != nil {
 				return err
 			}

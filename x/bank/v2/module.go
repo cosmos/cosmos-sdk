@@ -110,6 +110,12 @@ func (am AppModule) RegisterMsgHandlers(router appmodulev2.MsgRouter) {
 		errs = errors.Join(errs, err)
 	}
 
+	if err := appmodulev2.RegisterHandler(
+		router, gogoproto.MessageName(&types.MsgMint{}), handlers.MsgMint,
+	); err != nil {
+		errs = errors.Join(errs, err)
+	}
+
 	if errs != nil {
 		panic(errs)
 	}
@@ -122,6 +128,12 @@ func (am AppModule) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
 	var errs error
 	if err := appmodulev2.RegisterHandler(
 		router, gogoproto.MessageName(&types.QueryParamsRequest{}), handlers.QueryParams,
+	); err != nil {
+		errs = errors.Join(errs, err)
+	}
+
+	if err := appmodulev2.RegisterHandler(
+		router, gogoproto.MessageName(&types.QueryBalanceRequest{}), handlers.QueryBalance,
 	); err != nil {
 		errs = errors.Join(errs, err)
 	}

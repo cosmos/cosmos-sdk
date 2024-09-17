@@ -1,81 +1,108 @@
-use interchain_core::{Address, Context, Response};
+#![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
+
+use interchain_message_api::Address;
+use interchain_core::{Context, Response};
 use interchain_core::handler::{AccountAPI, AccountHandler, Handler, ModuleAPI, ModuleHandler};
 
+/// Defines a test harness for running tests against account and module implementations.
 #[derive(Default)]
 pub struct TestApp {}
 
 impl TestApp {
-    pub fn add_module<H: ModuleHandler>(&mut self, init: H::Init) -> Response<AccountInstance<H>> {
+    /// Adds a module to the test harness.
+    pub fn add_module<H: ModuleHandler>(&mut self, module_name: &str, init: H::Init) -> Response<AccountInstance<H>> {
         todo!()
     }
 
+    /// Adds a mock module to the test harness.
     pub fn add_mock_module(&mut self, module_name: &str, mock: MockModule) {
         todo!()
     }
 
+    /// Adds a mock module to the test harness.
     pub fn add_account<H: AccountHandler>(&mut self, ctx: &mut Context, init: H::Init) -> Response<AccountInstance<H>> {
         todo!()
     }
 
+    /// Adds a mock account to the test harness with the given address.
     pub fn add_account_with_address<H: AccountHandler>(&mut self, ctx: &mut Context, address: &Address, init: H::Init) -> Response<AccountInstance<H>> {
         todo!()
     }
 
+    /// Adds a mock account to the test harness.
     pub fn add_mock_account(&mut self, ctx: &mut Context, mock: MockAccount) -> Response<Address> {
         todo!()
     }
 
+    /// Adds a mock account to the test harness with the given address.
     pub fn add_mock_account_with_address(&mut self, ctx: &mut Context, address: &Address, mock: MockAccount) -> Response<Address> {
         todo!()
     }
 
+    /// Creates a new client context with a random address.
     pub fn new_client_context(&mut self) -> Context {
         todo!()
     }
 
+    /// Creates a new client context with the given address.
     pub fn new_client_context_with_address(&mut self, address: &Address) -> Context {
         todo!()
     }
 
+    /// Returns the test storage.
     pub fn storage(&self) -> &TestStorage {
         todo!()
     }
 
+    /// Returns a mutable reference to the test storage.
     pub fn storage_mut(&mut self) -> &mut TestStorage {
         todo!()
     }
 }
 
+/// Defines the test storage implementation.
 pub struct TestStorage {}
 
 impl TestStorage {
+    /// Begins a transaction.
     pub fn begin_tx(&mut self, ctx: &Context) -> Response<Context> {
         todo!()
     }
 
+    /// Rolls back a transaction.
     pub fn rollback_tx(&mut self, ctx: &mut Context) {
         todo!()
     }
 
+    /// Commits a transaction.
     pub fn commit_tx(&mut self, ctx: &mut Context) {
         todo!()
     }
 }
 
-pub struct AccountInstance<'a, H: Handler> {}
+/// Defines a test account instance.
+pub struct AccountInstance<'a, H: Handler> {
+    _phantom: std::marker::PhantomData<&'a ()>,
+    _phantom2: std::marker::PhantomData<H>,
+}
 
 impl <'a, H: Handler> AccountInstance<'a, H> {
+    /// Returns the address of the account.
     fn address(&self) -> &Address {
         todo!()
     }
 
+    /// Executes the closure in the context of the account.
+    /// This can be used for reading its internal state.
     fn with_context<F, R>(&self, f: F) -> R
     where
-        F: FnOnce(&Context) -> R
+        F: FnOnce(&Context, &H) -> R
     {
         todo!()
     }
 
+    /// Executes the closure in the context of the account.
+    /// This can be used for reading and modifying its internal state.
     fn with_context_mut<F, R>(&mut self, f: F) -> R
     where
         F: FnOnce(&Context) -> R
@@ -84,21 +111,27 @@ impl <'a, H: Handler> AccountInstance<'a, H> {
     }
 }
 
-pub struct MockModule<'a> { }
+/// Defines a mock module handler composed of mock module and account API trait implementations.
+pub struct MockModule {}
 
 impl MockModule {
+    /// Adds a mock module API implementation to the mock module handler.
     fn add_mock_module_api<A: ModuleAPI>(&mut self, mock: A) {
         todo!()
     }
 
+    /// Adds a mock account API implementation to the mock module handler.
     fn add_mock_account_api<A: AccountAPI>(&mut self, mock: A) {
         todo!()
     }
 }
 
-pub struct MockAccount<'a> {}
+
+/// Defines a mock account handler composed of mock account API trait implementations.
+pub struct MockAccount {}
 
 impl MockAccount {
+    /// Adds a mock account API implementation to the mock account handler.
     fn add_mock_account_api<A: AccountAPI>(&mut self, mock: A) {
         todo!()
     }

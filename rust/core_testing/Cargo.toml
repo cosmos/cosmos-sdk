@@ -7,6 +7,7 @@ license.workspace = true
 
 [dependencies]
 interchain_core = { path = "../core" }
+interchain_message_api = { path = "../message_api" }
 
 [lints]
 workspace = true

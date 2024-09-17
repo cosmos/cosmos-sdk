@@ -1,5 +1,9 @@
 //! Resource module.
 
+/// An account or module handler's resources.
+/// This is usually derived by the state management framework.
+pub unsafe trait Resources {}
+
 /// A resource is anything that an account or module can use to store its own
 /// state or interact with other accounts and modules.
 pub unsafe trait Resource: Sized {

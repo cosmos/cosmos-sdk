@@ -24,13 +24,13 @@ struct IndexArgs {
     prefix: u8,
 }
 
-/// Derive the `Schema` trait for a struct.
-#[proc_macro_derive(Schema, attributes(map, set, item, index, unique_index, seq))]
-pub fn derive_schema(input: TokenStream) -> TokenStream {
+/// Derive the `Resources` trait for a struct.
+#[proc_macro_derive(Resources, attributes(map, set, item, index, unique_index, seq))]
+pub fn derive_resources(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
     let name = input.ident;
     let expanded = quote! {
-        impl interchain_core::Schema for #name {
+        impl ::interchain_core::resource::Resources for #name {
         }
     };
     expanded.into()

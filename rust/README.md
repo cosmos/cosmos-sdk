@@ -2,6 +2,22 @@
 
 This is the single import, batteries-included crate for building applications with the [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) in Rust.
 
+<!-- toc -->
+
+- [Core Concepts](#core-concepts)
+- [Creating an Account Handler](#creating-an-account-handler)
+  * [Basic Structure](#basic-structure)
+  * [Define the account's state](#define-the-accounts-state)
+  * [Define the `OnCreate` Handler](#define-the-oncreate-handler)
+  * [Implement message handlers](#implement-message-handlers)
+  * [Emitting Events](#emitting-events)
+- [Creating a Module Handler](#creating-a-module-handler)
+- [Calling other accounts or modules](#calling-other-accounts-or-modules)
+- [Exporting a Package of Handlers](#exporting-a-package-of-handlers)
+- [Testing](#testing)
+
+<!-- tocstop -->
+
 ## Core Concepts
 
 * everything that runs code is an **account** with a unique [Address]
@@ -13,21 +29,20 @@ This is the single import, batteries-included crate for building applications wi
 ### Basic Structure
 
 Follow these steps to create the basic structure for account handler:
-1. Import this crate with `use interchain_sdk::*;` (_optional, but recommended_)
-2. Create a nested module (ex. `mod my_account_handler`) for the handler
+1. Create a nested module (ex. `mod my_account_handler`) for the handler
+2. Import this crate with `use interchain_sdk::*;` (_optional, but recommended_)
 3. Add a handler struct to the nested `mod` block (ex. `pub struct MyAccountHandler`)
 4. Annotate the struct with `#[derive(Resources)]`
-5. Annotate the `mod` block with `#[account_handler(MyAccountHandler)]`
+5. Annotate the `mod` block with `#[interchain_sdk::account_handler(MyAccountHandler)]`
 
 Here's an example:
 ```rust
-use interchain_sdk::*;
-
-#[account_handler(MyAccountHandler)]
+#[interchain_sdk::account_handler(MyAccountHandler)]
 mod my_account_handler {
+    use interchain_sdk::*;
+
     #[derive(Resources)]
-    pub struct MyAccountHandler {
-    }
+    pub struct MyAccountHandler {}
 }
 ```
 
@@ -173,17 +188,18 @@ and such traits can only be implemented by one module handler in the app.
 
 Here's an example of a module handler:
 ```rust
-#[module_handler(MyModuleHandler)]
+#[interchain_sdk::module_handler(MyModuleHandler)]
 mod my_module_handler {
+    use interchain_sdk::*;
+ 
     #[derive(Resources)]
-    pub struct MyModuleHandler {
-    }
-    
+    pub struct MyModuleHandler {}
+
     #[module_api]
     pub trait MyModuleApi {
         fn my_module_fn(&self, ctx: &Context) -> Response<()>;
     }
-    
+
     #[publish]
     impl MyModuleHandler {
         pub fn my_module_fn(&self, ctx: &Context) -> Response<()> {
@@ -223,3 +239,17 @@ pub struct MyAccountHandler {
     pub my_module_client: Option<MyModuleApiClient>,
 }
 ```
+
+## Exporting a Package of Handlers
+
+The [`package_root!`] macro can be used to define a package of one or more handlers which can be
+import as natively or as a virtual machine bundle (such as WASM):
+
+```rust
+package_root!(MyAccountHandler, MyModuleHandler);
+```
+
+## Testing
+
+It is recommended that all account and module handlers write unit tests.
+The `interchain_core_testing` framework can be used for this purpose.

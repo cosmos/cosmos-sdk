@@ -1,4 +1,14 @@
-#![allow(missing_docs)]
+This crate provides a testing framework for Interchain SDK applications.
+
+## Writing Tests
+
+1. Start by writing tests as you would normally do in Rust.
+2. Define a `TestApp`
+3. Add real or mock modules & accounts to the `TestApp`
+4. Perform actions on the modules & accounts and assert the results
+
+Let's define a simple counter with two methods `get` and `inc`:
+```rust
 #[interchain_sdk::account_handler(Counter)]
 pub mod counter {
     use interchain_sdk::*;
@@ -29,18 +39,4 @@ pub mod counter {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use interchain_core_testing::*;
-    use super::counter::*;
-
-    #[test]
-    fn test_counter() {
-        let mut app = TestApp::default();
-        let mut alice_ctx = app.new_client_context();
-        let counter_inst = app.add_account::<Counter>(&mut alice_ctx, ()).unwrap();
-    }
-}
-
-fn main() {}
+```

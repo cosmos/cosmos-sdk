@@ -1,6 +1,5 @@
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 
-
 #[doc(inline)]
 pub use interchain_core::Context;
 #[doc(inline)]
@@ -9,6 +8,8 @@ pub use interchain_core::Response;
 pub use interchain_core::EventBus;
 #[doc(inline)]
 pub use interchain_core::OnCreate;
+#[doc(inline)]
+pub use interchain_core::resource::Resources;
 
 #[doc(inline)]
 pub use interchain_message_api::Address;
@@ -34,3 +35,11 @@ extern crate interchain_schema_macros;
 #[cfg(feature = "schema_macros")]
 #[doc(inline)]
 pub use interchain_schema_macros::*;
+
+#[cfg(feature = "state_objects_macros")]
+#[allow(unused_imports)]
+#[macro_use]
+extern crate state_objects_macros;
+#[cfg(feature = "state_objects_macros")]
+#[doc(inline)]
+pub use state_objects_macros::*;

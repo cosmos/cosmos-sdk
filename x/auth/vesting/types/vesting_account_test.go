@@ -11,12 +11,6 @@ import (
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
-	authcodec "cosmossdk.io/x/auth/codec"
-	"cosmossdk.io/x/auth/keeper"
-	authtypes "cosmossdk.io/x/auth/types"
-	"cosmossdk.io/x/auth/vesting"
-	vestingtestutil "cosmossdk.io/x/auth/vesting/testutil"
-	"cosmossdk.io/x/auth/vesting/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -25,6 +19,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	vestingtestutil "github.com/cosmos/cosmos-sdk/x/auth/vesting/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 var (
@@ -917,8 +917,6 @@ func TestGenesisAccountValidate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		t.Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.expErr, tt.acc.Validate() != nil)
 		})

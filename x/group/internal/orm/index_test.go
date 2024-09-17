@@ -125,7 +125,6 @@ func TestIndexPrefixScan(t *testing.T) {
 		Metadata: []byte("metadata-b"),
 	}
 	for _, g := range []testdata.TableModel{g1, g2, g3} {
-		g := g
 		_, err := tb.Create(store, &g)
 		require.NoError(t, err)
 	}

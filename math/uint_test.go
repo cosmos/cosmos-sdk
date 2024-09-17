@@ -244,7 +244,7 @@ func (s *uintTestSuite) TestSafeSub() {
 	}
 
 	for i, tc := range testCases {
-		tc := tc
+
 		if tc.panic {
 			s.Require().Panics(func() { tc.x.Sub(tc.y) })
 			continue

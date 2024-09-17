@@ -24,6 +24,8 @@ jobs:
           go-version: "1.23"
           check-latest: true
       - name: test-sim-multi-seed-long
+        env:
+          GOMEMLIMIT: 14GiB # reserve 2 GiB as buffer for GC to avoid OOM
         run: |
           make test-sim-multi-seed-long
 

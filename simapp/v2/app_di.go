@@ -6,30 +6,13 @@ import (
 	"github.com/spf13/viper"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
-	coreapp "cosmossdk.io/core/app"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
-	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/x/accounts"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authzkeeper "cosmossdk.io/x/authz/keeper"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	circuitkeeper "cosmossdk.io/x/circuit/keeper"
-	consensuskeeper "cosmossdk.io/x/consensus/keeper"
-	distrkeeper "cosmossdk.io/x/distribution/keeper"
-	evidencekeeper "cosmossdk.io/x/evidence/keeper"
-	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	govkeeper "cosmossdk.io/x/gov/keeper"
-	groupkeeper "cosmossdk.io/x/group/keeper"
-	mintkeeper "cosmossdk.io/x/mint/keeper"
-	nftkeeper "cosmossdk.io/x/nft/keeper"
-	_ "cosmossdk.io/x/protocolpool"
-	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
-	slashingkeeper "cosmossdk.io/x/slashing/keeper"
-	stakingkeeper "cosmossdk.io/x/staking/keeper"
+	"cosmossdk.io/store/v2/root"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -47,29 +30,14 @@ var DefaultNodeHome string
 // capabilities aren't needed for testing.
 type SimApp[T transaction.Tx] struct {
 	*runtime.App[T]
-	legacyAmino       legacy.Amino
+	legacyAmino       registry.AminoRegistrar
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
 
-	// keepers
-	AccountsKeeper        accounts.Keeper
-	AuthKeeper            authkeeper.AccountKeeper
-	BankKeeper            bankkeeper.Keeper
-	StakingKeeper         *stakingkeeper.Keeper
-	SlashingKeeper        slashingkeeper.Keeper
-	MintKeeper            mintkeeper.Keeper
-	DistrKeeper           distrkeeper.Keeper
-	GovKeeper             *govkeeper.Keeper
-	UpgradeKeeper         *upgradekeeper.Keeper
-	AuthzKeeper           authzkeeper.Keeper
-	EvidenceKeeper        evidencekeeper.Keeper
-	FeeGrantKeeper        feegrantkeeper.Keeper
-	GroupKeeper           groupkeeper.Keeper
-	NFTKeeper             nftkeeper.Keeper
-	ConsensusParamsKeeper consensuskeeper.Keeper
-	CircuitBreakerKeeper  circuitkeeper.Keeper
-	PoolKeeper            poolkeeper.Keeper
+	// required keepers during wiring
+	// others keepers are all in the app
+	UpgradeKeeper *upgradekeeper.Keeper
 }
 
 func init() {
@@ -92,10 +60,11 @@ func NewSimApp[T transaction.Tx](
 	logger log.Logger,
 	viper *viper.Viper,
 ) *SimApp[T] {
-	viper.Set(serverv2.FlagHome, DefaultNodeHome) // TODO possibly set earlier when viper is created
 	var (
-		app        = &SimApp[T]{}
-		appBuilder *runtime.AppBuilder[T]
+		app          = &SimApp[T]{}
+		appBuilder   *runtime.AppBuilder[T]
+		err          error
+		storeOptions = &root.Options{}
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -163,28 +132,20 @@ func NewSimApp[T transaction.Tx](
 		&app.legacyAmino,
 		&app.txConfig,
 		&app.interfaceRegistry,
-		&app.AuthKeeper,
-		&app.BankKeeper,
-		&app.StakingKeeper,
-		&app.SlashingKeeper,
-		&app.MintKeeper,
-		&app.DistrKeeper,
-		&app.GovKeeper,
 		&app.UpgradeKeeper,
-		&app.AuthzKeeper,
-		&app.EvidenceKeeper,
-		&app.FeeGrantKeeper,
-		&app.GroupKeeper,
-		&app.NFTKeeper,
-		&app.ConsensusParamsKeeper,
-		&app.CircuitBreakerKeeper,
-		&app.PoolKeeper,
 	); err != nil {
 		panic(err)
 	}
 
-	var err error
-	app.App, err = appBuilder.Build()
+	var builderOpts []runtime.AppBuilderOption[T]
+	if sub := viper.Sub("store.options"); sub != nil {
+		err = sub.Unmarshal(storeOptions)
+		if err != nil {
+			panic(err)
+		}
+		builderOpts = append(builderOpts, runtime.AppBuilderWithStoreOptions[T](storeOptions))
+	}
+	app.App, err = appBuilder.Build(builderOpts...)
 	if err != nil {
 		panic(err)
 	}
@@ -196,7 +157,6 @@ func NewSimApp[T transaction.Tx](
 
 	// TODO (here or in runtime/v2)
 	// wire simulation manager
-	// wire snapshot manager
 	// wire unordered tx manager
 
 	if err := app.LoadLatest(); err != nil {
@@ -214,18 +174,13 @@ func (app *SimApp[T]) AppCodec() codec.Codec {
 }
 
 // InterfaceRegistry returns SimApp's InterfaceRegistry.
-func (app *SimApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {
+func (app *SimApp[T]) InterfaceRegistry() server.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
 // TxConfig returns SimApp's TxConfig.
 func (app *SimApp[T]) TxConfig() client.TxConfig {
 	return app.txConfig
-}
-
-// GetConsensusAuthority gets the consensus authority.
-func (app *SimApp[T]) GetConsensusAuthority() string {
-	return app.ConsensusParamsKeeper.GetAuthority()
 }
 
 // GetStore gets the app store.

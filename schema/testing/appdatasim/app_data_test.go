@@ -24,7 +24,7 @@ func TestAppSimulator_mirror(t *testing.T) {
 	})
 }
 
-func testAppSimulatorMirror(t *testing.T, retainDeletes bool) { // nolint: thelper // this isn't a test helper function
+func testAppSimulatorMirror(t *testing.T, retainDeletes bool) { //nolint: thelper // this isn't a test helper function
 	stateSimOpts := statesim.Options{CanRetainDeletions: retainDeletes}
 	mirror, err := NewSimulator(Options{
 		StateSimOptions: stateSimOpts,
@@ -84,9 +84,9 @@ func writerListener(w io.Writer) appdata.Listener {
 		OnTx:     nil,
 		OnEvent:  nil,
 		OnKVPair: nil,
-		Commit: func(data appdata.CommitData) error {
-			_, err := fmt.Fprintf(w, "Commit: %v\n", data)
-			return err
+		Commit: func(data appdata.CommitData) (completionCallback func() error, err error) {
+			_, err = fmt.Fprintf(w, "Commit: %v\n", data)
+			return nil, err
 		},
 		InitializeModuleData: func(data appdata.ModuleInitializationData) error {
 			bz, err := json.Marshal(data)

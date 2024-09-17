@@ -83,7 +83,7 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
 func NewCmdSubmitProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "submit-proposal [path/to/proposal.json]",
+		Use:   "submit-proposal <path/to/proposal.json>",
 		Short: "Submit a proposal along with some messages, metadata and deposit",
 		Args:  cobra.ExactArgs(1),
 		Long: strings.TrimSpace(
@@ -236,7 +236,7 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 // TODO(@julienrbrt): remove this once AutoCLI can flatten nested structs.
 func NewCmdWeightedVote() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "weighted-vote [proposal-id] [weighted-options]",
+		Use:     "weighted-vote <proposal-id> <weighted-options>",
 		Aliases: []string{"vote-weighted"},
 		Args:    cobra.ExactArgs(2),
 		Short:   "Vote for an active proposal, options: yes/no/no-with-veto/abstain",

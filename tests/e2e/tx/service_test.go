@@ -13,9 +13,6 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
-	authclient "cosmossdk.io/x/auth/client"
-	authtest "cosmossdk.io/x/auth/client/testutil"
-	"cosmossdk.io/x/auth/migrations/legacytx"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -32,6 +29,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var bankMsgSendEventAction = fmt.Sprintf("message.action='%s'", sdk.MsgTypeURL(&banktypes.MsgSend{}))
@@ -175,7 +175,6 @@ func (s *E2ETestSuite) TestSimulateTx_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			// Broadcast the tx via gRPC via the validator's clientCtx (which goes
 			// through Tendermint).
@@ -506,7 +505,6 @@ func (s *E2ETestSuite) TestBroadcastTx_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			// Broadcast the tx via gRPC via the validator's clientCtx (which goes
 			// through Tendermint).
@@ -772,7 +770,6 @@ func (s *E2ETestSuite) TestTxEncode_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.TxEncode(context.Background(), tc.req)
 			if tc.expErr {
@@ -852,7 +849,6 @@ func (s *E2ETestSuite) TestTxDecode_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.TxDecode(context.Background(), tc.req)
 			if tc.expErr {
@@ -963,7 +959,6 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.TxEncodeAmino(context.Background(), tc.req)
 			if tc.expErr {
@@ -1049,7 +1044,6 @@ func (s *E2ETestSuite) TestTxDecodeAmino_GRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.TxDecodeAmino(context.Background(), tc.req)
 			if tc.expErr {

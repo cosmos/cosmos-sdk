@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution/keeper"
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
 	"cosmossdk.io/x/distribution/types"
@@ -15,6 +14,7 @@ import (
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestQueryParams(t *testing.T) {
@@ -38,7 +38,6 @@ func TestQueryParams(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			out, err := queryServer.Params(ctx, tc.req)
 			if tc.errMsg == "" {
@@ -94,7 +93,6 @@ func TestQueryValidatorDistributionInfo(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			out, err := queryServer.ValidatorDistributionInfo(ctx, tc.req)
 			if tc.errMsg == "" {
@@ -173,7 +171,6 @@ func TestQueryCommunityPool(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			out, err := queryServer.CommunityPool(ctx, tc.req)
 			if tc.errMsg == "" {

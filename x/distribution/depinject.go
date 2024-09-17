@@ -6,12 +6,12 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution/keeper"
 	"cosmossdk.io/x/distribution/types"
 	staking "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -74,7 +74,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authorityAddr,
 	)
 
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper)
+	m := NewAppModule(in.Cdc, k, in.StakingKeeper)
 
 	return ModuleOutputs{
 		DistrKeeper: k,

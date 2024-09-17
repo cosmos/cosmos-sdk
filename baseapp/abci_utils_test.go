@@ -10,7 +10,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
 	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -18,10 +17,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
-	authtx "cosmossdk.io/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -34,6 +34,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 const (
@@ -419,7 +420,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsIncorrectVotingPower() {
 	s.Require().Error(baseapp.ValidateVoteExtensions(s.ctx, s.valStore, llc))
 }
 
-func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsIncorrecOrder() {
+func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsIncorrectOrder() {
 	ext := []byte("vote-extension")
 	cve := cmtproto.CanonicalVoteExtension{
 		Extension: ext,
@@ -477,7 +478,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 
 	// create a baseapp along with a tx config for tx generation
 	txConfig := authtx.NewTxConfig(cdc, signingCtx.AddressCodec(), signingCtx.ValidatorAddressCodec(), authtx.DefaultSignModes)
-	app := baseapp.NewBaseApp(s.T().Name(), log.NewNopLogger(), dbm.NewMemDB(), txConfig.TxDecoder())
+	app := baseapp.NewBaseApp(s.T().Name(), log.NewNopLogger(), coretesting.NewMemDB(), txConfig.TxDecoder())
 
 	// create a proposal handler
 	ph := baseapp.NewDefaultProposalHandler(mempool.NoOpMempool{}, app)
@@ -485,9 +486,11 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 
 	// build a tx
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := signingCtx.AddressCodec().BytesToString(addr)
+	require.NoError(s.T(), err)
 	builder := txConfig.NewTxBuilder()
 	s.Require().NoError(builder.SetMsgs(
-		&baseapptestutil.MsgCounter{Counter: 0, FailOnHandler: false, Signer: addr.String()},
+		&baseapptestutil.MsgCounter{Counter: 0, FailOnHandler: false, Signer: addrStr},
 	))
 	builder.SetGasLimit(100)
 	setTxSignature(s.T(), builder, 0)
@@ -592,24 +595,24 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 
 	testTxs := []testTx{
 		// test 1
-		{tx: buildMsg(s.T(), txConfig, []byte(`0`), [][]byte{secret1}, []uint64{1}), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, []byte(`12345678910`), [][]byte{secret1}, []uint64{2}), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, []byte(`22`), [][]byte{secret1}, []uint64{3}), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, []byte(`32`), [][]byte{secret2}, []uint64{1}), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`0`), [][]byte{secret1}, []uint64{1}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`12345678910`), [][]byte{secret1}, []uint64{2}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`22`), [][]byte{secret1}, []uint64{3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`32`), [][]byte{secret2}, []uint64{1}), priority: 8},
 		// test 2
-		{tx: buildMsg(s.T(), txConfig, []byte(`4`), [][]byte{secret1, secret2}, []uint64{3, 3}), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, []byte(`52345678910`), [][]byte{secret1, secret3}, []uint64{4, 3}), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, []byte(`62`), [][]byte{secret1, secret4}, []uint64{5, 3}), priority: 8},
-		{tx: buildMsg(s.T(), txConfig, []byte(`72`), [][]byte{secret3, secret5}, []uint64{4, 3}), priority: 8},
-		{tx: buildMsg(s.T(), txConfig, []byte(`82`), [][]byte{secret2, secret6}, []uint64{4, 3}), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`4`), [][]byte{secret1, secret2}, []uint64{3, 3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`52345678910`), [][]byte{secret1, secret3}, []uint64{4, 3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`62`), [][]byte{secret1, secret4}, []uint64{5, 3}), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`72`), [][]byte{secret3, secret5}, []uint64{4, 3}), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`82`), [][]byte{secret2, secret6}, []uint64{4, 3}), priority: 8},
 		// test 3
-		{tx: buildMsg(s.T(), txConfig, []byte(`9`), [][]byte{secret3, secret4}, []uint64{3, 3}), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, []byte(`1052345678910`), [][]byte{secret1, secret2}, []uint64{4, 4}), priority: 8},
-		{tx: buildMsg(s.T(), txConfig, []byte(`11`), [][]byte{secret1, secret2}, []uint64{5, 5}), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`9`), [][]byte{secret3, secret4}, []uint64{3, 3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`1052345678910`), [][]byte{secret1, secret2}, []uint64{4, 4}), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`11`), [][]byte{secret1, secret2}, []uint64{5, 5}), priority: 8},
 		// test 4
-		{tx: buildMsg(s.T(), txConfig, []byte(`1252345678910`), [][]byte{secret1}, []uint64{3}), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, []byte(`13`), [][]byte{secret1}, []uint64{5}), priority: 10},
-		{tx: buildMsg(s.T(), txConfig, []byte(`14`), [][]byte{secret1}, []uint64{6}), priority: 8},
+		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`1252345678910`), [][]byte{secret1}, []uint64{3}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`13`), [][]byte{secret1}, []uint64{5}), priority: 10},
+		{tx: buildMsg(s.T(), txConfig, signingCtx.AddressCodec(), []byte(`14`), [][]byte{secret1}, []uint64{6}), priority: 8},
 	}
 
 	for i := range testTxs {
@@ -718,7 +721,7 @@ func marshalDelimitedFn(msg proto.Message) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func buildMsg(t *testing.T, txConfig client.TxConfig, value []byte, secrets [][]byte, nonces []uint64) sdk.Tx {
+func buildMsg(t *testing.T, txConfig client.TxConfig, ac address.Codec, value []byte, secrets [][]byte, nonces []uint64) sdk.Tx {
 	t.Helper()
 	builder := txConfig.NewTxBuilder()
 
@@ -735,9 +738,12 @@ func buildMsg(t *testing.T, txConfig client.TxConfig, value []byte, secrets [][]
 		})
 	}
 
+	addr, err := ac.BytesToString(signatures[0].PubKey.Bytes())
+	require.NoError(t, err)
+
 	_ = builder.SetMsgs(
 		&baseapptestutil.MsgKeyValue{
-			Signer: sdk.AccAddress(signatures[0].PubKey.Bytes()).String(),
+			Signer: addr,
 			Value:  value,
 		},
 	)

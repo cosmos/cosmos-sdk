@@ -10,12 +10,12 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
 
 	coreheader "cosmossdk.io/core/header"
+	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
@@ -28,6 +28,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const DefaultGenTxGas = 10000000
@@ -84,7 +85,7 @@ type StartupConfig struct {
 	BaseAppOption   runtime.BaseAppOption
 	AtGenesis       bool
 	GenesisAccounts []GenesisAccount
-	DB              dbm.DB
+	DB              corestore.KVStoreWithBatch
 }
 
 func DefaultStartUpConfig() StartupConfig {
@@ -95,7 +96,7 @@ func DefaultStartUpConfig() StartupConfig {
 		ValidatorSet:    CreateRandomValidatorSet,
 		AtGenesis:       false,
 		GenesisAccounts: []GenesisAccount{ga},
-		DB:              dbm.NewMemDB(),
+		DB:              coretesting.NewMemDB(),
 	}
 }
 
@@ -304,6 +305,15 @@ func (m AppOptionsMap) Get(key string) interface{} {
 	}
 
 	return v
+}
+
+func (m AppOptionsMap) GetString(key string) string {
+	v, ok := m[key]
+	if !ok {
+		return ""
+	}
+
+	return v.(string)
 }
 
 func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {

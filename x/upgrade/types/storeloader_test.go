@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/metrics"
@@ -20,7 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
-func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
+func initStore(t *testing.T, db corestore.KVStoreWithBatch, storeKey string, k, v []byte) {
 	t.Helper()
 	rs := rootmulti.NewStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
@@ -38,7 +38,7 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	require.Equal(t, int64(1), commitID.Version)
 }
 
-func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
+func checkStore(t *testing.T, db corestore.KVStoreWithBatch, ver int64, storeKey string, k, v []byte) {
 	t.Helper()
 	rs := rootmulti.NewStore(db, coretesting.NewNopLogger(), metrics.NewNoOpMetrics())
 	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
@@ -93,10 +93,9 @@ func TestSetLoader(t *testing.T) {
 	v := []byte("value")
 
 	for name, tc := range cases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			// prepare a db with some data
-			db := dbm.NewMemDB()
+			db := coretesting.NewMemDB()
 
 			initStore(t, db, tc.origStoreKey, k, v)
 

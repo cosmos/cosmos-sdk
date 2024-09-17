@@ -107,21 +107,44 @@ func ListenerMux(listeners ...Listener) Listener {
 		}
 	}
 
-	commitCbs := make([]func(CommitData) error, 0, len(listeners))
+	commitCbs := make([]func(CommitData) (func() error, error), 0, len(listeners))
 	for _, l := range listeners {
 		if l.Commit != nil {
 			commitCbs = append(commitCbs, l.Commit)
 		}
 	}
-	if len(commitCbs) > 0 {
-		mux.Commit = func(data CommitData) error {
+	n := len(commitCbs)
+	if n > 0 {
+		mux.Commit = func(data CommitData) (func() error, error) {
+			waitCbs := make([]func() error, 0, n)
 			for _, cb := range commitCbs {
-				if err := cb(data); err != nil {
-					return err
+				wait, err := cb(data)
+				if err != nil {
+					return nil, err
+				}
+				if wait != nil {
+					waitCbs = append(waitCbs, wait)
 				}
 			}
-			return nil
+			return func() error {
+				for _, cb := range waitCbs {
+					if err := cb(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}, nil
 		}
+	}
+
+	mux.onBatch = func(batch PacketBatch) error {
+		for _, listener := range listeners {
+			err := batch.apply(&listener) //nolint:gosec // aliasing is safe here
+			if err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 
 	return mux

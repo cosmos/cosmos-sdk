@@ -4,11 +4,10 @@ import (
 	"context"
 	"io"
 
-	dbm "github.com/cosmos/cosmos-db"
-
 	"cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -63,34 +62,32 @@ func (failingStoreService) OpenTransientStore(ctx context.Context) store.KVStore
 }
 
 // CoreKVStore is a wrapper of Core/Store kvstore interface
-// Remove after https://github.com/cosmos/cosmos-sdk/issues/14714 is closed
 type coreKVStore struct {
 	kvStore storetypes.KVStore
 }
 
 // NewKVStore returns a wrapper of Core/Store kvstore interface
-// Remove once store migrates to core/store kvstore interface
 func newKVStore(store storetypes.KVStore) store.KVStore {
 	return coreKVStore{kvStore: store}
 }
 
-// Get returns nil iff key doesn't exist. Errors on nil key.
+// Get returns value corresponding to the key. Panics on nil key.
 func (store coreKVStore) Get(key []byte) ([]byte, error) {
 	return store.kvStore.Get(key), nil
 }
 
-// Has checks if a key exists. Errors on nil key.
+// Has checks if a key exists. Panics on nil key.
 func (store coreKVStore) Has(key []byte) (bool, error) {
 	return store.kvStore.Has(key), nil
 }
 
-// Set sets the key. Errors on nil key or value.
+// Set sets the key. Panics on nil key or value.
 func (store coreKVStore) Set(key, value []byte) error {
 	store.kvStore.Set(key, value)
 	return nil
 }
 
-// Delete deletes the key. Errors on nil key.
+// Delete deletes the key. Panics on nil key.
 func (store coreKVStore) Delete(key []byte) error {
 	store.kvStore.Delete(key)
 	return nil
@@ -164,7 +161,7 @@ func (s kvStoreAdapter) Set(key, value []byte) {
 	}
 }
 
-func (s kvStoreAdapter) Iterator(start, end []byte) dbm.Iterator {
+func (s kvStoreAdapter) Iterator(start, end []byte) store.Iterator {
 	it, err := s.store.Iterator(start, end)
 	if err != nil {
 		panic(err)
@@ -172,7 +169,7 @@ func (s kvStoreAdapter) Iterator(start, end []byte) dbm.Iterator {
 	return it
 }
 
-func (s kvStoreAdapter) ReverseIterator(start, end []byte) dbm.Iterator {
+func (s kvStoreAdapter) ReverseIterator(start, end []byte) store.Iterator {
 	it, err := s.store.ReverseIterator(start, end)
 	if err != nil {
 		panic(err)
@@ -182,4 +179,24 @@ func (s kvStoreAdapter) ReverseIterator(start, end []byte) dbm.Iterator {
 
 func KVStoreAdapter(store store.KVStore) storetypes.KVStore {
 	return &kvStoreAdapter{store}
+}
+
+// UpgradeStoreLoader is used to prepare baseapp with a fixed StoreLoader
+// pattern. This is useful for custom upgrade loading logic.
+func UpgradeStoreLoader(upgradeHeight int64, storeUpgrades *store.StoreUpgrades) baseapp.StoreLoader {
+	return func(ms storetypes.CommitMultiStore) error {
+		if upgradeHeight == ms.LastCommitID().Version+1 {
+			// Check if the current commit version and upgrade height matches
+			if len(storeUpgrades.Deleted) > 0 || len(storeUpgrades.Added) > 0 {
+				stup := &storetypes.StoreUpgrades{
+					Added:   storeUpgrades.Added,
+					Deleted: storeUpgrades.Deleted,
+				}
+				return ms.LoadLatestVersionAndUpgrade(stup)
+			}
+		}
+
+		// Otherwise load default store loader
+		return baseapp.DefaultStoreLoader(ms)
+	}
 }

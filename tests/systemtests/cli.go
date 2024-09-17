@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -15,7 +16,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
-	"golang.org/x/exp/slices"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -169,7 +169,18 @@ func (c CLIWrapper) Run(args ...string) string {
 	return rsp
 }
 
+// RunAndWait runs a cli command and waits for the server result when the TX is executed
+// It returns the result of the transaction.
+func (c CLIWrapper) RunAndWait(args ...string) string {
+	rsp := c.Run(args...)
+	RequireTxSuccess(c.t, rsp)
+	txResult, found := c.AwaitTxCommitted(rsp)
+	require.True(c.t, found)
+	return txResult
+}
+
 // AwaitTxCommitted wait for tx committed on chain
+// returns the server execution result and true when found within 3 blocks.
 func (c CLIWrapper) AwaitTxCommitted(submitResp string, timeout ...time.Duration) (string, bool) {
 	c.t.Helper()
 	RequireTxSuccess(c.t, submitResp)
@@ -223,7 +234,7 @@ func (c CLIWrapper) runWithInput(args []string, input io.Reader) (output string,
 		cmd := exec.Command(locateExecutable(c.execBinary), args...) //nolint:gosec // test code only
 		cmd.Dir = WorkDir
 		cmd.Stdin = input
-		return cmd.Output()
+		return cmd.CombinedOutput()
 	}()
 	gotOut = filterProtoNoise(gotOut)
 	ok = c.assertErrorFn(c.t, gotErr, string(gotOut))

@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
@@ -69,7 +67,7 @@ func (s *CLITestSuite) SetupSuite() {
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
 		WithCodec(s.encCfg.Codec).
-		WithClient(clitestutil.MockCometRPC{Client: rpcclientmock.Client{}}).
+		WithClient(clitestutil.MockCometRPC{}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain").
@@ -79,9 +77,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := clitestutil.NewMockCometRPC(abci.QueryResponse{
-			Value: bz,
-		})
+		c := clitestutil.NewMockCometRPCWithResponseQueryValue(bz)
 
 		return s.baseCtx.WithClient(c)
 	}
@@ -424,8 +420,6 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdFeeGrant()
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -446,7 +440,7 @@ func (s *CLITestSuite) TestTxWithFeeGrant() {
 	granterAddr, err := s.baseCtx.AddressCodec.BytesToString(granter)
 	s.Require().NoError(err)
 
-	// creating an account manually (This account won't be exist in state)
+	// creating an account manually (This account won't exist in state)
 	k, _, err := s.baseCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 	pub, err := k.GetPubKey()
@@ -628,8 +622,6 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdFeeGrant()
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
@@ -691,8 +683,6 @@ func (s *CLITestSuite) TestFilteredFeeAllowance() {
 	}
 
 	for _, tc := range cases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			err := tc.malleate()
 			s.Require().NoError(err)

@@ -14,19 +14,17 @@ import (
 	"unsafe"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/server"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	_ "cosmossdk.io/x/auth"
-	"cosmossdk.io/x/auth/signing"
-	_ "cosmossdk.io/x/auth/tx/config"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -39,6 +37,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 var ParamStoreKey = []byte("paramstore")
@@ -206,7 +207,7 @@ func setIntOnStore(store storetypes.KVStore, key []byte, i int64) {
 }
 
 type paramStore struct {
-	db *dbm.MemDB
+	db corestore.KVStoreWithBatch
 }
 
 var _ baseapp.ParamStore = (*paramStore)(nil)
@@ -294,17 +295,19 @@ func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {
 	return counter, failOnAnte
 }
 
-func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters ...int64) signing.Tx {
+func newTxCounter(t *testing.T, cfg client.TxConfig, ac address.Codec, counter int64, msgCounters ...int64) signing.Tx {
 	t.Helper()
 	_, _, addr := testdata.KeyTestPubAddr()
+	addrStr, err := ac.BytesToString(addr)
+	require.NoError(t, err)
 	msgs := make([]sdk.Msg, 0, len(msgCounters))
 	for _, c := range msgCounters {
-		msg := &baseapptestutil.MsgCounter{Counter: c, FailOnHandler: false, Signer: addr.String()}
+		msg := &baseapptestutil.MsgCounter{Counter: c, FailOnHandler: false, Signer: addrStr}
 		msgs = append(msgs, msg)
 	}
 
 	builder := cfg.NewTxBuilder()
-	err := builder.SetMsgs(msgs...)
+	err = builder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	builder.SetMemo("counter=" + strconv.FormatInt(counter, 10) + "&failOnAnte=false")
 	setTxSignature(t, builder, uint64(counter))
@@ -342,37 +345,41 @@ func setFailOnAnte(t *testing.T, cfg client.TxConfig, tx signing.Tx, failOnAnte 
 	return builder.GetTx()
 }
 
-func setFailOnHandler(t *testing.T, cfg client.TxConfig, tx signing.Tx, fail bool) signing.Tx {
+func setFailOnHandler(t *testing.T, cfg client.TxConfig, ac address.Codec, tx signing.Tx, fail bool) signing.Tx {
 	t.Helper()
 	builder := cfg.NewTxBuilder()
 	builder.SetMemo(tx.GetMemo())
 
 	msgs := tx.GetMsgs()
+	addr, err := ac.BytesToString(sdk.AccAddress("addr"))
+	require.NoError(t, err)
 	for i, msg := range msgs {
 		msgs[i] = &baseapptestutil.MsgCounter{
 			Counter:       msg.(*baseapptestutil.MsgCounter).Counter,
 			FailOnHandler: fail,
-			Signer:        sdk.AccAddress("addr").String(),
+			Signer:        addr,
 		}
 	}
 
-	err := builder.SetMsgs(msgs...)
+	err = builder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	return builder.GetTx()
 }
 
 // wonkyMsg is to be used to run a MsgCounter2 message when the MsgCounter2 handler is not registered.
-func wonkyMsg(t *testing.T, cfg client.TxConfig, tx signing.Tx) signing.Tx {
+func wonkyMsg(t *testing.T, cfg client.TxConfig, ac address.Codec, tx signing.Tx) signing.Tx {
 	t.Helper()
 	builder := cfg.NewTxBuilder()
 	builder.SetMemo(tx.GetMemo())
 
 	msgs := tx.GetMsgs()
+	addr, err := ac.BytesToString(sdk.AccAddress("wonky"))
+	require.NoError(t, err)
 	msgs = append(msgs, &baseapptestutil.MsgCounter2{
-		Signer: sdk.AccAddress("wonky").String(),
+		Signer: addr,
 	})
 
-	err := builder.SetMsgs(msgs...)
+	err = builder.SetMsgs(msgs...)
 	require.NoError(t, err)
 	return builder.GetTx()
 }
@@ -444,4 +451,21 @@ func (n NestedMessgesServerImpl) Check(ctx context.Context, message *baseapptest
 	}
 	sdkCtx.GasMeter().ConsumeGas(gas, "nested messages test")
 	return nil, nil
+}
+
+func newMockedVersionModifier(startingVersion uint64) server.VersionModifier {
+	return &mockedVersionModifier{version: startingVersion}
+}
+
+type mockedVersionModifier struct {
+	version uint64
+}
+
+func (m *mockedVersionModifier) SetAppVersion(ctx context.Context, u uint64) error {
+	m.version = u
+	return nil
+}
+
+func (m *mockedVersionModifier) AppVersion(ctx context.Context) (uint64, error) {
+	return m.version, nil
 }

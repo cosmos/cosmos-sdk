@@ -17,6 +17,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -223,7 +224,7 @@ func TestNewKey(t *testing.T) {
 			_, err = kb.KeyByAddress(addr)
 			require.NoError(t, err)
 
-			addr, err = sdk.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
+			addr, err = codectestutil.CodecOptions{}.GetAddressCodec().StringToBytes("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
 			require.NoError(t, err)
 			_, err = kb.KeyByAddress(addr)
 			require.NotNil(t, err)
@@ -2002,7 +2003,7 @@ func TestRenameKey(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		kr := newKeyring(t, "testKeyring")
 		t.Run(tc.name, func(t *testing.T) {
 			tc.run(kr)

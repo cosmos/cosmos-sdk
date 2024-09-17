@@ -38,6 +38,8 @@ const (
 	QueryPathBroadcastTx = "/cosmos.tx.v1beta1.Service/BroadcastTx"
 )
 
+// InitChain implements the ABCI interface. It initializes the application's state
+// and sets up the initial validator set.
 func (app *BaseApp) InitChain(req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
 	if req.ChainId != app.chainID {
 		return nil, fmt.Errorf("invalid chain-id on InitChain; expected: %s, got: %s", app.chainID, req.ChainId)
@@ -135,6 +137,7 @@ func (app *BaseApp) InitChain(req *abci.InitChainRequest) (*abci.InitChainRespon
 	}, nil
 }
 
+// Info implements the ABCI interface. It returns information about the application.
 func (app *BaseApp) Info(_ *abci.InfoRequest) (*abci.InfoResponse, error) {
 	lastCommitID := app.cms.LastCommitID()
 	appVersion := InitialAppVersion
@@ -914,10 +917,10 @@ func (app *BaseApp) FinalizeBlock(req *abci.FinalizeBlockRequest) (res *abci.Fin
 func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 	var halt bool
 	switch {
-	case app.haltHeight > 0 && uint64(height) > app.haltHeight:
+	case app.haltHeight > 0 && uint64(height) >= app.haltHeight:
 		halt = true
 
-	case app.haltTime > 0 && time.Unix() > int64(app.haltTime):
+	case app.haltTime > 0 && time.Unix() >= int64(app.haltTime):
 		halt = true
 	}
 

@@ -10,15 +10,14 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	store "cosmossdk.io/store/types"
 	_ "cosmossdk.io/x/accounts"
-	xauthsigning "cosmossdk.io/x/auth/signing"
 
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -36,6 +35,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var blockMaxGas = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
@@ -102,7 +102,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			&appBuilder)
 		require.NoError(t, err)
 
-		bapp := appBuilder.Build(dbm.NewMemDB(), nil)
+		bapp := appBuilder.Build(coretesting.NewMemDB(), nil)
 		err = bapp.Load(true)
 		require.NoError(t, err)
 

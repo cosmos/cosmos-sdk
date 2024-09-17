@@ -30,5 +30,10 @@ func (g gasService) GasConfig(ctx context.Context) gas.GasConfig {
 }
 
 func (g gasService) GasMeter(ctx context.Context) gas.Meter {
-	return ctx.(*executionContext).meter
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	return exCtx.meter
 }

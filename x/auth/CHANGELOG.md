@@ -29,7 +29,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#18641](https://github.com/cosmos/cosmos-sdk/pull/18641) Support the ability to broadcast unordered transactions per ADR-070. See UPGRADING.md for more details on integration.
 * [#18281](https://github.com/cosmos/cosmos-sdk/pull/18281) Support broadcasting multiple transactions.
-* (vesting) [#17810](https://github.com/cosmos/cosmos-sdk/pull/17810) Add the ability to specify a start time for continuous vesting accounts.
 
 ### Improvements
 
@@ -52,11 +51,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19290](https://github.com/cosmos/cosmos-sdk/issues/19290) Pass `appmodule.Environment` to NewKeeper instead of passing individual services. 
 * [#19535](https://github.com/cosmos/cosmos-sdk/pull/19535) Remove vesting account creation when the chain is running. The accounts module is required for creating [#vesting accounts](../accounts/defaults/lockup/README.md) on a running chain. 
 * [#19600](https://github.com/cosmos/cosmos-sdk/pull/19600) add a consensus query method to the consensus module in order for modules to query consensus for the consensus params. 
+* [#19600](https://github.com/cosmos/cosmos-sdk/pull/21403) NewAppModule now takes in `ante.ExtensionOptionChecker`, but it's only used in server/v2 chains, so it's safe to pass in nil for the rest of the users. 
+* [#21480](https://github.com/cosmos/cosmos-sdk/pull/21480) ConsensusKeeper is a required keeper for ante handlers.
+
 
 ### Consensus Breaking Changes
 
 * [#18817](https://github.com/cosmos/cosmos-sdk/pull/18817) SigVerification, GasConsumption, IncreaseSequence ante decorators have all been joined into one SigVerification decorator. Gas consumption during TX validation flow has reduced.
 * [#19093](https://github.com/cosmos/cosmos-sdk/pull/19093) SetPubKeyDecorator was merged into SigVerification, gas consumption is almost halved for a simple tx.
+* [#19535](https://github.com/cosmos/cosmos-sdk/pull/19535) Remove vesting account creation when the chain is running. The accounts module is required for creating [#vesting accounts](../accounts/defaults/lockup/README.md) on a running chain. 
 
 ### Bug Fixes
 

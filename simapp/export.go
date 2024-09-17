@@ -3,9 +3,9 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmttypes "github.com/cometbft/cometbft/types"
 
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/x/staking"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -42,15 +43,31 @@ func (app *SimApp) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAd
 	}
 
 	validators, err := staking.WriteValidators(ctx, app.StakingKeeper)
+	cmtValidators := []cmttypes.GenesisValidator{}
+	for _, val := range validators {
+		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(val.PubKey)
+		if err != nil {
+			return servertypes.ExportedApp{}, err
+		}
+		cmtVal := cmttypes.GenesisValidator{
+			Address: val.Address.Bytes(),
+			PubKey:  cmtPk,
+			Power:   val.Power,
+			Name:    val.Name,
+		}
+
+		cmtValidators = append(cmtValidators, cmtVal)
+	}
+
 	return servertypes.ExportedApp{
 		AppState:        appState,
-		Validators:      validators,
+		Validators:      cmtValidators,
 		Height:          height,
 		ConsensusParams: app.BaseApp.GetConsensusParams(ctx),
 	}, err
 }
 
-// prepare for fresh start at zero height
+// prepForZeroHeightGenesis prepares for fresh start at zero height
 // NOTE zero height genesis is a temporary feature which will be deprecated
 //
 //	in favor of export at a block height
@@ -65,9 +82,9 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	allowedAddrsMap := make(map[string]bool)
 
 	for _, addr := range jailAllowedAddrs {
-		_, err := sdk.ValAddressFromBech32(addr)
+		_, err := app.InterfaceRegistry().SigningContext().ValidatorAddressCodec().StringToBytes(addr)
 		if err != nil {
-			log.Fatal(err)
+			panic(err)
 		}
 		allowedAddrsMap[addr] = true
 	}
@@ -94,12 +111,15 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	}
 
 	for _, delegation := range dels {
-		valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		valAddr, err := app.InterfaceRegistry().SigningContext().ValidatorAddressCodec().StringToBytes(delegation.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
 
-		delAddr := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
+		delAddr, err := app.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(delegation.DelegatorAddress)
+		if err != nil {
+			panic(err)
+		}
 
 		_, _ = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
 	}
@@ -151,11 +171,14 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 
 	// reinitialize all delegations
 	for _, del := range dels {
-		valAddr, err := sdk.ValAddressFromBech32(del.ValidatorAddress)
+		valAddr, err := app.InterfaceRegistry().SigningContext().ValidatorAddressCodec().StringToBytes(del.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		delAddr := sdk.MustAccAddressFromBech32(del.DelegatorAddress)
+		delAddr, err := app.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(del.DelegatorAddress)
+		if err != nil {
+			panic(err)
+		}
 
 		if err := app.DistrKeeper.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr); err != nil {
 			// never called as BeforeDelegationCreated always returns nil
@@ -192,7 +215,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	err = app.StakingKeeper.UnbondingDelegations.Walk(
 		ctx,
 		nil,
-		func(key collections.Pair[[]byte, []byte], ubd stakingtypes.UnbondingDelegation) (stop bool, err error) {
+		func(_ collections.Pair[[]byte, []byte], ubd stakingtypes.UnbondingDelegation) (stop bool, err error) {
 			for i := range ubd.Entries {
 				ubd.Entries[i].CreationHeight = 0
 			}
@@ -219,8 +242,13 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 			panic("expected validator, not found")
 		}
 
+		valAddr, err := app.StakingKeeper.ValidatorAddressCodec().BytesToString(addr)
+		if err != nil {
+			panic(err)
+		}
+
 		validator.UnbondingHeight = 0
-		if applyAllowedAddrs && !allowedAddrsMap[addr.String()] {
+		if applyAllowedAddrs && !allowedAddrsMap[valAddr] {
 			validator.Jailed = true
 		}
 
@@ -237,7 +265,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 
 	_, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	/* Handle slashing state. */

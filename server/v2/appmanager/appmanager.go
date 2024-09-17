@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	appmanager "cosmossdk.io/core/app"
+	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 )
@@ -39,10 +39,10 @@ type AppManager[T transaction.Tx] struct {
 // InitGenesis initializes the genesis state of the application.
 func (a AppManager[T]) InitGenesis(
 	ctx context.Context,
-	blockRequest *appmanager.BlockRequest[T],
+	blockRequest *server.BlockRequest[T],
 	initGenesisJSON []byte,
 	txDecoder transaction.Codec[T],
-) (*appmanager.BlockResponse, corestore.WriterMap, error) {
+) (*server.BlockResponse, corestore.WriterMap, error) {
 	v, zeroState, err := a.db.StateLatest()
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to get latest state: %w", err)
@@ -89,7 +89,24 @@ func (a AppManager[T]) InitGenesis(
 
 // ExportGenesis exports the genesis state of the application.
 func (a AppManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byte, error) {
-	bz, err := a.exportGenesis(ctx, version)
+	zeroState, err := a.db.StateAt(version)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get latest state: %w", err)
+	}
+
+	bz := make([]byte, 0)
+	_, err = a.stf.RunWithCtx(ctx, zeroState, func(ctx context.Context) error {
+		if a.exportGenesis == nil {
+			return errors.New("export genesis function not set")
+		}
+
+		bz, err = a.exportGenesis(ctx, version)
+		if err != nil {
+			return fmt.Errorf("failed to export genesis state: %w", err)
+		}
+
+		return nil
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to export genesis state: %w", err)
 	}
@@ -99,8 +116,8 @@ func (a AppManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byt
 
 func (a AppManager[T]) DeliverBlock(
 	ctx context.Context,
-	block *appmanager.BlockRequest[T],
-) (*appmanager.BlockResponse, corestore.WriterMap, error) {
+	block *server.BlockRequest[T],
+) (*server.BlockResponse, corestore.WriterMap, error) {
 	latestVersion, currentState, err := a.db.StateLatest()
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create new state for height %d: %w", block.Height, err)
@@ -121,19 +138,20 @@ func (a AppManager[T]) DeliverBlock(
 // ValidateTx will validate the tx against the latest storage state. This means that
 // only the stateful validation will be run, not the execution portion of the tx.
 // If full execution is needed, Simulate must be used.
-func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (appmanager.TxResult, error) {
+func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (server.TxResult, error) {
 	_, latestState, err := a.db.StateLatest()
 	if err != nil {
-		return appmanager.TxResult{}, err
+		return server.TxResult{}, err
 	}
-	return a.stf.ValidateTx(ctx, latestState, a.config.ValidateTxGasLimit, tx), nil
+	res := a.stf.ValidateTx(ctx, latestState, a.config.ValidateTxGasLimit, tx)
+	return res, res.Error
 }
 
 // Simulate runs validation and execution flow of a Tx.
-func (a AppManager[T]) Simulate(ctx context.Context, tx T) (appmanager.TxResult, corestore.WriterMap, error) {
+func (a AppManager[T]) Simulate(ctx context.Context, tx T) (server.TxResult, corestore.WriterMap, error) {
 	_, state, err := a.db.StateLatest()
 	if err != nil {
-		return appmanager.TxResult{}, nil, err
+		return server.TxResult{}, nil, err
 	}
 	result, cs := a.stf.Simulate(ctx, state, a.config.SimulationGasLimit, tx) // TODO: check if this is done in the antehandler
 	return result, cs, nil

@@ -33,15 +33,14 @@ import (
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
 type Consensus[T transaction.Tx] struct {
-	logger             log.Logger
-	appName, version   string
-	consensusAuthority string // Set by the application to grant authority to the consensus engine to send messages to the consensus module
-	app                *appmanager.AppManager[T]
-	txCodec            transaction.Codec[T]
-	store              types.Store
-	streaming          streaming.Manager
-	snapshotManager    *snapshots.Manager
-	mempool            mempool.Mempool[T]
+	logger           log.Logger
+	appName, version string
+	app              *appmanager.AppManager[T]
+	txCodec          transaction.Codec[T]
+	store            types.Store
+	streaming        streaming.Manager
+	snapshotManager  *snapshots.Manager
+	mempool          mempool.Mempool[T]
 
 	cfg           Config
 	indexedEvents map[string]struct{}
@@ -67,7 +66,6 @@ type Consensus[T transaction.Tx] struct {
 func NewConsensus[T transaction.Tx](
 	logger log.Logger,
 	appName string,
-	consensusAuthority string, // TODO remove
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
@@ -80,7 +78,6 @@ func NewConsensus[T transaction.Tx](
 	return &Consensus[T]{
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
-		consensusAuthority:     consensusAuthority,
 		grpcMethodsMap:         gRPCMethodsMap,
 		app:                    app,
 		cfg:                    cfg,
@@ -246,7 +243,6 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 
 	if req.ConsensusParams != nil {
 		ctx = context.WithValue(ctx, corecontext.CometParamsInitInfoKey, &consensustypes.MsgUpdateParams{
-			Authority: c.consensusAuthority,
 			Block:     req.ConsensusParams.Block,
 			Evidence:  req.ConsensusParams.Evidence,
 			Validator: req.ConsensusParams.Validator,

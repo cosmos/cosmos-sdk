@@ -113,7 +113,10 @@ func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo)
 func (m *MetadataStore) flushRemovedStoreKeys(version uint64, storeKeys []string) (err error) {
 	batch := m.kv.NewBatch()
 	defer func() {
-		err = batch.Close()
+		cErr := batch.Close()
+		if err == nil {
+			err = cErr
+		}
 	}()
 
 	for _, storeKey := range storeKeys {

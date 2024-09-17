@@ -8,12 +8,12 @@ import (
 
 func TestObjectKeyString(t *testing.T) {
 	tt := []struct {
-		objectType schema.ObjectType
+		objectType schema.StateObjectType
 		key        any
 		expected   string
 	}{
 		{
-			objectType: schema.ObjectType{
+			objectType: schema.StateObjectType{
 				Name: "Singleton",
 				ValueFields: []schema.Field{
 					{Name: "Value", Kind: schema.StringKind},
@@ -23,7 +23,7 @@ func TestObjectKeyString(t *testing.T) {
 			expected: "",
 		},
 		{
-			objectType: schema.ObjectType{
+			objectType: schema.StateObjectType{
 				Name:      "Simple",
 				KeyFields: []schema.Field{{Name: "Key", Kind: schema.StringKind}},
 			},
@@ -31,13 +31,13 @@ func TestObjectKeyString(t *testing.T) {
 			expected: "Key=key",
 		},
 		{
-			objectType: schema.ObjectType{
+			objectType: schema.StateObjectType{
 				Name: "BytesAddressDecInt",
 				KeyFields: []schema.Field{
 					{Name: "Bz", Kind: schema.BytesKind},
 					{Name: "Addr", Kind: schema.AddressKind},
-					{Name: "Dec", Kind: schema.DecimalStringKind},
-					{Name: "Int", Kind: schema.IntegerStringKind},
+					{Name: "Dec", Kind: schema.DecimalKind},
+					{Name: "Int", Kind: schema.IntegerKind},
 				},
 			},
 			key: []interface{}{

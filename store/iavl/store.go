@@ -361,8 +361,8 @@ func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err e
 		res.ProofOps = getProofFromTree(mtree, req.Data, res.Value != nil)
 
 	case "/subspace":
-		pairs := kv.Pairs{
-			Pairs: make([]kv.Pair, 0),
+		pairs := kv.Pairs{ //nolint:staticcheck // We are in store v1.
+			Pairs: make([]kv.Pair, 0), //nolint:staticcheck // We are in store v1.
 		}
 
 		subspace := req.Data
@@ -370,7 +370,7 @@ func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err e
 
 		iterator := types.KVStorePrefixIterator(st, subspace)
 		for ; iterator.Valid(); iterator.Next() {
-			pairs.Pairs = append(pairs.Pairs, kv.Pair{Key: iterator.Key(), Value: iterator.Value()})
+			pairs.Pairs = append(pairs.Pairs, kv.Pair{Key: iterator.Key(), Value: iterator.Value()}) //nolint:staticcheck // We are in store v1.
 		}
 		if err := iterator.Close(); err != nil {
 			panic(fmt.Errorf("failed to close iterator: %w", err))

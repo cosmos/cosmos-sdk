@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/cachemulti"
@@ -22,13 +22,13 @@ import (
 )
 
 func TestStoreType(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, db)
 }
 
 func TestGetCommitKVStore(t *testing.T) {
-	var db corestore.KVStoreWithBatch = dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
@@ -45,7 +45,7 @@ func TestGetCommitKVStore(t *testing.T) {
 }
 
 func TestStoreMount(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 
 	key1 := types.NewKVStoreKey("store1")
@@ -61,7 +61,7 @@ func TestStoreMount(t *testing.T) {
 }
 
 func TestCacheMultiStore(t *testing.T) {
-	var db corestore.KVStoreWithBatch = dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
 	cacheMulti := ms.CacheMultiStore()
@@ -69,7 +69,7 @@ func TestCacheMultiStore(t *testing.T) {
 }
 
 func TestCacheMultiStoreWithVersion(t *testing.T) {
-	var db corestore.KVStoreWithBatch = dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
@@ -122,7 +122,7 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 }
 
 func TestHashStableWithEmptyCommit(t *testing.T) {
-	var db corestore.KVStoreWithBatch = dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
@@ -152,7 +152,7 @@ func TestHashStableWithEmptyCommit(t *testing.T) {
 }
 
 func TestMultistoreCommitLoad(t *testing.T) {
-	var db corestore.KVStoreWithBatch = dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := store.LoadLatestVersion()
 	require.Nil(t, err)
@@ -205,7 +205,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 }
 
 func TestMultistoreLoadWithUpgrade(t *testing.T) {
-	var db corestore.KVStoreWithBatch = dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := store.LoadLatestVersion()
 	require.Nil(t, err)
@@ -354,7 +354,7 @@ func TestParsePath(t *testing.T) {
 }
 
 func TestMultiStoreRestart(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	pruning := pruningtypes.NewCustomPruningOptions(2, 1)
 	multi := newMultiStoreWithMounts(db, pruning)
 	err := multi.LoadLatestVersion()
@@ -433,7 +433,7 @@ func TestMultiStoreRestart(t *testing.T) {
 }
 
 func TestMultiStoreQuery(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := multi.LoadLatestVersion()
 	require.Nil(t, err)
@@ -524,10 +524,8 @@ func TestMultiStore_Pruning(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
-			db := dbm.NewMemDB()
+			db := coretesting.NewMemDB()
 			ms := newMultiStoreWithMounts(db, tc.po)
 			require.NoError(t, ms.LoadLatestVersion())
 
@@ -559,7 +557,7 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 		interval    uint64 = 10
 	)
 
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(keepRecent, interval))
 	require.NoError(t, ms.LoadLatestVersion())
@@ -600,7 +598,7 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 }
 
 func TestMultiStore_PruningRestart(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 11))
 	require.NoError(t, ms.LoadLatestVersion())
 
@@ -653,7 +651,7 @@ func (p *pauseableCommitKVStoreStub) PausePruning(b bool) {
 }
 
 func TestPausePruningOnCommit(t *testing.T) {
-	store := NewStore(dbm.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(coretesting.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.SetPruning(pruningtypes.NewCustomPruningOptions(2, 11))
 	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
 	require.NoError(t, store.LoadLatestVersion())
@@ -669,7 +667,7 @@ func TestPausePruningOnCommit(t *testing.T) {
 // TestUnevenStoresHeightCheck tests if loading root store correctly errors when
 // there's any module store with the wrong height
 func TestUnevenStoresHeightCheck(t *testing.T) {
-	var db corestore.KVStoreWithBatch = dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := store.LoadLatestVersion()
 	require.Nil(t, err)
@@ -693,7 +691,7 @@ func TestUnevenStoresHeightCheck(t *testing.T) {
 }
 
 func TestSetInitialVersion(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
 	require.NoError(t, multi.LoadLatestVersion())
@@ -712,7 +710,7 @@ func TestSetInitialVersion(t *testing.T) {
 }
 
 func TestAddListenersAndListeningEnabled(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	testKey := types.NewKVStoreKey("listening_test_key")
 	enabled := multi.ListeningEnabled(testKey)
@@ -728,7 +726,7 @@ func TestAddListenersAndListeningEnabled(t *testing.T) {
 }
 
 func TestCacheWraps(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
 	cacheWrapper := multi.CacheWrap()
@@ -739,7 +737,7 @@ func TestCacheWraps(t *testing.T) {
 }
 
 func TestTraceConcurrency(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := multi.LoadLatestVersion()
 	require.NoError(t, err)
@@ -789,7 +787,7 @@ func TestTraceConcurrency(t *testing.T) {
 }
 
 func TestCommitOrdered(t *testing.T) {
-	var db corestore.KVStoreWithBatch = dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	err := multi.LoadLatestVersion()
 	require.Nil(t, err)
@@ -930,7 +928,7 @@ func (tl *MockListener) OnWrite(storeKey types.StoreKey, key, value []byte, dele
 }
 
 func TestStateListeners(t *testing.T) {
-	var db corestore.KVStoreWithBatch = dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	require.Empty(t, ms.listeners)
 
@@ -970,7 +968,7 @@ func (stub *commitKVStoreStub) Commit() types.CommitID {
 }
 
 func prepareStoreMap() (map[types.StoreKey]types.CommitKVStore, error) {
-	var db corestore.KVStoreWithBatch = dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)

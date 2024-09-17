@@ -13,31 +13,12 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/store/v2/root"
-	"cosmossdk.io/x/accounts"
-	authzkeeper "cosmossdk.io/x/authz/keeper"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	bankv2keeper "cosmossdk.io/x/bank/v2/keeper"
-	circuitkeeper "cosmossdk.io/x/circuit/keeper"
-	consensuskeeper "cosmossdk.io/x/consensus/keeper"
-	distrkeeper "cosmossdk.io/x/distribution/keeper"
-	epochskeeper "cosmossdk.io/x/epochs/keeper"
-	evidencekeeper "cosmossdk.io/x/evidence/keeper"
-	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	govkeeper "cosmossdk.io/x/gov/keeper"
-	groupkeeper "cosmossdk.io/x/group/keeper"
-	mintkeeper "cosmossdk.io/x/mint/keeper"
-	nftkeeper "cosmossdk.io/x/nft/keeper"
-	_ "cosmossdk.io/x/protocolpool"
-	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
-	slashingkeeper "cosmossdk.io/x/slashing/keeper"
-	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
@@ -54,26 +35,9 @@ type SimApp[T transaction.Tx] struct {
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
 
-	// keepers
-	AccountsKeeper        accounts.Keeper
-	AuthKeeper            authkeeper.AccountKeeper
-	BankKeeper            bankkeeper.Keeper
-	BankV2Keeper          *bankv2keeper.Keeper
-	StakingKeeper         *stakingkeeper.Keeper
-	SlashingKeeper        slashingkeeper.Keeper
-	MintKeeper            mintkeeper.Keeper
-	DistrKeeper           distrkeeper.Keeper
-	GovKeeper             *govkeeper.Keeper
-	UpgradeKeeper         *upgradekeeper.Keeper
-	AuthzKeeper           authzkeeper.Keeper
-	EvidenceKeeper        evidencekeeper.Keeper
-	FeeGrantKeeper        feegrantkeeper.Keeper
-	GroupKeeper           groupkeeper.Keeper
-	NFTKeeper             nftkeeper.Keeper
-	ConsensusParamsKeeper consensuskeeper.Keeper
-	CircuitBreakerKeeper  circuitkeeper.Keeper
-	PoolKeeper            poolkeeper.Keeper
-	EpochsKeeper          *epochskeeper.Keeper
+	// required keepers during wiring
+	// others keepers are all in the app
+	UpgradeKeeper *upgradekeeper.Keeper
 }
 
 func init() {
@@ -100,7 +64,7 @@ func NewSimApp[T transaction.Tx](
 		app          = &SimApp[T]{}
 		appBuilder   *runtime.AppBuilder[T]
 		err          error
-		storeOptions = root.DefaultStoreOptions()
+		storeOptions = &root.Options{}
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -168,35 +132,20 @@ func NewSimApp[T transaction.Tx](
 		&app.legacyAmino,
 		&app.txConfig,
 		&app.interfaceRegistry,
-		&app.AuthKeeper,
-		&app.BankKeeper,
-		&app.BankV2Keeper,
-		&app.StakingKeeper,
-		&app.SlashingKeeper,
-		&app.MintKeeper,
-		&app.DistrKeeper,
-		&app.GovKeeper,
 		&app.UpgradeKeeper,
-		&app.AuthzKeeper,
-		&app.EvidenceKeeper,
-		&app.FeeGrantKeeper,
-		&app.GroupKeeper,
-		&app.NFTKeeper,
-		&app.ConsensusParamsKeeper,
-		&app.CircuitBreakerKeeper,
-		&app.PoolKeeper,
-		&app.EpochsKeeper,
 	); err != nil {
 		panic(err)
 	}
 
+	var builderOpts []runtime.AppBuilderOption[T]
 	if sub := viper.Sub("store.options"); sub != nil {
-		err = sub.Unmarshal(&storeOptions)
+		err = sub.Unmarshal(storeOptions)
 		if err != nil {
 			panic(err)
 		}
+		builderOpts = append(builderOpts, runtime.AppBuilderWithStoreOptions[T](storeOptions))
 	}
-	app.App, err = appBuilder.Build(runtime.AppBuilderWithStoreOptions[T](storeOptions))
+	app.App, err = appBuilder.Build(builderOpts...)
 	if err != nil {
 		panic(err)
 	}
@@ -232,11 +181,6 @@ func (app *SimApp[T]) InterfaceRegistry() server.InterfaceRegistry {
 // TxConfig returns SimApp's TxConfig.
 func (app *SimApp[T]) TxConfig() client.TxConfig {
 	return app.txConfig
-}
-
-// GetConsensusAuthority gets the consensus authority.
-func (app *SimApp[T]) GetConsensusAuthority() string {
-	return app.ConsensusParamsKeeper.GetAuthority()
 }
 
 // GetStore gets the app store.

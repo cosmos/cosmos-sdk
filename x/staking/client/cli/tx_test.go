@@ -149,7 +149,6 @@ func (s *CLITestSuite) TestPrepareConfigForTxCreateValidator() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		s.Run(tc.name, func() {
 			fs, _ := cli.CreateValidatorMsgFlagSet(ip)
 			fs.String(flags.FlagName, "", "name of private key with which to sign the gentx")
@@ -296,7 +295,6 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 			if tc.expectErrMsg != "" {
@@ -419,8 +417,6 @@ func (s *CLITestSuite) TestNewEditValidatorCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
 			if tc.expectErrMsg != "" {

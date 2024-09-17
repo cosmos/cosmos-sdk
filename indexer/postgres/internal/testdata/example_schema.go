@@ -4,10 +4,10 @@ import "cosmossdk.io/schema"
 
 var ExampleSchema schema.ModuleSchema
 
-var AllKindsObject schema.ObjectType
+var AllKindsObject schema.StateObjectType
 
 func init() {
-	AllKindsObject = schema.ObjectType{
+	AllKindsObject = schema.StateObjectType{
 		Name: "all_kinds",
 		KeyFields: []schema.Field{
 			{
@@ -45,7 +45,7 @@ func init() {
 	)
 }
 
-var SingletonObject = schema.ObjectType{
+var SingletonObject = schema.StateObjectType{
 	Name: "singleton",
 	ValueFields: []schema.Field{
 		{
@@ -65,7 +65,7 @@ var SingletonObject = schema.ObjectType{
 	},
 }
 
-var VoteObject = schema.ObjectType{
+var VoteObject = schema.StateObjectType{
 	Name: "vote",
 	KeyFields: []schema.Field{
 		{

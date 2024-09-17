@@ -18,6 +18,7 @@ import (
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -43,21 +44,14 @@ var (
 type AppModule struct {
 	cdc           codec.Codec
 	keeper        keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(
-	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper,
-) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, stakingKeeper types.StakingKeeper) AppModule {
 	return AppModule{
 		cdc:           cdc,
 		keeper:        keeper,
-		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
 		stakingKeeper: stakingKeeper,
 	}
 }
@@ -173,20 +167,18 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalMsgs returns msgs used for governance proposals for simulations.
-func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
-	return simulation.ProposalMsgs()
-}
-
 // RegisterStoreDecoder registers a decoder for distribution module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-// WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, simState.TxConfig,
-		am.accountKeeper, am.bankKeeper, am.keeper, am.stakingKeeper,
-	)
+// ProposalMsgsX returns msgs used for governance proposals for simulations.
+func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("msg_update_params", 100), simulation.MsgUpdateParamsFactory())
+}
+
+func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("msg_set_withdraw_address", 50), simulation.MsgSetWithdrawAddressFactory(am.keeper))
+	reg.Add(weights.Get("msg_withdraw_delegation_reward", 50), simulation.MsgWithdrawDelegatorRewardFactory(am.keeper, am.stakingKeeper))
+	reg.Add(weights.Get("msg_withdraw_validator_commission", 50), simulation.MsgWithdrawValidatorCommissionFactory(am.keeper, am.stakingKeeper))
 }

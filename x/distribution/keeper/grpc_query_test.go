@@ -38,7 +38,6 @@ func TestQueryParams(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			out, err := queryServer.Params(ctx, tc.req)
 			if tc.errMsg == "" {
@@ -94,7 +93,6 @@ func TestQueryValidatorDistributionInfo(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			out, err := queryServer.ValidatorDistributionInfo(ctx, tc.req)
 			if tc.errMsg == "" {
@@ -173,7 +171,6 @@ func TestQueryCommunityPool(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			out, err := queryServer.CommunityPool(ctx, tc.req)
 			if tc.errMsg == "" {

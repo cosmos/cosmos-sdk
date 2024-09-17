@@ -43,6 +43,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Features
 
 * (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
+* (cli) [#21372](https://github.com/cosmos/cosmos-sdk/pull/21372) Add a `bulk-add-genesis-account` genesis command to add many genesis accounts at once.
+* (crypto/keyring) [#21653](https://github.com/cosmos/cosmos-sdk/pull/21653) New Linux-only backend that adds Linux kernel's `keyctl` support.
 * (runtime) [#21704](https://github.com/cosmos/cosmos-sdk/pull/21704) Add StoreLoader in simappv2.
 
 ### Improvements
@@ -52,8 +54,11 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Bug Fixes
 
 * (baseapp) [#21256](https://github.com/cosmos/cosmos-sdk/pull/21256) Halt height will not commit the block indicated, meaning that if halt-height is set to 10, only blocks until 9 (included) will be committed. This is to go back to the original behavior before a change was introduced in v0.50.0.
+* (runtime) [#21769](https://github.com/cosmos/cosmos-sdk/pull/21769) Fix baseapp options ordering to avoid overwriting options set by modules.
 
 ### API Breaking Changes
+
+* (sims)[#21613](https://github.com/cosmos/cosmos-sdk/pull/21613) Add sims2 framework and factory methods for simpler message factories in modules
 
 ### Deprecated
 

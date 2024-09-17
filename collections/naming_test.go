@@ -27,8 +27,9 @@ func TestNaming(t *testing.T) {
 	expectValueCodecName(t, "vbytes", BytesValue.WithName("vbytes"))
 	expectValueCodecName(t, "vbool", BoolValue.WithName("vbool"))
 
-	expectKeyCodecnames(t, NamedPairKeyCodec[bool, string]("abc", BoolKey, "def", StringKey), "abc", "def")
-	expectKeyCodecnames(t, NamedTripleKeyCodec[bool, string, int32]("abc", BoolKey, "def", StringKey, "ghi", Int32Key), "abc", "def", "ghi")
+	expectKeyCodecNames(t, NamedPairKeyCodec[bool, string]("abc", BoolKey, "def", StringKey), "abc", "def")
+	expectKeyCodecNames(t, NamedTripleKeyCodec[bool, string, int32]("abc", BoolKey, "def", StringKey, "ghi", Int32Key), "abc", "def", "ghi")
+	expectKeyCodecNames(t, NamedQuadKeyCodec[bool, string, int32, uint64]("abc", BoolKey, "def", StringKey, "ghi", Int32Key, "jkl", Uint64Key), "abc", "def", "ghi", "jkl")
 }
 
 func expectKeyCodecName[T any](t *testing.T, name string, cdc codec.KeyCodec[T]) {
@@ -45,7 +46,7 @@ func expectValueCodecName[T any](t *testing.T, name string, cdc codec.ValueCodec
 	require.Equal(t, name, schema.Fields[0].Name)
 }
 
-func expectKeyCodecnames[T any](t *testing.T, cdc codec.KeyCodec[T], names ...string) {
+func expectKeyCodecNames[T any](t *testing.T, cdc codec.KeyCodec[T], names ...string) {
 	schema, err := codec.KeySchemaCodec(cdc)
 	require.NoError(t, err)
 	require.Equal(t, len(names), len(schema.Fields))

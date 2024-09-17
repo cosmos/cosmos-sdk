@@ -236,29 +236,32 @@ func (p pairKeyCodec[K1, K2]) Name() string {
 }
 
 func (p pairKeyCodec[K1, K2]) SchemaCodec() (codec.SchemaCodec[Pair[K1, K2]], error) {
-	key1Schema, err := codec.KeySchemaCodec(p.keyCodec1)
+	field1, err := getNamedKeyField(p.keyCodec1, p.key1Name)
 	if err != nil {
-		return codec.SchemaCodec[Pair[K1, K2]]{}, err
+		return codec.SchemaCodec[Pair[K1, K2]]{}, fmt.Errorf("error getting key1 field: %w", err)
 	}
-	if len(key1Schema.Fields) != 1 {
-		return codec.SchemaCodec[Pair[K1, K2]]{}, fmt.Errorf("key1 schema has more than one field")
-	}
-	field1 := key1Schema.Fields[0]
-	field1.Name = p.key1Name
 
-	key2Schema, err := codec.KeySchemaCodec(p.keyCodec2)
+	field2, err := getNamedKeyField(p.keyCodec2, p.key2Name)
 	if err != nil {
-		return codec.SchemaCodec[Pair[K1, K2]]{}, err
+		return codec.SchemaCodec[Pair[K1, K2]]{}, fmt.Errorf("error getting key2 field: %w", err)
 	}
-	if len(key2Schema.Fields) != 1 {
-		return codec.SchemaCodec[Pair[K1, K2]]{}, fmt.Errorf("key2 schema has more than one field")
-	}
-	field2 := key2Schema.Fields[0]
-	field2.Name = p.key2Name
 
 	return codec.SchemaCodec[Pair[K1, K2]]{
 		Fields: []schema.Field{field1, field2},
 	}, nil
+}
+
+func getNamedKeyField[T any](keyCdc codec.KeyCodec[T], name string) (schema.Field, error) {
+	keySchema, err := codec.KeySchemaCodec(keyCdc)
+	if err != nil {
+		return schema.Field{}, err
+	}
+	if len(keySchema.Fields) != 1 {
+		return schema.Field{}, fmt.Errorf("key schema in composite key has more than one field, got %v", keySchema.Fields)
+	}
+	field := keySchema.Fields[0]
+	field.Name = name
+	return field, nil
 }
 
 // NewPrefixUntilPairRange defines a collection query which ranges until the provided Pair prefix.

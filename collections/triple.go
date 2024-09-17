@@ -292,36 +292,21 @@ func (t tripleKeyCodec[K1, K2, K3]) Name() string {
 }
 
 func (t tripleKeyCodec[K1, K2, K3]) SchemaCodec() (codec.SchemaCodec[Triple[K1, K2, K3]], error) {
-	key1Schema, err := codec.KeySchemaCodec(t.keyCodec1)
+	field1, err := getNamedKeyField(t.keyCodec1, t.key1Name)
 	if err != nil {
-		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, err
-	}
-	if len(key1Schema.Fields) != 1 {
-		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, fmt.Errorf("expected 1 field in key1 schema, got: %d", len(key1Schema.Fields))
-	}
-	field1 := key1Schema.Fields[0]
-	field1.Name = t.key1Name
-
-	key2Schema, err := codec.KeySchemaCodec(t.keyCodec2)
-	if err != nil {
-		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, err
-	}
-	if len(key2Schema.Fields) != 1 {
-		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, fmt.Errorf("expected 1 field in key2 schema, got: %d", len(key2Schema.Fields))
-	}
-	field2 := key2Schema.Fields[0]
-	field2.Name = t.key2Name
-
-	key3Schema, err := codec.KeySchemaCodec(t.keyCodec3)
-	if err != nil {
-		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, err
-	}
-	if len(key3Schema.Fields) != 1 {
-		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, fmt.Errorf("expected 1 field in key3 schema, got: %d", len(key3Schema.Fields))
+		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, fmt.Errorf("error getting key1 field: %w", err)
 	}
 
-	field3 := key3Schema.Fields[0]
-	field3.Name = t.key3Name
+	field2, err := getNamedKeyField(t.keyCodec2, t.key2Name)
+	if err != nil {
+		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, fmt.Errorf("error getting key2 field: %w", err)
+	}
+
+	field3, err := getNamedKeyField(t.keyCodec3, t.key3Name)
+	if err != nil {
+		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, fmt.Errorf("error getting key3 field: %w", err)
+	}
+
 	return codec.SchemaCodec[Triple[K1, K2, K3]]{
 		Fields: []schema.Field{field1, field2, field3},
 	}, nil

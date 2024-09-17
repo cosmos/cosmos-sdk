@@ -1343,7 +1343,6 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 
 		tc.bapp.SetParamStore(&paramStore{db: coretesting.NewMemDB()})
 		_, err := tc.bapp.InitChain(&abci.InitChainRequest{
@@ -1835,7 +1834,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 				return nil, err
 			}
 
-			cp := ctx.ConsensusParams() // nolint:staticcheck // ignore linting error
+			cp := ctx.ConsensusParams() //nolint:staticcheck // ignore linting error
 			extsEnabled := cp.Feature.VoteExtensionsEnableHeight != nil && req.Height >= cp.Feature.VoteExtensionsEnableHeight.Value && cp.Feature.VoteExtensionsEnableHeight.Value != 0
 			if !extsEnabled {
 				// check abci params

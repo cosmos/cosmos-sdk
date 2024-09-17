@@ -33,6 +33,8 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
+* [#21782](https://github.com/cosmos/cosmos-sdk/pull/21782) Fix JSON attribute sort order on messages with oneof fields.
+
 ### Improvements
 
 * [#21073](https://github.com/cosmos/cosmos-sdk/pull/21073) In Context use sync.Map `getSignersFuncs` map from concurrent writes, we also need to call Validate when using the legacy app.

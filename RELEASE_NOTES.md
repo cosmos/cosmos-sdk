@@ -10,6 +10,7 @@ Notably, we fixed the following:
 
 * Add the root command `module-hash-by-height` to query and retrieve module hashes at a specific height
 * `PreBlock` events (mainly `x/upgrade`) are now emitted (this time, for real)
+* A fix in runtime baseapp option ordering, giving issue when other modules were having options
 
 ## 📝 Changelog
 

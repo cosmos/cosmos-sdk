@@ -26,6 +26,7 @@ use (
 	./tools/confix
 	./tools/hubl
 	./x/accounts
+	./x/accounts/defaults/base
 	./x/accounts/defaults/lockup
 	./x/auth
 	./x/authz

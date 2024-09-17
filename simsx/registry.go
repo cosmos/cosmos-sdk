@@ -3,12 +3,11 @@ package simsx
 import (
 	"context"
 	"iter"
+	"maps"
 	"math/rand"
 	"slices"
 	"strings"
 	"time"
-
-	"golang.org/x/exp/maps"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/log"
@@ -170,11 +169,12 @@ func (s UniqueTypeRegistry) Add(weight uint32, f SimMsgFactoryX) {
 // Iterator returns an iterator function for a Go for loop sorted by weight desc.
 func (s UniqueTypeRegistry) Iterator() iter.Seq2[uint32, SimMsgFactoryX] {
 	x := maps.Values(s)
-	slices.SortFunc(x, func(a, b WeightedFactory) int {
+	sortedWeightedFactory := slices.SortedFunc(x, func(a, b WeightedFactory) int {
 		return a.Compare(b)
 	})
+
 	return func(yield func(uint32, SimMsgFactoryX) bool) {
-		for _, v := range x {
+		for _, v := range sortedWeightedFactory {
 			if !yield(v.Weight, v.Factory) {
 				return
 			}

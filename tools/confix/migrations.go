@@ -74,7 +74,6 @@ func PlanBuilder(from *tomledit.Document, to, planType string, loadFn loadDestCo
 
 	diffs := DiffKeys(from, target)
 	for _, diff := range diffs {
-		diff := diff
 		kv := diff.KV
 
 		var step transform.Step

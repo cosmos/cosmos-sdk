@@ -45,10 +45,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (genutil) [#21701](https://github.com/cosmos/cosmos-sdk/pull/21701) Improved error messages for genesis validation.
 * (runtime) [#21704](https://github.com/cosmos/cosmos-sdk/pull/21704) Move `upgradetypes.StoreLoader` to runtime and alias it in upgrade for backward compatibility.
 
-### Bug Fixes
-
-* (runtime) [#21769](https://github.com/cosmos/cosmos-sdk/pull/21769) Fix baseapp options ordering to avoid overwriting options set by modules.
-
 ## [v0.52.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0) - 2024-XX-XX
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.

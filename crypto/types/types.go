@@ -9,7 +9,7 @@ import (
 type JSONCompatPubKey interface {
 	Address() Address
 	Bytes() []byte
-	VerifySignature(msg []byte, sig []byte) bool
+	VerifySignature(msg, sig []byte) bool
 	Type() string
 }
 

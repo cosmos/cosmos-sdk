@@ -8,6 +8,7 @@ use (
 	./tests/systemtests
 	./tools/confix
 	./x/accounts
+	./x/accounts/defaults/base
 	./x/accounts/defaults/lockup
 	./x/auth
 	./x/authz

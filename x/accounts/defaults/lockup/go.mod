@@ -154,6 +154,7 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214 // main
 	cosmossdk.io/x/accounts => ../../.
+	cosmossdk.io/x/accounts/defaults/multisig => ../multisig
 	cosmossdk.io/x/bank => ../../../bank
 	cosmossdk.io/x/consensus => ../../../consensus
 	cosmossdk.io/x/distribution => ../../../distribution

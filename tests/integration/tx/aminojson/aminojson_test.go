@@ -2,6 +2,7 @@ package aminojson
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -214,7 +215,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		vesting.AppModule{}, gov.AppModule{})
 	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 
-	aj := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true})
+	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
 	addr1 := types.AccAddress("addr1")
 	now := time.Now()
 
@@ -393,14 +394,18 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		},
 		"staking/stake_authorization_allow": {
 			gogo: &stakingtypes.StakeAuthorization{
+				MaxTokens: &types.Coin{Denom: "foo", Amount: math.NewInt(123)},
 				Validators: &stakingtypes.StakeAuthorization_AllowList{
 					AllowList: &stakingtypes.StakeAuthorization_Validators{Address: []string{"foo"}},
 				},
+				AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			},
 			pulsar: &stakingapi.StakeAuthorization{
+				MaxTokens: &v1beta1.Coin{Denom: "foo", Amount: "123"},
 				Validators: &stakingapi.StakeAuthorization_AllowList{
 					AllowList: &stakingapi.StakeAuthorization_Validators{Address: []string{"foo"}},
 				},
+				AuthorizationType: stakingapi.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			},
 		},
 		"vesting/base_account_empty": {
@@ -432,6 +437,8 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			gogoBytes, err := encCfg.Amino.MarshalJSON(tc.gogo)
 			require.NoError(t, err)
+			gogoBytes, err = sortJson(gogoBytes)
+			require.NoError(t, err)
 
 			pulsarBytes, err := aj.Marshal(tc.pulsar)
 			if tc.pulsarMarshalFails {
@@ -458,6 +465,8 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			require.NoError(t, err)
 
 			newGogoBytes, err := encCfg.Amino.MarshalJSON(newGogo)
+			require.NoError(t, err)
+			newGogoBytes, err = sortJson(newGogoBytes)
 			require.NoError(t, err)
 			if tc.roundTripUnequal {
 				require.NotEqual(t, string(gogoBytes), string(newGogoBytes))
@@ -597,4 +606,21 @@ func postFixPulsarMessage(msg proto.Message) {
 			m.Permissions = nil
 		}
 	}
+}
+
+// sortJson sorts the JSON bytes by way of the side effect of unmarshalling and remarshalling the JSON
+// using encoding/json.  This hacky way of sorting JSON fields was used by the legacy amino JSON encoding in
+// x/auth/migrations/legacytx.StdSignBytes.  It is used here ensure the x/tx JSON encoding is equivalent to
+// the legacy amino JSON encoding.
+func sortJson(bz []byte) ([]byte, error) {
+	var c any
+	err := json.Unmarshal(bz, &c)
+	if err != nil {
+		return nil, err
+	}
+	js, err := json.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
+	return js, nil
 }

@@ -10,10 +10,8 @@ workspace = true
 
 [dependencies]
 interchain_message_api = { path = "../message_api" }
-interchain_schema_macros = { path = "../schema_macros" }
 simple_time = { path = "../util/simple_time" }
 
 [features]
-default = ["address", "macros"]
+default = ["address"]
 address = []
-macros = []

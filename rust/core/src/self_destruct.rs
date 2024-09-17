@@ -1,5 +1,7 @@
 //! Self-destruct functionality for accounts.
-use crate::{Context, Response};
+
+use crate::context::Context;
+use crate::response::Response;
 
 /// Self-destructs the account.
 ///

@@ -1,4 +1,4 @@
-use crate::Response;
+use crate::response::Response;
 
 /// An event bus that can be used to emit events.
 pub struct EventBus<T> {

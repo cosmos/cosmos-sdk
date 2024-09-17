@@ -11,25 +11,3 @@ pub mod resource;
 pub use context::Context;
 pub use response::Response;
 pub use events::EventBus;
-
-#[doc(inline)]
-pub use interchain_message_api::Address;
-#[doc(inline)]
-#[doc(inline)]
-pub use interchain_schema::StructCodec;
-
-#[cfg(feature = "core_macros")]
-#[allow(unused_imports)]
-#[macro_use]
-extern crate interchain_core_macros;
-#[cfg(feature = "core_macros")]
-#[doc(inline)]
-pub use interchain_core_macros::*;
-
-#[cfg(feature = "schema_macros")]
-#[allow(unused_imports)]
-#[macro_use]
-extern crate interchain_schema_macros;
-#[cfg(feature = "schema_macros")]
-#[doc(inline)]
-pub use interchain_schema_macros::*;

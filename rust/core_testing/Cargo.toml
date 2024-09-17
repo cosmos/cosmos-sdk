@@ -1,5 +1,5 @@
 [package]
-name = "interchain_sdk_testing"
+name = "interchain_core_testing"
 edition = "2021"
 version.workspace = true
 repository.workspace = true

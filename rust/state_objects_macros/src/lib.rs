@@ -1,4 +1,6 @@
+//! Macros for state_objects.
 use proc_macro::TokenStream;
+use quote::quote;
 use syn::{parse_macro_input, Field};
 
 struct MapArgs {
@@ -22,6 +24,7 @@ struct IndexArgs {
     prefix: u8,
 }
 
+/// Derive the `Schema` trait for a struct.
 #[proc_macro_derive(Schema, attributes(map, set, item, index, unique_index, seq))]
 pub fn derive_schema(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);

@@ -1,7 +1,7 @@
 use interchain_message_api::Address;
 use crate::handler::{AccountAPI, AccountFactory, AccountHandler, AccountClient, ModuleAPI};
 use crate::message::Message;
-use crate::Response;
+use crate::response::Response;
 
 /// Context wraps a single message request (and possibly response as well) along with
 /// the router callbacks necessary for making nested message calls.

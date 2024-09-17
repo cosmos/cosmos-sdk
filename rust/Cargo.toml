@@ -2,13 +2,14 @@
 members = [
     "core",
     "core_macros",
+    "core_testing",
     "state_objects",
+    "state_objects_macros",
     "schema",
     "schema_macros",
     "message_api",
-    "sdk_testing",
-    "util/simple_time"
-, "state_objects_macros"]
+    "util/simple_time",
+]
 
 [workspace.package]
 version = "0.0.1"
@@ -29,13 +30,24 @@ license.workspace = true
 
 [dependencies]
 interchain_core = { path = "core" }
+interchain_schema = { path = "schema" }
+interchain_message_api = { path = "message_api" }
 state_objects = { path = "state_objects" }
 simple_time = { path = "util/simple_time" }
+interchain_core_macros = { path = "core_macros" }
+interchain_schema_macros = { path = "schema_macros" }
+state_objects_macros = { path = "state_objects_macros" }
 
 [dev-dependencies]
-interchain_sdk_testing = { path = "sdk_testing" }
+interchain_core_testing = { path = "core_testing" }
 arrayvec = "0.7.6"
 thiserror = "1.0.63"
 
 [lints]
 workspace = true
+
+[features]
+default = ["core_macros", "schema_macros", "state_objects_macros"]
+core_macros = []
+schema_macros = []
+state_objects_macros = []

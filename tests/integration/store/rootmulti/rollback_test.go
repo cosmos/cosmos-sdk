@@ -6,9 +6,9 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 
@@ -16,7 +16,7 @@ import (
 )
 
 func TestRollback(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	options := simapp.SetupOptions{
 		Logger:  log.NewNopLogger(),
 		DB:      db,

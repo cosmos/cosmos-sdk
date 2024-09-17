@@ -172,7 +172,6 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 	}
 
 	for _, tt := range testData {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			cmd := AddKeyCommand()
 			cmd.Flags().AddFlagSet(Commands().PersistentFlags())

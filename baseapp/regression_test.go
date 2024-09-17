@@ -3,9 +3,9 @@ package baseapp
 import (
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
@@ -27,7 +27,7 @@ func TestNilCmsCheckBeforeSeal(t *testing.T) {
 
 	// 2. Now that we've figured out and gotten back an error, let's rectify the problem.
 	// and we should be able to set the commit multistore then reinvoke app.Init successfully!
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	logger := log.NewTestLogger(t)
 	app.cms = store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics())
 	err := app.Init()

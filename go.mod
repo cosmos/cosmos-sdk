@@ -67,7 +67,7 @@ require (
 
 require github.com/tidwall/btree v1.7.0 // indirect
 
-require golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
+require golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
 
 require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect

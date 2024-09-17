@@ -269,6 +269,9 @@ func NewChainDataSource(
 	for i, a := range oldSimAcc {
 		acc[i] = SimAccount{Account: a, r: r, bank: bank}
 		index[a.AddressBech32] = i
+		if a.AddressBech32 == "" {
+			panic("test account has empty bech32 address")
+		}
 	}
 	return &ChainDataSource{
 		r:                         r,

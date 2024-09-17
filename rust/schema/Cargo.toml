@@ -13,5 +13,6 @@ interchain_message_api = { path = "../message_api" }
 simple_time = { path = "../util/simple_time" }
 
 [features]
-default = ["address"]
+default = ["address", "std"]
 address = []
+std = []

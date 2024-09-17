@@ -1,26 +1,26 @@
 use interchain_core::{Context, Response};
-use crate::codec::{ObjectKey, PrefixKey};
+use interchain_schema::state_object::{ObjectKey, PrefixKey};
 
 /// An index on a set of fields in a map which may map multiple index key values to a single primary key value.
 pub struct Index<IndexKey, PrimaryKey> {
     _phantom: std::marker::PhantomData<(IndexKey, PrimaryKey)>,
 }
 
-impl<'a, IndexKey: ObjectKey<'a>, PrimaryKey: ObjectKey<'a>> Index<IndexKey, PrimaryKey> {
+impl<IndexKey: ObjectKey, PrimaryKey: ObjectKey> Index<IndexKey, PrimaryKey> {
     /// Iterates over the index keys in the given range.
-    pub fn iterate<Start, End>(&'a self, ctx: &Context, start: Start::Value, end: End::Value) -> Response<Iter<'a, IndexKey, PrimaryKey>>
+    pub fn iterate<'a, Start, End>(&self, ctx: &'a Context, start: Start::Value<'a>, end: End::Value<'a>) -> Response<Iter<'a, IndexKey, PrimaryKey>>
     where
-        Start: PrefixKey<'a, IndexKey>,
-        End: PrefixKey<'a, IndexKey>,
+        Start: PrefixKey<IndexKey>,
+        End: PrefixKey<IndexKey>,
     {
         todo!()
     }
 
     /// Iterates over the index keys in the given range in reverse order.
-    pub fn iterate_reverse<Start, End>(&'a self, ctx: &Context, start: Start::Value, end: End::Value) -> Response<Iter<'a, IndexKey, PrimaryKey>>
+    pub fn iterate_reverse<'a, Start, End>(&self, ctx: &Context, start: Start::Value<'a>, end: End::Value<'a>) -> Response<Iter<'a, IndexKey, PrimaryKey>>
     where
-        Start: PrefixKey<'a, IndexKey>,
-        End: PrefixKey<'a, IndexKey>,
+        Start: PrefixKey<IndexKey>,
+        End: PrefixKey<IndexKey>,
     {
         todo!()
     }

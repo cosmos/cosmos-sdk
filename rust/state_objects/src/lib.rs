@@ -8,7 +8,6 @@ mod index;
 mod unique;
 mod seq;
 mod uint_map;
-mod codec;
 mod ordered_map;
 mod ordered_set;
 

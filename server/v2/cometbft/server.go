@@ -104,7 +104,6 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	consensus := NewConsensus(
 		s.logger,
 		appI.Name(),
-		appI.GetConsensusAuthority(),
 		appI.GetAppManager(),
 		s.serverOptions.Mempool(cfg),
 		indexEvents,

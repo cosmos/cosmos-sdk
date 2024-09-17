@@ -1,8 +1,6 @@
 package simulation
 
 import (
-	"encoding/json"
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -34,7 +32,7 @@ func genMaxValidators(r *rand.Rand) (maxValidators uint32) {
 
 // getHistEntries returns randomized HistoricalEntries between 0-100.
 func getHistEntries(r *rand.Rand) uint32 {
-	return uint32(r.Intn(int(types.DefaultHistoricalEntries + 1)))
+	return uint32(r.Intn(int(0 + 1)))
 }
 
 // getKeyRotationFee returns randomized keyRotationFee between 10000-1000000.
@@ -64,7 +62,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	// NOTE: the slashing module need to be defined after the staking module on the
 	// NewSimulationManager constructor for this to work
 	simState.UnbondTime = unbondTime
-	params := types.NewParams(simState.UnbondTime, maxVals, 7, histEntries, simState.BondDenom, minCommissionRate, rotationFee)
+	params := types.NewParams(simState.UnbondTime, maxVals, 7, simState.BondDenom, minCommissionRate, rotationFee)
 
 	// validators & delegations
 	var (
@@ -108,11 +106,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 	}
 
 	stakingGenesis := types.NewGenesisState(params, validators, delegations)
-
-	bz, err := json.MarshalIndent(&stakingGenesis.Params, "", " ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(stakingGenesis)
 }

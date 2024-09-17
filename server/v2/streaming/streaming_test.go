@@ -12,7 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 )
 
 type PluginTestSuite struct {
@@ -52,7 +53,7 @@ func (s *PluginTestSuite) SetupTest() {
 	abciListener, ok := raw.(Listener)
 	require.True(s.T(), ok, "should pass type check")
 
-	logger := log.NewNopLogger()
+	logger := coretesting.NewNopLogger()
 	streamingService := Manager{
 		Listeners:     []Listener{abciListener},
 		StopNodeOnErr: true,

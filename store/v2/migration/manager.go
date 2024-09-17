@@ -183,8 +183,13 @@ func (m *Manager) writeChangeset() error {
 		batch := m.db.NewBatch()
 		// Invoking this code in a closure so that defer is called immediately on return
 		// yet not in the for-loop which can leave resource lingering.
-		err = func() error {
-			defer batch.Close()
+		err = func() (err error) {
+			defer func() {
+				cErr := batch.Close()
+				if err == nil {
+					err = cErr
+				}
+			}()
 
 			if err := batch.Set(csKey, csBytes); err != nil {
 				return fmt.Errorf("failed to write changeset to db.Batch: %w", err)
@@ -197,7 +202,6 @@ func (m *Manager) writeChangeset() error {
 		if err != nil {
 			return err
 		}
-		batch.Close()
 	}
 
 	return nil
@@ -216,7 +220,7 @@ func (m *Manager) GetMigratedVersion() uint64 {
 func (m *Manager) Sync() error {
 	version := m.GetMigratedVersion()
 	if version == 0 {
-		return fmt.Errorf("migration is not done yet")
+		return errors.New("migration is not done yet")
 	}
 	version += 1
 

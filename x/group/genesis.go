@@ -3,9 +3,10 @@ package group
 import (
 	"fmt"
 
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -83,7 +84,7 @@ func (s GenesisState) Validate() error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (s GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (s GenesisState) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	for _, g := range s.GroupPolicies {
 		err := g.UnpackInterfaces(unpacker)
 		if err != nil {

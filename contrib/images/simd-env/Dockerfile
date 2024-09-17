@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine AS build
+FROM golang:1.23-alpine AS build
 
 RUN apk add build-base git linux-headers
 
@@ -24,9 +24,11 @@ COPY x/mint/go.mod x/mint/go.sum /work/x/mint/
 COPY x/consensus/go.mod x/consensus/go.sum /work/x/consensus/
 COPY x/accounts/go.mod x/accounts/go.sum /work/x/accounts/
 COPY runtime/v2/go.mod runtime/v2/go.sum /work/runtime/v2/
+COPY server/v2/go.mod server/v2/go.sum /work/server/v2/
 COPY server/v2/appmanager/go.mod server/v2/appmanager/go.sum /work/server/v2/appmanager/
-COPY server/v2/core/go.mod server/v2/core/go.sum /work/server/v2/core/
 COPY server/v2/stf/go.mod server/v2/stf/go.sum /work/server/v2/stf/
+COPY server/v2/cometbft/go.mod server/v2/cometbft/go.sum /work/server/v2/cometbft/
+COPY core/testing/go.mod core/testing/go.sum /work/core/testing/
 
 RUN go mod download
 

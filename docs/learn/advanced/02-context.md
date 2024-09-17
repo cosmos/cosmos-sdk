@@ -39,7 +39,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/context.go#L41-L
   `Events` by defining various `Types` and `Attributes` or use the common definitions found in `types/`. Clients can subscribe or query for these `Events`. These `Events` are collected throughout `FinalizeBlock` and are returned to CometBFT for indexing.
 * **Priority:** The transaction priority, only relevant in `CheckTx`.
 * **KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the `KVStore`.
-* **Transient KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the transiant `KVStore`.
+* **Transient KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the transient `KVStore`.
 * **StreamingManager:** The streamingManager field provides access to the streaming manager, which allows modules to subscribe to state changes emitted by the blockchain. The streaming manager is used by the state listening API, which is described in [ADR 038](https://docs.cosmos.network/main/architecture/adr-038-state-listening).
 * **CometInfo:** A lightweight field that contains information about the current block, such as the block height, time, and hash. This information can be used for validating evidence, providing historical data, and enhancing the user experience. For further details see [here](https://github.com/cosmos/cosmos-sdk/blob/main/core/comet/service.go#L14).
 * **HeaderInfo:** The `headerInfo` field contains information about the current block header, such as the chain ID, gas limit, and timestamp. For further details see [here](https://github.com/cosmos/cosmos-sdk/blob/main/core/header/service.go#L14).
@@ -54,7 +54,7 @@ Contexts are intended to be **immutable**; they should never be edited. Instead,
 to create a child context from its parent using a `With` function. For example:
 
 ```go
-childCtx = parentCtx.WithBlockHeader(header)
+childCtx := parentCtx.WithBlockHeader(header)
 ```
 
 The [Golang Context Package](https://pkg.go.dev/context) documentation instructs developers to
@@ -71,7 +71,7 @@ goes wrong. The pattern of usage for a Context is as follows:
 
 1. A process receives a Context `ctx` from its parent process, which provides information needed to
    perform the process.
-2. The `ctx.ms` is a **branched store**, i.e. a branch of the [multistore](./04-store.md#multistore) is made so that the process can make changes to the state as it executes, without changing the original`ctx.ms`. This is useful to protect the underlying multistore in case the changes need to be reverted at some point in the execution.
+2. The `ctx.ms` is a **branched store**, i.e. a branch of the [multistore](./04-store.md#multistore) is made so that the process can make changes to the state as it executes, without changing the original `ctx.ms`. This is useful to protect the underlying multistore in case the changes need to be reverted at some point in the execution.
 3. The process may read and write from `ctx` as it is executing. It may call a subprocess and pass
    `ctx` to it as needed.
 4. When a subprocess returns, it checks if the result is a success or failure. If a failure, nothing

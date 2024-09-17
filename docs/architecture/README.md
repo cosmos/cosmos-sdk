@@ -36,7 +36,7 @@ Read about the [PROCESS](./PROCESS.md).
 
 ### Use RFC 2119 Keywords
 
-When writing ADRs, follow the same best practices for writing RFCs. When writing RFCs, key words are used to signify the requirements in the specification. These words are often capitalized: "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL. They are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
+When writing ADRs, follow the same best practices for writing RFCs. When writing RFCs, key words are used to signify the requirements in the specification. These words are often capitalized: "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL". They are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
 
 ## ADR Table of Contents
 
@@ -62,6 +62,7 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 061: Liquid Staking](./adr-061-liquid-staking.md)
 * [ADR 070: Un-Ordered Transaction Inclusion](./adr-070-unordered-transactions.md)
 * [ADR 065: Store v2](./adr-065-store-v2.md)
+* [ADR 073: Built-in In-process Indexer](./adr-073-indexer.md)
 
 ### Proposed
 
@@ -89,6 +90,7 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 063: Core Module API](./adr-063-core-module-api.md)
 * [ADR 067: Simulator v2](./adr-067-simulator-v2.md)
 * [ADR 069: `x/gov` modularity, multiple choice and optimisic proposals](./adr-069-gov-improvements.md)
+* [ADR 074: Messages with implicit signers](./adr-074-implicit-msg-signers.md)
 
 ### Draft
 

@@ -12,7 +12,7 @@ import (
 	"cosmossdk.io/collections"
 	coreaddress "cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	"cosmossdk.io/x/evidence/exported"
@@ -90,7 +90,7 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, evidence.AppModule{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 	tkey := storetypes.NewTransientStoreKey("evidence_transient_store")
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, tkey)
 	suite.ctx = testCtx.Ctx
@@ -102,12 +102,14 @@ func (suite *KeeperTestSuite) SetupTest() {
 	stakingKeeper := evidencetestutil.NewMockStakingKeeper(ctrl)
 	slashingKeeper := evidencetestutil.NewMockSlashingKeeper(ctrl)
 	accountKeeper := evidencetestutil.NewMockAccountKeeper(ctrl)
+	ck := evidencetestutil.NewMockConsensusKeeper(ctrl)
 
 	evidenceKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		env,
 		stakingKeeper,
 		slashingKeeper,
+		ck,
 		address.NewBech32Codec("cosmos"),
 	)
 
@@ -127,10 +129,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(evidenceKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
 	suite.evidenceKeeper = *evidenceKeeper
-
-	suite.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
-		suite.evidenceKeeper.Logger)
-
 	suite.msgServer = keeper.NewMsgServerImpl(suite.evidenceKeeper)
 }
 

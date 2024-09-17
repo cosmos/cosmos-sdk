@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/distribution/client/cli"
 	"cosmossdk.io/x/distribution/keeper"
@@ -19,6 +18,7 @@ import (
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -28,7 +28,6 @@ import (
 const ConsensusVersion = 4
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
@@ -36,7 +35,6 @@ var (
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasBeginBlocker       = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
@@ -46,24 +44,15 @@ var (
 type AppModule struct {
 	cdc           codec.Codec
 	keeper        keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
-	poolKeeper    types.PoolKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(
-	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, poolKeeper types.PoolKeeper,
-) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, stakingKeeper types.StakingKeeper) AppModule {
 	return AppModule{
 		cdc:           cdc,
 		keeper:        keeper,
-		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
 		stakingKeeper: stakingKeeper,
-		poolKeeper:    poolKeeper,
 	}
 }
 
@@ -71,13 +60,14 @@ func NewAppModule(
 func (am AppModule) IsAppModule() {}
 
 // Name returns the distribution module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the distribution module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the distribution module.
@@ -167,8 +157,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the distribution module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	c := sdk.UnwrapSDKContext(ctx) // TODO: remove and use context.Context after including the comet service
-	return am.keeper.BeginBlocker(c)
+	return am.keeper.BeginBlocker(ctx)
 }
 
 // AppModuleSimulation functions
@@ -178,20 +167,18 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalMsgs returns msgs used for governance proposals for simulations.
-func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
-	return simulation.ProposalMsgs()
-}
-
 // RegisterStoreDecoder registers a decoder for distribution module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-// WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, simState.TxConfig,
-		am.accountKeeper, am.bankKeeper, am.keeper, am.stakingKeeper,
-	)
+// ProposalMsgsX returns msgs used for governance proposals for simulations.
+func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("msg_update_params", 100), simulation.MsgUpdateParamsFactory())
+}
+
+func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("msg_set_withdraw_address", 50), simulation.MsgSetWithdrawAddressFactory(am.keeper))
+	reg.Add(weights.Get("msg_withdraw_delegation_reward", 50), simulation.MsgWithdrawDelegatorRewardFactory(am.keeper, am.stakingKeeper))
+	reg.Add(weights.Get("msg_withdraw_validator_commission", 50), simulation.MsgWithdrawValidatorCommissionFactory(am.keeper, am.stakingKeeper))
 }

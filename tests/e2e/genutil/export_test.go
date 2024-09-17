@@ -13,15 +13,16 @@ import (
 	"path"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtcfg "github.com/cometbft/cometbft/config"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	corectx "cosmossdk.io/core/context"
+	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 
@@ -29,9 +30,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	gentestutil "github.com/cosmos/cosmos-sdk/testutil/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	gentestutil "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -59,7 +60,7 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 func TestExportCmd_HomeDir(t *testing.T) {
 	_, ctx, _, cmd := setupApp(t, t.TempDir())
 
-	v := ctx.Value(corectx.ViperContextKey{})
+	v := ctx.Value(corectx.ViperContextKey)
 	viper, ok := v.(*viper.Viper)
 	require.True(t, ok)
 	viper.Set(flags.FlagHome, "foobar")
@@ -167,7 +168,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	err := createConfigFolder(tempDir)
 	assert.NilError(t, err)
 
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := simapp.NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 
 	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
@@ -204,7 +205,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	_, err = app.Commit()
 	assert.NilError(t, err)
 
-	cmd := genutilcli.ExportCmd(func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
+	cmd := genutilcli.ExportCmd(func(_ log.Logger, _ corestore.KVStoreWithBatch, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
 		var simApp *simapp.SimApp
 		if height != -1 {
 			simApp = simapp.NewSimApp(logger, db, nil, false, appOptions)
@@ -220,7 +221,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ViperContextKey{}, viper)
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
 
 	return app, ctx, appGenesis, cmd
 }

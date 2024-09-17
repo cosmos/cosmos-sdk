@@ -37,6 +37,7 @@ func (i *Info) Bytes() ([]byte, error) {
 	if len(i.Hash) != hashSize {
 		return nil, errors.New("invalid hash size")
 	}
+
 	buf = append(buf, i.Hash...)
 
 	// Encode Time
@@ -45,7 +46,7 @@ func (i *Info) Bytes() ([]byte, error) {
 	buf = append(buf, timeBytes...)
 
 	// Encode AppHash
-	if len(i.Hash) != hashSize {
+	if len(i.AppHash) != hashSize {
 		return nil, errors.New("invalid hash size")
 	}
 	buf = append(buf, i.AppHash...)

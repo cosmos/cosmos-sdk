@@ -7,13 +7,13 @@ import (
 
 	"cosmossdk.io/core/header"
 	sdkmath "cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/authz"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func (suite *TestSuite) createAccounts() []sdk.AccAddress {
@@ -198,6 +198,20 @@ func (suite *TestSuite) TestGrant() {
 					Grant:   grant,
 				}
 			},
+		},
+		{
+			name: "invalid grant with msg grant",
+			malleate: func() *authz.MsgGrant {
+				grant, err := authz.NewGrant(curBlockTime, authz.NewGenericAuthorization("/cosmos.authz.v1beta1.MsgGrant"), nil)
+				suite.Require().NoError(err)
+				return &authz.MsgGrant{
+					Granter: granterStrAddr,
+					Grantee: granteeStrAddr,
+					Grant:   grant,
+				}
+			},
+			expErr: true,
+			errMsg: "authz msgGrant is not allowed",
 		},
 	}
 

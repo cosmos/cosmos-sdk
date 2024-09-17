@@ -11,6 +11,24 @@
       "program": "${fileDirname}",
       "args": ["-test.timeout", "30m", "-test.v"],
       "buildFlags": "-tags e2e"
+    },
+    {
+      "name": "Start: simapp/v2",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/simapp/v2/simdv2",
+      "args": ["start"],
+      "buildFlags": ""
+    },
+    {
+      "name": "Start: simapp/v1",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/simapp/simd",
+      "args": ["start"],
+      "buildFlags": ""
     }
   ]
 }

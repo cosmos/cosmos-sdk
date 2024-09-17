@@ -1,0 +1,70 @@
+App State Diff:
+MODULE COUNT ERROR: expected 2, got 1
+Module all_kinds
+  Object Collection test_address
+    OBJECT COUNT ERROR: expected 12, got 7
+    Object key=0x00000306012e340202ff01a4310018941202cd0118020b01151703022b9dff2906022b4503ab49034e1207ef03c01300010c570f2cff: NOT FOUND
+    Object key=0x0000190f0405000a0501050288020000000100ff003b4d4b010700ff6f0e530a0e010104067a63b602055c000e0100: NOT FOUND
+    Object key=0x010901a813050300274200409f0200000b362f1c: NOT FOUND
+    Object key=0x01df2d00000627ff00fc0d9901003a93680000007501ff00010215290d000d0712: NOT FOUND
+    Object key=0x0200010d1a0100db010100ad8b1d0103180088bb0742258a66010303000c001200b200273e0d2051cc8656ff8304aa1d7e01: NOT FOUND
+    Object key=0x030201140105cc030101f5c9e4a7dafe1703f918000001cd01070309031901f007030a1371d4181bedf9c7340e82b8e655789f830106800c01a90701010d0f04: NOT FOUND
+    Object key=0x43063c0003f6218d29280001002e0e352f630100f70d073a01010e039a077a3d00379d0100b9018302fddb3000131939469d0172bc1614343802f916
+      valNotNull: expected [6 3 149 0 1 1 95 3 5 115 6 61 5 80 15 105 31 231 0 13 222 115 183 0 193 1 0 126 181 21], got [0 8 30 7 6 2 80 6 234 1 20 2 44 227 23 5 71 7 218 161 66 107 225 254 0 11 52 57 193 126 42 62 67 0 0 43 0 212 75 255 22]
+      valNullable: expected [124 169 52 6 86 99 120 2 25 0 71 192 164 7 162 0 1 0 5 0 24 246 1 198 14 57 3 3 1 1 1], got [196 2 95 46 3 0 0 208 251 25 73 62 53 1 6 0 30 0 4 217 1 10 116 0 11 130 11 253 204 45 43 57 6 6 63 75 7 183 195 65 0 143 3 89 2 3 0 33 234 58 12 15 16 0 115 12 190 7 0 218]
+      Object key=0x810100146300390103010105021f8a2f1300000b07b7ff0207078e701700b8ee008d003709cfc800062bff00d3120010019a01ec0e058f03500039f8029601: NOT FOUND
+    Object Collection test_bool
+    Object key=true
+      valNotNull: expected true, got false
+      Object Collection test_bytes
+    OBJECT COUNT ERROR: expected 3, got 1
+    Object key=0x: NOT FOUND
+    Object key=0xc2d7: NOT FOUND
+    Object key=0xff661b1c00
+      valNotNull: expected [255 0 24 235 0 84 11], got [17]
+      valNullable: expected [1 18 6], got [0 8 1 170 90 0 1 201 97 138 53 2]
+      Object Collection test_decimal
+    OBJECT COUNT ERROR: expected 3, got 0
+    Object key=0.00041: NOT FOUND
+    Object key=2236909734871917105: NOT FOUND
+    Object key=3.9672E+5: NOT FOUND
+    Object Collection test_duration
+    OBJECT COUNT ERROR: expected 1, got 2
+    Object Collection test_enum
+    Object key=baz: NOT FOUND
+    Object Collection test_float32
+    OBJECT COUNT ERROR: expected 4, got 3
+    Object key=-16: NOT FOUND
+    Object key=-5: NOT FOUND
+    Object Collection test_int16
+    OBJECT COUNT ERROR: expected 5, got 4
+    Object key=3518: NOT FOUND
+    Object Collection test_int32
+    OBJECT COUNT ERROR: expected 3, got 4
+    Object Collection test_int64
+    Object key=-53052092: NOT FOUND
+    Object Collection test_int8
+    OBJECT COUNT ERROR: expected 4, got 3
+    Object key=0: NOT FOUND
+    Object Collection test_string
+    OBJECT COUNT ERROR: expected 6, got 4
+    Object key=;֏!A$⍈̈#a²𒑮{: NOT FOUND
+    Object key=a]>/a֍)!"˂A: NOT FOUND
+    Object key=҉೫ᾙ
+    
+      valNotNull: expected @۰a?, got ҉"🏿᷾꜌-?𒑮
+      valNullable: expected nil, got 
+      Object key=ਃÙ࣢Ⱥ +
+      valNotNull: expected \^𞻱⅗�, got 𐹹aa
+      valNullable: expected nil, got aa
+      Object Collection test_time
+    Object key=1969-12-31 18:59:59.99999818 -0500 EST: NOT FOUND
+    Object Collection test_uint32
+    OBJECT COUNT ERROR: expected 2, got 3
+    Object Collection test_uint64
+    OBJECT COUNT ERROR: expected 2, got 3
+    Object Collection test_uint8
+    OBJECT COUNT ERROR: expected 2, got 1
+    Object key=0: NOT FOUND
+    Module test_cases: actual module NOT FOUND
+BlockNum: expected 2, got 1

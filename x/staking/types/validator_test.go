@@ -5,18 +5,15 @@ import (
 	"sort"
 	"testing"
 
-	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -254,58 +251,6 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 		types.Validators{Validators: vals, ValidatorCodec: address.NewBech32Codec("cosmosvaloper")}.Sort()
 		require.Equal(t, sortedVals, vals, "Validator sort returned different slices")
 	}
-}
-
-// Check SortCometBFT sorts the same as CometBFT
-func TestValidatorsSortCometBFT(t *testing.T) {
-	vals := make([]types.Validator, 100)
-
-	for i := range vals {
-		pk := ed25519.GenPrivKey().PubKey()
-		pk2 := ed25519.GenPrivKey().PubKey()
-		vals[i] = newValidator(t, sdk.ValAddress(pk2.Address()), pk)
-		vals[i].Status = types.Bonded
-		vals[i].Tokens = math.NewInt(rand.Int63())
-	}
-	// create some validators with the same power
-	for i := 0; i < 10; i++ {
-		vals[i].Tokens = math.NewInt(1000000)
-	}
-
-	valz := types.Validators{Validators: vals, ValidatorCodec: address.NewBech32Codec("cosmosvaloper")}
-
-	// create expected CometBFT validators by converting to CometBFT then sorting
-	expectedVals, err := testutil.ToCmtValidators(valz, sdk.DefaultPowerReduction)
-	require.NoError(t, err)
-	sort.Sort(cmttypes.ValidatorsByVotingPower(expectedVals))
-
-	// sort in SDK and then convert to CometBFT
-	sort.SliceStable(valz.Validators, func(i, j int) bool {
-		return types.ValidatorsByVotingPower(valz.Validators).Less(i, j, sdk.DefaultPowerReduction)
-	})
-	actualVals, err := testutil.ToCmtValidators(valz, sdk.DefaultPowerReduction)
-	require.NoError(t, err)
-
-	require.Equal(t, expectedVals, actualVals, "sorting in SDK is not the same as sorting in CometBFT")
-}
-
-func TestValidatorToCmt(t *testing.T) {
-	vals := types.Validators{}
-	expected := make([]*cmttypes.Validator, 10)
-
-	for i := 0; i < 10; i++ {
-		pk := ed25519.GenPrivKey().PubKey()
-		val := newValidator(t, sdk.ValAddress(pk.Address()), pk)
-		val.Status = types.Bonded
-		val.Tokens = math.NewInt(rand.Int63())
-		vals.Validators = append(vals.Validators, val)
-		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
-		require.NoError(t, err)
-		expected[i] = cmttypes.NewValidator(cmtPk, val.ConsensusPower(sdk.DefaultPowerReduction))
-	}
-	vs, err := testutil.ToCmtValidators(vals, sdk.DefaultPowerReduction)
-	require.NoError(t, err)
-	require.Equal(t, expected, vs)
 }
 
 func TestBondStatus(t *testing.T) {

@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/feegrant"
@@ -24,14 +23,12 @@ import (
 )
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasEndBlocker         = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
@@ -42,19 +39,15 @@ type AppModule struct {
 	cdc      codec.Codec
 	registry cdctypes.InterfaceRegistry
 
-	keeper        keeper.Keeper
-	accountKeeper feegrant.AccountKeeper
-	bankKeeper    feegrant.BankKeeper
+	keeper keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKeeper, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
-		cdc:           cdc,
-		keeper:        keeper,
-		accountKeeper: ak,
-		bankKeeper:    bk,
-		registry:      registry,
+		cdc:      cdc,
+		keeper:   keeper,
+		registry: registry,
 	}
 }
 
@@ -62,13 +55,14 @@ func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKe
 func (AppModule) IsAppModule() {}
 
 // Name returns the feegrant module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return feegrant.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the feegrant module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	feegrant.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	feegrant.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterInterfaces registers the feegrant module's interface types

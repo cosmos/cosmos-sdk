@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/gov/client/cli"
 	govclitestutil "cosmossdk.io/x/gov/client/testutil"
 	"cosmossdk.io/x/gov/types"
@@ -20,6 +19,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type E2ETestSuite struct {
@@ -164,8 +164,6 @@ func (s *E2ETestSuite) TestNewCmdSubmitProposal() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdSubmitProposal()
 			clientCtx := val.GetClientCtx()
@@ -260,8 +258,6 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdSubmitLegacyProposal()
 			clientCtx := val.GetClientCtx()
@@ -357,7 +353,6 @@ func (s *E2ETestSuite) TestNewCmdWeightedVote() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdWeightedVote()
 			clientCtx := val.GetClientCtx()

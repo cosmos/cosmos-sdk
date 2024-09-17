@@ -54,7 +54,7 @@ func NewTxCmd() *cobra.Command {
 // TODO(@julienrbrt): remove this once AutoCLI can flatten nested structs.
 func NewCreateValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-validator [path/to/validator.json]",
+		Use:   "create-validator <path/to/validator.json>",
 		Short: "Create new validator initialized with a self-delegation to it",
 		Args:  cobra.ExactArgs(1),
 		Long:  `Create a new validator initialized with a self-delegation by submitting a JSON file with the new validator details.`,
@@ -365,7 +365,7 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 }
 
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
-func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorConfig, txBldr tx.Factory, generateOnly bool, valCodec address.Codec) (tx.Factory, sdk.Msg, error) {
+func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorConfig, txBldr tx.Factory, generateOnly bool) (tx.Factory, sdk.Msg, error) {
 	amounstStr := config.Amount
 	amount, err := sdk.ParseCoinNormalized(amounstStr)
 	if err != nil {
@@ -398,7 +398,8 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 		return txBldr, nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
 	}
 
-	valStr, err := valCodec.BytesToString(sdk.ValAddress(valAddr))
+	valCodec := clientCtx.TxConfig.SigningContext().ValidatorAddressCodec()
+	valStr, err := valCodec.BytesToString(valAddr)
 	if err != nil {
 		return txBldr, nil, err
 	}

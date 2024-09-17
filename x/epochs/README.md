@@ -1,4 +1,8 @@
-# Epochs
+---
+sidebar_position: 1
+---
+
+# `x/epochs`
 
 ## Abstract
 
@@ -140,7 +144,7 @@ Query the currently running epochInfos
 <appd> query epochs epoch-infos
 ```
 
-::: details Example
+:::details Example
 
 An example output:
 
@@ -172,7 +176,7 @@ Query the current epoch by the specified identifier
 <appd> query epochs current-epoch [identifier]
 ```
 
-::: details Example
+:::details Example
 
 Query the current `day` epoch:
 
@@ -185,3 +189,5 @@ Which in this example outputs:
 ```sh
 current_epoch: "183"
 ```
+
+:::

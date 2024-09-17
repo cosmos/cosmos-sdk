@@ -9,16 +9,18 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/collections/colltest"
+	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/core/transaction"
 )
 
 func TestMakeAccountContext(t *testing.T) {
-	storeService, originalContext := colltest.MockStore()
+	originalContext := coretesting.Context()
+	storeService := coretesting.KVStoreService(originalContext, "test")
 	accountAddr := []byte("accountAddr")
 	sender := []byte("sender")
 	sb := collections.NewSchemaBuilderFromAccessor(openKVStore)
 
-	accountCtx := MakeAccountContext(originalContext, storeService, 1, accountAddr, sender, nil, nil, nil, nil)
+	accountCtx := MakeAccountContext(originalContext, storeService, 1, accountAddr, sender, nil, nil, nil)
 
 	// ensure whoami
 	require.Equal(t, accountAddr, Whoami(accountCtx))
@@ -42,38 +44,24 @@ func TestMakeAccountContext(t *testing.T) {
 	value, err := store.Get(append(AccountStatePrefix, append(binary.BigEndian.AppendUint64(nil, 1), itemPrefix...)...))
 	require.NoError(t, err)
 	require.Equal(t, []byte{0, 0, 0, 0, 0, 0, 3, 232}, value)
-
-	// ensure calling ExecModule works
-	accountCtx = MakeAccountContext(originalContext, storeService, 1, []byte("legit-exec-module"), []byte("invoker"), nil, func(ctx context.Context, sender []byte, msg, msgResp ProtoMsg) error {
-		// ensure we unwrapped the context when invoking a module call
-		require.Equal(t, originalContext, ctx)
-		Merge(msgResp, &types.StringValue{Value: "module exec was called"})
-		return nil
-	}, nil, nil)
-
-	resp, err := ExecModule[types.StringValue](accountCtx, &types.UInt64Value{Value: 1000})
-	require.NoError(t, err)
-	require.True(t, Equal(&types.StringValue{Value: "module exec was called"}, resp))
-
 	// ensure calling ExecModuleUntyped works
-	accountCtx = MakeAccountContext(originalContext, storeService, 1, []byte("legit-exec-module-untyped"), []byte("invoker"), nil, nil, func(ctx context.Context, sender []byte, msg ProtoMsg) (ProtoMsg, error) {
+	accountCtx = MakeAccountContext(originalContext, storeService, 1, []byte("legit-exec-module-untyped"), []byte("invoker"), nil, func(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
 		require.Equal(t, originalContext, ctx)
 		return &types.StringValue{Value: "module exec untyped was called"}, nil
 	}, nil)
 
-	respUntyped, err := ExecModuleUntyped(accountCtx, &types.UInt64Value{Value: 1000})
+	respUntyped, err := ExecModule(accountCtx, &types.UInt64Value{Value: 1000})
 	require.NoError(t, err)
 	require.True(t, Equal(&types.StringValue{Value: "module exec untyped was called"}, respUntyped))
 
 	// ensure calling QueryModule works, also by setting everything else communication related to nil
 	// we can guarantee that exec paths do not impact query paths.
-	accountCtx = MakeAccountContext(originalContext, storeService, 1, nil, nil, nil, nil, nil, func(ctx context.Context, req, resp ProtoMsg) error {
+	accountCtx = MakeAccountContext(originalContext, storeService, 1, nil, nil, nil, nil, func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
 		require.Equal(t, originalContext, ctx)
-		Merge(resp, &types.StringValue{Value: "module query was called"})
-		return nil
+		return &types.StringValue{Value: "module query was called"}, nil
 	})
 
-	resp, err = QueryModule[types.StringValue](accountCtx, &types.UInt64Value{Value: 1000})
+	resp, err := QueryModule(accountCtx, &types.UInt64Value{Value: 1000})
 	require.NoError(t, err)
 	require.True(t, Equal(&types.StringValue{Value: "module query was called"}, resp))
 }

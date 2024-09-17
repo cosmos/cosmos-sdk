@@ -35,6 +35,11 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 		return err
 	}
 
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		return err
+	}
+
 	for _, prop := range inactiveProps {
 		proposal, err := k.Proposals.Get(ctx, prop.Key.K2())
 		if err != nil {
@@ -61,10 +66,6 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			return err
 		}
 
-		params, err := k.Params.Get(ctx)
-		if err != nil {
-			return err
-		}
 		if !params.BurnProposalDepositPrevote {
 			err = k.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
 		} else {
@@ -77,7 +78,7 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 
 		// called when proposal become inactive
 		// call hook when proposal become inactive
-		if err := k.BranchService.Execute(ctx, func(ctx context.Context) error {
+		if err = k.BranchService.Execute(ctx, func(ctx context.Context) error {
 			return k.Hooks().AfterProposalFailedMinDeposit(ctx, proposal.Id)
 		}); err != nil {
 			// purposely ignoring the error here not to halt the chain if the hook fails
@@ -193,16 +194,10 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			// Messages may mutate state thus we use a cached context. If one of
 			// the handlers fails, no state mutation is written and the error
 			// message is logged.
-			if err := k.BranchService.Execute(ctx, func(ctx context.Context) error {
+			_, err = k.BranchService.ExecuteWithGasLimit(ctx, params.ProposalExecutionGas, func(ctx context.Context) error {
 				// execute all messages
 				for idx, msg = range messages {
 					if _, err := safeExecuteHandler(ctx, msg, k.MsgRouterService); err != nil {
-						// `idx` and `err` are populated with the msg index and error.
-						proposal.Status = v1.StatusFailed
-						proposal.FailedReason = err.Error()
-						tagValue = types.AttributeValueProposalFailed
-						logMsg = fmt.Sprintf("passed, but msg %d (%s) failed on execution: %s", idx, sdk.MsgTypeURL(msg), err)
-
 						return err
 					}
 				}
@@ -212,7 +207,14 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 				logMsg = "passed"
 
 				return nil
-			}); err != nil {
+			})
+			if err != nil {
+				// `idx` and `err` are populated with the msg index and error.
+				proposal.Status = v1.StatusFailed
+				proposal.FailedReason = err.Error()
+				tagValue = types.AttributeValueProposalFailed
+				logMsg = fmt.Sprintf("passed, but msg %d (%s) failed on execution: %s", idx, sdk.MsgTypeURL(msg), err)
+
 				break // We do not anything with the error. Returning an error halts the chain, and proposal struct is already updated.
 			}
 		case !burnDeposits && (proposal.ProposalType == v1.ProposalType_PROPOSAL_TYPE_EXPEDITED ||
@@ -222,10 +224,6 @@ func (k Keeper) EndBlocker(ctx context.Context) error {
 			// once the regular voting period expires again, the tally is repeated
 			// according to the regular proposal rules.
 			proposal.ProposalType = v1.ProposalType_PROPOSAL_TYPE_STANDARD
-			params, err := k.Params.Get(ctx)
-			if err != nil {
-				return err
-			}
 			endTime := proposal.VotingStartTime.Add(*params.VotingPeriod)
 			proposal.VotingEndTime = &endTime
 
@@ -290,7 +288,7 @@ func safeExecuteHandler(ctx context.Context, msg sdk.Msg, router router.Service)
 		}
 	}()
 
-	res, err = router.InvokeUntyped(ctx, msg)
+	res, err = router.Invoke(ctx, msg)
 	return
 }
 

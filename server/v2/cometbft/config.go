@@ -3,35 +3,56 @@ package cometbft
 import (
 	cmtcfg "github.com/cometbft/cometbft/config"
 
-	"cosmossdk.io/server/v2/api/grpc"
-	"cosmossdk.io/server/v2/cometbft/types"
+	"cosmossdk.io/server/v2/cometbft/mempool"
 )
 
 // Config is the configuration for the CometBFT application
 type Config struct {
-	// app.toml config options
-	Name            string              `mapstructure:"name" toml:"name"`
-	Version         string              `mapstructure:"version" toml:"version"`
-	InitialHeight   uint64              `mapstructure:"initial_height" toml:"initial_height"`
-	MinRetainBlocks uint64              `mapstructure:"min_retain_blocks" toml:"min_retain_blocks"`
-	IndexEvents     map[string]struct{} `mapstructure:"index_events" toml:"index_events"`
-	HaltHeight      uint64              `mapstructure:"halt_height" toml:"halt_height"`
-	HaltTime        uint64              `mapstructure:"halt_time" toml:"halt_time"`
-	// end of app.toml config options
+	AppTomlConfig    *AppTomlConfig
+	ConfigTomlConfig *cmtcfg.Config
+}
 
-	AddrPeerFilter types.PeerFilter // filter peers by address and port
-	IdPeerFilter   types.PeerFilter // filter peers by node ID
+func DefaultAppTomlConfig() *AppTomlConfig {
+	return &AppTomlConfig{
+		MinRetainBlocks: 0,
+		IndexEvents:     make([]string, 0),
+		HaltHeight:      0,
+		HaltTime:        0,
+		Address:         "tcp://127.0.0.1:26658",
+		Transport:       "socket",
+		Trace:           false,
+		Standalone:      false,
+		Mempool:         mempool.DefaultConfig(),
+	}
+}
 
-	Transport  string `mapstructure:"transport" toml:"transport"`
-	Addr       string `mapstructure:"addr" toml:"addr"`
-	Standalone bool   `mapstructure:"standalone" toml:"standalone"`
-	Trace      bool   `mapstructure:"trace" toml:"trace"`
+type AppTomlConfig struct {
+	MinRetainBlocks uint64   `mapstructure:"min-retain-blocks" toml:"min-retain-blocks" comment:"min-retain-blocks defines the minimum block height offset from the current block being committed, such that all blocks past this offset are pruned from CometBFT. A value of 0 indicates that no blocks should be pruned."`
+	IndexEvents     []string `mapstructure:"index-events" toml:"index-events" comment:"index-events defines the set of events in the form {eventType}.{attributeKey}, which informs CometBFT what to index. If empty, all events will be indexed."`
+	HaltHeight      uint64   `mapstructure:"halt-height" toml:"halt-height" comment:"halt-height contains a non-zero block height at which a node will gracefully halt and shutdown that can be used to assist upgrades and testing."`
+	HaltTime        uint64   `mapstructure:"halt-time" toml:"halt-time" comment:"halt-time contains a non-zero minimum block time (in Unix seconds) at which a node will gracefully halt and shutdown that can be used to assist upgrades and testing."`
+	Address         string   `mapstructure:"address" toml:"address" comment:"address defines the CometBFT RPC server address to bind to."`
+	Transport       string   `mapstructure:"transport" toml:"transport" comment:"transport defines the CometBFT RPC server transport protocol: socket, grpc"`
+	Trace           bool     `mapstructure:"trace" toml:"trace" comment:"trace enables the CometBFT RPC server to output trace information about its internal operations."`
+	Standalone      bool     `mapstructure:"standalone" toml:"standalone" comment:"standalone starts the application without the CometBFT node. The node should be started separately."`
 
-	GrpcConfig grpc.Config
+	// Sub configs
+	Mempool mempool.Config `mapstructure:"mempool" toml:"mempool" comment:"mempool defines the configuration for the SDK built-in app-side mempool implementations."`
+}
 
-	// MempoolConfig
-	CmtConfig *cmtcfg.Config
+// CfgOption is a function that allows to overwrite the default server configuration.
+type CfgOption func(*Config)
 
-	// Must be set by the application to grant authority to the consensus engine to send messages to the consensus module
-	ConsensusAuthority string
+// OverwriteDefaultConfigTomlConfig overwrites the default comet config with the new config.
+func OverwriteDefaultConfigTomlConfig(newCfg *cmtcfg.Config) CfgOption {
+	return func(cfg *Config) {
+		cfg.ConfigTomlConfig = newCfg
+	}
+}
+
+// OverwriteDefaultAppTomlConfig overwrites the default comet config with the new config.
+func OverwriteDefaultAppTomlConfig(newCfg *AppTomlConfig) CfgOption {
+	return func(cfg *Config) {
+		cfg.AppTomlConfig = newCfg
+	}
 }

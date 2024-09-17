@@ -113,6 +113,7 @@ service Query {
 
   // HistoricalInfo queries the historical info for given height.
   rpc HistoricalInfo(QueryHistoricalInfoRequest) returns (QueryHistoricalInfoResponse) {
+    option deprecated                          = true;
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/staking/v1beta1/historical_info/{height}";
   }
@@ -139,13 +140,24 @@ message QueryValidatorsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
+// ValidatorInfo contains the validator's address and public key.
+message ValidatorInfo {
+  option (cosmos_proto.message_added_in) = "x/staking v0.2.0";
+  // consensus_address is the consensus address of the validator.
+  string consensus_address = 1 [(cosmos_proto.field_added_in) = "x/staking v0.2.0"];
+}
+
 // QueryValidatorsResponse is response type for the Query/Validators RPC method
 message QueryValidatorsResponse {
-  // validators contains all the queried validators.
   repeated Validator validators = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
-  // pagination defines the pagination in the response.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  // validator_info contains additional information for each validator.
+  // The order of the elements in this list corresponds to the order of the elements in the validators list.
+  // For example, if you want the ValidatorInfo for the third validator in the validators list,
+  // you should look at the third element in the validator_info list.
+  repeated ValidatorInfo validator_info = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 
 // QueryValidatorRequest is response type for the Query/Validator RPC method
@@ -357,6 +369,7 @@ message QueryDelegatorValidatorResponse {
 // QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC
 // method.
 message QueryHistoricalInfoRequest {
+  option deprecated = true;
   // height defines at which height to query the historical info.
   int64 height = 1;
 }
@@ -364,9 +377,9 @@ message QueryHistoricalInfoRequest {
 // QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo RPC
 // method.
 message QueryHistoricalInfoResponse {
+  option deprecated = true;
   // hist defines the historical info at the given height.
-  HistoricalInfo   hist              = 1 [deprecated = true];
-  HistoricalRecord historical_record = 2;
+  HistoricalInfo hist = 1 [deprecated = true];
 }
 
 // QueryPoolRequest is request type for the Query/Pool RPC method.

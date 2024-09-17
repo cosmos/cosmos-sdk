@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -9,14 +10,28 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	_ "cosmossdk.io/x/accounts"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
+	_ "cosmossdk.io/x/consensus"
+	_ "cosmossdk.io/x/distribution"
+	distributionkeeper "cosmossdk.io/x/distribution/keeper"
+	_ "cosmossdk.io/x/protocolpool"
+	_ "cosmossdk.io/x/slashing"
+	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/testutil"
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 // bootstrapSlashTest creates 3 validators and bootstrap the app.
@@ -633,4 +648,120 @@ func TestSlashAmount(t *testing.T) {
 	noBurned, err := f.stakingKeeper.Slash(f.sdkCtx, sdk.ConsAddress(addrVals[0]), f.sdkCtx.BlockHeight(), 10, fraction)
 	assert.NilError(t, err)
 	assert.Assert(t, math.NewInt(0).Equal(noBurned))
+}
+
+// TestFixAvoidFullSlashPenalty fixes the following issue: https://github.com/cosmos/cosmos-sdk/issues/20641
+func TestFixAvoidFullSlashPenalty(t *testing.T) {
+	// setup
+	var authKeeper authkeeper.AccountKeeperI
+	var stakingKeeper *keeper.Keeper
+	var bankKeeper bankkeeper.Keeper
+	var slashKeeper slashingkeeper.Keeper
+	var distrKeeper distributionkeeper.Keeper
+	app, err := simtestutil.Setup(depinject.Configs(
+		depinject.Supply(log.NewNopLogger()),
+		configurator.NewAppConfig(
+			configurator.AccountsModule(),
+			configurator.AuthModule(),
+			configurator.BankModule(),
+			configurator.ConsensusModule(),
+			configurator.StakingModule(),
+			configurator.SlashingModule(),
+			configurator.ProtocolPoolModule(),
+			configurator.DistributionModule(),
+		),
+	), &authKeeper, &stakingKeeper, &bankKeeper, &slashKeeper, &distrKeeper)
+	require.NoError(t, err)
+	ctx := app.BaseApp.NewContext(false)
+	stakingMsgServer := keeper.NewMsgServerImpl(stakingKeeper)
+	bondDenom, err := stakingKeeper.BondDenom(ctx)
+	require.NoError(t, err)
+	// create 2 evil validators, controlled by attacker
+	evilValPubKey := secp256k1.GenPrivKey().PubKey()
+	evilValPubKey2 := secp256k1.GenPrivKey().PubKey()
+	// attacker user account
+	badtestAcc := sdk.AccAddress("addr1_______________")
+	// normal users who stakes on evilValAddr1
+	testAcc1 := sdk.AccAddress("addr2_______________")
+	testAcc2 := sdk.AccAddress("addr3_______________")
+	createAccount(t, ctx, authKeeper, badtestAcc)
+	createAccount(t, ctx, authKeeper, testAcc1)
+	createAccount(t, ctx, authKeeper, testAcc2)
+	// fund all accounts
+	testCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, stakingKeeper.TokensFromConsensusPower(ctx, 1)))
+	require.NoError(t, banktestutil.FundAccount(ctx, bankKeeper, badtestAcc, testCoins))
+	require.NoError(t, banktestutil.FundAccount(ctx, bankKeeper, testAcc1, testCoins))
+	require.NoError(t, banktestutil.FundAccount(ctx, bankKeeper, testAcc2, testCoins))
+	// create evilValAddr1 for normal staking operations
+	evilValAddr1 := sdk.ValAddress(evilValPubKey.Address())
+	createAccount(t, ctx, authKeeper, evilValAddr1.Bytes())
+	require.NoError(t, banktestutil.FundAccount(ctx, bankKeeper, sdk.AccAddress(evilValAddr1), testCoins))
+	createValMsg1, _ := types.NewMsgCreateValidator(
+		evilValAddr1.String(), evilValPubKey, testCoins[0], types.Description{Details: "test"}, types.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)), math.OneInt())
+	_, err = stakingMsgServer.CreateValidator(ctx, createValMsg1)
+	require.NoError(t, err)
+	// very small amount coin for evilValAddr2
+	smallCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, math.NewInt(1)))
+	// create evilValAddr2 to circumvent slashing
+	evilValAddr2 := sdk.ValAddress(evilValPubKey2.Address())
+	require.NoError(t, banktestutil.FundAccount(ctx, bankKeeper, sdk.AccAddress(evilValAddr2), smallCoins))
+	createValMsg3, _ := types.NewMsgCreateValidator(
+		evilValAddr2.String(), evilValPubKey2, smallCoins[0], types.Description{Details: "test"}, types.NewCommissionRates(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0)), math.OneInt())
+	createAccount(t, ctx, authKeeper, evilValAddr2.Bytes())
+	_, err = stakingMsgServer.CreateValidator(ctx, createValMsg3)
+	require.NoError(t, err)
+	// next block
+	ctx = ctx.WithBlockHeight(app.LastBlockHeight() + 1).WithHeaderInfo(header.Info{Height: app.LastBlockHeight() + 1})
+	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	require.NoError(t, err)
+	// all accs delegate to evilValAddr1
+	delMsg := types.NewMsgDelegate(badtestAcc.String(), evilValAddr1.String(), testCoins[0])
+	_, err = stakingMsgServer.Delegate(ctx, delMsg)
+	require.NoError(t, err)
+	delMsg = types.NewMsgDelegate(testAcc1.String(), evilValAddr1.String(), testCoins[0])
+	_, err = stakingMsgServer.Delegate(ctx, delMsg)
+	require.NoError(t, err)
+	delMsg = types.NewMsgDelegate(testAcc2.String(), evilValAddr1.String(), testCoins[0])
+	_, err = stakingMsgServer.Delegate(ctx, delMsg)
+	require.NoError(t, err)
+	// next block
+	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	require.NoError(t, err)
+	// 1. badtestAcc redelegates from evilValAddr1 to evilValAddr2
+	redelMsg := types.NewMsgBeginRedelegate(badtestAcc.String(), evilValAddr1.String(), evilValAddr2.String(), smallCoins[0])
+	_, err = stakingMsgServer.BeginRedelegate(ctx, redelMsg)
+	require.NoError(t, err)
+	// 2. evilValAddr2 undelegates its self-delegation and jail themselves
+	undelMsg := types.NewMsgUndelegate(sdk.AccAddress(evilValAddr2).String(), evilValAddr2.String(), smallCoins[0])
+	_, err = stakingMsgServer.Undelegate(ctx, undelMsg)
+	require.NoError(t, err)
+	// assert evilValAddr2 is jailed
+	evilVal2, err := stakingKeeper.GetValidator(ctx, evilValAddr2)
+	require.NoError(t, err)
+	require.True(t, evilVal2.Jailed)
+	// next block
+	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
+	require.NoError(t, err)
+	// assert invariants
+	_, stop := keeper.AllInvariants(stakingKeeper)(ctx)
+	require.False(t, stop)
+	_, stop = bankkeeper.AllInvariants(bankKeeper)(ctx)
+	require.False(t, stop)
+	_, stop = distributionkeeper.AllInvariants(distrKeeper)(ctx)
+	require.False(t, stop)
+	// evilValAddr1 is bad!
+	// lets slash evilValAddr1 with a 100% penalty
+	evilVal, err := stakingKeeper.GetValidator(ctx, evilValAddr1)
+	require.NoError(t, err)
+	evilValConsAddr, err := evilVal.GetConsAddr()
+	require.NoError(t, err)
+	evilPower := stakingKeeper.TokensToConsensusPower(ctx, evilVal.Tokens)
+	err = slashKeeper.Slash(ctx, evilValConsAddr, math.LegacyMustNewDecFromStr("1.0"), evilPower, 3)
+	require.NoError(t, err)
+}
+
+func createAccount(t *testing.T, ctx context.Context, k authkeeper.AccountKeeperI, addr sdk.AccAddress) {
+	t.Helper()
+	acc := k.NewAccountWithAddress(ctx, addr)
+	k.SetAccount(ctx, acc)
 }

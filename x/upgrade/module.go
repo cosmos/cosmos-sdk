@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/upgrade/client/cli"
 	"cosmossdk.io/x/upgrade/keeper"
@@ -24,13 +23,11 @@ import (
 const ConsensusVersion uint64 = 3
 
 var (
-	_ module.HasName        = AppModule{}
 	_ module.HasAminoCodec  = AppModule{}
 	_ module.HasGRPCGateway = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasPreBlocker         = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
@@ -52,13 +49,14 @@ func NewAppModule(keeper *keeper.Keeper) AppModule {
 func (AppModule) IsAppModule() {}
 
 // Name returns the ModuleName
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the upgrade types on the LegacyAmino codec
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the upgrade module.

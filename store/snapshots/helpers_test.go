@@ -11,12 +11,12 @@ import (
 	"testing"
 	"time"
 
-	db "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	"cosmossdk.io/store/types"
@@ -207,7 +207,7 @@ func (m *mockErrorSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 // The snapshot will complete when the returned closer is called.
 func setupBusyManager(t *testing.T) *snapshots.Manager {
 	t.Helper()
-	store, err := snapshots.NewStore(db.NewMemDB(), t.TempDir())
+	store, err := snapshots.NewStore(coretesting.NewMemDB(), t.TempDir())
 	require.NoError(t, err)
 	hung := newHungSnapshotter()
 	hung.SetSnapshotInterval(opts.Interval)

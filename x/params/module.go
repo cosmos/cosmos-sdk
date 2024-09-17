@@ -7,7 +7,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/params/keeper"
 	"cosmossdk.io/x/params/types/proposal"
@@ -18,13 +17,11 @@ import (
 )
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 )
 
@@ -47,13 +44,14 @@ func NewAppModule(k keeper.Keeper) AppModule {
 func (am AppModule) IsAppModule() {}
 
 // Name returns the params module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return proposal.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the params module's types on the given LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	proposal.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	proposal.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the params module.
@@ -80,11 +78,6 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 
 // RegisterStoreDecoder doesn't register any type.
 func (AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {}
-
-// WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
-	return nil
-}
 
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }

@@ -11,14 +11,15 @@ import (
 	"sync"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	iavltree "github.com/cosmos/iavl"
 
-	"cosmossdk.io/core/log"
+	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/cachemulti"
+	dbm "cosmossdk.io/store/db"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/listenkv"
@@ -56,8 +57,8 @@ func keysFromStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
 // cacheMultiStore which is used for branching other MultiStores. It implements
 // the CommitMultiStore interface.
 type Store struct {
-	db                  dbm.DB
-	logger              log.Logger
+	db                  corestore.KVStoreWithBatch
+	logger              iavltree.Logger
 	lastCommitInfo      *types.CommitInfo
 	pruningManager      *pruning.Manager
 	iavlCacheSize       int
@@ -85,7 +86,7 @@ var (
 // store will be created with a PruneNothing pruning strategy by default. After
 // a store is created, KVStores must be mounted and finally LoadLatestVersion or
 // LoadVersion must be called.
-func NewStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics) *Store {
+func NewStore(db corestore.KVStoreWithBatch, logger iavltree.Logger, metricGatherer metrics.StoreMetrics) *Store {
 	return &Store{
 		db:                  db,
 		logger:              logger,
@@ -138,7 +139,7 @@ func (rs *Store) GetStoreType() types.StoreType {
 }
 
 // MountStoreWithDB implements CommitMultiStore.
-func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db dbm.DB) {
+func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db corestore.KVStoreWithBatch) {
 	if key == nil {
 		panic("MountIAVLStore() key cannot be nil")
 	}
@@ -458,6 +459,16 @@ func (rs *Store) LastCommitID() types.CommitID {
 	return rs.lastCommitInfo.CommitID()
 }
 
+// PausePruning temporarily pauses the pruning of all individual stores which implement
+// the PausablePruner interface.
+func (rs *Store) PausePruning(pause bool) {
+	for _, store := range rs.stores {
+		if pauseable, ok := store.(types.PausablePruner); ok {
+			pauseable.PausePruning(pause)
+		}
+	}
+}
+
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
 	var previousHeight, version int64
@@ -479,7 +490,14 @@ func (rs *Store) Commit() types.CommitID {
 		rs.logger.Debug("commit header and version mismatch", "header_height", rs.commitHeader.Height, "version", version)
 	}
 
-	rs.lastCommitInfo = commitStores(version, rs.stores, rs.removalMap)
+	func() { // ensure unpause
+		// set the committing flag on all stores to block the pruning
+		rs.PausePruning(true)
+		// unset the committing flag on all stores to continue the pruning
+		defer rs.PausePruning(false)
+		rs.lastCommitInfo = commitStores(version, rs.stores, rs.removalMap)
+	}()
+
 	rs.lastCommitInfo.Timestamp = rs.commitHeader.Time
 	defer rs.flushMetadata(rs.db, version, rs.lastCommitInfo)
 
@@ -610,7 +628,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 
 				// If the store donesn't exist at this version, create a dummy one to prevent
 				// nil pointer panic in newer query APIs.
-				cacheStore = dbadapter.Store{DB: dbm.NewMemDB()}
+				cacheStore = dbadapter.Store{DB: coretesting.NewMemDB()}
 			}
 
 		default:
@@ -708,7 +726,7 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 	return nil
 }
 
-// getStoreByName performs a lookup of a StoreKey given a store name typically
+// GetStoreByName performs a lookup of a StoreKey given a store name typically
 // provided in a path. The StoreKey is then used to perform a lookup and return
 // a Store. If the Store is wrapped in an inter-block cache, it will be unwrapped
 // prior to being returned. If the StoreKey does not exist, nil is returned.
@@ -997,7 +1015,7 @@ loop:
 }
 
 func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (types.CommitKVStore, error) {
-	var db dbm.DB
+	var db corestore.KVStoreWithBatch
 
 	if params.db != nil {
 		db = dbm.NewPrefixDB(params.db, []byte("s/_/"))
@@ -1125,7 +1143,7 @@ func (rs *Store) GetCommitInfo(ver int64) (*types.CommitInfo, error) {
 	return cInfo, nil
 }
 
-func (rs *Store) flushMetadata(db dbm.DB, version int64, cInfo *types.CommitInfo) {
+func (rs *Store) flushMetadata(db corestore.KVStoreWithBatch, version int64, cInfo *types.CommitInfo) {
 	rs.logger.Debug("flushing metadata", "height", version)
 	batch := db.NewBatch()
 	defer func() {
@@ -1148,12 +1166,12 @@ func (rs *Store) flushMetadata(db dbm.DB, version int64, cInfo *types.CommitInfo
 
 type storeParams struct {
 	key            types.StoreKey
-	db             dbm.DB
+	db             corestore.KVStoreWithBatch
 	typ            types.StoreType
 	initialVersion uint64
 }
 
-func newStoreParams(key types.StoreKey, db dbm.DB, typ types.StoreType, initialVersion uint64) storeParams {
+func newStoreParams(key types.StoreKey, db corestore.KVStoreWithBatch, typ types.StoreType, initialVersion uint64) storeParams {
 	return storeParams{
 		key:            key,
 		db:             db,
@@ -1162,7 +1180,7 @@ func newStoreParams(key types.StoreKey, db dbm.DB, typ types.StoreType, initialV
 	}
 }
 
-func GetLatestVersion(db dbm.DB) int64 {
+func GetLatestVersion(db corestore.KVStoreWithBatch) int64 {
 	bz, err := db.Get([]byte(latestVersionKey))
 	if err != nil {
 		panic(err)
@@ -1222,7 +1240,7 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 	}
 }
 
-func flushCommitInfo(batch dbm.Batch, version int64, cInfo *types.CommitInfo) {
+func flushCommitInfo(batch corestore.Batch, version int64, cInfo *types.CommitInfo) {
 	bz, err := cInfo.Marshal()
 	if err != nil {
 		panic(err)
@@ -1235,7 +1253,7 @@ func flushCommitInfo(batch dbm.Batch, version int64, cInfo *types.CommitInfo) {
 	}
 }
 
-func flushLatestVersion(batch dbm.Batch, version int64) {
+func flushLatestVersion(batch corestore.Batch, version int64) {
 	bz, err := gogotypes.StdInt64Marshal(version)
 	if err != nil {
 		panic(err)

@@ -9,16 +9,18 @@ import (
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 type addressStringType struct{}
 
-func (a addressStringType) NewValue(_ context.Context, b *Builder) Value {
-	return &addressValue{addressCodec: b.AddressCodec, keyring: b.Keyring}
+func (a addressStringType) NewValue(ctx *context.Context, b *Builder) Value {
+	return &addressValue{addressCodec: b.AddressCodec, ctx: ctx}
 }
 
 func (a addressStringType) DefaultValue() string {
@@ -27,8 +29,8 @@ func (a addressStringType) DefaultValue() string {
 
 type validatorAddressStringType struct{}
 
-func (a validatorAddressStringType) NewValue(_ context.Context, b *Builder) Value {
-	return &addressValue{addressCodec: b.ValidatorAddressCodec, keyring: b.Keyring}
+func (a validatorAddressStringType) NewValue(ctx *context.Context, b *Builder) Value {
+	return &addressValue{addressCodec: b.ValidatorAddressCodec, ctx: ctx}
 }
 
 func (a validatorAddressStringType) DefaultValue() string {
@@ -36,9 +38,10 @@ func (a validatorAddressStringType) DefaultValue() string {
 }
 
 type addressValue struct {
-	value        string
+	ctx          *context.Context
 	addressCodec address.Codec
-	keyring      keyring.Keyring
+
+	value string
 }
 
 func (a addressValue) Get(protoreflect.Value) (protoreflect.Value, error) {
@@ -51,7 +54,9 @@ func (a addressValue) String() string {
 
 // Set implements the flag.Value interface for addressValue.
 func (a *addressValue) Set(s string) error {
-	addr, err := a.keyring.LookupAddressByKeyName(s)
+	// we get the keyring on set, as in NewValue the context is the parent context (before RunE)
+	keyring := getKeyringFromCtx(a.ctx)
+	addr, err := keyring.LookupAddressByKeyName(s)
 	if err == nil {
 		addrStr, err := a.addressCodec.BytesToString(addr)
 		if err != nil {
@@ -62,9 +67,11 @@ func (a *addressValue) Set(s string) error {
 		return nil
 	}
 
-	// failed all validation, just accept the input.
-	// TODO(@julienrbrt), for final client/v2 2.0.0 revert the logic and
-	// do a better keyring instantiation.
+	_, err = a.addressCodec.StringToBytes(s)
+	if err != nil {
+		return fmt.Errorf("invalid account address or key name: %w", err)
+	}
+
 	a.value = s
 
 	return nil
@@ -76,11 +83,11 @@ func (a addressValue) Type() string {
 
 type consensusAddressStringType struct{}
 
-func (a consensusAddressStringType) NewValue(ctx context.Context, b *Builder) Value {
+func (a consensusAddressStringType) NewValue(ctx *context.Context, b *Builder) Value {
 	return &consensusAddressValue{
 		addressValue: addressValue{
 			addressCodec: b.ConsensusAddressCodec,
-			keyring:      b.Keyring,
+			ctx:          ctx,
 		},
 	}
 }
@@ -102,7 +109,9 @@ func (a consensusAddressValue) String() string {
 }
 
 func (a *consensusAddressValue) Set(s string) error {
-	addr, err := a.keyring.LookupAddressByKeyName(s)
+	// we get the keyring on set, as in NewValue the context is the parent context (before RunE)
+	keyring := getKeyringFromCtx(a.ctx)
+	addr, err := keyring.LookupAddressByKeyName(s)
 	if err == nil {
 		addrStr, err := a.addressCodec.BytesToString(addr)
 		if err != nil {
@@ -127,11 +136,7 @@ func (a *consensusAddressValue) Set(s string) error {
 	var pk cryptotypes.PubKey
 	err2 := cdc.UnmarshalInterfaceJSON([]byte(s), &pk)
 	if err2 != nil {
-		// failed all validation, just accept the input.
-		// TODO(@julienrbrt), for final client/v2 2.0.0 revert the logic and
-		// do a better keyring instantiation.
-		a.value = s
-		return nil
+		return fmt.Errorf("input isn't a pubkey (%w) or is an invalid account address (%w)", err, err2)
 	}
 
 	a.value, err = a.addressCodec.BytesToString(pk.Address())
@@ -140,4 +145,22 @@ func (a *consensusAddressValue) Set(s string) error {
 	}
 
 	return nil
+}
+
+func getKeyringFromCtx(ctx *context.Context) keyring.Keyring {
+	dctx := *ctx
+	if dctx != nil {
+		if clientCtx := dctx.Value(client.ClientContextKey); clientCtx != nil {
+			k, err := sdkkeyring.NewAutoCLIKeyring(clientCtx.(*client.Context).Keyring)
+			if err != nil {
+				panic(fmt.Errorf("failed to create keyring: %w", err))
+			}
+
+			return k
+		} else if k := dctx.Value(keyring.KeyringContextKey); k != nil {
+			return k.(*keyring.KeyringImpl)
+		}
+	}
+
+	return keyring.NoKeyring{}
 }

@@ -2,9 +2,8 @@ package epochs
 
 import (
 	"fmt"
-	"sort"
-
-	"golang.org/x/exp/maps"
+	"maps"
+	"slices"
 
 	modulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
 	"cosmossdk.io/core/appmodule"
@@ -39,7 +38,7 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	EpochKeeper keeper.Keeper
+	EpochKeeper *keeper.Keeper
 	Module      appmodule.AppModule
 }
 
@@ -49,19 +48,16 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	return ModuleOutputs{EpochKeeper: k, Module: m}
 }
 
-func InvokeSetHooks(keeper keeper.Keeper, hooks map[string]types.EpochHooksWrapper) error {
+func InvokeSetHooks(keeper *keeper.Keeper, hooks map[string]types.EpochHooksWrapper) error {
 	if hooks == nil {
 		return nil
 	}
 
 	// Default ordering is lexical by module name.
 	// Explicit ordering can be added to the module config if required.
-	modNames := maps.Keys(hooks)
-	order := modNames
-	sort.Strings(order)
-
+	modNames := slices.Sorted(maps.Keys(hooks))
 	var multiHooks types.MultiEpochHooks
-	for _, modName := range order {
+	for _, modName := range modNames {
 		hook, ok := hooks[modName]
 		if !ok {
 			return fmt.Errorf("can't find epoch hooks for module %s", modName)

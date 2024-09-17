@@ -35,7 +35,7 @@ type KVStore interface {
 //
 // As with KVStore, given keys and values should be considered read-only, and must not be modified after
 // passing them to the batch.
-type Batch interface {
+type Batch = interface {
 	// Set sets a key/value pair.
 	// CONTRACT: key, value readonly []byte
 	Set(key, value []byte) error
@@ -87,7 +87,7 @@ type KVStoreWithBatch interface {
 //
 // Callers must make sure the iterator is valid before calling any methods on it,
 // otherwise these methods will panic.
-type Iterator interface {
+type Iterator = interface {
 	// Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
 	Domain() (start, end []byte)
 
@@ -133,7 +133,7 @@ var _ KVStore = (Writer)(nil)
 
 // ReaderMap represents a readonly view over all the accounts state.
 type ReaderMap interface {
-	// ReaderMap must return the state for the provided actor.
+	// GetReader must return the state for the provided actor.
 	// Storage implements might treat this as a prefix store over an actor.
 	// Prefix safety is on the implementer.
 	GetReader(actor []byte) (Reader, error)
@@ -142,7 +142,7 @@ type ReaderMap interface {
 // WriterMap represents a writable actor state.
 type WriterMap interface {
 	ReaderMap
-	// WriterMap must the return a WritableState
+	// GetWriter must the return a WritableState
 	// for the provided actor namespace.
 	GetWriter(actor []byte) (Writer, error)
 	// ApplyStateChanges applies all the state changes

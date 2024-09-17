@@ -223,7 +223,6 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			protoBlob, err := proto.Marshal(tt.in)
 			if err != nil {
@@ -280,7 +279,6 @@ func TestRejectUnknownFields_allowUnknownNonCriticals(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			blob, err := proto.Marshal(tt.in)
 			if err != nil {
@@ -483,7 +481,6 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			protoBlob, err := proto.Marshal(tt.in)
 			if err != nil {
@@ -634,7 +631,6 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			blob, err := proto.Marshal(tt.in)
 			if err != nil {

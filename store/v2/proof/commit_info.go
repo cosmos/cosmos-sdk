@@ -22,8 +22,9 @@ type (
 	// StoreInfo defines store-specific commit information. It contains a reference
 	// between a store name/key and the commit ID.
 	StoreInfo struct {
-		Name     []byte
-		CommitID CommitID
+		Name      []byte
+		CommitID  CommitID
+		Structure string
 	}
 
 	// CommitID defines the commitment information when a specific store is
@@ -71,7 +72,8 @@ func (ci *CommitInfo) GetStoreProof(storeKey []byte) ([]byte, *CommitmentOp, err
 		return bytes.Compare(ci.StoreInfos[i].Name, ci.StoreInfos[j].Name) < 0
 	})
 
-	index := 0
+	isEmpty := len(storeKey) == 0
+	index := -1
 	leaves := make([][]byte, len(ci.StoreInfos))
 	for i, si := range ci.StoreInfos {
 		var err error
@@ -79,14 +81,21 @@ func (ci *CommitInfo) GetStoreProof(storeKey []byte) ([]byte, *CommitmentOp, err
 		if err != nil {
 			return nil, nil, err
 		}
-		if bytes.Equal(si.Name, storeKey) {
+		if !isEmpty && bytes.Equal(si.Name, storeKey) {
 			index = i
+		}
+	}
+
+	if index == -1 {
+		if isEmpty {
+			index = 0
+		} else {
+			return nil, nil, fmt.Errorf("store key %s not found", storeKey)
 		}
 	}
 
 	rootHash, inners := ProofFromByteSlices(leaves, index)
 	commitmentOp := ConvertCommitmentOp(inners, storeKey, ci.StoreInfos[index].GetHash())
-
 	return rootHash, &commitmentOp, nil
 }
 
@@ -98,6 +107,7 @@ func (ci *CommitInfo) encodedSize() int {
 	for _, storeInfo := range ci.StoreInfos {
 		size += encoding.EncodeBytesSize(storeInfo.Name)
 		size += encoding.EncodeBytesSize(storeInfo.CommitID.Hash)
+		size += encoding.EncodeBytesSize([]byte(storeInfo.Structure))
 	}
 	return size
 }
@@ -110,6 +120,7 @@ func (ci *CommitInfo) encodedSize() int {
 // - for each store:
 //   - store name (bytes)
 //   - store hash (bytes)
+//   - store commit structure (bytes)
 func (ci *CommitInfo) Marshal() ([]byte, error) {
 	var buf bytes.Buffer
 	buf.Grow(ci.encodedSize())
@@ -128,6 +139,9 @@ func (ci *CommitInfo) Marshal() ([]byte, error) {
 			return nil, err
 		}
 		if err := encoding.EncodeBytes(&buf, si.CommitID.Hash); err != nil {
+			return nil, err
+		}
+		if err := encoding.EncodeBytes(&buf, []byte(si.Structure)); err != nil {
 			return nil, err
 		}
 	}
@@ -172,6 +186,14 @@ func (ci *CommitInfo) Unmarshal(buf []byte) error {
 			return err
 		}
 		buf = buf[n:]
+		// Structure
+		structure, n, err := encoding.DecodeBytes(buf)
+		if err != nil {
+			return err
+		}
+		buf = buf[n:]
+		ci.StoreInfos[i].Structure = string(structure)
+
 		ci.StoreInfos[i].CommitID = CommitID{
 			Hash:    hash,
 			Version: ci.Version,

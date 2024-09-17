@@ -6,12 +6,11 @@ import (
 	"testing"
 	"time"
 
-	types2 "github.com/cometbft/cometbft/abci/types"
+	types2 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/errors"
-	authsign "cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -19,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // GenSignedMockTx generates a signed mock transaction.

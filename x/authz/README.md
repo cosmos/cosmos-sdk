@@ -40,7 +40,7 @@ on behalf of one account to other accounts. The design is defined in the [ADR 03
 A *grant* is an allowance to execute a Msg by the grantee on behalf of the granter.
 Authorization is an interface that must be implemented by a concrete authorization logic to validate and execute grants. Authorizations are extensible and can be defined for any Msg service method even outside of the module where the Msg method is defined. See the `SendAuthorization` example in the next section for more details.
 
-**Note:** The authz module is different from the [auth (authentication)](../auth/) module that is responsible for specifying the base transaction and account types.
+**Note:** The authz module is different from the [auth (authentication)](../modules/auth/) module that is responsible for specifying the base transaction and account types.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/authz/authorizations.go#L11-L25
@@ -84,7 +84,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/bank/types/send_authoriz
 
 #### StakeAuthorization
 
-`StakeAuthorization` implements the `Authorization` interface for messages in the [staking module](https://docs.cosmos.network/main/build/modules/staking). It takes an `AuthorizationType` to specify whether you want to authorise delegating, undelegating or redelegating (i.e. these have to be authorised separately). It also takes a required `MaxTokens` that keeps track of a limit to the amount of tokens that can be delegated/undelegated/redelegated. If left empty, the amount is unlimited. Additionally, this Msg takes an `AllowList` or a `DenyList`, which allows you to select which validators you allow or deny grantees to stake with.
+`StakeAuthorization` implements the `Authorization` interface for messages in the [staking module](https://docs.cosmos.network/main/build/modules/staking). It takes an `AuthorizationType` to specify whether you want to authorise delegating, undelegating or redelegating (i.e. these have to be authorised separately). It also takes an optional `MaxTokens` that keeps track of a limit to the amount of tokens that can be delegated/undelegated/redelegated. If left empty, the amount is unlimited. Additionally, this Msg takes an `AllowList` or a `DenyList`, which allows you to select which validators you allow or deny grantees to stake with.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/authz.proto#L11-L35
@@ -142,6 +142,8 @@ In this section we describe the processing of messages for the authz module.
 
 An authorization grant is created using the `MsgGrant` message.
 If there is already a grant for the `(granter, grantee, Authorization)` triple, then the new grant overwrites the previous one. To update or extend an existing grant, a new grant with the same `(granter, grantee, Authorization)` triple should be created.
+
+An authorization grant for authz `MsgGrant` is not allowed and will return an error. This is for preventing user from accidentally authorizing their entire account to a different account.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/authz/v1beta1/tx.proto#L35-L45
@@ -274,11 +276,28 @@ The `grant` command allows a granter to grant an authorization to a grantee.
 ```bash
 simd tx authz grant <grantee> <authorization_type="send"|"generic"|"delegate"|"unbond"|"redelegate"> --from <granter> [flags]
 ```
+-  The `send` authorization_type refers to the built-in `SendAuthorization` type. The custom flags available are `spend-limit` (required) and `allow-list` (optional) , documented [here](#SendAuthorization)
 
 Example:
 
 ```bash
-simd tx authz grant cosmos1.. send --spend-limit=100stake --from=cosmos1..
+    simd tx authz grant cosmos1.. send --spend-limit=100stake --allow-list=cosmos1...,cosmos2... --from=cosmos1..
+```
+- The `generic` authorization_type refers to the built-in `GenericAuthorization` type. The custom flag available is `msg-type` ( required) documented [here](#GenericAuthorization).
+
+> Note: `msg-type` is any valid Cosmos SDK `Msg` type url.
+
+Example:
+```bash
+    simd tx authz grant cosmos1.. generic --msg-type=/cosmos.bank.v1beta1.MsgSend --from=cosmos1..
+```
+- The `delegate`,`unbond`,`redelegate` authorization_types refer to the built-in `StakeAuthorization` type. The custom flags available are `spend-limit` (optional), `allowed-validators` (optional) and `deny-validators` (optional) documented  [here](#StakeAuthorization).
+> Note: `allowed-validators` and `deny-validators` cannot both be empty. `spend-limit` represents the `MaxTokens`
+
+Example:
+
+```bash
+simd tx authz grant cosmos1.. delegate --spend-limit=100stake --allowed-validators=cosmos...,cosmos... --deny-validators=cosmos... --from=cosmos1..
 ```
 
 ##### revoke

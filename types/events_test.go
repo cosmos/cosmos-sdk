@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
@@ -268,7 +268,6 @@ func (s *eventsTestSuite) TestMarkEventsToIndex() {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		s.T().Run(name, func(_ *testing.T) {
 			s.Require().Equal(tc.expected, sdk.MarkEventsToIndex(tc.events, tc.indexSet))
 		})

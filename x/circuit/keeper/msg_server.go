@@ -134,7 +134,7 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 }
 
 // ResetCircuitBreaker resumes processing of Msg's in the state machine that
-// have been been paused using TripCircuitBreaker.
+// have been paused using TripCircuitBreaker.
 func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgResetCircuitBreaker) (*types.MsgResetCircuitBreakerResponse, error) {
 	keeper := srv.Keeper
 	address, err := srv.addressCodec.StringToBytes(msg.Authority)

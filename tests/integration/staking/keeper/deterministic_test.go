@@ -13,15 +13,13 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtestutil "cosmossdk.io/x/auth/testutil"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/consensus"
+	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
+	consensusparamtypes "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/distribution"
 	minttypes "cosmossdk.io/x/mint/types"
 	"cosmossdk.io/x/staking"
@@ -39,6 +37,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -71,7 +74,7 @@ type deterministicFixture struct {
 func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	t.Helper()
 	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
+		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey, consensusparamtypes.StoreKey,
 	)
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, distribution.AppModule{})
 	cdc := encodingCfg.Codec
@@ -124,19 +127,23 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 
 	assert.NilError(t, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
+	consensusParamsKeeper := consensusparamkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger()), authtypes.NewModuleAddress("gov").String())
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, consensusParamsKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
+
+	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper)
+	consensusModule := consensus.NewAppModule(cdc, consensusParamsKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
 		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{
-			authtypes.ModuleName:    authModule,
-			banktypes.ModuleName:    bankModule,
-			stakingtypes.ModuleName: stakingModule,
+			authtypes.ModuleName:           authModule,
+			banktypes.ModuleName:           bankModule,
+			stakingtypes.ModuleName:        stakingModule,
+			consensusparamtypes.ModuleName: consensusModule,
 		},
 		baseapp.NewMsgServiceRouter(),
 		baseapp.NewGRPCQueryRouter(),
@@ -472,7 +479,7 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.ValidatorDelegations, 14637, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.ValidatorDelegations, 14610, false)
 }
 
 func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
@@ -562,7 +569,7 @@ func TestGRPCDelegation(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Delegation, 4689, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Delegation, 4680, false)
 }
 
 func TestGRPCUnbondingDelegation(t *testing.T) {
@@ -645,7 +652,7 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorDelegations, 4292, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorDelegations, 4283, false)
 }
 
 func TestGRPCDelegatorValidator(t *testing.T) {
@@ -732,47 +739,6 @@ func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
 	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DelegatorUnbondingDelegations, 1302, false)
 }
 
-func TestGRPCHistoricalInfo(t *testing.T) {
-	t.Parallel()
-	f := initDeterministicFixture(t)
-
-	rapid.Check(t, func(rt *rapid.T) {
-		historical := stakingtypes.HistoricalRecord{}
-
-		height := rapid.Int64Min(0).Draw(rt, "height")
-
-		assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(
-			f.ctx,
-			uint64(height),
-			historical,
-		))
-
-		req := &stakingtypes.QueryHistoricalInfoRequest{
-			Height: height,
-		}
-
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.HistoricalInfo, 0, true)
-	})
-
-	f = initDeterministicFixture(t) // reset
-
-	historicalInfo := stakingtypes.HistoricalRecord{}
-
-	height := int64(127)
-
-	assert.NilError(t, f.stakingKeeper.HistoricalInfo.Set(
-		f.ctx,
-		uint64(height),
-		historicalInfo,
-	))
-
-	req := &stakingtypes.QueryHistoricalInfoRequest{
-		Height: height,
-	}
-
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.HistoricalInfo, 1027, false)
-}
-
 func TestGRPCDelegatorValidators(t *testing.T) {
 	t.Parallel()
 	f := initDeterministicFixture(t)
@@ -821,7 +787,7 @@ func TestGRPCPool(t *testing.T) {
 
 	f = initDeterministicFixture(t) // reset
 	getStaticValidator(t, f)
-	testdata.DeterministicIterations(t, f.ctx, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6296, false)
+	testdata.DeterministicIterations(t, f.ctx, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6287, false)
 }
 
 func TestGRPCRedelegations(t *testing.T) {

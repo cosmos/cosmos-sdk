@@ -28,7 +28,7 @@ type Launcher struct {
 }
 
 func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
-	fw, err := newUpgradeFileWatcher(cfg, logger)
+	fw, err := newUpgradeFileWatcher(cfg)
 	if err != nil {
 		return Launcher{}, err
 	}
@@ -39,7 +39,7 @@ func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 // Run launches the app in a subprocess and returns when the subprocess (app)
 // exits (either when it dies, or *after* a successful upgrade.) and upgrade finished.
 // Returns true if the upgrade request was detected and the upgrade process started.
-func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
+func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) (bool, error) {
 	bin, err := l.cfg.CurrentBin()
 	if err != nil {
 		return false, fmt.Errorf("error creating symlink to genesis: %w", err)
@@ -51,6 +51,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 
 	l.logger.Info("running app", "path", bin, "args", args)
 	cmd := exec.Command(bin, args...)
+	cmd.Stdin = stdin
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	if err := cmd.Start(); err != nil {
@@ -176,7 +177,7 @@ func (l Launcher) doBackup() error {
 		}
 
 		if uInfo.Name == "" {
-			return fmt.Errorf("upgrade-info.json is empty")
+			return errors.New("upgrade-info.json is empty")
 		}
 
 		// a destination directory, Format YYYY-MM-DD
@@ -241,7 +242,7 @@ func (l Launcher) doCustomPreUpgrade() error {
 	if oldMode != newMode {
 		if err := os.Chmod(preupgradeFile, newMode); err != nil {
 			l.logger.Info("COSMOVISOR_CUSTOM_PREUPGRADE could not add execute permission")
-			return fmt.Errorf("COSMOVISOR_CUSTOM_PREUPGRADE could not add execute permission")
+			return errors.New("COSMOVISOR_CUSTOM_PREUPGRADE could not add execute permission")
 		}
 	}
 

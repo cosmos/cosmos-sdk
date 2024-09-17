@@ -157,6 +157,11 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 		activatedVotingPeriod = true
 	}
 
+	addr, err := k.authKeeper.AddressCodec().BytesToString(depositorAddr)
+	if err != nil {
+		return false, err
+	}
+
 	// Add or update deposit object
 	deposit, err := k.Deposits.Get(ctx, collections.Join(proposalID, depositorAddr))
 	switch {
@@ -165,10 +170,6 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 		deposit.Amount = sdk.NewCoins(deposit.Amount...).Add(depositAmount...)
 	case errors.IsOf(err, collections.ErrNotFound):
 		// deposit doesn't exist
-		addr, err := k.authKeeper.AddressCodec().BytesToString(depositorAddr)
-		if err != nil {
-			return false, err
-		}
 		deposit = v1.NewDeposit(proposalID, addr, depositAmount)
 	default:
 		// failed to get deposit
@@ -181,14 +182,9 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 		return false, err
 	}
 
-	depositorStrAddr, err := k.authKeeper.AddressCodec().BytesToString(depositorAddr)
-	if err != nil {
-		return false, err
-	}
-
 	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeProposalDeposit,
-		event.NewAttribute(types.AttributeKeyDepositor, depositorStrAddr),
+		event.NewAttribute(types.AttributeKeyDepositor, addr),
 		event.NewAttribute(sdk.AttributeKeyAmount, depositAmount.String()),
 		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
 	); err != nil {
@@ -216,7 +212,7 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 	}
 
 	for _, deposit := range deposits {
-		depositerAddress, err := k.authKeeper.AddressCodec().StringToBytes(deposit.Depositor)
+		depositorAddress, err := k.authKeeper.AddressCodec().StringToBytes(deposit.Depositor)
 		if err != nil {
 			return err
 		}
@@ -242,13 +238,13 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 
 		if !remainingAmount.IsZero() {
 			err := k.bankKeeper.SendCoinsFromModuleToAccount(
-				ctx, types.ModuleName, depositerAddress, remainingAmount,
+				ctx, types.ModuleName, depositorAddress, remainingAmount,
 			)
 			if err != nil {
 				return err
 			}
 		}
-		err = k.Deposits.Remove(ctx, collections.Join(deposit.ProposalId, sdk.AccAddress(depositerAddress)))
+		err = k.Deposits.Remove(ctx, collections.Join(deposit.ProposalId, sdk.AccAddress(depositorAddress)))
 		if err != nil {
 			return err
 		}

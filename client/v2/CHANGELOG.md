@@ -36,22 +36,44 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-<!-- ## [v2.1.0-beta.1] to be tagged after v0.51 final or in SDK agnostic version -->
+<!-- ## [v2.1.0-rc.1] to be tagged after v0.51 final or in SDK agnostic version -->
 
 ### Features
 
 * [#18626](https://github.com/cosmos/cosmos-sdk/pull/18626) Support for off-chain signing and verification of a file.
 * [#18461](https://github.com/cosmos/cosmos-sdk/pull/18461) Support governance proposals.
+
+### API Breaking Changes
+
+* [#17709](https://github.com/cosmos/cosmos-sdk/pull/17709) Address codecs have been removed from `autocli.AppOptions` and `flag.Builder`. Instead client/v2 uses the address codecs present in the context (introduced in [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503)).
+
+### Bug Fixes
+
+* [#20964](https://github.com/cosmos/cosmos-sdk/pull/20964) Fix `GetNodeHomeDirectory` helper in `client/v2/helpers` to respect the `(PREFIX)_HOME` environment variable.
+
+## [v2.0.0-beta.3] - 2024-07-15
+
+### Features
+
+* [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Add `GetNodeHomeDirectory` helper in `client/v2/helpers`.
+
+## [v2.0.0-beta.2] - 2024-06-19
+
+### Features
+
 * [#19039](https://github.com/cosmos/cosmos-sdk/pull/19039) Add support for pubkey in autocli.
-* [#20266](https://github.com/cosmos/cosmos-sdk/pull/20266) Ability to override the short description in AutoCLI-generated top-level commands.
 
 ### Improvements
 
+* [#19646](https://github.com/cosmos/cosmos-sdk/pull/19646) Use keyring from command context.
+* (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Upgrade SDK version due to prometheus breaking change.
+* (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Bump `cosmossdk.io/store` to v1.1.0.
 * [#20083](https://github.com/cosmos/cosmos-sdk/pull/20083) Integrate latest version of cosmos-proto and improve version filtering.
 * [#19618](https://github.com/cosmos/cosmos-sdk/pull/19618) Marshal enum as string in queries.
 * [#19060](https://github.com/cosmos/cosmos-sdk/pull/19060) Use client context from root (or enhanced) command in autocli commands.
-  * Note, the given command must have a `client.Context` in its context.
+    * Note, the given command must have a `client.Context` in its context.
 * [#19216](https://github.com/cosmos/cosmos-sdk/pull/19216) Do not overwrite TxConfig, use directly the one provided in context. TxConfig should always be set in the `client.Context` in `root.go` of an app.
+* [#20266](https://github.com/cosmos/cosmos-sdk/pull/20266) Add ability to override the short description in AutoCLI-generated top-level commands.
 
 ### Bug Fixes
 
@@ -62,7 +84,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
-* [#17709](https://github.com/cosmos/cosmos-sdk/pull/17709) Address codecs have been removed from `autocli.AppOptions` and `flag.Builder`. Instead client/v2 uses the address codecs present in the context (introduced in [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503)).
+* [#19646](https://github.com/cosmos/cosmos-sdk/pull/19646) Remove keyring from `autocli.AppOptions` and `flag.Builder` options.
 
 ## [v2.0.0-beta.1] - 2023-11-07
 

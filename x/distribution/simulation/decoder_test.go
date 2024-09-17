@@ -19,9 +19,8 @@ import (
 )
 
 var (
-	delPk1    = ed25519.GenPrivKey().PubKey()
-	valAddr1  = sdk.ValAddress(delPk1.Address())
-	consAddr1 = sdk.ConsAddress(delPk1.Address().Bytes())
+	delPk1   = ed25519.GenPrivKey().PubKey()
+	valAddr1 = sdk.ValAddress(delPk1.Address())
 )
 
 func TestDecodeDistributionStore(t *testing.T) {
@@ -38,7 +37,6 @@ func TestDecodeDistributionStore(t *testing.T) {
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
 			{Key: types.FeePoolKey, Value: cdc.MustMarshal(&feePool)},
-			{Key: types.ProposerKey, Value: consAddr1.Bytes()},
 			{Key: types.GetValidatorSlashEventKeyPrefix(valAddr1, 13), Value: cdc.MustMarshal(&slashEvent)},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
@@ -49,12 +47,10 @@ func TestDecodeDistributionStore(t *testing.T) {
 		expectedLog string
 	}{
 		{"FeePool", fmt.Sprintf("%v\n%v", feePool, feePool)},
-		{"Proposer", fmt.Sprintf("%v\n%v", consAddr1, consAddr1)},
 		{"ValidatorSlashEvent", fmt.Sprintf("%v\n%v", slashEvent, slashEvent)},
 		{"other", ""},
 	}
 	for i, tt := range tests {
-		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:

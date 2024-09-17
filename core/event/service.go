@@ -4,7 +4,7 @@ package event
 import (
 	"context"
 
-	"google.golang.org/protobuf/runtime/protoiface"
+	"cosmossdk.io/core/transaction"
 )
 
 // Service represents an event service which can retrieve and set an event manager in a context.
@@ -19,7 +19,7 @@ type Manager interface {
 	// Emit emits events represented as a protobuf message (as described in ADR 032).
 	//
 	// Callers SHOULD assume that these events will not be included in consensus.
-	Emit(event protoiface.MessageV1) error
+	Emit(event transaction.Msg) error
 
 	// EmitKV emits an event based on an event and kv-pair attributes.
 	//

@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/staking/client/cli"
@@ -29,7 +28,6 @@ const (
 
 var (
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.HasInvariants       = AppModule{}
@@ -37,8 +35,6 @@ var (
 	_ module.HasABCIEndBlock     = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
-	_ appmodule.HasBeginBlocker       = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 
@@ -47,24 +43,15 @@ var (
 
 // AppModule implements an application module for the staking module.
 type AppModule struct {
-	cdc           codec.Codec
-	keeper        *keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
+	cdc    codec.Codec
+	keeper *keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(
-	cdc codec.Codec,
-	keeper *keeper.Keeper,
-	ak types.AccountKeeper,
-	bk types.BankKeeper,
-) AppModule {
+func NewAppModule(cdc codec.Codec, keeper *keeper.Keeper) AppModule {
 	return AppModule{
-		cdc:           cdc,
-		keeper:        keeper,
-		accountKeeper: ak,
-		bankKeeper:    bk,
+		cdc:    cdc,
+		keeper: keeper,
 	}
 }
 
@@ -72,13 +59,14 @@ func NewAppModule(
 func (am AppModule) IsAppModule() {}
 
 // Name returns the staking module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the staking module's types on the given LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterInterfaces registers the module's interface types
@@ -170,11 +158,6 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
-
-// BeginBlock returns the begin blocker for the staking module.
-func (am AppModule) BeginBlock(ctx context.Context) error {
-	return am.keeper.BeginBlocker(ctx)
-}
 
 // EndBlock returns the end blocker for the staking module.
 func (am AppModule) EndBlock(ctx context.Context) ([]appmodule.ValidatorUpdate, error) {

@@ -4,14 +4,15 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"time"
 
 	snapshot "cosmossdk.io/store/snapshots/types"
 )
 
 const (
-	txHashSize = 32
-	ttlSize    = 8
-	chunkSize  = txHashSize + ttlSize
+	txHashSize  = 32
+	timeoutSize = 8
+	chunkSize   = txHashSize + timeoutSize
 )
 
 var _ snapshot.ExtensionSnapshotter = &Snapshotter{}
@@ -78,11 +79,12 @@ func (s *Snapshotter) restore(height uint64, payloadReader snapshot.ExtensionPay
 		var txHash TxHash
 		copy(txHash[:], payload[i:i+txHashSize])
 
-		ttl := binary.BigEndian.Uint64(payload[i+txHashSize : i+chunkSize])
+		timestamp := binary.BigEndian.Uint64(payload[i+txHashSize : i+chunkSize])
 
-		if height < ttl {
-			// only add unordered transactions that are still valid, i.e. unexpired
-			s.m.Add(txHash, ttl)
+		// add all txs, we don't care at this point if they are expired,
+		// we'll let the purge loop handle that
+		if timestamp != 0 {
+			s.m.Add(txHash, time.Unix(int64(timestamp), 0))
 		}
 
 		i += chunkSize

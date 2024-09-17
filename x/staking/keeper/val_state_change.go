@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 
@@ -172,7 +173,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) ([]appmod
 		}
 
 		if validator.Jailed {
-			return nil, fmt.Errorf("should never retrieve a jailed validator from the power store")
+			return nil, errors.New("should never retrieve a jailed validator from the power store")
 		}
 
 		// if we get to a zero-power validator (which we don't bond),
@@ -198,7 +199,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) ([]appmod
 		case validator.IsBonded():
 			// no state change
 		default:
-			return nil, fmt.Errorf("unexpected validator status")
+			return nil, errors.New("unexpected validator status")
 		}
 
 		// fetch the old power bytes
@@ -265,14 +266,22 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) ([]appmod
 			return nil, err
 		}
 
-		oldPk, ok := history.OldConsPubkey.GetCachedValue().(cryptotypes.PubKey)
+		oldPkCached := history.OldConsPubkey.GetCachedValue()
+		if oldPkCached == nil {
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "OldConsPubkey cached value is nil")
+		}
+		oldPk, ok := oldPkCached.(cryptotypes.PubKey)
 		if !ok {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", oldPk)
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", oldPkCached)
 		}
 
-		newPk, ok := history.NewConsPubkey.GetCachedValue().(cryptotypes.PubKey)
+		newPkCached := history.NewConsPubkey.GetCachedValue()
+		if newPkCached == nil {
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "NewConsPubkey cached value is nil")
+		}
+		newPk, ok := newPkCached.(cryptotypes.PubKey)
 		if !ok {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", newPk)
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", newPkCached)
 		}
 
 		// a validator cannot rotate keys if it's not bonded or if it's jailed

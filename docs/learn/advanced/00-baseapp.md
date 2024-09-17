@@ -49,9 +49,7 @@ management logic.
 
 The `BaseApp` type holds many important parameters for any Cosmos SDK based application.
 
-```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/baseapp.go#L58-L182
-```
 
 Let us go through the most important components.
 
@@ -110,7 +108,7 @@ Finally, a few more important parameters:
 
 ```go
 func NewBaseApp(
-  name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
+  name string, logger log.Logger, db corestore.KVStoreWithBatch, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 
   // ...
@@ -148,7 +146,7 @@ To avoid unnecessary roundtrip to the main state, all reads to the branched stor
 
 ### CheckTx State Updates
 
-During `CheckTx`, the `checkState`, which is based off of the last committed state from the root
+During `CheckTx`, the `checkState`, which is based on the last committed state from the root
 store, is used for any reads and writes. Here we only execute the `AnteHandler` and verify a service router
 exists for every message in the transaction. Note, when we execute the `AnteHandler`, we branch
 the already branched `checkState`.
@@ -207,7 +205,7 @@ newly committed state and `finalizeBlockState` is set to `nil` to be reset on `F
 During `InitChain`, the `RequestInitChain` provides `ConsensusParams` which contains parameters
 related to block execution such as maximum gas and size in addition to evidence parameters. If these
 parameters are non-nil, they are set in the BaseApp's `ParamStore`. Behind the scenes, the `ParamStore`
-is managed by an `x/consensus_params` module. This allows the parameters to be tweaked via
+is managed by an `x/consensus` module. This allows the parameters to be tweaked via
  on-chain governance.
 
 ## Service Routers
@@ -311,6 +309,8 @@ Unconfirmed transactions are relayed to peers only if they pass `CheckTx`.
 `CheckTx()` can perform both _stateful_ and _stateless_ checks, but developers should strive to
 make the checks **lightweight** because gas fees are not charged for the resources (CPU, data load...) used during the `CheckTx`. 
 
+The [`Context`](../advanced/02-context.md), which includes a `GasMeter` that tracks how much gas is used during the execution of `Tx`, is initialized at the beginning of `CheckTx`. The user-provided amount of gas for `Tx` is referred to as `GasWanted`. If `GasConsumed`, the amount of gas used during execution, exceeds `GasWanted`, the execution is halted and the changes made to the cached copy of the state are not committed. Otherwise, `CheckTx` sets `GasUsed` equal to `GasConsumed` and returns it in the result. After calculating the gas and fee values, validator-nodes ensure that the user-specified `gas-prices` exceed their locally defined `min-gas-prices`.
+
 In the Cosmos SDK, after [decoding transactions](https://docs.cosmos.network/main/learn/advanced/encoding), `CheckTx()` is implemented
 to do the following checks:
 
@@ -388,17 +388,25 @@ Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `sdk.Msg`
 
 ### AnteHandler
 
-The `AnteHandler` is a special handler that implements the `AnteHandler` interface and is used to authenticate the transaction before the transaction's internal messages are processed.
+The `AnteHandler` is a special handler that implements the `AnteHandler` interface and is used to authenticate the transaction before the transaction's internal messages are processed. It is theoretically optional but serves as a crucial component in most public blockchain networks.
 
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/handler.go#L6-L8
-```
+The `AnteHandler` operates on a copy of the cached context, allowing it to perform stateful checks such as signature verification, sequence number incrementation, and fee deduction without altering the last committed state. If the execution fails, it can revert to the original state, ensuring that only successful transactions modify the blockchain state.
 
-The `AnteHandler` is theoretically optional, but still a very important component of public blockchain networks. It serves 3 primary purposes:
+Key operations performed by the `AnteHandler` include:
 
-* Be a primary line of defense against spam and second line of defense (the first one being the mempool) against transaction replay with fees deduction and [`sequence`](./01-transactions.md#transaction-generation) checking.
-* Perform preliminary _stateful_ validity checks like ensuring signatures are valid or that the sender has enough funds to pay for fees.
-* Play a role in the incentivisation of stakeholders via the collection of transaction fees.
+- **Signature Verification**: Ensures that the transaction's signatures are valid.
+- **Sequence Checking**: Verifies and increments the sequence numbers to prevent replay attacks.
+- **Fee Deduction**: Deducts the transaction fees from the accounts involved, typically starting with the first signer.
+
+These operations are crucial for maintaining the security and integrity of transactions on the blockchain.
+
+For more detailed examples, see the [`auth` module's `AnteHandler`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth) which is widely used for these purposes.
+
+:::warning
+Ante handlers typically operate at the transaction level. By default, they process only the outermost message of a transaction. However, transactions that embed multiple messages, such as those found in modules like x/authz or x/gov, may have inner messages that are not automatically processed by these default ante handlers. These inner messages are generally routed directly to the [message router](https://docs.cosmos.network/main/learn/advanced/baseapp#msg-service-router) bypassing the ante handlers. To ensure comprehensive processing, custom ante handlers can be designed to recursively inspect and apply necessary checks to all embedded messages within a transaction. This capability must be explicitly implemented to extend the awareness of ante handlers to inner messages.
+:::
+
+The `AnteHandler` is a primary line of defense against spam and a second line of defense (the first one being the mempool) against transaction replay with fees deduction and [`sequence`](./01-transactions.md#transaction-generation) checking. It also performs preliminary _stateful_ validity checks like ensuring signatures are valid or that the sender has enough funds to pay for fees, and plays a role in the incentivisation of stakeholders via the collection of transaction fees.
 
 `BaseApp` holds an `anteHandler` as parameter that is initialized in the [application's constructor](../beginner/00-app-anatomy.md#application-constructor). The most widely used `anteHandler` is the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/ante/ante.go).
 
@@ -407,6 +415,10 @@ Click [here](../beginner/04-gas-fees.md#antehandler) for more on the `anteHandle
 ### RunMsgs
 
 `RunMsgs` is called from `RunTx` with `runTxModeCheck` as parameter to check the existence of a route for each message the transaction, and with `execModeFinalize` to actually process the `sdk.Msg`s.
+
+`FinalizeBlock`, calls [`runMsgs`](../advanced/00-baseapp.md#runtx-antehandler-runmsgs-posthandler) to fully execute each `Msg` within the transaction. Since the transaction may have messages from different modules, `BaseApp` needs to know which module to find the appropriate handler. This is achieved using `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's Protobuf [`Msg` service](../../build/building-modules/03-msg-services.md). 
+
+For `LegacyMsg` routing, the `Route` function is called via the [module manager](../../build/building-modules/01-module-manager.md) to retrieve the route name and find the legacy [`Handler`](../../build/building-modules/03-msg-services.md#handler-type) within the module.
 
 First, it retrieves the `sdk.Msg`'s fully-qualified type name, by checking the `type_url` of the Protobuf `Any` representing the `sdk.Msg`. Then, using the application's [`msgServiceRouter`](#msg-service-router), it checks for the existence of `Msg` service method related to that `type_url`. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. Otherwise, if `mode == execModeFinalize`, the [`Msg` service](../../build/building-modules/03-msg-services.md) RPC is executed, before `RunMsgs` returns.
 
@@ -468,16 +480,23 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci.go#L623
 
 When the underlying consensus engine receives a block proposal, each transaction in the block needs to be processed by the application. To that end, the underlying consensus engine sends the transactions in FinalizeBlock message to the application for each transaction in a sequential order.
 
+Since `FinalizeBlock` is an ABCI call, `Tx` is received in the encoded `[]byte` form. Nodes first unmarshal the transaction, using the [`TxConfig`](../beginner/00-app-anatomy.md#register-codec) defined in the app, then call `runTx` in `execModeFinalize`, which is very similar to `CheckTx` but also executes and writes state changes.
+
+![blockprocessing](./blockprocessing-1.png)
+
 Before the first transaction of a given block is processed, a [volatile state](#state-updates) called `finalizeBlockState` is initialized during FinalizeBlock. This state is updated each time a transaction is processed via `FinalizeBlock`, and committed to the [main state](#state-updates) when the block is [committed](#commit), after what it is set to `nil`.
 
-```go reference
+The `FinalizeBlock` ABCI function defined in `BaseApp` does the bulk of the state transitions: it is run for each transaction in the block in sequential order as committed to during consensus. Under the hood, transaction execution is almost identical to `CheckTx` but calls the [`runTx`](#runtx) function in deliver mode instead of check mode.
+
+Instead of using their `checkState`, full-nodes use `finalizeblock`:
+
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/baseapp.go#LL708-L743
-```
+
 
 Transaction execution within `FinalizeBlock` performs the **exact same steps as `CheckTx`**, with a little caveat at step 3 and the addition of a fifth step:
 
 1. The `AnteHandler` does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivised to do so, as they earn a bonus on the total fee of the block they propose.
-2. For each `sdk.Msg` in the transaction, route to the appropriate module's Protobuf [`Msg` service](../../build/building-modules/03-msg-services.md). Additional _stateful_ checks are performed, and the branched multistore held in `finalizeBlockState`'s `context` is updated by the module's `keeper`. If the `Msg` service returns successfully, the branched multistore held in `context` is written to `finalizeBlockState` `CacheMultiStore`.
+2. For each `sdk.Msg` in the transaction, route to the appropriate module's Protobuf [`Msg` service](../../build/building-modules/03-msg-services.md). Additional _stateful_ checks are performed, and the branched multistore held in `finalizeBlockState`'s `context` is updated by the module's `keeper`. If the `Msg` service returns successfully, the branched multistore held in `context` is written to `finalizeBlockState` `CacheMultiStore`. Meaning, Protobuf `Msg` service is responsible for executing each message in the `Tx` and causes state transitions to persist in `finalizeBlockState`
 
 During the additional fifth step outlined in (2), each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
 
@@ -486,6 +505,8 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/store/types/gas.go#L23
 ```
 
 At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0` and the execution fails.
+
+If there are any failed state changes resulting from a `Tx` being invalid or `GasMeter` running out, the transaction processing terminates and any state changes are reverted. Invalid transactions in a block proposal cause validator nodes to reject the block and vote for a `nil` block instead.
 
 Each transaction returns a response to the underlying consensus engine of type [`abci.ExecTxResult`](https://docs.cometbft.com/v1.0/spec/abci/abci++_methods#exectxresult). The response contains:
 
@@ -508,11 +529,15 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/baseapp.go#L74
 
 ### Commit
 
-The [`Commit` ABCI message](https://docs.cometbft.com/v1.0/spec/abci/abci++_methods#commit) is sent from the underlying CometBFT engine after the full-node has received _precommits_ from 2/3+ of validators (weighted by voting power). On the `BaseApp` end, the `Commit(res abci.CommitResponse)` function is implemented to commit all the valid state transitions that occurred during `FinalizeBlock` and to reset state for the next block.
+The [`Commit` ABCI message](https://docs.cometbft.com/v1.0/spec/abci/abci++_methods#commit) is sent from the underlying CometBFT engine after the full-node has received _precommits_ from 2/3+ of validators (weighted by voting power). This is the final step where nodes commit the block and state changes. Validator nodes perform the previous step of executing state transitions to validate the transactions, then sign the block to confirm it. Full nodes that are not validators do not participate in consensus but listen for votes to understand whether or not they should commit the state changes.
 
-To commit state-transitions, the `Commit` function calls the `Write()` function on `finalizeBlockState.ms`, where `finalizeBlockState.ms` is a branched multistore of the main store `app.cms`. Then, the `Commit` function sets `checkState` to the latest header (obtained from `finalizeBlockState.ctx.BlockHeader`) and `finalizeBlockState` to `nil`.
+On the `BaseApp` end, the `Commit(res abci.CommitResponse)` function is implemented to commit all the valid state transitions that occurred during `FinalizeBlock` and to reset state for the next block. It syncs all the state transitions by writing the `finalizeBlockState.ms` into the application's internal state. `finalizeBlockState.ms` is a branched multistore of the main store `app.cms`. The `Commit` function calls the `Write()` function on `finalizeBlockState.ms`, effectively committing the state transitions. Then, the `Commit` function sets `checkState` to the latest header (obtained from `finalizeBlockState.ctx.BlockHeader`) and `finalizeBlockState` to `nil`.
 
-Finally, `Commit` returns the hash of the commitment of `app.cms` back to the underlying consensus engine. This hash is used as a reference in the header of the next block.
+Finally, `Commit` returns the hash of the commitment of `app.cms` back to the underlying consensus engine. This hash is used as a reference in the header of the next block. As soon as the state changes are committed, `checkState` starts afresh from the most recently committed state and `finalizeBlockState` resets to `nil` in order to be consistent and reflect the changes.
+
+Note that not all blocks have the same number of transactions and it is possible for consensus to result in a `nil` block or one with none at all. In a public blockchain network, it is also possible for validators to be byzantine, or malicious, which may prevent a `Tx` from being committed in the blockchain. Possible malicious behaviors include the proposer deciding to censor a `Tx` by excluding it from the block or a validator voting against the block.
+
+At this point, the transaction lifecycle of a `Tx` is over: nodes have verified its validity, delivered it by executing its state changes, and committed those changes. The `Tx` itself, in `[]byte` form, is stored in a block and appended to the blockchain.
 
 ### Info
 

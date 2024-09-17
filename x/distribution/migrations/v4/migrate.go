@@ -6,8 +6,6 @@ import (
 
 	gogotypes "github.com/cosmos/gogoproto/types"
 
-	"cosmossdk.io/collections"
-	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 
@@ -15,44 +13,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	OldProposerKey = []byte{0x01}
-	NewProposerKey = collections.NewPrefix(1)
-)
+var OldProposerKey = []byte{0x01}
 
-func MigrateStore(ctx context.Context, env appmodule.Environment, cdc codec.BinaryCodec) error {
-	store := env.KVStoreService.OpenKVStore(ctx)
-	bz, err := store.Get(OldProposerKey)
-	if err != nil {
-		return err
-	}
-
-	if bz == nil {
-		// previous proposer not set, nothing to do
-		return nil
-	}
-
-	addrValue := gogotypes.BytesValue{}
-	err = cdc.Unmarshal(bz, &addrValue)
-	if err != nil {
-		return err
-	}
-
-	sb := collections.NewSchemaBuilder(env.KVStoreService)
-	prevProposer := collections.NewItem(sb, NewProposerKey, "previous_proposer", collcodec.KeyToValueCodec(sdk.ConsAddressKey))
-	_, err = sb.Build()
-	if err != nil {
-		return err
-	}
-
-	return prevProposer.Set(ctx, addrValue.GetValue())
+// MigrateStore removes the last proposer from store.
+func MigrateStore(ctx context.Context, env appmodule.Environment, _ codec.BinaryCodec) error {
+	kvStore := env.KVStoreService.OpenKVStore(ctx)
+	return kvStore.Delete(OldProposerKey)
 }
 
 // GetPreviousProposerConsAddr returns the proposer consensus address for the
 // current block.
 func GetPreviousProposerConsAddr(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) (sdk.ConsAddress, error) {
-	store := storeService.OpenKVStore(ctx)
-	bz, err := store.Get(OldProposerKey)
+	kvStore := storeService.OpenKVStore(ctx)
+	bz, err := kvStore.Get(OldProposerKey)
 	if err != nil {
 		return nil, err
 	}
@@ -70,9 +43,9 @@ func GetPreviousProposerConsAddr(ctx context.Context, storeService store.KVStore
 	return addrValue.GetValue(), nil
 }
 
-// set the proposer public key for this block
+// SetPreviousProposerConsAddr set the proposer public key for this block.
 func SetPreviousProposerConsAddr(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec, consAddr sdk.ConsAddress) error {
-	store := storeService.OpenKVStore(ctx)
+	kvStore := storeService.OpenKVStore(ctx)
 	bz := cdc.MustMarshal(&gogotypes.BytesValue{Value: consAddr})
-	return store.Set(OldProposerKey, bz)
+	return kvStore.Set(OldProposerKey, bz)
 }

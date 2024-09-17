@@ -7,7 +7,7 @@ import "cosmos/app/v1alpha1/module.proto";
 // Module is the config object for the auth module.
 message Module {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "cosmossdk.io/x/auth"
+    go_import: "github.com/cosmos/cosmos-sdk/x/auth"
   };
 
   // bech32_prefix is the bech32 account prefix for the app.

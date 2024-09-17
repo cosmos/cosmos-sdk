@@ -69,10 +69,12 @@ As you can see, the weights are predefined in this case. Options exist to overri
 Here is how one can override the above package `simappparams`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.50.x/Makefile#L293-L299
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.51.x/Makefile#L292-L334
 ```
 
-For the last test a tool called [runsim](https://github.com/cosmos/tools/tree/master/cmd/runsim) is used, this is used to parallelize go test instances, provide info to Github and slack integrations to provide information to your team on how the simulations are running.  
+The SDK simulations can be executed like normal tests in Go from the shell or within an IDE.
+Make sure that you pass the `-tags='sims` parameter to enable them and other params that make sense for your scenario.
+
 
 ### Random proposal contents
 
@@ -115,7 +117,7 @@ func NewCustomApp(...) {
     gov.NewAppModule(app.govKeeper, app.accountKeeper, app.supplyKeeper),
     mint.NewAppModule(app.mintKeeper),
     distr.NewAppModule(app.distrKeeper, app.accountKeeper, app.supplyKeeper, app.stakingKeeper),
-    staking.NewAppModule(app.stakingKeeper, app.accountKeeper, app.supplyKeeper),
+    staking.NewAppModule(cdc, app.stakingKeeper),
     slashing.NewAppModule(app.slashingKeeper, app.accountKeeper, app.stakingKeeper),
   )
 
@@ -123,4 +125,13 @@ func NewCustomApp(...) {
   app.sm.RegisterStoreDecoders()
   ...
 }
+```
+
+## Integration with the Go fuzzer framework
+
+The simulations provide deterministic behaviour already. The integration with the [Go fuzzer](https://go.dev/doc/security/fuzz/)
+can be done at a high level with the deterministic pseudo random number generator where the fuzzer provides varying numbers. 
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.51.x/Makefile#L352-L355
 ```

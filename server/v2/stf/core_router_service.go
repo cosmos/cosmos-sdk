@@ -2,112 +2,73 @@ package stf
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"strings"
 
-	"google.golang.org/protobuf/runtime/protoiface"
-
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/router"
+	"cosmossdk.io/core/transaction"
 )
 
 // NewMsgRouterService implements router.Service.
-func NewMsgRouterService(msgRouterBuilder *MsgRouterBuilder) router.Service {
-	msgRouter, err := msgRouterBuilder.Build()
-	if err != nil {
-		panic(fmt.Errorf("cannot create msgRouter: %w", err))
-	}
-
-	return &msgRouterService{
-		builder: msgRouterBuilder,
-		handler: msgRouter,
-	}
+func NewMsgRouterService(identity transaction.Identity) router.Service {
+	return msgRouterService{identity: identity}
 }
 
 var _ router.Service = (*msgRouterService)(nil)
 
 type msgRouterService struct {
-	builder *MsgRouterBuilder
-	handler appmodulev2.Handler
+	// TODO(tip): the identity sits here for the purpose of disallowing modules to impersonate others (sudo).
+	// right now this is not used, but it serves the reminder of something that we should be eventually
+	// looking into.
+	identity []byte
 }
 
 // CanInvoke returns an error if the given message cannot be invoked.
-func (m *msgRouterService) CanInvoke(ctx context.Context, typeURL string) error {
-	if typeURL == "" {
-		return errors.New("missing type url")
+func (m msgRouterService) CanInvoke(ctx context.Context, typeURL string) error {
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return err
 	}
 
-	typeURL = strings.TrimPrefix(typeURL, "/")
-	if exists := m.builder.HandlerExists(typeURL); exists {
-		return fmt.Errorf("unknown request: %s", typeURL)
+	return exCtx.msgRouter.CanInvoke(ctx, typeURL)
+}
+
+// Invoke execute a message and returns a response.
+func (m msgRouterService) Invoke(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
-}
-
-// InvokeTyped execute a message and fill-in a response.
-// The response must be known and passed as a parameter.
-// Use InvokeUntyped if the response type is not known.
-func (m *msgRouterService) InvokeTyped(ctx context.Context, msg, resp protoiface.MessageV1) error {
-	// see https://github.com/cosmos/cosmos-sdk/pull/20349
-	panic("not implemented")
-}
-
-// InvokeUntyped execute a message and returns a response.
-func (m *msgRouterService) InvokeUntyped(ctx context.Context, msg protoiface.MessageV1) (protoiface.MessageV1, error) {
-	return m.handler(ctx, msg)
+	return exCtx.msgRouter.Invoke(ctx, msg)
 }
 
 // NewQueryRouterService implements router.Service.
-func NewQueryRouterService(queryRouterBuilder *MsgRouterBuilder) router.Service {
-	queryRouter, err := queryRouterBuilder.Build()
-	if err != nil {
-		panic(fmt.Errorf("cannot create queryRouter: %w", err))
-	}
-
-	return &queryRouterService{
-		builder: queryRouterBuilder,
-		handler: queryRouter,
-	}
+func NewQueryRouterService() router.Service {
+	return queryRouterService{}
 }
 
 var _ router.Service = (*queryRouterService)(nil)
 
-type queryRouterService struct {
-	builder *MsgRouterBuilder
-	handler appmodulev2.Handler
-}
+type queryRouterService struct{}
 
 // CanInvoke returns an error if the given request cannot be invoked.
-func (m *queryRouterService) CanInvoke(ctx context.Context, typeURL string) error {
-	if typeURL == "" {
-		return errors.New("missing type url")
+func (m queryRouterService) CanInvoke(ctx context.Context, typeURL string) error {
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return err
 	}
 
-	typeURL = strings.TrimPrefix(typeURL, "/")
-	if exists := m.builder.HandlerExists(typeURL); exists {
-		return fmt.Errorf("unknown request: %s", typeURL)
-	}
-
-	return nil
-}
-
-// InvokeTyped execute a message and fill-in a response.
-// The response must be known and passed as a parameter.
-// Use InvokeUntyped if the response type is not known.
-func (m *queryRouterService) InvokeTyped(
-	ctx context.Context,
-	req, resp protoiface.MessageV1,
-) error {
-	// see https://github.com/cosmos/cosmos-sdk/pull/20349
-	panic("not implemented")
+	return exCtx.queryRouter.CanInvoke(ctx, typeURL)
 }
 
 // InvokeUntyped execute a message and returns a response.
-func (m *queryRouterService) InvokeUntyped(
+func (m queryRouterService) Invoke(
 	ctx context.Context,
-	req protoiface.MessageV1,
-) (protoiface.MessageV1, error) {
-	return m.handler(ctx, req)
+	req transaction.Msg,
+) (transaction.Msg, error) {
+	exCtx, err := getExecutionCtxFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return exCtx.queryRouter.Invoke(ctx, req)
 }

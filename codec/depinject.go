@@ -8,7 +8,7 @@ import (
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/x/tx/signing"
 
@@ -20,7 +20,7 @@ func ProvideInterfaceRegistry(
 	addressCodec address.Codec,
 	validatorAddressCodec address.ValidatorAddressCodec,
 	customGetSigners []signing.CustomGetSigner,
-) (types.InterfaceRegistry, error) {
+) (types.InterfaceRegistry, registry.InterfaceRegistrar, error) {
 	signingOptions := signing.Options{
 		AddressCodec:          addressCodec,
 		ValidatorAddressCodec: validatorAddressCodec,
@@ -34,17 +34,17 @@ func ProvideInterfaceRegistry(
 		SigningOptions: signingOptions,
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, fmt.Errorf("failed to create interface registry: %w", err)
 	}
 
 	if err := interfaceRegistry.SigningContext().Validate(); err != nil {
-		return nil, err
+		return nil, nil, fmt.Errorf("failed to validate signing context: %w", err)
 	}
 
-	return interfaceRegistry, nil
+	return interfaceRegistry, interfaceRegistry, nil
 }
 
-func ProvideLegacyAmino() legacy.Amino {
+func ProvideLegacyAmino() registry.AminoRegistrar {
 	return NewLegacyAmino()
 }
 

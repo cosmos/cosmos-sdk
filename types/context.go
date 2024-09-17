@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/gaskv"
 	storetypes "cosmossdk.io/store/types"
 )
@@ -45,11 +45,11 @@ type Context struct {
 	chainID              string          // Deprecated: Use HeaderService for chainID and CometService for the rest
 	txBytes              []byte
 	logger               log.Logger
-	voteInfo             []abci.VoteInfo // Deprecated: use Cometinfo.LastCommit.Votes instead, will be removed after 0.51
+	voteInfo             []abci.VoteInfo // Deprecated: use Cometinfo.LastCommit.Votes instead, will be removed after 0.52
 	gasMeter             storetypes.GasMeter
 	blockGasMeter        storetypes.GasMeter
-	checkTx              bool // Deprecated: use execMode instead, will be removed after 0.51
-	recheckTx            bool // if recheckTx == true, then checkTx must also be true // Deprecated: use execMode instead, will be removed after 0.51
+	checkTx              bool // Deprecated: use execMode instead, will be removed after 0.52
+	recheckTx            bool // if recheckTx == true, then checkTx must also be true // Deprecated: use execMode instead, will be removed after 0.52
 	sigverifyTx          bool // when run simulation, because the private key corresponding to the account in the genesis.json randomly generated, we must skip the sigverify.
 	execMode             ExecMode
 	minGasPrice          DecCoins
@@ -102,7 +102,7 @@ func (c Context) HeaderHash() []byte {
 	return hash
 }
 
-// Deprecated: getting consensus params from the context is deprecated and will be removed after 0.51
+// Deprecated: getting consensus params from the context is deprecated and will be removed after 0.52
 // Querying the consensus module for the parameters is required in server/v2
 func (c Context) ConsensusParams() cmtproto.ConsensusParams {
 	return c.consParams
@@ -138,7 +138,7 @@ func NewContext(ms storetypes.MultiStore, isCheckTx bool, logger log.Logger) Con
 		kvGasConfig:          storetypes.KVGasConfig(),
 		transientKVGasConfig: storetypes.TransientGasConfig(),
 		headerInfo: header.Info{
-			Time: h.Time.UTC(),
+			Time: h.Time,
 		},
 	}
 }
@@ -161,7 +161,7 @@ func (c Context) WithBlockHeader(header cmtproto.Header) Context {
 	header.Time = header.Time.UTC()
 	c.header = header
 
-	// when calling withBlockheader on a new context chainID in the struct is empty
+	// when calling withBlockheader on a new context, chainID in the struct will be empty
 	c.chainID = header.ChainID
 	return c
 }
@@ -208,7 +208,7 @@ func (c Context) WithLogger(logger log.Logger) Context {
 }
 
 // WithVoteInfos returns a Context with an updated consensus VoteInfo.
-// Deprecated: use WithCometinfo() instead, will be removed after 0.51
+// Deprecated: use WithCometinfo() instead, will be removed after 0.52
 func (c Context) WithVoteInfos(voteInfo []abci.VoteInfo) Context {
 	c.voteInfo = voteInfo
 	return c
@@ -391,6 +391,19 @@ func UnwrapSDKContext(ctx context.Context) Context {
 		return sdkCtx
 	}
 	return ctx.Value(SdkContextKey).(Context)
+}
+
+// TryUnwrapSDKContext attempts to retrieve a Context from a context.Context
+func TryUnwrapSDKContext(ctx context.Context) (Context, bool) {
+	if sdkCtx, ok := ctx.(Context); ok {
+		return sdkCtx, true
+	}
+	v := ctx.Value(SdkContextKey)
+	if v == nil {
+		return Context{}, false
+	}
+	c, ok := v.(Context)
+	return c, ok
 }
 
 // ToSDKEvidence takes comet evidence and returns sdk evidence

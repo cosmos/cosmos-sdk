@@ -172,7 +172,7 @@ Flags are added to commands directly (generally in the [module's CLI file](../..
 
 ## Environment variables
 
-Each flag is bound to its respective named environment variable. Then name of the environment variable consist of two parts - capital case `basename` followed by flag name of the flag. `-` must be substituted with `_`. For example flag `--home` for application with basename `GAIA` is bound to `GAIA_HOME`. It allows reducing the amount of flags typed for routine operations. For example instead of:
+Each flag is bound to its respective named environment variable. Then name of the environment variable consist of two parts - capital case `basename` followed by flag name of the flag. `-` must be substituted with `_`. For example flag `--node` for application with basename `GAIA` is bound to `GAIA_NODE`. It allows reducing the amount of flags typed for routine operations. For example instead of:
 
 ```shell
 gaia --home=./ --node=<node address> --chain-id="testchain-1" --keyring-backend=test tx ... --from=<key name>

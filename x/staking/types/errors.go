@@ -39,7 +39,6 @@ var (
 	ErrDelegatorShareExRateInvalid     = errors.Register(ModuleName, 34, "cannot delegate to validators with invalid (zero) ex-rate")
 	ErrBothShareMsgsGiven              = errors.Register(ModuleName, 35, "both shares amount and shares percent provided")
 	ErrNeitherShareMsgsGiven           = errors.Register(ModuleName, 36, "neither shares amount nor shares percent provided")
-	ErrInvalidHistoricalInfo           = errors.Register(ModuleName, 37, "invalid historical info")
 	ErrEmptyValidatorPubKey            = errors.Register(ModuleName, 39, "empty validator public key")
 	ErrCommissionLTMinRate             = errors.Register(ModuleName, 40, "commission cannot be less than min rate")
 	ErrUnbondingNotFound               = errors.Register(ModuleName, 41, "unbonding operation not found")
@@ -49,7 +48,6 @@ var (
 	ErrNoUnbondingType                 = errors.Register(ModuleName, 45, "unbonding type not found")
 
 	// consensus key errors
-	ErrConsensusPubKeyAlreadyUsedForValidator = errors.Register(ModuleName, 46, "consensus pubkey is already used for a validator")
-	ErrExceedingMaxConsPubKeyRotations        = errors.Register(ModuleName, 47, "exceeding maximum consensus pubkey rotations within unbonding period")
-	ErrConsensusPubKeyLenInvalid              = errors.Register(ModuleName, 48, "consensus pubkey len is invalid")
+	ErrExceedingMaxConsPubKeyRotations = errors.Register(ModuleName, 46, "exceeding maximum consensus pubkey rotations within unbonding period")
+	ErrConsensusPubKeyLenInvalid       = errors.Register(ModuleName, 47, "consensus pubkey len is invalid")
 )

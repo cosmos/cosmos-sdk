@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/stretchr/testify/assert"
 
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/log"
 )
 
 func testFinalizeBlock(_ context.Context, _ *abci.FinalizeBlockRequest) (*abci.FinalizeBlockResponse, error) {

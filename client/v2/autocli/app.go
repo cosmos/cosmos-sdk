@@ -7,7 +7,6 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
-	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
@@ -35,9 +34,6 @@ type AppOptions struct {
 	// module or need to be improved.
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
 
-	// Keyring is the keyring to use for client/v2.
-	Keyring keyring.Keyring `optional:"true"`
-
 	// ClientCtx contains the necessary information needed to execute the commands.
 	ClientCtx client.Context
 }
@@ -62,7 +58,6 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
 			FileResolver:          appOptions.ClientCtx.InterfaceRegistry,
-			Keyring:               appOptions.Keyring,
 			AddressCodec:          appOptions.ClientCtx.AddressCodec,
 			ValidatorAddressCodec: appOptions.ClientCtx.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ClientCtx.ConsensusAddressCodec,

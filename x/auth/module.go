@@ -10,34 +10,32 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/x/auth/ante"
-	"cosmossdk.io/x/auth/keeper"
-	"cosmossdk.io/x/auth/simulation"
-	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // ConsensusVersion defines the current x/auth module consensus version.
 const (
-	ConsensusVersion = 6
+	ConsensusVersion = 5
 	GovModuleName    = "gov"
 )
 
 var (
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasName             = AppModule{}
 
 	_ appmodulev2.HasGenesis    = AppModule{}
 	_ appmodulev2.AppModule     = AppModule{}
-	_ appmodule.HasServices     = AppModule{}
 	_ appmodulev2.HasMigrations = AppModule{}
 )
 
@@ -47,34 +45,38 @@ type AppModule struct {
 	randGenAccountsFn types.RandomGenesisAccountsFn
 	accountsModKeeper types.AccountsModKeeper
 	cdc               codec.Codec
+	extOptChecker     ante.ExtensionOptionChecker
 }
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (am AppModule) IsAppModule() {}
 
-// NewAppModule creates a new AppModule object
+// NewAppModule creates a new AppModule object.
 func NewAppModule(
 	cdc codec.Codec,
 	accountKeeper keeper.AccountKeeper,
 	ak types.AccountsModKeeper,
 	randGenAccountsFn types.RandomGenesisAccountsFn,
+	extOptChecker ante.ExtensionOptionChecker,
 ) AppModule {
 	return AppModule{
 		accountKeeper:     accountKeeper,
 		randGenAccountsFn: randGenAccountsFn,
 		accountsModKeeper: ak,
 		cdc:               cdc,
+		extOptChecker:     extOptChecker,
 	}
 }
 
-// Name returns the auth module's name.
+// Name returns the module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the auth module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the auth module.
@@ -112,9 +114,6 @@ func (am AppModule) RegisterMigrations(mr appmodule.MigrationRegistrar) error {
 	}
 	if err := mr.Register(types.ModuleName, 4, m.Migrate4To5); err != nil {
 		return fmt.Errorf("failed to migrate x/%s from version 4 to 5: %w", types.ModuleName, err)
-	}
-	if err := mr.Register(types.ModuleName, 5, m.Migrate5To6); err != nil {
-		return fmt.Errorf("failed to migrate x/%s from version 5 to 6: %w", types.ModuleName, err)
 	}
 
 	return nil
@@ -163,6 +162,7 @@ func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 		ante.NewValidateMemoDecorator(am.accountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(am.accountKeeper),
 		ante.NewValidateSigCountDecorator(am.accountKeeper),
+		ante.NewExtensionOptionsDecorator(am.extOptChecker),
 	}
 
 	sdkTx, ok := tx.(sdk.Tx)
@@ -189,17 +189,12 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState, am.randGenAccountsFn)
 }
 
-// ProposalMsgs returns msgs used for governance proposals for simulations.
-func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
-	return simulation.ProposalMsgs()
+// ProposalMsgsX returns msgs used for governance proposals for simulations.
+func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("msg_update_params", 100), simulation.MsgUpdateParamsFactory())
 }
 
 // RegisterStoreDecoder registers a decoder for auth module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.accountKeeper.Schema)
-}
-
-// WeightedOperations doesn't return any auth module operation.
-func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
-	return nil
 }

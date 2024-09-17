@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -28,7 +29,7 @@ func validateCommunityTax(i interface{}) error {
 	}
 
 	if v.IsNil() {
-		return fmt.Errorf("community tax must be not nil")
+		return errors.New("community tax must be not nil")
 	}
 	if v.IsNegative() {
 		return fmt.Errorf("community tax must be positive: %s", v)

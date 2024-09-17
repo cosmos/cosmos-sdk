@@ -6,10 +6,14 @@ import (
 	"math/rand"
 	"testing"
 
+	gogoany "github.com/cosmos/gogoproto/types/any"
+
 	"cosmossdk.io/simapp"
 	baseaccountv1 "cosmossdk.io/x/accounts/defaults/base/v1"
 	"cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,7 +26,7 @@ func TestBaseAccount(t *testing.T) {
 	ctx := sdk.NewContext(app.CommitMultiStore(), false, app.Logger())
 
 	_, baseAccountAddr, err := ak.Init(ctx, "base", accCreator, &baseaccountv1.MsgInit{
-		PubKey: privKey.PubKey().Bytes(),
+		PubKey: toAnyPb(t, privKey.PubKey()),
 	}, nil)
 	require.NoError(t, err)
 
@@ -43,9 +47,8 @@ func TestBaseAccount(t *testing.T) {
 
 func sendTx(t *testing.T, ctx sdk.Context, app *simapp.SimApp, sender []byte, msg sdk.Msg) {
 	tx := sign(t, ctx, app, sender, privKey, msg)
-	res, _, err := app.SimDeliver(app.TxEncode, tx)
+	_, _, err := app.SimDeliver(app.TxEncode, tx)
 	require.NoError(t, err)
-	t.Log(res)
 }
 
 func sign(t *testing.T, ctx sdk.Context, app *simapp.SimApp, from sdk.AccAddress, privKey cryptotypes.PrivKey, msg sdk.Msg) sdk.Tx {
@@ -80,4 +83,14 @@ func bechify(t *testing.T, app *simapp.SimApp, addr []byte) string {
 
 func fundAccount(t *testing.T, app *simapp.SimApp, ctx sdk.Context, addr sdk.AccAddress, amt string) {
 	require.NoError(t, testutil.FundAccount(ctx, app.BankKeeper, addr, coins(t, amt)))
+}
+
+func toAnyPb(t *testing.T, pm gogoproto.Message) *codectypes.Any {
+	t.Helper()
+	if gogoproto.MessageName(pm) == gogoproto.MessageName(&gogoany.Any{}) {
+		t.Fatal("no")
+	}
+	pb, err := codectypes.NewAnyWithValue(pm)
+	require.NoError(t, err)
+	return pb
 }

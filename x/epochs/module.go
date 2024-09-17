@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/epochs/keeper"
 	"cosmossdk.io/x/epochs/simulation"
 	"cosmossdk.io/x/epochs/types"
@@ -21,7 +21,6 @@ import (
 )
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
@@ -36,11 +35,11 @@ const ConsensusVersion = 1
 // AppModule implements the AppModule interface for the epochs module.
 type AppModule struct {
 	cdc    codec.Codec
-	keeper keeper.Keeper
+	keeper *keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object.
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper *keeper.Keeper) AppModule {
 	return AppModule{
 		cdc:    cdc,
 		keeper: keeper,
@@ -51,12 +50,13 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 func (am AppModule) IsAppModule() {}
 
 // Name returns the epochs module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the epochs module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {}
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the epochs module.
 func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
@@ -67,7 +67,7 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterQueryServer(registrar, keeper.NewQuerier(am.keeper))
+	types.RegisterQueryServer(registrar, keeper.NewQuerier(*am.keeper))
 	return nil
 }
 
@@ -124,9 +124,4 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // RegisterStoreDecoder registers a decoder for epochs module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
-}
-
-// WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return nil
 }

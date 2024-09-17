@@ -208,7 +208,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "cosmossdk.io/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var AccountsPrefix = collections.NewPrefix(0)
@@ -257,7 +257,7 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "cosmossdk.io/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var AccountsPrefix = collections.NewPrefix(0)
@@ -508,7 +508,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "cosmossdk.io/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var AccountsPrefix = collections.NewPrefix(0)
@@ -677,7 +677,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 		Balances: collections.NewMap(
 			sb, BalancesPrefix, "balances",
 			collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
-			math.IntValue,
+			sdk.IntValue,
 		),
 	}
 }
@@ -720,7 +720,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 		Balances: collections.NewMap(
 			sb, BalancesPrefix, "balances",
 			collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
-			math.IntValue,
+			sdk.IntValue,
 		),
 	}
 }
@@ -930,7 +930,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "cosmossdk.io/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var AccountsNumberIndexPrefix = collections.NewPrefix(1)
@@ -989,7 +989,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "cosmossdk.io/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var AccountsNumberIndexPrefix = collections.NewPrefix(1)
@@ -1097,7 +1097,7 @@ import (
     storetypes "cosmossdk.io/store/types"
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "cosmossdk.io/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var AccountsPrefix = collections.NewPrefix(0)

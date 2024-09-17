@@ -163,8 +163,6 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.CancelUnbondingDelegation(ctx, &tc.req)
 			if tc.exceptErr {
@@ -264,7 +262,7 @@ func TestRotateConsPubKey(t *testing.T) {
 			validator: validators[0].GetOperator(),
 			newPubKey: validators[1].ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey),
 			pass:      false,
-			expErrMsg: "consensus pubkey is already used for a validator",
+			expErrMsg: "validator already exist for this pubkey; must use new validator pubkey",
 		},
 		{
 			name: "consensus pubkey rotation limit check",
@@ -314,7 +312,6 @@ func TestRotateConsPubKey(t *testing.T) {
 				// this shouldn't remove the existing keys from waiting queue since unbonding time isn't reached
 				_, err = stakingKeeper.EndBlocker(ctx)
 				assert.NilError(t, err)
-				// stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(ctx, ctx.BlockHeader().Time)
 
 				msg, err = types.NewMsgRotateConsPubKey(
 					validators[3].GetOperator(),
@@ -331,7 +328,6 @@ func TestRotateConsPubKey(t *testing.T) {
 				// this should remove keys from waiting queue since unbonding time is reached
 				_, err = stakingKeeper.EndBlocker(newCtx)
 				assert.NilError(t, err)
-				// stakingKeeper.UpdateAllMaturedConsKeyRotatedKeys(newCtx, newCtx.BlockHeader().Time)
 
 				return newCtx
 			},

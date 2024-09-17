@@ -10,7 +10,6 @@ import (
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
-	dbm "cosmossdk.io/store/v2/db"
 )
 
 var (
@@ -25,7 +24,7 @@ type IavlTree struct {
 
 // NewIavlTree creates a new IavlTree instance.
 func NewIavlTree(db corestore.KVStoreWithBatch, logger log.Logger, cfg *Config) *IavlTree {
-	tree := iavl.NewMutableTree(dbm.NewWrapper(db), cfg.CacheSize, cfg.SkipFastStorageUpgrade, logger, iavl.AsyncPruningOption(true))
+	tree := iavl.NewMutableTree(db, cfg.CacheSize, cfg.SkipFastStorageUpgrade, logger, iavl.AsyncPruningOption(true))
 	return &IavlTree{
 		tree: tree,
 	}
@@ -87,8 +86,9 @@ func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
 }
 
 // GetLatestVersion returns the latest version of the tree.
-func (t *IavlTree) GetLatestVersion() uint64 {
-	return uint64(t.tree.Version())
+func (t *IavlTree) GetLatestVersion() (uint64, error) {
+	v, err := t.tree.GetLatestVersion()
+	return uint64(v), err
 }
 
 // SetInitialVersion sets the initial version of the database.

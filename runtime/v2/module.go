@@ -14,34 +14,32 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
+	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
-	rootstorev2 "cosmossdk.io/store/v2/root"
 )
 
 var (
-	_ appmodulev2.AppModule = appModule{}
-	_ appmodule.HasServices = appModule{}
+	_ appmodulev2.AppModule = appModule[transaction.Tx]{}
+	_ hasServicesV1         = appModule[transaction.Tx]{}
 )
 
-type appModule struct {
-	app *App
+type appModule[T transaction.Tx] struct {
+	app *App[T]
 }
 
-func (m appModule) IsOnePerModuleType() {}
-func (m appModule) IsAppModule()        {}
+func (m appModule[T]) IsOnePerModuleType() {}
+func (m appModule[T]) IsAppModule()        {}
 
-func (m appModule) RegisterServices(registar grpc.ServiceRegistrar) error {
+func (m appModule[T]) RegisterServices(registar grpc.ServiceRegistrar) error {
 	autoCliQueryService, err := services.NewAutoCLIQueryService(m.app.moduleManager.modules)
 	if err != nil {
 		return err
@@ -58,7 +56,7 @@ func (m appModule) RegisterServices(registar grpc.ServiceRegistrar) error {
 	return nil
 }
 
-func (m appModule) AutoCLIOptions() *autocliv1.ModuleOptions {
+func (m appModule[T]) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
 			Service: appv1alpha1.Query_ServiceDesc.ServiceName,
@@ -95,21 +93,20 @@ func (m appModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 func init() {
 	appconfig.Register(&runtimev2.Module{},
 		appconfig.Provide(
-			ProvideAppBuilder,
-			ProvideEnvironment,
-			ProvideModuleManager,
-			ProvideGenesisTxHandler,
+			ProvideAppBuilder[transaction.Tx],
+			ProvideEnvironment[transaction.Tx],
+			ProvideModuleManager[transaction.Tx],
 			ProvideCometService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
 }
 
-func ProvideAppBuilder(
+func ProvideAppBuilder[T transaction.Tx](
 	interfaceRegistrar registry.InterfaceRegistrar,
-	amino legacy.Amino,
+	amino registry.AminoRegistrar,
 ) (
-	*AppBuilder,
+	*AppBuilder[T],
 	*stf.MsgRouterBuilder,
 	appmodulev2.AppModule,
 	protodesc.Resolver,
@@ -125,63 +122,61 @@ func ProvideAppBuilder(
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
 	}
 
-	// TODO register as Invoker from simapp v2; remove if not needed
-	// std.RegisterInterfaces(interfaceRegistrar)
-	// std.RegisterLegacyAminoCodec(amino)
-
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
-	app := &App{
-		storeKeys:          nil,
-		interfaceRegistrar: interfaceRegistrar,
-		amino:              amino,
-		msgRouterBuilder:   msgRouterBuilder,
-		queryRouterBuilder: stf.NewMsgRouterBuilder(), // TODO dedicated query router
+	app := &App[T]{
+		storeKeys:               nil,
+		interfaceRegistrar:      interfaceRegistrar,
+		amino:                   amino,
+		msgRouterBuilder:        msgRouterBuilder,
+		queryRouterBuilder:      stf.NewMsgRouterBuilder(), // TODO dedicated query router
+		GRPCMethodsToMessageMap: map[string]func() proto.Message{},
+		storeLoader:             DefaultStoreLoader,
 	}
-	appBuilder := &AppBuilder{app: app}
+	appBuilder := &AppBuilder[T]{app: app}
 
-	return appBuilder, msgRouterBuilder, appModule{app}, protoFiles, protoTypes
+	return appBuilder, msgRouterBuilder, appModule[T]{app}, protoFiles, protoTypes
 }
 
 type AppInputs struct {
 	depinject.In
 
-	AppConfig          *appv1alpha1.Config
 	Config             *runtimev2.Module
-	AppBuilder         *AppBuilder
-	ModuleManager      *MM
+	AppBuilder         *AppBuilder[transaction.Tx]
+	ModuleManager      *MM[transaction.Tx]
 	InterfaceRegistrar registry.InterfaceRegistrar
-	LegacyAmino        legacy.Amino
+	LegacyAmino        registry.AminoRegistrar
 	Logger             log.Logger
-	StoreOptions       *rootstorev2.FactoryOptions `optional:"true"`
+	DynamicConfig      server.DynamicConfig `optional:"true"` // can be nil in client wiring
 }
 
 func SetupAppBuilder(inputs AppInputs) {
 	app := inputs.AppBuilder.app
 	app.config = inputs.Config
-	app.appConfig = inputs.AppConfig
 	app.logger = inputs.Logger
 	app.moduleManager = inputs.ModuleManager
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 
-	// TODO: this is a bit of a hack, but it's the only way to get the store keys into the app
-	// registerStoreKey could instead set this on StoreOptions directly
-	if inputs.StoreOptions != nil {
-		inputs.AppBuilder.storeOptions = inputs.StoreOptions
-		inputs.AppBuilder.storeOptions.StoreKeys = inputs.AppBuilder.app.storeKeys
+	if inputs.DynamicConfig != nil {
+		inputs.AppBuilder.config = inputs.DynamicConfig
 	}
 }
 
-func ProvideModuleManager(
+func ProvideModuleManager[T transaction.Tx](
 	logger log.Logger,
 	config *runtimev2.Module,
 	modules map[string]appmodulev2.AppModule,
-) *MM {
-	return NewModuleManager(logger, config, modules)
+) *MM[T] {
+	return NewModuleManager[T](logger, config, modules)
 }
 
 // ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
-func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinject.ModuleKey, appBuilder *AppBuilder) (
+func ProvideEnvironment[T transaction.Tx](
+	logger log.Logger,
+	config *runtimev2.Module,
+	key depinject.ModuleKey,
+	appBuilder *AppBuilder[T],
+) (
 	appmodulev2.Environment,
 	store.KVStoreService,
 	store.MemoryStoreService,
@@ -215,8 +210,8 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 		EventService:       stf.NewEventService(),
 		GasService:         stf.NewGasMeterService(),
 		HeaderService:      stf.HeaderService{},
-		QueryRouterService: stf.NewQueryRouterService(appBuilder.app.queryRouterBuilder),
-		MsgRouterService:   stf.NewMsgRouterService(appBuilder.app.msgRouterBuilder),
+		QueryRouterService: stf.NewQueryRouterService(),
+		MsgRouterService:   stf.NewMsgRouterService([]byte(key.Name())),
 		TransactionService: services.NewContextAwareTransactionService(),
 		KVStoreService:     kvService,
 		MemStoreService:    memKvService,
@@ -225,7 +220,7 @@ func ProvideEnvironment(logger log.Logger, config *runtimev2.Module, key depinje
 	return env, kvService, memKvService
 }
 
-func registerStoreKey(wrapper *AppBuilder, key string) {
+func registerStoreKey[T transaction.Tx](wrapper *AppBuilder[T], key string) {
 	wrapper.app.storeKeys = append(wrapper.app.storeKeys, key)
 }
 
@@ -237,10 +232,6 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 	}
 
 	return nil
-}
-
-func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
-	return appBuilder.app
 }
 
 func ProvideCometService() comet.Service {

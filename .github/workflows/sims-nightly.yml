@@ -15,35 +15,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  install-runsim:
-    permissions:
-      contents: none
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
-          check-latest: true
-      - name: Install runsim
-        run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - uses: actions/cache@v4
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-
   test-sim-multi-seed-long:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.23"
           check-latest: true
-      - uses: actions/cache@v4
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
       - name: test-sim-multi-seed-long
+        env:
+          GOMEMLIMIT: 14GiB # reserve 2 GiB as buffer for GC to avoid OOM
         run: |
           make test-sim-multi-seed-long
 

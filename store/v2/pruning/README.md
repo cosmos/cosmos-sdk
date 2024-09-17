@@ -2,12 +2,12 @@
 
 The `pruning` package defines the `PruningManager` struct which is responsible for
 pruning the state storage (SS) and the state commitment (SC) based on the current
-height of the chain. The `PruneOptions` struct defines the configuration for pruning
+height of the chain. The `PruningOption` struct defines the configuration for pruning
 and is passed to the `PruningManager` during initialization.
 
 ## Prune Options
 
-The `PruneOptions` struct includes the following fields:
+The `PruningOption` struct includes the following fields:
 
 * `KeepRecent` (uint64): The number of recent heights to keep in the state.
 * `Interval` (uint64): The interval of how often to prune the state. 0 means no pruning.

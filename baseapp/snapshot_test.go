@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/stretchr/testify/require"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -245,7 +245,6 @@ func TestABCI_OfferSnapshot_Errors(t *testing.T) {
 		}, abci.OFFER_SNAPSHOT_RESULT_REJECT},
 	}
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			resp, err := suite.baseApp.OfferSnapshot(&abci.OfferSnapshotRequest{Snapshot: tc.snapshot})
 			require.NoError(t, err)

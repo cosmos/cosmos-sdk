@@ -10,13 +10,13 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
@@ -102,6 +102,10 @@ type AccountKeeper struct {
 	Schema collections.Schema
 	Params collections.Item[types.Params]
 
+	// only use for upgrade handler
+	//
+	// Deprecated: move to accounts module accountNumber
+	accountNumber collections.Sequence
 	// Accounts key: AccAddr | value: AccountI | index: AccountsIndex
 	Accounts *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
 }
@@ -135,6 +139,7 @@ func NewAccountKeeper(
 		permAddrs:         permAddrs,
 		authority:         authority,
 		Params:            collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		accountNumber:     collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 		Accounts:          collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
 	}
 	schema, err := sb.Build()
@@ -143,6 +148,22 @@ func NewAccountKeeper(
 	}
 	ak.Schema = schema
 	return ak
+}
+
+// removeLegacyAccountNumberUnsafe is used for migration purpose only. It deletes the sequence in the DB
+// and returns the last value used on success.
+// Deprecated
+func (ak AccountKeeper) removeLegacyAccountNumberUnsafe(ctx context.Context) (uint64, error) {
+	accNum, err := ak.accountNumber.Peek(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	// Delete DB entry for legacy account number
+	store := ak.KVStoreService.OpenKVStore(ctx)
+	err = store.Delete(types.GlobalAccountNumberKey.Bytes())
+
+	return accNum, err
 }
 
 // GetAuthority returns the x/auth module's authority.
@@ -294,7 +315,7 @@ func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAdd
 		}
 
 		if err := ak.BranchService.Execute(ctx, func(ctx context.Context) error {
-			result, err := ak.AccountsModKeeper.SendModuleMessageUntyped(ctx, signer, msg)
+			result, err := ak.AccountsModKeeper.SendModuleMessage(ctx, signer, msg)
 			if err != nil {
 				// If an error occurs during message execution, append error response
 				response := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}
@@ -316,4 +337,19 @@ func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAdd
 	}
 
 	return msgResponses, nil
+}
+
+// MigrateAccountNumberUnsafe migrates auth's account number to accounts's account number
+// and delete store entry for auth legacy GlobalAccountNumberKey.
+//
+// Should only use in an upgrade handler for migrating account number.
+func MigrateAccountNumberUnsafe(ctx context.Context, ak *AccountKeeper) error {
+	currentAccNum, err := ak.removeLegacyAccountNumberUnsafe(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to migrate account number: %w", err)
+	}
+
+	err = ak.AccountsModKeeper.InitAccountNumberSeqUnsafe(ctx, currentAccNum)
+
+	return err
 }

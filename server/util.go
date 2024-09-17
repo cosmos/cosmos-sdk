@@ -25,7 +25,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	corectx "cosmossdk.io/core/context"
-	corelog "cosmossdk.io/core/log"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
@@ -46,12 +46,13 @@ import (
 // a command's Context.
 const ServerContextKey = sdk.ContextKey("server.context")
 
-// Context server context
-// Deprecated: Do not use since we use viper to track all config
+// Context is the server context.
+// Prefer using we use viper a it tracks track all config.
+// See core/context/server_context.go.
 type Context struct {
 	Viper  *viper.Viper
 	Config *cmtcfg.Config
-	Logger corelog.Logger
+	Logger log.Logger
 }
 
 func NewDefaultContext() *Context {
@@ -169,7 +170,7 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 	return serverCtx, nil
 }
 
-// CreateSDKLogger creates a the default SDK logger.
+// CreateSDKLogger creates the default SDK logger.
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
@@ -227,8 +228,8 @@ func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 	}
 
 	cmdCtx = context.WithValue(cmdCtx, ServerContextKey, serverCtx)
-	cmdCtx = context.WithValue(cmdCtx, corectx.ViperContextKey{}, serverCtx.Viper)
-	cmdCtx = context.WithValue(cmdCtx, corectx.LoggerContextKey{}, serverCtx.Logger)
+	cmdCtx = context.WithValue(cmdCtx, corectx.ViperContextKey, serverCtx.Viper)
+	cmdCtx = context.WithValue(cmdCtx, corectx.LoggerContextKey, serverCtx.Logger)
 
 	cmd.SetContext(cmdCtx)
 
@@ -292,7 +293,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 	appCfgFilePath := filepath.Join(configPath, "app.toml")
 	if _, err := os.Stat(appCfgFilePath); os.IsNotExist(err) {
 		if (customAppTemplate != "" && customConfig == nil) || (customAppTemplate == "" && customConfig != nil) {
-			return nil, fmt.Errorf("customAppTemplate and customConfig should be both nil or not nil")
+			return nil, errors.New("customAppTemplate and customConfig should be both nil or not nil")
 		}
 
 		if customAppTemplate != "" {
@@ -354,6 +355,7 @@ func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.A
 		cometCmd,
 		version.NewVersionCommand(),
 		NewRollbackCmd(appCreator),
+		ModuleHashByHeightQuery(appCreator),
 	)
 }
 
@@ -472,7 +474,7 @@ func addrToIP(addr net.Addr) net.IP {
 }
 
 // OpenDB opens the application database using the appropriate driver.
-func OpenDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
+func OpenDB(rootDir string, backendType dbm.BackendType) (corestore.KVStoreWithBatch, error) {
 	dataDir := filepath.Join(rootDir, "data")
 	return dbm.NewDB("application", backendType, dataDir)
 }

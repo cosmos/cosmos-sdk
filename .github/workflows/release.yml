@@ -20,14 +20,14 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.23"
           check-latest: true
       - name: Unshallow
         run: git fetch --prune --unshallow
       - name: Create release
         uses: goreleaser/goreleaser-action@v3
         with:
-          args: release --rm-dist --release-notes ./RELEASE_NOTES.md
+          args: release --clean --release-notes ./RELEASE_NOTES.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

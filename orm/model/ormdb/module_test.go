@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"strings"
 	"testing"
 
@@ -17,7 +17,7 @@ import (
 	ormmodulev1alpha1 "cosmossdk.io/api/cosmos/orm/module/v1alpha1"
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
 	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/core/store"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	_ "cosmossdk.io/orm" // required for ORM module registration
@@ -103,7 +103,7 @@ func (k keeper) Burn(ctx context.Context, acct, denom string, amount uint64) err
 	}
 
 	if amount > supply.Amount {
-		return fmt.Errorf("insufficient supply")
+		return errors.New("insufficient supply")
 	}
 
 	supply.Amount -= amount
@@ -171,7 +171,7 @@ func (k keeper) safeSubBalance(ctx context.Context, acct, denom string, amount u
 	}
 
 	if amount > balance.Amount {
-		return fmt.Errorf("insufficient funds")
+		return errors.New("insufficient funds")
 	}
 
 	balance.Amount -= amount
@@ -357,14 +357,14 @@ func TestHooks(t *testing.T) {
 }
 
 type testStoreService struct {
-	db dbm.DB
+	db corestore.KVStoreWithBatch
 }
 
-func (t testStoreService) OpenKVStore(context.Context) store.KVStore {
+func (t testStoreService) OpenKVStore(context.Context) corestore.KVStore {
 	return testkv.TestStore{Db: t.db}
 }
 
-func (t testStoreService) OpenMemoryStore(context.Context) store.KVStore {
+func (t testStoreService) OpenMemoryStore(context.Context) corestore.KVStore {
 	return testkv.TestStore{Db: t.db}
 }
 
@@ -394,7 +394,7 @@ func TestGetBackendResolver(t *testing.T) {
 	assert.NilError(t, err)
 }
 
-func ProvideTestRuntime() store.KVStoreService {
+func ProvideTestRuntime() corestore.KVStoreService {
 	return testStoreService{db: dbm.NewMemDB()}
 }
 

@@ -15,79 +15,81 @@ jobs:
   build:
     permissions:
       contents: read # for actions/checkout to fetch code
-    runs-on: ubuntu-latest
+    runs-on: large-sdk-runner
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.23"
           check-latest: true
       - run: make build
-      - name: Install runsim
-        run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - uses: actions/cache@v4
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
 
   test-sim-import-export:
-    runs-on: ubuntu-latest
+    runs-on: large-sdk-runner
     needs: [build]
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.23"
           check-latest: true
-      - uses: actions/cache@v4
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
       - name: test-sim-import-export
         run: |
           make test-sim-import-export
 
   test-sim-after-import:
-    runs-on: ubuntu-latest
-    needs: [build]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
-          check-latest: true
-      - uses: actions/cache@v4
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
-      - name: test-sim-after-import
-        run: |
-          make test-sim-after-import
-
-  test-sim-multi-seed-short:
-    runs-on: ubuntu-latest
+    runs-on: large-sdk-runner
     needs: [build]
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.23"
           check-latest: true
-      - uses: actions/cache@v4
+      - name: test-sim-after-import
+        run: |
+          make test-sim-after-import
+
+  test-sim-deterministic:
+    runs-on: large-sdk-runner
+    needs: [build]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-runsim-binary
+          go-version: "1.23"
+          check-latest: true
+      - name: test-sim-nondeterminism-streaming
+        run: |
+          make test-sim-nondeterminism-streaming
+
+  test-sim-multi-seed-short:
+    runs-on: large-sdk-runner
+    needs: [build]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
       - name: test-sim-multi-seed-short
         run: |
           make test-sim-multi-seed-short
 
   sims-notify-success:
     needs:
-      [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
-    runs-on: ubuntu-latest
+      [
+        test-sim-multi-seed-short,
+        test-sim-after-import,
+        test-sim-import-export,
+        test-sim-deterministic,
+      ]
+    runs-on: large-sdk-runner
     if: ${{ success() }}
     steps:
       - name: Check out repository
@@ -114,8 +116,13 @@ jobs:
     permissions:
       contents: none
     needs:
-      [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
-    runs-on: ubuntu-latest
+      [
+        test-sim-multi-seed-short,
+        test-sim-after-import,
+        test-sim-import-export,
+        test-sim-deterministic,
+      ]
+    runs-on: large-sdk-runner
     if: ${{ failure() }}
     steps:
       - name: Notify Slack on failure

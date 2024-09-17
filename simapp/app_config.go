@@ -1,4 +1,4 @@
-//nolint:unused,nolintlint // ignore unused code linting and directive `//nolint:unused // ignore unused code linting` is unused for linter "unused"
+//nolint:unused,nolintlint // ignore unused code linting
 package simapp
 
 import (
@@ -31,14 +31,13 @@ import (
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/auth/tx/config" // import for side-effects
-	authtypes "cosmossdk.io/x/auth/types"
-	_ "cosmossdk.io/x/auth/vesting" // import for side-effects
-	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 	"cosmossdk.io/x/authz"
 	_ "cosmossdk.io/x/authz/module" // import for side-effects
 	_ "cosmossdk.io/x/bank"         // import for side-effects
 	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/bank/v2" // import for side-effects
+	bankv2types "cosmossdk.io/x/bank/v2/types"
+	bankmodulev2 "cosmossdk.io/x/bank/v2/types/module"
 	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
 	_ "cosmossdk.io/x/consensus" // import for side-effects
@@ -69,6 +68,11 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
+	_ "github.com/cosmos/cosmos-sdk/testutil/x/counter" // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"   // import for side-effects
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import for side-effects
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -79,6 +83,7 @@ var (
 		{Account: distrtypes.ModuleName},
 		{Account: pooltypes.ModuleName},
 		{Account: pooltypes.StreamAccount},
+		{Account: pooltypes.ProtocolPoolDistrAccount},
 		{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
 		{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
 		{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
@@ -117,6 +122,7 @@ var (
 					BeginBlockers: []string{
 						minttypes.ModuleName,
 						distrtypes.ModuleName,
+						pooltypes.ModuleName,
 						slashingtypes.ModuleName,
 						evidencetypes.ModuleName,
 						stakingtypes.ModuleName,
@@ -145,9 +151,11 @@ var (
 					// properly initialized with tokens from genesis accounts.
 					// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
 					InitGenesis: []string{
+						consensustypes.ModuleName,
 						accounts.ModuleName,
 						authtypes.ModuleName,
 						banktypes.ModuleName,
+						bankv2types.ModuleName,
 						distrtypes.ModuleName,
 						stakingtypes.ModuleName,
 						slashingtypes.ModuleName,
@@ -278,6 +286,10 @@ var (
 			{
 				Name:   epochstypes.ModuleName,
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
+			},
+			{
+				Name:   bankv2types.ModuleName,
+				Config: appconfig.WrapAny(&bankmodulev2.Module{}),
 			},
 		},
 	})

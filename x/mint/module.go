@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/mint/keeper"
 	"cosmossdk.io/x/mint/simulation"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	simsx "github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -25,14 +25,12 @@ import (
 const ConsensusVersion = 3
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasBeginBlocker       = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
@@ -44,28 +42,31 @@ type AppModule struct {
 	keeper     keeper.Keeper
 	authKeeper types.AccountKeeper
 
-	// inflationCalculator is used to calculate the inflation rate during BeginBlock.
-	// If inflationCalculator is nil, the default inflation calculation logic is used.
-	inflationCalculator types.InflationCalculationFn
+	// mintFn is used to mint new coins during BeginBlock. This function is in charge of
+	// minting new coins based on arbitrary logic, previously done through InflationCalculationFn.
+	// If mintFn is nil, the default minting logic is used.
+	mintFn types.MintFn
 }
 
 // NewAppModule creates a new AppModule object.
-// If the InflationCalculationFn argument is nil, then the SDK's default inflation function will be used.
+// If the mintFn argument is nil, then the default minting function will be used.
 func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
 	ak types.AccountKeeper,
-	ic types.InflationCalculationFn,
+	mintFn types.MintFn,
 ) AppModule {
-	if ic == nil {
-		ic = types.DefaultInflationCalculationFn
+	// If mintFn is nil, use the default minting function.
+	// This check also happens in ProvideModule when used with depinject.
+	if mintFn == nil {
+		mintFn = keeper.DefaultMintFn(types.DefaultInflationCalculationFn)
 	}
 
 	return AppModule{
-		cdc:                 cdc,
-		keeper:              keeper,
-		authKeeper:          ak,
-		inflationCalculator: ic,
+		cdc:        cdc,
+		keeper:     keeper,
+		authKeeper: ak,
+		mintFn:     mintFn,
 	}
 }
 
@@ -73,13 +74,14 @@ func NewAppModule(
 func (AppModule) IsAppModule() {}
 
 // Name returns the mint module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the mint module's types on the given LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterInterfaces registers the module's interface types
@@ -157,7 +159,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return am.keeper.BeginBlocker(ctx, am.inflationCalculator)
+	return am.keeper.BeginBlocker(ctx, am.mintFn)
 }
 
 // AppModuleSimulation functions
@@ -167,17 +169,12 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalMsgs returns msgs used for governance proposals for simulations.
-func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
-	return simulation.ProposalMsgs()
+// ProposalMsgsX returns msgs used for governance proposals for simulations.
+func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("msg_update_params", 100), simulation.MsgUpdateParamsFactory())
 }
 
 // RegisterStoreDecoder registers a decoder for mint module's types.
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
-}
-
-// WeightedOperations doesn't return any mint module operation.
-func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
-	return nil
 }

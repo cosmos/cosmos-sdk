@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 
 	errorsmod "cosmossdk.io/errors"
@@ -20,13 +20,14 @@ func (c *Consensus[T]) handleQueryP2P(path []string) (*abci.QueryResponse, error
 
 	cmd, typ, arg := path[1], path[2], path[3]
 	if cmd == "filter" {
-		if typ == "addr" {
-			if c.cfg.AddrPeerFilter != nil {
-				return c.cfg.AddrPeerFilter(arg)
+		switch typ {
+		case "addr":
+			if c.addrPeerFilter != nil {
+				return c.addrPeerFilter(arg)
 			}
-		} else if typ == "id" {
-			if c.cfg.IdPeerFilter != nil {
-				return c.cfg.IdPeerFilter(arg)
+		case "id":
+			if c.idPeerFilter != nil {
+				return c.idPeerFilter(arg)
 			}
 		}
 	}
@@ -61,7 +62,7 @@ func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *
 			return nil, errorsmod.Wrap(err, "failed to simulate tx")
 		}
 
-		bz, err := intoABCISimulationResponse(txResult, c.cfg.IndexEvents)
+		bz, err := intoABCISimulationResponse(txResult, c.indexedEvents)
 		if err != nil {
 			return nil, errorsmod.Wrap(err, "failed to marshal txResult")
 		}
@@ -75,7 +76,7 @@ func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *
 	case "version":
 		return &abci.QueryResponse{
 			Codespace: cometerrors.RootCodespace,
-			Value:     []byte(c.cfg.Version),
+			Value:     []byte(c.version),
 			Height:    req.Height,
 		}, nil
 	}

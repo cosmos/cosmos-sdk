@@ -22,9 +22,9 @@ recover from.
 * [State](#state)
 * [Events](#events)
 * [Client](#client)
-  * [CLI](#cli)
-  * [REST](#rest)
-  * [gRPC](#grpc)
+    * [CLI](#cli)
+    * [REST](#rest)
+    * [gRPC](#grpc)
 * [Resources](#resources)
 
 ## Concepts
@@ -93,6 +93,9 @@ This information is critical to ensure the `StoreUpgrades` happens smoothly at c
 expected upgrade. It eliminiates the chances for the new binary to execute `StoreUpgrades` multiple
 times every time on restart. Also if there are multiple upgrades planned on same height, the `Name`
 will ensure these `StoreUpgrades` takes place only in planned upgrade handler.
+
+**Note:** The `StoreLoader` helper function for StoreUpgrades in v2 is not part of the `x/upgrade` module; 
+instead, you can find it in the runtime v2 module.
 
 ### Proposal
 
@@ -246,8 +249,6 @@ module_versions:
   version: "1"
 - name: bank
   version: "2"
-- name: crisis
-  version: "1"
 - name: distribution
   version: "2"
 - name: evidence
@@ -411,10 +412,6 @@ Example Output:
       "version": "2"
     },
     {
-      "name": "crisis",
-      "version": "1"
-    },
-    {
       "name": "distribution",
       "version": "2"
     },
@@ -551,10 +548,6 @@ Example Output:
     {
       "name": "bank",
       "version": "2"
-    },
-    {
-      "name": "crisis",
-      "version": "1"
     },
     {
       "name": "distribution",

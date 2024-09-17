@@ -172,6 +172,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		if err := k.EventService.EventManager(ctx).EmitKV(
 			types.EventTypeTransfer,
 			event.NewAttribute(types.AttributeKeyRecipient, out.Address),
+			event.NewAttribute(types.AttributeKeySender, input.Address),
 			event.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
 		); err != nil {
 			return err

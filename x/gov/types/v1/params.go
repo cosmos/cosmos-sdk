@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/core/address"
+	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,24 +20,25 @@ const (
 
 // Default governance params
 var (
-	DefaultMinDepositTokens             = sdkmath.NewInt(10000000)
-	DefaultMinExpeditedDepositTokens    = DefaultMinDepositTokens.Mul(sdkmath.NewInt(DefaultMinExpeditedDepositTokensRatio))
-	DefaultQuorum                       = sdkmath.LegacyNewDecWithPrec(334, 3)
-	DefaultYesQuorum                    = sdkmath.LegacyNewDecWithPrec(0, 1)
-	DefaultExpeditedQuorum              = sdkmath.LegacyNewDecWithPrec(500, 3)
-	DefaultThreshold                    = sdkmath.LegacyNewDecWithPrec(5, 1)
-	DefaultExpeditedThreshold           = sdkmath.LegacyNewDecWithPrec(667, 3)
-	DefaultVetoThreshold                = sdkmath.LegacyNewDecWithPrec(334, 3)
-	DefaultMinInitialDepositRatio       = sdkmath.LegacyZeroDec()
-	DefaultProposalCancelRatio          = sdkmath.LegacyMustNewDecFromStr("0.5")
-	DefaultProposalCancelDestAddress    = ""
-	DefaultProposalCancelMaxPeriod      = sdkmath.LegacyMustNewDecFromStr("0.5")
-	DefaultBurnProposalPrevote          = false // set to false to replicate behavior of when this change was made (0.47)
-	DefaultBurnVoteQuorum               = false // set to false to  replicate behavior of when this change was made (0.47)
-	DefaultBurnVoteVeto                 = true  // set to true to replicate behavior of when this change was made (0.47)
-	DefaultMinDepositRatio              = sdkmath.LegacyMustNewDecFromStr("0.01")
-	DefaultOptimisticRejectedThreshold  = sdkmath.LegacyMustNewDecFromStr("0.1")
-	DefaultOptimisticAuthorizedAddreses = []string(nil)
+	DefaultMinDepositTokens                    = sdkmath.NewInt(10000000)
+	DefaultMinExpeditedDepositTokens           = DefaultMinDepositTokens.Mul(sdkmath.NewInt(DefaultMinExpeditedDepositTokensRatio))
+	DefaultQuorum                              = sdkmath.LegacyNewDecWithPrec(334, 3)
+	DefaultYesQuorum                           = sdkmath.LegacyNewDecWithPrec(0, 1)
+	DefaultExpeditedQuorum                     = sdkmath.LegacyNewDecWithPrec(500, 3)
+	DefaultThreshold                           = sdkmath.LegacyNewDecWithPrec(5, 1)
+	DefaultExpeditedThreshold                  = sdkmath.LegacyNewDecWithPrec(667, 3)
+	DefaultVetoThreshold                       = sdkmath.LegacyNewDecWithPrec(334, 3)
+	DefaultMinInitialDepositRatio              = sdkmath.LegacyZeroDec()
+	DefaultProposalCancelRatio                 = sdkmath.LegacyMustNewDecFromStr("0.5")
+	DefaultProposalCancelDestAddress           = ""
+	DefaultProposalCancelMaxPeriod             = sdkmath.LegacyMustNewDecFromStr("0.5")
+	DefaultBurnProposalPrevote                 = false // set to false to replicate behavior of when this change was made (0.47)
+	DefaultBurnVoteQuorum                      = false // set to false to  replicate behavior of when this change was made (0.47)
+	DefaultBurnVoteVeto                        = true  // set to true to replicate behavior of when this change was made (0.47)
+	DefaultMinDepositRatio                     = sdkmath.LegacyMustNewDecFromStr("0.01")
+	DefaultOptimisticRejectedThreshold         = sdkmath.LegacyMustNewDecFromStr("0.1")
+	DefaultOptimisticAuthorizedAddreses        = []string(nil)
+	DefaultProposalExecutionGas         uint64 = 10_000_000 // ten million
 )
 
 // NewParams creates a new Params instance with given values.
@@ -47,6 +49,7 @@ func NewParams(
 	burnProposalDeposit, burnVoteQuorum, burnVoteVeto bool,
 	minDepositRatio, optimisticRejectedThreshold string,
 	optimisticAuthorizedAddresses []string,
+	proposalExecutionGas uint64,
 ) Params {
 	return Params{
 		MinDeposit:                    minDeposit,
@@ -70,6 +73,7 @@ func NewParams(
 		MinDepositRatio:               minDepositRatio,
 		OptimisticRejectedThreshold:   optimisticRejectedThreshold,
 		OptimisticAuthorizedAddresses: optimisticAuthorizedAddresses,
+		ProposalExecutionGas:          proposalExecutionGas,
 	}
 }
 
@@ -97,6 +101,7 @@ func DefaultParams() Params {
 		DefaultMinDepositRatio.String(),
 		DefaultOptimisticRejectedThreshold.String(),
 		DefaultOptimisticAuthorizedAddreses,
+		DefaultProposalExecutionGas,
 	)
 }
 
@@ -266,6 +271,10 @@ func (p Params) ValidateBasic(addressCodec address.Codec) error {
 		}
 	}
 
+	if p.ProposalExecutionGas == 0 {
+		return fmt.Errorf("proposal execution gas must be positive: %d", p.ProposalExecutionGas)
+	}
+
 	return nil
 }
 
@@ -323,4 +332,105 @@ func (p MessageBasedParams) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+func (p MessageBasedParams) Equal(params *MessageBasedParams) (bool, error) {
+	if p.VotingPeriod != nil && params.VotingPeriod != nil {
+		if p.VotingPeriod.Seconds() != params.VotingPeriod.Seconds() {
+			return false, nil
+		}
+	} else if p.VotingPeriod == nil && params.VotingPeriod != nil ||
+		p.VotingPeriod != nil && params.VotingPeriod == nil {
+		return false, nil
+	}
+
+	quorum1, err := sdkmath.LegacyNewDecFromStr(p.Quorum)
+	if err != nil {
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid quorum string: %w", err)
+		}
+
+		quorum1 = sdkmath.LegacyZeroDec()
+	}
+
+	quorum2, err := sdkmath.LegacyNewDecFromStr(params.Quorum)
+	if err != nil {
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid compared quorum string: %w", err)
+		}
+
+		quorum2 = sdkmath.LegacyZeroDec()
+	}
+
+	if !quorum1.Equal(quorum2) {
+		return false, nil
+	}
+
+	yesQuorum1, err := sdkmath.LegacyNewDecFromStr(p.YesQuorum)
+	if err != nil {
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid yes quorum string: %w", err)
+		}
+
+		yesQuorum1 = sdkmath.LegacyZeroDec()
+	}
+
+	yesQuorum2, err := sdkmath.LegacyNewDecFromStr(params.YesQuorum)
+	if err != nil {
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid compared yes quorum string: %w", err)
+		}
+
+		yesQuorum2 = sdkmath.LegacyZeroDec()
+	}
+
+	if !yesQuorum1.Equal(yesQuorum2) {
+		return false, nil
+	}
+
+	threshold1, err := sdkmath.LegacyNewDecFromStr(p.Threshold)
+	if err != nil {
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid vote threshold string: %w", err)
+		}
+
+		threshold1 = sdkmath.LegacyZeroDec()
+	}
+
+	threshold2, err := sdkmath.LegacyNewDecFromStr(params.Threshold)
+	if err != nil {
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid compared vote threshold string: %w", err)
+		}
+
+		threshold2 = sdkmath.LegacyZeroDec()
+	}
+
+	if !threshold1.Equal(threshold2) {
+		return false, nil
+	}
+
+	vetoThreshold1, err := sdkmath.LegacyNewDecFromStr(p.VetoThreshold)
+	if err != nil {
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid veto threshold string: %w", err)
+		}
+
+		vetoThreshold1 = sdkmath.LegacyZeroDec()
+	}
+
+	vetoThreshold2, err := sdkmath.LegacyNewDecFromStr(params.VetoThreshold)
+	if err != nil {
+		if !errors.IsOf(err, sdkmath.ErrLegacyEmptyDecimalStr) {
+			return false, fmt.Errorf("invalid compared veto threshold string: %w", err)
+		}
+
+		vetoThreshold2 = sdkmath.LegacyZeroDec()
+	}
+
+	if !vetoThreshold1.Equal(vetoThreshold2) {
+		return false, nil
+	}
+
+	return true, nil
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -44,11 +45,11 @@ type TestnetInitializer interface {
 type SystemUnderTest struct {
 	execBinary         string
 	blockListener      *EventListener
-	currentHeight      int64
+	currentHeight      atomic.Int64
 	outputDir          string
 	testnetInitializer TestnetInitializer
 
-	// blockTime is the the expected/desired block time. This is not going to be very precise
+	// blockTime is the expected/desired block time. This is not going to be very precise
 	// since Tendermint consensus does not allow specifying it directly.
 	blockTime         time.Duration
 	rpcAddr           string
@@ -154,7 +155,7 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 	t.Helper()
 	s.Log("Start chain\n")
 	s.ChainStarted = true
-	s.startNodesAsync(t, append([]string{"start", "--trace", "--log_level=info"}, xargs...)...)
+	s.startNodesAsync(t, append([]string{"start", "--log_level=info", "--log_no_color"}, xargs...)...)
 
 	s.AwaitNodeUp(t, s.rpcAddr)
 
@@ -164,7 +165,7 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 		s.blockListener.Subscribe("tm.event='NewBlock'", func(e ctypes.ResultEvent) (more bool) {
 			newBlock, ok := e.Data.(tmtypes.EventDataNewBlock)
 			require.True(t, ok, "unexpected type %T", e.Data)
-			atomic.StoreInt64(&s.currentHeight, newBlock.Block.Height)
+			s.currentHeight.Store(newBlock.Block.Height)
 			return true
 		}),
 	)
@@ -246,7 +247,7 @@ func (s *SystemUnderTest) AwaitUpgradeInfo(t *testing.T) {
 			case err == nil:
 				found = true
 			case !os.IsNotExist(err):
-				t.Fatalf(err.Error())
+				t.Fatal(err.Error())
 			}
 		})
 		time.Sleep(s.blockTime / 2)
@@ -332,7 +333,7 @@ func (s *SystemUnderTest) StopChain() {
 
 func (s *SystemUnderTest) withEachPid(cb func(p *os.Process)) {
 	s.pidsLock.RLock()
-	pids := s.pids
+	pids := maps.Keys(s.pids)
 	s.pidsLock.RUnlock()
 
 	for pid := range pids {
@@ -362,12 +363,12 @@ func (s *SystemUnderTest) PrintBuffer() {
 // AwaitBlockHeight blocks until te target height is reached. An optional timeout parameter can be passed to abort early
 func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, timeout ...time.Duration) {
 	t.Helper()
-	require.Greater(t, targetHeight, s.currentHeight)
+	require.Greater(t, targetHeight, s.currentHeight.Load())
 	var maxWaitTime time.Duration
 	if len(timeout) != 0 {
 		maxWaitTime = timeout[0]
 	} else {
-		maxWaitTime = time.Duration(targetHeight-s.currentHeight+3) * s.blockTime
+		maxWaitTime = time.Duration(targetHeight-s.currentHeight.Load()+3) * s.blockTime
 	}
 	abort := time.NewTimer(maxWaitTime).C
 	for {
@@ -393,10 +394,10 @@ func (s *SystemUnderTest) AwaitNextBlock(t *testing.T, timeout ...time.Duration)
 	}
 	done := make(chan int64)
 	go func() {
-		for start, current := atomic.LoadInt64(&s.currentHeight), atomic.LoadInt64(&s.currentHeight); current == start; current = atomic.LoadInt64(&s.currentHeight) {
+		for start, current := s.currentHeight.Load(), s.currentHeight.Load(); current == start; current = s.currentHeight.Load() {
 			time.Sleep(s.blockTime)
 		}
-		done <- atomic.LoadInt64(&s.currentHeight)
+		done <- s.currentHeight.Load()
 		close(done)
 	}()
 	select {
@@ -434,7 +435,7 @@ func (s *SystemUnderTest) ResetChain(t *testing.T) {
 
 	// reset all validator nodes
 	s.ForEachNodeExecAndWait(t, []string{"comet", "unsafe-reset-all"})
-	s.currentHeight = 0
+	s.currentHeight.Store(0)
 	s.dirty = false
 }
 
@@ -465,7 +466,7 @@ func (s *SystemUnderTest) ModifyGenesisJSON(t *testing.T, mutators ...GenesisMut
 // modify json without enforcing a reset
 func (s *SystemUnderTest) modifyGenesisJSON(t *testing.T, mutators ...GenesisMutator) {
 	t.Helper()
-	require.Empty(t, s.currentHeight, "forced chain reset required")
+	require.Empty(t, s.currentHeight.Load(), "forced chain reset required")
 	current, err := os.ReadFile(filepath.Join(WorkDir, s.nodePath(0), "config", "genesis.json"))
 	require.NoError(t, err)
 	for _, m := range mutators {
@@ -528,7 +529,7 @@ func (s *SystemUnderTest) ForEachNodeExecAndWait(t *testing.T, cmds ...[]string)
 		for j, xargs := range cmds {
 			xargs = append(xargs, "--home", home)
 			s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(xargs, " "))
-			out := runShellCmd(t, s.execBinary, xargs...)
+			out := MustRunShellCmd(t, s.execBinary, xargs...)
 			s.Logf("Result: %s\n", out)
 			result[i][j] = out
 		}
@@ -536,20 +537,20 @@ func (s *SystemUnderTest) ForEachNodeExecAndWait(t *testing.T, cmds ...[]string)
 	return result
 }
 
-func runShellCmd(t *testing.T, cmd string, args ...string) string {
+func MustRunShellCmd(t *testing.T, cmd string, args ...string) string {
 	t.Helper()
-	out, err := runShellCmdX(cmd, args...)
+	out, err := RunShellCmd(cmd, args...)
 	require.NoError(t, err)
 	return out
 }
 
-func runShellCmdX(cmd string, args ...string) (string, error) {
+func RunShellCmd(cmd string, args ...string) (string, error) {
 	c := exec.Command( //nolint:gosec // used by tests only
 		locateExecutable(cmd),
 		args...,
 	)
 	c.Dir = WorkDir
-	out, err := c.CombinedOutput()
+	out, err := c.Output()
 	if err != nil {
 		return string(out), fmt.Errorf("run `%s %s`: out: %s: %w", cmd, strings.Join(args, " "), string(out), err)
 	}
@@ -560,7 +561,7 @@ func runShellCmdX(cmd string, args ...string) (string, error) {
 func (s *SystemUnderTest) startNodesAsync(t *testing.T, xargs ...string) {
 	t.Helper()
 	s.withEachNodeHome(func(i int, home string) {
-		args := append(xargs, "--home", home)
+		args := append(xargs, "--home="+home)
 		s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))
 		cmd := exec.Command( //nolint:gosec // used by tests only
 			locateExecutable(s.execBinary),
@@ -569,22 +570,25 @@ func (s *SystemUnderTest) startNodesAsync(t *testing.T, xargs ...string) {
 		cmd.Dir = WorkDir
 		s.watchLogs(i, cmd)
 		require.NoError(t, cmd.Start(), "node %d", i)
-
-		pid := cmd.Process.Pid
-		s.pidsLock.Lock()
-		s.pids[pid] = struct{}{}
-		s.pidsLock.Unlock()
-		s.Logf("Node started: %d\n", pid)
+		s.Logf("Node started: %d\n", cmd.Process.Pid)
 
 		// cleanup when stopped
-		go func(pid int) {
-			_ = cmd.Wait() // blocks until shutdown
-			s.pidsLock.Lock()
-			delete(s.pids, pid)
-			s.pidsLock.Unlock()
-			s.Logf("Node stopped: %d\n", pid)
-		}(pid)
+		s.awaitProcessCleanup(cmd)
 	})
+}
+
+func (s *SystemUnderTest) awaitProcessCleanup(cmd *exec.Cmd) {
+	pid := cmd.Process.Pid
+	s.pidsLock.Lock()
+	s.pids[pid] = struct{}{}
+	s.pidsLock.Unlock()
+	go func() {
+		_ = cmd.Wait() // blocks until shutdown
+		s.Logf("Node stopped: %d\n", pid)
+		s.pidsLock.Lock()
+		delete(s.pids, pid)
+		s.pidsLock.Unlock()
+	}()
 }
 
 func (s *SystemUnderTest) withEachNodeHome(cb func(i int, home string)) {
@@ -635,9 +639,12 @@ func AllNodes(t *testing.T, s *SystemUnderTest) []Node {
 	t.Helper()
 	result := make([]Node, s.nodesCount)
 	outs := s.ForEachNodeExecAndWait(t, []string{"comet", "show-node-id"})
-	ip, err := server.ExternalIP()
-	require.NoError(t, err)
-
+	ip := "127.0.0.1"
+	if false { // is there still a use case for external ip?
+		var err error
+		ip, err = server.ExternalIP()
+		require.NoError(t, err)
+	}
 	for i, out := range outs {
 		result[i] = Node{
 			ID:      strings.TrimSpace(out[0]),
@@ -665,7 +672,7 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 
 	// prepare new node
 	moniker := fmt.Sprintf("node%d", nodeNumber)
-	args := []string{"init", moniker, "--home", nodePath, "--overwrite"}
+	args := []string{"init", moniker, "--home=" + nodePath, "--overwrite"}
 	s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))
 	cmd := exec.Command( //nolint:gosec // used by tests only
 		locateExecutable(s.execBinary),
@@ -676,12 +683,15 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 	require.NoError(t, cmd.Run(), "failed to start node with id %d", nodeNumber)
 	require.NoError(t, saveGenesis(nodePath, []byte(s.ReadGenesisJSON(t))))
 
-	// quick hack: copy config and overwrite by start params
-	configFile := filepath.Join(WorkDir, nodePath, "config", "config.toml")
-	_ = os.Remove(configFile)
-	_, err := copyFile(filepath.Join(WorkDir, s.nodePath(0), "config", "config.toml"), configFile)
-	require.NoError(t, err)
+	configPath := filepath.Join(WorkDir, nodePath, "config")
 
+	// quick hack: copy config and overwrite by start params
+	for _, tomlFile := range []string{"config.toml", "app.toml"} {
+		configFile := filepath.Join(configPath, tomlFile)
+		_ = os.Remove(configFile)
+		_, err := copyFile(filepath.Join(WorkDir, s.nodePath(0), "config", tomlFile), configFile)
+		require.NoError(t, err)
+	}
 	// start node
 	allNodes := s.AllNodes(t)
 	node := allNodes[len(allNodes)-1]
@@ -698,9 +708,10 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 		fmt.Sprintf("--p2p.laddr=tcp://localhost:%d", node.P2PPort),
 		fmt.Sprintf("--rpc.laddr=tcp://localhost:%d", node.RPCPort),
 		fmt.Sprintf("--grpc.address=localhost:%d", 9090+nodeNumber),
-		fmt.Sprintf("--grpc-web.address=localhost:%d", 8090+nodeNumber),
+		"--p2p.pex=false",
 		"--moniker=" + moniker,
 		"--log_level=info",
+		"--log_no_color",
 		"--home", nodePath,
 	}
 	s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))
@@ -711,6 +722,7 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 	cmd.Dir = WorkDir
 	s.watchLogs(nodeNumber, cmd)
 	require.NoError(t, cmd.Start(), "node %d", nodeNumber)
+	s.awaitProcessCleanup(cmd)
 	return node
 }
 
@@ -725,6 +737,10 @@ func (s *SystemUnderTest) anyNodeRunning() bool {
 	s.pidsLock.RLock()
 	defer s.pidsLock.RUnlock()
 	return len(s.pids) != 0
+}
+
+func (s *SystemUnderTest) CurrentHeight() int64 {
+	return s.currentHeight.Load()
 }
 
 type Node struct {

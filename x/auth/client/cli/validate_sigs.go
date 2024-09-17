@@ -2,13 +2,11 @@ package cli
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	authclient "cosmossdk.io/x/auth/client"
-	authsigning "cosmossdk.io/x/auth/signing"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -16,11 +14,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func GetValidateSignaturesCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "validate-signatures [file]",
+		Use:   "validate-signatures <file>",
 		Short: "validate transactions signatures",
 		Long: `Print the addresses that must sign the transaction, those who have already
 signed it, and make sure that signatures are in the correct order.
@@ -52,7 +52,7 @@ func makeValidateSignaturesCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		if !printAndValidateSigs(cmd, clientCtx, txBldr.ChainID(), stdTx, clientCtx.Offline) {
-			return fmt.Errorf("signatures validation failed")
+			return errors.New("signatures validation failed")
 		}
 
 		return nil

@@ -64,7 +64,7 @@ func (s *GRPCQueryTestSuite) TestQueryParamsGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequest(tc.url)
 		s.Run(tc.name, func() {
 			s.Require().NoError(err)
@@ -99,7 +99,7 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorDistributionInfoGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequest(tc.url)
 		s.Run(tc.name, func() {
 			if tc.expErr {
@@ -116,7 +116,7 @@ func (s *GRPCQueryTestSuite) TestQueryOutstandingRewardsGRPC() {
 	val := s.network.GetValidators()[0]
 	baseURL := val.GetAPIAddress()
 
-	rewards, err := sdk.ParseDecCoins("19.6stake")
+	rewards, err := sdk.ParseDecCoins("46.06stake")
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -152,7 +152,7 @@ func (s *GRPCQueryTestSuite) TestQueryOutstandingRewardsGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 		s.Run(tc.name, func() {
 			if tc.expErr {
@@ -170,7 +170,7 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorCommissionGRPC() {
 	val := s.network.GetValidators()[0]
 	baseURL := val.GetAPIAddress()
 
-	commission, err := sdk.ParseDecCoins("9.8stake")
+	commission, err := sdk.ParseDecCoins("23.03stake")
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -206,7 +206,7 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorCommissionGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 		s.Run(tc.name, func() {
 			if tc.expErr {
@@ -264,7 +264,7 @@ func (s *GRPCQueryTestSuite) TestQuerySlashesGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequest(tc.url)
 
 		s.Run(tc.name, func() {
@@ -283,7 +283,7 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
 	val := s.network.GetValidators()[0]
 	baseURL := val.GetAPIAddress()
 
-	rewards, err := sdk.ParseDecCoins("9.8stake")
+	rewards, err := sdk.ParseDecCoins("23.03stake")
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -340,7 +340,7 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequestWithHeaders(tc.url, tc.headers)
 
 		s.Run(tc.name, func() {
@@ -392,7 +392,7 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorValidatorsGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequest(tc.url)
 
 		s.Run(tc.name, func() {
@@ -444,7 +444,7 @@ func (s *GRPCQueryTestSuite) TestQueryWithdrawAddressGRPC() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		resp, err := sdktestutil.GetRequest(tc.url)
 
 		s.Run(tc.name, func() {

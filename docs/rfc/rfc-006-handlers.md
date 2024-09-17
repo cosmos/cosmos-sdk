@@ -23,8 +23,8 @@ the use of [gRPC](https://github.com/TinyGo-org/TinyGo/issues/2814) within modul
 This has led us to look at a design which would allow the usage of TinyGo and
 other technologies.
 
-We looked at TinyGo for our first target in order to compile down down to a 32 bit environment which could be used with
-things like [Risc-0](https://www.risczero.com/), [Fluent](https://fluentlabs.xyz/) and other technologies. When speaking with the teams behind these technologies
+We looked at TinyGo for our first target in order to compile down to a 32 bit environment which could be used with
+things like [Risc-0](https://www.risczero.com/), [Fluent](https://fluent.xyz/) and other technologies. When speaking with the teams behind these technologies
 we found that they were interested in using the Cosmos SDK but were unable to due to being unable to use TinyGo or the
 Cosmos SDK go code in a 32 bit environment.
 
@@ -79,11 +79,11 @@ import (
 type PreMsgHandlerRouter interface {
 	// RegisterGlobalPreMsgHandler will register a pre msg handler that hooks before any message executes.
 	// Handler will be called before ANY message executes.
-	RegisterGlobalPreMsgHandler(handler func(ctx context.Context, msg protoiface.MessageV1) error)
+	RegisterGlobalPreMsgHandler(handler func(ctx context.Context, msg transaction.Msg) error)
 	// RegisterPreMsgHandler will register a pre msg handler that hooks before the provided message
 	// with the given message name executes. Handler will be called before the message is executed
 	// by the module.
-	RegisterPreMsgHandler(msgName string, handler func(ctx context.Context, msg protoiface.MessageV1) error)
+	RegisterPreMsgHandler(msgName string, handler func(ctx context.Context, msg transaction.Msg) error)
 }
 
 type HasPreMsgHandler interface {
@@ -105,11 +105,11 @@ import (
 type PostMsgHandlerRouter interface {
 	// RegisterGlobalPostMsgHandler will register a post msg handler that hooks after any message executes.
 	// Handler will be called after ANY message executes, alongside the response.
-	RegisterGlobalPostMsgHandler(handler func(ctx context.Context, msg, msgResp protoiface.MessageV1) error)
+	RegisterGlobalPostMsgHandler(handler func(ctx context.Context, msg, msgResp transaction.Msg) error)
 	// RegisterPostMsgHandler will register a pre msg handler that hooks after the provided message
 	// with the given message name executes. Handler will be called after the message is executed
 	// by the module, alongside the response returned by the module.
-	RegisterPostMsgHandler(msgName string, handler func(ctx context.Context, msg, msgResp protoiface.MessageV1) error)
+	RegisterPostMsgHandler(msgName string, handler func(ctx context.Context, msg, msgResp transaction.Msg) error)
 }
 
 type HasPostMsgHandler interface {
@@ -142,7 +142,7 @@ import (
 )
 
 type MsgHandlerRouter interface {
-	RegisterMsgHandler(msgName string, handler func(ctx context.Context, msg protoiface.MessageV1) (msgResp protoiface.MessageV1, err error))
+	RegisterMsgHandler(msgName string, handler func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error))
 }
 
 type HasMsgHandler interface {
@@ -150,7 +150,7 @@ type HasMsgHandler interface {
 }
 
 // RegisterMsgHandler is a helper function to retain type safety when creating handlers, so we do not need to cast messages.
-func RegisterMsgHandler[Req, Resp protoiface.MessageV1](router MsgHandlerRouter, handler func(ctx context.Context, req Req) (resp Resp, err error)) {
+func RegisterMsgHandler[Req, Resp transaction.Msg](router MsgHandlerRouter, handler func(ctx context.Context, req Req) (resp Resp, err error)) {
 	// impl detail
 }
 ```
@@ -186,7 +186,7 @@ import (
 )
 
 type QueryHandlerRouter interface {
-	RegisterQueryHandler(msgName string, handler func(ctx context.Context, req protoiface.MessageV1) (resp protoiface.MessageV1, err error))
+	RegisterQueryHandler(msgName string, handler func(ctx context.Context, req transaction.Msg) (resp transaction.Msg, err error))
 }
 
 type HasQueryHandler interface {
@@ -194,7 +194,7 @@ type HasQueryHandler interface {
 }
 
 // RegisterQueryHandler is a helper function to retain type safety when creating handlers, so we do not need to cast messages.
-func RegisterQueryHandler[Req, Resp protoiface.MessageV1](router QueryHandlerRouter, handler func(ctx context.Context, req Req) (resp Resp, err error)) {
+func RegisterQueryHandler[Req, Resp transaction.Msg](router QueryHandlerRouter, handler func(ctx context.Context, req Req) (resp Resp, err error)) {
 	// impl detail
 }
 

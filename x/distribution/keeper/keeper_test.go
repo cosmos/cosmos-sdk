@@ -8,10 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/distribution/keeper"
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
@@ -24,13 +23,13 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type dep struct {
 	bankKeeper    *distrtestutil.MockBankKeeper
 	stakingKeeper *distrtestutil.MockStakingKeeper
 	accountKeeper *distrtestutil.MockAccountKeeper
-	poolKeeper    *distrtestutil.MockPoolKeeper
 }
 
 func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, dep) {
@@ -47,7 +46,6 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
-	poolKeeper := distrtestutil.NewMockPoolKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
@@ -58,7 +56,7 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 	bankKeeper.EXPECT().BlockedAddr(withdrawAddr).Return(false).AnyTimes()
 	bankKeeper.EXPECT().BlockedAddr(distrAcc.GetAddress()).Return(true).AnyTimes()
 
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
@@ -69,7 +67,7 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
-		poolKeeper,
+		testCometService,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -77,7 +75,7 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 	params := types.DefaultParams()
 	require.NoError(t, distrKeeper.Params.Set(ctx, params))
 
-	return ctx, addrs, distrKeeper, dep{bankKeeper, stakingKeeper, accountKeeper, poolKeeper}
+	return ctx, addrs, distrKeeper, dep{bankKeeper, stakingKeeper, accountKeeper}
 }
 
 func TestSetWithdrawAddr(t *testing.T) {

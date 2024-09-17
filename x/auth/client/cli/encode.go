@@ -5,17 +5,16 @@ import (
 
 	"github.com/spf13/cobra"
 
-	authclient "cosmossdk.io/x/auth/client"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 // GetEncodeCommand returns the encode command to take a JSONified transaction and turn it into
 // Amino-serialized bytes
 func GetEncodeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "encode [file]",
+		Use:   "encode <file>",
 		Short: "Encode transactions generated offline",
 		Long: `Encode transactions created with the --generate-only flag or signed with the sign command.
 Read a transaction from <file>, serialize it to the Protobuf wire protocol, and output it as base64.

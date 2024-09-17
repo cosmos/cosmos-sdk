@@ -37,19 +37,6 @@ func (k Keeper) InitGenesis(ctx context.Context, data types.GenesisState) error 
 		}
 	}
 
-	var previousProposer sdk.ConsAddress
-	if data.PreviousProposer != "" {
-		var err error
-		previousProposer, err = k.stakingKeeper.ConsensusAddressCodec().StringToBytes(data.PreviousProposer)
-		if err != nil {
-			return err
-		}
-	}
-
-	if err := k.PreviousProposer.Set(ctx, previousProposer); err != nil {
-		return err
-	}
-
 	for _, rew := range data.OutstandingRewards {
 		valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(rew.ValidatorAddress)
 		if err != nil {
@@ -177,11 +164,6 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 		return nil, err
 	}
 
-	pp, err := k.PreviousProposer.Get(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	outstanding := make([]types.ValidatorOutstandingRewardsRecord, 0)
 
 	err = k.ValidatorOutstandingRewards.Walk(ctx, nil, func(addr sdk.ValAddress, rewards types.ValidatorOutstandingRewards) (stop bool, err error) {
@@ -303,9 +285,5 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 		return nil, err
 	}
 
-	ppAddr, err := k.stakingKeeper.ConsensusAddressCodec().BytesToString(pp)
-	if err != nil {
-		return nil, err
-	}
-	return types.NewGenesisState(params, feePool, dwi, ppAddr, outstanding, acc, his, cur, dels, slashes), nil
+	return types.NewGenesisState(params, feePool, dwi, outstanding, acc, his, cur, dels, slashes), nil
 }

@@ -290,7 +290,7 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 
 		if keyType == keyring.TypeLedger && clientCtx.SignModeStr == flags.SignModeTextual {
 			if !slices.Contains(clientCtx.TxConfig.SignModeHandler().SupportedModes(), signingv1beta1.SignMode_SIGN_MODE_TEXTUAL) {
-				return clientCtx, fmt.Errorf("SIGN_MODE_TEXTUAL is not available")
+				return clientCtx, errors.New("SIGN_MODE_TEXTUAL is not available")
 			}
 		}
 
@@ -379,7 +379,7 @@ func SetCmdClientContext(cmd *cobra.Command, clientCtx Context) error {
 }
 
 func GetViperFromCmd(cmd *cobra.Command) *viper.Viper {
-	value := cmd.Context().Value(corectx.ViperContextKey{})
+	value := cmd.Context().Value(corectx.ViperContextKey)
 	v, ok := value.(*viper.Viper)
 	if !ok {
 		return viper.New()
@@ -388,7 +388,7 @@ func GetViperFromCmd(cmd *cobra.Command) *viper.Viper {
 }
 
 func GetConfigFromCmd(cmd *cobra.Command) *cmtcfg.Config {
-	v := cmd.Context().Value(corectx.ViperContextKey{})
+	v := cmd.Context().Value(corectx.ViperContextKey)
 	viper, ok := v.(*viper.Viper)
 	if !ok {
 		return cmtcfg.DefaultConfig()
@@ -397,7 +397,7 @@ func GetConfigFromCmd(cmd *cobra.Command) *cmtcfg.Config {
 }
 
 func GetLoggerFromCmd(cmd *cobra.Command) log.Logger {
-	v := cmd.Context().Value(corectx.LoggerContextKey{})
+	v := cmd.Context().Value(corectx.LoggerContextKey)
 	logger, ok := v.(log.Logger)
 	if !ok {
 		return log.NewLogger(cmd.OutOrStdout())

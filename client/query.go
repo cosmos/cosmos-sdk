@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

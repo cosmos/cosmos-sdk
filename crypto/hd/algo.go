@@ -19,6 +19,9 @@ const (
 	// Ed25519Type represents the Ed25519Type signature system.
 	// It is currently not supported for end-user keys (wallets/ledgers).
 	Ed25519Type = PubKeyType("ed25519")
+	// Bls12_381Type represents the Bls12_381Type signature system.
+	// It is currently not supported for end-user keys (wallets/ledgers).
+	Bls12_381Type = PubKeyType("bls12_381")
 	// Sr25519Type represents the Sr25519Type signature system.
 	Sr25519Type = PubKeyType("sr25519")
 )

@@ -32,6 +32,7 @@ type queryServer struct {
 func NewQueryServer(clientCtx client.Context, cfg config.Config) ServiceServer {
 	return queryServer{
 		clientCtx: clientCtx,
+		cfg:       cfg,
 	}
 }
 

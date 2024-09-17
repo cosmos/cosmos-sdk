@@ -13,6 +13,9 @@ type ContextAwareCometInfoService struct{}
 
 // CometInfo implements comet.Service.
 func (c *ContextAwareCometInfoService) CometInfo(ctx context.Context) comet.Info {
-	ci := ctx.Value(corecontext.CometInfoKey).(comet.Info)
+	ci, ok := ctx.Value(corecontext.CometInfoKey).(comet.Info)
+	if !ok {
+		panic("comet.Info not found in context")
+	}
 	return ci
 }

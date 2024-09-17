@@ -11,7 +11,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	eviclient "cosmossdk.io/x/evidence/client"
 	"cosmossdk.io/x/evidence/client/cli"
@@ -26,7 +25,6 @@ import (
 )
 
 var (
-	_ module.HasName             = AppModule{}
 	_ module.HasAminoCodec       = AppModule{}
 	_ module.HasGRPCGateway      = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
@@ -61,13 +59,14 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, cometService comet.Serv
 func (am AppModule) IsAppModule() {}
 
 // Name returns the evidence module's name.
+// Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the evidence module's types to the LegacyAmino codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	types.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	types.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the evidence module.
@@ -152,9 +151,4 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // RegisterStoreDecoder registers a decoder for evidence module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
-}
-
-// WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return nil
 }

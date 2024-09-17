@@ -44,7 +44,7 @@ func TestStdSignBytes(t *testing.T) {
 		Amount:   []*basev1beta1.Coin{{Denom: "atom", Amount: "150"}},
 		GasLimit: 100000,
 	}
-	msgStr := fmt.Sprintf(`{"type":"testpb/TestMsg","value":{"signers":["%s"]}}`, addr)
+	msgStr := fmt.Sprintf(`{"type":"testpb/TestMsg","value":{"decField":"0","signers":["%s"]}}`, addr)
 	tests := []struct {
 		name string
 		args args
@@ -90,7 +90,6 @@ func TestStdSignBytes(t *testing.T) {
 		FileResolver: proto.HybridResolver,
 	})
 	for i, tc := range tests {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			anyMsgs := make([]*anypb.Any, len(tc.args.msgs))
 			for j, msg := range tc.args.msgs {

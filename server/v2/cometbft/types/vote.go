@@ -3,7 +3,7 @@ package types
 import (
 	"context"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 )
 
 // VoteExtensionsHandler defines how to implement vote extension handlers

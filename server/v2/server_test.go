@@ -7,20 +7,18 @@ import (
 	"testing"
 	"time"
 
-	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
 
+	coreserver "cosmossdk.io/core/server"
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/store"
 )
-
-type mockGRPCService struct {
-	grpc.GRPCService
-}
-
-func (m *mockGRPCService) RegisterGRPCServer(gogogrpc.Server) {}
 
 type mockInterfaceRegistry struct{}
 
@@ -33,84 +31,76 @@ func (*mockInterfaceRegistry) ListImplementations(ifaceTypeURL string) []string 
 }
 func (*mockInterfaceRegistry) ListAllInterfaces() []string { panic("not implemented") }
 
-// TODO split this test into multiple tests
-// test read config
-// test write config
-// test server configs
-// test start empty
-// test start config exists
-// test stop
+type mockApp[T transaction.Tx] struct {
+	serverv2.AppI[T]
+}
+
+func (*mockApp[T]) GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message {
+	return map[string]func() gogoproto.Message{}
+}
+
+func (*mockApp[T]) GetAppManager() *appmanager.AppManager[T] {
+	return nil
+}
+
+func (*mockApp[T]) InterfaceRegistry() coreserver.InterfaceRegistry {
+	return &mockInterfaceRegistry{}
+}
+
 func TestServer(t *testing.T) {
 	currentDir, err := os.Getwd()
-	if err != nil {
-		t.Log(err)
-		t.Fail()
-	}
-	configPath := filepath.Join(currentDir, "testdata", "app.toml")
+	require.NoError(t, err)
+	configPath := filepath.Join(currentDir, "testdata")
 
 	v, err := serverv2.ReadConfig(configPath)
 	if err != nil {
 		v = viper.New()
 	}
+	cfg := v.AllSettings()
 
 	logger := log.NewLogger(os.Stdout)
-	grpcServer, err := grpc.New(logger, v, &mockInterfaceRegistry{}, &mockGRPCService{})
-	if err != nil {
-		t.Log(err)
-		t.Fail()
-	}
+	grpcServer := grpc.New[transaction.Tx]()
+	err = grpcServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
+	require.NoError(t, err)
+
+	storeServer := store.New[transaction.Tx](nil /* nil appCreator as not using CLI commands */)
+	err = storeServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
+	require.NoError(t, err)
 
 	mockServer := &mockServer{name: "mock-server-1", ch: make(chan string, 100)}
 
 	server := serverv2.NewServer(
 		logger,
+		serverv2.DefaultServerConfig(),
 		grpcServer,
+		storeServer,
 		mockServer,
 	)
 
 	serverCfgs := server.Configs()
-	if serverCfgs[grpcServer.Name()].(*grpc.Config).Address != grpc.DefaultConfig().Address {
-		t.Logf("config is not equal: %v", serverCfgs[grpcServer.Name()])
-		t.Fail()
-	}
-	if serverCfgs[mockServer.Name()].(*mockServerConfig).MockFieldOne != MockServerDefaultConfig().MockFieldOne {
-		t.Logf("config is not equal: %v", serverCfgs[mockServer.Name()])
-		t.Fail()
-	}
+	require.Equal(t, serverCfgs[grpcServer.Name()].(*grpc.Config).Address, grpc.DefaultConfig().Address)
+	require.Equal(t, serverCfgs[mockServer.Name()].(*mockServerConfig).MockFieldOne, MockServerDefaultConfig().MockFieldOne)
 
 	// write config
-	if err := server.WriteConfig(configPath); err != nil {
-		t.Log(err)
-		t.Fail()
-	}
+	err = server.WriteConfig(configPath)
+	require.NoError(t, err)
 
 	v, err = serverv2.ReadConfig(configPath)
-	if err != nil {
-		t.Log(err) // config should be created by WriteConfig
-		t.FailNow()
-	}
-	if v.GetString(grpcServer.Name()+".address") != grpc.DefaultConfig().Address {
-		t.Logf("config is not equal: %v", v)
-		t.Fail()
-	}
+	require.NoError(t, err)
+
+	require.Equal(t, v.GetString(grpcServer.Name()+".address"), grpc.DefaultConfig().Address)
 
 	// start empty
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, serverv2.ServerContextKey, serverv2.Config{StartBlock: true})
-	ctx, cancelFn := context.WithCancel(ctx)
+	ctx, cancelFn := context.WithCancel(context.TODO())
 	go func() {
 		// wait 5sec and cancel context
 		<-time.After(5 * time.Second)
 		cancelFn()
 
-		if err := server.Stop(ctx); err != nil {
-			t.Logf("failed to stop servers: %s", err)
-			t.Fail()
-		}
+		err = server.Stop(ctx)
+		require.NoError(t, err)
 	}()
 
-	if err := server.Start(ctx); err != nil {
-		t.Log(err)
-		t.Fail()
-	}
+	err = server.Start(ctx)
+	require.NoError(t, err)
 }

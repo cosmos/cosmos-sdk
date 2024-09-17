@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -9,10 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/log"
+	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	"cosmossdk.io/x/gov/keeper"
 	govtestutil "cosmossdk.io/x/gov/testutil"
@@ -28,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -133,7 +135,7 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 	baseApp.SetCMS(testCtx.CMS)
 	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
-	environment := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithQueryRouterService(baseApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(baseApp.MsgServiceRouter()))
+	environment := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(baseApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(baseApp.MsgServiceRouter()))
 
 	// gomock initializations
 	ctrl := gomock.NewController(t)
@@ -199,7 +201,7 @@ func setupGovKeeperWithMaxVoteOptionsLen(t *testing.T, maxVoteOptionsLen uint64,
 	baseApp.SetCMS(testCtx.CMS)
 	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
-	environment := runtime.NewEnvironment(storeService, log.NewNopLogger(), runtime.EnvWithQueryRouterService(baseApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(baseApp.MsgServiceRouter()))
+	environment := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(baseApp.GRPCQueryRouter()), runtime.EnvWithMsgRouterService(baseApp.MsgServiceRouter()))
 
 	// gomock initializations
 	ctrl := gomock.NewController(t)
@@ -266,7 +268,7 @@ func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper) error {
 		}
 		newBalance, negative := balances[senderAddr].SafeSub(coins...)
 		if negative {
-			return fmt.Errorf("not enough balance")
+			return errors.New("not enough balance")
 		}
 		balances[senderAddr] = newBalance
 		return nil

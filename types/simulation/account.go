@@ -1,7 +1,7 @@
 package simulation
 
 import (
-	"fmt"
+	"errors"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -14,10 +14,11 @@ import (
 // eventually more useful data can be placed in here.
 // (e.g. number of coins)
 type Account struct {
-	PrivKey cryptotypes.PrivKey
-	PubKey  cryptotypes.PubKey
-	Address sdk.AccAddress
-	ConsKey cryptotypes.PrivKey
+	PrivKey       cryptotypes.PrivKey
+	PubKey        cryptotypes.PubKey
+	Address       sdk.AccAddress
+	ConsKey       cryptotypes.PrivKey
+	AddressBech32 string
 }
 
 // Equals returns true if two accounts are equal
@@ -50,10 +51,11 @@ func RandomAccounts(r *rand.Rand, n int) []Account {
 		}
 		idx[string(addr.Bytes())] = struct{}{}
 		accs[i] = Account{
-			Address: addr,
-			PrivKey: privKey,
-			PubKey:  pubKey,
-			ConsKey: ed25519.GenPrivKeyFromSecret(privkeySeed),
+			Address:       addr,
+			PrivKey:       privKey,
+			PubKey:        pubKey,
+			ConsKey:       ed25519.GenPrivKeyFromSecret(privkeySeed),
+			AddressBech32: addr.String(),
 		}
 		i++
 	}
@@ -90,7 +92,7 @@ func RandomFees(r *rand.Rand, spendableCoins sdk.Coins) (sdk.Coins, error) {
 	}
 
 	if randCoin.Amount.IsZero() {
-		return nil, fmt.Errorf("no coins found for random fees")
+		return nil, errors.New("no coins found for random fees")
 	}
 
 	amt, err := RandPositiveInt(r, randCoin.Amount)

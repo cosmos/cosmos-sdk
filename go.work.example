@@ -1,4 +1,4 @@
-go 1.22.2
+go 1.23
 
 use (
 	.
@@ -6,13 +6,17 @@ use (
 	./client/v2
 	./collections
 	./core
+	./core/testing
 	./depinject
 	./errors
+	./indexer/postgres
 	./log
 	./math
 	./orm
 	./simapp
 	./tests
+	./tests/systemtests
+	./schema
 	./server/v2/stf
 	./server/v2/appmanager
 	./store
@@ -22,6 +26,7 @@ use (
 	./tools/confix
 	./tools/hubl
 	./x/accounts
+	./x/accounts/defaults/lockup
 	./x/auth
 	./x/authz
 	./x/bank
@@ -41,5 +46,4 @@ use (
 	./x/tx
 	./x/upgrade
 	./x/epochs
-	./x/accounts/defaults/lockup
 )

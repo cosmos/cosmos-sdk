@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/distribution/types"
@@ -21,11 +22,12 @@ import (
 type Keeper struct {
 	appmodule.Environment
 
+	cometService comet.Service
+
 	cdc           codec.BinaryCodec
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
-	poolKeeper    types.PoolKeeper
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
@@ -44,11 +46,10 @@ type Keeper struct {
 	DelegatorStartingInfo collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
 	// ValidatorsAccumulatedCommission key: valAddr | value: ValidatorAccumulatedCommission
 	ValidatorsAccumulatedCommission collections.Map[sdk.ValAddress, types.ValidatorAccumulatedCommission]
-	// ValidatorOutstandingRewards key: valAddr | value: ValidatorOustandingRewards
+	// ValidatorOutstandingRewards key: valAddr | value: ValidatorOutstandingRewards
 	ValidatorOutstandingRewards collections.Map[sdk.ValAddress, types.ValidatorOutstandingRewards]
 	// ValidatorHistoricalRewards key: valAddr+period | value: ValidatorHistoricalRewards
 	ValidatorHistoricalRewards collections.Map[collections.Pair[sdk.ValAddress, uint64], types.ValidatorHistoricalRewards]
-	PreviousProposer           collections.Item[sdk.ConsAddress]
 	// ValidatorSlashEvents key: valAddr+height+period | value: ValidatorSlashEvent
 	ValidatorSlashEvents collections.Map[collections.Triple[sdk.ValAddress, uint64, uint64], types.ValidatorSlashEvent]
 
@@ -57,8 +58,12 @@ type Keeper struct {
 
 // NewKeeper creates a new distribution Keeper instance
 func NewKeeper(
-	cdc codec.BinaryCodec, env appmodule.Environment,
-	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, pk types.PoolKeeper,
+	cdc codec.BinaryCodec,
+	env appmodule.Environment,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	sk types.StakingKeeper,
+	cometService comet.Service,
 	feeCollectorName, authority string,
 ) Keeper {
 	// ensure distribution module account is set
@@ -69,11 +74,11 @@ func NewKeeper(
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := Keeper{
 		Environment:      env,
+		cometService:     cometService,
 		cdc:              cdc,
 		authKeeper:       ak,
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
-		poolKeeper:       pk,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
@@ -121,7 +126,6 @@ func NewKeeper(
 			collections.PairKeyCodec(sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), sdk.LEUint64Key), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			codec.CollValue[types.ValidatorHistoricalRewards](cdc),
 		),
-		PreviousProposer: collections.NewItem(sb, types.ProposerKey, "previous_proposer", collcodec.KeyToValueCodec(sdk.ConsAddressKey)),
 		ValidatorSlashEvents: collections.NewMap(
 			sb,
 			types.ValidatorSlashEventPrefix,

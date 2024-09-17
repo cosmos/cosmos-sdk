@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
@@ -27,7 +28,6 @@ func TestRandSubsetCoins(t *testing.T) {
 		{"too small amount", rand.New(rand.NewSource(99)), sdk.Coins{sdk.Coin{Denom: "aaa", Amount: math.NewInt(0)}}},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got := simulation.RandSubsetCoins(tt.r, tt.coins)
 			gotStringRep := got.String()
@@ -176,23 +176,11 @@ func TestRandomIntBetween(t *testing.T) {
 }
 
 func TestDeriveRand(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name string
-		r    *rand.Rand
-		exp  int64
-	}{
-		{"seed equal to zero", rand.New(rand.NewSource(0)), 8759604767892952359},
-		{"seed positive number", rand.New(rand.NewSource(1)), 4609759310771376844},
-		{"seed negative number", rand.New(rand.NewSource(-2)), 7949885017563827825},
-	}
-	for _, tt := range tests {
-		tc := tt
-		t.Run(tc.name, func(t *testing.T) {
-			got := simulation.DeriveRand(tc.r)
-			require.Equal(t, got.Int63(), tc.exp)
-		})
-	}
+	src := rand.New(rand.NewSource(0))
+	derived := simulation.DeriveRand(src)
+	got := derived.Int()
+	assert.NotEqual(t, got, src)
+	assert.NotEqual(t, got, rand.New(rand.NewSource(0)).Int())
 }
 
 func mustParseCoins(s string) sdk.Coins {

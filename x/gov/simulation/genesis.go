@@ -1,8 +1,6 @@
 package simulation
 
 import (
-	"encoding/json"
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -59,7 +57,7 @@ func GenExpeditedMinDeposit(r *rand.Rand, bondDenom string) sdk.Coins {
 	return sdk.NewCoins(sdk.NewInt64Coin(bondDenom, int64(simulation.RandIntBetween(r, 1e3/2, 1e3))))
 }
 
-// GenDepositMinInitialRatio returns randomized DepositMinInitialRatio
+// GenDepositMinInitialDepositRatio returns randomized DepositMinInitialRatio
 func GenDepositMinInitialDepositRatio(r *rand.Rand) sdkmath.LegacyDec {
 	return sdkmath.LegacyNewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdkmath.LegacyNewDec(100))
 }
@@ -194,13 +192,9 @@ func RandomizedGenState(simState *module.SimulationState) {
 			minDepositRatio.String(),
 			optimisticRejectedThreshold.String(),
 			[]string{},
+			10_000_000,
 		),
 	)
 
-	bz, err := json.MarshalIndent(&govGenesis, "", " ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Selected randomly generated governance parameters:\n%s\n", bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(govGenesis)
 }

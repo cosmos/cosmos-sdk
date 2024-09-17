@@ -5,12 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	storetypes "cosmossdk.io/store/types"
-	consensusv1 "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // PreBlocker will check if there is a scheduled plan and if it is ready to be executed.
@@ -31,7 +28,6 @@ func (k Keeper) PreBlocker(ctx context.Context) error {
 	}
 	found := err == nil
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx) // TODO remove with consensus messages
 	if !k.DowngradeVerified() {
 		k.SetDowngradeVerified(true)
 		// This check will make sure that we are using a valid binary.
@@ -46,14 +42,9 @@ func (k Keeper) PreBlocker(ctx context.Context) error {
 			}
 
 			if lastAppliedPlan != "" && !k.HasHandler(lastAppliedPlan) {
-				var appVersion uint64
-
-				var res consensusv1.QueryParamsResponse
-				if err := k.QueryRouterService.InvokeTyped(ctx, &consensusv1.QueryParamsRequest{}, &res); err != nil {
-					return errors.New("failed to query consensus params")
-				}
-				if res.Params.Version != nil {
-					appVersion = res.Params.Version.App
+				appVersion, err := k.consensusKeeper.AppVersion(ctx)
+				if err != nil {
+					return err
 				}
 
 				return fmt.Errorf("wrong app version %d, upgrade handler is missing for %s upgrade plan", appVersion, lastAppliedPlan)
@@ -97,8 +88,7 @@ func (k Keeper) PreBlocker(ctx context.Context) error {
 
 		// We have an upgrade handler for this upgrade name, so apply the upgrade
 		k.Logger.Info(fmt.Sprintf("applying upgrade \"%s\" at %s", plan.Name, plan.DueAt()))
-		sdkCtx = sdkCtx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
-		if err := k.ApplyUpgrade(sdkCtx, plan); err != nil {
+		if err := k.ApplyUpgrade(ctx, plan); err != nil {
 			return err
 		}
 		return nil

@@ -53,18 +53,21 @@ func (b WriterMap) ApplyStateChanges(stateChanges []store.StateChanges) error {
 	return nil
 }
 
+// GetStateChanges returns the state changes for all actors in the WriterMap.
 func (b WriterMap) GetStateChanges() ([]store.StateChanges, error) {
-	sc := make([]store.StateChanges, len(b.branchedWriterState))
-	for account, stateChange := range b.branchedWriterState {
-		kvChanges, err := stateChange.ChangeSets()
+	sc := make([]store.StateChanges, 0, len(b.branchedWriterState))
+	for acc, w := range b.branchedWriterState {
+		accBytes := []byte(acc)
+		kvChanges, err := w.ChangeSets()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("unable to get actor writer changes %x: %w", accBytes, err)
 		}
 		sc = append(sc, store.StateChanges{
-			Actor:        []byte(account),
+			Actor:        accBytes,
 			StateChanges: kvChanges,
 		})
 	}
+
 	return sc, nil
 }
 

@@ -53,7 +53,6 @@ func TestInitLockupAccount(t *testing.T) {
 	}
 
 	for _, test := range testcases {
-		test := test
 		_, err := baseLockup.Init(ctx, &test.msg)
 		if test.expErr != nil {
 			require.Equal(t, test.expErr, err)
@@ -273,6 +272,8 @@ func TestQueryLockupAccountBaseInfo(t *testing.T) {
 
 	baseLockup := setup(t, ctx, ss)
 
-	_, err := baseLockup.QueryLockupAccountBaseInfo(ctx, &lockuptypes.QueryLockupAccountInfoRequest{})
+	res, err := baseLockup.QueryLockupAccountBaseInfo(ctx, &lockuptypes.QueryLockupAccountInfoRequest{})
+	require.Equal(t, res.OriginalLocking.AmountOf("test"), math.NewInt(10))
+	require.Equal(t, res.Owner, "owner")
 	require.NoError(t, err)
 }

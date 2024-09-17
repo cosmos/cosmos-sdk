@@ -49,11 +49,16 @@ type RootStore interface {
 	// queries based on block time need to be supported.
 	SetCommitHeader(h *coreheader.Info)
 
+	// WorkingHash returns the current WIP commitment hash by applying the Changeset
+	// to the SC backend. It is only used to get the hash of the intermediate state
+	// before committing, the typical use case is for the genesis block.
+	// NOTE: It also writes the changeset to the SS backend.
+	WorkingHash(cs *corestore.Changeset) ([]byte, error)
+
 	// Commit should be responsible for taking the provided changeset and flushing
-	// it to disk. Note, depending on the implementation, the changeset, at this
-	// point, may already be written to the SC backends. Commit() should ensure
-	// the changeset is committed to all SC and SC backends and flushed to disk.
-	// It must return a hash of the merkle-ized committed state.
+	// it to disk. Note, it will overwrite the changeset if WorkingHash() was called.
+	// Commit() should ensure the changeset is committed to all SC and SS backends
+	// and flushed to disk. It must return a hash of the merkle-ized committed state.
 	Commit(cs *corestore.Changeset) ([]byte, error)
 
 	// LastCommitID returns a CommitID pertaining to the last commitment.
@@ -62,19 +67,18 @@ type RootStore interface {
 	// SetMetrics sets the telemetry handler on the RootStore.
 	SetMetrics(m metrics.Metrics)
 
+	Prune(version uint64) error
+
 	io.Closer
 }
 
-// UpgradeableRootStore extends the RootStore interface to support loading versions
-// with upgrades.
-type UpgradeableRootStore interface {
-	RootStore
-
+// UpgradeableStore defines the interface for upgrading store keys.
+type UpgradeableStore interface {
 	// LoadVersionAndUpgrade behaves identically to LoadVersion except it also
 	// accepts a StoreUpgrades object that defines a series of transformations to
 	// apply to store keys (if any).
 	//
-	// Note, handling StoreUpgrades is optional depending on the underlying RootStore
+	// Note, handling StoreUpgrades is optional depending on the underlying store
 	// implementation.
 	LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreUpgrades) error
 }

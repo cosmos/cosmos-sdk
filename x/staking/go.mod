@@ -26,7 +26,6 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20240604185151-ef581f913117
 	google.golang.org/grpc v1.66.2
 	google.golang.org/protobuf v1.34.2
-	gotest.tools/v3 v3.5.1
 )
 
 require (
@@ -170,6 +169,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
+	gotest.tools/v3 v3.5.1 // indirect
 )
 
 replace github.com/cosmos/cosmos-sdk => ../../.

@@ -314,7 +314,6 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			if tc.expPanic {
 				require.PanicsWithValue(tc.expPanicMsg, func() {
@@ -496,7 +495,6 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.EditValidator(tc.ctx, tc.input)
 			if tc.expErr {
@@ -614,7 +612,6 @@ func (s *KeeperTestSuite) TestMsgDelegate() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.Delegate(ctx, tc.input)
 			if tc.expErr {
@@ -782,7 +779,6 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.BeginRedelegate(ctx, tc.input)
 			if tc.expErr {
@@ -906,7 +902,6 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.Undelegate(ctx, tc.input)
 			if tc.expErr {
@@ -1068,7 +1063,6 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.CancelUnbondingDelegation(ctx, tc.input)
 			if tc.expErr {
@@ -1233,7 +1227,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.T().Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.UpdateParams(ctx, tc.input)
 			if tc.expErrMsg != "" {

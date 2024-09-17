@@ -14,7 +14,6 @@ import (
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
 
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -122,22 +121,14 @@ func AppGenesisFromReader(reader io.Reader) (*AppGenesis, error) {
 
 	vals := []sdk.GenesisValidator{}
 	for _, cmtVal := range ctmGenesis.Validators {
-		cmtPk, err := cryptocodec.FromCmtPubKeyInterface(cmtVal.PubKey)
-		if err != nil {
-			return nil, err
-		}
 		val := sdk.GenesisValidator{
 			Address: cmtVal.Address.Bytes(),
-			PubKey:  cmtPk,
+			PubKey:  cmtVal.PubKey,
 			Power:   cmtVal.Power,
 			Name:    cmtVal.Name,
 		}
 
 		vals = append(vals, val)
-	}
-
-	if len(vals) == 0 {
-		vals = nil
 	}
 
 	ag = AppGenesis{

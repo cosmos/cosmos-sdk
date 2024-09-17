@@ -60,31 +60,6 @@ func ToCmtProtoPublicKey(pk cryptotypes.PubKey) (cmtprotocrypto.PublicKey, error
 	}
 }
 
-func ToCmtProtoPublicKeyFromJsonCompatPubkey(pk cryptotypes.JSONCompatPubKey) (cmtprotocrypto.PublicKey, error) {
-	switch pk := pk.(type) {
-	case *ed25519.PubKey:
-		return cmtprotocrypto.PublicKey{
-			Sum: &cmtprotocrypto.PublicKey_Ed25519{
-				Ed25519: pk.Key,
-			},
-		}, nil
-	case *secp256k1.PubKey:
-		return cmtprotocrypto.PublicKey{
-			Sum: &cmtprotocrypto.PublicKey_Secp256K1{
-				Secp256K1: pk.Key,
-			},
-		}, nil
-	case *bls12_381.PubKey:
-		return cmtprotocrypto.PublicKey{
-			Sum: &cmtprotocrypto.PublicKey_Bls12381{
-				Bls12381: pk.Key,
-			},
-		}, nil
-	default:
-		return cmtprotocrypto.PublicKey{}, errors.Wrapf(sdkerrors.ErrInvalidType, "cannot convert %v to Tendermint public key", pk)
-	}
-}
-
 // FromCmtPubKeyInterface converts CMT's cmtcrypto.PubKey to our own PubKey.
 func FromCmtPubKeyInterface(tmPk cmtcrypto.PubKey) (cryptotypes.PubKey, error) {
 	tmProtoPk, err := encoding.PubKeyToProto(tmPk)
@@ -98,16 +73,6 @@ func FromCmtPubKeyInterface(tmPk cmtcrypto.PubKey) (cryptotypes.PubKey, error) {
 // ToCmtPubKeyInterface converts our own PubKey to CMT's cmtcrypto.PubKey.
 func ToCmtPubKeyInterface(pk cryptotypes.PubKey) (cmtcrypto.PubKey, error) {
 	tmProtoPk, err := ToCmtProtoPublicKey(pk)
-	if err != nil {
-		return nil, err
-	}
-
-	return encoding.PubKeyFromProto(tmProtoPk)
-}
-
-// ToCmtPubKeyInterface converts our own PubKey to CMT's cmtcrypto.PubKey.
-func ToCmtPubKeyInterfaceFromJsonCompatPubkey(pk cryptotypes.JSONCompatPubKey) (cmtcrypto.PubKey, error) {
-	tmProtoPk, err := ToCmtProtoPublicKeyFromJsonCompatPubkey(pk)
 	if err != nil {
 		return nil, err
 	}

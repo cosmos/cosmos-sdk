@@ -175,7 +175,6 @@ func TestValidateGenesis(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			err := v1.ValidateGenesis(codec, tc.genesisState())
 			if tc.expErrMsg != "" {

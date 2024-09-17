@@ -2,9 +2,8 @@ package cometbft
 
 import (
 	cmtcfg "github.com/cometbft/cometbft/config"
-	"github.com/spf13/viper"
 
-	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/cometbft/mempool"
 )
 
 // Config is the configuration for the CometBFT application
@@ -23,6 +22,7 @@ func DefaultAppTomlConfig() *AppTomlConfig {
 		Transport:       "socket",
 		Trace:           false,
 		Standalone:      false,
+		Mempool:         mempool.DefaultConfig(),
 	}
 }
 
@@ -35,6 +35,9 @@ type AppTomlConfig struct {
 	Transport       string   `mapstructure:"transport" toml:"transport" comment:"transport defines the CometBFT RPC server transport protocol: socket, grpc"`
 	Trace           bool     `mapstructure:"trace" toml:"trace" comment:"trace enables the CometBFT RPC server to output trace information about its internal operations."`
 	Standalone      bool     `mapstructure:"standalone" toml:"standalone" comment:"standalone starts the application without the CometBFT node. The node should be started separately."`
+
+	// Sub configs
+	Mempool mempool.Config `mapstructure:"mempool" toml:"mempool" comment:"mempool defines the configuration for the SDK built-in app-side mempool implementations."`
 }
 
 // CfgOption is a function that allows to overwrite the default server configuration.
@@ -52,15 +55,4 @@ func OverwriteDefaultAppTomlConfig(newCfg *AppTomlConfig) CfgOption {
 	return func(cfg *Config) {
 		cfg.AppTomlConfig = newCfg
 	}
-}
-
-func getConfigTomlFromViper(v *viper.Viper) *cmtcfg.Config {
-	rootDir := v.GetString(serverv2.FlagHome)
-
-	conf := cmtcfg.DefaultConfig()
-	if err := v.Unmarshal(conf); err != nil {
-		return cmtcfg.DefaultConfig().SetRoot(rootDir)
-	}
-
-	return conf.SetRoot(rootDir)
 }

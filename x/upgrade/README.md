@@ -94,6 +94,9 @@ expected upgrade. It eliminiates the chances for the new binary to execute `Stor
 times every time on restart. Also if there are multiple upgrades planned on same height, the `Name`
 will ensure these `StoreUpgrades` takes place only in planned upgrade handler.
 
+**Note:** The `StoreLoader` helper function for StoreUpgrades in v2 is not part of the `x/upgrade` module; 
+instead, you can find it in the runtime v2 module.
+
 ### Proposal
 
 Typically, a `Plan` is proposed and submitted through governance via a proposal

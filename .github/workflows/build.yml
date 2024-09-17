@@ -13,9 +13,6 @@ concurrency:
   group: ci-${{ github.ref }}-build
   cancel-in-progress: true
 
-env:
-  ROCKSDB_VERSION: 8.11.3
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,6 +25,8 @@ jobs:
         with:
           go-version: "1.23"
           check-latest: true
+      - name: Get rocksdb version
+        run: ./.github/scripts/get-rocksdb-version.sh
       - name: Fix permissions for cache
         run: sudo chown $(whoami) /usr/local/lib /usr/local/include
       - name: Restore rocksdb libraries cache
@@ -39,18 +38,12 @@ jobs:
             /usr/local/lib/librocksdb.*
             /usr/local/include/rocksdb
           key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-${{ matrix.go-arch }}
+      - name: Install rocksdb deps
+        if: matrix.go-arch == 'amd64'
+        run: ./.github/scripts/install-rocksdb-deps.sh
       - name: Install rocksdb
         if: matrix.go-arch == 'amd64' && steps.cache-rocksdb.outputs.cache-hit != 'true'
-        id: install_rocksdb
         run: ./.github/scripts/install-rocksdb.sh
-      - name: Saves rocksdb libraries cache
-        if: matrix.go-arch == 'amd64' && steps.install_rocksdb.outcome == 'success'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            /usr/local/lib/librocksdb.*
-            /usr/local/include/rocksdb
-          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-${{ matrix.go-arch }}
         ###################
         #### Build App ####
         ###################

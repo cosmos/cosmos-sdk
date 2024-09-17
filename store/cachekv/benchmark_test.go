@@ -4,9 +4,9 @@ import (
 	fmt "fmt"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/types"
@@ -14,7 +14,7 @@ import (
 
 func DoBenchmarkDeepCacheStack(b *testing.B, depth int) {
 	b.Helper()
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	initialStore := cachekv.NewStore(dbadapter.Store{DB: db})
 
 	nItems := 20

@@ -10,7 +10,6 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/core/transaction"
@@ -23,7 +22,7 @@ type ServerComponent[T transaction.Tx] interface {
 
 	Start(context.Context) error
 	Stop(context.Context) error
-	Init(AppI[T], *viper.Viper, log.Logger) error
+	Init(AppI[T], map[string]any, log.Logger) error
 }
 
 // HasStartFlags is a server module that has start flags.
@@ -90,7 +89,6 @@ func (s *Server[T]) Start(ctx context.Context) error {
 
 	g, ctx := errgroup.WithContext(ctx)
 	for _, mod := range s.components {
-		mod := mod
 		g.Go(func() error {
 			return mod.Start(ctx)
 		})
@@ -111,7 +109,6 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 
 	g, ctx := errgroup.WithContext(ctx)
 	for _, mod := range s.components {
-		mod := mod
 		g.Go(func() error {
 			return mod.Stop(ctx)
 		})
@@ -189,25 +186,24 @@ func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 
 // Init initializes all server components with the provided application, configuration, and logger.
 // It returns an error if any component fails to initialize.
-func (s *Server[T]) Init(appI AppI[T], v *viper.Viper, logger log.Logger) error {
-	cfg := s.config
-	if v != nil {
-		if err := UnmarshalSubConfig(v, s.Name(), &cfg); err != nil {
+func (s *Server[T]) Init(appI AppI[T], cfg map[string]any, logger log.Logger) error {
+	serverCfg := s.config
+	if len(cfg) > 0 {
+		if err := UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
 
 	var components []ServerComponent[T]
 	for _, mod := range s.components {
-		mod := mod
-		if err := mod.Init(appI, v, logger); err != nil {
+		if err := mod.Init(appI, cfg, logger); err != nil {
 			return err
 		}
 
 		components = append(components, mod)
 	}
 
-	s.config = cfg
+	s.config = serverCfg
 	s.components = components
 	return nil
 }

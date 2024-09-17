@@ -13,9 +13,6 @@ concurrency:
   group: ci-${{ github.ref }}-tests
   cancel-in-progress: true
 
-env:
-  ROCKSDB_VERSION: 8.11.3
-
 jobs:
   split-test-files:
     runs-on: ubuntu-latest
@@ -790,6 +787,8 @@ jobs:
             store/**/*.go
             store/go.mod
             store/go.sum
+      - name: Get rocksdb version
+        run: ./.github/scripts/get-rocksdb-version.sh
       - name: Fix permissions for cache
         run: sudo chown $(whoami) /usr/local/lib /usr/local/include
       - name: Restore rocksdb libraries cache
@@ -801,20 +800,10 @@ jobs:
             /usr/local/include/rocksdb
           key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
       - name: Install rocksdb deps
-        run: |
-          sudo apt-get update && sudo apt-get install -y libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+        run: ./.github/scripts/install-rocksdb-deps.sh
       - name: Install rocksdb
         if: steps.cache-rocksdb.outputs.cache-hit != 'true'
-        id: install_rocksdb
         run: ./.github/scripts/install-rocksdb.sh
-      - name: Saves rocksdb libraries cache
-        if: steps.install_rocksdb.outcome == 'success'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            /usr/local/lib/librocksdb.*
-            /usr/local/include/rocksdb
-          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
       - name: tests
         if: env.GIT_DIFF
         run: |
@@ -848,6 +837,8 @@ jobs:
             store/v2/**/*.go
             store/v2/go.mod
             store/v2/go.sum
+      - name: Get rocksdb version
+        run: ./.github/scripts/get-rocksdb-version.sh
       - name: Fix permissions for cache
         run: sudo chown $(whoami) /usr/local/lib /usr/local/include
       - name: Restore rocksdb libraries cache
@@ -859,20 +850,10 @@ jobs:
             /usr/local/include/rocksdb
           key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
       - name: Install rocksdb deps
-        run: |
-          sudo apt-get update && sudo apt-get install -y libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+        run: ./.github/scripts/install-rocksdb-deps.sh
       - name: Install rocksdb
-        if: env.GIT_DIFF && steps.cache-rocksdb.outputs.cache-hit != 'true'
-        id: install_rocksdb
+        if: steps.cache-rocksdb.outputs.cache-hit != 'true'
         run: ./.github/scripts/install-rocksdb.sh
-      - name: Saves rocksdb libraries cache
-        if: steps.install_rocksdb.outcome == 'success'
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            /usr/local/lib/librocksdb.*
-            /usr/local/include/rocksdb
-          key: ${{ runner.os }}-rocksdb-${{ env.ROCKSDB_VERSION }}-amd64
       - name: test & coverage report creation
         if: env.GIT_DIFF
         run: |

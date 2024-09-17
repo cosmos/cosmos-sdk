@@ -90,6 +90,8 @@ func ExportCmd(appExporter servertypes.AppExporter) *cobra.Command {
 				return err
 			}
 
+			fmt.Println("vals", exported.Validators)
+
 			// set current binary version
 			appGenesis.AppName = version.AppName
 			appGenesis.AppVersion = version.Version

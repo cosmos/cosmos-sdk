@@ -29,6 +29,7 @@
 /server/v2/stf/ @testinginprod @kocubinski @cosmos/sdk-core-dev
 /server/v2/appmanager/ @testinginprod @facundomedica @cosmos/sdk-core-dev
 /server/v2/cometbft/ @facundomedica @sontrinh16 @cosmos/sdk-core-dev
+/simsx @alpe @facundomedica @kocubinski @cosmos/sdk-core-dev
 /simapp/ @facundomedica @julienrbrt @cosmos/sdk-core-dev
 /simapp/v2/ @kocubinski @julienrbrt @cosmos/sdk-core-dev
 /store/ @cool-develope @kocubinski @cosmos/sdk-core-dev

@@ -12,6 +12,7 @@
 "C:Simulations":
   - x/simulation/**/*
   - x/*/simulation/**/*
+  - simsx/**/*
 "C:Store":
   - store/**/*
 "C:collections":

@@ -268,12 +268,6 @@ func prepareWeightedOps(
 			wContent = append(wContent, xm.ProposalContents(simState)...)
 		}
 	}
-	if len(wProps) != 0 {
-		panic("legacy proposals are not empty")
-	}
-	if len(wContent) != 0 {
-		panic("legacy proposal contents are not empty")
-	}
 
 	oReg := NewSimsMsgRegistryAdapter(reporter, stateFact.AccountSource, stateFact.BalanceSource, txConfig, logger)
 	wOps := make([]simtypes.WeightedOperation, 0, len(sm.Modules))

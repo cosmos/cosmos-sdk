@@ -184,10 +184,6 @@ func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
 func (ag *AppGenesis) ToGenesisDoc() (*cmttypes.GenesisDoc, error) {
 	cmtValidators := []cmttypes.GenesisValidator{}
 	for _, val := range ag.Consensus.Validators {
-		// cmtPk, err := cryptocodec.ToCmtPubKeyInterfaceFromJsonCompatPubkey(val.PubKey)
-		// if err != nil {
-		// 	return nil, err
-		// }
 		cmtVal := cmttypes.GenesisValidator{
 			Address: val.Address.Bytes(),
 			PubKey:  val.PubKey,
@@ -196,6 +192,10 @@ func (ag *AppGenesis) ToGenesisDoc() (*cmttypes.GenesisDoc, error) {
 		}
 
 		cmtValidators = append(cmtValidators, cmtVal)
+	}
+	// assert nil value for empty validators set
+	if len(cmtValidators) == 0 {
+		cmtValidators = nil
 	}
 	return &cmttypes.GenesisDoc{
 		GenesisTime:     ag.GenesisTime,

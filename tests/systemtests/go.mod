@@ -1,6 +1,6 @@
 module cosmossdk.io/tests/systemtests
 
-go 1.23
+go 1.23.0
 
 require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect

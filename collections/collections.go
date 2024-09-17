@@ -6,8 +6,9 @@ import (
 	"io"
 	"math"
 
-	"cosmossdk.io/collections/codec"
 	"cosmossdk.io/schema"
+
+	"cosmossdk.io/collections/codec"
 )
 
 var (
@@ -58,21 +59,21 @@ var (
 
 var (
 	// BoolValue implements a ValueCodec for bool.
-	BoolValue = codec.KeyToValueCodec(codec.KeyCodec[bool](BoolKey))
+	BoolValue = codec.KeyToValueCodec(BoolKey)
 	// Uint16Value implements a ValueCodec for uint16.
-	Uint16Value = codec.KeyToValueCodec(codec.KeyCodec[uint16](Uint16Key))
+	Uint16Value = codec.KeyToValueCodec(Uint16Key)
 	// Uint32Value implements a ValueCodec for uint32.
-	Uint32Value = codec.KeyToValueCodec(codec.KeyCodec[uint32](Uint32Key))
+	Uint32Value = codec.KeyToValueCodec(Uint32Key)
 	// Uint64Value implements a ValueCodec for uint64.
-	Uint64Value = codec.KeyToValueCodec(codec.KeyCodec[uint64](Uint64Key))
+	Uint64Value = codec.KeyToValueCodec(Uint64Key)
 	// Int32Value implements a ValueCodec for int32.
-	Int32Value = codec.KeyToValueCodec(codec.KeyCodec[int32](Int32Key))
+	Int32Value = codec.KeyToValueCodec(Int32Key)
 	// Int64Value implements a ValueCodec for int64.
-	Int64Value = codec.KeyToValueCodec(codec.KeyCodec[int64](Int64Key))
+	Int64Value = codec.KeyToValueCodec(Int64Key)
 	// StringValue implements a ValueCodec for string.
-	StringValue = codec.KeyToValueCodec(codec.KeyCodec[string](StringKey))
+	StringValue = codec.KeyToValueCodec(StringKey)
 	// BytesValue implements a ValueCodec for bytes.
-	BytesValue = codec.KeyToValueCodec(codec.KeyCodec[[]byte](BytesKey))
+	BytesValue = codec.KeyToValueCodec(BytesKey)
 )
 
 // Collection is the interface that all collections implement. It will eventually

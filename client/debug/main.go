@@ -179,11 +179,12 @@ func PubkeyRawCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pubkey-raw [pubkey] -t [{ed25519, secp256k1}]",
 		Short: "Decode a ED25519 or secp256k1 pubkey from hex, base64, or bech32",
-		Long: fmt.Sprintf(`Decode a pubkey from hex, base64, or bech32.
-Example:
-$ %s debug pubkey-raw TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBieSB0aGlz
-$ %s debug pubkey-raw cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
-			`, version.AppName, version.AppName),
+		Long:  "Decode a pubkey from hex, base64, or bech32.",
+		Example: fmt.Sprintf(`
+%s debug pubkey-raw 8FCA9D6D1F80947FD5E9A05309259746F5F72541121766D5F921339DD061174A
+%s debug pubkey-raw j8qdbR+AlH/V6aBTCSWXRvX3JUESF2bV+SEzndBhF0o=
+%s debug pubkey-raw cosmospub1zcjduepq3l9f6mglsz28l40f5pfsjfvhgm6lwf2pzgtkd40eyyeem5rpza9q47axrz
+			`, version.AppName, version.AppName, version.AppName),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -297,14 +298,11 @@ $ %s debug addr cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg
 
 func RawBytesCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "raw-bytes [raw-bytes]",
-		Short: "Convert raw bytes output (eg. [10 21 13 255]) to hex",
-		Long: fmt.Sprintf(`Convert raw-bytes to hex.
-
-Example:
-$ %s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]
-			`, version.AppName),
-		Args: cobra.ExactArgs(1),
+		Use:     "raw-bytes <raw-bytes>",
+		Short:   "Convert raw bytes output (eg. [10 21 13 255]) to hex",
+		Long:    "Convert raw-bytes to hex.",
+		Example: fmt.Sprintf("%s debug raw-bytes '[72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 110 100]'", version.AppName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			stringBytes := args[0]
 			stringBytes = strings.Trim(stringBytes, "[")

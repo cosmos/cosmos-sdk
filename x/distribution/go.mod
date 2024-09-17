@@ -24,7 +24,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240604185151-ef581f913117
 	google.golang.org/grpc v1.66.2
-	gotest.tools/v3 v3.5.1
+	gotest.tools/v3 v3.5.1 // indirect
 )
 
 require (

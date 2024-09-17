@@ -28,7 +28,6 @@ func TestRandSubsetCoins(t *testing.T) {
 		{"too small amount", rand.New(rand.NewSource(99)), sdk.Coins{sdk.Coin{Denom: "aaa", Amount: math.NewInt(0)}}},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got := simulation.RandSubsetCoins(tt.r, tt.coins)
 			gotStringRep := got.String()

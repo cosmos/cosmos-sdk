@@ -17,7 +17,7 @@ type altValue struct {
 func TestAltValueCodec(t *testing.T) {
 	// we assume we want to migrate the value from json(altValue) to just be
 	// the raw value uint64.
-	canonical := codec.KeyToValueCodec(codec.KeyCodec[uint64](codec.NewUint64Key[uint64]()))
+	canonical := codec.KeyToValueCodec(codec.NewUint64Key[uint64]())
 	alternative := func(v []byte) (uint64, error) {
 		var alt altValue
 		err := json.Unmarshal(v, &alt)

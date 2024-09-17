@@ -3,8 +3,9 @@ package runtime
 import (
 	"testing"
 
-	corestore "cosmossdk.io/core/store"
 	"github.com/stretchr/testify/require"
+
+	corestore "cosmossdk.io/core/store"
 )
 
 func TestCheckStoreUpgrade(t *testing.T) {

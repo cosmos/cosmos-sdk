@@ -102,7 +102,7 @@ func checkStoreUpgrade(storeUpgrades *store.StoreUpgrades) error {
 	}
 
 	// check for duplicates
-	var exists = make(map[string]bool)
+	exists := make(map[string]bool)
 	for _, key := range storeUpgrades.Added {
 		if exists[key] {
 			return fmt.Errorf("store upgrade has duplicate key %s in added", key)

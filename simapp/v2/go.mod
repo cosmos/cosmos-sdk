@@ -56,16 +56,10 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.2.0 // indirect
-<<<<<<< HEAD
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240916221850-7856d226038c // indirect; main
 	cosmossdk.io/server/v2/stf v0.0.0-20240916221850-7856d226038c // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main
-=======
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d // indirect
-	cosmossdk.io/server/v2/stf v0.0.0-20240708142107-25e99c54bac1 // indirect
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000 // indirect
->>>>>>> 81ec7ea9e (feat(auth): support accounts from auth (#21688))
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.14.0 // indirect; main

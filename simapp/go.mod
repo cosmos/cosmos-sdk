@@ -14,6 +14,7 @@ require (
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // main
 	cosmossdk.io/tools/confix v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
+	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
@@ -36,7 +37,7 @@ require (
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22 // indirect
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.52.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.7.0
@@ -48,14 +49,6 @@ require (
 	google.golang.org/protobuf v1.34.2
 )
 
-<<<<<<< HEAD
-=======
-require (
-	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
-	google.golang.org/grpc v1.66.2
-)
-
->>>>>>> 81ec7ea9e (feat(auth): support accounts from auth (#21688))
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect

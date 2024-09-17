@@ -12,22 +12,12 @@ require (
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/tx v0.13.4-0.20240909133312-50288938d1b6 // main
-	github.com/cosmos/cosmos-sdk v0.52.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/grpc v1.66.2
 	google.golang.org/protobuf v1.34.2
-)
-
-require (
-<<<<<<< HEAD
-	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
-=======
-	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
->>>>>>> 81ec7ea9e (feat(auth): support accounts from auth (#21688))
-	github.com/google/uuid v1.6.0 // indirect
 )
 
 require (
@@ -52,6 +42,7 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
+	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v1.1.2 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
@@ -93,6 +84,7 @@ require (
 	github.com/google/flatbuffers v24.3.25+incompatible // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/handlers v1.5.2 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
@@ -178,22 +170,17 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
+require github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
+
 replace github.com/cosmos/cosmos-sdk => ../../.
 
 // TODO remove post spinning out all modules
 replace (
-<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214 // main
-=======
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/collections => ../../collections
-	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/store => ../../store
-	cosmossdk.io/x/accounts/defaults/base => ./defaults/base // REMOVE this when
->>>>>>> 81ec7ea9e (feat(auth): support accounts from auth (#21688))
+	cosmossdk.io/x/accounts/defaults/base => ./defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ./defaults/lockup
 	cosmossdk.io/x/accounts/defaults/multisig => ./defaults/multisig
 	cosmossdk.io/x/bank => ../bank

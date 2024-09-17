@@ -9,13 +9,8 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
-<<<<<<< HEAD
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6
-	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
-=======
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
->>>>>>> 81ec7ea9e (feat(auth): support accounts from auth (#21688))
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
@@ -24,7 +19,7 @@ require (
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.52.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4

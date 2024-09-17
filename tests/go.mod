@@ -21,7 +21,7 @@ require (
 	github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.52.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cobra v1.8.1
@@ -33,14 +33,9 @@ require (
 )
 
 require (
-<<<<<<< HEAD
 	cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b // main
-	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
-=======
-	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
->>>>>>> 81ec7ea9e (feat(auth): support accounts from auth (#21688))
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000

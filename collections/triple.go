@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/schema"
+
 	"cosmossdk.io/collections/codec"
 )
 
@@ -64,7 +66,7 @@ func TripleKeyCodec[K1, K2, K3 any](keyCodec1 codec.KeyCodec[K1], keyCodec2 code
 	}
 }
 
-func NamedTripleKeyCodec[K1, K2, K3 any](key1Name string, keyCodec1 codec.KeyCodec[K1], key2Name string, keyCodec2 codec.KeyCodec[K2], key3Name string, keyCodec3 codec.KeyCodec[K3]) codec.NamedKeyCodec[Triple[K1, K2, K3]] {
+func NamedTripleKeyCodec[K1, K2, K3 any](key1Name string, keyCodec1 codec.KeyCodec[K1], key2Name string, keyCodec2 codec.KeyCodec[K2], key3Name string, keyCodec3 codec.KeyCodec[K3]) codec.KeyCodec[Triple[K1, K2, K3]] {
 	return tripleKeyCodec[K1, K2, K3]{
 		key1Name:  key1Name,
 		key2Name:  key2Name,
@@ -287,6 +289,42 @@ func (t tripleKeyCodec[K1, K2, K3]) SizeNonTerminal(key Triple[K1, K2, K3]) int 
 
 func (t tripleKeyCodec[K1, K2, K3]) Name() string {
 	return fmt.Sprintf("%s,%s,%s", t.key1Name, t.key2Name, t.key3Name)
+}
+
+func (t tripleKeyCodec[K1, K2, K3]) SchemaCodec() (codec.SchemaCodec[Triple[K1, K2, K3]], error) {
+	key1Schema, err := codec.KeySchemaCodec(t.keyCodec1)
+	if err != nil {
+		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, err
+	}
+	if len(key1Schema.Fields) != 1 {
+		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, fmt.Errorf("expected 1 field in key1 schema, got: %d", len(key1Schema.Fields))
+	}
+	field1 := key1Schema.Fields[0]
+	field1.Name = t.key1Name
+
+	key2Schema, err := codec.KeySchemaCodec(t.keyCodec2)
+	if err != nil {
+		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, err
+	}
+	if len(key2Schema.Fields) != 1 {
+		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, fmt.Errorf("expected 1 field in key2 schema, got: %d", len(key2Schema.Fields))
+	}
+	field2 := key2Schema.Fields[0]
+	field2.Name = t.key2Name
+
+	key3Schema, err := codec.KeySchemaCodec(t.keyCodec3)
+	if err != nil {
+		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, err
+	}
+	if len(key3Schema.Fields) != 1 {
+		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, fmt.Errorf("expected 1 field in key3 schema, got: %d", len(key3Schema.Fields))
+	}
+
+	field3 := key3Schema.Fields[0]
+	field3.Name = t.key3Name
+	return codec.SchemaCodec[Triple[K1, K2, K3]]{
+		Fields: []schema.Field{field1, field2, field3},
+	}, nil
 }
 
 // NewPrefixUntilTripleRange defines a collection query which ranges until the provided Pair prefix.

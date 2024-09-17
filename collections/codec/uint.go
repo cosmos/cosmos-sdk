@@ -9,9 +9,7 @@ import (
 
 func NewUint64Key[T ~uint64]() NameableKeyCodec[T] { return uint64Key[T]{} }
 
-type uint64Key[T ~uint64] struct {
-	name string
-}
+type uint64Key[T ~uint64] struct{}
 
 func (uint64Key[T]) Encode(buffer []byte, key T) (int, error) {
 	binary.BigEndian.PutUint64(buffer, (uint64)(key))
@@ -57,20 +55,13 @@ func (uint64Key[T]) KeyType() string {
 	return "uint64"
 }
 
-func (u uint64Key[T]) WithName(name string) NamedKeyCodec[T] {
-	u.name = name
-	return u
-}
-
-func (u uint64Key[T]) Name() string {
-	return u.name
+func (u uint64Key[T]) WithName(name string) KeyCodec[T] {
+	return NamedKeyCodec[T]{KeyCodec: u, Name: name}
 }
 
 func NewUint32Key[T ~uint32]() NameableKeyCodec[T] { return uint32Key[T]{} }
 
-type uint32Key[T ~uint32] struct {
-	name string
-}
+type uint32Key[T ~uint32] struct{}
 
 func (uint32Key[T]) Encode(buffer []byte, key T) (int, error) {
 	binary.BigEndian.PutUint32(buffer, (uint32)(key))
@@ -108,20 +99,13 @@ func (u uint32Key[T]) DecodeNonTerminal(buffer []byte) (int, T, error) { return 
 
 func (uint32Key[T]) SizeNonTerminal(_ T) int { return 4 }
 
-func (u uint32Key[T]) WithName(name string) NamedKeyCodec[T] {
-	u.name = name
-	return u
-}
-
-func (u uint32Key[T]) Name() string {
-	return u.name
+func (u uint32Key[T]) WithName(name string) KeyCodec[T] {
+	return NamedKeyCodec[T]{KeyCodec: u, Name: name}
 }
 
 func NewUint16Key[T ~uint16]() NameableKeyCodec[T] { return uint16Key[T]{} }
 
-type uint16Key[T ~uint16] struct {
-	name string
-}
+type uint16Key[T ~uint16] struct{}
 
 func (uint16Key[T]) Encode(buffer []byte, key T) (int, error) {
 	binary.BigEndian.PutUint16(buffer, (uint16)(key))
@@ -159,13 +143,8 @@ func (u uint16Key[T]) DecodeNonTerminal(buffer []byte) (int, T, error) { return 
 
 func (u uint16Key[T]) SizeNonTerminal(key T) int { return u.Size(key) }
 
-func (u uint16Key[T]) WithName(name string) NamedKeyCodec[T] {
-	u.name = name
-	return u
-}
-
-func (u uint16Key[T]) Name() string {
-	return u.name
+func (u uint16Key[T]) WithName(name string) KeyCodec[T] {
+	return NamedKeyCodec[T]{KeyCodec: u, Name: name}
 }
 
 func uintEncodeJSON(value uint64) ([]byte, error) {

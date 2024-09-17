@@ -13,9 +13,7 @@ const (
 	StringDelimiter uint8 = 0x0
 )
 
-type stringKey[T ~string] struct {
-	name string
-}
+type stringKey[T ~string] struct{}
 
 func (stringKey[T]) Encode(buffer []byte, key T) (int, error) {
 	return copy(buffer, key), nil
@@ -69,11 +67,6 @@ func (stringKey[T]) KeyType() string {
 	return "string"
 }
 
-func (s stringKey[T]) WithName(name string) NamedKeyCodec[T] {
-	s.name = name
-	return s
-}
-
-func (s stringKey[T]) Name() string {
-	return s.name
+func (s stringKey[T]) WithName(name string) KeyCodec[T] {
+	return NamedKeyCodec[T]{KeyCodec: s, Name: name}
 }

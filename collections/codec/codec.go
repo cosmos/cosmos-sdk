@@ -131,8 +131,7 @@ func KeyToValueCodec[K any](keyCodec KeyCodec[K]) NameableValueCodec[K] {
 
 // keyToValueCodec is a ValueCodec that wraps a KeyCodec to make it behave like a ValueCodec.
 type keyToValueCodec[K any] struct {
-	name string
-	kc   KeyCodec[K]
+	kc KeyCodec[K]
 }
 
 func (k keyToValueCodec[K]) EncodeJSON(value K) ([]byte, error) {
@@ -171,11 +170,6 @@ func (k keyToValueCodec[K]) ValueType() string {
 	return k.kc.KeyType()
 }
 
-func (k keyToValueCodec[K]) WithName(name string) NamedValueCodec[K] {
-	k.name = name
-	return k
-}
-
-func (k keyToValueCodec[K]) Name() string {
-	return k.name
+func (k keyToValueCodec[K]) WithName(name string) ValueCodec[K] {
+	return NamedValueCodec[K]{ValueCodec: k, Name: name}
 }

@@ -127,12 +127,16 @@ func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) []abci.E
 	indexAll := len(indexSet) == 0
 	abciEvents := make([]abci.Event, len(events))
 	for i, e := range events {
+		attributes, err := e.Attributes()
+		if err != nil {
+			panic(err)
+		}
 		abciEvents[i] = abci.Event{
 			Type:       e.Type,
-			Attributes: make([]abci.EventAttribute, len(e.Attributes)),
+			Attributes: make([]abci.EventAttribute, len(attributes)),
 		}
 
-		for j, attr := range e.Attributes {
+		for j, attr := range attributes {
 			_, index := indexSet[fmt.Sprintf("%s.%s", e.Type, attr.Key)]
 			abciEvents[i].Attributes[j] = abci.EventAttribute{
 				Key:   attr.Key,
@@ -148,12 +152,16 @@ func intoABCISimulationResponse(txRes server.TxResult, indexSet map[string]struc
 	indexAll := len(indexSet) == 0
 	abciEvents := make([]abci.Event, len(txRes.Events))
 	for i, e := range txRes.Events {
+		attributes, err := e.Attributes()
+		if err != nil {
+			panic(err)
+		}
 		abciEvents[i] = abci.Event{
 			Type:       e.Type,
-			Attributes: make([]abci.EventAttribute, len(e.Attributes)),
+			Attributes: make([]abci.EventAttribute, len(attributes)),
 		}
 
-		for j, attr := range e.Attributes {
+		for j, attr := range attributes {
 			_, index := indexSet[fmt.Sprintf("%s.%s", e.Type, attr.Key)]
 			abciEvents[i].Attributes[j] = abci.EventAttribute{
 				Key:   attr.Key,

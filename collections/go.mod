@@ -18,3 +18,5 @@ require (
 )
 
 replace cosmossdk.io/core/testing => ../core/testing
+
+replace cosmossdk.io/schema => ../schema

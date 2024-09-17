@@ -5,7 +5,7 @@ go 1.23.1
 require (
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
-	cosmossdk.io/core v1.0.0-alpha.2
+	cosmossdk.io/core v1.0.0-alpha.2.0.20240917105208-c9f0e2e4d892
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
@@ -246,6 +246,7 @@ require (
 replace (
 	cosmossdk.io/client/v2 => ../../client/v2
 	cosmossdk.io/collections => ../../collections
+	cosmossdk.io/schema => ../../schema
 	cosmossdk.io/tools/confix => ../../tools/confix
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/accounts/defaults/lockup => ../../x/accounts/defaults/lockup

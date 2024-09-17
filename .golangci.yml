@@ -72,12 +72,9 @@ issues:
     - text: "SA1019: params.SendEnabled is deprecated" # TODO remove once ready to remove from the sdk
       linters:
         - staticcheck
-<<<<<<< HEAD
-=======
     - text: "G115: integer overflow conversion" # We are doing this everywhere.
       linters:
         - gosec
->>>>>>> cbdfd9bdf (chore: bump golangci-lint and fix all linting issues (#21761))
     - text: "leading space"
       linters:
         - nolintlint

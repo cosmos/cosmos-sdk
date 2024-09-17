@@ -36,23 +36,12 @@ pub fn module_api(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
 /// This attribute bundles account and module handlers into a package root which can be
 /// loaded into an application.
-#[proc_macro_attribute]
-pub fn package(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let item = parse_macro_input!(item as File);
-    let expanded = quote! {
-        #item
-    };
-    expanded.into()
-}
-
-/// This attribute macro should be attached to a function that is called when the account is created.
-#[proc_macro_attribute]
-pub fn on_create(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    item
-}
-
-/// This attribute macro should be attached to a function that is called when the account is migrated.
-#[proc_macro_attribute]
-pub fn on_migrate(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    item
+#[proc_macro]
+pub fn package_root(item: TokenStream) -> TokenStream {
+    // let item = parse_macro_input!(item as File);
+    // let expanded = quote! {
+    //     #item
+    // };
+    // expanded.into()
+    TokenStream::default()
 }

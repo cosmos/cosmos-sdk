@@ -1,4 +1,225 @@
+**WARNING: Most of the code below does not work yet! Check back later!**
+
 This is the single import, batteries-included crate for building applications with the [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) in Rust.
 
 ## Core Concepts
 
+* everything that runs code is an **account** with a unique [Address]
+* the code that runs an account is called an **account handler**
+* a **module** is a special type of account, whose **module handler** code gets instantiated once per app
+
+## Creating an Account Handler
+
+### Basic Structure
+
+Follow these steps to create the basic structure for account handler:
+1. Import this crate with `use interchain_sdk::*;` (_optional, but recommended_)
+2. Create a nested module (ex. `mod my_account_handler`) for the handler
+3. Add a handler struct to the nested `mod` block (ex. `pub struct MyAccountHandler`)
+4. Annotate the struct with `#[derive(Resources)]`
+5. Annotate the `mod` block with `#[account_handler(MyAccountHandler)]`
+
+Here's an example:
+```rust
+use interchain_sdk::*;
+
+#[account_handler(MyAccountHandler)]
+mod my_account_handler {
+    #[derive(Resources)]
+    pub struct MyAccountHandler {
+    }
+}
+```
+
+### Define the account's state
+
+All the account's "resources" are managed by its handler struct.
+Internal state is the primary "resource" that a handler interacts with.
+(The other resources are references to other modules and accounts, which will be covered later.)
+State is defined using the [`state_objects`] framework which defines the following basic state types:
+[`Map`], [`Item`] [`Set`], and [`Seq`], plus some other types extending these such as [`OrderedMap`],
+[`OrderedSet`], [`Index`], [`UniqueIndex`] and [`UInt128Map`].
+See the [`state_objects`] documentation for more complete information.
+
+The most basic type is [`Item`], which is a single value that can be read and written.
+Here's an example of adding an item state resource to the handler:
+```rust
+pub struct MyAccountHandler {
+    pub owner: Item<Address>,
+}
+```
+
+[`Map`] is a common type for any more complex state as it allows for multiple values to be stored and retrieved by a key. Here's an example of adding a map state resource to the handler:
+```rust
+pub struct MyAccountHandler {
+    pub my_map: Map<Address, u64>,
+}
+```
+
+### Define the `OnCreate` Handler
+
+Every account handler must implement the [`OnCreate`] trait,
+which defines the behavior when an account is created.
+This is where you can set any initial state of the account.
+The [`OnCreate`] implementation must define an `InitMessage`,
+which is the message that is passed to the account when it is created.
+That struct must derive [`StructCodec`] which allows
+it to be serialized and deserialized.
+
+Here's an example:
+```rust
+#[derive(StructCodec)]
+pub struct MyAccountCreateMsg {
+    pub init_value: u64,
+}
+
+impl OnCreate for MyAccountHandler {
+    fn on_create(&mut self, ctx: &Context, msg: &CreateMsg) -> Result<()> {
+        self.owner(ctx, ctx.caller())?;
+        self.my_map.set(ctx, &ctx.caller(), msg.init_value)?;
+        Ok(())
+    }
+}
+```
+
+### Implement message handlers
+
+Message handlers can be defined by attaching the `#[publish]` attribute to one of the
+following targets:
+* any inherent `impl` block for the handler struct, in which case all `pub` functions in that block will be treated as message handlers
+* any `pub` function in an inherent `impl` block for the handler struct
+* an `impl` block for the handler struct for any trait that has `#[account_api] attached to it
+
+All message handler functions should immutably borrow the handler struct as the first argument (`&self`).
+If they modify state, they should mutably borrow [`Context`] and
+if they only read state, they should immutably borrow [`Context`].
+Other arguments can be provided to the function signature as needed and the return
+type should be [`Response`] parameterized with the return type of the function.
+The supported argument types are defined by [`interchain_schema`] crate.
+See that crate for more information.
+
+Here's an example demonstrating all three methods:
+```rust
+#[publish]
+impl MyAccountHandler {
+    pub fn set_caller_value(&mut self, ctx: &Context, x: u64) -> Result<()> {
+        self.my_map.set(ctx, ctx.caller(), x)?;
+        Ok(())
+    }
+}
+
+impl MyAccountHandler {
+    #[publish]
+    pub fn set_owner(&mut self, ctx: &Context, new_owner: Address) -> Result<()> {
+        if ctx.caller() != self.owner(ctx)? {
+            return Err("Unauthorized".into());
+        }
+        self.owner.set(ctx, new_owner)?;
+        Ok(())
+    }
+}
+
+#[account_api]
+pub trait GetMyValue {
+    fn get_my_value(&self, ctx: &Context) -> Response<u64>;
+}
+
+#[publish]
+impl GetMyValue for MyAccountHandler {
+    fn get_my_value(&self, ctx: &Context) -> Response<u64> {
+        Ok(self.my_map.get(ctx, &ctx.caller())?)
+    }
+}
+```
+
+### Emitting Events
+
+Events can be emitted by adding [`EventBus`] parameters to method handler functions
+where each [`EventBus`] is parameterized with an event type (usually a struct which
+derives [`StructCodec`]).
+Adding event buses for each type of event to each method ensures that the event API
+is clearly defined in a handler's schema for external users.
+(When client types are generated with `#[account_api]` or `#[module_api]` attributes,
+the event bus parameters, however, are not included in the generated client types
+so that callers don't need to worry about these.)
+
+Here's an example of emitting an event:
+```rust
+#[publish]
+impl MyAccountHandler {
+    pub fn set_caller_value(&mut self, ctx: &Context, x: u64, events: &mut EventBus<SetValueVent>) -> Result<()> {
+        self.my_map.set(ctx, ctx.caller(), x)?;
+        events.emit(SetValueEvent { caller: ctx.caller.clone(), value: x });
+        Ok(())
+    }
+}
+
+#[derive(StructCodec)]
+pub struct SetValueEvent {
+    pub caller: Address,
+    pub value: u64,
+}
+```
+
+## Creating a Module Handler
+
+The process for creating a module handler is very similar to creating an account handler.
+The main difference is
+that the [`module_handler`] attribute is used instead of the [`account_handler`] attribute
+and that module handler may implement [`module_api`] traits in additional to [`account_api`]
+traits.
+A [`module_api`] trait is defined by attaching the `#[module_api]` attribute to a trait
+and such traits can only be implemented by one module handler in the app.
+
+Here's an example of a module handler:
+```rust
+#[module_handler(MyModuleHandler)]
+mod my_module_handler {
+    #[derive(Resources)]
+    pub struct MyModuleHandler {
+    }
+    
+    #[module_api]
+    pub trait MyModuleApi {
+        fn my_module_fn(&self, ctx: &Context) -> Response<()>;
+    }
+    
+    #[publish]
+    impl MyModuleHandler {
+        pub fn my_module_fn(&self, ctx: &Context) -> Response<()> {
+            Ok(())
+        }
+    }
+}
+```
+
+## Calling other accounts or modules
+
+Any account may call any other account or module in the app by calling the generated
+`Client` structs that are generated when traits are annotated with `#[account_api]` or `#[module_api]`.
+Account API clients must be instantiated with the account's [`Address`] whereas
+module API clients don't need to be parameterized with anything because
+they must have a unique handler in the app.
+
+Client or client factories should be defined as resources in the handler struct
+in one of the following ways:
+1. define a module API `Client` or `Option<Client>` as a resource in the handler struct
+2. define an account API `ClientFactory` as a resource in the handler struct
+3. define an account API `Client` or `Option<Client>` as a resource in the handler struct,
+   annotated with `#[client]` and the address of the account
+
+While these types can all be instantiated and called dynamically, it's better
+to define them as explicit resources so that:
+* framework tooling can ensure that API type definitions are consistent between different codebases
+* the framework can ensure that all required modules are present in the app at startup
+
+Here's an example of all these methods for defining client resources:
+```rust
+pub struct MyAccountHandler {
+    pub my_module_client: MyModuleApiClient,
+    pub optional_v2_client: Option<MyModuleApi2Client>,
+    pub my_module_client_factory: MyModuleApiClientFactory,
+    #[client("my_module_address")]
+    pub my_module_client: Option<MyModuleApiClient>,
+}
+```

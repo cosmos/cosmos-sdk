@@ -6,3 +6,15 @@ use proc_macro::TokenStream;
 pub fn derive_struct_codec(input: TokenStream) -> TokenStream {
     TokenStream::new()
 }
+
+/// This derives an enum codec.
+#[proc_macro_derive(EnumCodec)]
+pub fn derive_enum_codec(input: TokenStream) -> TokenStream {
+    TokenStream::new()
+}
+
+/// This derives a oneof codec.
+#[proc_macro_derive(OneOfCodec)]
+pub fn derive_oneof_codec(input: TokenStream) -> TokenStream {
+    TokenStream::new()
+}

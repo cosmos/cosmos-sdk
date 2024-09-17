@@ -18,11 +18,16 @@ type NameableValueCodec[T any] interface {
 	WithName(name string) ValueCodec[T]
 }
 
+// NamedKeyCodec wraps a KeyCodec with a name.
+// The underlying key codec MUST have exactly one field in its schema.
 type NamedKeyCodec[T any] struct {
 	KeyCodec[T]
+
+	// Name is the name of the KeyCodec in the schema.
 	Name string
 }
 
+// SchemaCodec returns the schema codec for the named key codec.
 func (n NamedKeyCodec[T]) SchemaCodec() (SchemaCodec[T], error) {
 	cdc, err := KeySchemaCodec[T](n.KeyCodec)
 	if err != nil {
@@ -31,11 +36,16 @@ func (n NamedKeyCodec[T]) SchemaCodec() (SchemaCodec[T], error) {
 	return withName(cdc, n.Name)
 }
 
+// NamedValueCodec wraps a ValueCodec with a name.
+// The underlying value codec MUST have exactly one field in its schema.
 type NamedValueCodec[T any] struct {
 	ValueCodec[T]
+
+	// Name is the name of the ValueCodec in the schema.
 	Name string
 }
 
+// SchemaCodec returns the schema codec for the named value codec.
 func (n NamedValueCodec[T]) SchemaCodec() (SchemaCodec[T], error) {
 	cdc, err := ValueSchemaCodec[T](n.ValueCodec)
 	if err != nil {

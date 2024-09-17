@@ -37,6 +37,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.47.14](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.14) - 2024-09-18
+
 ### Improvements
 
 * [#21295](https://github.com/cosmos/cosmos-sdk/pull/21295) Bump to gogoproto v1.7.0.

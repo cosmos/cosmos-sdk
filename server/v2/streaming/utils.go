@@ -11,7 +11,7 @@ func IntoStreamingEvents(events []event.Event) []*Event {
 		}
 		attrs, err := event.Attributes()
 		if err != nil {
-			continue
+			panic(err)
 		}
 		for _, eventValue := range attrs {
 			strEvent.Attributes = append(strEvent.Attributes, &EventAttribute{

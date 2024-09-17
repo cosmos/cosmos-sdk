@@ -5,6 +5,14 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
+// JSONCompatPubKey defines a public key that are json compatible.
+type JSONCompatPubKey interface {
+	Address() Address
+	Bytes() []byte
+	VerifySignature(msg []byte, sig []byte) bool
+	Type() string
+}
+
 // PubKey defines a public key and extends proto.Message.
 type PubKey interface {
 	proto.Message

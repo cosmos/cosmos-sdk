@@ -136,6 +136,10 @@ func AppGenesisFromReader(reader io.Reader) (*AppGenesis, error) {
 		vals = append(vals, val)
 	}
 
+	if len(vals) == 0 {
+		vals = nil
+	}
+
 	ag = AppGenesis{
 		AppName: version.AppName,
 		// AppVersion is not filled as we do not know it from a CometBFT genesis
@@ -180,7 +184,7 @@ func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
 func (ag *AppGenesis) ToGenesisDoc() (*cmttypes.GenesisDoc, error) {
 	cmtValidators := []cmttypes.GenesisValidator{}
 	for _, val := range ag.Consensus.Validators {
-		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(val.PubKey)
+		// cmtPk, err := cryptocodec.ToCmtPubKeyInterfaceFromJsonCompatPubkey(val.PubKey)
 		// if err != nil {
 		// 	return nil, err
 		// }

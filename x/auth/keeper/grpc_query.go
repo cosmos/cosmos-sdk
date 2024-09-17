@@ -229,12 +229,9 @@ func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInf
 	account := s.k.GetAccount(ctx, addr)
 	if account == nil {
 		xAccount, err := s.getFromXAccounts(ctx, addr)
-		if err != nil {
-			return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
-		}
 		// account info is nil it means that the account can be encapsulated into a
 		// legacy account representation but not a base account one.
-		if xAccount.Info == nil {
+		if err != nil || xAccount.Info == nil {
 			return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 		}
 		return &types.QueryAccountInfoResponse{Info: xAccount.Info}, nil

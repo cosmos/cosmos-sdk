@@ -1,4 +1,5 @@
 //! This module defines the types that can be used in the schema at a type-level.
+//!
 //! Unless you are working with the implementation details of schema encoding, then you
 //! should consider this module as something that ensures type safety.
 //! This module uses a programming style known as type-level programming where types

@@ -1,4 +1,5 @@
-//! This crate defines the basic traits and types for schema and encoding.
+#![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
+
 pub mod value;
 pub mod types;
 mod r#struct;

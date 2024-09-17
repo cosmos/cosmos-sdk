@@ -1,6 +1,6 @@
 use interchain_schema::StructCodec;
 use interchain_schema::types::*;
-use interchain_schema::value::Value;
+use interchain_schema::value::MaybeBorrowed;
 
 pub trait FieldTypes {}
 impl FieldTypes for () {}
@@ -11,7 +11,7 @@ impl<A: Type, B: Type, C: Type, D: Type> FieldTypes for (A, B, C, D) {}
 
 
 pub trait ObjectValueField<'a> {
-    type Value: Value<'a>;
+    type Value: MaybeBorrowed<'a>;
 }
 pub trait ObjectKeyField<'a>: ObjectValueField<'a> {}
 

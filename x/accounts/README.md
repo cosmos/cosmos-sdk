@@ -59,6 +59,8 @@ func (a Account) AuthRetroCompatibility(ctx context.Context, _ *authtypes.QueryL
 - Implement this handler only for account types you want to expose via x/auth gRPC methods.
 - The `info` field in the response can be nil if your account doesn't fit the `BaseAccount` structure.
 
+# Genesis
+
 ## Creating accounts on genesis
 
 In order to create accounts at genesis, the `x/accounts` module allows developers to provide

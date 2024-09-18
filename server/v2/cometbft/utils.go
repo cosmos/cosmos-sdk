@@ -70,12 +70,13 @@ func finalizeBlockResponse(
 	cp *cmtproto.ConsensusParams,
 	appHash []byte,
 	indexSet map[string]struct{},
+	debug bool,
 ) (*abci.FinalizeBlockResponse, error) {
 	allEvents := append(in.BeginBlockEvents, in.EndBlockEvents...)
 
 	resp := &abci.FinalizeBlockResponse{
 		Events:                intoABCIEvents(allEvents, indexSet),
-		TxResults:             intoABCITxResults(in.TxResults, indexSet),
+		TxResults:             intoABCITxResults(in.TxResults, indexSet, debug),
 		ValidatorUpdates:      intoABCIValidatorUpdates(in.ValidatorUpdates),
 		AppHash:               appHash,
 		ConsensusParamUpdates: cp,
@@ -97,7 +98,7 @@ func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.Vali
 	return valsetUpdates
 }
 
-func intoABCITxResults(results []server.TxResult, indexSet map[string]struct{}) []*abci.ExecTxResult {
+func intoABCITxResults(results []server.TxResult, indexSet map[string]struct{}, debug bool) []*abci.ExecTxResult {
 	res := make([]*abci.ExecTxResult, len(results))
 	for i := range results {
 		res[i] = responseExecTxResultWithEvents(
@@ -105,7 +106,7 @@ func intoABCITxResults(results []server.TxResult, indexSet map[string]struct{}) 
 			results[i].GasWanted,
 			results[i].GasUsed,
 			intoABCIEvents(results[i].Events, indexSet),
-			false,
+			debug,
 		)
 	}
 
@@ -375,15 +376,4 @@ func uint64ToInt64(u uint64) int64 {
 		return math.MaxInt64
 	}
 	return int64(u)
-}
-
-// queryResult returns a ResponseQuery from an error. It will try to parse ABCI
-// info from the error.
-func queryResult(err error) *abci.QueryResponse {
-	space, code, log := errorsmod.ABCIInfo(err, false)
-	return &abci.QueryResponse{
-		Codespace: space,
-		Code:      code,
-		Log:       log,
-	}
 }

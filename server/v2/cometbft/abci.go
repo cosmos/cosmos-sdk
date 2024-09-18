@@ -134,7 +134,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		Events:    intoABCIEvents(resp.Events, c.indexedEvents),
 	}
 	if resp.Error != nil {
-		space, code, log := errorsmod.ABCIInfo(resp.Error, false)
+		space, code, log := errorsmod.ABCIInfo(resp.Error, c.cfg.AppTomlConfig.Trace)
 		cometResp.Code = code
 		cometResp.Codespace = space
 		cometResp.Log = log
@@ -195,7 +195,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 		}
 		res, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
 		if err != nil {
-			resp := queryResult(err)
+			resp := QueryResult(err, c.cfg.AppTomlConfig.Trace)
 			resp.Height = req.Height
 			return resp, err
 
@@ -484,7 +484,7 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	return finalizeBlockResponse(resp, cp, appHash, c.indexedEvents)
+	return finalizeBlockResponse(resp, cp, appHash, c.indexedEvents, c.cfg.AppTomlConfig.Trace)
 }
 
 // Commit implements types.Application.

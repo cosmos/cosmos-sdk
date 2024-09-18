@@ -217,29 +217,31 @@ func checkStoreUpgrade(storeUpgrades *store.StoreUpgrades) error {
 	}
 
 	// check for duplicates
-	exists := make(map[string]bool)
+	addedFilter := make(map[string]struct{})
+	deletedFilter := make(map[string]struct{})
+
 	for _, key := range storeUpgrades.Added {
-		if exists[key] {
+		if _, ok := addedFilter[key]; ok {
 			return fmt.Errorf("store upgrade has duplicate key %s in added", key)
 		}
-
-		if storeUpgrades.IsDeleted(key) {
-			return fmt.Errorf("store upgrade has key %s in both added and deleted", key)
-		}
-
-		exists[key] = true
+		addedFilter[key] = struct{}{}
 	}
-	exists = make(map[string]bool)
 	for _, key := range storeUpgrades.Deleted {
-		if exists[key] {
+		if _, ok := deletedFilter[key]; ok {
 			return fmt.Errorf("store upgrade has duplicate key %s in deleted", key)
 		}
+		deletedFilter[key] = struct{}{}
+	}
 
-		if storeUpgrades.IsAdded(key) {
+	for _, key := range storeUpgrades.Added {
+		if _, ok := deletedFilter[key]; ok {
 			return fmt.Errorf("store upgrade has key %s in both added and deleted", key)
 		}
-
-		exists[key] = true
+	}
+	for _, key := range storeUpgrades.Deleted {
+		if _, ok := addedFilter[key]; ok {
+			return fmt.Errorf("store upgrade has key %s in both added and deleted", key)
+		}
 	}
 
 	return nil

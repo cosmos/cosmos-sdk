@@ -1,7 +1,7 @@
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 
 use interchain_message_api::Address;
-use interchain_core::{Context, Response};
+use interchain_core::{Context};
 use interchain_core::handler::{AccountAPI, AccountHandler, Handler, ModuleAPI, ModuleHandler};
 
 /// Defines a test harness for running tests against account and module implementations.
@@ -10,7 +10,7 @@ pub struct TestApp {}
 
 impl TestApp {
     /// Adds a module to the test harness.
-    pub fn add_module<H: ModuleHandler>(&mut self, module_name: &str, init: H::Init) -> Response<AccountInstance<H>> {
+    pub fn add_module<H: ModuleHandler>(&mut self, module_name: &str, init: H::Init) -> Result<AccountInstance<H>, ()> {
         todo!()
     }
 
@@ -20,22 +20,22 @@ impl TestApp {
     }
 
     /// Adds a mock module to the test harness.
-    pub fn add_account<H: AccountHandler>(&mut self, ctx: &mut Context, init: H::Init) -> Response<AccountInstance<H>> {
+    pub fn add_account<H: AccountHandler>(&mut self, ctx: &mut Context, init: H::Init) -> Result<AccountInstance<H>, ()> {
         todo!()
     }
 
     /// Adds a mock account to the test harness with the given address.
-    pub fn add_account_with_address<H: AccountHandler>(&mut self, ctx: &mut Context, address: &Address, init: H::Init) -> Response<AccountInstance<H>> {
+    pub fn add_account_with_address<H: AccountHandler>(&mut self, ctx: &mut Context, address: &Address, init: H::Init) -> Result<AccountInstance<H>, ()> {
         todo!()
     }
 
     /// Adds a mock account to the test harness.
-    pub fn add_mock_account(&mut self, ctx: &mut Context, mock: MockAccount) -> Response<Address> {
+    pub fn add_mock_account(&mut self, ctx: &mut Context, mock: MockAccount) -> Result<Address, ()> {
         todo!()
     }
 
     /// Adds a mock account to the test harness with the given address.
-    pub fn add_mock_account_with_address(&mut self, ctx: &mut Context, address: &Address, mock: MockAccount) -> Response<Address> {
+    pub fn add_mock_account_with_address(&mut self, ctx: &mut Context, address: &Address, mock: MockAccount) -> Result<Address, ()> {
         todo!()
     }
 
@@ -65,7 +65,7 @@ pub struct TestStorage {}
 
 impl TestStorage {
     /// Begins a transaction.
-    pub fn begin_tx(&mut self, ctx: &Context) -> Response<Context> {
+    pub fn begin_tx(&mut self, ctx: &Context) -> Result<Context, ()> {
         todo!()
     }
 

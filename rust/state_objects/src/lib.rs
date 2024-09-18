@@ -10,6 +10,7 @@ mod seq;
 mod uint_map;
 mod ordered_map;
 mod ordered_set;
+pub mod response;
 
 pub use map::{Map};
 pub use set::{Set};

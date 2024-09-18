@@ -1,8 +1,9 @@
 //! The map module contains the `Map` struct, which represents a key-value map in storage.
 
 use std::iter::Product;
-use interchain_core::{Context, Response};
+use interchain_core::{Context};
 use interchain_schema::state_object::{ObjectKey, ObjectValue, PrefixKey};
+use crate::response::Response;
 
 /// A key-value map.
 pub struct Map<K, V> {
@@ -16,7 +17,7 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
     }
 
     /// Gets the value of the map at the given key.
-    pub fn get<'a>(&self, ctx: &Context, key: K::Value<'_>) -> Response<'a, Option<V::Value<'a>>> {
+    pub fn get<'a>(&self, ctx: &Context, key: K::Value<'_>) -> Response<'a, V::Value<'a>> {
         todo!()
     }
 

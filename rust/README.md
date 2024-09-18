@@ -36,13 +36,14 @@ Follow these steps to create the basic structure for account handler:
 5. Annotate the `mod` block with `#[interchain_sdk::account_handler(MyAccountHandler)]`
 
 Here's an example:
-```rust
-#[interchain_sdk::account_handler(MyAccountHandler)]
-mod my_account_handler {
-    use interchain_sdk::*;
 
-    #[derive(Resources)]
-    pub struct MyAccountHandler {}
+```rust
+#[interchain_sdk::account_handler(MyAsset)]
+mod my_asset {
+  use interchain_sdk::*;
+
+  #[derive(Resources)]
+  pub struct MyAsset {}
 }
 ```
 
@@ -59,17 +60,31 @@ See the [`state_objects`] documentation for more complete information.
 The most basic type is [`Item`], which is a single value that can be read and written.
 Here's an example of adding an item state resource to the handler:
 ```rust
-pub struct MyAccountHandler {
+#[derive(Resources)]
+pub struct MyAsset {
+    #[item(prefix=1)]
     pub owner: Item<Address>,
 }
 ```
 
+[`Item`] fields should have the `#[item]` attribute, and the type of the field should be `Item<T>`.
+The `prefix` attribute is optional, but recommended and is used to specify the store prefix for the item.
+
 [`Map`] is a common type for any more complex state as it allows for multiple values to be stored and retrieved by a key. Here's an example of adding a map state resource to the handler:
 ```rust
-pub struct MyAccountHandler {
-    pub my_map: Map<Address, u64>,
+#[derive(Resources)]
+pub struct MyAsset {
+    #[item(prefix=1)]
+    pub owner: Item<Address>,
+  
+    #[map(prefix=2, key(account), value(amount))]
+    pub balances: Map<Address, u128>,
 }
 ```
+
+[`Map`] fields should have the `#[map]` attribute, and the type of the field should be `Map<K, V>`.
+The `key` and `value` attributes are required
+and specify the field names of the key and value fields in the map which are necessary for indexing maps for querying.
 
 ### Define the `OnCreate` Handler
 
@@ -85,13 +100,13 @@ Here's an example:
 ```rust
 #[derive(StructCodec)]
 pub struct MyAccountCreateMsg {
-    pub init_value: u64,
+    pub initial_balance: u128,
 }
 
-impl OnCreate for MyAccountHandler {
+impl OnCreate for MyAsset {
     fn on_create(&mut self, ctx: &Context, msg: &CreateMsg) -> Result<()> {
         self.owner(ctx, ctx.caller())?;
-        self.my_map.set(ctx, &ctx.caller(), msg.init_value)?;
+        self.balances.set(ctx, &ctx.caller(), msg.init_value)?;
         Ok(())
     }
 }

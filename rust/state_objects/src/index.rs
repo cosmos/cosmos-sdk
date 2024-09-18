@@ -1,5 +1,6 @@
-use interchain_core::{Context, Response};
+use interchain_core::{Context};
 use interchain_schema::state_object::{ObjectKey, PrefixKey};
+use crate::response::Response;
 
 /// An index on a set of fields in a map which may map multiple index key values to a single primary key value.
 pub struct Index<IndexKey, PrimaryKey> {

@@ -1,13 +1,12 @@
 package proofs
 
 import (
-	"sort"
-
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-	"golang.org/x/exp/maps"
+	"maps"
+	"slices"
 
 	"cosmossdk.io/math/unsafe"
 	sdkmaps "cosmossdk.io/store/internal/maps"
+	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 )
 
 // SimpleResult contains a merkle.SimpleProof along with all data needed to build the confio/proof
@@ -47,9 +46,7 @@ const (
 )
 
 func SortedKeys(data map[string][]byte) []string {
-	keys := maps.Keys(data)
-	sort.Strings(keys)
-	return keys
+	return slices.Sorted(maps.Keys(data))
 }
 
 func CalcRoot(data map[string][]byte) []byte {

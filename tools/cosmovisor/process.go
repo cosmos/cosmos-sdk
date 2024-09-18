@@ -86,7 +86,11 @@ func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger, rpcAddres
 		logger.Warn(fmt.Sprintf("failed to create CometBFT client: %s", err))
 		return
 	}
-	defer client.Stop()
+	defer func() {
+		if err := client.Stop(); err != nil {
+			logger.Warn(fmt.Sprintf("couldn't stop CometBFT client: %s", err))
+		}
+	}()
 
 	err = client.Start()
 	if err != nil {
@@ -123,7 +127,7 @@ func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger, rpcAddres
 					logger.Warn(fmt.Sprintf("error marshaling JSON: %s", err))
 					return
 				}
-				if err := os.WriteFile(cfg.UpgradeInfoFilePath(), jsonBytes, 0o755); err != nil {
+				if err := os.WriteFile(cfg.UpgradeInfoFilePath(), jsonBytes, 0o666); err != nil {
 					logger.Warn(fmt.Sprintf("error writing upgrade-info.json: %s", err))
 					return
 				}
@@ -134,7 +138,7 @@ func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger, rpcAddres
 					logger.Warn(fmt.Sprintf("error marshaling JSON: %s", err))
 					return
 				}
-				if err := os.WriteFile(cfg.UpgradeInfoBatchFilePath(), jsonBytes, 0o755); err != nil {
+				if err := os.WriteFile(cfg.UpgradeInfoBatchFilePath(), jsonBytes, 0o666); err != nil {
 					logger.Warn(fmt.Sprintf("error writing upgrade-info.json.batch: %s", err))
 					return
 				}

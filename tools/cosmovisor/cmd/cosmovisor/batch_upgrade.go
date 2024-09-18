@@ -48,13 +48,13 @@ func AddBatchUpgrade(cmd *cobra.Command, args []string) error {
 	for _, uip := range upgradeInfoPaths {
 		fileData, err := os.ReadFile(uip)
 		if err != nil {
-			return fmt.Errorf("Error reading file %s: %v", uip, err)
+			return fmt.Errorf("Error reading file %s: %w", uip, err)
 		}
 
 		// Verify it's valid JSON
 		var jsonData json.RawMessage
 		if err := json.Unmarshal(fileData, &jsonData); err != nil {
-			return fmt.Errorf("Error parsing JSON from file %s: %v", uip, err)
+			return fmt.Errorf("Error parsing JSON from file %s: %w", uip, err)
 		}
 
 		// Add to our slice
@@ -64,13 +64,13 @@ func AddBatchUpgrade(cmd *cobra.Command, args []string) error {
 	// Marshal the combined data
 	batchData, err := json.MarshalIndent(allData, "", "  ")
 	if err != nil {
-		return fmt.Errorf("Error marshaling combined JSON: %v", err)
+		return fmt.Errorf("Error marshaling combined JSON: %w", err)
 	}
 
 	// Write to output file
 	err = os.WriteFile(cfg.UpgradeInfoBatchFilePath(), batchData, 0644)
 	if err != nil {
-		return fmt.Errorf("Error writing combined JSON to file: %v", err)
+		return fmt.Errorf("Error writing combined JSON to file: %w", err)
 	}
 
 	return nil

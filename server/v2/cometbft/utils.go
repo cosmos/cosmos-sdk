@@ -73,9 +73,19 @@ func finalizeBlockResponse(
 ) (*abci.FinalizeBlockResponse, error) {
 	allEvents := append(in.BeginBlockEvents, in.EndBlockEvents...)
 
+	events, err := intoABCIEvents(allEvents, indexSet)
+	if err != nil {
+		return nil, err
+	}
+
+	txResults, err := intoABCITxResults(in.TxResults, indexSet)
+	if err != nil {
+		return nil, err
+	}
+
 	resp := &abci.FinalizeBlockResponse{
-		Events:                intoABCIEvents(allEvents, indexSet),
-		TxResults:             intoABCITxResults(in.TxResults, indexSet),
+		Events:                events,
+		TxResults:             txResults,
 		ValidatorUpdates:      intoABCIValidatorUpdates(in.ValidatorUpdates),
 		AppHash:               appHash,
 		ConsensusParamUpdates: cp,
@@ -97,7 +107,7 @@ func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.Vali
 	return valsetUpdates
 }
 
-func intoABCITxResults(results []server.TxResult, indexSet map[string]struct{}) []*abci.ExecTxResult {
+func intoABCITxResults(results []server.TxResult, indexSet map[string]struct{}) ([]*abci.ExecTxResult, error) {
 	res := make([]*abci.ExecTxResult, len(results))
 	for i := range results {
 		if results[i].Error != nil {
@@ -110,26 +120,29 @@ func intoABCITxResults(results []server.TxResult, indexSet map[string]struct{}) 
 
 			continue
 		}
-
+		events, err := intoABCIEvents(results[i].Events, indexSet)
+		if err != nil {
+			return nil, err
+		}
 		res[i] = responseExecTxResultWithEvents(
 			results[i].Error,
 			results[i].GasWanted,
 			results[i].GasUsed,
-			intoABCIEvents(results[i].Events, indexSet),
+			events,
 			false,
 		)
 	}
 
-	return res
+	return res, nil
 }
 
-func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) []abci.Event {
+func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) ([]abci.Event, error) {
 	indexAll := len(indexSet) == 0
 	abciEvents := make([]abci.Event, len(events))
 	for i, e := range events {
 		attributes, err := e.Attributes()
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		abciEvents[i] = abci.Event{
 			Type:       e.Type,
@@ -145,7 +158,7 @@ func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) []abci.E
 			}
 		}
 	}
-	return abciEvents
+	return abciEvents, nil
 }
 
 func intoABCISimulationResponse(txRes server.TxResult, indexSet map[string]struct{}) ([]byte, error) {
@@ -154,7 +167,7 @@ func intoABCISimulationResponse(txRes server.TxResult, indexSet map[string]struc
 	for i, e := range txRes.Events {
 		attributes, err := e.Attributes()
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		abciEvents[i] = abci.Event{
 			Type:       e.Type,

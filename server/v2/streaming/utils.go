@@ -2,7 +2,7 @@ package streaming
 
 import "cosmossdk.io/core/event"
 
-func IntoStreamingEvents(events []event.Event) []*Event {
+func IntoStreamingEvents(events []event.Event) ([]*Event, error) {
 	streamingEvents := make([]*Event, len(events))
 
 	for _, event := range events {
@@ -11,7 +11,7 @@ func IntoStreamingEvents(events []event.Event) []*Event {
 		}
 		attrs, err := event.Attributes()
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 		for _, eventValue := range attrs {
 			strEvent.Attributes = append(strEvent.Attributes, &EventAttribute{
@@ -22,5 +22,5 @@ func IntoStreamingEvents(events []event.Event) []*Event {
 		streamingEvents = append(streamingEvents, strEvent)
 	}
 
-	return streamingEvents
+	return streamingEvents, nil
 }

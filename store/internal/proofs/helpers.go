@@ -4,9 +4,10 @@ import (
 	"maps"
 	"slices"
 
+	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+
 	"cosmossdk.io/math/unsafe"
 	sdkmaps "cosmossdk.io/store/internal/maps"
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 )
 
 // SimpleResult contains a merkle.SimpleProof along with all data needed to build the confio/proof

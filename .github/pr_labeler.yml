@@ -10,8 +10,10 @@
 "C:Keys":
   - client/keys/**/*
 "C:Simulations":
+  - types/simulation/**/*
   - x/simulation/**/*
   - x/*/simulation/**/*
+  - simsx/**/*
 "C:Store":
   - store/**/*
 "C:collections":

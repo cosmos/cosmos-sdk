@@ -7,6 +7,9 @@ import (
 	"reflect"
 	"strings"
 
+	"cosmossdk.io/math"
+	cosmos_proto "github.com/cosmos/cosmos-proto"
+
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -138,6 +141,10 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		if err != nil {
 			return nil, err
 		}
+		// err = postfixDynamicMessage(dynamicMsg.ProtoReflect())
+		// if err != nil {
+		// 	return nil, err
+		// }
 		dynamicMsgs = append(dynamicMsgs, dynamicMsg)
 
 		// unmarshal into gogoproto message
@@ -175,6 +182,40 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		TxBodyHasUnknownNonCriticals: txBodyHasUnknownNonCriticals,
 		Signers:                      signers,
 	}, nil
+}
+
+func postfixDynamicMessage(msg protoreflect.Message) error {
+	fields := msg.Descriptor().Fields()
+	for i := 0; i < fields.Len(); i++ {
+		field := fields.Get(i)
+		v := msg.Get(field)
+
+		switch val := v.Interface().(type) {
+		case protoreflect.Message:
+			err := postfixDynamicMessage(val)
+			if err != nil {
+				return err
+			}
+		case string:
+			fieldOpts := field.Options()
+			if proto.HasExtension(fieldOpts, cosmos_proto.E_Scalar) {
+				scalar := proto.GetExtension(fieldOpts, cosmos_proto.E_Scalar).(string)
+				switch scalar {
+				case "cosmos.Dec":
+					dec := &math.LegacyDec{}
+					err := dec.Unmarshal([]byte(val))
+					if err != nil {
+						return err
+					}
+					decStr := dec.String()
+					fmt.Printf("set %s=%s at %d\n", field.Name(), decStr, field.Number())
+					valStr := protoreflect.ValueOfString(decStr)
+					msg.Set(field, valStr)
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // Hash implements the interface for the Tx interface.

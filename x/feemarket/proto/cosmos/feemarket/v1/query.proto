@@ -1,0 +1,85 @@
+syntax = "proto3";
+package cosmos.feemarket.v1;
+
+option go_package = "cosmossdk.io/x/feemarket/types";
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "amino/amino.proto";
+import "feemarket/feemarket/v1/params.proto";
+import "feemarket/feemarket/v1/genesis.proto";
+
+// Query Service for the feemarket module.
+service Query {
+  // Params returns the current feemarket module parameters.
+  rpc Params(ParamsRequest) returns (ParamsResponse) {
+    option (google.api.http) = {
+      get: "/feemarket/v1/params"
+    };
+  };
+
+  // State returns the current feemarket module state.
+  rpc State(StateRequest) returns (StateResponse) {
+    option (google.api.http) = {
+      get: "/feemarket/v1/state"
+    };
+  };
+
+  // GasPrice returns the current feemarket module gas price
+  // for specified denom.
+  rpc GasPrice(GasPriceRequest) returns (GasPriceResponse) {
+    option (google.api.http) = {
+      get: "/feemarket/v1/gas_price/{denom}"
+    };
+  };
+
+  // GasPrices returns the current feemarket module list of gas prices
+  // in all available denoms.
+  rpc GasPrices(GasPricesRequest) returns (GasPricesResponse) {
+    option (google.api.http) = {
+      get: "/feemarket/v1/gas_prices"
+    };
+  };
+}
+
+// ParamsRequest is the request type for the Query/Params RPC method.
+message ParamsRequest {}
+
+// ParamsResponse is the response type for the Query/Params RPC method.
+message ParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// StateRequest is the request type for the Query/State RPC method.
+message StateRequest {}
+
+// StateResponse is the response type for the Query/State RPC method.
+message StateResponse {
+  State state = 1 [(gogoproto.nullable) = false];
+}
+
+// GasPriceRequest is the request type for the Query/GasPrice RPC method.
+message GasPriceRequest {
+  // denom we are querying gas price in
+  string denom = 1;
+}
+
+// GasPriceResponse is the response type for the Query/GasPrice RPC method.
+// Returns a gas price in specified denom.
+message GasPriceResponse {
+  cosmos.base.v1beta1.DecCoin price = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// GasPriceRequest is the request type for the Query/GasPrices RPC method.
+message GasPricesRequest {}
+
+// GasPricesResponse is the response type for the Query/GasPrices RPC method.
+// Returns a gas price in all available denoms.
+message GasPricesResponse {
+  repeated cosmos.base.v1beta1.DecCoin prices = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
+  ];
+}

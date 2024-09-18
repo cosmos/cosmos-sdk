@@ -1,0 +1,47 @@
+syntax = "proto3";
+package cosmos.feemarket.v1;
+
+option go_package = "cosmossdk.io/x/feemarket/types";
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "feemarket/feemarket/v1/params.proto";
+
+// GenesisState defines the feemarket module's genesis state.
+message GenesisState {
+  // Params are the parameters for the feemarket module. These parameters
+  // can be utilized to implement both the base EIP-1559 fee market and
+  // and the AIMD EIP-1559 fee market.
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  // State contains the current state of the AIMD fee market.
+  State state = 2 [(gogoproto.nullable) = false];
+}
+
+// State is utilized to track the current state of the fee market. This includes
+// the current base fee, learning rate, and block utilization within the
+// specified AIMD window.
+message State {
+  // BaseGasPrice is the current base fee. This is denominated in the fee per
+  // gas unit.
+  string base_gas_price = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+
+  // LearningRate is the current learning rate.
+  string learning_rate = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+
+  // Window contains a list of the last blocks' utilization values. This is used
+  // to calculate the next base fee. This stores the number of units of gas
+  // consumed per block.
+  repeated uint64 window = 3;
+
+  // Index is the index of the current block in the block utilization window.
+  uint64 index = 4;
+}

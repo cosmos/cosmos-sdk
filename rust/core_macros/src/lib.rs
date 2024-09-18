@@ -5,7 +5,7 @@ use std::default::Default;
 use proc_macro2::TokenStream as TokenStream2;
 use manyhow::{bail, error_message, manyhow};
 use quote::{format_ident, quote, ToTokens};
-use syn::{parse2, parse_macro_input, token, Attribute, File, Item, ItemImpl, ItemMod, Type};
+use syn::{parse2, parse_macro_input, parse_quote, token, Attribute, File, Item, ItemImpl, ItemMod, Type};
 use std::borrow::Borrow;
 use deluxe::ExtractAttributes;
 use heck::{AsUpperCamelCase, ToUpperCamelCase};
@@ -20,6 +20,12 @@ struct HandlerArgs(syn::Ident);
 pub fn account_handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenStream2> {
     let HandlerArgs(handler) = deluxe::parse2(attr)?;
     let items = &mut item.content.as_mut().unwrap().1;
+
+    let mut publish_targets = vec![];
+    for item in items.iter_mut() {
+        collect_publish_targets(&handler, item, &mut publish_targets)?;
+    }
+
     push_item(items, quote! {
         impl ::interchain_core::handler::Handler for #handler {
             type Init = ();
@@ -40,10 +46,31 @@ pub fn account_handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result
     push_item(items, quote! {
         pub struct #client_factory_ident;
     })?;
-    let mut publish_targets = vec![];
-    for item in items.iter_mut() {
-        collect_publish_targets(&handler, item, &mut publish_targets)?;
-    }
+    push_item(items, quote! {
+        unsafe impl ::interchain_core::resource::Resource for #client_factory_ident {
+            unsafe fn new(initializer: &mut ::interchain_core::resource::Initializer) -> Result<Self, ::interchain_core::resource::InitializationError> {
+                todo!()
+            }
+        }
+    })?;
+    push_item(items, quote! {
+        impl ::interchain_core::handler::AccountClientFactory for #client_factory_ident {
+            type Client = #client_ident;
+
+            fn new_client(address: &::interchain_message_api::Address) -> Self::Client {
+                #client_ident(address.clone())
+            }
+        }
+    })?;
+    push_item(items, quote! {
+        impl ::interchain_core::handler::AccountAPI for #handler {
+            type ClientFactory = #client_factory_ident;
+        }
+    })?;
+    push_item(items, quote! {
+        impl ::interchain_core::handler::AccountHandler for #handler {}
+    })?;
+
 
     let mut client_fn_impls = vec![];
     for publish_target in publish_targets.iter() {
@@ -65,6 +92,14 @@ pub fn account_handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result
                     let field = match pat_type.pat.as_ref() {
                         syn::Pat::Ident(ident) => {
                             let ty = pat_type.ty.clone();
+                            match ty.as_ref() {
+                                Type::Reference(tyref) => {
+                                    if tyref.elem == parse_quote!(Context) {
+                                        continue;
+                                    }
+                                }
+                                _ => {}
+                            }
                             msg_fields.push(quote! {
                                 #ident: #ty,
                             });

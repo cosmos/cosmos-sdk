@@ -14,12 +14,12 @@ pub trait AccountHandler: AccountAPI + Handler {}
 
 /// Account API trait.
 pub trait AccountAPI {
-    /// Account factory type.
-    type Factory: AccountFactory;
+    /// Account client factory type.
+    type ClientFactory: AccountClientFactory;
 }
 
 /// Account factory trait.
-pub trait AccountFactory: Resource {
+pub trait AccountClientFactory: Resource {
     /// Account client type.
     type Client;
 

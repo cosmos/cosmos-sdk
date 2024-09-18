@@ -35,8 +35,8 @@ mod tests {
     #[test]
     fn test_counter() {
         let mut app = TestApp::default();
-        let mut alice_ctx = app.new_client_context();
-        let counter_inst = app.add_account::<Counter>(&mut alice_ctx, ()).unwrap();
+        let alice = app.new_client_address();
+        let counter_inst = app.add_account::<Counter>(&alice, ()).unwrap();
     }
 }
 

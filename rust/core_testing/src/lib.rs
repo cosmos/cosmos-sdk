@@ -20,12 +20,12 @@ impl TestApp {
     }
 
     /// Adds a mock module to the test harness.
-    pub fn add_account<H: AccountHandler>(&mut self, ctx: &mut Context, init: H::Init) -> Result<AccountInstance<H>, ()> {
+    pub fn add_account<H: AccountHandler>(&mut self, caller: &Address, init: H::Init) -> Result<AccountInstance<H>, ()> {
         todo!()
     }
 
     /// Adds a mock account to the test harness with the given address.
-    pub fn add_account_with_address<H: AccountHandler>(&mut self, ctx: &mut Context, address: &Address, init: H::Init) -> Result<AccountInstance<H>, ()> {
+    pub fn add_account_with_address<H: AccountHandler>(&mut self, caller: &Address, address: &Address, init: H::Init) -> Result<AccountInstance<H>, ()> {
         todo!()
     }
 
@@ -35,19 +35,24 @@ impl TestApp {
     }
 
     /// Adds a mock account to the test harness with the given address.
-    pub fn add_mock_account_with_address(&mut self, ctx: &mut Context, address: &Address, mock: MockAccount) -> Result<Address, ()> {
+    pub fn add_mock_account_with_address(&mut self, address: &Address, mock: MockAccount) -> Result<Address, ()> {
+        todo!()
+    }
+
+    /// Creates a new random client address that can be used in calls.
+    pub fn new_client_address(&mut self) -> Address {
         todo!()
     }
 
     /// Creates a new client context with a random address.
-    pub fn new_client_context(&mut self) -> Context {
+    pub fn client_context(&mut self, address: &Address) -> &mut Context {
         todo!()
     }
-
-    /// Creates a new client context with the given address.
-    pub fn new_client_context_with_address(&mut self, address: &Address) -> Context {
-        todo!()
-    }
+    //
+    // /// Creates a new client context with the given address.
+    // pub fn new_client_context_with_address(&mut self, address: &Address) -> Context {
+    //     todo!()
+    // }
 
     /// Returns the test storage.
     pub fn storage(&self) -> &TestStorage {

@@ -169,7 +169,7 @@ func (enc Encoder) DefineTypeEncoding(typeURL string, encoder MessageEncoder) En
 // Marshal serializes a protobuf message to JSON.
 func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	err := enc.beginMarshal(message.ProtoReflect(), buf, false, enc.aminoNameAsTypeURL)
+	err := enc.beginMarshal(message.ProtoReflect(), buf, false)
 	if err != nil {
 		return nil, err
 	}
@@ -186,19 +186,24 @@ func (enc Encoder) Marshal(message proto.Message) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer, isAny, useTypeUrl bool) error {
+func (enc Encoder) beginMarshal(msg protoreflect.Message, writer io.Writer, isAny bool) error {
 	var (
 		name  string
 		named bool
 	)
 
-	switch {
-	case useTypeUrl:
-		name, named = getMessageTypeURL(msg), true
-	case isAny:
-		name, named = getMessageAminoNameAny(msg), true
-	default:
+	if isAny {
+		if enc.aminoNameAsTypeURL {
+			name, named = getMessageTypeURL(msg), true
+		} else {
+			name, named = getMessageAminoNameAny(msg), true
+		}
+	} else {
 		name, named = getMessageAminoName(msg)
+		if enc.aminoNameAsTypeURL {
+			// do not override named
+			name = getMessageTypeURL(msg)
+		}
 	}
 
 	if named {

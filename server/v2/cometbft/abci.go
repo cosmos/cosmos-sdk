@@ -134,8 +134,10 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		Events:    intoABCIEvents(resp.Events, c.indexedEvents),
 	}
 	if resp.Error != nil {
-		cometResp.Code = 1
-		cometResp.Log = resp.Error.Error()
+		space, code, log := errorsmod.ABCIInfo(resp.Error, true)
+		cometResp.Code = code
+		cometResp.Codespace = space
+		cometResp.Log = log
 	}
 
 	return cometResp, nil

@@ -122,7 +122,8 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 	}
 
 	resp, err := c.app.ValidateTx(ctx, decodedTx)
-	if err != nil {
+	// we do not want to return a cometbft error, but a check tx response with the error
+	if err != nil && err != resp.Error {
 		return nil, err
 	}
 
@@ -136,6 +137,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		cometResp.Code = 1
 		cometResp.Log = resp.Error.Error()
 	}
+
 	return cometResp, nil
 }
 

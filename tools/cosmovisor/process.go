@@ -1,6 +1,7 @@
 package cosmovisor
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,20 +10,19 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
-	"context"
-	"sort"
 
 	"github.com/otiai10/copy"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cometbft/cometbft/rpc/client/http"
 	cmttypes "github.com/cometbft/cometbft/types"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 type Launcher struct {
@@ -30,7 +30,6 @@ type Launcher struct {
 	cfg    *Config
 	fw     *fileWatcher
 }
-
 
 func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 	fw, err := newUpgradeFileWatcher(cfg)
@@ -40,7 +39,6 @@ func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 
 	return Launcher{logger: logger, cfg: cfg, fw: fw}, nil
 }
-
 
 func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger, rpcAddress string) error {
 	// load batch file in memory

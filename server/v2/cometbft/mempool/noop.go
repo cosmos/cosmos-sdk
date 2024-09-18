@@ -4,8 +4,11 @@ import (
 	"context"
 
 	"cosmossdk.io/core/transaction"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var _ Mempool[sdk.Tx] = (*NoOpMempool[sdk.Tx])(nil) // verify interface at compile time
 var _ Mempool[transaction.Tx] = (*NoOpMempool[transaction.Tx])(nil)
 
 // NoOpMempool defines a no-op mempool. Transactions are completely discarded and
@@ -16,7 +19,8 @@ var _ Mempool[transaction.Tx] = (*NoOpMempool[transaction.Tx])(nil)
 // is FIFO-ordered by default.
 type NoOpMempool[T transaction.Tx] struct{}
 
-func (NoOpMempool[T]) Insert(context.Context, T) error         { return nil }
-func (NoOpMempool[T]) Select(context.Context, []T) Iterator[T] { return nil }
-func (NoOpMempool[T]) CountTx() int                            { return 0 }
-func (NoOpMempool[T]) Remove([]T) error                        { return nil }
+func (NoOpMempool[T]) Insert(context.Context, T) error             { return nil }
+func (NoOpMempool[T]) Select(context.Context, []T) Iterator[T]     { return nil }
+func (NoOpMempool[T]) SelectBy(context.Context, []T, func(T) bool) {}
+func (NoOpMempool[T]) CountTx() int                                { return 0 }
+func (NoOpMempool[T]) Remove(T) error                              { return nil }

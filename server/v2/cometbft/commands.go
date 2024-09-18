@@ -106,15 +106,13 @@ func ShowValidatorCmd() *cobra.Command {
 				return err
 			}
 
-			cmd.Println(sdkPK) // TODO: figure out if we need the codec here or not, see below
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			bz, err := clientCtx.Codec.MarshalInterfaceJSON(sdkPK)
+			if err != nil {
+				return err
+			}
 
-			// clientCtx := client.GetClientContextFromCmd(cmd)
-			// bz, err := clientCtx.Codec.MarshalInterfaceJSON(sdkPK)
-			// if err != nil {
-			// 	return err
-			// }
-
-			// cmd.Println(string(bz))
+			cmd.Println(string(bz))
 			return nil
 		},
 	}

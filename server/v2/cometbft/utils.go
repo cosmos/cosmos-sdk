@@ -100,17 +100,6 @@ func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.Vali
 func intoABCITxResults(results []server.TxResult, indexSet map[string]struct{}) []*abci.ExecTxResult {
 	res := make([]*abci.ExecTxResult, len(results))
 	for i := range results {
-		if results[i].Error != nil {
-			space, code, log := errorsmod.ABCIInfo(results[i].Error, true)
-			res[i] = &abci.ExecTxResult{
-				Codespace: space,
-				Code:      code,
-				Log:       log,
-			}
-
-			continue
-		}
-
 		res[i] = responseExecTxResultWithEvents(
 			results[i].Error,
 			results[i].GasWanted,
@@ -366,10 +355,10 @@ func (c *Consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, com
 func (c *Consensus[T]) checkHalt(height int64, time time.Time) error {
 	var halt bool
 	switch {
-	case c.cfg.AppTomlConfig.HaltHeight > 0 && uint64(height) > c.cfg.AppTomlConfig.HaltHeight:
+	case c.cfg.AppTomlConfig.HaltHeight > 0 && uint64(height) >= c.cfg.AppTomlConfig.HaltHeight:
 		halt = true
 
-	case c.cfg.AppTomlConfig.HaltTime > 0 && time.Unix() > int64(c.cfg.AppTomlConfig.HaltTime):
+	case c.cfg.AppTomlConfig.HaltTime > 0 && time.Unix() >= int64(c.cfg.AppTomlConfig.HaltTime):
 		halt = true
 	}
 

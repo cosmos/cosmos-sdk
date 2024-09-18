@@ -59,7 +59,6 @@ func startInProcess(cfg Config, val *Validator) error {
 			}, err
 		}
 		gen, err := appGenesis.ToGenesisDoc()
-		fmt.Println("is", gen.Validators == nil)
 		if err != nil {
 			return node.ChecksummedGenesisDoc{
 				Sha256Checksum: []byte{},

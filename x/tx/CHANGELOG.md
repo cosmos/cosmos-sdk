@@ -33,6 +33,12 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
+## [v0.13.5](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.5) - 2024-09-18
+
+### Improvements
+
+* [#21712](https://github.com/cosmos/cosmos-sdk/pull/21712) Add `AminoNameAsTypeURL` option to Amino JSON encoder.
+
 ## [v0.13.4](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.4) - 2024-08-02
 
 ### Improvements

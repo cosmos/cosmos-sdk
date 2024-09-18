@@ -62,29 +62,28 @@ Here's an example of adding an item state resource to the handler:
 ```rust
 #[derive(Resources)]
 pub struct MyAsset {
-    #[item(prefix=1)]
+    #[schema(prefix=1)]
     pub owner: Item<Address>,
 }
 ```
 
-[`Item`] fields should have the `#[item]` attribute, and the type of the field should be `Item<T>`.
-The `prefix` attribute is optional, but recommended and is used to specify the store prefix for the item.
+All state object resources should have the `#[schema]` attribute.
+The `prefix` attribute indicates the store key prefix and is optional, but recommended.
 
 [`Map`] is a common type for any more complex state as it allows for multiple values to be stored and retrieved by a key. Here's an example of adding a map state resource to the handler:
 ```rust
 #[derive(Resources)]
 pub struct MyAsset {
-    #[item(prefix=1)]
+    #[schema(prefix=1)]
     pub owner: Item<Address>,
   
-    #[map(prefix=2, key(account), value(amount))]
+    #[schema(prefix=2, key(account), value(amount))]
     pub balances: Map<Address, u128>,
 }
 ```
 
-[`Map`] fields should have the `#[map]` attribute, and the type of the field should be `Map<K, V>`.
-The `key` and `value` attributes are required
-and specify the field names of the key and value fields in the map which are necessary for indexing maps for querying.
+Map state objects require `key` and `value` parameters in their `#[schema]` attribute
+in order to name the key and value fields in the map for querying by clients.
 
 ### Define the `OnCreate` Handler
 

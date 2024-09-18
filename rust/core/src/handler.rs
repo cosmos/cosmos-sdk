@@ -6,7 +6,7 @@ use crate::resource::{InitializationError, Initializer, Resource};
 /// Handler trait for account and module handlers.
 pub trait Handler {
     /// The parameter used for initializing the handler.
-    type Init: StructCodec;
+    type Init /*: StructCodec*/;
 }
 
 /// Account handler trait.

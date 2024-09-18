@@ -13,5 +13,5 @@ interchain_message_api = { path = "../message_api" }
 interchain_schema = { path = "../schema" }
 
 [features]
-default = []
+default = ["std"]
 std = []

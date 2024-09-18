@@ -1,6 +1,5 @@
-use std::task::Context;
 use interchain_schema::StructCodec;
-use crate::Response;
+use crate::{Context, Response};
 
 /// The trait that account handlers define to initialize themselves.
 pub trait OnCreate {

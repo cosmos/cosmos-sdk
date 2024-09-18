@@ -15,3 +15,8 @@ workspace = true
 syn = { version = "2.0.77", features = [] }
 quote = "1.0.37"
 deluxe = "0.5.0"
+
+[features]
+default = ["std"]
+std = []
+parallel_safe = []

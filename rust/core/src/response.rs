@@ -2,7 +2,8 @@ use interchain_schema::value::{ResponseValue};
 
 /// Response is the type that should be used for message handler responses.
 #[cfg(feature = "std")]
-pub type Response<'a, R: ResponseValue, E: ResponseValue = ()> = Result<R::MaybeBorrowed<'_>::Owned, E::MaybeBorrowed<'_>::Owned>;
+pub type Response<'a, R: ResponseValue, E: ResponseValue = ()> =
+    Result<<<R as ResponseValue>::MaybeBorrowed<'a> as ToOwned>::Owned, <<E as ResponseValue>::MaybeBorrowed<'a> as ToOwned>::Owned>;
 
 /// Response is the type that should be used for message handler responses.
 #[cfg(not(feature = "std"))]

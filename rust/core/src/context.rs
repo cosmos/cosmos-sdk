@@ -1,4 +1,5 @@
 use interchain_message_api::Address;
+use interchain_schema::value::ResponseValue;
 use crate::handler::{AccountAPI, AccountFactory, AccountHandler, AccountClient, ModuleAPI};
 use crate::message::Message;
 use crate::response::Response;
@@ -19,6 +20,11 @@ impl <'a> Context<'a> {
     /// This is the address of the account which is making the message call.
     pub fn caller(&self) -> &Address {
         unimplemented!()
+    }
+
+    /// Returns a new response with the given value.
+    pub fn ok<R: ResponseValue, E: ResponseValue>(&self, res: <R as ResponseValue>::MaybeBorrowed<'a>) -> Response<'a, R, E> {
+        Ok(res.to_owned())
     }
 
     /// Dynamically invokes a module message.

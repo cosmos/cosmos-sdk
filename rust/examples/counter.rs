@@ -8,20 +8,17 @@ pub mod counter {
         value: Item<u64>,
     }
 
-    impl OnCreate for Counter {
-        type InitMessage = ();
-
-        fn on_create(&self, ctx: &mut std::task::Context, init: &Self::InitMessage) -> Response<()> {
-            Ok(())
-        }
-    }
-
-    #[publish]
     impl Counter {
+        #[on_create]
+        pub fn create(ctx: &mut Context) {
+        }
+
+        #[publish]
         pub fn get(&self, ctx: &Context) -> Response<u64> {
             self.value.get(ctx)
         }
 
+        #[publish]
         pub fn inc(&mut self, ctx: &mut Context) -> Response<()> {
             let value = self.value.get(ctx)?;
             let new_value = value.checked_add(1).ok_or(())?;

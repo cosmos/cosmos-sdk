@@ -10,6 +10,7 @@ use (
 	./x/accounts
 	./x/accounts/defaults/base
 	./x/accounts/defaults/lockup
+	./x/accounts/defaults/multisig
 	./x/auth
 	./x/authz
 	./x/bank

@@ -116,20 +116,21 @@ func TestSimsMsgRegistryAdapter(t *testing.T) {
 }
 
 func TestUniqueTypeRegistry(t *testing.T) {
-	f1 := SimMsgFactoryFn[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
+	exampleFactory := SimMsgFactoryFn[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
 		return []SimAccount{}, nil
 	})
+
 	specs := map[string]struct {
 		src    []WeightedFactory
-		exp    []WeightedFactory
+		exp    []WeightedFactoryMethod
 		expErr bool
 	}{
 		"unique": {
-			src: []WeightedFactory{{Weight: 1, Factory: f1}},
-			exp: []WeightedFactory{{Weight: 1, Factory: f1}},
+			src: []WeightedFactory{{Weight: 1, Factory: exampleFactory}},
+			exp: []WeightedFactoryMethod{{Weight: 1, Factory: exampleFactory.Create()}},
 		},
 		"duplicate": {
-			src:    []WeightedFactory{{Weight: 1, Factory: f1}, {Weight: 2, Factory: f1}},
+			src:    []WeightedFactory{{Weight: 1, Factory: exampleFactory}, {Weight: 2, Factory: exampleFactory}},
 			expErr: true,
 		},
 	}
@@ -148,11 +149,56 @@ func TestUniqueTypeRegistry(t *testing.T) {
 				reg.Add(v.Weight, v.Factory)
 			}
 			// then
-			var got []WeightedFactory
-			for w, f := range reg.Iterator() {
-				got = append(got, WeightedFactory{Weight: w, Factory: f})
-			}
+			got := readAll(reg.Iterator())
 			require.Len(t, got, len(spec.exp))
 		})
 	}
+}
+
+func TestWeightedFactories(t *testing.T) {
+	r := NewWeightedFactoryMethods()
+	f1 := func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
+		panic("not implemented")
+	}
+	f2 := func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
+		panic("not implemented")
+	}
+	r.Add(1, f1)
+	r.Add(2, f2)
+	got := readAll(r.Iterator())
+	require.Len(t, got, 2)
+
+	assert.Equal(t, uint32(1), r[0].Weight)
+	assert.Equal(t, uint32(2), r[1].Weight)
+}
+
+func TestAppendIterators(t *testing.T) {
+	r1 := NewWeightedFactoryMethods()
+	r1.Add(2, func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
+		panic("not implemented")
+	})
+	r1.Add(2, func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
+		panic("not implemented")
+	})
+	r1.Add(3, func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
+		panic("not implemented")
+	})
+	r2 := NewUniqueTypeRegistry()
+	r2.Add(1, SimMsgFactoryFn[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
+		panic("not implemented")
+	}))
+	// when
+	all := readAll(AppendIterators(r1.Iterator(), r2.Iterator()))
+	// then
+	require.Len(t, all, 4)
+	gotWeights := Collect(all, func(a WeightedFactoryMethod) uint32 { return a.Weight })
+	assert.Equal(t, []uint32{2, 2, 3, 1}, gotWeights)
+}
+
+func readAll(iterator WeightedProposalMsgIter) []WeightedFactoryMethod {
+	var ret []WeightedFactoryMethod
+	for w, f := range iterator {
+		ret = append(ret, WeightedFactoryMethod{Weight: w, Factory: f})
+	}
+	return ret
 }

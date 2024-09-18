@@ -2,8 +2,6 @@ module cosmossdk.io/store
 
 go 1.23
 
-toolchain go1.23.0
-
 require (
 	cosmossdk.io/core v1.0.0-alpha.2
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000

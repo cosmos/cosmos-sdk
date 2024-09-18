@@ -118,7 +118,7 @@ require (
 	github.com/petermattis/goid v0.0.0-20240813172612-4fcff4a6cae7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.20.3 // indirect
+	github.com/prometheus/client_golang v1.20.4 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.59.1 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
@@ -177,6 +177,7 @@ replace (
 	cosmossdk.io/x/accounts => ../../.
 	cosmossdk.io/x/bank => ../../../bank
 	cosmossdk.io/x/consensus => ../../../consensus
+	cosmossdk.io/x/distribution => ../../../distribution
 	cosmossdk.io/x/gov => ../../../gov
 	cosmossdk.io/x/mint => ../../../mint
 	cosmossdk.io/x/protocolpool => ../../../protocolpool

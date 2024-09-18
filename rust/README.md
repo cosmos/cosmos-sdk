@@ -8,8 +8,8 @@ This is the single import, batteries-included crate for building applications wi
 - [Creating an Account Handler](#creating-an-account-handler)
   * [Basic Structure](#basic-structure)
   * [Define the account's state](#define-the-accounts-state)
-  * [Define the `OnCreate` Handler](#define-the-oncreate-handler)
   * [Implement message handlers](#implement-message-handlers)
+  * [Define the `OnCreate` Handler](#define-the-oncreate-handler)
   * [Emitting Events](#emitting-events)
 - [Creating a Module Handler](#creating-a-module-handler)
 - [Calling other accounts or modules](#calling-other-accounts-or-modules)
@@ -85,32 +85,6 @@ pub struct MyAsset {
 Map state objects require `key` and `value` parameters in their `#[schema]` attribute
 in order to name the key and value fields in the map for querying by clients.
 
-### Define the `OnCreate` Handler
-
-Every account handler must implement the [`OnCreate`] trait,
-which defines the behavior when an account is created.
-This is where you can set any initial state of the account.
-The [`OnCreate`] implementation must define an `InitMessage`,
-which is the message that is passed to the account when it is created.
-That struct must derive [`StructCodec`] which allows
-it to be serialized and deserialized.
-
-Here's an example:
-```rust
-#[derive(StructCodec)]
-pub struct MyAccountCreateMsg {
-    pub initial_balance: u128,
-}
-
-impl OnCreate for MyAsset {
-    fn on_create(&mut self, ctx: &Context, msg: &CreateMsg) -> Result<()> {
-        self.owner(ctx, ctx.caller())?;
-        self.balances.set(ctx, &ctx.caller(), msg.init_value)?;
-        Ok(())
-    }
-}
-```
-
 ### Implement message handlers
 
 Message handlers can be defined by attaching the `#[publish]` attribute to one of the
@@ -157,6 +131,25 @@ pub trait GetMyValue {
 impl GetMyValue for MyAccountHandler {
     fn get_my_value(&self, ctx: &Context) -> Response<u64> {
         Ok(self.my_map.get(ctx, &ctx.caller())?)
+    }
+}
+```
+### Define an `on_create` method
+
+One function in the handler struct can be defined as the "on create" method
+by attaching the `#[on_create]` attribute to it.
+This function will get called when the account is created and appropriate
+arguments must be provided to it by the caller creating this account.
+This method should return a [`Response<()>`].
+
+Here's an example:
+```rust
+impl MyAsset {
+    #[on_create]
+    fn on_create(&mut self, ctx: &Context, initial_balance: u128) -> Result<()> {
+        self.owner(ctx, ctx.caller())?;
+        self.balances.set(ctx, &ctx.caller(), initial_balance)?;
+        Ok(())
     }
 }
 ```

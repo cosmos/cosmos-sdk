@@ -7,8 +7,6 @@ pub use interchain_core::Response;
 #[doc(inline)]
 pub use interchain_core::EventBus;
 #[doc(inline)]
-pub use interchain_core::OnCreate;
-#[doc(inline)]
 pub use interchain_core::resource::Resources;
 
 #[doc(inline)]

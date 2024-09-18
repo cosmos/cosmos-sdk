@@ -13,9 +13,7 @@ mod message;
 pub mod self_destruct;
 pub mod handler;
 pub mod resource;
-mod on_create;
 
 pub use context::Context;
 pub use response::Response;
 pub use events::EventBus;
-pub use on_create::OnCreate;

@@ -101,8 +101,8 @@ type ValidatorI interface {
 
 // GenesisValidator is an initial validator.
 type GenesisValidator struct {
-	Address ConsAddress                  `json:"address"`
-	PubKey  cryptotypes.JSONCompatPubKey `json:"pub_key"`
-	Power   int64                        `json:"power"`
-	Name    string                       `json:"name"`
+	Address ConsAddress            `json:"address"`
+	PubKey  cryptotypes.JSONPubKey `json:"pub_key"`
+	Power   int64                  `json:"power"`
+	Name    string                 `json:"name"`
 }

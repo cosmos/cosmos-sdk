@@ -6,7 +6,7 @@ import (
 )
 
 // JSONCompatPubKey defines a public key that are json compatible.
-type JSONCompatPubKey interface {
+type JSONPubKey interface {
 	Address() Address
 	Bytes() []byte
 	VerifySignature(msg, sig []byte) bool

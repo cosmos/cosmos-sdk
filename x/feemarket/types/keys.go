@@ -21,6 +21,9 @@ var (
 
 	// KeyEnabledHeight is the store key for the feemarket module's enabled height.
 	KeyEnabledHeight = collections.NewPrefix(3)
+	KeyBasePrice     = collections.NewPrefix(4)
+	KeyLearning      = collections.NewPrefix(5)
+	KeyIndex         = collections.NewPrefix(6)
 
 	EventTypeFeePay      = "fee_pay"
 	EventTypeTipPay      = "tip_pay"

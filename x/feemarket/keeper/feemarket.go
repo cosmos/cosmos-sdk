@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -10,13 +12,13 @@ import (
 // is disabled, this function will return without updating the fee market.
 // This is executed in EndBlock which allows the next block's base fee to
 // be readily available for wallets to estimate gas prices.
-func (k *Keeper) UpdateFeeMarket(ctx sdk.Context) error {
+func (k *Keeper) UpdateFeeMarket(ctx context.Context) error {
 	params, err := k.GetParams(ctx)
 	if err != nil {
 		return err
 	}
 
-	k.Logger(ctx).Info(
+	k.Environment.Logger.Info(
 		"updated the fee market",
 		"params", params,
 	)
@@ -38,10 +40,10 @@ func (k *Keeper) UpdateFeeMarket(ctx sdk.Context) error {
 
 	// Update the base gas price based with the new learning rate and delta adjustment.
 	newBaseGasPrice := state.UpdateBaseGasPrice(params)
-
-	k.Logger(ctx).Info(
+	height := k.Environment.HeaderService.HeaderInfo(ctx).Height
+	k.Logger.Info(
 		"updated the fee market",
-		"height", ctx.BlockHeight(),
+		"height", height,
 		"new_base_gas_price", newBaseGasPrice,
 		"new_learning_rate", newLR,
 		"average_block_utilization", state.GetAverageUtilization(params),
@@ -54,7 +56,7 @@ func (k *Keeper) UpdateFeeMarket(ctx sdk.Context) error {
 }
 
 // GetBaseGasPrice returns the base fee from the fee market state.
-func (k *Keeper) GetBaseGasPrice(ctx sdk.Context) (math.LegacyDec, error) {
+func (k *Keeper) GetBaseGasPrice(ctx context.Context) (math.LegacyDec, error) {
 	state, err := k.GetState(ctx)
 	if err != nil {
 		return math.LegacyDec{}, err
@@ -64,7 +66,7 @@ func (k *Keeper) GetBaseGasPrice(ctx sdk.Context) (math.LegacyDec, error) {
 }
 
 // GetLearningRate returns the learning rate from the fee market state.
-func (k *Keeper) GetLearningRate(ctx sdk.Context) (math.LegacyDec, error) {
+func (k *Keeper) GetLearningRate(ctx context.Context) (math.LegacyDec, error) {
 	state, err := k.GetState(ctx)
 	if err != nil {
 		return math.LegacyDec{}, err
@@ -74,7 +76,7 @@ func (k *Keeper) GetLearningRate(ctx sdk.Context) (math.LegacyDec, error) {
 }
 
 // GetMinGasPrice returns the mininum gas prices for given denom as sdk.DecCoins from the fee market state.
-func (k *Keeper) GetMinGasPrice(ctx sdk.Context, denom string) (sdk.DecCoin, error) {
+func (k *Keeper) GetMinGasPrice(ctx context.Context, denom string) (sdk.DecCoin, error) {
 	baseGasPrice, err := k.GetBaseGasPrice(ctx)
 	if err != nil {
 		return sdk.DecCoin{}, err
@@ -100,7 +102,7 @@ func (k *Keeper) GetMinGasPrice(ctx sdk.Context, denom string) (sdk.DecCoin, err
 }
 
 // GetMinGasPrices returns the mininum gas prices as sdk.DecCoins from the fee market state.
-func (k *Keeper) GetMinGasPrices(ctx sdk.Context) (sdk.DecCoins, error) {
+func (k *Keeper) GetMinGasPrices(ctx context.Context) (sdk.DecCoins, error) {
 	baseGasPrice, err := k.GetBaseGasPrice(ctx)
 	if err != nil {
 		return sdk.NewDecCoins(), err
@@ -122,7 +124,7 @@ func (k *Keeper) GetMinGasPrices(ctx sdk.Context) (sdk.DecCoins, error) {
 	for _, denom := range extraDenoms {
 		gasPrice, err := k.ResolveToDenom(ctx, minGasPrice, denom)
 		if err != nil {
-			k.Logger(ctx).Info(
+			k.Logger.Info(
 				"failed to convert gas price",
 				"min gas price", minGasPrice,
 				"denom", denom,

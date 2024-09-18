@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.feemarket.v1;
 
-import "feemarket/feemarket/v1/params.proto";
+import "cosmos/feemarket/v1/params.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";

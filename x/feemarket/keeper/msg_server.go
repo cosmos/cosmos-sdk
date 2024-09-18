@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"cosmossdk.io/x/feemarket/types"
 )
 
@@ -23,8 +21,7 @@ func NewMsgServer(k *Keeper) types.MsgServer {
 
 // Params defines a method that updates the module's parameters. The signer of the message must
 // be the module authority.
-func (ms MsgServer) Params(goCtx context.Context, msg *types.MsgParams) (*types.MsgParamsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+func (ms MsgServer) Params(ctx context.Context, msg *types.MsgParams) (*types.MsgParamsResponse, error) {
 
 	if msg.Authority != ms.k.GetAuthority() {
 		return nil, fmt.Errorf("invalid authority to execute message")
@@ -35,9 +32,10 @@ func (ms MsgServer) Params(goCtx context.Context, msg *types.MsgParams) (*types.
 		return nil, fmt.Errorf("error getting params: %w", err)
 	}
 
+	height := ms.k.Environment.HeaderService.HeaderInfo(ctx).Height
 	// if going from disabled -> enabled, set enabled height
 	if !gotParams.Enabled && msg.Params.Enabled {
-		ms.k.SetEnabledHeight(ctx, ctx.BlockHeight())
+		ms.k.SetEnabledHeight(ctx, height)
 	}
 
 	params := msg.Params

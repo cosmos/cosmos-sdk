@@ -1,11 +1,14 @@
 package keeper
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"strconv"
 
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/appmodule"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,10 +18,15 @@ import (
 
 // Keeper is the x/feemarket keeper.
 type Keeper struct {
+	appmodule.Environment
+
 	cdc      codec.BinaryCodec
-	storeKey storetypes.StoreKey
 	ak       types.AccountKeeper
 	resolver types.DenomResolver
+
+	enabledHeight collections.Item[int64]
+	state         collections.Item[types.State]
+	params        collections.Item[types.Params]
 
 	// The address that is capable of executing a MsgParams message.
 	// Typically, this will be the governance module's address.
@@ -28,7 +36,7 @@ type Keeper struct {
 // NewKeeper constructs a new feemarket keeper.
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	storeKey storetypes.StoreKey,
+	env appmodule.Environment,
 	authKeeper types.AccountKeeper,
 	resolver types.DenomResolver,
 	authority string,
@@ -37,20 +45,20 @@ func NewKeeper(
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
 	}
 
+	sb := collections.NewSchemaBuilder(env.KVStoreService)
+
 	k := &Keeper{
-		cdc:       cdc,
-		storeKey:  storeKey,
-		ak:        authKeeper,
-		resolver:  resolver,
-		authority: authority,
+		cdc:           cdc,
+		Environment:   env,
+		ak:            authKeeper,
+		resolver:      resolver,
+		authority:     authority,
+		enabledHeight: collections.NewItem(sb, types.KeyEnabledHeight, "enabled_height", collections.Int64Value),
+		state:         collections.NewItem(sb, types.KeyState, "state", codec.CollValue[types.State](cdc)),
+		params:        collections.NewItem(sb, types.KeyParams, "params", codec.CollValue[types.Params](cdc)),
 	}
 
 	return k
-}
-
-// Logger returns a feemarket module-specific logger.
-func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // GetAuthority returns the address that is capable of executing a MsgUpdateParams message.
@@ -59,29 +67,29 @@ func (k *Keeper) GetAuthority() string {
 }
 
 // GetEnabledHeight returns the height at which the feemarket was enabled.
-func (k *Keeper) GetEnabledHeight(ctx sdk.Context) (int64, error) {
-	store := ctx.KVStore(k.storeKey)
-
-	key := types.KeyEnabledHeight
-	bz := store.Get(key)
-	if bz == nil {
-		return -1, nil
+func (k *Keeper) GetEnabledHeight(ctx context.Context) (int64, error) {
+	bz, err := k.enabledHeight.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return -1, nil
+		} else {
+			return -1, err
+		}
 	}
-
-	return strconv.ParseInt(string(bz), 10, 64)
+	return bz, err
 }
 
 // SetEnabledHeight sets the height at which the feemarket was enabled.
-func (k *Keeper) SetEnabledHeight(ctx sdk.Context, height int64) {
-	store := ctx.KVStore(k.storeKey)
+func (k *Keeper) SetEnabledHeight(ctx context.Context, height int64) error {
+	if err := k.enabledHeight.Set(ctx, height); err != nil {
+		return err
+	}
 
-	bz := []byte(strconv.FormatInt(height, 10))
-
-	store.Set(types.KeyEnabledHeight, bz)
+	return nil
 }
 
 // ResolveToDenom converts the given coin to the given denomination.
-func (k *Keeper) ResolveToDenom(ctx sdk.Context, coin sdk.DecCoin, denom string) (sdk.DecCoin, error) {
+func (k *Keeper) ResolveToDenom(ctx context.Context, coin sdk.DecCoin, denom string) (sdk.DecCoin, error) {
 	if k.resolver == nil {
 		return sdk.DecCoin{}, types.ErrResolverNotSet
 	}
@@ -95,59 +103,39 @@ func (k *Keeper) SetDenomResolver(resolver types.DenomResolver) {
 }
 
 // GetState returns the feemarket module's state.
-func (k *Keeper) GetState(ctx sdk.Context) (types.State, error) {
-	store := ctx.KVStore(k.storeKey)
-
-	key := types.KeyState
-	bz := store.Get(key)
-
-	state := types.State{}
-	if err := state.Unmarshal(bz); err != nil {
-		return types.State{}, err
+func (k *Keeper) GetState(ctx context.Context) (types.State, error) {
+	state, err := k.state.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.State{}, nil
+		} else {
+			return types.State{}, status.Error(codes.Internal, err.Error())
+		}
 	}
 
 	return state, nil
 }
 
 // SetState sets the feemarket module's state.
-func (k *Keeper) SetState(ctx sdk.Context, state types.State) error {
-	store := ctx.KVStore(k.storeKey)
-
-	bz, err := state.Marshal()
-	if err != nil {
-		return err
-	}
-
-	store.Set(types.KeyState, bz)
-
-	return nil
+func (k *Keeper) SetState(ctx context.Context, state types.State) error {
+	return k.state.Set(ctx, state)
 }
 
 // GetParams returns the feemarket module's parameters.
-func (k *Keeper) GetParams(ctx sdk.Context) (types.Params, error) {
-	store := ctx.KVStore(k.storeKey)
-
-	key := types.KeyParams
-	bz := store.Get(key)
-
-	params := types.Params{}
-	if err := params.Unmarshal(bz); err != nil {
-		return types.Params{}, err
+func (k *Keeper) GetParams(ctx context.Context) (types.Params, error) {
+	params, err := k.params.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.Params{}, nil
+		} else {
+			return types.Params{}, status.Error(codes.Internal, err.Error())
+		}
 	}
 
 	return params, nil
 }
 
 // SetParams sets the feemarket module's parameters.
-func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) error {
-	store := ctx.KVStore(k.storeKey)
-
-	bz, err := params.Marshal()
-	if err != nil {
-		return err
-	}
-
-	store.Set(types.KeyParams, bz)
-
-	return nil
+func (k *Keeper) SetParams(ctx context.Context, params types.Params) error {
+	return k.params.Set(ctx, params)
 }

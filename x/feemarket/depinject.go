@@ -3,12 +3,12 @@ package feemarket
 import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	store "cosmossdk.io/store/types"
+	"cosmossdk.io/depinject/appconfig"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	modulev1 "cosmossdk.io/api/feemarket/feemarket/module/v1"
+	modulev1 "cosmossdk.io/api/cosmos/feemarket/module/v1"
 	"cosmossdk.io/x/feemarket/keeper"
 	"cosmossdk.io/x/feemarket/types"
 )
@@ -16,9 +16,9 @@ import (
 const govModuleName = "gov"
 
 func init() {
-	appmodule.Register(
+	appconfig.Register(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
+		appconfig.Provide(ProvideModule),
 	)
 }
 
@@ -27,7 +27,7 @@ type Inputs struct {
 
 	Config        *modulev1.Module
 	Cdc           codec.Codec
-	Key           *store.KVStoreKey
+	Env           appmodule.Environment
 	AccountKeeper types.AccountKeeper
 }
 
@@ -54,7 +54,7 @@ func ProvideModule(in Inputs) Outputs {
 
 	Keeper := keeper.NewKeeper(
 		in.Cdc,
-		in.Key,
+		in.Env,
 		in.AccountKeeper,
 		nil,
 		authority.String(),

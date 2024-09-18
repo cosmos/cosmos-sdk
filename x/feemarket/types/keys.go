@@ -1,5 +1,7 @@
 package types
 
+import "cosmossdk.io/collections"
+
 const (
 	// ModuleName is the name of the feemarket module.
 	ModuleName = "feemarket"
@@ -10,21 +12,15 @@ const (
 	FeeCollectorName = "feemarket-fee-collector"
 )
 
-const (
-	prefixParams = iota + 1
-	prefixState
-	prefixEnableHeight = 3
-)
-
 var (
 	// KeyParams is the store key for the feemarket module's parameters.
-	KeyParams = []byte{prefixParams}
+	KeyParams = collections.NewPrefix(1)
 
 	// KeyState is the store key for the feemarket module's data.
-	KeyState = []byte{prefixState}
+	KeyState = collections.NewPrefix(2)
 
 	// KeyEnabledHeight is the store key for the feemarket module's enabled height.
-	KeyEnabledHeight = []byte{prefixEnableHeight}
+	KeyEnabledHeight = collections.NewPrefix(3)
 
 	EventTypeFeePay      = "fee_pay"
 	EventTypeTipPay      = "tip_pay"

@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/x/feemarket/keeper"
-	testkeeper "cosmossdk.io/x/feemarket/testutils/keeper"
+	testkeeper "cosmossdk.io/x/feemarket/testutils"
 	"cosmossdk.io/x/feemarket/types"
 	"cosmossdk.io/x/feemarket/types/mocks"
 )

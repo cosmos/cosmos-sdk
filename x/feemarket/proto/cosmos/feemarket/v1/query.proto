@@ -7,8 +7,8 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "amino/amino.proto";
-import "feemarket/feemarket/v1/params.proto";
-import "feemarket/feemarket/v1/genesis.proto";
+import "cosmos/feemarket/v1/params.proto";
+import "cosmos/feemarket/v1/genesis.proto";
 
 // Query Service for the feemarket module.
 service Query {

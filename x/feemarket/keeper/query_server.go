@@ -3,8 +3,6 @@ package keeper
 import (
 	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"cosmossdk.io/x/feemarket/types"
 )
 
@@ -21,33 +19,25 @@ func NewQueryServer(keeper Keeper) types.QueryServer {
 }
 
 // Params defines a method that returns the current feemarket parameters.
-func (q QueryServer) Params(goCtx context.Context, _ *types.ParamsRequest) (*types.ParamsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
+func (q QueryServer) Params(ctx context.Context, _ *types.ParamsRequest) (*types.ParamsResponse, error) {
 	params, err := q.k.GetParams(ctx)
 	return &types.ParamsResponse{Params: params}, err
 }
 
 // State defines a method that returns the current feemarket state.
-func (q QueryServer) State(goCtx context.Context, _ *types.StateRequest) (*types.StateResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
+func (q QueryServer) State(ctx context.Context, _ *types.StateRequest) (*types.StateResponse, error) {
 	state, err := q.k.GetState(ctx)
 	return &types.StateResponse{State: state}, err
 }
 
 // GasPrice defines a method that returns the current feemarket base gas price.
-func (q QueryServer) GasPrice(goCtx context.Context, req *types.GasPriceRequest) (*types.GasPriceResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
+func (q QueryServer) GasPrice(ctx context.Context, req *types.GasPriceRequest) (*types.GasPriceResponse, error) {
 	gasPrice, err := q.k.GetMinGasPrice(ctx, req.GetDenom())
 	return &types.GasPriceResponse{Price: gasPrice}, err
 }
 
 // GasPrices defines a method that returns the current feemarket list of gas prices.
-func (q QueryServer) GasPrices(goCtx context.Context, _ *types.GasPricesRequest) (*types.GasPricesResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
+func (q QueryServer) GasPrices(ctx context.Context, _ *types.GasPricesRequest) (*types.GasPricesResponse, error) {
 	gasPrices, err := q.k.GetMinGasPrices(ctx)
 	return &types.GasPricesResponse{Prices: gasPrices}, err
 }

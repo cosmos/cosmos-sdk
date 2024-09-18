@@ -5,7 +5,7 @@ option go_package = "cosmossdk.io/x/feemarket/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
-import "feemarket/feemarket/v1/params.proto";
+import "cosmos/feemarket/v1/params.proto";
 
 // GenesisState defines the feemarket module's genesis state.
 message GenesisState {

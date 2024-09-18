@@ -203,6 +203,8 @@ func TestMsgServer_ExecuteBundle(t *testing.T) {
 		require.Empty(t, txResp.ExecutionResponses)
 
 		// ensure execution side effects are not persisted
+		// aka recipient must not have money
+		require.True(t, f.balance(recipient, feeAmt.Denom).IsZero())
 	})
 }
 

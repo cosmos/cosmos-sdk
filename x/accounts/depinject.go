@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -39,7 +40,7 @@ type ModuleInputs struct {
 	Environment  appmodule.Environment
 	AddressCodec address.Codec
 	Registry     cdctypes.InterfaceRegistry
-	TxDecoder    *txdecode.Decoder
+	Config       *tx.ConfigOptions
 
 	// TODO: Add a way to inject custom accounts.
 	// Currently only the base account is supported.
@@ -67,8 +68,16 @@ func (s directHandler) GetSignBytes(_ context.Context, _ signing.SignerData, _ s
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	handler := directHandler{}
 	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler), baseaccount.WithSecp256K1PubKey())
+	txDec, err := txdecode.NewDecoder(txdecode.Options{
+		SigningContext: in.Config.SigningContext,
+		ProtoCodec:     in.Cdc,
+	})
+	if err != nil {
+		panic(err)
+	}
+
 	accountsKeeper, err := NewKeeper(
-		in.Cdc, in.Environment, in.AddressCodec, in.Registry, in.TxDecoder, account,
+		in.Cdc, in.Environment, in.AddressCodec, in.Registry, txDec, account,
 		accountstd.AddAccount(lockup.CONTINUOUS_LOCKING_ACCOUNT, lockup.NewContinuousLockingAccount),
 		accountstd.AddAccount(lockup.PERIODIC_LOCKING_ACCOUNT, lockup.NewPeriodicLockingAccount),
 		accountstd.AddAccount(lockup.DELAYED_LOCKING_ACCOUNT, lockup.NewDelayedLockingAccount),

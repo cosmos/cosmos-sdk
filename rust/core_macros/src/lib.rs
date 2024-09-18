@@ -7,6 +7,8 @@ use manyhow::{bail, error_message, manyhow};
 use quote::{format_ident, quote, ToTokens};
 use syn::{parse2, parse_macro_input, token, Attribute, File, Item, ItemImpl, ItemMod, Type};
 use std::borrow::Borrow;
+use deluxe::ExtractAttributes;
+use heck::{AsUpperCamelCase, ToUpperCamelCase};
 use syn::token::Impl;
 
 #[derive(deluxe::ParseMetaItem)]
@@ -34,7 +36,7 @@ pub fn account_handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result
             }
         }
     })?;
-    let client_factory_ident = format_ident!("{}Factory", handler);
+    let client_factory_ident = format_ident!("{}ClientFactory", handler);
     push_item(items, quote! {
         pub struct #client_factory_ident;
     })?;
@@ -45,16 +47,40 @@ pub fn account_handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result
 
     let mut client_fn_impls = vec![];
     for publish_target in publish_targets.iter() {
-        // if publish_target.on_create.is_some() {
-        //     continue;
-        // }
-        let signature = &publish_target.signature;
-        let fn_name = &signature.ident;
+        if publish_target.on_create.is_some() {
+            continue;
+        }
+        let signature = publish_target.signature.clone();
         client_fn_impls.push(quote! {
-            pub fn #fn_name(&self, ctx: &::interchain_core::Context) -> ::interchain_core::Response<()> {
+            #signature {
                 todo!()
             }
         });
+        let ident_camel = publish_target.signature.ident.to_string().to_upper_camel_case();
+        let msg_struct_name = format_ident!("{}{}Msg", handler, ident_camel);
+        let mut msg_fields = vec![];
+        for field in &publish_target.signature.inputs {
+            match field {
+                syn::FnArg::Typed(pat_type) => {
+                    let field = match pat_type.pat.as_ref() {
+                        syn::Pat::Ident(ident) => {
+                            let ty = pat_type.ty.clone();
+                            msg_fields.push(quote! {
+                                #ident: #ty,
+                            });
+                        }
+                        _ => bail!("expected identifier"),
+                    };
+                }
+                _ => {}
+            }
+        }
+        push_item(items, quote! {
+            // #[derive(::interchain_schema::StructCodec)]
+            pub struct #msg_struct_name {
+                #(#msg_fields)*
+            }
+        })?
     }
 
     push_item(items, quote! {
@@ -89,18 +115,21 @@ fn collect_publish_targets(self_name: &syn::Ident, item: &mut Item, targets: &mu
 
                     // TODO check for trait implementation
 
-                    let publish_all = deluxe::extract_attributes::<ItemImpl, Publish>(imp).map_or(None, |x| Some(x));
+                    let publish_all = maybe_extract_attribute(imp)?;
                     for item in &mut imp.items {
                         match item {
                             syn::ImplItem::Fn(impl_fn) => {
-                                let on_create = deluxe::extract_attributes::<syn::ImplItemFn, OnCreate>(impl_fn).map_or(None, |x| Some(x));
-                                let publish = deluxe::extract_attributes::<syn::ImplItemFn, Publish>(impl_fn).map_or(None, |x| Some(x));
+                                let on_create = maybe_extract_attribute(impl_fn)?;
+                                let publish = maybe_extract_attribute(impl_fn)?;
+                                if publish.is_some() && on_create.is_some() {
+                                    bail!("on_create and publish attributes must not be attached to the same function");
+                                }
                                 let publish = publish_all.clone().or(publish);
                                 if publish.is_some() || on_create.is_some() { // TODO check visibility
                                     targets.push(PublishFn {
                                         signature: impl_fn.sig.clone(),
                                         on_create,
-                                        publish: publish.unwrap(),
+                                        publish,
                                     });
                                 }
                             }
@@ -116,18 +145,40 @@ fn collect_publish_targets(self_name: &syn::Ident, item: &mut Item, targets: &mu
     Ok(())
 }
 
-#[derive(deluxe::ExtractAttributes, Clone)]
+#[derive(deluxe::ExtractAttributes, Clone, Debug)]
 #[deluxe(attributes(publish))]
-struct Publish {}
+struct Publish {
+    package: Option<String>,
+    name: Option<String>,
+}
 
 #[derive(deluxe::ExtractAttributes)]
 #[deluxe(attributes(on_create))]
-struct OnCreate {}
+struct OnCreate {
+    message_name: Option<String>,
+}
+
+fn maybe_extract_attribute<T, R>(t: &mut T) -> manyhow::Result<Option<R>>
+where
+    T: deluxe::HasAttributes,
+    R: deluxe::ExtractAttributes<T>,
+{
+    let mut have_attr = false;
+    for attr in t.attrs() {
+        if R::path_matches(attr.meta.path()) {
+            have_attr = true;
+        }
+    }
+    if !have_attr {
+        return Ok(None);
+    }
+    Ok(Some(R::extract_attributes(t)?))
+}
 
 struct PublishFn {
     signature: syn::Signature,
     on_create: Option<OnCreate>,
-    publish: Publish,
+    publish: Option<Publish>,
 }
 
 /// This derives an module handler.

@@ -9,7 +9,7 @@ This is the single import, batteries-included crate for building applications wi
   * [Basic Structure](#basic-structure)
   * [Define the account's state](#define-the-accounts-state)
   * [Implement message handlers](#implement-message-handlers)
-  * [Define the `OnCreate` Handler](#define-the-oncreate-handler)
+  * [Define an `on_create` method](#define-an-on_create-method)
   * [Emitting Events](#emitting-events)
 - [Creating a Module Handler](#creating-a-module-handler)
 - [Calling other accounts or modules](#calling-other-accounts-or-modules)

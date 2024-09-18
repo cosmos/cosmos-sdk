@@ -36,7 +36,24 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ## [v2.0.0-beta.4] - 2024-07-16
+=======
+<!-- ## [v2.1.0-rc.1] to be tagged after v0.51 final or in SDK agnostic version -->
+
+### Features
+
+* [#18626](https://github.com/cosmos/cosmos-sdk/pull/18626) Support for off-chain signing and verification of a file.
+* [#18461](https://github.com/cosmos/cosmos-sdk/pull/18461) Support governance proposals.
+
+### Improvements
+
+* [#21712](https://github.com/cosmos/cosmos-sdk/pull/21712) Marshal `type` field as proto message url in queries instead of amino name.
+
+### API Breaking Changes
+
+* [#17709](https://github.com/cosmos/cosmos-sdk/pull/17709) Address codecs have been removed from `autocli.AppOptions` and `flag.Builder`. Instead client/v2 uses the address codecs present in the context (introduced in [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503)).
+>>>>>>> 0c8ad9d2c (feat(x/tx): add `aminoNameAsTypeURL` option in aminojson encoder (#21712))
 
 ### Bug Fixes
 

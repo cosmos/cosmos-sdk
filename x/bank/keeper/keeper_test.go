@@ -1489,6 +1489,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	}
 	require.Equal(event2.Type, events[24].Type)
 	attrs2, err := event2.Attributes()
+	require.NoError(err)
 	for i := range attrs2 {
 		require.Equal(attrs2[i].Key, events[24].Attributes[i].Key)
 		require.Equal(attrs2[i].Value, events[24].Attributes[i].Value)

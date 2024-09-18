@@ -6,7 +6,7 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
 	// pseudo version lower than the latest tag
-	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.2 // main
+	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.3 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214 // main
 	cosmossdk.io/x/bank => ../../../x/bank
@@ -16,18 +16,13 @@ replace (
 )
 
 require (
-<<<<<<< HEAD
 	cosmossdk.io/api v0.8.0
 	cosmossdk.io/core v1.0.0 // main
-=======
-	cosmossdk.io/api v0.7.5
-	cosmossdk.io/core v1.0.0-alpha.3
->>>>>>> 01212de2d (feat(server/v2): refactor the server/v2 events (#21785))
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
-	cosmossdk.io/server/v2 v2.0.0-20240916221850-7856d226038c // main
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240916221850-7856d226038c // main
-	cosmossdk.io/server/v2/stf v0.0.0-20240916221850-7856d226038c // main
+	cosmossdk.io/server/v2 v2.0.0-20240918153713-01212de2d9dc // main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20240918153713-01212de2d9dc // main
+	cosmossdk.io/server/v2/stf v0.0.0-20240918153713-01212de2d9dc // main
 	cosmossdk.io/store/v2 v2.0.0-20240916221850-7856d226038c // main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
@@ -49,13 +44,8 @@ require (
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
-<<<<<<< HEAD
-	cosmossdk.io/schema v0.2.0 // indirect
-	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
-=======
 	cosmossdk.io/schema v0.3.0 // indirect
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
->>>>>>> 01212de2d (feat(server/v2): refactor the server/v2 events (#21785))
+	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.4-0.20240918094839-0c8ad9d2c64b // indirect; main
@@ -148,7 +138,7 @@ require (
 	github.com/petermattis/goid v0.0.0-20240813172612-4fcff4a6cae7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.20.3 // indirect
+	github.com/prometheus/client_golang v1.20.4 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.59.1 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect

@@ -3,29 +3,17 @@ go 1.23.1
 module github.com/cosmos/cosmos-sdk
 
 require (
-<<<<<<< HEAD
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/core v1.0.0-alpha.2
 	cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b // main
-=======
-	cosmossdk.io/api v0.7.5
-	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v1.0.0-alpha.3
-	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
->>>>>>> 01212de2d (feat(server/v2): refactor the server/v2 events (#21785))
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
-<<<<<<< HEAD
 	cosmossdk.io/schema v0.2.0
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6
-=======
-	cosmossdk.io/schema v0.3.0
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc
->>>>>>> 01212de2d (feat(server/v2): refactor the server/v2 events (#21785))
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.13.4-0.20240918094839-0c8ad9d2c64b // main

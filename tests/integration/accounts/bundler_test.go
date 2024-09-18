@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"testing"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
+
 	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	banktypes "cosmossdk.io/x/bank/types"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMsgServer_ExecuteBundle(t *testing.T) {
@@ -102,7 +104,6 @@ func TestMsgServer_ExecuteBundle(t *testing.T) {
 		require.Empty(t, txResp.ExecutionResponses)
 
 		// ensure auth side effects are not persisted in case of failures
-
 	})
 
 	t.Run("tx fails at pay bundler step", func(t *testing.T) {
@@ -132,7 +133,8 @@ func TestMsgServer_ExecuteBundle(t *testing.T) {
 					FromAddress: f.mustAddr(f.mockAccountAddress),
 					ToAddress:   f.bundler,
 					Amount:      sdk.NewCoins(feeAmt.AddAmount(feeAmt.Amount.AddRaw(30000))),
-				})},
+				}),
+			},
 			BundlerPaymentGasLimit: 30000,
 			ExecutionGasLimit:      30000,
 		})

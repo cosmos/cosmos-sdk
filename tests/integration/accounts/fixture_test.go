@@ -4,6 +4,9 @@ import (
 	"context"
 	"testing"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -16,6 +19,7 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 	minttypes "cosmossdk.io/x/mint/types"
 	txdecode "cosmossdk.io/x/tx/decode"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -28,8 +32,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	gogotypes "github.com/cosmos/gogoproto/types"
-	"github.com/stretchr/testify/require"
 )
 
 var _ accountstd.Interface = (*mockAccount)(nil)
@@ -98,7 +100,7 @@ func (f fixture) mint(address []byte, coins ...sdk.Coin) {
 	}
 }
 
-func (f fixture) balance(recipient string, denom string) sdk.Coin {
+func (f fixture) balance(recipient, denom string) sdk.Coin {
 	f.t.Helper()
 	balances, err := f.bankKeeper.Balance(f.ctx, &banktypes.QueryBalanceRequest{
 		Address: recipient,

@@ -93,6 +93,7 @@ type BeginBlock struct {
 
 type ResponsePreBlock struct {
 	ConsensusParamsChanged bool
+	Events                 []abci.Event
 }
 
 func (r ResponsePreBlock) IsConsensusParamsChanged() bool {

@@ -118,11 +118,12 @@ func (b *Builder) BuildQueryMethodCommand(ctx context.Context, descriptor protor
 	methodName := fmt.Sprintf("/%s/%s", serviceDescriptor.FullName(), descriptor.Name())
 	outputType := util.ResolveMessageType(b.TypeResolver, descriptor.Output())
 	encoderOptions := aminojson.EncoderOptions{
-		Indent:          "  ",
-		EnumAsString:    true,
-		DoNotSortFields: true,
-		TypeResolver:    b.TypeResolver,
-		FileResolver:    b.FileResolver,
+		Indent:             "  ",
+		EnumAsString:       true,
+		DoNotSortFields:    true,
+		AminoNameAsTypeURL: true,
+		TypeResolver:       b.TypeResolver,
+		FileResolver:       b.FileResolver,
 	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {

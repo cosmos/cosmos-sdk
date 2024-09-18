@@ -32,6 +32,7 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
+// KeyGenF is a function that generates a private key for use by comet.
 type KeyGenF = func() (cmtcrypto.PrivKey, error)
 
 // App is a wrapper around BaseApp and ModuleManager that can be used in hybrid
@@ -313,6 +314,7 @@ type hasServicesV1 interface {
 	RegisterServices(grpc.ServiceRegistrar) error
 }
 
+// ValidatorKeyProvider returns a function that generates a private key for use by comet.
 func (a *App) ValidatorKeyProvider() KeyGenF {
 	return func() (cmtcrypto.PrivKey, error) {
 		return cmted25519.GenPrivKey(), nil

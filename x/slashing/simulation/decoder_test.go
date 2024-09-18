@@ -50,7 +50,6 @@ func TestDecodeStore(t *testing.T) {
 		{"other", "", true},
 	}
 	for i, tt := range tests {
-		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.panics {
 				require.Panics(t, func() { dec(kvPairs.Pairs[i], kvPairs.Pairs[i]) }, tt.name)

@@ -83,7 +83,12 @@ jobs:
 
   sims-notify-success:
     needs:
-      [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
+      [
+        test-sim-multi-seed-short,
+        test-sim-after-import,
+        test-sim-import-export,
+        test-sim-deterministic,
+      ]
     runs-on: large-sdk-runner
     if: ${{ success() }}
     steps:
@@ -111,7 +116,12 @@ jobs:
     permissions:
       contents: none
     needs:
-      [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
+      [
+        test-sim-multi-seed-short,
+        test-sim-after-import,
+        test-sim-import-export,
+        test-sim-deterministic,
+      ]
     runs-on: large-sdk-runner
     if: ${{ failure() }}
     steps:

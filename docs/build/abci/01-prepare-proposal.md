@@ -33,7 +33,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go
 ```
 
 This default implementation can be overridden by the application developer in
-favor of a custom implementation in [`app.go`](https://docs.cosmos.network/main/build/building-apps/app-go-v2):
+favor of a custom implementation in [`app_di.go`](https://docs.cosmos.network/main/build/building-apps/app-go-di):
 
 ```go
 prepareOpt := func(app *baseapp.BaseApp) {

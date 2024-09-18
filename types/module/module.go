@@ -36,7 +36,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
@@ -69,7 +68,7 @@ type HasGenesisBasics = appmodule.HasGenesisBasics
 // HasAminoCodec is the interface for modules that have amino codec registration.
 // Deprecated: modules should not need to register their own amino codecs.
 type HasAminoCodec interface {
-	RegisterLegacyAminoCodec(legacy.Amino)
+	RegisterLegacyAminoCodec(registry.AminoRegistrar)
 }
 
 // HasGRPCGateway is the interface for modules to register their gRPC gateway routes.
@@ -294,14 +293,14 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 }
 
 // RegisterLegacyAminoCodec registers all module codecs
-func (m *Manager) RegisterLegacyAminoCodec(cdc legacy.Amino) {
+func (m *Manager) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
 	for name, b := range m.Modules {
 		if _, ok := b.(interface{ RegisterLegacyAminoCodec(*codec.LegacyAmino) }); ok {
 			panic(fmt.Sprintf("%s uses a deprecated amino registration api, implement HasAminoCodec instead if necessary", name))
 		}
 
 		if mod, ok := b.(HasAminoCodec); ok {
-			mod.RegisterLegacyAminoCodec(cdc)
+			mod.RegisterLegacyAminoCodec(registrar)
 		}
 	}
 }
@@ -595,7 +594,6 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 	}
 	var missing []string
 	for m := range m.Modules {
-		m := m
 		if pass != nil && pass(m) {
 			continue
 		}
@@ -835,7 +833,6 @@ func (m *Manager) GetVersionMap() appmodule.VersionMap {
 		if v, ok := v.(appmodule.HasConsensusVersion); ok {
 			version = v.ConsensusVersion()
 		}
-		name := name
 		vermap[name] = version
 	}
 

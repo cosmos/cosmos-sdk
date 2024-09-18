@@ -10,7 +10,7 @@ import (
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
@@ -45,12 +45,12 @@ type App struct {
 	ModuleManager      *module.Manager
 	UnorderedTxManager *unorderedtx.Manager
 
-	configurator      module.Configurator // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+	configurator      module.Configurator //nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 	config            *runtimev1alpha1.Module
 	storeKeys         []storetypes.StoreKey
 	interfaceRegistry codectypes.InterfaceRegistry
 	cdc               codec.Codec
-	amino             legacy.Amino
+	amino             registry.AminoRegistrar
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
 	grpcQueryRouter   *baseapp.GRPCQueryRouter
@@ -173,6 +173,9 @@ func (a *App) Close() error {
 
 // PreBlocker application updates every pre block
 func (a *App) PreBlocker(ctx sdk.Context, _ *abci.FinalizeBlockRequest) error {
+	if a.UnorderedTxManager != nil {
+		a.UnorderedTxManager.OnNewBlock(ctx.BlockTime())
+	}
 	return a.ModuleManager.PreBlock(ctx)
 }
 
@@ -248,7 +251,7 @@ func (a *App) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
 }
 
 // Configurator returns the app's configurator.
-func (a *App) Configurator() module.Configurator { // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+func (a *App) Configurator() module.Configurator { //nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 	return a.configurator
 }
 

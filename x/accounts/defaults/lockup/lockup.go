@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
+	"maps"
+	"slices"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -254,6 +255,10 @@ func (bva *BaseLockup) SendCoins(
 
 	hs := bva.headerService.HeaderInfo(ctx)
 
+	if err := msg.Amount.Validate(); err != nil {
+		return nil, err
+	}
+
 	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msg.Amount.Denoms()...)
 	if err != nil {
 		return nil, err
@@ -294,15 +299,21 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 		return nil, err
 	}
 
+	// deduplicate the denoms
+	denoms := make(map[string]struct{})
+	for _, denom := range msg.Denoms {
+		denoms[denom] = struct{}{}
+	}
+	uniqueDenoms := slices.Collect(maps.Keys(denoms))
+
 	hs := bva.headerService.HeaderInfo(ctx)
-	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, msg.Denoms...)
+	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, uniqueDenoms...)
 	if err != nil {
 		return nil, err
 	}
 
 	amount := sdk.Coins{}
-
-	for _, denom := range msg.Denoms {
+	for _, denom := range uniqueDenoms {
 		balance, err := bva.getBalance(ctx, fromAddress, denom)
 		if err != nil {
 			return nil, err
@@ -387,31 +398,22 @@ func (bva *BaseLockup) checkSender(ctx context.Context, sender string) error {
 }
 
 func sendMessage(ctx context.Context, msg proto.Message) ([]*codectypes.Any, error) {
-	response, err := accountstd.ExecModule(ctx, msg)
+	asAny, err := accountstd.PackAny(msg)
 	if err != nil {
 		return nil, err
 	}
 
-	respAny, err := accountstd.PackAny(response)
-	if err != nil {
-		return nil, err
-	}
-
-	return []*codectypes.Any{respAny}, nil
+	return accountstd.ExecModuleAnys(ctx, []*codectypes.Any{asAny})
 }
 
 func getStakingDenom(ctx context.Context) (string, error) {
 	// Query account balance for the sent denom
-	resp, err := accountstd.QueryModule(ctx, &stakingtypes.QueryParamsRequest{})
+	resp, err := accountstd.QueryModule[*stakingtypes.QueryParamsResponse](ctx, &stakingtypes.QueryParamsRequest{})
 	if err != nil {
 		return "", err
 	}
-	res, ok := resp.(*stakingtypes.QueryParamsResponse)
-	if !ok {
-		return "", fmt.Errorf("unexpected response type: %T", resp)
-	}
 
-	return res.Params.BondDenom, nil
+	return resp.Params.BondDenom, nil
 }
 
 // TrackDelegation tracks a delegation amount for any given lockup account type
@@ -536,17 +538,12 @@ func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) 
 
 func (bva BaseLockup) getBalance(ctx context.Context, sender, denom string) (*sdk.Coin, error) {
 	// Query account balance for the sent denom
-	resp, err := accountstd.QueryModule(ctx, &banktypes.QueryBalanceRequest{Address: sender, Denom: denom})
+	resp, err := accountstd.QueryModule[*banktypes.QueryBalanceResponse](ctx, &banktypes.QueryBalanceRequest{Address: sender, Denom: denom})
 	if err != nil {
 		return nil, err
 	}
 
-	res, ok := resp.(*banktypes.QueryBalanceResponse)
-	if !ok {
-		return nil, fmt.Errorf("unexpected response type: %T", resp)
-	}
-
-	return res.Balance, nil
+	return resp.Balance, nil
 }
 
 func (bva BaseLockup) checkTokensSendable(ctx context.Context, sender string, amount, lockedCoins sdk.Coins) error {

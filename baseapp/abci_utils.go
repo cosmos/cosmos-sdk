@@ -47,7 +47,7 @@ func ValidateVoteExtensions(
 	extCommit abci.ExtendedCommitInfo,
 ) error {
 	// Get values from context
-	cp := ctx.ConsensusParams() // nolint:staticcheck // ignore linting error
+	cp := ctx.ConsensusParams() //nolint:staticcheck // ignore linting error
 	currentHeight := ctx.HeaderInfo().Height
 	chainID := ctx.HeaderInfo().ChainID
 	commitInfo := ctx.CometInfo().LastCommit
@@ -258,7 +258,7 @@ func (h *DefaultProposalHandler) SetTxSelector(ts TxSelector) {
 func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error) {
 		var maxBlockGas uint64
-		if b := ctx.ConsensusParams().Block; b != nil { // nolint:staticcheck // ignore linting error
+		if b := ctx.ConsensusParams().Block; b != nil { //nolint:staticcheck // ignore linting error
 			maxBlockGas = uint64(b.MaxGas)
 		}
 
@@ -292,35 +292,42 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid dead lock
 		)
 		h.mempool.SelectBy(ctx, req.Txs, func(memTx sdk.Tx) bool {
-			signerData, err := h.signerExtAdapter.GetSigners(memTx)
-			if err != nil {
-				// propagate the error to the caller
-				resError = err
-				return false
-			}
-
-			// If the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
-			// so we add them and continue given that we don't need to check the sequence.
-			shouldAdd := true
+			unorderedTx, ok := memTx.(sdk.TxWithUnordered)
+			isUnordered := ok && unorderedTx.GetUnordered()
 			txSignersSeqs := make(map[string]uint64)
-			for _, signer := range signerData {
-				seq, ok := selectedTxsSignersSeqs[signer.Signer.String()]
-				if !ok {
-					txSignersSeqs[signer.Signer.String()] = signer.Sequence
-					continue
+
+			// if the tx is unordered, we don't need to check the sequence, we just add it
+			if !isUnordered {
+				signerData, err := h.signerExtAdapter.GetSigners(memTx)
+				if err != nil {
+					// propagate the error to the caller
+					resError = err
+					return false
 				}
 
-				// If we have seen this signer before in this block, we must make
-				// sure that the current sequence is seq+1; otherwise is invalid
-				// and we skip it.
-				if seq+1 != signer.Sequence {
-					shouldAdd = false
-					break
+				// If the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
+				// so we add them and continue given that we don't need to check the sequence.
+				shouldAdd := true
+				for _, signer := range signerData {
+					signerKey := string(signer.Signer)
+					seq, ok := selectedTxsSignersSeqs[signerKey]
+					if !ok {
+						txSignersSeqs[signerKey] = signer.Sequence
+						continue
+					}
+
+					// If we have seen this signer before in this block, we must make
+					// sure that the current sequence is seq+1; otherwise is invalid
+					// and we skip it.
+					if seq+1 != signer.Sequence {
+						shouldAdd = false
+						break
+					}
+					txSignersSeqs[signerKey] = signer.Sequence
 				}
-				txSignersSeqs[signer.Signer.String()] = signer.Sequence
-			}
-			if !shouldAdd {
-				return true
+				if !shouldAdd {
+					return true
+				}
 			}
 
 			// NOTE: Since transaction verification was already executed in CheckTx,
@@ -337,18 +344,21 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 				}
 
 				txsLen := len(h.txSelector.SelectedTxs(ctx))
-				for sender, seq := range txSignersSeqs {
-					// If txsLen != selectedTxsNums is true, it means that we've
-					// added a new tx to the selected txs, so we need to update
-					// the sequence of the sender.
-					if txsLen != selectedTxsNums {
-						selectedTxsSignersSeqs[sender] = seq
-					} else if _, ok := selectedTxsSignersSeqs[sender]; !ok {
-						// The transaction hasn't been added but it passed the
-						// verification, so we know that the sequence is correct.
-						// So we set this sender's sequence to seq-1, in order
-						// to avoid unnecessary calls to PrepareProposalVerifyTx.
-						selectedTxsSignersSeqs[sender] = seq - 1
+				// If the tx is unordered, we don't need to update the sender sequence.
+				if !isUnordered {
+					for sender, seq := range txSignersSeqs {
+						// If txsLen != selectedTxsNums is true, it means that we've
+						// added a new tx to the selected txs, so we need to update
+						// the sequence of the sender.
+						if txsLen != selectedTxsNums {
+							selectedTxsSignersSeqs[sender] = seq
+						} else if _, ok := selectedTxsSignersSeqs[sender]; !ok {
+							// The transaction hasn't been added but it passed the
+							// verification, so we know that the sequence is correct.
+							// So we set this sender's sequence to seq-1, in order
+							// to avoid unnecessary calls to PrepareProposalVerifyTx.
+							selectedTxsSignersSeqs[sender] = seq - 1
+						}
 					}
 				}
 				selectedTxsNums = txsLen
@@ -395,7 +405,7 @@ func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHan
 		var totalTxGas uint64
 
 		var maxBlockGas int64
-		if b := ctx.ConsensusParams().Block; b != nil { // nolint:staticcheck // ignore linting error
+		if b := ctx.ConsensusParams().Block; b != nil { //nolint:staticcheck // ignore linting error
 			maxBlockGas = b.MaxGas
 		}
 

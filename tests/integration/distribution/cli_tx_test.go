@@ -111,8 +111,6 @@ func (s *CLITestSuite) TestTxWithdrawAllRewardsCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewWithdrawAllRewardsCmd()
 

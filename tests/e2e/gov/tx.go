@@ -164,8 +164,6 @@ func (s *E2ETestSuite) TestNewCmdSubmitProposal() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdSubmitProposal()
 			clientCtx := val.GetClientCtx()
@@ -260,8 +258,6 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdSubmitLegacyProposal()
 			clientCtx := val.GetClientCtx()
@@ -357,7 +353,6 @@ func (s *E2ETestSuite) TestNewCmdWeightedVote() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdWeightedVote()
 			clientCtx := val.GetClientCtx()

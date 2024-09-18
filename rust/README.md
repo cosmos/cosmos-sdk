@@ -53,7 +53,7 @@ All the account's "resources" are managed by its handler struct.
 Internal state is the primary "resource" that a handler interacts with.
 (The other resources are references to other modules and accounts, which will be covered later.)
 State is defined using the [`state_objects`] framework which defines the following basic state types:
-[`Map`], [`Item`] [`Set`], and [`Seq`], plus some other types extending these such as [`OrderedMap`],
+[`Map`], [`Item`] and [`Set`], plus some other types extending these such as [`OrderedMap`],
 [`OrderedSet`], [`Index`], [`UniqueIndex`] and [`UInt128Map`].
 See the [`state_objects`] documentation for more complete information.
 

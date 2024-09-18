@@ -14,6 +14,7 @@ pub mod self_destruct;
 pub mod handler;
 pub mod resource;
 mod on_create;
+mod sync;
 
 pub use context::Context;
 pub use response::Response;

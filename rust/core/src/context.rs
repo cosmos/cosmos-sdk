@@ -50,5 +50,12 @@ impl Context {
     pub fn new_temp_account<H: AccountHandler>(&mut self, init: H::Init) -> Result<<<H as AccountAPI>::Factory as AccountFactory>::Client, ()> {
         unimplemented!()
     }
+
+    /// Returns a deterministic ID unique to the message call which this context pertains to.
+    /// Such IDs can be used to generate unique IDs for state objects.
+    /// The index parameter can be used to generate up to 256 such unique IDs per message call.
+    pub fn unique_id(&mut self, index: u8) -> Result<u128, ()> {
+        unimplemented!()
+    }
 }
 

@@ -4,21 +4,24 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
+
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/collections"
 	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
 	txdecode "cosmossdk.io/x/tx/decode"
-	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 var (
+	ErrAASemantics = errors.New("invalid account abstraction tx semantics")
 	// ErrAuthentication is returned when the authentication fails.
 	ErrAuthentication = errors.New("authentication failed")
 	// ErrBundlerPayment is returned when the bundler payment fails.
@@ -83,7 +86,7 @@ func (k Keeper) executeBundledTx(ctx context.Context, bundler string, txBytes []
 	blockInfo := k.HeaderService.HeaderInfo(ctx)
 	xt, err := verifyAndExtractAaXtFromTx(bundledTx, uint64(blockInfo.Height), blockInfo.Time)
 	if err != nil {
-		return nil, fmt.Errorf("tx failed validation check: %w", err)
+		return nil, fmt.Errorf("%w: tx failed validation check: %w", ErrAASemantics, err)
 	}
 
 	resp := new(v1.BundledTxResponse)
@@ -94,7 +97,7 @@ func (k Keeper) executeBundledTx(ctx context.Context, bundler string, txBytes []
 	})
 	resp.AuthenticationGasUsed = authGasUsed // set independently of outcome
 	if err != nil {
-		return nil, err
+		return resp, fmt.Errorf("%w: %w", ErrAuthentication, err)
 	}
 
 	// after authentication, we execute the bundler messages.
@@ -110,7 +113,7 @@ func (k Keeper) executeBundledTx(ctx context.Context, bundler string, txBytes []
 		})
 		resp.BundlerPaymentGasUsed = bundlerPaymentGasUsed // set independently of outcome
 		if err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrBundlerPayment, err)
+			return resp, fmt.Errorf("%w: %w", ErrBundlerPayment, err)
 		}
 		resp.BundlerPaymentResponses = paymentMsgResp
 	}
@@ -127,14 +130,14 @@ func (k Keeper) executeBundledTx(ctx context.Context, bundler string, txBytes []
 	})
 	resp.ExecutionGasUsed = execGasUsed // set independently of outcome
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrExecution, err)
+		return resp, fmt.Errorf("%w: %w", ErrExecution, err)
 	}
 	resp.ExecutionResponses = execResponses
 
 	return resp, nil
 }
 
-var aaXtName = gogoproto.MessageName(&aa_interface_v1.MsgAuthenticate{})
+var aaXtName = gogoproto.MessageName(&aa_interface_v1.TxExtension{})
 
 func verifyAndExtractAaXtFromTx(bundledTx *txdecode.DecodedTx, currentBlock uint64, currentTime time.Time) (*aa_interface_v1.TxExtension, error) {
 	// some basic things: we do not allow multi addresses in the bundled tx
@@ -170,7 +173,8 @@ func verifyAndExtractAaXtFromTx(bundledTx *txdecode.DecodedTx, currentBlock uint
 	found := false
 	xt := new(aa_interface_v1.TxExtension)
 	for i, anyPb := range bundledTx.Tx.Body.ExtensionOptions {
-		if nameFromTypeURL(anyPb.TypeUrl) == aaXtName {
+		xtName := nameFromTypeURL(anyPb.TypeUrl)
+		if xtName == aaXtName {
 			if found {
 				return nil, fmt.Errorf("multiple aa extensions on the same tx")
 			}
@@ -180,10 +184,12 @@ func verifyAndExtractAaXtFromTx(bundledTx *txdecode.DecodedTx, currentBlock uint
 			if err != nil {
 				return nil, fmt.Errorf("unable to unmarshal tx extension at index %d: %w", i, err)
 			}
+		} else {
+			log.Printf("name: %s, wanted: %s", xtName, aaXtName)
 		}
 	}
 	if !found {
-		return nil, fmt.Errorf("%w: did not have AA extension %s", ErrAuthentication, aaXtName)
+		return nil, fmt.Errorf("did not have AA extension %s", aaXtName)
 	}
 
 	err := verifyAaXt(xt)

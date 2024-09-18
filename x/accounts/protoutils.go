@@ -3,15 +3,21 @@ package accounts
 import (
 	"time"
 
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/x/accounts/internal/implementation"
-	"github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"cosmossdk.io/x/accounts/internal/implementation"
+
+	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 func protoV2TxToProtoV1(t *txv1beta1.Tx) *tx.Tx {
+	if t == nil || t.Body == nil || t.AuthInfo == nil {
+		panic("unvalidated tx")
+	}
+
 	return &tx.Tx{
 		Body: &tx.TxBody{
 			Messages:                    protoV2AnyToV1(t.Body.Messages...),
@@ -40,6 +46,10 @@ func protoV2TimestampToV1(timestamp *timestamppb.Timestamp) *time.Time {
 }
 
 func protov2TxRawToProtoV1(raw *txv1beta1.TxRaw) *tx.TxRaw {
+	// Check if 'raw' is nil to prevent nil dereferences
+	if raw == nil {
+		panic("unvalidated  raw tx")
+	}
 	return &tx.TxRaw{
 		BodyBytes:     raw.BodyBytes,
 		AuthInfoBytes: raw.AuthInfoBytes,
@@ -50,6 +60,9 @@ func protov2TxRawToProtoV1(raw *txv1beta1.TxRaw) *tx.TxRaw {
 func protoV2AnyToV1(v2s ...*anypb.Any) []*implementation.Any {
 	v1s := make([]*implementation.Any, len(v2s))
 	for i, v2 := range v2s {
+		if v2 == nil {
+			panic("unvalidated any")
+		}
 		v1s[i] = &implementation.Any{
 			TypeUrl: v2.TypeUrl,
 			Value:   v2.Value,
@@ -61,8 +74,19 @@ func protoV2AnyToV1(v2s ...*anypb.Any) []*implementation.Any {
 func protoV2SignerInfoToV1(infos []*txv1beta1.SignerInfo) []*tx.SignerInfo {
 	v1s := make([]*tx.SignerInfo, len(infos))
 	for i, info := range infos {
+		if info == nil {
+			// Handle nil 'info' to avoid nil dereference
+			panic("unvalidated signer info")
+		}
+		var publicKey *implementation.Any
+		if info.PublicKey != nil {
+			publicKeys := protoV2AnyToV1(info.PublicKey)
+			if len(publicKeys) > 0 && publicKeys[0] != nil {
+				publicKey = publicKeys[0]
+			}
+		}
 		v1s[i] = &tx.SignerInfo{
-			PublicKey: protoV2AnyToV1(info.PublicKey)[0],
+			PublicKey: publicKey,
 			ModeInfo:  protoV2ModeInfoToV1(info.ModeInfo),
 			Sequence:  info.Sequence,
 		}
@@ -71,13 +95,23 @@ func protoV2SignerInfoToV1(infos []*txv1beta1.SignerInfo) []*tx.SignerInfo {
 }
 
 func protoV2ModeInfoToV1(info *txv1beta1.ModeInfo) *tx.ModeInfo {
+	if info == nil || info.Sum == nil {
+		panic("unvalidated mode info")
+	}
 	switch v := info.Sum.(type) {
 	case *txv1beta1.ModeInfo_Single_:
+		if v.Single == nil {
+			panic("unvalidated single mode")
+		}
 		return &tx.ModeInfo{
-			Sum: &tx.ModeInfo_Single_{Single: &tx.ModeInfo_Single{Mode: signing.SignMode(v.Single.Mode)}},
+			Sum: &tx.ModeInfo_Single_{
+				Single: &tx.ModeInfo_Single{
+					Mode: signing.SignMode(v.Single.Mode),
+				},
+			},
 		}
 	default:
-		// NOTE(tip): we have a check that disallows modes different from single
+		// NOTE: we have a check that disallows modes different from single
 		panic("unexpected mode info")
 	}
 }

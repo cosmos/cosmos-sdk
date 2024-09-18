@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	txdecode "cosmossdk.io/x/tx/decode"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/collections"
@@ -18,6 +17,7 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
+	txdecode "cosmossdk.io/x/tx/decode"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,14 +48,17 @@ func NewKeeper(
 	env appmodule.Environment,
 	addressCodec address.Codec,
 	ir InterfaceRegistry,
+	txDecoder *txdecode.Decoder,
 	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	keeper := Keeper{
 		Environment:      env,
-		codec:            cdc,
+		txDecoder:        txDecoder,
 		addressCodec:     addressCodec,
+		codec:            cdc,
 		makeSendCoinsMsg: defaultCoinsTransferMsgFunc(addressCodec),
+		accounts:         nil,
 		Schema:           collections.Schema{},
 		AccountNumber:    collections.NewSequence(sb, AccountNumberKey, "account_number"),
 		AccountsByType:   collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),

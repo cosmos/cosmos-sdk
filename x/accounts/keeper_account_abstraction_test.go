@@ -4,13 +4,14 @@ import (
 	"testing"
 	"time"
 
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
-	txdecode "cosmossdk.io/x/tx/decode"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
+	txdecode "cosmossdk.io/x/tx/decode"
 )
 
 func TestVerifyAndExtractAaXtFromTx(t *testing.T) {

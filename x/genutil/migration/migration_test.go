@@ -8,9 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	oldGenFilePath = "./testdata/old_app_genesis.json"
-)
+var oldGenFilePath = "./testdata/old_app_genesis.json"
 
 func TestMigration(t *testing.T) {
 	tempDir := t.TempDir()

@@ -30,7 +30,7 @@ pub fn derive_resources(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
     let name = input.ident;
     let expanded = quote! {
-        impl ::interchain_core::resource::Resources for #name {
+        unsafe impl ::interchain_core::resource::Resources for #name {
         }
     };
     expanded.into()

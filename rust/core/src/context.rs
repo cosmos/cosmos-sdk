@@ -5,9 +5,11 @@ use crate::response::Response;
 
 /// Context wraps a single message request (and possibly response as well) along with
 /// the router callbacks necessary for making nested message calls.
-pub struct Context {}
+pub struct Context<'a> {
+    _phantom: std::marker::PhantomData<&'a ()>,
+}
 
-impl Context {
+impl <'a> Context<'a> {
     /// This is the address of the account that is getting called.
     /// In a receiving account, this is the account's own address.
     pub fn address(&self) -> &Address {

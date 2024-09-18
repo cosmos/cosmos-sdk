@@ -12,27 +12,38 @@ pub struct Map<K, V> {
 
 impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
     /// Checks if the map contains the given key.
-    pub fn has(&self, ctx: &Context, key: K::Value<'_>) -> Response<bool> {
+    pub fn has<'a>(&self, ctx: &Context<'a>, key: K::Value<'a>) -> Response<bool> {
         todo!()
     }
 
     /// Gets the value of the map at the given key.
-    pub fn get<'a>(&self, ctx: &Context, key: K::Value<'_>) -> Response<'a, V::Value<'a>> {
+    pub fn get<'a, 'b>(&self, ctx: &Context<'a>, key: K::Value<'a>) -> Response<'b, V::Value<'b>> {
+        todo!()
+    }
+
+    /// Gets the value of the map at the given key, possibly from a previous block.
+    pub fn stale_get<'a, 'b, 'c>(&self, ctx: &Context<'a>, key: K::Value<'b>) -> Response<'c, V::Value<'c>> {
         todo!()
     }
 
     /// Sets the value of the map at the given key.
-    pub fn set(&self, ctx: &mut Context, key: K::Value<'_>, value: V::Value<'_>) -> Response<()> {
+    pub fn set<'a, 'b>(&self, ctx: &mut Context<'a>, key: K::Value<'a>, value: V::Value<'b>) -> Response<()> {
         todo!()
     }
 
     /// Updates the value of the map at the given key.
-    pub fn update<'a>(&self, ctx: &'a mut Context, key: K::Value<'_>, updater: impl FnOnce(Option<V::Value<'a>>) -> Option<V::Value<'a>>) -> Response<()> {
+    pub fn update<'a, 'b>(&self, ctx: &mut Context<'a>, key: K::Value<'a>, updater: impl FnOnce(Option<V::Value<'b>>) -> Option<V::Value<'b>>) -> Response<()> {
+        todo!()
+    }
+
+    /// Lazily updates the value of the map at the given key at some later point in time.
+    /// This function is unsafe because updater must be commutative and that cannot be guaranteed by the type system.
+    pub unsafe fn lazy_update<'a, 'b>(&self, ctx: &mut Context<'a>, key: K::Value<'a>, updater: impl FnOnce(Option<V::Value<'b>>) -> Option<V::Value<'b>>) -> Response<()> {
         todo!()
     }
 
     /// Deletes the value of the map at the given key.
-    pub fn delete(&self, ctx: &mut Context, key: K::Value<'_>) -> Response<()> {
+    pub fn delete<'a>(&self, ctx: &mut Context<'a>, key: K::Value<'a>) -> Response<()> {
         todo!()
     }
 }

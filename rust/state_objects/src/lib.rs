@@ -6,7 +6,6 @@ mod item;
 mod errors;
 mod index;
 mod unique;
-mod seq;
 mod uint_map;
 mod ordered_map;
 mod ordered_set;

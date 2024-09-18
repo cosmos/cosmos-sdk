@@ -614,21 +614,20 @@ func registerServices[T transaction.Tx](s appmodulev2.AppModule, app *App[T], re
 
 		if module, ok := s.(appmodulev2.HasQueryHandlers); ok {
 			module.RegisterQueryHandlers(app.queryRouterBuilder)
+			// TODO: query regist by RegisterQueryHandlers not in grpcQueryDecoders
+			if module, ok := s.(interface {
+				GetQueryDecoders() map[string]func() gogoproto.Message
+			}); ok {
+				decoderMap := module.GetQueryDecoders()
+				for path, decoder := range decoderMap {
+					app.GRPCMethodsToMessageMap[path] = decoder
+				}
+			}
 		}
 	}
 
 	if c.err != nil {
 		app.logger.Warn("error registering services", "error", c.err)
-	}
-
-	// TODO: query regist by RegisterQueryHandlers not in grpcQueryDecoders
-	if module, ok := s.(interface {
-		GetQueryDecoders() map[string]func() gogoproto.Message
-	}); ok {
-		decoderMap := module.GetQueryDecoders()
-		for path, decoder := range decoderMap {
-			app.GRPCMethodsToMessageMap[path] = decoder
-		}
 	}
 
 	// merge maps

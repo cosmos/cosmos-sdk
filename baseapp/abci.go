@@ -773,8 +773,22 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 			WithHeaderHash(req.Hash))
 	}
 
-	if err := app.preBlock(req); err != nil {
+	preBlock, err := app.preBlock(req)
+	if err != nil {
 		return nil, err
+	}
+
+	// First check for an abort signal after preBlock, as it's the first place
+	// we spend any significant amount of time.
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		// continue
+	}
+
+	if preBlock != nil {
+		events = append(events, preBlock.Events...)
 	}
 
 	beginBlock, err := app.beginBlock(req)
@@ -782,8 +796,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 		return nil, err
 	}
 
-	// First check for an abort signal after beginBlock, as it's the first place
-	// we spend any significant amount of time.
+	// check after beginBlock if we should abort, to avoid propagating the result
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()

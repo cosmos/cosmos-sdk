@@ -716,12 +716,17 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) error {
+func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	var (
+		rsp *sdk.ResponsePreBlock
+		err error
+	)
+
 	if app.preBlocker != nil {
 		ctx := app.finalizeBlockState.Context()
-		rsp, err := app.preBlocker(ctx, req)
+		rsp, err = app.preBlocker(ctx, req)
 		if err != nil {
-			return err
+			return rsp, err
 		}
 		// rsp.ConsensusParamsChanged is true from preBlocker means ConsensusParams in store get changed
 		// write the consensus parameters in store to context
@@ -733,7 +738,7 @@ func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) error {
 			app.finalizeBlockState.SetContext(ctx)
 		}
 	}
-	return nil
+	return rsp, err
 }
 
 func (app *BaseApp) beginBlock(req *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {

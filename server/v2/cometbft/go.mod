@@ -16,8 +16,13 @@ replace (
 )
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.0
 	cosmossdk.io/core v1.0.0 // main
+=======
+	cosmossdk.io/api v0.7.5
+	cosmossdk.io/core v1.0.0-alpha.3
+>>>>>>> 01212de2d (feat(server/v2): refactor the server/v2 events (#21785))
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/server/v2 v2.0.0-20240916221850-7856d226038c // main
@@ -44,8 +49,13 @@ require (
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
+<<<<<<< HEAD
 	cosmossdk.io/schema v0.2.0 // indirect
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
+=======
+	cosmossdk.io/schema v0.3.0 // indirect
+	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
+>>>>>>> 01212de2d (feat(server/v2): refactor the server/v2 events (#21785))
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.4-0.20240918094839-0c8ad9d2c64b // indirect; main

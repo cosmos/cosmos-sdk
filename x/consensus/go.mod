@@ -3,10 +3,17 @@ module cosmossdk.io/x/consensus
 go 1.23.1
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/core v1.0.0-alpha.2 // main
 	cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b // main
+=======
+	cosmossdk.io/api v0.7.5
+	cosmossdk.io/collections v0.4.0
+	cosmossdk.io/core v1.0.0-alpha.3
+	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
+>>>>>>> 01212de2d (feat(server/v2): refactor the server/v2 events (#21785))
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
@@ -27,7 +34,7 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.4.1 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
-	cosmossdk.io/schema v0.2.0 // indirect
+	cosmossdk.io/schema v0.3.0 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.4-0.20240918094839-0c8ad9d2c64b // indirect; main

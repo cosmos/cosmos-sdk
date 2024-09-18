@@ -3,10 +3,16 @@ module cosmossdk.io/x/bank
 go 1.23.1
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/core v1.0.0-alpha.2 // main
 	cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b // main
+=======
+	cosmossdk.io/api v0.7.5
+	cosmossdk.io/collections v0.4.0
+	cosmossdk.io/core v1.0.0-alpha.3
+>>>>>>> 01212de2d (feat(server/v2): refactor the server/v2 events (#21785))
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1 // indirect
@@ -164,8 +170,13 @@ require (
 )
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/schema v0.2.0 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
+=======
+	cosmossdk.io/schema v0.3.0 // indirect
+	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
+>>>>>>> 01212de2d (feat(server/v2): refactor the server/v2 events (#21785))
 	github.com/google/uuid v1.6.0 // indirect
 )
 

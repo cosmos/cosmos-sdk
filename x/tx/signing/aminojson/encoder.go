@@ -125,12 +125,12 @@ func keyFieldEncoder(_ *Encoder, msg protoreflect.Message, w io.Writer) error {
 }
 
 type moduleAccountPretty struct {
-	Address       string   `json:"address"`
-	PubKey        string   `json:"public_key"`
 	AccountNumber uint64   `json:"account_number"`
-	Sequence      uint64   `json:"sequence"`
+	Address       string   `json:"address"`
 	Name          string   `json:"name"`
 	Permissions   []string `json:"permissions"`
+	PubKey        string   `json:"public_key"`
+	Sequence      uint64   `json:"sequence"`
 }
 
 // moduleAccountEncoder replicates the behavior in
@@ -170,25 +170,29 @@ func thresholdStringEncoder(enc *Encoder, msg protoreflect.Message, w io.Writer)
 	if !ok {
 		return errors.New("thresholdStringEncoder: msg not a multisig.LegacyAminoPubKey")
 	}
-	_, err := fmt.Fprintf(w, `{"threshold":"%d","pubkeys":`, pk.Threshold)
+
+	_, err := io.WriteString(w, `{"pubkeys":`)
 	if err != nil {
 		return err
 	}
 
 	if len(pk.PublicKeys) == 0 {
-		_, err = io.WriteString(w, `[]}`)
-		return err
+		_, err = io.WriteString(w, `[]`)
+		if err != nil {
+			return err
+		}
+	} else {
+		fields := msg.Descriptor().Fields()
+		pubkeysField := fields.ByName("public_keys")
+		pubkeys := msg.Get(pubkeysField).List()
+
+		err = enc.marshalList(pubkeys, pubkeysField, w)
+		if err != nil {
+			return err
+		}
 	}
 
-	fields := msg.Descriptor().Fields()
-	pubkeysField := fields.ByName("public_keys")
-	pubkeys := msg.Get(pubkeysField).List()
-
-	err = enc.marshalList(pubkeys, pubkeysField, w)
-	if err != nil {
-		return err
-	}
-	_, err = io.WriteString(w, `}`)
+	_, err = fmt.Fprintf(w, `,"threshold":"%d"}`, pk.Threshold)
 	return err
 }
 

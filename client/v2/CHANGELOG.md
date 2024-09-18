@@ -36,6 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v2.0.0-beta.5] - 2024-09-18
+
+### Improvements
+
+* [#21712](https://github.com/cosmos/cosmos-sdk/pull/21712) Marshal `type` field as proto message url in queries instead of amino name.
+
 ## [v2.0.0-beta.4] - 2024-07-16
 
 ### Bug Fixes

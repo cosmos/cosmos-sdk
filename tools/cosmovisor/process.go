@@ -127,7 +127,7 @@ func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger, rpcAddres
 					logger.Warn(fmt.Sprintf("error marshaling JSON: %s", err))
 					return
 				}
-				if err := os.WriteFile(cfg.UpgradeInfoFilePath(), jsonBytes, 0o666); err != nil {
+				if err := os.WriteFile(cfg.UpgradeInfoFilePath(), jsonBytes, 0o600); err != nil {
 					logger.Warn(fmt.Sprintf("error writing upgrade-info.json: %s", err))
 					return
 				}
@@ -138,7 +138,7 @@ func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger, rpcAddres
 					logger.Warn(fmt.Sprintf("error marshaling JSON: %s", err))
 					return
 				}
-				if err := os.WriteFile(cfg.UpgradeInfoBatchFilePath(), jsonBytes, 0o666); err != nil {
+				if err := os.WriteFile(cfg.UpgradeInfoBatchFilePath(), jsonBytes, 0o600); err != nil {
 					logger.Warn(fmt.Sprintf("error writing upgrade-info.json.batch: %s", err))
 					return
 				}

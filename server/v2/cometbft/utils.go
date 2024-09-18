@@ -379,10 +379,10 @@ func (c *Consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, com
 func (c *Consensus[T]) checkHalt(height int64, time time.Time) error {
 	var halt bool
 	switch {
-	case c.cfg.AppTomlConfig.HaltHeight >= 0 && uint64(height) > c.cfg.AppTomlConfig.HaltHeight:
+	case c.cfg.AppTomlConfig.HaltHeight > 0 && uint64(height) >= c.cfg.AppTomlConfig.HaltHeight:
 		halt = true
 
-	case c.cfg.AppTomlConfig.HaltTime >= 0 && time.Unix() > int64(c.cfg.AppTomlConfig.HaltTime):
+	case c.cfg.AppTomlConfig.HaltTime > 0 && time.Unix() >= int64(c.cfg.AppTomlConfig.HaltTime):
 		halt = true
 	}
 

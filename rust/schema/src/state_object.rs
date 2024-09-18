@@ -1,5 +1,5 @@
 //! This crate defines traits specific to state objects within schemas.
-use crate::value::Value;
+use crate::value::{ResponseValue, Value};
 
 // pub trait FieldTypes {}
 // impl FieldTypes for () {}

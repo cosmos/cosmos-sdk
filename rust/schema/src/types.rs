@@ -91,21 +91,21 @@ impl Type for DurationT {}
 
 /// The `NullableT` type represents a nullable type.
 pub struct NullableT<T> {
-    _phantom: std::marker::PhantomData<T>,
+    _phantom: core::marker::PhantomData<T>,
 }
 impl <T> Private for NullableT<T> {}
 impl <T> Type for NullableT<T> {}
 
 /// The `ListT` type represents a list type.
 pub struct ListT<T: ListElementType> {
-    _phantom: std::marker::PhantomData<T>,
+    _phantom: core::marker::PhantomData<T>,
 }
 impl <T:ListElementType> Private for ListT<T> {}
 impl <T:ListElementType> Type for ListT<T> {}
 
 /// The `StructT` type represents a struct type.
 pub struct StructT<T> {
-    _phantom: std::marker::PhantomData<T>,
+    _phantom: core::marker::PhantomData<T>,
 }
 impl <T> Private for StructT<T> {}
 impl <T> Type for StructT<T> {}

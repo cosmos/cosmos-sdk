@@ -58,7 +58,9 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 			return err
 		}
 
-		cmd.AddCommand(subCmd)
+		if !subCmdDesc.EnhanceCustomCommand {
+			cmd.AddCommand(subCmd)
+		}
 	}
 
 	if cmdDescriptor.Service == "" {

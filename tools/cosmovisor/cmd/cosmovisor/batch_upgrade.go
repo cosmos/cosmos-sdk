@@ -31,11 +31,11 @@ func AddBatchUpgrade(cmd *cobra.Command, args []string) error {
 		if len(a) != 3 {
 			return fmt.Errorf("argument at position %d (%s) is invalid", i, as)
 		}
-		upgradeName := args[0]
-		upgradePath := args[1]
-		upgradeHeight, err := strconv.ParseInt(args[2], 10, 64)
+		upgradeName := a[0]
+		upgradePath := a[1]
+		upgradeHeight, err := strconv.ParseInt(a[2], 10, 64)
 		if err != nil {
-			return fmt.Errorf("upgrade height at position %d (%s) is invalid", i, args[2])
+			return fmt.Errorf("upgrade height at position %d (%s) is invalid", i, a[2])
 		}
 		upgradeInfoPath := cfg.UpgradeInfoFilePath() + upgradeName
 		upgradeInfoPaths = append(upgradeInfoPaths, upgradeInfoPath)

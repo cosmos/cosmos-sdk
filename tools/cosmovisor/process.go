@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/otiai10/copy"
 
 	"cosmossdk.io/log"
@@ -40,67 +41,115 @@ func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 	return Launcher{logger: logger, cfg: cfg, fw: fw}, nil
 }
 
-func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger, rpcAddress string) error {
-	// load batch file in memory
+func loadBatchUpgradeFile(cfg *Config) ([]upgradetypes.Plan, error) {
 	var uInfos []upgradetypes.Plan
 	upgradeInfoFile, err := os.ReadFile(cfg.UpgradeInfoBatchFilePath())
-	if err != nil {
-		return fmt.Errorf("error while reading upgrade-info.json.batch: %w", err)
+	if os.IsNotExist(err) {
+		return uInfos, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("error while reading upgrade-info.json.batch: %w", err)
 	}
 
 	if err = json.Unmarshal(upgradeInfoFile, &uInfos); err != nil {
-		return err
+		return nil, err
 	}
 	sort.Slice(uInfos, func(i, j int) bool {
 		return uInfos[i].Height < uInfos[j].Height
 	})
+	return uInfos, nil
+}
 
+func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger, rpcAddress string) {
+	// load batch file in memory
+	uInfos, err := loadBatchUpgradeFile(cfg)
+	if err != nil {
+		logger.Warn(fmt.Sprintf("failed to load batch upgrade file: %s", err))
+		return
+	}
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		logger.Warn(fmt.Sprintf("failed to init watcher: %s", err))
+		return
+	}
+	defer watcher.Close()
+	err = watcher.Add(filepath.Dir(cfg.UpgradeInfoBatchFilePath()))
+	if err != nil {
+		logger.Warn(fmt.Sprintf("failed to init watcher: %s", err))
+		return
+	}
+
+	// sleep to allow the chain process to startup
+	time.Sleep(10 * time.Second)
 	client, err := http.New(rpcAddress, "/websocket")
 	if err != nil {
-		return fmt.Errorf("failed to create CometBFT client: %w", err)
+		logger.Warn(fmt.Sprintf("failed to create CometBFT client: %s", err))
+		return
 	}
 	defer client.Stop()
 
 	err = client.Start()
 	if err != nil {
-		return fmt.Errorf("failed to start CometBFT client: %w", err)
+		logger.Warn(fmt.Sprintf("failed to start CometBFT client: %s", err))
+		return
 	}
 
 	eventCh, err := client.Subscribe(ctx, "cosmovisor-watcher", cmttypes.EventQueryNewBlock.String())
 	if err != nil {
-		return fmt.Errorf("failed to subscribe to new blocks: %w", err)
+		logger.Warn(fmt.Sprintf("failed to subscribe to new blocks: %s", err))
+		return
 	}
-	// TODO: break if empty array
+
+	var prevUpgradeHeight int64 = -1
+
+	logger.Info("starting the batch watcher loop")
 	for {
 		select {
 		case e := <-eventCh:
+			if len(uInfos) == 0 {
+				continue
+			}
 			nb, ok := e.Data.(cmttypes.EventDataNewBlock)
 			if !ok {
 				logger.Warn("batch watcher: unexpected event data type:", e.Data)
 				continue
 			}
 			h := nb.Block.Height
-			// read batch file in buffer, get lowest, compare, replace and delete
-			if h > uInfos[0].Height {
+			upcomingUpgrade := uInfos[0].Height
+			// replace upgrade-info and upgrade-info batch file
+			if h > prevUpgradeHeight && h < upcomingUpgrade {
 				jsonBytes, err := json.Marshal(uInfos[0])
 				if err != nil {
-					return fmt.Errorf("error marshaling JSON: %w", err)
+					logger.Warn(fmt.Sprintf("error marshaling JSON: %s", err))
+					return
 				}
 				if err := os.WriteFile(cfg.UpgradeInfoFilePath(), jsonBytes, 0o755); err != nil {
-					return fmt.Errorf("error writing upgrade-info.json: %w", err)
+					logger.Warn(fmt.Sprintf("error writing upgrade-info.json: %s", err))
+					return
 				}
 				uInfos = uInfos[1:]
 
 				jsonBytes, err = json.Marshal(uInfos)
 				if err != nil {
-					return fmt.Errorf("error marshaling JSON: %w", err)
+					logger.Warn(fmt.Sprintf("error marshaling JSON: %s", err))
+					return
 				}
 				if err := os.WriteFile(cfg.UpgradeInfoBatchFilePath(), jsonBytes, 0o755); err != nil {
-					return fmt.Errorf("error writing upgrade-info.json.batch: %w", err)
+					logger.Warn(fmt.Sprintf("error writing upgrade-info.json.batch: %s", err))
+					return
+				}
+				prevUpgradeHeight = upcomingUpgrade
+			}
+		case event := <-watcher.Events:
+			if event.Op&(fsnotify.Write|fsnotify.Create) != 0 {
+				uInfos, err = loadBatchUpgradeFile(cfg)
+				if err != nil {
+					logger.Warn(fmt.Sprintf("failed to load batch upgrade file: %s", err))
+					return
 				}
 			}
 		case <-ctx.Done():
-			return nil
+			return
 		}
 	}
 }
@@ -140,11 +189,11 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 		}
 	}()
 
+	go BatchWatcher(ctx, l.cfg, l.logger, "http://localhost:26657")
+
 	if needsUpdate, err := l.WaitForUpgradeOrExit(cmd); err != nil || !needsUpdate {
 		return false, err
 	}
-
-	go BatchWatcher(ctx, l.cfg, l.logger, "localhost")
 
 	if !IsSkipUpgradeHeight(args, l.fw.currentInfo) {
 		l.cfg.WaitRestartDelay()

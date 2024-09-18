@@ -74,11 +74,11 @@ func AddUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgrade
 			return fmt.Errorf("failed to marshal upgrade plan: %w", err)
 		}
 
-		if err := saveOrAbort(cfg.UpgradeInfoFilePath(), planData, force); err != nil {
+		if err := saveOrAbort(upgradeInfoPath, planData, force); err != nil {
 			return err
 		}
 
-		logger.Info(fmt.Sprintf("%s created, %s upgrade binary will switch at height %d", cfg.UpgradeInfoFilePath(), upgradeName, upgradeHeight))
+		logger.Info(fmt.Sprintf("%s created, %s upgrade binary will switch at height %d", upgradeInfoPath, upgradeName, upgradeHeight))
 	}
 
 	return nil

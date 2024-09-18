@@ -40,7 +40,7 @@ type ModuleInputs struct {
 	Environment  appmodule.Environment
 	AddressCodec address.Codec
 	Registry     cdctypes.InterfaceRegistry
-	Config       *tx.ConfigOptions
+	Config       tx.ConfigOptions
 
 	// TODO: Add a way to inject custom accounts.
 	// Currently only the base account is supported.

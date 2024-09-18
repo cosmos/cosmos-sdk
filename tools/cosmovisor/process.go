@@ -13,11 +13,15 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"context"
+	"sort"
 
 	"github.com/otiai10/copy"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
+	"github.com/cometbft/cometbft/rpc/client/http"
+	cmttypes "github.com/cometbft/cometbft/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
@@ -27,6 +31,7 @@ type Launcher struct {
 	fw     *fileWatcher
 }
 
+
 func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 	fw, err := newUpgradeFileWatcher(cfg)
 	if err != nil {
@@ -34,6 +39,72 @@ func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 	}
 
 	return Launcher{logger: logger, cfg: cfg, fw: fw}, nil
+}
+
+
+func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger, rpcAddress string) error {
+	// load batch file in memory
+	var uInfos []upgradetypes.Plan
+	upgradeInfoFile, err := os.ReadFile(cfg.UpgradeInfoBatchFilePath())
+	if err != nil {
+		return fmt.Errorf("error while reading upgrade-info.json.batch: %w", err)
+	}
+
+	if err = json.Unmarshal(upgradeInfoFile, &uInfos); err != nil {
+		return err
+	}
+	sort.Slice(uInfos, func(i, j int) bool {
+		return uInfos[i].Height < uInfos[j].Height
+	})
+
+	client, err := http.New(rpcAddress, "/websocket")
+	if err != nil {
+		return fmt.Errorf("failed to create CometBFT client: %w", err)
+	}
+	defer client.Stop()
+
+	err = client.Start()
+	if err != nil {
+		return fmt.Errorf("failed to start CometBFT client: %w", err)
+	}
+
+	eventCh, err := client.Subscribe(ctx, "cosmovisor-watcher", cmttypes.EventQueryNewBlock.String())
+	if err != nil {
+		return fmt.Errorf("failed to subscribe to new blocks: %w", err)
+	}
+	// TODO: break if empty array
+	for {
+		select {
+		case e := <-eventCh:
+			nb, ok := e.Data.(cmttypes.EventDataNewBlock)
+			if !ok {
+				logger.Warn("batch watcher: unexpected event data type:", e.Data)
+				continue
+			}
+			h := nb.Block.Height
+			// read batch file in buffer, get lowest, compare, replace and delete
+			if h > uInfos[0].Height {
+				jsonBytes, err := json.Marshal(uInfos[0])
+				if err != nil {
+					return fmt.Errorf("error marshaling JSON: %w", err)
+				}
+				if err := os.WriteFile(cfg.UpgradeInfoFilePath(), jsonBytes, 0o755); err != nil {
+					return fmt.Errorf("error writing upgrade-info.json: %w", err)
+				}
+				uInfos = uInfos[1:]
+
+				jsonBytes, err = json.Marshal(uInfos)
+				if err != nil {
+					return fmt.Errorf("error marshaling JSON: %w", err)
+				}
+				if err := os.WriteFile(cfg.UpgradeInfoBatchFilePath(), jsonBytes, 0o755); err != nil {
+					return fmt.Errorf("error writing upgrade-info.json.batch: %w", err)
+				}
+			}
+		case <-ctx.Done():
+			return nil
+		}
+	}
 }
 
 // Run launches the app in a subprocess and returns when the subprocess (app)
@@ -58,10 +129,13 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 		return false, fmt.Errorf("launching process %s %s failed: %w", bin, strings.Join(args, " "), err)
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGTERM)
 	go func() {
 		sig := <-sigs
+		cancel()
 		if err := cmd.Process.Signal(sig); err != nil {
 			l.logger.Error("terminated", "error", err, "bin", bin)
 			os.Exit(1)
@@ -71,6 +145,8 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 	if needsUpdate, err := l.WaitForUpgradeOrExit(cmd); err != nil || !needsUpdate {
 		return false, err
 	}
+
+	go BatchWatcher(ctx, l.cfg, l.logger, "localhost")
 
 	if !IsSkipUpgradeHeight(args, l.fw.currentInfo) {
 		l.cfg.WaitRestartDelay()

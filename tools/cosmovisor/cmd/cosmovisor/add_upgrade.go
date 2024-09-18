@@ -19,7 +19,7 @@ func NewAddUpgradeCmd() *cobra.Command {
 		Short:        "Add APP upgrade binary to cosmovisor",
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(2),
-		RunE:         AddUpgrade,
+		RunE:         AddUpgradeCmd,
 	}
 
 	addUpgrade.Flags().Bool(cosmovisor.FlagForce, false, "overwrite existing upgrade binary / upgrade-info.json file")
@@ -28,26 +28,13 @@ func NewAddUpgradeCmd() *cobra.Command {
 	return addUpgrade
 }
 
-// AddUpgrade adds upgrade info to manifest
-func AddUpgrade(cmd *cobra.Command, args []string) error {
-	configPath, err := cmd.Flags().GetString(cosmovisor.FlagCosmovisorConfig)
-	if err != nil {
-		return fmt.Errorf("failed to get config flag: %w", err)
-	}
-
-	cfg, err := cosmovisor.GetConfigFromFile(configPath)
-	if err != nil {
-		return err
-	}
-
+func AddUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgradeName, executablePath, upgradeInfoPath string) error {
 	logger := cfg.Logger(os.Stdout)
 
-	upgradeName := args[0]
 	if !cfg.DisableRecase {
-		upgradeName = strings.ToLower(args[0])
+		upgradeName = strings.ToLower(upgradeName)
 	}
 
-	executablePath := args[1]
 	if _, err := os.Stat(executablePath); err != nil {
 		if os.IsNotExist(err) {
 			return fmt.Errorf("invalid executable path: %w", err)
@@ -68,11 +55,6 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read binary: %w", err)
 	}
 
-	force, err := cmd.Flags().GetBool(cosmovisor.FlagForce)
-	if err != nil {
-		return fmt.Errorf("failed to get force flag: %w", err)
-	}
-
 	if err := saveOrAbort(cfg.UpgradeBin(upgradeName), executableData, force); err != nil {
 		return err
 	}
@@ -80,9 +62,7 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 	logger.Info(fmt.Sprintf("Using %s for %s upgrade", executablePath, upgradeName))
 	logger.Info(fmt.Sprintf("Upgrade binary located at %s", cfg.UpgradeBin(upgradeName)))
 
-	if upgradeHeight, err := cmd.Flags().GetInt64(cosmovisor.FlagUpgradeHeight); err != nil {
-		return fmt.Errorf("failed to get upgrade-height flag: %w", err)
-	} else if upgradeHeight > 0 {
+	if upgradeHeight > 0 {
 		plan := upgradetypes.Plan{Name: upgradeName, Height: upgradeHeight}
 		if err := plan.ValidateBasic(); err != nil {
 			panic(fmt.Errorf("something is wrong with cosmovisor: %w", err))
@@ -102,6 +82,41 @@ func AddUpgrade(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func GetConfig(cmd *cobra.Command) (*cosmovisor.Config, error) {
+	configPath, err := cmd.Flags().GetString(cosmovisor.FlagCosmovisorConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get config flag: %w", err)
+	}
+
+	cfg, err := cosmovisor.GetConfigFromFile(configPath)
+	if err != nil {
+		return nil, err
+	}
+	return cfg, nil
+}
+
+// AddUpgrade adds upgrade info to manifest
+func AddUpgradeCmd(cmd *cobra.Command, args []string) error {
+	cfg, err := GetConfig(cmd)
+	if err != nil {
+		return err
+	}
+
+	upgradeName, executablePath := args[0], args[1]
+
+	force, err := cmd.Flags().GetBool(cosmovisor.FlagForce)
+	if err != nil {
+		return fmt.Errorf("failed to get force flag: %w", err)
+	}
+
+	upgradeHeight, err := cmd.Flags().GetInt64(cosmovisor.FlagUpgradeHeight)
+	if err != nil {
+		return fmt.Errorf("failed to get upgrade-height flag: %w", err)
+	}
+
+	return AddUpgrade(cfg, force, upgradeHeight, upgradeName, executablePath, cfg.UpgradeInfoFilePath())
 }
 
 // saveOrAbort saves data to path or aborts if file exists and force is false

@@ -109,6 +109,10 @@ func (cfg *Config) UpgradeInfoFilePath() string {
 	return filepath.Join(cfg.Home, "data", upgradetypes.UpgradeInfoFilename)
 }
 
+func (cfg *Config) UpgradeInfoBatchFilePath() string {
+	return cfg.UpgradeInfoFilePath() + ".batch"
+}
+
 // SymLinkToGenesis creates a symbolic link from "./current" to the genesis directory.
 func (cfg *Config) SymLinkToGenesis() (string, error) {
 	genesis := filepath.Join(cfg.Root(), genesisDir)

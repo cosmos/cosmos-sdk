@@ -13,6 +13,7 @@ mod message;
 pub mod self_destruct;
 pub mod handler;
 pub mod resource;
+mod error;
 
 pub use context::Context;
 pub use response::Response;

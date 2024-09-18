@@ -12,27 +12,27 @@ pub struct Map<K, V> {
 
 impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
     /// Checks if the map contains the given key.
-    pub fn has<'a>(&self, ctx: &Context<'a>, key: K::Value<'a>) -> Response<bool> {
+    pub fn has<'key>(&self, ctx: &Context<'key>, key: K::Value<'key>) -> Response<bool> {
         todo!()
     }
 
     /// Gets the value of the map at the given key.
-    pub fn get<'a, 'b>(&self, ctx: &Context<'a>, key: K::Value<'a>) -> Response<'b, V::Value<'b>> {
+    pub fn get<'key, 'value>(&self, ctx: &Context<'key>, key: K::Value<'key>) -> Response<'value, V::Value<'value>> {
         todo!()
     }
 
     /// Gets the value of the map at the given key, possibly from a previous block.
-    pub fn stale_get<'a, 'b, 'c>(&self, ctx: &Context<'a>, key: K::Value<'b>) -> Response<'c, V::Value<'c>> {
+    pub fn stale_get<'key>(&self, ctx: &Context<'key>, key: K::Value<'key>) -> Response<'key, V::Value<'key>> {
         todo!()
     }
 
     /// Sets the value of the map at the given key.
-    pub fn set<'a, 'b>(&self, ctx: &mut Context<'a>, key: K::Value<'a>, value: V::Value<'b>) -> Response<()> {
+    pub fn set<'key, 'value>(&self, ctx: &mut Context<'key>, key: K::Value<'key>, value: V::Value<'value>) -> Response<()> {
         todo!()
     }
 
     /// Updates the value of the map at the given key.
-    pub fn update<'a, 'b>(&self, ctx: &mut Context<'a>, key: K::Value<'a>, updater: impl FnOnce(Option<V::Value<'b>>) -> Option<V::Value<'b>>) -> Response<()> {
+    pub fn update<'key, 'value>(&self, ctx: &mut Context<'key>, key: K::Value<'key>, updater: impl FnOnce(Option<V::Value<'value>>) -> Option<V::Value<'value>>) -> Response<()> {
         todo!()
     }
 
@@ -43,7 +43,7 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
     }
 
     /// Deletes the value of the map at the given key.
-    pub fn delete<'a>(&self, ctx: &mut Context<'a>, key: K::Value<'a>) -> Response<()> {
+    pub fn delete<'key>(&self, ctx: &mut Context<'key>, key: K::Value<'key>) -> Response<()> {
         todo!()
     }
 }

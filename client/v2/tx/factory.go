@@ -42,8 +42,6 @@ type Factory struct {
 	conn             gogogrpc.ClientConn
 	txConfig         TxConfig
 	txParams         TxParameters
-
-	cachedTx TxBuilder
 }
 
 func NewFactoryFromFlagSet(flags *pflag.FlagSet, keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever account.AccountRetriever,
@@ -474,9 +472,6 @@ func (f *Factory) sequence() uint64 { return f.txParams.sequence }
 
 // gasAdjustment returns the gas adjustment value.
 func (f *Factory) gasAdjustment() float64 { return f.txParams.gasAdjustment }
-
-// keyring returns the keyring.
-func (f *Factory) keyring() keyring.Keyring { return f.keybase }
 
 // simulateAndExecute returns whether to simulate and execute.
 func (f *Factory) simulateAndExecute() bool { return f.txParams.simulateAndExecute }

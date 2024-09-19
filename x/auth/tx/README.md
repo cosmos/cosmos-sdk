@@ -21,14 +21,25 @@ It contains as well a depinject module and app module the registration of ante/p
 
 ## Contents
 
-* [Transactions](#transactions)
+* [`x/auth/tx`](#xauthtx)
+  * [Abstract](#abstract)
+  * [Contents](#contents)
+  * [Transactions](#transactions)
     * [`TxConfig`](#txconfig)
     * [`TxBuilder`](#txbuilder)
     * [`TxEncoder`/ `TxDecoder`](#txencoder-txdecoder)
-* [Depinject \& App Module](#depinject--app-module)
-* [Client](#client)
+  * [Depinject \& App Module](#depinject--app-module)
+  * [Client](#client)
     * [CLI](#cli)
+      * [Query](#query)
+      * [Transactions](#transactions-1)
+      * [`encode`](#encode)
+      * [`decode`](#decode)
     * [gRPC](#grpc)
+      * [`TxDecode`](#txdecode)
+      * [`TxEncode`](#txencode)
+      * [`TxDecodeAmino`](#txdecodeamino)
+      * [`TxEncodeAmino`](#txencodeamino)
 
 ## Transactions
 
@@ -62,10 +73,8 @@ More information about `TxEncoder` and `TxDecoder` can be found [here](https://d
 
 ## Depinject & App Module
 
-The `x/auth/tx/config` contains a depinject module and app module.
-The depinject module is there to setup ante/post handlers on an runtime app (via baseapp options) and the tx validator on the runtime/v2 app (via app module). It as well outputs the `TxConfig` and `TxConfigOptions` for the app.
-
-The app module is purely there for registering tx validators, due to the design of tx validators (tx validator belong to modules).
+The `x/auth/tx/config` contains a depinject module.
+The depinject module is to outputs the `TxConfig` and `TxConfigOptions` for the app.
 
 ## Client
 

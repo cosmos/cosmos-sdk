@@ -64,6 +64,13 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Deprecated
 
+### TO SORT
+
+* (x/auth/tx/config) Sign mode textual not more automatically added to tx config when using runtime. Should be added manually on the server side.
+* (x/auth/tx/config) This depinject module now only provide txconfig and tx config options. x/validate now handlers the providing of ante/post handlers, alongside tx validators for v2. The corresponding app config options have been removed
+* (x/validate) New module solely responsible for providing ante/post handlers and tx validators for v2. It can be extended by the app developer to provide extra tx validators.
+    * In comparison to x/auth/tx/config, there is no app config to skip ante/post handlers, as overwriting them is baseapp or not injecting the x/validate module has the same effect.
+
 ## [v0.52.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0) - 2024-XX-XX
 
 Every module contains its own CHANGELOG.md. Please refer to the module you are interested in.

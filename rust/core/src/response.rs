@@ -1,5 +1,5 @@
-use interchain_schema::state_object::ObjectValue;
-use interchain_schema::value::{ResponseValue, Value};
+use ixc_schema::state_object::ObjectValue;
+use ixc_schema::value::{ResponseValue, Value};
 use crate::error::ErrorMessage;
 
 /// Response is the type that should be used for message handler responses.

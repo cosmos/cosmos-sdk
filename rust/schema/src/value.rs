@@ -93,7 +93,7 @@ where
 }
 
 #[cfg(feature = "address")]
-impl<'a> MaybeBorrowed<'a> for interchain_message_api::Address {
+impl<'a> MaybeBorrowed<'a> for ixc_message_api::Address {
     type Type = AddressT;
 }
 
@@ -144,8 +144,8 @@ impl Value for simple_time::Time {
 impl Value for simple_time::Duration {
     type MaybeBorrowed<'a> = simple_time::Duration;
 }
-impl Value for interchain_message_api::Address {
-    type MaybeBorrowed<'a> = interchain_message_api::Address;
+impl Value for ixc_message_api::Address {
+    type MaybeBorrowed<'a> = ixc_message_api::Address;
 }
 impl<V: Value> Value for Option<V> {
     type MaybeBorrowed<'a> = Option<V::MaybeBorrowed<'a>>;

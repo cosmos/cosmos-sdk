@@ -1,6 +1,6 @@
 //! The item module contains the `Item` struct, which represents a single item in storage.
 
-use interchain_core::{Context, Response};
+use ixc_core::{Context, Response};
 use crate::Map;
 
 /// A single item in storage.

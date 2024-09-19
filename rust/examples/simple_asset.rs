@@ -1,7 +1,7 @@
 #![allow(missing_docs)]
-#[interchain_sdk::account_handler(SimpleAsset)]
+#[ixc::account_handler(SimpleAsset)]
 pub mod simple_asset {
-    use interchain_sdk::*;
+    use ixc::*;
 
     #[derive(Resources)]
     pub struct SimpleAsset {
@@ -29,7 +29,7 @@ pub mod simple_asset {
 
 #[cfg(test)]
 mod tests {
-    use interchain_core_testing::*;
+    use ixc_testing::*;
 }
 
 fn main() {}

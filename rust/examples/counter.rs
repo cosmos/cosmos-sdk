@@ -1,7 +1,7 @@
 #![allow(missing_docs)]
-#[interchain_sdk::account_handler(Counter)]
+#[ixc::account_handler(Counter)]
 pub mod counter {
-    use interchain_sdk::*;
+    use ixc::*;
 
     #[derive(Resources)]
     pub struct Counter {
@@ -37,7 +37,7 @@ pub mod counter {
 
 #[cfg(test)]
 mod tests {
-    use interchain_core_testing::*;
+    use ixc_testing::*;
     use super::counter::*;
 
     #[test]

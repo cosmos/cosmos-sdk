@@ -1,13 +1,14 @@
 [package]
-name = "interchain_core_testing"
+name = "ixc_testing"
 edition = "2021"
+readme = "README.md"
 version.workspace = true
 repository.workspace = true
 license.workspace = true
 
 [dependencies]
-interchain_core = { path = "../core" }
-interchain_message_api = { path = "../message_api" }
+ixc_core = { path = "../core" }
+ixc_message_api = { path = "../message_api" }
 
 [lints]
 workspace = true

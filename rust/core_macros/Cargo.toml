@@ -1,5 +1,5 @@
 [package]
-name = "interchain_core_macros"
+name = "ixc_core_macros"
 edition = "2021"
 version.workspace = true
 repository.workspace = true

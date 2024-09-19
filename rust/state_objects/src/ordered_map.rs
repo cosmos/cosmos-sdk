@@ -1,5 +1,5 @@
-use interchain_core::{Context, Response};
-use interchain_schema::state_object::{ObjectKey, ObjectValue, PrefixKey};
+use ixc_core::{Context, Response};
+use ixc_schema::state_object::{ObjectKey, ObjectValue, PrefixKey};
 use crate::Map;
 
 /// An ordered map is a map that maintains the order of its keys.

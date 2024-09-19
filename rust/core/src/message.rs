@@ -1,5 +1,5 @@
-use interchain_schema::StructCodec;
-use interchain_schema::value::{ResponseValue, Value};
+use ixc_schema::StructCodec;
+use ixc_schema::value::{ResponseValue, Value};
 
 pub trait Message<const Mod: bool>: StructCodec + Value {
     const SELECTOR: u128;

@@ -1,7 +1,7 @@
 //! Basic error handling utilities.
 use core::fmt::{Debug, Display, Formatter};
-use interchain_schema::types::StrT;
-use interchain_schema::value::{MaybeBorrowed, Value};
+use ixc_schema::types::StrT;
+use ixc_schema::value::{MaybeBorrowed, Value};
 
 /// A simple error type which just contains an error message.
 #[derive(Clone)]

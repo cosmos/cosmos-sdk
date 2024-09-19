@@ -1,5 +1,5 @@
-use interchain_core::{Context, Response};
-use interchain_schema::state_object::{ObjectKey, PrefixKey};
+use ixc_core::{Context, Response};
+use ixc_schema::state_object::{ObjectKey, PrefixKey};
 
 /// An index on a set of fields in a map which may map multiple index key values to a single primary key value.
 pub struct Index<IndexKey, PrimaryKey> {

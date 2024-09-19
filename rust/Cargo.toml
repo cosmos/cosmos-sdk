@@ -2,12 +2,12 @@
 members = [
     "core",
     "core_macros",
-    "core_testing",
     "state_objects",
     "state_objects_macros",
     "schema",
     "schema_macros",
     "message_api",
+    "testing",
     "util/simple_time",
 ]
 
@@ -22,24 +22,25 @@ license = "Apache-2.0"
 missing_docs = "deny"
 
 [package]
-name = "interchain_sdk"
+name = "ixc"
 edition = "2021"
+readme = "README.md"
 version.workspace = true
 repository.workspace = true
 license.workspace = true
 
 [dependencies]
-interchain_core = { path = "core" }
-interchain_schema = { path = "schema" }
-interchain_message_api = { path = "message_api" }
+ixc_core = { path = "core" }
+ixc_schema = { path = "schema" }
+ixc_message_api = { path = "message_api" }
 state_objects = { path = "state_objects" }
 simple_time = { path = "util/simple_time" }
-interchain_core_macros = { path = "core_macros" }
-interchain_schema_macros = { path = "schema_macros" }
+ixc_core_macros = { path = "core_macros" }
+ixc_schema_macros = { path = "schema_macros" }
 state_objects_macros = { path = "state_objects_macros" }
 
 [dev-dependencies]
-interchain_core_testing = { path = "core_testing" }
+ixc_testing = { path = "testing" }
 arrayvec = "0.7.6"
 thiserror = "1.0.63"
 

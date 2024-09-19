@@ -1,6 +1,7 @@
 [package]
-name = "interchain_schema"
+name = "ixc_schema"
 edition = "2021"
+readme = "README.md"
 version.workspace = true
 repository.workspace = true
 license.workspace = true
@@ -9,7 +10,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-interchain_message_api = { path = "../message_api" }
+ixc_message_api = { path = "../message_api" }
 simple_time = { path = "../util/simple_time" }
 
 [features]

@@ -1,7 +1,7 @@
 #![allow(missing_docs)]
-#[interchain_sdk::module_handler(Bank)]
+#[ixc::module_handler(Bank)]
 pub mod bank {
-    use interchain_sdk::*;
+    use ixc::*;
 
     pub struct Bank {
         #[schema(name(address, denom), value(amount))]

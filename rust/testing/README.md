@@ -11,7 +11,7 @@ Let's define a simple counter with two methods `get` and `inc`:
 ```rust
 #[interchain_sdk::account_handler(Counter)]
 pub mod counter {
-    use interchain_sdk::*;
+    use ixc::*;
 
     #[derive(Resources)]
     pub struct Counter {

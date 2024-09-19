@@ -34,17 +34,17 @@ This is the single import, batteries-included crate for building applications wi
 
 Follow these steps to create the basic structure for account handler:
 1. Create a nested module (ex. `mod my_account_handler`) for the handler
-2. Import this crate with `use interchain_sdk::*;` (_optional, but recommended_)
+2. Import this crate with `use ixc::*;` (_optional, but recommended_)
 3. Add a handler struct to the nested `mod` block (ex. `pub struct MyAccountHandler`)
 4. Annotate the struct with `#[derive(Resources)]`
-5. Annotate the `mod` block with `#[interchain_sdk::account_handler(MyAccountHandler)]`
+5. Annotate the `mod` block with `#[ixc::account_handler(MyAccountHandler)]`
 
 Here's an example:
 
 ```rust
-#[interchain_sdk::account_handler(MyAsset)]
+#[ixc::account_handler(MyAsset)]
 mod my_asset {
-  use interchain_sdk::*;
+  use ixc::*;
 
   #[derive(Resources)]
   pub struct MyAsset {}
@@ -102,7 +102,7 @@ If they modify state, they should mutably borrow [`Context`] and
 if they only read state, they should immutably borrow [`Context`].
 Other arguments can be provided to the function signature as needed and the return
 type should be [`Response`] parameterized with the return type of the function.
-The supported argument types are defined by [`interchain_schema`] crate.
+The supported argument types are defined by [`ixc_schema`] crate.
 See that crate for more information.
 
 Here's an example demonstrating all three methods:
@@ -199,9 +199,9 @@ and such traits can only be implemented by one module handler in the app.
 
 Here's an example of a module handler:
 ```rust
-#[interchain_sdk::module_handler(MyModuleHandler)]
+#[ixc::module_handler(MyModuleHandler)]
 mod my_module_handler {
-    use interchain_sdk::*;
+    use ixc::*;
  
     #[derive(Resources)]
     pub struct MyModuleHandler {}
@@ -263,18 +263,18 @@ package_root!(MyAccountHandler, MyModuleHandler);
 ## Testing
 
 It is recommended that all account and module handlers write unit tests.
-The `interchain_core_testing` framework can be used for this purpose.
+The `ixc_testing` framework can be used for this purpose.
 
 ## Advanced Usage
 
 ### Splitting code across multiple files
 
-The `#[interchain_sdk::account_handler]` and `#[interchain_sdk::module_handler]` attributes
+The `#[ixc::account_handler]` and `#[ixc::module_handler]` attributes
 work by searching for `#[publish]` and `#[on_create]` attributes in the same `mod` block.
 To split code across multiple files, there are two options:
-1. Reference the `#[account_api]` or `#[module_api]` traits by name in the `publish` field of the `#[interchain_sdk::account_handler]` or `#[interchain_sdk::module_handler]` attribute. Ex:
+1. Reference the `#[account_api]` or `#[module_api]` traits by name in the `publish` field of the `#[ixc::account_handler]` or `#[ixc::module_handler]` attribute. Ex:
 ```rust
-#[interchain_sdk::account_handler(MyAccountHandler, publish=[MyAccountApi])]
+#[ixc::account_handler(MyAccountHandler, publish=[MyAccountApi])]
 mod my_account_handler {
   // ...
 }

@@ -1,7 +1,7 @@
 #![allow(missing_docs)]
-#[interchain_sdk::account_handler(OwnerCounter)]
+#[ixc::account_handler(OwnerCounter)]
 pub mod counter {
-    use interchain_sdk::*;
+    use ixc::*;
 
     pub struct OwnedCounter {
         owner: Item<Address>,
@@ -47,7 +47,7 @@ pub mod counter {
 
 #[cfg(test)]
 mod tests {
-    use interchain_sdk_testing::*;
+    use ixc_testing::*;
     use super::counter::*;
 
     #[test]

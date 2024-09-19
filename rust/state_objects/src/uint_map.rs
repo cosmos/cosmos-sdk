@@ -1,5 +1,5 @@
-use interchain_core::{Context, Response};
-use interchain_schema::state_object::ObjectKey;
+use ixc_core::{Context, Response};
+use ixc_schema::state_object::ObjectKey;
 use crate::Map;
 
 /// A map from keys to 128-bit unsigned integers.

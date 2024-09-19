@@ -1,7 +1,7 @@
 #![allow(missing_docs)]
-#[interchain_sdk::module_handler(FixedVesting)]
+#[ixc::module_handler(FixedVesting)]
 mod vesting {
-    use interchain_sdk::*;
+    use ixc::*;
 
     use thiserror::Error;
     use crate::vesting::bank_api::{OnReceive, Coin, BankAPI};
@@ -64,7 +64,7 @@ mod vesting {
     }
 
     mod vesting_api {
-        use interchain_sdk::*;
+        use ixc::*;
         use crate::vesting::bank_api::Coin;
 
         #[account_api]
@@ -90,7 +90,7 @@ mod vesting {
 
     mod bank_api {
         use std::borrow::Cow;
-        use interchain_sdk::*;
+        use ixc::*;
 
         #[derive(StructCodec, Clone)]
         pub struct Coin {
@@ -119,7 +119,7 @@ mod vesting {
     }
 
     mod block_api {
-        use interchain_sdk::*;
+        use ixc::*;
 
         #[module_api]
         pub trait BlockInfoAPI {

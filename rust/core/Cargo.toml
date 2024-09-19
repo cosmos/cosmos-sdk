@@ -1,5 +1,5 @@
 [package]
-name = "interchain_core"
+name = "ixc_core"
 edition = "2021"
 version.workspace = true
 repository.workspace = true
@@ -9,8 +9,8 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-interchain_message_api = { path = "../message_api" }
-interchain_schema = { path = "../schema" }
+ixc_message_api = { path = "../message_api" }
+ixc_schema = { path = "../schema" }
 
 [features]
 default = ["std"]

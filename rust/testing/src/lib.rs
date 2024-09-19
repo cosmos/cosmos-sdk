@@ -1,8 +1,8 @@
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 
-use interchain_message_api::Address;
-use interchain_core::{Context};
-use interchain_core::handler::{AccountAPI, AccountHandler, Handler, ModuleAPI, ModuleHandler};
+use ixc_message_api::Address;
+use ixc_core::{Context};
+use ixc_core::handler::{AccountAPI, AccountHandler, Handler, ModuleAPI, ModuleHandler};
 
 /// Defines a test harness for running tests against account and module implementations.
 #[derive(Default)]

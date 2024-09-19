@@ -1,6 +1,6 @@
 //! Handler traits for account and module handlers.
-use interchain_message_api::Address;
-use interchain_schema::StructCodec;
+use ixc_message_api::Address;
+use ixc_schema::StructCodec;
 use crate::resource::{InitializationError, Initializer, Resource};
 
 /// Handler trait for account and module handlers.

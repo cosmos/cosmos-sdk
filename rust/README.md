@@ -46,27 +46,27 @@ Here's an example of adding an item state resource to the handler:
 ```rust
 #[derive(Resources)]
 pub struct MyAsset {
-    #[schema(prefix=1)]
+    #[state(prefix=1)]
     pub owner: Item<Address>,
 }
 ```
 
-All state object resources should have the `#[schema]` attribute.
+All state object resources should have the `#[state]` attribute.
 The `prefix` attribute indicates the store key prefix and is optional, but recommended.
 
 [`Map`] is a common type for any more complex state as it allows for multiple values to be stored and retrieved by a key. Here's an example of adding a map state resource to the handler:
 ```rust
 #[derive(Resources)]
 pub struct MyAsset {
-    #[schema(prefix=1)]
+    #[state(prefix=1)]
     pub owner: Item<Address>,
   
-    #[schema(prefix=2, key(account), value(amount))]
+    #[state(prefix=2, key(account), value(amount))]
     pub balances: Map<Address, u128>,
 }
 ```
 
-Map state objects require `key` and `value` parameters in their `#[schema]` attribute
+Map state objects require `key` and `value` parameters in their `#[state]` attribute
 in order to name the key and value fields in the map for querying by clients.
 
 ### Implement message handlers
@@ -247,12 +247,12 @@ In Rust, we encourage you to use the [`Address`] type for addresses and sized in
 For all of these types, there is a configurable mapping to Protobuf encoding that is described in more detail
 in the [`ixc_schema`] crate documentation.
 If the default mapping does not work, an alternate one may be available and can be annotated with optional
-`#[proto]` attributes.
+`#[proto]` and `#[schema]` attributes.
 Ex:
 
 ```rust
 #[derive(StructCodec)]
-#[proto(name="cosmos.base.v1beta1.Coin")]
+#[schema(name="cosmos.base.v1beta1.Coin")]
 pub struct Coin {
     pub denom: String,
     #[proto(string, tag=2)] // tag could actually be inferred from field order, but shown for demonstration
@@ -269,7 +269,7 @@ Tooling is being developed to statically check the compatibility of types follow
 (see the `cosmosdk.io/schema/diff` package) so that type definitions from different Rust packages can be
 compared for compatibility.
 
-`#[proto]` annotations can also be used on arguments to handler functions
+`#[proto]` and `#[schema]` annotations can also be used on arguments to handler functions
 to configure the message names handlers correspond to.
 (Note that even though the Cosmos SDK uses `service` definitions,
 messages are actually routed by message name, not service method name.)
@@ -277,7 +277,7 @@ Ex:
 ```rust
 #[module_api]
 trait BankMsg {
-   #[proto(name="cosmos.bank.v1beta1.MsgSend")]
+   #[schema(name="cosmos.bank.v1beta1.MsgSend")]
    fn send(&self, ctx: &Context, 
            #[proto(string, msgv1_signer=true)] from: &Address,
            #[proto(string)] to: &Address,

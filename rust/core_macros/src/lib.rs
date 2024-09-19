@@ -250,7 +250,7 @@ pub fn on_create(_attr: TokenStream2, item: TokenStream2) -> manyhow::Result<Tok
 }
 
 /// Derive the `Resources` trait for a struct.
-#[proc_macro_derive(Resources, attributes(schema, client))]
+#[proc_macro_derive(Resources, attributes(state, client))]
 pub fn derive_resources(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
     let name = input.ident;

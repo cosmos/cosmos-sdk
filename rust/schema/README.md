@@ -27,3 +27,28 @@ The rules for this are as follows:
   require [`value::Value`] instead and these types can't be borrowed explicitly even if the underlying
   implementation uses borrowing, (ex. we must write `Item<str>` instead of `Item<&str>` even though
   `Item.get()` and `Item.set()` actually take `&str`)
+
+## Protobuf Mapping
+
+The following table shows how Rust types are mapped to Protobuf types. Note that some
+types will have both a default and alternate mapping.
+
+| Rust Type | Protobuf Type(s)            | Notes                                       |
+|-----------|-----------------------------|---------------------------------------------|
+| `u8`      | `uint32`                    |                                             |
+| `u16`     | `uint32`                    |                                             |
+| `u32`     | `uint32`                    |                                             |
+| `u64`     | `uint64`                    |                                             |
+| `u128`    | `string`                    |                                             |
+| `i8`      | `int32`                     |                                             |
+| `i16`     | `int32`                     |                                             |
+| `i32`     | `int32`                     |                                             |
+| `i64`     | `int64`                     |                                             |
+| `i128`    | `string`                    |                                             |
+| `bool`    | `bool`                      |                                             |
+| `str`     | `string`                    |                                             |
+| `String`  | `string`                    |                                             |
+| `Address` | `string`, alternate `bytes` | uses an address codec for string conversion |
+| `Time`    | `google.protobuf.Timestamp` |                                             |
+| `Duration`| `google.protobuf.Duration`  |                                             |
+  

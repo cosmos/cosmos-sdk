@@ -38,6 +38,7 @@ const (
 	EnvTimeFormatLogs           = "COSMOVISOR_TIMEFORMAT_LOGS"
 	EnvCustomPreupgrade         = "COSMOVISOR_CUSTOM_PREUPGRADE"
 	EnvDisableRecase            = "COSMOVISOR_DISABLE_RECASE"
+	EnvCometBftRpcEndpoint      = "COMETBFT_RPC_ENDPOINT"
 )
 
 const (
@@ -68,6 +69,7 @@ type Config struct {
 	TimeFormatLogs           string        `toml:"cosmovisor_timeformat_logs" mapstructure:"cosmovisor_timeformat_logs" default:"kitchen"`
 	CustomPreUpgrade         string        `toml:"cosmovisor_custom_preupgrade" mapstructure:"cosmovisor_custom_preupgrade" default:""`
 	DisableRecase            bool          `toml:"cosmovisor_disable_recase" mapstructure:"cosmovisor_disable_recase" default:"false"`
+	CometBftRpcEndpoint      string        `toml:"combetbft_rpc_endpoint" mapstructure:"combetbft_rpc_endpoint" default:"http://localhost:26657"`
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -212,10 +214,11 @@ func GetConfigFromFile(filePath string) (*Config, error) {
 func GetConfigFromEnv(skipValidate bool) (*Config, error) {
 	var errs []error
 	cfg := &Config{
-		Home:             os.Getenv(EnvHome),
-		Name:             os.Getenv(EnvName),
-		DataBackupPath:   os.Getenv(EnvDataBackupPath),
-		CustomPreUpgrade: os.Getenv(EnvCustomPreupgrade),
+		Home:                os.Getenv(EnvHome),
+		Name:                os.Getenv(EnvName),
+		DataBackupPath:      os.Getenv(EnvDataBackupPath),
+		CustomPreUpgrade:    os.Getenv(EnvCustomPreupgrade),
+		CometBftRpcEndpoint: os.Getenv(EnvCometBftRpcEndpoint),
 	}
 
 	if cfg.DataBackupPath == "" {
@@ -553,6 +556,7 @@ func (cfg Config) DetailString() string {
 		{EnvTimeFormatLogs, cfg.TimeFormatLogs},
 		{EnvCustomPreupgrade, cfg.CustomPreUpgrade},
 		{EnvDisableRecase, fmt.Sprintf("%t", cfg.DisableRecase)},
+		{EnvCometBftRpcEndpoint, cfg.CometBftRpcEndpoint},
 	}
 
 	derivedEntries := []struct{ name, value string }{

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -12,10 +13,10 @@ import (
 
 func NewBatchAddUpgradeCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:          "add-batch-upgrade <upgrade1-name>:<path-to-exec1>:<upgrade1-height> <upgrade2-name>:<path-to-exec2>:<upgrade2-height> .. <upgradeN-name>:<path-to-execN>:<upgradeN-height>",
+		Use:          "add-batch-upgrade <upgrade1-name>:<path-to-exec1>:<upgrade1-height> .. <upgradeN-name>:<path-to-execN>:<upgradeN-height>",
 		Short:        "Add APP upgrades binary to cosmovisor",
 		SilenceUsage: true,
-		Args:         cobra.ArbitraryArgs,
+		Args:         cobra.MinimumNArgs(1),
 		RunE:         AddBatchUpgrade,
 	}
 }
@@ -33,13 +34,13 @@ func AddBatchUpgrade(cmd *cobra.Command, args []string) error {
 		if len(a) != 3 {
 			return fmt.Errorf("argument at position %d (%s) is invalid", i, as)
 		}
-		upgradeName := a[0]
+		upgradeName := filepath.Base(a[0])
 		upgradePath := a[1]
 		upgradeHeight, err := strconv.ParseInt(a[2], 10, 64)
 		if err != nil {
 			return fmt.Errorf("upgrade height at position %d (%s) is invalid", i, a[2])
 		}
-		upgradeInfoPath := cfg.UpgradeInfoFilePath() + upgradeName
+		upgradeInfoPath := filepath.Join(cfg.UpgradeInfoFilePath(), upgradeName)
 		upgradeInfoPaths = append(upgradeInfoPaths, upgradeInfoPath)
 		if err := AddUpgrade(cfg, true, upgradeHeight, upgradeName, upgradePath, upgradeInfoPath); err != nil {
 			return err

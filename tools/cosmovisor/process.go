@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -16,7 +17,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/cometbft/cometbft/rpc/client/http"
+	cmthttp "github.com/cometbft/cometbft/rpc/client/http"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/fsnotify/fsnotify"
 	"github.com/otiai10/copy"
@@ -49,7 +50,7 @@ func loadBatchUpgradeFile(cfg *Config) ([]upgradetypes.Plan, error) {
 	if os.IsNotExist(err) {
 		return uInfos, nil
 	} else if err != nil {
-		return nil, fmt.Errorf("error while reading upgrade-info.json.batch: %w", err)
+		return nil, fmt.Errorf("error while reading %s: %w", cfg.UpgradeInfoBatchFilePath(), err)
 	}
 
 	if err = json.Unmarshal(upgradeInfoFile, &uInfos); err != nil {
@@ -64,11 +65,11 @@ func loadBatchUpgradeFile(cfg *Config) ([]upgradetypes.Plan, error) {
 // BatchWatcher starts a watcher loop that swaps upgrade manifests at the correct
 // height, given the batch upgrade file. It watches the current state of the chain
 // via the websocket API.
-func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger, rpcAddress string) {
+func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger) {
 	// load batch file in memory
 	uInfos, err := loadBatchUpgradeFile(cfg)
 	if err != nil {
-		logger.Warn(fmt.Sprintf("failed to load batch upgrade file: %s", err))
+		logger.Warn("failed to load batch upgrade file", "error", err)
 		return
 	}
 
@@ -80,32 +81,44 @@ func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger, rpcAddres
 	defer watcher.Close()
 	err = watcher.Add(filepath.Dir(cfg.UpgradeInfoBatchFilePath()))
 	if err != nil {
-		logger.Warn(fmt.Sprintf("failed to init watcher: %s", err))
+		logger.Warn("failed to init watcher", "error", err)
 		return
 	}
 
-	// sleep to allow the chain process to startup
-	time.Sleep(10 * time.Second)
-	client, err := http.New(rpcAddress, "/websocket")
+	// Wait for the chain process to be ready
+pollLoop:
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			_, err := http.Get(cfg.CometBftRpcEndpoint)
+			if err == nil {
+				break pollLoop
+			}
+			time.Sleep(time.Second)
+		}
+	}
+	client, err := cmthttp.New(cfg.CometBftRpcEndpoint, "/websocket")
 	if err != nil {
-		logger.Warn(fmt.Sprintf("failed to create CometBFT client: %s", err))
+		logger.Warn("failed to create CometBFT client", "error", err)
 		return
 	}
 	defer func() {
 		if err := client.Stop(); err != nil {
-			logger.Warn(fmt.Sprintf("couldn't stop CometBFT client: %s", err))
+			logger.Warn("couldn't stop CometBFT client", "errror", err)
 		}
 	}()
 
 	err = client.Start()
 	if err != nil {
-		logger.Warn(fmt.Sprintf("failed to start CometBFT client: %s", err))
+		logger.Warn("failed to start CometBFT client", "error", err)
 		return
 	}
 
 	eventCh, err := client.Subscribe(ctx, "cosmovisor-watcher", cmttypes.EventQueryNewBlock.String())
 	if err != nil {
-		logger.Warn(fmt.Sprintf("failed to subscribe to new blocks: %s", err))
+		logger.Warn("failed to subscribe to new blocks", "error", err)
 		return
 	}
 
@@ -120,7 +133,7 @@ func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger, rpcAddres
 			}
 			nb, ok := e.Data.(cmttypes.EventDataNewBlock)
 			if !ok {
-				logger.Warn("batch watcher: unexpected event data type:", e.Data)
+				logger.Warn("batch watcher: unexpected event data type", "eventData", e.Data)
 				continue
 			}
 			h := nb.Block.Height
@@ -129,22 +142,22 @@ func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger, rpcAddres
 			if h > prevUpgradeHeight && h < upcomingUpgrade {
 				jsonBytes, err := json.Marshal(uInfos[0])
 				if err != nil {
-					logger.Warn(fmt.Sprintf("error marshaling JSON: %s", err))
+					logger.Warn("error marshaling JSON", "error", err)
 					return
 				}
 				if err := os.WriteFile(cfg.UpgradeInfoFilePath(), jsonBytes, 0o600); err != nil {
-					logger.Warn(fmt.Sprintf("error writing upgrade-info.json: %s", err))
+					logger.Warn("error writing upgrade-info.json", "error", err)
 					return
 				}
 				uInfos = uInfos[1:]
 
 				jsonBytes, err = json.Marshal(uInfos)
 				if err != nil {
-					logger.Warn(fmt.Sprintf("error marshaling JSON: %s", err))
+					logger.Warn("error marshaling JSON", "error", err)
 					return
 				}
 				if err := os.WriteFile(cfg.UpgradeInfoBatchFilePath(), jsonBytes, 0o600); err != nil {
-					logger.Warn(fmt.Sprintf("error writing upgrade-info.json.batch: %s", err))
+					logger.Warn("error writing upgrade-info.json.batch", "error", err)
 					return
 				}
 				prevUpgradeHeight = upcomingUpgrade
@@ -153,7 +166,7 @@ func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger, rpcAddres
 			if event.Op&(fsnotify.Write|fsnotify.Create) != 0 {
 				uInfos, err = loadBatchUpgradeFile(cfg)
 				if err != nil {
-					logger.Warn(fmt.Sprintf("failed to load batch upgrade file: %s", err))
+					logger.Warn("failed to load batch upgrade file", "error", err)
 					return
 				}
 			}
@@ -198,7 +211,7 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 		}
 	}()
 
-	go BatchWatcher(ctx, l.cfg, l.logger, "http://localhost:26657")
+	go BatchWatcher(ctx, l.cfg, l.logger)
 
 	if needsUpdate, err := l.WaitForUpgradeOrExit(cmd); err != nil || !needsUpdate {
 		return false, err

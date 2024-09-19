@@ -1,3 +1,5 @@
+**WARNING: This is an API preview! Most code won't work or even type check properly!**
+
 This crate provides a testing framework for Interchain SDK applications.
 
 ## Writing Tests

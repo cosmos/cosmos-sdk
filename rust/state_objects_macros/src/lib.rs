@@ -1,3 +1,4 @@
+//! **WARNING: This is an API preview! Most code won't work or even type check properly!**
 //! Macros for state_objects.
 use proc_macro::TokenStream;
 use quote::quote;

@@ -1,3 +1,4 @@
+//! **WARNING: This is an API preview! Most code won't work or even type check properly!**
 //! Macros for generating code for the schema crate.
 
 use proc_macro2::TokenStream as TokenStream2;

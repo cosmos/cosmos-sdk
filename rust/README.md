@@ -1,4 +1,4 @@
-**WARNING: Most of the code below does not work yet! Check back later!**
+**WARNING: This is an API preview! Most code won't work or even type check properly!**
 
 This is the single import, batteries-included crate for building applications with the [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) in Rust.
 
@@ -296,7 +296,7 @@ and types in those nested handlers are accessible through the mixin wrapper.
 
 ### Parallel Execution
 
-**NOTE: during this preview `parallel_safe` is enabled by default.**
+**NOTE: this is a highly experimental design. During this API preview `parallel_safe` is enabled by default.**
 
 The runtime executing account and module handler code written with this framework
 may attempt to execute it in parallel with other code which may be attempting to

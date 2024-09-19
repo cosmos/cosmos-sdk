@@ -9,8 +9,8 @@ pub use ixc_core::resource::Resources;
 pub use ixc_message_api::Address;
 #[doc(inline)]
 pub use ixc_schema::{StructCodec, EnumCodec, OneOfCodec};
-// #[doc(inline)]
-// pub use state_objects::*;
+#[doc(inline)]
+pub use state_objects::*;
 #[doc(inline)]
 pub use simple_time::{Time, Duration};
 
@@ -30,10 +30,10 @@ extern crate ixc_schema_macros;
 #[doc(inline)]
 pub use ixc_schema_macros::*;
 
-// #[cfg(feature = "state_objects_macros")]
-// #[allow(unused_imports)]
-// #[macro_use]
-// extern crate state_objects_macros;
-// #[cfg(feature = "state_objects_macros")]
-// #[doc(inline)]
-// pub use state_objects_macros::*;
+#[cfg(feature = "state_objects_macros")]
+#[allow(unused_imports)]
+#[macro_use]
+extern crate state_objects_macros;
+#[cfg(feature = "state_objects_macros")]
+#[doc(inline)]
+pub use state_objects_macros::*;

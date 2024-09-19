@@ -1,3 +1,4 @@
+//! **WARNING: This is an API preview! Most code won't work or even type check properly!**
 //! This crate provides a low-level implementation of the Cosmos SDK RFC 003 message passing API.
 
 /// A globally unique identifier for an account or message.

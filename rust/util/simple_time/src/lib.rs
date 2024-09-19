@@ -1,6 +1,6 @@
 //! A very simple, no_std friendly time library for Rust that provides:
-//! - a Time type that wraps a i128 representing nanoseconds since the Unix epoch
-//! - a Duration type that wraps a i128 representing a number of nanoseconds
+//! - a Time type that wraps an i128 representing nanoseconds since the Unix epoch
+//! - a Duration type that wraps an i128 representing a number of nanoseconds
 //! - const fn math operations for Time and Duration, plus basic core::ops trait implementations
 //!
 //! Any conversion to calendar time and parsing and formatting of date/time strings

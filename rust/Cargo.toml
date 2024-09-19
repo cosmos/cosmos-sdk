@@ -34,14 +34,14 @@ license.workspace = true
 ixc_core = { path = "core", version = "0.0.1" }
 ixc_schema = { path = "schema", version = "0.0.1" }
 ixc_message_api = { path = "message_api", version = "0.0.1" }
-#state_objects = { path = "state_objects", version = "0.0.1" }
+state_objects = { path = "state_objects", version = "0.0.1" }
 simple_time = { path = "util/simple_time", version = "0.0.1" }
 ixc_core_macros = { path = "core_macros", version = "0.0.1" }
 ixc_schema_macros = { path = "schema_macros", version = "0.0.1" }
-#state_objects_macros = { path = "state_objects_macros", version = "0.0.1" }
+state_objects_macros = { path = "state_objects_macros", version = "0.0.1" }
 
 [dev-dependencies]
-#ixc_testing = { path = "testing", version = "0.0.1" }
+ixc_testing = { path = "testing", version = "0.0.1" }
 arrayvec = "0.7.6"
 thiserror = "1.0.63"
 

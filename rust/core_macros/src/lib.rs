@@ -1,3 +1,4 @@
+//! **WARNING: This is an API preview! Most code won't work or even type check properly!**
 //! This is a macro utility crate for interchain_core.
 
 use proc_macro::{TokenStream};

@@ -293,3 +293,101 @@ pub struct MyModuleHandler {
 ```
 `AccountMixin` and `ModuleMixin` implement the [`Deref`](core::ops::Deref) trait so that all methods
 and types in those nested handlers are accessible through the mixin wrapper.
+
+### Parallel Execution
+
+**NOTE: during this preview `parallel_safe` is enabled by default.**
+
+The runtime executing account and module handler code written with this framework
+may attempt to execute it in parallel with other code which may be attempting to
+access the same state.
+This parallel runtime will attempt to find a safe way to synchronize this state
+access, usually by simulating transactions, tracking state reads and writes and
+then scheduling things with appropriate ordering, checkpointing, and rollbacks.
+The state that a handler is simulated against will likely be older than the
+state that it is actually executed against, so there may be some differences in
+behavior between simulation and execution.
+Ideally, when a handler is simulated, it will have similar enough behavior to when it is
+actually executed so that rollback, re-scheduling and re-execution are unnecessary.
+If re-execution is necessary, the runtime may impose a penalty on the user
+calling such handlers.
+Generally, a handler will not need to be re-executed if it accesses the same
+storage locations in simulation as during actual execution.
+The values written to and read from those locations can vary, but if the
+locations are the same, the runtime can ensure that the handler is only executed once.
+Storage locations are identified by an account address and a state object's key.
+We can ensure that such storage locations remain stable between simulation and execution
+if the storage locations are derived _only_ from:
+* message input,
+* pure functions of message input, and
+* older state that is guaranteed to be the same between simulation and execution
+
+#### `parallel_safe` feature flag
+
+The `state_objects` framework has a `parallel_safe` feature flag which uses lifetimes
+and Rust's borrow checker to ensure that the above conditions are met at compile time.
+
+In `parallel_safe` mode, `state_objects` types will have two lifetime parameters
+called `'key` and `'value` and it is recommended that your handlers also declare
+these lifetimes.
+The `'key` lifetime represents things that will be stable between simulation and execution,
+and are thus safe to use as state object keys to identify storage locations.
+Only references with the `'key` lifetime should be used to derive state object keys.
+References with `'value` lifetime should only be used as storage values as they may
+change between simulation and execution.
+
+Here's an example send method signature:
+```rust
+trait ParallelSafeSend {
+    fn send<'key, 'value>(&self, ctx: &mut Context<'key>, to: &'key Address, denom: &'key str, amount: &'value u128) -> Response<()>;
+}
+```
+
+This signature says that anything in the context as well as the address and denom
+should be stable between simulation and execution, and thus can be used as keys.
+The amount being sent, however, can change between simulation and execution.
+
+A caller using this parallel safe `send` should then ensure that it only passes
+references with the `'key` lifetime as arguments to the method (meaning derived
+from message input, pure functions on that input, or previous block state).
+
+#### Pure Functions
+
+A pure function is a function that has no side effects and always returns the same
+output given the same input.
+Message handlers are pure if they have no `Context` parameter and thus have no
+state access.
+A pure function could be used to transform raw input parameters into some other
+form while retaining the `'key` lifetime.
+An example of this could be implementing a hash function as a pure function.
+Then a storage key could be derived from the hash of some input parameters.
+
+#### Stale Reads
+
+In order to read a value from state that has the `'key` lifetime in `parallel_safe` mode,
+the [`Map`] type has a `state_get` method which reads from some historical state
+that is guaranteed to be the same between simulation and execution.
+Regular calls to `get` will read from the latest state and return values with the `'value` lifetime.
+However, calls to `state_get` will read from the historical state and return values with the `'key` lifetime which can then be used as keys for other state objects.
+
+#### Lazy Writes
+
+Lazy write operations is a technique to deal with resource contention during parallel execution.
+Say we have some global balance (like a fee-pool) which is constantly being written to by
+many transactions in a block.
+So even if these transactions could otherwise run concurrently, they would all need
+to lock around this fee-pool balance and actually need to run sequentially.
+
+A lazy write operation allows us to work around this resource contention if we can ensure
+that the order of write operations doesn't matter.
+This is true if and only if the write operations are commutative.
+This is the case when adding to a balance
+as it can only fail when the underlying integer type saturates to its maximum value,
+which is a fatal error condition anyway.
+
+Because the framework has no way of knowing which write operations actually are
+commutative, only privileged modules which are initialized by the application itself can
+use lazy write operations.
+The `state_objects` provides support for writing such modules using the [`UIntMap`] type
+which has a `lazy_add` method.
+If an unprivileged module tries to use `lazy_add`, the operation will occur synchronously.

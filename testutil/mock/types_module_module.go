@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	legacy "cosmossdk.io/core/legacy"
+	registry "cosmossdk.io/core/registry"
 	client "github.com/cosmos/cosmos-sdk/client"
 	types "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
@@ -53,7 +53,7 @@ func (mr *MockAppModuleBasicMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 i
 }
 
 // RegisterLegacyAminoCodec mocks base method.
-func (m *MockAppModuleBasic) RegisterLegacyAminoCodec(arg0 legacy.Amino) {
+func (m *MockAppModuleBasic) RegisterLegacyAminoCodec(arg0 registry.AminoRegistrar) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
 }
@@ -149,7 +149,7 @@ func (m *MockHasAminoCodec) EXPECT() *MockHasAminoCodecMockRecorder {
 }
 
 // RegisterLegacyAminoCodec mocks base method.
-func (m *MockHasAminoCodec) RegisterLegacyAminoCodec(arg0 legacy.Amino) {
+func (m *MockHasAminoCodec) RegisterLegacyAminoCodec(arg0 registry.AminoRegistrar) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
 }

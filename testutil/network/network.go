@@ -18,18 +18,17 @@ import (
 	"time"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
@@ -53,6 +52,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
@@ -168,7 +168,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config, baseappOpts ...func(
 	var (
 		appBuilder            *runtime.AppBuilder
 		txConfig              client.TxConfig
-		legacyAmino           legacy.Amino
+		legacyAmino           registry.AminoRegistrar
 		cdc                   codec.Codec
 		interfaceRegistry     codectypes.InterfaceRegistry
 		addressCodec          address.Codec
@@ -220,7 +220,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config, baseappOpts ...func(
 			panic(err)
 		}
 		app := appBuilder.Build(
-			dbm.NewMemDB(),
+			coretesting.NewMemDB(),
 			nil,
 			append(baseappOpts,
 				baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),

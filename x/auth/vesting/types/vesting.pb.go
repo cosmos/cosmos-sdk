@@ -4,7 +4,7 @@
 package types
 
 import (
-	types "cosmossdk.io/x/auth/types"
+	types "github.com/cosmos/cosmos-sdk/x/auth/types"
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types1 "github.com/cosmos/cosmos-sdk/types"

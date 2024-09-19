@@ -43,20 +43,25 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Features
 
 * (baseapp) [#20291](https://github.com/cosmos/cosmos-sdk/pull/20291) Simulate nested messages.
+* (cli) [#21372](https://github.com/cosmos/cosmos-sdk/pull/21372) Add a `bulk-add-genesis-account` genesis command to add many genesis accounts at once.
+* (crypto/keyring) [#21653](https://github.com/cosmos/cosmos-sdk/pull/21653) New Linux-only backend that adds Linux kernel's `keyctl` support.
+* (runtime) [#21704](https://github.com/cosmos/cosmos-sdk/pull/21704) Add StoreLoader in simappv2.
 
 ### Improvements
 
-* (client) [#21436](https://github.com/cosmos/cosmos-sdk/pull/21436) Use `address.Codec` from client.Context in `tx.Sign`.
+* (genutil) [#21701](https://github.com/cosmos/cosmos-sdk/pull/21701) Improved error messages for genesis validation.
+* (sims)[#21613](https://github.com/cosmos/cosmos-sdk/pull/21613) Add sims2 framework and factory methods for simpler message factories in modules
 
 ### Bug Fixes
 
 * (baseapp) [#21256](https://github.com/cosmos/cosmos-sdk/pull/21256) Halt height will not commit the block indicated, meaning that if halt-height is set to 10, only blocks until 9 (included) will be committed. This is to go back to the original behavior before a change was introduced in v0.50.0.
+* (runtime) [#21769](https://github.com/cosmos/cosmos-sdk/pull/21769) Fix baseapp options ordering to avoid overwriting options set by modules.
 
 ### API Breaking Changes
 
-### Deprecated
+* (types/mempool) [#21744](https://github.com/cosmos/cosmos-sdk/pull/21744) Update types/mempool.Mempool interface to take decoded transactions. This avoid to decode the transaction twice.
 
-* (types) [#21435](https://github.com/cosmos/cosmos-sdk/pull/21435) The `String()` method on `AccAddress`, `ValAddress` and `ConsAddress` have been deprecated. This is done because those are still using the deprecated global `sdk.Config`. Use an `address.Codec` instead.
+### Deprecated
 
 ## [v0.52.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.52.0) - 2024-XX-XX
 
@@ -128,6 +133,9 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (baseapp) [#20380](https://github.com/cosmos/cosmos-sdk/pull/20380) Enhanced OfferSnapshot documentation.
 * (client) [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Remove `ReadDefaultValuesFromDefaultClientConfig` from `client` package. (It was introduced in `v0.50.6` as a quick fix).
 * (grpcserver) [#20945](https://github.com/cosmos/cosmos-sdk/pull/20945) Adds error handling for out-of-gas panics in grpc query handlers.
+* (internal) [#21412](https://github.com/cosmos/cosmos-sdk/pull/21412) Using unsafe.String and unsafe.SliceData.
+* (client) [#21436](https://github.com/cosmos/cosmos-sdk/pull/21436) Use `address.Codec` from client.Context in `tx.Sign`.
+* (x/genutil) [#21249](https://github.com/cosmos/cosmos-sdk/pull/21249) Incremental JSON parsing for AppGenesis where possible.
 
 ### Bug Fixes
 
@@ -170,7 +178,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (x/authz) [#18265](https://github.com/cosmos/cosmos-sdk/pull/18265) Authz module was moved to its own go.mod `cosmossdk.io/x/authz`
 * (x/mint) [#18283](https://github.com/cosmos/cosmos-sdk/pull/18283) Mint module was moved to its own go.mod `cosmossdk.io/x/mint`
 * (server) [#18303](https://github.com/cosmos/cosmos-sdk/pull/18303) `x/genutil` now handles the application export. `server.AddCommands` does not take an `AppExporter` but instead `genutilcli.Commands` does.
-* (x/auth) [#18351](https://github.com/cosmos/cosmos-sdk/pull/18351) Auth module was moved to its own go.mod `cosmossdk.io/x/auth`
 * (types) [#18372](https://github.com/cosmos/cosmos-sdk/pull/18372) Removed global configuration for coin type and purpose. Setters and getters should be removed and access directly to defined types.
 * (types) [#18607](https://github.com/cosmos/cosmos-sdk/pull/18607) Removed address verifier from global config, moved verifier function to bech32 codec.
 * (types) [#18695](https://github.com/cosmos/cosmos-sdk/pull/18695) Removed global configuration for txEncoder.
@@ -212,6 +219,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
     * Remove parameter `txConfig` from `genutilcli.Commands`,`genutilcli.CommandsWithCustomMigrationMap`,`genutilcli.GenTxCmd`.
     * Remove parameter `addressCodec` from `genutilcli.GenTxCmd`,`genutilcli.AddGenesisAccountCmd`,`stakingcli.BuildCreateValidatorMsg`.
 * (sims) [#21039](https://github.com/cosmos/cosmos-sdk/pull/21039): Remove Baseapp from sims by a new interface `simtypes.AppEntrypoint`.
+* (x/genutil) [#21372](https://github.com/cosmos/cosmos-sdk/pull/21372) Remove `AddGenesisAccount` for `AddGenesisAccounts`.
+* (baseapp) [#21413](https://github.com/cosmos/cosmos-sdk/pull/21413) Add `SelectBy` method to `Mempool` interface, which is thread-safe to use.
 
 ### Client Breaking Changes
 
@@ -227,6 +236,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 * (simapp) [#19146](https://github.com/cosmos/cosmos-sdk/pull/19146) Replace `--v` CLI option with `--validator-count`/`-n`.
 * (module) [#19370](https://github.com/cosmos/cosmos-sdk/pull/19370) Deprecate `module.Configurator`, use `appmodule.HasMigrations` and `appmodule.HasServices` instead from Core API.
+* (types) [#21435](https://github.com/cosmos/cosmos-sdk/pull/21435) The `String()` method on `AccAddress`, `ValAddress` and `ConsAddress` have been deprecated. This is done because those are still using the deprecated global `sdk.Config`. Use an `address.Codec` instead.
 
 ## [v0.50.9](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.9) - 2024-08-07
 
@@ -279,7 +289,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types) [#19759](https://github.com/cosmos/cosmos-sdk/pull/19759) Align SignerExtractionAdapter in PriorityNonceMempool Remove.
 * (client) [#19870](https://github.com/cosmos/cosmos-sdk/pull/19870) Add new query command `wait-tx`. Alias `event-query-tx-for` to `wait-tx` for backward compatibility.
 
-### Improvements 
+### Improvements
 
 * (telemetry) [#19903](https://github.com/cosmos/cosmos-sdk/pull/19903) Conditionally emit metrics based on enablement.
     * **Introduction of `Now` Function**: Added a new function called `Now` to the telemetry package. It returns the current system time if telemetry is enabled, or a zero time if telemetry is not enabled.

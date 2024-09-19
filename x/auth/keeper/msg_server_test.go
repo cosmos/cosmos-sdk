@@ -8,10 +8,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"google.golang.org/protobuf/runtime/protoiface"
 
-	"cosmossdk.io/x/auth/types"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func (s *KeeperTestSuite) TestUpdateParams() {
@@ -121,7 +120,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			_, err := s.msgServer.UpdateParams(s.ctx, tc.req)
 			if tc.expectErr {
@@ -191,7 +189,6 @@ func (s *KeeperTestSuite) TestNonAtomicExec() {
 		}).AnyTimes()
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			_, err := s.msgServer.NonAtomicExec(s.ctx, tc.req)
 			if tc.expectErr {

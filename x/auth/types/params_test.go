@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestParamsEqual(t *testing.T) {
@@ -37,7 +37,6 @@ func TestParams_Validate(t *testing.T) {
 			types.DefaultSigVerifyCostED25519, types.DefaultSigVerifyCostSecp256k1), errors.New("invalid tx size cost per byte: 0")},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.params.Validate()
 			if tt.wantErr == nil {

@@ -10,31 +10,17 @@ import (
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
-	"cosmossdk.io/x/auth"
-	"cosmossdk.io/x/auth/ante"
-	"cosmossdk.io/x/auth/ante/unorderedtx"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtypes "cosmossdk.io/x/auth/types"
-	authzkeeper "cosmossdk.io/x/authz/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	consensuskeeper "cosmossdk.io/x/consensus/keeper"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
-	epochskeeper "cosmossdk.io/x/epochs/keeper"
-	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	govkeeper "cosmossdk.io/x/gov/keeper"
-	groupkeeper "cosmossdk.io/x/group/keeper"
-	mintkeeper "cosmossdk.io/x/mint/keeper"
-	nftkeeper "cosmossdk.io/x/nft/keeper"
 	_ "cosmossdk.io/x/protocolpool"
-	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
@@ -50,6 +36,12 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // DefaultNodeHome default home directories for the application daemon
@@ -65,30 +57,23 @@ var (
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*runtime.App
-	legacyAmino       legacy.Amino
+	legacyAmino       registry.AminoRegistrar
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
 
-	// keepers
+	// required keepers during wiring
+	// others keepers are all in the app
 	AccountsKeeper        accounts.Keeper
 	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
-	MintKeeper            mintkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
-	GovKeeper             *govkeeper.Keeper
 	UpgradeKeeper         *upgradekeeper.Keeper
-	AuthzKeeper           authzkeeper.Keeper
-	EvidenceKeeper        evidencekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
-	GroupKeeper           groupkeeper.Keeper
-	NFTKeeper             nftkeeper.Keeper
 	ConsensusParamsKeeper consensuskeeper.Keeper
 	CircuitBreakerKeeper  circuitkeeper.Keeper
-	PoolKeeper            poolkeeper.Keeper
-	EpochsKeeper          *epochskeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -186,19 +171,11 @@ func NewSimApp(
 		&app.BankKeeper,
 		&app.StakingKeeper,
 		&app.SlashingKeeper,
-		&app.MintKeeper,
 		&app.DistrKeeper,
-		&app.GovKeeper,
 		&app.UpgradeKeeper,
-		&app.AuthzKeeper,
-		&app.EvidenceKeeper,
 		&app.FeeGrantKeeper,
-		&app.GroupKeeper,
-		&app.NFTKeeper,
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
-		&app.PoolKeeper,
-		&app.EpochsKeeper,
 	); err != nil {
 		panic(err)
 	}
@@ -295,6 +272,7 @@ func (app *SimApp) setCustomAnteHandler() {
 			ante.HandlerOptions{
 				AccountKeeper:      app.AuthKeeper,
 				BankKeeper:         app.BankKeeper,
+				ConsensusKeeper:    app.ConsensusParamsKeeper,
 				SignModeHandler:    app.txConfig.SignModeHandler(),
 				FeegrantKeeper:     app.FeeGrantKeeper,
 				SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,

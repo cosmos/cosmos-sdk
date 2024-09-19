@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
@@ -15,15 +14,11 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/x/auth/ante"
-	"cosmossdk.io/x/auth/ante/unorderedtx"
-	"cosmossdk.io/x/auth/posthandler"
-	"cosmossdk.io/x/auth/tx"
-	authtypes "cosmossdk.io/x/auth/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
 
@@ -33,6 +28,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // flagMinGasPricesV2 is the flag name for the minimum gas prices in the main server v2 component.
@@ -53,25 +53,26 @@ type ModuleInputs struct {
 	ValidatorAddressCodec address.ValidatorAddressCodec
 	Codec                 codec.Codec
 	ProtoFileResolver     txsigning.ProtoFileResolver
-	Environment           appmodule.Environment
+	Environment           appmodulev2.Environment
 	// BankKeeper is the expected bank keeper to be passed to AnteHandlers / Tx Validators
-	BankKeeper               authtypes.BankKeeper                    `optional:"true"`
-	MetadataBankKeeper       BankKeeper                              `optional:"true"`
-	AccountKeeper            ante.AccountKeeper                      `optional:"true"`
-	FeeGrantKeeper           ante.FeegrantKeeper                     `optional:"true"`
-	AccountAbstractionKeeper ante.AccountAbstractionKeeper           `optional:"true"`
-	CustomSignModeHandlers   func() []txsigning.SignModeHandler      `optional:"true"`
-	CustomGetSigners         []txsigning.CustomGetSigner             `optional:"true"`
-	ExtraTxValidators        []appmodule.TxValidator[transaction.Tx] `optional:"true"`
-	UnorderedTxManager       *unorderedtx.Manager                    `optional:"true"`
-	TxFeeChecker             ante.TxFeeChecker                       `optional:"true"`
-	Viper                    *viper.Viper                            `optional:"true"` // server v2
+	ConsensusKeeper          ante.ConsensusKeeper
+	BankKeeper               authtypes.BankKeeper                      `optional:"true"`
+	MetadataBankKeeper       BankKeeper                                `optional:"true"`
+	AccountKeeper            ante.AccountKeeper                        `optional:"true"`
+	FeeGrantKeeper           ante.FeegrantKeeper                       `optional:"true"`
+	AccountAbstractionKeeper ante.AccountAbstractionKeeper             `optional:"true"`
+	CustomSignModeHandlers   func() []txsigning.SignModeHandler        `optional:"true"`
+	CustomGetSigners         []txsigning.CustomGetSigner               `optional:"true"`
+	ExtraTxValidators        []appmodulev2.TxValidator[transaction.Tx] `optional:"true"`
+	UnorderedTxManager       *unorderedtx.Manager                      `optional:"true"`
+	TxFeeChecker             ante.TxFeeChecker                         `optional:"true"`
+	DynamicConfig            server.DynamicConfig                      `optional:"true"`
 }
 
 type ModuleOutputs struct {
 	depinject.Out
 
-	Module          appmodule.AppModule   // This is only useful for chains using server/v2. It setup tx validators that don't belong to other modules.
+	Module          appmodulev2.AppModule // This is only useful for chains using server/v2. It setup tx validators that don't belong to other modules.
 	BaseAppOption   runtime.BaseAppOption // This is only useful for chains using baseapp. Server/v2 chains use TxValidator.
 	TxConfig        client.TxConfig
 	TxConfigOptions tx.ConfigOptions
@@ -125,8 +126,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		feeTxValidator       *ante.DeductFeeDecorator
 		unorderedTxValidator *ante.UnorderedTxDecorator
 	)
-	if in.AccountKeeper != nil && in.BankKeeper != nil && in.Viper != nil {
-		minGasPricesStr := in.Viper.GetString(flagMinGasPricesV2)
+	if in.AccountKeeper != nil && in.BankKeeper != nil && in.DynamicConfig != nil {
+		minGasPricesStr := in.DynamicConfig.GetString(flagMinGasPricesV2)
 		minGasPrices, err = sdk.ParseDecCoins(minGasPricesStr)
 		if err != nil {
 			panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
@@ -200,6 +201,7 @@ func newAnteHandler(txConfig client.TxConfig, in ModuleInputs) (sdk.AnteHandler,
 		ante.HandlerOptions{
 			Environment:        in.Environment,
 			AccountKeeper:      in.AccountKeeper,
+			ConsensusKeeper:    in.ConsensusKeeper,
 			BankKeeper:         in.BankKeeper,
 			SignModeHandler:    txConfig.SignModeHandler(),
 			FeegrantKeeper:     in.FeeGrantKeeper,

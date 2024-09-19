@@ -33,15 +33,14 @@ import (
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
 type Consensus[T transaction.Tx] struct {
-	logger             log.Logger
-	appName, version   string
-	consensusAuthority string // Set by the application to grant authority to the consensus engine to send messages to the consensus module
-	app                *appmanager.AppManager[T]
-	txCodec            transaction.Codec[T]
-	store              types.Store
-	streaming          streaming.Manager
-	snapshotManager    *snapshots.Manager
-	mempool            mempool.Mempool[T]
+	logger           log.Logger
+	appName, version string
+	app              *appmanager.AppManager[T]
+	txCodec          transaction.Codec[T]
+	store            types.Store
+	streaming        streaming.Manager
+	snapshotManager  *snapshots.Manager
+	mempool          mempool.Mempool[T]
 
 	cfg           Config
 	indexedEvents map[string]struct{}
@@ -67,7 +66,6 @@ type Consensus[T transaction.Tx] struct {
 func NewConsensus[T transaction.Tx](
 	logger log.Logger,
 	appName string,
-	consensusAuthority string,
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
@@ -80,7 +78,6 @@ func NewConsensus[T transaction.Tx](
 	return &Consensus[T]{
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
-		consensusAuthority:     consensusAuthority,
 		grpcMethodsMap:         gRPCMethodsMap,
 		app:                    app,
 		cfg:                    cfg,
@@ -129,11 +126,16 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		return nil, err
 	}
 
+	events, err := intoABCIEvents(resp.Events, c.indexedEvents)
+	if err != nil {
+		return nil, err
+	}
+
 	cometResp := &abciproto.CheckTxResponse{
 		Code:      resp.Code,
 		GasWanted: uint64ToInt64(resp.GasWanted),
 		GasUsed:   uint64ToInt64(resp.GasUsed),
-		Events:    intoABCIEvents(resp.Events, c.indexedEvents),
+		Events:    events,
 	}
 	if resp.Error != nil {
 		cometResp.Code = 1
@@ -245,8 +247,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	}
 
 	if req.ConsensusParams != nil {
-		ctx = context.WithValue(ctx, corecontext.InitInfoKey, &consensustypes.MsgUpdateParams{
-			Authority: c.consensusAuthority,
+		ctx = context.WithValue(ctx, corecontext.CometParamsInitInfoKey, &consensustypes.MsgUpdateParams{
 			Block:     req.ConsensusParams.Block,
 			Evidence:  req.ConsensusParams.Evidence,
 			Validator: req.ConsensusParams.Validator,
@@ -325,17 +326,8 @@ func (c *Consensus[T]) PrepareProposal(
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
 
-	decodedTxs := make([]T, len(req.Txs))
-	for i, tx := range req.Txs {
-		decTx, err := c.txCodec.Decode(tx)
-		if err != nil {
-			// TODO: vote extension meta data as a custom type to avoid possibly accepting invalid txs
-			// continue even if tx decoding fails
-			c.logger.Error("failed to decode tx", "err", err)
-			continue
-		}
-
-		decodedTxs[i] = decTx
+	if c.prepareProposalHandler == nil {
+		return nil, errors.New("no prepare proposal function was set")
 	}
 
 	ciCtx := contextWithCometInfo(ctx, comet.Info{
@@ -345,7 +337,7 @@ func (c *Consensus[T]) PrepareProposal(
 		LastCommit:      toCoreExtendedCommitInfo(req.LocalLastCommit),
 	})
 
-	txs, err := c.prepareProposalHandler(ciCtx, c.app, decodedTxs, req)
+	txs, err := c.prepareProposalHandler(ciCtx, c.app, c.txCodec, req)
 	if err != nil {
 		return nil, err
 	}
@@ -366,16 +358,12 @@ func (c *Consensus[T]) ProcessProposal(
 	ctx context.Context,
 	req *abciproto.ProcessProposalRequest,
 ) (*abciproto.ProcessProposalResponse, error) {
-	decodedTxs := make([]T, len(req.Txs))
-	for _, tx := range req.Txs {
-		decTx, err := c.txCodec.Decode(tx)
-		if err != nil {
-			// TODO: vote extension meta data as a custom type to avoid possibly accepting invalid txs
-			// continue even if tx decoding fails
-			c.logger.Error("failed to decode tx", "err", err)
-			continue
-		}
-		decodedTxs = append(decodedTxs, decTx)
+	if req.Height < 1 {
+		return nil, errors.New("ProcessProposal called with invalid height")
+	}
+
+	if c.processProposalHandler == nil {
+		return nil, errors.New("no process proposal function was set")
 	}
 
 	ciCtx := contextWithCometInfo(ctx, comet.Info{
@@ -385,7 +373,7 @@ func (c *Consensus[T]) ProcessProposal(
 		LastCommit:      toCoreCommitInfo(req.ProposedLastCommit),
 	})
 
-	err := c.processProposalHandler(ciCtx, c.app, decodedTxs, req)
+	err := c.processProposalHandler(ciCtx, c.app, c.txCodec, req)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abciproto.ProcessProposalResponse{
@@ -484,9 +472,10 @@ func (c *Consensus[T]) FinalizeBlock(
 	}
 
 	// remove txs from the mempool
-	err = c.mempool.Remove(decodedTxs)
-	if err != nil {
-		return nil, fmt.Errorf("unable to remove txs: %w", err)
+	for _, tx := range decodedTxs {
+		if err = c.mempool.Remove(tx); err != nil {
+			return nil, fmt.Errorf("unable to remove tx: %w", err)
+		}
 	}
 
 	c.lastCommittedHeight.Store(req.Height)

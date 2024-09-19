@@ -7,14 +7,14 @@ import (
 
 	v1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/core/header"
-	authtypes "cosmossdk.io/x/auth/types"
-	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 func (suite *KeeperTestSuite) TestQueryBalance() {
@@ -83,8 +83,6 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		suite.Run(tc.name, func() {
 			res, err := queryClient.Balance(gocontext.Background(), tc.req)
 			if tc.expectErrMsg == "" {

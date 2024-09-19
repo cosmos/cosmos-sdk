@@ -10,13 +10,13 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth/ante/unorderedtx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 )
 
 // AppBuilder is a type that is injected into a container by the runtime module
@@ -39,9 +39,18 @@ func (a *AppBuilder) Build(db corestore.KVStoreWithBatch, traceStore io.Writer, 
 		baseAppOptions = append(baseAppOptions, option)
 	}
 
+	// set routers first in case they get modified by other options
+	baseAppOptions = append(
+		[]func(*baseapp.BaseApp){
+			func(bApp *baseapp.BaseApp) {
+				bApp.SetMsgServiceRouter(a.app.msgServiceRouter)
+				bApp.SetGRPCQueryRouter(a.app.grpcQueryRouter)
+			},
+		},
+		baseAppOptions...,
+	)
+
 	bApp := baseapp.NewBaseApp(a.app.config.AppName, a.app.logger, db, nil, baseAppOptions...)
-	bApp.SetMsgServiceRouter(a.app.msgServiceRouter)
-	bApp.SetGRPCQueryRouter(a.app.grpcQueryRouter)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(a.app.interfaceRegistry)

@@ -130,7 +130,8 @@ func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (server.TxResult, e
 	if err != nil {
 		return server.TxResult{}, err
 	}
-	return a.stf.ValidateTx(ctx, latestState, a.config.ValidateTxGasLimit, tx), nil
+	res := a.stf.ValidateTx(ctx, latestState, a.config.ValidateTxGasLimit, tx)
+	return res, res.Error
 }
 
 // Simulate runs validation and execution flow of a Tx.

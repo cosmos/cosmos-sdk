@@ -6,9 +6,8 @@ import (
 	"io"
 	"math"
 
-	"cosmossdk.io/schema"
-
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/schema"
 )
 
 var (
@@ -105,11 +104,9 @@ type Collection interface {
 // decoders and encoders to and from schema values and raw kv-store bytes.
 type collectionSchemaCodec struct {
 	coll         Collection
-	objectType   schema.ObjectType
+	objectType   schema.StateObjectType
 	keyDecoder   func([]byte) (any, error)
 	valueDecoder func([]byte) (any, error)
-	keyEncoder   func(any) ([]byte, error)
-	valueEncoder func(any) ([]byte, error)
 }
 
 // Prefix defines a segregation bytes namespace for specific collections objects.

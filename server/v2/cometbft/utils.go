@@ -8,15 +8,11 @@ import (
 	"strings"
 	"time"
 
-	abciv1 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/abci/v1"
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/types/known/anypb"
 
-	v1beta1 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
@@ -24,6 +20,8 @@ import (
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	consensus "cosmossdk.io/x/consensus/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func queryResponse(res transaction.Msg, height int64) (*abci.QueryResponse, error) {
@@ -75,9 +73,19 @@ func finalizeBlockResponse(
 ) (*abci.FinalizeBlockResponse, error) {
 	allEvents := append(in.BeginBlockEvents, in.EndBlockEvents...)
 
+	events, err := intoABCIEvents(allEvents, indexSet)
+	if err != nil {
+		return nil, err
+	}
+
+	txResults, err := intoABCITxResults(in.TxResults, indexSet)
+	if err != nil {
+		return nil, err
+	}
+
 	resp := &abci.FinalizeBlockResponse{
-		Events:                intoABCIEvents(allEvents, indexSet),
-		TxResults:             intoABCITxResults(in.TxResults, indexSet),
+		Events:                events,
+		TxResults:             txResults,
 		ValidatorUpdates:      intoABCIValidatorUpdates(in.ValidatorUpdates),
 		AppHash:               appHash,
 		ConsensusParamUpdates: cp,
@@ -99,7 +107,7 @@ func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.Vali
 	return valsetUpdates
 }
 
-func intoABCITxResults(results []server.TxResult, indexSet map[string]struct{}) []*abci.ExecTxResult {
+func intoABCITxResults(results []server.TxResult, indexSet map[string]struct{}) ([]*abci.ExecTxResult, error) {
 	res := make([]*abci.ExecTxResult, len(results))
 	for i := range results {
 		if results[i].Error != nil {
@@ -112,29 +120,36 @@ func intoABCITxResults(results []server.TxResult, indexSet map[string]struct{}) 
 
 			continue
 		}
-
+		events, err := intoABCIEvents(results[i].Events, indexSet)
+		if err != nil {
+			return nil, err
+		}
 		res[i] = responseExecTxResultWithEvents(
 			results[i].Error,
 			results[i].GasWanted,
 			results[i].GasUsed,
-			intoABCIEvents(results[i].Events, indexSet),
+			events,
 			false,
 		)
 	}
 
-	return res
+	return res, nil
 }
 
-func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) []abci.Event {
+func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) ([]abci.Event, error) {
 	indexAll := len(indexSet) == 0
 	abciEvents := make([]abci.Event, len(events))
 	for i, e := range events {
+		attributes, err := e.Attributes()
+		if err != nil {
+			return nil, err
+		}
 		abciEvents[i] = abci.Event{
 			Type:       e.Type,
-			Attributes: make([]abci.EventAttribute, len(e.Attributes)),
+			Attributes: make([]abci.EventAttribute, len(attributes)),
 		}
 
-		for j, attr := range e.Attributes {
+		for j, attr := range attributes {
 			_, index := indexSet[fmt.Sprintf("%s.%s", e.Type, attr.Key)]
 			abciEvents[i].Attributes[j] = abci.EventAttribute{
 				Key:   attr.Key,
@@ -143,21 +158,25 @@ func intoABCIEvents(events []event.Event, indexSet map[string]struct{}) []abci.E
 			}
 		}
 	}
-	return abciEvents
+	return abciEvents, nil
 }
 
 func intoABCISimulationResponse(txRes server.TxResult, indexSet map[string]struct{}) ([]byte, error) {
 	indexAll := len(indexSet) == 0
-	abciEvents := make([]*abciv1.Event, len(txRes.Events))
+	abciEvents := make([]abci.Event, len(txRes.Events))
 	for i, e := range txRes.Events {
-		abciEvents[i] = &abciv1.Event{
+		attributes, err := e.Attributes()
+		if err != nil {
+			return nil, err
+		}
+		abciEvents[i] = abci.Event{
 			Type:       e.Type,
-			Attributes: make([]*abciv1.EventAttribute, len(e.Attributes)),
+			Attributes: make([]abci.EventAttribute, len(attributes)),
 		}
 
-		for j, attr := range e.Attributes {
+		for j, attr := range attributes {
 			_, index := indexSet[fmt.Sprintf("%s.%s", e.Type, attr.Key)]
-			abciEvents[i].Attributes[j] = &abciv1.EventAttribute{
+			abciEvents[i].Attributes[j] = abci.EventAttribute{
 				Key:   attr.Key,
 				Value: attr.Value,
 				Index: index || indexAll,
@@ -165,22 +184,22 @@ func intoABCISimulationResponse(txRes server.TxResult, indexSet map[string]struc
 		}
 	}
 
-	msgResponses := make([]*anypb.Any, len(txRes.Resp))
+	msgResponses := make([]*gogoany.Any, len(txRes.Resp))
 	for i, resp := range txRes.Resp {
 		// use this hack to maintain the protov2 API here for now
 		anyMsg, err := gogoany.NewAnyWithCacheWithValue(resp)
 		if err != nil {
 			return nil, err
 		}
-		msgResponses[i] = &anypb.Any{TypeUrl: anyMsg.TypeUrl, Value: anyMsg.Value}
+		msgResponses[i] = anyMsg
 	}
 
-	res := &v1beta1.SimulationResponse{
-		GasInfo: &v1beta1.GasInfo{
+	res := &sdk.SimulationResponse{
+		GasInfo: sdk.GasInfo{
 			GasWanted: txRes.GasWanted,
 			GasUsed:   txRes.GasUsed,
 		},
-		Result: &v1beta1.Result{
+		Result: &sdk.Result{
 			Data:         []byte{},
 			Log:          txRes.Error.Error(),
 			Events:       abciEvents,
@@ -188,7 +207,7 @@ func intoABCISimulationResponse(txRes server.TxResult, indexSet map[string]struc
 		},
 	}
 
-	return protojson.Marshal(res)
+	return gogoproto.Marshal(res)
 }
 
 // ToSDKEvidence takes comet evidence and returns sdk evidence

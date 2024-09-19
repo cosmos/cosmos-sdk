@@ -6,8 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	authsigning "cosmossdk.io/x/auth/signing"
-
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -16,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var (
@@ -101,7 +100,6 @@ func TestBuilderWithAux(t *testing.T) {
 		{"happy case", func() {}, false},
 	}
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			txBuilder, txSig = makeTxBuilder(t)
 

@@ -10,7 +10,6 @@ import (
 	// without this import amino json encoding will fail when resolving any types
 	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
 	"cosmossdk.io/math"
-	authcli "cosmossdk.io/x/auth/client/cli"
 	"cosmossdk.io/x/authz"
 	"cosmossdk.io/x/authz/client/cli"
 	authzclitestutil "cosmossdk.io/x/authz/client/testutil"
@@ -28,6 +27,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 )
 
 type E2ETestSuite struct {
@@ -305,7 +305,6 @@ func (s *E2ETestSuite) TestNewExecGenericAuthorized() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.GetClientCtx()
@@ -415,7 +414,6 @@ func (s *E2ETestSuite) TestNewExecGrantAuthorized() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.GetClientCtx()
@@ -619,7 +617,6 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.GetClientCtx()
@@ -686,7 +683,6 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.GetClientCtx()
@@ -841,7 +837,6 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.GetClientCtx()
@@ -909,7 +904,6 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := val.GetClientCtx()

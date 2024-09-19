@@ -4,13 +4,13 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/gas"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/auth/ante/unorderedtx"
-	"cosmossdk.io/x/auth/types"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
@@ -19,6 +19,7 @@ type HandlerOptions struct {
 	AccountKeeper            AccountKeeper
 	AccountAbstractionKeeper AccountAbstractionKeeper
 	BankKeeper               types.BankKeeper
+	ConsensusKeeper          ConsensusKeeper
 	ExtensionOptionChecker   ExtensionOptionChecker
 	FeegrantKeeper           FeegrantKeeper
 	SignModeHandler          *txsigning.HandlerMap
@@ -44,7 +45,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	anteDecorators := []sdk.AnteDecorator{
-		NewSetUpContextDecorator(options.Environment), // outermost AnteDecorator. SetUpContext must be called first
+		NewSetUpContextDecorator(options.Environment, options.ConsensusKeeper), // outermost AnteDecorator. SetUpContext must be called first
 		NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		NewValidateBasicDecorator(options.Environment),
 		NewTxTimeoutHeightDecorator(options.Environment),

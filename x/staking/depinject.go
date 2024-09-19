@@ -12,14 +12,15 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/simulation"
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -43,6 +44,7 @@ type ModuleInputs struct {
 	ConsensusAddressCodec address.ConsensusAddressCodec
 	AccountKeeper         types.AccountKeeper
 	BankKeeper            types.BankKeeper
+	ConsensusKeeper       types.ConsensusKeeper
 	Cdc                   codec.Codec
 	Environment           appmodule.Environment
 	CometInfoService      comet.Service
@@ -73,12 +75,13 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.Environment,
 		in.AccountKeeper,
 		in.BankKeeper,
+		in.ConsensusKeeper,
 		as,
 		in.ValidatorAddressCodec,
 		in.ConsensusAddressCodec,
 		in.CometInfoService,
 	)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
+	m := NewAppModule(in.Cdc, k)
 	return ModuleOutputs{StakingKeeper: k, Module: m}
 }
 
@@ -128,20 +131,23 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalMsgs returns msgs used for governance proposals for simulations.
-func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
-	return simulation.ProposalMsgs()
-}
-
 // RegisterStoreDecoder registers a decoder for staking module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-// WeightedOperations returns the all the staking module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, simState.TxConfig,
-		am.accountKeeper, am.bankKeeper, am.keeper,
-	)
+// ProposalMsgsX returns msgs used for governance proposals for simulations.
+func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("msg_update_params", 100), simulation.MsgUpdateParamsFactory())
+}
+
+// WeightedOperationsX returns the all the staking module operations with their respective weights.
+func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("msg_create_validator", 100), simulation.MsgCreateValidatorFactory(am.keeper))
+	reg.Add(weights.Get("msg_delegate", 100), simulation.MsgDelegateFactory(am.keeper))
+	reg.Add(weights.Get("msg_undelegate", 100), simulation.MsgUndelegateFactory(am.keeper))
+	reg.Add(weights.Get("msg_edit_validator", 5), simulation.MsgEditValidatorFactory(am.keeper))
+	reg.Add(weights.Get("msg_begin_redelegate", 100), simulation.MsgBeginRedelegateFactory(am.keeper))
+	reg.Add(weights.Get("msg_cancel_unbonding_delegation", 100), simulation.MsgCancelUnbondingDelegationFactory(am.keeper))
+	reg.Add(weights.Get("msg_rotate_cons_pubkey", 100), simulation.MsgRotateConsPubKeyFactory(am.keeper))
 }

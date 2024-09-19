@@ -5,7 +5,10 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/x/accounts"
+	bankv2types "cosmossdk.io/x/bank/v2/types"
+	epochstypes "cosmossdk.io/x/epochs/types"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -34,14 +37,14 @@ func (app *SimApp[T]) RegisterUpgradeHandlers() {
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := store.StoreUpgrades{
 			Added: []string{
-				accounts.ModuleName,
-				protocolpooltypes.ModuleName,
+				accounts.StoreKey,
+				protocolpooltypes.StoreKey,
+				epochstypes.StoreKey,
+				bankv2types.ModuleName,
 			},
 			Deleted: []string{"crisis"}, // The SDK discontinued the crisis module in v0.52.0
 		}
 
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		_ = storeUpgrades
-		// app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+		app.SetStoreLoader(runtime.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 }

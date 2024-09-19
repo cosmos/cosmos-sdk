@@ -8,15 +8,12 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/simapp/v2"
-	"cosmossdk.io/x/auth/tx"
-	authtxconfig "cosmossdk.io/x/auth/tx/config"
-	"cosmossdk.io/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -24,6 +21,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
@@ -82,7 +82,7 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 		},
 	}
 
-	initRootCmd[T](rootCmd, clientCtx.TxConfig, moduleManager)
+	initRootCmd(rootCmd, clientCtx.TxConfig, moduleManager)
 
 	nodeCmds := nodeservice.NewNodeCommands()
 	autoCliOpts.ModuleOptions = make(map[string]*autocliv1.ModuleOptions)
@@ -99,7 +99,7 @@ func ProvideClientContext(
 	appCodec codec.Codec,
 	interfaceRegistry codectypes.InterfaceRegistry,
 	txConfigOpts tx.ConfigOptions,
-	legacyAmino legacy.Amino,
+	legacyAmino registry.AminoRegistrar,
 	addressCodec address.Codec,
 	validatorAddressCodec address.ValidatorAddressCodec,
 	consensusAddressCodec address.ConsensusAddressCodec,
@@ -108,7 +108,7 @@ func ProvideClientContext(
 
 	amino, ok := legacyAmino.(*codec.LegacyAmino)
 	if !ok {
-		panic("legacy.Amino must be an *codec.LegacyAmino instance for legacy ClientContext")
+		panic("registry.AminoRegistrar must be an *codec.LegacyAmino instance for legacy ClientContext")
 	}
 
 	clientCtx := client.Context{}.

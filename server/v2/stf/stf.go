@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/schema/appdata"
 	stfgas "cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/internal"
 )
@@ -338,11 +339,8 @@ func (s STF[T]) preBlock(
 		return nil, err
 	}
 
-	for i, e := range ctx.events {
-		ctx.events[i].Attributes = append(
-			e.Attributes,
-			event.Attribute{Key: "mode", Value: "PreBlock"},
-		)
+	for i := range ctx.events {
+		ctx.events[i].BlockStage = appdata.PreBlockStage
 	}
 
 	return ctx.events, nil
@@ -357,11 +355,8 @@ func (s STF[T]) beginBlock(
 		return nil, err
 	}
 
-	for i, e := range ctx.events {
-		ctx.events[i].Attributes = append(
-			e.Attributes,
-			event.Attribute{Key: "mode", Value: "BeginBlock"},
-		)
+	for i := range ctx.events {
+		ctx.events[i].BlockStage = appdata.BeginBlockStage
 	}
 
 	return ctx.events, nil
@@ -383,11 +378,8 @@ func (s STF[T]) endBlock(
 
 	ctx.events = append(ctx.events, events...)
 
-	for i, e := range ctx.events {
-		ctx.events[i].Attributes = append(
-			e.Attributes,
-			event.Attribute{Key: "mode", Value: "BeginBlock"},
-		)
+	for i := range ctx.events {
+		ctx.events[i].BlockStage = appdata.EndBlockStage
 	}
 
 	return ctx.events, valsetUpdates, nil

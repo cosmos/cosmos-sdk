@@ -10,11 +10,9 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -35,12 +33,10 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	ModuleConfig      *modulev1.Module
-	Codec             codec.Codec
-	ProtoFileResolver txsigning.ProtoFileResolver
-	Environment       appmodulev2.Environment
-	TxConfig          client.TxConfig
-	DynamicConfig     server.DynamicConfig `optional:"true"`
+	ModuleConfig  *modulev1.Module
+	Environment   appmodulev2.Environment
+	TxConfig      client.TxConfig
+	DynamicConfig server.DynamicConfig `optional:"true"`
 
 	ConsensusKeeper          ante.ConsensusKeeper
 	BankKeeper               authtypes.BankKeeper                      `optional:"true"`
@@ -55,8 +51,8 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	Module        appmodulev2.AppModule // This is only useful for chains using server/v2. It setup tx validators that don't belong to other modules.
-	BaseAppOption runtime.BaseAppOption // This is only useful for chains using baseapp. Server/v2 chains use TxValidator.
+	Module        appmodulev2.AppModule // Only useful for chains using server/v2. It setup tx validators that don't belong to other modules.
+	BaseAppOption runtime.BaseAppOption // Only useful for chains using baseapp. Server/v2 chains use TxValidator.
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {

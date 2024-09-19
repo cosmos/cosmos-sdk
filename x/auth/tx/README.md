@@ -17,8 +17,6 @@ This document specifies the `x/auth/tx` package of the Cosmos SDK.
 
 This package represents the Cosmos SDK implementation of the `client.TxConfig`, `client.TxBuilder`, `client.TxEncoder` and `client.TxDecoder` interfaces.
 
-It contains as well a depinject module and app module the registration of ante/post handler via `runtime` and tx validator via `runtime/v2`.
-
 ## Contents
 
 * [`x/auth/tx`](#xauthtx)
@@ -28,7 +26,8 @@ It contains as well a depinject module and app module the registration of ante/p
     * [`TxConfig`](#txconfig)
     * [`TxBuilder`](#txbuilder)
     * [`TxEncoder`/ `TxDecoder`](#txencoder-txdecoder)
-  * [Depinject \& App Module](#depinject--app-module)
+  * [`x/auth/tx/config`](#xauthtxconfig)
+    * [Storage](#storage)
   * [Client](#client)
     * [CLI](#cli)
       * [Query](#query)
@@ -71,10 +70,21 @@ A `client.TxBuilder` can be accessed with `TxConfig.NewTxBuilder()`.
 
 More information about `TxEncoder` and `TxDecoder` can be found [here](https://docs.cosmos.network/main/core/encoding#transaction-encoding).
 
-## Depinject & App Module
+## `x/auth/tx/config`
 
 The `x/auth/tx/config` contains a depinject module.
 The depinject module is to outputs the `TxConfig` and `TxConfigOptions` for the app.
+
+### Storage
+
+This module has no store key. Do not forget to add the module name in the `SkipStoreKeys` runtime config present in the app config.
+
+```go
+SkipStoreKeys: []string{
+	authtxconfig.DepinjectModuleName,
+	validate.ModuleName,
+},
+```
 
 ## Client
 

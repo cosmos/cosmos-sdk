@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/x/bank/v2/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

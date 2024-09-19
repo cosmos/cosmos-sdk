@@ -3,13 +3,14 @@ package cli
 import (
 	"errors"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/x/bank/v2/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gogoproto "github.com/cosmos/gogoproto/proto"
 )
 
 const (

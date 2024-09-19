@@ -2,15 +2,13 @@ package types
 
 import (
 	coretransaction "cosmossdk.io/core/transaction"
-
 	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var (
-	_ coretransaction.Msg = &MsgSend{}
-)
+var _ coretransaction.Msg = &MsgSend{}
 
 // NewMsgSend constructs a msg to send coins from one account to another.
 func NewMsgSend(fromAddr, toAddr string, amount sdk.Coins) *MsgSend {

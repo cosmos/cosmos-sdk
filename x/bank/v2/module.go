@@ -186,4 +186,3 @@ func (AppModule) GetQueryCmd() *cobra.Command {
 
 // 	return nil
 // }
-

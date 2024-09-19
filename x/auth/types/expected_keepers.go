@@ -31,4 +31,12 @@ type AccountsModKeeper interface {
 	// InitAccountNumberSeqUnsafe is use to set accounts module account number with value
 	// of auth module current account number
 	InitAccountNumberSeqUnsafe(ctx context.Context, currentAccNum uint64) error
+
+	MigrateLegacyAccount(
+		ctx context.Context,
+		addr []byte, // The current address of the account
+		accNum uint64, // The current account number
+		accType string, // The account type to migrate to
+		msg transaction.Msg, // The init msg of the account type we're migrating to
+	) (transaction.Msg, error)
 }

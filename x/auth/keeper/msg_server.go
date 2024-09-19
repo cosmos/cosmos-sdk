@@ -4,9 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var _ types.MsgServer = msgServer{}
@@ -67,4 +73,56 @@ func (ms msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams
 	}
 
 	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+func (ms msgServer) MigrateAccount(ctx context.Context, msg *types.MsgMigrateAccount) (*types.MsgMigrateAccountResponse, error) {
+	signer, err := ms.ak.AddressCodec().StringToBytes(msg.Signer)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid signer address: %s", err)
+	}
+
+	acc := ms.ak.GetAccount(ctx, signer)
+	if acc == nil {
+		return nil, sdkerrors.ErrUnknownAddress.Wrapf("account %s does not exist", signer)
+	}
+
+	// check if account type is valid or not
+	_, isBaseAccount := (acc).(*types.BaseAccount)
+	if !isBaseAccount {
+		return nil, status.Error(codes.InvalidArgument, "only BaseAccount can be migrated")
+	}
+
+	// unwrap any msg
+	initMsg, err := unpackAnyRaw(msg.AccountInitMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	initResp, err := ms.ak.AccountsModKeeper.MigrateLegacyAccount(ctx, signer, acc.GetAccountNumber(), msg.AccountType, initMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	initRespAny, err := codectypes.NewAnyWithValue(initResp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgMigrateAccountResponse{InitResponse: initRespAny}, nil
+}
+
+func unpackAnyRaw(m *codectypes.Any) (gogoproto.Message, error) {
+	split := strings.Split(m.TypeUrl, "/")
+	name := split[len(split)-1]
+	typ := gogoproto.MessageType(name)
+	if typ == nil {
+		return nil, fmt.Errorf("no message type found for %s", name)
+	}
+	concreteMsg := reflect.New(typ.Elem()).Interface().(gogoproto.Message)
+	err := gogoproto.Unmarshal(m.Value, concreteMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	return concreteMsg, nil
 }

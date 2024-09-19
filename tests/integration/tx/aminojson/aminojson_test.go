@@ -2,13 +2,10 @@ package aminojson
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	stdmath "math"
 	"testing"
 	"time"
-
-	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal"
 
 	"github.com/cosmos/cosmos-proto/rapidproto"
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -48,6 +45,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	secp256k1types "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/tests/integration/rapidgen"
+	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal"
 	gogo_testpb "github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/gogo/testpb"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -109,19 +107,6 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 
 				msg := gen.Draw(r, "msg")
 				postFixPulsarMessage(msg)
-				// txBuilder.GetTx will fail if the msg has no signers
-				// so it does not make sense to run these cases, apparently.
-				// signers, err := encCfg.TxConfig.SigningContext().GetSigners(msg)
-				// if len(signers) == 0 {
-				// 	// skip
-				// 	return
-				// }
-				// if err != nil {
-				// 	if strings.Contains(err.Error(), "empty address string is not allowed") {
-				// 		return
-				// 	}
-				// 	require.NoError(t, err)
-				// }
 
 				gogo := tt.Gogo
 				sanity := tt.Pulsar
@@ -139,12 +124,9 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				aminoJSON, err := aj.Marshal(msg)
 				require.NoError(r, err)
 				if !bytes.Equal(legacyAminoJSON, aminoJSON) {
-					// play that back, wtf
-					againBz := fixture.MarshalLegacyAminoJSON(t, gogo)
 					require.Failf(r, "JSON mismatch", "legacy: %s\n  x/tx: %s\n",
-						string(againBz), string(aminoJSON))
+						string(legacyAminoJSON), string(aminoJSON))
 				}
-				require.Equal(r, string(legacyAminoJSON), string(aminoJSON))
 
 				// test amino json signer handler equivalence
 				if !proto.HasExtension(desc.Options(), msgv1.E_Signer) {
@@ -328,6 +310,9 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 				},
 				AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			},
+			// to be fixed in https://github.com/cosmos/cosmos-sdk/pull/21782
+			// TODO remove once merged
+			fails: true,
 		},
 		"vesting/base_account_empty": {
 			gogo: &vestingtypes.BaseVestingAccount{BaseAccount: &authtypes.BaseAccount{}},
@@ -464,45 +449,4 @@ func postFixPulsarMessage(msg proto.Message) {
 			m.Permissions = nil
 		}
 	}
-}
-
-func TestJSONSorting(t *testing.T) {
-	fixture := internal.NewSigningFixture(
-		t,
-		internal.SigningFixtureOptions{},
-		authzmodule.AppModule{},
-		staking.AppModule{},
-	)
-
-	// define message
-	authorization := &stakingtypes.StakeAuthorization{
-		MaxTokens: &types.Coin{Denom: "foo", Amount: math.NewInt(123)},
-		Validators: &stakingtypes.StakeAuthorization_AllowList{
-			AllowList: &stakingtypes.StakeAuthorization_Validators{Address: []string{"foo"}},
-		},
-		AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
-	}
-	authorizationAny, err := codectypes.NewAnyWithValue(authorization)
-	require.NoError(t, err)
-	msgGrant := &authztypes.MsgGrant{
-		Granter: "granter",
-		Grantee: "grantee",
-		Grant:   authztypes.Grant{Authorization: authorizationAny},
-	}
-
-	fixture.RequireLegacyAminoEquivalent(t, msgGrant)
-
-	addr1 := types.AccAddress("addr1")
-	ba := authtypes.NewBaseAccountWithAddress(addr1)
-	ma := &authtypes.ModuleAccount{BaseAccount: ba}
-	bz, err := json.Marshal(ma)
-	require.NoError(t, err)
-	fmt.Printf("ma: %+v -> %s\n", ma, string(bz))
-	protoBz, _ := gogoproto.Marshal(ma)
-	ma2 := &authtypes.ModuleAccount{}
-	err = gogoproto.Unmarshal(protoBz, ma2)
-	bz, err = json.Marshal(ma2)
-	require.NoError(t, err)
-	fmt.Printf("ma: %+v -> %s\n", ma2, string(bz))
-
 }

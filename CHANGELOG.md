@@ -45,7 +45,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (genutil) [#21701](https://github.com/cosmos/cosmos-sdk/pull/21701) Improved error messages for genesis validation.
 * (runtime) [#21704](https://github.com/cosmos/cosmos-sdk/pull/21704) Move `upgradetypes.StoreLoader` to runtime and alias it in upgrade for backward compatibility.
 * (sims)[#21613](https://github.com/cosmos/cosmos-sdk/pull/21613) Add sims2 framework and factory methods for simpler message factories in modules
-* (testutil/integration) [#21816](https://github.com/cosmos/cosmos-sdk/pull/21816) Allow to pass baseapp options in `NewIntegrationApp`.
 
 ### API Breaking Changes
 

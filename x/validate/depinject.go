@@ -27,7 +27,7 @@ import (
 const flagMinGasPricesV2 = "server.minimum-gas-prices"
 
 func init() {
-	appconfig.RegisterModule(&modulev1.Config{},
+	appconfig.RegisterModule(&modulev1.Module{},
 		appconfig.Provide(ProvideModule),
 	)
 }
@@ -35,7 +35,7 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config            *modulev1.Config
+	ModuleConfig      *modulev1.Module
 	Codec             codec.Codec
 	ProtoFileResolver txsigning.ProtoFileResolver
 	Environment       appmodulev2.Environment

@@ -50,7 +50,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/bank) [#21460](https://github.com/cosmos/cosmos-sdk/pull/21460) Added `Sender` attribute in `MsgMultiSend` event.
 * (genutil) [#21701](https://github.com/cosmos/cosmos-sdk/pull/21701) Improved error messages for genesis validation.
-* (sims) [#21613](https://github.com/cosmos/cosmos-sdk/pull/21613) Add sims2 framework and factory methods for simpler message factories in modules
 * (testutil/integration) [#21816](https://github.com/cosmos/cosmos-sdk/pull/21816) Allow to pass baseapp options in `NewIntegrationApp`.
 
 ### Bug Fixes

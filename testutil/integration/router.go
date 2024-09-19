@@ -47,8 +47,6 @@ func NewIntegrationApp(
 	keys map[string]*storetypes.KVStoreKey,
 	appCodec codec.Codec,
 	modules map[string]appmodule.AppModule,
-	msgRouter *baseapp.MsgServiceRouter,
-	grpcRouter *baseapp.GRPCQueryRouter,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
 	db := dbm.NewMemDB()

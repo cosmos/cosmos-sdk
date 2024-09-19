@@ -41,7 +41,7 @@ ixc_schema_macros = { path = "schema_macros", version = "0.0.2" }
 state_objects_macros = { path = "state_objects_macros", version = "0.0.2" }
 
 [dev-dependencies]
-ixc_testing = { path = "testing", version = "0.0.1" }
+ixc_testing = { path = "testing", version = "0.0.2" }
 arrayvec = "0.7.6"
 thiserror = "1.0.63"
 

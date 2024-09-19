@@ -12,7 +12,6 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/address"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -43,7 +42,6 @@ type ModuleInputs struct {
 	ValidatorAddressCodec  address.ValidatorAddressCodec
 	Codec                  codec.Codec
 	ProtoFileResolver      txsigning.ProtoFileResolver
-	Environment            appmodulev2.Environment
 	CustomSignModeHandlers func() []txsigning.SignModeHandler `optional:"true"`
 	CustomGetSigners       []txsigning.CustomGetSigner        `optional:"true"`
 }

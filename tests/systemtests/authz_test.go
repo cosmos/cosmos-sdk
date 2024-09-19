@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	msgSendTypeURL = `/cosmos.bank.v1beta1.MsgSend`
 	msgVoteTypeURL = `/cosmos.gov.v1.MsgVote`
 )
 
@@ -412,7 +413,6 @@ func TestAuthzExecTxCmd(t *testing.T) {
 				granterBal = expGranterBal
 
 				// check allowed addr balance equals to allowedAddrBal + transferredAmount
-				fmt.Println("Allowed.....", allowedAddrBal, tc.amount)
 				expAllowAddrBal := allowedAddrBal + int64(tc.amount)
 				require.Equal(t, expAllowAddrBal, cli.QueryBalance(allowedAddr, denom))
 				allowedAddrBal = expAllowAddrBal
@@ -440,6 +440,28 @@ func TestAuthzExecTxCmd(t *testing.T) {
 	rsp = cli.Run(execSendCmd...)
 	RequireTxFailure(t, rsp)
 	require.Contains(t, rsp, "authorization not found")
+
+	// test exec generic authorization
+
+	expirationTime = time.Now().Add(time.Second * 5).Unix()
+
+	// create generic authorization grant
+	rsp = cli.RunAndWait("tx", "authz", "grant", granteeAddr, "generic",
+		"--msg-type="+msgSendTypeURL,
+		"--expiration="+fmt.Sprintf("%d", expirationTime),
+		"--fees=1stake",
+		"--from", granterAddr)
+	RequireTxSuccess(t, rsp)
+
+	rsp = cli.RunAndWait(execSendCmd...)
+	RequireTxSuccess(t, rsp)
+
+	time.Sleep(time.Second * 5)
+
+	// check grants after expiration
+	resp := cli.CustomQuery("q", "authz", "grants", granterAddr, granteeAddr)
+	grants := gjson.Get(resp, "grants").Array()
+	require.Len(t, grants, 0)
 }
 
 // Write the given string to a new temporary json file.

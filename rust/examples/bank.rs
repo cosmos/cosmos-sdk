@@ -4,7 +4,8 @@ pub mod bank {
     use interchain_sdk::*;
 
     pub struct Bank {
-        balances: UInt128Map<(Address, String)>,
+        #[schema(name(address, denom), value(amount))]
+        balances: UIntMap<(Address, String), u128>,
     }
 
     #[derive(StructCodec)]

@@ -12,8 +12,8 @@ mod vesting {
         amount: Item<Option<Coin>>,
         beneficiary: Item<Address>,
         unlock_time: Item<Time>,
-        bank_client : BankAPI::Ref,
-        block_client : BlockInfoAPI::Ref,
+        bank_client : BankAPI::Client,
+        block_client : BlockInfoAPI::Client,
     }
 
     #[publish]
@@ -78,7 +78,7 @@ mod vesting {
             pub amount: Coin<'a>,
         }
 
-        #[derive(StructCodec, thiserror::Error)]
+        #[derive(EnumCodec, thiserror::Error)]
         pub enum UnlockError {
             #[error("the unlock time has not arrived yet")]
             NotTimeYet,
@@ -108,7 +108,7 @@ mod vesting {
             fn on_receive(&self, ctx: &mut Context, from: Address, amount: Coin) -> Response<(), SendError>;
         }
 
-        #[derive(StructCodec, thiserror::Error)]
+        #[derive(EnumCodec, thiserror::Error)]
         pub enum SendError {
             #[error("insufficient funds")]
             InsufficientFunds,

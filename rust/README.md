@@ -54,7 +54,7 @@ Internal state is the primary "resource" that a handler interacts with.
 (The other resources are references to other modules and accounts, which will be covered later.)
 State is defined using the [`state_objects`] framework which defines the following basic state types:
 [`Map`], [`Item`] and [`Set`], plus some other types extending these such as [`OrderedMap`],
-[`OrderedSet`], [`Index`], [`UniqueIndex`] and [`UInt128Map`].
+[`OrderedSet`], [`Index`], [`UniqueIndex`] and [`UIntMap`].
 See the [`state_objects`] documentation for more complete information.
 
 The most basic type is [`Item`], which is a single value that can be read and written.

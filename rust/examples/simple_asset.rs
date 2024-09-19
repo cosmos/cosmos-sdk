@@ -9,7 +9,7 @@ pub mod simple_asset {
         owner: Item<Address>,
 
         #[schema(name(address), value(amount))]
-        balances: UInt128Map<Address>,
+        balances: UIntMap<Address, u128>,
     }
 
     impl SimpleAsset {

@@ -3,8 +3,32 @@ use interchain_schema::state_object::ObjectKey;
 use crate::Map;
 
 /// A map from keys to 128-bit unsigned integers.
-pub struct UInt128Map<K> {
-    map: Map<K, u128>,
+pub struct UIntMap<K, V: UInt> {
+    map: Map<K, V>,
+}
+
+pub trait UInt {
+    fn add(self, other: Self) -> Option<Self>;
+    fn sub(self, other: Self) -> Option<Self>;
+}
+
+impl UInt for u64 {
+    fn add(self, other: Self) -> Option<Self> {
+        self.checked_add(other)
+    }
+
+    fn sub(self, other: Self) -> Option<Self> {
+        self.checked_sub(other)
+    }
+}
+impl UInt for u128 {
+    fn add(self, other: Self) -> Option<Self> {
+        self.checked_add(other)
+    }
+
+    fn sub(self, other: Self) -> Option<Self> {
+        self.checked_sub(other)
+    }
 }
 
 impl<'a, K: ObjectKey> UInt128Map<K> {

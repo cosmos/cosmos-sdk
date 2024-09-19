@@ -297,7 +297,7 @@ package_root!(MyAccountHandler, MyModuleHandler);
 ## Testing
 
 It is recommended that all account and module handlers write unit tests.
-The `ixc_testing` framework can be used for this purpose.
+The [`ixc_testing`](https://docs.rs/ixc_testing) framework can be used for this purpose.
 
 ## Advanced Usage
 

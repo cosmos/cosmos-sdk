@@ -3,14 +3,16 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	basev1 "cosmossdk.io/x/accounts/defaults/base/v1"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMigrateToAccounts(t *testing.T) {
@@ -95,5 +97,4 @@ func TestMigrateToAccounts(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, migrateMsg.PubKey, pkResp.(*basev1.QueryPubKeyResponse).PubKey)
 	})
-
 }

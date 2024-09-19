@@ -7,12 +7,13 @@ import (
 	"reflect"
 	"strings"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ types.MsgServer = msgServer{}

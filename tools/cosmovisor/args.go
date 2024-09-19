@@ -225,6 +225,10 @@ func GetConfigFromEnv(skipValidate bool) (*Config, error) {
 		cfg.DataBackupPath = cfg.Home
 	}
 
+	if cfg.CometBftRpcEndpoint == "" {
+		cfg.CometBftRpcEndpoint = "http://localhost:26657"
+	}
+
 	var err error
 	if cfg.AllowDownloadBinaries, err = BooleanOption(EnvDownloadBin, false); err != nil {
 		errs = append(errs, err)

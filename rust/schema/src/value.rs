@@ -12,6 +12,9 @@ where
 {
     /// The type of the value.
     type Type: Type;
+
+    /// A dummy method for building macros until we have an actual implementation.
+    fn dummy() {}
 }
 
 /// This trait describes value types that are to be used as generic parameters

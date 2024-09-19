@@ -111,7 +111,7 @@ pub fn account_handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result
             }
         }
         push_item(items, quote! {
-            // #[derive(::interchain_schema::StructCodec)]
+            #[derive(StructCodec)]
             pub struct #msg_struct_name {
                 #(#msg_fields)*
             }

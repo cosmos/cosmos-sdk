@@ -8,6 +8,12 @@ pub mod counter {
         value: Item<u64>,
     }
 
+    #[derive(StructCodec)]
+    pub struct Test1 {
+        pub a: u64,
+        pub b: String,
+    }
+
     impl Counter {
         #[on_create]
         pub fn create(ctx: &mut Context) {
@@ -15,14 +21,16 @@ pub mod counter {
 
         #[publish]
         pub fn get(&self, ctx: &Context) -> Response<u64> {
-            self.value.get(ctx)
+            // self.value.get(ctx)
+            todo!()
         }
 
         #[publish]
         pub fn inc(&mut self, ctx: &mut Context) -> Response<()> {
-            let value = self.value.get(ctx)?;
-            let new_value = value.checked_add(1).ok_or(())?;
-            self.value.set(ctx, new_value)
+            // let value = self.value.get(ctx)?;
+            // let new_value = value.checked_add(1).ok_or(())?;
+            // self.value.set(ctx, new_value)
+            todo!()
         }
     }
 }

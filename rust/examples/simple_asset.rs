@@ -5,20 +5,25 @@ pub mod simple_asset {
 
     #[derive(Resources)]
     pub struct SimpleAsset {
+        #[schema]
         owner: Item<Address>,
+
+        #[schema(name(address), value(amount))]
         balances: UInt128Map<Address>,
     }
 
     impl SimpleAsset {
         #[on_create]
         pub fn init(&self, ctx: &mut Context, initial_balance: u128) -> Response<()> {
-            self.owner.set(ctx, ctx.caller().clone())?;
-            self.balances.add(ctx, ctx.caller(), initial_balance)
+            // self.owner.set(ctx, ctx.caller().clone())?;
+            // self.balances.add(ctx, ctx.caller(), initial_balance)
+            todo!()
         }
 
         #[publish]
         pub fn get_balance(&self, ctx: &Context, address: Address) -> Response<u128> {
-            self.balances.get(ctx, address)
+            // self.balances.get(ctx, address)
+            todo!()
         }
     }
 }

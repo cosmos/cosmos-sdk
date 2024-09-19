@@ -25,4 +25,7 @@
 ///   pub field2: interchain_message_api::Address,
 /// }
 /// ```
-pub unsafe trait StructCodec {}
+pub unsafe trait StructCodec {
+    /// A dummy function for derived macro type checking.
+    fn dummy(&self);
+}

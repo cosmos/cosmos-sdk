@@ -4,17 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"testing"
 
-	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/aminojson"
 
@@ -205,44 +202,7 @@ func (s *SigningFixture) DynamicMessage(t *testing.T, msg transaction.Msg) proto
 	dynamicMsg := dynamicpb.NewMessageType(msgDesc).New().Interface()
 	err = proto.Unmarshal(protoBz, dynamicMsg)
 	require.NoError(t, err)
-	// err = postfixDynamicMessage(dynamicMsg.ProtoReflect())
-	// require.NoError(t, err)
 	return dynamicMsg
-}
-
-func postfixDynamicMessage(msg protoreflect.Message) error {
-	fields := msg.Descriptor().Fields()
-	for i := 0; i < fields.Len(); i++ {
-		field := fields.Get(i)
-		v := msg.Get(field)
-
-		switch val := v.Interface().(type) {
-		case protoreflect.Message:
-			err := postfixDynamicMessage(val)
-			if err != nil {
-				return err
-			}
-		case string:
-			fieldOpts := field.Options()
-			if proto.HasExtension(fieldOpts, cosmos_proto.E_Scalar) {
-				scalar := proto.GetExtension(fieldOpts, cosmos_proto.E_Scalar).(string)
-				switch scalar {
-				case "cosmos.Dec":
-					dec := &math.LegacyDec{}
-					err := dec.Unmarshal([]byte(val))
-					if err != nil {
-						return err
-					}
-					decStr := dec.String()
-					fmt.Printf("set %s=%s at %d\n", field.Name(), decStr, field.Number())
-					//valStr := protoreflect.ValueOfString("5.400000000000000000")
-					valStr := protoreflect.ValueOfString(decStr)
-					msg.Set(field, valStr)
-				}
-			}
-		}
-	}
-	return nil
 }
 
 // sortJson sorts the JSON bytes by way of the side effect of unmarshalling and remarshalling

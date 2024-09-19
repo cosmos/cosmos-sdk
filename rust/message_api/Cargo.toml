@@ -1,6 +1,7 @@
 [package]
 name = "ixc_message_api"
 edition = "2021"
+description = "Interchain SDK Message API"
 version.workspace = true
 repository.workspace = true
 license.workspace = true

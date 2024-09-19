@@ -1,6 +1,7 @@
 [package]
 name = "ixc_core"
 edition = "2021"
+description = "Interchain SDK Core"
 version.workspace = true
 repository.workspace = true
 license.workspace = true

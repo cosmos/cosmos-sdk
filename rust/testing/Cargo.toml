@@ -1,6 +1,7 @@
 [package]
 name = "ixc_testing"
 edition = "2021"
+description = "Interchain SDK Testing"
 readme = "README.md"
 version.workspace = true
 repository.workspace = true

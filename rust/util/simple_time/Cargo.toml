@@ -1,6 +1,7 @@
 [package]
 name = "simple_time"
 edition = "2021"
+description = "A simple time i128 nano-second precision time library"
 version.workspace = true
 repository.workspace = true
 license.workspace = true

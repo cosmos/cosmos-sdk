@@ -1,6 +1,7 @@
 [package]
 name = "state_objects"
 edition = "2021"
+description = "Interchain SDK State Objects"
 version.workspace = true
 repository.workspace = true
 license.workspace = true

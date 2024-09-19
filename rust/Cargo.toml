@@ -24,6 +24,7 @@ missing_docs = "deny"
 [package]
 name = "ixc"
 edition = "2021"
+description = "Interchain SDK"
 readme = "README.md"
 version.workspace = true
 repository.workspace = true

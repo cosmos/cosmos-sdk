@@ -1,6 +1,7 @@
 [package]
 name = "ixc_core_macros"
 edition = "2021"
+description = "Interchain SDK Core Macros"
 version.workspace = true
 repository.workspace = true
 license.workspace = true

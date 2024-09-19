@@ -2,7 +2,6 @@ package cli
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -62,14 +61,12 @@ func GetBalanceCmd() *cobra.Command {
 			req := types.NewQueryBalanceRequest(addr.String(), denom)
 			out := new(types.QueryBalanceResponse)
 
-			fmt.Println("req", gogoproto.MessageName(&types.QueryBalanceRequest{}))
-
 			err = clientCtx.Invoke(ctx, gogoproto.MessageName(&types.QueryBalanceRequest{}), req, out)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintProto(out.Balance)
+			return clientCtx.PrintProto(out)
 		},
 	}
 

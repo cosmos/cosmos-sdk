@@ -156,6 +156,12 @@ func (db *Database) Has(storeKey []byte, version uint64, key []byte) (bool, erro
 }
 
 func (db *Database) Get(storeKey []byte, targetVersion uint64, key []byte) ([]byte, error) {
+	// To support the get operation of InitGenesis, we need to return nil
+	// instead of VersionPruned error
+	if targetVersion == 0 {
+		return nil, nil
+	}
+
 	if targetVersion < db.earliestVersion {
 		return nil, storeerrors.ErrVersionPruned{EarliestVersion: db.earliestVersion, RequestedVersion: targetVersion}
 	}

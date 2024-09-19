@@ -73,7 +73,8 @@ func newPebbleDBIterator(src *pebble.Iterator, prefix, mvccStart, mvccEnd []byte
 
 		// We need to check whether initial key iterator visits has a version <= requested
 		// version. If larger version, call next to find another key which does.
-		if curKeyVersionDecoded > itr.version {
+		// If the key is tombstoned, we must move the cursor.
+		if curKeyVersionDecoded > itr.version || itr.cursorTombstoned() {
 			itr.Next()
 		} else {
 			// If version is less, seek to the largest version of that key <= requested

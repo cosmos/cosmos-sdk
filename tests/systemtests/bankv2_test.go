@@ -11,6 +11,10 @@ import (
 )
 
 func TestBankV2SendTxCmd(t *testing.T) {
+	// Currently only run with app v2
+	if !isV2() {
+		t.Skip()
+	}
 	// scenario: test bank send command
 	// given a running chain
 
@@ -28,7 +32,9 @@ func TestBankV2SendTxCmd(t *testing.T) {
 
 	// query validator balance and make sure it has enough balance
 	var transferAmount int64 = 1000
-	valBalance := cli.QueryBalance(valAddr, denom)
+	raw := cli.CustomQuery("q", "bankv2", "balance", valAddr, denom)
+	valBalance := gjson.Get(raw, "balance.amount").Int()
+
 	require.Greater(t, valBalance, transferAmount, "not enough balance found with validator")
 
 	bankSendCmdArgs := []string{"tx", "bankv2", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom)}

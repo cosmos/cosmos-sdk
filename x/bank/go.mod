@@ -5,7 +5,7 @@ go 1.23.1
 require (
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v1.0.0-alpha.2
+	cosmossdk.io/core v1.0.0-alpha.3
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1 // indirect
@@ -164,7 +164,7 @@ require (
 require cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 
 require (
-	cosmossdk.io/schema v0.2.0 // indirect
+	cosmossdk.io/schema v0.3.0 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect

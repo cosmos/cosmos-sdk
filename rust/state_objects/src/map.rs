@@ -1,9 +1,8 @@
 //! The map module contains the `Map` struct, which represents a key-value map in storage.
 
 use std::iter::Product;
-use interchain_core::{Context};
+use interchain_core::{Context, Response};
 use interchain_schema::state_object::{ObjectKey, ObjectValue, PrefixKey};
-use crate::response::Response;
 
 /// A key-value map.
 pub struct Map<K, V> {

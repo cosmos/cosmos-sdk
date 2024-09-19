@@ -1,7 +1,6 @@
-use interchain_core::{Context};
+use interchain_core::{Context, Response};
 use interchain_schema::state_object::{ObjectKey, ObjectValue, PrefixKey};
 use crate::Map;
-use crate::response::Response;
 
 /// An ordered map is a map that maintains the order of its keys.
 pub struct OrderedMap<K, V> {

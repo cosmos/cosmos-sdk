@@ -22,8 +22,7 @@ pub mod simple_asset {
 
         #[publish]
         pub fn get_balance(&self, ctx: &Context, address: Address) -> Response<u128> {
-            // self.balances.get(ctx, address)
-            todo!()
+            self.balances.get(ctx, address)
         }
     }
 }

@@ -1,5 +1,4 @@
-use interchain_core::{Context};
-use crate::response::Response;
+use interchain_core::{Context, Response};
 
 /// Enforces a queryable, uniqueness constraint on a set of fields in a map.
 pub struct UniqueIndex<UniqueKey, PrimaryKey> {

@@ -1,9 +1,12 @@
-use interchain_schema::value::{ResponseValue};
+use interchain_schema::state_object::ObjectValue;
+use interchain_schema::value::{ResponseValue, Value};
+use crate::error::ErrorMessage;
 
 /// Response is the type that should be used for message handler responses.
 #[cfg(feature = "std")]
-pub type Response<'a, R: ResponseValue, E: ResponseValue = ()> =
-    Result<<<R as ResponseValue>::MaybeBorrowed<'a> as ToOwned>::Owned, <<E as ResponseValue>::MaybeBorrowed<'a> as ToOwned>::Owned>;
+// pub type Response<'a, R:ObjectValue, E: Value = ErrorMessage> =
+//     Result<<<R as ObjectValue>::Value<'a> as ToOwned>::Owned, <<E as Value>::MaybeBorrowed<'a> as ToOwned>::Owned>;
+pub type Response<'a, R, E = ErrorMessage> = core::result::Result<R, E>;
 
 /// Response is the type that should be used for message handler responses.
 #[cfg(not(feature = "std"))]

@@ -22,10 +22,10 @@ impl <'a> Context<'a> {
         unimplemented!()
     }
 
-    /// Returns a new response with the given value.
-    pub fn ok<R: ResponseValue, E: ResponseValue>(&self, res: <R as ResponseValue>::MaybeBorrowed<'a>) -> Response<'a, R, E> {
-        Ok(res.to_owned())
-    }
+    // /// Returns a new response with the given value.
+    // pub fn ok<R: ResponseValue, E: ResponseValue>(&self, res: <R as ResponseValue>::MaybeBorrowed<'a>) -> Response<'a, R, E> {
+    //     Ok(res.to_owned())
+    // }
 
     /// Dynamically invokes a module message.
     /// Static module client instances should be preferred wherever possible,

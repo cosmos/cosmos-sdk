@@ -9,6 +9,7 @@ license.workspace = true
 interchain_core = { path = "../core" }
 interchain_schema = { path = "../schema" }
 simple_time = { path = "../util/simple_time" }
+thiserror = "1.0.63"
 
 [lints]
 workspace = true

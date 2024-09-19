@@ -3,6 +3,6 @@ use interchain_schema::value::{ResponseValue, Value};
 
 pub trait Message<const Mod: bool>: StructCodec + Value {
     const SELECTOR: u128;
-    type Response: StructCodec + ResponseValue;
-    type Error: StructCodec + ResponseValue;
+    type Response: Value;
+    type Error: Value;
 }

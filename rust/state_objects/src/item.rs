@@ -1,8 +1,7 @@
 //! The item module contains the `Item` struct, which represents a single item in storage.
 
-use interchain_core::{Context};
+use interchain_core::{Context, Response};
 use crate::Map;
-use crate::response::Response;
 
 /// A single item in storage.
 pub struct Item<V> {

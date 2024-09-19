@@ -1,11 +1,7 @@
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 
 #[doc(inline)]
-pub use interchain_core::Context;
-#[doc(inline)]
-pub use interchain_core::Response;
-#[doc(inline)]
-pub use interchain_core::EventBus;
+pub use interchain_core::{Context, Response, EventBus, ensure, bail, fmt_error};
 #[doc(inline)]
 pub use interchain_core::resource::Resources;
 

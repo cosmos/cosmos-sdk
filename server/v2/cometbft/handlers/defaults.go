@@ -79,7 +79,7 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 			// check again.
 			_, err := app.ValidateTx(ctx, memTx)
 			if err != nil {
-				err := h.mempool.Remove([]T{memTx})
+				err := h.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 					return nil, err
 				}

@@ -1,6 +1,8 @@
 package migration
 
 import (
+	"bytes"
+	"encoding/json"
 	"os"
 	"testing"
 
@@ -29,7 +31,18 @@ func TestMigration(t *testing.T) {
 	err = migrator.MigrateGenesisFile()
 	require.NoError(t, err)
 
+	var oldAppGenesis legacyAppGenesis
+	r, err := os.Open(oldGenFilePath)
+	require.NoError(t, err)
+	err = json.NewDecoder(r).Decode(&oldAppGenesis)
+	require.NoError(t, err)
+
 	// should be able to get app genesis from new genesis file
-	_, err = types.AppGenesisFromFile(tempDir)
+	newAppGenesis, err := types.AppGenesisFromFile(tempDir)
+	require.NotNil(t, newAppGenesis)
+	require.NotNil(t, newAppGenesis.Consensus)
+	require.True(t, bytes.Equal(oldAppGenesis.AppHash, newAppGenesis.AppHash))
+	require.True(t, bytes.Equal(oldAppGenesis.Consensus.Validators[0].Address.Bytes(), newAppGenesis.Consensus.Validators[0].Address.Bytes()))
+
 	require.NoError(t, err)
 }

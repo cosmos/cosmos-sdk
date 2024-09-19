@@ -5,7 +5,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
-// JSONCompatPubKey defines a public key that are json compatible.
+// JSONPubKey defines a public key that are parse from JSON file.
 type JSONPubKey interface {
 	Address() Address
 	Bytes() []byte

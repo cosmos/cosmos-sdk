@@ -2,10 +2,10 @@ package systemtests
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -263,10 +263,13 @@ func TestAuthzExecTxCmd(t *testing.T) {
 
 	// add grantee keys which will be used for each valid transaction
 	granteeAddr := cli.AddKey("grantee")
+	require.NotEqual(t, granterAddr, granteeAddr)
 	allowedAddr := cli.AddKey("allowed")
-	require.NotEqual(t, granterAddr, allowedAddr)
+	require.NotEqual(t, granteeAddr, allowedAddr)
 	notAllowedAddr := cli.AddKey("notAllowed")
-	require.NotEqual(t, granterAddr, notAllowedAddr)
+	require.NotEqual(t, granteeAddr, notAllowedAddr)
+	newAccount := cli.AddKey("newAccount")
+	require.NotEqual(t, granteeAddr, newAccount)
 
 	denom := "stake"
 	var initialAmount int64 = 10000000
@@ -274,16 +277,53 @@ func TestAuthzExecTxCmd(t *testing.T) {
 	sut.ModifyGenesisCLI(t,
 		[]string{"genesis", "add-genesis-account", granteeAddr, initialBalance},
 		[]string{"genesis", "add-genesis-account", allowedAddr, initialBalance},
+		[]string{"genesis", "add-genesis-account", newAccount, initialBalance},
 	)
 	sut.StartChain(t)
 
-	// query balancec
+	// query balances
+	granterBal := cli.QueryBalance(granterAddr, denom)
 	granteeBal := cli.QueryBalance(granteeAddr, denom)
 	require.Equal(t, initialAmount, granteeBal)
 	allowedAddrBal := cli.QueryBalance(allowedAddr, denom)
 	require.Equal(t, initialAmount, allowedAddrBal)
 
 	spendLimitAmount := 1000
+	expirationTime := time.Now().Add(time.Second * 10).Unix()
+
+	execCmdArgs := []string{"tx", "authz", "exec"}
+
+	// test exec command basic checks
+	execErrTestCases := []struct {
+		name      string
+		cmdArgs   []string
+		expErrMsg string
+	}{
+		{
+			"not enough arguments",
+			[]string{"--from=" + granteeAddr},
+			"accepts 1 arg(s), received 0",
+		},
+		{
+			"invalid json path",
+			[]string{"/invalid/file.txt", "--from=" + granteeAddr},
+			"invalid argument",
+		},
+	}
+
+	for _, tc := range execErrTestCases {
+		cmd := append(execCmdArgs, tc.cmdArgs...)
+		t.Run(tc.name, func(t *testing.T) {
+			assertErr := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
+				require.Len(t, gotOutputs, 1)
+				output := gotOutputs[0].(string)
+				require.Contains(t, output, tc.expErrMsg)
+				return false
+			}
+			_ = cli.WithRunErrorMatcher(assertErr).Run(cmd...)
+
+		})
+	}
 
 	// test exec send authorization
 
@@ -291,10 +331,12 @@ func TestAuthzExecTxCmd(t *testing.T) {
 	rsp := cli.RunAndWait("tx", "authz", "grant", granteeAddr, "send",
 		"--spend-limit="+fmt.Sprintf("%d%s", spendLimitAmount, denom),
 		"--allow-list="+allowedAddr,
+		"--expiration="+fmt.Sprintf("%d", expirationTime),
+		"--fees=1stake",
 		"--from", granterAddr)
 	RequireTxSuccess(t, rsp)
-
-	execCmdArgs := []string{"tx", "authz", "exec"}
+	// reduce fees of above tx from granter balance
+	granterBal = granterBal - 1
 
 	testCases := []struct {
 		name      string
@@ -314,7 +356,7 @@ func TestAuthzExecTxCmd(t *testing.T) {
 		},
 		{
 			"no grant found",
-			notAllowedAddr,
+			newAccount,
 			granteeAddr,
 			20,
 			true,
@@ -322,19 +364,26 @@ func TestAuthzExecTxCmd(t *testing.T) {
 		},
 		{
 			"amount greater than spend limit",
-			notAllowedAddr,
 			granteeAddr,
+			allowedAddr,
 			spendLimitAmount + 5,
 			true,
-			"authorization not found",
+			"requested amount is more than spend limit",
+		},
+		{
+			"send to not allowed address",
+			granteeAddr,
+			notAllowedAddr,
+			10,
+			true,
+			"cannot send to",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// msg vote
-			bankTx := fmt.Sprintf(`
-{
+			bankTx := fmt.Sprintf(`{
     "@type": "/cosmos.bank.v1beta1.MsgSend",
     "from_address": "%s",
     "to_address": "%s",
@@ -345,10 +394,8 @@ func TestAuthzExecTxCmd(t *testing.T) {
         }
     ]
 }`, granterAddr, tc.toAddr, denom, tc.amount)
-			execMsg := testutil.WriteToNewTempFile(t, bankTx)
+			execMsg := WriteToTempJSONFile(t, bankTx)
 			defer execMsg.Close()
-			fmt.Println("Exec file", execMsg.Name())
-			time.Sleep(time.Minute * 10)
 
 			cmd := append(append(execCmdArgs, execMsg.Name()), "--from="+tc.grantee)
 			if tc.expectErr {
@@ -358,8 +405,55 @@ func TestAuthzExecTxCmd(t *testing.T) {
 			} else {
 				rsp := cli.RunAndWait(cmd...)
 				RequireTxSuccess(t, rsp)
+
+				// check granter balance equals to granterBal - transferredAmount
+				expGranterBal := granterBal - int64(tc.amount)
+				require.Equal(t, expGranterBal, cli.QueryBalance(granterAddr, denom))
+				granterBal = expGranterBal
+
+				// check allowed addr balance equals to allowedAddrBal + transferredAmount
+				fmt.Println("Allowed.....", allowedAddrBal, tc.amount)
+				expAllowAddrBal := allowedAddrBal + int64(tc.amount)
+				require.Equal(t, expAllowAddrBal, cli.QueryBalance(allowedAddr, denom))
+				allowedAddrBal = expAllowAddrBal
 			}
 		})
 	}
 
+	// test grant expiry
+	time.Sleep(time.Second * 10)
+	bankTx := fmt.Sprintf(`{
+		"@type": "/cosmos.bank.v1beta1.MsgSend",
+		"from_address": "%s",
+		"to_address": "%s",
+		"amount": [
+			{
+				"denom": "%s",
+				"amount": "%d"
+			}
+		]
+	}`, granterAddr, allowedAddr, denom, 10)
+	execMsg := WriteToTempJSONFile(t, bankTx)
+	defer execMsg.Close()
+
+	execSendCmd := append(append(execCmdArgs, execMsg.Name()), "--from="+granteeAddr)
+	rsp = cli.Run(execSendCmd...)
+	RequireTxFailure(t, rsp)
+	require.Contains(t, rsp, "authorization not found")
+}
+
+// Write the given string to a new temporary json file.
+// Returns an file for the test to use.
+func WriteToTempJSONFile(t testing.TB, s string) *os.File {
+	t.Helper()
+
+	tmpFile, err := os.CreateTemp(t.TempDir(), "test-*.json")
+	require.Nil(t, err)
+	defer tmpFile.Close()
+
+	// Write to the temporary file
+	_, err = tmpFile.WriteString(s)
+	require.Nil(t, err)
+
+	return tmpFile
 }

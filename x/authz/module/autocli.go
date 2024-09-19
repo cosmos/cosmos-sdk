@@ -56,7 +56,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:     "Execute tx on behalf of granter account",
 					Example:   fmt.Sprintf("$ %s tx authz exec msg.json --from grantee\n $ %[1]s tx bank send [granter] [recipient] [amount] --generate-only | jq .body.messages > msg.json && %[1]s tx authz exec msg.json --from grantee", version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "msgs", Varargs: true},
+						{ProtoField: "msgs"},
 					},
 				},
 				{

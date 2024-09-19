@@ -10,8 +10,8 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-ixc_message_api = { path = "../message_api" }
-ixc_schema = { path = "../schema" }
+ixc_message_api = { path = "../message_api", version = "0.0.1" }
+ixc_schema = { path = "../schema", version = "0.0.1" }
 
 [features]
 default = ["std"]

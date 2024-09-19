@@ -7,7 +7,7 @@ pub struct UIntMap<K, V: UInt> {
     map: Map<K, V>,
 }
 
-pub trait UInt {
+pub trait UInt: Sized {
     fn add(self, other: Self) -> Option<Self>;
     fn sub(self, other: Self) -> Option<Self>;
 }
@@ -31,7 +31,7 @@ impl UInt for u128 {
     }
 }
 
-impl<'a, K: ObjectKey> UInt128Map<K> {
+impl<'a, K: ObjectKey, V: UInt> UIntMap<K, V> {
     /// Gets the current value for the given key, defaulting always to 0.
     pub fn get(&self, ctx: &Context, key: K::Value<'_>) -> Response<u128> {
         // let value = self.map.get(ctx, key)?;

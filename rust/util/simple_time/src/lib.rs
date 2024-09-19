@@ -6,6 +6,12 @@
 //! Any conversion to calendar time and parsing and formatting of date/time strings
 //! should be accomplished with other libraries.
 //! This library just supports very simple high precision time calculations and nothing more.
+
+#![no_std]
+
+#[cfg(feature = "std")]
+extern crate alloc;
+
 use core::ops::{Add, Sub, Neg, AddAssign, SubAssign, Mul, MulAssign};
 
 /// Time is as the number of nanoseconds since the Unix epoch.

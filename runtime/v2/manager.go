@@ -575,7 +575,6 @@ func (m *MM[T]) assertNoForgottenModules(
 	}
 	var missing []string
 	for m := range m.modules {
-		m := m
 		if pass != nil && pass(m) {
 			continue
 		}

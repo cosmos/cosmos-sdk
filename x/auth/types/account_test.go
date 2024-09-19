@@ -84,8 +84,6 @@ func TestGenesisAccountValidate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		t.Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.expErr, tt.acc.Validate() != nil)
 		})
@@ -151,7 +149,6 @@ func TestValidate(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.acc.Validate()
 			require.Equal(t, tt.expErr, err)

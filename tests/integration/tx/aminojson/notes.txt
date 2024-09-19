@@ -1,7 +1,0 @@
-x/auth/tx.builder.GetTx():
- - given a v1 message, marshals into any via gogoproto.Marshal
- - given a v2 message, marshals into any via protov2.Marshal
-
-LegacyDec.Marshal on an uninitialized (nil) value returns a "0"
-LegacyDec.Unmarshal("0") -> LegacyDec(0)
-LegacyDec.Marshal(0) -> "0.000000000000000000"

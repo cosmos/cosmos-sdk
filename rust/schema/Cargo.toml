@@ -11,8 +11,8 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-ixc_message_api = { path = "../message_api" }
-simple_time = { path = "../util/simple_time" }
+ixc_message_api = { path = "../message_api", version = "0.0.1" }
+simple_time = { path = "../util/simple_time", version = "0.0.1" }
 
 [features]
 default = ["address", "std"]

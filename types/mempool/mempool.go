@@ -14,10 +14,10 @@ type Mempool interface {
 
 	// Select returns an Iterator over the app-side mempool. If txs are specified,
 	// then they shall be incorporated into the Iterator. The Iterator is not thread-safe to use.
-	Select(context.Context, [][]byte) Iterator
+	Select(context.Context, []sdk.Tx) Iterator
 
 	// SelectBy use callback to iterate over the mempool, it's thread-safe to use.
-	SelectBy(context.Context, [][]byte, func(sdk.Tx) bool)
+	SelectBy(context.Context, []sdk.Tx, func(sdk.Tx) bool)
 
 	// CountTx returns the number of transactions currently in the mempool.
 	CountTx() int

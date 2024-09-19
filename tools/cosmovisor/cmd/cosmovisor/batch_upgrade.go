@@ -20,6 +20,8 @@ func NewBatchAddUpgradeCmd() *cobra.Command {
 	}
 }
 
+// AddBatchUpgrade takes in multiple specified upgrades and creates a single
+// batch upgrade file out of them
 func AddBatchUpgrade(cmd *cobra.Command, args []string) error {
 	cfg, err := GetConfig(cmd)
 	if err != nil {
@@ -68,7 +70,7 @@ func AddBatchUpgrade(cmd *cobra.Command, args []string) error {
 	}
 
 	// Write to output file
-	err = os.WriteFile(cfg.UpgradeInfoBatchFilePath(), batchData, 0644)
+	err = os.WriteFile(cfg.UpgradeInfoBatchFilePath(), batchData, 0o600)
 	if err != nil {
 		return fmt.Errorf("error writing combined JSON to file: %w", err)
 	}

@@ -16,14 +16,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/cometbft/cometbft/rpc/client/http"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/fsnotify/fsnotify"
 	"github.com/otiai10/copy"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/cometbft/cometbft/rpc/client/http"
-	cmttypes "github.com/cometbft/cometbft/types"
 )
 
 type Launcher struct {
@@ -41,6 +41,8 @@ func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 	return Launcher{logger: logger, cfg: cfg, fw: fw}, nil
 }
 
+// loadBatchUpgradeFile loads the batch upgrade file into memory, sorted by
+// their upgrade heights
 func loadBatchUpgradeFile(cfg *Config) ([]upgradetypes.Plan, error) {
 	var uInfos []upgradetypes.Plan
 	upgradeInfoFile, err := os.ReadFile(cfg.UpgradeInfoBatchFilePath())
@@ -59,6 +61,9 @@ func loadBatchUpgradeFile(cfg *Config) ([]upgradetypes.Plan, error) {
 	return uInfos, nil
 }
 
+// BatchWatcher starts a watcher loop that swaps upgrade manifests at the correct
+// height, given the batch upgrade file. It watches the current state of the chain
+// via the websocket API.
 func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger, rpcAddress string) {
 	// load batch file in memory
 	uInfos, err := loadBatchUpgradeFile(cfg)

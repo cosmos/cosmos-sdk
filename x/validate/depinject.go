@@ -1,7 +1,6 @@
 package validate
 
 import (
-	"errors"
 	"fmt"
 
 	modulev1 "cosmossdk.io/api/cosmos/validate/module/v1"
@@ -38,9 +37,9 @@ type ModuleInputs struct {
 	TxConfig      client.TxConfig
 	DynamicConfig server.DynamicConfig `optional:"true"`
 
+	AccountKeeper            ante.AccountKeeper
+	BankKeeper               authtypes.BankKeeper
 	ConsensusKeeper          ante.ConsensusKeeper
-	BankKeeper               authtypes.BankKeeper                      `optional:"true"`
-	AccountKeeper            ante.AccountKeeper                        `optional:"true"`
 	FeeGrantKeeper           ante.FeegrantKeeper                       `optional:"true"`
 	AccountAbstractionKeeper ante.AccountAbstractionKeeper             `optional:"true"`
 	ExtraTxValidators        []appmodulev2.TxValidator[transaction.Tx] `optional:"true"`
@@ -60,7 +59,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		in.TxConfig.SignModeHandler(),
 		ante.DefaultSigVerificationGasConsumer,
-		in.AccountAbstractionKeeper,
+		in.AccountAbstractionKeeper, // can be nil
 	)
 
 	var (
@@ -69,7 +68,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		feeTxValidator       *ante.DeductFeeDecorator
 		unorderedTxValidator *ante.UnorderedTxDecorator
 	)
-	if in.AccountKeeper != nil && in.BankKeeper != nil && in.DynamicConfig != nil {
+
+	if in.DynamicConfig != nil {
 		minGasPricesStr := in.DynamicConfig.GetString(flagMinGasPricesV2)
 		minGasPrices, err = sdk.ParseDecCoins(minGasPricesStr)
 		if err != nil {
@@ -125,10 +125,6 @@ func newBaseAppOption(in ModuleInputs) func(app *baseapp.BaseApp) {
 }
 
 func newAnteHandler(in ModuleInputs) (sdk.AnteHandler, error) {
-	if in.BankKeeper == nil {
-		return nil, errors.New("both AccountKeeper and BankKeeper are required")
-	}
-
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
 			Environment:        in.Environment,

@@ -50,7 +50,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Improvements
 
 * (genutil) [#21701](https://github.com/cosmos/cosmos-sdk/pull/21701) Improved error messages for genesis validation.
-* (sims)[#21613](https://github.com/cosmos/cosmos-sdk/pull/21613) Add sims2 framework and factory methods for simpler message factories in modules
+* (sims) [#21613](https://github.com/cosmos/cosmos-sdk/pull/21613) Add sims2 framework and factory methods for simpler message factories in modules
+* (testutil/integration) []() Allow to pass baseapp options in `NewIntegrationApp`.
 
 ### Bug Fixes
 

@@ -2,6 +2,8 @@
 
 This is the single import, batteries-included crate for building applications with the [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) in Rust.
 
+<!-- NOTE: To update this TOC please use https://github.com/jonschlinkert/markdown-toc -->
+
 <!-- toc -->
 
 - [Core Concepts](#core-concepts)
@@ -15,6 +17,8 @@ This is the single import, batteries-included crate for building applications wi
 - [Calling other accounts or modules](#calling-other-accounts-or-modules)
 - [Exporting a Package of Handlers](#exporting-a-package-of-handlers)
 - [Testing](#testing)
+- [Advanced Usage](#advanced-usage)
+  * [Splitting code across multiple files](#splitting-code-across-multiple-files)
 
 <!-- tocstop -->
 
@@ -260,3 +264,32 @@ package_root!(MyAccountHandler, MyModuleHandler);
 
 It is recommended that all account and module handlers write unit tests.
 The `interchain_core_testing` framework can be used for this purpose.
+
+## Advanced Usage
+
+### Splitting code across multiple files
+
+The `#[interchain_sdk::account_handler]` and `#[interchain_sdk::module_handler]` attributes
+work by searching for `#[publish]` and `#[on_create]` attributes in the same `mod` block.
+To split code across multiple files, there are two options:
+1. Reference the `#[account_api]` or `#[module_api]` traits by name in the `publish` field of the `#[interchain_sdk::account_handler]` or `#[interchain_sdk::module_handler]` attribute. Ex:
+```rust
+#[interchain_sdk::account_handler(MyAccountHandler, publish=[MyAccountApi])]
+mod my_account_handler {
+  // ...
+}
+```
+2. Create account or module handlers in separate files and then reference them in the main handler struct
+using [`ixc_core::handler::AccountMixin`] or [`ixc_core::handler::ModuleMixin`] types,
+and then annotate these with `#[publish]`. 
+Ex:
+```rust
+pub struct MyModuleHandler {
+  #[publish]
+  account_mixin: AccountMixin<NestedAccountHandler>,
+  #[publish]
+  module_mixin: ModuleMixin<NestedModuleHandler>,
+}
+```
+`AccountMixin` and `ModuleMixin` implement the [`Deref`](core::ops::Deref) trait so that all methods
+and types in those nested handlers are accessible through the mixin wrapper.

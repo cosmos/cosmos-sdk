@@ -103,6 +103,9 @@ func (ms msgServer) MigrateAccount(ctx context.Context, msg *types.MsgMigrateAcc
 		return nil, err
 	}
 
+	// account is then removed from state
+	ms.ak.RemoveAccount(ctx, acc)
+
 	initRespAny, err := codectypes.NewAnyWithValue(initResp)
 	if err != nil {
 		return nil, err
@@ -112,6 +115,9 @@ func (ms msgServer) MigrateAccount(ctx context.Context, msg *types.MsgMigrateAcc
 }
 
 func unpackAnyRaw(m *codectypes.Any) (gogoproto.Message, error) {
+	if m == nil {
+		return nil, fmt.Errorf("cannot unpack nil any")
+	}
 	split := strings.Split(m.TypeUrl, "/")
 	name := split[len(split)-1]
 	typ := gogoproto.MessageType(name)

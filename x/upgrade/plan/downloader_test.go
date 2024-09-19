@@ -96,7 +96,7 @@ func (z TestZip) SaveAs(path string) error {
 	return zipper.Close()
 }
 
-// saveTestZip saves a TestZip in this test's Home/src directory with the given name.
+// saveSrcTestZip saves a TestZip in this test's Home/src directory with the given name.
 // The full path to the saved archive is returned.
 func (s *DownloaderTestSuite) saveSrcTestZip(name string, z TestZip) string {
 	fullName := filepath.Join(s.Home, "src", name)

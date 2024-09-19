@@ -8,8 +8,8 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-ixc_core = { path = "../core" }
-ixc_message_api = { path = "../message_api" }
+ixc_core = { path = "../core", version = "0.0.2" }
+ixc_message_api = { path = "../message_api", version = "0.0.2" }
 
 [lints]
 workspace = true

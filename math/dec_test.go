@@ -261,7 +261,7 @@ func (s *decimalTestSuite) TestArithmetic() {
 	}
 
 	for tcIndex, tc := range tests {
-		tc := tc
+
 		resAdd := tc.d1.Add(tc.d2)
 		resSub := tc.d1.Sub(tc.d2)
 		resMul := tc.d1.Mul(tc.d2)
@@ -727,7 +727,6 @@ func TestFormatDec(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc[0], func(t *testing.T) {
 			out, err := math.FormatDec(tc[0])
 			require.NoError(t, err)
@@ -1025,4 +1024,37 @@ func TestQuoMut(t *testing.T) {
 			})
 		})
 	}
+}
+
+func Test_DocumentLegacyAsymmetry(t *testing.T) {
+	zeroDec := math.LegacyZeroDec()
+	emptyDec := math.LegacyDec{}
+
+	zeroDecBz, err := zeroDec.Marshal()
+	require.NoError(t, err)
+	zeroDecJSON := zeroDec.String()
+
+	emptyDecBz, err := emptyDec.Marshal()
+	require.NoError(t, err)
+	emptyDecJSON := emptyDec.String()
+
+	// makes sense, zero and empty are semantically different and render differently
+	require.NotEqual(t, zeroDecJSON, emptyDecJSON)
+	// but on the proto wire they encode to the same bytes
+	require.Equal(t, zeroDecBz, emptyDecBz)
+
+	// zero values are symmetrical
+	zeroDecRoundTrip := math.LegacyDec{}
+	err = zeroDecRoundTrip.Unmarshal(zeroDecBz)
+	require.NoError(t, err)
+	require.Equal(t, zeroDec.String(), zeroDecRoundTrip.String())
+	require.Equal(t, zeroDec, zeroDecRoundTrip)
+
+	// empty values are not
+	emptyDecRoundTrip := math.LegacyDec{}
+	err = emptyDecRoundTrip.Unmarshal(emptyDecBz)
+	require.NoError(t, err)
+	// !!! this is the key point, they are not equal, it looks like a bug
+	require.NotEqual(t, emptyDec.String(), emptyDecRoundTrip.String())
+	require.NotEqual(t, emptyDec, emptyDecRoundTrip)
 }

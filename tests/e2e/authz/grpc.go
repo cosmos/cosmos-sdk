@@ -63,7 +63,6 @@ func (s *E2ETestSuite) TestQueryGrantGRPC() {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			resp, _ := testutil.GetRequest(tc.url)
 			require := s.Require()
@@ -151,7 +150,6 @@ func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			tc.preRun()
 			resp, err := testutil.GetRequest(tc.url)

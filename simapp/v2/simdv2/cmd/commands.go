@@ -74,7 +74,11 @@ func initRootCmd[T transaction.Tx](
 		newApp,
 		logger,
 		initServerConfig(),
-		cometbft.New(&genericTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
+		cometbft.New(
+			&genericTxDecoder[T]{txConfig},
+			initCometOptions[T](),
+			initCometConfig(),
+		),
 		grpc.New[T](),
 		store.New[T](newApp),
 	); err != nil {

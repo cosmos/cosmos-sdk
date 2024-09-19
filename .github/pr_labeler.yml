@@ -10,8 +10,10 @@
 "C:Keys":
   - client/keys/**/*
 "C:Simulations":
+  - types/simulation/**/*
   - x/simulation/**/*
   - x/*/simulation/**/*
+  - simsx/**/*
 "C:Store":
   - store/**/*
 "C:collections":
@@ -28,6 +30,8 @@
   - indexer/postgres/**/*
 "C:x/accounts":
   - x/accounts/**/*
+"C:x/accounts/base":
+  - x/accounts/defaults/base/**/*
 "C:x/accounts/multisig":
   - x/accounts/defaults/multisig/**/*
 "C:x/accounts/lockup":

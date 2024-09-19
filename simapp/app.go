@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cast"
 
@@ -183,7 +185,7 @@ type SimApp struct {
 	sm                 *module.SimulationManager
 
 	// module configurator
-	configurator module.Configurator // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+	configurator module.Configurator //nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 }
 
 func init() {
@@ -463,15 +465,15 @@ func NewSimApp(
 		auth.NewAppModule(appCodec, app.AuthKeeper, app.AccountsKeeper, authsims.RandomGenesisAccounts, nil),
 		vesting.NewAppModule(app.AuthKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AuthKeeper),
-		feegrantmodule.NewAppModule(appCodec, app.AuthKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
+		feegrantmodule.NewAppModule(appCodec, app.FeeGrantKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, &app.GovKeeper, app.AuthKeeper, app.BankKeeper, app.PoolKeeper),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AuthKeeper, nil),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AuthKeeper, app.BankKeeper, app.StakingKeeper, app.interfaceRegistry, cometService),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AuthKeeper, app.BankKeeper, app.StakingKeeper),
-		staking.NewAppModule(appCodec, app.StakingKeeper, app.AuthKeeper, app.BankKeeper),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.StakingKeeper),
+		staking.NewAppModule(appCodec, app.StakingKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(appCodec, app.EvidenceKeeper, cometService),
-		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AuthKeeper, app.BankKeeper, app.interfaceRegistry),
+		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.interfaceRegistry),
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AuthKeeper, app.BankKeeper, app.interfaceRegistry),
 		nftmodule.NewAppModule(appCodec, app.NFTKeeper, app.AuthKeeper, app.BankKeeper, app.interfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
@@ -705,7 +707,7 @@ func (app *SimApp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 	return app.ModuleManager.EndBlock(ctx)
 }
 
-func (a *SimApp) Configurator() module.Configurator { // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+func (a *SimApp) Configurator() module.Configurator { //nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 	return a.configurator
 }
 
@@ -829,6 +831,14 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 
 func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
+}
+
+// ValidatorKeyProvider returns a function that generates a validator key
+// Supported key types are those supported by Comet: ed25519, secp256k1, bls12-381
+func (app *SimApp) ValidatorKeyProvider() runtime.KeyGenF {
+	return func() (cmtcrypto.PrivKey, error) {
+		return cmted25519.GenPrivKey(), nil
+	}
 }
 
 // GetMaccPerms returns a copy of the module account permissions

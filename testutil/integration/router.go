@@ -47,12 +47,9 @@ func NewIntegrationApp(
 	keys map[string]*storetypes.KVStoreKey,
 	appCodec codec.Codec,
 	modules map[string]appmodule.AppModule,
-<<<<<<< HEAD
-=======
 	msgRouter *baseapp.MsgServiceRouter,
 	grpcRouter *baseapp.GRPCQueryRouter,
 	baseAppOptions ...func(*baseapp.BaseApp),
->>>>>>> bdda21f2f (feat(testutil/integration): allow to pass baseapp options (#21816))
 ) *App {
 	db := dbm.NewMemDB()
 
@@ -61,13 +58,8 @@ func NewIntegrationApp(
 	basicModuleManager := module.NewBasicManagerFromManager(moduleManager, nil)
 	basicModuleManager.RegisterInterfaces(interfaceRegistry)
 
-<<<<<<< HEAD
 	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), authtx.DefaultSignModes)
-	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
-=======
-	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), addressCodec, validatorCodec, authtx.DefaultSignModes)
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), append(baseAppOptions, baseapp.SetChainID(appName))...)
->>>>>>> bdda21f2f (feat(testutil/integration): allow to pass baseapp options (#21816))
 	bApp.MountKVStores(keys)
 
 	bApp.SetInitChainer(func(_ sdk.Context, _ *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {

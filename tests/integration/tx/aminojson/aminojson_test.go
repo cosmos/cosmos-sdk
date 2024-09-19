@@ -1,9 +1,10 @@
 package aminojson
 
 import (
-	"context"
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"strings"
+	stdmath "math"
 	"testing"
 	"time"
 
@@ -19,7 +20,6 @@ import (
 	bankapi "cosmossdk.io/api/cosmos/bank/v1beta1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/math"
 	authztypes "cosmossdk.io/x/authz"
 	authzmodule "cosmossdk.io/x/authz/module"
@@ -40,7 +40,6 @@ import (
 	"cosmossdk.io/x/staking"
 	stakingtypes "cosmossdk.io/x/staking/types"
 	"cosmossdk.io/x/tx/signing/aminojson"
-	signing_testutil "cosmossdk.io/x/tx/signing/testutil"
 	"cosmossdk.io/x/upgrade"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -54,11 +53,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -79,8 +74,7 @@ import (
 // In order for step 3 to work certain restrictions on the data generated in step 1 must be enforced and are described
 // by the mutation of genOpts passed to the generator.
 func TestAminoJSON_Equivalence(t *testing.T) {
-	encCfg := testutil.MakeTestEncodingConfig(
-		codectestutil.CodecOptions{},
+	fixture := internal.NewSigningFixture(t, internal.SigningFixtureOptions{},
 		auth.AppModule{},
 		authzmodule.AppModule{},
 		bank.AppModule{},
@@ -96,9 +90,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 		upgrade.AppModule{},
 		vesting.AppModule{},
 	)
-	legacytx.RegressionTestingAminoCodec = encCfg.Amino
 	aj := aminojson.NewEncoder(aminojson.EncoderOptions{})
-	// aj := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: true})
 
 	for _, tt := range rapidgen.DefaultGeneratedTypes {
 		desc := tt.Pulsar.ProtoReflect().Descriptor()
@@ -106,7 +98,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			gen := rapidproto.MessageGenerator(tt.Pulsar, tt.Opts)
 			fmt.Printf("testing %s\n", tt.Pulsar.ProtoReflect().Descriptor().FullName())
-			rapid.Check(t, func(t *rapid.T) {
+			rapid.Check(t, func(r *rapid.T) {
 				// uncomment to debug; catch a panic and inspect application state
 				// defer func() {
 				//	if r := recover(); r != nil {
@@ -115,39 +107,44 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				//	}
 				// }()
 
-				msg := gen.Draw(t, "msg")
+				msg := gen.Draw(r, "msg")
 				postFixPulsarMessage(msg)
 				// txBuilder.GetTx will fail if the msg has no signers
 				// so it does not make sense to run these cases, apparently.
-				signers, err := encCfg.TxConfig.SigningContext().GetSigners(msg)
-				if len(signers) == 0 {
-					// skip
-					return
-				}
-				if err != nil {
-					if strings.Contains(err.Error(), "empty address string is not allowed") {
-						return
-					}
-					require.NoError(t, err)
-				}
+				// signers, err := encCfg.TxConfig.SigningContext().GetSigners(msg)
+				// if len(signers) == 0 {
+				// 	// skip
+				// 	return
+				// }
+				// if err != nil {
+				// 	if strings.Contains(err.Error(), "empty address string is not allowed") {
+				// 		return
+				// 	}
+				// 	require.NoError(t, err)
+				// }
 
 				gogo := tt.Gogo
 				sanity := tt.Pulsar
 
 				protoBz, err := proto.Marshal(msg)
-				require.NoError(t, err)
+				require.NoError(r, err)
 
 				err = proto.Unmarshal(protoBz, sanity)
-				require.NoError(t, err)
+				require.NoError(r, err)
 
-				err = encCfg.Codec.Unmarshal(protoBz, gogo)
-				require.NoError(t, err)
+				err = fixture.UnmarshalGogoProto(protoBz, gogo)
+				require.NoError(r, err)
 
-				legacyAminoJSON, err := encCfg.Amino.MarshalJSON(gogo)
-				require.NoError(t, err)
+				legacyAminoJSON := fixture.MarshalLegacyAminoJSON(t, gogo)
 				aminoJSON, err := aj.Marshal(msg)
-				require.NoError(t, err)
-				require.Equal(t, string(legacyAminoJSON), string(aminoJSON))
+				require.NoError(r, err)
+				if !bytes.Equal(legacyAminoJSON, aminoJSON) {
+					// play that back, wtf
+					againBz := fixture.MarshalLegacyAminoJSON(t, gogo)
+					require.Failf(r, "JSON mismatch", "legacy: %s\n  x/tx: %s\n",
+						string(againBz), string(aminoJSON))
+				}
+				require.Equal(r, string(legacyAminoJSON), string(aminoJSON))
 
 				// test amino json signer handler equivalence
 				if !proto.HasExtension(desc.Options(), msgv1.E_Signer) {
@@ -155,45 +152,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 					return
 				}
 
-				handlerOptions := signing_testutil.HandlerArgumentOptions{
-					ChainID:       "test-chain",
-					Memo:          "sometestmemo",
-					Msg:           tt.Pulsar,
-					AccNum:        1,
-					AccSeq:        2,
-					SignerAddress: "signerAddress",
-					Fee: &txv1beta1.Fee{
-						Amount: []*v1beta1.Coin{{Denom: "uatom", Amount: "1000"}},
-					},
-				}
-
-				signerData, txData, err := signing_testutil.MakeHandlerArguments(handlerOptions)
-				require.NoError(t, err)
-
-				handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{})
-				signBz, err := handler.GetSignBytes(context.Background(), signerData, txData)
-				require.NoError(t, err)
-
-				legacyHandler := tx.NewSignModeLegacyAminoJSONHandler()
-				txBuilder := encCfg.TxConfig.NewTxBuilder()
-				require.NoError(t, txBuilder.SetMsgs([]types.Msg{tt.Gogo}...))
-				txBuilder.SetMemo(handlerOptions.Memo)
-				txBuilder.SetFeeAmount(types.Coins{types.NewInt64Coin("uatom", 1000)})
-				theTx := txBuilder.GetTx()
-
-				legacySigningData := signing.SignerData{
-					ChainID:       handlerOptions.ChainID,
-					Address:       handlerOptions.SignerAddress,
-					AccountNumber: handlerOptions.AccNum,
-					Sequence:      handlerOptions.AccSeq,
-				}
-				legacySignBz, err := legacyHandler.GetSignBytes(
-					signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-					legacySigningData,
-					theTx,
-				)
-				require.NoError(t, err)
-				require.Equal(t, string(legacySignBz), string(signBz))
+				fixture.RequireLegacyAminoEquivalent(t, gogo)
 			})
 		})
 	}
@@ -212,22 +171,42 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	genericAuth, _ := codectypes.NewAnyWithValue(&authztypes.GenericAuthorization{Msg: "foo"})
 	pubkeyAny, _ := codectypes.NewAnyWithValue(&secp256k1types.PubKey{Key: []byte("foo")})
 	dec5point4 := math.LegacyMustNewDecFromStr("5.4")
+	failingBaseAccount := authtypes.NewBaseAccountWithAddress(addr1)
+	failingBaseAccount.AccountNumber = stdmath.MaxUint64
 
 	cases := map[string]struct {
-		gogo gogoproto.Message
+		gogo  gogoproto.Message
+		fails bool
 	}{
 		"auth/params": {
 			gogo: &authtypes.Params{TxSigLimit: 10},
 		},
-		"auth/module_account": {
+		"auth/module_account_nil_permissions": {
 			gogo: &authtypes.ModuleAccount{
 				BaseAccount: authtypes.NewBaseAccountWithAddress(
 					addr1,
-				), Permissions: []string{},
+				),
 			},
 		},
+		"auth/module_account/max_uint64": {
+			gogo: &authtypes.ModuleAccount{
+				BaseAccount: failingBaseAccount,
+			},
+			fails: true,
+		},
+		"auth/module_account_empty_permissions": {
+			gogo: &authtypes.ModuleAccount{
+				BaseAccount: authtypes.NewBaseAccountWithAddress(
+					addr1,
+				),
+				// empty set and nil are indistinguishable from the protoreflect API since they both
+				// marshal to zero proto bytes, there empty set is not supported.
+				Permissions: []string{},
+			},
+			fails: true,
+		},
 		"auth/base_account": {
-			gogo: &authtypes.BaseAccount{Address: addr1.String(), PubKey: pubkeyAny},
+			gogo: &authtypes.BaseAccount{Address: addr1.String(), PubKey: pubkeyAny, AccountNumber: 1, Sequence: 2},
 		},
 		"authz/msg_grant": {
 			gogo: &authztypes.MsgGrant{
@@ -262,7 +241,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"crypto/legacy_amino_pubkey": {
 			gogo: &multisig.LegacyAminoPubKey{PubKeys: []*codectypes.Any{pubkeyAny}},
 		},
-		"crypto/legacy_amino_pubkey/empty": {
+		"crypto/legacy_amino_pubkey_empty": {
 			gogo: &multisig.LegacyAminoPubKey{},
 		},
 		"consensus/evidence_params/duration": {
@@ -297,9 +276,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"gov/v1_msg_submit_proposal": {
 			gogo: &gov_v1_types.MsgSubmitProposal{},
 		},
-		// This test cases demonstrates the expected contract and proper way to set a cosmos.Dec field represented
-		// as bytes in protobuf message, namely:
-		// dec10bz, _ := types.NewDec(10).Marshal()
 		"slashing/params/dec": {
 			gogo: &slashingtypes.Params{
 				DowntimeJailDuration:    1e9 + 7,
@@ -344,6 +320,15 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 				AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			},
 		},
+		"staking/stake_authorization_deny": {
+			gogo: &stakingtypes.StakeAuthorization{
+				MaxTokens: &types.Coin{Denom: "foo", Amount: math.NewInt(123)},
+				Validators: &stakingtypes.StakeAuthorization_DenyList{
+					DenyList: &stakingtypes.StakeAuthorization_Validators{},
+				},
+				AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
+			},
+		},
 		"vesting/base_account_empty": {
 			gogo: &vestingtypes.BaseVestingAccount{BaseAccount: &authtypes.BaseAccount{}},
 		},
@@ -367,13 +352,17 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			gogoBytes := fixture.MarshalLegacyAminoJSON(t, tc.gogo)
+			legacyBytes := fixture.MarshalLegacyAminoJSON(t, tc.gogo)
 			dynamicBytes, err := aj.Marshal(fixture.DynamicMessage(t, tc.gogo))
 			require.NoError(t, err)
 
-			fmt.Printf("pulsar: %s\n", string(dynamicBytes))
-			fmt.Printf("  gogo: %s\n", string(gogoBytes))
-			require.Equal(t, string(gogoBytes), string(dynamicBytes))
+			fmt.Printf("legacy: %s\n", string(legacyBytes))
+			fmt.Printf("   sut: %s\n", string(dynamicBytes))
+			if tc.fails {
+				require.NotEqual(t, string(legacyBytes), string(dynamicBytes))
+				return
+			}
+			require.Equal(t, string(legacyBytes), string(dynamicBytes))
 
 			// test amino json signer handler equivalence
 			if !proto.HasExtension(fixture.MessageDescriptor(t, tc.gogo).Options(), msgv1.E_Signer) {
@@ -502,4 +491,18 @@ func TestJSONSorting(t *testing.T) {
 	}
 
 	fixture.RequireLegacyAminoEquivalent(t, msgGrant)
+
+	addr1 := types.AccAddress("addr1")
+	ba := authtypes.NewBaseAccountWithAddress(addr1)
+	ma := &authtypes.ModuleAccount{BaseAccount: ba}
+	bz, err := json.Marshal(ma)
+	require.NoError(t, err)
+	fmt.Printf("ma: %+v -> %s\n", ma, string(bz))
+	protoBz, _ := gogoproto.Marshal(ma)
+	ma2 := &authtypes.ModuleAccount{}
+	err = gogoproto.Unmarshal(protoBz, ma2)
+	bz, err = json.Marshal(ma2)
+	require.NoError(t, err)
+	fmt.Printf("ma: %+v -> %s\n", ma2, string(bz))
+
 }

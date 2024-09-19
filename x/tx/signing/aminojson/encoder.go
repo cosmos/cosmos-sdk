@@ -151,9 +151,8 @@ func moduleAccountEncoder(_ *Encoder, msg protoreflect.Message, w io.Writer) err
 	fields := msgDesc.Fields()
 
 	pretty := moduleAccountPretty{
-		PubKey:      "",
-		Name:        msg.Get(fields.ByName("name")).String(),
-		Permissions: make([]string, 0),
+		PubKey: "",
+		Name:   msg.Get(fields.ByName("name")).String(),
 	}
 	permissions := msg.Get(fields.ByName("permissions")).List()
 	for i := 0; i < permissions.Len(); i++ {

@@ -12,11 +12,11 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/core/address"
-	authtypes "cosmossdk.io/x/auth/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // GRPCBlockHeightHeader represents the gRPC header for block height.

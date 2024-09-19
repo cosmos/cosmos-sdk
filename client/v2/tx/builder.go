@@ -43,7 +43,6 @@ type TxBuilder interface {
 // TxBuilderProvider provides a TxBuilder.
 type TxBuilderProvider interface {
 	NewTxBuilder() TxBuilder
-	WrapTxBuilder(*apitx.Tx) (TxBuilder, error)
 }
 
 // BuilderProvider implements TxBuilderProvider.
@@ -65,16 +64,6 @@ func NewBuilderProvider(addressCodec address.Codec, decoder Decoder, codec codec
 // NewTxBuilder TxBuilder constructor.
 func (b BuilderProvider) NewTxBuilder() TxBuilder {
 	return newTxBuilder(b.addressCodec, b.decoder, b.codec)
-}
-
-// WrapTxBuilder
-// TODO: is this necessary
-func (b BuilderProvider) WrapTxBuilder(tx *apitx.Tx) (TxBuilder, error) {
-	return &txBuilder{
-		addressCodec: b.addressCodec,
-		decoder:      b.decoder,
-		codec:        b.codec,
-	}, nil
 }
 
 type txBuilder struct {

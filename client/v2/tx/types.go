@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
 
-	flags2 "github.com/cosmos/cosmos-sdk/client/flags"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -98,7 +97,6 @@ func NewFeeConfig(fees, feePayer, feeGranter string) (FeeConfig, error) {
 }
 
 // ExecutionOptions defines the transaction execution options ran by the client
-// ExecutionOptions defines the settings for transaction execution.
 type ExecutionOptions struct {
 	unordered          bool // unordered indicates if the transaction execution order is not guaranteed.
 	simulateAndExecute bool // simulateAndExecute indicates if the transaction should be simulated before execution.
@@ -127,19 +125,19 @@ type Tx interface {
 
 // txParamsFromFlagSet extracts the transaction parameters from the provided FlagSet.
 func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac address.Codec) (params TxParameters, err error) {
-	timestampUnix, _ := flags.GetInt64(flags2.FlagTimeoutTimestamp)
+	timestampUnix, _ := flags.GetInt64(flagTimeoutTimestamp)
 	timeoutTimestamp := time.Unix(timestampUnix, 0)
-	chainID, _ := flags.GetString(flags2.FlagChainID)
-	memo, _ := flags.GetString(flags2.FlagNote)
-	signMode, _ := flags.GetString(flags2.FlagSignMode)
+	chainID, _ := flags.GetString(flagChainID)
+	memo, _ := flags.GetString(flagNote)
+	signMode, _ := flags.GetString(flagSignMode)
 
-	accNumber, _ := flags.GetUint64(flags2.FlagAccountNumber)
-	sequence, _ := flags.GetUint64(flags2.FlagSequence)
-	from, _ := flags.GetString(flags2.FlagFrom)
+	accNumber, _ := flags.GetUint64(flagAccountNumber)
+	sequence, _ := flags.GetUint64(flagSequence)
+	from, _ := flags.GetString(flagFrom)
 
 	var fromName, fromAddress string
 	var addr []byte
-	isDryRun, _ := flags.GetBool(flags2.FlagDryRun)
+	isDryRun, _ := flags.GetBool(flagDryRun)
 	if isDryRun {
 		addr, err = ac.StringToBytes(from)
 	} else {
@@ -152,18 +150,18 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac addr
 		return params, err
 	}
 
-	gas, _ := flags.GetString(flags2.FlagGas)
-	gasSetting, _ := flags2.ParseGasSetting(gas)
-	gasAdjustment, _ := flags.GetFloat64(flags2.FlagGasAdjustment)
-	gasPrices, _ := flags.GetString(flags2.FlagGasPrices)
+	gas, _ := flags.GetString(flagGas)
+	simulate, gasValue, _ := parseGasSetting(gas)
+	gasAdjustment, _ := flags.GetFloat64(flagGasAdjustment)
+	gasPrices, _ := flags.GetString(flagGasPrices)
 
-	fees, _ := flags.GetString(flags2.FlagFees)
-	feePayer, _ := flags.GetString(flags2.FlagFeePayer)
-	feeGrater, _ := flags.GetString(flags2.FlagFeeGranter)
+	fees, _ := flags.GetString(flagFees)
+	feePayer, _ := flags.GetString(flagFeePayer)
+	feeGrater, _ := flags.GetString(flagFeeGranter)
 
-	unordered, _ := flags.GetBool(flags2.FlagUnordered)
+	unordered, _ := flags.GetBool(flagUnordered)
 
-	gasConfig, err := NewGasConfig(gasSetting.Gas, gasAdjustment, gasPrices)
+	gasConfig, err := NewGasConfig(gasValue, gasAdjustment, gasPrices)
 	if err != nil {
 		return params, err
 	}
@@ -188,7 +186,7 @@ func txParamsFromFlagSet(flags *pflag.FlagSet, keybase keyring2.Keyring, ac addr
 		FeeConfig: feeConfig,
 		ExecutionOptions: ExecutionOptions{
 			unordered:          unordered,
-			simulateAndExecute: gasSetting.Simulate,
+			simulateAndExecute: simulate,
 		},
 	}
 

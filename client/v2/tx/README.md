@@ -158,7 +158,6 @@ classDiagram
     class TxBuilderProvider {
         <<interface>>
         NewTxBuilder() TxBuilder
-        WrapTxBuilder(*apitx.Tx) (TxBuilder, error)
     }
 
     class BuilderProvider {
@@ -166,7 +165,6 @@ classDiagram
         decoder Decoder
         codec codec.BinaryCodec
         NewTxBuilder() TxBuilder
-        WrapTxBuilder(*apitx.Tx) (TxBuilder, error)
     }
 
     TxBuilder <|.. txBuilder : implements

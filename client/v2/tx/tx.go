@@ -16,7 +16,6 @@ import (
 	"cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	flags2 "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
@@ -33,18 +32,18 @@ func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs .
 		return err
 	}
 
-	isAux, _ := flagSet.GetBool(flags2.FlagAux)
+	isAux, _ := flagSet.GetBool(flagAux)
 	if isAux {
-		offline, _ := flagSet.GetBool(flags2.FlagOffline)
+		offline, _ := flagSet.GetBool(flagOffline)
 		return generateAuxSignerData(ctx, txf, offline, msgs...)
 	}
 
-	genOnly, _ := flagSet.GetBool(flags2.FlagGenerateOnly)
+	genOnly, _ := flagSet.GetBool(flagGenerateOnly)
 	if genOnly {
 		return generateOnly(ctx, txf, msgs...)
 	}
 
-	isDryRun, _ := flagSet.GetBool(flags2.FlagDryRun)
+	isDryRun, _ := flagSet.GetBool(flagDryRun)
 	if isDryRun {
 		return dryRun(txf, msgs...)
 	}
@@ -65,7 +64,7 @@ func newFactory(ctx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
 		AddressCodec:          ctx.AddressCodec,
 		Cdc:                   ctx.Codec,
 		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
-		// EnablesSignModes:      ctx.TxConfig.SignModeHandler().SupportedModes(),
+		EnablesSignModes:      ctx.TxConfig.SignModeHandler().SupportedModes(),
 	})
 	if err != nil {
 		return Factory{}, err

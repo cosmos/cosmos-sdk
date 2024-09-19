@@ -158,8 +158,9 @@ func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, removeStore func(
 
 	batch := m.kv.NewBatch()
 	defer func() {
-		if berr := batch.Close(); berr != nil {
-			err = berr
+		cErr := batch.Close()
+		if err == nil {
+			err = cErr
 		}
 	}()
 	for _, storeKey := range removedStoreKeys {

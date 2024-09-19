@@ -2,26 +2,6 @@
 
 This is the single import, batteries-included crate for building applications with the [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) in Rust.
 
-<!-- NOTE: To update this TOC please use https://github.com/jonschlinkert/markdown-toc -->
-
-<!-- toc -->
-
-- [Core Concepts](#core-concepts)
-- [Creating an Account Handler](#creating-an-account-handler)
-  * [Basic Structure](#basic-structure)
-  * [Define the account's state](#define-the-accounts-state)
-  * [Implement message handlers](#implement-message-handlers)
-  * [Define an `on_create` method](#define-an-on_create-method)
-  * [Emitting Events](#emitting-events)
-- [Creating a Module Handler](#creating-a-module-handler)
-- [Calling other accounts or modules](#calling-other-accounts-or-modules)
-- [Exporting a Package of Handlers](#exporting-a-package-of-handlers)
-- [Testing](#testing)
-- [Advanced Usage](#advanced-usage)
-  * [Splitting code across multiple files](#splitting-code-across-multiple-files)
-
-<!-- tocstop -->
-
 ## Core Concepts
 
 * everything that runs code is an **account** with a unique [Address]
@@ -251,6 +231,60 @@ pub struct MyAccountHandler {
 }
 ```
 
+## Protobuf Compatibility
+
+Most existing [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) applications use [Protocol Buffers](https://protobuf.dev) encoding.
+So far, there has been no mention of it, and all of the examples here use plain old Rust
+functions and structs so you may be wondering what's going on.
+
+The [`ixc_schema`] crate defines a rich set of types that can be used in messages that aims to be
+richer and more appropriate to this use case than the set of types provided by Protobuf.
+Currently, many Cosmos SDK messages use Protobuf `string`s everywhere to represent other data
+types.
+Sometimes these are annotated with `cosmos_proto.scalar` to indicate which data type we actually mean.
+In Rust, we encourage you to use the [`Address`] type for addresses and sized integer types, such as
+`u128`, instead of strings or byte arrays.
+For all of these types, there is a configurable mapping to Protobuf encoding that is described in more detail
+in the [`ixc_schema`] crate documentation.
+If the default mapping does not work, an alternate one may be available and can be annotated with optional
+`#[proto]` attributes.
+Ex:
+
+```rust
+#[derive(StructCodec)]
+#[proto(name="cosmos.base.v1beta1.Coin")]
+pub struct Coin {
+    pub denom: String,
+    #[proto(string, tag=2)] // tag could actually be inferred from field order, but shown for demonstration
+    pub amount: u128,
+}
+```
+
+Eventually, code generators may be implemented that take `.proto` files and generate this Rust code,
+but for now we recommend following the Cosmos SDK's "expected keeper" pattern and just re-defining
+types in Rust where needed.
+Keeping client definitions close to where they're used avoids any of the pernicious issues
+with versioning and dependencies that plague the Cosmos SDK in Golang.
+Tooling is being developed to statically check the compatibility of types following the [`ixc_schema`] model
+(see the `cosmosdk.io/schema/diff` package) so that type definitions from different Rust packages can be
+compared for compatibility.
+
+`#[proto]` annotations can also be used on arguments to handler functions
+to configure the message names handlers correspond to.
+(Note that even though the Cosmos SDK uses `service` definitions,
+messages are actually routed by message name, not service method name.)
+Ex:
+```rust
+#[module_api]
+trait BankMsg {
+   #[proto(name="cosmos.bank.v1beta1.MsgSend")]
+   fn send(&self, ctx: &Context, 
+           #[proto(string, msgv1_signer=true)] from: &Address,
+           #[proto(string)] to: &Address,
+           coins: &[Coin]) -> Response<()>;
+}
+```
+
 ## Exporting a Package of Handlers
 
 The [`package_root!`] macro can be used to define a package of one or more handlers which can be
@@ -293,6 +327,14 @@ pub struct MyModuleHandler {
 ```
 `AccountMixin` and `ModuleMixin` implement the [`Deref`](core::ops::Deref) trait so that all methods
 and types in those nested handlers are accessible through the mixin wrapper.
+
+### Dynamically Routing Messages
+
+All handler functions in [`#[account_api]`] and [`#[module_api]`] traits,
+and inside [`#[publish]`] inherent `impl` blocks will have a corresponding message `struct` generated for them.
+These structs can be used to dynamically invoke handlers using the [`Context::dynamic_invoke_module`] and
+[`Context::dynamic_invoke_account`] methods.
+Such structs can also be stored inside other structs and stored for later execution.
 
 ### Parallel Execution
 

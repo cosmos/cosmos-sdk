@@ -195,7 +195,7 @@ func (m *MM[T]) InitGenesisJSON(
 // ExportGenesisForModules performs export genesis functionality for modules
 func (m *MM[T]) ExportGenesisForModules(
 	ctx context.Context,
-	state store.WriterMap,
+	stateFactory func() store.WriterMap,
 	modulesToExport ...string,
 ) (map[string]json.RawMessage, error) {
 	if len(modulesToExport) == 0 {
@@ -229,7 +229,7 @@ func (m *MM[T]) ExportGenesisForModules(
 
 		channels[moduleName] = make(chan genesisResult)
 		go func(moduleI ModuleI, ch chan genesisResult) {
-			genesisCtx := services.NewGenesisContext(state)
+			genesisCtx := services.NewGenesisContext(stateFactory())
 			_, _ = genesisCtx.Run(ctx, func(ctx context.Context) error {
 				jm, err := moduleI.ExportGenesis(ctx)
 				if err != nil {

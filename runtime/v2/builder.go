@@ -201,7 +201,12 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 
 			var genesisJson map[string]json.RawMessage
 			_, err = genesisCtx.Run(ctx, func(ctx context.Context) error {
-				genesisJson, err = a.app.moduleManager.ExportGenesisForModules(ctx, a.branch(state))
+				genesisJson, err = a.app.moduleManager.ExportGenesisForModules(
+					ctx,
+					func() store.WriterMap {
+						return a.branch(state)
+					},
+				)
 				return err
 			})
 			if err != nil {

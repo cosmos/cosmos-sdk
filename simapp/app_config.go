@@ -67,12 +67,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	_ "github.com/cosmos/cosmos-sdk/testutil/x/counter" // import for side-effects
-<<<<<<< HEAD
 	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
-=======
 	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
->>>>>>> 763e4d68e (feat: introduce x/validate and split x/auth/tx/config (#21822))
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import for side-effects
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"

@@ -4,7 +4,7 @@ go 1.23.1
 
 replace (
 	// pseudo version lower than the latest tag
-	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
+	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240920150546-763e4d68e435 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.3 // main
 	// pseudo version lower than the latest tag

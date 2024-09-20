@@ -185,7 +185,8 @@ jobs:
         continue-on-error: true
       - name: sonarcloud
         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft }}
-        uses: SonarSource/sonarcloud-github-action@master
+        #        uses: SonarSource/sonarcloud-github-action@master
+        run: echo "restore me"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

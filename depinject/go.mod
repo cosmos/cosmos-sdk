@@ -1,6 +1,8 @@
 module cosmossdk.io/depinject
 
-go 1.20
+go 1.23
+
+toolchain go1.23.1
 
 require (
 	github.com/cockroachdb/errors v1.10.0

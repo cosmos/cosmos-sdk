@@ -477,6 +477,7 @@ var newConfig = func(
 		CustomPreUpgrade:         customPreUpgrade,
 		DisableRecase:            disableRecase,
 		ShutdownGrace:            time.Duration(shutdownGrace),
+		CometBftRpcEndpoint:      "http://localhost:26657",
 	}
 }
 

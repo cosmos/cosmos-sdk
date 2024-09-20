@@ -24,7 +24,7 @@ func NewBatchAddUpgradeCmd() *cobra.Command {
 // AddBatchUpgrade takes in multiple specified upgrades and creates a single
 // batch upgrade file out of them
 func AddBatchUpgrade(cmd *cobra.Command, args []string) error {
-	cfg, err := GetConfig(cmd)
+	cfg, err := getConfigFromCmd(cmd)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func AddBatchUpgrade(cmd *cobra.Command, args []string) error {
 		}
 		upgradeInfoPath := filepath.Join(cfg.UpgradeInfoFilePath(), upgradeName)
 		upgradeInfoPaths = append(upgradeInfoPaths, upgradeInfoPath)
-		if err := AddUpgrade(cfg, true, upgradeHeight, upgradeName, upgradePath, upgradeInfoPath); err != nil {
+		if err := addUpgrade(cfg, true, upgradeHeight, upgradeName, upgradePath, upgradeInfoPath); err != nil {
 			return err
 		}
 	}

@@ -62,10 +62,10 @@ func loadBatchUpgradeFile(cfg *Config) ([]upgradetypes.Plan, error) {
 	return uInfos, nil
 }
 
-// BatchWatcher starts a watcher loop that swaps upgrade manifests at the correct
+// BatchUpgradeWatcher starts a watcher loop that swaps upgrade manifests at the correct
 // height, given the batch upgrade file. It watches the current state of the chain
 // via the websocket API.
-func BatchWatcher(ctx context.Context, cfg *Config, logger log.Logger) {
+func BatchUpgradeWatcher(ctx context.Context, cfg *Config, logger log.Logger) {
 	// load batch file in memory
 	uInfos, err := loadBatchUpgradeFile(cfg)
 	if err != nil {
@@ -211,7 +211,7 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 		}
 	}()
 
-	go BatchWatcher(ctx, l.cfg, l.logger)
+	go BatchUpgradeWatcher(ctx, l.cfg, l.logger)
 
 	if needsUpdate, err := l.WaitForUpgradeOrExit(cmd); err != nil || !needsUpdate {
 		return false, err

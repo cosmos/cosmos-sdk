@@ -28,8 +28,8 @@ func NewAddUpgradeCmd() *cobra.Command {
 	return addUpgrade
 }
 
-// AddUpgrade adds upgrade info to manifest
-func AddUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgradeName, executablePath, upgradeInfoPath string) error {
+// addUpgrade adds upgrade info to manifest
+func addUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgradeName, executablePath, upgradeInfoPath string) error {
 	logger := cfg.Logger(os.Stdout)
 
 	if !cfg.DisableRecase {
@@ -86,7 +86,7 @@ func AddUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgrade
 }
 
 // GetConfig returns a Config using passed-in flag
-func GetConfig(cmd *cobra.Command) (*cosmovisor.Config, error) {
+func getConfigFromCmd(cmd *cobra.Command) (*cosmovisor.Config, error) {
 	configPath, err := cmd.Flags().GetString(cosmovisor.FlagCosmovisorConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get config flag: %w", err)
@@ -101,7 +101,7 @@ func GetConfig(cmd *cobra.Command) (*cosmovisor.Config, error) {
 
 // AddUpgradeCmd parses input flags and adds upgrade info to manifest
 func AddUpgradeCmd(cmd *cobra.Command, args []string) error {
-	cfg, err := GetConfig(cmd)
+	cfg, err := getConfigFromCmd(cmd)
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func AddUpgradeCmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get upgrade-height flag: %w", err)
 	}
 
-	return AddUpgrade(cfg, force, upgradeHeight, upgradeName, executablePath, cfg.UpgradeInfoFilePath())
+	return addUpgrade(cfg, force, upgradeHeight, upgradeName, executablePath, cfg.UpgradeInfoFilePath())
 }
 
 // saveOrAbort saves data to path or aborts if file exists and force is false

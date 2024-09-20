@@ -44,6 +44,7 @@
 
 /x/accounts/ @testinginprod @sontrinh16 @cosmos/sdk-core-dev
 /x/auth/ @facundomedica @testinginprod @aaronc @cosmos/sdk-core-dev
+/x/auth/tx/config @julienrbrt @akhilkumarpilli @kocubinski @cosmos/sdk-core-dev
 /x/authz/ @akhilkumarpilli @raynaudoe @cosmos/sdk-core-dev
 /x/bank/ @julienrbrt @sontrinh16 @cosmos/sdk-core-dev
 /x/bank/v2 @julienrbrt @hieuvubk @akhilkumarpilli @cosmos/sdk-core-dev
@@ -65,6 +66,7 @@
 /x/staking/ @facundomedica @testinginprod @JulianToledano @ziscky @cosmos/sdk-core-dev
 /x/tx/ @kocubinski @testinginprod @aaronc @cosmos/sdk-core-dev
 /x/upgrade/ @facundomedica @cool-develope @akhilkumarpilli @lucaslopezf @cosmos/sdk-core-dev
+/x/validate @julienrbrt @akhilkumarpilli @kocubinski @cosmos/sdk-core-dev
 
 # go mods
 

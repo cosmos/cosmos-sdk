@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"slices" //nolint: gci // ignore this line for this linter
+	"slices" 
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -12,7 +12,7 @@ import (
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	protoio "github.com/cosmos/gogoproto/io"
-	"github.com/cosmos/gogoproto/proto" //nolint: gci // ignore this line for this linter
+	"github.com/cosmos/gogoproto/proto" 
 
 	"cosmossdk.io/core/comet"
 

@@ -99,7 +99,7 @@ type memIterator struct {
 }
 
 // newMemIterator creates a new memory iterator for a given range of keys in a B-tree.
-// The iterator starts at the specified start key and ends at the specified end key.
+// The iterator creates a copy then starts at the specified start key and ends at the specified end key.
 // The `tree` parameter is the B-tree to iterate over.
 // The `ascending` parameter determines the direction of iteration.
 // If `ascending` is true, the iterator will iterate in ascending order.

@@ -48,7 +48,7 @@ contributors, the general procedure for contributing has been established:
       to begin work.
 5. To submit your work as a contribution to the repository follow standard GitHub best practices. See [pull request guideline](#pull-requests) below.
 
-**Note:** For very small or blatantly obvious problems, you are
+**Note 1:** For very small or blatantly obvious problems, you are
 not required to an open issue to submit a PR, but be aware that for more complex
 problems/features, if a PR is opened before an adequate design discussion has
 taken place in a GitHub issue, that PR runs a high likelihood of being rejected.

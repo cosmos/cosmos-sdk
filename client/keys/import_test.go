@@ -82,6 +82,7 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 
 			// Now add a temporary keybase
 			kbHome := filepath.Join(t.TempDir(), fmt.Sprintf("kbhome-%s", tc.name))
+			require.NoError(t, os.MkdirAll(kbHome, 0o700))
 			t.Cleanup(func() {
 				require.NoError(t, os.RemoveAll(kbHome))
 			})

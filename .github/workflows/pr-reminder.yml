@@ -2,8 +2,11 @@ name: PR Review Reminder
 
 on:
   schedule:
-    - cron: '0 9 * * 1-5'  # Every weekday at 9:00 AM UTC 
+    - cron: '0 9 * * 1-5'  # Every weekday at 9:00 AM UTC
   pull_request:
+
+permissions:
+  pull-requests: read
 
 jobs:
   pr-review:
@@ -14,15 +17,16 @@ jobs:
 
       - name: List open pull requests using GitHub Script
         uses: actions/github-script@v5
+        id: pr-list
         with:
           script: |
-            const pullRequests = await github.pulls.list({
+            const { data: pullRequests } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open'
             });
-            console.log(pullRequests);
-        
+            console.log(JSON.stringify(pullRequests, null, 2));
+
       - name: Send Slack Reminder
         if: steps.pr-list.outputs.result != ''
         uses: 8398a7/action-slack@v3

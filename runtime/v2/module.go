@@ -16,6 +16,7 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
@@ -196,6 +197,7 @@ func ProvideEnvironment[T transaction.Tx](
 	appBuilder *AppBuilder[T],
 	kvFactory store.KVStoreServiceFactory,
 	headerService header.Service,
+	eventService event.Service,
 ) (
 	appmodulev2.Environment,
 	store.KVStoreService,
@@ -227,7 +229,7 @@ func ProvideEnvironment[T transaction.Tx](
 	env := appmodulev2.Environment{
 		Logger:             logger,
 		BranchService:      stf.BranchService{},
-		EventService:       stf.NewEventService(),
+		EventService:       eventService,
 		GasService:         stf.NewGasMeterService(),
 		HeaderService:      headerService,
 		QueryRouterService: stf.NewQueryRouterService(),
@@ -272,10 +274,12 @@ func DefaultServiceBindings() depinject.Config {
 		}
 		headerService header.Service = services.NewGenesisHeaderService(stf.HeaderService{})
 		cometService  comet.Service  = &services.ContextAwareCometInfoService{}
+		eventService                 = stf.NewEventService()
 	)
 	return depinject.Supply(
 		kvServiceFactory,
 		headerService,
 		cometService,
+		eventService,
 	)
 }

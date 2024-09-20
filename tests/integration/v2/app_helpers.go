@@ -3,20 +3,24 @@ package integration
 
 import (
 	"context"
-	"cosmossdk.io/core/comet"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
 
+	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/runtime/v2"
+	"cosmossdk.io/runtime/v2/services"
+	"cosmossdk.io/server/v2/stf"
+	"cosmossdk.io/server/v2/stf/branch"
 	banktypes "cosmossdk.io/x/bank/types"
 	consensustypes "cosmossdk.io/x/consensus/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -189,10 +193,7 @@ func SetupWithConfiguration(
 		txConfigOptions tx.ConfigOptions
 		cometService    comet.Service                   = &cometServiceImpl{}
 		kvFactory       corestore.KVStoreServiceFactory = func(actor []byte) corestore.KVStoreService {
-			return &storeService{actor}
-		}
-		memFactory corestore.MemoryStoreServiceFactory = func(actor []byte) corestore.MemoryStoreService {
-			return &storeService{actor}
+			return services.NewGenesisKVService(actor, &storeService{actor, stf.NewKVStoreService(actor)})
 		}
 		cdc codec.Codec
 		err error
@@ -203,10 +204,11 @@ func SetupWithConfiguration(
 			appConfig,
 			codec.DefaultProviders,
 			depinject.Supply(
+				services.NewGenesisHeaderService(stf.HeaderService{}),
 				&dynamicConfigImpl{startupConfig.HomeDir},
 				cometService,
 				kvFactory,
-				memFactory,
+				&eventService{},
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,
@@ -245,7 +247,7 @@ func SetupWithConfiguration(
 		)
 	}
 
-	genesisState, err := genesisStateWithValSet(
+	genesisJSON, err := genesisStateWithValSet(
 		cdc,
 		app.DefaultGenesis(),
 		valSet,
@@ -256,7 +258,7 @@ func SetupWithConfiguration(
 	}
 
 	// init chain must be called to stop deliverState from being nil
-	stateBytes, err := cmtjson.MarshalIndent(genesisState, "", " ")
+	genesisJSONBytes, err := cmtjson.MarshalIndent(genesisJSON, "", " ")
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to marshal default genesis state: %w",
@@ -278,8 +280,18 @@ func SetupWithConfiguration(
 		},
 	)
 
+	store := storeBuilder.Get()
+	if store == nil {
+		return nil, fmt.Errorf("failed to build store: %w", err)
+	}
+	err = store.SetInitialVersion(1)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set initial version: %w", err)
+	}
+	integrationApp := &App{App: app, Store: store}
+
 	emptyHash := sha256.Sum256(nil)
-	_, state, err := app.InitGenesis(
+	_, genesisState, err := app.InitGenesis(
 		ctx,
 		&server.BlockRequest[stateMachineTx]{
 			Height:    1,
@@ -289,22 +301,14 @@ func SetupWithConfiguration(
 			AppHash:   emptyHash[:],
 			IsGenesis: true,
 		},
-		stateBytes,
+		genesisJSONBytes,
 		&genericTxDecoder{txConfigOptions},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to init genesis: %w", err)
+		return nil, fmt.Errorf("failed init genesiss: %w", err)
 	}
 
-	store := storeBuilder.Get()
-	if store == nil {
-		return nil, fmt.Errorf("failed to build store: %w", err)
-	}
-	err = store.SetInitialVersion(1)
-	if err != nil {
-		return nil, fmt.Errorf("failed to set initial version: %w", err)
-	}
-	genesisChanges, err := state.GetStateChanges()
+	genesisChanges, err := genesisState.GetStateChanges()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get genesis state changes: %w", err)
 	}
@@ -314,7 +318,7 @@ func SetupWithConfiguration(
 		return nil, fmt.Errorf("failed to commit initial version: %w", err)
 	}
 
-	return &App{App: app, Store: store}, nil
+	return integrationApp, nil
 }
 
 // genesisStateWithValSet returns a new genesis state with the validator set
@@ -461,7 +465,8 @@ type App struct {
 }
 
 type storeService struct {
-	actor []byte
+	actor            []byte
+	executionService corestore.KVStoreService
 }
 
 type contextKeyType struct{}
@@ -475,7 +480,7 @@ type integrationContext struct {
 func (s storeService) OpenKVStore(ctx context.Context) corestore.KVStore {
 	iCtx, ok := ctx.Value(contextKey).(integrationContext)
 	if !ok {
-		panic("failed to get integration context")
+		return s.executionService.OpenKVStore(ctx)
 	}
 
 	state, err := iCtx.state.GetWriter(s.actor)
@@ -485,6 +490,41 @@ func (s storeService) OpenKVStore(ctx context.Context) corestore.KVStore {
 	return state
 }
 
-func (s storeService) OpenMemoryStore(ctx context.Context) corestore.KVStore {
-	return s.OpenKVStore(ctx)
+var (
+	_ event.Service = &eventService{}
+	_ event.Manager = &eventManager{}
+)
+
+type eventService struct{}
+
+// EventManager implements event.Service.
+func (e *eventService) EventManager(context.Context) event.Manager {
+	return &eventManager{}
+}
+
+type eventManager struct{}
+
+// Emit implements event.Manager.
+func (e *eventManager) Emit(event transaction.Msg) error {
+	return nil
+}
+
+// EmitKV implements event.Manager.
+func (e *eventManager) EmitKV(eventType string, attrs ...event.Attribute) error {
+	return nil
+}
+
+func (a *App) Run(
+	ctx context.Context,
+	state corestore.ReaderMap,
+	fn func(ctx context.Context) error,
+) (corestore.ReaderMap, error) {
+	nextState := branch.DefaultNewWriterMap(state)
+	iCtx := integrationContext{state: nextState}
+	ctx = context.WithValue(ctx, contextKey, iCtx)
+	err := fn(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return nextState, nil
 }

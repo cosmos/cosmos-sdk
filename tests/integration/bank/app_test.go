@@ -103,7 +103,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 		configurator.AuthModule(),
 		configurator.StakingModule(),
 		configurator.TxModule(),
-		configurator.ValidationModule(),
+		configurator.ValidateModule(),
 		configurator.ConsensusModule(),
 		configurator.BankModule(),
 		configurator.GovModule(),
@@ -193,7 +193,10 @@ func TestSendNotEnoughBalance_v2(t *testing.T) {
 	s := createTestSuite(t, genAccs)
 	ctx := context.Background()
 
-	_, err := s.AppV2.Exec(ctx, func(ctx context.Context) error {
+	_, state, err := s.AppV2.Store.StateLatest()
+	require.NoError(t, err)
+
+	_, err = s.AppV2.Run(ctx, state, func(ctx context.Context) error {
 		return testutil.FundAccount(
 			ctx, s.BankKeeper, addr1,
 			sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67)))

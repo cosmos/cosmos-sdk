@@ -192,7 +192,6 @@ cloud.google.com/go/webrisk v1.4.0/go.mod h1:Hn8X6Zr+ziE2aNd8SliSDWpEnSS1u4R9+xX
 cloud.google.com/go/webrisk v1.5.0/go.mod h1:iPG6fr52Tv7sGk0H6qUFzmL3HHZev1htXuWDEEsqMTg=
 cloud.google.com/go/workflows v1.6.0/go.mod h1:6t9F5h/unJz41YqfBmqSASJSXccBLtD1Vwf+KmJENM0=
 cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoISEXH2bcHC3M=
-<<<<<<< HEAD
 cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 h1:YV9M+9pClbzPncO5XMSc3kIgDWjb7DdZ/DtURaWqle8=
 cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897/go.mod h1:oqpDMZQpEgSo0Cm4F+0yxoC9UQbo/SlodZR4zeOqBsE=
 cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab h1:E/IWad76v1Nc4Atswaccpt7twJ0VwHkbY94/PhmZfTo=
@@ -201,8 +200,6 @@ cosmossdk.io/core v1.0.0-alpha.3 h1:pnxaYAas7llXgVz1lM7X6De74nWrhNKnB3yMKe4OUUA=
 cosmossdk.io/core v1.0.0-alpha.3/go.mod h1:3u9cWq1FAVtiiCrDPpo4LhR+9V6k/ycSG4/Y/tREWCY=
 cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b h1:uEMbr7Hdpz0fU+GXU6mSN2vgoQnr66WYUpRuiba2aEk=
 cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b/go.mod h1:FllCSj/ZYskfb982HKqBSISO8DkBY4Euqq768HSFz68=
-=======
->>>>>>> d6364b895 (refactor(stf): remove RunWithCtx (#21739))
 cosmossdk.io/depinject v1.0.0 h1:dQaTu6+O6askNXO06+jyeUAnF2/ssKwrrszP9t5q050=
 cosmossdk.io/depinject v1.0.0/go.mod h1:zxK/h3HgHoA/eJVtiSsoaRaRA2D5U4cJ5thIG4ssbB8=
 cosmossdk.io/errors v1.0.1 h1:bzu+Kcr0kS/1DuPBtUFdWjzLqyUuCiyHjyJB6srBV/0=
@@ -213,16 +210,16 @@ cosmossdk.io/log v1.4.1 h1:wKdjfDRbDyZRuWa8M+9nuvpVYxrEOwbD/CA8hvhU8QM=
 cosmossdk.io/log v1.4.1/go.mod h1:k08v0Pyq+gCP6phvdI6RCGhLf/r425UT6Rk/m+o74rU=
 cosmossdk.io/math v1.3.0 h1:RC+jryuKeytIiictDslBP9i1fhkVm6ZDmZEoNP316zE=
 cosmossdk.io/math v1.3.0/go.mod h1:vnRTxewy+M7BtXBNFybkuhSH4WfedVAAnERHgVFhp3k=
-cosmossdk.io/runtime/v2 v2.0.0-20240916221850-7856d226038c h1:vnh9YoW/8fyrSpkyhHnUk3DymwmpE5U2ooRdJImfwEo=
-cosmossdk.io/runtime/v2 v2.0.0-20240916221850-7856d226038c/go.mod h1:d0B92058w/s/Yegf0ySClPPJn+Vp7Cz+H3ORggSSGm4=
+cosmossdk.io/runtime/v2 v2.0.0-20240920095614-aa90bb43d8f8 h1:Pt87wX5wD/skW7ALfiHrIBzB7HNKPNzYKwLXHs/52vA=
+cosmossdk.io/runtime/v2 v2.0.0-20240920095614-aa90bb43d8f8/go.mod h1:hKm9tvxe1a82KH2KfPlAaFk31cjNIC/N8KGQzuwmfi4=
 cosmossdk.io/schema v0.3.0 h1:01lcaM4trhzZ1HQTfTV8z6Ma1GziOZ/YmdzBN3F720c=
 cosmossdk.io/schema v0.3.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
-cosmossdk.io/server/v2 v2.0.0-20240918153713-01212de2d9dc h1:6lX4zEWS3jApSahbytOB0YVgdV4DEPK0pt06227h9Ng=
-cosmossdk.io/server/v2 v2.0.0-20240918153713-01212de2d9dc/go.mod h1:OOnpz5j7kFoqr9gSJ4vdM4tq6FXXuJJm7KlikmyTYKk=
-cosmossdk.io/server/v2/appmanager v0.0.0-20240918153713-01212de2d9dc h1:eEAmv+489lbcPJ+xWlyRR4CPCSBEYY7jJ7ayHYJwAfM=
-cosmossdk.io/server/v2/appmanager v0.0.0-20240918153713-01212de2d9dc/go.mod h1:qMT4t+uQP/gnfWtA3XTHsDCicXHRyYHxnLyEpRIHVxs=
-cosmossdk.io/server/v2/stf v0.0.0-20240918153713-01212de2d9dc h1:K7VVR3N2slgDcl+QMZp9LUpsrT1huGIiWoYBndagW/A=
-cosmossdk.io/server/v2/stf v0.0.0-20240918153713-01212de2d9dc/go.mod h1:e/pdNHJIOxL1wFKGkERDxLY0chj0+ZIetIPTkRgjX2o=
+cosmossdk.io/server/v2 v2.0.0-20240920095614-aa90bb43d8f8 h1:f9ngoXKselr0qkU0YWC0p/uvCI8/CqXBhzbx6jorQ/4=
+cosmossdk.io/server/v2 v2.0.0-20240920095614-aa90bb43d8f8/go.mod h1:OOnpz5j7kFoqr9gSJ4vdM4tq6FXXuJJm7KlikmyTYKk=
+cosmossdk.io/server/v2/appmanager v0.0.0-20240920095614-aa90bb43d8f8 h1:OyZVYhHSPxSCKJvxIh5QWFyPKUj0bV6PPIiuxnYGVcU=
+cosmossdk.io/server/v2/appmanager v0.0.0-20240920095614-aa90bb43d8f8/go.mod h1:/xDfniqVtn5nraiHkNJ4e6rYU0e83YAGsSjwmUA6H8k=
+cosmossdk.io/server/v2/stf v0.0.0-20240920095614-aa90bb43d8f8 h1:nPZQrhpMT26r8QZ7pLuJeWTFIeOFpq24y26P0ED4iW8=
+cosmossdk.io/server/v2/stf v0.0.0-20240920095614-aa90bb43d8f8/go.mod h1:e/pdNHJIOxL1wFKGkERDxLY0chj0+ZIetIPTkRgjX2o=
 cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214 h1:UUW0+2UgbDwQ452o2aw4DrVSWmowcad7DB7Vln+N94I=
 cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214/go.mod h1:ct8HATr+s48YYTRXEyP3HF33v9qEVWHMxwOL8P/v4iQ=
 cosmossdk.io/store/v2 v2.0.0-20240916221850-7856d226038c h1:x0NX01A+QWckckb1hi9p8mYW4OXTYEzsohQK2qBtIHg=

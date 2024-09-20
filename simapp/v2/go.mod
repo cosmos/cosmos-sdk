@@ -10,8 +10,8 @@ require (
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/runtime/v2 v2.0.0-20240916221850-7856d226038c // main
-	cosmossdk.io/server/v2 v2.0.0-20240918153713-01212de2d9dc // main
+	cosmossdk.io/runtime/v2 v2.0.0-20240920095614-aa90bb43d8f8 // main
+	cosmossdk.io/server/v2 v2.0.0-20240920095614-aa90bb43d8f8 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-20240916221850-7856d226038c // main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
@@ -56,8 +56,8 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.3.0 // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240918153713-01212de2d9dc // indirect; main
-	cosmossdk.io/server/v2/stf v0.0.0-20240918153713-01212de2d9dc // indirect; main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20240920095614-aa90bb43d8f8 // indirect; main
+	cosmossdk.io/server/v2/stf v0.0.0-20240920095614-aa90bb43d8f8 // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
@@ -289,20 +289,3 @@ replace (
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
-<<<<<<< HEAD
-=======
-
-// server v2 integration
-replace (
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/core => ../../core
-	cosmossdk.io/core/testing => ../../core/testing
-	cosmossdk.io/runtime/v2 => ../../runtime/v2
-	cosmossdk.io/server/v2 => ../../server/v2
-	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
-	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
-	cosmossdk.io/server/v2/stf => ../../server/v2/stf
-	cosmossdk.io/store => ../../store
-	cosmossdk.io/store/v2 => ../../store/v2
-)
->>>>>>> d6364b895 (refactor(stf): remove RunWithCtx (#21739))

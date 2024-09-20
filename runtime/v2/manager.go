@@ -24,7 +24,7 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
 )
 
@@ -195,8 +195,7 @@ func (m *MM[T]) InitGenesisJSON(
 // ExportGenesisForModules performs export genesis functionality for modules
 func (m *MM[T]) ExportGenesisForModules(
 	ctx context.Context,
-	appStf appmanager.StateTransitionFunction[T],
-	state store.ReaderMap,
+	state store.WriterMap,
 	modulesToExport ...string,
 ) (map[string]json.RawMessage, error) {
 	if len(modulesToExport) == 0 {
@@ -230,7 +229,8 @@ func (m *MM[T]) ExportGenesisForModules(
 
 		channels[moduleName] = make(chan genesisResult)
 		go func(moduleI ModuleI, ch chan genesisResult) {
-			_, _ = appStf.RunWithCtx(ctx, state, func(ctx context.Context) error {
+			genesisCtx := services.NewGenesisContext(state)
+			_, _ = genesisCtx.Run(ctx, func(ctx context.Context) error {
 				jm, err := moduleI.ExportGenesis(ctx)
 				if err != nil {
 					ch <- genesisResult{nil, err}

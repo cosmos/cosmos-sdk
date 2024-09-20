@@ -341,8 +341,8 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			dynamicBytes, err := aj.Marshal(fixture.DynamicMessage(t, tc.gogo))
 			require.NoError(t, err)
 
-			fmt.Printf("legacy: %s\n", string(legacyBytes))
-			fmt.Printf("   sut: %s\n", string(dynamicBytes))
+			t.Logf("legacy: %s\n", string(legacyBytes))
+			t.Logf("   sut: %s\n", string(dynamicBytes))
 			if tc.fails {
 				require.NotEqual(t, string(legacyBytes), string(dynamicBytes))
 				return

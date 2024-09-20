@@ -29,16 +29,14 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 )
 
-func ProvideCustomGetSigner() signing.CustomGetSigner {
-	return signing.CustomGetSigner{
-		MsgType: proto.MessageName(&testpb.TestRepeatedFields{}),
-		Fn: func(msg proto.Message) ([][]byte, error) {
-			testMsg := msg.(*testpb.TestRepeatedFields)
-			// arbitrary logic
-			signer := testMsg.NullableDontOmitempty[1].Value
-			return [][]byte{[]byte(signer)}, nil
-		},
-	}
+var TestRepeatedFieldsSigner = signing.CustomGetSigner{
+	MsgType: proto.MessageName(&testpb.TestRepeatedFields{}),
+	Fn: func(msg proto.Message) ([][]byte, error) {
+		testMsg := msg.(*testpb.TestRepeatedFields)
+		// arbitrary logic
+		signer := testMsg.NullableDontOmitempty[1].Value
+		return [][]byte{[]byte(signer)}, nil
+	},
 }
 
 type noOpAddressCodec struct{}
@@ -71,7 +69,7 @@ func NewSigningFixture(
 	t.Helper()
 	// set up transaction and signing infra
 	addressCodec, valAddressCodec := noOpAddressCodec{}, noOpAddressCodec{}
-	customGetSigners := []signing.CustomGetSigner{ProvideCustomGetSigner()}
+	customGetSigners := []signing.CustomGetSigner{TestRepeatedFieldsSigner}
 	interfaceRegistry, _, err := codec.ProvideInterfaceRegistry(
 		addressCodec,
 		valAddressCodec,

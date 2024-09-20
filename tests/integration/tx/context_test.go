@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	_ "cosmossdk.io/x/accounts"
+	"cosmossdk.io/x/tx/signing"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal"
 	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/pulsar/testpb"
@@ -13,6 +14,10 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/stretchr/testify/require"
 )
+
+func ProvideCustomGetSigner() signing.CustomGetSigner {
+	return internal.TestRepeatedFieldsSigner
+}
 
 func TestDefineCustomGetSigners(t *testing.T) {
 	var interfaceRegistry codectypes.InterfaceRegistry
@@ -26,7 +31,7 @@ func TestDefineCustomGetSigners(t *testing.T) {
 				configurator.ConsensusModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
-			depinject.Provide(internal.ProvideCustomGetSigner),
+			depinject.Provide(ProvideCustomGetSigner),
 		),
 		&interfaceRegistry,
 	)

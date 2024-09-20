@@ -34,13 +34,9 @@ import (
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2/cli"
 )
 
-func newApp[T transaction.Tx](
-	logger log.Logger, viper *viper.Viper,
-) serverv2.AppI[T] {
+func newApp[T transaction.Tx](logger log.Logger, viper *viper.Viper) serverv2.AppI[T] {
 	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
-
-	return serverv2.AppI[T](
-		simapp.NewSimApp[T](logger, viper))
+	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper))
 }
 
 func initRootCmd[T transaction.Tx](
@@ -78,7 +74,11 @@ func initRootCmd[T transaction.Tx](
 		newApp,
 		logger,
 		initServerConfig(),
-		cometbft.New(&genericTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
+		cometbft.New(
+			&genericTxDecoder[T]{txConfig},
+			initCometOptions[T](),
+			initCometConfig(),
+		),
 		grpc.New[T](),
 		store.New[T](newApp),
 	); err != nil {

@@ -119,7 +119,6 @@ func (s *CLITestSuite) TestTxInitCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 

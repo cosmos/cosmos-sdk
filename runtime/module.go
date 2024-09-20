@@ -39,7 +39,7 @@ type appModule struct {
 func (m appModule) IsOnePerModuleType() {}
 func (m appModule) IsAppModule()        {}
 
-func (m appModule) RegisterServices(configurator module.Configurator) { // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+func (m appModule) RegisterServices(configurator module.Configurator) { //nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 	err := m.app.registerRuntimeServices(configurator)
 	if err != nil {
 		panic(err)

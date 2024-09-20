@@ -14,7 +14,7 @@ import (
 	"cosmossdk.io/schema"
 )
 
-// Count returns the number of rows in the table.
+// count returns the number of rows in the table.
 func (tm *objectIndexer) count(ctx context.Context, conn dbConn) (int, error) {
 	sqlStr := fmt.Sprintf("SELECT COUNT(*) FROM %q;", tm.tableName())
 	if tm.options.logger != nil {
@@ -70,11 +70,11 @@ func (tm *objectIndexer) existsSqlAndParams(w io.Writer, key interface{}) ([]int
 	return keyParams, err
 }
 
-func (tm *objectIndexer) get(ctx context.Context, conn dbConn, key interface{}) (schema.ObjectUpdate, bool, error) {
+func (tm *objectIndexer) get(ctx context.Context, conn dbConn, key interface{}) (schema.StateObjectUpdate, bool, error) {
 	buf := new(strings.Builder)
 	params, err := tm.getSqlAndParams(buf, key)
 	if err != nil {
-		return schema.ObjectUpdate{}, false, err
+		return schema.StateObjectUpdate{}, false, err
 	}
 
 	sqlStr := buf.String()
@@ -147,7 +147,7 @@ func (tm *objectIndexer) selectAllClause(w io.Writer) error {
 	return nil
 }
 
-func (tm *objectIndexer) readRow(row interface{ Scan(...interface{}) error }) (schema.ObjectUpdate, bool, error) {
+func (tm *objectIndexer) readRow(row interface{ Scan(...interface{}) error }) (schema.StateObjectUpdate, bool, error) {
 	var res []interface{}
 	for _, f := range tm.typ.KeyFields {
 		res = append(res, tm.colBindValue(f))
@@ -164,16 +164,16 @@ func (tm *objectIndexer) readRow(row interface{ Scan(...interface{}) error }) (s
 	err := row.Scan(res...)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return schema.ObjectUpdate{}, false, err
+			return schema.StateObjectUpdate{}, false, err
 		}
-		return schema.ObjectUpdate{}, false, err
+		return schema.StateObjectUpdate{}, false, err
 	}
 
 	var keys []interface{}
 	for _, field := range tm.typ.KeyFields {
 		x, err := tm.readCol(field, res[0])
 		if err != nil {
-			return schema.ObjectUpdate{}, false, err
+			return schema.StateObjectUpdate{}, false, err
 		}
 		keys = append(keys, x)
 		res = res[1:]
@@ -188,7 +188,7 @@ func (tm *objectIndexer) readRow(row interface{ Scan(...interface{}) error }) (s
 	for _, field := range tm.typ.ValueFields {
 		x, err := tm.readCol(field, res[0])
 		if err != nil {
-			return schema.ObjectUpdate{}, false, err
+			return schema.StateObjectUpdate{}, false, err
 		}
 		values = append(values, x)
 		res = res[1:]
@@ -199,7 +199,7 @@ func (tm *objectIndexer) readRow(row interface{ Scan(...interface{}) error }) (s
 		value = values[0]
 	}
 
-	update := schema.ObjectUpdate{
+	update := schema.StateObjectUpdate{
 		TypeName: tm.typ.Name,
 		Key:      key,
 		Value:    value,
@@ -242,7 +242,7 @@ func (tm *objectIndexer) readCol(field schema.Field, value interface{}) (interfa
 	str := nullStr.String
 
 	switch field.Kind {
-	case schema.StringKind, schema.EnumKind, schema.IntegerStringKind, schema.DecimalStringKind:
+	case schema.StringKind, schema.EnumKind, schema.IntegerKind, schema.DecimalKind:
 		return str, nil
 	case schema.Uint8Kind:
 		value, err := strconv.ParseUint(str, 10, 8)

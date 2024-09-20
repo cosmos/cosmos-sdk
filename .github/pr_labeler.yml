@@ -10,8 +10,10 @@
 "C:Keys":
   - client/keys/**/*
 "C:Simulations":
+  - types/simulation/**/*
   - x/simulation/**/*
   - x/*/simulation/**/*
+  - simsx/**/*
 "C:Store":
   - store/**/*
 "C:collections":
@@ -28,6 +30,8 @@
   - indexer/postgres/**/*
 "C:x/accounts":
   - x/accounts/**/*
+"C:x/accounts/base":
+  - x/accounts/defaults/base/**/*
 "C:x/accounts/multisig":
   - x/accounts/defaults/multisig/**/*
 "C:x/accounts/lockup":
@@ -76,6 +80,8 @@
   - x/upgrade/**/*
 "C:x/epochs":
   - x/epochs/**/*
+"C:x/validate":
+  - x/validate/**/*
 "C:server/v2":
   - server/v2/**/*
 "C:server/v2 stf":

@@ -79,11 +79,11 @@ func Example_objectIndexer_createTableSql_vote_no_retain_delete() {
 	// GRANT SELECT ON TABLE "test_vote" TO PUBLIC;
 }
 
-func exampleCreateTable(objectType schema.ObjectType) {
+func exampleCreateTable(objectType schema.StateObjectType) {
 	exampleCreateTableOpt(objectType, false)
 }
 
-func exampleCreateTableOpt(objectType schema.ObjectType, noRetainDelete bool) {
+func exampleCreateTableOpt(objectType schema.StateObjectType, noRetainDelete bool) {
 	tm := newObjectIndexer("test", objectType, options{
 		logger:                 logutil.NoopLogger{},
 		disableRetainDeletions: noRetainDelete,

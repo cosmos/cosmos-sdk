@@ -19,7 +19,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
@@ -28,6 +27,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -105,7 +105,7 @@ func TestABCI_First_block_Height(t *testing.T) {
 
 func TestABCI_InitChain(t *testing.T) {
 	name := t.Name()
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	logger := log.NewTestLogger(t)
 	app := baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetChainID("test-chain-id"))
 
@@ -205,7 +205,7 @@ func TestABCI_InitChain(t *testing.T) {
 
 func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	_, err := app.InitChain(
@@ -222,7 +222,7 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 
 func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 	name := t.Name()
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	_, err := app.InitChain(
@@ -244,7 +244,7 @@ func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 
 func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 	name := t.Name()
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
@@ -311,7 +311,7 @@ func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 
 func TestABCI_ExtendVote(t *testing.T) {
 	name := t.Name()
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error) {
@@ -329,7 +329,7 @@ func TestABCI_ExtendVote(t *testing.T) {
 		return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT}, nil
 	})
 
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(&paramStore{db: coretesting.NewMemDB()})
 	_, err := app.InitChain(
 		&abci.InitChainRequest{
 			InitialHeight: 1,
@@ -394,7 +394,7 @@ func TestABCI_ExtendVote(t *testing.T) {
 // without having called ExtendVote before.
 func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 	name := t.Name()
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
@@ -407,7 +407,7 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 		return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT}, nil
 	})
 
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(&paramStore{db: coretesting.NewMemDB()})
 	_, err := app.InitChain(
 		&abci.InitChainRequest{
 			InitialHeight: 1,
@@ -527,7 +527,7 @@ func TestABCI_P2PQuery(t *testing.T) {
 }
 
 func TestBaseApp_PrepareCheckState(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	logger := log.NewTestLogger(t)
 
@@ -538,7 +538,7 @@ func TestBaseApp_PrepareCheckState(t *testing.T) {
 	}
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(&paramStore{db: coretesting.NewMemDB()})
 	_, err := app.InitChain(&abci.InitChainRequest{
 		ConsensusParams: cp,
 	})
@@ -556,7 +556,7 @@ func TestBaseApp_PrepareCheckState(t *testing.T) {
 }
 
 func TestBaseApp_Precommit(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	logger := log.NewTestLogger(t)
 
@@ -567,7 +567,7 @@ func TestBaseApp_Precommit(t *testing.T) {
 	}
 
 	app := baseapp.NewBaseApp(name, logger, db, nil)
-	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.SetParamStore(&paramStore{db: coretesting.NewMemDB()})
 	_, err := app.InitChain(&abci.InitChainRequest{
 		ConsensusParams: cp,
 	})
@@ -1499,10 +1499,10 @@ func TestABCI_Query(t *testing.T) {
 
 func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 	logger := log.NewTestLogger(t)
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 
-	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
+	snapshotStore, err := snapshots.NewStore(coretesting.NewMemDB(), testutil.GetTempDir(t))
 	require.NoError(t, err)
 
 	testCases := map[string]struct {
@@ -1589,9 +1589,8 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 
-		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+		tc.bapp.SetParamStore(&paramStore{db: coretesting.NewMemDB()})
 		_, err := tc.bapp.InitChain(&abci.InitChainRequest{
 			ConsensusParams: &cmtproto.ConsensusParams{
 				Evidence: &cmtproto.EvidenceParams{
@@ -1612,7 +1611,7 @@ func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 	t.Parallel()
 
 	logger := log.NewTestLogger(t)
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 
@@ -1635,7 +1634,7 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 	t.Parallel()
 
 	logger := log.NewTestLogger(t)
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 
@@ -2081,7 +2080,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 				return nil, err
 			}
 
-			cp := ctx.ConsensusParams() // nolint:staticcheck // ignore linting error
+			cp := ctx.ConsensusParams() //nolint:staticcheck // ignore linting error
 			extsEnabled := cp.Feature.VoteExtensionsEnableHeight != nil && req.Height >= cp.Feature.VoteExtensionsEnableHeight.Value && cp.Feature.VoteExtensionsEnableHeight.Value != 0
 			if !extsEnabled {
 				// check abci params
@@ -2307,7 +2306,7 @@ func TestABCI_HaltChain(t *testing.T) {
 }
 
 func TestBaseApp_PreBlocker(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	name := t.Name()
 	logger := log.NewTestLogger(t)
 

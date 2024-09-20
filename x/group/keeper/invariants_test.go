@@ -3,9 +3,9 @@ package keeper_test
 import (
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
@@ -39,7 +39,7 @@ func (s *invariantTestSuite) SetupSuite() {
 	group.RegisterInterfaces(interfaceRegistry)
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	key := storetypes.NewKVStoreKey(group.ModuleName)
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	_ = cms.LoadLatestVersion()

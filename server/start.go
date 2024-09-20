@@ -374,9 +374,7 @@ func startCmtNode(
 		return nil, cleanupFn, err
 	}
 
-	pv, err := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile(), func() (cmtcrypto.PrivKey, error) {
-		return cmted25519.GenPrivKey(), nil
-	}) // TODO:  make this modular
+	pv, err := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile(), app.ValidatorKeyProvider())
 	if err != nil {
 		return nil, cleanupFn, err
 	}

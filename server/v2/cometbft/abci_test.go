@@ -678,15 +678,17 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		ValidateTxGasLimit: gasLimit,
 		QueryGasLimit:      gasLimit,
 		SimulationGasLimit: gasLimit,
-		InitGenesis: func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) error {
-			return nil
+		InitGenesis: func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {
+			_, st, err := mockStore.StateLatest()
+			require.NoError(t, err)
+			return branch.DefaultNewWriterMap(st), nil
 		},
 	}
 
 	am, err := b.Build()
 	require.NoError(t, err)
 
-	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", "authority", am, mempool, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
+	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", am, mempool, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
 }
 
 // Check target version same with store's latest version

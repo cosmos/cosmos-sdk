@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"iter"
 	"os"
 	"path/filepath"
 	"testing"
@@ -82,7 +81,7 @@ func Run[T SimulationApp](
 		baseAppOptions ...func(*baseapp.BaseApp),
 	) T,
 	setupStateFactory func(app T) SimStateFactory,
-	postRunActions ...func(t testing.TB, app TestInstance[T]),
+	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
 ) {
 	t.Helper()
 	RunWithSeeds(t, appFactory, setupStateFactory, defaultSeeds, nil, postRunActions...)
@@ -110,7 +109,7 @@ func RunWithSeeds[T SimulationApp](
 	setupStateFactory func(app T) SimStateFactory,
 	seeds []int64,
 	fuzzSeed []byte,
-	postRunActions ...func(t testing.TB, app TestInstance[T]),
+	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
 ) {
 	t.Helper()
 	cfg := cli.NewConfigFromFlags()
@@ -137,7 +136,7 @@ func RunWithSeed[T SimulationApp](
 	setupStateFactory func(app T) SimStateFactory,
 	seed int64,
 	fuzzSeed []byte,
-	postRunActions ...func(t testing.TB, app TestInstance[T]),
+	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
 ) {
 	tb.Helper()
 	// setup environment
@@ -154,7 +153,7 @@ func RunWithSeed[T SimulationApp](
 	app := testInstance.App
 	stateFactory := setupStateFactory(app)
 	ops, reporter := prepareWeightedOps(app.SimulationManager(), stateFactory, tCfg, testInstance.App.TxConfig(), runLogger)
-	simParams, err := simulation.SimulateFromSeedX(tb, runLogger, WriteToDebugLog(runLogger), app.GetBaseApp(), stateFactory.AppStateFn, simtypes.RandomAccounts, ops, stateFactory.BlockedAddr, tCfg, stateFactory.Codec, testInstance.ExecLogWriter)
+	simParams, accs, err := simulation.SimulateFromSeedX(tb, runLogger, WriteToDebugLog(runLogger), app.GetBaseApp(), stateFactory.AppStateFn, simtypes.RandomAccounts, ops, stateFactory.BlockedAddr, tCfg, stateFactory.Codec, testInstance.ExecLogWriter)
 	require.NoError(tb, err)
 	err = simtestutil.CheckExportSimulation(app, tCfg, simParams)
 	require.NoError(tb, err)
@@ -164,7 +163,7 @@ func RunWithSeed[T SimulationApp](
 	// not using tb.Log to always print the summary
 	fmt.Printf("+++ DONE (seed: %d): \n%s\n", seed, reporter.Summary().String())
 	for _, step := range postRunActions {
-		step(tb, testInstance)
+		step(tb, testInstance, accs)
 	}
 	require.NoError(tb, app.Close())
 }
@@ -174,7 +173,7 @@ type (
 		WeightedOperationsX(weight WeightSource, reg Registry)
 	}
 	HasWeightedOperationsXWithProposals interface {
-		WeightedOperationsX(weights WeightSource, reg Registry, proposals iter.Seq2[uint32, SimMsgFactoryX],
+		WeightedOperationsX(weights WeightSource, reg Registry, proposals WeightedProposalMsgIter,
 			legacyProposals []simtypes.WeightedProposalContent) //nolint: staticcheck // used for legacy proposal types
 	}
 	HasProposalMsgsX interface {
@@ -254,25 +253,21 @@ func prepareWeightedOps(
 	reporter := NewBasicSimulationReporter()
 
 	pReg := make(UniqueTypeRegistry)
-	wProps := make([]simtypes.WeightedProposalMsg, 0, len(sm.Modules))
 	wContent := make([]simtypes.WeightedProposalContent, 0) //nolint:staticcheck // required for legacy type
-
+	legacyPReg := NewWeightedFactoryMethods()
 	// add gov proposals types
 	for _, m := range sm.Modules {
 		switch xm := m.(type) {
 		case HasProposalMsgsX:
 			xm.ProposalMsgsX(weights, pReg)
 		case HasLegacyProposalMsgs:
-			wProps = append(wProps, xm.ProposalMsgs(simState)...)
+			for _, p := range xm.ProposalMsgs(simState) {
+				weight := weights.Get(p.AppParamsKey(), uint32(p.DefaultWeight()))
+				legacyPReg.Add(weight, legacyToMsgFactoryAdapter(p.MsgSimulatorFn()))
+			}
 		case HasLegacyProposalContents:
 			wContent = append(wContent, xm.ProposalContents(simState)...)
 		}
-	}
-	if len(wProps) != 0 {
-		panic("legacy proposals are not empty")
-	}
-	if len(wContent) != 0 {
-		panic("legacy proposal contents are not empty")
 	}
 
 	oReg := NewSimsMsgRegistryAdapter(reporter, stateFact.AccountSource, stateFact.BalanceSource, txConfig, logger)
@@ -283,7 +278,7 @@ func prepareWeightedOps(
 		case HasWeightedOperationsX:
 			xm.WeightedOperationsX(weights, oReg)
 		case HasWeightedOperationsXWithProposals:
-			xm.WeightedOperationsX(weights, oReg, pReg.Iterator(), nil)
+			xm.WeightedOperationsX(weights, oReg, AppendIterators(legacyPReg.Iterator(), pReg.Iterator()), wContent)
 		case HasLegacyWeightedOperations:
 			wOps = append(wOps, xm.WeightedOperations(simState)...)
 		}

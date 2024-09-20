@@ -56,6 +56,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		configurator.StakingModule(),
 		configurator.ConsensusModule(),
 		configurator.TxModule(),
+		configurator.ValidateModule(),
 	))
 	s.NoError(err)
 	s.cfg.NumValidators = 1

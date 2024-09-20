@@ -4,8 +4,8 @@ go 1.23
 
 require (
 	cosmossdk.io/api v0.7.5
-	cosmossdk.io/core v1.0.0-alpha.2
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
+	cosmossdk.io/core v1.0.0-alpha.3
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/store v1.1.1
@@ -23,6 +23,7 @@ require (
 )
 
 require (
+	cosmossdk.io/schema v0.3.0 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
@@ -52,6 +53,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.20.3 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/prometheus/client_golang v1.20.4 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.59.1 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect

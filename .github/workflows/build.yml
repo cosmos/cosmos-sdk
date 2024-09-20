@@ -51,8 +51,7 @@ jobs:
         ###################
       - name: Build Cosmovisor
         if: env.GIT_DIFF
-        #        run: GOARCH=${{ matrix.go-arch }} make cosmovisor
-        run: echo "restore me"
+        run: GOARCH=${{ matrix.go-arch }} make cosmovisor
       - name: Build Confix
         if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} make confix

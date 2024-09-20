@@ -4,6 +4,7 @@ run:
   sort-results: true
   allow-parallel-runners: true
   exclude-dir: testutil/testdata
+  sort-results: true
 
 linters:
   disable-all: true

@@ -283,6 +283,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 					MaxRate:       math.LegacyZeroDec(),
 					MaxChangeRate: math.LegacyZeroDec(),
 				},
+				MinSelfDelegation: math.NewIntFromUint64(10),
 			},
 		},
 		"staking/msg_cancel_unbonding_delegation_response": {

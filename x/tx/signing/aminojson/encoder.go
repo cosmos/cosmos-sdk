@@ -27,8 +27,6 @@ func cosmosIntEncoder(_ *Encoder, v protoreflect.Value, w io.Writer) error {
 		if val == "" {
 			return jsonMarshal(w, "0")
 		}
-		// TODO
-		// I think this needs a similar path as cosmosDecEncoder
 		return jsonMarshal(w, val)
 	case []byte:
 		if len(val) == 0 {

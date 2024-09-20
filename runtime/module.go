@@ -127,7 +127,7 @@ func ProvideApp(interfaceRegistry codectypes.InterfaceRegistry) (
 type AppInputs struct {
 	depinject.In
 
-	AppConfig          *appv1alpha1.Config
+	AppConfig          *appv1alpha1.Config `optional:"true"`
 	Config             *runtimev1alpha1.Module
 	AppBuilder         *AppBuilder
 	Modules            map[string]appmodule.AppModule

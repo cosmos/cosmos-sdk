@@ -321,11 +321,11 @@ func encodeCollKey[K, V any, C Collection[K, V]](coll C, key K) ([]byte, error) 
 func getCollIter[K, V any, C Collection[K, V]](ctx context.Context, coll C, prefix, start []byte, reverse bool) (collections.Iterator[K, V], error) {
 	// TODO: maybe can be simplified
 	if reverse {
-		var end []byte
-		if prefix != nil {
-			start = storetypes.PrefixEndBytes(append(prefix, start...))
-			end = prefix
-		}
+		// if we are in reverse mode, we need to increase the start key
+		// to include the start key in the iteration.
+		start = storetypes.PrefixEndBytes(append(prefix, start...))
+		end := prefix
+
 		return coll.IterateRaw(ctx, end, start, collections.OrderDescending)
 	}
 	var end []byte

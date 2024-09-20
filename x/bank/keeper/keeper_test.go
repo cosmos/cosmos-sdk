@@ -1454,10 +1454,9 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	event2.Attributes = append(
 		event2.Attributes,
 		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[2].String()},
+		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
+		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()},
 	)
-	event2.Attributes = append(
-		event2.Attributes,
-		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()})
 	event3 := sdk.Event{
 		Type:       banktypes.EventTypeTransfer,
 		Attributes: []abci.EventAttribute{},
@@ -1465,9 +1464,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	event3.Attributes = append(
 		event3.Attributes,
 		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[3].String()},
-	)
-	event3.Attributes = append(
-		event3.Attributes,
+		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
 		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins2.String()},
 	)
 	// events are shifted due to the funding account events

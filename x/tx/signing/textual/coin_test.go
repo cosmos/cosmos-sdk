@@ -3,6 +3,7 @@ package textual_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -55,7 +56,7 @@ func TestMetadataQuerier(t *testing.T) {
 	require.Error(t, err)
 
 	// Errors if metadata querier returns an error
-	expErr := fmt.Errorf("mock error")
+	expErr := errors.New("mock error")
 	txt, err := textual.NewSignModeHandler(textual.SignModeOptions{
 		CoinMetadataQuerier: func(_ context.Context, _ string) (*bankv1beta1.Metadata, error) {
 			return nil, expErr

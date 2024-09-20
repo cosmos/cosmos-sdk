@@ -2,7 +2,7 @@
 name = "state_objects"
 edition = "2021"
 description = "Interchain SDK State Objects"
-version.workspace = true
+version = "0.0.2"
 repository.workspace = true
 license.workspace = true
 

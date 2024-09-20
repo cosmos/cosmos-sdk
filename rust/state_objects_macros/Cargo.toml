@@ -2,7 +2,7 @@
 name = "state_objects_macros"
 edition = "2021"
 description = "Interchain SDK State Objects Macros"
-version.workspace = true
+version = "0.0.2"
 repository.workspace = true
 license.workspace = true
 

@@ -12,7 +12,6 @@ members = [
 ]
 
 [workspace.package]
-version = "0.0.2"
 repository = "https://github.com/cosmos/cosmos-sdk"
 license = "Apache-2.0"
 
@@ -26,7 +25,7 @@ name = "ixc"
 edition = "2021"
 description = "Interchain SDK"
 readme = "README.md"
-version.workspace = true
+version = "0.0.2"
 repository.workspace = true
 license.workspace = true
 

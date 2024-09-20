@@ -12,8 +12,11 @@ import (
 )
 
 const (
-	msgSendTypeURL = `/cosmos.bank.v1beta1.MsgSend`
-	msgVoteTypeURL = `/cosmos.gov.v1.MsgVote`
+	msgSendTypeURL       = `/cosmos.bank.v1beta1.MsgSend`
+	msgDelegateTypeURL   = `/cosmos.staking.v1beta1.MsgDelegate`
+	msgVoteTypeURL       = `/cosmos.gov.v1.MsgVote`
+	msgUndelegateTypeURL = `/cosmos.staking.v1beta1.MsgUndelegate`
+	msgRedelegateTypeURL = `/cosmos.staking.v1beta1.MsgBeginRedelegate`
 )
 
 func TestAuthzGrantTxCmd(t *testing.T) {
@@ -289,7 +292,7 @@ func TestAuthzExecTxCmd(t *testing.T) {
 	allowedAddrBal := cli.QueryBalance(allowedAddr, denom)
 	require.Equal(t, initialAmount, allowedAddrBal)
 
-	spendLimitAmount := 1000
+	var spendLimitAmount int64 = 1000
 	expirationTime := time.Now().Add(time.Second * 10).Unix()
 
 	execCmdArgs := []string{"tx", "authz", "exec"}
@@ -337,13 +340,13 @@ func TestAuthzExecTxCmd(t *testing.T) {
 		"--from", granterAddr)
 	RequireTxSuccess(t, rsp)
 	// reduce fees of above tx from granter balance
-	granterBal = granterBal - 1
+	granterBal--
 
 	testCases := []struct {
 		name      string
 		grantee   string
 		toAddr    string
-		amount    int
+		amount    int64
 		expectErr bool
 		expErrMsg string
 	}{
@@ -383,9 +386,9 @@ func TestAuthzExecTxCmd(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// msg vote
+			// msg send
 			bankTx := fmt.Sprintf(`{
-    "@type": "/cosmos.bank.v1beta1.MsgSend",
+    "@type": "%s",
     "from_address": "%s",
     "to_address": "%s",
     "amount": [
@@ -394,7 +397,7 @@ func TestAuthzExecTxCmd(t *testing.T) {
             "amount": "%d"
         }
     ]
-}`, granterAddr, tc.toAddr, denom, tc.amount)
+}`, msgSendTypeURL, granterAddr, tc.toAddr, denom, tc.amount)
 			execMsg := WriteToTempJSONFile(t, bankTx)
 			defer execMsg.Close()
 
@@ -408,12 +411,12 @@ func TestAuthzExecTxCmd(t *testing.T) {
 				RequireTxSuccess(t, rsp)
 
 				// check granter balance equals to granterBal - transferredAmount
-				expGranterBal := granterBal - int64(tc.amount)
+				expGranterBal := granterBal - tc.amount
 				require.Equal(t, expGranterBal, cli.QueryBalance(granterAddr, denom))
 				granterBal = expGranterBal
 
 				// check allowed addr balance equals to allowedAddrBal + transferredAmount
-				expAllowAddrBal := allowedAddrBal + int64(tc.amount)
+				expAllowAddrBal := allowedAddrBal + tc.amount
 				require.Equal(t, expAllowAddrBal, cli.QueryBalance(allowedAddr, denom))
 				allowedAddrBal = expAllowAddrBal
 			}
@@ -423,7 +426,7 @@ func TestAuthzExecTxCmd(t *testing.T) {
 	// test grant expiry
 	time.Sleep(time.Second * 10)
 	bankTx := fmt.Sprintf(`{
-		"@type": "/cosmos.bank.v1beta1.MsgSend",
+		"@type": "%s",
 		"from_address": "%s",
 		"to_address": "%s",
 		"amount": [
@@ -432,7 +435,7 @@ func TestAuthzExecTxCmd(t *testing.T) {
 				"amount": "%d"
 			}
 		]
-	}`, granterAddr, allowedAddr, denom, 10)
+	}`, msgSendTypeURL, granterAddr, allowedAddr, denom, 10)
 	execMsg := WriteToTempJSONFile(t, bankTx)
 	defer execMsg.Close()
 
@@ -452,9 +455,14 @@ func TestAuthzExecTxCmd(t *testing.T) {
 		"--fees=1stake",
 		"--from", granterAddr)
 	RequireTxSuccess(t, rsp)
+	granterBal--
 
 	rsp = cli.RunAndWait(execSendCmd...)
 	RequireTxSuccess(t, rsp)
+	// check granter balance equals to granterBal - transferredAmount
+	expGranterBal := granterBal - 10
+	require.Equal(t, expGranterBal, cli.QueryBalance(granterAddr, denom))
+	granterBal = expGranterBal
 
 	time.Sleep(time.Second * 5)
 
@@ -462,20 +470,197 @@ func TestAuthzExecTxCmd(t *testing.T) {
 	resp := cli.CustomQuery("q", "authz", "grants", granterAddr, granteeAddr)
 	grants := gjson.Get(resp, "grants").Array()
 	require.Len(t, grants, 0)
+
+	// test exec delegate authorization
+
+	// query validator operator address
+	rsp = cli.CustomQuery("q", "staking", "validators")
+	validators := gjson.Get(rsp, "validators.#.operator_address").Array()
+	require.GreaterOrEqual(t, len(validators), 2)
+	val1Addr := validators[0].String()
+	val2Addr := validators[1].String()
+
+	require.Greater(t, granterBal, spendLimitAmount)
+
+	rsp = cli.RunAndWait("tx", "authz", "grant", granteeAddr, "delegate",
+		"--spend-limit="+fmt.Sprintf("%d%s", spendLimitAmount, denom),
+		"--allowed-validators="+val1Addr,
+		"--fees=1stake",
+		"--from", granterAddr)
+	RequireTxSuccess(t, rsp)
+	// reduce fees of above tx from granter balance
+	granterBal--
+
+	delegateTestCases := []struct {
+		name      string
+		grantee   string
+		valAddr   string
+		amount    int64
+		expectErr bool
+		expErrMsg string
+	}{
+		{
+			"valid txn: (delegate half tokens)",
+			granteeAddr,
+			val1Addr,
+			spendLimitAmount / 2,
+			false,
+			"",
+		},
+		{
+			"amount greater than spend limit",
+			granteeAddr,
+			val1Addr,
+			spendLimitAmount + 5,
+			true,
+			"negative coin amount",
+		},
+		{
+			"delegate to not allowed address",
+			granteeAddr,
+			val2Addr,
+			10,
+			true,
+			"cannot delegate",
+		},
+		{
+			"valid txn: (delegate remaining half tokens)",
+			granteeAddr,
+			val1Addr,
+			spendLimitAmount / 2,
+			false,
+			"",
+		},
+		{
+			"no authorization found as grant prunes",
+			granteeAddr,
+			val1Addr,
+			spendLimitAmount / 2,
+			true,
+			"authorization not found",
+		},
+	}
+
+	for _, tc := range delegateTestCases {
+		t.Run(tc.name, func(t *testing.T) {
+			delegateTx := fmt.Sprintf(`{"@type":"%s","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%d"}}`,
+				msgDelegateTypeURL, granterAddr, tc.valAddr, denom, tc.amount)
+			execMsg := WriteToTempJSONFile(t, delegateTx)
+			defer execMsg.Close()
+
+			cmd := append(append(execCmdArgs, execMsg.Name()), "--from="+tc.grantee)
+			if tc.expectErr {
+				rsp := cli.Run(cmd...)
+				RequireTxFailure(t, rsp)
+				require.Contains(t, rsp, tc.expErrMsg)
+			} else {
+				rsp := cli.RunAndWait(cmd...)
+				RequireTxSuccess(t, rsp)
+
+				// check granter balance equals to granterBal - transferredAmount
+				expGranterBal := granterBal - tc.amount
+				require.Equal(t, expGranterBal, cli.QueryBalance(granterAddr, denom))
+				granterBal = expGranterBal
+			}
+		})
+	}
+
+	// test exec undelegate authorization
+
+	// query delegated tokens count
+	resp = cli.CustomQuery("q", "staking", "delegation", granterAddr, val1Addr)
+	delegatedAmount := gjson.Get(resp, "delegation_response.balance.amount").Int()
+
+	rsp = cli.RunAndWait("tx", "authz", "grant", granteeAddr, "unbond",
+		"--allowed-validators="+val1Addr,
+		"--fees=1stake",
+		"--from", granterAddr)
+	RequireTxSuccess(t, rsp)
+
+	undelegateTestCases := []struct {
+		name      string
+		grantee   string
+		valAddr   string
+		amount    int64
+		expectErr bool
+		expErrMsg string
+	}{
+		{
+			"valid transaction",
+			granteeAddr,
+			val1Addr,
+			10,
+			false,
+			"",
+		},
+		{
+			"undelegate to not allowed address",
+			granteeAddr,
+			val2Addr,
+			10,
+			true,
+			"cannot delegate/undelegate",
+		},
+	}
+
+	for _, tc := range undelegateTestCases {
+		t.Run(tc.name, func(t *testing.T) {
+			undelegateTx := fmt.Sprintf(`{"@type":"%s","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%d"}}`,
+				msgUndelegateTypeURL, granterAddr, tc.valAddr, denom, tc.amount)
+			execMsg := WriteToTempJSONFile(t, undelegateTx)
+			defer execMsg.Close()
+
+			cmd := append(append(execCmdArgs, execMsg.Name()), "--from="+tc.grantee)
+			if tc.expectErr {
+				rsp := cli.Run(cmd...)
+				RequireTxFailure(t, rsp)
+				require.Contains(t, rsp, tc.expErrMsg)
+			} else {
+				rsp := cli.RunAndWait(cmd...)
+				RequireTxSuccess(t, rsp)
+
+				// query delegation and check balance reduced
+				expectedAmount := delegatedAmount - tc.amount
+				resp = cli.CustomQuery("q", "staking", "delegation", granterAddr, val1Addr)
+				delegatedAmount = gjson.Get(resp, "delegation_response.balance.amount").Int()
+				require.Equal(t, expectedAmount, delegatedAmount)
+			}
+		})
+	}
+
+	// revoke existing grant
+	rsp = cli.RunAndWait("tx", "authz", "revoke", granteeAddr, msgUndelegateTypeURL, "--from", granterAddr)
+	RequireTxSuccess(t, rsp)
+
+	// test exec redelegate authorization
+	rsp = cli.RunAndWait("tx", "authz", "grant", granteeAddr, "redelegate",
+		fmt.Sprintf("--allowed-validators=%s,%s", val1Addr, val2Addr),
+		"--fees=1stake",
+		"--from", granterAddr)
+	RequireTxSuccess(t, rsp)
+
+	redelegateTx := fmt.Sprintf(`{"@type":"%s","delegator_address":"%s","validator_src_address":"%s","validator_dst_address":"%s","amount":{"denom":"%s","amount":"%d"}}`,
+		msgRedelegateTypeURL, granterAddr, val1Addr, val2Addr, denom, 10)
+	execMsg = WriteToTempJSONFile(t, redelegateTx)
+	defer execMsg.Close()
+
+	redelegateCmd := append(append(execCmdArgs, execMsg.Name()), "--from="+granteeAddr, "--gas=auto")
+	rsp = cli.RunAndWait(redelegateCmd...)
+	RequireTxSuccess(t, rsp)
 }
 
 // Write the given string to a new temporary json file.
 // Returns an file for the test to use.
-func WriteToTempJSONFile(t testing.TB, s string) *os.File {
-	t.Helper()
+func WriteToTempJSONFile(tb testing.TB, s string) *os.File {
+	tb.Helper()
 
-	tmpFile, err := os.CreateTemp(t.TempDir(), "test-*.json")
-	require.Nil(t, err)
+	tmpFile, err := os.CreateTemp(tb.TempDir(), "test-*.json")
+	require.Nil(tb, err)
 	defer tmpFile.Close()
 
 	// Write to the temporary file
 	_, err = tmpFile.WriteString(s)
-	require.Nil(t, err)
+	require.Nil(tb, err)
 
 	return tmpFile
 }

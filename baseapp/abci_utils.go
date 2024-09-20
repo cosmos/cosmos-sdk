@@ -3,18 +3,16 @@ package baseapp
 import (
 	"bytes"
 	"context"
+	"cosmossdk.io/core/comet"
 	"fmt"
-	"slices" 
-
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	protoio "github.com/cosmos/gogoproto/io"
-	"github.com/cosmos/gogoproto/proto" 
-
-	"cosmossdk.io/core/comet"
+	"github.com/cosmos/gogoproto/proto"
+	"slices"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"

@@ -151,7 +151,7 @@ func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 	expHistInfos := []stakingtypes.HistoricalInfo{hist1, hist2, hist3}
 
 	for i, hi := range expHistInfos {
-		require.NoError(keeper.SetHistoricalInfo(ctx, int64(9+i), &hi)) 
+		require.NoError(keeper.SetHistoricalInfo(ctx, int64(9+i), &hi))
 	}
 
 	infos, err := keeper.GetAllHistoricalInfo(ctx)

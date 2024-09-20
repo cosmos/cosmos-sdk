@@ -35,7 +35,7 @@ func TestMigrateStore(t *testing.T) {
 	)
 
 	for _, b := range balances {
-		bz, err := encCfg.Codec.Marshal(&b) 
+		bz, err := encCfg.Codec.Marshal(&b)
 		require.NoError(t, err)
 
 		prefixAccStore.Set([]byte(b.Denom), bz)

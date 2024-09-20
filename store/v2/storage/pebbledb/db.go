@@ -68,27 +68,27 @@ func New(dataDir string) (*Database, error) {
 		return nil, fmt.Errorf("failed to open PebbleDB: %w", err)
 	}
 
-	pruneHeight, err := getPruneHeight(db)
+	earliestVersion, err := getEarliestVersion(db)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get prune height: %w", err)
+		return nil, fmt.Errorf("failed to get the earliest version: %w", err)
 	}
 
 	return &Database{
 		storage:         db,
-		earliestVersion: pruneHeight + 1,
+		earliestVersion: earliestVersion,
 		sync:            true,
 	}, nil
 }
 
 func NewWithDB(storage *pebble.DB, sync bool) *Database {
-	pruneHeight, err := getPruneHeight(storage)
+	earliestVersion, err := getEarliestVersion(storage)
 	if err != nil {
-		panic(fmt.Errorf("failed to get prune height: %w", err))
+		panic(fmt.Errorf("failed to get the earliest version: %w", err))
 	}
 
 	return &Database{
 		storage:         storage,
-		earliestVersion: pruneHeight + 1,
+		earliestVersion: earliestVersion,
 		sync:            sync,
 	}
 }
@@ -156,12 +156,6 @@ func (db *Database) Has(storeKey []byte, version uint64, key []byte) (bool, erro
 }
 
 func (db *Database) Get(storeKey []byte, targetVersion uint64, key []byte) ([]byte, error) {
-	// To support the get operation of InitGenesis, we need to return nil
-	// instead of VersionPruned error
-	if targetVersion == 0 {
-		return nil, nil
-	}
-
 	if targetVersion < db.earliestVersion {
 		return nil, storeerrors.ErrVersionPruned{EarliestVersion: db.earliestVersion, RequestedVersion: targetVersion}
 	}
@@ -368,7 +362,10 @@ func prependStoreKey(storeKey, key []byte) []byte {
 	return []byte(fmt.Sprintf("%s%s", storePrefix(storeKey), key))
 }
 
-func getPruneHeight(storage *pebble.DB) (uint64, error) {
+// getEarliestVersion returns the earliest version set in the database.
+// It is calculated by prune height + 1. If the prune height is not set, it
+// returns 0.
+func getEarliestVersion(storage *pebble.DB) (uint64, error) {
 	bz, closer, err := storage.Get([]byte(pruneHeightKey))
 	if err != nil {
 		if errors.Is(err, pebble.ErrNotFound) {
@@ -383,7 +380,7 @@ func getPruneHeight(storage *pebble.DB) (uint64, error) {
 		return 0, closer.Close()
 	}
 
-	return binary.LittleEndian.Uint64(bz), closer.Close()
+	return binary.LittleEndian.Uint64(bz) + 1, closer.Close()
 }
 
 func valTombstoned(value []byte) bool {

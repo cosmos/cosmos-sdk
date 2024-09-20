@@ -1032,11 +1032,13 @@ func Test_DocumentLegacyAsymmetry(t *testing.T) {
 
 	zeroDecBz, err := zeroDec.Marshal()
 	require.NoError(t, err)
-	zeroDecJSON := zeroDec.String()
+	zeroDecJSON, err := zeroDec.MarshalJSON()
+	require.NoError(t, err)
 
 	emptyDecBz, err := emptyDec.Marshal()
 	require.NoError(t, err)
-	emptyDecJSON := emptyDec.String()
+	emptyDecJSON, err := emptyDec.MarshalJSON()
+	require.NoError(t, err)
 
 	// makes sense, zero and empty are semantically different and render differently
 	require.NotEqual(t, zeroDecJSON, emptyDecJSON)
@@ -1047,14 +1049,19 @@ func Test_DocumentLegacyAsymmetry(t *testing.T) {
 	zeroDecRoundTrip := math.LegacyDec{}
 	err = zeroDecRoundTrip.Unmarshal(zeroDecBz)
 	require.NoError(t, err)
-	require.Equal(t, zeroDec.String(), zeroDecRoundTrip.String())
+	zeroDecRoundTripJSON, err := zeroDecRoundTrip.MarshalJSON()
+	require.NoError(t, err)
+	require.Equal(t, zeroDecJSON, zeroDecRoundTripJSON)
 	require.Equal(t, zeroDec, zeroDecRoundTrip)
 
 	// empty values are not
 	emptyDecRoundTrip := math.LegacyDec{}
 	err = emptyDecRoundTrip.Unmarshal(emptyDecBz)
 	require.NoError(t, err)
+	emptyDecRoundTripJSON, err := emptyDecRoundTrip.MarshalJSON()
+	require.NoError(t, err)
+
 	// !!! this is the key point, they are not equal, it looks like a bug
-	require.NotEqual(t, emptyDec.String(), emptyDecRoundTrip.String())
+	require.NotEqual(t, emptyDecJSON, emptyDecRoundTripJSON)
 	require.NotEqual(t, emptyDec, emptyDecRoundTrip)
 }

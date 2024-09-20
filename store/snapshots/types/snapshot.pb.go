@@ -4,6 +4,7 @@
 package types
 
 import (
+	"errors"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -1076,7 +1077,7 @@ func (m *Snapshot) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Snapshot: wiretype end group for non-group")
+			return errors.New("proto: Snapshot: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: Snapshot: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -1250,7 +1251,7 @@ func (m *Metadata) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Metadata: wiretype end group for non-group")
+			return errors.New("proto: Metadata: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: Metadata: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -1332,7 +1333,7 @@ func (m *SnapshotItem) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SnapshotItem: wiretype end group for non-group")
+			return errors.New("proto: SnapshotItem: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: SnapshotItem: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -1522,7 +1523,7 @@ func (m *SnapshotStoreItem) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SnapshotStoreItem: wiretype end group for non-group")
+			return errors.New("proto: SnapshotStoreItem: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: SnapshotStoreItem: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -1604,7 +1605,7 @@ func (m *SnapshotIAVLItem) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SnapshotIAVLItem: wiretype end group for non-group")
+			return errors.New("proto: SnapshotIAVLItem: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: SnapshotIAVLItem: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -1760,7 +1761,7 @@ func (m *SnapshotExtensionMeta) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SnapshotExtensionMeta: wiretype end group for non-group")
+			return errors.New("proto: SnapshotExtensionMeta: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: SnapshotExtensionMeta: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -1861,7 +1862,7 @@ func (m *SnapshotExtensionPayload) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SnapshotExtensionPayload: wiretype end group for non-group")
+			return errors.New("proto: SnapshotExtensionPayload: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: SnapshotExtensionPayload: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -2002,7 +2003,7 @@ func skipSnapshot(dAtA []byte) (n int, err error) {
 }
 
 var (
-	ErrInvalidLengthSnapshot        = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowSnapshot          = fmt.Errorf("proto: integer overflow")
-	ErrUnexpectedEndOfGroupSnapshot = fmt.Errorf("proto: unexpected end of group")
+	ErrInvalidLengthSnapshot        = errors.New("proto: negative length found during unmarshaling")
+	ErrIntOverflowSnapshot          = errors.New("proto: integer overflow")
+	ErrUnexpectedEndOfGroupSnapshot = errors.New("proto: unexpected end of group")
 )

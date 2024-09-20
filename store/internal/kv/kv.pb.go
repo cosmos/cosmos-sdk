@@ -4,6 +4,7 @@
 package kv
 
 import (
+	"errors"
 	fmt "fmt"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -304,7 +305,7 @@ func (m *Pairs) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Pairs: wiretype end group for non-group")
+			return errors.New("proto: Pairs: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: Pairs: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -388,7 +389,7 @@ func (m *Pair) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Pair: wiretype end group for non-group")
+			return errors.New("proto: Pair: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: Pair: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -563,7 +564,7 @@ func skipKv(dAtA []byte) (n int, err error) {
 }
 
 var (
-	ErrInvalidLengthKv        = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowKv          = fmt.Errorf("proto: integer overflow")
-	ErrUnexpectedEndOfGroupKv = fmt.Errorf("proto: unexpected end of group")
+	ErrInvalidLengthKv        = errors.New("proto: negative length found during unmarshaling")
+	ErrIntOverflowKv          = errors.New("proto: integer overflow")
+	ErrUnexpectedEndOfGroupKv = errors.New("proto: unexpected end of group")
 )

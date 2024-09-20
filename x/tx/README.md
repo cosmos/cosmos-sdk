@@ -19,18 +19,17 @@ custom signer definitions, allowing developers to tailor the signing process to 
 
 ## Contents
 
-- [x/tx](#xtx)
-  - [Abstract](#abstract)
-  - [Contents](#contents)
-  - [Signing](#signing)
-    - [Key Features](#key-features)
-  - [Decode](#decode)
-    - [Key Features](#key-features-1)
-    - [DecodedTx](#decodedtx)
-    - [Class Diagram](#class-diagram)
-    - [Decode Sequence Diagram](#decode-sequence-diagram)
-  - [Disambiguation Note](#disambiguation-note)
-  - [Disclaimer](#disclaimer)
+* [x/tx](#xtx)
+  * [Abstract](#abstract)
+  * [Contents](#contents)
+  * [Signing](#signing)
+    * [Key Features](#key-features)
+  * [Decode](#decode)
+    * [Key Features](#key-features-1)
+    * [DecodedTx](#decodedtx)
+    * [Class Diagram](#class-diagram)
+    * [Decode Sequence Diagram](#decode-sequence-diagram)
+  * [Disclaimer](#disclaimer)
 
 
 ## Signing
@@ -42,6 +41,7 @@ In summary, the signing package is responsible for preparing the data to be sign
 but doesn't handle the actual signing process (i.e., applying a cryptographic signature to these bytes).
 
 ### Key Features
+
 1. SignModeHandler Interface: this is the core interface that defines how different signing modes should be implemented.
 2. SignModeHandler Implementations:
    * [aminojson](https://github.com/cosmos/cosmos-sdk/blob/v0.50.7/docs/architecture/adr-020-protobuf-transaction-encoding.md#sign_mode_legacy_amino)
@@ -60,6 +60,7 @@ designed to work with transactions that follow the [ADR-027](https://github.com/
 specification for application-defined raw transaction serialization.
 
 ### Key Features
+
 1. Transaction Decoding: Parses raw transaction bytes into a structured `DecodedTx` object.
 2. ADR-027 Compatibility: Ensures compatibility with the ADR-027 specification.
 3. Unknown Field Handling: Rejects unknown fields in TxRaw and AuthInfo, while allowing non-critical unknown fields in TxBody.
@@ -72,6 +73,7 @@ specification for application-defined raw transaction serialization.
 components of a transaction after it has been parsed from its raw bytes. Here's a breakdown of its structure:
 
 The `DecodedTx` struct has the following fields:
+
 1. DynamicMessages: A slice of proto.Message interfaces, representing the transaction messages in a dynamic format. 
 2. Messages: A slice of gogoproto.Message interfaces, representing the transaction messages in the gogo protobuf format. 
 3. Tx: A pointer to a v1beta1.Tx struct, which represents the full transaction in the Cosmos SDK v1beta1 format. 
@@ -167,5 +169,5 @@ It's important to clarify that `x/tx` is distinct from `x/auth/tx`:
 * `x/auth/tx`: This is a separate package and is typically used in the context of building a complete tx is that is going to be broadcast in Cosmos SDK applications.
 
 When you see a "tx" module referenced in `app_config.go` or similar application configuration files, it refers to
-`x/auth/tx`, not `x/tx` (as it's not an Appmodule). This naming similarity can be confusing, so it's crucial to pay
+`x/auth/tx/config`, not `x/tx` (as it's not an Appmodule). This naming similarity can be confusing, so it's crucial to pay
 attention to the import paths and context when working with these packages.

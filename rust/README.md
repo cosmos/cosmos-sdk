@@ -89,7 +89,7 @@ Here's an example demonstrating all three methods:
 ```rust
 #[publish]
 impl MyAccountHandler {
-    pub fn set_caller_value(&mut self, ctx: &Context, x: u64) -> Result<()> {
+    pub fn set_caller_value(&self, ctx: &mut Context, x: u64) -> Result<()> {
         self.my_map.set(ctx, ctx.caller(), x)?;
         Ok(())
     }
@@ -97,7 +97,7 @@ impl MyAccountHandler {
 
 impl MyAccountHandler {
     #[publish]
-    pub fn set_owner(&mut self, ctx: &Context, new_owner: Address) -> Result<()> {
+    pub fn set_owner(&self, ctx: &mut Context, new_owner: Address) -> Result<()> {
         if ctx.caller() != self.owner(ctx)? {
             return Err("Unauthorized".into());
         }

@@ -938,9 +938,11 @@ For ante handler construction via `ante.NewAnteHandler`, the field `ante.Handler
 
 #### Account Migration Guide: x/auth to x/accounts
 
-Users can now migrate accounts from `x/auth` to `x/accounts` using the `auth.MsgMigrateAccount` message. Currently, this migration is only supported for `BaseAccount` types due to security considerations.
+Users can now migrate accounts from `x/auth` to `x/accounts` using the `auth.MsgMigrateAccount` message. Currently, this migration is only supported for `BaseAccount` due to security considerations.
 
 ##### Migration Process
+
+The migration process allows an auth BaseAccount to migrate to any kind of x/accounts supported acocunt type, here we will show how to migrate from a legacy x/auth `BaseAccount` to a `x/accounts` `BaseAccount`
 
 ###### Migrating to x/accounts/defaults/base
 

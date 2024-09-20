@@ -1,6 +1,8 @@
 package bank_test
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -33,6 +35,7 @@ import (
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type (
@@ -446,4 +449,127 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			}
 		})
 	}
+}
+
+var _ types.BankHooks = &MockBankHooksReceiver{}
+
+// BankHooks event hooks for bank (noalias)
+type MockBankHooksReceiver struct{}
+
+// Mock BlockBeforeSend bank hook that doesn't allow the sending of exactly 100 coins of any denom.
+func (h *MockBankHooksReceiver) BlockBeforeSend(ctx context.Context, from, to sdk.AccAddress, amount sdk.Coins) error {
+	for _, coin := range amount {
+		if coin.Amount.Equal(sdkmath.NewInt(100)) {
+			return fmt.Errorf("not allowed; expected %v, got: %v", 100, coin.Amount)
+		}
+	}
+	return nil
+}
+
+// variable for counting `TrackBeforeSend`
+var (
+	countTrackBeforeSend = 0
+	expNextCount         = 1
+)
+
+// Mock TrackBeforeSend bank hook that simply tracks the sending of exactly 50 coins of any denom.
+func (h *MockBankHooksReceiver) TrackBeforeSend(ctx context.Context, from, to sdk.AccAddress, amount sdk.Coins) {
+	for _, coin := range amount {
+		if coin.Amount.Equal(sdkmath.NewInt(50)) {
+			countTrackBeforeSend++
+		}
+	}
+}
+
+func TestHooks(t *testing.T) {
+	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
+
+	genAccs := []authtypes.GenesisAccount{acc1}
+	s := createTestSuite(t, genAccs)
+
+	ctx := s.App.BaseApp.NewContext(false)
+
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))))
+	require.NoError(t, testutil.FundModuleAccount(ctx, s.BankKeeper, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000)))))
+
+	// create a valid send amount which is 1 coin, and an invalidSendAmount which is 100 coins
+	validSendAmount := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1)))
+	triggerTrackSendAmount := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(50)))
+	invalidBlockSendAmount := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100)))
+
+	// setup our mock bank hooks receiver that prevents the send of 100 coins
+	bankHooksReceiver := MockBankHooksReceiver{}
+	baseBankKeeper, ok := s.BankKeeper.(bankkeeper.BaseKeeper)
+	require.True(t, ok)
+	bankkeeper.UnsafeSetHooks(
+		&baseBankKeeper, types.NewMultiBankHooks(&bankHooksReceiver),
+	)
+	s.BankKeeper = baseBankKeeper
+
+	// try sending a validSendAmount and it should work
+	err := s.BankKeeper.SendCoins(ctx, addr1, addr2, validSendAmount)
+	require.NoError(t, err)
+
+	// try sending an trigger track send amount and it should work
+	err = s.BankKeeper.SendCoins(ctx, addr1, addr2, triggerTrackSendAmount)
+	require.NoError(t, err)
+
+	require.Equal(t, countTrackBeforeSend, expNextCount)
+	expNextCount++
+
+	// try sending an invalidSendAmount and it should not work
+	err = s.BankKeeper.SendCoins(ctx, addr1, addr2, invalidBlockSendAmount)
+	require.Error(t, err)
+
+	// make sure that account to module doesn't bypass hook
+	err = s.BankKeeper.SendCoinsFromAccountToModule(ctx, addr1, stakingtypes.BondedPoolName, validSendAmount)
+	require.NoError(t, err)
+	err = s.BankKeeper.SendCoinsFromAccountToModule(ctx, addr1, stakingtypes.BondedPoolName, invalidBlockSendAmount)
+	require.Error(t, err)
+	err = s.BankKeeper.SendCoinsFromAccountToModule(ctx, addr1, stakingtypes.BondedPoolName, triggerTrackSendAmount)
+	require.NoError(t, err)
+	require.Equal(t, countTrackBeforeSend, expNextCount)
+	expNextCount++
+
+	// make sure that module to account doesn't bypass hook
+	err = s.BankKeeper.SendCoinsFromModuleToAccount(ctx, stakingtypes.BondedPoolName, addr1, validSendAmount)
+	require.NoError(t, err)
+	err = s.BankKeeper.SendCoinsFromModuleToAccount(ctx, stakingtypes.BondedPoolName, addr1, invalidBlockSendAmount)
+	require.Error(t, err)
+	err = s.BankKeeper.SendCoinsFromModuleToAccount(ctx, stakingtypes.BondedPoolName, addr1, triggerTrackSendAmount)
+	require.NoError(t, err)
+	require.Equal(t, countTrackBeforeSend, expNextCount)
+	expNextCount++
+
+	// make sure that module to module doesn't bypass hook
+	err = s.BankKeeper.SendCoinsFromModuleToModule(ctx, stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, validSendAmount)
+	require.NoError(t, err)
+	err = s.BankKeeper.SendCoinsFromModuleToModule(ctx, stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, invalidBlockSendAmount)
+	// there should be no error since module to module does not call block before send hooks
+	require.NoError(t, err)
+	err = s.BankKeeper.SendCoinsFromModuleToModule(ctx, stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, triggerTrackSendAmount)
+	require.NoError(t, err)
+	require.Equal(t, countTrackBeforeSend, expNextCount)
+	expNextCount++
+
+	// make sure that DelegateCoins doesn't bypass the hook
+	err = s.BankKeeper.DelegateCoins(ctx, addr1, s.AccountKeeper.GetModuleAddress(stakingtypes.BondedPoolName), validSendAmount)
+	require.NoError(t, err)
+	err = s.BankKeeper.DelegateCoins(ctx, addr1, s.AccountKeeper.GetModuleAddress(stakingtypes.BondedPoolName), invalidBlockSendAmount)
+	require.Error(t, err)
+	err = s.BankKeeper.DelegateCoins(ctx, addr1, s.AccountKeeper.GetModuleAddress(stakingtypes.BondedPoolName), triggerTrackSendAmount)
+	require.NoError(t, err)
+	require.Equal(t, countTrackBeforeSend, expNextCount)
+	expNextCount++
+
+	// make sure that UndelegateCoins doesn't bypass the hook
+	err = s.BankKeeper.UndelegateCoins(ctx, s.AccountKeeper.GetModuleAddress(stakingtypes.BondedPoolName), addr1, validSendAmount)
+	require.NoError(t, err)
+	err = s.BankKeeper.UndelegateCoins(ctx, s.AccountKeeper.GetModuleAddress(stakingtypes.BondedPoolName), addr1, invalidBlockSendAmount)
+	require.Error(t, err)
+
+	err = s.BankKeeper.UndelegateCoins(ctx, s.AccountKeeper.GetModuleAddress(stakingtypes.BondedPoolName), addr1, triggerTrackSendAmount)
+	require.NoError(t, err)
+	require.Equal(t, countTrackBeforeSend, expNextCount)
+	expNextCount++
 }

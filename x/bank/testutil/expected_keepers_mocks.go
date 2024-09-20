@@ -242,3 +242,52 @@ func (mr *MockAccountKeeperMockRecorder) ValidatePermissions(macc interface{}) *
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePermissions", reflect.TypeOf((*MockAccountKeeper)(nil).ValidatePermissions), macc)
 }
+
+// MockBankHooks is a mock of BankHooks interface.
+type MockBankHooks struct {
+	ctrl     *gomock.Controller
+	recorder *MockBankHooksMockRecorder
+}
+
+// MockBankHooksMockRecorder is the mock recorder for MockBankHooks.
+type MockBankHooksMockRecorder struct {
+	mock *MockBankHooks
+}
+
+// NewMockBankHooks creates a new mock instance.
+func NewMockBankHooks(ctrl *gomock.Controller) *MockBankHooks {
+	mock := &MockBankHooks{ctrl: ctrl}
+	mock.recorder = &MockBankHooksMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockBankHooks) EXPECT() *MockBankHooksMockRecorder {
+	return m.recorder
+}
+
+// BlockBeforeSend mocks base method.
+func (m *MockBankHooks) BlockBeforeSend(ctx context.Context, from, to types.AccAddress, amount types.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BlockBeforeSend", ctx, from, to, amount)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BlockBeforeSend indicates an expected call of BlockBeforeSend.
+func (mr *MockBankHooksMockRecorder) BlockBeforeSend(ctx, from, to, amount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BlockBeforeSend", reflect.TypeOf((*MockBankHooks)(nil).BlockBeforeSend), ctx, from, to, amount)
+}
+
+// TrackBeforeSend mocks base method.
+func (m *MockBankHooks) TrackBeforeSend(ctx context.Context, from, to types.AccAddress, amount types.Coins) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "TrackBeforeSend", ctx, from, to, amount)
+}
+
+// TrackBeforeSend indicates an expected call of TrackBeforeSend.
+func (mr *MockBankHooksMockRecorder) TrackBeforeSend(ctx, from, to, amount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TrackBeforeSend", reflect.TypeOf((*MockBankHooks)(nil).TrackBeforeSend), ctx, from, to, amount)
+}

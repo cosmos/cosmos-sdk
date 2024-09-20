@@ -131,6 +131,13 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
+	err := k.BlockBeforeSend(ctx, delegatorAddr, moduleAccAddr, amt)
+	if err != nil {
+		return err
+	}
+	// call the TrackBeforeSend hooks and the BlockBeforeSend hooks
+	k.TrackBeforeSend(ctx, delegatorAddr, moduleAccAddr, amt)
+
 	balances := sdk.NewCoins()
 
 	for _, coin := range amt {
@@ -157,7 +164,7 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 		types.NewCoinSpentEvent(delegatorAddr, amt),
 	)
 
-	err := k.addCoins(ctx, moduleAccAddr, amt)
+	err = k.addCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -180,7 +187,15 @@ func (k BaseKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegato
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	err := k.subUnlockedCoins(ctx, moduleAccAddr, amt)
+	// call the TrackBeforeSend hooks and the BlockBeforeSend hooks
+	err := k.BlockBeforeSend(ctx, moduleAccAddr, delegatorAddr, amt)
+	if err != nil {
+		return err
+	}
+
+	k.TrackBeforeSend(ctx, moduleAccAddr, delegatorAddr, amt)
+
+	err = k.subUnlockedCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -286,7 +301,7 @@ func (k BaseKeeper) SendCoinsFromModuleToModule(
 		panic(errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule))
 	}
 
-	return k.SendCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
+	return k.SendCoinsWithoutBlockHook(ctx, senderAddr, recipientAcc.GetAddress(), amt)
 }
 
 // SendCoinsFromAccountToModule transfers coins from an AccAddress to a ModuleAccount.

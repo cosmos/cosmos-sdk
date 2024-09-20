@@ -1,0 +1,41 @@
+name: PR Review Reminder
+
+on:
+  schedule:
+    - cron: '0 9 * * 1-5'  # Every weekday at 9:00 AM UTC 
+  pull_request:
+
+jobs:
+  send_slack_reminder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: List open pull requests
+        uses: actions/github-script@v5
+        id: pr-list
+        with:
+          script: |
+            const { data: pullRequests } = await github.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+            return pullRequests.map(pr => pr.html_url).join('\n');
+        
+      - name: Send Slack Reminder
+        if: steps.pr-list.outputs.result != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          fields: custom
+          author_name: 'GitHub Action'
+          text: |
+            The following pull requests are awaiting review:
+            ${{ steps.pr-list.outputs.result }}
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: pr-github
+          SLACK_USERNAME: Sim Tests
+          SLACK_ICON_EMOJI: ":think:"
+          SLACK_COLOR: good
+          SLACK_MESSAGE: Daily Pull Request Review Reminder
+          SLACK_FOOTER: ""

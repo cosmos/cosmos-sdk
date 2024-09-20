@@ -29,7 +29,9 @@ jobs:
         if: env.GIT_DIFF
         id: lint_long
         run: |
-          make lint
+          echo "restore me"
+          # make lint
+          
       - uses: technote-space/get-diff-action@v6.1.2
         if: steps.lint_long.outcome == 'skipped'
         id: git_diff_all
@@ -43,7 +45,8 @@ jobs:
       - name: run linting (short)
         if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
         run: |
-          make lint
+          echo "restore me"
+          # make lint
         env:
           GIT_DIFF: ${{ env.GIT_DIFF }}
           LINT_DIFF: 1

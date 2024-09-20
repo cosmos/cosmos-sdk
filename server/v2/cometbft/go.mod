@@ -20,9 +20,9 @@ require (
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
-	cosmossdk.io/server/v2 v2.0.0-20240918153713-01212de2d9dc // main
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240918153713-01212de2d9dc // main
-	cosmossdk.io/server/v2/stf v0.0.0-20240918153713-01212de2d9dc // main
+	cosmossdk.io/server/v2 v2.0.0-20240920095614-aa90bb43d8f8 // main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20240920095614-aa90bb43d8f8 // main
+	cosmossdk.io/server/v2/stf v0.0.0-20240920095614-aa90bb43d8f8 // main
 	cosmossdk.io/store/v2 v2.0.0-20240916221850-7856d226038c // main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f

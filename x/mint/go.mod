@@ -167,6 +167,7 @@ require (
 require (
 	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
 	github.com/cometbft/cometbft/api v1.0.0-rc.1 // indirect
+	github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 )
 

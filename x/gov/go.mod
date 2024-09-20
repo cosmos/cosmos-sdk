@@ -32,7 +32,10 @@ require (
 	google.golang.org/protobuf v1.34.2
 )
 
-require gotest.tools/v3 v3.5.1 // indirect
+require (
+	github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22 // indirect
+	gotest.tools/v3 v3.5.1 // indirect
+)
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect

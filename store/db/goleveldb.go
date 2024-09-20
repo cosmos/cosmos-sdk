@@ -17,6 +17,8 @@ import (
 	corestore "cosmossdk.io/core/store"
 )
 
+const DBFileSuffix string = ".db"
+
 var _ corestore.KVStoreWithBatch = (*GoLevelDB)(nil)
 
 // GoLevelDB implements corestore.KVStore using github.com/syndtr/goleveldb/leveldb.
@@ -24,6 +26,11 @@ var _ corestore.KVStoreWithBatch = (*GoLevelDB)(nil)
 // the IAVL v0/v1 backend.
 type GoLevelDB struct {
 	db *leveldb.DB
+}
+
+// DBOptions defines the interface of a database options.
+type DBOptions interface {
+	Get(string) interface{}
 }
 
 func NewGoLevelDB(name, dir string, opts DBOptions) (*GoLevelDB, error) {

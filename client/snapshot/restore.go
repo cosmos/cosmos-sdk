@@ -4,11 +4,11 @@ import (
 	"path/filepath"
 	"strconv"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	dbm "cosmossdk.io/store/db"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -50,7 +50,7 @@ func RestoreSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCre
 	return cmd
 }
 
-func openDB(rootDir string, backendType dbm.DBType) (corestore.KVStoreWithBatch, error) {
+func openDB(rootDir string, backendType dbm.BackendType) (corestore.KVStoreWithBatch, error) {
 	dataDir := filepath.Join(rootDir, "data")
-	return dbm.NewDB("application", backendType, dataDir, nil)
+	return dbm.NewDB("application", backendType, dataDir)
 }

@@ -11,11 +11,10 @@ import (
 	"testing"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-
-	dbm "cosmossdk.io/store/db"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -43,11 +42,11 @@ func preRunETestImpl(cmd *cobra.Command, args []string) error {
 
 func TestGetAppDBBackend(t *testing.T) {
 	v := viper.New()
-	require.Equal(t, server.GetAppDBBackend(v), dbm.DBTypeGoLevelDB)
+	require.Equal(t, server.GetAppDBBackend(v), dbm.GoLevelDBBackend)
 	v.Set("db_backend", "dbtype1") // value from CometBFT config
-	require.Equal(t, server.GetAppDBBackend(v), dbm.DBType("dbtype1"))
+	require.Equal(t, server.GetAppDBBackend(v), dbm.BackendType("dbtype1"))
 	v.Set("app-db-backend", "dbtype2") // value from app.toml
-	require.Equal(t, server.GetAppDBBackend(v), dbm.DBType("dbtype2"))
+	require.Equal(t, server.GetAppDBBackend(v), dbm.BackendType("dbtype2"))
 }
 
 func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T) {

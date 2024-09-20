@@ -24,6 +24,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open'
+              draft: false,
             });
             console.log(JSON.stringify(pullRequests, null, 2));
 

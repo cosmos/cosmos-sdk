@@ -41,14 +41,14 @@ func (a AppManager[T]) InitGenesis(
 	ctx context.Context,
 	blockRequest *server.BlockRequest[T],
 	initGenesisJSON []byte,
-	txCodec transaction.Codec[T],
+	txDecoder transaction.Codec[T],
 ) (*server.BlockResponse, corestore.WriterMap, error) {
 	var genTxs []T
 	genesisState, err := a.initGenesis(
 		ctx,
 		bytes.NewBuffer(initGenesisJSON),
 		func(jsonTx json.RawMessage) error {
-			genTx, err := txCodec.DecodeJSON(jsonTx)
+			genTx, err := txDecoder.DecodeJSON(jsonTx)
 			if err != nil {
 				return fmt.Errorf("failed to decode genesis transaction: %w", err)
 			}

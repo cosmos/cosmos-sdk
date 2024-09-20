@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/store/v2/root"
-	consensuskeeper "cosmossdk.io/x/consensus/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -38,8 +37,7 @@ type SimApp[T transaction.Tx] struct {
 
 	// required keepers during wiring
 	// others keepers are all in the app
-	UpgradeKeeper         *upgradekeeper.Keeper
-	ConsensusParamsKeeper consensuskeeper.Keeper
+	UpgradeKeeper *upgradekeeper.Keeper
 }
 
 func init() {
@@ -144,7 +142,6 @@ func NewSimApp[T transaction.Tx](
 		&app.txConfig,
 		&app.interfaceRegistry,
 		&app.UpgradeKeeper,
-		&app.ConsensusParamsKeeper,
 	); err != nil {
 		panic(err)
 	}
@@ -185,11 +182,6 @@ func (app *SimApp[T]) InterfaceRegistry() server.InterfaceRegistry {
 // TxConfig returns SimApp's TxConfig.
 func (app *SimApp[T]) TxConfig() client.TxConfig {
 	return app.txConfig
-}
-
-// GetConsensusAuthority gets the consensus authority.
-func (app *SimApp[T]) GetConsensusAuthority() string {
-	return app.ConsensusParamsKeeper.GetAuthority()
 }
 
 // GetStore gets the app store.

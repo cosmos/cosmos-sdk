@@ -254,6 +254,14 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 	return nil
 }
 
+// DefaultServiceBindings provides default services for the following service interfaces:
+// - store.KVStoreServiceFactory
+// - header.Service
+// - comet.Service
+//
+// They are all required.  For most use cases these default services bindings should be sufficient.
+// Power users (or tests) may wish to provide their own services bindings, in which case they must
+// supply implementations for each of the above interfaces.
 func DefaultServiceBindings() depinject.Config {
 	var (
 		kvServiceFactory store.KVStoreServiceFactory = func(actor []byte) store.KVStoreService {

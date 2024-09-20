@@ -34,7 +34,7 @@ func ImportKeyCommand() *cobra.Command {
 			}
 			buf := bufio.NewReader(clientCtx.Input)
 
-			bz, err := os.ReadFile(args[1])
+			armor, err := os.ReadFile(args[1])
 			if err != nil {
 				return err
 			}
@@ -44,17 +44,17 @@ func ImportKeyCommand() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.Keyring.ImportPrivKey(args[0], string(bz), passphrase)
+			return clientCtx.Keyring.ImportPrivKey(name, string(armor), passphrase)
 		},
 	}
 }
 
 func ImportKeyHexCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "import-hex <name> <hex>",
+		Use:   "import-hex <name> [hex]",
 		Short: "Import private keys into the local keybase",
 		Long:  fmt.Sprintf("Import hex encoded private key into the local keybase.\nSupported key-types can be obtained with:\n%s list-key-types", version.AppName),
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -65,7 +65,17 @@ func ImportKeyHexCommand() *cobra.Command {
 				return errors.New("the provided name is invalid or empty after trimming whitespace")
 			}
 			keyType, _ := cmd.Flags().GetString(flags.FlagKeyType)
-			return clientCtx.Keyring.ImportPrivKeyHex(args[0], args[1], keyType)
+			var hexKey string
+			if len(args) == 2 {
+				hexKey = args[1]
+			} else {
+				buf := bufio.NewReader(clientCtx.Input)
+				hexKey, err = input.GetPassword("Enter hex private key:", buf)
+				if err != nil {
+					return err
+				}
+			}
+			return clientCtx.Keyring.ImportPrivKeyHex(name, hexKey, keyType)
 		},
 	}
 	cmd.Flags().String(flags.FlagKeyType, string(hd.Secp256k1Type), "private key signing algorithm kind")

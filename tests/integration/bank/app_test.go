@@ -2,8 +2,9 @@ package bank_test
 
 import (
 	"context"
-	"cosmossdk.io/core/server"
 	"testing"
+
+	"cosmossdk.io/core/server"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/stretchr/testify/assert"
@@ -102,6 +103,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 		configurator.AuthModule(),
 		configurator.StakingModule(),
 		configurator.TxModule(),
+		configurator.ValidationModule(),
 		configurator.ConsensusModule(),
 		configurator.BankModule(),
 		configurator.GovModule(),

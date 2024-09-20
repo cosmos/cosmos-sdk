@@ -164,7 +164,7 @@ replace github.com/cosmos/cosmos-sdk => ../..
 // TODO remove post spinning out all modules
 replace (
 	// pseudo version lower than the latest tag
-	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240815194237-858ec2fcb897 // main
+	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240920150546-763e4d68e435 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214 // main
 	cosmossdk.io/x/bank => ../bank

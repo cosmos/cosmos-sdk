@@ -6,20 +6,22 @@ on:
   pull_request:
 
 jobs:
-  send_slack_reminder:
+  pr-review:
     runs-on: ubuntu-latest
     steps:
-      - name: List open pull requests
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: List open pull requests using GitHub Script
         uses: actions/github-script@v5
-        id: pr-list
         with:
           script: |
-            const { data: pullRequests } = await github.pulls.list({
+            const pullRequests = await github.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open'
             });
-            return pullRequests.map(pr => pr.html_url).join('\n');
+            console.log(pullRequests);
         
       - name: Send Slack Reminder
         if: steps.pr-list.outputs.result != ''

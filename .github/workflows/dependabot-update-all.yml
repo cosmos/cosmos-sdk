@@ -1,5 +1,5 @@
 name: Dependabot Update All Go Modules
-on: pull_request
+on: workflow_dispatch
 
 permissions:
   pull-requests: write

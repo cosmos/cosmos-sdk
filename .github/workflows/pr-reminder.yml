@@ -32,9 +32,8 @@ jobs:
               link: pr.html_url,
               assignees: pr.assignees.map(assignee => assignee.login)
             }));
-            
-            console.log("Pull Request Details:");
-            console.log(JSON.stringify(prDetails, null, 2));
+
+            return JSON.stringify(prDetails, null, 2)
 
       - name: Send Slack Reminder
         if: steps.pr-list.outputs.result != ''

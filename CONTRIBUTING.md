@@ -128,9 +128,7 @@ NOTE: when merging, GitHub will squash commits and rebase on top of the main.
 
 ### Pull Request Templates
 
-There are three PR templates. The [default template](./.github/PULL_REQUEST_TEMPLATE.md) is for types `fix`, `feat`, and `refactor`. We also have a [docs template](./.github/PULL_REQUEST_TEMPLATE/docs.md) for documentation changes. When previewing a PR before it has been opened, you can change the template by adding one of the following parameters to the url:
-
-* `template=docs.md`
+There are three PR templates. The [default template](./.github/PULL_REQUEST_TEMPLATE.md) is used for PR types such as `fix`, `feat`,`docs`, and `refactor`, among others. These are just a few examples. For more details, please refer to the default template.
 
 ### Pull Request Accountability
 

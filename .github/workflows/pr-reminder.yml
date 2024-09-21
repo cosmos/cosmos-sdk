@@ -34,9 +34,9 @@ jobs:
             }));
 
             const formattedPRs = pullRequests.map(pr => {
-              const assignees = pr.assignees.length > 0 ? `Assignees: ${pr.assignees.join(', ')}` : 'No assignees';
-              return `*Title*: ${pr.title}\n*Link*: <${pr.link}>\n${assignees}\n`;
-            }).join('\n');
+              const assignees = pr.assignees.length > 0 ? `Assignees: ${pr.assignees.map(assignee => assignee.login).join(', ')}` : 'No assignees';
+              return `*Title*: ${pr.title}\n*Link*: <${pr.html_url}>\n${assignees}`;
+            }).join('\n\n'); // Double newlines between PRs for readability in Slack
 
             return formattedPRs
 

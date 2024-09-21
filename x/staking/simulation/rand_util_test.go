@@ -33,7 +33,6 @@ func TestRandURIOfHostLength(t *testing.T) {
 				got = len(parsedUri.Host)
 			}
 			require.Equal(t, tc.want, got)
-
 		})
 	}
 }

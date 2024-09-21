@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/x/staking/simulation"
-
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/x/staking/simulation"
 )
 
 func TestRandURIOfHostLength(t *testing.T) {

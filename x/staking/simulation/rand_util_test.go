@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cosmossdk.io/x/staking/simulation"
+
 	"github.com/stretchr/testify/require"
 )
 

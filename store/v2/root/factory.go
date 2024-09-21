@@ -109,6 +109,8 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 			return nil, err
 		}
 		ssDb, err = rocksdb.New(dir)
+	default:
+		return nil, fmt.Errorf("unknown storage type: %s", opts.Options.SSType)
 	}
 	if err != nil {
 		return nil, err
@@ -168,12 +170,12 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		}
 		oldTrees[string(key)] = tree
 	}
+
 	sc, err = commitment.NewCommitStore(trees, oldTrees, opts.SCRawDB, opts.Logger)
 	if err != nil {
 		return nil, err
 	}
 
 	pm := pruning.NewManager(sc, ss, storeOpts.SCPruningOption, storeOpts.SSPruningOption)
-
 	return New(opts.Logger, ss, sc, pm, nil, nil)
 }

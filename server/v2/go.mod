@@ -14,7 +14,7 @@ replace (
 
 require (
 	cosmossdk.io/api v0.7.5
-	cosmossdk.io/core v1.0.0-alpha.1
+	cosmossdk.io/core v1.0.0-alpha.3
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
@@ -30,7 +30,7 @@ require (
 	github.com/hashicorp/go-plugin v1.6.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pelletier/go-toml/v2 v2.2.2
-	github.com/prometheus/client_golang v1.20.3
+	github.com/prometheus/client_golang v1.20.4
 	github.com/prometheus/common v0.59.1
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1
@@ -38,12 +38,13 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/sync v0.8.0
-	google.golang.org/grpc v1.66.1
+	google.golang.org/grpc v1.66.2
 	google.golang.org/protobuf v1.34.2
 )
 
 require (
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
+	cosmossdk.io/schema v0.3.0 // indirect
 	github.com/DataDog/datadog-go v4.8.3+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
@@ -75,7 +76,7 @@ require (
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/linxGnu/grocksdb v1.8.14 // indirect
+	github.com/linxGnu/grocksdb v1.9.3 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

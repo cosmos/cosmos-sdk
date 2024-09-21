@@ -10,11 +10,11 @@ import (
 	"math/rand"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/metrics"
@@ -125,7 +125,7 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 	// This checksum test makes sure that the byte stream remains identical. If the test fails
 	// without having changed the data (e.g. because the Protobuf or zlib encoding changes),
 	// snapshottypes.CurrentFormat must be bumped.
-	store := newMultiStoreWithGeneratedData(dbm.NewMemDB(), 5, 10000)
+	store := newMultiStoreWithGeneratedData(coretesting.NewMemDB(), 5, 10000)
 	version := uint64(store.LastCommitID().Version)
 
 	testcases := []struct {
@@ -142,7 +142,6 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 		}},
 	}
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(fmt.Sprintf("Format %v", tc.format), func(t *testing.T) {
 			ch := make(chan io.ReadCloser)
 			go func() {
@@ -167,7 +166,7 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 }
 
 func TestMultistoreSnapshot_Errors(t *testing.T) {
-	store := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
+	store := newMultiStoreWithMixedMountsAndBasicData(coretesting.NewMemDB())
 
 	testcases := map[string]struct {
 		height     uint64
@@ -177,7 +176,6 @@ func TestMultistoreSnapshot_Errors(t *testing.T) {
 		"unknown height": {9, nil},
 	}
 	for name, tc := range testcases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			err := store.Snapshot(tc.height, nil)
 			require.Error(t, err)
@@ -189,8 +187,8 @@ func TestMultistoreSnapshot_Errors(t *testing.T) {
 }
 
 func TestMultistoreSnapshotRestore(t *testing.T) {
-	source := newMultiStoreWithMixedMountsAndBasicData(dbm.NewMemDB())
-	target := newMultiStoreWithMixedMounts(dbm.NewMemDB())
+	source := newMultiStoreWithMixedMountsAndBasicData(coretesting.NewMemDB())
+	target := newMultiStoreWithMixedMounts(coretesting.NewMemDB())
 	version := uint64(source.LastCommitID().Version)
 	require.EqualValues(t, 3, version)
 	dummyExtensionItem := snapshottypes.SnapshotItem{
@@ -240,13 +238,13 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 
 	b.ReportAllocs()
 	b.StopTimer()
-	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
+	source := newMultiStoreWithGeneratedData(coretesting.NewMemDB(), stores, storeKeys)
 	version := source.LastCommitID().Version
 	require.EqualValues(b, 1, version)
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		target := rootmulti.NewStore(dbm.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
+		target := rootmulti.NewStore(coretesting.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
 		for _, key := range source.StoreKeysByName() {
 			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
 		}
@@ -276,13 +274,13 @@ func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys ui
 
 	b.ReportAllocs()
 	b.StopTimer()
-	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
+	source := newMultiStoreWithGeneratedData(coretesting.NewMemDB(), stores, storeKeys)
 	version := uint64(source.LastCommitID().Version)
 	require.EqualValues(b, 1, version)
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		target := rootmulti.NewStore(dbm.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
+		target := rootmulti.NewStore(coretesting.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
 		for _, key := range source.StoreKeysByName() {
 			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
 		}

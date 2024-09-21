@@ -374,9 +374,7 @@ func startCmtNode(
 		return nil, cleanupFn, err
 	}
 
-	pv, err := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile(), func() (cmtcrypto.PrivKey, error) {
-		return cmted25519.GenPrivKey(), nil
-	}) // TODO:  make this modular
+	pv, err := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile(), app.ValidatorKeyProvider())
 	if err != nil {
 		return nil, cleanupFn, err
 	}
@@ -832,7 +830,7 @@ func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCr
 	_, context := getCtx(ctx, true)
 	clientCreator := proxy.NewLocalClientCreator(cmtApp)
 	metrics := node.DefaultMetricsProvider(cmtcfg.DefaultConfig().Instrumentation)
-	_, _, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID) // nolint: dogsled // function from comet
+	_, _, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID) //nolint: dogsled // function from comet
 	proxyApp := proxy.NewAppConns(clientCreator, proxyMetrics)
 	if err := proxyApp.Start(); err != nil {
 		return nil, fmt.Errorf("error starting proxy app connections: %w", err)

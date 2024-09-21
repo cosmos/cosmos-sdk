@@ -24,7 +24,7 @@ func RandURIOfHostLength(r *rand.Rand, n int) string {
 }
 
 // RandSocialHandleURIs returns a string array of length num with uris.
-func RandSocialHandleURIs(r *rand.Rand, num int, uriHostLength int) []string {
+func RandSocialHandleURIs(r *rand.Rand, num, uriHostLength int) []string {
 	if num == 0 {
 		return []string{}
 	}

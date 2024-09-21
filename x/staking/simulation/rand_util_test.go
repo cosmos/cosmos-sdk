@@ -37,3 +37,24 @@ func TestRandURIOfHostLength(t *testing.T) {
 		})
 	}
 }
+
+func TestRandSocialHandleURIs(t *testing.T) {
+	t.Parallel()
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+	tests := []struct {
+		name string
+		n    int
+		want int
+	}{
+		{"0-handles", 0, 0},
+		{"10-handles", 10, 10},
+		{"100-handles", 100, 100},
+	}
+	for _, tt := range tests {
+		tc := tt
+		t.Run(tc.name, func(t *testing.T) {
+			uris := simulation.RandSocialHandleURIs(r, tc.n, 10)
+			require.Equal(t, tc.want, len(uris))
+		})
+	}
+}

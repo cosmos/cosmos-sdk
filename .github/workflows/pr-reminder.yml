@@ -33,7 +33,12 @@ jobs:
               assignees: pr.assignees.map(assignee => assignee.login)
             }));
 
-            return JSON.stringify(prDetails, null, 2)
+            const formattedPRs = pullRequests.map(pr => {
+              const assignees = pr.assignees.length > 0 ? `Assignees: ${pr.assignees.join(', ')}` : 'No assignees';
+              return `*Title*: ${pr.title}\n*Link*: <${pr.link}>\n${assignees}\n`;
+            }).join('\n');
+
+            return formattedPRs
 
       - name: Send Slack Reminder
         if: steps.pr-list.outputs.result != ''

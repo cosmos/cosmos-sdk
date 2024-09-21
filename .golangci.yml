@@ -4,18 +4,11 @@ run:
   sort-results: true
   allow-parallel-runners: true
   exclude-dir: testutil/testdata
-  skip-files:
-    - server/grpc/gogoreflection/fix_registration.go
-    - "fix_registration.go"
-    - "x/bank/migrations/v4/gen_state_test.go"
-    - ".*\\.pb\\.go$"
-    - ".*\\.pb\\.gw\\.go$"
-    - ".*\\.pulsar\\.go$"
+  sort-results: true
 
 linters:
   disable-all: true
   enable:
-    - depguard
     - dogsled
     - exportloopref
     - goconst
@@ -61,6 +54,13 @@ issues:
         - nolintlint
   max-issues-per-linter: 10000
   max-same-issues: 10000
+  exclude-files:
+    - server/grpc/gogoreflection/fix_registration.go
+    - "fix_registration.go"
+    - "x/bank/migrations/v4/gen_state_test.go"
+    - ".*\\.pb\\.go$"
+    - ".*\\.pb\\.gw\\.go$"
+    - ".*\\.pulsar\\.go$"
 
 linters-settings:
   gci:

@@ -1,6 +1,8 @@
 module cosmossdk.io/x/upgrade
 
-go 1.21
+go 1.23
+
+toolchain go1.23.1
 
 require (
 	cosmossdk.io/api v0.7.5

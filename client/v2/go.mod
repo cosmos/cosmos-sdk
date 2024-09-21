@@ -1,13 +1,15 @@
 module cosmossdk.io/client/v2
 
-go 1.21
+go 1.23
+
+toolchain go1.23.1
 
 require (
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/depinject v1.0.0-alpha.4
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/x/tx v0.13.4
+	cosmossdk.io/x/tx v0.13.5
 	github.com/cockroachdb/errors v1.11.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.50.6

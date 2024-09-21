@@ -7,7 +7,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
-	google.golang.org/grpc v1.64.1
+	google.golang.org/grpc v1.66.2
 	google.golang.org/protobuf v1.34.2
 	gotest.tools/v3 v3.5.1
 	sigs.k8s.io/yaml v1.4.0

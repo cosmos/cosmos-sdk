@@ -7,12 +7,12 @@ import (
 	cmtabcitypes "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
@@ -55,15 +55,16 @@ func NewIntegrationApp(
 	modules map[string]appmodule.AppModule,
 	msgRouter *baseapp.MsgServiceRouter,
 	grpcRouter *baseapp.GRPCQueryRouter,
+	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	moduleManager := module.NewManagerFromMap(modules)
 	moduleManager.RegisterInterfaces(interfaceRegistry)
 
 	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), addressCodec, validatorCodec, authtx.DefaultSignModes)
-	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
+	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), append(baseAppOptions, baseapp.SetChainID(appName))...)
 	bApp.MountKVStores(keys)
 
 	bApp.SetInitChainer(func(_ sdk.Context, _ *cmtabcitypes.InitChainRequest) (*cmtabcitypes.InitChainResponse, error) {
@@ -201,7 +202,7 @@ func (app *App) QueryHelper() *baseapp.QueryServiceTestHelper {
 
 // CreateMultiStore is a helper for setting up multiple stores for provided modules.
 func CreateMultiStore(keys map[string]*storetypes.KVStoreKey, logger log.Logger) storetypes.CommitMultiStore {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	cms := store.NewCommitMultiStore(db, logger, metrics.NewNoOpMetrics())
 
 	for key := range keys {

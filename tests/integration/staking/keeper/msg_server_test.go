@@ -163,8 +163,6 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := msgServer.CancelUnbondingDelegation(ctx, &tc.req)
 			if tc.exceptErr {

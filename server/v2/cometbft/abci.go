@@ -33,15 +33,14 @@ import (
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
 type Consensus[T transaction.Tx] struct {
-	logger             log.Logger
-	appName, version   string
-	consensusAuthority string // Set by the application to grant authority to the consensus engine to send messages to the consensus module
-	app                *appmanager.AppManager[T]
-	txCodec            transaction.Codec[T]
-	store              types.Store
-	streaming          streaming.Manager
-	snapshotManager    *snapshots.Manager
-	mempool            mempool.Mempool[T]
+	logger           log.Logger
+	appName, version string
+	app              *appmanager.AppManager[T]
+	txCodec          transaction.Codec[T]
+	store            types.Store
+	streaming        streaming.Manager
+	snapshotManager  *snapshots.Manager
+	mempool          mempool.Mempool[T]
 
 	cfg           Config
 	indexedEvents map[string]struct{}
@@ -67,7 +66,6 @@ type Consensus[T transaction.Tx] struct {
 func NewConsensus[T transaction.Tx](
 	logger log.Logger,
 	appName string,
-	consensusAuthority string, // TODO remove
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
@@ -80,7 +78,6 @@ func NewConsensus[T transaction.Tx](
 	return &Consensus[T]{
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
-		consensusAuthority:     consensusAuthority,
 		grpcMethodsMap:         gRPCMethodsMap,
 		app:                    app,
 		cfg:                    cfg,
@@ -129,11 +126,16 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		return nil, err
 	}
 
+	events, err := intoABCIEvents(resp.Events, c.indexedEvents)
+	if err != nil {
+		return nil, err
+	}
+
 	cometResp := &abciproto.CheckTxResponse{
 		Code:      resp.Code,
 		GasWanted: uint64ToInt64(resp.GasWanted),
 		GasUsed:   uint64ToInt64(resp.GasUsed),
-		Events:    intoABCIEvents(resp.Events, c.indexedEvents),
+		Events:    events,
 	}
 	if resp.Error != nil {
 		cometResp.Code = 1
@@ -246,7 +248,6 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 
 	if req.ConsensusParams != nil {
 		ctx = context.WithValue(ctx, corecontext.CometParamsInitInfoKey, &consensustypes.MsgUpdateParams{
-			Authority: c.consensusAuthority,
 			Block:     req.ConsensusParams.Block,
 			Evidence:  req.ConsensusParams.Evidence,
 			Validator: req.ConsensusParams.Validator,
@@ -471,9 +472,10 @@ func (c *Consensus[T]) FinalizeBlock(
 	}
 
 	// remove txs from the mempool
-	err = c.mempool.Remove(decodedTxs)
-	if err != nil {
-		return nil, fmt.Errorf("unable to remove txs: %w", err)
+	for _, tx := range decodedTxs {
+		if err = c.mempool.Remove(tx); err != nil {
+			return nil, fmt.Errorf("unable to remove tx: %w", err)
+		}
 	}
 
 	c.lastCommittedHeight.Store(req.Height)

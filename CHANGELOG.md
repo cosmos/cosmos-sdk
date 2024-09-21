@@ -44,7 +44,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 * (x/validate) [#21822](https://github.com/cosmos/cosmos-sdk/pull/21822) New module solely responsible for providing ante/post handlers and tx validators for v2. It can be extended by the app developer to provide extra tx validators.
     * In comparison to x/auth/tx/config, there is no app config to skip ante/post handlers, as overwriting them in baseapp or not injecting the x/validate module has the same effect.
-* (crypto/keyring) [#21653](https://github.com/cosmos/cosmos-sdk/pull/21653) New Linux-only backend that adds Linux kernel's `keyctl` support.
 
 ### Improvements
 

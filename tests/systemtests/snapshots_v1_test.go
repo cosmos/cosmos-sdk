@@ -1,4 +1,4 @@
-//go:build system_test && !v2
+//go:build !system_test
 
 package systemtests
 
@@ -15,6 +15,10 @@ import (
 var nodeDir string
 
 func TestSnapshots(t *testing.T) {
+	if isV2() {
+		t.Skip()
+	}
+	
 	sut.ResetChain(t)
 	cli := NewCLIWrapper(t, sut, verbose)
 	// add genesis account with some tokens

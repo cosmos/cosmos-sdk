@@ -7,18 +7,19 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
 	authzmodule "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
+	bankv2 "cosmossdk.io/x/bank/v2"
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/epochs"
 	"cosmossdk.io/x/evidence"
@@ -43,7 +44,7 @@ import (
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	logger := log.NewTestLogger(t)
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:  logger.With("instance", "first"),
@@ -85,7 +86,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 }
 
 func TestRunMigrations(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	logger := log.NewTestLogger(t)
 	app := NewSimApp(logger.With("instance", "simapp"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 
@@ -201,6 +202,7 @@ func TestRunMigrations(t *testing.T) {
 				appmodule.VersionMap{
 					"accounts":     accounts.AppModule{}.ConsensusVersion(),
 					"bank":         1,
+					"bankv2":       bankv2.AppModule{}.ConsensusVersion(),
 					"auth":         auth.AppModule{}.ConsensusVersion(),
 					"authz":        authzmodule.AppModule{}.ConsensusVersion(),
 					"staking":      staking.AppModule{}.ConsensusVersion(),
@@ -230,7 +232,7 @@ func TestRunMigrations(t *testing.T) {
 }
 
 func TestInitGenesisOnMigration(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := NewSimApp(log.NewTestLogger(t), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 	ctx := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 
@@ -269,7 +271,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 }
 
 func TestUpgradeStateOnGenesis(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:  log.NewTestLogger(t),
 		DB:      db,

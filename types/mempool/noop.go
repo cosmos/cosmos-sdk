@@ -17,7 +17,7 @@ var _ Mempool = (*NoOpMempool)(nil)
 type NoOpMempool struct{}
 
 func (NoOpMempool) Insert(context.Context, sdk.Tx) error                  { return nil }
-func (NoOpMempool) Select(context.Context, [][]byte) Iterator             { return nil }
-func (NoOpMempool) SelectBy(context.Context, [][]byte, func(sdk.Tx) bool) {}
+func (NoOpMempool) Select(context.Context, []sdk.Tx) Iterator             { return nil }
+func (NoOpMempool) SelectBy(context.Context, []sdk.Tx, func(sdk.Tx) bool) {}
 func (NoOpMempool) CountTx() int                                          { return 0 }
 func (NoOpMempool) Remove(sdk.Tx) error                                   { return nil }

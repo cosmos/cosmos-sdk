@@ -8,7 +8,6 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -41,12 +40,14 @@ type App[T transaction.Tx] struct {
 	// modules configuration
 	storeKeys          []string
 	interfaceRegistrar registry.InterfaceRegistrar
-	amino              legacy.Amino
+	amino              registry.AminoRegistrar
 	moduleManager      *MM[T]
 
 	// GRPCMethodsToMessageMap maps gRPC method name to a function that decodes the request
 	// bytes into a gogoproto.Message, which then can be passed to appmanager.
 	GRPCMethodsToMessageMap map[string]func() gogoproto.Message
+
+	storeLoader StoreLoader
 }
 
 // Name returns the app name.
@@ -69,9 +70,14 @@ func (a *App[T]) DefaultGenesis() map[string]json.RawMessage {
 	return a.moduleManager.DefaultGenesis()
 }
 
+// SetStoreLoader sets the store loader.
+func (a *App[T]) SetStoreLoader(loader StoreLoader) {
+	a.storeLoader = loader
+}
+
 // LoadLatest loads the latest version.
 func (a *App[T]) LoadLatest() error {
-	return a.db.LoadLatestVersion()
+	return a.storeLoader(a.db)
 }
 
 // LoadHeight loads a particular height

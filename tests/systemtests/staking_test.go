@@ -31,7 +31,7 @@ func TestStakeUnstake(t *testing.T) {
 	valAddr := gjson.Get(rsp, "validators.#.operator_address").Array()[0].String()
 
 	// stake tokens
-	rsp = cli.Run("tx", "staking", "delegate", valAddr, "10000stake", "--from="+account1Addr, "--fees=1stake")
+	rsp = cli.RunAndWait("tx", "staking", "delegate", valAddr, "10000stake", "--from="+account1Addr, "--fees=1stake")
 	RequireTxSuccess(t, rsp)
 
 	t.Log(cli.QueryBalance(account1Addr, "stake"))
@@ -42,7 +42,7 @@ func TestStakeUnstake(t *testing.T) {
 	assert.Equal(t, "stake", gjson.Get(rsp, "delegation_response.balance.denom").String(), rsp)
 
 	// unstake tokens
-	rsp = cli.Run("tx", "staking", "unbond", valAddr, "5000stake", "--from="+account1Addr, "--fees=1stake")
+	rsp = cli.RunAndWait("tx", "staking", "unbond", valAddr, "5000stake", "--from="+account1Addr, "--fees=1stake")
 	RequireTxSuccess(t, rsp)
 
 	rsp = cli.CustomQuery("q", "staking", "delegation", account1Addr, valAddr)

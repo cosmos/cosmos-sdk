@@ -91,7 +91,7 @@ func createRootStore(cmd *cobra.Command, v *viper.Viper, logger log.Logger) (sto
 		}
 		dbType = db.DBType(dbStr)
 	} else {
-		dbType = db.DBType(v.GetString("store.app-db-backend"))
+		dbType = db.DBType(v.GetString(FlagAppDBBackend))
 	}
 	scRawDb, err := db.NewDB(dbType, "application", filepath.Join(rootDir, "data"), nil)
 	if err != nil {

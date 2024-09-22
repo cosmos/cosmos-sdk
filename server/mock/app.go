@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	db "github.com/cosmos/cosmos-db"
+	dbm "github.com/cosmos/cosmos-db"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -30,7 +30,7 @@ import (
 // similar to a real app. Make sure rootDir is empty before running the test,
 // in order to guarantee consistent results.
 func NewApp(rootDir string, logger log.Logger) (servertypes.ABCI, error) {
-	db, err := db.NewGoLevelDB("mock", filepath.Join(rootDir, "data"), nil)
+	db, err := dbm.NewGoLevelDB("mock", filepath.Join(rootDir, "data"), nil)
 	if err != nil {
 		return nil, err
 	}

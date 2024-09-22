@@ -8,15 +8,18 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/server"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade"
 	"cosmossdk.io/x/upgrade/keeper"
+	upgradetestutil "cosmossdk.io/x/upgrade/testutil"
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -132,16 +135,36 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) *TestSuite {
 	s.env = runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()), runtime.EnvWithQueryRouterService(s.baseApp.GRPCQueryRouter()))
 
 	s.baseApp.SetParamStore(&paramStore{params: cmtproto.ConsensusParams{Version: &cmtproto.VersionParams{App: 1}}})
+	s.baseApp.SetVersionModifier(newMockedVersionModifier(1))
 
 	authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
 	require.NoError(t, err)
 
-	s.keeper = keeper.NewKeeper(s.env, skip, s.encCfg.Codec, t.TempDir(), s.baseApp, authority)
+	ctrl := gomock.NewController(t)
+	ck := upgradetestutil.NewMockConsensusKeeper(ctrl)
+	s.keeper = keeper.NewKeeper(s.env, skip, s.encCfg.Codec, t.TempDir(), s.baseApp, authority, ck)
 
 	s.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: height})
 
 	s.preModule = upgrade.NewAppModule(s.keeper)
 	return &s
+}
+
+func newMockedVersionModifier(startingVersion uint64) server.VersionModifier {
+	return &mockedVersionModifier{version: startingVersion}
+}
+
+type mockedVersionModifier struct {
+	version uint64
+}
+
+func (m *mockedVersionModifier) SetAppVersion(ctx context.Context, u uint64) error {
+	m.version = u
+	return nil
+}
+
+func (m *mockedVersionModifier) AppVersion(ctx context.Context) (uint64, error) {
+	return m.version, nil
 }
 
 func TestRequireFutureBlock(t *testing.T) {
@@ -510,8 +533,11 @@ func TestDowngradeVerification(t *testing.T) {
 		authority, err := addresscodec.NewBech32Codec("cosmos").BytesToString(authtypes.NewModuleAddress(govModuleName))
 		require.NoError(t, err)
 
+		ctrl := gomock.NewController(t)
 		// downgrade. now keeper does not have the handler.
-		k := keeper.NewKeeper(s.env, map[int64]bool{}, s.encCfg.Codec, t.TempDir(), nil, authority)
+		ck := upgradetestutil.NewMockConsensusKeeper(ctrl)
+		ck.EXPECT().AppVersion(gomock.Any()).Return(uint64(0), nil).AnyTimes()
+		k := keeper.NewKeeper(s.env, map[int64]bool{}, s.encCfg.Codec, t.TempDir(), nil, authority, ck)
 		m := upgrade.NewAppModule(k)
 
 		// assertions

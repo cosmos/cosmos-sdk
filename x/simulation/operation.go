@@ -76,13 +76,12 @@ func NewOperationQueue() OperationQueue {
 }
 
 // queueOperations adds all future operations into the operation queue.
-func queueOperations(queuedOps OperationQueue, queuedTimeOps, futureOps []simulation.FutureOperation) {
+func queueOperations(queuedOps OperationQueue, queuedTimeOps *[]simulation.FutureOperation, futureOps []simulation.FutureOperation) {
 	if futureOps == nil {
 		return
 	}
 
 	for _, futureOp := range futureOps {
-		futureOp := futureOp
 		if futureOp.BlockHeight != 0 {
 			if val, ok := queuedOps[futureOp.BlockHeight]; ok {
 				queuedOps[futureOp.BlockHeight] = append(val, futureOp.Op)
@@ -96,15 +95,15 @@ func queueOperations(queuedOps OperationQueue, queuedTimeOps, futureOps []simula
 		// TODO: Replace with proper sorted data structure, so don't have the
 		// copy entire slice
 		index := sort.Search(
-			len(queuedTimeOps),
+			len(*queuedTimeOps),
 			func(i int) bool {
-				return queuedTimeOps[i].BlockTime.After(futureOp.BlockTime)
+				return (*queuedTimeOps)[i].BlockTime.After(futureOp.BlockTime)
 			},
 		)
 
-		queuedTimeOps = append(queuedTimeOps, simulation.FutureOperation{})
-		copy(queuedTimeOps[index+1:], queuedTimeOps[index:])
-		queuedTimeOps[index] = futureOp
+		*queuedTimeOps = append(*queuedTimeOps, simulation.FutureOperation{})
+		copy((*queuedTimeOps)[index+1:], (*queuedTimeOps)[index:])
+		(*queuedTimeOps)[index] = futureOp
 	}
 }
 

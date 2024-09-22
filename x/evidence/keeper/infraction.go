@@ -5,13 +5,12 @@ import (
 	"fmt"
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
-	consensusv1 "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/evidence/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// HandleEquivocationEvidence implements an equivocation evidence handler. Assuming the
+// handleEquivocationEvidence implements an equivocation evidence handler. Assuming the
 // evidence is valid, the validator committing the misbehavior will be slashed,
 // jailed and tombstoned. Once tombstoned, the validator will not be able to
 // recover. Note, the evidence contains the block time and height at the time of
@@ -73,27 +72,18 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 	// Reject evidence if the double-sign is too old. Evidence is considered stale
 	// if the difference in time and number of blocks is greater than the allowed
 	// parameters defined.
-	resp, err := k.QueryRouterService.Invoke(ctx, &consensusv1.QueryParamsRequest{})
-	if err != nil {
-		return fmt.Errorf("failed to query consensus params: %w", err)
-	}
-	res, ok := resp.(*consensusv1.QueryParamsResponse)
-	if !ok {
-		return fmt.Errorf("unexpected response type: %T", resp)
-	}
 
-	if res.Params.Evidence != nil {
-		if ageDuration > res.Params.Evidence.MaxAgeDuration && ageBlocks > res.Params.Evidence.MaxAgeNumBlocks {
-			k.Logger.Info(
-				"ignored equivocation; evidence too old",
-				"validator", consAddr,
-				"infraction_height", infractionHeight,
-				"max_age_num_blocks", res.Params.Evidence.MaxAgeNumBlocks,
-				"infraction_time", infractionTime,
-				"max_age_duration", res.Params.Evidence.MaxAgeDuration,
-			)
-			return nil
-		}
+	eviAgeBlocks, eviAgeDuration, _, err := k.consensusKeeper.EvidenceParams(ctx)
+	if err == nil && ageDuration > eviAgeDuration && ageBlocks > eviAgeBlocks {
+		k.Logger.Info(
+			"ignored equivocation; evidence too old",
+			"validator", consAddr,
+			"infraction_height", infractionHeight,
+			"max_age_num_blocks", eviAgeBlocks,
+			"infraction_time", infractionTime,
+			"max_age_duration", eviAgeDuration,
+		)
+		return nil
 	}
 
 	if ok := k.slashingKeeper.HasValidatorSigningInfo(ctx, consAddr); !ok {

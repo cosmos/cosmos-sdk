@@ -20,7 +20,6 @@ import (
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -85,10 +84,10 @@ func (m *MM[T]) Modules() map[string]appmodulev2.AppModule {
 }
 
 // RegisterLegacyAminoCodec registers all module codecs
-func (m *MM[T]) RegisterLegacyAminoCodec(cdc legacy.Amino) {
+func (m *MM[T]) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
 	for _, b := range m.modules {
 		if mod, ok := b.(appmodule.HasAminoCodec); ok {
-			mod.RegisterLegacyAminoCodec(cdc)
+			mod.RegisterLegacyAminoCodec(registrar)
 		}
 	}
 }
@@ -578,7 +577,6 @@ func (m *MM[T]) assertNoForgottenModules(
 	}
 	var missing []string
 	for m := range m.modules {
-		m := m
 		if pass != nil && pass(m) {
 			continue
 		}
@@ -605,14 +603,19 @@ func registerServices[T transaction.Tx](s hasServicesV1, app *App[T], registry *
 		err:               nil,
 	}
 
-	err := s.RegisterServices(c)
-	if err != nil {
+	if err := s.RegisterServices(c); err != nil {
 		return fmt.Errorf("unable to register services: %w", err)
 	}
+
+	if c.err != nil {
+		app.logger.Warn("error registering services", "error", c.err)
+	}
+
 	// merge maps
 	for path, decoder := range c.grpcQueryDecoders {
 		app.GRPCMethodsToMessageMap[path] = decoder
 	}
+
 	return nil
 }
 
@@ -655,7 +658,7 @@ func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{
 		// TODO(tip): what if a query is not deterministic?
 		requestFullName, err := registerMethod(c.stfQueryRouter, sd, md, ss)
 		if err != nil {
-			return fmt.Errorf("unable to register query handler %s: %w", md.MethodName, err)
+			return fmt.Errorf("unable to register query handler %s.%s: %w", sd.ServiceName, md.MethodName, err)
 		}
 
 		// register gRPC query method.
@@ -676,7 +679,7 @@ func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{})
 	for _, md := range sd.Methods {
 		_, err := registerMethod(c.stfMsgRouter, sd, md, ss)
 		if err != nil {
-			return fmt.Errorf("unable to register msg handler %s: %w", md.MethodName, err)
+			return fmt.Errorf("unable to register msg handler %s.%s: %w", sd.ServiceName, md.MethodName, err)
 		}
 	}
 	return nil

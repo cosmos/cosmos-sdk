@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
 	corestore "cosmossdk.io/core/store"
@@ -94,10 +93,9 @@ func TestSetLoader(t *testing.T) {
 	v := []byte("value")
 
 	for name, tc := range cases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			// prepare a db with some data
-			db := dbm.NewMemDB()
+			db := coretesting.NewMemDB()
 
 			initStore(t, db, tc.origStoreKey, k, v)
 

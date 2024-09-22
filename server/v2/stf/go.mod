@@ -2,10 +2,9 @@ module cosmossdk.io/server/v2/stf
 
 go 1.23
 
-replace cosmossdk.io/core => ../../../core
-
 require (
-	cosmossdk.io/core v0.11.0
+	cosmossdk.io/core v1.0.0-alpha.3
+	cosmossdk.io/schema v0.3.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/tidwall/btree v1.7.0
 )

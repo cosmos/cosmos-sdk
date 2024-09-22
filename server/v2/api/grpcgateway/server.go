@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/transaction"
@@ -83,10 +82,10 @@ func (s *GRPCGatewayServer[T]) Config() any {
 	return s.config
 }
 
-func (s *GRPCGatewayServer[T]) Init(appI serverv2.AppI[transaction.Tx], v *viper.Viper, logger log.Logger) error {
-	cfg := s.Config().(*Config)
-	if v != nil {
-		if err := serverv2.UnmarshalSubConfig(v, s.Name(), &cfg); err != nil {
+func (s *GRPCGatewayServer[T]) Init(appI serverv2.AppI[transaction.Tx], cfg map[string]any, logger log.Logger) error {
+	serverCfg := s.Config().(*Config)
+	if len(cfg) > 0 {
+		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
@@ -95,7 +94,7 @@ func (s *GRPCGatewayServer[T]) Init(appI serverv2.AppI[transaction.Tx], v *viper
 	// appI.RegisterGRPCGatewayRoutes(s.GRPCGatewayRouter, s.GRPCSrv)
 
 	s.logger = logger
-	s.config = cfg
+	s.config = serverCfg
 
 	return nil
 }

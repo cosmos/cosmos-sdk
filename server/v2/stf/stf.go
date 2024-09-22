@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/schema/appdata"
 	stfgas "cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/internal"
 )
@@ -338,11 +339,8 @@ func (s STF[T]) preBlock(
 		return nil, err
 	}
 
-	for i, e := range ctx.events {
-		ctx.events[i].Attributes = append(
-			e.Attributes,
-			event.Attribute{Key: "mode", Value: "PreBlock"},
-		)
+	for i := range ctx.events {
+		ctx.events[i].BlockStage = appdata.PreBlockStage
 	}
 
 	return ctx.events, nil
@@ -357,11 +355,8 @@ func (s STF[T]) beginBlock(
 		return nil, err
 	}
 
-	for i, e := range ctx.events {
-		ctx.events[i].Attributes = append(
-			e.Attributes,
-			event.Attribute{Key: "mode", Value: "BeginBlock"},
-		)
+	for i := range ctx.events {
+		ctx.events[i].BlockStage = appdata.BeginBlockStage
 	}
 
 	return ctx.events, nil
@@ -383,11 +378,8 @@ func (s STF[T]) endBlock(
 
 	ctx.events = append(ctx.events, events...)
 
-	for i, e := range ctx.events {
-		ctx.events[i].Attributes = append(
-			e.Attributes,
-			event.Attribute{Key: "mode", Value: "BeginBlock"},
-		)
+	for i := range ctx.events {
+		ctx.events[i].BlockStage = appdata.EndBlockStage
 	}
 
 	return ctx.events, valsetUpdates, nil
@@ -454,19 +446,6 @@ func (s STF[T]) Query(
 	queryCtx.setHeaderInfo(hi)
 	queryCtx.setGasLimit(gasLimit)
 	return s.queryRouter.Invoke(queryCtx, req)
-}
-
-// RunWithCtx is made to support genesis, if genesis was just the execution of messages instead
-// of being something custom then we would not need this. PLEASE DO NOT USE.
-// TODO: Remove
-func (s STF[T]) RunWithCtx(
-	ctx context.Context,
-	state store.ReaderMap,
-	closure func(ctx context.Context) error,
-) (store.WriterMap, error) {
-	branchedState := s.branchFn(state)
-	stfCtx := s.makeContext(ctx, nil, branchedState, internal.ExecModeFinalize)
-	return branchedState, closure(stfCtx)
 }
 
 // clone clones STF.

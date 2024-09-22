@@ -28,6 +28,7 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
+	validatemodulev1 "cosmossdk.io/api/cosmos/validate/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/accounts"
@@ -35,6 +36,9 @@ import (
 	_ "cosmossdk.io/x/authz/module" // import for side-effects
 	_ "cosmossdk.io/x/bank"         // import for side-effects
 	banktypes "cosmossdk.io/x/bank/types"
+	_ "cosmossdk.io/x/bank/v2" // import for side-effects
+	bankv2types "cosmossdk.io/x/bank/v2/types"
+	bankmodulev2 "cosmossdk.io/x/bank/v2/types/module"
 	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
 	_ "cosmossdk.io/x/consensus" // import for side-effects
@@ -65,12 +69,13 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/auth" // import for side-effects
+	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import for side-effects
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/validate"
 )
 
 var (
@@ -151,6 +156,7 @@ var (
 						accounts.ModuleName,
 						authtypes.ModuleName,
 						banktypes.ModuleName,
+						bankv2types.ModuleName,
 						distrtypes.ModuleName,
 						stakingtypes.ModuleName,
 						slashingtypes.ModuleName,
@@ -179,7 +185,21 @@ var (
 						QueryGasLimit:      100_000,
 						SimulationGasLimit: 100_000,
 					},
+					// SkipStoreKeys is an optional list of store keys to skip when constructing the
+					// module's keeper. This is useful when a module does not have a store key.
+					SkipStoreKeys: []string{
+						authtxconfig.DepinjectModuleName,
+						validate.ModuleName,
+					},
 				}),
+			},
+			{
+				Name:   authtxconfig.DepinjectModuleName, // x/auth/tx/config depinject module (not app module), use to provide tx configuration
+				Config: appconfig.WrapAny(&txconfigv1.Config{}),
+			},
+			{
+				Name:   validate.ModuleName,
+				Config: appconfig.WrapAny(&validatemodulev1.Module{}),
 			},
 			{
 				Name: authtypes.ModuleName,
@@ -213,10 +233,6 @@ var (
 			{
 				Name:   slashingtypes.ModuleName,
 				Config: appconfig.WrapAny(&slashingmodulev1.Module{}),
-			},
-			{
-				Name:   "tx",
-				Config: appconfig.WrapAny(&txconfigv1.Config{}),
 			},
 			{
 				Name:   genutiltypes.ModuleName,
@@ -262,10 +278,8 @@ var (
 				Config: appconfig.WrapAny(&govmodulev1.Module{}),
 			},
 			{
-				Name: consensustypes.ModuleName,
-				Config: appconfig.WrapAny(&consensusmodulev1.Module{
-					Authority: "consensus", // TODO remove.
-				}),
+				Name:   consensustypes.ModuleName,
+				Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
 			},
 			{
 				Name:   accounts.ModuleName,
@@ -282,6 +296,10 @@ var (
 			{
 				Name:   epochstypes.ModuleName,
 				Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
+			},
+			{
+				Name:   bankv2types.ModuleName,
+				Config: appconfig.WrapAny(&bankmodulev2.Module{}),
 			},
 		},
 	})

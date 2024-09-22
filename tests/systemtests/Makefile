@@ -2,7 +2,7 @@
 
 WAIT_TIME ?= 45s
 
-all: test
+all: test format
 
 test:
 	go test -mod=readonly -failfast -tags='system_test $(if $(findstring v2,$(COSMOS_BUILD_OPTIONS)),v2)' ./... --wait-time=$(WAIT_TIME) --verbose $(if $(findstring v2,$(COSMOS_BUILD_OPTIONS)),--binary=simdv2)

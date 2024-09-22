@@ -10,6 +10,7 @@ mod r#struct;
 mod r#enum;
 mod oneof;
 pub mod state_object;
+mod codec;
 
 pub use r#struct::{StructCodec};
 pub use r#enum::{EnumCodec};

@@ -13,6 +13,8 @@ workspace = true
 [dependencies]
 ixc_message_api = { path = "../message_api", version = "0.0.2" }
 simple_time = { path = "../util/simple_time", version = "0.0.1" }
+bump-scope = "0.9.0"
+allocator-api2 = "0.2.18"
 
 [features]
 default = ["address", "std"]

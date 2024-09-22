@@ -30,7 +30,7 @@ mod tests {
         }
     }
 
-    fn test1<'a: 'b, 'b>(scope: &'b BumpScope<'a>) -> (allocator_api2::boxed::Box<dyn Drop, &'b BumpScope<'a>>, &'a [HasString]) {
+    fn test1<'a: 'b, 'b>(scope: &'b BumpScope<'a>) -> (Box<dyn Drop + 'b>, &'a [HasString]) {
         struct Dropper<'a> {
             str_box: BumpBox<'a, [HasString]>,
             do_drop: DoDrop,
@@ -54,13 +54,15 @@ mod tests {
             s: String::from("bar"),
         });
         let str_box = strings.into_boxed_slice();
-        let str_slice = unsafe { str_box.as_non_null_slice().as_ptr() as *const [HasString] };
-        let dropper = allocator_api2::boxed::Box::<dyn Drop + 'a, &BumpScope>::new_in(Dropper {
-            str_box,
-            do_drop: DoDrop {},
-        }, scope);
+        unsafe {
+            let str_slice = str_box.as_non_null_slice().as_ptr() as *const [HasString];
+            let dropper = Dropper {
+                str_box,
+                do_drop: DoDrop {},
+            };
 
-        (dropper, unsafe { &*str_slice })
+            (Box::new(dropper), &*str_slice)
+        }
     }
 
     #[test]

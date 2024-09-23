@@ -3,6 +3,7 @@
 use alloc::borrow::ToOwned;
 use bump_scope::BumpString;
 use crate::decoder::{DecodeError, Decoder};
+use crate::encoder::{EncodeError, Encoder};
 use crate::types::*;
 
 /// Any type used directly as a message function argument or struct field must implement this trait.
@@ -10,7 +11,7 @@ use crate::types::*;
 /// declared.
 pub trait ArgValue<'a>
 where
-    Self: 'a,
+    Self: Sized + 'a,
 {
     /// The type of the value.
     type Type: Type;
@@ -27,6 +28,10 @@ where
 
     fn finish_decode_state(state: Self::DecodeState) -> (Self, Option<Self::MemoryHandle>) {
         unimplemented!("finish")
+    }
+
+    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+        unimplemented!("encode")
     }
 }
 
@@ -101,7 +106,7 @@ impl<'a> ArgValue<'a> for bool {
 }
 impl<'a> ArgValue<'a> for &'a str {
     type Type = StrT;
-    type DecodeState = Result<&'a str, BumpString<'a, 'a>>;
+    type DecodeState = Option<Result<&'a str, BumpString<'a, 'a>>>;
     type MemoryHandle = BumpString<'a, 'a>;
 
     fn visit_decode_state<D: Decoder<'a>>(state: &'a mut Self::DecodeState, decoder: &'a mut D) -> Result<(), DecodeError> {

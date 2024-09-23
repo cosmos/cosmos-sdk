@@ -16,9 +16,12 @@ where
     /// The type of the value.
     type Type: Type;
 
-    /// The type of the helper used to decode the value.
+    /// In progress decoding state.
     type DecodeState: Default;
 
+    /// Memory handle type returned if the decoded data borrows data which needed
+    /// to be allocated and needs some owner.
+    /// This handle is that owner.
     type MemoryHandle;
 
     /// Decode the value from the decoder.
@@ -26,10 +29,12 @@ where
         unimplemented!("decode")
     }
 
-    fn finish_decode_state(state: Self::DecodeState) -> (Self, Option<Self::MemoryHandle>) {
+    /// Finish decoding the value, return it and return the memory handle if needed.
+    fn finish_decode_state(state: Self::DecodeState) -> Result<(Self, Option<Self::MemoryHandle>), DecodeError> {
         unimplemented!("finish")
     }
 
+    /// Encode the value to the encoder.
     fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
         unimplemented!("encode")
     }
@@ -85,8 +90,7 @@ impl<'a> ArgValue<'a> for i32 {
     type MemoryHandle = ();
 
     fn visit_decode_state<D: Decoder<'a>>(state: &'a mut Self::DecodeState, decoder: &'a mut D) -> Result<(), DecodeError> {
-        *state = decoder.decode_i32()?;
-        Ok(())
+        todo!()
     }
 }
 impl<'a> ArgValue<'a> for i64 {

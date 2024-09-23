@@ -16,6 +16,9 @@ mod list;
 mod binary;
 mod encoder;
 mod proto;
+mod kind;
+mod field;
+mod fields;
 
 pub use r#struct::{StructCodec};
 pub use r#enum::{EnumCodec};

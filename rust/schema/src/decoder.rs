@@ -1,20 +1,25 @@
 use bump_scope::{BumpScope, BumpString, BumpVec};
 use crate::list::ListVisitor;
-use crate::r#struct::StructVisitor;
+use crate::r#struct::StructDecodeVisitor;
 use crate::value::ArgValue;
 
 pub trait Decoder<'a> {
-    fn decode_i32(&mut self) -> Result<i32, DecodeError>;
+    fn decode_u32(&mut self) -> Result<i32, DecodeError>;
+    fn decode_u128(&mut self) -> Result<u128, DecodeError>;
     fn decode_borrowed_str(&mut self) -> Result<Result<&'a str, BumpString<'a, 'a>>, DecodeError>;
-    fn decode_struct<V: StructVisitor<'a>>(&mut self, visitor: &mut V) -> Result<(), DecodeError>;
+    #[cfg(feature = "std")]
+    fn decode_owned_str(&mut self) -> Result<alloc::string::String, DecodeError>;
+    fn decode_struct<V: StructDecodeVisitor<'a>>(&mut self, visitor: &mut V) -> Result<(), DecodeError>;
     fn decode_list<T, V: ListVisitor<'a, T>>(&mut self, visitor: &mut V) -> Result<(), DecodeError>;
     fn scope(&self) -> &'a BumpScope<'a>;
 
-    #[cfg(feature = "std")]
-    fn decode_owned_str(&mut self) -> Result<alloc::string::String, DecodeError>;
 }
 
-pub enum DecodeError {}
+pub enum DecodeError {
+    OutOfData,
+    InvalidData,
+    UnknownFieldNumber
+}
 
 // pub trait DecodeHelper<'a>: Default {
 //     type Value;

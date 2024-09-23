@@ -84,7 +84,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 
 	err = proto.Unmarshal(txBytes, &raw)
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
 	}
 
 	var body v1beta1.TxBody
@@ -136,7 +136,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		dynamicMsg := dynamicpb.NewMessageType(msgDesc.(protoreflect.MessageDescriptor)).New().Interface()
 		err = anyMsg.UnmarshalTo(dynamicMsg)
 		if err != nil {
-			return nil, err
+			return nil, errorsmod.Wrap(ErrTxDecode, fmt.Sprintf("cannot unmarshal Any message: %v", err))
 		}
 		dynamicMsgs = append(dynamicMsgs, dynamicMsg)
 
@@ -148,7 +148,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		msg := reflect.New(gogoType.Elem()).Interface().(gogoproto.Message)
 		err = d.codec.Unmarshal(anyMsg.Value, msg)
 		if err != nil {
-			return nil, err
+			return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
 		}
 		msgs = append(msgs, msg)
 

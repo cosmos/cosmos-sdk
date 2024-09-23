@@ -40,5 +40,5 @@ func (a *decValue) Set(s string) error {
 }
 
 func (a decValue) Type() string {
-	return "math.LegacyDec"
+	return "cosmos.Dec"
 }

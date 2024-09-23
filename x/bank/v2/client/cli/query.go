@@ -49,7 +49,7 @@ func GetBalanceCmd() *cobra.Command {
 
 			denom := args[1]
 			if denom == "" {
-				return errors.New("Empty denom")
+				return errors.New("empty denom")
 			}
 
 			addr, err := sdk.AccAddressFromBech32(args[0])

@@ -48,7 +48,6 @@ jobs:
           SLACK_ICON_EMOJI: ":think:"
           SLACK_COLOR: good
           SLACKIFY_MARKDOWN: true
+          SLACK_TITLE: Daily Pull Request Review Reminder
           SLACK_MESSAGE: |
-            Daily Pull Request Review Reminder: 
             ${{ steps.pr-list.outputs.result }}
-          SLACK_FOOTER: ""

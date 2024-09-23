@@ -296,7 +296,7 @@ func (a Account) AuthRetroCompatibility(ctx context.Context, _ *authtypes.QueryL
 
 	return &authtypes.QueryLegacyAccountResponse{
 		Account: baseAccountAny,
-		Info:    baseAccount,
+		Base:    baseAccount,
 	}, nil
 }
 

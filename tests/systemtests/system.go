@@ -12,7 +12,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 	"sync/atomic"
 	"syscall"
@@ -332,43 +331,6 @@ func (s *SystemUnderTest) StopChain() {
 	s.ChainStarted = false
 }
 
-// StopSingleNode stops a validator node without stop the chain running
-func (s *SystemUnderTest) StopSingleNode() error {
-	if !s.ChainStarted {
-		return nil
-	}
-
-	s.pidsLock.RLock()
-	pids := maps.Keys(s.pids)
-	s.pidsLock.RUnlock()
-
-	var intPids []int
-	for pid := range pids {
-		intPids = append(intPids, pid)
-	}
-
-	sort.Ints(intPids)
-	p, err := os.FindProcess(intPids[0])
-	if err != nil {
-		return err
-	}
-
-	// Stop the 1st node
-	return p.Signal(syscall.SIGTERM)
-}
-
-// StartSingleNode start running a validator node with dir input
-func (s *SystemUnderTest) StartSingleNode(t *testing.T, dir string) {
-	t.Helper()
-	cmd := exec.Command( //nolint:gosec // used by tests only
-		locateExecutable(s.execBinary),
-		[]string{"start", "--log_level=info", "--log_no_color"}...,
-	)
-	cmd.Dir = WorkDir
-	err := cmd.Start()
-	require.NoError(t, err)
-}
-
 func (s *SystemUnderTest) withEachPid(cb func(p *os.Process)) {
 	s.pidsLock.RLock()
 	pids := maps.Keys(s.pids)
@@ -398,7 +360,13 @@ func (s *SystemUnderTest) PrintBuffer() {
 	})
 }
 
-// AwaitBlockHeight blocks until te target height is reached. An optional timeout parameter can be passed to abort early
+// AwaitNBlocks blocks until the current height + n block is reached. An optional timeout parameter can be passed to abort early
+func (s *SystemUnderTest) AwaitNBlocks(t *testing.T, n int64, timeout ...time.Duration) {
+	t.Helper()
+	s.AwaitBlockHeight(t, s.CurrentHeight()+n, timeout...)
+}
+
+// AwaitBlockHeight blocks until the target height is reached. An optional timeout parameter can be passed to abort early
 func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, timeout ...time.Duration) {
 	t.Helper()
 	require.Greater(t, targetHeight, s.currentHeight.Load())
@@ -615,6 +583,7 @@ func (s *SystemUnderTest) startNodesAsync(t *testing.T, xargs ...string) {
 	})
 }
 
+// tracks the PID in state with a go routine waiting for the shutdown completion to unregister
 func (s *SystemUnderTest) awaitProcessCleanup(cmd *exec.Cmd) {
 	pid := cmd.Process.Pid
 	s.pidsLock.Lock()
@@ -633,6 +602,11 @@ func (s *SystemUnderTest) withEachNodeHome(cb func(i int, home string)) {
 	for i := 0; i < s.nodesCount; i++ {
 		cb(i, s.nodePath(i))
 	}
+}
+
+// NodeDir returns the workdir and path to the node home folder.
+func (s *SystemUnderTest) NodeDir(i int) string {
+	return filepath.Join(WorkDir, s.nodePath(i))
 }
 
 // nodePath returns the path of the node within the work dir. not absolute

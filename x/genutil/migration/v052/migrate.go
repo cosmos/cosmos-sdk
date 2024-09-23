@@ -1,4 +1,4 @@
-package migration
+package migrate
 
 import (
 	"encoding/json"

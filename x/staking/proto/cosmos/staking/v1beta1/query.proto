@@ -304,10 +304,10 @@ message QueryRedelegationsRequest {
   string delegator_addr = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // src_validator_addr defines the validator address to redelegate from.
-  string src_validator_addr = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string src_validator_addr = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 
   // dst_validator_addr defines the validator address to redelegate to.
-  string dst_validator_addr = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string dst_validator_addr = 3 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 4;

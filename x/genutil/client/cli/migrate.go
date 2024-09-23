@@ -67,14 +67,11 @@ func MigrateHandler(cmd *cobra.Command, args []string, migrations types.Migratio
 	var err error
 	if target == "v0.52" {
 		appGenesis, err = v052.MigrateGenesisFile(importGenesis)
-		if err != nil {
-			return err
-		}
 	} else {
 		appGenesis, err = types.AppGenesisFromFile(importGenesis)
-		if err != nil {
-			return err
-		}
+	}
+	if err != nil {
+		return err
 	}
 
 	if err := appGenesis.ValidateAndComplete(); err != nil {

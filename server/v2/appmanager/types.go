@@ -40,12 +40,4 @@ type StateTransitionFunction[T transaction.Tx] interface {
 		gasLimit uint64,
 		req transaction.Msg,
 	) (transaction.Msg, error)
-
-	// RunWithCtx executes the provided closure within a context.
-	// TODO: remove
-	RunWithCtx(
-		ctx context.Context,
-		state store.ReaderMap,
-		closure func(ctx context.Context) error,
-	) (store.WriterMap, error)
 }

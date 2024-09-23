@@ -99,7 +99,7 @@ type memIterator struct {
 }
 
 // newMemIterator creates a new memory iterator for a given range of keys in a B-tree.
-// The iterator starts at the specified start key and ends at the specified end key.
+// The iterator creates a copy then starts at the specified start key and ends at the specified end key.
 // The `tree` parameter is the B-tree to iterate over.
 // The `ascending` parameter determines the direction of iteration.
 // If `ascending` is true, the iterator will iterate in ascending order.
@@ -111,7 +111,7 @@ type memIterator struct {
 // The `valid` field of the iterator indicates whether the iterator is positioned at a valid key.
 // The `start` and `end` fields of the iterator store the start and end keys respectively.
 func newMemIterator(start, end []byte, tree *btree.BTreeG[item], ascending bool) *memIterator {
-	iter := tree.Iter()
+	iter := tree.Copy().Iter()
 	var valid bool
 	if ascending {
 		if start != nil {
@@ -205,6 +205,9 @@ func (mi *memIterator) keyInRange(key []byte) bool {
 		return false
 	}
 	if !mi.ascending && mi.start != nil && bytes.Compare(key, mi.start) < 0 {
+		return false
+	}
+	if !mi.ascending && mi.end != nil && bytes.Compare(key, mi.end) >= 0 {
 		return false
 	}
 	return true

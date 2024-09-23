@@ -27,7 +27,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type MsgInit struct {
 	// pub_key defines a pubkey for the account arbitrary encapsulated.
 	PubKey *any.Any `protobuf:"bytes,1,opt,name=pub_key,json=pubKey,proto3" json:"pub_key,omitempty"`
-	// init_sequence defines the initial sequence of the account
+	// init_sequence defines the initial sequence of the account.
+	// Defaults to zero if not set.
 	InitSequence uint64 `protobuf:"varint,2,opt,name=init_sequence,json=initSequence,proto3" json:"init_sequence,omitempty"`
 }
 

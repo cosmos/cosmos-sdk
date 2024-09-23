@@ -136,6 +136,8 @@ type GRPCTestCase struct {
 	expOut string
 }
 
+// RunGRPCQueries runs given grpc testcases by making requests and
+// checking response with expected output
 func RunGRPCQueries(t *testing.T, testCases []GRPCTestCase) {
 	t.Helper()
 
@@ -146,4 +148,20 @@ func RunGRPCQueries(t *testing.T, testCases []GRPCTestCase) {
 			require.Contains(t, string(resp), tc.expOut)
 		})
 	}
+}
+
+// Write the given string to a new temporary json file.
+// Returns an file for the test to use.
+func WriteToTempJSONFile(tb testing.TB, s string) *os.File {
+	tb.Helper()
+
+	tmpFile, err := os.CreateTemp(tb.TempDir(), "test-*.json")
+	require.Nil(tb, err)
+	defer tmpFile.Close()
+
+	// Write to the temporary file
+	_, err = tmpFile.WriteString(s)
+	require.Nil(tb, err)
+
+	return tmpFile
 }

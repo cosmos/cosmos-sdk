@@ -127,7 +127,7 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 	} else {
 		args = append(args, "--minimum-gas-prices="+s.minGasPrice)
 	}
-	
+
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
 
 	out, err := RunShellCmd(s.execBinary, args...)

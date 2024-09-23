@@ -73,6 +73,9 @@ func TestSnapshots(t *testing.T) {
 }
 
 func TestPrune(t *testing.T) {
+	if !isV2() {
+		t.Skip()
+	}
 	sut.ResetChain(t)
 	cli := NewCLIWrapper(t, sut, verbose)
 	// add genesis account with some tokens

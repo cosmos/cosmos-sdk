@@ -22,7 +22,7 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 
 	// we pass -1 as epoch number to indicate that this is not an epoch minting,
 	// but a regular block minting. Same with epoch id "block".
-	err = k.mintFn(ctx, k.Environment, &minter, "block", -1)
+	err = k.MintFn(ctx, &minter, "block", -1)
 	if err != nil {
 		return err
 	}

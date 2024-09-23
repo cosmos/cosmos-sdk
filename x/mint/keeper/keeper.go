@@ -31,6 +31,9 @@ type Keeper struct {
 	Params collections.Item[types.Params]
 	Minter collections.Item[types.Minter]
 
+	// mintFn is used to mint new coins during BeginBlock. This function is in charge of
+	// minting new coins based on arbitrary logic, previously done through InflationCalculationFn.
+	// If mintFn is nil, the default minting logic is used.
 	mintFn types.MintFn
 }
 

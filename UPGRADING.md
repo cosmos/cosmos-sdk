@@ -106,7 +106,7 @@ For non depinject users, simply call `RegisterLegacyAminoCodec` and `RegisterInt
 
 Additionally, thanks to the genesis simplification, as explained in [the genesis interface update](#genesis-interface), the module manager `InitGenesis` and `ExportGenesis` methods do not require the codec anymore.
 
-##### GRPC WEB
+##### gRPC Web
 
 Grpc-web embedded client has been removed from the server. If you would like to use grpc-web, you can use the [envoy proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start). Here's how to set it up:
 
@@ -319,6 +319,11 @@ used as a TTL for the transaction and is used to provide replay protection. See
 [ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-transactions.md)
 for more details.
 
+#### Sign Mode Textual
+
+With the split of `x/auth/tx/config` in two (x/auth/tx/config as depinject module for txconfig and tx options) and `x/validate`, sign mode textual is no more automatically configured when using runtime (it was previously the case).
+For the same instructions than for legacy app wiring to enable sign mode textual (see in v0.50 UPGRADING documentation).
+
 ### Depinject `app_config.go` / `app.yml`
 
 With the introduction of [environment in modules](#core-api), depinject automatically creates the environment for all modules.
@@ -459,7 +464,7 @@ if err != nil {
 }
 ```
 
-### `x/crisis`
+#### `x/crisis`
 
 The `x/crisis` module was removed due to it not being supported or functional any longer. 
 
@@ -502,6 +507,11 @@ storetypes.StoreUpgrades{
 			},
 }
 ```
+
+#### `x/validate`
+
+Introducing `x/validate` a module that is solely used for registering default ante/post handlers and global tx validators when using runtime and runtime/v2. If you wish to set your custom ante/post handlers, no need to use this module.
+You can however always extend them by adding extra tx validators (see `x/validate` documentation).
 
 ## [v0.50.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0)
 

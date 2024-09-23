@@ -74,7 +74,7 @@ var (
 )
 
 func TestAppImportExport(t *testing.T) {
-	simsx.Run(t, NewSimApp, setupStateFactory, func(t testing.TB, ti simsx.TestInstance[*SimApp]) {
+	simsx.Run(t, NewSimApp, setupStateFactory, func(t testing.TB, ti simsx.TestInstance[*SimApp], _ []simtypes.Account) {
 		app := ti.App
 		t.Log("exporting genesis...\n")
 		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
@@ -116,35 +116,39 @@ func TestAppImportExport(t *testing.T) {
 //	set up a new node instance, Init chain from exported genesis
 //	run new instance for n blocks
 func TestAppSimulationAfterImport(t *testing.T) {
-	simsx.Run(t, NewSimApp, setupStateFactory, func(t testing.TB, ti simsx.TestInstance[*SimApp]) {
+	simsx.Run(t, NewSimApp, setupStateFactory, func(t testing.TB, ti simsx.TestInstance[*SimApp], accs []simtypes.Account) {
 		app := ti.App
 		t.Log("exporting genesis...\n")
 		exported, err := app.ExportAppStateAndValidators(false, exportWithValidatorSet, exportAllModules)
 		require.NoError(t, err)
 
-		t.Log("importing genesis...\n")
 		importGenesisStateFactory := func(app *SimApp) simsx.SimStateFactory {
 			return simsx.SimStateFactory{
 				Codec: app.AppCodec(),
-				AppStateFn: func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config) (json.RawMessage, []simtypes.Account, string, time.Time) {
+				AppStateFn: func(r *rand.Rand, _ []simtypes.Account, config simtypes.Config) (json.RawMessage, []simtypes.Account, string, time.Time) {
+					t.Log("importing genesis...\n")
+					genesisTimestamp := time.Unix(config.GenesisTime, 0)
+
 					_, err = app.InitChain(&abci.InitChainRequest{
 						AppStateBytes: exported.AppState,
 						ChainId:       simsx.SimAppChainID,
+						InitialHeight: exported.Height,
+						Time:          genesisTimestamp,
 					})
 					if IsEmptyValidatorSetErr(err) {
 						t.Skip("Skipping simulation as all validators have been unbonded")
 						return nil, nil, "", time.Time{}
 					}
-					acc, err := simtestutil.AccountsFromAppState(app.AppCodec(), exported.AppState)
 					require.NoError(t, err)
-					genesisTimestamp := time.Unix(config.GenesisTime, 0)
-					return exported.AppState, acc, config.ChainID, genesisTimestamp
+					// use accounts from initial run
+					return exported.AppState, accs, config.ChainID, genesisTimestamp
 				},
 				BlockedAddr:   must(BlockedAddresses(app.AuthKeeper.AddressCodec())),
 				AccountSource: app.AuthKeeper,
 				BalanceSource: app.BankKeeper,
 			}
 		}
+		ti.Cfg.InitialBlockHeight = int(exported.Height)
 		simsx.RunWithSeed(t, ti.Cfg, NewSimApp, importGenesisStateFactory, ti.Cfg.Seed, ti.Cfg.FuzzSeed)
 	})
 }
@@ -191,7 +195,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	var mx sync.Mutex
 	appHashResults := make(map[int64][][]byte)
 	appSimLogger := make(map[int64][]simulation.LogWriter)
-	captureAndCheckHash := func(t testing.TB, ti simsx.TestInstance[*SimApp]) {
+	captureAndCheckHash := func(t testing.TB, ti simsx.TestInstance[*SimApp], _ []simtypes.Account) {
 		seed, appHash := ti.Cfg.Seed, ti.App.LastCommitID().Hash
 		mx.Lock()
 		otherHashes, execWriters := appHashResults[seed], appSimLogger[seed]

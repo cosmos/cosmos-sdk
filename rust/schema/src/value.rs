@@ -1,13 +1,14 @@
 //! This module contains traits that must be implemented by types that can be used in the schema.
 
 use alloc::borrow::ToOwned;
-use crate::decoder::{BorrowedStrHelper, DecodeError, DecodeHelper, Decoder};
+use bump_scope::BumpString;
+use crate::decoder::{DecodeError, Decoder};
 use crate::types::*;
 
 /// Any type used directly as a message function argument or struct field must implement this trait.
 /// Unlike [`Value`] it takes a lifetime parameter so value may already be borrowed where it is
 /// declared.
-pub trait MaybeBorrowed<'a>
+pub trait ArgValue<'a>
 where
     Self: 'a,
 {
@@ -15,132 +16,151 @@ where
     type Type: Type;
 
     /// The type of the helper used to decode the value.
-    type DecodeHelper: DecodeHelper<'a, Value = Self>;
+    type DecodeState: Default;
+
+    type MemoryHandle;
 
     /// Decode the value from the decoder.
-    fn decode<D: Decoder<'a>>(helper: &'a mut Self::DecodeHelper, decoder: &'a mut D) -> Result<(), DecodeError> {
+    fn visit_decode_state<D: Decoder<'a>>(state: &'a mut Self::DecodeState, decoder: &'a mut D) -> Result<(), DecodeError> {
         unimplemented!("decode")
     }
 
-    /// A dummy method for building macros until we have an actual implementation.
-    fn dummy() {}
+    fn finish_decode_state(state: Self::DecodeState) -> (Self, Option<Self::MemoryHandle>) {
+        unimplemented!("finish")
+    }
 }
 
 /// This trait describes value types that are to be used as generic parameters
 /// where there is no lifetime parameter available.
-/// Any types implementing this trait relate themselves to a type implementing [`MaybeBorrowed`]
+/// Any types implementing this trait relate themselves to a type implementing [`ArgValue`]
 /// so that generic types taking a `Value` type parameter can use a borrowed value if possible.
 pub trait Value {
     /// The possibly borrowable value type this type is related to.
-    type MaybeBorrowed<'a>: MaybeBorrowed<'a>;
+    type MaybeBorrowed<'a>: ArgValue<'a>;
 }
 
-impl<'a> MaybeBorrowed<'a> for u8 {
+impl<'a> ArgValue<'a> for u8 {
     type Type = U8T;
-    type DecodeHelper = u8;
+    type DecodeState = u8;
+    type MemoryHandle = ();
 }
-impl<'a> MaybeBorrowed<'a> for u16 {
+impl<'a> ArgValue<'a> for u16 {
     type Type = U16T;
-    type DecodeHelper = u16;
+    type DecodeState = u16;
+    type MemoryHandle = ();
 }
-impl<'a> MaybeBorrowed<'a> for u32 {
+impl<'a> ArgValue<'a> for u32 {
     type Type = U32T;
-    type DecodeHelper = u32;
+    type DecodeState = u32;
+    type MemoryHandle = ();
 }
-impl<'a> MaybeBorrowed<'a> for u64 {
+impl<'a> ArgValue<'a> for u64 {
     type Type = U64T;
-    type DecodeHelper = u64;
+    type DecodeState = u64;
+    type MemoryHandle = ();
 }
-impl<'a> MaybeBorrowed<'a> for u128 {
+impl<'a> ArgValue<'a> for u128 {
     type Type = UIntNT<16>;
-    type DecodeHelper = u128;
+    type DecodeState = u128;
+    type MemoryHandle = ();
 }
-impl<'a> MaybeBorrowed<'a> for i8 {
+impl<'a> ArgValue<'a> for i8 {
     type Type = I8T;
-    type DecodeHelper = i8;
+    type DecodeState = i8;
+    type MemoryHandle = ();
 }
-impl<'a> MaybeBorrowed<'a> for i16 {
+impl<'a> ArgValue<'a> for i16 {
     type Type = I16T;
-    type DecodeHelper = i16;
+    type DecodeState = i16;
+    type MemoryHandle = ();
 }
-impl<'a> MaybeBorrowed<'a> for i32 {
+impl<'a> ArgValue<'a> for i32 {
     type Type = I32T;
-    type DecodeHelper = i32;
+    type DecodeState = i32;
+    type MemoryHandle = ();
 
-    fn decode<D: Decoder<'a>>(helper: &'a mut Self::DecodeHelper, decoder: &'a mut D) -> Result<(), DecodeError> {
-        *helper = decoder.decode_i32()?;
+    fn visit_decode_state<D: Decoder<'a>>(state: &'a mut Self::DecodeState, decoder: &'a mut D) -> Result<(), DecodeError> {
+        *state = decoder.decode_i32()?;
         Ok(())
     }
 }
-impl<'a> MaybeBorrowed<'a> for i64 {
+impl<'a> ArgValue<'a> for i64 {
     type Type = I64T;
-    type DecodeHelper = i64;
+    type DecodeState = i64;
+    type MemoryHandle = ();
 }
-impl<'a> MaybeBorrowed<'a> for i128 {
+impl<'a> ArgValue<'a> for i128 {
     type Type = IntNT<16>;
-    type DecodeHelper = i128;
+    type DecodeState = i128;
+    type MemoryHandle = ();
 }
-impl<'a> MaybeBorrowed<'a> for bool {
+impl<'a> ArgValue<'a> for bool {
     type Type = Bool;
-    type DecodeHelper = bool;
+    type DecodeState = bool;
+    type MemoryHandle = ();
 }
-impl<'a> MaybeBorrowed<'a> for &'a str {
+impl<'a> ArgValue<'a> for &'a str {
     type Type = StrT;
-    type DecodeHelper = BorrowedStrHelper<'a>;
+    type DecodeState = Result<&'a str, BumpString<'a, 'a>>;
+    type MemoryHandle = BumpString<'a, 'a>;
 
-    fn decode<D: Decoder<'a>>(helper: &'a mut Self::DecodeHelper, decoder: &'a mut D) -> Result<(), DecodeError> {
-        let (borrowed, owned) = decoder.decode_borrowed_str()?;
-        helper.s = borrowed;
-        helper.owner = owned;
-        Ok(())
+    fn visit_decode_state<D: Decoder<'a>>(state: &'a mut Self::DecodeState, decoder: &'a mut D) -> Result<(), DecodeError> {
+        todo!()
     }
 }
 
 #[cfg(feature = "std")]
-impl<'a> MaybeBorrowed<'a> for alloc::string::String {
+impl<'a> ArgValue<'a> for alloc::string::String {
     type Type = StrT;
-    type DecodeHelper = ();
+    type DecodeState = alloc::string::String;
+    type MemoryHandle = ();
 }
 
-impl<'a> MaybeBorrowed<'a> for simple_time::Time {
+impl<'a> ArgValue<'a> for simple_time::Time {
     type Type = TimeT;
-    type DecodeHelper = simple_time::Time;
+    type DecodeState = simple_time::Time;
+    type MemoryHandle = ();
 }
-impl<'a> MaybeBorrowed<'a> for simple_time::Duration {
+impl<'a> ArgValue<'a> for simple_time::Duration {
     type Type = DurationT;
-    type DecodeHelper = simple_time::Duration;
+    type DecodeState = simple_time::Duration;
+    type MemoryHandle = ();
 }
-impl<'a, V: MaybeBorrowed<'a>> MaybeBorrowed<'a> for Option<V> {
+impl<'a, V: ArgValue<'a>> ArgValue<'a> for Option<V> {
     type Type = NullableT<V::Type>;
-    type DecodeHelper = ();
+    type DecodeState = Option<V::DecodeState>;
+    type MemoryHandle = V::MemoryHandle;
 }
-impl<'a, V: MaybeBorrowed<'a>> MaybeBorrowed<'a> for &'a [V]
+impl<'a, V: ArgValue<'a>> ArgValue<'a> for &'a [V]
 where
     V::Type: ListElementType,
 {
     type Type = ListT<V::Type>;
-    type DecodeHelper = ();
+    type DecodeState = ();
+    type MemoryHandle = ();
 }
 
 #[cfg(feature = "std")]
-impl<'a, V: MaybeBorrowed<'a>> MaybeBorrowed<'a> for alloc::vec::Vec<V>
+impl<'a, V: ArgValue<'a>> ArgValue<'a> for alloc::vec::Vec<V>
 where
     V::Type: ListElementType,
 {
     type Type = ListT<V::Type>;
-    type DecodeHelper = ();
+    type DecodeState = ();
+    type MemoryHandle = ();
 }
 
 #[cfg(feature = "address")]
-impl<'a> MaybeBorrowed<'a> for ixc_message_api::Address {
+impl<'a> ArgValue<'a> for ixc_message_api::Address {
     type Type = AddressT;
-    type DecodeHelper = ();
+    type DecodeState = ixc_message_api::Address;
+    type MemoryHandle = ();
 }
 
 #[cfg(feature = "arrayvec")]
-impl<'a, T: Type, V: MaybeBorrowed<'a, T>, const N: usize> MaybeBorrowed<'a, ListT<T>> for arrayvec::ArrayVec<T, N> {}
+impl<'a, T: Type, V: ArgValue<'a, T>, const N: usize> ArgValue<'a, ListT<T>> for arrayvec::ArrayVec<T, N> {}
 #[cfg(feature = "arrayvec")]
-impl<'a, const N: usize> MaybeBorrowed<'a, StrT> for arrayvec::ArrayString<T, N> {}
+impl<'a, const N: usize> ArgValue<'a, StrT> for arrayvec::ArrayString<T, N> {}
 
 impl Value for u8 {
     type MaybeBorrowed<'a> = u8;
@@ -192,7 +212,7 @@ impl<V: Value> Value for Option<V> {
 }
 impl<V: Value> Value for [V]
 where
-        for<'a> <<V as Value>::MaybeBorrowed<'a> as MaybeBorrowed<'a>>::Type: ListElementType,
+        for<'a> <<V as Value>::MaybeBorrowed<'a> as ArgValue<'a>>::Type: ListElementType,
 {
     type MaybeBorrowed<'a> = &'a [V::MaybeBorrowed<'a>];
 }

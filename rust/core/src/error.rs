@@ -1,7 +1,7 @@
 //! Basic error handling utilities.
 use core::fmt::{Debug, Display, Formatter};
 use ixc_schema::types::StrT;
-use ixc_schema::value::{MaybeBorrowed, Value};
+use ixc_schema::value::{ArgValue, Value};
 
 /// A simple error type which just contains an error message.
 #[derive(Clone)]
@@ -41,8 +41,10 @@ impl<E: core::error::Error> From<E> for ErrorMessage {
     }
 }
 
-impl <'a> MaybeBorrowed<'a> for ErrorMessage {
+impl <'a> ArgValue<'a> for ErrorMessage {
     type Type = StrT;
+    type DecodeState = ();
+    type MemoryHandle = ();
 }
 
 impl Value for ErrorMessage {

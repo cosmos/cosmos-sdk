@@ -258,8 +258,7 @@ func (k Keeper) GetBlockConsPubKeyRotationHistory(ctx context.Context) ([]types.
 	if err != nil {
 		return nil, err
 	}
-	defer iterator.Close()
-
+	// iterator would be closed in the CollectValues
 	return indexes.CollectValues(ctx, k.RotationHistory, iterator)
 }
 

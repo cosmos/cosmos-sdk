@@ -93,9 +93,9 @@ func baseFieldValue(field schema.Field, typeSet schema.TypeSet) *rapid.Generator
 		return rapid.Float32().AsAny()
 	case schema.Float64Kind:
 		return rapid.Float64().AsAny()
-	case schema.IntegerStringKind:
+	case schema.IntegerKind:
 		return rapid.StringMatching(schema.IntegerFormat).AsAny()
-	case schema.DecimalStringKind:
+	case schema.DecimalKind:
 		return rapid.StringMatching(schema.DecimalFormat).AsAny()
 	case schema.BoolKind:
 		return rapid.Bool().AsAny()

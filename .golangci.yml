@@ -13,7 +13,7 @@ linters:
     - dogsled
     - errcheck
     - errorlint
-    - exportloopref
+    - copyloopvar
     - gci
     - goconst
     - gocritic
@@ -45,15 +45,15 @@ issues:
     - crypto/keys/secp256k1/internal/*
     - types/coin_regex.go
   exclude-rules:
-    - text: "ST1003:"
+    - text: "ST1003:" # We are fine with our current naming
       linters:
         - stylecheck
     # FIXME: Disabled until golangci-lint updates stylecheck with this fix:
     # https://github.com/dominikh/go-tools/issues/389
-    - text: "ST1016:"
+    - text: "ST1016:" # Ok with inconsistent receiver names
       linters:
         - stylecheck
-    - path: "migrations"
+    - path: "migrations" # migraitions always use deprecated code
       text: "SA1019:"
       linters:
         - staticcheck
@@ -72,9 +72,9 @@ issues:
     - text: "SA1019: params.SendEnabled is deprecated" # TODO remove once ready to remove from the sdk
       linters:
         - staticcheck
-    - text: "SA1029: Inappropriate key in context.WithValue" # TODO remove this when dependency is updated
+    - text: "G115: integer overflow conversion" # We are doing this everywhere.
       linters:
-        - staticcheck
+        - gosec
     - text: "leading space"
       linters:
         - nolintlint

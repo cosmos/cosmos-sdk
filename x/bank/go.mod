@@ -160,7 +160,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-require cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
+require cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
 
 require (
 	cosmossdk.io/schema v0.3.0 // indirect
@@ -176,7 +176,6 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/collections => ../../collections
-	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/staking => ../staking
 	cosmossdk.io/x/tx => ../tx

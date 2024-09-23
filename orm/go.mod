@@ -5,7 +5,7 @@ go 1.23
 require (
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/core v1.0.0-alpha.3
-	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
+	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33
@@ -71,5 +71,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-replace cosmossdk.io/core/testing => ../core/testing

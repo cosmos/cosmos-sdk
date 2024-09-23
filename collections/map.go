@@ -87,6 +87,7 @@ func (m Map[K, V]) Get(ctx context.Context, key K) (v V, err error) {
 	if err != nil {
 		return v, err
 	}
+	fmt.Printf("collectiosn/map bytesKey=%x value=%x\n", bytesKey, valueBytes)
 	if valueBytes == nil {
 		return v, fmt.Errorf("%w: key '%s' of type %s", ErrNotFound, m.kc.Stringify(key), m.vc.ValueType())
 	}
@@ -131,7 +132,9 @@ func (m Map[K, V]) Iterate(ctx context.Context, ranger Ranger[K]) (Iterator[K, V
 // walk function with the decoded key and value. If the callback function
 // returns true then the walking is stopped.
 // A nil ranger equals to walking over the entire key and value set.
-func (m Map[K, V]) Walk(ctx context.Context, ranger Ranger[K], walkFunc func(key K, value V) (stop bool, err error)) error {
+func (m Map[K, V]) Walk(
+	ctx context.Context, ranger Ranger[K], walkFunc func(key K, value V) (stop bool, err error),
+) error {
 	iter, err := m.Iterate(ctx, ranger)
 	if err != nil {
 		return err

@@ -2,6 +2,7 @@
 package integration
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/json"
@@ -313,6 +314,14 @@ func SetupWithConfiguration(
 		return nil, fmt.Errorf("failed to get genesis state changes: %w", err)
 	}
 	cs := &corestore.Changeset{Changes: genesisChanges}
+	for _, change := range genesisChanges {
+		if !bytes.Equal(change.Actor, []byte("acc")) {
+			continue
+		}
+		for _, kv := range change.StateChanges {
+			fmt.Printf("actor: %s, key: %x, value: %x\n", change.Actor, kv.Key, kv.Value)
+		}
+	}
 	_, err = store.Commit(cs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to commit initial version: %w", err)

@@ -2,6 +2,7 @@ package cachekv
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"sort"
 	"sync"
@@ -153,8 +154,10 @@ func (store *Store) Write() {
 		// save the byteslice, then we can assume only a read-only copy is sufficient.
 		if obj.val.value != nil {
 			// It already exists in the parent, hence update it.
+			fmt.Printf("cachekv/Write() key=%x value=%x rm=%t\n", obj.key, obj.val.value, false)
 			store.parent.Set([]byte(obj.key), obj.val.value)
 		} else {
+			fmt.Printf("cachekv/Write() key=%x value=%x rm=%t\n", obj.key, obj.val.value, true)
 			store.parent.Delete([]byte(obj.key))
 		}
 	}
@@ -366,7 +369,9 @@ func (store *Store) dirtyItems(start, end []byte) {
 	store.clearUnsortedCacheSubset(kvL, stateAlreadySorted)
 }
 
-func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sortState) { //nolint:staticcheck // We are in store v1.
+func (store *Store) clearUnsortedCacheSubset(
+	unsorted []*kv.Pair, sortState sortState,
+) { //nolint:staticcheck // We are in store v1.
 	n := len(store.unsortedCache)
 	if len(unsorted) == n { // This pattern allows the Go compiler to emit the map clearing idiom for the entire map.
 		for key := range store.unsortedCache {

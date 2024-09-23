@@ -2,16 +2,18 @@ package bank_test
 
 import (
 	"context"
+	"encoding/hex"
+	"errors"
+	"fmt"
 	"testing"
-
-	"cosmossdk.io/core/server"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	secp256k1_internal "gitlab.com/yawning/secp256k1-voi"
+	"gitlab.com/yawning/secp256k1-voi/secec"
 
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -63,7 +65,10 @@ type (
 )
 
 var (
-	priv1 = secp256k1.GenPrivKey()
+	stablePrivateKey, _ = secec.NewPrivateKeyFromScalar(secp256k1_internal.NewScalarFromUint64(100))
+	stablePriv1         = &secp256k1.PrivKey{Key: stablePrivateKey.Bytes()}
+	//priv1               = secp256k1.GenPrivKey()
+	priv1 = stablePriv1
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 	priv2 = secp256k1.GenPrivKey()
 	addr2 = sdk.AccAddress(priv2.PubKey().Address())
@@ -91,13 +96,6 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 	t.Helper()
 	res := suite{}
 
-	var genAccounts []simtestutil.GenesisAccount
-	for _, acc := range genesisAccounts {
-		genAccounts = append(genAccounts, simtestutil.GenesisAccount{GenesisAccount: acc})
-	}
-
-	startupCfg := simtestutil.DefaultStartUpConfig()
-	startupCfg.GenesisAccounts = genAccounts
 	moduleConfigs := []configurator.ModuleOption{
 		configurator.AccountsModule(),
 		configurator.AuthModule(),
@@ -112,14 +110,25 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 	}
 	var err error
 	if testAppV2 {
-		v2StartupCfg := integrationv2.DefaultStartUpConfig()
-		v2StartupCfg.HomeDir = t.TempDir()
+		startupCfg := integrationv2.DefaultStartUpConfig()
+		var genAccounts []integrationv2.GenesisAccount
+		for _, acc := range genesisAccounts {
+			genAccounts = append(genAccounts, integrationv2.GenesisAccount{GenesisAccount: acc})
+		}
+		startupCfg.GenesisAccounts = genAccounts
+		startupCfg.HomeDir = t.TempDir()
 		res.AppV2, err = integrationv2.SetupWithConfiguration(
 			depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
-			v2StartupCfg,
+			startupCfg,
 			&res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
 		require.NoError(t, err)
 	} else {
+		var genAccounts []simtestutil.GenesisAccount
+		for _, acc := range genesisAccounts {
+			genAccounts = append(genAccounts, simtestutil.GenesisAccount{GenesisAccount: acc})
+		}
+		startupCfg := simtestutil.DefaultStartUpConfig()
+		startupCfg.GenesisAccounts = genAccounts
 		res.App, err = simtestutil.SetupWithConfiguration(
 			depinject.Configs(configurator.NewAppConfig(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
 			startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
@@ -149,6 +158,8 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	s := createTestSuite(t, genAccs)
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false)
+	fmt.Printf("*** presence test\n")
+	require.NotNil(t, s.AccountKeeper.GetAccount(ctx, addr1))
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
 	_, err := baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: baseApp.LastBlockHeight() + 1})
@@ -193,31 +204,58 @@ func TestSendNotEnoughBalance_v2(t *testing.T) {
 	s := createTestSuite(t, genAccs)
 	ctx := context.Background()
 
+	randomAssert := func(actor, key, value string) error {
+		_, state, err := s.AppV2.Store.StateLatest()
+		if err != nil {
+			return err
+		}
+		rdr, err := state.GetReader([]byte(actor))
+		if err != nil {
+			return err
+		}
+		k, err := hex.DecodeString(key)
+		if err != nil {
+			return err
+		}
+		v, err := rdr.Get(k)
+		if err != nil {
+			return err
+		}
+		if hex.EncodeToString(v) != value {
+			return errors.New("unexpected value")
+		}
+		return nil
+	}
+
 	_, state, err := s.AppV2.Store.StateLatest()
+	require.NoError(t, randomAssert("acc",
+		"6163636f756e744e756d6265720000000000000002",
+		"93354845030274cd4bf1686abd60ab28ec52e1a7"))
 	require.NoError(t, err)
 
-	_, err = s.AppV2.Run(ctx, state, func(ctx context.Context) error {
+	nextState, err := s.AppV2.Run(ctx, state, func(ctx context.Context) error {
+		acc := s.AccountKeeper.GetAccount(ctx, addr1)
+		require.NotNil(t, acc)
 		return testutil.FundAccount(
 			ctx, s.BankKeeper, addr1,
 			sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67)))
 	})
 	require.NoError(t, err)
-	_, _, err = s.AppV2.DeliverBlock(ctx, &server.BlockRequest[transaction.Tx]{
-		Height:  2, // TODO how to auto-advance height with app v2 interface?
-		Hash:    make([]byte, 32),
-		AppHash: make([]byte, 32),
-	})
+	//_, _, err = s.AppV2.DeliverBlock(ctx, &server.BlockRequest[transaction.Tx]{
+	//	Height:  2, // TODO how to auto-advance height with app v2 interface?
+	//	Hash:    make([]byte, 32),
+	//	AppHash: make([]byte, 32),
+	//})
 	require.NoError(t, err)
-	/*
-		_, err := baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: baseApp.LastBlockHeight() + 1})
-		require.NoError(t, err)
-		_, err = baseApp.Commit()
-		require.NoError(t, err)
-
+	nextState, err = s.AppV2.Run(ctx, nextState, func(ctx context.Context) error {
 		res1 := s.AccountKeeper.GetAccount(ctx, addr1)
 		require.NotNil(t, res1)
 		require.Equal(t, acc, res1.(*authtypes.BaseAccount))
 
+		return nil
+	})
+
+	/*
 		origAccNum := res1.GetAccountNumber()
 		origSeq := res1.GetSequence()
 
@@ -226,9 +264,10 @@ func TestSendNotEnoughBalance_v2(t *testing.T) {
 		addr2Str, err := s.AccountKeeper.AddressCodec().BytesToString(addr2)
 		require.NoError(t, err)
 		sendMsg := types.NewMsgSend(addr1Str, addr2Str, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
-		header := header.Info{Height: baseApp.LastBlockHeight() + 1}
+		hdr := header.Info{Height: 3} // TODO how to auto-advance height with app v2 interface?
+
 		txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
-		_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
+		_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, hdr, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 		require.Error(t, err)
 
 		checkBalance(t, baseApp, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)}, s.BankKeeper)

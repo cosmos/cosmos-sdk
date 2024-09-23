@@ -33,11 +33,15 @@ jobs:
               assignees: pr.assignees.map(assignee => assignee.login)
             }));
 
-            let table = "| Title | Link | Assignees |\n| --- | --- | --- |\n"; // Table header
+            let table = '<table border="1" cellpadding="5"><tr><th>Title</th><th>Link</th><th>Assignees</th></tr>';
             pullRequests.forEach(pr => {
-              const assignees = pr.assignees.length > 0 ? pr.assignees.join(', ') : 'No assignees';
-              table += `| ${pr.title} | <${pr.link}> | ${assignees} |\n`;
+              table += `<tr>
+                          <td>${pr.title}</td>
+                          <td><a href="${pr.link}">${pr.link}</a></td>
+                          <td>${pr.assignees.length ? pr.assignees.join(', ') : 'No assignees'}</td>
+                        </tr>`;
             });
+            table += '</table>';
             return table;
 
       - name: Send Slack Reminder

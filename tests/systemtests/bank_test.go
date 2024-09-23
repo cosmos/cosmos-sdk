@@ -224,7 +224,7 @@ func TestBankGRPCQueries(t *testing.T) {
 
 	// start chain
 	sut.StartChain(t)
-	baseurl := fmt.Sprintf("http://localhost:%d", apiPortStart)
+	baseurl := sut.APIAddress()
 
 	// test supply grpc endpoint
 	supplyUrl := baseurl + "/cosmos/bank/v1beta1/supply"

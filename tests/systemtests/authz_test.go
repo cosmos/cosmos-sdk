@@ -1,3 +1,5 @@
+//go:build system_test
+
 package systemtests
 
 import (
@@ -715,7 +717,7 @@ func TestAuthzGRPCQueries(t *testing.T) {
 	RequireTxSuccess(t, rsp)
 	grant3 := `{"authorization":{"@type":"/cosmos.authz.v1beta1.GenericAuthorization","msg":"/cosmos.gov.v1.MsgVote"},"expiration":null}`
 
-	baseurl := fmt.Sprintf("http://localhost:%d", apiPortStart)
+	baseurl := sut.APIAddress()
 
 	// test query grant grpc endpoint
 	grantURL := baseurl + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s&msg_type_url=%s"

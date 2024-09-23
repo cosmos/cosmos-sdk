@@ -513,7 +513,7 @@ func writeFile(name, dir string, contents []byte) error {
 	return os.WriteFile(file, contents, 0o600)
 }
 
-// getBankV2GenesisFromV1 clones bank/v1 state to bank/v2 
+// getBankV2GenesisFromV1 clones bank/v1 state to bank/v2
 // since we not migrate yet
 // TODO: Remove
 func getBankV2GenesisFromV1(v1GenesisState banktypes.GenesisState) bankv2types.GenesisState {

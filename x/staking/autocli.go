@@ -113,7 +113,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "delegator_addr"},
 						{ProtoField: "src_validator_addr"},
-						{ProtoField: "dst_validator_addr"},
+						{ProtoField: "dst_validator_addr", Optional: true},
 					},
 				},
 				{

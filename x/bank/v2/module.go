@@ -144,7 +144,7 @@ func (am AppModule) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
 	}
 }
 
-// GetQueryDecoders registers the query handlers for the bank module.
+// GetQueryDecoders returns grpc request and the corresponding decoder.
 func (am AppModule) GetQueryDecoders() map[string]func() gogoproto.Message {
 	decodeMaps := make(map[string]func() gogoproto.Message)
 	var errs error
@@ -171,18 +171,14 @@ func (am AppModule) GetQueryDecoders() map[string]func() gogoproto.Message {
 	return decodeMaps
 }
 
-// GetTxCmd returns the root tx command for the bank module.
+// GetTxCmd returns the root tx command for the bank/v2 module.
+// TODO: Remove & use autocli
 func (AppModule) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
 }
 
+// GetTxCmd returns the root query command for the bank/v2 module.
+// TODO: Remove & use autocli
 func (AppModule) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
-
-// // RegisterServices registers module services.
-// func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-// 	am.RegisterMsgHandlers(registrar)
-
-// 	return nil
-// }

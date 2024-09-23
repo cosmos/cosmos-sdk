@@ -1,4 +1,4 @@
-package tx
+package validate
 
 import (
 	"context"

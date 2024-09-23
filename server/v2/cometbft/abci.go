@@ -126,11 +126,16 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		return nil, err
 	}
 
+	events, err := intoABCIEvents(resp.Events, c.indexedEvents)
+	if err != nil {
+		return nil, err
+	}
+
 	cometResp := &abciproto.CheckTxResponse{
 		Code:      resp.Code,
 		GasWanted: uint64ToInt64(resp.GasWanted),
 		GasUsed:   uint64ToInt64(resp.GasUsed),
-		Events:    intoABCIEvents(resp.Events, c.indexedEvents),
+		Events:    events,
 	}
 	if resp.Error != nil {
 		cometResp.Code = 1
@@ -467,9 +472,10 @@ func (c *Consensus[T]) FinalizeBlock(
 	}
 
 	// remove txs from the mempool
-	err = c.mempool.Remove(decodedTxs)
-	if err != nil {
-		return nil, fmt.Errorf("unable to remove txs: %w", err)
+	for _, tx := range decodedTxs {
+		if err = c.mempool.Remove(tx); err != nil {
+			return nil, fmt.Errorf("unable to remove tx: %w", err)
+		}
 	}
 
 	c.lastCommittedHeight.Store(req.Height)

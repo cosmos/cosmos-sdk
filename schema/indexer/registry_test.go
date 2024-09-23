@@ -3,15 +3,17 @@ package indexer
 import "testing"
 
 func TestRegister(t *testing.T) {
-	Register("test", func(params InitParams) (InitResult, error) {
-		return InitResult{}, nil
+	Register("test", Initializer{
+		InitFunc: func(params InitParams) (InitResult, error) {
+			return InitResult{}, nil
+		},
 	})
 
-	if indexerRegistry["test"] == nil {
+	if _, ok := indexerRegistry["test"]; !ok {
 		t.Fatalf("expected to find indexer")
 	}
 
-	if indexerRegistry["test2"] != nil {
+	if _, ok := indexerRegistry["test2"]; ok {
 		t.Fatalf("expected not to find indexer")
 	}
 
@@ -20,7 +22,9 @@ func TestRegister(t *testing.T) {
 			t.Fatalf("expected to panic")
 		}
 	}()
-	Register("test", func(params InitParams) (InitResult, error) {
-		return InitResult{}, nil
+	Register("test", Initializer{
+		InitFunc: func(params InitParams) (InitResult, error) {
+			return InitResult{}, nil
+		},
 	})
 }

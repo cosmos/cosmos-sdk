@@ -459,10 +459,8 @@ func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap
 func (m *MM[T]) RegisterServices(app *App[T]) error {
 	for _, module := range m.modules {
 		// register msg + query
-		if services, ok := module.(hasServicesV1); ok {
-			if err := registerServices(services, app, protoregistry.GlobalFiles); err != nil {
-				return err
-			}
+		if err := registerServices(module, app, protoregistry.GlobalFiles); err != nil {
+			return err
 		}
 
 		// register migrations
@@ -594,7 +592,7 @@ func (m *MM[T]) assertNoForgottenModules(
 	return nil
 }
 
-func registerServices[T transaction.Tx](s hasServicesV1, app *App[T], registry *protoregistry.Files) error {
+func registerServices[T transaction.Tx](s appmodulev2.AppModule, app *App[T], registry *protoregistry.Files) error {
 	c := &configurator{
 		grpcQueryDecoders: map[string]func() gogoproto.Message{},
 		stfQueryRouter:    app.queryRouterBuilder,
@@ -603,8 +601,28 @@ func registerServices[T transaction.Tx](s hasServicesV1, app *App[T], registry *
 		err:               nil,
 	}
 
-	if err := s.RegisterServices(c); err != nil {
-		return fmt.Errorf("unable to register services: %w", err)
+	if services, ok := s.(hasServicesV1); ok {
+		if err := services.RegisterServices(c); err != nil {
+			return fmt.Errorf("unable to register services: %w", err)
+		}
+	} else {
+		// If module not implement RegisterServices, register msg & query handler.
+		if module, ok := s.(appmodulev2.HasMsgHandlers); ok {
+			module.RegisterMsgHandlers(app.msgRouterBuilder)
+		}
+
+		if module, ok := s.(appmodulev2.HasQueryHandlers); ok {
+			module.RegisterQueryHandlers(app.queryRouterBuilder)
+			// TODO: query regist by RegisterQueryHandlers not in grpcQueryDecoders
+			if module, ok := s.(interface {
+				GetQueryDecoders() map[string]func() gogoproto.Message
+			}); ok {
+				decoderMap := module.GetQueryDecoders()
+				for path, decoder := range decoderMap {
+					app.GRPCMethodsToMessageMap[path] = decoder
+				}
+			}
+		}
 	}
 
 	if c.err != nil {

@@ -212,9 +212,9 @@ Their responsibilities include:
 
 Currently residing Stable Release Managers:
 
-* @tac0turtle - Marko Baricevic
-* @julienrbrt - Julien Robert
-
+* [@tac0turtle - Marko Baricevic](https://github.com/tac0turtle)
+* [@julienrbrt - Julien Robert](https://github.com/julienrbrt)
+  
 ## Cosmos SDK Modules Tagging Strategy
 
 The Cosmos SDK repository is a mono-repo where its Go modules have a different release process and cadence than the Cosmos SDK itself.

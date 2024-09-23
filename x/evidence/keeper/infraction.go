@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// HandleEquivocationEvidence implements an equivocation evidence handler. Assuming the
+// handleEquivocationEvidence implements an equivocation evidence handler. Assuming the
 // evidence is valid, the validator committing the misbehavior will be slashed,
 // jailed and tombstoned. Once tombstoned, the validator will not be able to
 // recover. Note, the evidence contains the block time and height at the time of

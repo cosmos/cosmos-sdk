@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"google.golang.org/protobuf/proto"
 	"gotest.tools/v3/assert"
 
@@ -16,7 +17,6 @@ import (
 	"cosmossdk.io/orm/model/ormtable"
 	"cosmossdk.io/orm/testing/ormtest"
 	"cosmossdk.io/orm/types/kv"
-	dbm "cosmossdk.io/store/db"
 )
 
 func initBalanceTable(tb testing.TB) testpb.BalanceTable {

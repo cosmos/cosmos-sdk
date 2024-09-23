@@ -38,6 +38,7 @@ jobs:
               return `*Title*: ${pr.title}\n*Link*: <${pr.html_url}>\n${assignees}`;
             }).join('\n\n'); // Double newlines between PRs for readability in Slack
 
+            console.table(formattedPrs);
             return formattedPRs
 
       - name: Send Slack Reminder

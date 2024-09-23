@@ -12,9 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var nodeDir string
-
-func TestSnapshots(t *testing.T) {
+func TestSnapshotsV1(t *testing.T) {
 	if isV2() {
 		t.Skip()
 	}
@@ -28,7 +26,7 @@ func TestSnapshots(t *testing.T) {
 	)
 
 	sut.StartChain(t)
-	nodeDir = filepath.Join(WorkDir, "testnet", "node0", "simd")
+	nodeDir := filepath.Join(WorkDir, "testnet", "node0", "simd")
 
 	// Wait for chain produce some blocks
 	time.Sleep(time.Second * 10)
@@ -69,7 +67,7 @@ func TestSnapshots(t *testing.T) {
 	require.DirExists(t, fmt.Sprintf("%s/data/application.db", nodeDir))
 }
 
-func TestPrune(t *testing.T) {
+func TestPruneV1(t *testing.T) {
 	if isV2() {
 		t.Skip()
 	}
@@ -83,7 +81,7 @@ func TestPrune(t *testing.T) {
 	)
 
 	sut.StartChain(t)
-	nodeDir = filepath.Join(WorkDir, "testnet", "node0", "simd")
+	nodeDir := filepath.Join(WorkDir, "testnet", "node0", "simd")
 
 	// Wait for chain produce some blocks
 	time.Sleep(time.Second * 10)

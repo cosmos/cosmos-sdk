@@ -675,7 +675,6 @@ func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{
 	for _, md := range sd.Methods {
 		// TODO(tip): what if a query is not deterministic?
 		requestFullName, err := registerMethod(c.stfQueryRouter, sd, md, ss)
-		fmt.Println("requestFullName", requestFullName)
 		if err != nil {
 			return fmt.Errorf("unable to register query handler %s.%s: %w", sd.ServiceName, md.MethodName, err)
 		}

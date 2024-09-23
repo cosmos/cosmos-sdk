@@ -20,15 +20,12 @@ func TestMigration(t *testing.T) {
 	err := os.RemoveAll(tempDir)
 	require.NoError(t, err)
 
-	migrator, err := NewMigrator(oldGenFilePath)
-	require.NoError(t, err)
-
 	// should not be able to get app genesis from new genesis file
 	// since validators address are still in hex string and not cons address
 	_, err = types.AppGenesisFromFile(oldGenFilePath)
 	require.ErrorContains(t, err, "error unmarshalling AppGenesis: decoding bech32 failed")
 
-	newAppGenesis, err := migrator.MigrateGenesisFile()
+	newAppGenesis, err := MigrateGenesisFile(oldGenFilePath)
 	require.NoError(t, err)
 	// save the new app genesis to new temp dir
 	err = newAppGenesis.SaveAs(tempDir)

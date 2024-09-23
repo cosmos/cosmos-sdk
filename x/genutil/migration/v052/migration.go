@@ -18,12 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-type Migrator struct {
-	// genesis file path
-	filePath string
-	reader   io.Reader
-}
-
 type legacyAppGenesis struct {
 	AppName       string                  `json:"app_name"`
 	AppVersion    string                  `json:"app_version"`
@@ -40,31 +34,39 @@ type legacyConsensusGenesis struct {
 	Params     *cmttypes.ConsensusParams   `json:"params,omitempty"`
 }
 
-func NewMigrator(filePath string) (*Migrator, error) {
-	file, err := os.Open(filepath.Clean(filePath))
+func MigrateGenesisFile(oldGenFile string) (*types.AppGenesis, error) {
+	file, err := os.Open(filepath.Clean(oldGenFile))
 	if err != nil {
 		return nil, err
 	}
 
-	return &Migrator{
-		reader: file,
-	}, nil
+	appGenesis, err := migrateGenesisValidator(file)
+	ferr := file.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read genesis from file %s: %w", oldGenFile, err)
+	}
+
+	if ferr != nil {
+		return nil, ferr
+	}
+
+	return appGenesis, nil
 }
 
-// MigrateGenesisFile migrate current genesis file content to match of the
+// migrateGenesisValidator migrate current genesis file genesis validator to match of the
 // new genesis validator type.
-func (m Migrator) MigrateGenesisFile() (*types.AppGenesis, error) {
+func migrateGenesisValidator(r io.Reader) (*types.AppGenesis, error) {
 	var newAg types.AppGenesis
 	var ag legacyAppGenesis
 	var err error
 
-	if rs, ok := m.reader.(io.ReadSeeker); ok {
+	if rs, ok := r.(io.ReadSeeker); ok {
 		err = json.NewDecoder(rs).Decode(&ag)
 		if err == nil {
 			vals := []sdk.GenesisValidator{}
 			for _, cmtVal := range ag.Consensus.Validators {
 				val := sdk.GenesisValidator{
-					Address: sdk.ConsAddress(cmtVal.Address).Bytes(),
+					Address: cmtVal.Address.Bytes(),
 					PubKey:  cmtVal.PubKey,
 					Power:   cmtVal.Power,
 					Name:    cmtVal.Name,
@@ -97,7 +99,7 @@ func (m Migrator) MigrateGenesisFile() (*types.AppGenesis, error) {
 		}
 	}
 
-	jsonBlob, ioerr := io.ReadAll(m.reader)
+	jsonBlob, ioerr := io.ReadAll(r)
 	if ioerr != nil {
 		err = errors.Join(err, fmt.Errorf("failed to read file completely: %w", ioerr))
 		return nil, err
@@ -123,8 +125,7 @@ func (m Migrator) MigrateGenesisFile() (*types.AppGenesis, error) {
 	}
 
 	newAg = types.AppGenesis{
-		AppName: version.AppName,
-		// AppVersion is not filled as we do not know it from a CometBFT genesis
+		AppName:       version.AppName,
 		GenesisTime:   ctmGenesis.GenesisTime,
 		ChainID:       ctmGenesis.ChainID,
 		InitialHeight: ctmGenesis.InitialHeight,

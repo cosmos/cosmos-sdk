@@ -283,11 +283,7 @@ func TestBankGRPCQueries(t *testing.T) {
 
 	// test denom metadata endpoint
 	denomMetadataUrl := baseurl + "/cosmos/bank/v1beta1/denoms_metadata"
-	dmTestCases := []struct {
-		name   string
-		url    string
-		expOut string
-	}{
+	dmTestCases := []GRPCTestCase{
 		{
 			"test GRPC client metadata",
 			denomMetadataUrl,
@@ -305,23 +301,13 @@ func TestBankGRPCQueries(t *testing.T) {
 		},
 	}
 
-	for _, tc := range dmTestCases {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := testutil.GetRequest(tc.url)
-			require.NoError(t, err)
-			require.Contains(t, string(resp), tc.expOut)
-		})
-	}
+	RunGRPCQueries(t, dmTestCases)
 
 	// test bank balances endpoint
 	balanceUrl := baseurl + "/cosmos/bank/v1beta1/balances/"
 	allBalancesOutput := `{"balances":[` + specificDenomOutput + `,{"denom":"stake","amount":"10000000"}],"pagination":{"next_key":null,"total":"2"}}`
 
-	balanceTestCases := []struct {
-		name   string
-		url    string
-		expOut string
-	}{
+	balanceTestCases := []GRPCTestCase{
 		{
 			"test GRPC total account balance",
 			balanceUrl + account1Addr,
@@ -339,11 +325,5 @@ func TestBankGRPCQueries(t *testing.T) {
 		},
 	}
 
-	for _, tc := range balanceTestCases {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := testutil.GetRequest(tc.url)
-			require.NoError(t, err)
-			require.Contains(t, string(resp), tc.expOut)
-		})
-	}
+	RunGRPCQueries(t, balanceTestCases)
 }

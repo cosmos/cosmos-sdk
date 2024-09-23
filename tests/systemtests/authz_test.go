@@ -255,7 +255,7 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 }
 
 func TestAuthzExecTxCmd(t *testing.T) {
-	// scenario: test authz grant command
+	// scenario: test authz exec command
 	// given a running chain
 
 	sut.ResetChain(t)
@@ -325,7 +325,6 @@ func TestAuthzExecTxCmd(t *testing.T) {
 				return false
 			}
 			_ = cli.WithRunErrorMatcher(assertErr).Run(cmd...)
-
 		})
 	}
 
@@ -359,12 +358,12 @@ func TestAuthzExecTxCmd(t *testing.T) {
 			"",
 		},
 		{
-			"no grant found",
-			newAccount,
+			"send to not allowed address",
 			granteeAddr,
-			20,
+			notAllowedAddr,
+			10,
 			true,
-			"authorization not found",
+			"cannot send to",
 		},
 		{
 			"amount greater than spend limit",
@@ -375,12 +374,12 @@ func TestAuthzExecTxCmd(t *testing.T) {
 			"requested amount is more than spend limit",
 		},
 		{
-			"send to not allowed address",
+			"no grant found",
+			newAccount,
 			granteeAddr,
-			notAllowedAddr,
-			10,
+			20,
 			true,
-			"cannot send to",
+			"authorization not found",
 		},
 	}
 
@@ -632,6 +631,11 @@ func TestAuthzExecTxCmd(t *testing.T) {
 	rsp = cli.RunAndWait("tx", "authz", "revoke", granteeAddr, msgUndelegateTypeURL, "--from", granterAddr)
 	RequireTxSuccess(t, rsp)
 
+	// check grants between granter and grantee after revoking
+	resp = cli.CustomQuery("q", "authz", "grants", granterAddr, granteeAddr)
+	grants = gjson.Get(resp, "grants").Array()
+	require.Len(t, grants, 0)
+
 	// test exec redelegate authorization
 	rsp = cli.RunAndWait("tx", "authz", "grant", granteeAddr, "redelegate",
 		fmt.Sprintf("--allowed-validators=%s,%s", val1Addr, val2Addr),
@@ -639,14 +643,199 @@ func TestAuthzExecTxCmd(t *testing.T) {
 		"--from", granterAddr)
 	RequireTxSuccess(t, rsp)
 
+	var redelegationAmount int64 = 10
+
 	redelegateTx := fmt.Sprintf(`{"@type":"%s","delegator_address":"%s","validator_src_address":"%s","validator_dst_address":"%s","amount":{"denom":"%s","amount":"%d"}}`,
-		msgRedelegateTypeURL, granterAddr, val1Addr, val2Addr, denom, 10)
+		msgRedelegateTypeURL, granterAddr, val1Addr, val2Addr, denom, redelegationAmount)
 	execMsg = WriteToTempJSONFile(t, redelegateTx)
 	defer execMsg.Close()
 
 	redelegateCmd := append(append(execCmdArgs, execMsg.Name()), "--from="+granteeAddr, "--gas=auto")
 	rsp = cli.RunAndWait(redelegateCmd...)
 	RequireTxSuccess(t, rsp)
+
+	// query new delegation and check balance increased
+	resp = cli.CustomQuery("q", "staking", "delegation", granterAddr, val2Addr)
+	delegatedAmount = gjson.Get(resp, "delegation_response.balance.amount").Int()
+	require.GreaterOrEqual(t, delegatedAmount, redelegationAmount)
+
+	// revoke all existing grants
+	rsp = cli.RunAndWait("tx", "authz", "revoke-all", "--from", granterAddr)
+	RequireTxSuccess(t, rsp)
+
+	// check grants after revoking
+	resp = cli.CustomQuery("q", "authz", "grants-by-granter", granterAddr)
+	grants = gjson.Get(resp, "grants").Array()
+	require.Len(t, grants, 0)
+}
+
+func TestAuthzGRPCQueries(t *testing.T) {
+	// scenario: test authz grpc gateway queries
+	// given a running chain
+
+	sut.ResetChain(t)
+	cli := NewCLIWrapper(t, sut, verbose)
+
+	// get validator address which will be used as granter
+	granterAddr := gjson.Get(cli.Keys("keys", "list"), "1.address").String()
+	require.NotEmpty(t, granterAddr)
+
+	// add grantee keys
+	grantee1Addr := cli.AddKey("grantee1")
+	require.NotEqual(t, granterAddr, grantee1Addr)
+
+	grantee2Addr := cli.AddKey("grantee2")
+	require.NotEqual(t, granterAddr, grantee2Addr)
+
+	sut.ModifyGenesisCLI(t,
+		[]string{"genesis", "add-genesis-account", grantee1Addr, "10000000stake"},
+	)
+
+	// start chain
+	sut.StartChain(t)
+
+	// create few grants
+	rsp := cli.RunAndWait("tx", "authz", "grant", grantee1Addr, "send",
+		"--spend-limit=10000stake",
+		"--fees=1stake",
+		"--from", granterAddr)
+	RequireTxSuccess(t, rsp)
+	grant1 := `{"authorization":{"@type":"/cosmos.bank.v1beta1.SendAuthorization","spend_limit":[{"denom":"stake","amount":"10000"}],"allow_list":[]},"expiration":null}`
+
+	rsp = cli.RunAndWait("tx", "authz", "grant", grantee2Addr, "send",
+		"--spend-limit=10000stake",
+		"--fees=1stake",
+		"--from", granterAddr)
+	RequireTxSuccess(t, rsp)
+	grant2 := `{"authorization":{"@type":"/cosmos.bank.v1beta1.SendAuthorization","spend_limit":[{"denom":"stake","amount":"10000"}],"allow_list":[]},"expiration":null}`
+
+	rsp = cli.RunAndWait("tx", "authz", "grant", grantee2Addr, "generic",
+		"--msg-type="+msgVoteTypeURL,
+		"--fees=1stake",
+		"--from", granterAddr)
+	RequireTxSuccess(t, rsp)
+	grant3 := `{"authorization":{"@type":"/cosmos.authz.v1beta1.GenericAuthorization","msg":"/cosmos.gov.v1.MsgVote"},"expiration":null}`
+
+	baseurl := fmt.Sprintf("http://localhost:%d", apiPortStart)
+
+	// test query grant grpc endpoint
+	grantURL := baseurl + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s&msg_type_url=%s"
+
+	grantTestCases := []GRPCTestCase{
+		{
+			"invalid granter address",
+			fmt.Sprintf(grantURL, "invalid_granter", grantee1Addr, msgSendTypeURL),
+			"decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			"invalid grantee address",
+			fmt.Sprintf(grantURL, granterAddr, "invalid_grantee", msgSendTypeURL),
+			"decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			"with empty granter",
+			fmt.Sprintf(grantURL, "", grantee1Addr, msgSendTypeURL),
+			"empty address string is not allowed",
+		},
+		{
+			"with empty grantee",
+			fmt.Sprintf(grantURL, granterAddr, "", msgSendTypeURL),
+			"empty address string is not allowed",
+		},
+		{
+			"invalid msg-type",
+			fmt.Sprintf(grantURL, granterAddr, grantee1Addr, "invalidMsg"),
+			"authorization not found for invalidMsg type",
+		},
+		{
+			"valid query",
+			fmt.Sprintf(grantURL, granterAddr, grantee1Addr, msgSendTypeURL),
+			grant1,
+		},
+	}
+
+	RunGRPCQueries(t, grantTestCases)
+
+	// test query grants grpc endpoint
+	grantsURL := baseurl + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s"
+	grantsTestCases := []GRPCTestCase{
+		{
+			"expect single grant",
+			fmt.Sprintf(grantsURL, granterAddr, grantee1Addr),
+			grant1,
+		},
+		{
+			"expect two grants",
+			fmt.Sprintf(grantsURL, granterAddr, grantee2Addr),
+			fmt.Sprintf("[%s,%s]", grant2, grant3),
+		},
+		{
+			"expect single grant with pagination",
+			fmt.Sprintf(grantsURL+"&pagination.limit=1", granterAddr, grantee2Addr),
+			grant2,
+		},
+		{
+			"expect single grant with pagination limit and offset",
+			fmt.Sprintf(grantsURL+"&pagination.limit=1&pagination.offset=1", granterAddr, grantee2Addr),
+			grant3,
+		},
+		{
+			"expect two grants with pagination",
+			fmt.Sprintf(grantsURL+"&pagination.limit=2", granterAddr, grantee2Addr),
+			fmt.Sprintf("[%s,%s]", grant2, grant3),
+		},
+	}
+
+	RunGRPCQueries(t, grantsTestCases)
+
+	// test query grants by granter grpc endpoint
+	grantsByGranterURL := baseurl + "/cosmos/authz/v1beta1/grants/granter/%s"
+	granterTestCases := []GRPCTestCase{
+		{
+			"invalid account address",
+			fmt.Sprintf(grantsByGranterURL, "invalid address"),
+			"decoding bech32 failed",
+		},
+		{
+			"no authorizations found",
+			fmt.Sprintf(grantsByGranterURL, grantee1Addr),
+			`"grants":[]`,
+		},
+		{
+			"valid query",
+			fmt.Sprintf(grantsByGranterURL, granterAddr),
+			`"total":"3"`,
+		},
+	}
+
+	RunGRPCQueries(t, granterTestCases)
+
+	// test query grants by grantee grpc endpoint
+	grantsByGranteeURL := baseurl + "/cosmos/authz/v1beta1/grants/grantee/%s"
+	granteeTestCases := []GRPCTestCase{
+		{
+			"invalid account address",
+			fmt.Sprintf(grantsByGranteeURL, "invalid address"),
+			"decoding bech32 failed",
+		},
+		{
+			"no authorizations found",
+			fmt.Sprintf(grantsByGranteeURL, granterAddr),
+			`"grants":[]`,
+		},
+		{
+			"valid query",
+			fmt.Sprintf(grantsByGranteeURL, grantee1Addr),
+			`"total":"1"`,
+		},
+		{
+			"valid query with more grants",
+			fmt.Sprintf(grantsByGranteeURL, grantee2Addr),
+			`"total":"2"`,
+		},
+	}
+
+	RunGRPCQueries(t, granteeTestCases)
 }
 
 // Write the given string to a new temporary json file.

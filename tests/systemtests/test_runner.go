@@ -10,7 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -125,5 +127,23 @@ func printResultFlag(ok bool) {
 		fmt.Println(successFlag)
 	} else {
 		fmt.Println(failureFlag)
+	}
+}
+
+type GRPCTestCase struct {
+	name   string
+	url    string
+	expOut string
+}
+
+func RunGRPCQueries(t *testing.T, testCases []GRPCTestCase) {
+	t.Helper()
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := testutil.GetRequest(tc.url)
+			require.NoError(t, err)
+			require.Contains(t, string(resp), tc.expOut)
+		})
 	}
 }

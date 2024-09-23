@@ -1,4 +1,4 @@
-use bump_scope::Bump;
+use bump_scope::{Bump, BumpString, BumpVec};
 
 pub struct Input<'a> {
     pub input: &'a [u8],
@@ -8,6 +8,10 @@ pub struct Input<'a> {
 pub trait Deserializer<'a> {}
 
 pub trait Visitor<'a> {}
+
+trait DeferDrop {}
+impl <T> DeferDrop for T {}
+
 
 #[cfg(test)]
 mod tests {
@@ -23,22 +27,15 @@ mod tests {
         s: std::string::String,
     }
 
-    struct DoDrop {}
-    impl Drop for DoDrop {
+    impl Drop for HasString {
         fn drop(&mut self) {
-            std::println!("do drop");
+            std::println!("do drop {}", self.s);
         }
     }
 
-    fn test1<'a: 'b, 'b>(scope: &'b BumpScope<'a>) -> (Box<dyn Drop + 'b>, &'a [HasString]) {
+    fn test1<'a: 'b, 'b>(scope: &'b BumpScope<'a>) -> (Box<dyn DeferDrop + 'b>, &'a [HasString]) {
         struct Dropper<'a> {
             str_box: BumpBox<'a, [HasString]>,
-            do_drop: DoDrop,
-        }
-        impl Drop for Dropper<'_> {
-            fn drop(&mut self) {
-                std::println!("dropped");
-            }
         }
         let mut strings = BumpVec::new_in(scope);
         strings.push(HasString {
@@ -58,7 +55,6 @@ mod tests {
             let str_slice = str_box.as_non_null_slice().as_ptr() as *const [HasString];
             let dropper = Dropper {
                 str_box,
-                do_drop: DoDrop {},
             };
 
             (Box::new(dropper), &*str_slice)
@@ -76,5 +72,65 @@ mod tests {
             std::println!("{}", s.s);
         }
         drop(todrop);
+    }
+
+    fn test2() -> *const dyn DeferDrop {
+        struct Foo {}
+        impl Drop for Foo {
+            fn drop(&mut self) {
+                std::println!("dropping foo");
+            }
+        }
+        let foo = Foo {};
+        &foo as *const Foo as *const dyn DeferDrop
+    }
+
+    #[test]
+    fn test_test2() {
+        let _ = test2();
+    }
+}
+
+trait Helper<'a> {
+    type H<'b>
+    where
+        'a: 'b;
+}
+
+impl<'a> Helper<'a> for &'a str {
+    type H<'b>
+    where
+        'a: 'b,
+    = BumpString<'b, 'a>;
+}
+
+
+impl<'a, T> Helper<'a> for &'a [T] {
+    type H<'b>
+    where
+        'a: 'b,
+    = BumpVec<'b, 'a, T>;
+}
+
+trait Test1 {
+    fn test1() -> impl DeferDrop;
+}
+
+struct Coin<'a> {
+    denom: &'a str,
+    amount: u128,
+}
+
+impl <'a> Test1 for Coin<'a> {
+    fn test1() -> impl DeferDrop {
+        // struct Dropper<'a, 'b> {
+        //     denom: <&'a str as Helper<'a>>::H<'b>,
+        //     amount: (),
+        // }
+        // Dropper {
+        //     denom: todo!(),
+        //     amount: (),
+        // }
+        todo!()
     }
 }

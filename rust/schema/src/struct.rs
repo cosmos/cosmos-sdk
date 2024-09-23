@@ -1,3 +1,5 @@
+use crate::decoder::{DecodeError, Decoder};
+
 /// StructCodec is the trait that should be derived to encode and decode a struct.
 ///
 /// It should generally be used in conjunction with the `#[derive(StructCodec)]` attribute
@@ -28,4 +30,9 @@
 pub unsafe trait StructCodec {
     /// A dummy function for derived macro type checking.
     fn dummy(&self);
+}
+
+
+pub unsafe trait StructVisitor<'a> {
+    fn visit_field<D: Decoder<'a>>(&mut self, index: usize, decoder: &mut D) -> Result<(), DecodeError>;
 }

@@ -1,6 +1,7 @@
 //! This module contains traits that must be implemented by types that can be used in the schema.
 
 use alloc::borrow::ToOwned;
+use crate::decoder::{BorrowedStrHelper, DecodeError, DecodeHelper, Decoder};
 use crate::types::*;
 
 /// Any type used directly as a message function argument or struct field must implement this trait.
@@ -12,6 +13,14 @@ where
 {
     /// The type of the value.
     type Type: Type;
+
+    /// The type of the helper used to decode the value.
+    type DecodeHelper: DecodeHelper<'a, Value = Self>;
+
+    /// Decode the value from the decoder.
+    fn decode<D: Decoder<'a>>(helper: &'a mut Self::DecodeHelper, decoder: &'a mut D) -> Result<(), DecodeError> {
+        unimplemented!("decode")
+    }
 
     /// A dummy method for building macros until we have an actual implementation.
     fn dummy() {}
@@ -28,60 +37,89 @@ pub trait Value {
 
 impl<'a> MaybeBorrowed<'a> for u8 {
     type Type = U8T;
+    type DecodeHelper = u8;
 }
 impl<'a> MaybeBorrowed<'a> for u16 {
     type Type = U16T;
+    type DecodeHelper = u16;
 }
 impl<'a> MaybeBorrowed<'a> for u32 {
     type Type = U32T;
+    type DecodeHelper = u32;
 }
 impl<'a> MaybeBorrowed<'a> for u64 {
     type Type = U64T;
+    type DecodeHelper = u64;
 }
 impl<'a> MaybeBorrowed<'a> for u128 {
     type Type = UIntNT<16>;
+    type DecodeHelper = u128;
 }
 impl<'a> MaybeBorrowed<'a> for i8 {
     type Type = I8T;
+    type DecodeHelper = i8;
 }
 impl<'a> MaybeBorrowed<'a> for i16 {
     type Type = I16T;
+    type DecodeHelper = i16;
 }
 impl<'a> MaybeBorrowed<'a> for i32 {
     type Type = I32T;
+    type DecodeHelper = i32;
+
+    fn decode<D: Decoder<'a>>(helper: &'a mut Self::DecodeHelper, decoder: &'a mut D) -> Result<(), DecodeError> {
+        *helper = decoder.decode_i32()?;
+        Ok(())
+    }
 }
 impl<'a> MaybeBorrowed<'a> for i64 {
     type Type = I64T;
+    type DecodeHelper = i64;
 }
 impl<'a> MaybeBorrowed<'a> for i128 {
     type Type = IntNT<16>;
+    type DecodeHelper = i128;
 }
 impl<'a> MaybeBorrowed<'a> for bool {
     type Type = Bool;
+    type DecodeHelper = bool;
 }
 impl<'a> MaybeBorrowed<'a> for &'a str {
     type Type = StrT;
+    type DecodeHelper = BorrowedStrHelper<'a>;
+
+    fn decode<D: Decoder<'a>>(helper: &'a mut Self::DecodeHelper, decoder: &'a mut D) -> Result<(), DecodeError> {
+        let (borrowed, owned) = decoder.decode_borrowed_str()?;
+        helper.s = borrowed;
+        helper.owner = owned;
+        Ok(())
+    }
 }
 
 #[cfg(feature = "std")]
 impl<'a> MaybeBorrowed<'a> for alloc::string::String {
     type Type = StrT;
+    type DecodeHelper = ();
 }
 
 impl<'a> MaybeBorrowed<'a> for simple_time::Time {
     type Type = TimeT;
+    type DecodeHelper = simple_time::Time;
 }
 impl<'a> MaybeBorrowed<'a> for simple_time::Duration {
     type Type = DurationT;
+    type DecodeHelper = simple_time::Duration;
 }
 impl<'a, V: MaybeBorrowed<'a>> MaybeBorrowed<'a> for Option<V> {
     type Type = NullableT<V::Type>;
+    type DecodeHelper = ();
 }
 impl<'a, V: MaybeBorrowed<'a>> MaybeBorrowed<'a> for &'a [V]
 where
     V::Type: ListElementType,
 {
     type Type = ListT<V::Type>;
+    type DecodeHelper = ();
 }
 
 #[cfg(feature = "std")]
@@ -90,11 +128,13 @@ where
     V::Type: ListElementType,
 {
     type Type = ListT<V::Type>;
+    type DecodeHelper = ();
 }
 
 #[cfg(feature = "address")]
 impl<'a> MaybeBorrowed<'a> for ixc_message_api::Address {
     type Type = AddressT;
+    type DecodeHelper = ();
 }
 
 #[cfg(feature = "arrayvec")]

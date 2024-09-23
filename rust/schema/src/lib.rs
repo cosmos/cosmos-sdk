@@ -11,6 +11,7 @@ mod r#enum;
 mod oneof;
 pub mod state_object;
 mod codec;
+mod decoder;
 
 pub use r#struct::{StructCodec};
 pub use r#enum::{EnumCodec};

@@ -3,14 +3,21 @@ use bump_scope::{BumpScope, BumpString};
 use crate::decoder::DecodeError;
 use crate::list::ListVisitor;
 use crate::r#struct::StructDecodeVisitor;
+use crate::value::ArgValue;
 
-struct Decoder<'a> {
-    buf: &'a [u8],
-    scope: &'a mut BumpScope<'a>,
+pub fn decode_value<'b, 'a: 'b, V: ArgValue<'a>>(input: &'a [u8], scope: &'b mut BumpScope<'a>) -> Result<(V, Option<V::MemoryHandle>), DecodeError> {
+    let mut decoder = Decoder { buf: input, scope };
+    let mut decode_state = V::DecodeState::default();
+    V::visit_decode_state(&mut decode_state, &mut decoder)?;
+    V::finish_decode_state(decode_state)
 }
 
+struct Decoder<'b, 'a: 'b> {
+    buf: &'a [u8],
+    scope: &'b mut BumpScope<'a>,
+}
 
-impl <'a> Decoder<'a> {
+impl<'b, 'a: 'b> Decoder<'b, 'a> {
     fn read_bytes(&mut self, size: usize) -> Result<&'a [u8], DecodeError> {
         if self.buf.len() < size {
             return Err(DecodeError::OutOfData);
@@ -21,10 +28,10 @@ impl <'a> Decoder<'a> {
     }
 }
 
-impl <'a> crate::decoder::Decoder<'a> for Decoder<'a> {
-    fn decode_u32(&mut self) -> Result<i32, DecodeError> {
+impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for Decoder<'b, 'a> {
+    fn decode_u32(&mut self) -> Result<u32, DecodeError> {
         let bz = self.read_bytes(4)?;
-        Ok(i32::from_le_bytes(bz.try_into().unwrap()))
+        Ok(u32::from_le_bytes(bz.try_into().unwrap()))
     }
 
     fn decode_u128(&mut self) -> Result<u128, DecodeError> {
@@ -45,14 +52,11 @@ impl <'a> crate::decoder::Decoder<'a> for Decoder<'a> {
     }
 
     fn decode_struct<V: StructDecodeVisitor<'a>>(&mut self, visitor: &mut V) -> Result<(), DecodeError> {
-        // let mut i = 0;
-        // let mut inner = InnerDecoder { outer: self };
-        // for f in V::FIELDS {
-        //     visitor.decode_field(i, &mut inner)?;
-        //     i += 1;
-        // }
-        todo!();
-        Ok(())
+        let size = self.decode_u32()? as usize;
+        let bz = self.read_bytes(size)?;
+        let mut sub = Decoder { buf: bz, scope: self.scope };
+        let mut inner = InnerDecoder { outer: &mut sub };
+        inner.decode_struct(visitor)
     }
 
     fn decode_list<T, V: ListVisitor<'a, T>>(&mut self, visitor: &mut V) -> Result<(), DecodeError> {
@@ -72,11 +76,11 @@ impl <'a> crate::decoder::Decoder<'a> for Decoder<'a> {
     }
 }
 
-struct InnerDecoder<'a> {
-    outer: &'a mut Decoder<'a>
+struct InnerDecoder<'b, 'a: 'b> {
+    outer: &'b mut Decoder<'b, 'a>,
 }
-impl <'a> crate::decoder::Decoder<'a> for InnerDecoder<'a> {
-    fn decode_u32(&mut self) -> Result<i32, DecodeError> {
+impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for InnerDecoder<'b, 'a> {
+    fn decode_u32(&mut self) -> Result<u32, DecodeError> {
         self.outer.decode_u32()
     }
 
@@ -110,4 +114,24 @@ impl <'a> crate::decoder::Decoder<'a> for InnerDecoder<'a> {
     fn scope(&self) -> &'a BumpScope<'a> {
         todo!()
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use bump_scope::Bump;
+    use crate::binary::decoder::decode_value;
+    use crate::decoder::Decoder;
+    use crate::encoder::Encoder;
+
+    #[test]
+    fn test_u32_decode() {
+        let buf: [u8; 4] = [10, 0, 0, 0];
+        let mut bump = Bump::new();
+        let mut scope = bump.as_mut_scope();
+        let (x, _) = decode_value::<u32>(&buf, &mut scope).unwrap();
+        assert_eq!(x, 10);
+    }
+
+    #[test]
+    fn test_decode_string() {}
 }

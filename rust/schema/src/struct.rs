@@ -65,20 +65,20 @@ mod tests {
         type DecodeState = (<&'a str as ArgValue<'a>>::DecodeState, <u128 as ArgValue<'a>>::DecodeState);
         type MemoryHandle = (Option<<&'a str as ArgValue<'a>>::MemoryHandle>, Option<<u128 as ArgValue<'a>>::MemoryHandle>);
 
-        fn visit_decode_state<D: Decoder<'a>>(state: &'a mut Self::DecodeState, decoder: &'a mut D) -> Result<(), DecodeError> {
-            struct Visitor<'a> {
-                state: &'a mut <crate::r#struct::tests::Coin<'a> as ArgValue<'a>>::DecodeState,
+        fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+            struct Visitor<'b, 'a:'b> {
+                state: &'b mut <crate::r#struct::tests::Coin<'a> as ArgValue<'a>>::DecodeState,
             }
-            unsafe impl StructSchema for Visitor<'a> {
+            unsafe impl <'b, 'a:'b> StructSchema for Visitor<'b, 'a> {
                 const FIELDS: &'static [Field<'static>] = &[
                     to_field::<StrT>().with_name("denom"),
                     to_field::<UIntNT<16>>().with_name("amount"),
                 ];
             }
-            unsafe impl<'a> StructDecodeVisitor<'a> for Visitor<'a> {
+            unsafe impl<'b, 'a:'b> StructDecodeVisitor<'a> for Visitor<'b, 'a> {
                 fn decode_field<D: Decoder<'a>>(&mut self, index: usize, decoder: &mut D) -> Result<(), DecodeError> {
                     match index {
-                        0 => <&'a str as ArgValue<'a>>::visit_decode_state(&mut self.state.0, decoder),
+                        // 0 => <&'a str as ArgValue<'a>>::visit_decode_state(&mut self.state.0, decoder),
                         // 1 => <u128 as ArgValue<'a>>::visit_decode_state(&mut self.state.1, decoder),
                         _ => Err(DecodeError::UnknownFieldNumber),
                     }
@@ -104,7 +104,7 @@ mod tests {
             struct Visitor<'a> {
                 state: &'a Coin<'a>,
             }
-            unsafe impl StructSchema for Visitor<'a> {
+            unsafe impl <'a> StructSchema for Visitor<'a> {
                 const FIELDS: &'static [Field<'static>] = &[
                     to_field::<StrT>().with_name("denom"),
                     to_field::<UIntNT<16>>().with_name("amount"),

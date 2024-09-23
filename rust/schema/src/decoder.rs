@@ -4,7 +4,7 @@ use crate::r#struct::StructDecodeVisitor;
 use crate::value::ArgValue;
 
 pub trait Decoder<'a> {
-    fn decode_u32(&mut self) -> Result<i32, DecodeError>;
+    fn decode_u32(&mut self) -> Result<u32, DecodeError>;
     fn decode_u128(&mut self) -> Result<u128, DecodeError>;
     fn decode_borrowed_str(&mut self) -> Result<Result<&'a str, BumpString<'a, 'a>>, DecodeError>;
     #[cfg(feature = "std")]
@@ -15,6 +15,7 @@ pub trait Decoder<'a> {
 
 }
 
+#[derive(Debug)]
 pub enum DecodeError {
     OutOfData,
     InvalidData,

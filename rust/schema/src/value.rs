@@ -25,7 +25,7 @@ where
     type MemoryHandle;
 
     /// Decode the value from the decoder.
-    fn visit_decode_state<D: Decoder<'a>>(state: &'a mut Self::DecodeState, decoder: &'a mut D) -> Result<(), DecodeError> {
+    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
         unimplemented!("decode")
     }
 
@@ -63,6 +63,15 @@ impl<'a> ArgValue<'a> for u32 {
     type Type = U32T;
     type DecodeState = u32;
     type MemoryHandle = ();
+
+    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+        *state = decoder.decode_u32()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState) -> Result<(Self, Option<Self::MemoryHandle>), DecodeError> {
+        Ok((state, None))
+    }
 }
 impl<'a> ArgValue<'a> for u64 {
     type Type = U64T;
@@ -88,10 +97,6 @@ impl<'a> ArgValue<'a> for i32 {
     type Type = I32T;
     type DecodeState = i32;
     type MemoryHandle = ();
-
-    fn visit_decode_state<D: Decoder<'a>>(state: &'a mut Self::DecodeState, decoder: &'a mut D) -> Result<(), DecodeError> {
-        todo!()
-    }
 }
 impl<'a> ArgValue<'a> for i64 {
     type Type = I64T;
@@ -113,9 +118,6 @@ impl<'a> ArgValue<'a> for &'a str {
     type DecodeState = Option<Result<&'a str, BumpString<'a, 'a>>>;
     type MemoryHandle = BumpString<'a, 'a>;
 
-    fn visit_decode_state<D: Decoder<'a>>(state: &'a mut Self::DecodeState, decoder: &'a mut D) -> Result<(), DecodeError> {
-        todo!()
-    }
 }
 
 #[cfg(feature = "std")]

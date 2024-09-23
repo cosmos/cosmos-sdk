@@ -1,16 +1,17 @@
 use crate::encoder::{EncodeError};
 use crate::r#struct::{StructDecodeVisitor, StructEncodeVisitor};
 use crate::value::ArgValue;
+use crate::buffer::Writer;
 
 struct Encoder<W> {
     writer: W
 }
 
-trait Writer {
-    fn write(&mut self, bytes: &[u8]) -> Result<(), EncodeError>;
-}
-
 impl <W: Writer> crate::encoder::Encoder for Encoder<W> {
+    fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError> {
+        self.writer.write(&x.to_le_bytes())
+    }
+
     fn encode_u128(&mut self, x: u128) -> Result<(), EncodeError> {
         self.writer.write(&x.to_le_bytes())
     }
@@ -44,6 +45,11 @@ struct EncodeSizer {
 }
 
 impl crate::encoder::Encoder for EncodeSizer {
+    fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError> {
+        self.size += 4;
+        Ok(())
+    }
+
     fn encode_u128(&mut self, x: u128) -> Result<(), EncodeError> {
         self.size += 4;
         Ok(())
@@ -72,6 +78,10 @@ struct InnerEncoder<W> {
 }
 
 impl <W: Writer> crate::encoder::Encoder for InnerEncoder<W> {
+    fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError> {
+        self.outer.encode_u32(x)
+    }
+
     fn encode_u128(&mut self, x: u128) -> Result<(), EncodeError> {
         self.outer.encode_u128(x)
     }
@@ -97,6 +107,11 @@ struct InnerEncodeSizer {
 }
 
 impl crate::encoder::Encoder for InnerEncodeSizer {
+    fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError> {
+        self.outer.size += 4;
+        Ok(())
+    }
+
     fn encode_u128(&mut self, x: u128) -> Result<(), EncodeError> {
         self.outer.encode_u128(x)
     }
@@ -113,5 +128,26 @@ impl crate::encoder::Encoder for InnerEncodeSizer {
 
     fn encode_struct<'a, V: StructEncodeVisitor>(&mut self, visitor: &V) -> Result<(), EncodeError> {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::encoder::Encoder;
+
+    #[test]
+    fn test_u32_size() {
+        let mut sizer = crate::binary::encoder::EncodeSizer { size: 0 };
+        sizer.encode_u32(10).unwrap();
+        assert_eq!(sizer.size, 4);
+    }
+
+    #[test]
+    fn test_u32_encode() {
+        let mut buf = [0u8; 4];
+        let mut writer = crate::buffer::SliceWriter::new(&mut buf);
+        let mut encoder = crate::binary::encoder::Encoder { writer };
+        encoder.encode_u32(10).unwrap();
+        assert_eq!(buf, [10, 0, 0, 0]);
     }
 }

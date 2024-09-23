@@ -19,6 +19,7 @@ mod proto;
 mod kind;
 mod field;
 mod fields;
+mod buffer;
 
 pub use r#struct::{StructCodec};
 pub use r#enum::{EnumCodec};

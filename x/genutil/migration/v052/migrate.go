@@ -39,15 +39,11 @@ func MigrateGenesisFile(oldGenFile string) (*types.AppGenesis, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
 	appGenesis, err := migrateGenesisValidator(file)
-	ferr := file.Close()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read genesis from file %s: %w", oldGenFile, err)
-	}
-
-	if ferr != nil {
-		return nil, ferr
 	}
 
 	return appGenesis, nil

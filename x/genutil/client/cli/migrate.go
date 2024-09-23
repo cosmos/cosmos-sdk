@@ -13,13 +13,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
+	v052 "github.com/cosmos/cosmos-sdk/x/genutil/migration/v052"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 const flagGenesisTime = "genesis-time"
 
 // MigrationMap is a map of SDK versions to their respective genesis migration functions.
-var MigrationMap = types.MigrationMap{}
+var MigrationMap = types.MigrationMap{
+	"v0.52": v052.Migrate,
+}
 
 // MigrateGenesisCmd returns a command to execute genesis state migration.
 // Applications should pass their own migration map to this function.
@@ -56,9 +59,27 @@ func MigrateHandler(cmd *cobra.Command, args []string, migrations types.Migratio
 	}
 
 	importGenesis := args[1]
-	appGenesis, err := types.AppGenesisFromFile(importGenesis)
-	if err != nil {
-		return err
+	outputDocument, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
+
+	// for v52 we need to migrate the consensus validator address from hex bytes to
+	// sdk consensus address.
+	var appGenesis *types.AppGenesis
+	var err error
+	if target == "v0.52" {
+		v52Migrator, err := v052.NewMigrator(importGenesis)
+		if err != nil {
+			return err
+		}
+
+		appGenesis, err = v52Migrator.MigrateGenesisFile()
+		if err != nil {
+			return err
+		}
+	} else {
+		appGenesis, err = types.AppGenesisFromFile(importGenesis)
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := appGenesis.ValidateAndComplete(); err != nil {
@@ -110,7 +131,6 @@ func MigrateHandler(cmd *cobra.Command, args []string, migrations types.Migratio
 		return fmt.Errorf("failed to marshal app genesis: %w", err)
 	}
 
-	outputDocument, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 	if outputDocument == "" {
 		cmd.Println(string(bz))
 		return nil

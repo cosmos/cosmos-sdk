@@ -20,7 +20,7 @@ func TestMigration(t *testing.T) {
 	err := os.RemoveAll(tempDir)
 	require.NoError(t, err)
 
-	migrator, err := NewMigrator(oldGenFilePath, tempDir)
+	migrator, err := NewMigrator(oldGenFilePath)
 	require.NoError(t, err)
 
 	// should not be able to get app genesis from new genesis file
@@ -28,9 +28,13 @@ func TestMigration(t *testing.T) {
 	_, err = types.AppGenesisFromFile(oldGenFilePath)
 	require.ErrorContains(t, err, "error unmarshalling AppGenesis: decoding bech32 failed")
 
-	err = migrator.MigrateGenesisFile()
+	newAppGenesis, err := migrator.MigrateGenesisFile()
+	require.NoError(t, err)
+	// save the new app genesis to new temp dir
+	err = newAppGenesis.SaveAs(tempDir)
 	require.NoError(t, err)
 
+	// read the old app genesis to compare with the new app genesis
 	var oldAppGenesis legacyAppGenesis
 	r, err := os.Open(oldGenFilePath)
 	require.NoError(t, err)
@@ -38,7 +42,7 @@ func TestMigration(t *testing.T) {
 	require.NoError(t, err)
 
 	// should be able to get app genesis from new genesis file
-	newAppGenesis, err := types.AppGenesisFromFile(tempDir)
+	newAppGenesis, err = types.AppGenesisFromFile(tempDir)
 	require.NotNil(t, newAppGenesis)
 	require.NotNil(t, newAppGenesis.Consensus)
 	require.True(t, bytes.Equal(oldAppGenesis.AppHash, newAppGenesis.AppHash))

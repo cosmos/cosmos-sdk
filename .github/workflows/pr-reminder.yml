@@ -49,5 +49,6 @@ jobs:
           SLACK_COLOR: good
           SLACKIFY_MARKDOWN: true
           SLACK_MESSAGE: |
-            Daily Pull Request Review Reminder: ${{ steps.pr-list.outputs.result }}
+            Daily Pull Request Review Reminder: 
+            ${{ steps.pr-list.outputs.result }}
           SLACK_FOOTER: ""

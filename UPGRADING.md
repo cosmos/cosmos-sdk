@@ -946,15 +946,15 @@ To find out more please read the [signer field](https://github.com/cosmos/cosmos
 
 For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`. Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.
 
-#### Account Migration Guide: x/auth to x/accounts
+##### Account Migration Guide: x/auth to x/accounts
 
 Users can now migrate accounts from `x/auth` to `x/accounts` using the `auth.MsgMigrateAccount` message. Currently, this migration is only supported for `BaseAccount` due to security considerations.
 
-##### Migration Process
+###### Migration Process
 
 The migration process allows an auth BaseAccount to migrate to any kind of x/accounts supported acocunt type, here we will show how to migrate from a legacy x/auth `BaseAccount` to a `x/accounts` `BaseAccount`
 
-###### Migrating to x/accounts/defaults/base
+####### Migrating to x/accounts/defaults/base
 
 To migrate to the `BaseAccount` in `x/accounts`, follow these steps:
 
@@ -965,7 +965,7 @@ To migrate to the `BaseAccount` in `x/accounts`, follow these steps:
 
 > **Important**: If you intend to keep the same public key, ensure you use your current sequence number.
 
-##### Example: x/auth.MsgMigrateAccount
+###### Example: x/auth.MsgMigrateAccount
 
 Here's an example of the `x/auth.MsgMigrateAccount` message structure:
 
@@ -984,7 +984,7 @@ Here's an example of the `x/auth.MsgMigrateAccount` message structure:
 }
 ```
 
-###### Field Descriptions
+**Field Descriptions**
 
 - `signer`: The address of the account you want to migrate from.
 - `account_type`: The new account type you want to migrate to (depends on what's installed on the chain).

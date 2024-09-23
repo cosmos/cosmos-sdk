@@ -197,18 +197,13 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 			if err != nil {
 				return nil, fmt.Errorf("unable to get state at given version: %w", err)
 			}
-			genesisCtx := services.NewGenesisContext(a.branch(state))
 
-			var genesisJson map[string]json.RawMessage
-			_, err = genesisCtx.Run(ctx, func(ctx context.Context) error {
-				genesisJson, err = a.app.moduleManager.ExportGenesisForModules(
-					ctx,
-					func() store.WriterMap {
-						return a.branch(state)
-					},
-				)
-				return err
-			})
+			genesisJson, err := a.app.moduleManager.ExportGenesisForModules(
+				ctx,
+				func() store.WriterMap {
+					return a.branch(state)
+				},
+			)
 			if err != nil {
 				return nil, fmt.Errorf("failed to export genesis: %w", err)
 			}

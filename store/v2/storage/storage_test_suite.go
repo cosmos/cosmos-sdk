@@ -485,6 +485,33 @@ func (s *StorageTestSuite) TestDatabaseIterator_ForwardIterationHigher() {
 	s.Require().Equal(0, count)
 }
 
+func (s *StorageTestSuite) TestDatabaseIterator_WithDelete() {
+	db, err := s.NewDB(s.T().TempDir())
+	s.Require().NoError(err)
+	defer db.Close()
+
+	dbApplyChangeset(s.T(), db, 1, storeKey1, [][]byte{[]byte("keyA")}, [][]byte{[]byte("value001")})
+	dbApplyChangeset(s.T(), db, 2, storeKey1, [][]byte{[]byte("keyA")}, [][]byte{nil}) // delete
+
+	itr, err := db.Iterator(storeKey1Bytes, 1, nil, nil)
+	s.Require().NoError(err)
+
+	count := 0
+	for ; itr.Valid(); itr.Next() {
+		count++
+	}
+	s.Require().Equal(1, count)
+
+	itr, err = db.Iterator(storeKey1Bytes, 2, nil, nil)
+	s.Require().NoError(err)
+
+	count = 0
+	for ; itr.Valid(); itr.Next() {
+		count++
+	}
+	s.Require().Equal(0, count)
+}
+
 func (s *StorageTestSuite) TestDatabase_IteratorNoDomain() {
 	db, err := s.NewDB(s.T().TempDir())
 	s.Require().NoError(err)

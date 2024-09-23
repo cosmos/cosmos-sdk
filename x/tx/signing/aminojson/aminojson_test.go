@@ -24,7 +24,7 @@ func TestAminoJsonSignMode(t *testing.T) {
 		Msg: &bankv1beta1.MsgSend{
 			FromAddress: "foo",
 			ToAddress:   "bar",
-			Amount:      []*basev1beta1.Coin{{Denom: "demon", Amount: "100"}},
+			Amount:      []*basev1beta1.Coin{{Denom: "denom", Amount: "100"}},
 		},
 		AccNum:        1,
 		AccSeq:        2,

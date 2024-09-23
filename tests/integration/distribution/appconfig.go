@@ -21,6 +21,7 @@ var AppConfig = configurator.NewAppConfig(
 	configurator.BankModule(),
 	configurator.StakingModule(),
 	configurator.TxModule(),
+	configurator.ValidateModule(),
 	configurator.ConsensusModule(),
 	configurator.GenutilModule(),
 	configurator.DistributionModule(),

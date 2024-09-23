@@ -45,7 +45,7 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: pr-github
           SLACK_USERNAME: PR-Reminder
-          SG_MINIMAL: true
+          MSG_MINIMAL: true
           SLACK_ICON_EMOJI: ":think:"
           SLACK_COLOR: good
           SLACKIFY_MARKDOWN: true

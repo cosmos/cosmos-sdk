@@ -27,7 +27,6 @@ jobs:
               draft: false
             });
 
-
             let table = 'Title  |  Link  |  Assignees';
             pullRequests.forEach(pr => {
               const assignees = pr.assignees.length > 0 ? `Assignees: ${pr.assignees.map(assignee => assignee.login).join(', ')}` : 'No assignees';

@@ -60,9 +60,10 @@ func (s *GenesisTestSuite) SetupTest() {
 	accountKeeper.EXPECT().GetModuleAccount(s.sdkCtx, minterAcc.Name).Return(minterAcc)
 
 	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), accountKeeper, bankKeeper, "", "")
-	s.keeper.SetMintFn(func(ctx context.Context, env appmodule.Environment, minter *types.Minter, epochId string, epochNumber int64) error {
+	err := s.keeper.SetMintFn(func(ctx context.Context, env appmodule.Environment, minter *types.Minter, epochId string, epochNumber int64) error {
 		return nil
 	})
+	s.NoError(err)
 }
 
 func (s *GenesisTestSuite) TestImportExportGenesis() {

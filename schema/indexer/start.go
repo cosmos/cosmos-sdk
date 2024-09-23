@@ -86,7 +86,7 @@ func StartIndexing(opts IndexingOptions) (IndexingTarget, error) {
 		logger = logutil.NoopLogger{}
 	}
 
-	logger.Info("Starting indexer manager")
+	logger.Info("Starting indexing")
 
 	cfg, err := unmarshalIndexingConfig(opts.Config)
 	if err != nil {
@@ -107,7 +107,7 @@ func StartIndexing(opts IndexingOptions) (IndexingTarget, error) {
 			return IndexingTarget{}, fmt.Errorf("indexer type %q not found", targetCfg.Type)
 		}
 
-		logger.Info("Starting indexer", "target", targetName, "type", targetCfg.Type)
+		logger.Info("Starting indexer", "target_name", targetName, "type", targetCfg.Type)
 
 		if targetCfg.Filter != nil {
 			return IndexingTarget{}, fmt.Errorf("indexer filter options are not supported yet")

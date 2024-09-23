@@ -44,6 +44,7 @@ func TestMigration(t *testing.T) {
 	require.NotNil(t, newAppGenesis.Consensus)
 	require.True(t, bytes.Equal(oldAppGenesis.AppHash, newAppGenesis.AppHash))
 	require.True(t, bytes.Equal(oldAppGenesis.Consensus.Validators[0].Address.Bytes(), newAppGenesis.Consensus.Validators[0].Address.Bytes()))
+	require.Equal(t, len(oldAppGenesis.Consensus.Validators), len(newAppGenesis.Consensus.Validators), "Number of validators should remain the same after migration")
 
 	require.NoError(t, err)
 }

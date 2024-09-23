@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/store/v2/root"
+	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -38,6 +39,7 @@ type SimApp[T transaction.Tx] struct {
 	// required keepers during wiring
 	// others keepers are all in the app
 	UpgradeKeeper *upgradekeeper.Keeper
+	StakingKeeper *stakingkeeper.Keeper
 }
 
 func init() {
@@ -134,6 +136,7 @@ func NewSimApp[T transaction.Tx](
 		&app.txConfig,
 		&app.interfaceRegistry,
 		&app.UpgradeKeeper,
+		&app.StakingKeeper,
 	); err != nil {
 		panic(err)
 	}

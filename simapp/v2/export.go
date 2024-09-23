@@ -3,6 +3,7 @@ package simapp
 import (
 	"context"
 
+	"cosmossdk.io/x/staking"
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
 )
 
@@ -22,8 +23,14 @@ func (app *SimApp[T]) ExportAppStateAndValidators(jailAllowedAddrs []string) (v2
 		return v2.ExportedApp{}, err
 	}
 
+	validators, err := staking.WriteValidators(ctx, app.StakingKeeper)
+	if err != nil {
+		return v2.ExportedApp{}, err
+	}
+
 	return v2.ExportedApp{
-		AppState: genesis,
-		Height:   int64(latestHeight),
+		AppState:   genesis,
+		Height:     int64(latestHeight),
+		Validators: validators,
 	}, nil
 }

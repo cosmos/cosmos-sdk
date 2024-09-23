@@ -32,6 +32,7 @@ type AccountsModKeeper interface {
 	// of auth module current account number
 	InitAccountNumberSeqUnsafe(ctx context.Context, currentAccNum uint64) error
 
+	// MigrateLegacyAccount migrates the given account to an x/accounts' account.
 	MigrateLegacyAccount(
 		ctx context.Context,
 		addr []byte, // The current address of the account

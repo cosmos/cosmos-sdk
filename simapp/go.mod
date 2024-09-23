@@ -49,7 +49,7 @@ require (
 
 require (
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
-	google.golang.org/grpc v1.66.2
+	google.golang.org/grpc v1.67.0
 )
 
 require (

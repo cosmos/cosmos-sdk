@@ -27,21 +27,16 @@ jobs:
               draft: false
             });
 
-            const prDetails = pullRequests.map(pr => ({
-              title: pr.title,
-              link: pr.html_url,
-              assignees: pr.assignees.map(assignee => assignee.login)
-            }));
 
-            let table = '<table border="1" cellpadding="5"><tr><th>Title</th><th>Link</th><th>Assignees</th></tr>';
+            let table = 'Title  |  Link  |  Assignees';
             pullRequests.forEach(pr => {
-              table += `<tr>
-                          <td>${pr.title}</td>
-                          <td><a href="${pr.link}">${pr.link}</a></td>
-                          <td>${pr.assignees.length ? pr.assignees.join(', ') : 'No assignees'}</td>
-                        </tr>`;
+              const assignees = pr.assignees.length > 0 ? `Assignees: ${pr.assignees.map(assignee => assignee.login).join(', ')}` : 'No assignees';
+              table += `
+                          ${pr.title}
+                          ${pr.html_url}
+                          assignees
+                      `;
             });
-            table += '</table>';
             return table;
 
       - name: Send Slack Reminder

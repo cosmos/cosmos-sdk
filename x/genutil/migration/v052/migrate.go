@@ -63,18 +63,6 @@ func migrateGenesisValidator(r io.Reader) (*types.AppGenesis, error) {
 	if rs, ok := r.(io.ReadSeeker); ok {
 		err = json.NewDecoder(rs).Decode(&ag)
 		if err == nil {
-			vals := []sdk.GenesisValidator{}
-			for _, cmtVal := range ag.Consensus.Validators {
-				val := sdk.GenesisValidator{
-					Address: cmtVal.Address.Bytes(),
-					PubKey:  cmtVal.PubKey,
-					Power:   cmtVal.Power,
-					Name:    cmtVal.Name,
-				}
-
-				vals = append(vals, val)
-			}
-
 			newAg = types.AppGenesis{
 				AppName:       ag.AppName,
 				AppVersion:    ag.AppVersion,
@@ -84,7 +72,7 @@ func migrateGenesisValidator(r io.Reader) (*types.AppGenesis, error) {
 				AppHash:       ag.AppHash,
 				AppState:      ag.AppState,
 				Consensus: &types.ConsensusGenesis{
-					Validators: vals,
+					Validators: convertValidators(ag.Consensus.Validators),
 					Params:     ag.Consensus.Params,
 				},
 			}
@@ -112,18 +100,6 @@ func migrateGenesisValidator(r io.Reader) (*types.AppGenesis, error) {
 		return nil, err
 	}
 
-	vals := []sdk.GenesisValidator{}
-	for _, cmtVal := range ctmGenesis.Validators {
-		val := sdk.GenesisValidator{
-			Address: cmtVal.Address.Bytes(),
-			PubKey:  cmtVal.PubKey,
-			Power:   cmtVal.Power,
-			Name:    cmtVal.Name,
-		}
-
-		vals = append(vals, val)
-	}
-
 	newAg = types.AppGenesis{
 		AppName:       version.AppName,
 		GenesisTime:   ctmGenesis.GenesisTime,
@@ -132,12 +108,25 @@ func migrateGenesisValidator(r io.Reader) (*types.AppGenesis, error) {
 		AppHash:       ctmGenesis.AppHash,
 		AppState:      ctmGenesis.AppState,
 		Consensus: &types.ConsensusGenesis{
-			Validators: vals,
+			Validators: convertValidators(ctmGenesis.Validators),
 			Params:     ctmGenesis.ConsensusParams,
 		},
 	}
 
 	return &newAg, nil
+}
+
+func convertValidators(cmtVals []cmttypes.GenesisValidator) []sdk.GenesisValidator {
+	vals := make([]sdk.GenesisValidator, len(cmtVals))
+	for i, cmtVal := range cmtVals {
+		vals[i] = sdk.GenesisValidator{
+			Address: cmtVal.Address.Bytes(),
+			PubKey:  cmtVal.PubKey,
+			Power:   cmtVal.Power,
+			Name:    cmtVal.Name,
+		}
+	}
+	return vals
 }
 
 // CometBFT Genesis Handling for JSON,

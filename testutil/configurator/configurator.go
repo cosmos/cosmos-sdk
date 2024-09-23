@@ -24,11 +24,16 @@ import (
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
+	validatemodulev1 "cosmossdk.io/api/cosmos/validate/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/validate"       // import as blank for app wiring
 )
 
 // Config should never need to be instantiated manually and is solely used for ModuleOption.
@@ -183,9 +188,18 @@ func ParamsModule() ModuleOption {
 
 func TxModule() ModuleOption {
 	return func(config *Config) {
-		config.ModuleConfigs[testutil.TxModuleName] = &appv1alpha1.ModuleConfig{
-			Name:   testutil.TxModuleName,
+		config.ModuleConfigs[testutil.AuthTxConfigDepinjectModuleName] = &appv1alpha1.ModuleConfig{
+			Name:   testutil.AuthTxConfigDepinjectModuleName,
 			Config: appconfig.WrapAny(&txconfigv1.Config{}),
+		}
+	}
+}
+
+func ValidateModule() ModuleOption {
+	return func(config *Config) {
+		config.ModuleConfigs[testutil.ValidateModuleName] = &appv1alpha1.ModuleConfig{
+			Name:   testutil.ValidateModuleName,
+			Config: appconfig.WrapAny(&validatemodulev1.Module{}),
 		}
 	}
 }

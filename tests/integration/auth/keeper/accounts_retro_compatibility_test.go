@@ -46,7 +46,7 @@ func TestAuthToAccountsGRPCCompat(t *testing.T) {
 	valid := &mockRetroCompatAccount{
 		retroCompat: &authtypes.QueryLegacyAccountResponse{
 			Account: &codectypes.Any{},
-			Info: &authtypes.BaseAccount{
+			Base: &authtypes.BaseAccount{
 				Address:       "test",
 				PubKey:        nil,
 				AccountNumber: 10,
@@ -86,7 +86,7 @@ func TestAuthToAccountsGRPCCompat(t *testing.T) {
 			Address: f.mustAddr(valid.address),
 		})
 		require.NoError(t, err)
-		require.Equal(t, infoResp.Info, valid.retroCompat.Info)
+		require.Equal(t, infoResp.Info, valid.retroCompat.Base)
 
 		accountResp, err := qs.Account(f.ctx, &authtypes.QueryAccountRequest{
 			Address: f.mustAddr(noInfo.address),

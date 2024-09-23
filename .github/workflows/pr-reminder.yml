@@ -33,7 +33,7 @@ jobs:
               table += `
                           ${pr.title}
                           ${pr.html_url}
-                          assignees
+                          ${assignees}
                       `;
             });
             return table;

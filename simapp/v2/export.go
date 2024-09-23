@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"cosmossdk.io/x/staking"
+
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
 )
 

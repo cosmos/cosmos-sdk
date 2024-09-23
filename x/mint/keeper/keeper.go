@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -20,7 +21,6 @@ type Keeper struct {
 	appmodule.Environment
 
 	cdc              codec.BinaryCodec
-	stakingKeeper    types.StakingKeeper
 	bankKeeper       types.BankKeeper
 	feeCollectorName string
 	// the address capable of executing a MsgUpdateParams message. Typically, this
@@ -30,13 +30,14 @@ type Keeper struct {
 	Schema collections.Schema
 	Params collections.Item[types.Params]
 	Minter collections.Item[types.Minter]
+
+	mintFn types.MintFn
 }
 
 // NewKeeper creates a new mint Keeper instance
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	env appmodule.Environment,
-	sk types.StakingKeeper,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	feeCollectorName string,
@@ -51,7 +52,6 @@ func NewKeeper(
 	k := Keeper{
 		Environment:      env,
 		cdc:              cdc,
-		stakingKeeper:    sk,
 		bankKeeper:       bk,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
@@ -67,21 +67,20 @@ func NewKeeper(
 	return k
 }
 
+// SetMintFn sets the mint function.
+// This is a required call by the application developer
+func (k *Keeper) SetMintFn(mintFn types.MintFn) error {
+	if mintFn == nil {
+		return errors.New("mintFn cannot be nil")
+	}
+
+	k.mintFn = mintFn
+	return nil
+}
+
 // GetAuthority returns the x/mint module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
-}
-
-// StakingTokenSupply implements an alias call to the underlying staking keeper's
-// StakingTokenSupply to be used in BeginBlocker.
-func (k Keeper) StakingTokenSupply(ctx context.Context) (math.Int, error) {
-	return k.stakingKeeper.StakingTokenSupply(ctx)
-}
-
-// BondedRatio implements an alias call to the underlying staking keeper's
-// BondedRatio to be used in BeginBlocker.
-func (k Keeper) BondedRatio(ctx context.Context) (math.LegacyDec, error) {
-	return k.stakingKeeper.BondedRatio(ctx)
 }
 
 // MintCoins implements an alias call to the underlying supply keeper's
@@ -101,7 +100,13 @@ func (k Keeper) AddCollectedFees(ctx context.Context, fees sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
 }
 
-func (k Keeper) DefaultMintFn(ic types.InflationCalculationFn) types.MintFn {
+func (k Keeper) MintFn(ctx context.Context, minter *types.Minter, epochId string, epochNumber int64) error {
+	return k.mintFn(ctx, k.Environment, minter, epochId, epochNumber)
+}
+
+// DefaultMintFn returns a default mint function. It requires the Staking module and the mint keeper.
+// The default Mintfn has a requirement on staking as it uses bond to calculate inflation.
+func DefaultMintFn(ic types.InflationCalculationFn, staking types.StakingKeeper, k Keeper) types.MintFn {
 	return func(ctx context.Context, env appmodule.Environment, minter *types.Minter, epochId string, epochNumber int64) error {
 		// the default mint function is called every block, so we only check if epochId is "block" which is
 		// a special value to indicate that this is not an epoch minting, but a regular block minting.
@@ -109,12 +114,12 @@ func (k Keeper) DefaultMintFn(ic types.InflationCalculationFn) types.MintFn {
 			return nil
 		}
 
-		stakingTokenSupply, err := k.StakingTokenSupply(ctx)
+		stakingTokenSupply, err := staking.StakingTokenSupply(ctx)
 		if err != nil {
 			return err
 		}
 
-		bondedRatio, err := k.BondedRatio(ctx)
+		bondedRatio, err := staking.BondedRatio(ctx)
 		if err != nil {
 			return err
 		}

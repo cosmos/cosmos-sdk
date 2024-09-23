@@ -59,12 +59,13 @@ func (s *ModuleTestSuite) SetupTest() {
 	s.mintKeeper = keeper.NewKeeper(
 		encCfg.Codec,
 		env,
-		stakingKeeper,
 		accountKeeper,
 		bankKeeper,
 		authtypes.FeeCollectorName,
 		govModuleNameStr,
 	)
+	s.mintKeeper.SetMintFn(keeper.DefaultMintFn(types.DefaultInflationCalculationFn, stakingKeeper, s.mintKeeper))
+
 	s.stakingKeeper = stakingKeeper
 	s.bankKeeper = bankKeeper
 
@@ -74,7 +75,7 @@ func (s *ModuleTestSuite) SetupTest() {
 	s.NoError(s.mintKeeper.Minter.Set(s.ctx, types.DefaultInitialMinter()))
 	s.msgServer = keeper.NewMsgServerImpl(s.mintKeeper)
 
-	s.appmodule = mint.NewAppModule(encCfg.Codec, s.mintKeeper, accountKeeper, s.mintKeeper.DefaultMintFn(types.DefaultInflationCalculationFn))
+	s.appmodule = mint.NewAppModule(encCfg.Codec, s.mintKeeper, accountKeeper)
 }
 
 func (s *ModuleTestSuite) TestEpochHooks() {

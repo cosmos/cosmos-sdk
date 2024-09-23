@@ -64,31 +64,22 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		panic(err)
 	}
 
+	if in.MintFn == nil {
+		panic("mintFn cannot be nil")
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Environment,
-		in.StakingKeeper,
 		in.AccountKeeper,
 		in.BankKeeper,
 		feeCollectorName,
 		as,
 	)
 
-	if in.MintFn != nil && in.InflationCalculationFn != nil {
-		panic("MintFn and InflationCalculationFn cannot both be set")
-	}
+	k.SetMintFn(in.MintFn)
 
-	// if no mintFn is provided, use the default minting function
-	if in.MintFn == nil {
-		// if no inflationCalculationFn is provided, use the default inflation calculation function
-		if in.InflationCalculationFn == nil {
-			in.InflationCalculationFn = types.DefaultInflationCalculationFn
-		}
-
-		in.MintFn = k.DefaultMintFn(in.InflationCalculationFn)
-	}
-
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.MintFn)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper)
 
 	return ModuleOutputs{MintKeeper: k, Module: m, EpochHooks: epochstypes.EpochHooksWrapper{EpochHooks: m}}
 }

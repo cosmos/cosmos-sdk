@@ -18,6 +18,10 @@ func (keeper Keeper) InitGenesis(ctx context.Context, ak types.AccountKeeper, da
 
 	ak.GetModuleAccount(ctx, types.ModuleName)
 
+	if keeper.mintFn == nil {
+		panic("mintFn cannot be nil")
+	}
+
 	return nil
 }
 

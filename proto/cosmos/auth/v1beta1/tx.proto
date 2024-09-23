@@ -71,6 +71,7 @@ message MsgNonAtomicExecResponse {
 // MsgMigrateAccount defines a message which allows users to migrate from BaseAccount
 // to other x/accounts types.
 message MsgMigrateAccount {
+  option (amino.name)           = "cosmos-sdk/x/auth/MsgMigrateAccount";
   option (cosmos.msg.v1.signer) = "signer";
 
   string              signer           = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];

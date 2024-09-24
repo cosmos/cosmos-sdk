@@ -21,6 +21,7 @@ func (am AppModule) IsOnePerModuleType() {}
 func init() {
 	appconfig.RegisterModule(&modulev1.Module{},
 		appconfig.Provide(ProvideModule),
+		appconfig.Invoke(InvokeMintFnCreation),
 	)
 }
 
@@ -71,16 +72,24 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		feeCollectorName,
 		as,
 	)
-	if in.MintFn == nil && in.StakingKeeper != nil {
-		panic("custom minting function or staking keeper must be supplied or available")
-	} else if in.MintFn == nil {
-		in.MintFn = keeper.DefaultMintFn(types.DefaultInflationCalculationFn, in.StakingKeeper, k)
-	}
-	if err := k.SetMintFn(in.MintFn); err != nil {
-		panic(err)
-	}
 
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper)
 
 	return ModuleOutputs{MintKeeper: k, Module: m, EpochHooks: epochstypes.EpochHooksWrapper{EpochHooks: m}}
+}
+
+func InvokeMintFnCreation(config *modulev1.Module, mintFn types.MintFn, stakingKeeper types.StakingKeeper, mintKeeper *keeper.Keeper) error {
+	// all arguments to invokers are optional
+	if mintKeeper == nil || config == nil {
+		return nil
+	}
+
+	if mintFn == nil {
+		mintFn = keeper.DefaultMintFn(types.DefaultInflationCalculationFn, stakingKeeper, mintKeeper)
+	}
+	if err := mintKeeper.SetMintFn(mintFn); err != nil {
+		return err
+	}
+
+	return nil
 }

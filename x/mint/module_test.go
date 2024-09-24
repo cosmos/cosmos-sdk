@@ -64,7 +64,7 @@ func (s *ModuleTestSuite) SetupTest() {
 		authtypes.FeeCollectorName,
 		govModuleNameStr,
 	)
-	err := s.mintKeeper.SetMintFn(keeper.DefaultMintFn(types.DefaultInflationCalculationFn, stakingKeeper, s.mintKeeper))
+	err := s.mintKeeper.SetMintFn(keeper.DefaultMintFn(types.DefaultInflationCalculationFn, stakingKeeper, &s.mintKeeper))
 	s.NoError(err)
 
 	s.stakingKeeper = stakingKeeper

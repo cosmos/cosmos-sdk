@@ -109,7 +109,7 @@ func (k Keeper) MintFn(ctx context.Context, minter *types.Minter, epochId string
 
 // DefaultMintFn returns a default mint function. It requires the Staking module and the mint keeper.
 // The default Mintfn has a requirement on staking as it uses bond to calculate inflation.
-func DefaultMintFn(ic types.InflationCalculationFn, staking types.StakingKeeper, k Keeper) types.MintFn {
+func DefaultMintFn(ic types.InflationCalculationFn, staking types.StakingKeeper, k *Keeper) types.MintFn {
 	return func(ctx context.Context, env appmodule.Environment, minter *types.Minter, epochId string, epochNumber int64) error {
 		// the default mint function is called every block, so we only check if epochId is "block" which is
 		// a special value to indicate that this is not an epoch minting, but a regular block minting.

@@ -72,7 +72,6 @@ func NewKeeper(
 
 // SetMintFn is used to mint new coins during BeginBlock. The mintFn function is in charge of
 // minting new coins based on arbitrary logic, previously done through InflationCalculationFn.
-// If mintFn is nil, the default minting logic is used.
 func (k *Keeper) SetMintFn(mintFn types.MintFn) error {
 	if mintFn == nil {
 		return errors.New("mintFn cannot be nil")

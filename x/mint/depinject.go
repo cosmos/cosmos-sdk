@@ -36,7 +36,7 @@ type ModuleInputs struct {
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
-	StakingKeeper types.StakingKeeper
+	StakingKeeper types.StakingKeeper `optional:true`
 }
 
 type ModuleOutputs struct {
@@ -72,7 +72,9 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		feeCollectorName,
 		as,
 	)
-	if in.MintFn == nil {
+	if in.MintFn == nil && in.StakingKeeper != nil {
+		panic("custom minting function or staking keeper must be supplied or available")
+	} else if in.MintFn == nil {
 		in.MintFn = keeper.DefaultMintFn(types.DefaultInflationCalculationFn, in.StakingKeeper, k)
 	}
 	if err := k.SetMintFn(in.MintFn); err != nil {

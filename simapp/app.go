@@ -373,7 +373,7 @@ func NewSimApp(
 	)
 
 	app.MintKeeper = mintkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[minttypes.StoreKey]), logger.With(log.ModuleKey, "x/mint")), app.AuthKeeper, app.BankKeeper, authtypes.FeeCollectorName, govModuleAddr)
-	if err := app.MintKeeper.SetMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn, app.StakingKeeper, app.MintKeeper)); err != nil {
+	if err := app.MintKeeper.SetMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn, app.StakingKeeper, &app.MintKeeper)); err != nil {
 		panic(err)
 	}
 

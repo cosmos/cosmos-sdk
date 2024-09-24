@@ -185,9 +185,10 @@ impl <T> Type for StructT<T> {
     const KIND: Kind = Kind::Struct;
     type ReferencedType = T;
 }
+impl <T> ListElementType for StructT<T> {}
 
 /// Represents a type that can be used as an element in a list.
-pub trait ListElementType: Type {}
+pub(crate) trait ListElementType: Type {}
 
 /// Converts a type to a field.
 pub const fn to_field<T: Type>() -> Field<'static> {

@@ -122,6 +122,8 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for InnerDecoder<'b, 'a> {
 #[cfg(test)]
 mod tests {
     extern crate std;
+
+    use alloc::vec;
     use bump_scope::{Bump, BumpScope};
     use crate::binary::decoder::decode_value;
     use crate::binary::encoder::encode_value;
@@ -231,6 +233,22 @@ mod tests {
         let res = encode_value(&coin, bump.as_scope()).unwrap();
         let (decoded, mem) = decode_value::<Coin>(&res, bump.as_scope()).unwrap();
         assert_eq!(decoded, coin);
+        let _ = mem;
+    }
+
+    #[test]
+    fn test_coins() {
+        let coins = vec![Coin {
+            denom: "uatom",
+            amount: 1234567890,
+        },Coin {
+            denom: "foo",
+            amount: 9876543210,
+        }];
+        let mut bump = Bump::new();
+        let res = encode_value(&coins, bump.as_scope()).unwrap();
+        let (decoded, mem) = decode_value::<&[Coin]>(&res, bump.as_scope()).unwrap();
+        assert_eq!(decoded, coins);
         let _ = mem;
     }
 }

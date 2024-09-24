@@ -1,9 +1,10 @@
 //! This module contains traits that must be implemented by types that can be used in the schema.
 
 use alloc::borrow::ToOwned;
-use bump_scope::BumpString;
+use bump_scope::{BumpString, BumpVec};
 use crate::decoder::{DecodeError, Decoder};
 use crate::encoder::{EncodeError, Encoder};
+use crate::list::SliceState;
 use crate::types::*;
 
 /// Any type used directly as a message function argument or struct field must implement this trait.
@@ -198,8 +199,16 @@ where
     V::Type: ListElementType,
 {
     type Type = ListT<V::Type>;
-    type DecodeState = ();
-    type MemoryHandle = ();
+    type DecodeState = SliceState<'a, V>;
+    type MemoryHandle = (BumpVec<'a, 'a, V>, BumpVec<'a, 'a, V::MemoryHandle>);
+
+    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+        decoder.decode_list(state)
+    }
+
+    fn finish_decode_state(state: Self::DecodeState) -> Result<(Self, Option<Self::MemoryHandle>), DecodeError> {
+        todo!()
+    }
 }
 
 #[cfg(feature = "std")]
@@ -210,6 +219,10 @@ where
     type Type = ListT<V::Type>;
     type DecodeState = ();
     type MemoryHandle = ();
+
+    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+        encoder.encode_list_slice(self.as_slice())
+    }
 }
 
 #[cfg(feature = "address")]

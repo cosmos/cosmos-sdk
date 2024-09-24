@@ -75,7 +75,9 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	if in.MintFn == nil {
 		in.MintFn = keeper.DefaultMintFn(types.DefaultInflationCalculationFn, in.StakingKeeper, k)
 	}
-	k.SetMintFn(in.MintFn)
+	if err := k.SetMintFn(in.MintFn); err != nil {
+		panic(err)
+	}
 
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper)
 

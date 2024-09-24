@@ -50,7 +50,6 @@ func NewAppModule(
 	keeper keeper.Keeper,
 	ak types.AccountKeeper,
 ) AppModule {
-
 	return AppModule{
 		cdc:        cdc,
 		keeper:     keeper,

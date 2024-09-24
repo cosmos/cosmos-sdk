@@ -30,7 +30,7 @@ func TestStakeUnstake(t *testing.T) {
 	// query validator address to delegate tokens
 	rsp := cli.CustomQuery("q", "staking", "validators")
 	valAddr := gjson.Get(rsp, "validators.#.operator_address").Array()[0].String()
-	valAddrPk := gjson.Get(rsp, "validators.#.consensus_pubkey.value").Array()[0].String()
+	valPk := gjson.Get(rsp, "validators.#.consensus_pubkey.value").Array()[0].String()
 
 	// stake tokens
 	rsp = cli.RunAndWait("tx", "staking", "delegate", valAddr, "1000000stake", "--from="+account1Addr, "--fees=1stake")
@@ -40,11 +40,11 @@ func TestStakeUnstake(t *testing.T) {
 	assert.Equal(t, int64(8999999), cli.QueryBalance(account1Addr, "stake"))
 
 	// check validator has been updated
-	endBlockRsp := cli.CustomQuery("q", "block-results", gjson.Get(rsp, "height").String())
-	validatorUpdates := gjson.Get(endBlockRsp, "validator_updates").Array()
+	rsp = cli.CustomQuery("q", "block-results", gjson.Get(rsp, "height").String())
+	validatorUpdates := gjson.Get(rsp, "validator_updates").Array()
 	assert.NotEmpty(t, validatorUpdates)
-	pubKey := gjson.Get(validatorUpdates[0].String(), "pub_key_bytes").String()
-	assert.Equal(t, pubKey, valAddrPk)
+	vpk := gjson.Get(validatorUpdates[0].String(), "pub_key_bytes").String()
+	assert.Equal(t, vpk, valPk)
 
 	rsp = cli.CustomQuery("q", "staking", "delegation", account1Addr, valAddr)
 	assert.Equal(t, "1000000", gjson.Get(rsp, "delegation_response.balance.amount").String(), rsp)

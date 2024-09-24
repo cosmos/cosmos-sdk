@@ -16,7 +16,11 @@ We will be breaking down the steps to create a testnet from mainnet state.
   // InitSimAppForTestnet is broken down into two sections:
   // Required Changes: Changes that, if not made, will cause the testnet to halt or panic
   // Optional Changes: Changes to customize the testnet to one's liking (lower vote times, fund accounts, etc)
+<<<<<<< HEAD:docs/docs/build/building-apps/05-app-testnet.md
   func InitSimAppForTestnet(app *simApp, newValAddr bytes.HexBytes, newValPubKey crypto.PubKey, newOperatorAddress, upgradeToTrigger string) *simApp {
+=======
+  func InitSimAppForTestnet(app *SimApp, newValAddr bytes.HexBytes, newValPubKey crypto.PubKey, newOperatorAddress, upgradeToTrigger string) *SimApp {
+>>>>>>> f195a8660 (chore(docs): rename merlin to simapp (#21884)):docs/build/building-apps/05-app-testnet.md
   ...
   }
 ```
@@ -152,7 +156,11 @@ It is useful to create new accounts for your testing purposes. This avoids the n
 		sdk.MustAccAddressFromBech32("cosmos1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc")}
 
   // Fund localSimApp accounts
+<<<<<<< HEAD:docs/docs/build/building-apps/05-app-testnet.md
 	for _, account := range localsimAccounts {
+=======
+	for _, account := range localSimAppAccounts {
+>>>>>>> f195a8660 (chore(docs): rename merlin to simapp (#21884)):docs/build/building-apps/05-app-testnet.md
 		err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, defaultCoins)
 		if err != nil {
 			tmos.Exit(err.Error())
@@ -195,8 +203,13 @@ Before we can run the testnet we must plug everything together.
 in `root.go`, in the `initRootCmd` function we add:
 
 ```diff
+<<<<<<< HEAD:docs/docs/build/building-apps/05-app-testnet.md
   server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, createsimAppAndExport, addModuleInitFlags)
 	++ server.AddTestnetCreatorCommand(rootCmd, simapp.DefaultNodeHome, newTestnetApp, addModuleInitFlags)
+=======
+server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, createSimAppAndExport)
++server.AddTestnetCreatorCommand(rootCmd, simapp.DefaultNodeHome, newTestnetApp)
+>>>>>>> f195a8660 (chore(docs): rename merlin to simapp (#21884)):docs/build/building-apps/05-app-testnet.md
 ```
 
 Next we will add a newTestnetApp helper function:
@@ -205,7 +218,11 @@ Next we will add a newTestnetApp helper function:
 // newTestnetApp starts by running the normal newApp method. From there, the app interface returned is modified in order
 // for a testnet to be created from the provided app.
 func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+<<<<<<< HEAD:docs/docs/build/building-apps/05-app-testnet.md
 	// Create an app and type cast to an simApp
+=======
+	// Create an app and type cast to an SimApp
+>>>>>>> f195a8660 (chore(docs): rename merlin to simapp (#21884)):docs/build/building-apps/05-app-testnet.md
 	app := newApp(logger, db, traceStore, appOpts)
 	simApp, ok := app.(*simapp.SimApp)
 	if !ok {
@@ -230,6 +247,10 @@ func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, ap
 	}
 
 	// Make modifications to the normal SimApp required to run the network locally
+<<<<<<< HEAD:docs/docs/build/building-apps/05-app-testnet.md
 	return meriln.InitMerlinAppForTestnet(simApp, newValAddr, newValPubKey, newOperatorAddress, upgradeToTrigger)
+=======
+	return simapp.InitSimAppForTestnet(simApp, newValAddr, newValPubKey, newOperatorAddress, upgradeToTrigger)
+>>>>>>> f195a8660 (chore(docs): rename merlin to simapp (#21884)):docs/build/building-apps/05-app-testnet.md
 }
 ```

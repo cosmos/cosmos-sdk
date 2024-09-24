@@ -2,17 +2,22 @@
 package integration
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/stretchr/testify/require"
+	"math/rand"
+	"testing"
 	"time"
 
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
-	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -22,19 +27,16 @@ import (
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
+	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
 	consensustypes "cosmossdk.io/x/consensus/types"
-	stakingtypes "cosmossdk.io/x/staking/types"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -65,25 +67,6 @@ var DefaultConsensusParams = &cmtproto.ConsensusParams{
 			cmttypes.ABCIPubKeyTypeSecp256k1,
 		},
 	},
-}
-
-// CreateRandomValidatorSet creates a validator set with one random validator
-func CreateRandomValidatorSet() (*cmttypes.ValidatorSet, error) {
-	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get pub key: %w", err)
-	}
-
-	// create validator set with single validator
-	validator := cmttypes.NewValidator(pubKey, 1)
-
-	return cmttypes.NewValidatorSet([]*cmttypes.Validator{validator}), nil
-}
-
-type GenesisAccount struct {
-	authtypes.GenesisAccount
-	Coins sdk.Coins
 }
 
 // StartupConfig defines the startup configuration new a test application.
@@ -143,41 +126,6 @@ func SetupAtGenesis(
 	return SetupWithConfiguration(appConfig, cfg, extraOutputs...)
 }
 
-var _ server.DynamicConfig = &dynamicConfigImpl{}
-
-type dynamicConfigImpl struct {
-	homeDir string
-}
-
-func (d *dynamicConfigImpl) Get(key string) any {
-	return d.GetString(key)
-}
-
-func (d *dynamicConfigImpl) GetString(key string) string {
-	switch key {
-	case runtime.FlagHome:
-		return d.homeDir
-	case "store.app-db-backend":
-		return "goleveldb"
-	case "server.minimum-gas-prices":
-		return "0stake"
-	default:
-		panic(fmt.Sprintf("unknown key: %s", key))
-	}
-}
-
-func (d *dynamicConfigImpl) UnmarshalSub(string, any) (bool, error) {
-	return false, nil
-}
-
-var _ comet.Service = &cometServiceImpl{}
-
-type cometServiceImpl struct{}
-
-func (c cometServiceImpl) CometInfo(context.Context) comet.Info {
-	return comet.Info{}
-}
-
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
 // appConfig defines the application configuration (f.e. app_config.go).
 // extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
@@ -191,6 +139,7 @@ func SetupWithConfiguration(
 		app             *runtime.App[stateMachineTx]
 		appBuilder      *runtime.AppBuilder[stateMachineTx]
 		storeBuilder    *runtime.StoreBuilder
+		txConfig        client.TxConfig
 		txConfigOptions tx.ConfigOptions
 		cometService    comet.Service                   = &cometServiceImpl{}
 		kvFactory       corestore.KVStoreServiceFactory = func(actor []byte) corestore.KVStoreService {
@@ -215,7 +164,7 @@ func SetupWithConfiguration(
 				std.RegisterInterfaces,
 			),
 		),
-		append(extraOutputs, &appBuilder, &cdc, &txConfigOptions, &storeBuilder)...); err != nil {
+		append(extraOutputs, &appBuilder, &cdc, &txConfigOptions, &txConfig, &storeBuilder)...); err != nil {
 		return nil, fmt.Errorf("failed to inject dependencies: %w", err)
 	}
 
@@ -289,7 +238,7 @@ func SetupWithConfiguration(
 	if err != nil {
 		return nil, fmt.Errorf("failed to set initial version: %w", err)
 	}
-	integrationApp := &App{App: app, Store: store}
+	integrationApp := &App{App: app, Store: store, txConfig: txConfig}
 
 	emptyHash := sha256.Sum256(nil)
 	_, genesisState, err := app.InitGenesis(
@@ -303,26 +252,13 @@ func SetupWithConfiguration(
 			IsGenesis: true,
 		},
 		genesisJSONBytes,
-		&genericTxDecoder{txConfigOptions},
+		&genesisTxCodec{txConfigOptions},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed init genesiss: %w", err)
 	}
 
-	genesisChanges, err := genesisState.GetStateChanges()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get genesis state changes: %w", err)
-	}
-	cs := &corestore.Changeset{Changes: genesisChanges}
-	for _, change := range genesisChanges {
-		if !bytes.Equal(change.Actor, []byte("acc")) {
-			continue
-		}
-		for _, kv := range change.StateChanges {
-			fmt.Printf("actor: %s, key: %x, value: %x\n", change.Actor, kv.Key, kv.Value)
-		}
-	}
-	_, err = store.Commit(cs)
+	_, err = integrationApp.Commit(genesisState)
 	if err != nil {
 		return nil, fmt.Errorf("failed to commit initial version: %w", err)
 	}
@@ -330,197 +266,10 @@ func SetupWithConfiguration(
 	return integrationApp, nil
 }
 
-// genesisStateWithValSet returns a new genesis state with the validator set
-func genesisStateWithValSet(
-	codec codec.Codec,
-	genesisState map[string]json.RawMessage,
-	valSet *cmttypes.ValidatorSet,
-	genAccs []authtypes.GenesisAccount,
-	balances ...banktypes.Balance,
-) (map[string]json.RawMessage, error) {
-	// set genesis accounts
-	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
-	genesisState[authtypes.ModuleName] = codec.MustMarshalJSON(authGenesis)
-
-	validators := make([]stakingtypes.Validator, 0, len(valSet.Validators))
-	delegations := make([]stakingtypes.Delegation, 0, len(valSet.Validators))
-
-	bondAmt := sdk.DefaultPowerReduction
-
-	for _, val := range valSet.Validators {
-		pk, err := cryptocodec.FromCmtPubKeyInterface(val.PubKey)
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert pubkey: %w", err)
-		}
-
-		pkAny, err := codectypes.NewAnyWithValue(pk)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create new any: %w", err)
-		}
-
-		validator := stakingtypes.Validator{
-			OperatorAddress: sdk.ValAddress(val.Address).String(),
-			ConsensusPubkey: pkAny,
-			Jailed:          false,
-			Status:          stakingtypes.Bonded,
-			Tokens:          bondAmt,
-			DelegatorShares: sdkmath.LegacyOneDec(),
-			Description:     stakingtypes.Description{},
-			UnbondingHeight: int64(0),
-			UnbondingTime:   time.Unix(0, 0).UTC(),
-			Commission: stakingtypes.NewCommission(
-				sdkmath.LegacyZeroDec(),
-				sdkmath.LegacyZeroDec(),
-				sdkmath.LegacyZeroDec(),
-			),
-			MinSelfDelegation: sdkmath.ZeroInt(),
-		}
-		validators = append(validators, validator)
-		delegations = append(
-			delegations,
-			stakingtypes.NewDelegation(
-				genAccs[0].GetAddress().String(),
-				sdk.ValAddress(val.Address).String(),
-				sdkmath.LegacyOneDec(),
-			),
-		)
-
-	}
-
-	// set validators and delegations
-	stakingGenesis := stakingtypes.NewGenesisState(
-		stakingtypes.DefaultParams(),
-		validators,
-		delegations,
-	)
-	genesisState[stakingtypes.ModuleName] = codec.MustMarshalJSON(
-		stakingGenesis,
-	)
-
-	totalSupply := sdk.NewCoins()
-	for _, b := range balances {
-		// add genesis acc tokens to total supply
-		totalSupply = totalSupply.Add(b.Coins...)
-	}
-
-	for range delegations {
-		// add delegated tokens to total supply
-		totalSupply = totalSupply.Add(
-			sdk.NewCoin(sdk.DefaultBondDenom, bondAmt),
-		)
-	}
-
-	// add bonded amount to bonded pool module account
-	balances = append(balances, banktypes.Balance{
-		Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).
-			String(),
-		Coins: sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, bondAmt)},
-	})
-
-	// update total supply
-	bankGenesis := banktypes.NewGenesisState(
-		banktypes.DefaultGenesisState().Params,
-		balances,
-		totalSupply,
-		[]banktypes.Metadata{},
-		[]banktypes.SendEnabled{},
-	)
-	genesisState[banktypes.ModuleName] = codec.MustMarshalJSON(bankGenesis)
-
-	return genesisState, nil
-}
-
-type genericTxDecoder struct {
-	tx.ConfigOptions
-}
-
-// Decode implements transaction.Codec.
-func (t *genericTxDecoder) Decode(bz []byte) (stateMachineTx, error) {
-	var out stateMachineTx
-	tx, err := t.ProtoDecoder(bz)
-	if err != nil {
-		return out, err
-	}
-
-	var ok bool
-	out, ok = tx.(stateMachineTx)
-	if !ok {
-		return out, errors.New("unexpected Tx type")
-	}
-
-	return out, nil
-}
-
-// DecodeJSON implements transaction.Codec.
-func (t *genericTxDecoder) DecodeJSON(bz []byte) (stateMachineTx, error) {
-	var out stateMachineTx
-	tx, err := t.JSONDecoder(bz)
-	if err != nil {
-		return out, err
-	}
-
-	var ok bool
-	out, ok = tx.(stateMachineTx)
-	if !ok {
-		return out, errors.New("unexpected Tx type")
-	}
-
-	return out, nil
-}
-
 type App struct {
 	*runtime.App[stateMachineTx]
-	Store runtime.Store
-}
-
-type storeService struct {
-	actor            []byte
-	executionService corestore.KVStoreService
-}
-
-type contextKeyType struct{}
-
-var contextKey = contextKeyType{}
-
-type integrationContext struct {
-	state corestore.WriterMap
-}
-
-func (s storeService) OpenKVStore(ctx context.Context) corestore.KVStore {
-	iCtx, ok := ctx.Value(contextKey).(integrationContext)
-	if !ok {
-		return s.executionService.OpenKVStore(ctx)
-	}
-
-	state, err := iCtx.state.GetWriter(s.actor)
-	if err != nil {
-		panic(err)
-	}
-	return state
-}
-
-var (
-	_ event.Service = &eventService{}
-	_ event.Manager = &eventManager{}
-)
-
-type eventService struct{}
-
-// EventManager implements event.Service.
-func (e *eventService) EventManager(context.Context) event.Manager {
-	return &eventManager{}
-}
-
-type eventManager struct{}
-
-// Emit implements event.Manager.
-func (e *eventManager) Emit(event transaction.Msg) error {
-	return nil
-}
-
-// EmitKV implements event.Manager.
-func (e *eventManager) EmitKV(eventType string, attrs ...event.Attribute) error {
-	return nil
+	Store    runtime.Store
+	txConfig client.TxConfig
 }
 
 func (a *App) Run(
@@ -536,4 +285,116 @@ func (a *App) Run(
 		return nil, err
 	}
 	return nextState, nil
+}
+
+func (a *App) Commit(state corestore.WriterMap) ([]byte, error) {
+	changes, err := state.GetStateChanges()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get state changes: %w", err)
+	}
+	cs := &corestore.Changeset{Changes: changes}
+	//for _, change := range changes {
+	//	if !bytes.Equal(change.Actor, []byte("acc")) {
+	//		continue
+	//	}
+	//	for _, kv := range change.StateChanges {
+	//		fmt.Printf("actor: %s, key: %x, value: %x\n", change.Actor, kv.Key, kv.Value)
+	//	}
+	//}
+	return a.Store.Commit(cs)
+}
+
+func (a *App) SignCheckDeliver(
+	t *testing.T, ctx context.Context, height uint64, msgs []sdk.Msg,
+	chainID string, accNums, accSeqs []uint64, privateKeys []cryptotypes.PrivKey,
+	txErrString string,
+) server.TxResult {
+	t.Helper()
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	sigs := make([]signing.SignatureV2, len(privateKeys))
+
+	// create a random length memo
+	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
+
+	signMode, err := authsign.APISignModeToInternal(a.txConfig.SignModeHandler().DefaultMode())
+	require.NoError(t, err)
+
+	// 1st round: set SignatureV2 with empty signatures, to set correct
+	// signer infos.
+	for i, p := range privateKeys {
+		sigs[i] = signing.SignatureV2{
+			PubKey: p.PubKey(),
+			Data: &signing.SingleSignatureData{
+				SignMode: signMode,
+			},
+			Sequence: accSeqs[i],
+		}
+	}
+
+	txBuilder := a.txConfig.NewTxBuilder()
+	err = txBuilder.SetMsgs(msgs...)
+	require.NoError(t, err)
+	err = txBuilder.SetSignatures(sigs...)
+	require.NoError(t, err)
+	txBuilder.SetMemo(memo)
+	txBuilder.SetFeeAmount(sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)})
+	txBuilder.SetGasLimit(DefaultGenTxGas)
+
+	// 2nd round: once all signer infos are set, every signer can sign.
+	for i, p := range privateKeys {
+		signerData := authsign.SignerData{
+			Address:       sdk.AccAddress(p.PubKey().Address()).String(),
+			ChainID:       chainID,
+			AccountNumber: accNums[i],
+			Sequence:      accSeqs[i],
+			PubKey:        p.PubKey(),
+		}
+
+		signBytes, err := authsign.GetSignBytesAdapter(
+			ctx, a.txConfig.SignModeHandler(), signMode, signerData,
+			// todo why fetch twice?
+			txBuilder.GetTx())
+		require.NoError(t, err)
+		sig, err := p.Sign(signBytes)
+		require.NoError(t, err)
+		sigs[i].Data.(*signing.SingleSignatureData).Signature = sig
+	}
+	err = txBuilder.SetSignatures(sigs...)
+	require.NoError(t, err)
+
+	builtTx := txBuilder.GetTx()
+	require.NoError(t, err)
+
+	blockResponse, blockState, err := a.DeliverBlock(ctx, &server.BlockRequest[stateMachineTx]{
+		Height:  height,
+		Txs:     []stateMachineTx{builtTx},
+		Hash:    make([]byte, 32),
+		AppHash: make([]byte, 32),
+	})
+	require.NoError(t, err)
+
+	require.Equal(t, 1, len(blockResponse.TxResults))
+	txResult := blockResponse.TxResults[0]
+	finalizeSuccess := txResult.Code == 0
+	if txErrString != "" {
+		require.False(t, finalizeSuccess)
+		require.ErrorContains(t, txResult.Error, txErrString)
+	} else {
+		require.True(t, finalizeSuccess)
+		require.NoError(t, txResult.Error)
+	}
+
+	_, err = a.Commit(blockState)
+	require.NoError(t, err)
+
+	return txResult
+}
+
+func (a *App) CheckBalance(
+	ctx context.Context, t *testing.T, addr sdk.AccAddress, expected sdk.Coins, keeper bankkeeper.Keeper,
+) {
+	t.Helper()
+	balances := keeper.GetAllBalances(ctx, addr)
+	require.Equal(t, expected, balances)
 }

@@ -2,8 +2,6 @@ package bank_test
 
 import (
 	"context"
-	"encoding/hex"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -204,81 +202,42 @@ func TestSendNotEnoughBalance_v2(t *testing.T) {
 	s := createTestSuite(t, genAccs)
 	ctx := context.Background()
 
-	randomAssert := func(actor, key, value string) error {
-		_, state, err := s.AppV2.Store.StateLatest()
-		if err != nil {
-			return err
-		}
-		rdr, err := state.GetReader([]byte(actor))
-		if err != nil {
-			return err
-		}
-		k, err := hex.DecodeString(key)
-		if err != nil {
-			return err
-		}
-		v, err := rdr.Get(k)
-		if err != nil {
-			return err
-		}
-		if hex.EncodeToString(v) != value {
-			return errors.New("unexpected value")
-		}
-		return nil
-	}
+	_, state, storeErr := s.AppV2.Store.StateLatest()
+	require.NoError(t, storeErr)
 
-	_, state, err := s.AppV2.Store.StateLatest()
-	require.NoError(t, randomAssert("acc",
-		"6163636f756e744e756d6265720000000000000002",
-		"93354845030274cd4bf1686abd60ab28ec52e1a7"))
-	require.NoError(t, err)
-
-	nextState, err := s.AppV2.Run(ctx, state, func(ctx context.Context) error {
-		acc := s.AccountKeeper.GetAccount(ctx, addr1)
-		require.NotNil(t, acc)
-		return testutil.FundAccount(
+	_, err := s.AppV2.Run(ctx, state, func(ctx context.Context) error {
+		err := testutil.FundAccount(
 			ctx, s.BankKeeper, addr1,
 			sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67)))
-	})
-	require.NoError(t, err)
-	//_, _, err = s.AppV2.DeliverBlock(ctx, &server.BlockRequest[transaction.Tx]{
-	//	Height:  2, // TODO how to auto-advance height with app v2 interface?
-	//	Hash:    make([]byte, 32),
-	//	AppHash: make([]byte, 32),
-	//})
-	require.NoError(t, err)
-	nextState, err = s.AppV2.Run(ctx, nextState, func(ctx context.Context) error {
+		require.NoError(t, err)
 		res1 := s.AccountKeeper.GetAccount(ctx, addr1)
 		require.NotNil(t, res1)
 		require.Equal(t, acc, res1.(*authtypes.BaseAccount))
 
-		return nil
-	})
-
-	/*
 		origAccNum := res1.GetAccountNumber()
 		origSeq := res1.GetSequence()
-
 		addr1Str, err := s.AccountKeeper.AddressCodec().BytesToString(addr1)
 		require.NoError(t, err)
 		addr2Str, err := s.AccountKeeper.AddressCodec().BytesToString(addr2)
 		require.NoError(t, err)
 		sendMsg := types.NewMsgSend(addr1Str, addr2Str, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
-		hdr := header.Info{Height: 3} // TODO how to auto-advance height with app v2 interface?
 
-		txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
-		_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, hdr, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
-		require.Error(t, err)
-
-		checkBalance(t, baseApp, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)}, s.BankKeeper)
-
-		ctx2 := baseApp.NewContext(true)
-		res2 := s.AccountKeeper.GetAccount(ctx2, addr1)
+		// TODO how to auto-advance height with app v2 interface?
+		s.AppV2.SignCheckDeliver(
+			t, ctx, 2, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq},
+			[]cryptotypes.PrivKey{priv1},
+			"spendable balance 67foocoin is smaller than 100foocoin",
+		)
+		s.AppV2.CheckBalance(ctx, t, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)}, s.BankKeeper)
+		res2 := s.AccountKeeper.GetAccount(ctx, addr1)
 		require.NotNil(t, res2)
 
 		require.Equal(t, origAccNum, res2.GetAccountNumber())
 		require.Equal(t, origSeq+1, res2.GetSequence())
-	*/
+
+		return nil
+	})
+	require.NoError(t, err)
 }
 
 func TestMsgMultiSendWithAccounts(t *testing.T) {

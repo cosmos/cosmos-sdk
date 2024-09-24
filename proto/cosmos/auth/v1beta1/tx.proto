@@ -22,6 +22,9 @@ service Msg {
 
   // NonAtomicExec allows users to submit multiple messages for non-atomic execution.
   rpc NonAtomicExec(MsgNonAtomicExec) returns (MsgNonAtomicExecResponse);
+
+  // MigrateAccount migrates the account to x/accounts.
+  rpc MigrateAccount(MsgMigrateAccount) returns (MsgMigrateAccountResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -63,4 +66,23 @@ message NonAtomicExecResult {
 // MsgNonAtomicExecResponse defines the response of MsgNonAtomicExec.
 message MsgNonAtomicExecResponse {
   repeated NonAtomicExecResult results = 1;
+}
+
+// MsgMigrateAccount defines a message which allows users to migrate from BaseAccount
+// to other x/accounts types.
+message MsgMigrateAccount {
+  option (amino.name)           = "cosmos-sdk/x/auth/MsgMigrateAccount";
+  option (cosmos.msg.v1.signer) = "signer";
+
+  string              signer           = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string              account_type     = 2;
+  google.protobuf.Any account_init_msg = 3;
+}
+
+// MsgMigrateAccountResponse defines the response given when migrating to
+// an x/accounts account.
+message MsgMigrateAccountResponse {
+  // init_response defines the response returned by the x/account account
+  // initialization.
+  google.protobuf.Any init_response = 1;
 }

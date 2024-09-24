@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/schema"
 )
 
 // Quad defines a multipart key composed of four keys.
@@ -79,11 +80,28 @@ func QuadKeyCodec[K1, K2, K3, K4 any](keyCodec1 codec.KeyCodec[K1], keyCodec2 co
 	}
 }
 
+// NamedQuadKeyCodec instantiates a new KeyCodec instance that can encode the Quad, given
+// the KeyCodecs of the four parts of the key, in order.
+// The provided names are used to identify the parts of the key in the schema for indexing.
+func NamedQuadKeyCodec[K1, K2, K3, K4 any](key1Name string, keyCodec1 codec.KeyCodec[K1], key2Name string, keyCodec2 codec.KeyCodec[K2], key3Name string, keyCodec3 codec.KeyCodec[K3], key4Name string, keyCodec4 codec.KeyCodec[K4]) codec.KeyCodec[Quad[K1, K2, K3, K4]] {
+	return quadKeyCodec[K1, K2, K3, K4]{
+		name1:     key1Name,
+		keyCodec1: keyCodec1,
+		name2:     key2Name,
+		keyCodec2: keyCodec2,
+		name3:     key3Name,
+		keyCodec3: keyCodec3,
+		name4:     key4Name,
+		keyCodec4: keyCodec4,
+	}
+}
+
 type quadKeyCodec[K1, K2, K3, K4 any] struct {
-	keyCodec1 codec.KeyCodec[K1]
-	keyCodec2 codec.KeyCodec[K2]
-	keyCodec3 codec.KeyCodec[K3]
-	keyCodec4 codec.KeyCodec[K4]
+	name1, name2, name3, name4 string
+	keyCodec1                  codec.KeyCodec[K1]
+	keyCodec2                  codec.KeyCodec[K2]
+	keyCodec3                  codec.KeyCodec[K3]
+	keyCodec4                  codec.KeyCodec[K4]
 }
 
 type jsonQuadKey [4]json.RawMessage
@@ -336,6 +354,32 @@ func (t quadKeyCodec[K1, K2, K3, K4]) SizeNonTerminal(key Quad[K1, K2, K3, K4]) 
 		size += t.keyCodec4.SizeNonTerminal(*key.k4)
 	}
 	return size
+}
+
+func (t quadKeyCodec[K1, K2, K3, K4]) SchemaCodec() (codec.SchemaCodec[Quad[K1, K2, K3, K4]], error) {
+	field1, err := getNamedKeyField(t.keyCodec1, t.name1)
+	if err != nil {
+		return codec.SchemaCodec[Quad[K1, K2, K3, K4]]{}, fmt.Errorf("error getting key1 field: %w", err)
+	}
+
+	field2, err := getNamedKeyField(t.keyCodec2, t.name2)
+	if err != nil {
+		return codec.SchemaCodec[Quad[K1, K2, K3, K4]]{}, fmt.Errorf("error getting key2 field: %w", err)
+	}
+
+	field3, err := getNamedKeyField(t.keyCodec3, t.name3)
+	if err != nil {
+		return codec.SchemaCodec[Quad[K1, K2, K3, K4]]{}, fmt.Errorf("error getting key3 field: %w", err)
+	}
+
+	field4, err := getNamedKeyField(t.keyCodec4, t.name4)
+	if err != nil {
+		return codec.SchemaCodec[Quad[K1, K2, K3, K4]]{}, fmt.Errorf("error getting key4 field: %w", err)
+	}
+
+	return codec.SchemaCodec[Quad[K1, K2, K3, K4]]{
+		Fields: []schema.Field{field1, field2, field3, field4},
+	}, nil
 }
 
 // NewPrefixUntilQuadRange defines a collection query which ranges until the provided Quad prefix.

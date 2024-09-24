@@ -43,7 +43,7 @@ var testResolver = ModuleSetDecoderResolver(moduleSet)
 
 func TestModuleSetDecoderResolver_IterateAll(t *testing.T) {
 	objectTypes := map[string]bool{}
-	err := testResolver.IterateAll(func(moduleName string, cdc schema.ModuleCodec) error {
+	err := testResolver.AllDecoders(func(moduleName string, cdc schema.ModuleCodec) error {
 		cdc.Schema.AllTypes(func(t schema.Type) bool {
 			objTyp, ok := t.(schema.StateObjectType)
 			if ok {
@@ -128,7 +128,7 @@ func TestModuleSetDecoderResolver_IterateAll_Error(t *testing.T) {
 	resolver := ModuleSetDecoderResolver(map[string]interface{}{
 		"modD": modD{},
 	})
-	err := resolver.IterateAll(func(moduleName string, cdc schema.ModuleCodec) error {
+	err := resolver.AllDecoders(func(moduleName string, cdc schema.ModuleCodec) error {
 		if moduleName == "modD" {
 			t.Fatalf("expected error")
 		}

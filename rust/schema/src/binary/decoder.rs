@@ -3,9 +3,9 @@ use bump_scope::{BumpScope, BumpString};
 use crate::decoder::DecodeError;
 use crate::list::ListVisitor;
 use crate::r#struct::StructDecodeVisitor;
-use crate::value::ArgValue;
+use crate::value::Value;
 
-pub fn decode_value<'b, 'a: 'b, V: ArgValue<'a>>(input: &'a [u8], scope: &'b BumpScope<'a>) -> Result<(V, Option<V::MemoryHandle>), DecodeError> {
+pub fn decode_value<'b, 'a: 'b, V: Value<'a>>(input: &'a [u8], scope: &'b BumpScope<'a>) -> Result<(V, Option<V::MemoryHandle>), DecodeError> {
     let mut decoder = Decoder { buf: input, scope };
     let mut decode_state = V::DecodeState::default();
     V::visit_decode_state(&mut decode_state, &mut decoder)?;
@@ -132,7 +132,7 @@ mod tests {
     use crate::field::Field;
     use crate::r#struct::{StructDecodeVisitor, StructEncodeVisitor, StructSchema};
     use crate::types::{to_field, StrT, StructT, UIntNT};
-    use crate::value::ArgValue;
+    use crate::value::Value;
 
     #[test]
     fn test_u32_decode() {
@@ -174,21 +174,21 @@ mod tests {
     unsafe impl<'a> StructEncodeVisitor for Coin<'a> {
         fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError> {
             match index {
-                0 => <&'a str as ArgValue<'a>>::encode(&self.denom, encoder),
-                1 => <u128 as ArgValue<'a>>::encode(&self.amount, encoder),
+                0 => <&'a str as Value<'a>>::encode(&self.denom, encoder),
+                1 => <u128 as Value<'a>>::encode(&self.amount, encoder),
                 _ => Err(EncodeError::UnknownError),
             }
         }
     }
 
-    impl<'a> ArgValue<'a> for Coin<'a> {
+    impl<'a> Value<'a> for Coin<'a> {
         type Type = StructT<Coin<'a>>;
-        type DecodeState = (<&'a str as ArgValue<'a>>::DecodeState, <u128 as ArgValue<'a>>::DecodeState);
-        type MemoryHandle = (Option<<&'a str as ArgValue<'a>>::MemoryHandle>, Option<<u128 as ArgValue<'a>>::MemoryHandle>);
+        type DecodeState = (<&'a str as Value<'a>>::DecodeState, <u128 as Value<'a>>::DecodeState);
+        type MemoryHandle = (Option<<&'a str as Value<'a>>::MemoryHandle>, Option<<u128 as Value<'a>>::MemoryHandle>);
 
         fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
             struct Visitor<'b, 'a: 'b> {
-                state: &'b mut <Coin<'a> as ArgValue<'a>>::DecodeState,
+                state: &'b mut <Coin<'a> as Value<'a>>::DecodeState,
             }
             unsafe impl<'b, 'a: 'b> StructSchema for Visitor<'b, 'a> {
                 const FIELDS: &'static [Field<'static>] = Coin::<'a>::FIELDS;
@@ -196,8 +196,8 @@ mod tests {
             unsafe impl<'b, 'a: 'b> StructDecodeVisitor<'a> for Visitor<'b, 'a> {
                 fn decode_field<D: Decoder<'a>>(&mut self, index: usize, decoder: &mut D) -> Result<(), DecodeError> {
                     match index {
-                        0 => <&'a str as ArgValue<'a>>::visit_decode_state(&mut self.state.0, decoder),
-                        1 => <u128 as ArgValue<'a>>::visit_decode_state(&mut self.state.1, decoder),
+                        0 => <&'a str as Value<'a>>::visit_decode_state(&mut self.state.0, decoder),
+                        1 => <u128 as Value<'a>>::visit_decode_state(&mut self.state.1, decoder),
                         _ => Err(DecodeError::UnknownFieldNumber),
                     }
                 }
@@ -207,8 +207,8 @@ mod tests {
 
         fn finish_decode_state(state: Self::DecodeState) -> Result<(Self, Option<Self::MemoryHandle>), DecodeError> {
             let states = (
-                <&'a str as ArgValue<'a>>::finish_decode_state(state.0)?,
-                <u128 as ArgValue<'a>>::finish_decode_state(state.1)?,
+                <&'a str as Value<'a>>::finish_decode_state(state.0)?,
+                <u128 as Value<'a>>::finish_decode_state(state.1)?,
             );
             let mut mem = None;
             if states.0.1.is_some() || states.1.1.is_some() {

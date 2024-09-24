@@ -8,9 +8,9 @@ use crate::list::SliceState;
 use crate::types::*;
 
 /// Any type used directly as a message function argument or struct field must implement this trait.
-/// Unlike [`Value`] it takes a lifetime parameter so value may already be borrowed where it is
+/// Unlike [`AbstractValue`] it takes a lifetime parameter so value may already be borrowed where it is
 /// declared.
-pub trait ArgValue<'a>
+pub trait Value<'a>
 where
     Self: Sized + 'a,
 {
@@ -43,24 +43,24 @@ where
 
 /// This trait describes value types that are to be used as generic parameters
 /// where there is no lifetime parameter available.
-/// Any types implementing this trait relate themselves to a type implementing [`ArgValue`]
+/// Any types implementing this trait relate themselves to a type implementing [`Value`]
 /// so that generic types taking a `Value` type parameter can use a borrowed value if possible.
-pub trait Value {
+pub trait AbstractValue {
     /// The possibly borrowable value type this type is related to.
-    type MaybeBorrowed<'a>: ArgValue<'a>;
+    type Value<'a>: Value<'a>;
 }
 
-impl<'a> ArgValue<'a> for u8 {
+impl<'a> Value<'a> for u8 {
     type Type = U8T;
     type DecodeState = u8;
     type MemoryHandle = ();
 }
-impl<'a> ArgValue<'a> for u16 {
+impl<'a> Value<'a> for u16 {
     type Type = U16T;
     type DecodeState = u16;
     type MemoryHandle = ();
 }
-impl<'a> ArgValue<'a> for u32 {
+impl<'a> Value<'a> for u32 {
     type Type = U32T;
     type DecodeState = u32;
     type MemoryHandle = ();
@@ -78,12 +78,12 @@ impl<'a> ArgValue<'a> for u32 {
         encoder.encode_u32(*self)
     }
 }
-impl<'a> ArgValue<'a> for u64 {
+impl<'a> Value<'a> for u64 {
     type Type = U64T;
     type DecodeState = u64;
     type MemoryHandle = ();
 }
-impl<'a> ArgValue<'a> for u128 {
+impl<'a> Value<'a> for u128 {
     type Type = UIntNT<16>;
     type DecodeState = u128;
     type MemoryHandle = ();
@@ -101,37 +101,37 @@ impl<'a> ArgValue<'a> for u128 {
         encoder.encode_u128(*self)
     }
 }
-impl<'a> ArgValue<'a> for i8 {
+impl<'a> Value<'a> for i8 {
     type Type = I8T;
     type DecodeState = i8;
     type MemoryHandle = ();
 }
-impl<'a> ArgValue<'a> for i16 {
+impl<'a> Value<'a> for i16 {
     type Type = I16T;
     type DecodeState = i16;
     type MemoryHandle = ();
 }
-impl<'a> ArgValue<'a> for i32 {
+impl<'a> Value<'a> for i32 {
     type Type = I32T;
     type DecodeState = i32;
     type MemoryHandle = ();
 }
-impl<'a> ArgValue<'a> for i64 {
+impl<'a> Value<'a> for i64 {
     type Type = I64T;
     type DecodeState = i64;
     type MemoryHandle = ();
 }
-impl<'a> ArgValue<'a> for i128 {
+impl<'a> Value<'a> for i128 {
     type Type = IntNT<16>;
     type DecodeState = i128;
     type MemoryHandle = ();
 }
-impl<'a> ArgValue<'a> for bool {
+impl<'a> Value<'a> for bool {
     type Type = Bool;
     type DecodeState = bool;
     type MemoryHandle = ();
 }
-impl<'a> ArgValue<'a> for &'a str {
+impl<'a> Value<'a> for &'a str {
     type Type = StrT;
     type DecodeState = Option<Result<&'a str, BumpString<'a, 'a>>>;
     type MemoryHandle = BumpString<'a, 'a>;
@@ -164,7 +164,7 @@ impl<'a> ArgValue<'a> for &'a str {
 }
 
 #[cfg(feature = "std")]
-impl<'a> ArgValue<'a> for alloc::string::String {
+impl<'a> Value<'a> for alloc::string::String {
     type Type = StrT;
     type DecodeState = alloc::string::String;
     type MemoryHandle = ();
@@ -179,22 +179,22 @@ impl<'a> ArgValue<'a> for alloc::string::String {
     }
 }
 
-impl<'a> ArgValue<'a> for simple_time::Time {
+impl<'a> Value<'a> for simple_time::Time {
     type Type = TimeT;
     type DecodeState = simple_time::Time;
     type MemoryHandle = ();
 }
-impl<'a> ArgValue<'a> for simple_time::Duration {
+impl<'a> Value<'a> for simple_time::Duration {
     type Type = DurationT;
     type DecodeState = simple_time::Duration;
     type MemoryHandle = ();
 }
-impl<'a, V: ArgValue<'a>> ArgValue<'a> for Option<V> {
+impl<'a, V: Value<'a>> Value<'a> for Option<V> {
     type Type = NullableT<V::Type>;
     type DecodeState = Option<V::DecodeState>;
     type MemoryHandle = V::MemoryHandle;
 }
-impl<'a, V: ArgValue<'a>> ArgValue<'a> for &'a [V]
+impl<'a, V: Value<'a>> Value<'a> for &'a [V]
 where
     V::Type: ListElementType,
 {
@@ -212,7 +212,7 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<'a, V: ArgValue<'a>> ArgValue<'a> for alloc::vec::Vec<V>
+impl<'a, V: Value<'a>> Value<'a> for alloc::vec::Vec<V>
 where
     V::Type: ListElementType,
 {
@@ -226,70 +226,70 @@ where
 }
 
 #[cfg(feature = "address")]
-impl<'a> ArgValue<'a> for ixc_message_api::Address {
+impl<'a> Value<'a> for ixc_message_api::Address {
     type Type = AddressT;
     type DecodeState = ixc_message_api::Address;
     type MemoryHandle = ();
 }
 
 #[cfg(feature = "arrayvec")]
-impl<'a, T: Type, V: ArgValue<'a, T>, const N: usize> ArgValue<'a, ListT<T>> for arrayvec::ArrayVec<T, N> {}
+impl<'a, T: Type, V: Value<'a, T>, const N: usize> Value<'a, ListT<T>> for arrayvec::ArrayVec<T, N> {}
 #[cfg(feature = "arrayvec")]
-impl<'a, const N: usize> ArgValue<'a, StrT> for arrayvec::ArrayString<T, N> {}
+impl<'a, const N: usize> Value<'a, StrT> for arrayvec::ArrayString<T, N> {}
 
-impl Value for u8 {
-    type MaybeBorrowed<'a> = u8;
+impl AbstractValue for u8 {
+    type Value<'a> = u8;
 }
-impl Value for u16 {
-    type MaybeBorrowed<'a> = u16;
+impl AbstractValue for u16 {
+    type Value<'a> = u16;
 }
-impl Value for u32 {
-    type MaybeBorrowed<'a> = u32;
+impl AbstractValue for u32 {
+    type Value<'a> = u32;
 }
-impl Value for u64 {
-    type MaybeBorrowed<'a> = u64;
+impl AbstractValue for u64 {
+    type Value<'a> = u64;
 }
-impl Value for u128 {
-    type MaybeBorrowed<'a> = u128;
+impl AbstractValue for u128 {
+    type Value<'a> = u128;
 }
-impl Value for i8 {
-    type MaybeBorrowed<'a> = i8;
+impl AbstractValue for i8 {
+    type Value<'a> = i8;
 }
-impl Value for i16 {
-    type MaybeBorrowed<'a> = i16;
+impl AbstractValue for i16 {
+    type Value<'a> = i16;
 }
-impl Value for i32 {
-    type MaybeBorrowed<'a> = i32;
+impl AbstractValue for i32 {
+    type Value<'a> = i32;
 }
-impl Value for i64 {
-    type MaybeBorrowed<'a> = i64;
+impl AbstractValue for i64 {
+    type Value<'a> = i64;
 }
-impl Value for i128 {
-    type MaybeBorrowed<'a> = i128;
+impl AbstractValue for i128 {
+    type Value<'a> = i128;
 }
-impl Value for bool {
-    type MaybeBorrowed<'a> = bool;
+impl AbstractValue for bool {
+    type Value<'a> = bool;
 }
-impl Value for str {
-    type MaybeBorrowed<'a> = &'a str;
+impl AbstractValue for str {
+    type Value<'a> = &'a str;
 }
-impl Value for simple_time::Time {
-    type MaybeBorrowed<'a> = simple_time::Time;
+impl AbstractValue for simple_time::Time {
+    type Value<'a> = simple_time::Time;
 }
-impl Value for simple_time::Duration {
-    type MaybeBorrowed<'a> = simple_time::Duration;
+impl AbstractValue for simple_time::Duration {
+    type Value<'a> = simple_time::Duration;
 }
-impl Value for ixc_message_api::Address {
-    type MaybeBorrowed<'a> = ixc_message_api::Address;
+impl AbstractValue for ixc_message_api::Address {
+    type Value<'a> = ixc_message_api::Address;
 }
-impl<V: Value> Value for Option<V> {
-    type MaybeBorrowed<'a> = Option<V::MaybeBorrowed<'a>>;
+impl<V: AbstractValue> AbstractValue for Option<V> {
+    type Value<'a> = Option<V::Value<'a>>;
 }
-impl<V: Value> Value for [V]
+impl<V: AbstractValue> AbstractValue for [V]
 where
-        for<'a> <<V as Value>::MaybeBorrowed<'a> as ArgValue<'a>>::Type: ListElementType,
+        for<'a> <<V as AbstractValue>::Value<'a> as Value<'a>>::Type: ListElementType,
 {
-    type MaybeBorrowed<'a> = &'a [V::MaybeBorrowed<'a>];
+    type Value<'a> = &'a [V::Value<'a>];
 }
 
 /// ResponseValue is a trait that must be implemented by types that can be used as the return value.
@@ -303,10 +303,10 @@ pub trait ResponseValue {
 impl ResponseValue for () {
     type MaybeBorrowed<'a> = ();
 }
-impl<V: Value> ResponseValue for V
+impl<V: AbstractValue> ResponseValue for V
 where
-        for<'a> V::MaybeBorrowed<'a>: ToOwned,
+        for<'a> V::Value<'a>: ToOwned,
 {
-    type MaybeBorrowed<'a> = V::MaybeBorrowed<'a>;
+    type MaybeBorrowed<'a> = V::Value<'a>;
 }
 

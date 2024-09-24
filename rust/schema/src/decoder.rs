@@ -1,7 +1,7 @@
 use bump_scope::{BumpScope, BumpString, BumpVec};
 use crate::list::ListVisitor;
 use crate::r#struct::StructDecodeVisitor;
-use crate::value::ArgValue;
+use crate::value::Value;
 
 pub trait Decoder<'a> {
     fn decode_u32(&mut self) -> Result<u32, DecodeError>;

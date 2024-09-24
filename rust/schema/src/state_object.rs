@@ -1,5 +1,5 @@
 //! This crate defines traits specific to state objects within schemas.
-use crate::value::{ResponseValue, Value};
+use crate::value::{ResponseValue, AbstractValue};
 
 // pub trait FieldTypes {}
 // impl FieldTypes for () {}
@@ -18,29 +18,29 @@ impl ObjectValue for () {
     // type FieldTypes = ();
     type Value<'a> = ();
 }
-impl <A: Value> ObjectValue for A {
+impl <A: AbstractValue> ObjectValue for A {
     // type FieldTypes = (A::MaybeBorrowed<'_>::Type,);
-    type Value<'a> = A::MaybeBorrowed<'a>;
+    type Value<'a> = A::Value<'a>;
 }
-impl <A: Value> ObjectValue for (A,) {
+impl <A: AbstractValue> ObjectValue for (A,) {
     // type FieldTypes = (A::MaybeBorrowed<'_>::Type,);
-    type Value<'a> = (A::MaybeBorrowed<'a>);
+    type Value<'a> = (A::Value<'a>);
 }
-impl <A: Value, B: Value> ObjectValue for (A,B) {
+impl <A: AbstractValue, B: AbstractValue> ObjectValue for (A, B) {
     // type FieldTypes = (A::MaybeBorrowed<'_>::Type, B::MaybeBorrowed<'_>::Type);
-    type Value<'a> = (A::MaybeBorrowed<'a>, B::MaybeBorrowed<'a>);
+    type Value<'a> = (A::Value<'a>, B::Value<'a>);
 }
-impl <A: Value, B: Value, C: Value> ObjectValue for (A,B,C) {
+impl <A: AbstractValue, B: AbstractValue, C: AbstractValue> ObjectValue for (A, B, C) {
     // type FieldTypes = (A::MaybeBorrowed<'_>::Type, B::MaybeBorrowed<'_>::Type, C::MaybeBorrowed<'_>::Type);
-    type Value<'a> = (A::MaybeBorrowed<'a>, B::MaybeBorrowed<'a>, C::MaybeBorrowed<'a>);
+    type Value<'a> = (A::Value<'a>, B::Value<'a>, C::Value<'a>);
 }
-impl <A: Value, B: Value, C: Value, D: Value> ObjectValue for (A,B,C,D) {
+impl <A: AbstractValue, B: AbstractValue, C: AbstractValue, D: AbstractValue> ObjectValue for (A, B, C, D) {
     // type FieldTypes = (A::MaybeBorrowed<'_>::Type, B::MaybeBorrowed<'_>::Type, C::MaybeBorrowed<'_>::Type, D::MaybeBorrowed<'_>::Type);
-    type Value<'a> = (A::MaybeBorrowed<'a>, B::MaybeBorrowed<'a>, C::MaybeBorrowed<'a>, D::MaybeBorrowed<'a>);
+    type Value<'a> = (A::Value<'a>, B::Value<'a>, C::Value<'a>, D::Value<'a>);
 }
 
 /// This trait is implemented for types that can be used as key fields in state objects.
-pub trait KeyFieldValue: Value {}
+pub trait KeyFieldValue: AbstractValue {}
 impl KeyFieldValue for u8 {}
 impl KeyFieldValue for u16 {}
 impl KeyFieldValue for u32 {}

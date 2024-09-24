@@ -177,7 +177,7 @@ func (AppModule) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd()
 }
 
-// GetTxCmd returns the root query command for the bank/v2 module.
+// GetQueryCmd returns the root query command for the bank/v2 module.
 // TODO: Remove & use autocli
 func (AppModule) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()

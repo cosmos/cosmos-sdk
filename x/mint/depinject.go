@@ -27,16 +27,15 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	ModuleKey              depinject.OwnModuleKey
-	Config                 *modulev1.Module
-	Environment            appmodule.Environment
-	Cdc                    codec.Codec
-	MintFn                 types.MintFn                 `optional:"true"`
-	InflationCalculationFn types.InflationCalculationFn `optional:"true"` // deprecated
+	ModuleKey   depinject.OwnModuleKey
+	Config      *modulev1.Module
+	Environment appmodule.Environment
+	Cdc         codec.Codec
+	MintFn      types.MintFn `optional:"true"`
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
-	StakingKeeper types.StakingKeeper `optional:true`
+	StakingKeeper types.StakingKeeper `optional:"true"`
 }
 
 type ModuleOutputs struct {

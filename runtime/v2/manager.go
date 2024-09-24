@@ -21,8 +21,10 @@ import (
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
 )
 
@@ -193,6 +195,7 @@ func (m *MM[T]) InitGenesisJSON(
 // ExportGenesisForModules performs export genesis functionality for modules
 func (m *MM[T]) ExportGenesisForModules(
 	ctx context.Context,
+	stateFactory func() store.WriterMap,
 	modulesToExport ...string,
 ) (map[string]json.RawMessage, error) {
 	if len(modulesToExport) == 0 {
@@ -203,17 +206,19 @@ func (m *MM[T]) ExportGenesisForModules(
 		return nil, err
 	}
 
+	type genesisResult struct {
+		bz  json.RawMessage
+		err error
+	}
+
 	type ModuleI interface {
 		ExportGenesis(ctx context.Context) (json.RawMessage, error)
 	}
 
-	genesisData := make(map[string]json.RawMessage)
-
-	// TODO: make async export genesis https://github.com/cosmos/cosmos-sdk/issues/21303
+	channels := make(map[string]chan genesisResult)
 	for _, moduleName := range modulesToExport {
 		mod := m.modules[moduleName]
 		var moduleI ModuleI
-
 		if module, hasGenesis := mod.(appmodulev2.HasGenesis); hasGenesis {
 			moduleI = module.(ModuleI)
 		} else if module, hasABCIGenesis := mod.(appmodulev2.HasABCIGenesis); hasABCIGenesis {
@@ -222,12 +227,29 @@ func (m *MM[T]) ExportGenesisForModules(
 			continue
 		}
 
-		res, err := moduleI.ExportGenesis(ctx)
-		if err != nil {
-			return nil, err
+		channels[moduleName] = make(chan genesisResult)
+		go func(moduleI ModuleI, ch chan genesisResult) {
+			genesisCtx := services.NewGenesisContext(stateFactory())
+			_, _ = genesisCtx.Run(ctx, func(ctx context.Context) error {
+				jm, err := moduleI.ExportGenesis(ctx)
+				if err != nil {
+					ch <- genesisResult{nil, err}
+					return err
+				}
+				ch <- genesisResult{jm, nil}
+				return nil
+			})
+		}(moduleI, channels[moduleName])
+	}
+
+	genesisData := make(map[string]json.RawMessage)
+	for moduleName := range channels {
+		res := <-channels[moduleName]
+		if res.err != nil {
+			return nil, fmt.Errorf("genesis export error in %s: %w", moduleName, res.err)
 		}
 
-		genesisData[moduleName] = res
+		genesisData[moduleName] = res.bz
 	}
 
 	return genesisData, nil

@@ -1,18 +1,24 @@
 use bump_scope::{BumpScope, BumpString, BumpVec};
 use crate::list::ListVisitor;
+use crate::mem::MemoryManager;
 use crate::r#struct::StructDecodeVisitor;
 use crate::value::Value;
 
 pub trait Decoder<'a> {
     fn decode_u32(&mut self) -> Result<u32, DecodeError>;
     fn decode_u128(&mut self) -> Result<u128, DecodeError>;
-    fn decode_borrowed_str(&mut self) -> Result<Result<&'a str, BumpString<'a, 'a>>, DecodeError>;
+    fn decode_borrowed_str(&mut self) -> Result<&'a str, DecodeError>;
     #[cfg(feature = "std")]
     fn decode_owned_str(&mut self) -> Result<alloc::string::String, DecodeError>;
     fn decode_struct<V: StructDecodeVisitor<'a>>(&mut self, visitor: &mut V) -> Result<(), DecodeError>;
     fn decode_list<T, V: ListVisitor<'a, T>>(&mut self, visitor: &mut V) -> Result<(), DecodeError>;
-    fn scope(&self) -> &'a BumpScope<'a>;
+    fn mem_manager(&mut self) -> &mut MemoryManager<'a, 'a>;
+}
 
+pub fn decode<'a, D: Decoder<'a>, V: Value<'a>>(decoder: &mut D) -> Result<V, DecodeError> {
+    let mut state = V::DecodeState::default();
+    V::visit_decode_state(&mut state, decoder)?;
+    V::finish_decode_state(state, decoder.mem_manager())
 }
 
 #[derive(Debug)]

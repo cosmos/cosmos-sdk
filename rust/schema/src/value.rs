@@ -5,6 +5,7 @@ use bump_scope::{BumpString, BumpVec};
 use crate::decoder::{DecodeError, Decoder};
 use crate::encoder::{EncodeError, Encoder};
 use crate::list::SliceState;
+use crate::mem::MemoryManager;
 use crate::types::*;
 
 /// Any type used directly as a message function argument or struct field must implement this trait.
@@ -20,18 +21,13 @@ where
     /// In progress decoding state.
     type DecodeState: Default;
 
-    /// Memory handle type returned if the decoded data borrows data which needed
-    /// to be allocated and needs some owner.
-    /// This handle is that owner.
-    type MemoryHandle;
-
     /// Decode the value from the decoder.
     fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
         unimplemented!("decode")
     }
 
     /// Finish decoding the value, return it and return the memory handle if needed.
-    fn finish_decode_state(state: Self::DecodeState) -> Result<(Self, Option<Self::MemoryHandle>), DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &mut MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
         unimplemented!("finish")
     }
 
@@ -53,25 +49,22 @@ pub trait AbstractValue {
 impl<'a> Value<'a> for u8 {
     type Type = U8T;
     type DecodeState = u8;
-    type MemoryHandle = ();
 }
 impl<'a> Value<'a> for u16 {
     type Type = U16T;
     type DecodeState = u16;
-    type MemoryHandle = ();
 }
 impl<'a> Value<'a> for u32 {
     type Type = U32T;
     type DecodeState = u32;
-    type MemoryHandle = ();
 
     fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
         *state = decoder.decode_u32()?;
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState) -> Result<(Self, Option<Self::MemoryHandle>), DecodeError> {
-        Ok((state, None))
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &mut MemoryManager) -> Result<Self, DecodeError>  {
+        Ok(state)
     }
 
     fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
@@ -81,20 +74,18 @@ impl<'a> Value<'a> for u32 {
 impl<'a> Value<'a> for u64 {
     type Type = U64T;
     type DecodeState = u64;
-    type MemoryHandle = ();
 }
 impl<'a> Value<'a> for u128 {
     type Type = UIntNT<16>;
     type DecodeState = u128;
-    type MemoryHandle = ();
 
     fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
         *state = decoder.decode_u128()?;
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState) -> Result<(Self, Option<Self::MemoryHandle>), DecodeError> {
-        Ok((state, None))
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &mut MemoryManager) -> Result<Self, DecodeError>  {
+        Ok(state)
     }
 
     fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
@@ -104,58 +95,38 @@ impl<'a> Value<'a> for u128 {
 impl<'a> Value<'a> for i8 {
     type Type = I8T;
     type DecodeState = i8;
-    type MemoryHandle = ();
 }
 impl<'a> Value<'a> for i16 {
     type Type = I16T;
     type DecodeState = i16;
-    type MemoryHandle = ();
 }
 impl<'a> Value<'a> for i32 {
     type Type = I32T;
     type DecodeState = i32;
-    type MemoryHandle = ();
 }
 impl<'a> Value<'a> for i64 {
     type Type = I64T;
     type DecodeState = i64;
-    type MemoryHandle = ();
 }
 impl<'a> Value<'a> for i128 {
     type Type = IntNT<16>;
     type DecodeState = i128;
-    type MemoryHandle = ();
 }
 impl<'a> Value<'a> for bool {
     type Type = Bool;
     type DecodeState = bool;
-    type MemoryHandle = ();
 }
 impl<'a> Value<'a> for &'a str {
     type Type = StrT;
-    type DecodeState = Option<Result<&'a str, BumpString<'a, 'a>>>;
-    type MemoryHandle = BumpString<'a, 'a>;
+    type DecodeState = &'a str;
 
     fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
-        *state = Some(decoder.decode_borrowed_str()?);
+        *state = decoder.decode_borrowed_str()?;
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState) -> Result<(Self, Option<Self::MemoryHandle>), DecodeError> {
-        match state {
-            None => { Ok(("", None)) }
-            Some(state) => {
-                match state {
-                    Ok(s) => Ok((s, None)),
-                    Err(s) => {
-                        let ptr = s.as_ptr();
-                        let len = s.len();
-                        let ss = unsafe { core::str::from_utf8_unchecked(core::slice::from_raw_parts(ptr, len)) };
-                        Ok((ss, Some(s)))
-                    }
-                }
-            }
-        }
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &mut MemoryManager) -> Result<Self, DecodeError> {
+        Ok(state)
     }
 
     fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
@@ -167,32 +138,28 @@ impl<'a> Value<'a> for &'a str {
 impl<'a> Value<'a> for alloc::string::String {
     type Type = StrT;
     type DecodeState = alloc::string::String;
-    type MemoryHandle = ();
 
     fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
         *state = decoder.decode_owned_str()?;
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState) -> Result<(Self, Option<Self::MemoryHandle>), DecodeError> {
-        Ok((state, None))
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &mut MemoryManager) -> Result<Self, DecodeError> {
+        Ok(state)
     }
 }
 
 impl<'a> Value<'a> for simple_time::Time {
     type Type = TimeT;
     type DecodeState = simple_time::Time;
-    type MemoryHandle = ();
 }
 impl<'a> Value<'a> for simple_time::Duration {
     type Type = DurationT;
     type DecodeState = simple_time::Duration;
-    type MemoryHandle = ();
 }
 impl<'a, V: Value<'a>> Value<'a> for Option<V> {
     type Type = NullableT<V::Type>;
     type DecodeState = Option<V::DecodeState>;
-    type MemoryHandle = V::MemoryHandle;
 }
 impl<'a, V: Value<'a>> Value<'a> for &'a [V]
 where
@@ -200,14 +167,16 @@ where
 {
     type Type = ListT<V::Type>;
     type DecodeState = SliceState<'a, V>;
-    type MemoryHandle = (BumpVec<'a, 'a, V>, BumpVec<'a, 'a, V::MemoryHandle>);
 
     fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
         decoder.decode_list(state)
     }
 
-    fn finish_decode_state(state: Self::DecodeState) -> Result<(Self, Option<Self::MemoryHandle>), DecodeError> {
-        todo!()
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &mut MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
+        match state.xs {
+            None => Ok(&[]),
+            Some(xs) => Ok(mem_handle.unpack_slice(xs))
+        }
     }
 }
 
@@ -217,8 +186,7 @@ where
     V::Type: ListElementType,
 {
     type Type = ListT<V::Type>;
-    type DecodeState = ();
-    type MemoryHandle = ();
+    type DecodeState = alloc::vec::Vec<V>;
 
     fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
         encoder.encode_list_slice(self.as_slice())
@@ -229,7 +197,6 @@ where
 impl<'a> Value<'a> for ixc_message_api::Address {
     type Type = AddressT;
     type DecodeState = ixc_message_api::Address;
-    type MemoryHandle = ();
 }
 
 #[cfg(feature = "arrayvec")]

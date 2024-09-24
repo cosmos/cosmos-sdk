@@ -1,15 +1,11 @@
 package bank_test
 
 import (
-	"context"
-	"fmt"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	secp256k1_internal "gitlab.com/yawning/secp256k1-voi"
-	"gitlab.com/yawning/secp256k1-voi/secec"
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
@@ -33,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	integrationv2 "github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,10 +58,7 @@ type (
 )
 
 var (
-	stablePrivateKey, _ = secec.NewPrivateKeyFromScalar(secp256k1_internal.NewScalarFromUint64(100))
-	stablePriv1         = &secp256k1.PrivKey{Key: stablePrivateKey.Bytes()}
-	//priv1               = secp256k1.GenPrivKey()
-	priv1 = stablePriv1
+	priv1 = secp256k1.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 	priv2 = secp256k1.GenPrivKey()
 	addr2 = sdk.AccAddress(priv2.PubKey().Address())
@@ -83,63 +75,47 @@ type suite struct {
 	AccountKeeper      types.AccountKeeper
 	DistributionKeeper distrkeeper.Keeper
 	App                *runtime.App
-	AppV2              *integrationv2.App
 	TxConfig           client.TxConfig
 }
-
-// TODO move to param
-var testAppV2 = false
 
 func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) suite {
 	t.Helper()
 	res := suite{}
 
-	moduleConfigs := []configurator.ModuleOption{
-		configurator.AccountsModule(),
-		configurator.AuthModule(),
-		configurator.StakingModule(),
-		configurator.TxModule(),
-		configurator.ValidateModule(),
-		configurator.ConsensusModule(),
-		configurator.BankModule(),
-		configurator.GovModule(),
-		configurator.DistributionModule(),
-		configurator.ProtocolPoolModule(),
-	}
-	var err error
-	if testAppV2 {
-		startupCfg := integrationv2.DefaultStartUpConfig()
-		var genAccounts []integrationv2.GenesisAccount
-		for _, acc := range genesisAccounts {
-			genAccounts = append(genAccounts, integrationv2.GenesisAccount{GenesisAccount: acc})
-		}
-		startupCfg.GenesisAccounts = genAccounts
-		startupCfg.HomeDir = t.TempDir()
-		res.AppV2, err = integrationv2.SetupWithConfiguration(
-			depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
-			startupCfg,
-			&res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
-		require.NoError(t, err)
-	} else {
-		var genAccounts []simtestutil.GenesisAccount
-		for _, acc := range genesisAccounts {
-			genAccounts = append(genAccounts, simtestutil.GenesisAccount{GenesisAccount: acc})
-		}
-		startupCfg := simtestutil.DefaultStartUpConfig()
-		startupCfg.GenesisAccounts = genAccounts
-		res.App, err = simtestutil.SetupWithConfiguration(
-			depinject.Configs(configurator.NewAppConfig(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
-			startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
-		require.NoError(t, err)
+	var genAccounts []simtestutil.GenesisAccount
+	for _, acc := range genesisAccounts {
+		genAccounts = append(genAccounts, simtestutil.GenesisAccount{GenesisAccount: acc})
 	}
 
+	startupCfg := simtestutil.DefaultStartUpConfig()
+	startupCfg.GenesisAccounts = genAccounts
+
+	app, err := simtestutil.SetupWithConfiguration(
+		depinject.Configs(
+			configurator.NewAppConfig(
+				configurator.AccountsModule(),
+				configurator.AuthModule(),
+				configurator.StakingModule(),
+				configurator.TxModule(),
+				configurator.ValidateModule(),
+				configurator.ConsensusModule(),
+				configurator.BankModule(),
+				configurator.GovModule(),
+				configurator.DistributionModule(),
+				configurator.ProtocolPoolModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
+		),
+		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
+
+	res.App = app
+
+	require.NoError(t, err)
 	return res
 }
 
 // CheckBalance checks the balance of an account.
-func checkBalance(
-	t *testing.T, baseApp *baseapp.BaseApp, addr sdk.AccAddress, balances sdk.Coins, keeper bankkeeper.Keeper,
-) {
+func checkBalance(t *testing.T, baseApp *baseapp.BaseApp, addr sdk.AccAddress, balances sdk.Coins, keeper bankkeeper.Keeper) {
 	t.Helper()
 	ctxCheck := baseApp.NewContext(true)
 	keeperBalances := keeper.GetAllBalances(ctxCheck, addr)
@@ -147,7 +123,6 @@ func checkBalance(
 }
 
 func TestSendNotEnoughBalance(t *testing.T) {
-	testAppV2 = false
 	acc := &authtypes.BaseAccount{
 		Address: addr1.String(),
 	}
@@ -156,8 +131,6 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	s := createTestSuite(t, genAccs)
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false)
-	fmt.Printf("*** presence test\n")
-	require.NotNil(t, s.AccountKeeper.GetAccount(ctx, addr1))
 
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
 	_, err := baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: baseApp.LastBlockHeight() + 1})
@@ -190,54 +163,6 @@ func TestSendNotEnoughBalance(t *testing.T) {
 
 	require.Equal(t, origAccNum, res2.GetAccountNumber())
 	require.Equal(t, origSeq+1, res2.GetSequence())
-}
-
-func TestSendNotEnoughBalance_v2(t *testing.T) {
-	testAppV2 = true
-	acc := &authtypes.BaseAccount{
-		Address: addr1.String(),
-	}
-
-	genAccs := []authtypes.GenesisAccount{acc}
-	s := createTestSuite(t, genAccs)
-	ctx := context.Background()
-
-	_, state, storeErr := s.AppV2.Store.StateLatest()
-	require.NoError(t, storeErr)
-
-	_, err := s.AppV2.Run(ctx, state, func(ctx context.Context) error {
-		err := testutil.FundAccount(
-			ctx, s.BankKeeper, addr1,
-			sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67)))
-		require.NoError(t, err)
-		res1 := s.AccountKeeper.GetAccount(ctx, addr1)
-		require.NotNil(t, res1)
-		require.Equal(t, acc, res1.(*authtypes.BaseAccount))
-
-		origAccNum := res1.GetAccountNumber()
-		origSeq := res1.GetSequence()
-		addr1Str, err := s.AccountKeeper.AddressCodec().BytesToString(addr1)
-		require.NoError(t, err)
-		addr2Str, err := s.AccountKeeper.AddressCodec().BytesToString(addr2)
-		require.NoError(t, err)
-		sendMsg := types.NewMsgSend(addr1Str, addr2Str, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
-
-		// TODO how to auto-advance height with app v2 interface?
-		s.AppV2.SignCheckDeliver(
-			t, ctx, 2, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq},
-			[]cryptotypes.PrivKey{priv1},
-			"spendable balance 67foocoin is smaller than 100foocoin",
-		)
-		s.AppV2.CheckBalance(ctx, t, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)}, s.BankKeeper)
-		res2 := s.AccountKeeper.GetAccount(ctx, addr1)
-		require.NotNil(t, res2)
-
-		require.Equal(t, origAccNum, res2.GetAccountNumber())
-		require.Equal(t, origSeq+1, res2.GetSequence())
-
-		return nil
-	})
-	require.NoError(t, err)
 }
 
 func TestMsgMultiSendWithAccounts(t *testing.T) {

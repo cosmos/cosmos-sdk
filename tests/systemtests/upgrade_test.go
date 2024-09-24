@@ -38,7 +38,7 @@ func TestChainUpgrade(t *testing.T) {
 		upgradeName         = "v050-to-v051"
 	)
 
-	sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight))
+	sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight+1))
 
 	cli := NewCLIWrapper(t, sut, verbose)
 	govAddr := sdk.AccAddress(address.Module("gov")).String()

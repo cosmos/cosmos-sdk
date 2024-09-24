@@ -1,3 +1,42 @@
+# Instalation
+
+```bash
+git clone git@github.com:mirvaisdia-nitka/cosmos-sdk-debug.git
+```
+
+```bash
+cd cosmos-sdk-debug/
+
+```
+```bash
+make build
+
+```
+
+```bash
+./build/simd init demo     --home ./private/.simapp     --chain-id learning-chain-1
+```
+
+```bash
+./build/simd keys add alice     --home ./private/.simapp     --keyring-backend test
+```
+
+```bash
+./build/simd genesis add-genesis-account alice 100000000stake     --home ./private/.simapp     --keyring-backend test
+```
+
+```bash
+./build/simd genesis gentx alice 70000000stake     --home ./private/.simapp     --keyring-backend test     --chain-id learning-chain-1
+```
+
+```bash
+./build/simd genesis collect-gentxs     --home ./private/.simapp
+```
+
+```bash
+./build/simd start  --home ./private/.simapp
+```
+
 <div align="center">
   <h1> Cosmos SDK </h1>
 </div>

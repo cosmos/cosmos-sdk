@@ -33,6 +33,8 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
+* [#21825](https://github.com/cosmos/cosmos-sdk/pull/21825) Fix decimal encoding and field ordering in Amino JSON encoder.
+
 ## [v0.13.5](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.5) - 2024-09-18
 
 ### Improvements

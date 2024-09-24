@@ -23,11 +23,13 @@ impl <'a, T: ArgValue<'a>> Default for SliceState<'a, T> {
 
 impl <'a, T:ArgValue<'a>> SliceState<'a, T> {
     fn get_xs<'b>(&mut self, scope: &'b BumpScope<'a>) -> &mut BumpVec<'b, 'a, T> {
-        self.xs.get_or_insert_with(|| BumpVec::new_in(scope))
+        // self.xs.get_or_insert_with(|| BumpVec::new_in(scope))
+        todo!()
     }
 
     fn get_mem_handles<'b>(&mut self, scope: &'b BumpScope<'a>) -> &mut BumpVec<'b, 'a, T::MemoryHandle> {
-        self.mem_handles.get_or_insert_with(|| BumpVec::new_in(scope))
+        // self.mem_handles.get_or_insert_with(|| BumpVec::new_in(scope))
+        todo!()
     }
 }
 

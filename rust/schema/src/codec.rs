@@ -10,7 +10,7 @@ pub trait Deserializer<'a> {}
 pub trait Visitor<'a> {}
 
 trait DeferDrop {}
-impl <T> DeferDrop for T {}
+impl<T> DeferDrop for T {}
 
 
 #[cfg(test)]
@@ -19,6 +19,7 @@ mod tests {
     use alloc::string::String;
     use alloc::vec;
     use core::any::Any;
+    use core::ptr::NonNull;
     use bump_scope::{bump_vec, mut_bump_vec, Bump, BumpBox, BumpScope, BumpVec, MutBumpVec};
     use super::*;
     extern crate std;
@@ -33,7 +34,7 @@ mod tests {
         }
     }
 
-    fn test1<'a: 'b, 'b>(scope: &'b BumpScope<'a>) -> (Box<dyn DeferDrop + 'b>, &'a [HasString]) {
+    fn test1<'a: 'b, 'b>(scope: &'b BumpScope<'a>) -> (*mut (dyn DeferDrop + 'b), &'a [HasString]) {
         struct Dropper<'a> {
             str_box: BumpBox<'a, [HasString]>,
         }
@@ -53,11 +54,10 @@ mod tests {
         let str_box = strings.into_boxed_slice();
         unsafe {
             let str_slice = str_box.as_non_null_slice().as_ptr() as *const [HasString];
-            let dropper = Dropper {
+            let dropper = scope.alloc(Dropper {
                 str_box,
-            };
-
-            (Box::new(dropper), &*str_slice)
+            });
+            (dropper.into_raw().as_ptr() as *mut (dyn DeferDrop + 'b), &*str_slice)
         }
     }
 
@@ -70,6 +70,11 @@ mod tests {
         todrop.push(dropper);
         for s in strs {
             std::println!("{}", s.s);
+        }
+        unsafe {
+            for d in todrop.drain(..) {
+                let _ = *d;
+            }
         }
         drop(todrop);
     }
@@ -121,7 +126,7 @@ struct Coin<'a> {
     amount: u128,
 }
 
-impl <'a> Test1 for Coin<'a> {
+impl<'a> Test1 for Coin<'a> {
     fn test1() -> impl DeferDrop {
         // struct Dropper<'a, 'b> {
         //     denom: <&'a str as Helper<'a>>::H<'b>,

@@ -29,7 +29,7 @@ const govModuleNameStr = "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 type KeeperTestSuite struct {
 	suite.Suite
 
-	mintKeeper    keeper.Keeper
+	mintKeeper    *keeper.Keeper
 	ctx           sdk.Context
 	msgServer     types.MsgServer
 	stakingKeeper *minttestutil.MockStakingKeeper
@@ -80,7 +80,7 @@ func (s *KeeperTestSuite) TestDefaultMintFn() {
 	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio, nil).AnyTimes()
 	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(792)))).Return(nil)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, types.ModuleName, authtypes.FeeCollectorName, gomock.Any()).Return(nil)
-	err := s.mintKeeper.SetMintFn(keeper.DefaultMintFn(types.DefaultInflationCalculationFn, s.stakingKeeper, &s.mintKeeper))
+	err := s.mintKeeper.SetMintFn(keeper.DefaultMintFn(types.DefaultInflationCalculationFn, s.stakingKeeper, s.mintKeeper))
 	s.NoError(err)
 
 	minter, err := s.mintKeeper.Minter.Get(s.ctx)
@@ -122,7 +122,7 @@ func (s *KeeperTestSuite) TestBeginBlocker() {
 	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio, nil).AnyTimes()
 	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(792)))).Return(nil)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, types.ModuleName, authtypes.FeeCollectorName, gomock.Any()).Return(nil)
-	err := s.mintKeeper.SetMintFn(keeper.DefaultMintFn(types.DefaultInflationCalculationFn, s.stakingKeeper, &s.mintKeeper))
+	err := s.mintKeeper.SetMintFn(keeper.DefaultMintFn(types.DefaultInflationCalculationFn, s.stakingKeeper, s.mintKeeper))
 	s.NoError(err)
 	// get minter (it should get modified afterwards)
 	minter, err := s.mintKeeper.Minter.Get(s.ctx)

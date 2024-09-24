@@ -39,7 +39,7 @@ var (
 // AppModule implements an application module for the mint module.
 type AppModule struct {
 	cdc        codec.Codec
-	keeper     keeper.Keeper
+	keeper     *keeper.Keeper
 	authKeeper types.AccountKeeper
 }
 
@@ -47,7 +47,7 @@ type AppModule struct {
 // If the mintFn argument is nil, then the default minting function will be used.
 func NewAppModule(
 	cdc codec.Codec,
-	keeper keeper.Keeper,
+	keeper *keeper.Keeper,
 	ak types.AccountKeeper,
 ) AppModule {
 	return AppModule{

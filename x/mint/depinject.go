@@ -30,7 +30,6 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	ModuleKey   depinject.OwnModuleKey
 	Config      *modulev1.Module
 	Environment appmodule.Environment
 	Cdc         codec.Codec
@@ -75,18 +74,15 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper)
 
-	return ModuleOutputs{MintKeeper: &k, Module: m, EpochHooks: epochstypes.EpochHooksWrapper{EpochHooks: m}}
+	return ModuleOutputs{MintKeeper: k, Module: m, EpochHooks: epochstypes.EpochHooksWrapper{EpochHooks: m}}
 }
 
-func InvokeMintFnCreation(mintFn types.MintFn, stakingKeeper types.StakingKeeper, mintKeeper *keeper.Keeper) error {
+func InvokeMintFnCreation(mintKeeper *keeper.Keeper, mintFn types.MintFn, stakingKeeper types.StakingKeeper) error {
 	if mintFn == nil && stakingKeeper == nil {
 		return fmt.Errorf("custom minting function or staking keeper must be supplied or available")
 	} else if mintFn == nil {
 		mintFn = keeper.DefaultMintFn(types.DefaultInflationCalculationFn, stakingKeeper, mintKeeper)
 	}
-	if err := mintKeeper.SetMintFn(mintFn); err != nil {
-		return err
-	}
 
-	return nil
+	return mintKeeper.SetMintFn(mintFn)
 }

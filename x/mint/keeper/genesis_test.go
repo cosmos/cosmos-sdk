@@ -32,7 +32,7 @@ type GenesisTestSuite struct {
 	suite.Suite
 
 	sdkCtx        sdk.Context
-	keeper        keeper.Keeper
+	keeper        *keeper.Keeper
 	cdc           codec.BinaryCodec
 	accountKeeper types.AccountKeeper
 	key           *storetypes.KVStoreKey

@@ -28,7 +28,7 @@ type MintTestSuite struct {
 
 	ctx         sdk.Context
 	queryClient types.QueryClient
-	mintKeeper  keeper.Keeper
+	mintKeeper  *keeper.Keeper
 }
 
 func (suite *MintTestSuite) SetupTest() {

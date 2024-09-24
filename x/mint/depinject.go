@@ -84,7 +84,9 @@ func InvokeMintFnCreation(config *modulev1.Module, mintFn types.MintFn, stakingK
 		return nil
 	}
 
-	if mintFn == nil {
+	if mintFn == nil && stakingKeeper != nil {
+		panic("custom minting function or staking keeper must be supplied or available")
+	} else if mintFn == nil {
 		mintFn = keeper.DefaultMintFn(types.DefaultInflationCalculationFn, stakingKeeper, mintKeeper)
 	}
 	if err := mintKeeper.SetMintFn(mintFn); err != nil {

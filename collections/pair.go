@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/schema"
-
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/schema"
 )
 
 // Pair defines a key composed of two keys.

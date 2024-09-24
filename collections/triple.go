@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/schema"
-
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/schema"
 )
 
 // Triple defines a multipart key composed of three keys.

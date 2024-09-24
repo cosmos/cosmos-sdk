@@ -44,7 +44,6 @@ impl<E: core::error::Error> From<E> for ErrorMessage {
 impl <'a> Value<'a> for ErrorMessage {
     type Type = StrT;
     type DecodeState = ();
-    type MemoryHandle = ();
 }
 
 impl AbstractValue for ErrorMessage {

@@ -1,6 +1,8 @@
 package mint
 
 import (
+	"fmt"
+
 	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
@@ -78,14 +80,9 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	return ModuleOutputs{MintKeeper: k, Module: m, EpochHooks: epochstypes.EpochHooksWrapper{EpochHooks: m}}
 }
 
-func InvokeMintFnCreation(config *modulev1.Module, mintFn types.MintFn, stakingKeeper types.StakingKeeper, mintKeeper *keeper.Keeper) error {
-	// all arguments to invokers are optional
-	if mintKeeper == nil || config == nil {
-		return nil
-	}
-
+func InvokeMintFnCreation(mintFn types.MintFn, stakingKeeper types.StakingKeeper, mintKeeper *keeper.Keeper) error {
 	if mintFn == nil && stakingKeeper != nil {
-		panic("custom minting function or staking keeper must be supplied or available")
+		return fmt.Errorf("custom minting function or staking keeper must be supplied or available")
 	} else if mintFn == nil {
 		mintFn = keeper.DefaultMintFn(types.DefaultInflationCalculationFn, stakingKeeper, mintKeeper)
 	}

@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
@@ -26,6 +27,7 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 		return nil
 	}
 	feesCollected := sdk.NewDecCoinsFromCoins(feesCollectedInt...)
+	fmt.Printf("AllocateTokens:\n feesCollected: %s", feesCollected.String())
 
 	// transfer collected fees to the distribution module account
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, k.feeCollectorName, types.ModuleName, feesCollectedInt); err != nil {
@@ -52,7 +54,7 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 
 	voteMultiplier := math.LegacyOneDec().Sub(communityTax)
 	feeMultiplier := feesCollected.MulDecTruncate(voteMultiplier)
-
+	fmt.Printf("AllocateTokens:\n feeMultiplier: %s,\nvoteMultiplier: %s,\n remaining: %s,\n communityTax: %s", feeMultiplier.String(), voteMultiplier.String(), remaining.String(), communityTax.String())
 	// allocate tokens proportionally to voting power
 	//
 	// TODO: Consider parallelizing later
@@ -70,7 +72,7 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 		// Ref: https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
 		powerFraction := math.LegacyNewDec(vote.Validator.Power).QuoTruncate(math.LegacyNewDec(totalPreviousPower))
 		reward := feeMultiplier.MulDecTruncate(powerFraction)
-
+		fmt.Printf("AllocateTokens:\n reward: %s", reward.String())
 		if err = k.AllocateTokensToValidator(ctx, validator, reward); err != nil {
 			return err
 		}

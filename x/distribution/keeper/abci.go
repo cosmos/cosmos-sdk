@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/x/distribution/types"
 
@@ -17,6 +18,8 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 	var previousTotalPower int64
 	header := k.HeaderService.HeaderInfo(ctx)
 	ci := k.cometService.CometInfo(ctx)
+	fmt.Printf("BeginBlocker: \nLastCommit: {Votes %v, Rounds: %v},\nProposerAddress: %v,\nValidatorsHash: %X\n", ci.LastCommit.Votes, ci.LastCommit.Round, ci.ProposerAddress, ci.ValidatorsHash)
+	fmt.Printf("BegginBlocker: Header: {Height: %v, Time: %v, ChainID: %v}\n", header.Height, header.Time, header.ChainID)
 	for _, vote := range ci.LastCommit.Votes {
 		previousTotalPower += vote.Validator.Power
 	}

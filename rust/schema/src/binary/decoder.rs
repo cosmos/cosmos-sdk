@@ -72,8 +72,8 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for Decoder<'b, 'a> {
         Ok(())
     }
 
-    fn mem_manager(&mut self) -> &mut MemoryManager<'a, 'a> {
-        &mut self.scope
+    fn mem_manager(&self) -> &MemoryManager<'a, 'a> {
+        &self.scope
     }
 }
 
@@ -112,8 +112,8 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for InnerDecoder<'b, 'a> {
         todo!()
     }
 
-    fn mem_manager(&mut self) -> &mut MemoryManager<'a, 'a> {
-        &mut self.outer.scope
+    fn mem_manager(&self) -> &MemoryManager<'a, 'a> {
+        &self.outer.scope
     }
 }
 
@@ -137,7 +137,7 @@ mod tests {
     fn test_u32_decode() {
         let buf: [u8; 4] = [10, 0, 0, 0];
         let bump = Bump::new();
-        let mut mem = MemoryManager::new_scope(&bump);
+        let mut mem = MemoryManager::new(bump.as_scope());
         let x = decode_value::<u32>(&buf, &mut mem).unwrap();
         assert_eq!(x, 10);
     }
@@ -146,7 +146,7 @@ mod tests {
     fn test_decode_borrowed_string() {
         let str = "hello";
         let bump = Bump::new();
-        let mut mem = MemoryManager::new_scope(&bump);
+        let mut mem = MemoryManager::new(bump.as_scope());
         let x = decode_value::<&str>(str.as_bytes(), &mut mem).unwrap();
         assert_eq!(x, "hello");
     }
@@ -155,7 +155,7 @@ mod tests {
     fn test_decode_owned_string() {
         let str = "hello";
         let bump = Bump::new();
-        let mut mem = MemoryManager::new_scope(&bump);
+        let mut mem = MemoryManager::new(bump.as_scope());
         let x = decode_value::<alloc::string::String>(str.as_bytes(), &mut mem).unwrap();
         assert_eq!(x, "hello");
     }
@@ -206,7 +206,7 @@ mod tests {
             decoder.decode_struct(&mut Visitor { state })
         }
 
-        fn finish_decode_state(state: Self::DecodeState, mem: &mut MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
+        fn finish_decode_state(state: Self::DecodeState, mem: &MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
             let states = (
                 <&'a str as Value<'a>>::finish_decode_state(state.0, mem)?,
                 <u128 as Value<'a>>::finish_decode_state(state.1, mem)?,
@@ -227,7 +227,7 @@ mod tests {
             amount: 1234567890,
         };
         let mut bump = Bump::new();
-        let mut mem = MemoryManager::new_scope(&bump);
+        let mut mem = MemoryManager::new(bump.as_scope());
         let res = encode_value(&coin, bump.as_scope()).unwrap();
         let decoded = decode_value::<Coin>(&res, &mem).unwrap();
         assert_eq!(decoded, coin);
@@ -245,7 +245,7 @@ mod tests {
         }];
         let mut bump = Bump::new();
         let res = encode_value(&coins, bump.as_scope()).unwrap();
-        let mut mem = MemoryManager::new_scope(&bump);
+        let mut mem = MemoryManager::new(bump.as_scope());
         let decoded = decode_value::<&[Coin]>(&res, &mut mem).unwrap();
         assert_eq!(decoded, coins);
         let _ = mem;

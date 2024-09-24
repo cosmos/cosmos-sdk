@@ -12,7 +12,7 @@ pub trait Decoder<'a> {
     fn decode_owned_str(&mut self) -> Result<alloc::string::String, DecodeError>;
     fn decode_struct<V: StructDecodeVisitor<'a>>(&mut self, visitor: &mut V) -> Result<(), DecodeError>;
     fn decode_list<T, V: ListVisitor<'a, T>>(&mut self, visitor: &mut V) -> Result<(), DecodeError>;
-    fn mem_manager(&mut self) -> &mut MemoryManager<'a, 'a>;
+    fn mem_manager(&self) -> &MemoryManager<'a, 'a>;
 }
 
 pub fn decode<'a, D: Decoder<'a>, V: Value<'a>>(decoder: &mut D) -> Result<V, DecodeError> {

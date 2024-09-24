@@ -27,7 +27,7 @@ where
     }
 
     /// Finish decoding the value, return it and return the memory handle if needed.
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &mut MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
         unimplemented!("finish")
     }
 
@@ -63,7 +63,7 @@ impl<'a> Value<'a> for u32 {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &mut MemoryManager) -> Result<Self, DecodeError>  {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager) -> Result<Self, DecodeError>  {
         Ok(state)
     }
 
@@ -84,7 +84,7 @@ impl<'a> Value<'a> for u128 {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &mut MemoryManager) -> Result<Self, DecodeError>  {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager) -> Result<Self, DecodeError>  {
         Ok(state)
     }
 
@@ -125,7 +125,7 @@ impl<'a> Value<'a> for &'a str {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &mut MemoryManager) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager) -> Result<Self, DecodeError> {
         Ok(state)
     }
 
@@ -144,7 +144,7 @@ impl<'a> Value<'a> for alloc::string::String {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &mut MemoryManager) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager) -> Result<Self, DecodeError> {
         Ok(state)
     }
 }
@@ -172,7 +172,7 @@ where
         decoder.decode_list(state)
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &mut MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
         match state.xs {
             None => Ok(&[]),
             Some(xs) => Ok(mem_handle.unpack_slice(xs))

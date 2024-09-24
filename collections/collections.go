@@ -6,9 +6,8 @@ import (
 	"io"
 	"math"
 
-	"cosmossdk.io/schema"
-
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/schema"
 )
 
 var (

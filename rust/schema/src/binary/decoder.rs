@@ -13,7 +13,7 @@ pub fn decode_value<'b, 'a: 'b, V: Value<'a>>(input: &'a [u8], memory_manager: &
 
 struct Decoder<'b, 'a: 'b> {
     buf: &'a [u8],
-    scope: &'b MemoryManager<'a, 'a>
+    scope: &'b MemoryManager<'a, 'a>,
 }
 
 impl<'b, 'a: 'b> Decoder<'b, 'a> {
@@ -73,7 +73,7 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for Decoder<'b, 'a> {
     }
 
     fn mem_manager(&mut self) -> &mut MemoryManager<'a, 'a> {
-        todo!()
+        &mut self.scope
     }
 }
 
@@ -113,7 +113,7 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for InnerDecoder<'b, 'a> {
     }
 
     fn mem_manager(&mut self) -> &mut MemoryManager<'a, 'a> {
-        todo!()
+        &mut self.outer.scope
     }
 }
 
@@ -206,7 +206,7 @@ mod tests {
             decoder.decode_struct(&mut Visitor { state })
         }
 
-        fn finish_decode_state(state: Self::DecodeState, mem: &mut MemoryManager) -> Result<Self, DecodeError> {
+        fn finish_decode_state(state: Self::DecodeState, mem: &mut MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
             let states = (
                 <&'a str as Value<'a>>::finish_decode_state(state.0, mem)?,
                 <u128 as Value<'a>>::finish_decode_state(state.1, mem)?,
@@ -239,7 +239,7 @@ mod tests {
         let coins = vec![Coin {
             denom: "uatom",
             amount: 1234567890,
-        },Coin {
+        }, Coin {
             denom: "foo",
             amount: 9876543210,
         }];

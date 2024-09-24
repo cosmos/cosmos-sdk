@@ -6,7 +6,7 @@ pub struct MemoryManager<'b, 'a: 'b> {
 }
 
 impl<'b, 'a: 'b> MemoryManager<'b, 'a> {
-    pub fn new_scope(bump: &Bump) -> MemoryManager<'a, 'a> {
+    pub fn new_scope(bump: &'a Bump) -> MemoryManager<'b, 'a> {
         MemoryManager {
             handles: BumpVec::new_in(bump),
         }

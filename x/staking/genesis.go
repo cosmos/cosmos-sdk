@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/types"
 
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -27,14 +26,9 @@ func WriteValidators(ctx context.Context, keeper *keeper.Keeper) (vals []sdk.Gen
 			return true, err
 		}
 
-		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
-		if err != nil {
-			return true, err
-		}
-
 		vals = append(vals, sdk.GenesisValidator{
 			Address: sdk.ConsAddress(pk.Address()).Bytes(),
-			PubKey:  cmtPk,
+			PubKey:  pk,
 			Power:   validator.GetConsensusPower(keeper.PowerReduction(ctx)),
 			Name:    validator.GetMoniker(),
 		})

@@ -6,6 +6,7 @@ import (
 )
 
 // JSONPubKey defines a public key that are parse from JSON file.
+// convert PubKey to JSONPubKey needs a in between step
 type JSONPubKey interface {
 	Address() Address
 	Bytes() []byte

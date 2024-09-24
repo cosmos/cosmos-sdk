@@ -25,13 +25,10 @@ func (app *SimApp[T]) ExportAppStateAndValidators(jailAllowedAddrs []string) (v2
 	}
 
 	validators, err := staking.WriteValidators(ctx, app.StakingKeeper)
-	if err != nil {
-		return v2.ExportedApp{}, err
-	}
 
 	return v2.ExportedApp{
 		AppState:   genesis,
 		Height:     int64(latestHeight),
 		Validators: validators,
-	}, nil
+	}, err
 }

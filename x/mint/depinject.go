@@ -64,10 +64,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		panic(err)
 	}
 
-	if in.MintFn == nil {
-		panic("mintFn cannot be nil")
-	}
-
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Environment,
@@ -76,7 +72,9 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		feeCollectorName,
 		as,
 	)
-
+	if in.MintFn == nil {
+		in.MintFn = keeper.DefaultMintFn(types.DefaultInflationCalculationFn, in.StakingKeeper, k)
+	}
 	k.SetMintFn(in.MintFn)
 
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper)

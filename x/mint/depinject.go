@@ -23,7 +23,7 @@ func (am AppModule) IsOnePerModuleType() {}
 func init() {
 	appconfig.RegisterModule(&modulev1.Module{},
 		appconfig.Provide(ProvideModule),
-		appconfig.Invoke(InvokeMintFnCreation),
+		appconfig.Invoke(InvokeSetMintFn),
 	)
 }
 
@@ -77,7 +77,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	return ModuleOutputs{MintKeeper: k, Module: m, EpochHooks: epochstypes.EpochHooksWrapper{EpochHooks: m}}
 }
 
-func InvokeMintFnCreation(mintKeeper *keeper.Keeper, mintFn types.MintFn, stakingKeeper types.StakingKeeper) error {
+func InvokeSetMintFn(mintKeeper *keeper.Keeper, mintFn types.MintFn, stakingKeeper types.StakingKeeper) error {
 	if mintFn == nil && stakingKeeper == nil {
 		return fmt.Errorf("custom minting function or staking keeper must be supplied or available")
 	} else if mintFn == nil {

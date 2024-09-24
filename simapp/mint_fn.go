@@ -29,7 +29,7 @@ func ProvideExampleMintFn(bankKeeper MintBankKeeper) minttypes.MintFn {
 		if epochID != "minute" {
 			return nil
 		}
-
+		fmt.Printf("ProvideExampleMintFn:\nEpoch ID: %s\nEpoch Number: %d\n", epochID, epochNumber)
 		resp, err := env.QueryRouterService.Invoke(ctx, &stakingtypes.QueryParamsRequest{})
 		if err != nil {
 			return err
@@ -49,6 +49,9 @@ func ProvideExampleMintFn(bankKeeper MintBankKeeper) minttypes.MintFn {
 		}
 
 		stakingTokenSupply := bankSupply.Amount
+		fmt.Printf("ProvideExampleMintFn:\nStaking Token Supply: %v,\n ", stakingTokenSupply)
+		fmt.Printf("ProvideExampleMintFn:\nBondDenom: %s,\n HistoricalEntries: %d,\nMaxEntries: %d,\n MaxValidators: %d,\n UnbondingTime: %s", stakingParams.Params.BondDenom,
+			stakingParams.Params.HistoricalEntries, stakingParams.Params.MaxEntries, stakingParams.Params.MaxValidators, stakingParams.Params.UnbondingTime)
 
 		resp, err = env.QueryRouterService.Invoke(ctx, &minttypes.QueryParamsRequest{})
 		if err != nil {
@@ -92,6 +95,7 @@ func ProvideExampleMintFn(bankKeeper MintBankKeeper) minttypes.MintFn {
 		maxSupply := mintParams.Params.MaxSupply
 		totalSupply := stakingTokenSupply.Amount
 
+		fmt.Printf("ProvideExampleMintFn:\nMinted Coin: %v,\n Max Supply: %v,\n Total Supply: %v\n", mintedCoin, maxSupply, totalSupply)
 		if !maxSupply.IsZero() {
 			// supply is not infinite, check the amount to mint
 			remainingSupply := maxSupply.Sub(totalSupply)

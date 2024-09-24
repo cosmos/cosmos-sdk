@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/x/mint/types"
 
@@ -17,7 +18,7 @@ func (k Keeper) BeginBlocker(ctx context.Context, mintFn types.MintFn) error {
 	if err != nil {
 		return err
 	}
-
+	fmt.Printf("BeginBlocker:\nInflation: %s,\n AnnualProvisions: %s,\n", minter.Inflation, minter.AnnualProvisions)
 	oldMinter := minter
 
 	// we pass -1 as epoch number to indicate that this is not an epoch minting,

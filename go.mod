@@ -181,7 +181,7 @@ require (
 // TODO remove after all modules have their own go.mods
 replace (
 	// pseudo version lower than the latest tag
-	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240923144907-a7a0daf704cc // main
+	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214 // main
 	cosmossdk.io/x/bank => ./x/bank

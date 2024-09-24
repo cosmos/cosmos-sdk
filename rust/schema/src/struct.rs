@@ -16,6 +16,8 @@ use crate::field::Field;
 ///
 /// Example:
 /// ```
+/// use ixc_schema::StructCodec;
+///
 /// #[derive(StructCodec)]
 /// pub struct MyStruct<'a> {
 ///   pub field1: u8,
@@ -26,7 +28,7 @@ use crate::field::Field;
 /// #[derive(StructCodec)]
 /// pub struct MyStruct2 {
 ///   pub field1: simple_time::Time,
-///   pub field2: interchain_message_api::Address,
+///   pub field2: ixc_message_api::Address,
 /// }
 /// ```
 pub unsafe trait StructCodec {
@@ -60,6 +62,23 @@ mod tests {
         amount: u128,
     }
 
+    unsafe impl <'a> StructSchema for Coin<'a> {
+        const FIELDS: &'static [Field<'static>] = &[
+            to_field::<StrT>().with_name("denom"),
+            to_field::<UIntNT<16>>().with_name("amount"),
+        ];
+    }
+
+    unsafe impl<'a> StructEncodeVisitor for Coin<'a> {
+        fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError> {
+            match index {
+                0 => <&'a str as ArgValue<'a>>::encode(&self.denom, encoder),
+                1 => <u128 as ArgValue<'a>>::encode(&self.amount, encoder),
+                _ => Err(EncodeError::UnknownError),
+            }
+        }
+    }
+
     impl<'a> ArgValue<'a> for Coin<'a> {
         type Type = StructT<Coin<'a>>;
         type DecodeState = (<&'a str as ArgValue<'a>>::DecodeState, <u128 as ArgValue<'a>>::DecodeState);
@@ -70,10 +89,7 @@ mod tests {
                 state: &'b mut <crate::r#struct::tests::Coin<'a> as ArgValue<'a>>::DecodeState,
             }
             unsafe impl <'b, 'a:'b> StructSchema for Visitor<'b, 'a> {
-                const FIELDS: &'static [Field<'static>] = &[
-                    to_field::<StrT>().with_name("denom"),
-                    to_field::<UIntNT<16>>().with_name("amount"),
-                ];
+                const FIELDS: &'static [Field<'static>] = Coin::<'a>::FIELDS;
             }
             unsafe impl<'b, 'a:'b> StructDecodeVisitor<'a> for Visitor<'b, 'a> {
                 fn decode_field<D: Decoder<'a>>(&mut self, index: usize, decoder: &mut D) -> Result<(), DecodeError> {
@@ -101,26 +117,7 @@ mod tests {
 
         /// Encode the value to the encoder.
         fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
-            struct Visitor<'a> {
-                state: &'a Coin<'a>,
-            }
-            unsafe impl <'a> StructSchema for Visitor<'a> {
-                const FIELDS: &'static [Field<'static>] = &[
-                    to_field::<StrT>().with_name("denom"),
-                    to_field::<UIntNT<16>>().with_name("amount"),
-                ];
-            }
-            unsafe impl<'a> StructEncodeVisitor for Visitor<'a> {
-                fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError> {
-                    match index {
-                        0 => <&'a str as ArgValue<'a>>::encode(&self.state.denom, encoder),
-                        1 => <u128 as ArgValue<'a>>::encode(&self.state.amount, encoder),
-                        _ => Err(EncodeError::UnknownError),
-                    }
-                }
-            }
-
-            encoder.encode_struct(&Visitor { state: self })
+            encoder.encode_struct(self)
         }
     }
 

@@ -1,12 +1,15 @@
+use bump_scope::BumpScope;
 use crate::handler::{AccountAPI, AccountClientFactory, AccountHandler, ModuleAPI};
 use crate::message::Message;
 use crate::response::Response;
 use ixc_message_api::Address;
+use ixc_message_api::packet::MessagePacket;
 
 /// Context wraps a single message request (and possibly response as well) along with
 /// the router callbacks necessary for making nested message calls.
 pub struct Context<'a> {
     _phantom: std::marker::PhantomData<&'a ()>,
+    message_packet: &'a MessagePacket,
 }
 
 impl <'a> Context<'a> {

@@ -72,6 +72,10 @@ impl<'a> ArgValue<'a> for u32 {
     fn finish_decode_state(state: Self::DecodeState) -> Result<(Self, Option<Self::MemoryHandle>), DecodeError> {
         Ok((state, None))
     }
+
+    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+        encoder.encode_u32(*self)
+    }
 }
 impl<'a> ArgValue<'a> for u64 {
     type Type = U64T;
@@ -82,6 +86,19 @@ impl<'a> ArgValue<'a> for u128 {
     type Type = UIntNT<16>;
     type DecodeState = u128;
     type MemoryHandle = ();
+
+    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+        *state = decoder.decode_u128()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState) -> Result<(Self, Option<Self::MemoryHandle>), DecodeError> {
+        Ok((state, None))
+    }
+
+    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+        encoder.encode_u128(*self)
+    }
 }
 impl<'a> ArgValue<'a> for i8 {
     type Type = I8T;
@@ -118,6 +135,31 @@ impl<'a> ArgValue<'a> for &'a str {
     type DecodeState = Option<Result<&'a str, BumpString<'a, 'a>>>;
     type MemoryHandle = BumpString<'a, 'a>;
 
+    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+        *state = Some(decoder.decode_borrowed_str()?);
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState) -> Result<(Self, Option<Self::MemoryHandle>), DecodeError> {
+        match state {
+            None => { Ok(("", None)) }
+            Some(state) => {
+                match state {
+                    Ok(s) => Ok((s, None)),
+                    Err(s) => {
+                        let ptr = s.as_ptr();
+                        let len = s.len();
+                        let ss = unsafe { core::str::from_utf8_unchecked(core::slice::from_raw_parts(ptr, len)) };
+                        Ok((ss, Some(s)))
+                    }
+                }
+            }
+        }
+    }
+
+    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+        encoder.encode_str(self)
+    }
 }
 
 #[cfg(feature = "std")]
@@ -125,6 +167,15 @@ impl<'a> ArgValue<'a> for alloc::string::String {
     type Type = StrT;
     type DecodeState = alloc::string::String;
     type MemoryHandle = ();
+
+    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+        *state = decoder.decode_owned_str()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState) -> Result<(Self, Option<Self::MemoryHandle>), DecodeError> {
+        Ok((state, None))
+    }
 }
 
 impl<'a> ArgValue<'a> for simple_time::Time {

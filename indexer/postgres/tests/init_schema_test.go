@@ -33,17 +33,20 @@ func testInitSchema(t *testing.T, disableRetainDeletions bool, goldenFileName st
 	connectionUrl := createTestDB(t)
 
 	buf := &strings.Builder{}
-
-	cfg, err := postgresConfigToIndexerConfig(postgres.Config{
-		DatabaseURL:            connectionUrl,
-		DisableRetainDeletions: disableRetainDeletions,
-	})
-	require.NoError(t, err)
-
-	res, err := postgres.StartIndexer(indexer.InitParams{
-		Config:  cfg,
+	res, err := indexer.StartIndexing(indexer.IndexingOptions{
+		Config: indexer.IndexingConfig{
+			Target: map[string]indexer.Config{
+				"postgres": {
+					Type: "postgres",
+					Config: postgres.Config{
+						DatabaseURL:            connectionUrl,
+						DisableRetainDeletions: disableRetainDeletions,
+					},
+				},
+			},
+		},
 		Context: context.Background(),
-		Logger:  &prettyLogger{buf},
+		Logger:  prettyLogger{buf},
 	})
 	require.NoError(t, err)
 	listener := res.Listener

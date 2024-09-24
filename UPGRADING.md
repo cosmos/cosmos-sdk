@@ -946,6 +946,55 @@ To find out more please read the [signer field](https://github.com/cosmos/cosmos
 
 For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`. Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.
 
+##### Account Migration Guide: x/auth to x/accounts
+
+Users can now migrate accounts from `x/auth` to `x/accounts` using the `auth.MsgMigrateAccount` message. Currently, this migration is only supported for `BaseAccount` due to security considerations.
+
+###### Migration Process
+
+The migration process allows an auth BaseAccount to migrate to any kind of x/accounts supported account type, here we will show how to migrate from a legacy x/auth `BaseAccount` to a `x/accounts` `BaseAccount`
+
+####### Migrating to x/accounts/defaults/base
+
+To migrate to the `BaseAccount` in `x/accounts`, follow these steps:
+
+1. Send a `basev1.MsgInit` message.
+2. This process allows you to:
+    - Switch to a new public key
+    - Reset your sequence number
+
+> **Important**: If you intend to keep the same public key, ensure you use your current sequence number.
+
+###### Example: x/auth.MsgMigrateAccount
+
+Here's an example of the `x/auth.MsgMigrateAccount` message structure:
+
+```json
+{
+  "signer": "cosmos1w43tr39v3lzvxz969e4ty9a74rq9nw7563tqvy",
+  "account_type": "base",
+  "account_init_msg": {
+    "@type": "/cosmos.accounts.defaults.base.v1.MsgInit",
+    "pub_key": {
+      "@type": "/cosmos.crypto.secp256k1.PubKey",
+      "key": "AkeoE1z32tlQyE7xpx3v+JE9XJL0trVQBFoDCn0pGl3w"
+    },
+    "init_sequence": "100"
+  }
+}
+```
+
+**Field Descriptions**
+
+- `signer`: The address of the account you want to migrate from.
+- `account_type`: The new account type you want to migrate to (depends on what's installed on the chain).
+- `account_init_msg`: The custom initialization message for the new account.
+    - `@type`: Specifies the type of account (in this case, x/accounts base account).
+    - `pub_key`: The public key for the account. You can migrate to a different public key if desired.
+    - `init_sequence`: The new sequence number for the account.
+
+> **Warning**: If you're keeping the same public key, make sure to use your current sequence number to prevent potential replay attacks.
+
 #### `x/capability`
 
 Capability has been moved to [IBC Go](https://github.com/cosmos/ibc-go). IBC v8 will contain the necessary changes to incorporate the new module location.

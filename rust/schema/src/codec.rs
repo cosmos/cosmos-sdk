@@ -1,17 +1,14 @@
 use bump_scope::{Bump, BumpString, BumpVec};
+use crate::buffer::{ReverseWriter, ReverseWriterFactory, Writer};
+use crate::decoder::DecodeError;
+use crate::encoder::EncodeError;
+use crate::mem::MemoryManager;
+use crate::value::Value;
 
-pub struct Input<'a> {
-    pub input: &'a [u8],
-    pub bump_scope: &'a bump_scope::BumpScope<'a>,
+pub trait Codec {
+    fn encode_value<'a, V: Value<'a>, F: ReverseWriterFactory>(value: &V, writer_factory: &F) -> Result<F::Writer::Output, EncodeError>;
+    fn decode_value<'b, 'a: 'b, V: Value<'a>>(input: &'a [u8], memory_manager: &'b MemoryManager<'a, 'a>) -> Result<V, DecodeError>;
 }
-
-pub trait Deserializer<'a> {}
-
-pub trait Visitor<'a> {}
-
-trait DeferDrop {}
-impl<T> DeferDrop for T {}
-
 
 #[cfg(test)]
 mod tests {

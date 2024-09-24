@@ -1,5 +1,8 @@
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 
+mod manager;
+mod store;
+
 use ixc_message_api::Address;
 use ixc_core::{Context};
 use ixc_core::handler::{AccountAPI, AccountHandler, Handler, ModuleAPI, ModuleHandler};

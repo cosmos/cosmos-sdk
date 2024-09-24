@@ -16,6 +16,7 @@ pub mod self_destruct;
 pub mod handler;
 pub mod resource;
 pub mod error;
+mod routes;
 
 pub use context::Context;
 pub use response::Response;

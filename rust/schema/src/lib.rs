@@ -10,7 +10,7 @@ mod r#struct;
 mod r#enum;
 mod oneof;
 pub mod state_object;
-mod codec;
+pub mod codec;
 mod decoder;
 mod list;
 mod binary;
@@ -20,7 +20,7 @@ mod kind;
 mod field;
 mod fields;
 mod buffer;
-mod mem;
+pub mod mem;
 
 pub use r#struct::{StructCodec};
 pub use r#enum::{EnumCodec};

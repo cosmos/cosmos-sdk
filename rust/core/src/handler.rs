@@ -4,7 +4,7 @@ use ixc_schema::StructCodec;
 use crate::resource::{InitializationError, Initializer, Resource};
 
 /// Handler trait for account and module handlers.
-pub trait Handler {
+pub trait Handler: ixc_message_api::handler::Handler {
     /// The parameter used for initializing the handler.
     type Init /*: StructCodec*/;
 }

@@ -4,6 +4,8 @@
 mod header;
 mod data_pointer;
 pub mod packet;
+pub mod code;
+pub mod handler;
 
 /// A globally unique identifier for an account or message.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]

@@ -8,12 +8,6 @@ pub mod counter {
         value: Item<u64>,
     }
 
-    #[derive(StructCodec)]
-    pub struct Test1 {
-        pub a: u64,
-        pub b: String,
-    }
-
     impl Counter {
         #[on_create]
         pub fn create(ctx: &mut Context) {

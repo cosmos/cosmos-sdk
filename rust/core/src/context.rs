@@ -3,16 +3,20 @@ use crate::handler::{AccountAPI, AccountClientFactory, AccountHandler, ModuleAPI
 use crate::message::Message;
 use crate::response::Response;
 use ixc_message_api::Address;
-// use ixc_message_api::packet::MessagePacket;
+use ixc_message_api::handler::HostCallbacks;
+use ixc_message_api::packet::MessagePacket;
+use ixc_schema::codec::Codec;
+use ixc_schema::mem::MemoryManager;
 
 /// Context wraps a single message request (and possibly response as well) along with
 /// the router callbacks necessary for making nested message calls.
 pub struct Context<'a> {
-    _phantom: std::marker::PhantomData<&'a ()>,
-    // message_packet: &'a MessagePacket,
+    message_packet: &'a MessagePacket,
+    host_callbacks: &'a HostCallbacks,
+    memory_manager: &'a MemoryManager<'a, 'a>,
 }
 
-impl <'a> Context<'a> {
+impl<'a> Context<'a> {
     /// This is the address of the account that is getting called.
     /// In a receiving account, this is the account's own address.
     pub fn address(&self) -> &Address {
@@ -32,7 +36,7 @@ impl <'a> Context<'a> {
     /// Dynamically invokes a module message.
     /// Static module client instances should be preferred wherever possible,
     /// so that static dependency analysis can be performed.
-    pub fn dynamic_invoke_module<M: Message<true>>(&self, message: M) -> Response<M::Response, M::Error>
+    pub fn dynamic_invoke_module<'b, M: Message<'b, true>>(&self, message: M) -> Response<M::Response, M::Error>
     {
         unimplemented!()
     }
@@ -40,7 +44,16 @@ impl <'a> Context<'a> {
     /// Dynamically invokes an account message.
     /// Static account client instances should be preferred wherever possible,
     /// so that static dependency analysis can be performed.
-    pub fn dynamic_invoke_account<M: Message<false>>(&self, account: &Address, message: M) -> Response<M::Response, M::Error> {
+    pub fn dynamic_invoke_account<'b, M: Message<'b, false>>(&self, account: &Address, message: M) -> Response<M::Response, M::Error> {
+        // TODO allocate packet
+        let msg_body = M::Codec::encode_value(&message, self.memory_manager.scope())?;
+        // TODO call self.host_callbacks.invoke
+        // let code = self.host_callbacks.invoke(&mut packet);
+        // if code != Code::Ok {
+        //    // TODO decode error
+        // } else {
+        //    // TODO decode response
+        // }
         unimplemented!()
     }
 

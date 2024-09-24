@@ -56,8 +56,8 @@ func (a Account) AuthRetroCompatibility(ctx context.Context, _ *authtypes.QueryL
 
 ## Usage Notes
 
-- Implement this handler only for account types you want to expose via x/auth gRPC methods.
-- The `info` field in the response can be nil if your account doesn't fit the `BaseAccount` structure.
+* Implement this handler only for account types you want to expose via x/auth gRPC methods.
+* The `info` field in the response can be nil if your account doesn't fit the `BaseAccount` structure.
 
 # Genesis
 

@@ -1,12 +1,14 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -30,7 +32,7 @@ type GenesisTestSuite struct {
 	suite.Suite
 
 	sdkCtx        sdk.Context
-	keeper        keeper.Keeper
+	keeper        *keeper.Keeper
 	cdc           codec.BinaryCodec
 	accountKeeper types.AccountKeeper
 	key           *storetypes.KVStoreKey
@@ -51,14 +53,17 @@ func (s *GenesisTestSuite) SetupTest() {
 	s.sdkCtx = testCtx.Ctx
 	s.key = key
 
-	stakingKeeper := minttestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := minttestutil.NewMockAccountKeeper(ctrl)
 	bankKeeper := minttestutil.NewMockBankKeeper(ctrl)
 	s.accountKeeper = accountKeeper
 	accountKeeper.EXPECT().GetModuleAddress(minterAcc.Name).Return(minterAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(s.sdkCtx, minterAcc.Name).Return(minterAcc)
 
-	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), stakingKeeper, accountKeeper, bankKeeper, "", "")
+	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), accountKeeper, bankKeeper, "", "")
+	err := s.keeper.SetMintFn(func(ctx context.Context, env appmodule.Environment, minter *types.Minter, epochId string, epochNumber int64) error {
+		return nil
+	})
+	s.NoError(err)
 }
 
 func (s *GenesisTestSuite) TestImportExportGenesis() {

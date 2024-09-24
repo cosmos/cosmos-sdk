@@ -27,7 +27,7 @@ const govModuleNameStr = "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 type ModuleTestSuite struct {
 	suite.Suite
 
-	mintKeeper    keeper.Keeper
+	mintKeeper    *keeper.Keeper
 	ctx           sdk.Context
 	msgServer     types.MsgServer
 	stakingKeeper *minttestutil.MockStakingKeeper
@@ -59,22 +59,24 @@ func (s *ModuleTestSuite) SetupTest() {
 	s.mintKeeper = keeper.NewKeeper(
 		encCfg.Codec,
 		env,
-		stakingKeeper,
 		accountKeeper,
 		bankKeeper,
 		authtypes.FeeCollectorName,
 		govModuleNameStr,
 	)
+	err := s.mintKeeper.SetMintFn(keeper.DefaultMintFn(types.DefaultInflationCalculationFn, stakingKeeper, s.mintKeeper))
+	s.NoError(err)
+
 	s.stakingKeeper = stakingKeeper
 	s.bankKeeper = bankKeeper
 
-	err := s.mintKeeper.Params.Set(s.ctx, types.DefaultParams())
+	err = s.mintKeeper.Params.Set(s.ctx, types.DefaultParams())
 	s.NoError(err)
 
 	s.NoError(s.mintKeeper.Minter.Set(s.ctx, types.DefaultInitialMinter()))
 	s.msgServer = keeper.NewMsgServerImpl(s.mintKeeper)
 
-	s.appmodule = mint.NewAppModule(encCfg.Codec, s.mintKeeper, accountKeeper, s.mintKeeper.DefaultMintFn(types.DefaultInflationCalculationFn))
+	s.appmodule = mint.NewAppModule(encCfg.Codec, s.mintKeeper, accountKeeper)
 }
 
 func (s *ModuleTestSuite) TestEpochHooks() {

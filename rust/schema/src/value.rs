@@ -63,7 +63,7 @@ impl<'a> Value<'a> for u32 {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager) -> Result<Self, DecodeError>  {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager<'a, 'a>) -> Result<Self, DecodeError>  {
         Ok(state)
     }
 
@@ -84,7 +84,7 @@ impl<'a> Value<'a> for u128 {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager) -> Result<Self, DecodeError>  {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager<'a, 'a>) -> Result<Self, DecodeError>  {
         Ok(state)
     }
 
@@ -125,7 +125,7 @@ impl<'a> Value<'a> for &'a str {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
         Ok(state)
     }
 
@@ -144,7 +144,7 @@ impl<'a> Value<'a> for alloc::string::String {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
         Ok(state)
     }
 }

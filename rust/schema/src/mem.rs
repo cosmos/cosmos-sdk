@@ -19,7 +19,7 @@ impl<'b, 'a: 'b> MemoryManager<'b, 'a> {
         self.handles.borrow().bump()
     }
 
-    pub fn unpack_slice<T>(&self, vec: BumpVec<'b, 'a, T>) -> &'b [T] {
+    pub fn unpack_slice<T>(&self, vec: BumpVec<'b, 'a, T>) -> &'a [T] {
         unsafe {
             let b = vec.into_boxed_slice();
             let slice = b.as_non_null_slice().as_ptr() as *const [T];

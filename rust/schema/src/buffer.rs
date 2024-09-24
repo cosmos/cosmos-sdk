@@ -94,7 +94,7 @@ impl <'a> ReverseWriterFactory for BumpScope<'a> {
     fn new(&self, size: usize) -> Self::Writer {
         let b = self.alloc_slice_fill(size, 0);
         ReverseSliceWriter {
-            buf: b,
+            buf: b.into_mut(),
             pos: size,
         }
     }
@@ -102,12 +102,12 @@ impl <'a> ReverseWriterFactory for BumpScope<'a> {
 
 
 pub struct ReverseSliceWriter<'a> {
-    buf: BumpBox<'a, [u8]>,
+    buf: &'a mut [u8],
     pos: usize,
 }
 
 impl<'a> ReverseWriter for ReverseSliceWriter<'a> {
-    type Output = BumpBox<'a, [u8]>;
+    type Output = &'a [u8];
 
     fn write(&mut self, bytes: &[u8]) -> Result<(), EncodeError> {
         if self.pos < bytes.len() {
@@ -123,6 +123,6 @@ impl<'a> ReverseWriter for ReverseSliceWriter<'a> {
     }
 
     fn finish(self) -> Result<Self::Output, EncodeError> {
-        Ok(self.buf)
+        Ok(&self.buf[self.pos..])
     }
 }

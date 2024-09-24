@@ -31,10 +31,12 @@ impl <'a, W: ReverseWriter> crate::encoder::Encoder for Encoder<'a, W> {
     }
 
     fn encode_list_slice<'c, V: Value<'c>>(&mut self, x: &[V]) -> Result<(), EncodeError> {
+        let mut sub = Encoder { writer: self.writer };
+        let mut inner = InnerEncoder::<W> { outer: &mut sub };
         for v in x.iter().rev() {
-            <V as Value>::encode(v, self)?;
+            <V as Value>::encode(v, &mut inner)?;
         }
-        self.writer.write(&(x.len() as u32).to_le_bytes())?;
+        self.encode_u32(x.len() as u32)?;
         Ok(())
     }
 
@@ -170,6 +172,6 @@ mod tests {
         let x = 10u32;
         let bump = Bump::new();
         let res = encode_value(&x, bump.as_scope()).unwrap();
-        assert_eq!(res.as_slice(), &[10, 0, 0, 0]);
+        assert_eq!(res, &[10, 0, 0, 0]);
     }
 }

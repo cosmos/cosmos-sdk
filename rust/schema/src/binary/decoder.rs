@@ -62,13 +62,13 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for Decoder<'b, 'a> {
     }
 
     fn decode_list<T, V: ListVisitor<'a, T>>(&mut self, visitor: &mut V) -> Result<(), DecodeError> {
-        // let size = self.decode_u32()? as usize;
-        // visitor.init(size, &mut self.scope)?;
-        // let mut inner = InnerDecoder { outer: self };
-        // for _ in 0..size {
-        //     visitor.next(&mut inner)?;
-        // }
-        todo!();
+        let size = self.decode_u32()? as usize;
+        visitor.init(size, &self.scope)?;
+        let mut sub = Decoder { buf: self.buf, scope: self.scope };
+        let mut inner = InnerDecoder { outer: &mut sub };
+        for _ in 0..size {
+            visitor.next(&mut inner)?;
+        }
         Ok(())
     }
 
@@ -227,11 +227,11 @@ mod tests {
             amount: 1234567890,
         };
         let mut bump = Bump::new();
-        let mut mem = MemoryManager::new(bump.as_scope());
-        let res = encode_value(&coin, bump.as_scope()).unwrap();
-        let decoded = decode_value::<Coin>(&res, &mem).unwrap();
+        let scope = bump.as_scope();
+        let mut mem = MemoryManager::new(scope);
+        let res = encode_value(&coin, scope).unwrap();
+        let decoded = decode_value::<Coin>(res, &mem).unwrap();
         assert_eq!(decoded, coin);
-        let _ = mem;
     }
 
     #[test]
@@ -248,6 +248,5 @@ mod tests {
         let mut mem = MemoryManager::new(bump.as_scope());
         let decoded = decode_value::<&[Coin]>(&res, &mut mem).unwrap();
         assert_eq!(decoded, coins);
-        let _ = mem;
     }
 }

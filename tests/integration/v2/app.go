@@ -239,7 +239,7 @@ func SetupWithConfiguration(
 	if err != nil {
 		return nil, fmt.Errorf("failed to set initial version: %w", err)
 	}
-	integrationApp := &App{App: app, Store: store, txConfig: txConfig}
+	integrationApp := &App{App: app, Store: store, txConfig: txConfig, lastHeight: 1}
 
 	emptyHash := sha256.Sum256(nil)
 	_, genesisState, err := app.InitGenesis(
@@ -269,8 +269,9 @@ func SetupWithConfiguration(
 
 type App struct {
 	*runtime.App[stateMachineTx]
-	Store    runtime.Store
-	txConfig client.TxConfig
+	lastHeight uint64
+	Store      runtime.Store
+	txConfig   client.TxConfig
 }
 
 func (a *App) Run(
@@ -288,25 +289,43 @@ func (a *App) Run(
 	return nextState, nil
 }
 
+func (a *App) Deliver(
+	t *testing.T, ctx context.Context, txs []stateMachineTx,
+) (*server.BlockResponse, corestore.WriterMap) {
+	t.Helper()
+	req := &server.BlockRequest[stateMachineTx]{
+		Height:  a.lastHeight + 1,
+		Txs:     txs,
+		Hash:    make([]byte, 32),
+		AppHash: make([]byte, 32),
+	}
+	resp, state, err := a.DeliverBlock(ctx, req)
+	require.NoError(t, err)
+	a.lastHeight++
+	return resp, state
+}
+
+// StateLatestContext creates returns a new context from context.Background() with the latest state.
+func (a *App) StateLatestContext(t *testing.T) context.Context {
+	t.Helper()
+	_, state, err := a.Store.StateLatest()
+	require.NoError(t, err)
+	writeableState := branch.DefaultNewWriterMap(state)
+	iCtx := integrationContext{state: writeableState}
+	return context.WithValue(context.Background(), contextKey, iCtx)
+}
+
 func (a *App) Commit(state corestore.WriterMap) ([]byte, error) {
 	changes, err := state.GetStateChanges()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get state changes: %w", err)
 	}
 	cs := &corestore.Changeset{Changes: changes}
-	//for _, change := range changes {
-	//	if !bytes.Equal(change.Actor, []byte("acc")) {
-	//		continue
-	//	}
-	//	for _, kv := range change.StateChanges {
-	//		fmt.Printf("actor: %s, key: %x, value: %x\n", change.Actor, kv.Key, kv.Value)
-	//	}
-	//}
 	return a.Store.Commit(cs)
 }
 
 func (a *App) SignCheckDeliver(
-	t *testing.T, ctx context.Context, height uint64, msgs []sdk.Msg,
+	t *testing.T, ctx context.Context, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, privateKeys []cryptotypes.PrivKey,
 	txErrString string,
 ) server.TxResult {
@@ -367,22 +386,13 @@ func (a *App) SignCheckDeliver(
 	builtTx := txBuilder.GetTx()
 	require.NoError(t, err)
 
-	blockResponse, blockState, err := a.DeliverBlock(ctx, &server.BlockRequest[stateMachineTx]{
-		Height:  height,
-		Txs:     []stateMachineTx{builtTx},
-		Hash:    make([]byte, 32),
-		AppHash: make([]byte, 32),
-	})
-	require.NoError(t, err)
+	blockResponse, blockState := a.Deliver(t, ctx, []stateMachineTx{builtTx})
 
 	require.Equal(t, 1, len(blockResponse.TxResults))
 	txResult := blockResponse.TxResults[0]
-	finalizeSuccess := txResult.Code == 0
 	if txErrString != "" {
-		require.False(t, finalizeSuccess)
 		require.ErrorContains(t, txResult.Error, txErrString)
 	} else {
-		require.True(t, finalizeSuccess)
 		require.NoError(t, txResult.Error)
 	}
 
@@ -393,7 +403,7 @@ func (a *App) SignCheckDeliver(
 }
 
 func (a *App) CheckBalance(
-	ctx context.Context, t *testing.T, addr sdk.AccAddress, expected sdk.Coins, keeper bankkeeper.Keeper,
+	t *testing.T, ctx context.Context, addr sdk.AccAddress, expected sdk.Coins, keeper bankkeeper.Keeper,
 ) {
 	t.Helper()
 	balances := keeper.GetAllBalances(ctx, addr)

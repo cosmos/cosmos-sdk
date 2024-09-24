@@ -204,21 +204,13 @@ func (s STF[T]) deliverTx(
 	}
 
 	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
-	res := server.TxResult{
+	return server.TxResult{
 		Events:    append(validationEvents, execEvents...),
 		GasUsed:   execGas + validateGas,
 		GasWanted: gasLimit,
 		Resp:      execResp,
 		Error:     err,
 	}
-	// TODO
-	// we should be using cosmossdk.io/errors here, but that dependency brings in
-	// grpc, which we want to avoid. can the error matching code be pulled out?
-	// below is a temporary solution.
-	if err != nil {
-		res.Code = 1
-	}
-	return res
 }
 
 // validateTx validates a transaction given the provided WritableState and gas limit.
@@ -537,7 +529,7 @@ func (e *executionContext) Value(key any) any {
 func (s STF[T]) makeContext(
 	ctx context.Context,
 	sender transaction.Identity,
-	state store.WriterMap,
+	store store.WriterMap,
 	execMode transaction.ExecMode,
 ) *executionContext {
 	valuedCtx := context.WithValue(ctx, corecontext.ExecModeKey, execMode)
@@ -547,7 +539,7 @@ func (s STF[T]) makeContext(
 		s.makeGasMeteredState,
 		s.branchFn,
 		sender,
-		state,
+		store,
 		execMode,
 		s.msgRouter,
 		s.queryRouter,

@@ -2,13 +2,14 @@ package integration
 
 import (
 	"context"
+	"fmt"
+
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/runtime/v2"
-	"fmt"
 )
 
 func (c cometServiceImpl) CometInfo(context.Context) comet.Info {

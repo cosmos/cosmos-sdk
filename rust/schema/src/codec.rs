@@ -34,7 +34,7 @@ mod tests {
         }
     }
 
-    fn test1<'a: 'b, 'b>(scope: &'b BumpScope<'a>) -> (*mut (dyn DeferDrop + 'b), &'a [HasString]) {
+    fn test1<'a: 'b, 'b>(scope: &'b BumpScope<'a>) -> (NonNull<dyn DeferDrop + 'b>, &'a [HasString]) {
         struct Dropper<'a> {
             str_box: BumpBox<'a, [HasString]>,
         }
@@ -57,7 +57,7 @@ mod tests {
             let dropper = scope.alloc(Dropper {
                 str_box,
             });
-            (dropper.into_raw().as_ptr() as *mut (dyn DeferDrop + 'b), &*str_slice)
+            (dropper.into_raw() as NonNull<dyn DeferDrop + 'b>, &*str_slice)
         }
     }
 
@@ -73,7 +73,7 @@ mod tests {
         }
         unsafe {
             for d in todrop.drain(..) {
-                let _ = *d;
+                d.drop_in_place()
             }
         }
         drop(todrop);

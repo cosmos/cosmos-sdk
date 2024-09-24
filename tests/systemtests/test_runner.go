@@ -10,9 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -129,40 +126,4 @@ func printResultFlag(ok bool) {
 	} else {
 		fmt.Println(failureFlag)
 	}
-}
-
-type GRPCTestCase struct {
-	name   string
-	url    string
-	expOut string
-}
-
-// RunGRPCQueries runs given grpc testcases by making requests and
-// checking response with expected output
-func RunGRPCQueries(t *testing.T, testCases []GRPCTestCase) {
-	t.Helper()
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := testutil.GetRequest(tc.url)
-			require.NoError(t, err)
-			require.Contains(t, string(resp), tc.expOut)
-		})
-	}
-}
-
-// Write the given string to a new temporary json file.
-// Returns an file for the test to use.
-func WriteToTempJSONFile(tb testing.TB, s string) *os.File {
-	tb.Helper()
-
-	tmpFile, err := os.CreateTemp(tb.TempDir(), "test-*.json")
-	require.Nil(tb, err)
-	defer tmpFile.Close()
-
-	// Write to the temporary file
-	_, err = tmpFile.WriteString(s)
-	require.Nil(tb, err)
-
-	return tmpFile
 }

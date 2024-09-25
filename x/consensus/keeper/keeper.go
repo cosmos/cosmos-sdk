@@ -78,6 +78,12 @@ func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*
 	if err != nil {
 		return nil, err
 	}
+
+	// initialize version params with zero value if not set
+	if paramsProto.Version == nil {
+		paramsProto.Version = &cmtproto.VersionParams{}
+	}
+
 	params := cmttypes.ConsensusParamsFromProto(paramsProto)
 
 	nextParams := params.Update(&consensusParams)

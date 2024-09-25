@@ -311,8 +311,8 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	}
 	height := f.app.LastBlockHeight()
 
-	_, err = f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
-	assert.Error(t, err, "previous proposer not set")
+	proposerAddr, _ := f.distrKeeper.GetPreviousProposerConsAddr(f.sdkCtx)
+	assert.Equal(t, proposerAddr.Empty(), true)
 
 	for _, tc := range testCases {
 		tc := tc

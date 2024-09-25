@@ -72,7 +72,7 @@ for more info.
 A `SetPreBlocker` method has been added to BaseApp. This is essential for BaseApp to run `PreBlock` which runs before begin blocker other modules, and allows to modify consensus parameters, and the changes are visible to the following state machine logics.
 Read more about other use cases [here](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-068-preblock.md).
 
-`depinject` / app v2 users need to add `x/upgrade` in their `app_config.go` / `app.yml`:
+`depinject` / app di users need to add `x/upgrade` in their `app_config.go` / `app.yml`:
 
 ```diff
 + PreBlockers: []string{
@@ -180,7 +180,7 @@ The following modules `NewKeeper` function now take a `KVStoreService` instead o
 * `x/slashing`
 * `x/upgrade`
 
-**Users using `depinject` / app v2 do not need any changes, this is abstracted for them.**
+**Users using `depinject` / app di do not need any changes, this is abstracted for them.**
 
 Users manually wiring their chain need to use the `runtime.NewKVStoreService` method to create a `KVStoreService` from a `StoreKey`:
 
@@ -197,7 +197,7 @@ app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 
 Replace all your CometBFT logger imports by `cosmossdk.io/log`.
 
-Additionally, `depinject` / app v2 users must now supply a logger through the main `depinject.Supply` function instead of passing it to `appBuilder.Build`.
+Additionally, `depinject` / app di users must now supply a logger through the main `depinject.Supply` function instead of passing it to `appBuilder.Build`.
 
 ```diff
 appConfig = depinject.Configs(
@@ -221,7 +221,7 @@ User manually wiring their chain need to add the logger argument when creating t
 Previously, the `ModuleBasics` was a global variable that was used to register all modules' `AppModuleBasic` implementation.
 The global variable has been removed and the basic module manager can be now created from the module manager.
 
-This is automatically done for `depinject` / app v2 users, however for supplying different app module implementation, pass them via `depinject.Supply` in the main `AppConfig` (`app_config.go`):
+This is automatically done for `depinject` / app di users, however for supplying different app module implementation, pass them via `depinject.Supply` in the main `AppConfig` (`app_config.go`):
 
 ```go
 depinject.Supply(
@@ -332,7 +332,7 @@ When using (legacy) application wiring, the following must be added to `app.go` 
 	app.txConfig = txConfig
 ```
 
-When using `depinject` / `app v2`, **it's enabled by default** if there's a bank keeper present.
+When using `depinject` / `app di`, **it's enabled by default** if there's a bank keeper present.
 
 And in the application client (usually `root.go`):
 
@@ -351,7 +351,7 @@ And in the application client (usually `root.go`):
 	}
 ```
 
-When using `depinject` / `app v2`, the a tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
+When using `depinject` / `app di`, the a tx config should be recreated from the `txConfigOpts` to use `NewGRPCCoinMetadataQueryFn` instead of depending on the bank keeper (that is used in the server).
 
 To learn more see the [docs](https://docs.cosmos.network/main/learn/advanced/transactions#sign_mode_textual) and the [ADR-050](https://docs.cosmos.network/main/build/architecture/adr-050-sign-mode-textual).
 

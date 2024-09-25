@@ -83,10 +83,7 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		NonCriticalExtensionOptions: txBody.NonCriticalExtensionOptions,
 		HashOfRawBytes:              getHash(textualData.BodyBytes, textualData.AuthInfoBytes),
 	}
-	if txAuthInfo.Tip != nil { //nolint:staticcheck // we still need this deprecated struct
-		envelope.Tip = txAuthInfo.Tip.Amount    //nolint:staticcheck // we still need this deprecated struct
-		envelope.Tipper = txAuthInfo.Tip.Tipper //nolint:staticcheck // we still need this deprecated struct
-	}
+
 	// Find all other tx signers than the current signer. In the case where our
 	// Textual signer is one key of a multisig, then otherSigners will include
 	// the multisig pubkey.
@@ -243,12 +240,6 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 			Granter:  envelope.FeeGranter,
 		},
 	}
-	if envelope.Tip != nil {
-		authInfo.Tip = &txv1beta1.Tip{ //nolint:staticcheck // we still need this deprecated struct
-			Amount: envelope.Tip,
-			Tipper: envelope.Tipper,
-		}
-	}
 
 	// Figure out the signers in the correct order.
 	signers, err := getSigners(txBody, authInfo)
@@ -281,11 +272,12 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 	// Note that we might not always get back the exact bodyBz and authInfoBz
 	// that was passed into, because protobuf is not deterministic.
 	// In tests, we don't check bytes equality, but protobuf object equality.
-	bodyBz, err := proto.Marshal(txBody)
+	protov2MarshalOpts := proto.MarshalOptions{Deterministic: true}
+	bodyBz, err := protov2MarshalOpts.Marshal(txBody)
 	if err != nil {
 		return nilValue, err
 	}
-	authInfoBz, err := proto.Marshal(authInfo)
+	authInfoBz, err := protov2MarshalOpts.Marshal(authInfo)
 	if err != nil {
 		return nilValue, err
 	}

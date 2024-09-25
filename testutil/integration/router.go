@@ -47,6 +47,7 @@ func NewIntegrationApp(
 	keys map[string]*storetypes.KVStoreKey,
 	appCodec codec.Codec,
 	modules map[string]appmodule.AppModule,
+	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
 	db := dbm.NewMemDB()
 
@@ -56,13 +57,13 @@ func NewIntegrationApp(
 	basicModuleManager.RegisterInterfaces(interfaceRegistry)
 
 	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), authtx.DefaultSignModes)
-	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
+	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), append(baseAppOptions, baseapp.SetChainID(appName))...)
 	bApp.MountKVStores(keys)
 
-	bApp.SetInitChainer(func(ctx sdk.Context, _ *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {
+	bApp.SetInitChainer(func(_ sdk.Context, _ *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {
 		for _, mod := range modules {
 			if m, ok := mod.(module.HasGenesis); ok {
-				m.InitGenesis(ctx, appCodec, m.DefaultGenesis(appCodec))
+				m.InitGenesis(sdkCtx, appCodec, m.DefaultGenesis(appCodec))
 			}
 		}
 

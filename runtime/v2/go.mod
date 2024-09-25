@@ -13,7 +13,7 @@ replace (
 )
 
 require (
-	cosmossdk.io/api v0.7.5
+	cosmossdk.io/api v0.7.6
 	cosmossdk.io/core v1.0.0-alpha.3
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.4.1

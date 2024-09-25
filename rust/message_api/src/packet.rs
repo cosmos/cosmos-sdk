@@ -10,31 +10,38 @@ pub struct MessagePacket {
 }
 
 impl MessagePacket {
+    /// Creates a new message packet.
     pub unsafe fn new(data: *mut MessageHeader, len: usize) -> Self {
         Self { data, len }
     }
 
-    pub unsafe fn header(&self) -> &MessageHeader {
-        &*(self.data as *const MessageHeader)
+    /// Returns the message header.
+    pub fn header(&self) -> &MessageHeader {
+        unsafe { &*(self.data as *const MessageHeader) }
     }
 
+    /// Returns a mutable reference to the message header.
     pub unsafe fn header_mut(&self) -> &mut MessageHeader {
         &mut *self.data
     }
 
-    pub fn in1<'a>(&self) -> DataPointerWrapper<'a> {
+    /// Returns input data pointer 1.
+    pub fn in1(&self) -> DataPointerWrapper {
         unsafe { DataPointerWrapper(&mut self.header_mut().in_pointer1, self.data as *const u8, self.len) }
     }
 
-    pub fn in2<'a>(&self) -> DataPointerWrapper<'a> {
+    /// Returns input data pointer 2.
+    pub fn in2(&self) -> DataPointerWrapper {
         unsafe { DataPointerWrapper(&mut self.header_mut().in_pointer2, self.data as *const u8, self.len) }
     }
 
-    pub fn out1<'a>(&self) -> DataPointerWrapper<'a> {
+    /// Returns output data pointer 1.
+    pub fn out1(&self) -> DataPointerWrapper {
         unsafe { DataPointerWrapper(&mut self.header_mut().out_pointer1, self.data as *const u8, self.len) }
     }
 
-    pub fn out2<'a>(&self) -> DataPointerWrapper<'a> {
+    /// Returns output data pointer 2.
+    pub fn out2(&self) -> DataPointerWrapper {
         unsafe { DataPointerWrapper(&mut self.header_mut().out_pointer2, self.data as *const u8, self.len) }
     }
 }

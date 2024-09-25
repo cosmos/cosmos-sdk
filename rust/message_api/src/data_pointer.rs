@@ -1,12 +1,20 @@
 use crate::header::MESSAGE_HEADER_SIZE;
-use crate::packet::MessagePacket;
 
-#[derive(Default)]
+#[derive(Copy, Clone)]
 pub union DataPointer {
     pub native_pointer: NativePointer,
     pub local_pointer: LocalPointer,
 }
 
+impl Default for DataPointer {
+    fn default() -> Self {
+        Self {
+            local_pointer: LocalPointer::default(),
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
 struct NativePointer {
     pub len: u32,
     pub capacity: u32,
@@ -23,7 +31,7 @@ impl Default for NativePointer {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Copy, Clone)]
 struct LocalPointer {
     pub len: u32,
     pub offset: u32,
@@ -49,7 +57,7 @@ impl DataPointer {
     }
 }
 
-pub struct DataPointerWrapper<'a>(&'a mut DataPointer, *const u8, usize);
+pub struct DataPointerWrapper<'a>(pub(crate) &'a mut DataPointer, pub(crate) *const u8, pub(crate) usize);
 
 impl<'a> DataPointerWrapper<'a> {
     pub fn get(&self) -> &[u8] {

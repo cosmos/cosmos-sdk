@@ -1,20 +1,32 @@
+//! Error and success codes returned by the message API.
+
+/// Error codes that can be returned by the system.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum SystemErrorCode {
+    /// Out of gas error.
     OutOfGas,
+    /// Fatal execution error that likely cannot be recovered from.
     FatalExecutionError,
+    /// Account not-found error.
     AccountNotFound,
-    MessageHandlerNotFound,
-    InvalidStateAccess,
+    /// The caller attempted to impersonate another caller and was not authorized.
     UnauthorizedCallerAccess,
+    /// The handler code was invalid or failed to execute properly within its virtual machine.
     InvalidHandler,
+    /// The handler returned an invalid error code.
     UnknownHandlerError,
+    /// The system encountered an unknown error.
     Unknown(u32),
 }
 
+/// Error and success codes returned by the message API.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Code {
+    /// The operation completed successfully.
     Ok,
+    /// A system error.
     SystemError(SystemErrorCode),
+    /// An error returned by the handler.
     HandlerError(u32),
 }
 

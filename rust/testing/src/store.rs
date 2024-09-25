@@ -1,8 +1,7 @@
-use std::num::Mul;
 use imbl::{HashMap, OrdMap, Vector};
 
 pub struct VersionedMultiStore {
-    versions: Vector<MultiStore>
+    versions: Vector<MultiStore>,
 }
 
 pub struct MultiStore {
@@ -17,8 +16,15 @@ pub enum Store {
 struct Update {
     store: u128,
     key: Vec<u8>,
-    value: Vec<u8>,
-    remove: bool,
+    operation: Operation,
+}
+
+enum Operation {
+    Set(Vec<u8>),
+    Remove,
+    Add(u128),
+    SafeSub(u128),
+    LazyAdd(u128),
 }
 
 type ChangeSet = Vec<Update>;

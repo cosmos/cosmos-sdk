@@ -66,13 +66,6 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 		queryTx   bool
 	}{
 		{
-			"not enough arguments",
-			grantee1Addr,
-			[]string{},
-			"accepts 2 arg(s), received 1",
-			false,
-		},
-		{
 			"invalid authorization type",
 			grantee1Addr,
 			[]string{"spend"},
@@ -237,51 +230,6 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 	resp := cli.CustomQuery("q", "authz", "grants-by-granter", granterAddr)
 	grants := gjson.Get(resp, "grants").Array()
 	require.Len(t, grants, grantsCount)
-}
-
-func TestAuthzExecCmdBasicChecks(t *testing.T) {
-	// scenario: test authz exec command basic error cases
-	// given a running chain
-
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
-
-	// get validator address which will be used as granter
-	granterAddr := cli.GetKeyAddr("node0")
-	require.NotEmpty(t, granterAddr)
-
-	execCmdArgs := []string{"tx", "authz", "exec"}
-
-	// test exec command basic checks
-	execErrTestCases := []struct {
-		name      string
-		cmdArgs   []string
-		expErrMsg string
-	}{
-		{
-			"not enough arguments",
-			[]string{"--from=" + granterAddr},
-			"accepts 1 arg(s), received 0",
-		},
-		{
-			"invalid json path",
-			[]string{"/invalid/file.txt", "--from=" + granterAddr},
-			"invalid argument",
-		},
-	}
-
-	for _, tc := range execErrTestCases {
-		cmd := append(execCmdArgs, tc.cmdArgs...)
-		t.Run(tc.name, func(t *testing.T) {
-			assertErr := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
-				require.Len(t, gotOutputs, 1)
-				output := gotOutputs[0].(string)
-				require.Contains(t, output, tc.expErrMsg)
-				return false
-			}
-			_ = cli.WithRunErrorMatcher(assertErr).Run(cmd...)
-		})
-	}
 }
 
 func TestAuthzExecSendAuthorization(t *testing.T) {

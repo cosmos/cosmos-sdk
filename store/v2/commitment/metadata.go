@@ -2,6 +2,7 @@ package commitment
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	corestore "cosmossdk.io/core/store"
@@ -158,10 +159,7 @@ func (m *MetadataStore) deleteRemovedStoreKeys(version uint64, removeStore func(
 
 	batch := m.kv.NewBatch()
 	defer func() {
-		cErr := batch.Close()
-		if err == nil {
-			err = cErr
-		}
+		err = errors.Join(err, batch.Close())
 	}()
 	for _, storeKey := range removedStoreKeys {
 		if err := removeStore(storeKey, version); err != nil {

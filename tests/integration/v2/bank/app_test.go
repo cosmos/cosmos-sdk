@@ -9,6 +9,7 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	_ "cosmossdk.io/x/accounts"
 	_ "cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
@@ -18,6 +19,7 @@ import (
 	_ "cosmossdk.io/x/distribution"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	_ "cosmossdk.io/x/gov"
+	govv1 "cosmossdk.io/x/gov/types/v1"
 	_ "cosmossdk.io/x/protocolpool"
 	_ "cosmossdk.io/x/staking"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -236,4 +238,236 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMsgMultiSendMultipleOut(t *testing.T) {
+	ac := cdctestutil.CodecOptions{}.GetAddressCodec()
+	addr1Str, err := ac.BytesToString(addr1)
+	require.NoError(t, err)
+	acc1 := &authtypes.BaseAccount{
+		Address: addr1Str,
+	}
+	addr2Str, err := ac.BytesToString(addr2)
+	require.NoError(t, err)
+	acc2 := &authtypes.BaseAccount{
+		Address: addr2Str,
+	}
+	addr3Str, err := ac.BytesToString(addr3)
+	require.NoError(t, err)
+
+	genAccs := []authtypes.GenesisAccount{acc1, acc2}
+	s := createTestSuite(t, genAccs)
+	ctx := s.App.StateLatestContext(t)
+
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	_, state := s.App.Deliver(t, ctx, nil)
+	_, err = s.App.Commit(state)
+	require.NoError(t, err)
+
+	testCases := []appTestCase{
+		{
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs: []types.Input{types.NewInput(addr1Str, coins)},
+				Outputs: []types.Output{
+					types.NewOutput(addr2Str, halfCoins),
+					types.NewOutput(addr3Str, halfCoins),
+				},
+			}},
+			accNums:  []uint64{0},
+			accSeqs:  []uint64{0},
+			privKeys: []cryptotypes.PrivKey{priv1},
+			expectedBalances: []expectedBalance{
+				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
+				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 47)}},
+				{addr3, sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.App.SignCheckDeliver(t, ctx, tc.msgs, "", tc.accNums, tc.accSeqs, tc.privKeys, "")
+
+		for _, eb := range tc.expectedBalances {
+			s.App.CheckBalance(t, ctx, eb.addr, eb.coins, s.BankKeeper)
+		}
+	}
+}
+
+func TestMsgMultiSendDependent(t *testing.T) {
+	ac := cdctestutil.CodecOptions{}.GetAddressCodec()
+	addr1Str, err := ac.BytesToString(addr1)
+	require.NoError(t, err)
+	addr2Str, err := ac.BytesToString(addr2)
+	require.NoError(t, err)
+
+	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
+	acc2 := authtypes.NewBaseAccountWithAddress(addr2)
+	err = acc2.SetAccountNumber(1)
+	require.NoError(t, err)
+
+	genAccs := []authtypes.GenesisAccount{acc1, acc2}
+	s := createTestSuite(t, genAccs)
+	ctx := s.App.StateLatestContext(t)
+
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	_, state := s.App.Deliver(t, ctx, nil)
+	_, err = s.App.Commit(state)
+	require.NoError(t, err)
+
+	testCases := []appTestCase{
+		{
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs:  []types.Input{types.NewInput(addr1Str, coins)},
+				Outputs: []types.Output{types.NewOutput(addr2Str, coins)},
+			}},
+			accNums:  []uint64{0},
+			accSeqs:  []uint64{0},
+			privKeys: []cryptotypes.PrivKey{priv1},
+			expectedBalances: []expectedBalance{
+				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 32)}},
+				{addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}},
+			},
+		},
+		{
+			msgs: []sdk.Msg{&types.MsgMultiSend{
+				Inputs: []types.Input{types.NewInput(addr2Str, coins)},
+				Outputs: []types.Output{
+					types.NewOutput(addr1Str, coins),
+				},
+			}},
+			accNums:  []uint64{1},
+			accSeqs:  []uint64{0},
+			privKeys: []cryptotypes.PrivKey{priv2},
+			expectedBalances: []expectedBalance{
+				{addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 42)}},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.App.SignCheckDeliver(t, ctx, tc.msgs, "", tc.accNums, tc.accSeqs, tc.privKeys, "")
+
+		for _, eb := range tc.expectedBalances {
+			s.App.CheckBalance(t, ctx, eb.addr, eb.coins, s.BankKeeper)
+		}
+	}
+}
+
+func TestMsgSetSendEnabled(t *testing.T) {
+	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
+
+	genAccs := []authtypes.GenesisAccount{acc1}
+	s := createTestSuite(t, genAccs)
+
+	ctx := s.App.StateLatestContext(t)
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 101))))
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("stake", 100000))))
+	addr1Str := addr1.String()
+	govAddr := s.BankKeeper.GetAuthority()
+	goodGovProp, err := govv1.NewMsgSubmitProposal(
+		[]sdk.Msg{
+			types.NewMsgSetSendEnabled(govAddr, nil, nil),
+		},
+		sdk.Coins{{Denom: "stake", Amount: sdkmath.NewInt(100000)}},
+		addr1Str,
+		"set default send enabled to true",
+		"Change send enabled",
+		"Modify send enabled and set to true",
+		govv1.ProposalType_PROPOSAL_TYPE_STANDARD,
+	)
+	require.NoError(t, err, "making goodGovProp")
+
+	testCases := []appTestCase{
+		{
+			desc: "wrong authority",
+			msgs: []sdk.Msg{
+				types.NewMsgSetSendEnabled(addr1Str, nil, nil),
+			},
+			accSeqs: []uint64{0},
+			expInError: []string{
+				"invalid authority",
+				"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+				addr1Str,
+				"expected authority account as only signer for proposal message",
+			},
+		},
+		{
+			desc: "right authority wrong signer",
+			msgs: []sdk.Msg{
+				types.NewMsgSetSendEnabled(govAddr, nil, nil),
+			},
+			accSeqs: []uint64{1}, // wrong signer, so this sequence doesn't actually get used.
+			expInError: []string{
+				"cannot be claimed by public key with address",
+				govAddr,
+			},
+		},
+		{
+			desc: "submitted good as gov prop",
+			msgs: []sdk.Msg{
+				goodGovProp,
+			},
+			accSeqs:    []uint64{1},
+			expInError: nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(tt *testing.T) {
+			var errString string
+			if len(tc.expInError) > 0 {
+				errString = tc.expInError[0]
+			}
+			txResult := s.App.SignCheckDeliver(
+				tt, ctx, tc.msgs, "", []uint64{0}, tc.accSeqs, []cryptotypes.PrivKey{priv1}, errString)
+			if len(tc.expInError) > 0 {
+				require.Error(tt, txResult.Error)
+				for _, exp := range tc.expInError {
+					require.ErrorContains(tt, txResult.Error, exp)
+				}
+			} else {
+				require.NoError(tt, txResult.Error)
+			}
+		})
+	}
+}
+
+// TestSendToNonExistingAccount tests sending coins to an account that does not exist, and this account
+// must not be created.
+func TestSendToNonExistingAccount(t *testing.T) {
+	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
+	genAccs := []authtypes.GenesisAccount{acc1}
+	s := createTestSuite(t, genAccs)
+	ctx := s.App.StateLatestContext(t)
+
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	_, state := s.App.Deliver(t, ctx, nil)
+	_, err := s.App.Commit(state)
+	require.NoError(t, err)
+
+	addr2Str, err := s.AccountKeeper.AddressCodec().BytesToString(addr2)
+	require.NoError(t, err)
+	sendMsg := types.NewMsgSend(addr1.String(), addr2Str, coins)
+	res := s.App.SignCheckDeliver(t, ctx, []sdk.Msg{sendMsg}, "", []uint64{0}, []uint64{0}, []cryptotypes.PrivKey{priv1}, "")
+	require.NoError(t, res.Error)
+
+	// Check that the account was not created
+	acc2 := s.AccountKeeper.GetAccount(ctx, addr2)
+	require.Nil(t, acc2)
+
+	// But it does have a balance
+	s.App.CheckBalance(t, ctx, addr2, coins, s.BankKeeper)
+
+	// Now we send coins back and the account should be created
+	sendMsg = types.NewMsgSend(addr2Str, addr1.String(), coins)
+	res = s.App.SignCheckDeliver(t, ctx, []sdk.Msg{sendMsg}, "", []uint64{0}, []uint64{0}, []cryptotypes.PrivKey{priv2}, "")
+	require.NoError(t, res.Error)
+
+	// Balance has been reduced
+	s.App.CheckBalance(t, ctx, addr2, sdk.NewCoins(), s.BankKeeper)
+
+	// Check that the account was created
+	acc2 = s.AccountKeeper.GetAccount(ctx, addr2)
+	require.NotNil(t, acc2, "account should have been created %s", addr2.String())
 }

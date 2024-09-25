@@ -55,6 +55,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Bug Fixes
 
+* (sims) [21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims loop when running dry on validators
+
 ### API Breaking Changes
 
 * (types/mempool) [#21744](https://github.com/cosmos/cosmos-sdk/pull/21744) Update types/mempool.Mempool interface to take decoded transactions. This avoid to decode the transaction twice.

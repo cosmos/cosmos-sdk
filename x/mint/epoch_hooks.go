@@ -17,7 +17,7 @@ func (am AppModule) BeforeEpochStart(ctx context.Context, epochIdentifier string
 
 	oldMinter := minter
 
-	err = am.mintFn(ctx, am.keeper.Environment, &minter, epochIdentifier, epochNumber)
+	err = am.keeper.MintFn(ctx, &minter, epochIdentifier, epochNumber)
 	if err != nil {
 		return err
 	}

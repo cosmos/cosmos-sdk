@@ -6,6 +6,7 @@ import "cosmos/bank/v2/bank.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "cosmossdk.io/x/bank/v2/types";
 
@@ -24,3 +25,41 @@ message MsgUpdateParams {
 
 // MsgUpdateParamsResponse defines the response structure for executing a MsgUpdateParams message.
 message MsgUpdateParamsResponse {}
+
+// MsgSend represents a message to send coins from one account to another.
+message MsgSend {
+  option (cosmos.msg.v1.signer) = "from_address";
+  option (amino.name)           = "cosmos-sdk/x/bank/v2/MsgSend";
+
+  string   from_address                    = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string   to_address                      = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+// MsgSendResponse defines the response structure for executing a MsgSend message.
+message MsgSendResponse {}
+
+// MsgMint is the Msg/Mint request type.
+message MsgMint {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "cosmos-sdk/x/bank/v2/MsgMint";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  string   to_address                      = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated cosmos.base.v1beta1.Coin amount = 3 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+// MsgMint defines the response structure for executing a MsgMint message.
+message MsgMintResponse {}

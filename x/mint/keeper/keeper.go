@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -67,6 +66,8 @@ func NewKeeper(
 	}
 	k.Schema = schema
 
+	return &k
+}
 
 // SetMintFn is used to mint new coins during BeginBlock. The mintFn function is in charge of
 // minting new coins based on arbitrary logic, previously done through InflationCalculationFn.

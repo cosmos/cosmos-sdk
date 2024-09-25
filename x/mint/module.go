@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/x/mint/keeper"
-	mintKeeper "cosmossdk.io/x/mint/keeper"
 	"cosmossdk.io/x/mint/simulation"
 	"cosmossdk.io/x/mint/types"
 

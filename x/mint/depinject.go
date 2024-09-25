@@ -63,10 +63,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		panic(err)
 	}
 
-	if in.MintFn == nil {
-		panic("mintFn cannot be nil")
-	}
-
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Environment,

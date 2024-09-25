@@ -13,10 +13,10 @@ We allow developers to take the state from their mainnet and run tests against t
 We will be breaking down the steps to create a testnet from mainnet state. 
 
 ```go 
-  // InitMerlinAppForTestnet is broken down into two sections:
+  // InitSimAppForTestnet is broken down into two sections:
   // Required Changes: Changes that, if not made, will cause the testnet to halt or panic
   // Optional Changes: Changes to customize the testnet to one's liking (lower vote times, fund accounts, etc)
-  func InitMerlinAppForTestnet(app *MerlinApp, newValAddr bytes.HexBytes, newValPubKey crypto.PubKey, newOperatorAddress, upgradeToTrigger string) *MerlinApp {
+  func InitSimAppForTestnet(app *SimApp, newValAddr bytes.HexBytes, newValPubKey crypto.PubKey, newOperatorAddress, upgradeToTrigger string) *SimApp {
   ...
   }
 ```
@@ -137,7 +137,7 @@ It is useful to create new accounts for your testing purposes. This avoids the n
 
 	defaultCoins := sdk.NewCoins(sdk.NewInt64Coin("ustake", 1000000000000))
 
-	localMerlinAccounts := []sdk.AccAddress{
+	localSimAppAccounts := []sdk.AccAddress{
 		sdk.MustAccAddressFromBech32("cosmos12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"),
 		sdk.MustAccAddressFromBech32("cosmos1cyyzpxplxdzkeea7kwsydadg87357qnahakaks"),
 		sdk.MustAccAddressFromBech32("cosmos18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv"),
@@ -151,8 +151,8 @@ It is useful to create new accounts for your testing purposes. This avoids the n
 		sdk.MustAccAddressFromBech32("cosmos14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk"),
 		sdk.MustAccAddressFromBech32("cosmos1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc")}
 
-  // Fund localMerlin accounts
-	for _, account := range localMerlinAccounts {
+  // Fund localSimApp accounts
+	for _, account := range localSimAppAccounts {
 		err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, defaultCoins)
 		if err != nil {
 			tmos.Exit(err.Error())
@@ -195,7 +195,7 @@ Before we can run the testnet we must plug everything together.
 in `root.go`, in the `initRootCmd` function we add:
 
 ```diff
-server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, createMerlinAppAndExport)
+server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, createSimAppAndExport)
 +server.AddTestnetCreatorCommand(rootCmd, simapp.DefaultNodeHome, newTestnetApp)
 ```
 
@@ -205,7 +205,7 @@ Next we will add a newTestnetApp helper function:
 // newTestnetApp starts by running the normal newApp method. From there, the app interface returned is modified in order
 // for a testnet to be created from the provided app.
 func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
-	// Create an app and type cast to an MerlinApp
+	// Create an app and type cast to an SimApp
 	app := newApp(logger, db, traceStore, appOpts)
 	simApp, ok := app.(*simapp.SimApp)
 	if !ok {
@@ -229,7 +229,7 @@ func newTestnetApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, ap
 		panic("upgradeToTrigger is not of type string")
 	}
 
-	// Make modifications to the normal MerlinApp required to run the network locally
-	return meriln.InitMerlinAppForTestnet(simApp, newValAddr, newValPubKey, newOperatorAddress, upgradeToTrigger)
+	// Make modifications to the normal SimApp required to run the network locally
+	return simapp.InitSimAppForTestnet(simApp, newValAddr, newValPubKey, newOperatorAddress, upgradeToTrigger)
 }
 ```

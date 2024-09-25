@@ -35,12 +35,11 @@ var (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	ctx           sdk.Context
-	environment   appmodule.Environment
-	poolKeeper    poolkeeper.Keeper
-	authKeeper    *pooltestutil.MockAccountKeeper
-	bankKeeper    *pooltestutil.MockBankKeeper
-	stakingKeeper *pooltestutil.MockStakingKeeper
+	ctx         sdk.Context
+	environment appmodule.Environment
+	poolKeeper  poolkeeper.Keeper
+	authKeeper  *pooltestutil.MockAccountKeeper
+	bankKeeper  *pooltestutil.MockBankKeeper
 
 	msgServer   types.MsgServer
 	queryServer types.QueryServer
@@ -66,10 +65,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	bankKeeper := pooltestutil.NewMockBankKeeper(ctrl)
 	s.bankKeeper = bankKeeper
 
-	stakingKeeper := pooltestutil.NewMockStakingKeeper(ctrl)
-	stakingKeeper.EXPECT().BondDenom(ctx).Return("stake", nil).AnyTimes()
-	s.stakingKeeper = stakingKeeper
-
 	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(types.GovModuleName))
 	s.Require().NoError(err)
 
@@ -78,7 +73,6 @@ func (s *KeeperTestSuite) SetupTest() {
 		environment,
 		accountKeeper,
 		bankKeeper,
-		stakingKeeper,
 		authority,
 	)
 	s.ctx = ctx
@@ -101,7 +95,6 @@ func (s *KeeperTestSuite) mockWithdrawContinuousFund() {
 	distrBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000)))
 	s.bankKeeper.EXPECT().GetAllBalances(gomock.Any(), gomock.Any()).Return(distrBal).AnyTimes()
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	s.stakingKeeper.EXPECT().BondDenom(gomock.Any()).Return("stake", nil).AnyTimes()
 }
 
 func (s *KeeperTestSuite) mockStreamFunds(distributed math.Int) {

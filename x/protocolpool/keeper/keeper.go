@@ -21,9 +21,8 @@ import (
 type Keeper struct {
 	appmodule.Environment
 
-	authKeeper    types.AccountKeeper
-	bankKeeper    types.BankKeeper
-	stakingKeeper types.StakingKeeper
+	authKeeper types.AccountKeeper
+	bankKeeper types.BankKeeper
 
 	cdc codec.BinaryCodec
 
@@ -43,7 +42,7 @@ const (
 	errModuleAccountNotSet = "%s module account has not been set"
 )
 
-func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, authority string,
+func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.AccountKeeper, bk types.BankKeeper, authority string,
 ) Keeper {
 	// ensure pool module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -64,7 +63,6 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 		Environment:               env,
 		authKeeper:                ak,
 		bankKeeper:                bk,
-		stakingKeeper:             sk,
 		cdc:                       cdc,
 		authority:                 authority,
 		BudgetProposal:            collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.Budget](cdc)),

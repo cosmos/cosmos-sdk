@@ -231,10 +231,10 @@ func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInf
 		xAccount, err := s.getFromXAccounts(ctx, addr)
 		// account info is nil it means that the account can be encapsulated into a
 		// legacy account representation but not a base account one.
-		if err != nil || xAccount.Info == nil {
+		if err != nil || xAccount.Base == nil {
 			return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
 		}
-		return &types.QueryAccountInfoResponse{Info: xAccount.Info}, nil
+		return &types.QueryAccountInfoResponse{Info: xAccount.Base}, nil
 	}
 
 	// if there is no public key, avoid serializing the nil value

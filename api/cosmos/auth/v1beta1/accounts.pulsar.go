@@ -372,14 +372,14 @@ func (x *fastReflection_QueryLegacyAccount) ProtoMethods() *protoiface.Methods {
 var (
 	md_QueryLegacyAccountResponse         protoreflect.MessageDescriptor
 	fd_QueryLegacyAccountResponse_account protoreflect.FieldDescriptor
-	fd_QueryLegacyAccountResponse_info    protoreflect.FieldDescriptor
+	fd_QueryLegacyAccountResponse_base    protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_auth_v1beta1_accounts_proto_init()
 	md_QueryLegacyAccountResponse = File_cosmos_auth_v1beta1_accounts_proto.Messages().ByName("QueryLegacyAccountResponse")
 	fd_QueryLegacyAccountResponse_account = md_QueryLegacyAccountResponse.Fields().ByName("account")
-	fd_QueryLegacyAccountResponse_info = md_QueryLegacyAccountResponse.Fields().ByName("info")
+	fd_QueryLegacyAccountResponse_base = md_QueryLegacyAccountResponse.Fields().ByName("base")
 }
 
 var _ protoreflect.Message = (*fastReflection_QueryLegacyAccountResponse)(nil)
@@ -453,9 +453,9 @@ func (x *fastReflection_QueryLegacyAccountResponse) Range(f func(protoreflect.Fi
 			return
 		}
 	}
-	if x.Info != nil {
-		value := protoreflect.ValueOfMessage(x.Info.ProtoReflect())
-		if !f(fd_QueryLegacyAccountResponse_info, value) {
+	if x.Base != nil {
+		value := protoreflect.ValueOfMessage(x.Base.ProtoReflect())
+		if !f(fd_QueryLegacyAccountResponse_base, value) {
 			return
 		}
 	}
@@ -476,8 +476,8 @@ func (x *fastReflection_QueryLegacyAccountResponse) Has(fd protoreflect.FieldDes
 	switch fd.FullName() {
 	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.account":
 		return x.Account != nil
-	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.info":
-		return x.Info != nil
+	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.base":
+		return x.Base != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryLegacyAccountResponse"))
@@ -496,8 +496,8 @@ func (x *fastReflection_QueryLegacyAccountResponse) Clear(fd protoreflect.FieldD
 	switch fd.FullName() {
 	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.account":
 		x.Account = nil
-	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.info":
-		x.Info = nil
+	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.base":
+		x.Base = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryLegacyAccountResponse"))
@@ -517,8 +517,8 @@ func (x *fastReflection_QueryLegacyAccountResponse) Get(descriptor protoreflect.
 	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.account":
 		value := x.Account
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.info":
-		value := x.Info
+	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.base":
+		value := x.Base
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
@@ -542,8 +542,8 @@ func (x *fastReflection_QueryLegacyAccountResponse) Set(fd protoreflect.FieldDes
 	switch fd.FullName() {
 	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.account":
 		x.Account = value.Message().Interface().(*anypb.Any)
-	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.info":
-		x.Info = value.Message().Interface().(*BaseAccount)
+	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.base":
+		x.Base = value.Message().Interface().(*BaseAccount)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryLegacyAccountResponse"))
@@ -569,11 +569,11 @@ func (x *fastReflection_QueryLegacyAccountResponse) Mutable(fd protoreflect.Fiel
 			x.Account = new(anypb.Any)
 		}
 		return protoreflect.ValueOfMessage(x.Account.ProtoReflect())
-	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.info":
-		if x.Info == nil {
-			x.Info = new(BaseAccount)
+	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.base":
+		if x.Base == nil {
+			x.Base = new(BaseAccount)
 		}
-		return protoreflect.ValueOfMessage(x.Info.ProtoReflect())
+		return protoreflect.ValueOfMessage(x.Base.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.auth.v1beta1.QueryLegacyAccountResponse"))
@@ -590,7 +590,7 @@ func (x *fastReflection_QueryLegacyAccountResponse) NewField(fd protoreflect.Fie
 	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.account":
 		m := new(anypb.Any)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.info":
+	case "cosmos.auth.v1beta1.QueryLegacyAccountResponse.base":
 		m := new(BaseAccount)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
@@ -666,8 +666,8 @@ func (x *fastReflection_QueryLegacyAccountResponse) ProtoMethods() *protoiface.M
 			l = options.Size(x.Account)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Info != nil {
-			l = options.Size(x.Info)
+		if x.Base != nil {
+			l = options.Size(x.Base)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -699,8 +699,8 @@ func (x *fastReflection_QueryLegacyAccountResponse) ProtoMethods() *protoiface.M
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Info != nil {
-			encoded, err := options.Marshal(x.Info)
+		if x.Base != nil {
+			encoded, err := options.Marshal(x.Base)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -814,7 +814,7 @@ func (x *fastReflection_QueryLegacyAccountResponse) ProtoMethods() *protoiface.M
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Info", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Base", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -841,10 +841,10 @@ func (x *fastReflection_QueryLegacyAccountResponse) ProtoMethods() *protoiface.M
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Info == nil {
-					x.Info = &BaseAccount{}
+				if x.Base == nil {
+					x.Base = &BaseAccount{}
 				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Info); err != nil {
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Base); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -937,10 +937,10 @@ type QueryLegacyAccountResponse struct {
 	// the type wrapped by the any does not need to comply with the
 	// sdk.AccountI interface.
 	Account *anypb.Any `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
-	// info represents the account as a BaseAccount, this can return
-	// nil if the account cannot be represented as a base account.
+	// base represents the account as a BaseAccount, this can return
+	// nil if the account cannot be represented as a BaseAccount.
 	// This is used in the gRPC QueryAccountInfo method.
-	Info *BaseAccount `protobuf:"bytes,2,opt,name=info,proto3" json:"info,omitempty"`
+	Base *BaseAccount `protobuf:"bytes,2,opt,name=base,proto3" json:"base,omitempty"`
 }
 
 func (x *QueryLegacyAccountResponse) Reset() {
@@ -970,9 +970,9 @@ func (x *QueryLegacyAccountResponse) GetAccount() *anypb.Any {
 	return nil
 }
 
-func (x *QueryLegacyAccountResponse) GetInfo() *BaseAccount {
+func (x *QueryLegacyAccountResponse) GetBase() *BaseAccount {
 	if x != nil {
-		return x.Info
+		return x.Base
 	}
 	return nil
 }
@@ -993,10 +993,10 @@ var file_cosmos_auth_v1beta1_accounts_proto_rawDesc = []byte{
 	0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2e, 0x0a, 0x07, 0x61, 0x63, 0x63,
 	0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f,
 	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79,
-	0x52, 0x07, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x34, 0x0a, 0x04, 0x69, 0x6e, 0x66,
-	0x6f, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x52, 0x07, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x34, 0x0a, 0x04, 0x62, 0x61, 0x73,
+	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x42, 0x61,
-	0x73, 0x65, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x04, 0x69, 0x6e, 0x66, 0x6f, 0x42,
+	0x73, 0x65, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x04, 0x62, 0x61, 0x73, 0x65, 0x42,
 	0xc8, 0x01, 0x0a, 0x17, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61,
 	0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0d, 0x41, 0x63, 0x63,
 	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x63, 0x6f,
@@ -1034,7 +1034,7 @@ var file_cosmos_auth_v1beta1_accounts_proto_goTypes = []interface{}{
 }
 var file_cosmos_auth_v1beta1_accounts_proto_depIdxs = []int32{
 	2, // 0: cosmos.auth.v1beta1.QueryLegacyAccountResponse.account:type_name -> google.protobuf.Any
-	3, // 1: cosmos.auth.v1beta1.QueryLegacyAccountResponse.info:type_name -> cosmos.auth.v1beta1.BaseAccount
+	3, // 1: cosmos.auth.v1beta1.QueryLegacyAccountResponse.base:type_name -> cosmos.auth.v1beta1.BaseAccount
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name

@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func NewBoolKey[T ~bool]() KeyCodec[T] { return boolKey[T]{} }
+func NewBoolKey[T ~bool]() NameableKeyCodec[T] { return boolKey[T]{} }
 
 type boolKey[T ~bool] struct{}
 
@@ -63,4 +63,8 @@ func (b boolKey[T]) DecodeNonTerminal(buffer []byte) (int, T, error) {
 
 func (b boolKey[T]) SizeNonTerminal(key T) int {
 	return b.Size(key)
+}
+
+func (b boolKey[T]) WithName(name string) KeyCodec[T] {
+	return NamedKeyCodec[T]{KeyCodec: b, Name: name}
 }

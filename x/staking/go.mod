@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v0.7.5
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v1.0.0-alpha.3
-	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
+	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.3.0
@@ -49,7 +49,6 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft-db v0.15.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.3.0 // indirect
@@ -88,7 +87,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/hdevalence/ed25519consensus v0.2.0 // indirect
-	github.com/huandu/skiplist v1.2.0 // indirect
+	github.com/huandu/skiplist v1.2.1 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
@@ -166,6 +165,7 @@ require (
 require (
 	cosmossdk.io/schema v0.3.0 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
+	github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
@@ -178,7 +178,6 @@ replace github.com/cosmos/cosmos-sdk => ../../.
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/collections => ../../collections
-	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/tx => ../tx

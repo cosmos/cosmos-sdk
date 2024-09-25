@@ -41,13 +41,7 @@ func (a *AppBuilder[T]) RegisterModules(modules map[string]appmodulev2.AppModule
 		// if a (legacy) module implements the HasName interface, check that the name matches
 		if mod, ok := appModule.(interface{ Name() string }); ok {
 			if name != mod.Name() {
-				a.app.logger.Warn(
-					fmt.Sprintf(
-						"module name %q does not match name returned by HasName: %q",
-						name,
-						mod.Name(),
-					),
-				)
+				a.app.logger.Warn(fmt.Sprintf("module name %q does not match name returned by HasName: %q", name, mod.Name()))
 			}
 		}
 

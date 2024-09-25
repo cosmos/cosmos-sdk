@@ -68,6 +68,7 @@ func EnvWithMemStoreService(memStoreService store.MemoryStoreService) EnvOption 
 	}
 }
 
+// EnvWithAddressCodecs sets the address codecs in the environment.
 func EnvWithAddressCodecs(
 	addressCodec address.Codec,
 	validatorAddressCodec address.ValidatorAddressCodec,
@@ -138,7 +139,7 @@ func (failingMemStore) OpenMemoryStore(context.Context) store.KVStore {
 	panic("memory store not set")
 }
 
-// failingAddressCodec is an address codec that panics when accessed
+// failingAddressCodec is an address codec that returns an error when accessed
 type failingAddressCodec struct {
 	address.Codec
 

@@ -1,6 +1,7 @@
 package appmodulev2
 
 import (
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
@@ -26,4 +27,8 @@ type Environment struct {
 
 	KVStoreService  store.KVStoreService
 	MemStoreService store.MemoryStoreService
+
+	AddressCodec          address.Codec
+	ValidatorAddressCodec address.ValidatorAddressCodec
+	ConsensusAddressCodec address.ConsensusAddressCodec
 }

@@ -2,10 +2,12 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/runtime/protoiface"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/store"
@@ -24,16 +26,19 @@ func NewEnvironment(
 	opts ...EnvOption,
 ) appmodule.Environment {
 	env := appmodule.Environment{
-		Logger:             logger,
-		EventService:       EventService{},
-		HeaderService:      HeaderService{},
-		BranchService:      BranchService{},
-		GasService:         GasService{},
-		TransactionService: TransactionService{},
-		KVStoreService:     kvService,
-		MsgRouterService:   NewMsgRouterService(failingMsgRouter{}),
-		QueryRouterService: NewQueryRouterService(failingQueryRouter{}),
-		MemStoreService:    failingMemStore{},
+		Logger:                logger,
+		EventService:          EventService{},
+		HeaderService:         HeaderService{},
+		BranchService:         BranchService{},
+		GasService:            GasService{},
+		TransactionService:    TransactionService{},
+		KVStoreService:        kvService,
+		MsgRouterService:      NewMsgRouterService(failingMsgRouter{}),
+		QueryRouterService:    NewQueryRouterService(failingQueryRouter{}),
+		MemStoreService:       failingMemStore{},
+		AddressCodec:          failingAddressCodec{},
+		ValidatorAddressCodec: failingAddressCodec{prefix: "validator"},
+		ConsensusAddressCodec: failingAddressCodec{prefix: "consensus"},
 	}
 
 	for _, opt := range opts {
@@ -60,6 +65,18 @@ func EnvWithQueryRouterService(queryServiceRouter *baseapp.GRPCQueryRouter) EnvO
 func EnvWithMemStoreService(memStoreService store.MemoryStoreService) EnvOption {
 	return func(env *appmodule.Environment) {
 		env.MemStoreService = memStoreService
+	}
+}
+
+func EnvWithAddressCodecs(
+	addressCodec address.Codec,
+	validatorAddressCodec address.ValidatorAddressCodec,
+	consensusAddressCodec address.ConsensusAddressCodec,
+) EnvOption {
+	return func(env *appmodule.Environment) {
+		env.AddressCodec = addressCodec
+		env.ValidatorAddressCodec = validatorAddressCodec
+		env.ConsensusAddressCodec = consensusAddressCodec
 	}
 }
 
@@ -119,4 +136,19 @@ type failingMemStore struct {
 
 func (failingMemStore) OpenMemoryStore(context.Context) store.KVStore {
 	panic("memory store not set")
+}
+
+// failingAddressCodec is an address codec that panics when accessed
+type failingAddressCodec struct {
+	address.Codec
+
+	prefix string
+}
+
+func (f failingAddressCodec) StringToBytes(text string) ([]byte, error) {
+	return nil, fmt.Errorf("%saddress codec not set", f.prefix+" ")
+}
+
+func (f failingAddressCodec) BytesToString(bz []byte) (string, error) {
+	return "", fmt.Errorf("%saddress codec not set", f.prefix+" ")
 }

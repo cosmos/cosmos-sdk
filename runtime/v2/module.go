@@ -14,6 +14,7 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"cosmossdk.io/core/address"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
@@ -178,6 +179,9 @@ func ProvideEnvironment[T transaction.Tx](
 	appBuilder *AppBuilder[T],
 	kvFactory store.KVStoreServiceFactory,
 	headerService header.Service,
+	addressCodec address.Codec,
+	validatorAddressCodec address.ValidatorAddressCodec,
+	consensusAddressCodec address.ConsensusAddressCodec,
 ) (
 	appmodulev2.Environment,
 	store.KVStoreService,
@@ -207,16 +211,19 @@ func ProvideEnvironment[T transaction.Tx](
 	}
 
 	env := appmodulev2.Environment{
-		Logger:             logger,
-		BranchService:      stf.BranchService{},
-		EventService:       stf.NewEventService(),
-		GasService:         stf.NewGasMeterService(),
-		HeaderService:      headerService,
-		QueryRouterService: stf.NewQueryRouterService(),
-		MsgRouterService:   stf.NewMsgRouterService([]byte(key.Name())),
-		TransactionService: services.NewContextAwareTransactionService(),
-		KVStoreService:     kvService,
-		MemStoreService:    memKvService,
+		Logger:                logger,
+		BranchService:         stf.BranchService{},
+		EventService:          stf.NewEventService(),
+		GasService:            stf.NewGasMeterService(),
+		HeaderService:         headerService,
+		QueryRouterService:    stf.NewQueryRouterService(),
+		MsgRouterService:      stf.NewMsgRouterService([]byte(key.Name())),
+		TransactionService:    services.NewContextAwareTransactionService(),
+		KVStoreService:        kvService,
+		MemStoreService:       memKvService,
+		AddressCodec:          addressCodec,
+		ValidatorAddressCodec: validatorAddressCodec,
+		ConsensusAddressCodec: consensusAddressCodec,
 	}
 
 	return env, kvService, memKvService

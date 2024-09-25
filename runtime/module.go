@@ -12,6 +12,7 @@ import (
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/registry"
@@ -254,6 +255,9 @@ func ProvideEnvironment(
 	app *AppBuilder,
 	msgServiceRouter *baseapp.MsgServiceRouter,
 	queryServiceRouter *baseapp.GRPCQueryRouter,
+	addressCodec address.Codec,
+	valAddressCodec address.ValidatorAddressCodec,
+	consAddressCodec address.ConsensusAddressCodec,
 ) (store.KVStoreService, store.MemoryStoreService, appmodule.Environment) {
 	var (
 		kvService    store.KVStoreService     = failingStoreService{}
@@ -275,6 +279,7 @@ func ProvideEnvironment(
 		EnvWithMsgRouterService(msgServiceRouter),
 		EnvWithQueryRouterService(queryServiceRouter),
 		EnvWithMemStoreService(memKvService),
+		EnvWithAddressCodecs(addressCodec, valAddressCodec, consAddressCodec),
 	)
 }
 

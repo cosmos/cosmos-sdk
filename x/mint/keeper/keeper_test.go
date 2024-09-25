@@ -29,7 +29,7 @@ const govModuleNameStr = "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 type KeeperTestSuite struct {
 	suite.Suite
 
-	mintKeeper    keeper.Keeper
+	mintKeeper    *keeper.Keeper
 	ctx           sdk.Context
 	msgServer     types.MsgServer
 	stakingKeeper *minttestutil.MockStakingKeeper

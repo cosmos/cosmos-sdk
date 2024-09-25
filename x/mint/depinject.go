@@ -1,6 +1,8 @@
 package mint
 
 import (
+	"fmt"
+
 	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
@@ -21,28 +23,25 @@ func (am AppModule) IsOnePerModuleType() {}
 func init() {
 	appconfig.RegisterModule(&modulev1.Module{},
 		appconfig.Provide(ProvideModule),
+		appconfig.Invoke(InvokeSetMintFn),
 	)
 }
 
 type ModuleInputs struct {
 	depinject.In
 
-	ModuleKey              depinject.OwnModuleKey
-	Config                 *modulev1.Module
-	Environment            appmodule.Environment
-	Cdc                    codec.Codec
-	MintFn                 types.MintFn                 `optional:"true"`
-	InflationCalculationFn types.InflationCalculationFn `optional:"true"` // deprecated
+	Config      *modulev1.Module
+	Environment appmodule.Environment
+	Cdc         codec.Codec
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
-	StakingKeeper types.StakingKeeper
 }
 
 type ModuleOutputs struct {
 	depinject.Out
 
-	MintKeeper keeper.Keeper
+	MintKeeper *keeper.Keeper
 	Module     appmodule.AppModule
 	EpochHooks epochstypes.EpochHooksWrapper
 }
@@ -77,9 +76,17 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		as,
 	)
 
-	k.SetMintFn(in.MintFn)
-
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper)
 
 	return ModuleOutputs{MintKeeper: k, Module: m, EpochHooks: epochstypes.EpochHooksWrapper{EpochHooks: m}}
+}
+
+func InvokeSetMintFn(mintKeeper *keeper.Keeper, mintFn types.MintFn, stakingKeeper types.StakingKeeper) error {
+	if mintFn == nil && stakingKeeper == nil {
+		return fmt.Errorf("custom minting function or staking keeper must be supplied or available")
+	} else if mintFn == nil {
+		mintFn = keeper.DefaultMintFn(types.DefaultInflationCalculationFn, stakingKeeper, mintKeeper)
+	}
+
+	return mintKeeper.SetMintFn(mintFn)
 }

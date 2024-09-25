@@ -24,13 +24,12 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
-              draft: false
             });
 
             let table = '';
             pullRequests.forEach(pr => {
               const assignees = pr.assignees.length > 0 ? `Assignees: ${pr.assignees.map(assignee => assignee.login).join(', ')}` : 'No assignees';
-              table += `
+              table += pr.draft ? '' : `
                       Title: ${pr.title}
                       Link: <${pr.html_url}>
                       Assigness: ${assignees}
@@ -51,6 +50,4 @@ jobs:
           SLACKIFY_MARKDOWN: true
           SLACK_TITLE: Daily Pull Request Review Reminder
           SLACK_MESSAGE: |
-            There are currently ${{ steps.pr-count.outputs.result }} open pull requests requiring review:  
-
             ${{ steps.pr-list.outputs.result }}  

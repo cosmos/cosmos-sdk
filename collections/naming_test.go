@@ -33,6 +33,7 @@ func TestNaming(t *testing.T) {
 }
 
 func expectKeyCodecName[T any](t *testing.T, name string, cdc codec.KeyCodec[T]) {
+	t.Helper()
 	schema, err := codec.KeySchemaCodec(cdc)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(schema.Fields))
@@ -40,6 +41,7 @@ func expectKeyCodecName[T any](t *testing.T, name string, cdc codec.KeyCodec[T])
 }
 
 func expectValueCodecName[T any](t *testing.T, name string, cdc codec.ValueCodec[T]) {
+	t.Helper()
 	schema, err := codec.ValueSchemaCodec(cdc)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(schema.Fields))
@@ -47,6 +49,7 @@ func expectValueCodecName[T any](t *testing.T, name string, cdc codec.ValueCodec
 }
 
 func expectKeyCodecNames[T any](t *testing.T, cdc codec.KeyCodec[T], names ...string) {
+	t.Helper()
 	schema, err := codec.KeySchemaCodec(cdc)
 	require.NoError(t, err)
 	require.Equal(t, len(names), len(schema.Fields))

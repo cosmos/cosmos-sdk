@@ -2,11 +2,9 @@
 sidebar_position: 1
 ---
 
-
 ### Modifying the `DefaultGenesis`
 
 It is possible to modify the DefaultGenesis parameters for modules by wrapping the module, providing it to the `*module.Manager` and injecting it with `depinject`.
-
 
 Example ( staking ) :
 

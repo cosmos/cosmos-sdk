@@ -26,13 +26,7 @@ func (cm CustomStakingModule) DefaultGenesis() json.RawMessage {
     })
 }
 
-// option 1 ( for non depinject users ): use new module manager
-moduleManager := module.NewManagerFromMap(map[string]appmodule.AppModule{
-    stakingtypes.ModuleName: CustomStakingModule{cdc: appCodec, AppModule: staking.NewAppModule(...)},
-	// other modules ...
-})
-
-// option 2 ( for depinject users ): override previous module manager
+// option 1 ( for depinject users ): override previous module manager
 depinject.Inject(
 // ... provider/invoker/supplier
 &moduleManager,
@@ -44,8 +38,12 @@ moduleManager.Modules()[stakingtypes.ModuleName] = CustomStakingModule{
 	cdc: appCodec,
 }
 
+// option 2 ( for non depinject users ): use new module manager
+moduleManager := module.NewManagerFromMap(map[string]appmodule.AppModule{
+stakingtypes.ModuleName: CustomStakingModule{cdc: appCodec, AppModule: staking.NewAppModule(...)},
+// other modules ...
+})
 
-
-
+// set the module manager
+app.ModuleManager = moduleManager
 ```
-

@@ -131,8 +131,8 @@ func SimulateFromSeedX(
 	})
 	nextValidators := validators
 	if len(nextValidators) == 0 {
-		tb.Skip("skipping: empty validator set")
-		return
+		tb.Skip("skipping: empty validator set in genesis")
+		return params, accs, nil
 	}
 
 	var (

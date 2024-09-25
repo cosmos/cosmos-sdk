@@ -3,7 +3,6 @@ name: PR Review Reminder
 on:
   schedule:
     - cron: '0 9 * * 1-5'  # Every weekday at 9:00 AM UTC
-  pull_request:
 
 permissions:
   pull-requests: read

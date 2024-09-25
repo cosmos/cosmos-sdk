@@ -4,6 +4,7 @@ use crate::message::Message;
 use crate::response::Response;
 use ixc_message_api::Address;
 use ixc_message_api::handler::HostCallbacks;
+use ixc_message_api::header::MessageHeader;
 use ixc_message_api::packet::MessagePacket;
 use ixc_schema::codec::Codec;
 use ixc_schema::mem::MemoryManager;
@@ -11,7 +12,7 @@ use ixc_schema::mem::MemoryManager;
 /// Context wraps a single message request (and possibly response as well) along with
 /// the router callbacks necessary for making nested message calls.
 pub struct Context<'a> {
-    message_packet: &'a MessagePacket,
+    message_packet: &'a mut MessagePacket,
     host_callbacks: &'a HostCallbacks,
     memory_manager: &'a MemoryManager<'a, 'a>,
 }
@@ -46,7 +47,14 @@ impl<'a> Context<'a> {
     /// so that static dependency analysis can be performed.
     pub fn dynamic_invoke_account<'b, M: Message<'b, false>>(&self, account: &Address, message: M) -> Response<M::Response, M::Error> {
         // TODO allocate packet
-        let msg_body = M::Codec::encode_value(&message, self.memory_manager.scope())?;
+        let mut guard = self.memory_manager.scope().scope_guard();
+        let new_scope = guard.scope();
+        let mut header = new_scope.alloc_default::<MessageHeader>();
+        let mut packet = unsafe { MessagePacket::new(header.as_mut_ptr(), 0) };
+        let new_mem_mgr = MemoryManager::new(&new_scope);
+        let msg_body = M::Codec::encode_value(&message, new_mem_mgr.scope())?;
+        packet.in1().set_slice(msg_body);
+        self.host_callbacks.invoke(&mut packet);
         // TODO call self.host_callbacks.invoke
         // let code = self.host_callbacks.invoke(&mut packet);
         // if code != Code::Ok {

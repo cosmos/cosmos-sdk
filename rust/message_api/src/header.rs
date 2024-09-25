@@ -3,6 +3,7 @@ use crate::data_pointer::DataPointer;
 
 pub const MESSAGE_HEADER_SIZE: usize = 512;
 
+#[derive(Default)]
 pub struct MessageHeader {
     pub target_account: u128, // 16 bytes
     pub sender_account: u128, // 16 bytes

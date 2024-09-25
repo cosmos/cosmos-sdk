@@ -80,6 +80,7 @@ func TestStart(t *testing.T) {
 }
 
 func callCommit(t *testing.T, listener appdata.Listener) {
+	t.Helper()
 	cb, err := listener.Commit(appdata.CommitData{})
 	if err != nil {
 		t.Fatal(err)

@@ -362,7 +362,13 @@ func (s *SystemUnderTest) PrintBuffer() {
 	})
 }
 
-// AwaitBlockHeight blocks until te target height is reached. An optional timeout parameter can be passed to abort early
+// AwaitNBlocks blocks until the current height + n block is reached. An optional timeout parameter can be passed to abort early
+func (s *SystemUnderTest) AwaitNBlocks(t *testing.T, n int64, timeout ...time.Duration) {
+	t.Helper()
+	s.AwaitBlockHeight(t, s.CurrentHeight()+n, timeout...)
+}
+
+// AwaitBlockHeight blocks until the target height is reached. An optional timeout parameter can be passed to abort early
 func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, timeout ...time.Duration) {
 	t.Helper()
 	require.Greater(t, targetHeight, s.currentHeight.Load())
@@ -579,6 +585,7 @@ func (s *SystemUnderTest) startNodesAsync(t *testing.T, xargs ...string) {
 	})
 }
 
+// tracks the PID in state with a go routine waiting for the shutdown completion to unregister
 func (s *SystemUnderTest) awaitProcessCleanup(cmd *exec.Cmd) {
 	pid := cmd.Process.Pid
 	s.pidsLock.Lock()
@@ -597,6 +604,11 @@ func (s *SystemUnderTest) withEachNodeHome(cb func(i int, home string)) {
 	for i := 0; i < s.nodesCount; i++ {
 		cb(i, s.nodePath(i))
 	}
+}
+
+// NodeDir returns the workdir and path to the node home folder.
+func (s *SystemUnderTest) NodeDir(i int) string {
+	return filepath.Join(WorkDir, s.nodePath(i))
 }
 
 // nodePath returns the path of the node within the work dir. not absolute

@@ -182,7 +182,7 @@ go test -mod=readonly -tags='system_test' -v ./...  --run TestQueryTotalSupply -
 ## Part 4: Set state via TX
 
 Complexer workflows and tests require modifying state on a running chain. This works only with builtin logic and operations.
-If we want to burn some our new tokens, we need to submit a bank burn message to do this.
+If we want to burn some of our new tokens, we need to submit a bank burn message to do this.
 The CLI wrapper works similar to the query. Just pass the parameters. It uses the `node0` key as *default*:
 
 ```go

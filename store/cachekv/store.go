@@ -366,9 +366,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 	store.clearUnsortedCacheSubset(kvL, stateAlreadySorted)
 }
 
-func (store *Store) clearUnsortedCacheSubset(
-	unsorted []*kv.Pair, sortState sortState,
-) { //nolint:staticcheck // We are in store v1.
+func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sortState) { //nolint:staticcheck // We are in store v1.
 	n := len(store.unsortedCache)
 	if len(unsorted) == n { // This pattern allows the Go compiler to emit the map clearing idiom for the entire map.
 		for key := range store.unsortedCache {

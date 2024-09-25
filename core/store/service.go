@@ -23,8 +23,6 @@ type MemoryStoreService interface {
 	OpenMemoryStore(context.Context) KVStore
 }
 
-type MemoryStoreServiceFactory func([]byte) MemoryStoreService
-
 // TransientStoreService represents a unique, non-forgeable handle to a memory-backed
 // KVStore which is reset at the start of every block. It should be provided as
 // a module-scoped dependency by the runtime module being used to build the app.

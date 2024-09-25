@@ -70,11 +70,7 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 			}
 
 			customClientTemplate, customClientConfig := initClientConfig()
-			clientCtx, err = config.CreateClientConfig(
-				clientCtx,
-				customClientTemplate,
-				customClientConfig,
-			)
+			clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
 			if err != nil {
 				return err
 			}
@@ -113,9 +109,7 @@ func ProvideClientContext(
 
 	amino, ok := legacyAmino.(*codec.LegacyAmino)
 	if !ok {
-		panic(
-			"registry.AminoRegistrar must be an *codec.LegacyAmino instance for legacy ClientContext",
-		)
+		panic("registry.AminoRegistrar must be an *codec.LegacyAmino instance for legacy ClientContext")
 	}
 
 	clientCtx := client.Context{}.
@@ -132,11 +126,7 @@ func ProvideClientContext(
 
 	// Read the config to overwrite the default values with the values from the config file
 	customClientTemplate, customClientConfig := initClientConfig()
-	clientCtx, err = config.CreateClientConfig(
-		clientCtx,
-		customClientTemplate,
-		customClientConfig,
-	)
+	clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
 	if err != nil {
 		panic(err)
 	}

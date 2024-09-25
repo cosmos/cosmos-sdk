@@ -13,8 +13,6 @@ type Service interface {
 	HeaderInfo(context.Context) Info
 }
 
-type HeaderServiceFactory func() Service
-
 // Info defines a struct that contains information about the header
 type Info struct {
 	Height  int64     // Height returns the height of the block

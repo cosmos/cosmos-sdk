@@ -267,6 +267,7 @@ func SetupWithConfiguration(
 	return integrationApp, nil
 }
 
+// App is a wrapper around runtime.App that provides additional testing utilities.
 type App struct {
 	*runtime.App[stateMachineTx]
 	lastHeight uint64
@@ -274,21 +275,7 @@ type App struct {
 	txConfig   client.TxConfig
 }
 
-func (a *App) Run(
-	ctx context.Context,
-	state corestore.ReaderMap,
-	fn func(ctx context.Context) error,
-) (corestore.ReaderMap, error) {
-	nextState := branch.DefaultNewWriterMap(state)
-	iCtx := integrationContext{state: nextState}
-	ctx = context.WithValue(ctx, contextKey, iCtx)
-	err := fn(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return nextState, nil
-}
-
+// Deliver delivers a block with the given transactions and returns the resulting state.
 func (a *App) Deliver(
 	t *testing.T, ctx context.Context, txs []stateMachineTx,
 ) (*server.BlockResponse, corestore.WriterMap) {
@@ -315,6 +302,7 @@ func (a *App) StateLatestContext(t *testing.T) context.Context {
 	return context.WithValue(context.Background(), contextKey, iCtx)
 }
 
+// Commit commits the given state and returns the new state hash.
 func (a *App) Commit(state corestore.WriterMap) ([]byte, error) {
 	changes, err := state.GetStateChanges()
 	if err != nil {
@@ -324,6 +312,7 @@ func (a *App) Commit(state corestore.WriterMap) ([]byte, error) {
 	return a.Store.Commit(cs)
 }
 
+// SignCheckDeliver signs and checks the given messages and delivers them.
 func (a *App) SignCheckDeliver(
 	t *testing.T, ctx context.Context, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, privateKeys []cryptotypes.PrivKey,
@@ -402,6 +391,7 @@ func (a *App) SignCheckDeliver(
 	return txResult
 }
 
+// CheckBalance checks the balance of the given address.
 func (a *App) CheckBalance(
 	t *testing.T, ctx context.Context, addr sdk.AccAddress, expected sdk.Coins, keeper bankkeeper.Keeper,
 ) {

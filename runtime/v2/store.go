@@ -64,10 +64,12 @@ type Store interface {
 	LastCommitID() (proof.CommitID, error)
 }
 
+// StoreBuilder is a builder for a store/v2 RootStore satisfying the Store interface.
 type StoreBuilder struct {
 	store Store
 }
 
+// Build creates a new store/v2 RootStore.
 func (sb *StoreBuilder) Build(
 	logger log.Logger,
 	storeKeys []string,

@@ -45,7 +45,6 @@ func RemoteCommand(config *config.Config, configDir string) ([]*cobra.Command, e
 	commands := []*cobra.Command{}
 
 	for chain, chainConfig := range config.Chains {
-		chain, chainConfig := chain, chainConfig
 
 		// load chain info
 		chainInfo := NewChainInfo(configDir, chain, chainConfig)

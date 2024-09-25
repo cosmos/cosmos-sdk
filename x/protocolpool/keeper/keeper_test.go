@@ -147,14 +147,14 @@ func (s *KeeperTestSuite) TestIterateAndUpdateFundsDistribution() {
 	err = s.poolKeeper.IterateAndUpdateFundsDistribution(s.ctx)
 	s.Require().NoError(err)
 
-	err = s.poolKeeper.RecipientFundDistribution.Walk(s.ctx, nil, func(key sdk.AccAddress, value math.Int) (stop bool, err error) {
+	err = s.poolKeeper.RecipientFundDistribution.Walk(s.ctx, nil, func(key sdk.AccAddress, value types.DistributionAmount) (stop bool, err error) {
 		strAddr, err := s.authKeeper.AddressCodec().BytesToString(key)
 		s.Require().NoError(err)
 
 		if strAddr == "cosmos1qypq2q2l8z4wz2z2l8z4wz2z2l8z4wz2srklj6" {
-			s.Require().Equal(value, math.NewInt(300000))
+			s.Require().Equal(value.Amount, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(300000))))
 		} else if strAddr == "cosmos1tygms3xhhs3yv487phx3dw4a95jn7t7lpm470r" {
-			s.Require().Equal(value, math.NewInt(300000))
+			s.Require().Equal(value.Amount, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(300000))))
 		}
 		return false, nil
 	})
@@ -215,16 +215,16 @@ func (suite *KeeperTestSuite) TestSetToDistribute() {
 	// Verify that LastBalance was set correctly
 	lastBalance, err := suite.poolKeeper.LastBalance.Get(suite.ctx)
 	suite.Require().NoError(err)
-	suite.Require().Equal(math.NewInt(1000000), lastBalance)
+	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000))), lastBalance.Amount)
 
 	// Verify that a distribution was set
-	var distribution math.Int
-	err = suite.poolKeeper.Distributions.Walk(suite.ctx, nil, func(key time.Time, value math.Int) (bool, error) {
+	var distribution types.DistributionAmount
+	err = suite.poolKeeper.Distributions.Walk(suite.ctx, nil, func(key time.Time, value types.DistributionAmount) (bool, error) {
 		distribution = value
 		return true, nil
 	})
 	suite.Require().NoError(err)
-	suite.Require().Equal(math.NewInt(1000000), distribution)
+	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000))), distribution.Amount)
 
 	// Test case when balance is zero
 	zeroBal := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt()))
@@ -235,7 +235,7 @@ func (suite *KeeperTestSuite) TestSetToDistribute() {
 
 	// Verify that no new distribution was set
 	count := 0
-	err = suite.poolKeeper.Distributions.Walk(suite.ctx, nil, func(key time.Time, value math.Int) (bool, error) {
+	err = suite.poolKeeper.Distributions.Walk(suite.ctx, nil, func(key time.Time, value types.DistributionAmount) (bool, error) {
 		count++
 		return false, nil
 	})

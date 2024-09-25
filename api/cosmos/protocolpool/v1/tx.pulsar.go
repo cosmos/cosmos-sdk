@@ -5357,6 +5357,57 @@ func (x *fastReflection_MsgCancelContinuousFund) ProtoMethods() *protoiface.Meth
 	}
 }
 
+var _ protoreflect.List = (*_MsgCancelContinuousFundResponse_4_list)(nil)
+
+type _MsgCancelContinuousFundResponse_4_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_MsgCancelContinuousFundResponse_4_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_MsgCancelContinuousFundResponse_4_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_MsgCancelContinuousFundResponse_4_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_MsgCancelContinuousFundResponse_4_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_MsgCancelContinuousFundResponse_4_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgCancelContinuousFundResponse_4_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_MsgCancelContinuousFundResponse_4_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgCancelContinuousFundResponse_4_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
 	md_MsgCancelContinuousFundResponse                          protoreflect.MessageDescriptor
 	fd_MsgCancelContinuousFundResponse_canceled_time            protoreflect.FieldDescriptor
@@ -5457,8 +5508,8 @@ func (x *fastReflection_MsgCancelContinuousFundResponse) Range(f func(protorefle
 			return
 		}
 	}
-	if x.WithdrawnAllocatedFund != nil {
-		value := protoreflect.ValueOfMessage(x.WithdrawnAllocatedFund.ProtoReflect())
+	if len(x.WithdrawnAllocatedFund) != 0 {
+		value := protoreflect.ValueOfList(&_MsgCancelContinuousFundResponse_4_list{list: &x.WithdrawnAllocatedFund})
 		if !f(fd_MsgCancelContinuousFundResponse_withdrawn_allocated_fund, value) {
 			return
 		}
@@ -5485,7 +5536,7 @@ func (x *fastReflection_MsgCancelContinuousFundResponse) Has(fd protoreflect.Fie
 	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
 		return x.RecipientAddress != ""
 	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.withdrawn_allocated_fund":
-		return x.WithdrawnAllocatedFund != nil
+		return len(x.WithdrawnAllocatedFund) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
@@ -5536,8 +5587,11 @@ func (x *fastReflection_MsgCancelContinuousFundResponse) Get(descriptor protoref
 		value := x.RecipientAddress
 		return protoreflect.ValueOfString(value)
 	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.withdrawn_allocated_fund":
-		value := x.WithdrawnAllocatedFund
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
+		if len(x.WithdrawnAllocatedFund) == 0 {
+			return protoreflect.ValueOfList(&_MsgCancelContinuousFundResponse_4_list{})
+		}
+		listValue := &_MsgCancelContinuousFundResponse_4_list{list: &x.WithdrawnAllocatedFund}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
@@ -5565,7 +5619,9 @@ func (x *fastReflection_MsgCancelContinuousFundResponse) Set(fd protoreflect.Fie
 	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
 		x.RecipientAddress = value.Interface().(string)
 	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.withdrawn_allocated_fund":
-		x.WithdrawnAllocatedFund = value.Message().Interface().(*v1beta1.Coin)
+		lv := value.List()
+		clv := lv.(*_MsgCancelContinuousFundResponse_4_list)
+		x.WithdrawnAllocatedFund = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
@@ -5593,9 +5649,10 @@ func (x *fastReflection_MsgCancelContinuousFundResponse) Mutable(fd protoreflect
 		return protoreflect.ValueOfMessage(x.CanceledTime.ProtoReflect())
 	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.withdrawn_allocated_fund":
 		if x.WithdrawnAllocatedFund == nil {
-			x.WithdrawnAllocatedFund = new(v1beta1.Coin)
+			x.WithdrawnAllocatedFund = []*v1beta1.Coin{}
 		}
-		return protoreflect.ValueOfMessage(x.WithdrawnAllocatedFund.ProtoReflect())
+		value := &_MsgCancelContinuousFundResponse_4_list{list: &x.WithdrawnAllocatedFund}
+		return protoreflect.ValueOfList(value)
 	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.canceled_height":
 		panic(fmt.Errorf("field canceled_height of message cosmos.protocolpool.v1.MsgCancelContinuousFundResponse is not mutable"))
 	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
@@ -5621,8 +5678,8 @@ func (x *fastReflection_MsgCancelContinuousFundResponse) NewField(fd protoreflec
 	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.recipient_address":
 		return protoreflect.ValueOfString("")
 	case "cosmos.protocolpool.v1.MsgCancelContinuousFundResponse.withdrawn_allocated_fund":
-		m := new(v1beta1.Coin)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_MsgCancelContinuousFundResponse_4_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgCancelContinuousFundResponse"))
@@ -5703,9 +5760,11 @@ func (x *fastReflection_MsgCancelContinuousFundResponse) ProtoMethods() *protoif
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.WithdrawnAllocatedFund != nil {
-			l = options.Size(x.WithdrawnAllocatedFund)
-			n += 1 + l + runtime.Sov(uint64(l))
+		if len(x.WithdrawnAllocatedFund) > 0 {
+			for _, e := range x.WithdrawnAllocatedFund {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -5736,19 +5795,21 @@ func (x *fastReflection_MsgCancelContinuousFundResponse) ProtoMethods() *protoif
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.WithdrawnAllocatedFund != nil {
-			encoded, err := options.Marshal(x.WithdrawnAllocatedFund)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
+		if len(x.WithdrawnAllocatedFund) > 0 {
+			for iNdEx := len(x.WithdrawnAllocatedFund) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.WithdrawnAllocatedFund[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x22
 			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x22
 		}
 		if len(x.RecipientAddress) > 0 {
 			i -= len(x.RecipientAddress)
@@ -5941,10 +6002,8 @@ func (x *fastReflection_MsgCancelContinuousFundResponse) ProtoMethods() *protoif
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.WithdrawnAllocatedFund == nil {
-					x.WithdrawnAllocatedFund = &v1beta1.Coin{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.WithdrawnAllocatedFund); err != nil {
+				x.WithdrawnAllocatedFund = append(x.WithdrawnAllocatedFund, &v1beta1.Coin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.WithdrawnAllocatedFund[len(x.WithdrawnAllocatedFund)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -6403,6 +6462,57 @@ func (x *fastReflection_MsgWithdrawContinuousFund) ProtoMethods() *protoiface.Me
 	}
 }
 
+var _ protoreflect.List = (*_MsgWithdrawContinuousFundResponse_1_list)(nil)
+
+type _MsgWithdrawContinuousFundResponse_1_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_MsgWithdrawContinuousFundResponse_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_MsgWithdrawContinuousFundResponse_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_MsgWithdrawContinuousFundResponse_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_MsgWithdrawContinuousFundResponse_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_MsgWithdrawContinuousFundResponse_1_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgWithdrawContinuousFundResponse_1_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_MsgWithdrawContinuousFundResponse_1_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgWithdrawContinuousFundResponse_1_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
 	md_MsgWithdrawContinuousFundResponse        protoreflect.MessageDescriptor
 	fd_MsgWithdrawContinuousFundResponse_amount protoreflect.FieldDescriptor
@@ -6479,8 +6589,8 @@ func (x *fastReflection_MsgWithdrawContinuousFundResponse) Interface() protorefl
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_MsgWithdrawContinuousFundResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Amount != nil {
-		value := protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
+	if len(x.Amount) != 0 {
+		value := protoreflect.ValueOfList(&_MsgWithdrawContinuousFundResponse_1_list{list: &x.Amount})
 		if !f(fd_MsgWithdrawContinuousFundResponse_amount, value) {
 			return
 		}
@@ -6501,7 +6611,7 @@ func (x *fastReflection_MsgWithdrawContinuousFundResponse) Range(f func(protoref
 func (x *fastReflection_MsgWithdrawContinuousFundResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "cosmos.protocolpool.v1.MsgWithdrawContinuousFundResponse.amount":
-		return x.Amount != nil
+		return len(x.Amount) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgWithdrawContinuousFundResponse"))
@@ -6537,8 +6647,11 @@ func (x *fastReflection_MsgWithdrawContinuousFundResponse) Clear(fd protoreflect
 func (x *fastReflection_MsgWithdrawContinuousFundResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	case "cosmos.protocolpool.v1.MsgWithdrawContinuousFundResponse.amount":
-		value := x.Amount
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
+		if len(x.Amount) == 0 {
+			return protoreflect.ValueOfList(&_MsgWithdrawContinuousFundResponse_1_list{})
+		}
+		listValue := &_MsgWithdrawContinuousFundResponse_1_list{list: &x.Amount}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgWithdrawContinuousFundResponse"))
@@ -6560,7 +6673,9 @@ func (x *fastReflection_MsgWithdrawContinuousFundResponse) Get(descriptor protor
 func (x *fastReflection_MsgWithdrawContinuousFundResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.protocolpool.v1.MsgWithdrawContinuousFundResponse.amount":
-		x.Amount = value.Message().Interface().(*v1beta1.Coin)
+		lv := value.List()
+		clv := lv.(*_MsgWithdrawContinuousFundResponse_1_list)
+		x.Amount = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgWithdrawContinuousFundResponse"))
@@ -6583,9 +6698,10 @@ func (x *fastReflection_MsgWithdrawContinuousFundResponse) Mutable(fd protorefle
 	switch fd.FullName() {
 	case "cosmos.protocolpool.v1.MsgWithdrawContinuousFundResponse.amount":
 		if x.Amount == nil {
-			x.Amount = new(v1beta1.Coin)
+			x.Amount = []*v1beta1.Coin{}
 		}
-		return protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
+		value := &_MsgWithdrawContinuousFundResponse_1_list{list: &x.Amount}
+		return protoreflect.ValueOfList(value)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgWithdrawContinuousFundResponse"))
@@ -6600,8 +6716,8 @@ func (x *fastReflection_MsgWithdrawContinuousFundResponse) Mutable(fd protorefle
 func (x *fastReflection_MsgWithdrawContinuousFundResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.protocolpool.v1.MsgWithdrawContinuousFundResponse.amount":
-		m := new(v1beta1.Coin)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_MsgWithdrawContinuousFundResponse_1_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.protocolpool.v1.MsgWithdrawContinuousFundResponse"))
@@ -6671,9 +6787,11 @@ func (x *fastReflection_MsgWithdrawContinuousFundResponse) ProtoMethods() *proto
 		var n int
 		var l int
 		_ = l
-		if x.Amount != nil {
-			l = options.Size(x.Amount)
-			n += 1 + l + runtime.Sov(uint64(l))
+		if len(x.Amount) > 0 {
+			for _, e := range x.Amount {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -6704,19 +6822,21 @@ func (x *fastReflection_MsgWithdrawContinuousFundResponse) ProtoMethods() *proto
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Amount != nil {
-			encoded, err := options.Marshal(x.Amount)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
+		if len(x.Amount) > 0 {
+			for iNdEx := len(x.Amount) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Amount[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0xa
 			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0xa
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -6796,10 +6916,8 @@ func (x *fastReflection_MsgWithdrawContinuousFundResponse) ProtoMethods() *proto
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Amount == nil {
-					x.Amount = &v1beta1.Coin{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Amount); err != nil {
+				x.Amount = append(x.Amount, &v1beta1.Coin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Amount[len(x.Amount)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -7346,7 +7464,7 @@ type MsgCancelContinuousFundResponse struct {
 	// withdrawnAllocatedFund represents the fund allocated to this recipient (if any) that have not been withdrawn yet,
 	// before a cancellation request has been initiated.
 	// It involves first withdrawing the funds and then canceling the request.
-	WithdrawnAllocatedFund *v1beta1.Coin `protobuf:"bytes,4,opt,name=withdrawn_allocated_fund,json=withdrawnAllocatedFund,proto3" json:"withdrawn_allocated_fund,omitempty"`
+	WithdrawnAllocatedFund []*v1beta1.Coin `protobuf:"bytes,4,rep,name=withdrawn_allocated_fund,json=withdrawnAllocatedFund,proto3" json:"withdrawn_allocated_fund,omitempty"`
 }
 
 func (x *MsgCancelContinuousFundResponse) Reset() {
@@ -7390,7 +7508,7 @@ func (x *MsgCancelContinuousFundResponse) GetRecipientAddress() string {
 	return ""
 }
 
-func (x *MsgCancelContinuousFundResponse) GetWithdrawnAllocatedFund() *v1beta1.Coin {
+func (x *MsgCancelContinuousFundResponse) GetWithdrawnAllocatedFund() []*v1beta1.Coin {
 	if x != nil {
 		return x.WithdrawnAllocatedFund
 	}
@@ -7440,7 +7558,7 @@ type MsgWithdrawContinuousFundResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Amount *v1beta1.Coin `protobuf:"bytes,1,opt,name=amount,proto3" json:"amount,omitempty"`
+	Amount []*v1beta1.Coin `protobuf:"bytes,1,rep,name=amount,proto3" json:"amount,omitempty"`
 }
 
 func (x *MsgWithdrawContinuousFundResponse) Reset() {
@@ -7463,7 +7581,7 @@ func (*MsgWithdrawContinuousFundResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_protocolpool_v1_tx_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *MsgWithdrawContinuousFundResponse) GetAmount() *v1beta1.Coin {
+func (x *MsgWithdrawContinuousFundResponse) GetAmount() []*v1beta1.Coin {
 	if x != nil {
 		return x.Amount
 	}
@@ -7607,7 +7725,7 @@ var file_cosmos_protocolpool_v1_tx_proto_rawDesc = []byte{
 	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x10, 0x72, 0x65, 0x63, 0x69, 0x70,
 	0x69, 0x65, 0x6e, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x85, 0x01, 0x0a, 0x18,
 	0x77, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x6e, 0x5f, 0x61, 0x6c, 0x6c, 0x6f, 0x63, 0x61,
-	0x74, 0x65, 0x64, 0x5f, 0x66, 0x75, 0x6e, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19,
+	0x74, 0x65, 0x64, 0x5f, 0x66, 0x75, 0x6e, 0x64, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19,
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62,
 	0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa,
 	0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f,
@@ -7625,7 +7743,7 @@ var file_cosmos_protocolpool_v1_tx_proto_rawDesc = []byte{
 	0x88, 0x01, 0x0a, 0x21, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x43,
 	0x6f, 0x6e, 0x74, 0x69, 0x6e, 0x75, 0x6f, 0x75, 0x73, 0x46, 0x75, 0x6e, 0x64, 0x52, 0x65, 0x73,
 	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x63, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
 	0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e,
 	0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
 	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d,

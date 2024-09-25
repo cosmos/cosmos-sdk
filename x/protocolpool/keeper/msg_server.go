@@ -157,7 +157,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		return nil, err
 	}
 
-	err = k.RecipientFundDistribution.Set(ctx, recipient, math.ZeroInt())
+	err = k.RecipientFundDistribution.Set(ctx, recipient, types.DistributionAmount{Amount: sdk.NewCoins()})
 	if err != nil {
 		return nil, err
 	}

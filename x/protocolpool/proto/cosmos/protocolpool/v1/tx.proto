@@ -155,7 +155,7 @@ message MsgCancelContinuousFundResponse {
   // withdrawnAllocatedFund represents the fund allocated to this recipient (if any) that have not been withdrawn yet,
   // before a cancellation request has been initiated.
   // It involves first withdrawing the funds and then canceling the request.
-  cosmos.base.v1beta1.Coin withdrawn_allocated_fund = 4
+  repeated cosmos.base.v1beta1.Coin withdrawn_allocated_fund = 4
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   ;
 }
@@ -169,7 +169,7 @@ message MsgWithdrawContinuousFund {
 // MsgWithdrawContinuousFundResponse defines the response to executing a
 // MsgWithdrawContinuousFund message.
 message MsgWithdrawContinuousFundResponse {
-  cosmos.base.v1beta1.Coin amount = 1
+  repeated cosmos.base.v1beta1.Coin amount = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   ;
 }

@@ -3,6 +3,7 @@ name: PR Review Reminder
 on:
   schedule:
     - cron: '0 9 * * 1-5'  # Every weekday at 9:00 AM UTC
+  pull_request:
 
 permissions:
   pull-requests: read
@@ -12,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: List open pull requests using GitHub Script
-        uses: actions/github-script@v5
+        uses: actions/github-script@v7
         id: pr-list
         with:
           script: |
@@ -50,4 +51,6 @@ jobs:
           SLACKIFY_MARKDOWN: true
           SLACK_TITLE: Daily Pull Request Review Reminder
           SLACK_MESSAGE: |
-            ${{ steps.pr-list.outputs.result }}
+            There are currently ${{ steps.pr-count.outputs.result }} open pull requests requiring review:  
+
+            ${{ steps.pr-list.outputs.result }}  

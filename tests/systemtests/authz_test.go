@@ -1,3 +1,5 @@
+//go:build system_test
+
 package systemtests
 
 import (
@@ -435,7 +437,6 @@ func TestAuthzExecGenericAuthorization(t *testing.T) {
 	// check granter balance equals to granterBal - transferredAmount
 	expGranterBal := granterBal - 10
 	require.Equal(t, expGranterBal, cli.QueryBalance(granterAddr, testDenom))
-	granterBal = expGranterBal
 
 	time.Sleep(time.Second * 5)
 
@@ -842,6 +843,8 @@ func TestAuthzGRPCQueries(t *testing.T) {
 }
 
 func setupChain(t *testing.T) (*CLIWrapper, string, string) {
+	t.Helper()
+
 	sut.ResetChain(t)
 	cli := NewCLIWrapper(t, sut, verbose)
 
@@ -851,7 +854,7 @@ func setupChain(t *testing.T) (*CLIWrapper, string, string) {
 	granterAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, granterAddr)
 	granteeAddr := cli.GetKeyAddr("node1")
-	require.NotEmpty(t, granterAddr)
+	require.NotEmpty(t, granteeAddr)
 
 	sut.StartChain(t)
 
@@ -859,6 +862,8 @@ func setupChain(t *testing.T) (*CLIWrapper, string, string) {
 }
 
 func msgSendExec(t *testing.T, granter, grantee, toAddr, denom string, amount int64) []string {
+	t.Helper()
+
 	bankTx := fmt.Sprintf(`{
 		"@type": "%s",
 		"from_address": "%s",
@@ -883,10 +888,13 @@ func WriteToTempJSONFile(tb testing.TB, s string) *os.File {
 
 	tmpFile, err := os.CreateTemp(tb.TempDir(), "test-*.json")
 	require.NoError(tb, err)
-	defer tmpFile.Close()
 
 	// Write to the temporary file
 	_, err = tmpFile.WriteString(s)
+	require.NoError(tb, err)
+
+	// Close the file after writing
+	err = tmpFile.Close()
 	require.NoError(tb, err)
 
 	return tmpFile

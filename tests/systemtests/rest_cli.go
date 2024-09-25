@@ -3,8 +3,9 @@ package systemtests
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 type GRPCTestCase struct {

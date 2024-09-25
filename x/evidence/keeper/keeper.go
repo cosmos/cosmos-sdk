@@ -39,7 +39,7 @@ type Keeper struct {
 // NewKeeper creates a new Keeper object.
 func NewKeeper(
 	cdc codec.BinaryCodec, env appmodule.Environment, stakingKeeper types.StakingKeeper,
-	slashingKeeper types.SlashingKeeper, ck types.ConsensusKeeper, ac address.Codec, consensusAddressCodec address.Codec,
+	slashingKeeper types.SlashingKeeper, ck types.ConsensusKeeper, ac, consensusAddressCodec address.Codec,
 ) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := &Keeper{

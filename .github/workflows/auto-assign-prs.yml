@@ -2,7 +2,7 @@ name: Auto Assign Reviewers
 
 on:
   pull_request:
-    types: [opened, edited]
+    types: [opened, edited, review_requested]
   push:
 
 jobs:
@@ -18,19 +18,44 @@ jobs:
         with:
           github-token: ${{ secrets.PRBOT_PAT }}
           script: |
-            console.log(context.payload)
+            const { owner, repo } = context.repo;
 
-            const reviewers = context.payload.pull_request.requested_reviewers.map(reviewer => reviewer.login);
-            const pr_number = context.payload.pull_request.number;
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
+            async function getCurrentPR() {
+              if (context.payload.pull_request) {
+                return context.payload.pull_request;
+              }
+              
+              const allPRs = await github.rest.pulls.list({
+                owner,
+                repo,
+                state: 'open',
+              });
+              
+              return allPRs.data.find(pr => pr.head.sha === context.sha);
+            }
 
-            console.log(`Assigning reviewers ${reviewers} to PR ${pr_number}`);
-            console.log(github.rest);
+            const pr = await getCurrentPR();
+            if (!pr) {
+              console.log('No matching PR found.');
+              return;
+            }
 
-            await github.rest.pull_request.addAssignees({
+            console.log(`Processing PR #${pr.number}`);
+
+            const reviewers = pr.requested_reviewers.map(reviewer => reviewer.login);
+
+            if (reviewers.length === 0) {
+              console.log('No reviewers found for this PR.');
+              return;
+            }
+
+            console.log(`Current reviewers: ${reviewers.join(', ')}`);
+
+            await github.rest.issues.addAssignees({
               owner,
               repo,
-              pr_number,
+              issue_number: pr.number,
               assignees: reviewers,
             });
+
+            console.log(`Assigned ${reviewers.join(', ')} as assignees to PR #${pr.number}`);

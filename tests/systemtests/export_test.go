@@ -19,7 +19,10 @@ func TestChainExportImport(t *testing.T) {
 	sut.ResetChain(t)
 	cli := NewCLIWrapper(t, sut, verbose)
 	sut.StartChain(t)
-	sut.AwaitNBlocks(t, 2)
+
+	grantee := cli.GetKeyAddr("node1")
+	rsp3 := cli.RunAndWait("tx", "authz", "grant", grantee, "send", "--spend-limit=1000stake", "--from=node0", "--fees=1stake")
+	RequireTxSuccess(t, rsp3)
 	sut.StopChain()
 
 	outFile := filepath.Join(t.TempDir(), "exported_genesis.json")

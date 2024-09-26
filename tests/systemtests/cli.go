@@ -244,6 +244,8 @@ func (c CLIWrapper) runWithInput(args []string, input io.Reader) (output string,
 		return cmd.CombinedOutput()
 	}()
 	gotOut = filterProtoNoise(gotOut)
+	fmt.Println("assertError", gotErr)
+	fmt.Println("assertError", string(gotOut))
 	ok = c.assertErrorFn(c.t, gotErr, string(gotOut))
 	return strings.TrimSpace(string(gotOut)), ok
 }

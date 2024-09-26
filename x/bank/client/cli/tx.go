@@ -36,21 +36,21 @@ func NewTxCmd() *cobra.Command {
 }
 
 // NewMultiSendTxCmd returns a CLI command handler for creating a MsgMultiSend transaction.
-// For a better UX this command is limited to send funds from one account to two or more accounts.
+// This version allows sending funds from one account to one or more accounts.
 func NewMultiSendTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "multi-send <from_key_or_address> <to_address_1> <to_address_2>... <amount>",
-		Short: "Send funds from one account to two or more accounts.",
-		Long: `Send funds from one account to two or more accounts.
-By default, sends the [amount] to each address of the list.
+		Use:   "multi-send <from_key_or_address> <to_address_1>... <amount>",
+		Short: "Send funds from one account to one or more accounts.",
+		Long: `Send funds from one account to one or more accounts.
+By default, sends the [amount] to each address in the list.
 Using the '--split' flag, the [amount] is split equally between the addresses.
-Note, the '--from' flag is ignored as it is implied from [from_key_or_address] and 
+Note, the '--from' flag is ignored as it is implied from [from_key_or_address] and
 separate addresses with space.
 When using '--dry-run' a key name cannot be used, only a bech32 address.`,
-		Example: fmt.Sprintf("%s tx bank multi-send cosmos1... cosmos1... cosmos1... cosmos1... 10stake", version.AppName),
-		Args:    cobra.MinimumNArgs(4),
+		Example: fmt.Sprintf("%s tx bank multi-send cosmos1... cosmos1... cosmos1... 10stake", version.AppName),
+		Args:    cobra.MinimumNArgs(3), // Changed minimum argument count to 3
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := cmd.Flags().Set(flags.FlagFrom, args[0])
+			err := cmd.Flags().Set(flags.FlagFrom, args[0]) // Set the first argument as the sender
 			if err != nil {
 				return err
 			}
@@ -59,7 +59,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.`,
 				return err
 			}
 
-			coins, err := sdk.ParseCoinsNormalized(args[len(args)-1])
+			coins, err := sdk.ParseCoinsNormalized(args[len(args)-1]) // The last argument is the amount
 			if err != nil {
 				return err
 			}
@@ -73,15 +73,15 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.`,
 				return err
 			}
 
-			totalAddrs := sdkmath.NewInt(int64(len(args) - 2))
+			totalAddrs := sdkmath.NewInt(int64(len(args) - 2)) // Calculate the number of recipients
 			// coins to be received by the addresses
 			sendCoins := coins
 			if split {
-				sendCoins = coins.QuoInt(totalAddrs)
+				sendCoins = coins.QuoInt(totalAddrs) // Logic to split the amount among recipients
 			}
 
 			var output []types.Output
-			for _, arg := range args[1 : len(args)-1] {
+			for _, arg := range args[1 : len(args)-1] { // Process each recipient
 				_, err = clientCtx.AddressCodec.StringToBytes(arg)
 				if err != nil {
 					return err
@@ -90,11 +90,9 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.`,
 				output = append(output, types.NewOutput(arg, sendCoins))
 			}
 
-			// amount to be send from the from address
+			// Calculate the total amount to be sent by the sender
 			var amount sdk.Coins
 			if split {
-				// user input: 1000stake to send to 3 addresses
-				// actual: 333stake to each address (=> 999stake actually sent)
 				amount = sendCoins.MulInt(totalAddrs)
 			} else {
 				amount = coins.MulInt(totalAddrs)

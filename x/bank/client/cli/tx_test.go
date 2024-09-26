@@ -51,7 +51,127 @@ func (s *CLITestSuite) SetupSuite() {
 		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
 }
 
-func (s *CLITestSuite) TestMultiSendTxCmd() {
+func (s *CLITestSuite) TestMultiSendTxCmd_SingleRecipient() {
+	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 2) // Create only 2 accounts: one sender and one recipient
+	accountStr := make([]string, len(accounts))
+	for i, acc := range accounts {
+		addrStr, err := s.baseCtx.AddressCodec.BytesToString(acc.Address)
+		s.Require().NoError(err)
+		accountStr[i] = addrStr
+	}
+
+	cmd := cli.NewMultiSendTxCmd()
+	cmd.SetOutput(io.Discard)
+
+	extraArgs := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("photon", sdkmath.NewInt(10))).String()),
+		fmt.Sprintf("--%s=test-chain", flags.FlagChainID),
+	}
+
+	testCases := []struct {
+		name         string
+		ctxGen       func() client.Context
+		from         string
+		to           []string
+		amount       sdk.Coins
+		extraArgs    []string
+		expectErrMsg string
+	}{
+		{
+			"valid transaction with single recipient",
+			func() client.Context {
+				return s.baseCtx
+			},
+			accountStr[0], // Sending account
+			[]string{
+				accountStr[1], // Only one recipient account
+			},
+			sdk.NewCoins(
+				sdk.NewCoin("stake", sdkmath.NewInt(10)),
+				sdk.NewCoin("photon", sdkmath.NewInt(40)),
+			),
+			extraArgs,
+			"",
+		},
+		{
+			"invalid from Address",
+			func() client.Context {
+				return s.baseCtx
+			},
+			"foo",
+			[]string{
+				accountStr[1],
+			},
+			sdk.NewCoins(
+				sdk.NewCoin("stake", sdkmath.NewInt(10)),
+				sdk.NewCoin("photon", sdkmath.NewInt(40)),
+			),
+			extraArgs,
+			"key not found",
+		},
+		{
+			"invalid recipient",
+			func() client.Context {
+				return s.baseCtx
+			},
+			accountStr[0],
+			[]string{
+				"bar",
+			},
+			sdk.NewCoins(
+				sdk.NewCoin("stake", sdkmath.NewInt(10)),
+				sdk.NewCoin("photon", sdkmath.NewInt(40)),
+			),
+			extraArgs,
+			"invalid bech32 string",
+		},
+		{
+			"invalid amount",
+			func() client.Context {
+				return s.baseCtx
+			},
+			accountStr[0],
+			[]string{
+				accountStr[1],
+			},
+			nil,
+			extraArgs,
+			"must send positive amount",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			ctx := svrcmd.CreateExecuteContext(context.Background())
+
+			var args []string
+			args = append(args, tc.from)            // Sending account
+			args = append(args, tc.to...)           // Recipient account(s)
+			args = append(args, tc.amount.String()) // Amount
+			args = append(args, tc.extraArgs...)    // Additional flags
+
+			cmd.SetContext(ctx)
+			cmd.SetArgs(args)
+
+			s.Require().NoError(client.SetCmdClientContextHandler(tc.ctxGen(), cmd))
+
+			out, err := clitestutil.ExecTestCLICmd(tc.ctxGen(), cmd, args)
+			if tc.expectErrMsg != "" {
+				s.Require().Error(err)
+				s.Require().Contains(out.String(), tc.expectErrMsg)
+			} else {
+				s.Require().NoError(err)
+				msg := &sdk.TxResponse{}
+				s.Require().NoError(tc.ctxGen().Codec.UnmarshalJSON(out.Bytes(), msg), out.String())
+			}
+		})
+	}
+}
+
+func (s *CLITestSuite) TestMultiSendTxCmd_MultiRecipient() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 3)
 	accountStr := make([]string, len(accounts))
 	for i, acc := range accounts {

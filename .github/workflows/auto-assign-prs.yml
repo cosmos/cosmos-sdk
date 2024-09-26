@@ -18,7 +18,7 @@ jobs:
         with:
           github-token: ${{ secrets.PRBOT_PAT }}
           script: |
-            console.log(context.payload.pull_request)
+            console.log(context.payload)
 
             const reviewers = context.payload.pull_request.requested_reviewers.map(reviewer => reviewer.login);
             const pr_number = context.payload.pull_request.number;

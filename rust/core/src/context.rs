@@ -3,7 +3,7 @@ use crate::handler::{AccountAPI, AccountClientFactory, AccountHandler, ModuleAPI
 use crate::message::Message;
 use crate::response::Response;
 use ixc_message_api::Address;
-use ixc_message_api::handler::HostCallbacks;
+use ixc_message_api::handler::HostBackend;
 use ixc_message_api::header::MessageHeader;
 use ixc_message_api::packet::MessagePacket;
 use ixc_schema::codec::Codec;
@@ -13,7 +13,7 @@ use ixc_schema::mem::MemoryManager;
 /// the router callbacks necessary for making nested message calls.
 pub struct Context<'a> {
     message_packet: &'a mut MessagePacket,
-    host_callbacks: &'a HostCallbacks,
+    host_callbacks: &'a HostBackend,
     memory_manager: &'a MemoryManager<'a, 'a>,
 }
 

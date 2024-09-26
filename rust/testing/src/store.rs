@@ -1,7 +1,10 @@
+use std::alloc::Layout;
 use imbl::{HashMap, OrdMap, Vector};
+use thiserror::Error;
 use ixc_message_api::AccountID;
 use ixc_message_api::code::Code;
 use ixc_message_api::packet::MessagePacket;
+use ixc_message_api::handler::{AllocError, HostBackend};
 
 pub struct VersionedMultiStore {
     versions: Vector<MultiStore>,
@@ -71,37 +74,48 @@ impl Tx {
         }
     }
 
-    fn kv_get(&self, packet: &mut MessagePacket) -> Code {
-        self.track_access(packet.in1().get(), Access::Read);
+    fn kv_get(&self, packet: &mut MessagePacket, backend: &dyn HostBackend) -> Result<Code, Error> {
+        self.track_access(packet.in1().get(), Access::Read)?;
         match self.current_store.kv_store.get(&packet.in1().get()) {
             None => unsafe {
                 // TODO what should we do when not found?
                 packet.out1().set_slice(&[]);
-                Code::Ok
             }
             Some(value) => unsafe {
-                // TODO we should do some allocation or copying here
-                packet.out1().set_slice(value.as_slice());
-                Code::Ok
+                let out = backend.alloc(Layout::from_size_align_unchecked(value.len(), 16))?;
+                let out_slice = core::slice::from_raw_parts_mut(out, value.len());
+                out_slice.copy_from_slice(value.as_slice());
+                packet.out1().set_slice(out_slice);
             }
         }
+        Ok(Code::Ok)
     }
 
-    fn kv_set(&mut self, packet: &mut MessagePacket) -> Code {
-        self.track_access(packet.in1().get(), Access::Write);
+    fn kv_set(&mut self, packet: &mut MessagePacket) -> Result<Code, Error> {
+        self.track_access(packet.in1().get(), Access::Write)?;
         self.current_frame.changes.push(Update {
             account: self.current_frame.account,
             key: packet.in1().get().to_vec(),
             operation: Operation::Set(packet.in2().get().to_vec()),
         });
         self.current_store.kv_store.insert(packet.in1().get().to_vec(), packet.in2().get().to_vec());
-        Code::Ok
+        Ok(Code::Ok)
     }
 
-    fn track_access(&self, key: &[u8], access: Access) {
+    fn track_access(&self, key: &[u8], access: Access) -> Result<(), AccessError> {
         // TODO track reads and writes for parallel execution
+        Ok(())
     }
 }
+
+#[derive(Debug, Error)]
+enum Error {
+    AllocError(#[from] AllocError),
+    AccessError(#[from] AccessError),
+}
+
+#[derive(Debug, Error)]
+struct AccessError;
 
 #[derive(Clone)]
 pub struct Frame {

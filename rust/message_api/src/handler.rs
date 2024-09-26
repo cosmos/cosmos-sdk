@@ -1,16 +1,19 @@
+use core::alloc::Layout;
 use crate::code::Code;
 use crate::packet::MessagePacket;
 
 pub trait Handler {
-    fn handle(&self, message_packet: &mut MessagePacket, callbacks: &HostCallbacks) -> HandlerCode;
+    fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend) -> HandlerCode;
 }
 
 #[non_exhaustive]
-pub struct HostCallbacks {
-    pub invoke: InvokeFn,
+pub trait HostBackend {
+    fn invoke(&self, message_packet: &mut MessagePacket) -> Code;
+    unsafe fn alloc(&self, layout: Layout) -> Result<*mut u8, AllocError>;
 }
 
-pub type InvokeFn = fn(&mut MessagePacket) -> Code;
+#[derive(Debug)]
+pub struct AllocError;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum HandlerCode {

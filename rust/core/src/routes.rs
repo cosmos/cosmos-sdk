@@ -1,5 +1,5 @@
 use ixc_message_api::code::Code;
-use ixc_message_api::handler::{HandlerCode, HostCallbacks};
+use ixc_message_api::handler::{HandlerCode, HostBackend};
 use ixc_message_api::packet::MessagePacket;
 
 pub unsafe trait Router where Self: 'static {

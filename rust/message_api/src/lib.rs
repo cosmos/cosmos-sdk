@@ -6,7 +6,7 @@ pub mod header;
 pub mod data_pointer;
 pub mod packet;
 pub mod code;
-mod handler;
+pub mod handler;
 mod account_id;
 
 pub use account_id::AccountID;

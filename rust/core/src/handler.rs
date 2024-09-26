@@ -1,5 +1,5 @@
 //! Handler traits for account and module handlers.
-use ixc_message_api::Address;
+use ixc_message_api::AccountID;
 use ixc_schema::StructCodec;
 use crate::resource::{InitializationError, Initializer, Resource};
 

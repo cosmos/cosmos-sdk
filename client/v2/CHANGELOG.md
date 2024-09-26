@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* [#21936](https://github.com/cosmos/cosmos-sdk/pull/21936) Print possible enum values in error message after an invalid input was provided.
+
 ### Bug Fixes
 
 * [#21809](https://github.com/cosmos/cosmos-sdk/pull/21809) Correctly handle enhanced sub commands.

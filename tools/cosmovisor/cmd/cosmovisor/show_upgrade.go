@@ -12,7 +12,8 @@ func NewShowUpgradeInfoCmd() *cobra.Command {
 	showUpgradeInfo := &cobra.Command{
 		Use:          "show-upgrade-info",
 		Short:        "Show upgrade-info.json into stdout.",
-		SilenceUsage: true,
+		SilenceUsage: false,
+		Args:         cobra.cobra.NoArgs,
 		RunE:         showUpgradeInfoCmd,
 	}
 

@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
 	_ "embed"
 
 	"github.com/spf13/viper"
@@ -119,6 +120,7 @@ func NewSimApp[T transaction.Tx](
 				codec.ProvideAddressCodec,
 				codec.ProvideProtoCodec,
 				codec.ProvideLegacyAmino,
+				multisigdepinject.ProvideAccount,
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,

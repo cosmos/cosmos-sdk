@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -45,6 +46,7 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 				codec.ProvideProtoCodec,
 				codec.ProvideLegacyAmino,
 				ProvideClientContext,
+				multisigdepinject.ProvideAccount,
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,

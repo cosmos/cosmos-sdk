@@ -111,6 +111,7 @@ func (s STF[T]) DeliverBlock(
 
 	// reset events
 	exCtx.events = make([]event.Event, 0)
+	exCtx.txIndex = 0
 	// pre block is called separate from begin block in order to prepopulate state
 	preBlockEvents, err := s.preBlock(exCtx, block.Txs)
 	if err != nil {
@@ -123,7 +124,7 @@ func (s STF[T]) DeliverBlock(
 
 	// reset events
 	exCtx.events = make([]event.Event, 0)
-
+	exCtx.txIndex = 0
 	// begin block
 	var beginBlockEvents []event.Event
 	if !block.IsGenesis {
@@ -141,6 +142,7 @@ func (s STF[T]) DeliverBlock(
 
 	// execute txs
 	txResults := make([]server.TxResult, len(block.Txs))
+	exCtx.txIndex = 0
 	// TODO: skip first tx if vote extensions are enabled (marko)
 	for i, txBytes := range block.Txs {
 		// check if we need to return early or continue delivering txs
@@ -195,7 +197,7 @@ func (s STF[T]) deliverTx(
 			Error: recoveryError,
 		}
 	}
-
+	// TODO: how to handle msgIndex and eventIndex ???
 	validateGas, validationEvents, err := s.validateTx(ctx, state, gasLimit, tx, execMode)
 	if err != nil {
 		return server.TxResult{
@@ -204,6 +206,7 @@ func (s STF[T]) deliverTx(
 	}
 
 	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
+	// TODO: should handle execCtx.txIndex with events
 	return server.TxResult{
 		Events:    append(validationEvents, execEvents...),
 		GasUsed:   execGas + validateGas,
@@ -278,6 +281,7 @@ func (s STF[T]) execTx(
 	// whole execution step is rolled back.
 	postTxCtx := s.makeContext(ctx, RuntimeIdentity, execState, execMode) // NO gas limit.
 	postTxCtx.setHeaderInfo(hi)
+	// TODO: how to handle msgIndex and eventIndex ???
 	postTxErr := s.postTxExec(postTxCtx, tx, true)
 	if postTxErr != nil {
 		// if post tx fails, then we do not apply any state change, we return the post tx error,
@@ -318,7 +322,7 @@ func (s STF[T]) runTxMsgs(
 	execCtx.setGasLimit(gasLimit)
 	for i, msg := range msgs {
 		execCtx.sender = txSenders[i]
-		resp, err := s.msgRouter.Invoke(execCtx, msg)
+		resp, err := s.msgRouter.Invoke(execCtx, msg) // TODO: should handle execCtx.msgIndex with events
 		if err != nil {
 			return nil, 0, nil, fmt.Errorf("message execution at index %d failed: %w", i, err)
 		}
@@ -492,6 +496,10 @@ type executionContext struct {
 
 	msgRouter   router.Service
 	queryRouter router.Service
+
+	txIndex    int32
+	msgIndex   int32
+	eventIndex int32 // TODO: how to pass it to the handlers?
 }
 
 // setHeaderInfo sets the header info in the state to be used by queries in the future.

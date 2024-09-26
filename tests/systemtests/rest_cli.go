@@ -1,6 +1,7 @@
 package systemtests
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -28,23 +29,30 @@ func RunGRPCQueries(t *testing.T, testCases []GRPCTestCase) {
 	}
 }
 
-type GRPCTestCaseWithHeaders struct {
-	name    string
-	url     string
-	headers map[string]string
-	expOut  string
-}
-
-// RunGRPCQueriesWithHeaders runs given grpc testcases by making requests with headers and
-// checking response with expected output
-func RunGRPCQueriesWithHeaders(t *testing.T, testCases []GRPCTestCaseWithHeaders) {
+// TestGRPCQueryIgnoreNumbers runs given grpc testcases by making requests and
+// checking response with expected output ignoring number values
+// This method is using when number values in response are non-deterministic
+func TestGRPCQueryIgnoreNumbers(t *testing.T, testCases []GRPCTestCase) {
 	t.Helper()
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			resp, err := testutil.GetRequest(tc.url)
 			require.NoError(t, err)
-			require.JSONEq(t, tc.expOut, string(resp))
+
+			// regular expression pattern to match any numeric value in the JSON
+			numberRegexPattern := `"\d+(\.\d+)?"`
+
+			// compile the regex
+			r, err := regexp.Compile(numberRegexPattern)
+			require.NoError(t, err)
+
+			// replace all numeric values in the above JSONs with `NUMBER` text
+			expectedJSON := r.ReplaceAllString(tc.expOut, `"NUMBER"`)
+			actualJSON := r.ReplaceAllString(string(resp), `"NUMBER"`)
+
+			// compare two jsons
+			require.JSONEq(t, expectedJSON, actualJSON)
 		})
 	}
 }

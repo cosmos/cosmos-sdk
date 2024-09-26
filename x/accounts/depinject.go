@@ -2,6 +2,7 @@ package accounts
 
 import (
 	"context"
+	"fmt"
 
 	modulev1 "cosmossdk.io/api/cosmos/accounts/module/v1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -12,7 +13,6 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	baseaccount "cosmossdk.io/x/accounts/defaults/base"
 	"cosmossdk.io/x/accounts/defaults/lockup"
-	"cosmossdk.io/x/accounts/defaults/multisig"
 	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -39,6 +39,7 @@ type ModuleInputs struct {
 	AddressCodec address.Codec
 	Registry     cdctypes.InterfaceRegistry
 
+	Accounts []accountstd.DepinjectAccount // how can the account impls provide this??
 	// TODO: Add a way to inject custom accounts.
 	// Currently only the base account is supported.
 }
@@ -63,6 +64,9 @@ func (s directHandler) GetSignBytes(_ context.Context, _ signing.SignerData, _ s
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
+
+	fmt.Println(in.Accounts)
+
 	handler := directHandler{}
 	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler), baseaccount.WithSecp256K1PubKey())
 	accountskeeper, err := NewKeeper(
@@ -71,7 +75,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		accountstd.AddAccount(lockup.PERIODIC_LOCKING_ACCOUNT, lockup.NewPeriodicLockingAccount),
 		accountstd.AddAccount(lockup.DELAYED_LOCKING_ACCOUNT, lockup.NewDelayedLockingAccount),
 		accountstd.AddAccount(lockup.PERMANENT_LOCKING_ACCOUNT, lockup.NewPermanentLockingAccount),
-		accountstd.AddAccount(multisig.MULTISIG_ACCOUNT, multisig.NewAccount),
 	)
 	if err != nil {
 		panic(err)

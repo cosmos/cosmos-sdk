@@ -175,6 +175,7 @@ replace (
 	cosmossdk.io/core/testing => ../../../../core/testing
 	cosmossdk.io/store => ../../../../store
 	cosmossdk.io/x/accounts => ../../.
+	cosmossdk.io/x/accounts/defaults/base => ../../defaults/base
 	cosmossdk.io/x/bank => ../../../bank
 	cosmossdk.io/x/consensus => ../../../consensus
 	cosmossdk.io/x/distribution => ../../../distribution

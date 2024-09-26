@@ -63,7 +63,7 @@ func (e *enumValue) Set(s string) error {
 			validValues = append(validValues, k)
 		}
 
-		return fmt.Errorf("%s is not a valid value for enum %s. Valid values are: %s.", s, e.enum.FullName(), strings.Join(validValues, ", "))
+		return fmt.Errorf("%s is not a valid value for enum %s. Valid values are: %s", s, e.enum.FullName(), strings.Join(validValues, ", "))
 	}
 	e.value = valDesc.Number()
 	return nil

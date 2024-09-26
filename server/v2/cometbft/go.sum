@@ -8,8 +8,8 @@ cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf h1:CttA/mEIxGm4E7vwrjUpju7
 cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf/go.mod h1:YMfx2ATpgITsoydD3hIBa8IkDHtyXp/14rmG0d3sEew=
 cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab h1:E/IWad76v1Nc4Atswaccpt7twJ0VwHkbY94/PhmZfTo=
 cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab/go.mod h1:Or+5eVAo1aiS1DnPK90eQykGc59LGBWtqwBoJcxXTmw=
-cosmossdk.io/core v1.0.0-alpha.3 h1:pnxaYAas7llXgVz1lM7X6De74nWrhNKnB3yMKe4OUUA=
-cosmossdk.io/core v1.0.0-alpha.3/go.mod h1:3u9cWq1FAVtiiCrDPpo4LhR+9V6k/ycSG4/Y/tREWCY=
+cosmossdk.io/core v1.0.0-alpha.3.0.20240926131628-f927e9b55173 h1:c48OejHzonsfeMGg8RwJ+ySm4YenR96RcbYmtdMMy3Q=
+cosmossdk.io/core v1.0.0-alpha.3.0.20240926131628-f927e9b55173/go.mod h1:3u9cWq1FAVtiiCrDPpo4LhR+9V6k/ycSG4/Y/tREWCY=
 cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b h1:uEMbr7Hdpz0fU+GXU6mSN2vgoQnr66WYUpRuiba2aEk=
 cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b/go.mod h1:FllCSj/ZYskfb982HKqBSISO8DkBY4Euqq768HSFz68=
 cosmossdk.io/depinject v1.0.0 h1:dQaTu6+O6askNXO06+jyeUAnF2/ssKwrrszP9t5q050=
@@ -28,8 +28,8 @@ cosmossdk.io/server/v2 v2.0.0-20240920095614-aa90bb43d8f8 h1:f9ngoXKselr0qkU0YWC
 cosmossdk.io/server/v2 v2.0.0-20240920095614-aa90bb43d8f8/go.mod h1:OOnpz5j7kFoqr9gSJ4vdM4tq6FXXuJJm7KlikmyTYKk=
 cosmossdk.io/server/v2/appmanager v0.0.0-20240920095614-aa90bb43d8f8 h1:OyZVYhHSPxSCKJvxIh5QWFyPKUj0bV6PPIiuxnYGVcU=
 cosmossdk.io/server/v2/appmanager v0.0.0-20240920095614-aa90bb43d8f8/go.mod h1:/xDfniqVtn5nraiHkNJ4e6rYU0e83YAGsSjwmUA6H8k=
-cosmossdk.io/server/v2/stf v0.0.0-20240920095614-aa90bb43d8f8 h1:nPZQrhpMT26r8QZ7pLuJeWTFIeOFpq24y26P0ED4iW8=
-cosmossdk.io/server/v2/stf v0.0.0-20240920095614-aa90bb43d8f8/go.mod h1:e/pdNHJIOxL1wFKGkERDxLY0chj0+ZIetIPTkRgjX2o=
+cosmossdk.io/server/v2/stf v0.0.0-20240926131628-f927e9b55173 h1:JKbaE2m1yAZc8fsEoqKHfJJv6dlWOSTrHE3is654GfY=
+cosmossdk.io/server/v2/stf v0.0.0-20240926131628-f927e9b55173/go.mod h1:e/pdNHJIOxL1wFKGkERDxLY0chj0+ZIetIPTkRgjX2o=
 cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214 h1:UUW0+2UgbDwQ452o2aw4DrVSWmowcad7DB7Vln+N94I=
 cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214/go.mod h1:ct8HATr+s48YYTRXEyP3HF33v9qEVWHMxwOL8P/v4iQ=
 cosmossdk.io/store/v2 v2.0.0-20240916221850-7856d226038c h1:x0NX01A+QWckckb1hi9p8mYW4OXTYEzsohQK2qBtIHg=

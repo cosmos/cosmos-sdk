@@ -43,6 +43,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#18626](https://github.com/cosmos/cosmos-sdk/pull/18626) Support for off-chain signing and verification of a file.
 * [#18461](https://github.com/cosmos/cosmos-sdk/pull/18461) Support governance proposals.
 
+<<<<<<< HEAD
+=======
+### Improvements
+
+* [#21936](https://github.com/cosmos/cosmos-sdk/pull/21936) Print possible enum values in error message after an invalid input was provided.
+
+### API Breaking Changes
+
+* [#17709](https://github.com/cosmos/cosmos-sdk/pull/17709) Address codecs have been removed from `autocli.AppOptions` and `flag.Builder`. Instead client/v2 uses the address codecs present in the context (introduced in [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503)).
+
+## [v2.0.0-beta.5] - 2024-09-18
+
+>>>>>>> dc2cea5bc (feat(client/v2): improve error message on enums (#21936))
 ### Improvements
 
 * [#21712](https://github.com/cosmos/cosmos-sdk/pull/21712) Marshal `type` field as proto message url in queries instead of amino name.

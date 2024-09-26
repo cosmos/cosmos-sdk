@@ -107,7 +107,7 @@ func SimulateFromSeed(
 	nextValidators := validators
 	if len(nextValidators) == 0 {
 		tb.Skip("skipping: empty validator set in genesis")
-		return params, accs, nil
+		return true, params, nil
 	}
 
 	var (
@@ -249,7 +249,7 @@ func SimulateFromSeed(
 		nextValidators = updateValidators(tb, r, params, validators, res.ValidatorUpdates, eventStats.Tally)
 		if len(nextValidators) == 0 {
 			tb.Skip("skipping: empty validator set")
-			return exportedParams, accs, err
+			return true, params, nil
 		}
 
 		// update the exported params

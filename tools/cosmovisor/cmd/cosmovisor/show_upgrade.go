@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/tools/cosmovisor"
 	"github.com/spf13/cobra"
 )
 
@@ -19,6 +20,16 @@ func NewShowUpgradeInfoCmd() *cobra.Command {
 }
 
 func showUpgradeInfoCmd(cmd *cobra.Command) error {
+	configPath, err := cmd.Flags().GetString(cosmovisor.FlagCosmovisorConfig)
+	if err != nil {
+		return fmt.Errorf("failed to get config flag: %w", err)
+	}
+
+	cfg, err := cosmovisor.GetConfigFromFile(configPath)
+	if err != nil {
+		return err
+	}
+
 	data, err := os.ReadFile(cfg.UpgradeInfoFilePath())
 	if err != nil {
 		if os.IsNotExist(err) {

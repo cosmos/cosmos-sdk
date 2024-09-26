@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 )
@@ -40,8 +41,7 @@ func TestSubmitProposal(t *testing.T) {
 }`
 	invalidPropFile := testutil.WriteToNewTempFile(t, invalidProp)
 	os.WriteFile("test", []byte(invalidProp), 0o600)
-	// defer invalidPropFile.Close()
-
+	defer invalidPropFile.Close()
 
 	// Create a valid new proposal JSON.
 	propMetadata := []byte{42}
@@ -64,12 +64,13 @@ func TestSubmitProposal(t *testing.T) {
 	"deposit": "%s"
 }`, govAddress, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("stake", math.NewInt(100000)))
 	validPropFile := testutil.WriteToNewTempFile(t, validProp)
-	// defer validPropFile.Close()
+	defer validPropFile.Close()
 
 	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
+		name      string
+		args      []string
+		expectErr bool
+		errMsg    string
 	}{
 		{
 			"invalid proposal",
@@ -82,6 +83,7 @@ func TestSubmitProposal(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 			},
 			true,
+			"invalid character in coin string",
 		},
 		{
 			"valid proposal",
@@ -94,17 +96,19 @@ func TestSubmitProposal(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 			},
 			false,
+			"",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.expectErr {
-				rsp := cli.Run(tc.args...)
-				fmt.Println("respppp", rsp)
-				txResult, found := cli.AwaitTxCommitted(rsp)
-				fmt.Println("resulttttt", txResult)
-				require.False(t, found)
+				assertOutput := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
+					require.Contains(t, gotOutputs[0], tc.errMsg)
+					return false
+				}
+
+				cli.WithRunErrorMatcher(assertOutput).Run(tc.args...)
 			} else {
 				rsp := cli.Run(tc.args...)
 				txResult, found := cli.AwaitTxCommitted(rsp)
@@ -140,20 +144,20 @@ func TestSubmitLegacyProposal(t *testing.T) {
 	invalidPropFile := testutil.WriteToNewTempFile(t, invalidProp)
 	defer invalidPropFile.Close()
 
-
 	validProp := fmt.Sprintf(`{
 		"title": "Text Proposal",
 		  "description": "Hello, World!",
 		  "type": "Text",
 		"deposit": "%s"
 	  }`, sdk.NewCoin("stake", math.NewInt(154310)))
-	  validPropFile := testutil.WriteToNewTempFile(t, validProp)
-	  defer validPropFile.Close()
+	validPropFile := testutil.WriteToNewTempFile(t, validProp)
+	defer validPropFile.Close()
 
 	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
+		name      string
+		args      []string
+		expectErr bool
+		errMsg    string
 	}{
 		{
 			"invalid proposal (file)",
@@ -165,19 +169,21 @@ func TestSubmitLegacyProposal(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 			},
 			true,
+			"proposal title is required",
 		},
 		{
 			"invalid proposal",
 			[]string{
 				"tx", "gov", "submit-legacy-proposal",
-				fmt.Sprintf("--%s='Where is the title!?'", "description"),        //nolint:staticcheck // we are intentionally using a deprecated flag here.
-				fmt.Sprintf("--%s=%s", "type", "Text"), //nolint:staticcheck // we are intentionally using a deprecated flag here.
+				fmt.Sprintf("--%s='Where is the title!?'", "description"), //nolint:staticcheck // we are intentionally using a deprecated flag here.
+				fmt.Sprintf("--%s=%s", "type", "Text"),                    //nolint:staticcheck // we are intentionally using a deprecated flag here.
 				fmt.Sprintf("--%s=%s", "deposit", sdk.NewCoin("stake", math.NewInt(10000)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 			},
-			false,
+			true,
+			"proposal title is required",
 		},
 		{
 			"valid transaction (file)",
@@ -190,14 +196,15 @@ func TestSubmitLegacyProposal(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 			},
 			false,
+			"",
 		},
 		{
 			"valid transaction",
 			[]string{
 				"tx", "gov", "submit-legacy-proposal",
 				fmt.Sprintf("--%s='Text Proposal'", "title"),
-				fmt.Sprintf("--%s='Where is the title!?'", "description"),        //nolint:staticcheck // we are intentionally using a deprecated flag here.
-				fmt.Sprintf("--%s=%s", "type", "Text"), //nolint:staticcheck // we are intentionally using a deprecated flag here.
+				fmt.Sprintf("--%s='Where is the title!?'", "description"), //nolint:staticcheck // we are intentionally using a deprecated flag here.
+				fmt.Sprintf("--%s=%s", "type", "Text"),                    //nolint:staticcheck // we are intentionally using a deprecated flag here.
 				fmt.Sprintf("--%s=%s", "deposit", sdk.NewCoin("stake", math.NewInt(100000)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -205,20 +212,23 @@ func TestSubmitLegacyProposal(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
 			},
 			false,
+			"",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			out, ok := cli.run(tc.args)			
 			if tc.expectErr {
-				require.Equal(t, ok, false)
-			} else {
-				require.Equal(t, ok, true)
-				resp, committed := cli.AwaitTxCommitted(out, DefaultWaitTime)
-				require.Equal(t, cli.expTXCommitted, committed, "expected tx committed: %v", cli.expTXCommitted)
+				assertOutput := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
+					fmt.Println("gotOut", gotOutputs)
+					require.Contains(t, gotOutputs[0], tc.errMsg)
+					return false
+				}
 
-				txResult, found := cli.AwaitTxCommitted(resp)
+				cli.WithRunErrorMatcher(assertOutput).Run(tc.args...)
+			} else {
+				rsp := cli.Run(tc.args...)
+				txResult, found := cli.AwaitTxCommitted(rsp)
 				require.True(t, found)
 				RequireTxSuccess(t, txResult)
 			}

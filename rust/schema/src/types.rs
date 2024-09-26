@@ -131,10 +131,10 @@ impl Type for StrT {
 }
 
 /// The `AddressT` type represents an address.
-pub struct AddressT;
-impl Private for AddressT {}
-impl Type for AddressT {
-    const KIND: Kind = Kind::Address;
+pub struct AccountIDT;
+impl Private for AccountIDT {}
+impl Type for AccountIDT {
+    const KIND: Kind = Kind::AccountID;
     type ReferencedType = ();
 }
 

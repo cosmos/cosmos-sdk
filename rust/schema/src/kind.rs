@@ -22,7 +22,7 @@ pub enum Kind {
     Duration,
     Float32,
     Float64,
-    Address,
+    AccountID,
     Enum,
     JSON,
     Struct,

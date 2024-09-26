@@ -1,5 +1,5 @@
 use crate::binary::encoder::encode_value;
-use crate::buffer::ReverseWriterFactory;
+use crate::buffer::WriterFactory;
 use crate::codec::Codec;
 use crate::decoder::DecodeError;
 use crate::encoder::EncodeError;
@@ -12,7 +12,7 @@ mod decoder;
 pub struct NativeBinaryCodec;
 
 impl Codec for NativeBinaryCodec {
-    fn encode_value<'a, V: Value<'a>, F: ReverseWriterFactory>(value: &V, writer_factory: &F) -> Result<F::Writer::Output, EncodeError> {
+    fn encode_value<'a, V: Value<'a>, F: WriterFactory>(value: &V, writer_factory: &F) -> Result<F::Output, EncodeError> {
         encode_value(value, writer_factory)
     }
 

@@ -2,12 +2,12 @@ use bump_scope::BumpScope;
 use crate::encoder::{EncodeError};
 use crate::r#struct::{StructDecodeVisitor, StructEncodeVisitor};
 use crate::value::Value;
-use crate::buffer::{ReverseWriter, ReverseWriterFactory, Writer};
+use crate::buffer::{ReverseWriter, WriterFactory};
 
-pub fn encode_value<'a, V: Value<'a>, F: ReverseWriterFactory>(value: &V, writer_factory: &F) -> Result<<<F as ReverseWriterFactory>::Writer as ReverseWriter>::Output, EncodeError> {
+pub fn encode_value<'a, V: Value<'a>, F: WriterFactory>(value: &V, writer_factory: &F) -> Result<F::Output, EncodeError> {
     let mut sizer = EncodeSizer { size: 0 };
     <V as Value<'a>>::encode(value, &mut sizer)?;
-    let mut writer = writer_factory.new(sizer.size);
+    let mut writer = writer_factory.new_reverse(sizer.size);
     let mut encoder = Encoder { writer: &mut writer };
     <V as Value<'a>>::encode(value, &mut encoder)?;
     writer.finish()

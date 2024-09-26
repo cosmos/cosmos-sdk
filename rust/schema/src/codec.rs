@@ -1,12 +1,12 @@
 use bump_scope::{Bump, BumpString, BumpVec};
-use crate::buffer::{ReverseWriter, ReverseWriterFactory, Writer};
+use crate::buffer::{ReverseWriter, WriterFactory};
 use crate::decoder::DecodeError;
 use crate::encoder::EncodeError;
 use crate::mem::MemoryManager;
 use crate::value::Value;
 
 pub trait Codec {
-    fn encode_value<'a, V: Value<'a>, F: ReverseWriterFactory>(value: &V, writer_factory: &F) -> Result<F::Writer::Output, EncodeError>;
+    fn encode_value<'a, V: Value<'a>, F: WriterFactory>(value: &V, writer_factory: &F) -> Result<F::Output, EncodeError>;
     fn decode_value<'b, 'a: 'b, V: Value<'a>>(input: &'a [u8], memory_manager: &'b MemoryManager<'a, 'a>) -> Result<V, DecodeError>;
 }
 
@@ -30,6 +30,8 @@ mod tests {
             std::println!("do drop {}", self.s);
         }
     }
+
+    trait DeferDrop {}
 
     fn test1<'a: 'b, 'b>(scope: &'b BumpScope<'a>) -> (NonNull<dyn DeferDrop + 'b>, &'a [HasString]) {
         struct Dropper<'a> {
@@ -90,49 +92,5 @@ mod tests {
     #[test]
     fn test_test2() {
         let _ = test2();
-    }
-}
-
-trait Helper<'a> {
-    type H<'b>
-    where
-        'a: 'b;
-}
-
-impl<'a> Helper<'a> for &'a str {
-    type H<'b>
-    where
-        'a: 'b,
-    = BumpString<'b, 'a>;
-}
-
-
-impl<'a, T> Helper<'a> for &'a [T] {
-    type H<'b>
-    where
-        'a: 'b,
-    = BumpVec<'b, 'a, T>;
-}
-
-trait Test1 {
-    fn test1() -> impl DeferDrop;
-}
-
-struct Coin<'a> {
-    denom: &'a str,
-    amount: u128,
-}
-
-impl<'a> Test1 for Coin<'a> {
-    fn test1() -> impl DeferDrop {
-        // struct Dropper<'a, 'b> {
-        //     denom: <&'a str as Helper<'a>>::H<'b>,
-        //     amount: (),
-        // }
-        // Dropper {
-        //     denom: todo!(),
-        //     amount: (),
-        // }
-        todo!()
     }
 }

@@ -194,9 +194,9 @@ where
 }
 
 #[cfg(feature = "address")]
-impl<'a> Value<'a> for ixc_message_api::Address {
-    type Type = AddressT;
-    type DecodeState = ixc_message_api::Address;
+impl<'a> Value<'a> for ixc_message_api::AccountID {
+    type Type = AccountIDT;
+    type DecodeState = ixc_message_api::AccountID;
 }
 
 #[cfg(feature = "arrayvec")]
@@ -246,8 +246,8 @@ impl AbstractValue for simple_time::Time {
 impl AbstractValue for simple_time::Duration {
     type Value<'a> = simple_time::Duration;
 }
-impl AbstractValue for ixc_message_api::Address {
-    type Value<'a> = ixc_message_api::Address;
+impl AbstractValue for ixc_message_api::AccountID {
+    type Value<'a> = ixc_message_api::AccountID;
 }
 impl<V: AbstractValue> AbstractValue for Option<V> {
     type Value<'a> = Option<V::Value<'a>>;

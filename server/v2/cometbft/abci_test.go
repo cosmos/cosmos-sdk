@@ -3,10 +3,17 @@ package cometbft
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"io"
 	"strings"
 	"testing"
 	"time"
+
+	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
+	"github.com/stretchr/testify/require"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/store"
@@ -20,16 +27,7 @@ import (
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/mock"
-	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	v1 "github.com/cometbft/cometbft/api/cometbft/types/v1"
-
-	"github.com/cosmos/gogoproto/proto"
-
-	"encoding/json"
-
 	consensustypes "cosmossdk.io/x/consensus/types"
-	gogotypes "github.com/cosmos/gogoproto/types"
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -336,9 +334,6 @@ func TestConsensus_ExtendVote(t *testing.T) {
 			Block: &v1.BlockParams{
 				MaxGas: 5000000,
 			},
-			Abci: &v1.ABCIParams{
-				VoteExtensionsEnableHeight: 2,
-			},
 			Feature: &v1.FeatureParams{
 				VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 2},
 			},
@@ -377,9 +372,6 @@ func TestConsensus_VerifyVoteExtension(t *testing.T) {
 		ConsensusParams: &v1.ConsensusParams{
 			Block: &v1.BlockParams{
 				MaxGas: 5000000,
-			},
-			Abci: &v1.ABCIParams{
-				VoteExtensionsEnableHeight: 2,
 			},
 			Feature: &v1.FeatureParams{
 				VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 2},
@@ -539,6 +531,7 @@ func TestConsensus_ProcessProposal_With_Handler(t *testing.T) {
 		Height: 1,
 		Txs:    [][]byte{mockTx.Bytes(), append(mockTx.Bytes(), []byte("bad")...), mockTx.Bytes(), mockTx.Bytes()},
 	})
+	require.NoError(t, err)
 	require.Equal(t, res.Status, abciproto.PROCESS_PROPOSAL_STATUS_REJECT)
 }
 
@@ -577,7 +570,7 @@ func TestConsensus_Query(t *testing.T) {
 	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
 
 	// Write data to state storage
-	c.store.GetStateStorage().ApplyChangeset(1, &store.Changeset{
+	err := c.store.GetStateStorage().ApplyChangeset(1, &store.Changeset{
 		Changes: []store.StateChanges{
 			{
 				Actor: actorName,
@@ -591,8 +584,9 @@ func TestConsensus_Query(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(t, err)
 
-	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
+	_, err = c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),
 		ChainId:       "test",
 		InitialHeight: 1,
@@ -632,6 +626,8 @@ func TestConsensus_Query(t *testing.T) {
 }
 
 func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.Tx]) *Consensus[mock.Tx] {
+	t.Helper()
+
 	msgRouterBuilder := getMsgRouterBuilder(t, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
 		return nil, nil
 	})
@@ -640,9 +636,6 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		cParams := &v1.ConsensusParams{
 			Block: &v1.BlockParams{
 				MaxGas: 300000,
-			},
-			Abci: &v1.ABCIParams{
-				VoteExtensionsEnableHeight: 2,
 			},
 			Feature: &v1.FeatureParams{
 				VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 2},
@@ -685,15 +678,17 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		ValidateTxGasLimit: gasLimit,
 		QueryGasLimit:      gasLimit,
 		SimulationGasLimit: gasLimit,
-		InitGenesis: func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) error {
-			return nil
+		InitGenesis: func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {
+			_, st, err := mockStore.StateLatest()
+			require.NoError(t, err)
+			return branch.DefaultNewWriterMap(st), nil
 		},
 	}
 
 	am, err := b.Build()
 	require.NoError(t, err)
 
-	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", "authority", am, mempool, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
+	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", am, mempool, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
 }
 
 // Check target version same with store's latest version

@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/golang/mock/gomock"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
@@ -17,8 +16,8 @@ import (
 	ormmodulev1alpha1 "cosmossdk.io/api/cosmos/orm/module/v1alpha1"
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
 	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/core/store"
 	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	_ "cosmossdk.io/orm" // required for ORM module registration
@@ -361,11 +360,11 @@ type testStoreService struct {
 	db corestore.KVStoreWithBatch
 }
 
-func (t testStoreService) OpenKVStore(context.Context) store.KVStore {
+func (t testStoreService) OpenKVStore(context.Context) corestore.KVStore {
 	return testkv.TestStore{Db: t.db}
 }
 
-func (t testStoreService) OpenMemoryStore(context.Context) store.KVStore {
+func (t testStoreService) OpenMemoryStore(context.Context) corestore.KVStore {
 	return testkv.TestStore{Db: t.db}
 }
 
@@ -390,13 +389,13 @@ func TestGetBackendResolver(t *testing.T) {
 			},
 		},
 	}, ormdb.ModuleDBOptions{
-		MemoryStoreService: testStoreService{db: dbm.NewMemDB()},
+		MemoryStoreService: testStoreService{db: coretesting.NewMemDB()},
 	})
 	assert.NilError(t, err)
 }
 
-func ProvideTestRuntime() store.KVStoreService {
-	return testStoreService{db: dbm.NewMemDB()}
+func ProvideTestRuntime() corestore.KVStoreService {
+	return testStoreService{db: coretesting.NewMemDB()}
 }
 
 func TestAppConfigModule(t *testing.T) {

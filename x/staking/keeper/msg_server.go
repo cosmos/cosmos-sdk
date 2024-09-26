@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	consensusv1 "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -75,20 +74,24 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", cv)
 	}
 
-	resp, err := k.QueryRouterService.Invoke(ctx, &consensusv1.QueryParamsRequest{})
+	pubkeyTypes, err := k.consensusKeeper.ValidatorPubKeyTypes(ctx)
 	if err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
 	}
-	res, ok := resp.(*consensusv1.QueryParamsResponse)
-	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unexpected response type: %T", resp)
+
+	pkType := pk.Type()
+	if !slices.Contains(pubkeyTypes, pkType) {
+		return nil, errorsmod.Wrapf(
+			types.ErrValidatorPubKeyTypeNotSupported,
+			"got: %s, expected: %s", pk.Type(), pubkeyTypes,
+		)
 	}
 
-	if res.Params.Validator == nil {
+	if pubkeyTypes == nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "validator params are not set")
 	}
 
-	if err = validatePubKey(pk, res.Params.Validator.PubKeyTypes); err != nil {
+	if err = validatePubKey(pk, pubkeyTypes); err != nil {
 		return nil, err
 	}
 
@@ -660,21 +663,16 @@ func (k msgServer) RotateConsPubKey(ctx context.Context, msg *types.MsgRotateCon
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", cv)
 	}
 
-	// check if the new public key type is valid
-	resp, err := k.QueryRouterService.Invoke(ctx, &consensusv1.QueryParamsRequest{})
+	pubkeyTypes, err := k.consensusKeeper.ValidatorPubKeyTypes(ctx)
 	if err != nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "failed to query consensus params: %s", err)
-	}
-	paramsRes, ok := resp.(*consensusv1.QueryParamsResponse)
-	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unexpected response type: %T", resp)
+		return nil, err
 	}
 
-	if paramsRes.Params.Validator == nil {
+	if pubkeyTypes == nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "validator params are not set")
 	}
 
-	if err = validatePubKey(pk, paramsRes.Params.Validator.PubKeyTypes); err != nil {
+	if err = validatePubKey(pk, pubkeyTypes); err != nil {
 		return nil, err
 	}
 

@@ -57,6 +57,7 @@ type Keeper struct {
 	cdc                   codec.BinaryCodec
 	authKeeper            types.AccountKeeper
 	bankKeeper            types.BankKeeper
+	consensusKeeper       types.ConsensusKeeper
 	hooks                 types.StakingHooks
 	authority             string
 	validatorAddressCodec addresscodec.Codec
@@ -119,6 +120,7 @@ func NewKeeper(
 	env appmodule.Environment,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
+	ck types.ConsensusKeeper,
 	authority string,
 	validatorAddressCodec addresscodec.Codec,
 	consensusAddressCodec addresscodec.Codec,
@@ -148,6 +150,7 @@ func NewKeeper(
 		cdc:                   cdc,
 		authKeeper:            ak,
 		bankKeeper:            bk,
+		consensusKeeper:       ck,
 		hooks:                 nil,
 		authority:             authority,
 		validatorAddressCodec: validatorAddressCodec,

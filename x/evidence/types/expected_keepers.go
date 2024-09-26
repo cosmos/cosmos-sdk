@@ -5,7 +5,6 @@ import (
 	"time"
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -15,7 +14,6 @@ import (
 // StakingKeeper defines the staking module interface contract needed by the
 // evidence module.
 type StakingKeeper interface {
-	ConsensusAddressCodec() address.Codec
 	ValidatorByConsAddr(context.Context, sdk.ConsAddress) (sdk.ValidatorI, error)
 }
 
@@ -36,4 +34,8 @@ type SlashingKeeper interface {
 // AccountKeeper define the account keeper interface contracted needed by the evidence module
 type AccountKeeper interface {
 	SetAccount(ctx context.Context, acc sdk.AccountI)
+}
+
+type ConsensusKeeper interface {
+	EvidenceParams(context.Context) (maxAge int64, maxAgeDuration time.Duration, maxBytes uint64, err error)
 }

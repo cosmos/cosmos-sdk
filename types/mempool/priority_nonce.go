@@ -223,6 +223,16 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 	sender := sig.Signer.String()
 	priority := mp.cfg.TxPriority.GetTxPriority(ctx, tx)
 	nonce := sig.Sequence
+
+	// if it's an unordered tx, we use the gas instead of the nonce
+	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
+		gasLimit, err := unordered.GetGasLimit()
+		nonce = gasLimit
+		if err != nil {
+			return err
+		}
+	}
+
 	key := txMeta[C]{nonce: nonce, priority: priority, sender: sender}
 
 	senderIndex, ok := mp.senderIndices[sender]
@@ -351,13 +361,13 @@ func (i *PriorityNonceIterator[C]) Tx() sdk.Tx {
 //
 // NOTE: It is not safe to use this iterator while removing transactions from
 // the underlying mempool.
-func (mp *PriorityNonceMempool[C]) Select(ctx context.Context, txs [][]byte) Iterator {
+func (mp *PriorityNonceMempool[C]) Select(ctx context.Context, txs []sdk.Tx) Iterator {
 	mp.mtx.Lock()
 	defer mp.mtx.Unlock()
 	return mp.doSelect(ctx, txs)
 }
 
-func (mp *PriorityNonceMempool[C]) doSelect(_ context.Context, _ [][]byte) Iterator {
+func (mp *PriorityNonceMempool[C]) doSelect(_ context.Context, _ []sdk.Tx) Iterator {
 	if mp.priorityIndex.Len() == 0 {
 		return nil
 	}
@@ -373,7 +383,7 @@ func (mp *PriorityNonceMempool[C]) doSelect(_ context.Context, _ [][]byte) Itera
 }
 
 // SelectBy will hold the mutex during the iteration, callback returns if continue.
-func (mp *PriorityNonceMempool[C]) SelectBy(ctx context.Context, txs [][]byte, callback func(sdk.Tx) bool) {
+func (mp *PriorityNonceMempool[C]) SelectBy(ctx context.Context, txs []sdk.Tx, callback func(sdk.Tx) bool) {
 	mp.mtx.Lock()
 	defer mp.mtx.Unlock()
 
@@ -458,6 +468,15 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 	sig := sigs[0]
 	sender := sig.Signer.String()
 	nonce := sig.Sequence
+
+	// if it's an unordered tx, we use the gas instead of the nonce
+	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
+		gasLimit, err := unordered.GetGasLimit()
+		nonce = gasLimit
+		if err != nil {
+			return err
+		}
+	}
 
 	scoreKey := txMeta[C]{nonce: nonce, sender: sender}
 	score, ok := mp.scores[scoreKey]

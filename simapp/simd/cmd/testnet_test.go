@@ -18,10 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	genutiltest "github.com/cosmos/cosmos-sdk/testutil/x/genutil"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -34,6 +34,7 @@ func Test_TestnetCmd(t *testing.T) {
 		configurator.StakingModule(),
 		configurator.ConsensusModule(),
 		configurator.TxModule(),
+		configurator.ValidateModule(),
 		configurator.MintModule(),
 	)
 	var moduleManager *module.Manager
@@ -72,7 +73,9 @@ func Test_TestnetCmd(t *testing.T) {
 	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	cmd := testnetInitFilesCmd(moduleManager)
-	cmd.SetArgs([]string{fmt.Sprintf("--%s=test", flags.FlagKeyringBackend), fmt.Sprintf("--output-dir=%s", home)})
+	cmd.SetArgs(
+		[]string{fmt.Sprintf("--%s=test", flags.FlagKeyringBackend), fmt.Sprintf("--output-dir=%s", home)},
+	)
 	err = cmd.ExecuteContext(ctx)
 	require.NoError(t, err)
 

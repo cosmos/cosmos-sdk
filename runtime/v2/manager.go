@@ -21,8 +21,10 @@ import (
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
 )
 
@@ -193,6 +195,7 @@ func (m *MM[T]) InitGenesisJSON(
 // ExportGenesisForModules performs export genesis functionality for modules
 func (m *MM[T]) ExportGenesisForModules(
 	ctx context.Context,
+	stateFactory func() store.WriterMap,
 	modulesToExport ...string,
 ) (map[string]json.RawMessage, error) {
 	if len(modulesToExport) == 0 {
@@ -203,17 +206,19 @@ func (m *MM[T]) ExportGenesisForModules(
 		return nil, err
 	}
 
+	type genesisResult struct {
+		bz  json.RawMessage
+		err error
+	}
+
 	type ModuleI interface {
 		ExportGenesis(ctx context.Context) (json.RawMessage, error)
 	}
 
-	genesisData := make(map[string]json.RawMessage)
-
-	// TODO: make async export genesis https://github.com/cosmos/cosmos-sdk/issues/21303
+	channels := make(map[string]chan genesisResult)
 	for _, moduleName := range modulesToExport {
 		mod := m.modules[moduleName]
 		var moduleI ModuleI
-
 		if module, hasGenesis := mod.(appmodulev2.HasGenesis); hasGenesis {
 			moduleI = module.(ModuleI)
 		} else if module, hasABCIGenesis := mod.(appmodulev2.HasABCIGenesis); hasABCIGenesis {
@@ -222,12 +227,29 @@ func (m *MM[T]) ExportGenesisForModules(
 			continue
 		}
 
-		res, err := moduleI.ExportGenesis(ctx)
-		if err != nil {
-			return nil, err
+		channels[moduleName] = make(chan genesisResult)
+		go func(moduleI ModuleI, ch chan genesisResult) {
+			genesisCtx := services.NewGenesisContext(stateFactory())
+			_, _ = genesisCtx.Run(ctx, func(ctx context.Context) error {
+				jm, err := moduleI.ExportGenesis(ctx)
+				if err != nil {
+					ch <- genesisResult{nil, err}
+					return err
+				}
+				ch <- genesisResult{jm, nil}
+				return nil
+			})
+		}(moduleI, channels[moduleName])
+	}
+
+	genesisData := make(map[string]json.RawMessage)
+	for moduleName := range channels {
+		res := <-channels[moduleName]
+		if res.err != nil {
+			return nil, fmt.Errorf("genesis export error in %s: %w", moduleName, res.err)
 		}
 
-		genesisData[moduleName] = res
+		genesisData[moduleName] = res.bz
 	}
 
 	return genesisData, nil
@@ -459,10 +481,8 @@ func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap
 func (m *MM[T]) RegisterServices(app *App[T]) error {
 	for _, module := range m.modules {
 		// register msg + query
-		if services, ok := module.(hasServicesV1); ok {
-			if err := registerServices(services, app, protoregistry.GlobalFiles); err != nil {
-				return err
-			}
+		if err := registerServices(module, app, protoregistry.GlobalFiles); err != nil {
+			return err
 		}
 
 		// register migrations
@@ -577,7 +597,6 @@ func (m *MM[T]) assertNoForgottenModules(
 	}
 	var missing []string
 	for m := range m.modules {
-		m := m
 		if pass != nil && pass(m) {
 			continue
 		}
@@ -595,7 +614,7 @@ func (m *MM[T]) assertNoForgottenModules(
 	return nil
 }
 
-func registerServices[T transaction.Tx](s hasServicesV1, app *App[T], registry *protoregistry.Files) error {
+func registerServices[T transaction.Tx](s appmodulev2.AppModule, app *App[T], registry *protoregistry.Files) error {
 	c := &configurator{
 		grpcQueryDecoders: map[string]func() gogoproto.Message{},
 		stfQueryRouter:    app.queryRouterBuilder,
@@ -604,8 +623,28 @@ func registerServices[T transaction.Tx](s hasServicesV1, app *App[T], registry *
 		err:               nil,
 	}
 
-	if err := s.RegisterServices(c); err != nil {
-		return fmt.Errorf("unable to register services: %w", err)
+	if services, ok := s.(hasServicesV1); ok {
+		if err := services.RegisterServices(c); err != nil {
+			return fmt.Errorf("unable to register services: %w", err)
+		}
+	} else {
+		// If module not implement RegisterServices, register msg & query handler.
+		if module, ok := s.(appmodulev2.HasMsgHandlers); ok {
+			module.RegisterMsgHandlers(app.msgRouterBuilder)
+		}
+
+		if module, ok := s.(appmodulev2.HasQueryHandlers); ok {
+			module.RegisterQueryHandlers(app.queryRouterBuilder)
+			// TODO: query regist by RegisterQueryHandlers not in grpcQueryDecoders
+			if module, ok := s.(interface {
+				GetQueryDecoders() map[string]func() gogoproto.Message
+			}); ok {
+				decoderMap := module.GetQueryDecoders()
+				for path, decoder := range decoderMap {
+					app.GRPCMethodsToMessageMap[path] = decoder
+				}
+			}
+		}
 	}
 
 	if c.err != nil {

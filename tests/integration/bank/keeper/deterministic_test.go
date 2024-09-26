@@ -200,7 +200,9 @@ func TestGRPCQueryAllBalances(t *testing.T) {
 
 		for i := 0; i < numCoins; i++ {
 			coin := getCoin(rt)
-
+			if exists, _ := coins.Find(coin.Denom); exists {
+				t.Skip("duplicate denom")
+			}
 			// NewCoins sorts the denoms
 			coins = sdk.NewCoins(append(coins, coin)...)
 		}
@@ -266,7 +268,7 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 	assert.NilError(t, err)
 
 	req := banktypes.NewQuerySpendableBalancesRequest(addr1Str, nil)
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.SpendableBalances, 1777, false)
+	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.SpendableBalances, 1420, false)
 }
 
 func TestGRPCQueryTotalSupply(t *testing.T) {

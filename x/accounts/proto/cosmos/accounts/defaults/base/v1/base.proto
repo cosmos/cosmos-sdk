@@ -10,6 +10,9 @@ import "google/protobuf/any.proto";
 message MsgInit {
   // pub_key defines a pubkey for the account arbitrary encapsulated.
   google.protobuf.Any pub_key = 1;
+  // init_sequence defines the initial sequence of the account.
+  // Defaults to zero if not set.
+  uint64 init_sequence = 2;
 }
 
 // MsgInitResponse is the response returned after base account initialization.

@@ -17,7 +17,7 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	errorsmod "cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors/v2"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/client/grpc/cmtservice"
@@ -33,15 +33,14 @@ import (
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
 type Consensus[T transaction.Tx] struct {
-	logger             log.Logger
-	appName, version   string
-	consensusAuthority string // Set by the application to grant authority to the consensus engine to send messages to the consensus module
-	app                *appmanager.AppManager[T]
-	txCodec            transaction.Codec[T]
-	store              types.Store
-	streaming          streaming.Manager
-	snapshotManager    *snapshots.Manager
-	mempool            mempool.Mempool[T]
+	logger           log.Logger
+	appName, version string
+	app              *appmanager.AppManager[T]
+	txCodec          transaction.Codec[T]
+	store            types.Store
+	streaming        streaming.Manager
+	snapshotManager  *snapshots.Manager
+	mempool          mempool.Mempool[T]
 
 	cfg           Config
 	indexedEvents map[string]struct{}
@@ -67,7 +66,6 @@ type Consensus[T transaction.Tx] struct {
 func NewConsensus[T transaction.Tx](
 	logger log.Logger,
 	appName string,
-	consensusAuthority string, // TODO remove
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
@@ -80,7 +78,6 @@ func NewConsensus[T transaction.Tx](
 	return &Consensus[T]{
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
-		consensusAuthority:     consensusAuthority,
 		grpcMethodsMap:         gRPCMethodsMap,
 		app:                    app,
 		cfg:                    cfg,
@@ -125,20 +122,29 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 	}
 
 	resp, err := c.app.ValidateTx(ctx, decodedTx)
+	// we do not want to return a cometbft error, but a check tx response with the error
+	if err != nil && err != resp.Error {
+		return nil, err
+	}
+
+	events, err := intoABCIEvents(resp.Events, c.indexedEvents)
 	if err != nil {
 		return nil, err
 	}
 
 	cometResp := &abciproto.CheckTxResponse{
-		Code:      resp.Code,
+		Code:      0,
 		GasWanted: uint64ToInt64(resp.GasWanted),
 		GasUsed:   uint64ToInt64(resp.GasUsed),
-		Events:    intoABCIEvents(resp.Events, c.indexedEvents),
+		Events:    events,
 	}
 	if resp.Error != nil {
-		cometResp.Code = 1
-		cometResp.Log = resp.Error.Error()
+		space, code, log := errorsmod.ABCIInfo(resp.Error, c.cfg.AppTomlConfig.Trace)
+		cometResp.Code = code
+		cometResp.Codespace = space
+		cometResp.Log = log
 	}
+
 	return cometResp, nil
 }
 
@@ -194,7 +200,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 		}
 		res, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
 		if err != nil {
-			resp := queryResult(err)
+			resp := QueryResult(err, c.cfg.AppTomlConfig.Trace)
 			resp.Height = req.Height
 			return resp, err
 
@@ -246,7 +252,6 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 
 	if req.ConsensusParams != nil {
 		ctx = context.WithValue(ctx, corecontext.CometParamsInitInfoKey, &consensustypes.MsgUpdateParams{
-			Authority: c.consensusAuthority,
 			Block:     req.ConsensusParams.Block,
 			Evidence:  req.ConsensusParams.Evidence,
 			Validator: req.ConsensusParams.Validator,
@@ -282,10 +287,10 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		return nil, fmt.Errorf("genesis state init failure: %w", err)
 	}
 
-	// TODO necessary? where should this WARN live if it all. helpful for testing
 	for _, txRes := range blockresponse.TxResults {
-		if txRes.Error != nil {
-			c.logger.Warn("genesis tx failed", "code", txRes.Code, "error", txRes.Error)
+		if err := txRes.Error; err != nil {
+			space, code, log := errorsmod.ABCIInfo(err, c.cfg.AppTomlConfig.Trace)
+			c.logger.Warn("genesis tx failed", "codespace", space, "code", code, "log", log)
 		}
 	}
 
@@ -471,9 +476,10 @@ func (c *Consensus[T]) FinalizeBlock(
 	}
 
 	// remove txs from the mempool
-	err = c.mempool.Remove(decodedTxs)
-	if err != nil {
-		return nil, fmt.Errorf("unable to remove txs: %w", err)
+	for _, tx := range decodedTxs {
+		if err = c.mempool.Remove(tx); err != nil {
+			return nil, fmt.Errorf("unable to remove tx: %w", err)
+		}
 	}
 
 	c.lastCommittedHeight.Store(req.Height)
@@ -483,7 +489,7 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	return finalizeBlockResponse(resp, cp, appHash, c.indexedEvents)
+	return finalizeBlockResponse(resp, cp, appHash, c.indexedEvents, c.cfg.AppTomlConfig.Trace)
 }
 
 // Commit implements types.Application.

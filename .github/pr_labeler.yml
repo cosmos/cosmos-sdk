@@ -80,6 +80,8 @@
   - x/upgrade/**/*
 "C:x/epochs":
   - x/epochs/**/*
+"C:x/validate":
+  - x/validate/**/*
 "C:server/v2":
   - server/v2/**/*
 "C:server/v2 stf":

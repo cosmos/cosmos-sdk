@@ -111,6 +111,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		slashingKeeper,
 		ck,
 		address.NewBech32Codec("cosmos"),
+		address.NewBech32Codec("cosmosvalcons"),
 	)
 
 	suite.stakingKeeper = stakingKeeper

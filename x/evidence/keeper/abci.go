@@ -23,7 +23,7 @@ func (k Keeper) BeginBlocker(ctx context.Context, cometService comet.Service) er
 		// It's still ongoing discussion how should we treat and slash attacks with
 		// premeditation. So for now we agree to treat them in the same way.
 		case comet.LightClientAttack, comet.DuplicateVote:
-			evidence := types.FromABCIEvidence(evidence, k.stakingKeeper.ConsensusAddressCodec())
+			evidence := types.FromABCIEvidence(evidence, k.consensusAddressCodec)
 			err := k.handleEquivocationEvidence(ctx, evidence)
 			if err != nil {
 				return err

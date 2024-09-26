@@ -3,6 +3,7 @@ package runtime
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
@@ -157,23 +159,51 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 		ValidateTxGasLimit: a.app.config.GasConfig.ValidateTxGasLimit,
 		QueryGasLimit:      a.app.config.GasConfig.QueryGasLimit,
 		SimulationGasLimit: a.app.config.GasConfig.SimulationGasLimit,
-		InitGenesis: func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) error {
+		InitGenesis: func(
+			ctx context.Context,
+			src io.Reader,
+			txHandler func(json.RawMessage) error,
+		) (store.WriterMap, error) {
 			// this implementation assumes that the state is a JSON object
 			bz, err := io.ReadAll(src)
 			if err != nil {
-				return fmt.Errorf("failed to read import state: %w", err)
+				return nil, fmt.Errorf("failed to read import state: %w", err)
 			}
-			var genesisState map[string]json.RawMessage
-			if err = json.Unmarshal(bz, &genesisState); err != nil {
-				return err
+			var genesisJSON map[string]json.RawMessage
+			if err = json.Unmarshal(bz, &genesisJSON); err != nil {
+				return nil, err
 			}
-			if err = a.app.moduleManager.InitGenesisJSON(ctx, genesisState, txHandler); err != nil {
-				return fmt.Errorf("failed to init genesis: %w", err)
+
+			v, zeroState, err := a.app.db.StateLatest()
+			if err != nil {
+				return nil, fmt.Errorf("unable to get latest state: %w", err)
 			}
-			return nil
+			if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
+				return nil, errors.New("cannot init genesis on non-zero state")
+			}
+			genesisCtx := services.NewGenesisContext(a.branch(zeroState))
+			genesisState, err := genesisCtx.Run(ctx, func(ctx context.Context) error {
+				err = a.app.moduleManager.InitGenesisJSON(ctx, genesisJSON, txHandler)
+				if err != nil {
+					return fmt.Errorf("failed to init genesis: %w", err)
+				}
+				return nil
+			})
+
+			return genesisState, err
 		},
 		ExportGenesis: func(ctx context.Context, version uint64) ([]byte, error) {
-			genesisJson, err := a.app.moduleManager.ExportGenesisForModules(ctx)
+			state, err := a.app.db.StateAt(version)
+			if err != nil {
+				return nil, fmt.Errorf("unable to get state at given version: %w", err)
+			}
+
+			genesisJson, err := a.app.moduleManager.ExportGenesisForModules(
+				ctx,
+				func() store.WriterMap {
+					return a.branch(state)
+				},
+			)
 			if err != nil {
 				return nil, fmt.Errorf("failed to export genesis: %w", err)
 			}

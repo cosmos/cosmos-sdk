@@ -3,8 +3,8 @@ module cosmossdk.io/store/v2
 go 1.23
 
 require (
-	cosmossdk.io/core v1.0.0-alpha.2
-	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
+	cosmossdk.io/core v1.0.0-alpha.3
+	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.4.1
 	github.com/cockroachdb/pebble v1.1.0
@@ -24,6 +24,7 @@ require (
 )
 
 require (
+	cosmossdk.io/schema v0.3.0 // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -63,5 +64,3 @@ require (
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace cosmossdk.io/core/testing => ../../core/testing

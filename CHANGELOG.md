@@ -56,6 +56,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Bug Fixes
 
 * (sims) [21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims test when running dry on validators
+* (cli) [#21919](https://github.com/cosmos/cosmos-sdk/pull/21919) Query address-by-acc-num by account_id instead of id.
 
 ### API Breaking Changes
 

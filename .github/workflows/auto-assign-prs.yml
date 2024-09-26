@@ -15,14 +15,17 @@ jobs:
       - name: Assign reviewers as assignees
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PRBOT_PAT }}
           script: |
             const reviewers = context.payload.pull_request.requested_reviewers.map(reviewer => reviewer.login);
             const pr_number = context.payload.pull_request.number;
             const owner = context.repo.owner;
             const repo = context.repo.repo;
 
-            await github.issues.addAssignees({
+            console.log(`Assigning reviewers ${reviewers} to PR ${pr_number}`);
+            console.log(github.rest);
+
+            await github.rest.pull_request.addAssignees({
               owner,
               repo,
               pr_number,

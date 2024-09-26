@@ -937,7 +937,7 @@ type QueryLegacyAccountResponse struct {
 	// the type wrapped by the any does not need to comply with the
 	// sdk.AccountI interface.
 	Account *anypb.Any `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
-	// info represents the account as a BaseAccount, this can return
+	// base represents the account as a BaseAccount, this can return
 	// nil if the account cannot be represented as a BaseAccount.
 	// This is used in the gRPC QueryAccountInfo method.
 	Base *BaseAccount `protobuf:"bytes,2,opt,name=base,proto3" json:"base,omitempty"`

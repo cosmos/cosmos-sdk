@@ -3,7 +3,6 @@ name: Auto Assign Reviewers
 on:
   pull_request:
     types: [opened, edited, review_requested]
-  push:
 
 jobs:
   assign-reviewers:

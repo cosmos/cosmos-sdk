@@ -45,10 +45,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * (sims) [21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims test when running dry on validators
+* (cli) [#21919](https://github.com/cosmos/cosmos-sdk/pull/21919) Query address-by-acc-num by account_id instead of id.
 
 ## [v0.50.10](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.10) - 2024-09-20
 
-## Features
+### Features
 
 * (cli) [#20779](https://github.com/cosmos/cosmos-sdk/pull/20779) Added `module-hash-by-height` command to query and retrieve module hashes at a specified blockchain height, enhancing debugging capabilities.
 * (cli) [#21372](https://github.com/cosmos/cosmos-sdk/pull/21372) Added a `bulk-add-genesis-account` genesis command to add many genesis accounts at once.

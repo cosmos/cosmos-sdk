@@ -4,6 +4,7 @@ buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88e
 buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2/go.mod h1:HqcXMSa5qnNuakaMUo+hWhF51mKbcrZxGl9Vp5EeJXc=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
+<<<<<<< HEAD
 cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf h1:CttA/mEIxGm4E7vwrjUpju7/Iespns08d9bOza70cIc=
 cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf/go.mod h1:YMfx2ATpgITsoydD3hIBa8IkDHtyXp/14rmG0d3sEew=
 cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab h1:E/IWad76v1Nc4Atswaccpt7twJ0VwHkbY94/PhmZfTo=
@@ -12,6 +13,12 @@ cosmossdk.io/core v1.0.0-alpha.3 h1:pnxaYAas7llXgVz1lM7X6De74nWrhNKnB3yMKe4OUUA=
 cosmossdk.io/core v1.0.0-alpha.3/go.mod h1:3u9cWq1FAVtiiCrDPpo4LhR+9V6k/ycSG4/Y/tREWCY=
 cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b h1:uEMbr7Hdpz0fU+GXU6mSN2vgoQnr66WYUpRuiba2aEk=
 cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b/go.mod h1:FllCSj/ZYskfb982HKqBSISO8DkBY4Euqq768HSFz68=
+=======
+cosmossdk.io/collections v0.4.0 h1:PFmwj2W8szgpD5nOd8GWH6AbYNi1f2J6akWXJ7P5t9s=
+cosmossdk.io/collections v0.4.0/go.mod h1:oa5lUING2dP+gdDquow+QjlF45eL1t4TJDypgGd+tv0=
+cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 h1:NxxUo0GMJUbIuVg0R70e3cbn9eFTEuMr7ev1AFvypdY=
+cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29/go.mod h1:8s2tPeJtSiQuoyPmr2Ag7meikonISO4Fv4MoO8+ORrs=
+>>>>>>> f927e9b55 (ci: actually enable v2 system test (#21539))
 cosmossdk.io/depinject v1.0.0 h1:dQaTu6+O6askNXO06+jyeUAnF2/ssKwrrszP9t5q050=
 cosmossdk.io/depinject v1.0.0/go.mod h1:zxK/h3HgHoA/eJVtiSsoaRaRA2D5U4cJ5thIG4ssbB8=
 cosmossdk.io/errors v1.0.1 h1:bzu+Kcr0kS/1DuPBtUFdWjzLqyUuCiyHjyJB6srBV/0=

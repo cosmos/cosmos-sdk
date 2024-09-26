@@ -17,7 +17,7 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	errorsmod "cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors/v2"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/client/grpc/cmtservice"
@@ -122,7 +122,8 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 	}
 
 	resp, err := c.app.ValidateTx(ctx, decodedTx)
-	if err != nil {
+	// we do not want to return a cometbft error, but a check tx response with the error
+	if err != nil && err != resp.Error {
 		return nil, err
 	}
 
@@ -132,15 +133,18 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 	}
 
 	cometResp := &abciproto.CheckTxResponse{
-		Code:      resp.Code,
+		Code:      0,
 		GasWanted: uint64ToInt64(resp.GasWanted),
 		GasUsed:   uint64ToInt64(resp.GasUsed),
 		Events:    events,
 	}
 	if resp.Error != nil {
-		cometResp.Code = 1
-		cometResp.Log = resp.Error.Error()
+		space, code, log := errorsmod.ABCIInfo(resp.Error, c.cfg.AppTomlConfig.Trace)
+		cometResp.Code = code
+		cometResp.Codespace = space
+		cometResp.Log = log
 	}
+
 	return cometResp, nil
 }
 
@@ -196,7 +200,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 		}
 		res, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
 		if err != nil {
-			resp := queryResult(err)
+			resp := QueryResult(err, c.cfg.AppTomlConfig.Trace)
 			resp.Height = req.Height
 			return resp, err
 
@@ -283,10 +287,10 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		return nil, fmt.Errorf("genesis state init failure: %w", err)
 	}
 
-	// TODO necessary? where should this WARN live if it all. helpful for testing
 	for _, txRes := range blockresponse.TxResults {
-		if txRes.Error != nil {
-			c.logger.Warn("genesis tx failed", "code", txRes.Code, "error", txRes.Error)
+		if err := txRes.Error; err != nil {
+			space, code, log := errorsmod.ABCIInfo(err, c.cfg.AppTomlConfig.Trace)
+			c.logger.Warn("genesis tx failed", "codespace", space, "code", code, "log", log)
 		}
 	}
 
@@ -485,7 +489,7 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	return finalizeBlockResponse(resp, cp, appHash, c.indexedEvents)
+	return finalizeBlockResponse(resp, cp, appHash, c.indexedEvents, c.cfg.AppTomlConfig.Trace)
 }
 
 // Commit implements types.Application.

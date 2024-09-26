@@ -204,6 +204,7 @@ func (k msgServer) ExecLegacyContent(ctx context.Context, msg *v1.MsgExecLegacyC
 	}
 
 	// Ensure that the content has a respective handler
+	fmt.Println("legacyRouter", k.Keeper.legacyRouter)
 	if !k.Keeper.legacyRouter.HasRoute(content.ProposalRoute()) {
 		return nil, errors.Wrap(govtypes.ErrNoProposalHandlerExists, content.ProposalRoute())
 	}

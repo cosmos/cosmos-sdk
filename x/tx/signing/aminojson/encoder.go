@@ -11,7 +11,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
-	"cosmossdk.io/api/cosmos/crypto/multisig"
 	"cosmossdk.io/math"
 )
 
@@ -166,24 +165,15 @@ func moduleAccountEncoder(_ *Encoder, msg protoreflect.Message, w io.Writer) err
 // also see:
 // https://github.com/cosmos/cosmos-sdk/blob/b49f948b36bc991db5be431607b475633aed697e/proto/cosmos/crypto/multisig/keys.proto#L15/
 func thresholdStringEncoder(enc *Encoder, msg protoreflect.Message, w io.Writer) error {
-	pk, ok := msg.Interface().(*multisig.LegacyAminoPubKey)
-	if !ok {
-		return errors.New("thresholdStringEncoder: msg not a multisig.LegacyAminoPubKey")
-	}
-	_, err := fmt.Fprintf(w, `{"threshold":"%d","pubkeys":`, pk.Threshold)
+	fields := msg.Descriptor().Fields()
+	thresholdField := fields.ByName("threshold")
+	threshold := msg.Get(thresholdField).Uint()
+	_, err := fmt.Fprintf(w, `{"threshold":"%d","pubkeys":`, threshold)
 	if err != nil {
 		return err
 	}
-
-	if len(pk.PublicKeys) == 0 {
-		_, err = io.WriteString(w, `[]}`)
-		return err
-	}
-
-	fields := msg.Descriptor().Fields()
 	pubkeysField := fields.ByName("public_keys")
 	pubkeys := msg.Get(pubkeysField).List()
-
 	err = enc.marshalList(pubkeys, pubkeysField, w)
 	if err != nil {
 		return err

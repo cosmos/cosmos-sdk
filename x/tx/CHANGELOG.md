@@ -37,6 +37,10 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 * [#21850](https://github.com/cosmos/cosmos-sdk/pull/21850) Support bytes field as signer.
 
+### Bug Fixes
+
+* [#21943](https://github.com/cosmos/cosmos-sdk/pull/21943) Fix multisig account failed on threshold encode after send tx.
+
 ## [v0.13.5](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.5) - 2024-09-18
 
 ### Improvements

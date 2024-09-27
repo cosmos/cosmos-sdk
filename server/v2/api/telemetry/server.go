@@ -94,7 +94,6 @@ func (s *TelemetryServer[T]) Stop(ctx context.Context) error {
 		return nil
 	}
 
-	s.logger.Info("Stopping telemetry server")
 	return s.server.Shutdown(ctx)
 }
 

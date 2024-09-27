@@ -2,8 +2,9 @@ package telemetry
 
 func DefaultConfig() *Config {
 	return &Config{
+		Enable:                  true,
+		Address:                 "localhost:1338",
 		ServiceName:             "",
-		Enabled:                 true,
 		EnableHostname:          false,
 		EnableHostnameLabel:     false,
 		EnableServiceLabel:      false,
@@ -16,13 +17,16 @@ func DefaultConfig() *Config {
 }
 
 type Config struct {
-	// Prefixed with keys to separate services
-	ServiceName string `mapstructure:"service-name" toml:"service-name" comment:"Prefixed with keys to separate services."`
-
-	// Enabled enables the application telemetry functionality. When enabled,
+	// Enable enables the application telemetry functionality. When enabled,
 	// an in-memory sink is also enabled by default. Operators may also enabled
 	// other sinks such as Prometheus.
-	Enabled bool `mapstructure:"enabled" toml:"enabled" comment:"Enabled enables the application telemetry functionality. When enabled, an in-memory sink is also enabled by default. Operators may also enabled other sinks such as Prometheus."`
+	Enable bool `mapstructure:"enable" toml:"enable" comment:"Enable enables the application telemetry functionality. When enabled, an in-memory sink is also enabled by default. Operators may also enabled other sinks such as Prometheus."`
+
+	// Address defines the API server to listen on
+	Address string `mapstructure:"address" toml:"address" comment:"Address defines the metrics server address to bind to."`
+
+	// Prefixed with keys to separate services
+	ServiceName string `mapstructure:"service-name" toml:"service-name" comment:"Prefixed with keys to separate services."`
 
 	// Enable prefixing gauge values with hostname
 	EnableHostname bool `mapstructure:"enable-hostname" toml:"enable-hostname" comment:"Enable prefixing gauge values with hostname."`

@@ -1,6 +1,6 @@
 use bump_scope::BumpScope;
 use crate::encoder::{EncodeError};
-use crate::r#struct::{StructDecodeVisitor, StructEncodeVisitor};
+use crate::structs::{StructDecodeVisitor, StructEncodeVisitor};
 use crate::value::Value;
 use crate::buffer::{ReverseWriter, WriterFactory};
 

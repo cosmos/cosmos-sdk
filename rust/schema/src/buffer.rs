@@ -1,97 +1,30 @@
+//! Buffer utilities for encoding and decoding.
 use bump_scope::{BumpScope, BumpBox};
 use crate::encoder::EncodeError;
 
-// pub trait WriterFactory {
-//     type Writer: Writer;
-//     fn new(&self, size: Option<usize>) -> Self::Writer;
-// }
-//
-// pub trait Writer {
-//     fn new(size: Option<usize>) -> Self;
-//     // type Output;
-//     fn write(&mut self, bytes: &[u8]) -> Result<(), EncodeError>;
-//     // fn finish(self) -> Result<Self::Output, EncodeError>;
-// }
-
-// pub struct BumpWriterFactory<'a> {
-//     scope: &'a mut BumpScope<'a>,
-// }
-//
-// impl<'a> BumpWriterFactory<'a> {
-//     pub fn new(scope: &'a mut BumpScope<'a>) -> BumpWriterFactory<'a> {
-//         BumpWriterFactory {
-//             scope,
-//         }
-//     }
-// }
-//
-//
-// pub struct SliceWriter<'a> {
-//     buf: &'a mut [u8],
-//     pos: usize,
-// }
-//
-// impl<'a> SliceWriter<'a> {
-//     pub fn new(buf: &'a mut [u8]) -> SliceWriter<'a> {
-//         SliceWriter {
-//             buf,
-//             pos: 0,
-//         }
-//     }
-//
-//     pub fn written(&self) -> usize {
-//         self.pos
-//     }
-// }
-//
-// impl<'a> Writer for SliceWriter<'a> {
-//     type Output = &'a [u8];
-//
-//     fn write(&mut self, bytes: &[u8]) -> Result<(), EncodeError> {
-//         if self.pos + bytes.len() > self.buf.len() {
-//             return Err(EncodeError::OutOfSpace);
-//         }
-//         self.buf[self.pos..self.pos + bytes.len()].copy_from_slice(bytes);
-//         self.pos += bytes.len();
-//         Ok(())
-//     }
-//
-//     fn finish(self) -> Result<Self::Output, EncodeError> {
-//         Ok(&self.buf[0..self.pos])
-//     }
-// }
-
-// #[cfg(feature = "std")]
-// impl Writer for alloc::vec::Vec<u8> {
-//     fn new(size: Option<usize>) -> Self {
-//         match size {
-//             Some(size) => alloc::vec::Vec::with_capacity(size),
-//             None => alloc::vec::Vec::new(),
-//         }
-//     }
-//
-//     fn write(&mut self, bytes: &[u8]) -> Result<(), EncodeError> {
-//         self.extend_from_slice(bytes);
-//         Ok(())
-//     }
-// }
-
+/// A factory for creating writers.
 pub trait WriterFactory {
+    /// The type of output produced by the writer.
     type Output;
-    fn new_reverse(&self, size: usize) -> impl ReverseWriter<Self::Output>;
+    /// Create a new reverse writer.
+    fn new_reverse(&self, size: usize) -> impl ReverseWriter<Output=Self::Output>;
 }
 
+/// A writer that writes bytes slices starting from the end of a buffer.
 pub trait ReverseWriter {
+    /// The type of output produced by the writer.
+    type Output;
+    /// Write bytes to the end of the buffer.
     fn write(&mut self, bytes: &[u8]) -> Result<(), EncodeError>;
+    /// Get the current position in the buffer.
     fn pos(&self) -> usize;
-    fn finish(self) -> Result<Output, EncodeError>;
+    /// Finish writing and return the output.
+    fn finish(self) -> Result<Self::Output, EncodeError>;
 }
-
-pub trait
 
 impl<'a> WriterFactory for BumpScope<'a> {
     type Output = &'a [u8];
-    fn new_reverse(&self, size: usize) -> impl ReverseWriter<Self::Output> {
+    fn new_reverse(&self, size: usize) -> impl ReverseWriter<Output=Self::Output> {
         let b = self.alloc_slice_fill(size, 0);
         ReverseSliceWriter {
             buf: b.into_mut(),
@@ -101,12 +34,14 @@ impl<'a> WriterFactory for BumpScope<'a> {
 }
 
 
-pub struct ReverseSliceWriter<'a> {
+struct ReverseSliceWriter<'a> {
     buf: &'a mut [u8],
     pos: usize,
 }
 
-impl<'a> ReverseWriter<&'a [u8]> for ReverseSliceWriter<'a> {
+impl<'a> ReverseWriter for ReverseSliceWriter<'a> {
+    type Output = &'a [u8];
+
     fn write(&mut self, bytes: &[u8]) -> Result<(), EncodeError> {
         if self.pos < bytes.len() {
             return Err(EncodeError::OutOfSpace);
@@ -122,20 +57,5 @@ impl<'a> ReverseWriter<&'a [u8]> for ReverseSliceWriter<'a> {
 
     fn finish(self) -> Result<&'a [u8], EncodeError> {
         Ok(&self.buf[self.pos..])
-    }
-}
-
-impl<'a> ReverseWriter<&'a [u8]> for ReverseSliceWriter<'a> {
-    fn write(&mut self, bytes: &[u8]) -> Result<(), EncodeError> {
-        if self.pos < bytes.len() {
-            return Err(EncodeError::OutOfSpace);
-        }
-        self.pos -= bytes.len();
-        self.buf[self.pos..self.pos + bytes.len()].copy_from_slice(bytes);
-        Ok(())
-    }
-
-    fn pos(&self) -> usize {
-        self.pos
     }
 }

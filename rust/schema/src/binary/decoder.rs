@@ -3,7 +3,7 @@ use bump_scope::{BumpScope, BumpString};
 use crate::decoder::{decode, DecodeError};
 use crate::list::ListVisitor;
 use crate::mem::MemoryManager;
-use crate::r#struct::StructDecodeVisitor;
+use crate::structs::StructDecodeVisitor;
 use crate::value::Value;
 
 pub fn decode_value<'b, 'a: 'b, V: Value<'a>>(input: &'a [u8], memory_manager: &'b MemoryManager<'a, 'a>) -> Result<V, DecodeError> {
@@ -129,7 +129,7 @@ mod tests {
     use crate::encoder::{EncodeError, Encoder};
     use crate::field::Field;
     use crate::mem::MemoryManager;
-    use crate::r#struct::{StructDecodeVisitor, StructEncodeVisitor, StructSchema};
+    use crate::structs::{StructDecodeVisitor, StructEncodeVisitor, StructSchema};
     use crate::types::{to_field, StrT, StructT, UIntNT};
     use crate::value::Value;
 

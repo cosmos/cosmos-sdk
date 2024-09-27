@@ -1,3 +1,4 @@
+//! Defines a codec for the native binary format.
 use crate::binary::encoder::encode_value;
 use crate::buffer::WriterFactory;
 use crate::codec::Codec;
@@ -9,6 +10,7 @@ use crate::value::Value;
 mod encoder;
 mod decoder;
 
+/// A codec for encoding and decoding values using the native binary format.
 pub struct NativeBinaryCodec;
 
 impl Codec for NativeBinaryCodec {

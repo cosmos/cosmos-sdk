@@ -1,0 +1,14 @@
+[package]
+name = "ixc-vm-wasmtime"
+version = "0.1.0"
+edition = "2021"
+repository.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+ixc_message_api = { path = "../../message_api" }
+ixc_vm_api = { path = "../api" }
+
+[lints]
+workspace = true

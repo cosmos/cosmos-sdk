@@ -1,24 +1,25 @@
-use bump_scope::{Bump, BumpString, BumpVec};
+//! The codec trait.
 use crate::buffer::{ReverseWriter, WriterFactory};
 use crate::decoder::DecodeError;
 use crate::encoder::EncodeError;
 use crate::mem::MemoryManager;
 use crate::value::Value;
+use bump_scope::{Bump, BumpVec};
 
+/// Trait implemented by encoding protocols.
 pub trait Codec {
+    /// Encode a value.
     fn encode_value<'a, V: Value<'a>, F: WriterFactory>(value: &V, writer_factory: &F) -> Result<F::Output, EncodeError>;
+    /// Decode a value.
     fn decode_value<'b, 'a: 'b, V: Value<'a>>(input: &'a [u8], memory_manager: &'b MemoryManager<'a, 'a>) -> Result<V, DecodeError>;
 }
 
 #[cfg(test)]
 mod tests {
-    use alloc::boxed::Box;
-    use alloc::string::String;
-    use alloc::vec;
-    use core::any::Any;
-    use core::ptr::NonNull;
-    use bump_scope::{bump_vec, mut_bump_vec, Bump, BumpBox, BumpScope, BumpVec, MutBumpVec};
     use super::*;
+    use alloc::string::String;
+    use bump_scope::{bump_vec, Bump, BumpBox, BumpScope, BumpVec};
+    use core::ptr::NonNull;
     extern crate std;
 
     struct HasString {

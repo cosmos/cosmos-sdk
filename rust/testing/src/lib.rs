@@ -2,6 +2,7 @@
 
 mod manager;
 mod store;
+mod vm;
 
 use ixc_message_api::Address;
 use ixc_core::{Context};

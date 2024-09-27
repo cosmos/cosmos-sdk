@@ -6,22 +6,21 @@ extern crate alloc;
 
 pub mod value;
 pub mod types;
-mod r#struct;
+pub mod structs;
 mod r#enum;
 mod oneof;
 pub mod state_object;
 pub mod codec;
-mod decoder;
+pub mod decoder;
 mod list;
-mod binary;
-mod encoder;
-mod proto;
+pub mod binary;
+pub mod encoder;
 mod kind;
 mod field;
 mod fields;
-mod buffer;
+pub mod buffer;
 pub mod mem;
 
-pub use r#struct::{StructCodec};
+pub use structs::{StructCodec};
 pub use r#enum::{EnumCodec};
 pub use oneof::{OneOfCodec};

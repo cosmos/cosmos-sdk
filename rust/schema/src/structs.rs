@@ -1,3 +1,4 @@
+//! Struct codec and schema traits.
 use crate::decoder::{DecodeError, Decoder};
 use crate::encoder::{EncodeError, Encoder};
 use crate::field::Field;
@@ -36,14 +37,20 @@ pub unsafe trait StructCodec {
     fn dummy(&self);
 }
 
+/// StructSchema is the trait that should be derived to define the schema of a struct.
 pub unsafe trait StructSchema {
+    /// The fields of the struct.
     const FIELDS: &'static [Field<'static>];
 }
 
+/// StructDecodeVisitor is the trait that should be derived to decode a struct.
 pub unsafe trait StructDecodeVisitor<'a>: StructSchema {
+    /// Decode a field from the input data.
     fn decode_field<D: Decoder<'a>>(&mut self, index: usize, decoder: &mut D) -> Result<(), DecodeError>;
 }
 
+/// StructEncodeVisitor is the trait that should be derived to encode a struct.
 pub unsafe trait StructEncodeVisitor: StructSchema {
+    /// Encode a field to the output data.
     fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError>;
 }

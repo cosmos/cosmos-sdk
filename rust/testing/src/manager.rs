@@ -1,7 +1,8 @@
+use std::alloc::Layout;
 use imbl::HashMap;
 use ixc::*;
 use ixc_message_api::code::Code;
-use ixc_message_api::handler::Handler;
+use ixc_message_api::handler::{AllocError, Handler, HostBackend};
 use ixc_message_api::packet::MessagePacket;
 use crate::store::VersionedMultiStore;
 
@@ -24,5 +25,19 @@ impl Hypervisor {
             // invoke handler with message packet linked to current state
             todo!()
         }
+    }
+}
+
+struct ExecContext {
+
+}
+
+impl HostBackend for ExecContext {
+    fn invoke(&self, message_packet: &mut MessagePacket) -> Code {
+        todo!()
+    }
+
+    unsafe fn alloc(&self, layout: Layout) -> Result<*mut u8, AllocError> {
+        todo!()
     }
 }

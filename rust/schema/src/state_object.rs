@@ -54,6 +54,7 @@ impl KeyFieldValue for i128 {}
 impl KeyFieldValue for bool {}
 impl KeyFieldValue for simple_time::Time {}
 impl KeyFieldValue for simple_time::Duration {}
+#[cfg(feature = "address")]
 impl KeyFieldValue for ixc_message_api::AccountID {}
 
 /// This trait is implemented for types that can be used as keys in state objects.

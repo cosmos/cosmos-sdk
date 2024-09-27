@@ -1,13 +1,17 @@
+//! Memory management utilities for codec implementations.
 use core::cell::RefCell;
 use core::ptr::NonNull;
 use bump_scope::{BumpBox, BumpScope, BumpVec};
 
+/// A memory manager that tracks allocated memory using a bump allocator and ensures that
+/// memory is deallocated and dropped properly when the manager is dropped.
 pub struct MemoryManager<'b, 'a: 'b> {
     scope: &'b BumpScope<'a>,
     handles: RefCell<BumpVec<'b, 'a, NonNull<dyn DeferDrop + 'b>>>,
 }
 
 impl<'b, 'a: 'b> MemoryManager<'b, 'a> {
+    /// Create a new memory manager.
     pub fn new(scope: &'b BumpScope<'a>) -> MemoryManager<'b, 'a> {
         MemoryManager {
             scope,
@@ -15,10 +19,13 @@ impl<'b, 'a: 'b> MemoryManager<'b, 'a> {
         }
     }
 
+    /// Get the bump scope for this memory manager.
     pub fn scope(&self) -> &'b bump_scope::BumpScope<'a> {
         self.handles.borrow().bump()
     }
 
+    /// Converts a BumpVec into a borrowed slice in such a way that the drop code
+    /// for T (if any) will be executed when the MemoryManager is dropped.
     pub fn unpack_slice<T>(&self, vec: BumpVec<'b, 'a, T>) -> &'a [T] {
         unsafe {
             let b = vec.into_boxed_slice();

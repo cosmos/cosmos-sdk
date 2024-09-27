@@ -1,30 +1,43 @@
-use bump_scope::{BumpScope, BumpString, BumpVec};
+//! The decoder trait and error type.
 use crate::list::ListVisitor;
 use crate::mem::MemoryManager;
-use crate::r#struct::StructDecodeVisitor;
+use crate::structs::StructDecodeVisitor;
 use crate::value::Value;
 
+/// The trait that decoders must implement.
 pub trait Decoder<'a> {
+    /// Decode a `u32`.
     fn decode_u32(&mut self) -> Result<u32, DecodeError>;
+    /// Decode a `u128`.
     fn decode_u128(&mut self) -> Result<u128, DecodeError>;
+    /// Decode a borrowed `str`.
     fn decode_borrowed_str(&mut self) -> Result<&'a str, DecodeError>;
     #[cfg(feature = "std")]
+    /// Decode an owned `String`.
     fn decode_owned_str(&mut self) -> Result<alloc::string::String, DecodeError>;
+    /// Decode a struct.
     fn decode_struct<V: StructDecodeVisitor<'a>>(&mut self, visitor: &mut V) -> Result<(), DecodeError>;
+    /// Decode a list.
     fn decode_list<T, V: ListVisitor<'a, T>>(&mut self, visitor: &mut V) -> Result<(), DecodeError>;
+    /// Get the memory manager.
     fn mem_manager(&self) -> &MemoryManager<'a, 'a>;
 }
 
+/// Decode a single value.
 pub fn decode<'a, D: Decoder<'a>, V: Value<'a>>(decoder: &mut D) -> Result<V, DecodeError> {
     let mut state = V::DecodeState::default();
     V::visit_decode_state(&mut state, decoder)?;
     V::finish_decode_state(state, decoder.mem_manager())
 }
 
+/// A decoding error.
 #[derive(Debug)]
 pub enum DecodeError {
+    /// The input data is out of data.
     OutOfData,
+    /// The input data is invalid.
     InvalidData,
+    /// An unknown and unhandled field number was encountered.
     UnknownFieldNumber
 }
 

@@ -52,7 +52,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Improvements
 
 * (sims) [#21613](https://github.com/cosmos/cosmos-sdk/pull/21613) Add sims2 framework and factory methods for simpler message factories in modules
-* (modules) Duplicatable metrics are no more collected in modules. They were unecessary overhead.
+* (modules) [#21963](https://github.com/cosmos/cosmos-sdk/pull/21963) Duplicatable metrics are no more collected in modules. They were unecessary overhead.
 
 ### Bug Fixes
 

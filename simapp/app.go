@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/x/accounts/defaults/multisig"
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
@@ -315,6 +316,7 @@ func NewSimApp(
 		accountstd.AddAccount(lockup.PERIODIC_LOCKING_ACCOUNT, lockup.NewPeriodicLockingAccount),
 		accountstd.AddAccount(lockup.DELAYED_LOCKING_ACCOUNT, lockup.NewDelayedLockingAccount),
 		accountstd.AddAccount(lockup.PERMANENT_LOCKING_ACCOUNT, lockup.NewPermanentLockingAccount),
+		accountstd.AddAccount("multisig", multisig.NewAccount),
 		// PRODUCTION: add
 		baseaccount.NewAccount("base", txConfig.SignModeHandler(), baseaccount.WithSecp256K1PubKey()),
 	)

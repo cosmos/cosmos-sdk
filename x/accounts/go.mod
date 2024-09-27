@@ -8,8 +8,6 @@ require (
 	cosmossdk.io/core v1.0.0-alpha.3
 	cosmossdk.io/core/testing v0.0.0-00010101000000-000000000000
 	cosmossdk.io/depinject v1.0.0
-	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/tx v0.13.3
 	github.com/cosmos/cosmos-sdk v0.53.0
@@ -34,8 +32,6 @@ require (
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/schema v0.3.0 // indirect
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
-	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
-	cosmossdk.io/x/distribution v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -182,9 +178,6 @@ replace (
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/store => ../../store
-	cosmossdk.io/x/accounts/defaults/base => ./defaults/base // REMOVE this when
-	cosmossdk.io/x/accounts/defaults/lockup => ./defaults/lockup
-	cosmossdk.io/x/accounts/defaults/multisig => ./defaults/multisig
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/distribution => ../distribution
 	cosmossdk.io/x/mint => ../mint

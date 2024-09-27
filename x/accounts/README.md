@@ -2,6 +2,44 @@
 
 The x/accounts module provides module and facilities for writing smart cosmos-sdk accounts.
 
+# The `Authentication` Interface, enabling abstracted TX authentication mechanisms beyond public key cryptography.
+
+The x/accounts module allows chain developers to implement custom authentication mechanisms for their accounts, specifically
+an account can be authenticated from a TX if it implements the `Authentication` interface, interface implementation in x/accounts' 
+accounts is done by exposing an execution handler capable of handling a specific message.
+
+In this case the message we want to implement is `MsgAuthenticate` as defined [here](./proto/cosmos/accounts/interfaces/account_abstraction/v1/interface.proto).
+
+## How to implement the interface
+
+An account can implement the interface by handling the execution of `MsgAuthenticate`:
+
+```go
+package base
+
+// Authenticate implements the authentication flow of an abstracted base account.
+func (a Account) Authenticate(ctx context.Context, msg *aa_interface_v1.MsgAuthenticate) (*aa_interface_v1.MsgAuthenticateResponse, error) {
+	if !accountstd.SenderIsAccountsModule(ctx) {
+		return nil, errors.New("unauthorized: only accounts module is allowed to call this")
+	}
+	// your authentication logic.
+}
+
+// Implementing the authentication interface is done by registering the execution handler 
+// which handles authenticate.
+func (a Account) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
+	accountstd.RegisterExecuteHandler(builder, a.SwapPubKey) // other handler
+	accountstd.RegisterExecuteHandler(builder, a.Authenticate) // <= implements the Authentication interface.
+}
+
+```
+
+It is important to:
+1. Verify the sender is the x/accounts module. This will make it impossible for other accounts to try to trigger authentication.
+2. Ensure that the authentication mechanism is safe:
+   3. It must not be possible to replay the same action using the same signature.
+
+
 # Supporting Custom Accounts in the x/auth gRPC Server
 
 ## Overview

@@ -152,7 +152,7 @@ replace (
 	cosmossdk.io/core/testing => ../../../../core/testing
 	cosmossdk.io/store => ../../../../store
 	cosmossdk.io/x/accounts => ../../.
-	cosmossdk.io/x/accounts/defaults/multisig => ../multisig
+	cosmossdk.io/x/accounts/defaults/base => ../../defaults/base
 	cosmossdk.io/x/bank => ../../../bank
 	cosmossdk.io/x/consensus => ../../../consensus
 	cosmossdk.io/x/distribution => ../../../distribution
@@ -161,4 +161,5 @@ replace (
 	cosmossdk.io/x/protocolpool => ../../../protocolpool
 	cosmossdk.io/x/slashing => ../../../slashing
 	cosmossdk.io/x/staking => ../../../staking
+	cosmossdk.io/x/tx => ../../../tx
 )

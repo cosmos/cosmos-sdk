@@ -7,6 +7,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
@@ -71,6 +73,9 @@ func NewKeeper(
 	if err != nil {
 		return Keeper{}, err
 	}
+
+	fmt.Printf("%#v\n", slices.Collect(maps.Keys(keeper.accounts)))
+
 	registerToInterfaceRegistry(ir, keeper.accounts)
 	return keeper, nil
 }

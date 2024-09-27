@@ -274,7 +274,6 @@ func (s *CLITestSuite) TestCLIQueryTxCmdByHash() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxCmd()
 			cmd.SetArgs(tc.args)
@@ -340,7 +339,6 @@ func (s *CLITestSuite) TestCLIQueryTxCmdByEvents() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxCmd()
 			cmd.SetArgs(tc.args)
@@ -383,7 +381,6 @@ func (s *CLITestSuite) TestCLIQueryTxsCmdByEvents() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxsByEventsCmd()
 
@@ -1019,7 +1016,6 @@ func (s *CLITestSuite) TestAuxSigner() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			_, err := govtestutil.MsgSubmitLegacyProposal(
 				s.clientCtx,
@@ -1238,7 +1234,6 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := govtestutil.MsgSubmitLegacyProposal(
 				s.clientCtx,

@@ -17,7 +17,7 @@ import (
 
 // GlobalLabels defines the set of global labels that will be applied to all
 // metrics emitted using the telemetry package function wrappers.
-var GlobalLabels = []metrics.Label{} // nolint: ignore // false positive
+var GlobalLabels = []metrics.Label{} //nolint: ignore // false positive
 
 // NewLabel creates a new instance of Label with name and value
 func NewLabel(name, value string) metrics.Label {

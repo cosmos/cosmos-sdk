@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/cobra"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/x/bank/v2/client/cli"
 	"cosmossdk.io/x/bank/v2/keeper"
 	"cosmossdk.io/x/bank/v2/types"
 
@@ -102,6 +105,18 @@ func (am AppModule) RegisterMsgHandlers(router appmodulev2.MsgRouter) {
 		errs = errors.Join(errs, err)
 	}
 
+	if err := appmodulev2.RegisterHandler(
+		router, gogoproto.MessageName(&types.MsgSend{}), handlers.MsgSend,
+	); err != nil {
+		errs = errors.Join(errs, err)
+	}
+
+	if err := appmodulev2.RegisterHandler(
+		router, gogoproto.MessageName(&types.MsgMint{}), handlers.MsgMint,
+	); err != nil {
+		errs = errors.Join(errs, err)
+	}
+
 	if errs != nil {
 		panic(errs)
 	}
@@ -118,7 +133,52 @@ func (am AppModule) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
 		errs = errors.Join(errs, err)
 	}
 
+	if err := appmodulev2.RegisterHandler(
+		router, gogoproto.MessageName(&types.QueryBalanceRequest{}), handlers.QueryBalance,
+	); err != nil {
+		errs = errors.Join(errs, err)
+	}
+
 	if errs != nil {
 		panic(errs)
 	}
+}
+
+// GetQueryDecoders returns grpc request and the corresponding decoder.
+func (am AppModule) GetQueryDecoders() map[string]func() gogoproto.Message {
+	decodeMaps := make(map[string]func() gogoproto.Message)
+	var errs error
+
+	typ := gogoproto.MessageType(gogoproto.MessageName(&types.QueryParamsRequest{}))
+	if typ == nil {
+		errs = errors.Join(errs, fmt.Errorf("unable to find message in gogotype registry"))
+	}
+	decodeMaps[gogoproto.MessageName(&types.QueryParamsRequest{})] = func() gogoproto.Message {
+		return reflect.New(typ.Elem()).Interface().(gogoproto.Message)
+	}
+
+	typ = gogoproto.MessageType(gogoproto.MessageName(&types.QueryBalanceRequest{}))
+	if typ == nil {
+		errs = errors.Join(errs, fmt.Errorf("unable to find message in gogotype registry"))
+	}
+	decodeMaps[gogoproto.MessageName(&types.QueryBalanceRequest{})] = func() gogoproto.Message {
+		return reflect.New(typ.Elem()).Interface().(gogoproto.Message)
+	}
+
+	if errs != nil {
+		panic(errs)
+	}
+	return decodeMaps
+}
+
+// GetTxCmd returns the root tx command for the bank/v2 module.
+// TODO: Remove & use autocli
+func (AppModule) GetTxCmd() *cobra.Command {
+	return cli.NewTxCmd()
+}
+
+// GetQueryCmd returns the root query command for the bank/v2 module.
+// TODO: Remove & use autocli
+func (AppModule) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd()
 }

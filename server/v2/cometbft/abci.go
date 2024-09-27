@@ -227,7 +227,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 		resp, err = c.handleQueryP2P(path)
 
 	default:
-		resp = QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "unknown query path"), c.cfg.AppTomlConfig.Trace)
+		resp = QueryResult(errorsmod.Wrapf(cometerrors.ErrUnknownRequest, "unknown query path %s", path), c.cfg.AppTomlConfig.Trace)
 	}
 
 	if err != nil {

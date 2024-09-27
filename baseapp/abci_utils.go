@@ -538,3 +538,33 @@ func (ts *defaultTxSelector) SelectTxForProposal(_ context.Context, maxTxBytes, 
 	// check if we've reached capacity; if so, we cannot select any more transactions
 	return ts.totalTxBytes >= maxTxBytes || (maxBlockGas > 0 && (ts.totalTxGas >= maxBlockGas))
 }
+
+// DefaultLaneHandler
+
+var _ mempool.Lanes = DefaultLaneHandler{}
+
+// DefaultLaneHandler identifies separates transactions based on fee into separate lanes
+type DefaultLaneHandler struct {
+	FeeLanes    map[string]uint32
+	DefaultLane string
+}
+
+func (dlh DefaultLaneHandler) GetLanes() (map[string]uint32, string) {
+	return dlh.FeeLanes, dlh.DefaultLane
+}
+
+func (DefaultLaneHandler) GetTxLane(_ context.Context, tx sdk.Tx) uint32 {
+	return 0
+}
+
+var _ mempool.Lanes = NoopLaneHandler{}
+
+type NoopLaneHandler struct{}
+
+func (NoopLaneHandler) GetLanes() (map[string]uint32, string) {
+	return map[string]uint32{}, ""
+}
+
+func (NoopLaneHandler) GetTxLane(_ context.Context, _ sdk.Tx) uint32 {
+	return 0
+}

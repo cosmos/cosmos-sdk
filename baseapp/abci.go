@@ -152,12 +152,16 @@ func (app *BaseApp) Info(_ *abci.InfoRequest) (*abci.InfoResponse, error) {
 		}
 	}
 
+	lanes, defaultLane := app.laneHandler.GetLanes()
+
 	return &abci.InfoResponse{
 		Data:             app.name,
 		Version:          app.version,
 		AppVersion:       appVersion,
 		LastBlockHeight:  lastCommitID.Version,
 		LastBlockAppHash: lastCommitID.Hash,
+		LanePriorities:   lanes,
+		DefaultLane:      defaultLane,
 	}, nil
 }
 
@@ -377,6 +381,7 @@ func (app *BaseApp) CheckTx(req *abci.CheckTxRequest) (*abci.CheckTxResponse, er
 		Log:       result.Log,
 		Data:      result.Data,
 		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+		LaneId:    result.LaneId,
 	}, nil
 }
 

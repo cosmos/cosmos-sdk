@@ -406,3 +406,9 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 func (app *BaseApp) SetGRPCQueryRouter(grpcQueryRouter *GRPCQueryRouter) {
 	app.grpcQueryRouter = grpcQueryRouter
 }
+
+// SetLaneHandler provides baseapp the LaneHandler
+// 0 is a reserved lane, order of the lanes does not matter
+func (app *BaseApp) SetLaneHandler(laneHandler mempool.Lanes) {
+	app.laneHandler = laneHandler
+}

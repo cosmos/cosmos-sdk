@@ -91,6 +91,7 @@ type BaseApp struct {
 	prepareCheckStater sdk.PrepareCheckStater         // logic to run during commit using the checkState
 	precommiter        sdk.Precommiter                // logic to run during commit using the deliverState
 	versionModifier    server.VersionModifier         // interface to get and set the app version
+	laneHandler        mempool.Lanes
 
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID
@@ -1002,6 +1003,8 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 			result.Events = append(anteEvents, result.Events...)
 		}
 	}
+
+	// handleLaned mempool
 
 	return gInfo, result, anteEvents, err
 }

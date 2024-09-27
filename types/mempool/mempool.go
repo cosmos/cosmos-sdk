@@ -39,6 +39,14 @@ type Iterator interface {
 	Tx() sdk.Tx
 }
 
+type Lanes interface {
+	// GetLanes gets all the available lanes an application has with the default lane
+	GetLanes() (lanes map[string]uint32, defaultLane string)
+
+	// GetTxLane returns the lane priority for the given transaction
+	GetTxLane(context.Context, sdk.Tx) uint32
+}
+
 var (
 	ErrTxNotFound           = errors.New("tx not found in mempool")
 	ErrMempoolTxMaxCapacity = errors.New("pool reached max tx capacity")

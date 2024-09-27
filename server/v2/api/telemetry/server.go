@@ -82,12 +82,9 @@ func (s *TelemetryServer[T]) Start(ctx context.Context) error {
 		Handler: mux,
 	}
 
-	go func() {
-		s.logger.Info("Starting telemetry server", "address", s.config.Address)
-		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			s.logger.Error("Failed to start telemetry server", "error", err)
-		}
-	}()
+	if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		return fmt.Errorf("failed to start telemetry server: %w", err)
+	}
 
 	return nil
 }

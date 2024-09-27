@@ -60,7 +60,7 @@ func TestBankSendTxCmd(t *testing.T) {
 		require.Len(t, gotOutputs, 1)
 		code := gjson.Get(gotOutputs[0].(string), "code")
 		require.True(t, code.Exists())
-		require.Greater(t, code.Int(), 0)
+		require.Greater(t, code.Int(), int64(0))
 		return false
 	}
 	invalidCli := cli

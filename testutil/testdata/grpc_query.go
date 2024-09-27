@@ -100,22 +100,21 @@ func DeterministicIterations[request, response proto.Message](
 
 func DeterministicIterationsV2[request, response proto.Message](
 	t *testing.T,
-	ctx context.Context,
 	req request,
 	meterFn func() gas.Meter,
-	queryFn func(context.Context, request) (response, error),
+	queryFn func(request) (response, error),
 	assertGas func(*testing.T, gas.Gas),
 	assertResponse func(*testing.T, response),
 ) {
 	t.Helper()
-	prevRes, err := queryFn(ctx, req)
+	prevRes, err := queryFn(req)
 	gasMeter := meterFn()
 	gasConsumed := gasMeter.Consumed()
 	require.NoError(t, err)
 	assertGas(t, gasConsumed)
 
 	for i := 0; i < iterCount; i++ {
-		res, err := queryFn(ctx, req)
+		res, err := queryFn(req)
 		require.NoError(t, err)
 		sameGas := gasMeter.Consumed()
 		require.Equal(t, gasConsumed, sameGas)

@@ -200,7 +200,7 @@ func (c *Consensus[T]) Query(
 		if err != nil {
 			return nil, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
 		}
-		res, _, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
+		res, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
 		if err != nil {
 			resp := QueryResult(err, c.cfg.AppTomlConfig.Trace)
 			resp.Height = req.Height

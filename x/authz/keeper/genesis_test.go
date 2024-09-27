@@ -18,7 +18,6 @@ import (
 	bank "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -56,7 +55,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
 	suite.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
-	suite.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+	suite.accountKeeper.EXPECT().AddressCodec().Return(addresscodec.NewBech32Codec("cosmos")).AnyTimes()
 
 	suite.baseApp = baseapp.NewBaseApp(
 		"authz",

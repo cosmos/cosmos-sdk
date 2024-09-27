@@ -104,6 +104,7 @@ func (s *GRPCGatewayServer[T]) Init(appI serverv2.AppI[transaction.Tx], cfg map[
 
 func (s *GRPCGatewayServer[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
+		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil
 	}
 

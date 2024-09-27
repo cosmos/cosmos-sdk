@@ -163,6 +163,7 @@ func (s *Server[T]) Config() any {
 
 func (s *Server[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
+		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil
 	}
 

@@ -56,7 +56,7 @@ var v2KeyChanges = v2KeyChangesMap{
 	"iavl-cache-size":       []string{"store.options.iavl-config.cache-size"},
 	"iavl-disable-fastnode": []string{"store.options.iavl-config.skip-fast-storage-upgrade"},
 	"telemetry.enabled":     []string{"telemetry.enable"},
-	"mempool.max-txs": []string{"comet.mempool.max-txs"},
+	"mempool.max-txs":       []string{"comet.mempool.max-txs"},
 	// Add other key mappings as needed
 }
 

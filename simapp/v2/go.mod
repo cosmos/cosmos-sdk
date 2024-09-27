@@ -6,12 +6,12 @@ require (
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/core v1.0.0 // main
-	cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b // indirect; main
+	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // indirect; main
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/runtime/v2 v2.0.0-20240920095614-aa90bb43d8f8 // main
-	cosmossdk.io/server/v2 v2.0.0-20240920095614-aa90bb43d8f8 // main
+	cosmossdk.io/server/v2 v2.0.0-20240927165321-7fe95fc3f945 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-20240916221850-7856d226038c // main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
@@ -49,7 +49,7 @@ require (
 	cloud.google.com/go v0.115.0 // indirect
 	cloud.google.com/go/auth v0.5.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
-	cloud.google.com/go/compute/metadata v0.3.0 // indirect
+	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // indirect; main
@@ -226,9 +226,9 @@ require (
 	golang.org/x/tools v0.25.0 // indirect
 	google.golang.org/api v0.185.0 // indirect
 	google.golang.org/genproto v0.0.0-20240617180043-68d350f18fd4 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240725223205-93522f1f2a9f // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
-	google.golang.org/grpc v1.66.2 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240924160255-9d4c2d233b61 // indirect
+	google.golang.org/grpc v1.67.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.1 // indirect

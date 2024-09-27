@@ -3,7 +3,7 @@ package telemetry
 func DefaultConfig() *Config {
 	return &Config{
 		Enable:                  true,
-		Address:                 "localhost:1338",
+		Address:                 "localhost:1318",
 		ServiceName:             "",
 		EnableHostname:          false,
 		EnableHostnameLabel:     false,

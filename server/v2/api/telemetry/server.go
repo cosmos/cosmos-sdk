@@ -13,13 +13,13 @@ import (
 )
 
 var (
-	_ serverv2.ServerComponent[transaction.Tx] = (*TelemetryServer[transaction.Tx])(nil)
-	_ serverv2.HasConfig                       = (*TelemetryServer[transaction.Tx])(nil)
+	_ serverv2.ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
+	_ serverv2.HasConfig                       = (*Server[transaction.Tx])(nil)
 )
 
 const ServerName = "telemetry"
 
-type TelemetryServer[T transaction.Tx] struct {
+type Server[T transaction.Tx] struct {
 	config  *Config
 	logger  log.Logger
 	server  *http.Server
@@ -27,16 +27,16 @@ type TelemetryServer[T transaction.Tx] struct {
 }
 
 // New creates a new telemetry server.
-func New[T transaction.Tx]() *TelemetryServer[T] {
-	return &TelemetryServer[T]{}
+func New[T transaction.Tx]() *Server[T] {
+	return &Server[T]{}
 }
 
 // Name returns the server name.
-func (s *TelemetryServer[T]) Name() string {
+func (s *Server[T]) Name() string {
 	return ServerName
 }
 
-func (s *TelemetryServer[T]) Config() any {
+func (s *Server[T]) Config() any {
 	if s.config == nil || s.config.Address == "" {
 		return DefaultConfig()
 	}
@@ -45,7 +45,7 @@ func (s *TelemetryServer[T]) Config() any {
 }
 
 // Init implements serverv2.ServerComponent.
-func (s *TelemetryServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
+func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
 	serverCfg := s.Config().(*Config)
 	if len(cfg) > 0 {
 		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
@@ -53,7 +53,7 @@ func (s *TelemetryServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, log
 		}
 	}
 	s.config = serverCfg
-	s.logger = logger
+	s.logger = logger.With(log.ModuleKey, s.Name())
 
 	metrics, err := NewMetrics(s.config)
 	if err != nil {
@@ -64,7 +64,7 @@ func (s *TelemetryServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, log
 	return nil
 }
 
-func (s *TelemetryServer[T]) Start(ctx context.Context) error {
+func (s *Server[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
 		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil
@@ -82,6 +82,7 @@ func (s *TelemetryServer[T]) Start(ctx context.Context) error {
 		Handler: mux,
 	}
 
+	s.logger.Info("starting telemetry server...", "address", s.config.Address)
 	if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		return fmt.Errorf("failed to start telemetry server: %w", err)
 	}
@@ -89,15 +90,16 @@ func (s *TelemetryServer[T]) Start(ctx context.Context) error {
 	return nil
 }
 
-func (s *TelemetryServer[T]) Stop(ctx context.Context) error {
+func (s *Server[T]) Stop(ctx context.Context) error {
 	if !s.config.Enable || s.server == nil {
 		return nil
 	}
 
+	s.logger.Info("stopping telemetry server...", "address", s.config.Address)
 	return s.server.Shutdown(ctx)
 }
 
-func (s *TelemetryServer[T]) metricsHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server[T]) metricsHandler(w http.ResponseWriter, r *http.Request) {
 	format := strings.TrimSpace(r.FormValue("format"))
 
 	// errorResponse defines the attributes of a JSON error response.

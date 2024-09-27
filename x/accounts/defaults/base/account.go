@@ -72,6 +72,12 @@ type Account struct {
 }
 
 func (a Account) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitResponse, error) {
+	if msg.InitSequence != 0 {
+		err := a.Sequence.Set(ctx, msg.InitSequence)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return &v1.MsgInitResponse{}, a.savePubKey(ctx, msg.PubKey)
 }
 
@@ -260,6 +266,18 @@ func (a Account) QuerySequence(ctx context.Context, _ *v1.QuerySequence) (*v1.Qu
 	return &v1.QuerySequenceResponse{Sequence: seq}, nil
 }
 
+func (a Account) QueryPubKey(ctx context.Context, _ *v1.QueryPubKey) (*v1.QueryPubKeyResponse, error) {
+	pubKey, err := a.loadPubKey(ctx)
+	if err != nil {
+		return nil, err
+	}
+	anyPubKey, err := codectypes.NewAnyWithValue(pubKey)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.QueryPubKeyResponse{PubKey: anyPubKey}, nil
+}
+
 func (a Account) AuthRetroCompatibility(ctx context.Context, _ *authtypes.QueryLegacyAccount) (*authtypes.QueryLegacyAccountResponse, error) {
 	addr, err := a.addrCodec.BytesToString(accountstd.Whoami(ctx))
 	if err != nil {
@@ -313,5 +331,6 @@ func (a Account) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 
 func (a Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, a.QuerySequence)
+	accountstd.RegisterQueryHandler(builder, a.QueryPubKey)
 	accountstd.RegisterQueryHandler(builder, a.AuthRetroCompatibility)
 }

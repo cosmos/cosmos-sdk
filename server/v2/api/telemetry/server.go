@@ -26,7 +26,7 @@ type TelemetryServer[T transaction.Tx] struct {
 	metrics *Metrics
 }
 
-// New creates a new telemtry server.
+// New creates a new telemetry server.
 func New[T transaction.Tx]() *TelemetryServer[T] {
 	return &TelemetryServer[T]{}
 }

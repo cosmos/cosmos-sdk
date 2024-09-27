@@ -2,6 +2,8 @@ package integration
 
 import (
 	"context"
+	"cosmossdk.io/core/gas"
+	stfgas "cosmossdk.io/server/v2/stf/gas"
 	"fmt"
 
 	"cosmossdk.io/core/comet"
@@ -59,16 +61,34 @@ type contextKeyType struct{}
 var contextKey = contextKeyType{}
 
 type integrationContext struct {
-	state corestore.WriterMap
+	state    corestore.WriterMap
+	gasMeter gas.Meter
+}
+
+func GasMeterFromContext(ctx context.Context) gas.Meter {
+	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
+	if !ok {
+		return nil
+	}
+	return iCtx.gasMeter
+}
+
+func GasMeterFactory(ctx context.Context) func() gas.Meter {
+	return func() gas.Meter {
+		return GasMeterFromContext(ctx)
+	}
 }
 
 func (s storeService) OpenKVStore(ctx context.Context) corestore.KVStore {
-	iCtx, ok := ctx.Value(contextKey).(integrationContext)
+	const gasLimit = 100_000
+	iCtx, ok := ctx.Value(contextKey).(*integrationContext)
 	if !ok {
 		return s.executionService.OpenKVStore(ctx)
 	}
 
-	state, err := iCtx.state.GetWriter(s.actor)
+	iCtx.gasMeter = stfgas.NewMeter(gasLimit)
+	writerMap := stfgas.NewMeteredWriterMap(stfgas.DefaultConfig, iCtx.gasMeter, iCtx.state)
+	state, err := writerMap.GetWriter(s.actor)
 	if err != nil {
 		panic(err)
 	}

@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/core/gas"
+	"github.com/cosmos/gogoproto/proto"
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"github.com/cosmos/gogoproto/types/any/test"
-
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/core/gas"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -86,6 +87,7 @@ func DeterministicIterations[request, response proto.Message](
 	if gasOverwrite { // to handle regressions, i.e. check that gas consumption didn't change
 		gasConsumed = ctx.GasMeter().GasConsumed() - before
 	}
+	t.Logf("gas consumed: %d", gasConsumed)
 
 	for i := 0; i < iterCount; i++ {
 		before := ctx.GasMeter().GasConsumed()
@@ -99,28 +101,27 @@ func DeterministicIterations[request, response proto.Message](
 func DeterministicIterationsV2[request, response proto.Message](
 	t *testing.T,
 	ctx context.Context,
-	gasService gas.Service,
 	req request,
-	grpcFn func(context.Context, request) (response, error),
-	gasConsumed uint64,
-	gasOverwrite bool,
+	meterFn func() gas.Meter,
+	queryFn func(context.Context, request) (response, error),
+	assertGas func(*testing.T, gas.Gas),
+	assertResponse func(*testing.T, response),
 ) {
 	t.Helper()
-	consumed := func() uint64 {
-		return gasService.GasMeter(ctx).Consumed()
-	}
-	before := consumed()
-	prevRes, err := grpcFn(ctx, req)
-	assert.NilError(t, err)
-	if gasOverwrite { // to handle regressions, i.e. check that gas consumption didn't change
-		gasConsumed = consumed() - before
-	}
+	prevRes, err := queryFn(ctx, req)
+	gasMeter := meterFn()
+	gasConsumed := gasMeter.Consumed()
+	require.NoError(t, err)
+	assertGas(t, gasConsumed)
 
 	for i := 0; i < iterCount; i++ {
-		before := consumed()
-		res, err := grpcFn(ctx, req)
-		assert.Equal(t, consumed()-before, gasConsumed)
-		assert.NilError(t, err)
-		assert.DeepEqual(t, res, prevRes)
+		res, err := queryFn(ctx, req)
+		require.NoError(t, err)
+		sameGas := gasMeter.Consumed()
+		require.Equal(t, gasConsumed, sameGas)
+		require.Equal(t, res, prevRes)
+		if assertResponse != nil {
+			assertResponse(t, res)
+		}
 	}
 }

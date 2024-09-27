@@ -291,7 +291,7 @@ func (a *App) StateLatestContext(t *testing.T) context.Context {
 	_, state, err := a.Store.StateLatest()
 	require.NoError(t, err)
 	writeableState := branch.DefaultNewWriterMap(state)
-	iCtx := integrationContext{state: writeableState}
+	iCtx := &integrationContext{state: writeableState}
 	return context.WithValue(context.Background(), contextKey, iCtx)
 }
 

@@ -2,6 +2,8 @@ package bank
 
 import (
 	"context"
+	"cosmossdk.io/core/gas"
+	minttypes "cosmossdk.io/x/mint/types"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -23,7 +25,27 @@ import (
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 )
 
-var denomRegex = `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
+var (
+	denomRegex   = `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
+	coin1        = sdk.NewCoin("denom", math.NewInt(10))
+	metadataAtom = banktypes.Metadata{
+		Description: "The native staking token of the Cosmos Hub.",
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    "uatom",
+				Exponent: 0,
+				Aliases:  []string{"microatom"},
+			},
+			{
+				Denom:    "atom",
+				Exponent: 6,
+				Aliases:  []string{"ATOM"},
+			},
+		},
+		Base:    "uatom",
+		Display: "atom",
+	}
+)
 
 type deterministicFixture struct {
 	*testing.T
@@ -35,8 +57,71 @@ type deterministicFixture struct {
 func (f *deterministicFixture) QueryBalance(
 	ctx context.Context, req *banktypes.QueryBalanceRequest,
 ) (*banktypes.QueryBalanceResponse, error) {
-	res, err := f.app.Query(ctx, 0, req)
+	res, _, err := f.app.Query(ctx, 0, req)
 	return res.(*banktypes.QueryBalanceResponse), err
+}
+
+func (f *deterministicFixture) QueryAllBalances(
+	ctx context.Context, req *banktypes.QueryAllBalancesRequest,
+) (*banktypes.QueryAllBalancesResponse, error) {
+	res, _, err := f.app.Query(ctx, 0, req)
+	return res.(*banktypes.QueryAllBalancesResponse), err
+}
+
+func (f *deterministicFixture) QuerySpendableBalances(
+	ctx context.Context, req *banktypes.QuerySpendableBalancesRequest,
+) (*banktypes.QuerySpendableBalancesResponse, error) {
+	res, _, err := f.app.Query(ctx, 0, req)
+	return res.(*banktypes.QuerySpendableBalancesResponse), err
+}
+
+func (f *deterministicFixture) QueryTotalSupply(
+	ctx context.Context, req *banktypes.QueryTotalSupplyRequest,
+) (*banktypes.QueryTotalSupplyResponse, error) {
+	res, _, err := f.app.Query(ctx, 0, req)
+	return res.(*banktypes.QueryTotalSupplyResponse), err
+}
+
+func (f *deterministicFixture) QuerySupplyOf(
+	ctx context.Context, req *banktypes.QuerySupplyOfRequest,
+) (*banktypes.QuerySupplyOfResponse, error) {
+	res, _, err := f.app.Query(ctx, 0, req)
+	return res.(*banktypes.QuerySupplyOfResponse), err
+}
+
+func (f *deterministicFixture) QueryParams(
+	ctx context.Context, req *banktypes.QueryParamsRequest,
+) (*banktypes.QueryParamsResponse, error) {
+	res, _, err := f.app.Query(ctx, 0, req)
+	return res.(*banktypes.QueryParamsResponse), err
+}
+
+func (f *deterministicFixture) QueryDenomsMetadata(
+	ctx context.Context, req *banktypes.QueryDenomsMetadataRequest,
+) (*banktypes.QueryDenomsMetadataResponse, error) {
+	res, _, err := f.app.Query(ctx, 0, req)
+	return res.(*banktypes.QueryDenomsMetadataResponse), err
+}
+
+func (f *deterministicFixture) QueryDenomMetadata(
+	ctx context.Context, req *banktypes.QueryDenomMetadataRequest,
+) (*banktypes.QueryDenomMetadataResponse, error) {
+	res, _, err := f.app.Query(ctx, 0, req)
+	return res.(*banktypes.QueryDenomMetadataResponse), err
+}
+
+func (f *deterministicFixture) QuerySendEnabled(
+	ctx context.Context, req *banktypes.QuerySendEnabledRequest,
+) (*banktypes.QuerySendEnabledResponse, error) {
+	res, _, err := f.app.Query(ctx, 0, req)
+	return res.(*banktypes.QuerySendEnabledResponse), err
+}
+
+func (f *deterministicFixture) QueryDenomOwners(
+	ctx context.Context, req *banktypes.QueryDenomOwnersRequest,
+) (*banktypes.QueryDenomOwnersResponse, error) {
+	res, _, err := f.app.Query(ctx, 0, req)
+	return res.(*banktypes.QueryDenomOwnersResponse), err
 }
 
 func fundAccount(f *deterministicFixture, addr sdk.AccAddress, coin ...sdk.Coin) {
@@ -81,9 +166,23 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	return &deterministicFixture{app: app, bankKeeper: bankKeeper, T: t}
 }
 
-func TestGRPCQueryBalance(t *testing.T) {
+func assertNonZeroGas(t *testing.T, gasUsed gas.Gas) {
+	t.Helper()
+	require.NotZero(t, gasUsed)
+}
+
+func TestQueryBalance(t *testing.T) {
+	t.Parallel()
 	f := initDeterministicFixture(t)
 	f.ctx = f.app.StateLatestContext(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+	assertBalance := func(coin sdk.Coin) func(t *testing.T, res *banktypes.QueryBalanceResponse) {
+		return func(t *testing.T, res *banktypes.QueryBalanceResponse) {
+			require.Equal(t, coin.Denom, res.Balance.Denom)
+			require.Truef(t, coin.Amount.Equal(res.Balance.Amount),
+				"expected %s, got %s", coin.Amount, res.Balance.Amount)
+		}
+	}
 
 	rapid.Check(t, func(rt *rapid.T) {
 		addr := testdata.AddressGenerator(rt).Draw(rt, "address")
@@ -95,6 +194,434 @@ func TestGRPCQueryBalance(t *testing.T) {
 
 		req := banktypes.NewQueryBalanceRequest(addrStr, coin.GetDenom())
 
-		testdata.DeterministicIterationsV2(t, f.ctx, nil, req, f.QueryBalance, 0, true)
+		testdata.DeterministicIterationsV2(t, f.ctx, req, gasMeterFactory,
+			f.QueryBalance, assertNonZeroGas, assertBalance(coin))
 	})
+
+	fundAccount(f, addr1, coin1)
+	addr1Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr1)
+	require.NoError(t, err)
+	req := banktypes.NewQueryBalanceRequest(addr1Str, coin1.GetDenom())
+	testdata.DeterministicIterationsV2(t, f.ctx, req, gasMeterFactory,
+		f.QueryBalance, assertNonZeroGas, assertBalance(coin1))
+}
+
+func TestQueryAllBalances(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+	f.ctx = f.app.StateLatestContext(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+	addressCodec := codectestutil.CodecOptions{}.GetAddressCodec()
+
+	rapid.Check(t, func(rt *rapid.T) {
+		addr := testdata.AddressGenerator(rt).Draw(rt, "address")
+		numCoins := rapid.IntRange(1, 10).Draw(rt, "num-count")
+		coins := make(sdk.Coins, 0, numCoins)
+
+		addrStr, err := addressCodec.BytesToString(addr)
+		require.NoError(t, err)
+
+		for i := 0; i < numCoins; i++ {
+			coin := getCoin(rt)
+			if exists, _ := coins.Find(coin.Denom); exists {
+				t.Skip("duplicate denom")
+			}
+			// NewCoins sorts the denoms
+			coins = sdk.NewCoins(append(coins, coin)...)
+		}
+
+		fundAccount(f, addr, coins...)
+
+		req := banktypes.NewQueryAllBalancesRequest(
+			addrStr, testdata.PaginationGenerator(rt, uint64(numCoins)).Draw(rt, "pagination"), false)
+		testdata.DeterministicIterationsV2(t, f.ctx, req, gasMeterFactory,
+			f.QueryAllBalances, assertNonZeroGas, nil)
+	})
+
+	coins := sdk.NewCoins(
+		sdk.NewCoin("stake", math.NewInt(10)),
+		sdk.NewCoin("denom", math.NewInt(100)),
+	)
+
+	fundAccount(f, addr1, coins...)
+	addr1Str, err := addressCodec.BytesToString(addr1)
+	require.NoError(t, err)
+
+	req := banktypes.NewQueryAllBalancesRequest(addr1Str, nil, false)
+	testdata.DeterministicIterationsV2(t, f.ctx, req, gasMeterFactory,
+		f.QueryAllBalances, assertNonZeroGas, nil)
+}
+
+func TestQuerySpendableBalances(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+	f.ctx = f.app.StateLatestContext(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		addr := testdata.AddressGenerator(rt).Draw(rt, "address")
+		addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr)
+		require.NoError(t, err)
+
+		// Denoms must be unique, otherwise sdk.NewCoins will panic.
+		denoms := rapid.SliceOfNDistinct(rapid.StringMatching(denomRegex), 1, 10, rapid.ID[string]).Draw(rt, "denoms")
+		coins := make(sdk.Coins, 0, len(denoms))
+		for _, denom := range denoms {
+			coin := sdk.NewCoin(
+				denom,
+				math.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+			)
+
+			// NewCoins sorts the denoms
+			coins = sdk.NewCoins(append(coins, coin)...)
+		}
+
+		err = banktestutil.FundAccount(f.ctx, f.bankKeeper, addr, coins)
+		require.NoError(t, err)
+
+		req := banktypes.NewQuerySpendableBalancesRequest(addrStr, testdata.PaginationGenerator(rt, uint64(len(denoms))).Draw(rt, "pagination"))
+		testdata.DeterministicIterationsV2(t, f.ctx, req, gasMeterFactory,
+			f.QuerySpendableBalances, assertNonZeroGas, nil)
+	})
+
+	coins := sdk.NewCoins(
+		sdk.NewCoin("stake", math.NewInt(10)),
+		sdk.NewCoin("denom", math.NewInt(100)),
+	)
+
+	err := banktestutil.FundAccount(f.ctx, f.bankKeeper, addr1, coins)
+	require.NoError(t, err)
+
+	addr1Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr1)
+	require.NoError(t, err)
+
+	req := banktypes.NewQuerySpendableBalancesRequest(addr1Str, nil)
+	testdata.DeterministicIterationsV2(t, f.ctx, req, gasMeterFactory,
+		f.QuerySpendableBalances, assertNonZeroGas, nil)
+}
+
+func TestQueryTotalSupply(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+	f.ctx = f.app.StateLatestContext(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+
+	res, err := f.QueryTotalSupply(f.ctx, &banktypes.QueryTotalSupplyRequest{})
+	require.NoError(t, err)
+	initialSupply := res.GetSupply()
+
+	rapid.Check(t, func(rt *rapid.T) {
+		numCoins := rapid.IntRange(1, 3).Draw(rt, "num-count")
+		coins := make(sdk.Coins, 0, numCoins)
+
+		for i := 0; i < numCoins; i++ {
+			coin := sdk.NewCoin(
+				rapid.StringMatching(denomRegex).Draw(rt, "denom"),
+				math.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+			)
+
+			coins = coins.Add(coin)
+		}
+
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, coins))
+
+		initialSupply = initialSupply.Add(coins...)
+
+		req := &banktypes.QueryTotalSupplyRequest{
+			Pagination: testdata.PaginationGenerator(rt, uint64(len(initialSupply))).Draw(rt, "pagination"),
+		}
+
+		testdata.DeterministicIterationsV2(
+			t, f.ctx, req, gasMeterFactory, f.QueryTotalSupply, assertNonZeroGas, nil)
+	})
+
+	f = initDeterministicFixture(t) // reset
+	f.ctx = f.app.StateLatestContext(t)
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+
+	coins := sdk.NewCoins(
+		sdk.NewCoin("foo", math.NewInt(10)),
+		sdk.NewCoin("bar", math.NewInt(100)),
+	)
+
+	require.NoError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, coins))
+
+	req := &banktypes.QueryTotalSupplyRequest{}
+	testdata.DeterministicIterationsV2(
+		t, f.ctx, req, gasMeterFactory, f.QueryTotalSupply, assertNonZeroGas, nil)
+}
+
+func TestQueryTotalSupplyOf(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+	f.ctx = f.app.StateLatestContext(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		coin := sdk.NewCoin(
+			rapid.StringMatching(denomRegex).Draw(rt, "denom"),
+			math.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+		)
+
+		require.NoError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
+
+		req := &banktypes.QuerySupplyOfRequest{Denom: coin.GetDenom()}
+		testdata.DeterministicIterationsV2(
+			t, f.ctx, req, gasMeterFactory, f.QuerySupplyOf, assertNonZeroGas, nil)
+	})
+
+	coin := sdk.NewCoin("bar", math.NewInt(100))
+
+	require.NoError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
+	req := &banktypes.QuerySupplyOfRequest{Denom: coin.GetDenom()}
+	testdata.DeterministicIterationsV2(
+		t, f.ctx, req, gasMeterFactory, f.QuerySupplyOf, assertNonZeroGas, nil)
+}
+
+func TestQueryParams(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+	f.ctx = f.app.StateLatestContext(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		enabledStatus := banktypes.SendEnabled{
+			Denom:   rapid.StringMatching(denomRegex).Draw(rt, "denom"),
+			Enabled: rapid.Bool().Draw(rt, "status"),
+		}
+
+		params := banktypes.Params{
+			SendEnabled:        []*banktypes.SendEnabled{&enabledStatus},
+			DefaultSendEnabled: rapid.Bool().Draw(rt, "send"),
+		}
+
+		err := f.bankKeeper.SetParams(f.ctx, params)
+		require.NoError(t, err)
+
+		req := &banktypes.QueryParamsRequest{}
+		testdata.DeterministicIterationsV2(
+			t, f.ctx, req, gasMeterFactory, f.QueryParams, assertNonZeroGas, nil)
+	})
+
+	enabledStatus := banktypes.SendEnabled{
+		Denom:   "denom",
+		Enabled: true,
+	}
+
+	params := banktypes.Params{
+		SendEnabled:        []*banktypes.SendEnabled{&enabledStatus},
+		DefaultSendEnabled: false,
+	}
+
+	err := f.bankKeeper.SetParams(f.ctx, params)
+	require.NoError(t, err)
+	req := &banktypes.QueryParamsRequest{}
+	testdata.DeterministicIterationsV2(
+		t, f.ctx, req, gasMeterFactory, f.QueryParams, assertNonZeroGas, nil)
+}
+
+func createAndReturnMetadatas(t *rapid.T, count int) []banktypes.Metadata {
+	denomsMetadata := make([]banktypes.Metadata, 0, count)
+	for i := 0; i < count; i++ {
+
+		denom := rapid.StringMatching(denomRegex).Draw(t, "denom")
+
+		aliases := rapid.SliceOf(rapid.String()).Draw(t, "aliases")
+		// In the GRPC server code, empty arrays are returned as nil
+		if len(aliases) == 0 {
+			aliases = nil
+		}
+
+		metadata := banktypes.Metadata{
+			Description: rapid.StringN(1, 100, 100).Draw(t, "desc"),
+			DenomUnits: []*banktypes.DenomUnit{
+				{
+					Denom:    denom,
+					Exponent: rapid.Uint32().Draw(t, "exponent"),
+					Aliases:  aliases,
+				},
+			},
+			Base:    denom,
+			Display: denom,
+			Name:    rapid.String().Draw(t, "name"),
+			Symbol:  rapid.String().Draw(t, "symbol"),
+			URI:     rapid.String().Draw(t, "uri"),
+			URIHash: rapid.String().Draw(t, "uri-hash"),
+		}
+
+		denomsMetadata = append(denomsMetadata, metadata)
+	}
+
+	return denomsMetadata
+}
+
+func TestDenomsMetadata(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+	f.ctx = f.app.StateLatestContext(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		count := rapid.IntRange(1, 3).Draw(rt, "count")
+		denomsMetadata := createAndReturnMetadatas(rt, count)
+		require.True(t, len(denomsMetadata) == count)
+
+		for i := 0; i < count; i++ {
+			f.bankKeeper.SetDenomMetaData(f.ctx, denomsMetadata[i])
+		}
+
+		req := &banktypes.QueryDenomsMetadataRequest{
+			Pagination: testdata.PaginationGenerator(rt, uint64(count)).Draw(rt, "pagination"),
+		}
+
+		testdata.DeterministicIterationsV2(
+			t, f.ctx, req, gasMeterFactory, f.QueryDenomsMetadata, assertNonZeroGas, nil)
+	})
+
+	f = initDeterministicFixture(t) // reset
+	f.ctx = f.app.StateLatestContext(t)
+	gasMeterFactory = integration.GasMeterFactory(f.ctx)
+
+	f.bankKeeper.SetDenomMetaData(f.ctx, metadataAtom)
+
+	req := &banktypes.QueryDenomsMetadataRequest{}
+	testdata.DeterministicIterationsV2(
+		t, f.ctx, req, gasMeterFactory, f.QueryDenomsMetadata, assertNonZeroGas, nil)
+}
+
+func TestDenomMetadata(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+	f.ctx = f.app.StateLatestContext(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		denomMetadata := createAndReturnMetadatas(rt, 1)
+		require.True(t, len(denomMetadata) == 1)
+		f.bankKeeper.SetDenomMetaData(f.ctx, denomMetadata[0])
+
+		req := &banktypes.QueryDenomMetadataRequest{
+			Denom: denomMetadata[0].Base,
+		}
+
+		testdata.DeterministicIterationsV2(
+			t, f.ctx, req, gasMeterFactory, f.QueryDenomMetadata, assertNonZeroGas, nil)
+	})
+
+	f.bankKeeper.SetDenomMetaData(f.ctx, metadataAtom)
+
+	req := &banktypes.QueryDenomMetadataRequest{
+		Denom: metadataAtom.Base,
+	}
+
+	testdata.DeterministicIterationsV2(
+		t, f.ctx, req, gasMeterFactory, f.QueryDenomMetadata, assertNonZeroGas, nil)
+}
+
+func TestSendEnabled(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+	f.ctx = f.app.StateLatestContext(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+
+	allDenoms := []string{}
+
+	rapid.Check(t, func(rt *rapid.T) {
+		count := rapid.IntRange(0, 10).Draw(rt, "count")
+		denoms := make([]string, 0, count)
+
+		for i := 0; i < count; i++ {
+			coin := banktypes.SendEnabled{
+				Denom:   rapid.StringMatching(denomRegex).Draw(rt, "denom"),
+				Enabled: rapid.Bool().Draw(rt, "enabled-status"),
+			}
+
+			f.bankKeeper.SetSendEnabled(f.ctx, coin.Denom, coin.Enabled)
+			denoms = append(denoms, coin.Denom)
+		}
+
+		allDenoms = append(allDenoms, denoms...)
+
+		req := &banktypes.QuerySendEnabledRequest{
+			Denoms: denoms,
+			// Pagination is only taken into account when `denoms` is an empty array
+			Pagination: testdata.PaginationGenerator(rt, uint64(len(allDenoms))).Draw(rt, "pagination"),
+		}
+		testdata.DeterministicIterationsV2(
+			t, f.ctx, req, gasMeterFactory, f.QuerySendEnabled, assertNonZeroGas, nil)
+	})
+
+	coin1 := banktypes.SendEnabled{
+		Denom:   "falsecoin",
+		Enabled: false,
+	}
+	coin2 := banktypes.SendEnabled{
+		Denom:   "truecoin",
+		Enabled: true,
+	}
+
+	f.bankKeeper.SetSendEnabled(f.ctx, coin1.Denom, false)
+	f.bankKeeper.SetSendEnabled(f.ctx, coin2.Denom, true)
+
+	req := &banktypes.QuerySendEnabledRequest{
+		Denoms: []string{coin1.GetDenom(), coin2.GetDenom()},
+	}
+
+	testdata.DeterministicIterationsV2(
+		t, f.ctx, req, gasMeterFactory, f.QuerySendEnabled, assertNonZeroGas, nil)
+}
+
+func TestDenomOwners(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+	f.ctx = f.app.StateLatestContext(t)
+	gasMeterFactory := integration.GasMeterFactory(f.ctx)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		denom := rapid.StringMatching(denomRegex).Draw(rt, "denom")
+		numAddr := rapid.IntRange(1, 10).Draw(rt, "number-address")
+		for i := 0; i < numAddr; i++ {
+			addr := testdata.AddressGenerator(rt).Draw(rt, "address")
+
+			coin := sdk.NewCoin(
+				denom,
+				math.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+			)
+
+			err := banktestutil.FundAccount(f.ctx, f.bankKeeper, addr, sdk.NewCoins(coin))
+			require.NoError(t, err)
+		}
+
+		req := &banktypes.QueryDenomOwnersRequest{
+			Denom:      denom,
+			Pagination: testdata.PaginationGenerator(rt, uint64(numAddr)).Draw(rt, "pagination"),
+		}
+		testdata.DeterministicIterationsV2(
+			t, f.ctx, req, gasMeterFactory, f.QueryDenomOwners, assertNonZeroGas, nil)
+	})
+
+	denomOwners := []*banktypes.DenomOwner{
+		{
+			Address: "cosmos1qg65a9q6k2sqq7l3ycp428sqqpmqcucgzze299",
+			Balance: coin1,
+		},
+		{
+			Address: "cosmos1qglnsqgpq48l7qqzgs8qdshr6fh3gqq9ej3qut",
+			Balance: coin1,
+		},
+	}
+
+	for i := 0; i < len(denomOwners); i++ {
+		addr, err := sdk.AccAddressFromBech32(denomOwners[i].Address)
+		require.NoError(t, err)
+
+		err = banktestutil.FundAccount(f.ctx, f.bankKeeper, addr, sdk.NewCoins(coin1))
+		require.NoError(t, err)
+	}
+
+	req := &banktypes.QueryDenomOwnersRequest{
+		Denom: coin1.GetDenom(),
+	}
+	testdata.DeterministicIterationsV2(
+		t, f.ctx, req, gasMeterFactory, f.QueryDenomOwners, assertNonZeroGas, nil)
 }

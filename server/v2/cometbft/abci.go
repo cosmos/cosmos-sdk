@@ -189,7 +189,9 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 
 // Query implements types.Application.
 // It is called by cometbft to query application state.
-func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (resp *abciproto.QueryResponse, err error) {
+func (c *Consensus[T]) Query(
+	ctx context.Context, req *abciproto.QueryRequest,
+) (resp *abciproto.QueryResponse, err error) {
 	// check if it's a gRPC method
 	makeGRPCRequest, isGRPC := c.grpcMethodsMap[req.Path]
 	if isGRPC {
@@ -198,7 +200,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 		if err != nil {
 			return nil, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
 		}
-		res, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
+		res, _, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
 		if err != nil {
 			resp := QueryResult(err, c.cfg.AppTomlConfig.Trace)
 			resp.Height = req.Height
@@ -238,7 +240,9 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 }
 
 // InitChain implements types.Application.
-func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRequest) (*abciproto.InitChainResponse, error) {
+func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRequest) (
+	*abciproto.InitChainResponse, error,
+) {
 	c.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
 	// store chainID to be used later on in execution
@@ -554,7 +558,9 @@ func (c *Consensus[T]) VerifyVoteExtension(
 }
 
 // ExtendVote implements types.Application.
-func (c *Consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVoteRequest) (*abciproto.ExtendVoteResponse, error) {
+func (c *Consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVoteRequest) (
+	*abciproto.ExtendVoteResponse, error,
+) {
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp, err := c.GetConsensusParams(ctx)

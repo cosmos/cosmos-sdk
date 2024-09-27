@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"cosmossdk.io/core/gas"
 	"errors"
 	"fmt"
 
@@ -16,7 +17,9 @@ import (
 
 type AppManager[T transaction.Tx] interface {
 	ValidateTx(ctx context.Context, tx T) (server.TxResult, error)
-	Query(ctx context.Context, version uint64, request transaction.Msg) (response transaction.Msg, err error)
+	Query(
+		ctx context.Context, version uint64, request transaction.Msg,
+	) (response transaction.Msg, gas gas.Gas, err error)
 }
 
 type DefaultProposalHandler[T transaction.Tx] struct {
@@ -32,10 +35,12 @@ func NewDefaultProposalHandler[T transaction.Tx](mp mempool.Mempool[T]) *Default
 }
 
 func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
-	return func(ctx context.Context, app AppManager[T], codec transaction.Codec[T], req *abci.PrepareProposalRequest) ([]T, error) {
+	return func(
+		ctx context.Context, app AppManager[T], codec transaction.Codec[T], req *abci.PrepareProposalRequest,
+	) ([]T, error) {
 		var maxBlockGas uint64
 
-		res, err := app.Query(ctx, 0, &consensustypes.QueryParamsRequest{})
+		res, _, err := app.Query(ctx, 0, &consensustypes.QueryParamsRequest{})
 		if err != nil {
 			return nil, err
 		}
@@ -98,7 +103,9 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 }
 
 func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
-	return func(ctx context.Context, app AppManager[T], codec transaction.Codec[T], req *abci.ProcessProposalRequest) error {
+	return func(
+		ctx context.Context, app AppManager[T], codec transaction.Codec[T], req *abci.ProcessProposalRequest,
+	) error {
 		// If the mempool is nil we simply return ACCEPT,
 		// because PrepareProposal may have included txs that could fail verification.
 		_, isNoOp := h.mempool.(mempool.NoOpMempool[T])
@@ -106,7 +113,7 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 			return nil
 		}
 
-		res, err := app.Query(ctx, 0, &consensustypes.QueryParamsRequest{})
+		res, _, err := app.Query(ctx, 0, &consensustypes.QueryParamsRequest{})
 		if err != nil {
 			return err
 		}
@@ -174,7 +181,9 @@ func decodeTxs[T transaction.Tx](codec transaction.Codec[T], txsBz [][]byte) []T
 // NoOpPrepareProposal defines a no-op PrepareProposal handler. It will always
 // return the transactions sent by the client's request.
 func NoOpPrepareProposal[T transaction.Tx]() PrepareHandler[T] {
-	return func(ctx context.Context, app AppManager[T], codec transaction.Codec[T], req *abci.PrepareProposalRequest) ([]T, error) {
+	return func(
+		ctx context.Context, app AppManager[T], codec transaction.Codec[T], req *abci.PrepareProposalRequest,
+	) ([]T, error) {
 		return decodeTxs(codec, req.Txs), nil
 	}
 }
@@ -198,7 +207,9 @@ func NoOpExtendVote() ExtendVoteHandler {
 // NoOpVerifyVoteExtensionHandler defines a no-op VerifyVoteExtension handler. It
 // will always return an ACCEPT status with no error.
 func NoOpVerifyVoteExtensionHandler() VerifyVoteExtensionhandler {
-	return func(context.Context, store.ReaderMap, *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error) {
+	return func(context.Context, store.ReaderMap, *abci.VerifyVoteExtensionRequest) (
+		*abci.VerifyVoteExtensionResponse, error,
+	) {
 		return &abci.VerifyVoteExtensionResponse{Status: abci.VERIFY_VOTE_EXTENSION_STATUS_ACCEPT}, nil
 	}
 }

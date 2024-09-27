@@ -3,6 +3,7 @@ package appmanager
 import (
 	"bytes"
 	"context"
+	"cosmossdk.io/core/gas"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -135,20 +136,21 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (server.TxResult, cor
 
 // Query queries the application at the provided version.
 // CONTRACT: Version must always be provided, if 0, get latest
-func (a AppManager[T]) Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error) {
+func (a AppManager[T]) Query(
+	ctx context.Context, version uint64, request transaction.Msg,
+) (transaction.Msg, gas.Gas, error) {
+	var (
+		queryState corestore.ReaderMap
+		err        error
+	)
 	// if version is provided attempt to do a height query.
 	if version != 0 {
-		queryState, err := a.db.StateAt(version)
-		if err != nil {
-			return nil, err
-		}
-		return a.stf.Query(ctx, queryState, a.config.QueryGasLimit, request)
+		queryState, err = a.db.StateAt(version)
+	} else { // otherwise rely on latest available state.
+		_, queryState, err = a.db.StateLatest()
 	}
-
-	// otherwise rely on latest available state.
-	_, queryState, err := a.db.StateLatest()
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	return a.stf.Query(ctx, queryState, a.config.QueryGasLimit, request)
 }
@@ -156,6 +158,8 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request transa
 // QueryWithState executes a query with the provided state. This allows to process a query
 // independently of the db state. For example, it can be used to process a query with temporary
 // and uncommitted state
-func (a AppManager[T]) QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Msg) (transaction.Msg, error) {
+func (a AppManager[T]) QueryWithState(
+	ctx context.Context, state corestore.ReaderMap, request transaction.Msg,
+) (transaction.Msg, gas.Gas, error) {
 	return a.stf.Query(ctx, state, a.config.QueryGasLimit, request)
 }

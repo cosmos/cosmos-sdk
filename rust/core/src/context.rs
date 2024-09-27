@@ -2,7 +2,7 @@ use bump_scope::BumpScope;
 use crate::handler::{AccountAPI, AccountClientFactory, AccountHandler, ModuleAPI};
 use crate::message::Message;
 use crate::response::Response;
-use ixc_message_api::Address;
+use ixc_message_api::AccountID;
 use ixc_message_api::handler::HostBackend;
 use ixc_message_api::header::MessageHeader;
 use ixc_message_api::packet::MessagePacket;
@@ -13,19 +13,19 @@ use ixc_schema::mem::MemoryManager;
 /// the router callbacks necessary for making nested message calls.
 pub struct Context<'a> {
     message_packet: &'a mut MessagePacket,
-    host_callbacks: &'a HostBackend,
+    host_callbacks: &'a dyn HostBackend,
     memory_manager: &'a MemoryManager<'a, 'a>,
 }
 
 impl<'a> Context<'a> {
     /// This is the address of the account that is getting called.
     /// In a receiving account, this is the account's own address.
-    pub fn address(&self) -> &Address {
+    pub fn account_id(&self) -> &AccountID {
         unimplemented!()
     }
 
     /// This is the address of the account which is making the message call.
-    pub fn caller(&self) -> &Address {
+    pub fn caller(&self) -> &AccountID {
         unimplemented!()
     }
 
@@ -45,16 +45,17 @@ impl<'a> Context<'a> {
     /// Dynamically invokes an account message.
     /// Static account client instances should be preferred wherever possible,
     /// so that static dependency analysis can be performed.
-    pub fn dynamic_invoke_account<'b, M: Message<'b, false>>(&self, account: &Address, message: M) -> Response<M::Response, M::Error> {
+    pub fn dynamic_invoke_account<'b, M: Message<'b, false>>(&self, account: &AccountID, message: M) -> Response<M::Response, M::Error> {
         // TODO allocate packet
         let mut guard = self.memory_manager.scope().scope_guard();
         let new_scope = guard.scope();
         let mut header = new_scope.alloc_default::<MessageHeader>();
-        let mut packet = unsafe { MessagePacket::new(header.as_mut_ptr(), 0) };
-        let new_mem_mgr = MemoryManager::new(&new_scope);
-        let msg_body = M::Codec::encode_value(&message, new_mem_mgr.scope())?;
-        packet.in1().set_slice(msg_body);
-        self.host_callbacks.invoke(&mut packet);
+        // let mut packet = unsafe { MessagePacket::new(header.as_mut_ptr(), 0) };
+        // let new_mem_mgr = MemoryManager::new(&new_scope);
+        // let msg_body = M::Codec::encode_value(&message, new_mem_mgr.scope())?;
+        // packet.in1().set_slice(msg_body);
+        // self.host_callbacks.invoke(&mut packet);
+        todo!()
         // TODO call self.host_callbacks.invoke
         // let code = self.host_callbacks.invoke(&mut packet);
         // if code != Code::Ok {

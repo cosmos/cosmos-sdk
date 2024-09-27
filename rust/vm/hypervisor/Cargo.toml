@@ -8,6 +8,8 @@ publish = false
 
 [dependencies]
 ixc_message_api = { path = "../../message_api" }
+ixc_vm_api = { path = "../../vm/api" }
+ixc_core_macros = { path = "../../core_macros" }
 
 [lints]
 workspace = true

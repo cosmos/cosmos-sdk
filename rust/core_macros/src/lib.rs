@@ -6,8 +6,9 @@ use std::default::Default;
 use proc_macro2::TokenStream as TokenStream2;
 use manyhow::{bail, error_message, manyhow};
 use quote::{format_ident, quote, ToTokens};
-use syn::{parse2, parse_macro_input, parse_quote, token, Attribute, File, Item, ItemImpl, ItemMod, Type};
+use syn::{parse2, parse_macro_input, parse_quote, token, Attribute, File, Item, ItemImpl, ItemMod, LitStr, Type};
 use std::borrow::Borrow;
+use blake2::{Blake2b512, Digest};
 use deluxe::ExtractAttributes;
 use heck::{AsUpperCamelCase, ToUpperCamelCase};
 use syn::token::Impl;
@@ -271,4 +272,21 @@ pub fn package_root(item: TokenStream) -> TokenStream {
     // };
     // expanded.into()
     TokenStream::default()
+}
+
+
+
+/// Creates the message selector for the given message name.
+#[proc_macro]
+pub fn message_selector(item: TokenStream) -> TokenStream {
+    let input_str = parse_macro_input!(item as LitStr);
+    let mut hasher = Blake2b512::new(); // TODO should we use 256 or 512?
+    hasher.update(input_str.value().as_bytes());
+    let res = hasher.finalize();
+    // take first 8 bytes and convert to u64
+    let hash = u64::from_le_bytes(res[..8].try_into().unwrap());
+    let expanded = quote! {
+        #hash
+    };
+    expanded.into()
 }

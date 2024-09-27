@@ -1,5 +1,6 @@
 //! Self-destruct functionality for accounts.
 
+use ixc_core_macros::message_selector;
 use crate::context::Context;
 use crate::response::Response;
 
@@ -9,3 +10,6 @@ use crate::response::Response;
 pub unsafe fn self_destruct<'a, 'b>(ctx: &mut Context<'a>) -> Response<'b, ()> {
     unimplemented!()
 }
+
+
+pub const CREATE_SELECTOR: u64 = message_selector!("ixc.account.v1.create");

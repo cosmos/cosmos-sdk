@@ -12,7 +12,7 @@ mod context;
 mod response;
 mod events;
 mod message;
-pub mod self_destruct;
+pub mod account_api;
 pub mod handler;
 pub mod resource;
 pub mod error;

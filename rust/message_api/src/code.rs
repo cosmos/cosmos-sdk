@@ -9,6 +9,8 @@ pub enum SystemErrorCode {
     FatalExecutionError,
     /// Account not-found error.
     AccountNotFound,
+    /// Message handler not-found error.
+    HandlerNotFound,
     /// The caller attempted to impersonate another caller and was not authorized.
     UnauthorizedCallerAccess,
     /// The handler code was invalid or failed to execute properly within its virtual machine.

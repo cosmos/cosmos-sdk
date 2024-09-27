@@ -89,14 +89,13 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 		configurator.ProtocolPoolModule(),
 	}
 	var err error
-	startupCfg := integration.DefaultStartUpConfig()
+	startupCfg := integration.DefaultStartUpConfig(t)
 	var genAccounts []integration.GenesisAccount
 	for _, acc := range genesisAccounts {
 		genAccounts = append(genAccounts, integration.GenesisAccount{GenesisAccount: acc})
 	}
 	startupCfg.GenesisAccounts = genAccounts
-	startupCfg.HomeDir = t.TempDir()
-	res.App, err = integration.SetupWithConfiguration(
+	res.App, err = integration.NewApp(
 		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
 		startupCfg,
 		&res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)

@@ -1,4 +1,3 @@
-// this file is a port of testutil/sims/app_helpers.go from v1 to v2 architecture
 package integration
 
 import (
@@ -10,11 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/comet"
@@ -31,19 +28,26 @@ import (
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
 	consensustypes "cosmossdk.io/x/consensus/types"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
-	cmttypes "github.com/cometbft/cometbft/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const DefaultGenTxGas = 10000000
+const (
+	Genesis_COMMIT = iota
+	Genesis_NOCOMMIT
+	Genesis_SKIP
+)
 
 type stateMachineTx = transaction.Tx
 
@@ -78,12 +82,14 @@ var DefaultConsensusParams = &cmtproto.ConsensusParams{
 type StartupConfig struct {
 	ValidatorSet    func() (*cmttypes.ValidatorSet, error)
 	AppOption       runtime.AppBuilderOption[stateMachineTx]
-	AtGenesis       bool
+	GenesisBehavior int
 	GenesisAccounts []GenesisAccount
 	HomeDir         string
 }
 
-func DefaultStartUpConfig() StartupConfig {
+func DefaultStartUpConfig(t *testing.T) StartupConfig {
+	t.Helper()
+
 	priv := secp256k1.GenPrivKey()
 	ba := authtypes.NewBaseAccount(
 		priv.PubKey().Address().Bytes(),
@@ -99,38 +105,16 @@ func DefaultStartUpConfig() StartupConfig {
 	}
 	return StartupConfig{
 		ValidatorSet:    CreateRandomValidatorSet,
-		AtGenesis:       false,
+		GenesisBehavior: Genesis_COMMIT,
 		GenesisAccounts: []GenesisAccount{ga},
+		HomeDir:         t.TempDir(),
 	}
 }
 
-// Setup initializes a new runtime.App and can inject values into extraOutputs.
-// It uses SetupWithConfiguration under the hood.
-func Setup(
-	appConfig depinject.Config,
-	extraOutputs ...interface{},
-) (*App, error) {
-	return SetupWithConfiguration(
-		appConfig,
-		DefaultStartUpConfig(),
-		extraOutputs...)
-}
-
-// SetupAtGenesis initializes a new runtime.App at genesis and can inject values into extraOutputs.
-// It uses SetupWithConfiguration under the hood.
-func SetupAtGenesis(
-	appConfig depinject.Config,
-	extraOutputs ...interface{},
-) (*App, error) {
-	cfg := DefaultStartUpConfig()
-	cfg.AtGenesis = true
-	return SetupWithConfiguration(appConfig, cfg, extraOutputs...)
-}
-
-// SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
+// NewApp initializes a new runtime.App. A Nop logger is set in runtime.App.
 // appConfig defines the application configuration (f.e. app_config.go).
 // extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
-func SetupWithConfiguration(
+func NewApp(
 	appConfig depinject.Config,
 	startupConfig StartupConfig,
 	extraOutputs ...interface{},
@@ -175,6 +159,20 @@ func SetupWithConfiguration(
 	}
 	if err := app.LoadLatest(); err != nil {
 		return nil, fmt.Errorf("failed to load app: %w", err)
+	}
+
+	store := storeBuilder.Get()
+	if store == nil {
+		return nil, fmt.Errorf("failed to build store: %w", err)
+	}
+	err = store.SetInitialVersion(1)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set initial version: %w", err)
+	}
+
+	integrationApp := &App{App: app, Store: store, txConfig: txConfig, lastHeight: 1}
+	if startupConfig.GenesisBehavior == Genesis_SKIP {
+		return integrationApp, nil
 	}
 
 	// create validator set
@@ -231,16 +229,6 @@ func SetupWithConfiguration(
 		},
 	)
 
-	store := storeBuilder.Get()
-	if store == nil {
-		return nil, fmt.Errorf("failed to build store: %w", err)
-	}
-	err = store.SetInitialVersion(1)
-	if err != nil {
-		return nil, fmt.Errorf("failed to set initial version: %w", err)
-	}
-	integrationApp := &App{App: app, Store: store, txConfig: txConfig, lastHeight: 1}
-
 	emptyHash := sha256.Sum256(nil)
 	_, genesisState, err := app.InitGenesis(
 		ctx,
@@ -257,6 +245,11 @@ func SetupWithConfiguration(
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed init genesiss: %w", err)
+	}
+
+	if startupConfig.GenesisBehavior == Genesis_NOCOMMIT {
+		integrationApp.lastHeight = 0
+		return integrationApp, nil
 	}
 
 	_, err = integrationApp.Commit(genesisState)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/core/gas"
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"github.com/cosmos/gogoproto/types/any/test"
 
@@ -90,6 +91,35 @@ func DeterministicIterations[request, response proto.Message](
 		before := ctx.GasMeter().GasConsumed()
 		res, err := grpcFn(ctx, req)
 		assert.Equal(t, ctx.GasMeter().GasConsumed()-before, gasConsumed)
+		assert.NilError(t, err)
+		assert.DeepEqual(t, res, prevRes)
+	}
+}
+
+func DeterministicIterationsV2[request, response proto.Message](
+	t *testing.T,
+	ctx context.Context,
+	gasService gas.Service,
+	req request,
+	grpcFn func(context.Context, request) (response, error),
+	gasConsumed uint64,
+	gasOverwrite bool,
+) {
+	t.Helper()
+	consumed := func() uint64 {
+		return gasService.GasMeter(ctx).Consumed()
+	}
+	before := consumed()
+	prevRes, err := grpcFn(ctx, req)
+	assert.NilError(t, err)
+	if gasOverwrite { // to handle regressions, i.e. check that gas consumption didn't change
+		gasConsumed = consumed() - before
+	}
+
+	for i := 0; i < iterCount; i++ {
+		before := consumed()
+		res, err := grpcFn(ctx, req)
+		assert.Equal(t, consumed()-before, gasConsumed)
 		assert.NilError(t, err)
 		assert.DeepEqual(t, res, prevRes)
 	}

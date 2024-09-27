@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/x/accounts/defaults/multisig"
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
@@ -29,6 +28,7 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	baseaccount "cosmossdk.io/x/accounts/defaults/base"
 	lockup "cosmossdk.io/x/accounts/defaults/lockup"
+	"cosmossdk.io/x/accounts/defaults/multisig"
 	"cosmossdk.io/x/accounts/testing/account_abstraction"
 	"cosmossdk.io/x/accounts/testing/counter"
 	"cosmossdk.io/x/authz"

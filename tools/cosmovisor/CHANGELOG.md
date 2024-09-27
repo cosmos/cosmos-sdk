@@ -67,6 +67,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#16550](https://github.com/cosmos/cosmos-sdk/pull/16550) Add COSMOVISOR_CUSTOM_PREUPGRADE to cosmovisor to execute custom pre-upgrade scripts (separate from daemon `pre-upgrade` command).
 * [#16963](https://github.com/cosmos/cosmos-sdk/pull/16963) Add DAEMON_SHUTDOWN_GRACE to send interrupt and wait before sending kill.
 * [#15361](https://github.com/cosmos/cosmos-sdk/pull/15361) Add `cosmovisor config` command to display the configuration used by cosmovisor.
+* [#21932](https://github.com/cosmos/cosmos-sdk/pull/21932) Add `cosmovisor show-upgrade-info` command to display the upgrade-info.json into stdout.
 
 ## Improvements
 

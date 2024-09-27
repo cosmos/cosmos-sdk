@@ -42,6 +42,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (crypto/keyring) [#21653](https://github.com/cosmos/cosmos-sdk/pull/21653) New Linux-only backend that adds Linux kernel's `keyctl` support.
 
+### Improvements
+
+* (server) [#21941](https://github.com/cosmos/cosmos-sdk/pull/21941) Regenerate addrbook.json for in place testnet.
+
 ### Bug Fixes
 
 * (sims) [21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims test when running dry on validators

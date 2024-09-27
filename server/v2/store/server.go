@@ -68,10 +68,10 @@ func (s *StoreComponent[T]) CLICommands() serverv2.CLIConfig {
 	}
 }
 
-func (g *StoreComponent[T]) Config() any {
-	if g.config == nil || g.config == (&Config{}) {
+func (s *StoreComponent[T]) Config() any {
+	if s.config == nil || s.config.AppDBBackend == "" {
 		return DefaultConfig()
 	}
 
-	return g.config
+	return s.config
 }

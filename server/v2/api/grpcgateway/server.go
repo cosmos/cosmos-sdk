@@ -72,7 +72,7 @@ func (g *GRPCGatewayServer[T]) Name() string {
 }
 
 func (s *GRPCGatewayServer[T]) Config() any {
-	if s.config == nil || s.config == (&Config{}) {
+	if s.config == nil {
 		cfg := DefaultConfig()
 		// overwrite the default config with the provided options
 		for _, opt := range s.cfgOptions {

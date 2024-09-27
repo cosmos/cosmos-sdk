@@ -148,7 +148,7 @@ func (s *Server[T]) Name() string {
 }
 
 func (s *Server[T]) Config() any {
-	if s.config == nil || s.config == (&Config{}) {
+	if s.config == nil || s.config.Address == "" {
 		cfg := DefaultConfig()
 		// overwrite the default config with the provided options
 		for _, opt := range s.cfgOptions {

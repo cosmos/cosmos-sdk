@@ -20,7 +20,7 @@ require (
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.4.1
-	cosmossdk.io/server/v2 v2.0.0-20240920095614-aa90bb43d8f8 // main
+	cosmossdk.io/server/v2 v2.0.0-20240927165321-7fe95fc3f945 // main
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240920095614-aa90bb43d8f8 // main
 	cosmossdk.io/server/v2/stf v0.0.0-20240926131628-f927e9b55173 // main
 	cosmossdk.io/store/v2 v2.0.0-20240916221850-7856d226038c // main
@@ -40,7 +40,7 @@ require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // indirect
-	cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b // indirect
+	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // indirect
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
 	cosmossdk.io/schema v0.3.0 // indirect
@@ -174,9 +174,9 @@ require (
 	golang.org/x/text v0.18.0 // indirect
 	golang.org/x/tools v0.25.0 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240604185151-ef581f913117 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
-	google.golang.org/grpc v1.66.2 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240924160255-9d4c2d233b61 // indirect
+	google.golang.org/grpc v1.67.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

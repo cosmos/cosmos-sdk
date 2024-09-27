@@ -3,9 +3,6 @@ package simapp
 import (
 	_ "embed"
 
-	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
-	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
-	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
 	"github.com/spf13/viper"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
@@ -16,6 +13,9 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/store/v2/root"
+	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
+	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
+	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"

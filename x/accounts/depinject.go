@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/accounts/accountstd"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 )

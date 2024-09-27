@@ -178,9 +178,6 @@ replace (
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/bank => ../bank
-	cosmossdk.io/x/distribution => ../distribution
-	cosmossdk.io/x/mint => ../mint
-	cosmossdk.io/x/slashing => ../slashing
 	cosmossdk.io/x/staking => ../staking
 	cosmossdk.io/x/tx => ../tx
 )

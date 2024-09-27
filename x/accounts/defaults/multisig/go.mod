@@ -174,14 +174,7 @@ replace (
 	cosmossdk.io/collections => ../../../../collections // TODO tag new collections ASAP
 	cosmossdk.io/store => ../../../../store
 	cosmossdk.io/x/accounts => ../../.
-	cosmossdk.io/x/accounts/defaults/base => ../../defaults/base
 	cosmossdk.io/x/bank => ../../../bank
-	cosmossdk.io/x/consensus => ../../../consensus
-	cosmossdk.io/x/distribution => ../../../distribution
-	cosmossdk.io/x/gov => ../../../gov
-	cosmossdk.io/x/mint => ../../../mint
-	cosmossdk.io/x/protocolpool => ../../../protocolpool
-	cosmossdk.io/x/slashing => ../../../slashing
 	cosmossdk.io/x/staking => ../../../staking
 	cosmossdk.io/x/tx => ../../../tx
 )

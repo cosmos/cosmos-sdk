@@ -436,17 +436,16 @@ func (s STF[T]) Query(
 	state store.ReaderMap,
 	gasLimit uint64,
 	req transaction.Msg,
-) (transaction.Msg, gas.Gas, error) {
+) (transaction.Msg, error) {
 	queryState := s.branchFn(state)
 	hi, err := s.getHeaderInfo(queryState)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 	queryCtx := s.makeContext(ctx, nil, queryState, internal.ExecModeSimulate)
 	queryCtx.setHeaderInfo(hi)
 	queryCtx.setGasLimit(gasLimit)
-	res, err := s.queryRouter.Invoke(queryCtx, req)
-	return res, queryCtx.meter.Consumed(), err
+	return s.queryRouter.Invoke(queryCtx, req)
 }
 
 // clone clones STF.

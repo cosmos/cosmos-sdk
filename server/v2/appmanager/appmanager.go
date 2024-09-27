@@ -3,7 +3,6 @@ package appmanager
 import (
 	"bytes"
 	"context"
-	"cosmossdk.io/core/gas"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -138,7 +137,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (server.TxResult, cor
 // CONTRACT: Version must always be provided, if 0, get latest
 func (a AppManager[T]) Query(
 	ctx context.Context, version uint64, request transaction.Msg,
-) (transaction.Msg, gas.Gas, error) {
+) (transaction.Msg, error) {
 	var (
 		queryState corestore.ReaderMap
 		err        error
@@ -150,7 +149,7 @@ func (a AppManager[T]) Query(
 		_, queryState, err = a.db.StateLatest()
 	}
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 	return a.stf.Query(ctx, queryState, a.config.QueryGasLimit, request)
 }
@@ -160,6 +159,6 @@ func (a AppManager[T]) Query(
 // and uncommitted state
 func (a AppManager[T]) QueryWithState(
 	ctx context.Context, state corestore.ReaderMap, request transaction.Msg,
-) (transaction.Msg, gas.Gas, error) {
+) (transaction.Msg, error) {
 	return a.stf.Query(ctx, state, a.config.QueryGasLimit, request)
 }

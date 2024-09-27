@@ -57,70 +57,70 @@ type deterministicFixture struct {
 func (f *deterministicFixture) QueryBalance(
 	ctx context.Context, req *banktypes.QueryBalanceRequest,
 ) (*banktypes.QueryBalanceResponse, error) {
-	res, _, err := f.app.Query(ctx, 0, req)
+	res, err := f.app.Query(ctx, 0, req)
 	return res.(*banktypes.QueryBalanceResponse), err
 }
 
 func (f *deterministicFixture) QueryAllBalances(
 	ctx context.Context, req *banktypes.QueryAllBalancesRequest,
 ) (*banktypes.QueryAllBalancesResponse, error) {
-	res, _, err := f.app.Query(ctx, 0, req)
+	res, err := f.app.Query(ctx, 0, req)
 	return res.(*banktypes.QueryAllBalancesResponse), err
 }
 
 func (f *deterministicFixture) QuerySpendableBalances(
 	ctx context.Context, req *banktypes.QuerySpendableBalancesRequest,
 ) (*banktypes.QuerySpendableBalancesResponse, error) {
-	res, _, err := f.app.Query(ctx, 0, req)
+	res, err := f.app.Query(ctx, 0, req)
 	return res.(*banktypes.QuerySpendableBalancesResponse), err
 }
 
 func (f *deterministicFixture) QueryTotalSupply(
 	ctx context.Context, req *banktypes.QueryTotalSupplyRequest,
 ) (*banktypes.QueryTotalSupplyResponse, error) {
-	res, _, err := f.app.Query(ctx, 0, req)
+	res, err := f.app.Query(ctx, 0, req)
 	return res.(*banktypes.QueryTotalSupplyResponse), err
 }
 
 func (f *deterministicFixture) QuerySupplyOf(
 	ctx context.Context, req *banktypes.QuerySupplyOfRequest,
 ) (*banktypes.QuerySupplyOfResponse, error) {
-	res, _, err := f.app.Query(ctx, 0, req)
+	res, err := f.app.Query(ctx, 0, req)
 	return res.(*banktypes.QuerySupplyOfResponse), err
 }
 
 func (f *deterministicFixture) QueryParams(
 	ctx context.Context, req *banktypes.QueryParamsRequest,
 ) (*banktypes.QueryParamsResponse, error) {
-	res, _, err := f.app.Query(ctx, 0, req)
+	res, err := f.app.Query(ctx, 0, req)
 	return res.(*banktypes.QueryParamsResponse), err
 }
 
 func (f *deterministicFixture) QueryDenomsMetadata(
 	ctx context.Context, req *banktypes.QueryDenomsMetadataRequest,
 ) (*banktypes.QueryDenomsMetadataResponse, error) {
-	res, _, err := f.app.Query(ctx, 0, req)
+	res, err := f.app.Query(ctx, 0, req)
 	return res.(*banktypes.QueryDenomsMetadataResponse), err
 }
 
 func (f *deterministicFixture) QueryDenomMetadata(
 	ctx context.Context, req *banktypes.QueryDenomMetadataRequest,
 ) (*banktypes.QueryDenomMetadataResponse, error) {
-	res, _, err := f.app.Query(ctx, 0, req)
+	res, err := f.app.Query(ctx, 0, req)
 	return res.(*banktypes.QueryDenomMetadataResponse), err
 }
 
 func (f *deterministicFixture) QuerySendEnabled(
 	ctx context.Context, req *banktypes.QuerySendEnabledRequest,
 ) (*banktypes.QuerySendEnabledResponse, error) {
-	res, _, err := f.app.Query(ctx, 0, req)
+	res, err := f.app.Query(ctx, 0, req)
 	return res.(*banktypes.QuerySendEnabledResponse), err
 }
 
 func (f *deterministicFixture) QueryDenomOwners(
 	ctx context.Context, req *banktypes.QueryDenomOwnersRequest,
 ) (*banktypes.QueryDenomOwnersResponse, error) {
-	res, _, err := f.app.Query(ctx, 0, req)
+	res, err := f.app.Query(ctx, 0, req)
 	return res.(*banktypes.QueryDenomOwnersResponse), err
 }
 

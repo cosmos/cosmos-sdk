@@ -3,7 +3,6 @@ package appmanager
 import (
 	"context"
 
-	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -40,5 +39,5 @@ type StateTransitionFunction[T transaction.Tx] interface {
 		state store.ReaderMap,
 		gasLimit uint64,
 		req transaction.Msg,
-	) (transaction.Msg, gas.Gas, error)
+	) (transaction.Msg, error)
 }

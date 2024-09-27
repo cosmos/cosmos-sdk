@@ -125,7 +125,7 @@ func NewSimApp[T transaction.Tx](
 				// inject desired account types:
 				multisigdepinject.ProvideAccount,
 				basedepinject.ProvideAccount,
-				lockupdepinject.ProvideAllLockupAccounts(),
+				lockupdepinject.ProvideAllLockupAccounts,
 
 				// provide base account options
 				basedepinject.ProvideSecp256K1PubKey,

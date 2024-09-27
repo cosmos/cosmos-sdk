@@ -40,7 +40,7 @@ func AddBatchUpgrade(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("upgrade height at position %d (%s) is invalid", i, a[2])
 		}
-		upgradeInfoPath := filepath.Join(cfg.UpgradeInfoFilePath(), upgradeName)
+		upgradeInfoPath := cfg.UpgradeInfoFilePath() + "." + upgradeName
 		upgradeInfoPaths = append(upgradeInfoPaths, upgradeInfoPath)
 		if err := addUpgrade(cfg, true, upgradeHeight, upgradeName, upgradePath, upgradeInfoPath); err != nil {
 			return err

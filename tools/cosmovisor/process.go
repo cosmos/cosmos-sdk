@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -17,14 +16,16 @@ import (
 	"syscall"
 	"time"
 
-	cmthttp "github.com/cometbft/cometbft/rpc/client/http"
-	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/fsnotify/fsnotify"
 	"github.com/otiai10/copy"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+
+	cmtservice "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 )
 
 type Launcher struct {
@@ -85,6 +86,9 @@ func BatchUpgradeWatcher(ctx context.Context, cfg *Config, logger log.Logger) {
 		return
 	}
 
+	var conn *grpc.ClientConn
+	var grpcErr error
+
 	// Wait for the chain process to be ready
 pollLoop:
 	for {
@@ -92,51 +96,49 @@ pollLoop:
 		case <-ctx.Done():
 			return
 		default:
-			_, err := http.Get(cfg.CometBftRpcEndpoint)
-			if err == nil {
+			conn, grpcErr = grpc.NewClient(cfg.CosmosGrpcEndpoint, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			if grpcErr == nil {
 				break pollLoop
 			}
 			time.Sleep(time.Second)
 		}
 	}
-	client, err := cmthttp.New(cfg.CometBftRpcEndpoint, "/websocket")
-	if err != nil {
-		logger.Warn("failed to create CometBFT client", "error", err)
-		return
-	}
+
 	defer func() {
-		if err := client.Stop(); err != nil {
-			logger.Warn("couldn't stop CometBFT client", "errror", err)
+		if err := conn.Close(); err != nil {
+			logger.Warn("couldn't stop gRPC client", "error", err)
 		}
 	}()
 
-	err = client.Start()
-	if err != nil {
-		logger.Warn("failed to start CometBFT client", "error", err)
-		return
-	}
-
-	eventCh, err := client.Subscribe(ctx, "cosmovisor-watcher", cmttypes.EventQueryNewBlock.String())
-	if err != nil {
-		logger.Warn("failed to subscribe to new blocks", "error", err)
-		return
-	}
+	client := cmtservice.NewServiceClient(conn)
 
 	var prevUpgradeHeight int64 = -1
 
 	logger.Info("starting the batch watcher loop")
 	for {
 		select {
-		case e := <-eventCh:
+		case event := <-watcher.Events:
+			if event.Op&(fsnotify.Write|fsnotify.Create) != 0 {
+				uInfos, err = loadBatchUpgradeFile(cfg)
+				if err != nil {
+					logger.Warn("failed to load batch upgrade file", "error", err)
+					return
+				}
+			}
+		case <-ctx.Done():
+			return
+		default:
 			if len(uInfos) == 0 {
 				continue
 			}
-			nb, ok := e.Data.(cmttypes.EventDataNewBlock)
-			if !ok {
-				logger.Warn("batch watcher: unexpected event data type", "eventData", e.Data)
+			resp, err := client.GetLatestBlock(ctx, &cmtservice.GetLatestBlockRequest{})
+			if err != nil {
+				logger.Warn("error getting latest block", "error", err)
+				time.Sleep(time.Second)
 				continue
 			}
-			h := nb.Block.Height
+
+			h := resp.SdkBlock.Header.Height
 			upcomingUpgrade := uInfos[0].Height
 			// replace upgrade-info and upgrade-info batch file
 			if h > prevUpgradeHeight && h < upcomingUpgrade {
@@ -162,16 +164,9 @@ pollLoop:
 				}
 				prevUpgradeHeight = upcomingUpgrade
 			}
-		case event := <-watcher.Events:
-			if event.Op&(fsnotify.Write|fsnotify.Create) != 0 {
-				uInfos, err = loadBatchUpgradeFile(cfg)
-				if err != nil {
-					logger.Warn("failed to load batch upgrade file", "error", err)
-					return
-				}
-			}
-		case <-ctx.Done():
-			return
+
+			// Add a small delay to avoid hammering the gRPC endpoint
+			time.Sleep(time.Second)
 		}
 	}
 }

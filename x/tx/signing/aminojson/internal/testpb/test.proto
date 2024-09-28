@@ -32,19 +32,20 @@ message ABitOfEverything {
 
   repeated int32 repeated = 6;
 
-  string str     = 7;
-  bool bool      = 8;
-  bytes    bytes = 9;
-  int32    i32   = 10;
-  fixed32  f32   = 11;
-  uint32   u32   = 12;
-  sint32   si32  = 13;
-  sfixed32 sf32  = 14;
-  int64    i64   = 15;
-  fixed64  f64   = 16;
-  uint64   u64   = 17;
-  sint64   si64  = 18;
-  sfixed64 sf64  = 19;
+  string str            = 7;
+  bool bool             = 8;
+  bytes    bytes        = 9;
+  int32    i32          = 10;
+  fixed32  f32          = 11;
+  uint32   u32          = 12;
+  sint32   si32         = 13;
+  sfixed32 sf32         = 14;
+  int64    i64          = 15;
+  fixed64  f64          = 16;
+  uint64   u64          = 17;
+  sint64   si64         = 18;
+  sfixed64 sf64         = 19;
+  bytes    pretty_bytes = 20 [(amino.encoding) = "hex"];
 
   // The following types are not tested here because they are treated fundamentally differently in
   // gogoproto.  They are tested fully in /tests/integration/aminojson/aminojson_test.go

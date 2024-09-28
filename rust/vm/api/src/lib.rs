@@ -1,11 +1,12 @@
 //! **WARNING: This is an API preview! Most code won't work or even type check properly!**
 //!
 //! Virtual Machine API
-use ixc_message_api::code::Code;
+use ixc_message_api::code::ErrorCode;
 use ixc_message_api::handler::{HostBackend};
 use ixc_message_api::packet::MessagePacket;
 
 /// A unique identifier for a handler implementation.
+#[derive(Debug, Clone)]
 pub struct HandlerID {
     // NOTE: encoding these as strings should be considered a temporary
     /// The unique identifier for the virtual machine that the handler is implemented in.
@@ -16,6 +17,16 @@ pub struct HandlerID {
 
 /// A virtual machine that can run message handlers.
 pub trait VM {
-    /// Run a message handler within the virtual machine.
-    fn run_handler(&self, vm_handler_id: &str, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend) -> Code;
+    /// Describe a handler within the virtual machine.
+    fn describe_handler(&self, vm_handler_id: &str) -> Option<HandlerDescriptor>;
+    /// Run a handler within the virtual machine.
+    fn run_handler(&self, vm_handler_id: &str, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend) -> Result<(), ErrorCode>;
+}
+
+#[non_exhaustive]
+#[derive(Debug, Default, Clone)]
+/// A descriptor for a handler.
+pub struct HandlerDescriptor {
+    /// The storage parameters for the handler for initializing its storage.
+    pub storage_params: Option<Vec<u8>>,
 }

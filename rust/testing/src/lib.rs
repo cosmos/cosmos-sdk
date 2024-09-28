@@ -6,7 +6,7 @@ mod vm;
 
 use ixc_message_api::Address;
 use ixc_core::{Context};
-use ixc_core::handler::{AccountAPI, AccountHandler, Handler, ModuleAPI, ModuleHandler};
+use ixc_core::handler::{HandlerAPI, AccountHandler, Handler, ModuleAPI, ModuleHandler};
 
 /// Defines a test harness for running tests against account and module implementations.
 #[derive(Default)]
@@ -130,7 +130,7 @@ impl MockModule {
     }
 
     /// Adds a mock account API implementation to the mock module handler.
-    fn add_mock_account_api<A: AccountAPI>(&mut self, mock: A) {
+    fn add_mock_account_api<A: HandlerAPI>(&mut self, mock: A) {
         todo!()
     }
 }
@@ -141,7 +141,7 @@ pub struct MockAccount {}
 
 impl MockAccount {
     /// Adds a mock account API implementation to the mock account handler.
-    fn add_mock_account_api<A: AccountAPI>(&mut self, mock: A) {
+    fn add_mock_account_api<A: HandlerAPI>(&mut self, mock: A) {
         todo!()
     }
 }

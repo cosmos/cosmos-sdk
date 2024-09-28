@@ -1,5 +1,7 @@
 //! Error and success codes returned by the message API.
 
+use crate::handler::HandlerErrorCode;
+
 /// Error codes that can be returned by the system.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum SystemErrorCode {
@@ -23,13 +25,11 @@ pub enum SystemErrorCode {
 
 /// Error and success codes returned by the message API.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum Code {
-    /// The operation completed successfully.
-    Ok,
+pub enum ErrorCode {
     /// A system error.
     SystemError(SystemErrorCode),
     /// An error returned by the handler.
-    HandlerError(u32),
+    HandlerError(HandlerErrorCode),
 }
 
 // impl From<u32> for Code {

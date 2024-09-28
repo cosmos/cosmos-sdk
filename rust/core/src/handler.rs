@@ -1,57 +1,56 @@
 //! Handler traits for account and module handlers.
 use ixc_message_api::AccountID;
+use ixc_message_api::handler::RawHandler;
 use ixc_schema::StructCodec;
 use crate::resource::{InitializationError, Initializer, Resource};
+use crate::routes::Router;
 
 /// Handler trait for account and module handlers.
-pub trait Handler: ixc_message_api::handler::Handler {
+pub trait Handler: HandlerAPI + RawHandler {
     /// The parameter used for initializing the handler.
     type Init /*: StructCodec*/;
 }
 
-/// Account handler trait.
-pub trait AccountHandler: AccountAPI + Handler {}
-
 /// Account API trait.
-pub trait AccountAPI {
+pub trait HandlerAPI: Router {
     /// Account client factory type.
-    type ClientFactory: AccountClientFactory;
+    type ClientFactory: ClientFactory;
 }
 
 /// Account factory trait.
-pub trait AccountClientFactory: Resource {
+pub trait ClientFactory: Resource {
     /// Account client type.
-    type Client;
+    type Client: Client;
 
     /// Create a new account client with the given address.
-    fn new_client(address: &Address) -> Self::Client;
+    fn new_client(account_id: AccountID) -> Self::Client;
 }
 
 /// Account client trait.
-pub trait AccountClient {
+pub trait Client {
     /// Get the address of the account.
-    fn address(&self) -> &Address;
+    fn account_id(&self) -> AccountID;
 }
 
-/// Module handler trait.
-pub trait ModuleHandler: ModuleAPI + Handler {}
-
-/// Module API trait.
-pub trait ModuleAPI {
-    /// Module client type.
-    type Client: Resource;
-}
-
+// /// Module handler trait.
+// pub trait ModuleHandler: ModuleAPI + Handler {}
+//
+// /// Module API trait.
+// pub trait ModuleAPI {
+//     /// Module client type.
+//     type Client: Resource;
+// }
+//
 /// Mixes in an account handler into another account handler.
-pub struct AccountMixin<H: AccountHandler>(H);
+pub struct Mixin<H: Handler>(H);
 
-unsafe impl<H: AccountHandler> Resource for AccountMixin<H> {
+unsafe impl<H: Handler> Resource for Mixin<H> {
     unsafe fn new(initializer: &mut Initializer) -> Result<Self, InitializationError> {
         todo!()
     }
 }
 
-impl<H: AccountHandler> core::ops::Deref for AccountMixin<H> {
+impl<H: Handler> core::ops::Deref for Mixin<H> {
     type Target = H;
 
     fn deref(&self) -> &Self::Target {
@@ -59,19 +58,20 @@ impl<H: AccountHandler> core::ops::Deref for AccountMixin<H> {
     }
 }
 
-/// Mixes in a module handler into another module handler.
-pub struct ModuleMixin<H: ModuleHandler>(H);
-
-unsafe impl<H: ModuleHandler> Resource for ModuleMixin<H> {
-    unsafe fn new(initializer: &mut Initializer) -> Result<Self, InitializationError> {
-        todo!()
-    }
-}
-
-impl<H: ModuleHandler> core::ops::Deref for ModuleMixin<H> {
-    type Target = H;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+//
+// /// Mixes in a module handler into another module handler.
+// pub struct ModuleMixin<H: ModuleHandler>(H);
+//
+// unsafe impl<H: ModuleHandler> Resource for ModuleMixin<H> {
+//     unsafe fn new(initializer: &mut Initializer) -> Result<Self, InitializationError> {
+//         todo!()
+//     }
+// }
+//
+// impl<H: ModuleHandler> core::ops::Deref for ModuleMixin<H> {
+//     type Target = H;
+//
+//     fn deref(&self) -> &Self::Target {
+//         &self.0
+//     }
+// }

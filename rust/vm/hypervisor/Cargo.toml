@@ -1,5 +1,5 @@
 [package]
-name = "hypervisor"
+name = "ixc_hypervisor"
 version = "0.1.0"
 edition = "2021"
 repository.workspace = true

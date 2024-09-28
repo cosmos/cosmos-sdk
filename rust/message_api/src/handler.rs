@@ -1,21 +1,21 @@
 //! The raw handler and host backend interfaces.
 use core::alloc::Layout;
-use crate::code::Code;
+use crate::code::ErrorCode;
 use crate::packet::MessagePacket;
 
 /// A handler for an account.
-pub trait Handler {
+pub trait RawHandler {
     /// The name of the handler.
     fn name(&self) -> &'static str;
 
     /// Handle a message packet.
-    fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend) -> HandlerCode;
+    fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend) -> Result<(), HandlerErrorCode>;
 }
 
 /// A host backend for the handler.
 pub trait HostBackend {
     /// Invoke a message packet.
-    fn invoke(&self, message_packet: &mut MessagePacket) -> Code;
+    fn invoke(&self, message_packet: &mut MessagePacket) -> Result<(), ErrorCode>;
     /// Allocate memory for a message response.
     /// The memory management expectation of handlers is that the caller
     /// deallocates both the memory it allocated and any memory allocated
@@ -32,9 +32,8 @@ pub struct AllocError;
 
 /// A code that a handler can return.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum HandlerCode {
-    /// The handler completed successfully.
-    Ok,
+pub enum HandlerErrorCode {
+    MessageNotHandled = 0,
     /// The handler encountered an error.
-    HandlerError(u32),
+    Custom(u32),
 }

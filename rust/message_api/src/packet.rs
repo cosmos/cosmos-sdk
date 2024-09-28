@@ -1,12 +1,11 @@
 //! This module contains the definition of the `MessagePacket` struct.
 
-use crate::data_pointer::DataPointerWrapper;
 use crate::header::MessageHeader;
 
 /// A packet containing a message and its header.
 pub struct MessagePacket {
-    data: *mut MessageHeader,
-    len: usize,
+    pub(crate) data: *mut MessageHeader,
+    pub(crate) len: usize,
 }
 
 impl MessagePacket {
@@ -25,23 +24,4 @@ impl MessagePacket {
         &mut *self.data
     }
 
-    /// Returns input data pointer 1.
-    pub fn in1(&self) -> DataPointerWrapper {
-        unsafe { DataPointerWrapper(&mut self.header_mut().in_pointer1, self.data as *const u8, self.len) }
-    }
-
-    /// Returns input data pointer 2.
-    pub fn in2(&self) -> DataPointerWrapper {
-        unsafe { DataPointerWrapper(&mut self.header_mut().in_pointer2, self.data as *const u8, self.len) }
-    }
-
-    /// Returns output data pointer 1.
-    pub fn out1(&self) -> DataPointerWrapper {
-        unsafe { DataPointerWrapper(&mut self.header_mut().out_pointer1, self.data as *const u8, self.len) }
-    }
-
-    /// Returns output data pointer 2.
-    pub fn out2(&self) -> DataPointerWrapper {
-        unsafe { DataPointerWrapper(&mut self.header_mut().out_pointer2, self.data as *const u8, self.len) }
-    }
 }

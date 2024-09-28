@@ -16,7 +16,7 @@ import (
 	"cosmossdk.io/store/v2/root"
 )
 
-// QueryBlockResultsCmd implements the default command for a BlockResults query.
+// PrunesCmd implements the default command for pruning app history states.
 func (s *Server[T]) PrunesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prune [pruning-method]",

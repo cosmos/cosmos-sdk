@@ -149,15 +149,45 @@ type listenerWrapper struct {
 
 func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
 	if p.listener.StartBlock != nil {
-		err := p.listener.StartBlock(appdata.StartBlockData{
-			Height: uint64(req.Height),
-		})
-		if err != nil {
+		if err := p.listener.StartBlock(appdata.StartBlockData{
+			Height:      uint64(req.Height),
+			HeaderBytes: nil, // TODO: need to define a header struct including enc/decoding
+			HeaderJSON:  nil, // TODO: need to define a header json struct
+		}); err != nil {
 			return err
 		}
 	}
-
-	//// TODO txs, events
+	if p.listener.OnTx != nil {
+		for i, tx := range req.Txs {
+			if err := p.listener.OnTx(appdata.TxData{
+				TxIndex: int32(i),
+				Bytes:   func() ([]byte, error) { return tx, nil },
+				JSON:    nil, // TODO: need to define a tx json struct
+			}); err != nil {
+				return err
+			}
+		}
+	}
+	if p.listener.OnEvent != nil {
+		events := make([]appdata.Event, len(res.Events))
+		for i, event := range res.Events {
+			events[i] = appdata.Event{
+				BlockStage: appdata.UnknownBlockStage,
+				Type:       event.Type,
+				Data:       nil,
+				Attributes: func() ([]appdata.EventAttribute, error) {
+					attrs := make([]appdata.EventAttribute, len(event.Attributes))
+					for j, attr := range event.Attributes {
+						attrs[j] = appdata.EventAttribute{
+							Key:   attr.Key,
+							Value: attr.Value,
+						}
+					}
+					return attrs, nil
+				},
+			}
+		}
+	}
 
 	return nil
 }

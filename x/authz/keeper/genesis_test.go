@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
@@ -14,7 +13,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/authz/keeper"
 	authzmodule "cosmossdk.io/x/authz/module"
-	authztestutil "cosmossdk.io/x/authz/testutil"
 	bank "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -37,11 +35,10 @@ var (
 type GenesisTestSuite struct {
 	suite.Suite
 
-	ctx           sdk.Context
-	keeper        keeper.Keeper
-	baseApp       *baseapp.BaseApp
-	accountKeeper *authztestutil.MockAccountKeeper
-	encCfg        moduletestutil.TestEncodingConfig
+	ctx     sdk.Context
+	keeper  keeper.Keeper
+	baseApp *baseapp.BaseApp
+	encCfg  moduletestutil.TestEncodingConfig
 }
 
 func (suite *GenesisTestSuite) SetupTest() {
@@ -51,11 +48,6 @@ func (suite *GenesisTestSuite) SetupTest() {
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, authzmodule.AppModule{})
-
-	// gomock initializations
-	ctrl := gomock.NewController(suite.T())
-	suite.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
-	suite.accountKeeper.EXPECT().AddressCodec().Return(addresscodec.NewBech32Codec("cosmos")).AnyTimes()
 
 	suite.baseApp = baseapp.NewBaseApp(
 		"authz",

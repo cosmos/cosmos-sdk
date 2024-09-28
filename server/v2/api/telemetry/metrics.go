@@ -57,7 +57,7 @@ type GatherResponse struct {
 	ContentType string
 }
 
-// New creates a new instance of Metrics
+// NewMetrics creates a new instance of Metrics
 func NewMetrics(cfg *Config) (*Metrics, error) {
 	if numGlobalLabels := len(cfg.GlobalLabels); numGlobalLabels > 0 {
 		parsedGlobalLabels := make([]metrics.Label, numGlobalLabels)

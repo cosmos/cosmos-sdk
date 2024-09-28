@@ -129,6 +129,8 @@ pollLoop:
 			return
 		default:
 			if len(uInfos) == 0 {
+				// prevent spending extra CPU cycles
+				time.Sleep(time.Second)
 				continue
 			}
 			resp, err := client.GetLatestBlock(ctx, &cmtservice.GetLatestBlockRequest{})

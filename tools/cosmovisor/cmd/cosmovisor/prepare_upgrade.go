@@ -1,15 +1,8 @@
 package main
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
 	"path/filepath"
-	"runtime"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -21,114 +14,53 @@ func NewPrepareUpgradeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prepare-upgrade",
 		Short: "Prepare for the next upgrade",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := cosmovisor.GetConfigFromFile(cmd.Flag(cosmovisor.FlagCosmovisorConfig).Value.String())
-			if err != nil {
-				return fmt.Errorf("failed to get config: %w", err)
-			}
-
-			logger := cfg.Logger(os.Stdout)
-
-			upgradeInfo, err := cfg.UpgradeInfo()
-			if err != nil {
-				return fmt.Errorf("failed to get upgrade info: %w", err)
-			}
-
-			if upgradeInfo.Name == "" {
-				logger.Info("No upgrade scheduled")
-				return nil
-			}
-
-			logger.Info("Preparing for upgrade", "name", upgradeInfo.Name, "height", upgradeInfo.Height)
-
-			upgradeInfoParsed, err := plan.ParseInfo(upgradeInfo.Info, plan.ParseOptionEnforceChecksum(cfg.DownloadMustHaveChecksum))
-			if err != nil {
-				return fmt.Errorf("failed to parse upgrade info: %w", err)
-			}
-
-			binaryURL, err := getBinaryURL(upgradeInfoParsed.Binaries)
-			if err != nil {
-				return fmt.Errorf("failed to get binary URL: %w", err)
-			}
-
-			binaryPath := filepath.Join(cfg.UpgradeDir(upgradeInfo.Name), "bin", cfg.Name)
-			if err := downloadBinary(binaryURL, binaryPath); err != nil {
-				return fmt.Errorf("failed to download binary: %w", err)
-			}
-
-			logger.Info("Binary downloaded", "path", binaryPath)
-
-			if err := verifyChecksum(binaryPath, upgradeInfoParsed.Binaries[runtime.GOOS+"/"+runtime.GOARCH]); err != nil {
-				return fmt.Errorf("checksum verification failed: %w", err)
-			}
-
-			logger.Info("Checksum verified successfully")
-
-			return nil
-		},
+		Long: `Prepare for the next upgrade by downloading and verifying the upgrade binary.
+This command will download the binary specified in the upgrade-info.json file,
+verify its checksum, and place it in the appropriate directory for Cosmovisor to use.`,
+		RunE:         prepareUpgradeHandler,
+		SilenceUsage: false,
+		Args:         cobra.NoArgs,
 	}
-
 	return cmd
 }
 
-func getBinaryURL(binaries plan.BinaryDownloadURLMap) (string, error) {
-	osArch := runtime.GOOS + "/" + runtime.GOARCH
-	url, ok := binaries[osArch]
-	if !ok {
-		return "", fmt.Errorf("binary not found for %s", osArch)
-	}
-	
-	parts := strings.Split(url, "?checksum=")
-	if len(parts) > 1 {
-		return parts[0], nil
-	}
-	return url, nil
-}
-
-func downloadBinary(url, destPath string) error {
-	resp, err := http.Get(url)
+func prepareUpgradeHandler(cmd *cobra.Command, _ []string) error {
+	configPath, err := cmd.Flags().GetString(cosmovisor.FlagCosmovisorConfig)
 	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("bad status: %s", resp.Status)
+		return fmt.Errorf("failed to get config flag: %w", err)
 	}
 
-	out, err := os.Create(destPath)
+	cfg, err := cosmovisor.GetConfigFromFile(configPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get config: %w", err)
 	}
-	defer out.Close()
 
-	_, err = io.Copy(out, resp.Body)
-	return err
-}
-
-func verifyChecksum(filePath, expectedChecksum string) error {
-	file, err := os.Open(filePath)
+	logger := cfg.Logger(cmd.OutOrStdout())
+	upgradeInfo, err := cfg.UpgradeInfo()
 	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	hash := sha256.New()
-	if _, err := io.Copy(hash, file); err != nil {
-		return err
+		return fmt.Errorf("failed to get upgrade info: %w", err)
 	}
 
-	actualChecksum := hex.EncodeToString(hash.Sum(nil))
-	
-	parts := strings.Split(expectedChecksum, "sha256:")
-	if len(parts) != 2 {
-		return fmt.Errorf("invalid checksum format: %s", expectedChecksum)
-	}
-	expectedChecksumOnly := strings.TrimSpace(parts[1])
+	logger.Info("Preparing for upgrade", "name", upgradeInfo.Name, "height", upgradeInfo.Height)
 
-	if actualChecksum != expectedChecksumOnly {
-		return fmt.Errorf("checksum mismatch: expected %s, got %s", expectedChecksumOnly, actualChecksum)
+	upgradeInfoParsed, err := plan.ParseInfo(upgradeInfo.Info, plan.ParseOptionEnforceChecksum(cfg.DownloadMustHaveChecksum))
+	if err != nil {
+		return fmt.Errorf("failed to parse upgrade info: %w", err)
 	}
+
+	binaryURL, err := cosmovisor.GetBinaryURL(upgradeInfoParsed.Binaries)
+	if err != nil {
+		return fmt.Errorf("failed to get binary URL: %w", err)
+	}
+
+	logger.Info("Downloading upgrade binary", "url", binaryURL)
+
+	upgradeBin := filepath.Join(cfg.UpgradeBin(upgradeInfo.Name), cfg.Name)
+	if err := plan.DownloadUpgrade(filepath.Dir(upgradeBin), binaryURL, cfg.Name); err != nil {
+		return fmt.Errorf("failed to download and verify binary: %w", err)
+	}
+
+	logger.Info("Upgrade preparation complete", "name", upgradeInfo.Name, "height", upgradeInfo.Height)
 
 	return nil
 }

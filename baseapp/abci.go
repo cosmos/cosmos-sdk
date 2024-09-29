@@ -180,7 +180,6 @@ func (app *BaseApp) Query(_ context.Context, req *abci.QueryRequest) (resp *abci
 
 	telemetry.IncrCounter(1, "query", "count")
 	telemetry.IncrCounter(1, "query", req.Path)
-	
 	start := telemetry.Now()
 	defer telemetry.MeasureSince(start, req.Path)
 

@@ -6,14 +6,14 @@ use crate::mem::MemoryManager;
 use crate::structs::StructDecodeVisitor;
 use crate::value::Value;
 
-pub fn decode_value<'b, 'a: 'b, V: Value<'a>>(input: &'a [u8], memory_manager: &'b MemoryManager<'a>) -> Result<V, DecodeError> {
+pub fn decode_value<'b, 'a: 'b, V: Value<'a>>(input: &'a [u8], memory_manager: &'b MemoryManager<'a, 'a>) -> Result<V, DecodeError> {
     let mut decoder = Decoder { buf: input, scope: memory_manager };
     decode(&mut decoder)
 }
 
 struct Decoder<'b, 'a: 'b> {
     buf: &'a [u8],
-    scope: &'b MemoryManager<'a>,
+    scope: &'b MemoryManager<'a, 'a>,
 }
 
 impl<'b, 'a: 'b> Decoder<'b, 'a> {
@@ -72,7 +72,7 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for Decoder<'b, 'a> {
         Ok(())
     }
 
-    fn mem_manager(&self) -> &MemoryManager<'a> {
+    fn mem_manager(&self) -> &MemoryManager<'a, 'a> {
         &self.scope
     }
 }
@@ -112,7 +112,7 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for InnerDecoder<'b, 'a> {
         todo!()
     }
 
-    fn mem_manager(&self) -> &MemoryManager<'a> {
+    fn mem_manager(&self) -> &MemoryManager<'a, 'a> {
         &self.outer.scope
     }
 }

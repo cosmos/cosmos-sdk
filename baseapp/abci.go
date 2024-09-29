@@ -180,7 +180,9 @@ func (app *BaseApp) Query(_ context.Context, req *abci.QueryRequest) (resp *abci
 
 	telemetry.IncrCounter(1, "query", "count")
 	telemetry.IncrCounter(1, "query", req.Path)
-	defer telemetry.MeasureSince(telemetry.Now(), req.Path)
+	
+	start := telemetry.Now()
+	defer telemetry.MeasureSince(start, req.Path)
 
 	if req.Path == QueryPathBroadcastTx {
 		return queryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), app.trace), nil

@@ -291,7 +291,6 @@ Example output:
 ```bash
 INFO Preparing for upgrade name=v1.0.0 height=1000000
 INFO Downloading upgrade binary url=https://example.com/binary/v1.0.0?checksum=sha256:339911508de5e20b573ce902c500ee670589073485216bee8b045e853f24bce8
-INFO Binary downloaded and verified path=/path/to/cosmovisor/upgrades/v1.0.0/bin/myapp
 INFO Upgrade preparation complete name=v1.0.0 height=1000000
 ```
 

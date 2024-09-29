@@ -359,9 +359,9 @@ func (cfg *Config) validate() []error {
 	// validate DataPath
 	switch {
 	case cfg.DataPath == "":
-		break
+		errs = append(errs, fmt.Errorf("%s is not set", EnvDataPath))
 	case !filepath.IsAbs(cfg.DataPath):
-		errs = append(errs, fmt.Errorf("%s must be an absolute path", cfg.DataPath))
+		errs = append(errs, fmt.Errorf("%s must be an absolute path", EnvDataPath))
 	default:
 		switch info, err := os.Stat(cfg.DataPath); {
 		case err != nil:

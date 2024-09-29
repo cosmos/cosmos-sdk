@@ -210,31 +210,27 @@ func (s *argsTestSuite) TestValidate() {
 		valid bool
 	}{
 		"happy": {
-			cfg:   Config{Home: absPath, Name: "bind", DataBackupPath: absPath},
+			cfg:   Config{Home: absPath, Name: "bind", DataBackupPath: absPath, DataPath: absPath},
 			valid: true,
 		},
 		"happy with download": {
-			cfg:   Config{Home: absPath, Name: "bind", AllowDownloadBinaries: true, DataBackupPath: absPath},
+			cfg:   Config{Home: absPath, Name: "bind", AllowDownloadBinaries: true, DataBackupPath: absPath, DataPath: absPath},
 			valid: true,
 		},
 		"happy with skip data backup": {
-			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: absPath},
+			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: absPath, DataPath: absPath},
 			valid: true,
 		},
 		"happy with skip data backup and empty data backup path": {
-			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: ""},
+			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: "", DataPath: absPath},
 			valid: true,
 		},
 		"happy with skip data backup and no such data backup path dir": {
-			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: filepath.FromSlash("/no/such/dir")},
+			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: filepath.FromSlash("/no/such/dir"), DataPath: absPath},
 			valid: true,
 		},
 		"happy with skip data backup and relative data backup path": {
-			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: relPath},
-			valid: true,
-		},
-		"happy with empty data path": {
-			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataPath: ""},
+			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataBackupPath: relPath, DataPath: absPath},
 			valid: true,
 		},
 		"happy with absolute data path": {
@@ -273,6 +269,10 @@ func (s *argsTestSuite) TestValidate() {
 			cfg:   Config{Home: absPath, Name: "bind", DataBackupPath: relPath},
 			valid: false,
 		},
+		"missing data path": {
+			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataPath: ""},
+			valid: false,
+		},
 		"no such data path dir": {
 			cfg:   Config{Home: absPath, Name: "bind", UnsafeSkipBackup: true, DataPath: filepath.FromSlash("/no/such/dir")},
 			valid: false,
@@ -299,7 +299,7 @@ func (s *argsTestSuite) TestEnsureBin() {
 	absPath, err := filepath.Abs(relPath)
 	s.Require().NoError(err)
 
-	cfg := Config{Home: absPath, Name: "dummyd", DataBackupPath: absPath}
+	cfg := Config{Home: absPath, Name: "dummyd", DataBackupPath: absPath, DataPath: absPath}
 	s.Require().Len(cfg.validate(), 0, "validation errors")
 
 	s.Require().NoError(plan.EnsureBinary(cfg.GenesisBin()))

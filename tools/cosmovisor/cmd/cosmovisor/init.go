@@ -3,10 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"

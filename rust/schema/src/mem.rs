@@ -20,7 +20,7 @@ impl<'a> MemoryManager<'a> {
         }
     }
 
-    pub(crate) fn new_vec<'b, T>(&'a self) -> BumpVec<'b, 'a, T> {
+    pub(crate) fn new_vec<'b, T>(&'b self) -> BumpVec<'b, 'a, T> {
         BumpVec::new_in(&self.bump)
     }
 

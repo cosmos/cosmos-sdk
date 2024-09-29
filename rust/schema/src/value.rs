@@ -165,7 +165,7 @@ where
     V::Type: ListElementType,
 {
     type Type = ListT<V::Type>;
-    type DecodeState = SliceState<'a, V>;
+    type DecodeState = SliceState<'a, 'a, V>;
 
     fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
         decoder.decode_list(state)

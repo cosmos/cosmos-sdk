@@ -8,11 +8,11 @@ pub trait ListVisitor<'a, T> {
     fn next<D: Decoder<'a>>(&mut self, decoder: &mut D) -> Result<(), DecodeError>;
 }
 
-pub struct SliceState<'a, T: Value<'a>> {
-    pub(crate) xs: Option<BumpVec<'a, 'a, T>>,
+pub struct SliceState<'b, 'a: 'b, T: Value<'a>> {
+    pub(crate) xs: Option<BumpVec<'b, 'a, T>>,
 }
 
-impl <'a, T: Value<'a>> Default for SliceState<'a, T> {
+impl <'b, 'a:'b, T: Value<'a>> Default for SliceState<'b, 'a, T> {
     fn default() -> Self {
         Self {
             xs: None,
@@ -20,8 +20,8 @@ impl <'a, T: Value<'a>> Default for SliceState<'a, T> {
     }
 }
 
-impl <'a, T: Value<'a>> SliceState<'a, T> {
-    fn get_xs<'b>(&mut self, mem: &MemoryManager<'a>) -> &mut BumpVec<'a, 'a, T> {
+impl <'b, 'a:'b, T: Value<'a>> SliceState<'b, 'a, T> {
+    fn get_xs(&mut self, mem: &'b MemoryManager<'a>) -> &mut BumpVec<'b, 'a, T> {
         if self.xs.is_none() {
             self.xs = Some(mem.new_vec());
         }
@@ -29,7 +29,7 @@ impl <'a, T: Value<'a>> SliceState<'a, T> {
     }
 }
 
-impl <'a, T: Value<'a>> ListVisitor<'a, T> for SliceState<'a, T> {
+impl <'b, 'a:'b, T: Value<'a>> ListVisitor<'a, T> for SliceState<'b, 'a, T> {
     fn init(&mut self, len: usize, scope: &MemoryManager<'a>) -> Result<(), DecodeError> {
         self.get_xs(scope).reserve(len);
         Ok(())

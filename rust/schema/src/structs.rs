@@ -39,8 +39,12 @@ pub unsafe trait StructCodec {
 
 /// StructSchema is the trait that should be derived to define the schema of a struct.
 pub unsafe trait StructSchema {
+    /// The name of the struct.
+    const NAME: &'static str;
     /// The fields of the struct.
     const FIELDS: &'static [Field<'static>];
+    /// Whether the struct is sealed.
+    const SEALED: bool;
 }
 
 /// StructDecodeVisitor is the trait that should be derived to decode a struct.
@@ -53,4 +57,15 @@ pub unsafe trait StructDecodeVisitor<'a>: StructSchema {
 pub unsafe trait StructEncodeVisitor: StructSchema {
     /// Encode a field to the output data.
     fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError>;
+}
+
+/// StructType contains the schema of a struct.
+pub struct StructType<'a> {
+    /// The name of the struct.
+    pub name: &'a str,
+    /// The fields of the struct.
+    pub fields: &'a [Field<'a>],
+    /// Sealed indicates whether new fields can be added to the struct.
+    /// If sealed is true, the struct is considered sealed and new fields cannot be added.
+    pub sealed: bool,
 }

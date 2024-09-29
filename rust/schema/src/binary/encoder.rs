@@ -2,7 +2,8 @@ use bump_scope::BumpScope;
 use crate::encoder::{EncodeError};
 use crate::structs::{StructDecodeVisitor, StructEncodeVisitor};
 use crate::value::Value;
-use crate::buffer::{ReverseWriter, WriterFactory};
+use crate::buffer::{Writer, WriterFactory};
+use crate::state_object::ObjectValue;
 
 pub fn encode_value<'a, V: Value<'a>, F: WriterFactory>(value: &V, writer_factory: &F) -> Result<F::Output, EncodeError> {
     let mut sizer = EncodeSizer { size: 0 };
@@ -13,11 +14,22 @@ pub fn encode_value<'a, V: Value<'a>, F: WriterFactory>(value: &V, writer_factor
     writer.finish()
 }
 
-struct Encoder<'a, W> {
-    writer: &'a mut W
+fn encode_object_value<'a, V: ObjectValue, F: WriterFactory>(value: V::Value<'a>, writer_factory: &F) -> Result<F::Output, EncodeError> {
+    let mut sizer = EncodeSizer { size: 0 };
+    let mut inner = InnerEncodeSizer { outer: &mut sizer };
+    V::encode_reverse(&value, &mut inner)?;
+    let mut writer = writer_factory.new_reverse(sizer.size);
+    let mut encoder = Encoder { writer: &mut writer };
+    let mut inner = InnerEncoder { outer: &mut encoder };
+    V::encode_reverse(&value, &mut inner)?;
+    writer.finish()
 }
 
-impl <'a, W: ReverseWriter> crate::encoder::Encoder for Encoder<'a, W> {
+struct Encoder<'a, W> {
+    writer: &'a mut W,
+}
+
+impl<'a, W: Writer> crate::encoder::Encoder for Encoder<'a, W> {
     fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError> {
         self.writer.write(&x.to_le_bytes())
     }
@@ -53,7 +65,7 @@ impl <'a, W: ReverseWriter> crate::encoder::Encoder for Encoder<'a, W> {
 }
 
 struct EncodeSizer {
-    size: usize
+    size: usize,
 }
 
 impl crate::encoder::Encoder for EncodeSizer {
@@ -92,11 +104,11 @@ impl crate::encoder::Encoder for EncodeSizer {
     }
 }
 
-struct InnerEncoder<'b, 'a:'b, W> {
-    outer: &'b mut Encoder<'a, W>
+struct InnerEncoder<'b, 'a: 'b, W> {
+    outer: &'b mut Encoder<'a, W>,
 }
 
-impl <'b, 'a:'b, W: ReverseWriter> crate::encoder::Encoder for InnerEncoder<'a, 'b, W> {
+impl<'b, 'a: 'b, W: Writer> crate::encoder::Encoder for InnerEncoder<'a, 'b, W> {
     fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError> {
         self.outer.encode_u32(x)
     }
@@ -125,10 +137,10 @@ impl <'b, 'a:'b, W: ReverseWriter> crate::encoder::Encoder for InnerEncoder<'a, 
 }
 
 struct InnerEncodeSizer<'a> {
-    outer: &'a mut EncodeSizer
+    outer: &'a mut EncodeSizer,
 }
 
-impl <'a> crate::encoder::Encoder for InnerEncodeSizer<'a> {
+impl<'a> crate::encoder::Encoder for InnerEncodeSizer<'a> {
     fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError> {
         self.outer.size += 4;
         Ok(())

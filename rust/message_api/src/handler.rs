@@ -30,10 +30,21 @@ pub trait HostBackend {
 #[derive(Debug)]
 pub struct AllocError;
 
-/// A code that a handler can return.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+/// An error code returned by a handler.
+pub enum HandlerError {
+    /// A known handler error code, usually returned by handler implementation libraries.
+    KnownCode(HandlerErrorCode),
+    /// A custom error code returned by a handler.
+    Custom(u16),
+}
+
+/// A pre-defined error code that is usually returned by handler implementation libraries,
+/// rather than handlers themselves.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum HandlerErrorCode {
-    MessageNotHandled = 0,
-    /// The handler encountered an error.
-    Custom(u32),
+    /// The handler doesn't handle the specified message.
+    MessageNotHandled,
+    /// Encoding error.
+    EncodingError,
 }

@@ -1,7 +1,9 @@
 //! The map module contains the `Map` struct, which represents a key-value map in storage.
 
 use std::iter::Product;
+use bump_scope::Bump;
 use ixc_core::{Context, Response};
+use ixc_schema::mem::MemoryManager;
 use ixc_schema::state_object::{ObjectKey, ObjectValue, PrefixKey};
 
 /// A key-value map.
@@ -17,6 +19,12 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
 
     /// Gets the value of the map at the given key.
     pub fn get<'key, 'value>(&self, ctx: &Context<'key>, key: K::Value<'key>) -> Response<'value, V::Value<'value>> {
+        unsafe {
+            let bump = Bump::new();
+            let scope = bump.as_scope();
+            let mem_mgr = MemoryManager::new(scope);
+            let backend = ctx.get_host_backend();
+        }
         todo!()
     }
 

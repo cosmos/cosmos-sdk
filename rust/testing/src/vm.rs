@@ -25,10 +25,10 @@ impl VM for NativeVM {
             let code = handler.handle(message_packet, callbacks);
             match code {
                 HandlerCode::Ok => ErrorCode::Ok,
-                HandlerCode::HandlerError(code) => ErrorCode::HandlerError(code),
+                HandlerCode::HandlerError(code) => ErrorCode::HandlerSystemError(code),
             }
         } else {
-            ErrorCode::SystemError(SystemErrorCode::HandlerNotFound)
+            ErrorCode::RuntimeSystemError(SystemErrorCode::HandlerNotFound)
         }
     }
 }

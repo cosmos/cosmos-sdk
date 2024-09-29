@@ -1,7 +1,21 @@
 //! Basic error handling utilities.
 use core::fmt::{Debug, Display, Formatter};
+use ixc_message_api::code::SystemErrorCode;
+use ixc_message_api::handler::HandlerErrorCode;
 use ixc_schema::types::StrT;
 use ixc_schema::value::{Value, AbstractValue};
+use crate::response::ResponseBody;
+
+/// The standard error wrapper for handler functions.
+#[derive(Debug, Clone)]
+pub enum Error<E> {
+    /// A system error occurred.
+    SystemError(SystemErrorCode),
+    /// A known handler error occurred.
+    KnownHandlerError(HandlerErrorCode),
+    /// A custom handler error occurred.
+    HandlerError(E), // TODO response body
+}
 
 /// A simple error type which just contains an error message.
 #[derive(Clone)]
@@ -41,9 +55,9 @@ impl<E: core::error::Error> From<E> for ErrorMessage {
     }
 }
 
-impl <'a> Value<'a> for ErrorMessage {
+impl<'a> Value<'a> for ErrorMessage {
     type Type = StrT;
-    type DecodeState = ();
+    type DecodeState = String;
 }
 
 impl AbstractValue for ErrorMessage {

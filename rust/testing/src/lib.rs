@@ -4,7 +4,7 @@ mod manager;
 mod store;
 mod vm;
 
-use ixc_message_api::Address;
+use ixc_message_api::{AccountID, Address};
 use ixc_core::{Context};
 use ixc_core::handler::{HandlerAPI, AccountHandler, Handler, ModuleAPI, ModuleHandler};
 
@@ -13,50 +13,50 @@ use ixc_core::handler::{HandlerAPI, AccountHandler, Handler, ModuleAPI, ModuleHa
 pub struct TestApp {}
 
 impl TestApp {
-    /// Adds a module to the test harness.
-    pub fn add_module<H: ModuleHandler>(&mut self, module_name: &str, init: H::Init) -> Result<AccountInstance<H>, ()> {
-        todo!()
-    }
-
-    /// Adds a mock module to the test harness.
-    pub fn add_mock_module(&mut self, module_name: &str, mock: MockModule) {
-        todo!()
-    }
-
-    /// Adds a mock module to the test harness.
-    pub fn add_account<H: AccountHandler>(&mut self, caller: &Address, init: H::Init) -> Result<AccountInstance<H>, ()> {
-        todo!()
-    }
-
-    /// Adds a mock account to the test harness with the given address.
-    pub fn add_account_with_address<H: AccountHandler>(&mut self, caller: &Address, address: &Address, init: H::Init) -> Result<AccountInstance<H>, ()> {
-        todo!()
-    }
-
-    /// Adds a mock account to the test harness.
-    pub fn add_mock_account(&mut self, ctx: &mut Context, mock: MockAccount) -> Result<Address, ()> {
-        todo!()
-    }
-
-    /// Adds a mock account to the test harness with the given address.
-    pub fn add_mock_account_with_address(&mut self, address: &Address, mock: MockAccount) -> Result<Address, ()> {
-        todo!()
-    }
-
-    /// Creates a new random client address that can be used in calls.
-    pub fn new_client_address(&mut self) -> Address {
-        todo!()
-    }
-
-    /// Creates a new client context with a random address.
-    pub fn client_context(&mut self, address: &Address) -> &mut Context {
-        todo!()
-    }
-    //
-    // /// Creates a new client context with the given address.
-    // pub fn new_client_context_with_address(&mut self, address: &Address) -> Context {
+    // /// Adds a module to the test harness.
+    // pub fn add_module<H: ModuleHandler>(&mut self, module_name: &str, init: H::Init) -> Result<AccountInstance<H>, ()> {
     //     todo!()
     // }
+    //
+    // /// Adds a mock module to the test harness.
+    // pub fn add_mock_module(&mut self, module_name: &str, mock: MockModule) {
+    //     todo!()
+    // }
+    //
+    // /// Adds a mock module to the test harness.
+    // pub fn add_account<H: AccountHandler>(&mut self, caller: &Address, init: H::Init) -> Result<AccountInstance<H>, ()> {
+    //     todo!()
+    // }
+    //
+    // /// Adds a mock account to the test harness with the given address.
+    // pub fn add_account_with_address<H: AccountHandler>(&mut self, caller: &Address, address: &Address, init: H::Init) -> Result<AccountInstance<H>, ()> {
+    //     todo!()
+    // }
+    //
+    // /// Adds a mock account to the test harness.
+    // pub fn add_mock_account(&mut self, ctx: &mut Context, mock: MockAccount) -> Result<Address, ()> {
+    //     todo!()
+    // }
+    //
+    // /// Adds a mock account to the test harness with the given address.
+    // pub fn add_mock_account_with_address(&mut self, address: &Address, mock: MockAccount) -> Result<Address, ()> {
+    //     todo!()
+    // }
+    //
+    // /// Creates a new random client address that can be used in calls.
+    // pub fn new_client_address(&mut self) -> Address {
+    //     todo!()
+    // }
+    //
+    // /// Creates a new client context with a random address.
+    // pub fn client_context(&mut self, address: &Address) -> &mut Context {
+    //     todo!()
+    // }
+    // //
+    // // /// Creates a new client context with the given address.
+    // // pub fn new_client_context_with_address(&mut self, address: &Address) -> Context {
+    // //     todo!()
+    // // }
 
     /// Returns the test storage.
     pub fn storage(&self) -> &TestStorage {
@@ -97,7 +97,7 @@ pub struct AccountInstance<'a, H: Handler> {
 
 impl <'a, H: Handler> AccountInstance<'a, H> {
     /// Returns the address of the account.
-    fn address(&self) -> &Address {
+    fn account_id(&self) -> AccountID {
         todo!()
     }
 

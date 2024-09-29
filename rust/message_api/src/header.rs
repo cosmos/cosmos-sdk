@@ -6,7 +6,7 @@ use crate::data_pointer::DataPointer;
 pub const MESSAGE_HEADER_SIZE: usize = size_of::<MessageHeader>();
 
 /// A message header.
-#[derive(Default)]
+#[derive(Default, Copy, Clone)]
 #[non_exhaustive]
 pub struct MessageHeader {
     /// The target account of the message.

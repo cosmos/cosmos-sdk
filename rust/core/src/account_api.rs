@@ -11,5 +11,5 @@ pub unsafe fn self_destruct<'a, 'b>(ctx: &mut Context<'a>) -> Response<'b, ()> {
     unimplemented!()
 }
 
-
+/// The selector for the account create message.
 pub const CREATE_SELECTOR: u64 = message_selector!("ixc.account.v1.create");

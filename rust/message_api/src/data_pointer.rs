@@ -54,7 +54,7 @@ pub struct LocalPointer {
 
 impl DataPointer {
     /// Gets the data that the pointer points to as a slice of bytes.
-    pub unsafe fn get(&self, message_packet: &MessagePacket) -> &[u8] {
+    pub unsafe fn get<'a>(&self, message_packet: &'a MessagePacket) -> &'a [u8] {
         if self.local_pointer.zero == 0 {
             if self.local_pointer.offset < MESSAGE_HEADER_SIZE as u32 {
                 return &[];

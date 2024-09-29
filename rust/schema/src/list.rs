@@ -4,7 +4,7 @@ use crate::mem::MemoryManager;
 use crate::value::Value;
 
 pub trait ListVisitor<'a, T> {
-    fn init(&mut self, len: usize, scope: &MemoryManager<'a, 'a>) -> Result<(), DecodeError>;
+    fn init(&mut self, len: usize, scope: &MemoryManager<'a>) -> Result<(), DecodeError>;
     fn next<D: Decoder<'a>>(&mut self, decoder: &mut D) -> Result<(), DecodeError>;
 }
 
@@ -21,16 +21,16 @@ impl <'a, T: Value<'a>> Default for SliceState<'a, T> {
 }
 
 impl <'a, T: Value<'a>> SliceState<'a, T> {
-    fn get_xs<'b>(&mut self, mem: &MemoryManager<'a, 'a>) -> &mut BumpVec<'a, 'a, T> {
+    fn get_xs<'b>(&mut self, mem: &MemoryManager<'a>) -> &mut BumpVec<'a, 'a, T> {
         if self.xs.is_none() {
-            self.xs = Some(BumpVec::new_in(mem.scope()));
+            self.xs = Some(mem.new_vec());
         }
         self.xs.as_mut().unwrap()
     }
 }
 
 impl <'a, T: Value<'a>> ListVisitor<'a, T> for SliceState<'a, T> {
-    fn init(&mut self, len: usize, scope: &MemoryManager<'a, 'a>) -> Result<(), DecodeError> {
+    fn init(&mut self, len: usize, scope: &MemoryManager<'a>) -> Result<(), DecodeError> {
         self.get_xs(scope).reserve(len);
         Ok(())
     }

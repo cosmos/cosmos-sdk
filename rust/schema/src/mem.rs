@@ -1,50 +1,58 @@
 //! Memory management utilities for codec implementations.
 use core::cell::RefCell;
 use core::ptr::NonNull;
-use bump_scope::{BumpBox, BumpScope, BumpVec};
+use bump_scope::{Bump, BumpBox, BumpVec};
 
 /// A memory manager that tracks allocated memory using a bump allocator and ensures that
 /// memory is deallocated and dropped properly when the manager is dropped.
-pub struct MemoryManager<'b, 'a: 'b> {
-    scope: &'b BumpScope<'a>,
-    handles: RefCell<BumpVec<'b, 'a, NonNull<dyn DeferDrop + 'b>>>,
+pub struct MemoryManager<'a> {
+    bump: Bump,
+    handles: RefCell<Option<BumpVec<'a, 'a, NonNull<dyn DeferDrop + 'a>>>>,
 }
 
-impl<'b, 'a: 'b> MemoryManager<'b, 'a> {
+impl<'a> MemoryManager<'a> {
     /// Create a new memory manager.
-    pub fn new(scope: &'b BumpScope<'a>) -> MemoryManager<'b, 'a> {
+    pub fn new() -> MemoryManager<'a> {
+        let bump = Bump::new();
         MemoryManager {
-            scope,
-            handles: RefCell::new(BumpVec::new_in(scope)),
+            bump,
+            handles: RefCell::new(None),
         }
     }
 
-    /// Get the bump scope for this memory manager.
-    pub fn scope(&self) -> &'b bump_scope::BumpScope<'a> {
-        self.handles.borrow().bump()
+    pub(crate) fn new_vec<'b, T>(&'a self) -> BumpVec<'b, 'a, T> {
+        BumpVec::new_in(&self.bump)
     }
 
     /// Converts a BumpVec into a borrowed slice in such a way that the drop code
     /// for T (if any) will be executed when the MemoryManager is dropped.
-    pub fn unpack_slice<T>(&self, vec: BumpVec<'b, 'a, T>) -> &'a [T] {
+    pub(crate) fn unpack_slice<T>(&self, vec: BumpVec<'_, 'a, T>) -> &'a [T] {
         unsafe {
             let b = vec.into_boxed_slice();
             let slice = b.as_non_null_slice().as_ptr() as *const [T];
             struct Dropper<'a, U> {
                 b: BumpBox<'a, [U]>,
             }
-            let dropper = self.scope().alloc(Dropper { b });
-            self.handles.borrow_mut().push(dropper.into_raw() as NonNull<dyn DeferDrop + 'b>);
+            let dropper = self.bump.alloc(Dropper { b });
+            let mut handles = self.handles.borrow_mut();
+            if handles.is_none() {
+                *handles = Some(BumpVec::new_in(self.bump.as_scope()));
+            }
+            let mut handles = handles.as_mut().unwrap();
+            handles.push(dropper.into_raw() as NonNull<dyn DeferDrop + 'a>);
             &*slice
         }
     }
+
 }
 
-impl<'b, 'a: 'b> Drop for MemoryManager<'b, 'a> {
+impl<'a> Drop for MemoryManager<'a> {
     fn drop(&mut self) {
-        for handle in self.handles.borrow_mut().drain(..) {
-            unsafe {
-                handle.as_ptr().drop_in_place();
+        if let Some(handles) = self.handles.get_mut() {
+            for handle in handles.drain(..) {
+                unsafe {
+                    handle.as_ptr().drop_in_place();
+                }
             }
         }
     }

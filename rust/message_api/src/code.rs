@@ -26,10 +26,13 @@ pub enum SystemErrorCode {
 /// Error and success codes returned by the message API.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ErrorCode {
-    /// A system error.
-    SystemError(SystemErrorCode),
-    /// An error returned by the handler.
-    HandlerError(HandlerErrorCode),
+    /// An error that can only be returned by the system, in the range of 0..127.
+    RuntimeSystemError(SystemErrorCode),
+    /// A predefined error code returned by handler implementations libraries,
+    /// in the range of 128..255.
+    HandlerSystemError(HandlerErrorCode),
+    /// A custom error code returned by a handler.
+    CustomHandlerError(u16)
 }
 
 // impl From<u32> for Code {

@@ -16,6 +16,7 @@ members = [
 [workspace.package]
 repository = "https://github.com/cosmos/cosmos-sdk"
 license = "Apache-2.0"
+rust-version = "1.81.0"
 
 [workspace.lints]
 

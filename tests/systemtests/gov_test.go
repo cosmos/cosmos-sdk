@@ -131,10 +131,6 @@ func TestSubmitLegacyProposal(t *testing.T) {
 
 	sut.StartChain(t)
 
-	// get gov module address
-	// resp := cli.CustomQuery("q", "auth", "module-account", "gov")
-	// govAddress := gjson.Get(resp, "account.value.address").String()
-
 	invalidProp := `{
 	"title": "",
 		"description": "Where is the title!?",
@@ -231,6 +227,142 @@ func TestSubmitLegacyProposal(t *testing.T) {
 				txResult, found := cli.AwaitTxCommitted(rsp)
 				require.True(t, found)
 				RequireTxSuccess(t, txResult)
+			}
+		})
+	}
+}
+
+func TestNewCmdWeightedVote(t *testing.T) {
+	// given a running chain
+
+	sut.ResetChain(t)
+	cli := NewCLIWrapper(t, sut, verbose)
+
+	// get validator address
+	valAddr := gjson.Get(cli.Keys("keys", "list"), "0.address").String()
+	require.NotEmpty(t, valAddr)
+
+	sut.StartChain(t)
+
+	// Submit a new proposal for voting
+	proposalArgs := []string{
+		"tx", "gov", "submit-legacy-proposal",
+		fmt.Sprintf("--%s='Text Proposal'", "title"),
+		fmt.Sprintf("--%s='Where is the title!?'", "description"), //nolint:staticcheck // we are intentionally using a deprecated flag here.
+		fmt.Sprintf("--%s=%s", "type", "Text"),                    //nolint:staticcheck // we are intentionally using a deprecated flag here.
+		fmt.Sprintf("--%s=%s", "deposit", sdk.NewCoin("stake", math.NewInt(10_000_000)).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String())}
+	rsp := cli.Run(proposalArgs...)
+	txResult, found := cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
+
+	proposalsResp := cli.CustomQuery("q", "gov", "proposals")
+	proposals := gjson.Get(proposalsResp, "proposals.#.id").Array()
+	require.NotEmpty(t, proposals)
+
+	proposal1 := cli.CustomQuery("q", "gov", "proposal", "1")
+	fmt.Println("first proposal", proposal1)
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectedCode uint32
+		broadcasted  bool
+		errMsg       string
+	}{
+		{
+			"vote for invalid proposal",
+			[]string{
+				"tx", "gov", "weighted-vote",
+				"10",
+				"yes",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
+			},
+			true, 3, true,
+			"inactive proposal",
+		},
+		{
+			"valid vote",
+			[]string{
+				"tx", "gov", "weighted-vote",
+				"1",
+				"yes",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
+			},
+			false, 0, true,
+			"",
+		},
+		{
+			"valid vote with metadata",
+			[]string{
+				"tx", "gov", "weighted-vote",
+				"1",
+				"yes",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--metadata=%s", "AQ=="),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
+			},
+			false, 0, true,
+			"",
+		},
+		{
+			"invalid valid split vote string",
+			[]string{
+				"tx", "gov", "weighted-vote",
+				"1",
+				"yes/0.6,no/0.3,abstain/0.05,no_with_veto/0.05",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
+			},
+			true, 0, false,
+			"is not a valid vote option",
+		},
+		{
+			"valid split vote",
+			[]string{
+				"tx", "gov", "weighted-vote",
+				"1",
+				"yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
+			},
+			false, 0, true,
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if !tc.broadcasted {
+				assertOutput := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
+					require.Contains(t, gotOutputs[0], tc.errMsg)
+					return false
+				}
+				cli.WithRunErrorMatcher(assertOutput).Run(tc.args...)
+			} else {
+				rsp := cli.Run(tc.args...)
+				if tc.expectErr {
+					RequireTxFailure(t, rsp)
+				} else {
+					cli.AwaitTxCommitted(rsp)
+				}
 			}
 		})
 	}

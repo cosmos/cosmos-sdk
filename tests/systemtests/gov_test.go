@@ -160,7 +160,7 @@ func TestSubmitLegacyProposal(t *testing.T) {
 			"invalid proposal (file)",
 			[]string{
 				"tx", "gov", "submit-legacy-proposal",
-				fmt.Sprintf("--%s=%s", "proposal", invalidPropFile.Name()), //nolint:staticcheck // we are intentionally using a deprecated flag here.
+				fmt.Sprintf("--%s=%s", "proposal", invalidPropFile.Name()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
@@ -172,8 +172,8 @@ func TestSubmitLegacyProposal(t *testing.T) {
 			"invalid proposal",
 			[]string{
 				"tx", "gov", "submit-legacy-proposal",
-				fmt.Sprintf("--%s='Where is the title!?'", "description"), //nolint:staticcheck // we are intentionally using a deprecated flag here.
-				fmt.Sprintf("--%s=%s", "type", "Text"),                    //nolint:staticcheck // we are intentionally using a deprecated flag here.
+				fmt.Sprintf("--%s='Where is the title!?'", "description"),
+				fmt.Sprintf("--%s=%s", "type", "Text"),
 				fmt.Sprintf("--%s=%s", "deposit", sdk.NewCoin("stake", math.NewInt(10000)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -200,8 +200,8 @@ func TestSubmitLegacyProposal(t *testing.T) {
 			[]string{
 				"tx", "gov", "submit-legacy-proposal",
 				fmt.Sprintf("--%s='Text Proposal'", "title"),
-				fmt.Sprintf("--%s='Where is the title!?'", "description"), //nolint:staticcheck // we are intentionally using a deprecated flag here.
-				fmt.Sprintf("--%s=%s", "type", "Text"),                    //nolint:staticcheck // we are intentionally using a deprecated flag here.
+				fmt.Sprintf("--%s='Where is the title!?'", "description"),
+				fmt.Sprintf("--%s=%s", "type", "Text"),
 				fmt.Sprintf("--%s=%s", "deposit", sdk.NewCoin("stake", math.NewInt(100000)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -249,8 +249,8 @@ func TestNewCmdWeightedVote(t *testing.T) {
 	proposalArgs := []string{
 		"tx", "gov", "submit-legacy-proposal",
 		fmt.Sprintf("--%s='Text Proposal'", "title"),
-		fmt.Sprintf("--%s='Where is the title!?'", "description"), //nolint:staticcheck // we are intentionally using a deprecated flag here.
-		fmt.Sprintf("--%s=%s", "type", "Text"),                    //nolint:staticcheck // we are intentionally using a deprecated flag here.
+		fmt.Sprintf("--%s='Where is the title!?'", "description"),
+		fmt.Sprintf("--%s=%s", "type", "Text"),
 		fmt.Sprintf("--%s=%s", "deposit", sdk.NewCoin("stake", math.NewInt(10_000_000)).String()),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -385,8 +385,8 @@ func TestQueryDeposit(t *testing.T) {
 	proposalArgs := []string{
 		"tx", "gov", "submit-legacy-proposal",
 		fmt.Sprintf("--%s='Text Proposal'", "title"),
-		fmt.Sprintf("--%s='Where is the title!?'", "description"), //nolint:staticcheck // we are intentionally using a deprecated flag here.
-		fmt.Sprintf("--%s=%s", "type", "Text"),                    //nolint:staticcheck // we are intentionally using a deprecated flag here.
+		fmt.Sprintf("--%s='Where is the title!?'", "description"),
+		fmt.Sprintf("--%s=%s", "type", "Text"),
 		fmt.Sprintf("--%s=%s", "deposit", sdk.NewCoin("stake", math.NewInt(10_000_000)).String()),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

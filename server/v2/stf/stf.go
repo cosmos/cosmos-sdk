@@ -324,7 +324,7 @@ func (s STF[T]) runTxMsgs(
 		execCtx.sender = txSenders[i]
 		resp, err := s.msgRouter.Invoke(execCtx, msg) // TODO: should handle execCtx.msgIndex with events
 		if err != nil {
-			return nil, 0, nil, fmt.Errorf("message execution at index %d failed: %w", i, err)
+			return nil, 0, nil, err // do not wrap the error or we lose the original error type
 		}
 		msgResps[i] = resp
 	}

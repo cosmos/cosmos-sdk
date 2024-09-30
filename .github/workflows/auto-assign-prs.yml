@@ -1,0 +1,60 @@
+name: Auto Assign Reviewers
+
+on:
+  pull_request:
+    types: [opened, edited, review_requested]
+
+jobs:
+  assign-reviewers:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Assign reviewers as assignees
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PRBOT_PAT }}
+          script: |
+            const { owner, repo } = context.repo;
+
+            async function getCurrentPR() {
+              if (context.payload.pull_request) {
+                return context.payload.pull_request;
+              }
+              
+              const allPRs = await github.rest.pulls.list({
+                owner,
+                repo,
+                state: 'open',
+              });
+              
+              return allPRs.data.find(pr => pr.head.sha === context.sha);
+            }
+
+            const pr = await getCurrentPR();
+            if (!pr) {
+              console.log('No matching PR found.');
+              return;
+            }
+
+            console.log(`Processing PR #${pr.number}`);
+
+            const reviewers = pr.requested_reviewers.map(reviewer => reviewer.login);
+
+            if (reviewers.length === 0) {
+              console.log('No reviewers found for this PR.');
+              return;
+            }
+
+            console.log(`Current reviewers: ${reviewers.join(', ')}`);
+
+            await github.rest.issues.addAssignees({
+              owner,
+              repo,
+              issue_number: pr.number,
+              assignees: reviewers,
+            });
+
+            console.log(`Assigned ${reviewers.join(', ')} as assignees to PR #${pr.number}`);

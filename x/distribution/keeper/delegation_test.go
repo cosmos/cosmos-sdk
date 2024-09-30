@@ -32,6 +32,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
@@ -39,8 +40,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-
-	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
+	accountKeeper.EXPECT().AddressCodec().Return(addrCdc)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
@@ -54,7 +54,6 @@ func TestCalculateRewardsBasic(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
-		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -146,14 +145,15 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	accountKeeper.EXPECT().AddressCodec().Return(addrCdc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	authorityAddr, err := addrCdc.BytesToString(authtypes.NewModuleAddress("gov"))
@@ -166,7 +166,6 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
-		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -261,14 +260,15 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	accountKeeper.EXPECT().AddressCodec().Return(addrCdc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
@@ -282,7 +282,6 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
-		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -398,6 +397,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
@@ -405,7 +405,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
+	accountKeeper.EXPECT().AddressCodec().Return(addrCdc)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
@@ -419,7 +419,6 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
-		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -508,6 +507,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
@@ -515,7 +515,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
+	accountKeeper.EXPECT().AddressCodec().Return(addrCdc)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
@@ -529,7 +529,6 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
-		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -596,6 +595,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
@@ -603,7 +603,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
+	accountKeeper.EXPECT().AddressCodec().Return(addrCdc)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
@@ -617,7 +617,6 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
-		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -725,6 +724,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
@@ -732,7 +732,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
+	accountKeeper.EXPECT().AddressCodec().Return(addrCdc)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
@@ -746,7 +746,6 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
-		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -882,10 +881,11 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	accountKeeper.EXPECT().AddressCodec().Return(addrCdc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
-	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
@@ -899,7 +899,6 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
-		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -1091,15 +1090,16 @@ func Test100PercentCommissionReward(t *testing.T) {
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, distribution.AppModule{})
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
+	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	accountKeeper.EXPECT().AddressCodec().Return(addrCdc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec(sdk.Bech32PrefixValAddr)).AnyTimes()
 	stakingKeeper.EXPECT().BondDenom(gomock.Any()).Return("stake", nil).AnyTimes()
-	addrCdc := address.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
@@ -1113,7 +1113,6 @@ func Test100PercentCommissionReward(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
-		addrCdc,
 		"fee_collector",
 		authorityAddr,
 	)

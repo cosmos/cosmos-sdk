@@ -47,6 +47,7 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 
+	accountKeeper.EXPECT().AddressCodec().Return(cdcOpts.GetAddressCodec()).AnyTimes()
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
@@ -67,7 +68,6 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
-		cdcOpts.GetAddressCodec(),
 		"fee_collector",
 		authorityAddr,
 	)

@@ -22,7 +22,7 @@ Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI+
 
 ## Mempool
 
-+ Before we delve into `PrepareProposal` and `ProcessProposal`, let's first walk through the mempool concepts.
+* Before we delve into `PrepareProposal` and `ProcessProposal`, let's first walk through the mempool concepts.
 
 There are countless designs that an application developer can write for a mempool, the SDK opted to provide only simple mempool implementations.
 Namely, the SDK provides the following mempools:

@@ -1163,7 +1163,7 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 		return nil, err
 	}
 
-	_, _, _, err = app.runTx(execModePrepareProposal, bz, tx) // TODO: we should remove encoding here
+	_, _, _, err = app.runTx(execModePrepareProposal, bz, tx)
 	if err != nil {
 		return nil, err
 	}

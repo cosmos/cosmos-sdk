@@ -68,9 +68,13 @@ impl<'a> Writer for ReverseSliceWriter<'a> {
     }
 }
 
+/// A buffer reader.
 pub trait Reader<'a> {
+    /// Read a slice of bytes from the buffer and update the remaining length.
     fn read_bytes(&mut self, size: usize) -> Result<&'a [u8], DecodeError>;
-    fn done(&self) -> Result<(), DecodeError>;
+
+    /// Check if the buffer has been completely read and return an error if not.
+    fn is_done(&self) -> Result<(), DecodeError>;
 }
 
 impl <'a> Reader<'a> for &'a [u8] {
@@ -83,7 +87,7 @@ impl <'a> Reader<'a> for &'a [u8] {
         Ok(bz)
     }
 
-    fn done(&self) -> Result<(), DecodeError> {
+    fn is_done(&self) -> Result<(), DecodeError> {
         if !self.is_empty() {
             return Err(DecodeError::InvalidData);
         }

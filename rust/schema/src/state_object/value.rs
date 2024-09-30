@@ -1,6 +1,8 @@
+use crate::buffer::WriterFactory;
 use crate::decoder::{decode, DecodeError, Decoder};
 use crate::encoder::{EncodeError, Encoder};
-use crate::stateobject::value_field::ObjectFieldValue;
+use crate::mem::MemoryManager;
+use crate::state_object::value_field::ObjectFieldValue;
 use crate::value::Value;
 
 /// This trait is implemented for types that can be used as tuples of value fields in state objects.

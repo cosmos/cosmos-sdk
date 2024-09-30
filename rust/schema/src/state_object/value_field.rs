@@ -12,76 +12,80 @@ pub trait ObjectFieldValue {
     type Out<'a>: Value<'a>;
 }
 
-impl crate::state_object::ObjectFieldValue for u8 {
+impl ObjectFieldValue for u8 {
     type In<'a> = u8;
     type Out<'a> = u8;
 }
-impl crate::state_object::ObjectFieldValue for u16 {
+impl ObjectFieldValue for u16 {
     type In<'a> = u16;
     type Out<'a> = u16;
 }
-impl crate::state_object::ObjectFieldValue for u32 {
+impl ObjectFieldValue for u32 {
     type In<'a> = u32;
     type Out<'a> = u32;
 }
-impl crate::state_object::ObjectFieldValue for u64 {
+impl ObjectFieldValue for u64 {
     type In<'a> = u64;
     type Out<'a> = u64;
 }
-impl crate::state_object::ObjectFieldValue for u128 {
+impl ObjectFieldValue for u128 {
     type In<'a> = u128;
     type Out<'a> = u128;
 }
-impl crate::state_object::ObjectFieldValue for i8 {
+impl ObjectFieldValue for i8 {
     type In<'a> = i8;
     type Out<'a> = i8;
 }
-impl crate::state_object::ObjectFieldValue for i16 {
+impl ObjectFieldValue for i16 {
     type In<'a> = i16;
     type Out<'a> = i16;
 }
-impl crate::state_object::ObjectFieldValue for i32 {
+impl ObjectFieldValue for i32 {
     type In<'a> = i32;
     type Out<'a> = i32;
 }
-impl crate::state_object::ObjectFieldValue for i64 {
+impl ObjectFieldValue for i64 {
     type In<'a> = i64;
     type Out<'a> = i64;
 }
-impl crate::state_object::ObjectFieldValue for i128 {
+impl ObjectFieldValue for i128 {
     type In<'a> = i128;
     type Out<'a> = i128;
 }
-impl crate::state_object::ObjectFieldValue for bool {
+impl ObjectFieldValue for bool {
     type In<'a> = bool;
     type Out<'a> = bool;
 }
-impl crate::state_object::ObjectFieldValue for str {
+impl ObjectFieldValue for str {
     type In<'a> = &'a str;
     type Out<'a> = &'a str;
 }
 #[cfg(feature = "std")]
-impl crate::state_object::ObjectFieldValue for alloc::string::String {
+impl ObjectFieldValue for alloc::string::String {
     type In<'a> = &'a str;
     type Out<'a> = alloc::string::String;
 }
-impl crate::state_object::ObjectFieldValue for simple_time::Time {
+impl ObjectFieldValue for [u8] {
+    type In<'a> = &'a [u8];
+    type Out<'a> = &'a [u8];
+}
+impl ObjectFieldValue for simple_time::Time {
     type In<'a> = simple_time::Time;
     type Out<'a> = simple_time::Time;
 }
-impl crate::state_object::ObjectFieldValue for simple_time::Duration {
+impl ObjectFieldValue for simple_time::Duration {
     type In<'a> = simple_time::Duration;
     type Out<'a> = simple_time::Duration;
 }
-impl crate::state_object::ObjectFieldValue for ixc_message_api::AccountID {
+impl ObjectFieldValue for ixc_message_api::AccountID {
     type In<'a> = ixc_message_api::AccountID;
     type Out<'a> = ixc_message_api::AccountID;
 }
-impl<V: crate::state_object::ObjectFieldValue> crate::state_object::ObjectFieldValue for Option<V> {
+impl<V: ObjectFieldValue> ObjectFieldValue for Option<V> {
     type In<'a> = Option<V::In<'a>>;
     type Out<'a> = Option<V::Out<'a>>;
 }
-impl<V: crate::state_object::ObjectFieldValue> crate::state_object::ObjectFieldValue for [V]
+impl<V: ObjectFieldValue> ObjectFieldValue for [V]
 where
         for<'a> <V as ObjectFieldValue>::In<'a>: ListElementValue<'a>,
         for<'a> <<V as ObjectFieldValue>::In<'a> as Value<'a>>::Type: ListElementType,

@@ -22,7 +22,7 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
 
     /// Gets the value of the map at the given key.
     pub fn get<'key, 'value>(&self, ctx: &Context<'key>, key: K::In<'key>) -> Result<'value, Option<V::In<'value>>> {
-        let buf = K::encode(key, &ctx.memory_manager() as &dyn Allocator)
+        let buf = K::encode(key, ctx.memory_manager() as &dyn Allocator)
             .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
         let mut packet = ctx.memory_manager().allocate_packet(0)
             .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
@@ -36,7 +36,7 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
             ctx.host_backend().invoke(&mut packet, &ctx.memory_manager()).
                 map_err(|_| todo!())?;
         }
-        NativeBinaryCodec::decode_object_key
+        // NativeBinaryCodec::decode_object_key
         // decode result
         todo!()
     }

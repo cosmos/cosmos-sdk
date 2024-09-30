@@ -26,10 +26,12 @@ impl Codec for NativeBinaryCodec {
 }
 
 impl NativeBinaryCodec {
+    /// Encode an object value.
     pub fn encode_object_value<'a, V: ObjectValue, F: WriterFactory>(value: V::In<'a>, writer_factory: &F) -> Result<F::Output, EncodeError> {
         todo!()
     }
 
+    /// Decode an object value.
     pub fn decode_object_value<'a, V: ObjectValue>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<V::Out<'a>, DecodeError> {
         todo!()
     }

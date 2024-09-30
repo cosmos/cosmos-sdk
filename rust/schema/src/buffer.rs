@@ -4,6 +4,7 @@ use crate::encoder::EncodeError;
 use allocator_api2::alloc::Allocator;
 use core::alloc::Layout;
 use core::ptr::slice_from_raw_parts_mut;
+use crate::decoder::DecodeError;
 
 /// A factory for creating writers.
 pub trait WriterFactory {
@@ -64,5 +65,28 @@ impl<'a> Writer for ReverseSliceWriter<'a> {
 
     fn finish(self) -> Result<&'a [u8], EncodeError> {
         Ok(&self.buf[self.pos..])
+    }
+}
+
+pub trait Reader<'a> {
+    fn read_bytes(&mut self, size: usize) -> Result<&'a [u8], DecodeError>;
+    fn done(&self) -> Result<(), DecodeError>;
+}
+
+impl <'a> Reader<'a> for &'a [u8] {
+    fn read_bytes(&mut self, size: usize) -> Result<&'a [u8], DecodeError> {
+        if self.len() < size {
+            return Err(DecodeError::OutOfData);
+        }
+        let bz = &self[0..size];
+        *self = &self[size..];
+        Ok(bz)
+    }
+
+    fn done(&self) -> Result<(), DecodeError> {
+        if !self.is_empty() {
+            return Err(DecodeError::InvalidData);
+        }
+        Ok(())
     }
 }

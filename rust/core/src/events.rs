@@ -2,7 +2,7 @@ use crate::Context;
 
 /// An event bus that can be used to emit events.
 pub struct EventBus<T> {
-    _phantom: std::marker::PhantomData<T>,
+    _phantom: core::marker::PhantomData<T>,
 }
 
 impl<T> EventBus<T> {

@@ -16,8 +16,6 @@ pub struct MessageHeader {
     pub sender_account: AccountID, // 8 bytes
     /// The message selector.
     pub message_selector: u64, // 8 bytes
-    /// The context key.
-    pub context_key: u64, // 8 bytes
     /// The gas limit.
     pub gas_limit: u64, // 8 bytes
     /// The gas consumed.

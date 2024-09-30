@@ -6,7 +6,7 @@ use std::ops::DerefMut;
 use std::sync::Arc;
 use ixc_message_api::AccountID;
 use ixc_message_api::code::{ErrorCode, SystemErrorCode};
-use ixc_message_api::handler::{AllocError, RawHandler, HostBackend, HandlerErrorCode};
+use ixc_message_api::handler::{RawHandler, HostBackend, HandlerErrorCode, Allocator};
 use ixc_message_api::packet::MessagePacket;
 use ixc_vm_api::{HandlerID, VM};
 use ixc_core_macros::message_selector;
@@ -41,7 +41,7 @@ impl<ST: StateHandler> Hypervisor<ST> {
     }
 
     /// Invoke a message packet.
-    pub fn invoke(&self, message_packet: &mut MessagePacket) -> Result<(), ErrorCode> {
+    pub fn invoke(&self, message_packet: &mut MessagePacket, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
         let mut tx = self.state_handler.new_transaction();
         tx.push_frame(message_packet.header().sender_account, true).map_err(
             |e| match e {
@@ -52,7 +52,7 @@ impl<ST: StateHandler> Hypervisor<ST> {
             vmdata: self.vmdata.clone(),
             tx: RefCell::new(tx),
         };
-        let res = exec_context.invoke(message_packet);
+        let res = exec_context.invoke(message_packet, allocator);
         let tx = exec_context.tx.into_inner();
         if res.is_ok() {
             self.state_handler.commit(tx);
@@ -91,6 +91,8 @@ pub trait Transaction {
     fn rollback(self);
     /// A mutable kv-store instance for the hypervisor to manage its own state.
     fn manager_state(&self) -> &mut Self::KVStore;
+    /// The active handler for the state layer.
+    fn handler(&self) -> &dyn RawHandler;
 }
 
 /// A push frame error.
@@ -152,8 +154,11 @@ fn parse_handler_id(value: &[u8]) -> Option<HandlerID> {
     })
 }
 
+const HYPERVISOR_ACCOUNT: AccountID = AccountID::new(1);
+const STATE_ACCOUNT: AccountID = AccountID::new(2);
+
 impl<TX: Transaction> HostBackend for ExecContext<TX> {
-    fn invoke(&self, message_packet: &mut MessagePacket) -> Result<(), ErrorCode> {
+    fn invoke(&self, message_packet: &mut MessagePacket, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
         // get the mutable transaction from the RefCell
         let mut tx = self.tx.try_borrow_mut()
             .map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::FatalExecutionError))?;
@@ -168,8 +173,11 @@ impl<TX: Transaction> HostBackend for ExecContext<TX> {
 
         let target_account = message_packet.header().account;
         // check if the target account is a system account
-        if target_account.is_null() {
-            return self.handle_system_message(&mut tx, message_packet);
+        match target_account {
+            HYPERVISOR_ACCOUNT => return self.handle_system_message(&mut tx, message_packet),
+            STATE_ACCOUNT => return tx.handler().handle(message_packet, &NullCallbacks)
+                .map_err(|_| todo!()),
+            _ => {}
         }
 
         // find the account's handler ID and retrieve its VM
@@ -190,8 +198,8 @@ impl<TX: Transaction> HostBackend for ExecContext<TX> {
         res
     }
 
-    unsafe fn alloc(&self, layout: Layout) -> Result<*mut u8, AllocError> {
-        Ok(std::alloc::alloc(layout))
+    fn allocator(&self) -> &dyn Allocator {
+        &allocator_api2::alloc::Global
     }
 }
 
@@ -249,6 +257,18 @@ impl<TX: Transaction> ExecContext<TX> {
 
 const CREATE_SELECTOR: u64 = message_selector!("ixc.account.v1.create");
 const ON_CREATE_SELECTOR: u64 = message_selector!("ixc.account.v1.on_create");
+
+struct NullCallbacks;
+
+impl HostBackend for NullCallbacks {
+    fn invoke(&self, _message_packet: &mut MessagePacket, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
+        Err(ErrorCode::RuntimeSystemError(SystemErrorCode::InvalidHandler))
+    }
+
+    fn allocator(&self) -> &dyn Allocator {
+        unimplemented!("not expected to make any nested calls")
+    }
+}
 
 
 #[cfg(test)]

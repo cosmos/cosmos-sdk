@@ -1,6 +1,6 @@
 //! Encoder trait and error type.
 use crate::structs::StructEncodeVisitor;
-use crate::value::{AbstractValue, Value};
+use crate::value::{Value};
 use core::fmt::Display;
 
 /// The trait that encoders must implement.

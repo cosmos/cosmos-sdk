@@ -21,6 +21,7 @@ mod fields;
 pub mod buffer;
 pub mod mem;
 mod mem2;
+mod stateobject;
 
 pub use structs::{StructCodec};
 pub use r#enum::{EnumCodec};

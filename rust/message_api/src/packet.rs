@@ -1,5 +1,6 @@
 //! This module contains the definition of the `MessagePacket` struct.
 
+use allocator_api2::alloc::Allocator;
 use crate::header::MessageHeader;
 
 /// A packet containing a message and its header.
@@ -20,8 +21,7 @@ impl MessagePacket {
     }
 
     /// Returns a mutable reference to the message header.
-    pub unsafe fn header_mut(&self) -> &mut MessageHeader {
-        &mut *self.data
+    pub fn header_mut(&self) -> &mut MessageHeader {
+        unsafe { &mut *self.data }
     }
-
 }

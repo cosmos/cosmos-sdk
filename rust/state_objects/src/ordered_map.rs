@@ -1,4 +1,4 @@
-use ixc_core::{Context, Response};
+use ixc_core::{Context, Result};
 use ixc_schema::state_object::{ObjectKey, ObjectValue, PrefixKey};
 use crate::Map;
 
@@ -9,7 +9,7 @@ pub struct OrderedMap<K, V> {
 
 impl<K: ObjectKey, V: ObjectKey> OrderedMap<K, V> {
     /// Iterate over the keys and values in the map in order.
-    pub fn iterate<'a, Start, End>(&self, ctx: &Context, start: Start::Value<'_>, end: End::Value<'_>) -> Response<Iter<'a, K, V>>
+    pub fn iterate<'a, Start, End>(&self, ctx: &Context, start: Start::Value<'_>, end: End::Value<'_>) -> Result<Iter<'a, K, V>>
     where
         Start: PrefixKey<K>,
         End: PrefixKey<K>,
@@ -18,7 +18,7 @@ impl<K: ObjectKey, V: ObjectKey> OrderedMap<K, V> {
     }
 
     /// Iterate over the keys and values in the map in reverse order.
-    pub fn iterate_reverse<'a, Start, End>(&self, ctx: &Context, start: Start::Value<'_>, end: End::Value<'_>) -> Response<Iter<'a, K, V>>
+    pub fn iterate_reverse<'a, Start, End>(&self, ctx: &Context, start: Start::Value<'_>, end: End::Value<'_>) -> Result<Iter<'a, K, V>>
     where
         Start: PrefixKey<K>,
         End: PrefixKey<K>,
@@ -34,7 +34,7 @@ pub struct Iter<'a, K, V> {
 }
 
 impl<'a, K: ObjectKey, V: ObjectValue> Iterator for Iter<'a, K, V> {
-    type Item = (K::Value<'a>, V::Value<'a>);
+    type Item = (K::In<'a>, V::In<'a>);
 
     fn next(&mut self) -> Option<Self::Item> {
         todo!()

@@ -14,7 +14,7 @@ pub fn encode_value<'a, V: Value<'a>, F: WriterFactory>(value: &V, writer_factor
     writer.finish()
 }
 
-fn encode_object_value<'a, V: ObjectValue, F: WriterFactory>(value: V::Value<'a>, writer_factory: &F) -> Result<F::Output, EncodeError> {
+fn encode_object_value<'a, V: ObjectValue, F: WriterFactory>(value: V::In<'a>, writer_factory: &F) -> Result<F::Output, EncodeError> {
     let mut sizer = EncodeSizer { size: 0 };
     let mut inner = InnerEncodeSizer { outer: &mut sizer };
     V::encode_reverse(&value, &mut inner)?;

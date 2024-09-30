@@ -1,3 +1,4 @@
+use core::mem::transmute;
 use allocator_api2::alloc::Allocator;
 use crate::error::Error;
 use crate::message::Message;
@@ -14,7 +15,7 @@ use ixc_schema::value::ResponseValue;
 pub struct Context<'a> {
     mem: MemoryManager,
     message_packet: &'a MessagePacket,
-    host_callbacks: &'a dyn HostBackend,
+    backend: &'a dyn HostBackend,
 }
 
 impl<'a> Context<'a> {
@@ -23,7 +24,7 @@ impl<'a> Context<'a> {
         Self {
             mem: MemoryManager::new(),
             message_packet,
-            host_callbacks,
+            backend: host_callbacks,
         }
     }
 
@@ -60,39 +61,24 @@ impl<'a> Context<'a> {
         let msg_body = M::Codec::encode_value(&message, &self.mem as &dyn Allocator).
             map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
 
-        // create the message header and fill in call details
-        const HEADER_LAYOUT: allocator_api2::alloc::Layout = unsafe {
-            allocator_api2::alloc::Layout::from_size_align_unchecked(
-                MESSAGE_HEADER_SIZE,
-                align_of::<MessageHeader>(),
-            )
-        };
-        let header_ptr = self.mem.allocate_zeroed(HEADER_LAYOUT)
-            .map_err(|_| todo!())?;
-        let mut header_ptr: *mut MessageHeader = header_ptr.cast().as_ptr();
-        let mut header: &mut MessageHeader = &mut *header_ptr;
+        // create the message packet and fill in call details
+        let packet = self.mem.allocate_packet(0)
+            .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+        let header = packet.header_mut();
         header.sender_account = self.message_packet.header().account;
         header.account = account;
         header.in_pointer1.set_slice(msg_body);
         header.message_selector = M::SELECTOR;
 
-        // package the header in a packet
-        let mut packet = unsafe { MessagePacket::new(header_ptr, MESSAGE_HEADER_SIZE) };
-
         // invoke the message
-        let res = self.host_callbacks.invoke(&mut packet, &self.mem)
+        let res = self.backend.invoke(packet, &self.mem)
             .map_err(|_| todo!());
 
         match res {
             Ok(_) => {
-                // let out_data = packet.header().out_pointer1.get(&packet);
-                // let res = <M::Response as ResponseValue>::decode_value::<M::Codec>(out_data, &mem_mgr).
-                //     map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-                // Ok(ResponseBody::new(bump, packet, res))
-                // let res = M::Response::<'a>::decode_value::<M::Codec>(&packet, &self.mem).
-                //     map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-                // Ok(res)
-                todo!()
+                let res = M::Response::<'a>::decode_value::<M::Codec>(packet, &self.mem).
+                    map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+                Ok(res)
             }
             Err(_) => {
                 todo!()
@@ -111,8 +97,8 @@ impl<'a> Context<'a> {
     // }
 
     /// Get the host backend.
-    pub unsafe fn get_host_backend(&self) -> &dyn HostBackend {
-        self.host_callbacks
+    pub unsafe fn host_backend(&self) -> &dyn HostBackend {
+        self.backend
     }
 
     /// Get the memory manager.

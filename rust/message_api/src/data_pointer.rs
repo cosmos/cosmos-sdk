@@ -63,8 +63,8 @@ impl DataPointer {
                 return &[];
             }
             unsafe {
-                // return core::slice::from_raw_parts(message_packet.data.offset(self.local_pointer.offset as isize), self.local_pointer.len as usize);
-                todo!()
+                let data = message_packet.data as *const u8;
+                return core::slice::from_raw_parts(data.offset(self.local_pointer.offset as isize), self.local_pointer.len as usize);
             }
         }
         unsafe {

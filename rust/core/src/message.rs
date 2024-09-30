@@ -1,6 +1,6 @@
 use ixc_schema::codec::Codec;
 use ixc_schema::structs::StructSchema;
-use ixc_schema::value::{ResponseValue, AbstractValue, Value};
+use ixc_schema::value::{ResponseValue, Value};
 
 pub trait Message<'a>: Value<'a> + StructSchema {
     const SELECTOR: u64;

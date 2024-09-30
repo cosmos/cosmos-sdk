@@ -18,6 +18,5 @@ allocator-api2 = "0.2.18"
 num_enum = "0.7.3"
 
 [features]
-default = ["address", "std"]
-address = []
+default = ["std"]
 std = []

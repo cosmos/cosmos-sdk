@@ -1,4 +1,6 @@
 //! Basic error handling utilities.
+
+use alloc::string::{String, ToString};
 use core::fmt::{Debug, Display, Formatter};
 use ixc_message_api::code::SystemErrorCode;
 use ixc_message_api::handler::HandlerErrorCode;
@@ -6,7 +8,7 @@ use ixc_schema::decoder::{DecodeError, Decoder};
 use ixc_schema::encoder::{EncodeError, Encoder};
 use ixc_schema::mem::MemoryManager;
 use ixc_schema::types::StrT;
-use ixc_schema::value::{Value, AbstractValue, ResponseValue};
+use ixc_schema::value::{Value, ResponseValue};
 
 /// The standard error wrapper for handler functions.
 #[derive(Debug, Clone)]
@@ -65,16 +67,16 @@ impl<'a> Value<'a> for ErrorMessage {
     type Type = StrT;
     type DecodeState = String;
 
-    fn encode<E: Encoder>(&self, encoder: &mut E) -> std::result::Result<(), EncodeError> {
+    fn encode<E: Encoder>(&self, encoder: &mut E) -> core::result::Result<(), EncodeError> {
         encoder.encode_str(&self.msg)
     }
 
-    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> std::result::Result<(), DecodeError> {
+    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> core::result::Result<(), DecodeError> {
         *state = decoder.decode_owned_str()?;
         Ok(())
     }
 
-    fn finish_decode_state(msg: Self::DecodeState, _mem_handle: &'a MemoryManager) -> std::result::Result<Self, DecodeError> {
+    fn finish_decode_state(msg: Self::DecodeState, _mem_handle: &'a MemoryManager) -> core::result::Result<Self, DecodeError> {
         Ok(ErrorMessage { msg })
     }
 }

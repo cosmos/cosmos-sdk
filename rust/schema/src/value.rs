@@ -10,7 +10,7 @@ use crate::mem::MemoryManager;
 use crate::types::*;
 
 /// Any type used directly as a message function argument or struct field must implement this trait.
-/// Unlike [`AbstractValue`] it takes a lifetime parameter so value may already be borrowed where it is
+/// Unlike [`ObjectFieldValue`] it takes a lifetime parameter so value may already be borrowed where it is
 /// declared.
 pub trait Value<'a>
 where
@@ -36,15 +36,6 @@ where
     fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
         unimplemented!("encode")
     }
-}
-
-/// This trait describes value types that are to be used as generic parameters
-/// where there is no lifetime parameter available.
-/// Any types implementing this trait relate themselves to a type implementing [`Value`]
-/// so that generic types taking a `Value` type parameter can use a borrowed value if possible.
-pub trait AbstractValue {
-    /// The possibly borrowable value type this type is related to.
-    type Value<'a>: Value<'a>;
 }
 
 impl<'a> Value<'a> for u8 {
@@ -188,7 +179,7 @@ where
 {}
 
 impl<'a, V: ListElementValue<'a>> Value<'a> for &'a [V]
-    where V::Type: ListElementType
+where V::Type: ListElementType
 {
     type Type = ListT<V::Type>;
     type DecodeState = AllocatorVecBuilder<'a, V>;
@@ -241,7 +232,6 @@ where
     }
 }
 
-#[cfg(feature = "address")]
 impl<'a> Value<'a> for ixc_message_api::AccountID {
     type Type = AccountIDT;
     type DecodeState = ixc_message_api::AccountID;
@@ -252,61 +242,6 @@ impl<'a, T: Type, V: Value<'a, T>, const N: usize> Value<'a, ListT<T>> for array
 #[cfg(feature = "arrayvec")]
 impl<'a, const N: usize> Value<'a, StrT> for arrayvec::ArrayString<T, N> {}
 
-impl AbstractValue for u8 {
-    type Value<'a> = u8;
-}
-impl AbstractValue for u16 {
-    type Value<'a> = u16;
-}
-impl AbstractValue for u32 {
-    type Value<'a> = u32;
-}
-impl AbstractValue for u64 {
-    type Value<'a> = u64;
-}
-impl AbstractValue for u128 {
-    type Value<'a> = u128;
-}
-impl AbstractValue for i8 {
-    type Value<'a> = i8;
-}
-impl AbstractValue for i16 {
-    type Value<'a> = i16;
-}
-impl AbstractValue for i32 {
-    type Value<'a> = i32;
-}
-impl AbstractValue for i64 {
-    type Value<'a> = i64;
-}
-impl AbstractValue for i128 {
-    type Value<'a> = i128;
-}
-impl AbstractValue for bool {
-    type Value<'a> = bool;
-}
-impl AbstractValue for str {
-    type Value<'a> = &'a str;
-}
-impl AbstractValue for simple_time::Time {
-    type Value<'a> = simple_time::Time;
-}
-impl AbstractValue for simple_time::Duration {
-    type Value<'a> = simple_time::Duration;
-}
-impl AbstractValue for ixc_message_api::AccountID {
-    type Value<'a> = ixc_message_api::AccountID;
-}
-impl<V: AbstractValue> AbstractValue for Option<V> {
-    type Value<'a> = Option<V::Value<'a>>;
-}
-impl<V: AbstractValue> AbstractValue for [V]
-where
-        for<'a> <V as AbstractValue>::Value<'a>: ListElementValue<'a>,
-        for<'a> <<V as AbstractValue>::Value<'a> as Value<'a>>::Type: ListElementType,
-{
-    type Value<'a> = &'a [V::Value<'a>];
-}
 
 /// ResponseValue is a trait that must be implemented by types that can be used as the return value.
 pub trait ResponseValue<'a> {
@@ -316,7 +251,7 @@ pub trait ResponseValue<'a> {
     /// Decode the value from the input.
     fn decode_value<C: Codec>(message_packet: &'a MessagePacket, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError>;
 
-    ///
+    /// Encode the value to the message packet.
     fn encode_value<C: Codec>(value: &Self::Value, message_packet: &'a mut MessagePacket, allocator: &'a dyn Allocator) -> Result<(), EncodeError>;
 }
 

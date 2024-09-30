@@ -97,7 +97,6 @@ func TestQueryLatestValidatorSet(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, len(res.Validators), len(vals))
-	fmt.Printf("%v", res)
 
 	// with pagination
 	res, err = qc.GetLatestValidatorSet(context.Background(), &cmtservice.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{

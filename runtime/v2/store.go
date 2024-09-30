@@ -79,7 +79,7 @@ func (sb *StoreBuilder) Build(
 	if sb.store != nil {
 		return sb.store, nil
 	}
-	home := config.GetString(FlagHome)
+	home := config.GetString(flagHome)
 	scRawDb, err := db.NewDB(
 		db.DBType(config.GetString("store.app-db-backend")),
 		"application",
@@ -106,6 +106,7 @@ func (sb *StoreBuilder) Build(
 	return sb.store, nil
 }
 
+// Get returns the Store.  Build must be called before calling Get or the result will be nil.
 func (sb *StoreBuilder) Get() Store {
 	return sb.store
 }

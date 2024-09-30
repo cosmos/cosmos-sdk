@@ -3,8 +3,9 @@ package rest
 import (
 	"context"
 	"errors"
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/gorilla/mux"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -37,6 +38,8 @@ func (s *Server[T]) Name() string {
 func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
 	s.logger = logger.With(log.ModuleKey, s.Name())
 
+	s.config = s.Config().(*Config)
+
 	return nil
 }
 
@@ -60,6 +63,7 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	if !s.config.Enable {
 		return nil
 	}
+
 	s.logger.Info("Stopping HTTP server")
 
 	return s.httpServer.Shutdown(ctx)

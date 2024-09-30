@@ -151,10 +151,13 @@ func RandomRequestFinalizeBlock(
 			signed = false
 		}
 
+		var commitStatus cmtproto.BlockIDFlag
 		if signed {
 			event("begin_block", "signing", "signed")
+			commitStatus = cmtproto.BlockIDFlagCommit
 		} else {
 			event("begin_block", "signing", "missed")
+			commitStatus = cmtproto.BlockIDFlagAbsent
 		}
 
 		voteInfos[i] = abci.VoteInfo{
@@ -162,7 +165,7 @@ func RandomRequestFinalizeBlock(
 				Address: SumTruncated(mVal.val.PubKeyBytes),
 				Power:   mVal.val.Power,
 			},
-			BlockIdFlag: cmtproto.BlockIDFlagCommit,
+			BlockIdFlag: commitStatus,
 		}
 	}
 

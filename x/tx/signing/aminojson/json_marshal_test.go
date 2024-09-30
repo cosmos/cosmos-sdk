@@ -1,6 +1,7 @@
 package aminojson_test
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -413,4 +414,34 @@ func TestAminoNameAsTypeURL(t *testing.T) {
 		"u64": "4759492485"
 	}
 }`, string(bz))
+}
+
+func TestCustomBytesEncoder(t *testing.T) {
+	cdc := amino.NewCodec()
+	cdc.RegisterConcrete(&testpb.ABitOfEverything{}, "ABitOfEverything", nil)
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{})
+
+	bz := sha256.Sum256([]byte("test"))
+
+	msg := &testpb.ABitOfEverything{
+		Bytes:       bz[:],
+		PrettyBytes: bz[:],
+	}
+
+	legacyJSON, err := cdc.MarshalJSON(msg)
+	require.NoError(t, err)
+	aminoJSON, err := encoder.Marshal(msg)
+	require.NoError(t, err)
+	require.Equal(t, string(legacyJSON), string(aminoJSON))
+
+	encoder.DefineFieldEncoding(
+		"hex",
+		func(enc *aminojson.Encoder, v protoreflect.Value, w io.Writer) error {
+			_, err := fmt.Fprintf(w, "\"%x\"", v.Bytes())
+			return err
+		})
+	aminoJSON, err = encoder.Marshal(msg)
+	require.NoError(t, err)
+	require.NotEqual(t, string(legacyJSON), string(aminoJSON))
+	t.Logf("hex encoded bytes: %s", string(aminoJSON))
 }

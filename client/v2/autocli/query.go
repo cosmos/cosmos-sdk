@@ -53,7 +53,9 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 			return err
 		}
 
-		cmd.AddCommand(subCmd)
+		if !subCmdDesc.EnhanceCustomCommand {
+			cmd.AddCommand(subCmd)
+		}
 	}
 
 	// skip empty command descriptors

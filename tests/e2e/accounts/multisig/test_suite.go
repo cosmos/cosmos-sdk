@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
-	multisigaccount "cosmossdk.io/x/accounts/defaults/multisig"
 	v1 "cosmossdk.io/x/accounts/defaults/multisig/v1"
 	"cosmossdk.io/x/bank/testutil"
 
@@ -76,7 +75,7 @@ func (s *E2ETestSuite) initAccount(ctx context.Context, sender []byte, membersPo
 		members = append(members, &v1.Member{Address: addrStr, Weight: power})
 	}
 
-	_, accountAddr, err := s.app.AccountsKeeper.Init(ctx, multisigaccount.MULTISIG_ACCOUNT, sender,
+	_, accountAddr, err := s.app.AccountsKeeper.Init(ctx, "multisig", sender,
 		&v1.MsgInit{
 			Members: members,
 			Config: &v1.Config{

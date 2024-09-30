@@ -10,7 +10,7 @@ include scripts/build/build.mk
 
 .DEFAULT_GOAL := help
 
-#? go.sum: Run go mod tidy and ensure dependencies have not been modified
+#? go.sum: Run go mod tidy and ensure dependencies have not been modified.
 go.sum: go.mod
 	echo "Ensure dependencies have not been modified ..." >&2
 	go mod verify

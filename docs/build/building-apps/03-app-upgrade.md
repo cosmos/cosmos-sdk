@@ -41,7 +41,7 @@ and gracefully exit.
 Generally the application binary will restart on exit, but then will execute this BeginBlocker
 again and exit, causing a restart loop. Either the operator can manually install the new software,
 or you can make use of an external watcher daemon to possibly download and then switch binaries,
-also potentially doing a backup. The SDK tool for doing such, is called [Cosmovisor](https://docs.cosmos.network/main/tooling/cosmovisor).
+also potentially doing a backup. The SDK tool for doing such, is called [Cosmovisor](https://docs.cosmos.network/main/build/tooling/cosmovisor).
 
 When the binary restarts with the upgraded version (here v0.40.0), it will detect we have registered the
 "testnet-v2" upgrade handler in the code, and realize it is the new version. It then will run the upgrade handler
@@ -131,7 +131,7 @@ to lose connectivity with the exiting nodes, thus this module prefers to just ha
 
 ## Automation
 
-Read more about [Cosmovisor](https://docs.cosmos.network/main/tooling/cosmovisor), the tool for automating upgrades.
+Read more about [Cosmovisor](https://docs.cosmos.network/main/build/tooling/cosmovisor), the tool for automating upgrades.
 
 ## Canceling Upgrades
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/schema"
 )
 
 // Pair defines a key composed of two keys.
@@ -54,9 +55,22 @@ func PairKeyCodec[K1, K2 any](keyCodec1 codec.KeyCodec[K1], keyCodec2 codec.KeyC
 	}
 }
 
+// NamedPairKeyCodec instantiates a new KeyCodec instance that can encode the Pair, given the KeyCodec of the
+// first part of the key and the KeyCodec of the second part of the key.
+// It also provides names for the keys which are used for indexing purposes.
+func NamedPairKeyCodec[K1, K2 any](key1Name string, keyCodec1 codec.KeyCodec[K1], key2Name string, keyCodec2 codec.KeyCodec[K2]) codec.KeyCodec[Pair[K1, K2]] {
+	return pairKeyCodec[K1, K2]{
+		key1Name:  key1Name,
+		key2Name:  key2Name,
+		keyCodec1: keyCodec1,
+		keyCodec2: keyCodec2,
+	}
+}
+
 type pairKeyCodec[K1, K2 any] struct {
-	keyCodec1 codec.KeyCodec[K1]
-	keyCodec2 codec.KeyCodec[K2]
+	key1Name, key2Name string
+	keyCodec1          codec.KeyCodec[K1]
+	keyCodec2          codec.KeyCodec[K2]
 }
 
 func (p pairKeyCodec[K1, K2]) KeyCodec1() codec.KeyCodec[K1] { return p.keyCodec1 }
@@ -214,6 +228,39 @@ func (p pairKeyCodec[K1, K2]) DecodeJSON(b []byte) (Pair[K1, K2], error) {
 	}
 
 	return Join(k1, k2), nil
+}
+
+func (p pairKeyCodec[K1, K2]) Name() string {
+	return fmt.Sprintf("%s,%s", p.key1Name, p.key2Name)
+}
+
+func (p pairKeyCodec[K1, K2]) SchemaCodec() (codec.SchemaCodec[Pair[K1, K2]], error) {
+	field1, err := getNamedKeyField(p.keyCodec1, p.key1Name)
+	if err != nil {
+		return codec.SchemaCodec[Pair[K1, K2]]{}, fmt.Errorf("error getting key1 field: %w", err)
+	}
+
+	field2, err := getNamedKeyField(p.keyCodec2, p.key2Name)
+	if err != nil {
+		return codec.SchemaCodec[Pair[K1, K2]]{}, fmt.Errorf("error getting key2 field: %w", err)
+	}
+
+	return codec.SchemaCodec[Pair[K1, K2]]{
+		Fields: []schema.Field{field1, field2},
+	}, nil
+}
+
+func getNamedKeyField[T any](keyCdc codec.KeyCodec[T], name string) (schema.Field, error) {
+	keySchema, err := codec.KeySchemaCodec(keyCdc)
+	if err != nil {
+		return schema.Field{}, err
+	}
+	if len(keySchema.Fields) != 1 {
+		return schema.Field{}, fmt.Errorf("key schema in composite key has more than one field, got %v", keySchema.Fields)
+	}
+	field := keySchema.Fields[0]
+	field.Name = name
+	return field, nil
 }
 
 // NewPrefixUntilPairRange defines a collection query which ranges until the provided Pair prefix.

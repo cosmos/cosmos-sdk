@@ -33,10 +33,11 @@ type ModuleInputs struct {
 	EvidenceHandlers []eviclient.EvidenceHandler `optional:"true"`
 	CometService     comet.Service
 
-	StakingKeeper   types.StakingKeeper
-	SlashingKeeper  types.SlashingKeeper
-	ConsensusKeeper types.ConsensusKeeper
-	AddressCodec    address.Codec
+	StakingKeeper         types.StakingKeeper
+	SlashingKeeper        types.SlashingKeeper
+	ConsensusKeeper       types.ConsensusKeeper
+	AddressCodec          address.Codec
+	ConsensusAddressCodec address.Codec
 }
 
 type ModuleOutputs struct {
@@ -47,7 +48,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.Environment, in.StakingKeeper, in.SlashingKeeper, in.ConsensusKeeper, in.AddressCodec)
+	k := keeper.NewKeeper(in.Cdc, in.Environment, in.StakingKeeper, in.SlashingKeeper, in.ConsensusKeeper, in.AddressCodec, in.ConsensusAddressCodec)
 	m := NewAppModule(in.Cdc, *k, in.CometService, in.EvidenceHandlers...)
 
 	return ModuleOutputs{EvidenceKeeper: *k, Module: m}

@@ -116,9 +116,9 @@ func getClient(endpoint string) (*grpc.ClientConn, error) {
 		creds = insecure.NewCredentials()
 	}
 
-	client, err := grpc.Dial(endpoint, grpc.WithTransportCredentials(creds))
-	if err != nil {
-		return nil, fmt.Errorf("getting grpc client connection: %w", err)
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(creds),
 	}
-	return client, nil
+
+	return grpc.NewClient(endpoint, opts...)
 }

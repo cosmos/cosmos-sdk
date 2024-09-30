@@ -85,11 +85,11 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx context.Context, pagination *que
 func NewBaseKeeper(
 	env appmodule.Environment,
 	cdc codec.BinaryCodec,
-	addrCdc address.Codec,
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
 ) BaseKeeper {
+	addrCdc := ak.AddressCodec()
 	if _, err := addrCdc.StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}

@@ -66,7 +66,6 @@ func NewKeeper(
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
 	cometService comet.Service,
-	addrCdc address.Codec,
 	feeCollectorName, authority string,
 ) Keeper {
 	// ensure distribution module account is set
@@ -79,7 +78,7 @@ func NewKeeper(
 		Environment:      env,
 		cometService:     cometService,
 		cdc:              cdc,
-		addrCdc:          addrCdc,
+		addrCdc:          ak.AddressCodec(),
 		authKeeper:       ak,
 		bankKeeper:       bk,
 		stakingKeeper:    sk,

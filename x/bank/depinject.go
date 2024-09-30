@@ -87,7 +87,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	bankKeeper := keeper.NewBaseKeeper(
 		in.Environment,
 		in.Cdc,
-		in.AddressCodec,
 		in.AccountKeeper,
 		blockedAddresses,
 		authStr,

@@ -37,7 +37,7 @@ import (
 )
 
 type (
-	execMode uint8
+	execMode = uint8
 
 	// StoreLoader defines a customizable function to control how we load the
 	// CommitMultiStore from disk. This is useful for state migration, when

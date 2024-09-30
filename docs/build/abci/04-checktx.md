@@ -15,7 +15,7 @@ graph TD
 ```
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/31c604762a434c7b676b6a89897ecbd7c4653a23/baseapp/abci.go#L350-L386
+https://github.com/cosmos/cosmos-sdk/blob/31c604762a434c7b676b6a89897ecbd7c4653a23/baseapp/abci.go#L350-L390
 ```
 
 ## CheckTx Handler

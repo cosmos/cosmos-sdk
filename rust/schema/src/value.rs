@@ -1,9 +1,10 @@
 //! This module contains traits that must be implemented by types that can be used in the schema.
 
+use allocator_api2::vec;
 use crate::codec::Codec;
 use crate::decoder::{DecodeError, Decoder};
 use crate::encoder::{EncodeError, Encoder};
-use crate::list::SliceState;
+use crate::list::AllocatorVecBuilder;
 use crate::mem::MemoryManager;
 use crate::types::*;
 
@@ -160,12 +161,17 @@ impl<'a, V: Value<'a>> Value<'a> for Option<V> {
     type Type = NullableT<V::Type>;
     type DecodeState = Option<V::DecodeState>;
 }
+
 impl<'a, V: Value<'a>> Value<'a> for &'a [V]
 where
     V::Type: ListElementType,
 {
     type Type = ListT<V::Type>;
-    type DecodeState = SliceState<'a, V>;
+    type DecodeState = AllocatorVecBuilder<'a, V>;
+
+    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+        encoder.encode_list_slice(self)
+    }
 
     fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
         decoder.decode_list(state)
@@ -175,6 +181,25 @@ where
         match state.xs {
             None => Ok(&[]),
             Some(xs) => Ok(mem_handle.unpack_slice(xs))
+        }
+    }
+}
+
+impl<'a, V: Value<'a>> Value<'a> for allocator_api2::vec::Vec<V, &'a dyn allocator_api2::alloc::Allocator>
+where
+    V::Type: ListElementType,
+{
+    type Type = ListT<V::Type>;
+    type DecodeState = AllocatorVecBuilder<'a, V>;
+
+    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+        decoder.decode_list(state)
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
+        match state.xs {
+            None => Ok(allocator_api2::vec::Vec::new_in(mem_handle.allocator())),
+            Some(xs) => Ok(xs)
         }
     }
 }

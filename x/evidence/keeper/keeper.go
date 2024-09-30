@@ -23,12 +23,13 @@ import (
 type Keeper struct {
 	appmodule.Environment
 
-	cdc             codec.BinaryCodec
-	router          types.Router
-	stakingKeeper   types.StakingKeeper
-	slashingKeeper  types.SlashingKeeper
-	consensusKeeper types.ConsensusKeeper
-	addressCodec    address.Codec
+	cdc                   codec.BinaryCodec
+	router                types.Router
+	stakingKeeper         types.StakingKeeper
+	slashingKeeper        types.SlashingKeeper
+	consensusKeeper       types.ConsensusKeeper
+	addressCodec          address.Codec
+	consensusAddressCodec address.Codec
 
 	Schema collections.Schema
 	// Evidences key: evidence hash bytes | value: Evidence
@@ -38,17 +39,18 @@ type Keeper struct {
 // NewKeeper creates a new Keeper object.
 func NewKeeper(
 	cdc codec.BinaryCodec, env appmodule.Environment, stakingKeeper types.StakingKeeper,
-	slashingKeeper types.SlashingKeeper, ck types.ConsensusKeeper, ac address.Codec,
+	slashingKeeper types.SlashingKeeper, ck types.ConsensusKeeper, ac, consensusAddressCodec address.Codec,
 ) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := &Keeper{
-		Environment:     env,
-		cdc:             cdc,
-		stakingKeeper:   stakingKeeper,
-		slashingKeeper:  slashingKeeper,
-		consensusKeeper: ck,
-		addressCodec:    ac,
-		Evidences:       collections.NewMap(sb, types.KeyPrefixEvidence, "evidences", collections.BytesKey, codec.CollInterfaceValue[exported.Evidence](cdc)),
+		Environment:           env,
+		cdc:                   cdc,
+		stakingKeeper:         stakingKeeper,
+		slashingKeeper:        slashingKeeper,
+		consensusKeeper:       ck,
+		addressCodec:          ac,
+		consensusAddressCodec: consensusAddressCodec,
+		Evidences:             collections.NewMap(sb, types.KeyPrefixEvidence, "evidences", collections.BytesKey, codec.CollInterfaceValue[exported.Evidence](cdc)),
 	}
 	schema, err := sb.Build()
 	if err != nil {

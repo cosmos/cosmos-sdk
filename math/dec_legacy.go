@@ -969,5 +969,5 @@ func FormatDec(v string) (string, error) {
 }
 
 func LegacyDecToDec(ld LegacyDec) (Dec, error) {
-    return NewDecFromString(ld.String())
+	return NewDecFromString(ld.String())
 }

@@ -4,8 +4,9 @@ package math
 import (
 	"fmt"
 
-	"cosmossdk.io/errors"
 	"github.com/cockroachdb/apd/v3"
+
+	"cosmossdk.io/errors"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -18,13 +19,13 @@ var exactContext = apd.Context{
 }
 
 // Add adds x and y
-func Add(x Dec, y Dec) (Dec, error) {
+func Add(x, y Dec) (Dec, error) {
 	return x.Add(y)
 }
 
 // SubNonNegative subtracts the value of y from x and returns the result with
 // arbitrary precision. Returns an error if the result is negative.
-func SubNonNegative(x Dec, y Dec) (Dec, error) {
+func SubNonNegative(x, y Dec) (Dec, error) {
 	z, err := x.Sub(y)
 	if err != nil {
 		return Dec{}, err
@@ -39,7 +40,7 @@ func SubNonNegative(x Dec, y Dec) (Dec, error) {
 
 // SafeSubBalance subtracts the value of y from x and returns the result with arbitrary precision.
 // Returns with ErrInsufficientFunds error if the result is negative.
-func SafeSubBalance(x Dec, y Dec) (Dec, error) {
+func SafeSubBalance(x, y Dec) (Dec, error) {
 	var z Dec
 	_, err := exactContext.Sub(&z.dec, &x.dec, &y.dec)
 	if err != nil {
@@ -55,7 +56,7 @@ func SafeSubBalance(x Dec, y Dec) (Dec, error) {
 
 // SafeAddBalance adds the value of x+y and returns the result with arbitrary precision.
 // Returns with ErrInvalidRequest error if either x or y is negative.
-func SafeAddBalance(x Dec, y Dec) (Dec, error) {
+func SafeAddBalance(x, y Dec) (Dec, error) {
 	var z Dec
 
 	if x.IsNegative() || y.IsNegative() {

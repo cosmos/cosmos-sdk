@@ -5,15 +5,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
-// JSONPubKey defines a public key that are parse from JSON file.
-// convert PubKey to JSONPubKey needs a in between step
-type JSONPubKey interface {
-	Address() Address
-	Bytes() []byte
-	VerifySignature(msg, sig []byte) bool
-	Type() string
-}
-
 // PubKey defines a public key and extends proto.Message.
 type PubKey interface {
 	proto.Message

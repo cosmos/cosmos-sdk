@@ -2,9 +2,12 @@ package simapp
 
 import (
 	"context"
+	"fmt"
 
-	"cosmossdk.io/x/staking"
+	stakingtypes "cosmossdk.io/x/staking/types"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
 )
 
@@ -24,11 +27,39 @@ func (app *SimApp[T]) ExportAppStateAndValidators(jailAllowedAddrs []string) (v2
 		return v2.ExportedApp{}, err
 	}
 
-	validators, err := staking.WriteValidators(ctx, app.StakingKeeper)
+	// get the current bonded validators
+	resp, err := app.Query(ctx, 0, latestHeight, &stakingtypes.QueryValidatorsRequest{
+		Status: stakingtypes.BondStatusBonded,
+	})
+
+	vals, ok := resp.(*stakingtypes.QueryValidatorsResponse)
+	if !ok {
+		return v2.ExportedApp{}, fmt.Errorf("invalid response, expected QueryValidatorsResponse")
+	}
+
+	// convert to genesis validator
+	var genesisVals []sdk.GenesisValidator
+	for _, val := range vals.Validators {
+		pk, err := val.ConsPubKey()
+		if err != nil {
+			return v2.ExportedApp{}, err
+		}
+		jsonPk, err := cryptocodec.PubKeyFromProto(pk)
+		if err != nil {
+			return v2.ExportedApp{}, err
+		}
+
+		genesisVals = append(genesisVals, sdk.GenesisValidator{
+			Address: sdk.ConsAddress(pk.Address()).Bytes(),
+			PubKey:  jsonPk,
+			Power:   val.GetConsensusPower(app.StakingKeeper.PowerReduction(ctx)),
+			Name:    val.Description.Moniker,
+		})
+	}
 
 	return v2.ExportedApp{
 		AppState:   genesis,
 		Height:     int64(latestHeight),
-		Validators: validators,
+		Validators: genesisVals,
 	}, err
 }

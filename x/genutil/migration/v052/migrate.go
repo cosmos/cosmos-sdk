@@ -13,6 +13,7 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -59,6 +60,10 @@ func migrateGenesisValidator(r io.Reader) (*types.AppGenesis, error) {
 	if rs, ok := r.(io.ReadSeeker); ok {
 		err = json.NewDecoder(rs).Decode(&ag)
 		if err == nil {
+			vals, err := convertValidators(ag.Consensus.Validators)
+			if err != nil {
+				return nil, err
+			}
 			newAg = types.AppGenesis{
 				AppName:       ag.AppName,
 				AppVersion:    ag.AppVersion,
@@ -68,7 +73,7 @@ func migrateGenesisValidator(r io.Reader) (*types.AppGenesis, error) {
 				AppHash:       ag.AppHash,
 				AppState:      ag.AppState,
 				Consensus: &types.ConsensusGenesis{
-					Validators: convertValidators(ag.Consensus.Validators),
+					Validators: vals,
 					Params:     ag.Consensus.Params,
 				},
 			}
@@ -96,6 +101,10 @@ func migrateGenesisValidator(r io.Reader) (*types.AppGenesis, error) {
 		return nil, err
 	}
 
+	vals, err := convertValidators(ctmGenesis.Validators)
+	if err != nil {
+		return nil, err
+	}
 	newAg = types.AppGenesis{
 		AppName:       version.AppName,
 		GenesisTime:   ctmGenesis.GenesisTime,
@@ -104,7 +113,7 @@ func migrateGenesisValidator(r io.Reader) (*types.AppGenesis, error) {
 		AppHash:       ctmGenesis.AppHash,
 		AppState:      ctmGenesis.AppState,
 		Consensus: &types.ConsensusGenesis{
-			Validators: convertValidators(ctmGenesis.Validators),
+			Validators: vals,
 			Params:     ctmGenesis.ConsensusParams,
 		},
 	}
@@ -112,17 +121,25 @@ func migrateGenesisValidator(r io.Reader) (*types.AppGenesis, error) {
 	return &newAg, nil
 }
 
-func convertValidators(cmtVals []cmttypes.GenesisValidator) []sdk.GenesisValidator {
+func convertValidators(cmtVals []cmttypes.GenesisValidator) ([]sdk.GenesisValidator, error) {
 	vals := make([]sdk.GenesisValidator, len(cmtVals))
 	for i, cmtVal := range cmtVals {
+		pk, err := cryptocodec.FromCmtPubKeyInterface(cmtVal.PubKey)
+		if err != nil {
+			return nil, err
+		}
+		jsonPk, err := cryptocodec.PubKeyFromProto(pk)
+		if err != nil {
+			return nil, err
+		}
 		vals[i] = sdk.GenesisValidator{
 			Address: cmtVal.Address.Bytes(),
-			PubKey:  cmtVal.PubKey,
+			PubKey:  jsonPk,
 			Power:   cmtVal.Power,
 			Name:    cmtVal.Name,
 		}
 	}
-	return vals
+	return vals, nil
 }
 
 // CometBFT Genesis Handling for JSON,

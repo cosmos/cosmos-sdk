@@ -3,6 +3,7 @@ package types
 import (
 	"cosmossdk.io/math"
 
+	cryptokeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -101,8 +102,8 @@ type ValidatorI interface {
 
 // GenesisValidator is an initial validator.
 type GenesisValidator struct {
-	Address ConsAddress            `json:"address"`
-	PubKey  cryptotypes.JSONPubKey `json:"pub_key"`
-	Power   int64                  `json:"power"`
-	Name    string                 `json:"name"`
+	Address ConsAddress           `json:"address"`
+	PubKey  cryptokeys.JSONPubkey `json:"pub_key"`
+	Power   int64                 `json:"power"`
+	Name    string                `json:"name"`
 }

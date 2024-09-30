@@ -14,6 +14,7 @@ import (
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -121,9 +122,17 @@ func AppGenesisFromReader(reader io.Reader) (*AppGenesis, error) {
 
 	vals := []sdk.GenesisValidator{}
 	for _, cmtVal := range ctmGenesis.Validators {
+		pk, err := cryptocodec.FromCmtPubKeyInterface(cmtVal.PubKey)
+		if err != nil {
+			return nil, err
+		}
+		jsonPk, err := cryptocodec.PubKeyFromProto(pk)
+		if err != nil {
+			return nil, err
+		}
 		val := sdk.GenesisValidator{
 			Address: cmtVal.Address.Bytes(),
-			PubKey:  cmtVal.PubKey,
+			PubKey:  jsonPk,
 			Power:   cmtVal.Power,
 			Name:    cmtVal.Name,
 		}
@@ -175,9 +184,17 @@ func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
 func (ag *AppGenesis) ToGenesisDoc() (*cmttypes.GenesisDoc, error) {
 	cmtValidators := []cmttypes.GenesisValidator{}
 	for _, val := range ag.Consensus.Validators {
+		pk, err := cryptocodec.PubKeyToProto(val.PubKey)
+		if err != nil {
+			return nil, err
+		}
+		cmtPk, err := cryptocodec.FromCmtPubKeyInterface(pk)
+		if err != nil {
+			return nil, err
+		}
 		cmtVal := cmttypes.GenesisValidator{
 			Address: val.Address.Bytes(),
-			PubKey:  val.PubKey,
+			PubKey:  cmtPk,
 			Power:   val.Power,
 			Name:    val.Name,
 		}
@@ -239,7 +256,7 @@ func (cs *ConsensusGenesis) MarshalJSON() ([]byte, error) {
 func (cs *ConsensusGenesis) UnmarshalJSON(b []byte) error {
 	type Alias ConsensusGenesis
 
-	result := Alias{}
+	var result Alias
 	if err := cmtjson.Unmarshal(b, &result); err != nil {
 		return err
 	}

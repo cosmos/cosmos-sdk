@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"slices"
@@ -122,4 +123,12 @@ func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
 
 func (a *App[T]) GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message {
 	return a.GRPCMethodsToMessageMap
+}
+
+func (a *App[T]) Query(ctx context.Context, gasLimit, version uint64, req transaction.Msg) (transaction.Msg, error) {
+	state, err := a.db.StateAt(version)
+	if err != nil {
+		return nil, err
+	}
+	return a.stf.Query(ctx, state, gasLimit, req)
 }

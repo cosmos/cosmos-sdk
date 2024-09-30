@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -366,4 +367,47 @@ func TestNewCmdWeightedVote(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestQueryDeposit(t *testing.T) {
+	// given a running chain
+
+	sut.ResetChain(t)
+	cli := NewCLIWrapper(t, sut, verbose)
+
+	// get validator address
+	valAddr := gjson.Get(cli.Keys("keys", "list"), "0.address").String()
+	require.NotEmpty(t, valAddr)
+
+	sut.StartChain(t)
+
+	// Submit a new proposal for voting
+	proposalArgs := []string{
+		"tx", "gov", "submit-legacy-proposal",
+		fmt.Sprintf("--%s='Text Proposal'", "title"),
+		fmt.Sprintf("--%s='Where is the title!?'", "description"), //nolint:staticcheck // we are intentionally using a deprecated flag here.
+		fmt.Sprintf("--%s=%s", "type", "Text"),                    //nolint:staticcheck // we are intentionally using a deprecated flag here.
+		fmt.Sprintf("--%s=%s", "deposit", sdk.NewCoin("stake", math.NewInt(10_000_000)).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String())}
+	rsp := cli.Run(proposalArgs...)
+	txResult, found := cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
+
+	// Query initial deposit
+	resp := cli.CustomQuery("q", "gov", "deposit", "1", valAddr)
+	depositAmount := gjson.Get(resp, "deposit.amount.0.amount").Int()
+	require.Equal(t, depositAmount, int64(10_000_000))
+
+	resp = cli.CustomQuery("q", "gov", "deposits", "1")
+	deposits := gjson.Get(resp, "deposits").Array()
+	require.Equal(t, len(deposits), 1)
+
+	time.Sleep(time.Second * 8)
+	resp = cli.CustomQuery("q", "gov", "deposits", "1")
+	deposits = gjson.Get(resp, "deposits").Array()
+	require.Equal(t, len(deposits), 0)
 }

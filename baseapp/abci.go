@@ -370,7 +370,7 @@ func (app *BaseApp) CheckTx(req *abci.CheckTxRequest) (*abci.CheckTxResponse, er
 	var decodedTx sdk.Tx = nil
 	ctx := app.getContextForTx(mode, req.Tx)
 	if app.checkTxHandler != nil {
-		tx, err := app.checkTxHandler(ctx, req.Tx)
+		tx, err := app.checkTxHandler(ctx, mode, req.Tx)
 		if err != nil {
 			return nil, fmt.Errorf("checkTxHandler error: %w", err)
 		}

@@ -45,7 +45,7 @@ require (
 
 require (
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 )
 
@@ -62,20 +62,10 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.3.0 // indirect
-<<<<<<< HEAD
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240920095614-aa90bb43d8f8 // indirect; main
 	cosmossdk.io/server/v2/stf v0.0.0-20240926131628-f927e9b55173 // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main
-	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
-	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.4-0.20240918094839-0c8ad9d2c64b // indirect; main
-=======
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d // indirect
-	cosmossdk.io/server/v2/stf v0.0.0-20240708142107-25e99c54bac1 // indirect
-	cosmossdk.io/store v1.1.1 // indirect
-	cosmossdk.io/x/tx v0.13.5 // indirect
->>>>>>> 7ce403f51 (feat(accounts): make x/accounts more depinject friendly (#21928))
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

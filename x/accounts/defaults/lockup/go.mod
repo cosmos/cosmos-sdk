@@ -14,12 +14,6 @@ require (
 )
 
 require (
-	cosmossdk.io/schema v0.3.0 // indirect
-	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-)
-
-require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
 	cosmossdk.io/api v0.8.0 // indirect
@@ -28,6 +22,7 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
+	cosmossdk.io/schema v0.3.0 // indirect
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
 	cosmossdk.io/x/tx v0.13.4-0.20240918094839-0c8ad9d2c64b // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -39,6 +34,7 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
+	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v1.1.2 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
@@ -68,6 +64,7 @@ require (
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.3 // indirect
@@ -158,5 +155,4 @@ replace (
 	cosmossdk.io/x/bank => ../../../bank
 	cosmossdk.io/x/distribution => ../../../distribution
 	cosmossdk.io/x/staking => ../../../staking
-	cosmossdk.io/x/tx => ../../../tx
 )

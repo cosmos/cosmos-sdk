@@ -50,6 +50,15 @@ require (
 )
 
 require (
+<<<<<<< HEAD
+=======
+	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
+	google.golang.org/grpc v1.67.0
+)
+
+require (
+>>>>>>> 7ce403f51 (feat(accounts): make x/accounts more depinject friendly (#21928))
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
 	cloud.google.com/go v0.115.0 // indirect
@@ -60,7 +69,6 @@ require (
 	cloud.google.com/go/storage v1.42.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/schema v0.3.0 // indirect
-	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

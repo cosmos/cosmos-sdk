@@ -3,9 +3,16 @@ module cosmossdk.io/x/accounts/defaults/base
 go 1.23.1
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.0
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // main
 	cosmossdk.io/core v1.0.0-alpha.3 // main
+=======
+	cosmossdk.io/api v0.7.6
+	cosmossdk.io/collections v0.4.0
+	cosmossdk.io/core v1.0.0-alpha.3
+	cosmossdk.io/depinject v1.0.0
+>>>>>>> 7ce403f51 (feat(accounts): make x/accounts more depinject friendly (#21928))
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
@@ -20,8 +27,12 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
+<<<<<<< HEAD
 	cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b // indirect; main
 	cosmossdk.io/depinject v1.0.0 // indirect
+=======
+	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // indirect
+>>>>>>> 7ce403f51 (feat(accounts): make x/accounts more depinject friendly (#21928))
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.4.1 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
@@ -175,13 +186,10 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214 // main
 	cosmossdk.io/x/accounts => ../../.
+<<<<<<< HEAD
 	cosmossdk.io/x/accounts/defaults/multisig => ../multisig
+=======
+>>>>>>> 7ce403f51 (feat(accounts): make x/accounts more depinject friendly (#21928))
 	cosmossdk.io/x/bank => ../../../bank
-	cosmossdk.io/x/consensus => ../../../consensus
-	cosmossdk.io/x/distribution => ../../../distribution
-	cosmossdk.io/x/gov => ../../../gov
-	cosmossdk.io/x/mint => ../../../mint
-	cosmossdk.io/x/protocolpool => ../../../protocolpool
-	cosmossdk.io/x/slashing => ../../../slashing
 	cosmossdk.io/x/staking => ../../../staking
 )

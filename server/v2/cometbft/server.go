@@ -113,6 +113,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	)
 	consensus.prepareProposalHandler = s.serverOptions.PrepareProposalHandler
 	consensus.processProposalHandler = s.serverOptions.ProcessProposalHandler
+	consensus.checkTxHandler = s.serverOptions.CheckTxHandler
 	consensus.verifyVoteExt = s.serverOptions.VerifyVoteExtensionHandler
 	consensus.extendVote = s.serverOptions.ExtendVoteHandler
 	consensus.addrPeerFilter = s.serverOptions.AddrPeerFilter

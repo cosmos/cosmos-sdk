@@ -367,28 +367,22 @@ func (app *BaseApp) CheckTx(req *abci.CheckTxRequest) (*abci.CheckTxResponse, er
 		return nil, fmt.Errorf("unknown RequestCheckTx type: %s", req.Type)
 	}
 
-	var decodedTx sdk.Tx = nil
-	ctx := app.getContextForTx(mode, req.Tx)
-	if app.checkTxHandler != nil {
-		tx, err := app.checkTxHandler(ctx, mode, req.Tx)
+	if app.checkTxHandler == nil {
+		gInfo, result, anteEvents, err := app.runTx(mode, req.Tx, nil)
 		if err != nil {
-			return nil, fmt.Errorf("checkTxHandler error: %w", err)
+			return responseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
 		}
-		decodedTx = tx
+
+		return &abci.CheckTxResponse{
+			GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
+			GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+			Log:       result.Log,
+			Data:      result.Data,
+			Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+		}, nil
 	}
 
-	gInfo, result, anteEvents, err := app.runTx(mode, req.Tx, decodedTx)
-	if err != nil {
-		return responseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
-	}
-
-	return &abci.CheckTxResponse{
-		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
-	}, nil
+	return app.checkTxHandler(app.runTx, req)
 }
 
 // PrepareProposal implements the PrepareProposal ABCI method and returns a

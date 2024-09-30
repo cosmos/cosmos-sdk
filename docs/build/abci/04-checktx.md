@@ -30,15 +30,6 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		return nil, fmt.Errorf("unknown RequestCheckTx type: %s", req.Type)
 	}
 
-	var decodedTx sdk.Tx = nil
-	ctx := app.getContextForTx(mode, req.Tx)
-	if app.checkTxHandler != nil {
-		tx, err := app.checkTxHandler(ctx, req.Tx)
-		if err != nil {
-			return nil, fmt.Errorf("checkTxHandler error: %w", err)
-		}
-		decodedTx = tx
-	}
 
 	gInfo, result, anteEvents, err := app.runTx(mode, req.Tx, decodedTx)
 	if err != nil {

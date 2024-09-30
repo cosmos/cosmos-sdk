@@ -70,10 +70,12 @@ func NewDecFromString(s string) (Dec, error) {
 	case apd.NaN, apd.NaNSignaling:
 		return Dec{}, ErrInvalidDec.Wrap("not a number")
 	case apd.Infinite:
-		return Dec{}, ErrInvalidDec.Wrapf(s)
-	default:
+		return Dec{}, ErrInvalidDec.Wrap(s)
+	case apd.Finite:
 		result := Dec{*d}
 		return result, nil
+	default:
+		return Dec{}, ErrInvalidDec.Wrapf("unsupported type: %d", d.Form)
 	}
 }
 

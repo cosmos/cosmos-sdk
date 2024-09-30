@@ -59,14 +59,22 @@ func TestBankSendTxCmd(t *testing.T) {
 	assertUnauthorizedErr := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
 		require.Len(t, gotOutputs, 1)
 		code := gjson.Get(gotOutputs[0].(string), "code")
-		require.True(t, code.Exists())
-		require.Greater(t, code.Int(), int64(0))
+		// With binary v2, this tx should fail at ValidateTx so not be broadcasted yet
+		if isV2() {
+			require.False(t, code.Exists())
+			require.Contains(t, gotOutputs[0], "signature verification failed")
+		} else {
+			require.True(t, code.Exists())
+			require.Greater(t, code.Int(), int64(0))
+		}
 		return false
 	}
 	invalidCli := cli
 	invalidCli.chainID = cli.chainID + "a" // set invalid chain-id
 	rsp = invalidCli.WithRunErrorMatcher(assertUnauthorizedErr).Run(bankSendCmdArgs...)
-	RequireTxFailure(t, rsp)
+	if !isV2() {
+		RequireTxFailure(t, rsp)
+	}
 
 	// test tx bank send generate only
 	assertGenOnlyOutput := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {

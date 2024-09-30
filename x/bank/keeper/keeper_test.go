@@ -878,7 +878,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 			},
 			expErr: "restriction test error",
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(959), newBarCoin(412)),
+				from: sdk.NewCoins(newFooCoin(959), newBarCoin(500)),
 				to1:  sdk.NewCoins(newFooCoin(15)),
 				to2:  sdk.NewCoins(newFooCoin(26)),
 			},
@@ -907,7 +907,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 				},
 			},
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(948), newBarCoin(400)),
+				from: sdk.NewCoins(newFooCoin(948), newBarCoin(488)),
 				to1:  sdk.NewCoins(newFooCoin(26)),
 				to2:  sdk.NewCoins(newFooCoin(26), newBarCoin(12)),
 			},
@@ -937,8 +937,8 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 			},
 			expErr: "second restriction error",
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(904), newBarCoin(400)),
-				to1:  sdk.NewCoins(newFooCoin(38)),
+				from: sdk.NewCoins(newFooCoin(948), newBarCoin(488)),
+				to1:  sdk.NewCoins(newFooCoin(26)),
 				to2:  sdk.NewCoins(newFooCoin(26), newBarCoin(12)),
 			},
 		},
@@ -966,8 +966,8 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 				},
 			},
 			expBals: expBals{
-				from: sdk.NewCoins(newFooCoin(904), newBarCoin(365)),
-				to1:  sdk.NewCoins(newFooCoin(38), newBarCoin(25)),
+				from: sdk.NewCoins(newFooCoin(948), newBarCoin(453)),
+				to1:  sdk.NewCoins(newFooCoin(26), newBarCoin(25)),
 				to2:  sdk.NewCoins(newFooCoin(26), newBarCoin(22)),
 			},
 		},

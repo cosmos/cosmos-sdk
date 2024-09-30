@@ -40,6 +40,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#21462](https://github.com/cosmos/cosmos-sdk/pull/21462) Pass `stdin` to binary.
 
+### Features
+
+* [#21932](https://github.com/cosmos/cosmos-sdk/pull/21932) Add `cosmovisor show-upgrade-info` command to display the upgrade-info.json into stdout.
+
 ## v1.6.0 - 2024-08-12
 
 ## Improvements

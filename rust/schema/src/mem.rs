@@ -49,16 +49,6 @@ impl MemoryManager {
     }
 }
 
-impl ixc_message_api::handler::Allocator for MemoryManager {
-    fn allocate(&self, layout: Layout) -> Result<NonNull<[u8]>, ixc_message_api::handler::AllocError> {
-        self.bump.allocate(layout).map_err(|_| ixc_message_api::handler::AllocError)
-    }
-
-    unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout) {
-        self.bump.deallocate(ptr, layout)
-    }
-}
-
 unsafe impl Allocator for MemoryManager {
     fn allocate(&self, layout: Layout) -> Result<NonNull<[u8]>, AllocError> {
         self.bump.allocate(layout)

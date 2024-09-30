@@ -1,6 +1,7 @@
 //! This module contains traits that must be implemented by types that can be used in the schema.
 
-use allocator_api2::vec;
+use ixc_message_api::handler::Allocator;
+use ixc_message_api::packet::MessagePacket;
 use crate::codec::Codec;
 use crate::decoder::{DecodeError, Decoder};
 use crate::encoder::{EncodeError, Encoder};
@@ -27,7 +28,7 @@ where
     }
 
     /// Finish decoding the value, return it and return the memory handle if needed.
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError> {
         unimplemented!("finish")
     }
 
@@ -308,27 +309,40 @@ where
 }
 
 /// ResponseValue is a trait that must be implemented by types that can be used as the return value.
-pub trait ResponseValue {
+pub trait ResponseValue<'a> {
     /// The value type that is returned.
-    type Value<'a>;
+    type Value;
 
     /// Decode the value from the input.
-    fn decode_value<'a, C: Codec>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Value<'a>, DecodeError>;
+    fn decode_value<C: Codec>(message_packet: &'a MessagePacket, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError>;
+
+    ///
+    fn encode_value<C: Codec>(value: &Self::Value, message_packet: &'a mut MessagePacket, allocator: &'a dyn Allocator) -> Result<(), EncodeError>;
 }
 
-impl ResponseValue for () {
-    type Value<'a> = ();
+impl <'a> ResponseValue<'a> for () {
+    type Value = ();
 
-    fn decode_value<'a, C: Codec>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Value<'a>, DecodeError> {
+    fn decode_value<C: Codec>(message_packet: &'a MessagePacket, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError> {
+        Ok(())
+    }
+
+    fn encode_value<C: Codec>(value: &Self::Value, message_packet: &'a mut MessagePacket, allocator: &'a dyn Allocator) -> Result<(), EncodeError> {
         Ok(())
     }
 }
 
-impl<V: AbstractValue> ResponseValue for V
+impl<'a, V: Value<'a>> ResponseValue<'a> for V
 {
-    type Value<'a> = V::Value<'a>;
+    type Value = V;
 
-    fn decode_value<'a, C: Codec>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Value<'a>, DecodeError> {
-        C::decode_value(input, memory_manager)
+    fn decode_value<C: Codec>(message_packet: &'a MessagePacket, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError> {
+        unsafe { C::decode_value(message_packet.header().out_pointer1.get(message_packet), memory_manager) }
+    }
+
+    fn encode_value<C: Codec>(value: &Self::Value, message_packet: &'a mut MessagePacket, allocator: &'a dyn Allocator) -> Result<(), EncodeError> {
+        let res = C::encode_value(value, allocator)?;
+        unsafe { message_packet.header_mut().out_pointer1.set_slice(res); }
+        Ok(())
     }
 }

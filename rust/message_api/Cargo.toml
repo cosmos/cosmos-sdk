@@ -10,3 +10,4 @@ license.workspace = true
 workspace = true
 
 [dependencies]
+allocator-api2 = "0.2.18"

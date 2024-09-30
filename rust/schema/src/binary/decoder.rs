@@ -122,6 +122,7 @@ mod tests {
     extern crate std;
 
     use alloc::vec;
+    use allocator_api2::alloc::Allocator;
     use bump_scope::{Bump, BumpScope};
     use crate::binary::decoder::decode_value;
     use crate::binary::encoder::encode_value;
@@ -236,8 +237,8 @@ mod tests {
             denom: "uatom",
             amount: 1234567890,
         };
-        let mut mem = MemoryManager::new();
-        let res = encode_value(&coin, &mem).unwrap();
+        let mem = MemoryManager::new();
+        let res = encode_value(&coin, &mem as &dyn Allocator).unwrap();
         let decoded = decode_value::<Coin>(res, &mem).unwrap();
         assert_eq!(decoded, coin);
     }
@@ -251,8 +252,8 @@ mod tests {
             denom: "foo",
             amount: 9876543210,
         }];
-        let mut mem = MemoryManager::new();
-        let res = encode_value(&coins, &mem).unwrap();
+        let mem = MemoryManager::new();
+        let res = encode_value(&coins, &mem as &dyn Allocator).unwrap();
         let decoded = decode_value::<&[Coin]>(&res, &mem).unwrap();
         assert_eq!(decoded, coins);
     }

@@ -8,6 +8,7 @@ pub const MESSAGE_HEADER_SIZE: usize = size_of::<MessageHeader>();
 /// A message header.
 #[derive(Default, Copy, Clone)]
 #[non_exhaustive]
+#[repr(C)]
 pub struct MessageHeader {
     /// The target account of the message.
     pub account: AccountID, // 8 bytes

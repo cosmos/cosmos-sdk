@@ -8,7 +8,6 @@
 extern crate alloc;
 
 mod context;
-mod response;
 mod events;
 mod message;
 pub mod account_api;
@@ -18,5 +17,5 @@ pub mod error;
 mod routes;
 
 pub use context::Context;
-pub use response::Response;
 pub use events::EventBus;
+pub use error::Result;

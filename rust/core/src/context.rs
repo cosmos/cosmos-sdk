@@ -1,31 +1,29 @@
+use allocator_api2::alloc::Allocator;
+use crate::error::Error;
 use crate::message::Message;
-use crate::response::{Response, ResponseBody};
-use bump_scope::{Bump, BumpBox};
 use ixc_message_api::handler::{HandlerErrorCode, HostBackend};
 use ixc_message_api::header::{MessageHeader, MESSAGE_HEADER_SIZE};
 use ixc_message_api::packet::MessagePacket;
 use ixc_message_api::AccountID;
-use ixc_message_api::code::ErrorCode;
 use ixc_schema::codec::Codec;
 use ixc_schema::mem::MemoryManager;
 use ixc_schema::value::ResponseValue;
-use crate::error::Error;
 
 /// Context wraps a single message request (and possibly response as well) along with
 /// the router callbacks necessary for making nested message calls.
 pub struct Context<'a> {
-    message_packet: &'a mut MessagePacket,
+    mem: MemoryManager,
+    message_packet: &'a MessagePacket,
     host_callbacks: &'a dyn HostBackend,
-    memory_manager: &'a MemoryManager<'a, 'a>,
 }
 
 impl<'a> Context<'a> {
     /// Create a new context from a message packet and host callbacks.
-    pub fn new(message_packet: &'a mut MessagePacket, host_callbacks: &'a dyn HostBackend, memory_manager: &'a MemoryManager<'a, 'a>) -> Self {
+    pub fn new(message_packet: &'a MessagePacket, host_callbacks: &'a dyn HostBackend) -> Self {
         Self {
+            mem: MemoryManager::new(),
             message_packet,
             host_callbacks,
-            memory_manager,
         }
     }
 
@@ -56,41 +54,44 @@ impl<'a> Context<'a> {
     /// Dynamically invokes an account message.
     /// Static account client instances should be preferred wherever possible,
     /// so that static dependency analysis can be performed.
-    pub unsafe fn dynamic_invoke<'b, M: Message<'b, false>>(&mut self, account: AccountID, message: M) -> Response<M::Response, M::Error> {
-        // create a new bump scope and memory manager
-        // let mut guard = self.memory_manager.scope().scope_guard();
-        // let scope = guard.scope();
-        let bump = Bump::new();
-        let scope = bump.as_scope();
-        let mem_mgr = MemoryManager::new(scope);
-
+    pub unsafe fn dynamic_invoke<'b, M: Message<'b>>(&'a mut self, account: AccountID, message: M)
+        -> crate::error::Result<'a, <M::Response<'a> as ResponseValue<'a>>::Value, M::Error> {
         // encode the message body
-        let msg_body = M::Codec::encode_value(&message, mem_mgr.scope()).
+        let msg_body = M::Codec::encode_value(&message, &self.mem as &dyn Allocator).
             map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
 
         // create the message header and fill in call details
-        let mut header = scope.alloc_default::<MessageHeader>();
+        const HEADER_LAYOUT: allocator_api2::alloc::Layout = unsafe {
+            allocator_api2::alloc::Layout::from_size_align_unchecked(
+                MESSAGE_HEADER_SIZE,
+                align_of::<MessageHeader>(),
+            )
+        };
+        let header_ptr = self.mem.allocate_zeroed(HEADER_LAYOUT)
+            .map_err(|_| todo!())?;
+        let mut header_ptr: *mut MessageHeader = header_ptr.cast().as_ptr();
+        let mut header: &mut MessageHeader = &mut *header_ptr;
         header.sender_account = self.message_packet.header().account;
         header.account = account;
         header.in_pointer1.set_slice(msg_body);
         header.message_selector = M::SELECTOR;
 
         // package the header in a packet
-        let header_ptr = header.into_mut();
-        let header_ptr: *mut MessageHeader = header_ptr;
         let mut packet = unsafe { MessagePacket::new(header_ptr, MESSAGE_HEADER_SIZE) };
 
         // invoke the message
-        let res = self.host_callbacks.invoke(&mut packet);
+        let res = self.host_callbacks.invoke(&mut packet, &self.mem)
+            .map_err(|_| todo!());
 
-        // parse the response data
-        // TODO how can we have some simple case for () responses and errors?
         match res {
             Ok(_) => {
                 // let out_data = packet.header().out_pointer1.get(&packet);
                 // let res = <M::Response as ResponseValue>::decode_value::<M::Codec>(out_data, &mem_mgr).
                 //     map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
                 // Ok(ResponseBody::new(bump, packet, res))
+                // let res = M::Response::<'a>::decode_value::<M::Codec>(&packet, &self.mem).
+                //     map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+                // Ok(res)
                 todo!()
             }
             Err(_) => {
@@ -99,19 +100,24 @@ impl<'a> Context<'a> {
         }
     }
 
-    /// Dynamically invokes a message that does not modify state.
-    pub fn dynamic_invoke_readonly<'b, M: Message<'b, false>>(&self, account: &AccountID, message: M) -> Response<M::Response, M::Error> {
-        todo!()
-    }
-
-    /// Dynamically invokes a message that does not read or write state.
-    pub fn dynamic_invoke_pure<'b, M: Message<'b, false>>(&self, account: &AccountID, message: M) -> Response<M::Response, M::Error> {
-        todo!()
-    }
+    // /// Dynamically invokes a message that does not modify state.
+    // pub fn dynamic_invoke_readonly<'b, M: Message<'b>>(&self, account: &AccountID, message: M) -> Response<M::Response, M::Error> {
+    //     todo!()
+    // }
+    //
+    // /// Dynamically invokes a message that does not read or write state.
+    // pub fn dynamic_invoke_pure<'b, M: Message<'b, false>>(&self, account: &AccountID, message: M) -> Response<M::Response, M::Error> {
+    //     todo!()
+    // }
 
     /// Get the host backend.
     pub unsafe fn get_host_backend(&self) -> &dyn HostBackend {
         self.host_callbacks
+    }
+
+    /// Get the memory manager.
+    pub fn memory_manager(&self) -> &MemoryManager {
+        &self.mem
     }
 
     // /// Get the address of the module implementing the given trait, client type or module message, if any.

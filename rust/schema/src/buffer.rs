@@ -1,14 +1,16 @@
 //! Buffer utilities for encoding and decoding.
-use bump_scope::{BumpScope, BumpBox, BumpVec};
+
 use crate::encoder::EncodeError;
-use crate::mem::MemoryManager;
+use allocator_api2::alloc::Allocator;
+use core::alloc::Layout;
+use core::ptr::slice_from_raw_parts_mut;
 
 /// A factory for creating writers.
 pub trait WriterFactory {
     /// The type of output produced by the writer.
     type Output;
     /// Create a new reverse writer.
-    fn new_reverse(&self, size: usize) -> impl Writer<Output=Self::Output>;
+    fn new_reverse(&self, size: usize) -> Result<impl Writer<Output=Self::Output>, EncodeError>;
 }
 
 /// A writer that writes bytes slices in the order specified when it was created.
@@ -23,14 +25,18 @@ pub trait Writer {
     fn finish(self) -> Result<Self::Output, EncodeError>;
 }
 
-impl<'a> WriterFactory for &'a MemoryManager {
+impl<'a> WriterFactory for &'a dyn Allocator {
     type Output = &'a [u8];
 
-    fn new_reverse(&self, size: usize) -> impl Writer<Output=Self::Output> {
-        let b = self.bump.alloc_slice_fill(size, 0);
-        ReverseSliceWriter {
-            buf: b.into_mut(),
-            pos: size,
+    fn new_reverse(&self, size: usize) -> Result<impl Writer<Output=Self::Output>, EncodeError> {
+        unsafe {
+            let ptr = self.allocate_zeroed(
+                Layout::from_size_align_unchecked(size, 1)
+            ).map_err(|_| EncodeError::OutOfSpace)?;
+            Ok(ReverseSliceWriter {
+                buf: &mut *ptr.as_ptr(),
+                pos: size,
+            })
         }
     }
 }

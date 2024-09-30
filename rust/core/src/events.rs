@@ -1,4 +1,4 @@
-use crate::response::Response;
+use crate::Context;
 
 /// An event bus that can be used to emit events.
 pub struct EventBus<T> {
@@ -7,7 +7,7 @@ pub struct EventBus<T> {
 
 impl<T> EventBus<T> {
     /// Emits an event to the event bus.
-    pub fn emit<U>(&mut self, event: T) -> Response<()> {
+    pub fn emit<U>(&mut self, ctx: &mut Context, event: T) -> crate::error::Result<()> {
         todo!()
     }
 }

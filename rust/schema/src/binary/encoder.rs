@@ -8,7 +8,7 @@ use crate::state_object::ObjectValue;
 pub fn encode_value<'a, V: Value<'a>, F: WriterFactory>(value: &V, writer_factory: F) -> Result<F::Output, EncodeError> {
     let mut sizer = EncodeSizer { size: 0 };
     <V as Value<'a>>::encode(value, &mut sizer)?;
-    let mut writer = writer_factory.new_reverse(sizer.size);
+    let mut writer = writer_factory.new_reverse(sizer.size)?;
     let mut encoder = Encoder { writer: &mut writer };
     <V as Value<'a>>::encode(value, &mut encoder)?;
     writer.finish()
@@ -18,7 +18,7 @@ fn encode_object_value<'a, V: ObjectValue, F: WriterFactory>(value: V::Value<'a>
     let mut sizer = EncodeSizer { size: 0 };
     let mut inner = InnerEncodeSizer { outer: &mut sizer };
     V::encode_reverse(&value, &mut inner)?;
-    let mut writer = writer_factory.new_reverse(sizer.size);
+    let mut writer = writer_factory.new_reverse(sizer.size)?;
     let mut encoder = Encoder { writer: &mut writer };
     let mut inner = InnerEncoder { outer: &mut encoder };
     V::encode_reverse(&value, &mut inner)?;
@@ -168,6 +168,7 @@ impl<'a> crate::encoder::Encoder for InnerEncodeSizer<'a> {
 
 #[cfg(test)]
 mod tests {
+    use allocator_api2::alloc::Allocator;
     use bump_scope::Bump;
     use crate::binary::encoder::encode_value;
     use crate::encoder::Encoder;
@@ -184,7 +185,7 @@ mod tests {
     fn test_u32_encode() {
         let x = 10u32;
         let mem = MemoryManager::new();
-        let res = encode_value(&x, &mem).unwrap();
+        let res = encode_value(&x, &mem as &dyn Allocator).unwrap();
         assert_eq!(res, &[10, 0, 0, 0]);
     }
 }

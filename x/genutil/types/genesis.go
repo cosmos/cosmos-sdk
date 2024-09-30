@@ -188,7 +188,7 @@ func (ag *AppGenesis) ToGenesisDoc() (*cmttypes.GenesisDoc, error) {
 		if err != nil {
 			return nil, err
 		}
-		cmtPk, err := cryptocodec.FromCmtPubKeyInterface(pk)
+		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
 		if err != nil {
 			return nil, err
 		}

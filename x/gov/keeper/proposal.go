@@ -127,7 +127,6 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		}
 
 		// Ensure that the content has a respective handler
-		fmt.Println(k.legacyRouter)
 		if !k.legacyRouter.HasRoute(content.ProposalRoute()) {
 			return v1.Proposal{}, errorsmod.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
 		}

@@ -63,7 +63,7 @@ impl<'a> Value<'a> for u32 {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError>  {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
         Ok(state)
     }
 
@@ -84,7 +84,7 @@ impl<'a> Value<'a> for u128 {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError>  {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
         Ok(state)
     }
 
@@ -162,9 +162,32 @@ impl<'a, V: Value<'a>> Value<'a> for Option<V> {
     type DecodeState = Option<V::DecodeState>;
 }
 
-impl<'a, V: Value<'a>> Value<'a> for &'a [V]
+impl<'a> Value<'a> for &'a [u8]
+{
+    type Type = BytesT;
+    type DecodeState = &'a [u8];
+
+    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+        todo!()
+    }
+
+    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+        todo!()
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
+        todo!()
+    }
+}
+
+/// A trait that must be implemented by value types that can be used as list elements.
+pub trait ListElementValue<'a>: Value<'a>
 where
-    V::Type: ListElementType,
+    Self::Type: ListElementType,
+{}
+
+impl<'a, V: ListElementValue<'a>> Value<'a> for &'a [V]
+    where V::Type: ListElementType
 {
     type Type = ListT<V::Type>;
     type DecodeState = AllocatorVecBuilder<'a, V>;
@@ -278,6 +301,7 @@ impl<V: AbstractValue> AbstractValue for Option<V> {
 }
 impl<V: AbstractValue> AbstractValue for [V]
 where
+        for<'a> <V as AbstractValue>::Value<'a>: ListElementValue<'a>,
         for<'a> <<V as AbstractValue>::Value<'a> as Value<'a>>::Type: ListElementType,
 {
     type Value<'a> = &'a [V::Value<'a>];

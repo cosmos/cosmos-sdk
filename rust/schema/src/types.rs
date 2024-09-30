@@ -36,7 +36,6 @@ impl Type for U8T {
     const KIND: Kind = Kind::Uint8;
     type ReferencedType = ();
 }
-impl ListElementType for U8T {}
 
 /// The `U16T` type represents an unsigned 16-bit integer.
 pub struct U16T;
@@ -127,6 +126,14 @@ pub struct StrT;
 impl Private for StrT {}
 impl Type for StrT {
     const KIND: Kind = Kind::String;
+    type ReferencedType = ();
+}
+
+/// The `BytesT` type represents a byte array.
+pub struct BytesT;
+impl Private for crate::types::BytesT {}
+impl Type for crate::types::BytesT {
+    const KIND: Kind = Kind::Bytes;
     type ReferencedType = ();
 }
 

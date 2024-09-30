@@ -18,10 +18,11 @@ import (
 )
 
 const flagGenesisTime = "genesis-time"
+const v52 = "v0.52"
 
 // MigrationMap is a map of SDK versions to their respective genesis migration functions.
 var MigrationMap = types.MigrationMap{
-	"v0.52": v052.Migrate,
+	v52: v052.Migrate,
 }
 
 // MigrateGenesisCmd returns a command to execute genesis state migration.
@@ -65,7 +66,7 @@ func MigrateHandler(cmd *cobra.Command, args []string, migrations types.Migratio
 	// sdk consensus address.
 	var appGenesis *types.AppGenesis
 	var err error
-	if target == "v0.52" {
+	if target == v52 {
 		appGenesis, err = v052.MigrateGenesisFile(importGenesis)
 	} else {
 		appGenesis, err = types.AppGenesisFromFile(importGenesis)

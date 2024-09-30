@@ -32,7 +32,7 @@ func WriteValidators(ctx context.Context, keeper *keeper.Keeper) (vals []sdk.Gen
 		}
 
 		vals = append(vals, sdk.GenesisValidator{
-			Address: sdk.ConsAddress(pk.Address()).Bytes(),
+			Address: pk.Address().Bytes(),
 			PubKey:  jsonPk,
 			Power:   validator.GetConsensusPower(keeper.PowerReduction(ctx)),
 			Name:    validator.GetMoniker(),

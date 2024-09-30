@@ -6,17 +6,17 @@ use crate::mem::MemoryManager;
 use crate::structs::StructDecodeVisitor;
 use crate::value::Value;
 
-pub fn decode_value<'b, 'a: 'b, V: Value<'a>>(input: &'a [u8], memory_manager: &'b MemoryManager<'a, 'a>) -> Result<V, DecodeError> {
+pub fn decode_value<'a, V: Value<'a>>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<V, DecodeError> {
     let mut decoder = Decoder { buf: input, scope: memory_manager };
     decode(&mut decoder)
 }
 
-struct Decoder<'b, 'a: 'b> {
+struct Decoder<'a> {
     buf: &'a [u8],
-    scope: &'b MemoryManager<'a, 'a>,
+    scope: &'a MemoryManager,
 }
 
-impl<'b, 'a: 'b> Decoder<'b, 'a> {
+impl <'a> Decoder<'a> {
     fn read_bytes(&mut self, size: usize) -> Result<&'a [u8], DecodeError> {
         if self.buf.len() < size {
             return Err(DecodeError::OutOfData);
@@ -27,7 +27,7 @@ impl<'b, 'a: 'b> Decoder<'b, 'a> {
     }
 }
 
-impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for Decoder<'b, 'a> {
+impl<'a> crate::decoder::Decoder<'a> for Decoder<'a> {
     fn decode_u32(&mut self) -> Result<u32, DecodeError> {
         let bz = self.read_bytes(4)?;
         Ok(u32::from_le_bytes(bz.try_into().unwrap()))
@@ -72,13 +72,13 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for Decoder<'b, 'a> {
         Ok(())
     }
 
-    fn mem_manager(&self) -> &MemoryManager<'a, 'a> {
+    fn mem_manager(&self) -> &'a MemoryManager {
         &self.scope
     }
 }
 
 struct InnerDecoder<'b, 'a: 'b> {
-    outer: &'b mut Decoder<'b, 'a>,
+    outer: &'b mut Decoder<'a>,
 }
 impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for InnerDecoder<'b, 'a> {
     fn decode_u32(&mut self) -> Result<u32, DecodeError> {
@@ -112,7 +112,7 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for InnerDecoder<'b, 'a> {
         todo!()
     }
 
-    fn mem_manager(&self) -> &MemoryManager<'a, 'a> {
+    fn mem_manager(&self) -> &'a MemoryManager {
         &self.outer.scope
     }
 }
@@ -136,8 +136,7 @@ mod tests {
     #[test]
     fn test_u32_decode() {
         let buf: [u8; 4] = [10, 0, 0, 0];
-        let bump = Bump::new();
-        let mut mem = MemoryManager::new(bump.as_scope());
+        let mut mem = MemoryManager::new();
         let x = decode_value::<u32>(&buf, &mut mem).unwrap();
         assert_eq!(x, 10);
     }
@@ -145,8 +144,7 @@ mod tests {
     #[test]
     fn test_decode_borrowed_string() {
         let str = "hello";
-        let bump = Bump::new();
-        let mut mem = MemoryManager::new(bump.as_scope());
+        let mut mem = MemoryManager::new();
         let x = decode_value::<&str>(str.as_bytes(), &mut mem).unwrap();
         assert_eq!(x, "hello");
     }
@@ -154,8 +152,7 @@ mod tests {
     #[test]
     fn test_decode_owned_string() {
         let str = "hello";
-        let bump = Bump::new();
-        let mut mem = MemoryManager::new(bump.as_scope());
+        let mut mem = MemoryManager::new();
         let x = decode_value::<alloc::string::String>(str.as_bytes(), &mut mem).unwrap();
         assert_eq!(x, "hello");
     }
@@ -166,11 +163,19 @@ mod tests {
         amount: u128,
     }
 
+    impl <'a> Drop for Coin<'a> {
+        fn drop(&mut self) {
+            std::println!("drop Coin");
+        }
+    }
+
     unsafe impl<'a> StructSchema for Coin<'a> {
+        const NAME: &'static str = "Coin";
         const FIELDS: &'static [Field<'static>] = &[
             to_field::<StrT>().with_name("denom"),
             to_field::<UIntNT<16>>().with_name("amount"),
         ];
+        const SEALED: bool = false;
     }
 
     unsafe impl<'a> StructEncodeVisitor for Coin<'a> {
@@ -192,7 +197,9 @@ mod tests {
                 state: &'b mut <Coin<'a> as Value<'a>>::DecodeState,
             }
             unsafe impl<'b, 'a: 'b> StructSchema for Visitor<'b, 'a> {
+                const NAME: &'static str = Coin::<'a>::NAME;
                 const FIELDS: &'static [Field<'static>] = Coin::<'a>::FIELDS;
+                const SEALED: bool = Coin::<'a>::SEALED;
             }
             unsafe impl<'b, 'a: 'b> StructDecodeVisitor<'a> for Visitor<'b, 'a> {
                 fn decode_field<D: Decoder<'a>>(&mut self, index: usize, decoder: &mut D) -> Result<(), DecodeError> {
@@ -206,7 +213,7 @@ mod tests {
             decoder.decode_struct(&mut Visitor { state })
         }
 
-        fn finish_decode_state(state: Self::DecodeState, mem: &MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
+        fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError> {
             let states = (
                 <&'a str as Value<'a>>::finish_decode_state(state.0, mem)?,
                 <u128 as Value<'a>>::finish_decode_state(state.1, mem)?,
@@ -226,10 +233,8 @@ mod tests {
             denom: "uatom",
             amount: 1234567890,
         };
-        let mut bump = Bump::new();
-        let scope = bump.as_scope();
-        let mut mem = MemoryManager::new(scope);
-        let res = encode_value(&coin, scope).unwrap();
+        let mut mem = MemoryManager::new();
+        let res = encode_value(&coin, &mem).unwrap();
         let decoded = decode_value::<Coin>(res, &mem).unwrap();
         assert_eq!(decoded, coin);
     }
@@ -243,10 +248,9 @@ mod tests {
             denom: "foo",
             amount: 9876543210,
         }];
-        let mut bump = Bump::new();
-        let res = encode_value(&coins, bump.as_scope()).unwrap();
-        let mut mem = MemoryManager::new(bump.as_scope());
-        let decoded = decode_value::<&[Coin]>(&res, &mut mem).unwrap();
+        let mut mem = MemoryManager::new();
+        let res = encode_value(&coins, &mem).unwrap();
+        let decoded = decode_value::<&[Coin]>(&res, &mem).unwrap();
         assert_eq!(decoded, coins);
     }
 }

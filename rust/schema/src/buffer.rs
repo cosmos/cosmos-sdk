@@ -1,6 +1,7 @@
 //! Buffer utilities for encoding and decoding.
 use bump_scope::{BumpScope, BumpBox, BumpVec};
 use crate::encoder::EncodeError;
+use crate::mem::MemoryManager;
 
 /// A factory for creating writers.
 pub trait WriterFactory {
@@ -22,11 +23,11 @@ pub trait Writer {
     fn finish(self) -> Result<Self::Output, EncodeError>;
 }
 
-impl<'a> WriterFactory for BumpScope<'a> {
+impl<'a> WriterFactory for &'a MemoryManager {
     type Output = &'a [u8];
 
     fn new_reverse(&self, size: usize) -> impl Writer<Output=Self::Output> {
-        let b = self.alloc_slice_fill(size, 0);
+        let b = self.bump.alloc_slice_fill(size, 0);
         ReverseSliceWriter {
             buf: b.into_mut(),
             pos: size,

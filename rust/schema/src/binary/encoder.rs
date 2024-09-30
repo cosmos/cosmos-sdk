@@ -5,7 +5,7 @@ use crate::value::Value;
 use crate::buffer::{Writer, WriterFactory};
 use crate::state_object::ObjectValue;
 
-pub fn encode_value<'a, V: Value<'a>, F: WriterFactory>(value: &V, writer_factory: &F) -> Result<F::Output, EncodeError> {
+pub fn encode_value<'a, V: Value<'a>, F: WriterFactory>(value: &V, writer_factory: F) -> Result<F::Output, EncodeError> {
     let mut sizer = EncodeSizer { size: 0 };
     <V as Value<'a>>::encode(value, &mut sizer)?;
     let mut writer = writer_factory.new_reverse(sizer.size);
@@ -171,6 +171,7 @@ mod tests {
     use bump_scope::Bump;
     use crate::binary::encoder::encode_value;
     use crate::encoder::Encoder;
+    use crate::mem::MemoryManager;
 
     #[test]
     fn test_u32_size() {
@@ -182,8 +183,8 @@ mod tests {
     #[test]
     fn test_u32_encode() {
         let x = 10u32;
-        let bump = Bump::new();
-        let res = encode_value(&x, bump.as_scope()).unwrap();
+        let mem = MemoryManager::new();
+        let res = encode_value(&x, &mem).unwrap();
         assert_eq!(res, &[10, 0, 0, 0]);
     }
 }

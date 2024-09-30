@@ -26,7 +26,7 @@ where
     }
 
     /// Finish decoding the value, return it and return the memory handle if needed.
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
         unimplemented!("finish")
     }
 
@@ -62,7 +62,7 @@ impl<'a> Value<'a> for u32 {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager<'a, 'a>) -> Result<Self, DecodeError>  {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError>  {
         Ok(state)
     }
 
@@ -83,7 +83,7 @@ impl<'a> Value<'a> for u128 {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager<'a, 'a>) -> Result<Self, DecodeError>  {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError>  {
         Ok(state)
     }
 
@@ -124,7 +124,7 @@ impl<'a> Value<'a> for &'a str {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
         Ok(state)
     }
 
@@ -143,7 +143,7 @@ impl<'a> Value<'a> for alloc::string::String {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
         Ok(state)
     }
 }
@@ -171,7 +171,7 @@ where
         decoder.decode_list(state)
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &MemoryManager<'a, 'a>) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
         match state.xs {
             None => Ok(&[]),
             Some(xs) => Ok(mem_handle.unpack_slice(xs))
@@ -264,13 +264,13 @@ pub trait ResponseValue {
     type Value<'a>;
 
     /// Decode the value from the input.
-    fn decode_value<'b, 'a: 'b, C: Codec>(input: &'a [u8], memory_manager: &'b MemoryManager<'a, 'a>) -> Result<Self::Value<'a>, DecodeError>;
+    fn decode_value<'a, C: Codec>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Value<'a>, DecodeError>;
 }
 
 impl ResponseValue for () {
     type Value<'a> = ();
 
-    fn decode_value<'b, 'a: 'b, C: Codec>(input: &'a [u8], memory_manager: &'b MemoryManager<'a, 'a>) -> Result<Self::Value<'a>, DecodeError> {
+    fn decode_value<'a, C: Codec>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Value<'a>, DecodeError> {
         Ok(())
     }
 }
@@ -279,7 +279,7 @@ impl<V: AbstractValue> ResponseValue for V
 {
     type Value<'a> = V::Value<'a>;
 
-    fn decode_value<'b, 'a: 'b, C: Codec>(input: &'a [u8], memory_manager: &'b MemoryManager<'a, 'a>) -> Result<Self::Value<'a>, DecodeError> {
+    fn decode_value<'a, C: Codec>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Value<'a>, DecodeError> {
         C::decode_value(input, memory_manager)
     }
 }

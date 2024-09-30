@@ -1,5 +1,6 @@
 //! The raw handler and host backend interfaces.
 use core::alloc::Layout;
+use core::ptr::NonNull;
 use crate::code::ErrorCode;
 use crate::packet::MessagePacket;
 
@@ -12,10 +13,18 @@ pub trait RawHandler {
     fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend) -> Result<(), HandlerErrorCode>;
 }
 
+/// An allocator for a handler.
+pub trait Allocator {
+    /// Allocate memory for a message response.
+    fn allocate(&self, layout: Layout) -> Result<NonNull<[u8]>, AllocError>;
+    /// Deallocate memory.
+    unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout);
+}
+
 /// A host backend for the handler.
 pub trait HostBackend {
     /// Invoke a message packet.
-    fn invoke(&self, message_packet: &mut MessagePacket) -> Result<(), ErrorCode>;
+    fn invoke(&self, message_packet: &mut MessagePacket, allocator: &dyn Allocator) -> Result<(), ErrorCode>;
     /// Allocate memory for a message response.
     /// The memory management expectation of handlers is that the caller
     /// deallocates both the memory it allocated and any memory allocated
@@ -23,7 +32,7 @@ pub trait HostBackend {
     /// The alloc function in the host backend should return a pointer to
     /// memory that the caller knows how to free and such allocated
     /// memory should be referenced in the message packet's out pointers.
-    unsafe fn alloc(&self, layout: Layout) -> Result<*mut u8, AllocError>;
+    fn allocator(&self) -> &dyn Allocator;
 }
 
 /// An allocation error.

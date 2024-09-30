@@ -20,7 +20,7 @@ pub trait Decoder<'a> {
     /// Decode a list.
     fn decode_list<T, V: ListVisitor<'a, T>>(&mut self, visitor: &mut V) -> Result<(), DecodeError>;
     /// Get the memory manager.
-    fn mem_manager(&self) -> &MemoryManager<'a, 'a>;
+    fn mem_manager(&self) -> &'a MemoryManager;
 }
 
 /// Decode a single value.

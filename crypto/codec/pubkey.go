@@ -39,12 +39,12 @@ func PubKeyFromProto(pk cryptotypes.PubKey) (cryptokeys.JSONPubkey, error) {
 		}, nil
 	case *secp256k1.PubKey:
 		return cryptokeys.JSONPubkey{
-			KeyType: ed25519.PubKeyName,
+			KeyType: secp256k1.PubKeyName,
 			Value:   pk.Bytes(),
 		}, nil
 	case *bls12_381.PubKey:
 		return cryptokeys.JSONPubkey{
-			KeyType: ed25519.PubKeyName,
+			KeyType: bls12_381.PubKeyName,
 			Value:   pk.Bytes(),
 		}, nil
 	default:

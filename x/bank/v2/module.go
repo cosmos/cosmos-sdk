@@ -3,11 +3,8 @@ package bankv2
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"reflect"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -109,33 +106,6 @@ func (am AppModule) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
 
 	appmodulev2.RegisterMsgHandler(router, handlers.QueryParams)
 	appmodulev2.RegisterMsgHandler(router, handlers.QueryBalance)
-}
-
-// GetQueryDecoders returns grpc request and the corresponding decoder.
-func (am AppModule) GetQueryDecoders() map[string]func() gogoproto.Message {
-	decodeMaps := make(map[string]func() gogoproto.Message)
-	var errs error
-
-	typ := gogoproto.MessageType(gogoproto.MessageName(&types.QueryParamsRequest{}))
-	if typ == nil {
-		errs = errors.Join(errs, fmt.Errorf("unable to find message in gogotype registry"))
-	}
-	decodeMaps[gogoproto.MessageName(&types.QueryParamsRequest{})] = func() gogoproto.Message {
-		return reflect.New(typ.Elem()).Interface().(gogoproto.Message)
-	}
-
-	typ = gogoproto.MessageType(gogoproto.MessageName(&types.QueryBalanceRequest{}))
-	if typ == nil {
-		errs = errors.Join(errs, fmt.Errorf("unable to find message in gogotype registry"))
-	}
-	decodeMaps[gogoproto.MessageName(&types.QueryBalanceRequest{})] = func() gogoproto.Message {
-		return reflect.New(typ.Elem()).Interface().(gogoproto.Message)
-	}
-
-	if errs != nil {
-		panic(errs)
-	}
-	return decodeMaps
 }
 
 // GetTxCmd returns the root tx command for the bank/v2 module.

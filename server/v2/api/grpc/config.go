@@ -4,14 +4,9 @@ import "math"
 
 func DefaultConfig() *Config {
 	return &Config{
-		Enable: true,
-		// DefaultGRPCAddress defines the default address to bind the gRPC server to.
-		Address: "localhost:9090",
-		// DefaultGRPCMaxRecvMsgSize defines the default gRPC max message size in
-		// bytes the server can receive.
+		Enable:         true,
+		Address:        "localhost:9090",
 		MaxRecvMsgSize: 1024 * 1024 * 10,
-		// DefaultGRPCMaxSendMsgSize defines the default gRPC max message size in
-		// bytes the server can send.
 		MaxSendMsgSize: math.MaxInt32,
 	}
 }

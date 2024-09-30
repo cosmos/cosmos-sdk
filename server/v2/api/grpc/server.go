@@ -148,7 +148,7 @@ func (s *Server[T]) Name() string {
 }
 
 func (s *Server[T]) Config() any {
-	if s.config == nil || s.config == (&Config{}) {
+	if s.config == nil || s.config.Address == "" {
 		cfg := DefaultConfig()
 		// overwrite the default config with the provided options
 		for _, opt := range s.cfgOptions {
@@ -163,6 +163,7 @@ func (s *Server[T]) Config() any {
 
 func (s *Server[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
+		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil
 	}
 
@@ -171,24 +172,12 @@ func (s *Server[T]) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to listen on address %s: %w", s.config.Address, err)
 	}
 
-	errCh := make(chan error)
-
-	// Start the gRPC in an external goroutine as Serve is blocking and will return
-	// an error upon failure, which we'll send on the error channel that will be
-	// consumed by the for block below.
-	go func() {
-		s.logger.Info("starting gRPC server...", "address", s.config.Address)
-		errCh <- s.grpcSrv.Serve(listener)
-	}()
-
-	// Start a blocking select to wait for an indication to stop the server or that
-	// the server failed to start properly.
-	err = <-errCh
-	if err != nil {
-		s.logger.Error("failed to start gRPC server", "err", err)
+	s.logger.Info("starting gRPC server...", "address", s.config.Address)
+	if err := s.grpcSrv.Serve(listener); err != nil {
+		return fmt.Errorf("failed to start gRPC server: %w", err)
 	}
 
-	return err
+	return nil
 }
 
 func (s *Server[T]) Stop(ctx context.Context) error {
@@ -198,6 +187,10 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 
 	s.logger.Info("stopping gRPC server...", "address", s.config.Address)
 	s.grpcSrv.GracefulStop()
-
 	return nil
+}
+
+// GetGRPCServer returns the underlying gRPC server.
+func (s *Server[T]) GetGRPCServer() *grpc.Server {
+	return s.grpcSrv
 }

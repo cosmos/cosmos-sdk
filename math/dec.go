@@ -50,14 +50,14 @@ var dec128Context = apd.Context{
 // Examples:
 // - "123" -> Dec{123}
 // - "-123.456" -> Dec{-123.456}
-// - "1.23e4" -> Dec{12300}
+// - "1.23E4" -> Dec{12300}
 // - "NaN" or "Infinity" -> ErrInvalidDec
 //
 // The internal representation is an arbitrary-precision decimal: Negative × Coeff × 10*Exponent
 // The maximum exponent is 100_000 and must not be exceeded. Following values would be invalid:
-// 1e100001 -> ErrInvalidDec
-// -1e100001 -> ErrInvalidDec
-// 1e-100001 -> ErrInvalidDec
+// 1E100001 -> ErrInvalidDec
+// -1E100001 -> ErrInvalidDec
+// 1E-100001 -> ErrInvalidDec
 //
 // This function is essential for converting textual data into Dec types for numerical operations.
 func NewDecFromString(s string) (Dec, error) {
@@ -368,14 +368,22 @@ func (x Dec) Reduce() (Dec, int) {
 	return y, n
 }
 
-// Marshal serializes the decimal value into a byte slice in a text format.
-// This method ensures the decimal is represented in a portable and human-readable form.
-// The output may be in scientific notation if the number's magnitude is very large or very small.
+// Marshal serializes the decimal value into a byte slice in text format.
+// This method represents the decimal in a portable and compact scientific notation.
+//
+// For example, the following transformations are made:
+//   - 0 -> 0E+0
+//   - 123 -> 1.23E+3
+//   - -0.001 -> -1E-3
+//
+// The output is always in scientific notation ensuring consistency.
 //
 // Returns:
-// - A byte slice of the decimal in text format, which may include scientific notation depending on the value.
+//   - A byte slice of the decimal in text format.
+//   - An error if the decimal cannot be reduced or marshaled properly.
 func (x Dec) Marshal() ([]byte, error) {
-	return x.dec.MarshalText()
+	d, _ := x.Reduce()
+	return []byte(d.dec.Text('E')), nil
 }
 
 // Unmarshal parses a byte slice containing a text-formatted decimal and stores the result in the receiver.
@@ -392,5 +400,4 @@ func (x *Dec) Unmarshal(data []byte) error {
 
 	x.dec = result.dec
 	return nil
-
 }

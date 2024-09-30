@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cockroachdb/apd/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -1296,43 +1295,67 @@ func TestMarshal(t *testing.T) {
 	}{
 		"No trailing zeros": {
 			x:   NewDecFromInt64(123456),
-			exp: "123456",
+			exp: "1.23456E+5",
 		},
 		"Trailing zeros": {
 			x:   NewDecFromInt64(123456000),
-			exp: "123456000",
+			exp: "1.23456E+8",
 		},
 		"Zero value": {
 			x:   NewDecFromInt64(0),
-			exp: "0",
+			exp: "0E+0",
+		},
+		"-0": {
+			x:   NewDecFromInt64(-0),
+			exp: "0E+0",
 		},
 		"Decimal value": {
 			x:   must(NewDecFromString("1.30000")),
-			exp: "1.30000",
+			exp: "1.3E+0",
 		},
 		"Positive value": {
 			x:   NewDecFromInt64(10),
-			exp: "10",
+			exp: "1E+1",
 		},
 		"negative value": {
 			x:   NewDecFromInt64(-10),
-			exp: "-10",
+			exp: "-1E+1",
 		},
 		"max decimal": {
 			x:   must(NewDecFromString("9." + strings.Repeat("0", 34))),
-			exp: "9.0000000000000000000000000000000000",
+			exp: "9E+0",
 		},
 		"min decimal": {
 			x:   must(NewDecFromString("-1." + strings.Repeat("0", 34))),
-			exp: "-1.0000000000000000000000000000000000",
+			exp: "-1E+0",
+		},
+		"5 decimal places": {
+			x:   must(NewDecFromString("0.00001")),
+			exp: "1E-5",
 		},
 		"6 decimal places": {
 			x:   must(NewDecFromString("0.000001")),
-			exp: "0.000001",
+			exp: "1E-6",
 		},
 		"7 decimal places": {
 			x:   must(NewDecFromString("0.0000001")),
 			exp: "1E-7",
+		},
+		"4 decimal places before the comma": {
+			x:   must(NewDecFromString("1000")),
+			exp: "1E+3",
+		},
+		"5 decimal places before the comma": {
+			x:   must(NewDecFromString("10000")),
+			exp: "1E+4",
+		},
+		"6 decimal places before the comma": {
+			x:   must(NewDecFromString("100000")),
+			exp: "1E+5",
+		},
+		"7 decimal places before the comma": {
+			x:   must(NewDecFromString("1000000")),
+			exp: "1E+6",
 		},
 		"1e100000": {
 			x:   NewDecWithPrec(1, 100_000),
@@ -1359,82 +1382,78 @@ func TestMarshal(t *testing.T) {
 func TestUnMarshal(t *testing.T) {
 	specs := map[string]struct {
 		x      string
-		exp    string
+		exp    Dec
 		expErr error
 	}{
 		"Leading zeros": {
 			x:   "000123456",
-			exp: "123456",
+			exp: NewDecFromInt64(123456),
 		},
 		"Trailing zeros": {
 			x:   "1.00000",
-			exp: "1.00000",
+			exp: NewDecFromInt64(1),
 		},
 		"Small e": {
 			x:   "1.23456e+8",
-			exp: "123456000",
+			exp: NewDecFromInt64(123456000),
+		},
+		"xxx": {
+			x:   "1.23E+2",
+			exp: NewDecFromInt64(123),
 		},
 		"Zero value": {
 			x:   "0",
-			exp: "0",
+			exp: NewDecFromInt64(0),
 		},
 		"-0": {
 			x:   "-0",
-			exp: "-0",
+			exp: NewDecFromInt64(0),
+		},
+		"0E+0": {
+			x:   "0E+0",
+			exp: NewDecFromInt64(0),
 		},
 		"Decimal value": {
 			x:   "1.3000",
-			exp: "1.3000",
+			exp: NewDecWithPrec(13, -1),
 		},
 		"Positive value": {
 			x:   "1E+1",
-			exp: "10",
+			exp: NewDecFromInt64(10),
 		},
 		"negative value": {
 			x:   "-1E+1",
-			exp: "-10",
-		},
-		"Max Exponent": {
-			x:   "1e" + strconv.Itoa(apd.MaxExponent),
-			exp: "1e" + strconv.Itoa(apd.MaxExponent),
-		},
-		"Above Max Exponent": {
-			x:      "1e" + strconv.Itoa(apd.MaxExponent+1),
-			expErr: ErrInvalidDec,
+			exp: NewDecFromInt64(-10),
 		},
 		"Min Exponent": {
-			x:   "1e-100000",
-			exp: "1e-100000",
+			x:   "1E-100000",
+			exp: NewDecWithPrec(1, -100_000),
 		},
 		"Below Min Exponent": {
-			x:      "1e" + strconv.Itoa(apd.MinExponent-1),
+			x:      "1.1E-100001",
 			expErr: ErrInvalidDec,
 		},
-		"1e100000": {
+		"1E100000": {
 			x:   "1E+100000",
-			exp: "1e100000",
+			exp: NewDecWithPrec(1, 100_000),
 		},
-		"1.1e100000": {
+		"Above Max Exponent": {
 			x:      "1.1E+100001",
 			expErr: ErrInvalidDec,
 		},
-		"1.e100000": {
-			x:   "1E+100000",
-			exp: "1e100000",
-		},
-		"-1e100000": {
+		"-1E100000": {
 			x:   "-1e100000",
-			exp: "-1e100000",
+			exp: NewDecWithPrec(-1, 100_000),
 		},
-		"9e100000": {
+		"9E100000": {
 			x:   "9e100000",
-			exp: "9e100000",
+			exp: NewDecWithPrec(9, 100_000),
 		},
 		"NaN": {
 			x:      "NaN",
 			expErr: ErrInvalidDec,
 		},
-		"1foo": {
+		"currency string": {
 			x:      "1foo",
 			expErr: ErrInvalidDec,
 		},
@@ -1444,11 +1463,11 @@ func TestUnMarshal(t *testing.T) {
 		},
 		"0.": {
 			x:   "0.",
-			exp: "0",
+			exp: NewDecFromInt64(0),
 		},
 		".0": {
 			x:   ".0",
-			exp: "0.0",
+			exp: NewDecFromInt64(0),
 		},
 	}
 	for name, spec := range specs {
@@ -1459,16 +1478,8 @@ func TestUnMarshal(t *testing.T) {
 				require.ErrorIs(t, err, spec.expErr)
 				return
 			}
-			if unmarshaled.dec.Exponent == 100000 || unmarshaled.dec.Exponent == -100000 {
-				if unmarshaled.dec.Negative {
-					assert.Equal(t, spec.exp, "-"+unmarshaled.dec.Coeff.String()+"e"+strconv.Itoa(int(unmarshaled.dec.Exponent)))
-				} else {
-					assert.Equal(t, spec.exp, unmarshaled.dec.Coeff.String()+"e"+strconv.Itoa(int(unmarshaled.dec.Exponent)))
-				}
-			} else {
-				assert.Equal(t, spec.exp, unmarshaled.String())
-			}
 			require.NoError(t, err)
+			assert.True(t, spec.exp.Equal(unmarshaled))
 		})
 	}
 }

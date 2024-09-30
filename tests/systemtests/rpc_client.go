@@ -11,6 +11,7 @@ import (
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	client "github.com/cometbft/cometbft/rpc/client/http"
 	cmtypes "github.com/cometbft/cometbft/types"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
@@ -18,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/stretchr/testify/require"
 )
 
 // RPCClient is a test helper to interact with a node via the RPC endpoint.

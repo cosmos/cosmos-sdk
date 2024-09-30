@@ -111,7 +111,6 @@ func (s STF[T]) DeliverBlock(
 
 	// reset events
 	exCtx.events = make([]event.Event, 0)
-	exCtx.txIndex = 0
 	// pre block is called separate from begin block in order to prepopulate state
 	preBlockEvents, err := s.preBlock(exCtx, block.Txs)
 	if err != nil {
@@ -124,7 +123,6 @@ func (s STF[T]) DeliverBlock(
 
 	// reset events
 	exCtx.events = make([]event.Event, 0)
-	exCtx.txIndex = 0
 	// begin block
 	var beginBlockEvents []event.Event
 	if !block.IsGenesis {
@@ -142,14 +140,13 @@ func (s STF[T]) DeliverBlock(
 
 	// execute txs
 	txResults := make([]server.TxResult, len(block.Txs))
-	exCtx.txIndex = 0
 	// TODO: skip first tx if vote extensions are enabled (marko)
 	for i, txBytes := range block.Txs {
 		// check if we need to return early or continue delivering txs
 		if err = isCtxCancelled(ctx); err != nil {
 			return nil, nil, err
 		}
-		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi)
+		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi, int32(i+1))
 	}
 	// reset events
 	exCtx.events = make([]event.Event, 0)
@@ -175,6 +172,7 @@ func (s STF[T]) deliverTx(
 	tx T,
 	execMode transaction.ExecMode,
 	hi header.Info,
+	txIndex int32,
 ) server.TxResult {
 	// recover in the case of a panic
 	var recoveryError error
@@ -197,18 +195,32 @@ func (s STF[T]) deliverTx(
 			Error: recoveryError,
 		}
 	}
-	// TODO: how to handle msgIndex and eventIndex ???
 	validateGas, validationEvents, err := s.validateTx(ctx, state, gasLimit, tx, execMode)
 	if err != nil {
 		return server.TxResult{
 			Error: err,
 		}
 	}
+	events := make([]event.Event, 0)
+	// set the event indexes, set MsgIndex to 0 in validation events
+	for i, e := range validationEvents {
+		e.BlockStage = appdata.TxProcessingStage
+		e.TxIndex = txIndex
+		e.MsgIndex = 0
+		e.EventIndex = int32(i + 1)
+		events = append(events, e)
+	}
 
 	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
-	// TODO: should handle execCtx.txIndex with events
+	// set the TxIndex in the exec events
+	for _, e := range execEvents {
+		e.BlockStage = appdata.TxProcessingStage
+		e.TxIndex = txIndex
+		events = append(events, e)
+	}
+
 	return server.TxResult{
-		Events:    append(validationEvents, execEvents...),
+		Events:    events,
 		GasUsed:   execGas + validateGas,
 		GasWanted: gasLimit,
 		Resp:      execResp,
@@ -274,6 +286,12 @@ func (s STF[T]) execTx(
 		if applyErr != nil {
 			return nil, 0, nil, applyErr
 		}
+		// set the event indexes, set MsgIndex to -1 in post tx events
+		for i := range postTxCtx.events {
+			postTxCtx.events[i].EventIndex = int32(i + 1)
+			postTxCtx.events[i].MsgIndex = -1
+		}
+
 		return nil, gasUsed, postTxCtx.events, txErr
 	}
 	// tx execution went fine, now we use the same state to run the post tx exec handler,
@@ -281,7 +299,6 @@ func (s STF[T]) execTx(
 	// whole execution step is rolled back.
 	postTxCtx := s.makeContext(ctx, RuntimeIdentity, execState, execMode) // NO gas limit.
 	postTxCtx.setHeaderInfo(hi)
-	// TODO: how to handle msgIndex and eventIndex ???
 	postTxErr := s.postTxExec(postTxCtx, tx, true)
 	if postTxErr != nil {
 		// if post tx fails, then we do not apply any state change, we return the post tx error,
@@ -293,6 +310,11 @@ func (s STF[T]) execTx(
 	applyErr := applyStateChanges(state, execState)
 	if applyErr != nil {
 		return nil, 0, nil, applyErr
+	}
+	// set the event indexes, set MsgIndex to -1 in post tx events
+	for i := range postTxCtx.events {
+		postTxCtx.events[i].EventIndex = int32(i + 1)
+		postTxCtx.events[i].MsgIndex = -1
 	}
 
 	return msgsResp, gasUsed, append(runTxMsgsEvents, postTxCtx.events...), nil
@@ -320,17 +342,24 @@ func (s STF[T]) runTxMsgs(
 	execCtx := s.makeContext(ctx, RuntimeIdentity, state, execMode)
 	execCtx.setHeaderInfo(hi)
 	execCtx.setGasLimit(gasLimit)
+	events := make([]event.Event, 0)
 	for i, msg := range msgs {
 		execCtx.sender = txSenders[i]
-		resp, err := s.msgRouter.Invoke(execCtx, msg) // TODO: should handle execCtx.msgIndex with events
+		execCtx.events = make([]event.Event, 0) // reset events
+		resp, err := s.msgRouter.Invoke(execCtx, msg)
 		if err != nil {
 			return nil, 0, nil, err // do not wrap the error or we lose the original error type
 		}
 		msgResps[i] = resp
+		for j, e := range execCtx.events {
+			e.MsgIndex = int32(i + 1)
+			e.EventIndex = int32(j + 1)
+			events = append(events, e)
+		}
 	}
 
 	consumed := execCtx.meter.Limit() - execCtx.meter.Remaining()
-	return msgResps, consumed, execCtx.events, nil
+	return msgResps, consumed, events, nil
 }
 
 // preBlock executes the pre block logic.
@@ -345,6 +374,7 @@ func (s STF[T]) preBlock(
 
 	for i := range ctx.events {
 		ctx.events[i].BlockStage = appdata.PreBlockStage
+		ctx.events[i].EventIndex = int32(i + 1)
 	}
 
 	return ctx.events, nil
@@ -361,6 +391,7 @@ func (s STF[T]) beginBlock(
 
 	for i := range ctx.events {
 		ctx.events[i].BlockStage = appdata.BeginBlockStage
+		ctx.events[i].EventIndex = int32(i + 1)
 	}
 
 	return ctx.events, nil
@@ -374,30 +405,30 @@ func (s STF[T]) endBlock(
 	if err != nil {
 		return nil, nil, err
 	}
-
-	events, valsetUpdates, err := s.validatorUpdates(ctx)
+	events := ctx.events
+	ctx.events = make([]event.Event, 0) // reset events
+	valsetUpdates, err := s.validatorUpdates(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	ctx.events = append(ctx.events, events...)
-
-	for i := range ctx.events {
-		ctx.events[i].BlockStage = appdata.EndBlockStage
+	events = append(events, ctx.events...)
+	for i := range events {
+		events[i].BlockStage = appdata.EndBlockStage
+		events[i].EventIndex = int32(i + 1)
 	}
 
-	return ctx.events, valsetUpdates, nil
+	return events, valsetUpdates, nil
 }
 
 // validatorUpdates returns the validator updates for the current block. It is called by endBlock after the endblock execution has concluded
 func (s STF[T]) validatorUpdates(
 	ctx *executionContext,
-) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
+) ([]appmodulev2.ValidatorUpdate, error) {
 	valSetUpdates, err := s.doValidatorUpdate(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return ctx.events, valSetUpdates, nil
+	return valSetUpdates, nil
 }
 
 // Simulate simulates the execution of a tx on the provided state.
@@ -412,7 +443,7 @@ func (s STF[T]) Simulate(
 	if err != nil {
 		return server.TxResult{}, nil
 	}
-	txr := s.deliverTx(ctx, simulationState, tx, internal.ExecModeSimulate, hi)
+	txr := s.deliverTx(ctx, simulationState, tx, internal.ExecModeSimulate, hi, 0)
 
 	return txr, simulationState
 }
@@ -496,10 +527,6 @@ type executionContext struct {
 
 	msgRouter   router.Service
 	queryRouter router.Service
-
-	txIndex    int32
-	msgIndex   int32
-	eventIndex int32 // TODO: how to pass it to the handlers?
 }
 
 // setHeaderInfo sets the header info in the state to be used by queries in the future.

@@ -165,6 +165,5 @@ func (r coreRouterImpl) Invoke(ctx context.Context, req transaction.Msg) (res tr
 	if !exists {
 		return nil, fmt.Errorf("%w: %s", ErrNoHandler, typeName)
 	}
-	// TODO: should handle ctx.eventIndex, eventIndex should be embedded as a value in the context???
 	return handler(ctx, req)
 }

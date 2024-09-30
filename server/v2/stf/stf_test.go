@@ -9,12 +9,15 @@ import (
 	"time"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
+	"github.com/stretchr/testify/require"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/event"
 	coregas "cosmossdk.io/core/gas"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/server/v2/stf/branch"
 	"cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/mock"
@@ -68,22 +71,48 @@ func TestSTF(t *testing.T) {
 	sum := sha256.Sum256([]byte("test-hash"))
 
 	s := &STF[mock.Tx]{
-		doPreBlock: func(ctx context.Context, txs []mock.Tx) error { return nil },
+		doPreBlock: func(ctx context.Context, txs []mock.Tx) error {
+			ctx.(*executionContext).events = append(ctx.(*executionContext).events, event.NewEvent("pre-block"))
+			return nil
+		},
 		doBeginBlock: func(ctx context.Context) error {
 			kvSet(t, ctx, "begin-block")
+			ctx.(*executionContext).events = append(ctx.(*executionContext).events, event.NewEvent("begin-block"))
 			return nil
 		},
 		doEndBlock: func(ctx context.Context) error {
 			kvSet(t, ctx, "end-block")
+			ctx.(*executionContext).events = append(ctx.(*executionContext).events, event.NewEvent("end-block"))
 			return nil
 		},
-		doValidatorUpdate: func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error) { return nil, nil },
+		doValidatorUpdate: func(ctx context.Context) ([]appmodulev2.ValidatorUpdate, error) {
+			ctx.(*executionContext).events = append(ctx.(*executionContext).events, event.NewEvent("validator-update"))
+			return nil, nil
+		},
 		doTxValidation: func(ctx context.Context, tx mock.Tx) error {
 			kvSet(t, ctx, "validate")
+			ctx.(*executionContext).events = append(
+				ctx.(*executionContext).events,
+				event.NewEvent("validate-tx", event.NewAttribute("sender", string(tx.Sender))),
+				event.NewEvent(
+					"validate-tx",
+					event.NewAttribute("sender", string(tx.Sender)),
+					event.NewAttribute("index", "2"),
+				),
+			)
 			return nil
 		},
 		postTxExec: func(ctx context.Context, tx mock.Tx, success bool) error {
 			kvSet(t, ctx, "post-tx-exec")
+			ctx.(*executionContext).events = append(
+				ctx.(*executionContext).events,
+				event.NewEvent("post-tx-exec", event.NewAttribute("sender", string(tx.Sender))),
+				event.NewEvent(
+					"post-tx-exec",
+					event.NewAttribute("sender", string(tx.Sender)),
+					event.NewAttribute("index", "2"),
+				),
+			)
 			return nil
 		},
 		branchFn:            branch.DefaultNewWriterMap,
@@ -93,6 +122,15 @@ func TestSTF(t *testing.T) {
 
 	addMsgHandlerToSTF(t, s, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
 		kvSet(t, ctx, "exec")
+		ctx.(*executionContext).events = append(
+			ctx.(*executionContext).events,
+			event.NewEvent("handle-msg", event.NewAttribute("msg", msg.String())),
+			event.NewEvent(
+				"handle-msg",
+				event.NewAttribute("msg", msg.String()),
+				event.NewAttribute("index", "2"),
+			),
+		)
 		return nil, nil
 	})
 
@@ -134,6 +172,57 @@ func TestSTF(t *testing.T) {
 		}
 		if txResult.GasWanted != mockTx.GasLimit {
 			t.Errorf("Expected GasWanted to be %d, got %d", mockTx.GasLimit, txResult.GasWanted)
+		}
+
+		// check PreBlockEvents
+		require.Len(t, result.PreBlockEvents, 1)
+		require.Equal(t, "pre-block", result.PreBlockEvents[0].Type)
+		require.Equal(t, appdata.PreBlockStage, result.PreBlockEvents[0].BlockStage)
+		require.Equal(t, int32(1), result.PreBlockEvents[0].EventIndex)
+		// check BeginBlockEvents
+		require.Len(t, result.BeginBlockEvents, 1)
+		require.Equal(t, "begin-block", result.BeginBlockEvents[0].Type)
+		require.Equal(t, appdata.BeginBlockStage, result.BeginBlockEvents[0].BlockStage)
+		require.Equal(t, int32(1), result.BeginBlockEvents[0].EventIndex)
+		// check EndBlockEvents
+		require.Len(t, result.EndBlockEvents, 2)
+		require.Equal(t, "end-block", result.EndBlockEvents[0].Type)
+		require.Equal(t, "validator-update", result.EndBlockEvents[1].Type)
+		require.Equal(t, appdata.EndBlockStage, result.EndBlockEvents[1].BlockStage)
+		require.Equal(t, int32(1), result.EndBlockEvents[0].EventIndex)
+		require.Equal(t, int32(2), result.EndBlockEvents[1].EventIndex)
+		// check TxEvents
+		require.Len(t, txResult.Events, 6)
+		for i, event := range txResult.Events {
+			require.Equal(t, appdata.TxProcessingStage, event.BlockStage)
+			require.Equal(t, int32(1), event.TxIndex)
+			require.Equal(t, int32(i%2+1), event.EventIndex)
+			attrs, err := event.Attributes()
+			require.NoError(t, err)
+			require.Less(t, len(attrs), 3)
+			require.Greater(t, len(attrs), 0)
+			if len(attrs) == 2 {
+				require.Equal(t, "index", attrs[1].Key)
+				require.Equal(t, "2", attrs[1].Value)
+			}
+			switch i {
+			case 0, 1:
+				require.Equal(t, "validate-tx", event.Type)
+				require.Equal(t, int32(0), event.MsgIndex)
+				require.Equal(t, "sender", attrs[0].Key)
+				require.Equal(t, "sender", attrs[0].Value)
+			case 2, 3:
+				require.Equal(t, "handle-msg", event.Type)
+				require.Equal(t, int32(1), event.MsgIndex)
+				require.Equal(t, "msg", attrs[0].Key)
+				require.Equal(t, "&BoolValue{Value:true,XXX_unrecognized:[],}", attrs[0].Value)
+
+			case 4, 5:
+				require.Equal(t, "post-tx-exec", event.Type)
+				require.Equal(t, int32(-1), event.MsgIndex)
+				require.Equal(t, "sender", attrs[0].Key)
+				require.Equal(t, "sender", attrs[0].Value)
+			}
 		}
 	})
 

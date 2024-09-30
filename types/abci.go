@@ -23,6 +23,9 @@ type ProcessProposalHandler func(Context, *abci.ProcessProposalRequest) (*abci.P
 // PrepareProposalHandler defines a function type alias for preparing a proposal
 type PrepareProposalHandler func(Context, *abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error)
 
+// CheckTxHandler defines a function type alias for executing logic before transactions are executed.
+type CheckTxHandler func(Context, *abci.CheckTxRequest) (*abci.CheckTxResponse, error)
+
 // ExtendVoteHandler defines a function type alias for extending a pre-commit vote.
 type ExtendVoteHandler func(Context, *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error)
 

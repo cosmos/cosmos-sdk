@@ -8,7 +8,6 @@ import (
 
 	gateway "github.com/cosmos/gogogateway"
 	"github.com/cosmos/gogoproto/jsonpb"
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
@@ -17,26 +16,25 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 )
 
-var _ serverv2.ServerComponent[transaction.Tx] = (*GRPCGatewayServer[transaction.Tx])(nil)
-
-const (
-	ServerName = "grpc-gateway"
-
-	// GRPCBlockHeightHeader is the gRPC header for block height.
-	GRPCBlockHeightHeader = "x-cosmos-block-height"
+var (
+	_ serverv2.ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
+	_ serverv2.HasConfig                       = (*Server[transaction.Tx])(nil)
 )
 
-type GRPCGatewayServer[T transaction.Tx] struct {
+const ServerName = "grpc-gateway"
+
+type Server[T transaction.Tx] struct {
 	logger     log.Logger
 	config     *Config
 	cfgOptions []CfgOption
 
-	GRPCSrv           *grpc.Server
-	GRPCGatewayRouter *runtime.ServeMux
+	server            *http.Server
+	gRPCSrv           *grpc.Server
+	gRPCGatewayRouter *runtime.ServeMux
 }
 
 // New creates a new gRPC-gateway server.
-func New[T transaction.Tx](grpcSrv *grpc.Server, ir jsonpb.AnyResolver, cfgOptions ...CfgOption) *GRPCGatewayServer[T] {
+func New[T transaction.Tx](grpcSrv *grpc.Server, ir jsonpb.AnyResolver, cfgOptions ...CfgOption) *Server[T] {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
 	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshaling issue.
 	marshalerOption := &gateway.JSONPb{
@@ -46,9 +44,9 @@ func New[T transaction.Tx](grpcSrv *grpc.Server, ir jsonpb.AnyResolver, cfgOptio
 		AnyResolver:  ir,
 	}
 
-	return &GRPCGatewayServer[T]{
-		GRPCSrv: grpcSrv,
-		GRPCGatewayRouter: runtime.NewServeMux(
+	return &Server[T]{
+		gRPCSrv: grpcSrv,
+		gRPCGatewayRouter: runtime.NewServeMux(
 			// Custom marshaler option is required for gogo proto
 			runtime.WithMarshalerOption(runtime.MIMEWildcard, marshalerOption),
 
@@ -64,12 +62,12 @@ func New[T transaction.Tx](grpcSrv *grpc.Server, ir jsonpb.AnyResolver, cfgOptio
 	}
 }
 
-func (g *GRPCGatewayServer[T]) Name() string {
+func (s *Server[T]) Name() string {
 	return ServerName
 }
 
-func (s *GRPCGatewayServer[T]) Config() any {
-	if s.config == nil || s.config == (&Config{}) {
+func (s *Server[T]) Config() any {
+	if s.config == nil || s.config.Address == "" {
 		cfg := DefaultConfig()
 		// overwrite the default config with the provided options
 		for _, opt := range s.cfgOptions {
@@ -82,7 +80,7 @@ func (s *GRPCGatewayServer[T]) Config() any {
 	return s.config
 }
 
-func (s *GRPCGatewayServer[T]) Init(appI serverv2.AppI[transaction.Tx], cfg map[string]any, logger log.Logger) error {
+func (s *Server[T]) Init(appI serverv2.AppI[transaction.Tx], cfg map[string]any, logger log.Logger) error {
 	serverCfg := s.Config().(*Config)
 	if len(cfg) > 0 {
 		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
@@ -90,42 +88,43 @@ func (s *GRPCGatewayServer[T]) Init(appI serverv2.AppI[transaction.Tx], cfg map[
 		}
 	}
 
-	// Register the gRPC-Gateway server.
-	// appI.RegisterGRPCGatewayRoutes(s.GRPCGatewayRouter, s.GRPCSrv)
+	// TODO: register the gRPC-Gateway routes
 
-	s.logger = logger
+	s.logger = logger.With(log.ModuleKey, s.Name())
 	s.config = serverCfg
 
 	return nil
 }
 
-func (s *GRPCGatewayServer[T]) Start(ctx context.Context) error {
+func (s *Server[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
+		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil
 	}
 
-	// TODO start a normal Go http server (and do not leverage comet's like https://github.com/cosmos/cosmos-sdk/blob/9df6019de6ee7999fe9864bac836deb2f36dd44a/server/api/server.go#L98)
+	mux := http.NewServeMux()
+	mux.Handle("/", s.gRPCGatewayRouter)
+
+	s.server = &http.Server{
+		Addr:    s.config.Address,
+		Handler: mux,
+	}
+
+	s.logger.Info("starting gRPC-Gateway server...", "address", s.config.Address)
+	if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		return fmt.Errorf("failed to start gRPC-Gateway server: %w", err)
+	}
 
 	return nil
 }
 
-func (s *GRPCGatewayServer[T]) Stop(ctx context.Context) error {
+func (s *Server[T]) Stop(ctx context.Context) error {
 	if !s.config.Enable {
 		return nil
 	}
 
-	return nil
-}
-
-// Register implements registers a grpc-gateway server
-func (s *GRPCGatewayServer[T]) Register(r mux.Router) error {
-	// configure grpc-gatway server
-	r.PathPrefix("/").Handler(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		// Fall back to grpc gateway server.
-		s.GRPCGatewayRouter.ServeHTTP(w, req)
-	}))
-
-	return nil
+	s.logger.Info("stopping gRPC-Gateway server...", "address", s.config.Address)
+	return s.server.Shutdown(ctx)
 }
 
 // CustomGRPCHeaderMatcher for mapping request headers to
@@ -134,6 +133,9 @@ func (s *GRPCGatewayServer[T]) Register(r mux.Router) error {
 // gRPC metadata after removing prefix 'Grpc-Metadata-'. We can use this
 // CustomGRPCHeaderMatcher if headers don't start with `Grpc-Metadata-`
 func CustomGRPCHeaderMatcher(key string) (string, bool) {
+	// GRPCBlockHeightHeader is the gRPC header for block height.
+	const GRPCBlockHeightHeader = "x-cosmos-block-height"
+
 	switch strings.ToLower(key) {
 	case GRPCBlockHeightHeader:
 		return GRPCBlockHeightHeader, true

@@ -10,8 +10,8 @@ import (
 type (
 	// PreMsgHandler is a handler that is executed before Handler. If it errors the execution reverts.
 	PreMsgHandler = func(ctx context.Context, msg transaction.Msg) error
-	// Handler handles the state transition of the provided message.
-	Handler = func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error)
+	// HandlerFunc handles the state transition of the provided message.
+	HandlerFunc = func(ctx context.Context, msg transaction.Msg) (msgResp transaction.Msg, err error)
 	// PostMsgHandler runs after Handler, only if Handler does not error. If PostMsgHandler errors
 	// then the execution is reverted.
 	PostMsgHandler = func(ctx context.Context, msg, msgResp transaction.Msg) error
@@ -19,10 +19,10 @@ type (
 
 // PreMsgRouter is a router that allows you to register PreMsgHandlers for specific message types.
 type PreMsgRouter interface {
-	// RegisterPreHandler will register a specific message handler hooking into the message with
+	// RegisterPreMsgHandler will register a specific message handler hooking into the message with
 	// the provided name.
 	RegisterPreMsgHandler(msgName string, handler PreMsgHandler)
-	// RegisterGlobalPreHandler will register a global message handler hooking into any message
+	// RegisterGlobalPreMsgHandler will register a global message handler hooking into any message
 	// being executed.
 	RegisterGlobalPreMsgHandler(handler PreMsgHandler)
 }
@@ -64,10 +64,10 @@ func RegisterMsgPreHandler[Req transaction.Msg](
 
 // PostMsgRouter is a router that allows you to register PostMsgHandlers for specific message types.
 type PostMsgRouter interface {
-	// RegisterPostHandler will register a specific message handler hooking after the execution of message with
+	// RegisterPostMsgHandler will register a specific message handler hooking after the execution of message with
 	// the provided name.
 	RegisterPostMsgHandler(msgName string, handler PostMsgHandler)
-	// RegisterGlobalPostHandler will register a global message handler hooking after the execution of any message.
+	// RegisterGlobalPostMsgHandler will register a global message handler hooking after the execution of any message.
 	RegisterGlobalPostMsgHandler(handler PostMsgHandler)
 }
 
@@ -76,7 +76,7 @@ type HasPostMsgHandlers interface {
 	RegisterPostMsgHandlers(router PostMsgRouter)
 }
 
-// RegisterPostHandler is a helper function that modules can use to not lose type safety when registering handlers to the
+// RegisterPostMsgHandler is a helper function that modules can use to not lose type safety when registering handlers to the
 // PostMsgRouter. Example usage:
 // ```go
 //
@@ -110,9 +110,15 @@ func RegisterPostMsgHandler[Req, Resp transaction.Msg](
 	router.RegisterPostMsgHandler(msgName, untypedHandler)
 }
 
+type Handler struct {
+	Func        HandlerFunc
+	MakeMsg     func() transaction.Msg
+	MakeMsgResp func() transaction.Msg
+}
+
 // MsgRouter is a router that allows you to register Handlers for specific message types.
 type MsgRouter = interface {
-	RegisterHandler(msgName string, handler Handler) error
+	RegisterHandler(handler Handler)
 }
 
 // HasMsgHandlers is an interface that modules must implement if they want to register Handlers.
@@ -151,11 +157,10 @@ type HasQueryHandlers interface {
 //	}
 //
 // ```
-func RegisterHandler[Req, Resp transaction.Msg](
+func RegisterMsgHandler[Req, Resp transaction.Msg](
 	router MsgRouter,
-	msgName string,
 	handler func(ctx context.Context, msg Req) (msgResp Resp, err error),
-) error {
+) {
 	untypedHandler := func(ctx context.Context, m transaction.Msg) (transaction.Msg, error) {
 		typed, ok := m.(Req)
 		if !ok {
@@ -164,5 +169,13 @@ func RegisterHandler[Req, Resp transaction.Msg](
 		return handler(ctx, typed)
 	}
 
-	return router.RegisterHandler(msgName, untypedHandler)
+	router.RegisterHandler(Handler{
+		Func: untypedHandler,
+		MakeMsg: func() transaction.Msg {
+			return *new(Req)
+		},
+		MakeMsgResp: func() transaction.Msg {
+			return *new(Resp)
+		},
+	})
 }

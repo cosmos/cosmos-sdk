@@ -13,3 +13,7 @@ require (
 	github.com/google/go-cmp v0.6.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 )
+
+replace (
+	cosmossdk.io/core => ../../../core
+)

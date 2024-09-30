@@ -98,50 +98,17 @@ func (am AppModule) ExportGenesis(ctx context.Context) (json.RawMessage, error) 
 func (am AppModule) RegisterMsgHandlers(router appmodulev2.MsgRouter) {
 	handlers := keeper.NewHandlers(am.keeper)
 
-	var errs error
-	if err := appmodulev2.RegisterHandler(
-		router, gogoproto.MessageName(&types.MsgUpdateParams{}), handlers.MsgUpdateParams,
-	); err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	if err := appmodulev2.RegisterHandler(
-		router, gogoproto.MessageName(&types.MsgSend{}), handlers.MsgSend,
-	); err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	if err := appmodulev2.RegisterHandler(
-		router, gogoproto.MessageName(&types.MsgMint{}), handlers.MsgMint,
-	); err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	if errs != nil {
-		panic(errs)
-	}
+	appmodulev2.RegisterMsgHandler(router, handlers.MsgUpdateParams)
+	appmodulev2.RegisterMsgHandler(router, handlers.MsgSend)
+	appmodulev2.RegisterMsgHandler(router, handlers.MsgMint)
 }
 
 // RegisterQueryHandlers registers the query handlers for the bank module.
 func (am AppModule) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
 	handlers := keeper.NewHandlers(am.keeper)
 
-	var errs error
-	if err := appmodulev2.RegisterHandler(
-		router, gogoproto.MessageName(&types.QueryParamsRequest{}), handlers.QueryParams,
-	); err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	if err := appmodulev2.RegisterHandler(
-		router, gogoproto.MessageName(&types.QueryBalanceRequest{}), handlers.QueryBalance,
-	); err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	if errs != nil {
-		panic(errs)
-	}
+	appmodulev2.RegisterMsgHandler(router, handlers.QueryParams)
+	appmodulev2.RegisterMsgHandler(router, handlers.QueryBalance)
 }
 
 // GetQueryDecoders returns grpc request and the corresponding decoder.

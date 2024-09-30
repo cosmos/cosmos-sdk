@@ -830,5 +830,8 @@ func (s *stfRouterWrapper) RegisterHandler(handler appmodulev2.Handler) {
 	s.error = errors.Join(s.error, err)
 
 	// also make the decoder
+	if s.error == nil {
+		s.decoders = map[string]func() gogoproto.Message{}
+	}
 	s.decoders[requestName] = handler.MakeMsg
 }

@@ -131,7 +131,7 @@ mod tests {
     use crate::mem::MemoryManager;
     use crate::structs::{StructDecodeVisitor, StructEncodeVisitor, StructSchema};
     use crate::types::{to_field, StrT, StructT, UIntNT};
-    use crate::value::{ListElementValue, Value};
+    use crate::value::{AbstractValue, ListElementValue, Value};
 
     #[test]
     fn test_u32_decode() {
@@ -228,6 +228,7 @@ mod tests {
     }
 
     impl<'a> ListElementValue<'a> for Coin<'a> {}
+    impl<'a> AbstractValue for Coin<'a> { type Value<'b> = Coin<'b>; }
 
     #[test]
     fn test_coin() {

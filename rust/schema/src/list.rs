@@ -20,7 +20,7 @@ impl<'a, T: Value<'a>> Default for AllocatorVecBuilder<'a, T> {
 impl<'a, T: Value<'a>> AllocatorVecBuilder<'a, T> {
     fn get_xs<'b>(&mut self, mem: &'a MemoryManager) -> &mut Vec<T, &'a dyn Allocator> {
         if self.xs.is_none() {
-            self.xs = Some(Vec::new_in(mem.allocator()));
+            self.xs = Some(Vec::new_in(mem));
         }
         self.xs.as_mut().unwrap()
     }

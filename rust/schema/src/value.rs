@@ -221,7 +221,7 @@ where
 
     fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
         match state.xs {
-            None => Ok(allocator_api2::vec::Vec::new_in(mem_handle.allocator())),
+            None => Ok(allocator_api2::vec::Vec::new_in(mem_handle)),
             Some(xs) => Ok(xs)
         }
     }

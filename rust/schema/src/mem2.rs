@@ -1,6 +1,8 @@
 use core::cell::Cell;
 use core::ptr::NonNull;
 
+
+// Work in progress on a custom bump allocator to avoid a dependency and customize chunk size.
 struct Bump {
     cur: *mut Chunk
 }

@@ -39,10 +39,6 @@ require (
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // indirect; main
 	cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b // main
 	cosmossdk.io/schema v0.3.0 // indirect
-	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5 // indirect
-	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000 // indirect
-	cosmossdk.io/x/distribution v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
 	cosmossdk.io/x/tx v0.13.4-0.20240918094839-0c8ad9d2c64b // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect

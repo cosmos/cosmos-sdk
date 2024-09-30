@@ -8,8 +8,6 @@ require (
 	cosmossdk.io/core v1.0.0-alpha.3 // main
 	cosmossdk.io/core/testing v0.0.0-20240913164418-aaf72f20c10b // main
 	cosmossdk.io/depinject v1.0.0
-	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/tx v0.13.4-0.20240918094839-0c8ad9d2c64b // main
 	github.com/cosmos/cosmos-sdk v0.52.0
@@ -28,8 +26,6 @@ require (
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/schema v0.3.0 // indirect
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
-	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
-	cosmossdk.io/x/distribution v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -180,12 +176,6 @@ replace (
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214 // main
-	cosmossdk.io/x/accounts/defaults/base => ./defaults/base
-	cosmossdk.io/x/accounts/defaults/lockup => ./defaults/lockup
-	cosmossdk.io/x/accounts/defaults/multisig => ./defaults/multisig
 	cosmossdk.io/x/bank => ../bank
-	cosmossdk.io/x/distribution => ../distribution
-	cosmossdk.io/x/mint => ../mint
-	cosmossdk.io/x/slashing => ../slashing
 	cosmossdk.io/x/staking => ../staking
 )

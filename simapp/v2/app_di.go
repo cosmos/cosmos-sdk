@@ -126,6 +126,10 @@ func NewSimApp[T transaction.Tx](
 		)
 	)
 
+	// the subsection of config that contains the store options (in app.toml [store.options] header)
+	// is unmarshaled into a store.Options struct and passed to the store builder.
+	// future work may move this specification and retrieval into store/v2.
+	// If these options are not specified then default values will be used.
 	if sub := viper.Sub("store.options"); sub != nil {
 		storeOptions := &root.Options{}
 		err := sub.Unmarshal(storeOptions)

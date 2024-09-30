@@ -14,36 +14,8 @@ graph TD
     N[P2P] -->|Receive TX| C
 ```
 
-```go
-// CheckTx implements the ABCI interface.
-func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
-	var mode execMode
-
-	switch {
-	case req.Type == abci.CHECK_TX_TYPE_CHECK:
-		mode = execModeCheck
-
-	case req.Type == abci.CHECK_TX_TYPE_RECHECK:
-		mode = execModeReCheck
-
-	default:
-		return nil, fmt.Errorf("unknown RequestCheckTx type: %s", req.Type)
-	}
-
-
-	gInfo, result, anteEvents, err := app.runTx(mode, req.Tx, decodedTx)
-	if err != nil {
-		return responseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
-	}
-
-	return &abci.CheckTxResponse{
-		GasWanted: int64(gInfo.GasWanted),
-		GasUsed:   int64(gInfo.GasUsed),
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
-	}, nil
-}
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/31c604762a434c7b676b6a89897ecbd7c4653a23/baseapp/abci.go#L350-L386
 ```
 
 ## CheckTx Handler

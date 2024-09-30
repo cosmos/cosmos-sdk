@@ -5,7 +5,6 @@ package systemtests
 import (
 	"encoding/base64"
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -41,7 +40,6 @@ func TestSubmitProposal(t *testing.T) {
 	"deposit": "-324foocoin"
 }`
 	invalidPropFile := testutil.WriteToNewTempFile(t, invalidProp)
-	os.WriteFile("test", []byte(invalidProp), 0o600)
 	defer invalidPropFile.Close()
 
 	// Create a valid new proposal JSON.

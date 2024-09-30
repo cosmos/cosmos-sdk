@@ -16,9 +16,16 @@ replace (
 )
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/api v0.8.0
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/errors v1.0.1 // indirect
+=======
+	cosmossdk.io/api v0.7.6
+	cosmossdk.io/collections v0.4.0
+	cosmossdk.io/core v1.0.0-alpha.3
+	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
+>>>>>>> 7c6e0388a (chore(server/v2/cometbft): improve code check (#21955))
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/server/v2 v2.0.0-20240927165321-7fe95fc3f945 // main
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240920095614-aa90bb43d8f8 // main
@@ -39,7 +46,10 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.34.2-20240701160653-fedbb9acfd2f.2 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
+<<<<<<< HEAD
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // indirect
+=======
+>>>>>>> 7c6e0388a (chore(server/v2/cometbft): improve code check (#21955))
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // indirect
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/math v1.3.0 // indirect

@@ -32,9 +32,7 @@ type ModuleInputs struct {
 	AddressCodec address.Codec
 	Registry     cdctypes.InterfaceRegistry
 
-	Accounts []accountstd.DepinjectAccount // how can the account impls provide this??
-	// TODO: Add a way to inject custom accounts.
-	// Currently only the base account is supported.
+	Accounts []accountstd.DepinjectAccount // at least one account must be provided
 }
 
 type ModuleOutputs struct {

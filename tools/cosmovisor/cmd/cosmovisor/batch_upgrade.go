@@ -17,13 +17,13 @@ func NewBatchAddUpgradeCmd() *cobra.Command {
 		Short:        "Add APP upgrades binary to cosmovisor",
 		SilenceUsage: true,
 		Args:         cobra.MinimumNArgs(1),
-		RunE:         AddBatchUpgrade,
+		RunE:         addBatchUpgrade,
 	}
 }
 
-// AddBatchUpgrade takes in multiple specified upgrades and creates a single
+// addBatchUpgrade takes in multiple specified upgrades and creates a single
 // batch upgrade file out of them
-func AddBatchUpgrade(cmd *cobra.Command, args []string) error {
+func addBatchUpgrade(cmd *cobra.Command, args []string) error {
 	cfg, err := getConfigFromCmd(cmd)
 	if err != nil {
 		return err

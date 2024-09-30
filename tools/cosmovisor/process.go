@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -196,19 +197,24 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		BatchUpgradeWatcher(ctx, l.cfg, l.logger)
+	}()
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGTERM)
 	go func() {
 		sig := <-sigs
 		cancel()
+		wg.Wait()
 		if err := cmd.Process.Signal(sig); err != nil {
 			l.logger.Error("terminated", "error", err, "bin", bin)
 			os.Exit(1)
 		}
 	}()
-
-	go BatchUpgradeWatcher(ctx, l.cfg, l.logger)
 
 	if needsUpdate, err := l.WaitForUpgradeOrExit(cmd); err != nil || !needsUpdate {
 		return false, err
@@ -235,6 +241,9 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 
 		return true, nil
 	}
+
+	cancel()
+	wg.Wait()
 
 	return false, nil
 }

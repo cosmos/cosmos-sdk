@@ -19,7 +19,7 @@ func NewAddUpgradeCmd() *cobra.Command {
 		Short:        "Add APP upgrade binary to cosmovisor",
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(2),
-		RunE:         AddUpgradeCmd,
+		RunE:         addUpgradeCmd,
 	}
 
 	addUpgrade.Flags().Bool(cosmovisor.FlagForce, false, "overwrite existing upgrade binary / upgrade-info.json file")
@@ -99,8 +99,8 @@ func getConfigFromCmd(cmd *cobra.Command) (*cosmovisor.Config, error) {
 	return cfg, nil
 }
 
-// AddUpgradeCmd parses input flags and adds upgrade info to manifest
-func AddUpgradeCmd(cmd *cobra.Command, args []string) error {
+// addUpgradeCmd parses input flags and adds upgrade info to manifest
+func addUpgradeCmd(cmd *cobra.Command, args []string) error {
 	cfg, err := getConfigFromCmd(cmd)
 	if err != nil {
 		return err

@@ -91,7 +91,7 @@ type BaseApp struct {
 	prepareCheckStater sdk.PrepareCheckStater         // logic to run during commit using the checkState
 	precommiter        sdk.Precommiter                // logic to run during commit using the deliverState
 	versionModifier    server.VersionModifier         // interface to get and set the app version
-	laneHandler        mempool.Lanes
+	laneHandler        mempool.Lanes                  // lane handler for the comet mempool
 
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID
@@ -938,6 +938,15 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		err = app.mempool.Insert(ctx, tx)
 		if err != nil {
 			return gInfo, nil, anteEvents, err
+		}
+		if app.laneHandler != nil {
+			// if the laneHandler is set, we set the laneId in the result
+			// this takes advantage of https://github.com/cometbft/cometbft/blob/main/docs/references/architecture/adr-118-mempool-lanes.md
+			lane, err := app.laneHandler.GetTxLane(ctx, tx)
+			if err != nil {
+				return gInfo, nil, anteEvents, err
+			}
+			result.LaneId = lane
 		}
 	} else if mode == execModeFinalize {
 		err = app.mempool.Remove(tx)

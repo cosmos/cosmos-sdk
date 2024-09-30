@@ -44,7 +44,7 @@ type Lanes interface {
 	GetLanes() (lanes map[string]uint32, defaultLane string)
 
 	// GetTxLane returns the lane priority for the given transaction
-	GetTxLane(context.Context, sdk.Tx) uint32
+	GetTxLane(context.Context, sdk.Tx) (string, error)
 }
 
 var (

@@ -28,7 +28,7 @@ type PrepareProposalHandler func(Context, *abci.PrepareProposalRequest) (*abci.P
 type CheckTxHandler func(RunTx, *abci.CheckTxRequest) (*abci.CheckTxResponse, error)
 
 // RunTx defines a function type alias for executing logic before transactions are executed.
-type RunTx func(mode uint8, txBytes []byte, tx Tx) (gInfo GasInfo, result *Result, anteEvents []abci.Event, err error)
+type RunTx func(txBytes []byte, tx Tx) (gInfo GasInfo, result *Result, anteEvents []abci.Event, err error)
 
 // ExtendVoteHandler defines a function type alias for extending a pre-commit vote.
 type ExtendVoteHandler func(Context, *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error)

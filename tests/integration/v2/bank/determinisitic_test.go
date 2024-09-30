@@ -2,21 +2,22 @@ package bank
 
 import (
 	"context"
-	"cosmossdk.io/core/gas"
-	minttypes "cosmossdk.io/x/mint/types"
-	"github.com/cosmos/gogoproto/proto"
+	"fmt"
 	"testing"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
+	"cosmossdk.io/core/gas"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
+	minttypes "cosmossdk.io/x/mint/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
@@ -59,8 +60,16 @@ func queryFnFactory[RequestT, ResponseT proto.Message](
 	f *deterministicFixture,
 ) func(RequestT) (ResponseT, error) {
 	return func(req RequestT) (ResponseT, error) {
+		var emptyResponse ResponseT
 		res, err := f.app.Query(f.ctx, 0, req)
-		return res.(ResponseT), err
+		if err != nil {
+			return emptyResponse, err
+		}
+		castedRes, ok := res.(ResponseT)
+		if !ok {
+			return emptyResponse, fmt.Errorf("unexpected response type: %T", res)
+		}
+		return castedRes, nil
 	}
 }
 
@@ -119,6 +128,7 @@ func TestQueryBalance(t *testing.T) {
 	queryFn := queryFnFactory[*banktypes.QueryBalanceRequest, *banktypes.QueryBalanceResponse](f)
 	assertBalance := func(coin sdk.Coin) func(t *testing.T, res *banktypes.QueryBalanceResponse) {
 		return func(t *testing.T, res *banktypes.QueryBalanceResponse) {
+			t.Helper()
 			require.Equal(t, coin.Denom, res.Balance.Denom)
 			require.Truef(t, coin.Amount.Equal(res.Balance.Amount),
 				"expected %s, got %s", coin.Amount, res.Balance.Amount)

@@ -2,16 +2,15 @@ package integration
 
 import (
 	"context"
-	"cosmossdk.io/core/gas"
-	stfgas "cosmossdk.io/server/v2/stf/gas"
 	"fmt"
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/runtime/v2"
+	stfgas "cosmossdk.io/server/v2/stf/gas"
 )
 
 func (c cometServiceImpl) CometInfo(context.Context) comet.Info {
@@ -32,7 +31,7 @@ func (d *dynamicConfigImpl) Get(key string) any {
 
 func (d *dynamicConfigImpl) GetString(key string) string {
 	switch key {
-	case runtime.FlagHome:
+	case "home":
 		return d.homeDir
 	case "store.app-db-backend":
 		return "goleveldb"

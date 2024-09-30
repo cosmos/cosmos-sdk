@@ -74,17 +74,18 @@ var DefaultConsensusParams = &cmtproto.ConsensusParams{
 	},
 }
 
-// StartupConfig defines the startup configuration new a test application.
-//
-// ValidatorSet defines a custom validator set to be validating the app.
-// BaseAppOption defines the additional operations that must be run on baseapp before app start.
-// AtGenesis defines if the app started should already have produced block or not.
+// StartupConfig defines the startup configuration of a new test app.
 type StartupConfig struct {
-	ValidatorSet    func() (*cmttypes.ValidatorSet, error)
-	AppOption       runtime.AppBuilderOption[stateMachineTx]
+	// ValidatorSet defines a custom validator set to be validating the app.
+	ValidatorSet func() (*cmttypes.ValidatorSet, error)
+	// AppOption defines the additional operations that will be run in the app builder phase.
+	AppOption runtime.AppBuilderOption[stateMachineTx]
+	// GenesisBehavior defines the behavior of the app at genesis.
 	GenesisBehavior int
+	// GenesisAccounts defines the genesis accounts to be used in the app.
 	GenesisAccounts []GenesisAccount
-	HomeDir         string
+	// HomeDir defines the home directory of the app where config and data will be stored.
+	HomeDir string
 }
 
 func DefaultStartUpConfig(t *testing.T) StartupConfig {
@@ -103,11 +104,13 @@ func DefaultStartUpConfig(t *testing.T) StartupConfig {
 			sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000)),
 		),
 	}
+	homedir := t.TempDir()
+	t.Logf("generated integration test app config; HomeDir=%s", homedir)
 	return StartupConfig{
 		ValidatorSet:    CreateRandomValidatorSet,
 		GenesisBehavior: Genesis_COMMIT,
 		GenesisAccounts: []GenesisAccount{ga},
-		HomeDir:         t.TempDir(),
+		HomeDir:         homedir,
 	}
 }
 

@@ -141,8 +141,6 @@ func TestSendNotEnoughBalance(t *testing.T) {
 
 	require.Equal(t, origAccNum, res2.GetAccountNumber())
 	require.Equal(t, origSeq+1, res2.GetSequence())
-
-	require.NoError(t, err)
 }
 
 func TestMsgMultiSendWithAccounts(t *testing.T) {

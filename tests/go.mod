@@ -69,7 +69,7 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
-	cosmossdk.io/schema v0.3.0 // indirect
+	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect

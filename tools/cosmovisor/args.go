@@ -38,6 +38,7 @@ const (
 	EnvTimeFormatLogs           = "COSMOVISOR_TIMEFORMAT_LOGS"
 	EnvCustomPreupgrade         = "COSMOVISOR_CUSTOM_PREUPGRADE"
 	EnvDisableRecase            = "COSMOVISOR_DISABLE_RECASE"
+	EnvGRPCAddress              = "COSMOVISOR_GRPC_ADDRESS"
 )
 
 const (
@@ -68,6 +69,7 @@ type Config struct {
 	TimeFormatLogs           string        `toml:"cosmovisor_timeformat_logs" mapstructure:"cosmovisor_timeformat_logs" default:"kitchen"`
 	CustomPreUpgrade         string        `toml:"cosmovisor_custom_preupgrade" mapstructure:"cosmovisor_custom_preupgrade" default:""`
 	DisableRecase            bool          `toml:"cosmovisor_disable_recase" mapstructure:"cosmovisor_disable_recase" default:"false"`
+	GRPCAddress              string        `toml:"cosmovisor_grpc_address" mapstructure:"cosmovisor_grpc_address"`
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -280,6 +282,11 @@ func GetConfigFromEnv(skipValidate bool) (*Config, error) {
 	envPreUpgradeMaxRetriesVal := os.Getenv(EnvPreupgradeMaxRetries)
 	if cfg.PreUpgradeMaxRetries, err = strconv.Atoi(envPreUpgradeMaxRetriesVal); err != nil && envPreUpgradeMaxRetriesVal != "" {
 		errs = append(errs, fmt.Errorf("%s could not be parsed to int: %w", EnvPreupgradeMaxRetries, err))
+	}
+
+	cfg.GRPCAddress = os.Getenv(EnvGRPCAddress)
+	if cfg.GRPCAddress == "" {
+		cfg.GRPCAddress = "localhost:9090"
 	}
 
 	if !skipValidate {

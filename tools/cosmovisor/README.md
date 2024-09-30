@@ -274,7 +274,7 @@ cosmovisor prepare-upgrade
 
 This command performs the following actions:
 
-1. Reads the `upgrade-info.json` file to get information about the next scheduled upgrade.
+1. Retrieves upgrade information directly from the blockchain about the next scheduled upgrade.
 2. Downloads the new binary specified in the upgrade plan.
 3. Verifies the binary's checksum (if required by configuration).
 4. Places the new binary in the appropriate directory for Cosmovisor to use during the upgrade.
@@ -293,6 +293,8 @@ INFO Preparing for upgrade name=v1.0.0 height=1000000
 INFO Downloading upgrade binary url=https://example.com/binary/v1.0.0?checksum=sha256:339911508de5e20b573ce902c500ee670589073485216bee8b045e853f24bce8
 INFO Upgrade preparation complete name=v1.0.0 height=1000000
 ```
+
+*Note: The current way of downloading manually and placing the binary at the right place would still work.*
 
 ## Example: SimApp Upgrade
 

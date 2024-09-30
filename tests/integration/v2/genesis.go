@@ -1,13 +1,17 @@
 package integration
 
 import (
-	sdkmath "cosmossdk.io/math"
-	banktypes "cosmossdk.io/x/bank/types"
-	stakingtypes "cosmossdk.io/x/staking/types"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
+
 	cmttypes "github.com/cometbft/cometbft/types"
+
+	sdkmath "cosmossdk.io/math"
+	banktypes "cosmossdk.io/x/bank/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -15,7 +19,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"time"
 )
 
 // genesisStateWithValSet returns a new genesis state with the validator set
@@ -26,6 +29,9 @@ func genesisStateWithValSet(
 	genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
 ) (map[string]json.RawMessage, error) {
+	if len(genAccs) == 0 {
+		return nil, errors.New("no genesis accounts provided")
+	}
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = codec.MustMarshalJSON(authGenesis)

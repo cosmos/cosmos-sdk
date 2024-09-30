@@ -31,6 +31,7 @@ func TestQueryNodeInfo(t *testing.T) {
 	v := NewCLIWrapper(t, sut, true).Version()
 	assert.Equal(t, res.ApplicationVersion.Version, v)
 
+	// TODO: we should be adding a way to distinguish a v2. Eventually we should skip some v2 system depending on the consensus engine we want to test
 	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/node_info", baseurl))
 	assert.NoError(t, err)
 	assert.Equal(t, gjson.GetBytes(restRes, "application_version.version").String(), res.ApplicationVersion.Version)
@@ -80,7 +81,7 @@ func TestQueryBlockByHeight(t *testing.T) {
 	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/%d", baseurl, 2))
 	assert.NoError(t, err)
 	assert.Equal(t, gjson.GetBytes(restRes, "sdk_block.header.height").Int(), int64(2))
-	assert.Contains(t, res.SdkBlock.Header.ProposerAddress, "cosmosvalcons")
+	assert.Contains(t, gjson.GetBytes(restRes, "sdk_block.header.proposer_address").String(), "cosmosvalcons")
 }
 
 func TestQueryLatestValidatorSet(t *testing.T) {

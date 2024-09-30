@@ -81,7 +81,7 @@ func (r RPCClient) Invoke(ctx context.Context, method string, req, reply interfa
 		Prove:  abciReq.Prove,
 	}
 
-	result, err := r.client.ABCIQueryWithOptions(context.Background(), abciReq.Path, abciReq.Data, abciOpts)
+	result, err := r.client.ABCIQueryWithOptions(ctx, abciReq.Path, abciReq.Data, abciOpts)
 	if err != nil {
 		return err
 	}

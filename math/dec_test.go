@@ -571,7 +571,7 @@ func TestQuo(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, gotErr := spec.x.Quo(spec.y)
 			if name == "1.234 / -123 = 1.111" {
-				fmt.Println("got", got)
+				t.Log("got", got)
 			}
 
 			if spec.expErr != nil {
@@ -642,7 +642,7 @@ func TestQuoExact(t *testing.T) {
 			y:   NewDecWithPrec(1234, -3),
 			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
 		},
-		"-1.234 / 1234 = -121.766": {
+		"-1.234 / 1.234 = -1": {
 			x:   NewDecWithPrec(-1234, -3),
 			y:   NewDecWithPrec(1234, -3),
 			exp: must(NewDecFromString("-1.000000000000000000000000000000000")),

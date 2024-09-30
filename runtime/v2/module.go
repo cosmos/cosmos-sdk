@@ -149,9 +149,12 @@ type AppInputs struct {
 	InterfaceRegistrar registry.InterfaceRegistrar
 	LegacyAmino        registry.AminoRegistrar
 	Logger             log.Logger
-	StoreBuilder       *StoreBuilder
-	DynamicConfig      server.DynamicConfig `optional:"true"` // can be nil in client wiring
-	StoreOptions       *rootstore.Options   `optional:"true"` // if unset defaults will be used
+	// StoreBuilder is a builder for a store/v2 RootStore satisfying the Store interface
+	StoreBuilder *StoreBuilder
+	// StoreOptions are required as input for the StoreBuilder. If not provided, the default options are used.
+	StoreOptions *rootstore.Options `optional:"true"`
+	// DynamicConfig can be nil in client wiring, but is required in server wiring.
+	DynamicConfig server.DynamicConfig `optional:"true"`
 }
 
 func SetupAppBuilder(inputs AppInputs) {

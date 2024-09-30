@@ -135,9 +135,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (server.TxResult, cor
 
 // Query queries the application at the provided version.
 // CONTRACT: Version must always be provided, if 0, get latest
-func (a AppManager[T]) Query(
-	ctx context.Context, version uint64, request transaction.Msg,
-) (transaction.Msg, error) {
+func (a AppManager[T]) Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error) {
 	var (
 		queryState corestore.ReaderMap
 		err        error

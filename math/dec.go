@@ -3,8 +3,9 @@ package math
 import (
 	"math/big"
 
-	"cosmossdk.io/errors"
 	"github.com/cockroachdb/apd/v3"
+
+	"cosmossdk.io/errors"
 )
 
 // Dec is a wrapper struct around apd.Decimal that does no mutation of apd.Decimal's when performing
@@ -138,7 +139,6 @@ func (x Dec) Add(y Dec) (Dec, error) {
 func (x Dec) Sub(y Dec) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Sub(&z.dec, &x.dec, &y.dec)
-
 	if err != nil {
 		return Dec{}, ErrInvalidDec.Wrap(err.Error())
 	}

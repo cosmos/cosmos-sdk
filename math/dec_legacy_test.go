@@ -784,7 +784,7 @@ func (s *decimalTestSuite) TestConvertToBigIntMutativeForLegacyDec() {
 }
 
 func TestLegacyDecToDec(t *testing.T) {
-	legacyDec, _ := math.LegacyNewDecFromStr("123.000000000000000000") 
+	legacyDec, _ := math.LegacyNewDecFromStr("123.000000000000000000")
 
 	dec, err := math.LegacyDecToDec(legacyDec)
 	require.NoError(t, err)

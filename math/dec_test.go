@@ -1152,8 +1152,8 @@ func TestMulExact(t *testing.T) {
 			exp: must(NewDecFromString("1.000000")),
 		},
 		"0.0000001 * 0.0000001 = 0": {
-			x:   NewDecWithPrec(00000001, -7),
-			y:   NewDecWithPrec(00000001, -7),
+			x:   NewDecWithPrec(0o0000001, -7),
+			y:   NewDecWithPrec(0o0000001, -7),
 			exp: NewDecWithPrec(1, -14),
 		},
 		"1.000000000000000000000000000000000000123456789 * 0.000001 = 0.000000000100000000000000000000000000000123456789": {

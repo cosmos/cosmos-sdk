@@ -54,7 +54,7 @@ func initRootCmd[T transaction.Tx](
 		genutilcli.InitCmd(moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		NewTestnetCmd(moduleManager),
+		NewTestnetCmd(store, moduleManager),
 	)
 
 	logger, err := serverv2.NewLogger(viper.New(), rootCmd.OutOrStdout())

@@ -2,7 +2,6 @@ package types_test
 
 import (
 	"encoding/json"
-	"reflect"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
@@ -10,8 +9,6 @@ import (
 
 	"cosmossdk.io/math"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -101,37 +98,6 @@ func (s *eventsTestSuite) TestEmitTypedEvent() {
 			s.Require().Equal(attrs[1].Key, "denom")
 		}
 	})
-}
-
-func (s *eventsTestSuite) TestEventManagerTypedEvents() {
-	em := sdk.NewEventManager()
-
-	coin := sdk.NewCoin("fakedenom", math.NewInt(1999999))
-	cat := testdata.Cat{
-		Moniker: "Garfield",
-		Lives:   6,
-	}
-	animal, err := codectypes.NewAnyWithValue(&cat)
-	s.Require().NoError(err)
-	hasAnimal := testdata.HasAnimal{
-		X:      1000,
-		Animal: animal,
-	}
-
-	s.Require().NoError(em.EmitTypedEvents(&coin))
-	s.Require().NoError(em.EmitTypedEvent(&hasAnimal))
-	s.Require().Len(em.Events(), 2)
-
-	msg1, err := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[0])
-	s.Require().NoError(err)
-	s.Require().Equal(coin.String(), msg1.String())
-	s.Require().Equal(reflect.TypeOf(&coin), reflect.TypeOf(msg1))
-
-	msg2, err := sdk.ParseTypedEvent(em.Events().ToABCIEvents()[1])
-	s.Require().NoError(err)
-	s.Require().Equal(reflect.TypeOf(&hasAnimal), reflect.TypeOf(msg2))
-	response := msg2.(*testdata.HasAnimal)
-	s.Require().Equal(hasAnimal.Animal.String(), response.Animal.String())
 }
 
 func (s *eventsTestSuite) TestStringifyEvents() {

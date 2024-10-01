@@ -185,10 +185,7 @@ func (m *Manager) writeChangeset() error {
 		// yet not in the for-loop which can leave resource lingering.
 		err = func() (err error) {
 			defer func() {
-				cErr := batch.Close()
-				if err == nil {
-					err = cErr
-				}
+				err = errors.Join(err, batch.Close())
 			}()
 
 			if err := batch.Set(csKey, csBytes); err != nil {

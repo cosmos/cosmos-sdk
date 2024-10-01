@@ -149,23 +149,23 @@ pollLoop:
 			if h > prevUpgradeHeight && h < upcomingUpgrade {
 				jsonBytes, err := json.Marshal(uInfos[0])
 				if err != nil {
-					logger.Warn("error marshaling JSON", "error", err)
-					return
+					logger.Warn("error marshaling JSON for upgrade-info.json", "error", err, "upgrade", uInfos[0])
+					continue
 				}
 				if err := os.WriteFile(cfg.UpgradeInfoFilePath(), jsonBytes, 0o600); err != nil {
 					logger.Warn("error writing upgrade-info.json", "error", err)
-					return
+					continue
 				}
 				uInfos = uInfos[1:]
 
 				jsonBytes, err = json.Marshal(uInfos)
 				if err != nil {
-					logger.Warn("error marshaling JSON", "error", err)
-					return
+					logger.Warn("error marshaling JSON for upgrade-info.json.batch", "error", err, "upgrades", uInfos)
+					continue
 				}
 				if err := os.WriteFile(cfg.UpgradeInfoBatchFilePath(), jsonBytes, 0o600); err != nil {
 					logger.Warn("error writing upgrade-info.json.batch", "error", err)
-					return
+					continue
 				}
 				prevUpgradeHeight = upcomingUpgrade
 			}

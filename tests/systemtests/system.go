@@ -132,6 +132,11 @@ func (s *SystemUnderTest) SetupChain() {
 	if err != nil {
 		panic(fmt.Sprintf("failed set block max gas: %s", err))
 	}
+	// Short period for gov
+	genesisBz, err = sjson.SetRawBytes(genesisBz, "app_state.gov.params.voting_period", []byte(fmt.Sprintf(`"%s"`, "8s")))
+	if err != nil {
+		panic(fmt.Sprintf("failed set voting period: %s", err))
+	}
 	s.withEachNodeHome(func(i int, home string) {
 		if err := saveGenesis(home, genesisBz); err != nil {
 			panic(err)
@@ -358,6 +363,12 @@ func (s *SystemUnderTest) PrintBuffer() {
 			_, _ = fmt.Fprintf(s.out, "err> %s\n", v)
 		}
 	})
+}
+
+// AwaitNBlocks blocks until the current height + n block is reached. An optional timeout parameter can be passed to abort early
+func (s *SystemUnderTest) AwaitNBlocks(t *testing.T, n int64, timeout ...time.Duration) {
+	t.Helper()
+	s.AwaitBlockHeight(t, s.CurrentHeight()+n, timeout...)
 }
 
 // AwaitBlockHeight blocks until te target height is reached. An optional timeout parameter can be passed to abort early

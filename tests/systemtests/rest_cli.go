@@ -31,7 +31,7 @@ func RunGRPCQueries(t *testing.T, testCases []GRPCTestCase) {
 
 // TestGRPCQueryIgnoreNumbers runs given grpc testcases by making requests and
 // checking response with expected output ignoring number values
-// This method is using when number values in response are non-deterministic
+// This method is used when number values in response are non-deterministic
 func TestGRPCQueryIgnoreNumbers(t *testing.T, testCases []GRPCTestCase) {
 	t.Helper()
 

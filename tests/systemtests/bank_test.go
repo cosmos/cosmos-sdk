@@ -23,7 +23,7 @@ func TestBankSendTxCmd(t *testing.T) {
 	cli := NewCLIWrapper(t, sut, verbose)
 
 	// get validator address
-	valAddr := gjson.Get(cli.Keys("keys", "list"), "1.address").String()
+	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
 
 	// add new key
@@ -131,28 +131,24 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 	testCases := []struct {
 		name         string
 		cmdArgs      []string
-		expectErr    bool
 		expectedCode uint32
 		expErrMsg    string
 	}{
 		{
 			"valid transaction",
 			append(multiSendCmdArgs, "--fees=1stake"),
-			false,
 			0,
 			"",
 		},
 		{
 			"not enough arguments",
 			[]string{"tx", "bank", "multi-send", account1Addr, account2Addr, "1000stake", "--from=" + account1Addr},
-			true,
 			0,
 			"only received 3",
 		},
 		{
 			"chain-id shouldn't be used with offline and generate-only flags",
 			append(multiSendCmdArgs, "--generate-only", "--offline", "-a=0", "-s=4"),
-			true,
 			0,
 			"chain ID cannot be used",
 		},
@@ -160,7 +156,7 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if tc.expectErr {
+			if tc.expErrMsg != "" {
 				assertErr := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
 					require.Len(t, gotOutputs, 1)
 					output := gotOutputs[0].(string)
@@ -173,24 +169,24 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 					return false // always abort
 				}
 				_ = cli.WithRunErrorMatcher(assertErr).Run(tc.cmdArgs...)
-			} else {
-				rsp := cli.Run(tc.cmdArgs...)
-				txResult, found := cli.AwaitTxCommitted(rsp)
-				require.True(t, found)
-				RequireTxSuccess(t, txResult)
-				// check account1 balance equals to account1Bal - transferredAmount*no_of_accounts - fees
-				expAcc1Balance := account1Bal - (1000 * 2) - 1
-				require.Equal(t, expAcc1Balance, cli.QueryBalance(account1Addr, denom))
-				account1Bal = expAcc1Balance
-				// check account2 balance equals to account2Bal + transferredAmount
-				expAcc2Balance := account2Bal + 1000
-				require.Equal(t, expAcc2Balance, cli.QueryBalance(account2Addr, denom))
-				account2Bal = expAcc2Balance
-				// check account3 balance equals to account3Bal + transferredAmount
-				expAcc3Balance := account3Bal + 1000
-				require.Equal(t, expAcc3Balance, cli.QueryBalance(account3Addr, denom))
-				account3Bal = expAcc3Balance
+				return
 			}
+			rsp := cli.Run(tc.cmdArgs...)
+			txResult, found := cli.AwaitTxCommitted(rsp)
+			require.True(t, found)
+			RequireTxSuccess(t, txResult)
+			// check account1 balance equals to account1Bal - transferredAmount*no_of_accounts - fees
+			expAcc1Balance := account1Bal - (1000 * 2) - 1
+			require.Equal(t, expAcc1Balance, cli.QueryBalance(account1Addr, denom))
+			account1Bal = expAcc1Balance
+			// check account2 balance equals to account2Bal + transferredAmount
+			expAcc2Balance := account2Bal + 1000
+			require.Equal(t, expAcc2Balance, cli.QueryBalance(account2Addr, denom))
+			account2Bal = expAcc2Balance
+			// check account3 balance equals to account3Bal + transferredAmount
+			expAcc3Balance := account3Bal + 1000
+			require.Equal(t, expAcc3Balance, cli.QueryBalance(account3Addr, denom))
+			account3Bal = expAcc3Balance
 		})
 	}
 }
@@ -224,7 +220,7 @@ func TestBankGRPCQueries(t *testing.T) {
 
 	// start chain
 	sut.StartChain(t)
-	baseurl := fmt.Sprintf("http://localhost:%d", apiPortStart)
+	baseurl := sut.APIAddress()
 
 	// test supply grpc endpoint
 	supplyUrl := baseurl + "/cosmos/bank/v1beta1/supply"
@@ -283,45 +279,31 @@ func TestBankGRPCQueries(t *testing.T) {
 
 	// test denom metadata endpoint
 	denomMetadataUrl := baseurl + "/cosmos/bank/v1beta1/denoms_metadata"
-	dmTestCases := []struct {
-		name   string
-		url    string
-		expOut string
-	}{
+	dmTestCases := []GRPCTestCase{
 		{
 			"test GRPC client metadata",
 			denomMetadataUrl,
-			bankDenomMetadata,
+			fmt.Sprintf(`{"metadatas":%s,"pagination":{"next_key":null,"total":"2"}}`, bankDenomMetadata),
 		},
 		{
 			"test GRPC client metadata of a specific denom",
 			denomMetadataUrl + "/uatom",
-			atomDenomMetadata,
+			fmt.Sprintf(`{"metadata":%s}`, atomDenomMetadata),
 		},
 		{
 			"test GRPC client metadata of a bogus denom",
 			denomMetadataUrl + "/foobar",
-			`"details":[]`,
+			`{"code":5, "message":"client metadata for denom foobar", "details":[]}`,
 		},
 	}
 
-	for _, tc := range dmTestCases {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := testutil.GetRequest(tc.url)
-			require.NoError(t, err)
-			require.Contains(t, string(resp), tc.expOut)
-		})
-	}
+	RunGRPCQueries(t, dmTestCases)
 
 	// test bank balances endpoint
 	balanceUrl := baseurl + "/cosmos/bank/v1beta1/balances/"
 	allBalancesOutput := `{"balances":[` + specificDenomOutput + `,{"denom":"stake","amount":"10000000"}],"pagination":{"next_key":null,"total":"2"}}`
 
-	balanceTestCases := []struct {
-		name   string
-		url    string
-		expOut string
-	}{
+	balanceTestCases := []GRPCTestCase{
 		{
 			"test GRPC total account balance",
 			balanceUrl + account1Addr,
@@ -330,20 +312,14 @@ func TestBankGRPCQueries(t *testing.T) {
 		{
 			"test GRPC account balance of a specific denom",
 			fmt.Sprintf("%s%s/by_denom?denom=%s", balanceUrl, account1Addr, newDenom),
-			specificDenomOutput,
+			fmt.Sprintf(`{"balance":%s}`, specificDenomOutput),
 		},
 		{
 			"test GRPC account balance of a bogus denom",
 			fmt.Sprintf("%s%s/by_denom?denom=foobar", balanceUrl, account1Addr),
-			bogusDenomOutput,
+			fmt.Sprintf(`{"balance":%s}`, bogusDenomOutput),
 		},
 	}
 
-	for _, tc := range balanceTestCases {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := testutil.GetRequest(tc.url)
-			require.NoError(t, err)
-			require.Contains(t, string(resp), tc.expOut)
-		})
-	}
+	RunGRPCQueries(t, balanceTestCases)
 }

@@ -46,6 +46,7 @@ impl<'a> Value<'a> for u16 {
     type Type = U16T;
     type DecodeState = u16;
 }
+
 impl<'a> Value<'a> for u32 {
     type Type = U32T;
     type DecodeState = u32;
@@ -63,10 +64,25 @@ impl<'a> Value<'a> for u32 {
         encoder.encode_u32(*self)
     }
 }
+
 impl<'a> Value<'a> for u64 {
     type Type = U64T;
     type DecodeState = u64;
+
+    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+        *state = decoder.decode_u64()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
+        Ok(state)
+    }
+
+    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+        encoder.encode_u64(*self)
+    }
 }
+
 impl<'a> Value<'a> for u128 {
     type Type = UIntNT<16>;
     type DecodeState = u128;
@@ -84,6 +100,7 @@ impl<'a> Value<'a> for u128 {
         encoder.encode_u128(*self)
     }
 }
+
 impl<'a> Value<'a> for i8 {
     type Type = I8T;
     type DecodeState = i8;
@@ -233,8 +250,21 @@ where
 }
 
 impl<'a> Value<'a> for ixc_message_api::AccountID {
-    type Type = AccountIDT;
+    type Type = AccountID_T;
     type DecodeState = ixc_message_api::AccountID;
+
+    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+        *state = decoder.decode_account_id()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError> {
+        Ok(state)
+    }
+
+    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+        encoder.encode_account_id(*self)
+    }
 }
 
 #[cfg(feature = "arrayvec")]

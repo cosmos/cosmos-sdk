@@ -1,9 +1,10 @@
 use alloc::string::String;
 use bump_scope::{BumpScope, BumpString};
+use ixc_message_api::AccountID;
 use crate::decoder::{decode, DecodeError};
 use crate::list::ListVisitor;
 use crate::mem::MemoryManager;
-use crate::structs::StructDecodeVisitor;
+use crate::structs::{StructDecodeVisitor, StructType};
 use crate::value::Value;
 
 pub fn decode_value<'a, V: Value<'a>>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<V, DecodeError> {
@@ -33,6 +34,11 @@ impl<'a> crate::decoder::Decoder<'a> for Decoder<'a> {
         Ok(u32::from_le_bytes(bz.try_into().unwrap()))
     }
 
+    fn decode_u64(&mut self) -> Result<u64, DecodeError> {
+        let bz = self.read_bytes(8)?;
+        Ok(u64::from_le_bytes(bz.try_into().unwrap()))
+    }
+
     fn decode_u128(&mut self) -> Result<u128, DecodeError> {
         let bz = self.read_bytes(16)?;
         Ok(u128::from_le_bytes(bz.try_into().unwrap()))
@@ -50,11 +56,11 @@ impl<'a> crate::decoder::Decoder<'a> for Decoder<'a> {
         Ok(String::from_utf8(bz.to_vec()).map_err(|_| DecodeError::InvalidData)?)
     }
 
-    fn decode_struct<V: StructDecodeVisitor<'a>>(&mut self, visitor: &mut V) -> Result<(), DecodeError> {
+    fn decode_struct<V: StructDecodeVisitor<'a>>(&mut self, visitor: &mut V, struct_type: &StructType) -> Result<(), DecodeError> {
         let mut i = 0;
         let mut sub = Decoder { buf: self.buf, scope: self.scope };
         let mut inner = InnerDecoder { outer: &mut sub };
-        for _ in V::FIELDS.iter() {
+        for _ in struct_type.fields.iter() {
             visitor.decode_field(i, &mut inner)?;
             i += 1;
         }
@@ -72,6 +78,11 @@ impl<'a> crate::decoder::Decoder<'a> for Decoder<'a> {
         Ok(())
     }
 
+    fn decode_account_id(&mut self) -> Result<AccountID, DecodeError> {
+        let id = self.decode_u64()?;
+        Ok(AccountID::new(id))
+    }
+
     fn mem_manager(&self) -> &'a MemoryManager {
         &self.scope
     }
@@ -84,6 +95,8 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for InnerDecoder<'b, 'a> {
     fn decode_u32(&mut self) -> Result<u32, DecodeError> {
         self.outer.decode_u32()
     }
+
+    fn decode_u64(&mut self) -> Result<u64, DecodeError> { self.outer.decode_u64() }
 
     fn decode_u128(&mut self) -> Result<u128, DecodeError> {
         self.outer.decode_u128()
@@ -101,15 +114,22 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for InnerDecoder<'b, 'a> {
         Ok(String::from_utf8(bz.to_vec()).map_err(|_| DecodeError::InvalidData)?)
     }
 
-    fn decode_struct<V: StructDecodeVisitor<'a>>(&mut self, visitor: &mut V) -> Result<(), DecodeError> {
+    fn decode_struct<V: StructDecodeVisitor<'a>>(&mut self, visitor: &mut V, struct_type: &StructType) -> Result<(), DecodeError> {
         let size = self.decode_u32()? as usize;
         let bz = self.outer.read_bytes(size)?;
         let mut sub = Decoder { buf: bz, scope: self.outer.scope };
-        sub.decode_struct(visitor)
+        sub.decode_struct(visitor, struct_type)
     }
 
     fn decode_list<T, V: ListVisitor<'a, T>>(&mut self, visitor: &mut V) -> Result<(), DecodeError> {
-        todo!()
+        let size = self.decode_u32()? as usize;
+        let bz = self.outer.read_bytes(size)?;
+        let mut sub = Decoder { buf: bz, scope: self.outer.scope };
+        sub.decode_list(visitor)
+    }
+
+    fn decode_account_id(&mut self) -> Result<AccountID, DecodeError> {
+        self.outer.decode_account_id()
     }
 
     fn mem_manager(&self) -> &'a MemoryManager {
@@ -130,9 +150,10 @@ mod tests {
     use crate::encoder::{EncodeError, Encoder};
     use crate::field::Field;
     use crate::mem::MemoryManager;
-    use crate::structs::{StructDecodeVisitor, StructEncodeVisitor, StructSchema};
+    use crate::state_object::ObjectFieldValue;
+    use crate::structs::{to_struct_type, StructDecodeVisitor, StructEncodeVisitor, StructSchema, StructType};
     use crate::types::{to_field, StrT, StructT, UIntNT};
-    use crate::value::{ObjectFieldValue, ListElementValue, Value};
+    use crate::value::{ListElementValue, Value};
 
     #[test]
     fn test_u32_decode() {
@@ -189,6 +210,8 @@ mod tests {
         }
     }
 
+    const COIN_STRUCT_TYPE: StructType = to_struct_type::<Coin<'static>>();
+
     impl<'a> Value<'a> for Coin<'a> {
         type Type = StructT<Coin<'a>>;
         type DecodeState = (<&'a str as Value<'a>>::DecodeState, <u128 as Value<'a>>::DecodeState);
@@ -196,11 +219,6 @@ mod tests {
         fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
             struct Visitor<'b, 'a: 'b> {
                 state: &'b mut <Coin<'a> as Value<'a>>::DecodeState,
-            }
-            unsafe impl<'b, 'a: 'b> StructSchema for Visitor<'b, 'a> {
-                const NAME: &'static str = Coin::<'a>::NAME;
-                const FIELDS: &'static [Field<'static>] = Coin::<'a>::FIELDS;
-                const SEALED: bool = Coin::<'a>::SEALED;
             }
             unsafe impl<'b, 'a: 'b> StructDecodeVisitor<'a> for Visitor<'b, 'a> {
                 fn decode_field<D: Decoder<'a>>(&mut self, index: usize, decoder: &mut D) -> Result<(), DecodeError> {
@@ -211,7 +229,7 @@ mod tests {
                     }
                 }
             }
-            decoder.decode_struct(&mut Visitor { state })
+            decoder.decode_struct(&mut Visitor { state }, &COIN_STRUCT_TYPE)
         }
 
         fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError> {
@@ -224,12 +242,15 @@ mod tests {
 
         /// Encode the value to the encoder.
         fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
-            encoder.encode_struct(self)
+            encoder.encode_struct(self, &COIN_STRUCT_TYPE)
         }
     }
 
     impl<'a> ListElementValue<'a> for Coin<'a> {}
-    impl<'a> ObjectFieldValue for Coin<'a> { type Value<'b> = Coin<'b>; }
+    impl<'a> ObjectFieldValue for Coin<'a> {
+        type In<'b> = Coin<'b>;
+        type Out<'b> = Coin<'b>;
+    }
 
     #[test]
     fn test_coin() {

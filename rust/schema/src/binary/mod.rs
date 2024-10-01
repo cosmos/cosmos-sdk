@@ -1,4 +1,5 @@
 //! Defines a codec for the native binary format.
+
 use crate::binary::encoder::encode_value;
 use crate::buffer::WriterFactory;
 use crate::codec::Codec;
@@ -10,7 +11,6 @@ use crate::value::Value;
 
 mod encoder;
 mod decoder;
-mod object_value;
 
 /// A codec for encoding and decoding values using the native binary format.
 pub struct NativeBinaryCodec;
@@ -22,17 +22,5 @@ impl Codec for NativeBinaryCodec {
 
     fn decode_value<'a, V: Value<'a>>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<V, DecodeError> {
         decoder::decode_value(input, memory_manager)
-    }
-}
-
-impl NativeBinaryCodec {
-    /// Encode an object value.
-    pub fn encode_object_value<'a, V: ObjectValue, F: WriterFactory>(value: V::In<'a>, writer_factory: &F) -> Result<F::Output, EncodeError> {
-        todo!()
-    }
-
-    /// Decode an object value.
-    pub fn decode_object_value<'a, V: ObjectValue>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<V::Out<'a>, DecodeError> {
-        todo!()
     }
 }

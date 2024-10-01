@@ -1,6 +1,7 @@
 use bump_scope::BumpScope;
+use ixc_message_api::AccountID;
 use crate::encoder::{EncodeError};
-use crate::structs::{StructDecodeVisitor, StructEncodeVisitor};
+use crate::structs::{StructDecodeVisitor, StructEncodeVisitor, StructType};
 use crate::value::Value;
 use crate::buffer::{Writer, WriterFactory};
 use crate::state_object::ObjectValue;
@@ -14,16 +15,16 @@ pub fn encode_value<'a, V: Value<'a>, F: WriterFactory>(value: &V, writer_factor
     writer.finish()
 }
 
-fn encode_object_value<'a, V: ObjectValue, F: WriterFactory>(value: V::In<'a>, writer_factory: &F) -> Result<F::Output, EncodeError> {
-    let mut sizer = EncodeSizer { size: 0 };
-    let mut inner = InnerEncodeSizer { outer: &mut sizer };
-    V::encode_reverse(&value, &mut inner)?;
-    let mut writer = writer_factory.new_reverse(sizer.size)?;
-    let mut encoder = Encoder { writer: &mut writer };
-    let mut inner = InnerEncoder { outer: &mut encoder };
-    V::encode_reverse(&value, &mut inner)?;
-    writer.finish()
-}
+// fn encode_object_value<'a, V: ObjectValue, F: WriterFactory>(value: V::In<'a>, writer_factory: &F) -> Result<F::Output, EncodeError> {
+//     let mut sizer = EncodeSizer { size: 0 };
+//     let mut inner = InnerEncodeSizer { outer: &mut sizer };
+//     V::encode_reverse(&value, &mut inner)?;
+//     let mut writer = writer_factory.new_reverse(sizer.size)?;
+//     let mut encoder = Encoder { writer: &mut writer };
+//     let mut inner = InnerEncoder { outer: &mut encoder };
+//     V::encode_reverse(&value, &mut inner)?;
+//     writer.finish()
+// }
 
 struct Encoder<'a, W> {
     writer: &'a mut W,
@@ -31,6 +32,10 @@ struct Encoder<'a, W> {
 
 impl<'a, W: Writer> crate::encoder::Encoder for Encoder<'a, W> {
     fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError> {
+        self.writer.write(&x.to_le_bytes())
+    }
+
+    fn encode_u64(&mut self, x: u64) -> Result<(), EncodeError> {
         self.writer.write(&x.to_le_bytes())
     }
 
@@ -52,15 +57,19 @@ impl<'a, W: Writer> crate::encoder::Encoder for Encoder<'a, W> {
         Ok(())
     }
 
-    fn encode_struct<V: StructEncodeVisitor>(&mut self, visitor: &V) -> Result<(), EncodeError> {
-        let mut i = V::FIELDS.len();
+    fn encode_struct<V: StructEncodeVisitor>(&mut self, visitor: &V, struct_type: &StructType) -> Result<(), EncodeError>  {
+        let mut i = struct_type.fields.len();
         let mut sub = Encoder { writer: self.writer };
         let mut inner = InnerEncoder::<W> { outer: &mut sub };
-        for f in V::FIELDS.iter().rev() {
+        for f in struct_type.fields.iter().rev() {
             i -= 1;
             visitor.encode_field(i, &mut inner)?;
         }
         Ok(())
+    }
+
+    fn encode_account_id(&mut self, x: AccountID) -> Result<(), EncodeError> {
+        self.encode_u64(x.get())
     }
 }
 
@@ -71,6 +80,11 @@ struct EncodeSizer {
 impl crate::encoder::Encoder for EncodeSizer {
     fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError> {
         self.size += 4;
+        Ok(())
+    }
+
+    fn encode_u64(&mut self, x: u64) -> Result<(), EncodeError> {
+        self.size += 8;
         Ok(())
     }
 
@@ -93,13 +107,18 @@ impl crate::encoder::Encoder for EncodeSizer {
         Ok(())
     }
 
-    fn encode_struct<'a, V: StructEncodeVisitor>(&mut self, visitor: &V) -> Result<(), EncodeError> {
+    fn encode_struct<V: StructEncodeVisitor>(&mut self, visitor: &V, struct_type: &StructType) -> Result<(), EncodeError> {
         let mut i = 0;
         let mut sub = InnerEncodeSizer { outer: self };
-        for f in V::FIELDS {
+        for f in struct_type.fields {
             visitor.encode_field(i, &mut sub)?;
             i += 1;
         }
+        Ok(())
+    }
+
+    fn encode_account_id(&mut self, x: AccountID) -> Result<(), EncodeError> {
+        self.size += 8;
         Ok(())
     }
 }
@@ -112,6 +131,8 @@ impl<'b, 'a: 'b, W: Writer> crate::encoder::Encoder for InnerEncoder<'a, 'b, W> 
     fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError> {
         self.outer.encode_u32(x)
     }
+
+    fn encode_u64(&mut self, x: u64) -> Result<(), EncodeError> { self.outer.encode_u64(x) }
 
     fn encode_u128(&mut self, x: u128) -> Result<(), EncodeError> {
         self.outer.encode_u128(x)
@@ -127,12 +148,16 @@ impl<'b, 'a: 'b, W: Writer> crate::encoder::Encoder for InnerEncoder<'a, 'b, W> 
         // TODO: prefix with length of actual encoded data
     }
 
-    fn encode_struct<V: StructEncodeVisitor>(&mut self, visitor: &V) -> Result<(), EncodeError> {
+    fn encode_struct<V: StructEncodeVisitor>(&mut self, visitor: &V, struct_type: &StructType) -> Result<(), EncodeError> {
         let end_pos = self.outer.writer.pos(); // this is a reverse writer so we start at the end
-        self.outer.encode_struct(visitor)?;
+        self.outer.encode_struct(visitor, struct_type)?;
         let start_pos = self.outer.writer.pos(); // now we know the start position
         let len = (end_pos - start_pos) as u32;
         self.outer.encode_u32(len)
+    }
+
+    fn encode_account_id(&mut self, x: AccountID) -> Result<(), EncodeError> {
+        self.outer.encode_account_id(x)
     }
 }
 
@@ -143,6 +168,11 @@ struct InnerEncodeSizer<'a> {
 impl<'a> crate::encoder::Encoder for InnerEncodeSizer<'a> {
     fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError> {
         self.outer.size += 4;
+        Ok(())
+    }
+
+    fn encode_u64(&mut self, x: u64) -> Result<(), EncodeError> {
+        self.outer.size += 8;
         Ok(())
     }
 
@@ -160,9 +190,14 @@ impl<'a> crate::encoder::Encoder for InnerEncodeSizer<'a> {
         self.outer.encode_list_slice(xs)
     }
 
-    fn encode_struct<V: StructEncodeVisitor>(&mut self, visitor: &V) -> Result<(), EncodeError> {
+    fn encode_struct<V: StructEncodeVisitor>(&mut self, visitor: &V, struct_type: &StructType) -> Result<(), EncodeError>  {
         self.outer.size += 4;
-        self.outer.encode_struct(visitor)
+        self.outer.encode_struct(visitor, struct_type)
+    }
+
+    fn encode_account_id(&mut self, x: AccountID) -> Result<(), EncodeError> {
+        self.outer.size += 8;
+        Ok(())
     }
 }
 

@@ -1,13 +1,17 @@
 //! The decoder trait and error type.
+
+use ixc_message_api::AccountID;
 use crate::list::ListVisitor;
 use crate::mem::MemoryManager;
-use crate::structs::StructDecodeVisitor;
+use crate::structs::{StructDecodeVisitor, StructType};
 use crate::value::Value;
 
 /// The trait that decoders must implement.
 pub trait Decoder<'a> {
     /// Decode a `u32`.
     fn decode_u32(&mut self) -> Result<u32, DecodeError>;
+    /// Decode a `u64`.
+    fn decode_u64(&mut self) -> Result<u64, DecodeError>;
     /// Decode a `u128`.
     fn decode_u128(&mut self) -> Result<u128, DecodeError>;
     /// Decode a borrowed `str`.
@@ -16,9 +20,11 @@ pub trait Decoder<'a> {
     /// Decode an owned `String`.
     fn decode_owned_str(&mut self) -> Result<alloc::string::String, DecodeError>;
     /// Decode a struct.
-    fn decode_struct<V: StructDecodeVisitor<'a>>(&mut self, visitor: &mut V) -> Result<(), DecodeError>;
+    fn decode_struct<V: StructDecodeVisitor<'a>>(&mut self, visitor: &mut V, struct_type: &StructType) -> Result<(), DecodeError>;
     /// Decode a list.
     fn decode_list<T, V: ListVisitor<'a, T>>(&mut self, visitor: &mut V) -> Result<(), DecodeError>;
+    /// Decode an account ID.
+    fn decode_account_id(&mut self) -> Result<AccountID, DecodeError>;
     /// Get the memory manager.
     fn mem_manager(&self) -> &'a MemoryManager;
 }

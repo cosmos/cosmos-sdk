@@ -138,9 +138,9 @@ impl Type for crate::types::BytesT {
 }
 
 /// The `AddressT` type represents an address.
-pub struct AccountIDT;
-impl Private for AccountIDT {}
-impl Type for AccountIDT {
+pub struct AccountID_T;
+impl Private for AccountID_T {}
+impl Type for AccountID_T {
     const KIND: Kind = Kind::AccountID;
     type ReferencedType = ();
 }

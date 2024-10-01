@@ -48,13 +48,13 @@ pub unsafe trait StructSchema {
 }
 
 /// StructDecodeVisitor is the trait that should be derived to decode a struct.
-pub unsafe trait StructDecodeVisitor<'a>: StructSchema {
+pub unsafe trait StructDecodeVisitor<'a> {
     /// Decode a field from the input data.
     fn decode_field<D: Decoder<'a>>(&mut self, index: usize, decoder: &mut D) -> Result<(), DecodeError>;
 }
 
 /// StructEncodeVisitor is the trait that should be derived to encode a struct.
-pub unsafe trait StructEncodeVisitor: StructSchema {
+pub unsafe trait StructEncodeVisitor {
     /// Encode a field to the output data.
     fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError>;
 }
@@ -68,4 +68,13 @@ pub struct StructType<'a> {
     /// Sealed indicates whether new fields can be added to the struct.
     /// If sealed is true, the struct is considered sealed and new fields cannot be added.
     pub sealed: bool,
+}
+
+/// Convert StructSchema to StructType.
+pub const fn to_struct_type<T: StructSchema>() -> StructType<'static> {
+    StructType {
+        name: T::NAME,
+        fields: T::FIELDS,
+        sealed: T::SEALED,
+    }
 }

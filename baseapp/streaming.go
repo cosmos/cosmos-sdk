@@ -9,6 +9,7 @@ import (
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/spf13/cast"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/schema"
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/schema/decoding"
@@ -32,11 +33,11 @@ const (
 // kv-store keys, and app modules. Using the built-in indexer framework is mutually exclusive from using other
 // types of streaming listeners.
 func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*storetypes.KVStoreKey, appModules map[string]any) error {
-	listener, err := indexer.StartManager(indexer.ManagerOptions{
+	listener, err := indexer.StartIndexing(indexer.IndexingOptions{
 		Config:     indexerOpts,
 		Resolver:   decoding.ModuleSetDecoderResolver(appModules),
 		SyncSource: nil,
-		Logger:     app.logger.With("module", "indexer"),
+		Logger:     app.logger.With(log.ModuleKey, "indexer"),
 	})
 	if err != nil {
 		return err
@@ -46,7 +47,7 @@ func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*stor
 	app.cms.AddListeners(exposedKeys)
 
 	app.streamingManager = storetypes.StreamingManager{
-		ABCIListeners: []storetypes.ABCIListener{listenerWrapper{listener}},
+		ABCIListeners: []storetypes.ABCIListener{listenerWrapper{listener.Listener}},
 		StopNodeOnErr: true,
 	}
 
@@ -163,14 +164,16 @@ func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.Finaliz
 
 func (p listenerWrapper) ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*storetypes.StoreKVPair) error {
 	if cb := p.listener.OnKVPair; cb != nil {
-		updates := make([]appdata.ModuleKVPairUpdate, len(changeSet))
+		updates := make([]appdata.ActorKVPairUpdate, len(changeSet))
 		for i, pair := range changeSet {
-			updates[i] = appdata.ModuleKVPairUpdate{
-				ModuleName: pair.StoreKey,
-				Update: schema.KVPairUpdate{
-					Key:    pair.Key,
-					Value:  pair.Value,
-					Delete: pair.Delete,
+			updates[i] = appdata.ActorKVPairUpdate{
+				Actor: []byte(pair.StoreKey),
+				StateChanges: []schema.KVPairUpdate{
+					{
+						Key:    pair.Key,
+						Value:  pair.Value,
+						Remove: pair.Delete,
+					},
 				},
 			}
 		}
@@ -181,9 +184,15 @@ func (p listenerWrapper) ListenCommit(ctx context.Context, res abci.CommitRespon
 	}
 
 	if p.listener.Commit != nil {
-		err := p.listener.Commit(appdata.CommitData{})
+		commitCb, err := p.listener.Commit(appdata.CommitData{})
 		if err != nil {
 			return err
+		}
+		if commitCb != nil {
+			err := commitCb()
+			if err != nil {
+				return err
+			}
 		}
 	}
 

@@ -2,45 +2,27 @@ package simapp
 
 import (
 	_ "embed"
-	"path/filepath"
 
 	"github.com/spf13/viper"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
-	coreapp "cosmossdk.io/core/app"
-	"cosmossdk.io/core/legacy"
-	"cosmossdk.io/core/log"
+	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
-	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/commitment/iavl"
-	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/root"
-	"cosmossdk.io/x/accounts"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authzkeeper "cosmossdk.io/x/authz/keeper"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	circuitkeeper "cosmossdk.io/x/circuit/keeper"
-	consensuskeeper "cosmossdk.io/x/consensus/keeper"
-	distrkeeper "cosmossdk.io/x/distribution/keeper"
-	evidencekeeper "cosmossdk.io/x/evidence/keeper"
-	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	govkeeper "cosmossdk.io/x/gov/keeper"
-	groupkeeper "cosmossdk.io/x/group/keeper"
-	mintkeeper "cosmossdk.io/x/mint/keeper"
-	nftkeeper "cosmossdk.io/x/nft/keeper"
-	_ "cosmossdk.io/x/protocolpool"
-	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
-	slashingkeeper "cosmossdk.io/x/slashing/keeper"
-	stakingkeeper "cosmossdk.io/x/staking/keeper"
+	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
+	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
+	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
 // DefaultNodeHome default home directories for the application daemon
@@ -51,29 +33,14 @@ var DefaultNodeHome string
 // capabilities aren't needed for testing.
 type SimApp[T transaction.Tx] struct {
 	*runtime.App[T]
-	legacyAmino       legacy.Amino
+	legacyAmino       registry.AminoRegistrar
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
 
-	// keepers
-	AccountsKeeper        accounts.Keeper
-	AuthKeeper            authkeeper.AccountKeeper
-	BankKeeper            bankkeeper.Keeper
-	StakingKeeper         *stakingkeeper.Keeper
-	SlashingKeeper        slashingkeeper.Keeper
-	MintKeeper            mintkeeper.Keeper
-	DistrKeeper           distrkeeper.Keeper
-	GovKeeper             *govkeeper.Keeper
-	UpgradeKeeper         *upgradekeeper.Keeper
-	AuthzKeeper           authzkeeper.Keeper
-	EvidenceKeeper        evidencekeeper.Keeper
-	FeeGrantKeeper        feegrantkeeper.Keeper
-	GroupKeeper           groupkeeper.Keeper
-	NFTKeeper             nftkeeper.Keeper
-	ConsensusParamsKeeper consensuskeeper.Keeper
-	CircuitBreakerKeeper  circuitkeeper.Keeper
-	PoolKeeper            poolkeeper.Keeper
+	// required keepers during wiring
+	// others keepers are all in the app
+	UpgradeKeeper *upgradekeeper.Keeper
 }
 
 func init() {
@@ -96,35 +63,17 @@ func NewSimApp[T transaction.Tx](
 	logger log.Logger,
 	viper *viper.Viper,
 ) *SimApp[T] {
-	viper.Set(serverv2.FlagHome, DefaultNodeHome) // TODO possibly set earlier when viper is created
-	scRawDb, err := db.NewGoLevelDB("application", filepath.Join(DefaultNodeHome, "data"), nil)
-	if err != nil {
-		panic(err)
-	}
 	var (
 		app        = &SimApp[T]{}
 		appBuilder *runtime.AppBuilder[T]
+		err        error
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
 			AppConfig(),
+			runtime.DefaultServiceBindings(),
 			depinject.Supply(
 				logger,
-				&root.FactoryOptions{
-					Logger:  logger,
-					RootDir: DefaultNodeHome,
-					SSType:  0,
-					SCType:  0,
-					SCPruningOption: &store.PruningOption{
-						KeepRecent: 0,
-						Interval:   0,
-					},
-					IavlConfig: &iavl.Config{
-						CacheSize:              100_000,
-						SkipFastStorageUpgrade: true,
-					},
-					SCRawDB: scRawDb,
-				},
 				viper,
 
 				// ADVANCED CONFIGURATION
@@ -172,6 +121,25 @@ func NewSimApp[T transaction.Tx](
 				codec.ProvideAddressCodec,
 				codec.ProvideProtoCodec,
 				codec.ProvideLegacyAmino,
+				// inject desired account types:
+				multisigdepinject.ProvideAccount,
+				basedepinject.ProvideAccount,
+				lockupdepinject.ProvideAllLockupAccounts,
+
+				// provide base account options
+				basedepinject.ProvideSecp256K1PubKey,
+				// if you want to provide a custom public key you
+				// can do it from here.
+				// Example:
+				// 		basedepinject.ProvideCustomPubkey[Ed25519PublicKey]()
+				//
+				// You can also provide a custom public key with a custom validation function:
+				//
+				// 		basedepinject.ProvideCustomPubKeyAndValidationFunc(func(pub Ed25519PublicKey) error {
+				//			if len(pub.Key) != 64 {
+				//				return fmt.Errorf("invalid pub key size")
+				//			}
+				// 		})
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,
@@ -180,28 +148,26 @@ func NewSimApp[T transaction.Tx](
 		)
 	)
 
+	// the subsection of config that contains the store options (in app.toml [store.options] header)
+	// is unmarshaled into a store.Options struct and passed to the store builder.
+	// future work may move this specification and retrieval into store/v2.
+	// If these options are not specified then default values will be used.
+	if sub := viper.Sub("store.options"); sub != nil {
+		storeOptions := &root.Options{}
+		err := sub.Unmarshal(storeOptions)
+		if err != nil {
+			panic(err)
+		}
+		appConfig = depinject.Configs(appConfig, depinject.Supply(storeOptions))
+	}
+
 	if err := depinject.Inject(appConfig,
 		&appBuilder,
 		&app.appCodec,
 		&app.legacyAmino,
 		&app.txConfig,
 		&app.interfaceRegistry,
-		&app.AuthKeeper,
-		&app.BankKeeper,
-		&app.StakingKeeper,
-		&app.SlashingKeeper,
-		&app.MintKeeper,
-		&app.DistrKeeper,
-		&app.GovKeeper,
 		&app.UpgradeKeeper,
-		&app.AuthzKeeper,
-		&app.EvidenceKeeper,
-		&app.FeeGrantKeeper,
-		&app.GroupKeeper,
-		&app.NFTKeeper,
-		&app.ConsensusParamsKeeper,
-		&app.CircuitBreakerKeeper,
-		&app.PoolKeeper,
 	); err != nil {
 		panic(err)
 	}
@@ -218,7 +184,6 @@ func NewSimApp[T transaction.Tx](
 
 	// TODO (here or in runtime/v2)
 	// wire simulation manager
-	// wire snapshot manager
 	// wire unordered tx manager
 
 	if err := app.LoadLatest(); err != nil {
@@ -236,18 +201,13 @@ func (app *SimApp[T]) AppCodec() codec.Codec {
 }
 
 // InterfaceRegistry returns SimApp's InterfaceRegistry.
-func (app *SimApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {
+func (app *SimApp[T]) InterfaceRegistry() server.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
 // TxConfig returns SimApp's TxConfig.
 func (app *SimApp[T]) TxConfig() client.TxConfig {
 	return app.txConfig
-}
-
-// GetConsensusAuthority gets the consensus authority.
-func (app *SimApp[T]) GetConsensusAuthority() string {
-	return app.ConsensusParamsKeeper.GetAuthority()
 }
 
 // GetStore gets the app store.

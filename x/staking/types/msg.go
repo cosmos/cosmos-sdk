@@ -64,7 +64,7 @@ func (msg MsgCreateValidator) Validate(ac address.Codec) error {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount")
 	}
 
-	if msg.Description == (Description{}) {
+	if msg.Description.IsEmpty() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 
@@ -88,6 +88,11 @@ func (msg MsgCreateValidator) Validate(ac address.Codec) error {
 	}
 
 	return nil
+}
+
+// GetMoniker returns the moniker of the validator
+func (msg MsgCreateValidator) GetMoniker() string {
+	return msg.Description.GetMoniker()
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

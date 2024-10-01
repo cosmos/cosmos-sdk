@@ -19,7 +19,7 @@ import (
 func setupContinousAccount(t *testing.T, ctx context.Context, ss store.KVStoreService) *ContinuousLockingAccount {
 	t.Helper()
 	deps := makeMockDependencies(ss)
-	owner := "owner"
+	owner := "owner" //nolint:goconst // adding constants for this would impede readability
 
 	acc, err := NewContinuousLockingAccount(deps)
 	require.NoError(t, err)

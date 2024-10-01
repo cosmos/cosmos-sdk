@@ -14,8 +14,6 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
-	authcli "cosmossdk.io/x/auth/client/cli"
-	authclitestutil "cosmossdk.io/x/auth/client/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 	govtestutil "cosmossdk.io/x/gov/client/testutil"
 	govtypes "cosmossdk.io/x/gov/types/v1beta1"
@@ -35,6 +33,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authclitestutil "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
@@ -357,7 +357,6 @@ func (s *E2ETestSuite) TestCLIQueryTxCmdByHash() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxCmd()
 			clientCtx := val.GetClientCtx()
@@ -490,7 +489,6 @@ func (s *E2ETestSuite) TestCLIQueryTxCmdByEvents() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxCmd()
 			clientCtx := val.GetClientCtx()
@@ -570,7 +568,6 @@ func (s *E2ETestSuite) TestCLIQueryTxsCmdByEvents() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxsByEventsCmd()
 			clientCtx := val.GetClientCtx()
@@ -1503,7 +1500,6 @@ func (s *E2ETestSuite) TestAuxSigner() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			_, err := govtestutil.MsgSubmitLegacyProposal(
 				val.GetClientCtx(),
@@ -1730,7 +1726,6 @@ func (s *E2ETestSuite) TestAuxToFeeWithTips() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := govtestutil.MsgSubmitLegacyProposal(
 				val.GetClientCtx(),

@@ -11,11 +11,13 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	coreapp "cosmossdk.io/core/app"
+	coreserver "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/store"
 )
 
 type mockInterfaceRegistry struct{}
@@ -33,7 +35,15 @@ type mockApp[T transaction.Tx] struct {
 	serverv2.AppI[T]
 }
 
-func (*mockApp[T]) InterfaceRegistry() coreapp.InterfaceRegistry {
+func (*mockApp[T]) GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message {
+	return map[string]func() gogoproto.Message{}
+}
+
+func (*mockApp[T]) GetAppManager() *appmanager.AppManager[T] {
+	return nil
+}
+
+func (*mockApp[T]) InterfaceRegistry() coreserver.InterfaceRegistry {
 	return &mockInterfaceRegistry{}
 }
 
@@ -46,17 +56,24 @@ func TestServer(t *testing.T) {
 	if err != nil {
 		v = viper.New()
 	}
+	cfg := v.AllSettings()
 
 	logger := log.NewLogger(os.Stdout)
 	grpcServer := grpc.New[transaction.Tx]()
-	err = grpcServer.Init(&mockApp[transaction.Tx]{}, v, logger)
+	err = grpcServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
+	require.NoError(t, err)
+
+	storeServer := store.New[transaction.Tx](nil /* nil appCreator as not using CLI commands */)
+	err = storeServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
 	require.NoError(t, err)
 
 	mockServer := &mockServer{name: "mock-server-1", ch: make(chan string, 100)}
 
 	server := serverv2.NewServer(
 		logger,
+		serverv2.DefaultServerConfig(),
 		grpcServer,
+		storeServer,
 		mockServer,
 	)
 

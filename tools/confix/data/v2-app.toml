@@ -1,0 +1,94 @@
+[comet]
+# min-retain-blocks defines the minimum block height offset from the current block being committed, such that all blocks past this offset are pruned from CometBFT. A value of 0 indicates that no blocks should be pruned.
+min-retain-blocks = 0
+# index-events defines the set of events in the form {eventType}.{attributeKey}, which informs CometBFT what to index. If empty, all events will be indexed.
+index-events = []
+# halt-height contains a non-zero block height at which a node will gracefully halt and shutdown that can be used to assist upgrades and testing.
+halt-height = 0
+# halt-time contains a non-zero minimum block time (in Unix seconds) at which a node will gracefully halt and shutdown that can be used to assist upgrades and testing.
+halt-time = 0
+# address defines the CometBFT RPC server address to bind to.
+address = 'tcp://127.0.0.1:26658'
+# transport defines the CometBFT RPC server transport protocol: socket, grpc
+transport = 'socket'
+# trace enables the CometBFT RPC server to output trace information about its internal operations.
+trace = false
+# standalone starts the application without the CometBFT node. The node should be started separately.
+standalone = false
+
+# mempool defines the configuration for the SDK built-in app-side mempool implementations.
+[comet.mempool]
+# max-txs defines the maximum number of transactions that can be in the mempool. A value of 0 indicates an unbounded mempool, a negative value disables the app-side mempool.
+max-txs = -1
+
+[grpc]
+# Enable defines if the gRPC server should be enabled.
+enable = true
+# Address defines the gRPC server address to bind to.
+address = 'localhost:9090'
+# MaxRecvMsgSize defines the max message size in bytes the server can receive.
+# The default value is 10MB.
+max-recv-msg-size = 10485760
+# MaxSendMsgSize defines the max message size in bytes the server can send.
+# The default value is math.MaxInt32.
+max-send-msg-size = 2147483647
+
+[server]
+# minimum-gas-prices defines the price which a validator is willing to accept for processing a transaction. A transaction's fees must meet the minimum of any denomination specified in this config (e.g. 0.25token1;0.0001token2).
+minimum-gas-prices = '0stake'
+
+[store]
+# The type of database for application and snapshots databases.
+app-db-backend = 'goleveldb'
+
+[store.options]
+# SState storage database type. Currently we support: "sqlite", "pebble" and "rocksdb"
+ss-type = 'sqlite'
+# State commitment database type. Currently we support: "iavl" and "iavl-v2"
+sc-type = 'iavl'
+
+# Pruning options for state storage
+[store.options.ss-pruning-option]
+# Number of recent heights to keep on disk.
+keep-recent = 2
+# Height interval at which pruned heights are removed from disk.
+interval = 100
+
+# Pruning options for state commitment
+[store.options.sc-pruning-option]
+# Number of recent heights to keep on disk.
+keep-recent = 2
+# Height interval at which pruned heights are removed from disk.
+interval = 100
+
+[store.options.iavl-config]
+# CacheSize set the size of the iavl tree cache.
+cache-size = 100000
+# If true, the tree will work like no fast storage and always not upgrade fast storage.
+skip-fast-storage-upgrade = true
+
+[telemetry]
+# Enable enables the application telemetry functionality. When enabled, an in-memory sink is also enabled by default. Operators may also enabled other sinks such as Prometheus.
+enable = true
+# Address defines the metrics server address to bind to.
+address = 'localhost:1338'
+# Prefixed with keys to separate services.
+service-name = ''
+# Enable prefixing gauge values with hostname.
+enable-hostname = false
+# Enable adding hostname to labels.
+enable-hostname-label = false
+# Enable adding service to labels.
+enable-service-label = false
+# PrometheusRetentionTime, when positive, enables a Prometheus metrics sink. It defines the retention duration in seconds.
+prometheus-retention-time = 0
+# GlobalLabels defines a global set of name/value label tuples applied to all metrics emitted using the wrapper functions defined in telemetry package.
+#  Example:
+#   [["chain_id", "cosmoshub-1"]]
+global-labels = []
+# MetricsSink defines the type of metrics backend to use. Default is in memory
+metrics-sink = ''
+# StatsdAddr defines the address of a statsd server to send metrics to. Only utilized if MetricsSink is set to "statsd" or "dogstatsd".
+stats-addr = ''
+# DatadogHostname defines the hostname to use when emitting metrics to Datadog. Only utilized if MetricsSink is set to "dogstatsd".
+data-dog-hostname = ''

@@ -6,13 +6,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth/ante"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 func TestSetupDecorator_BlockMaxGas(t *testing.T) {
@@ -33,7 +33,7 @@ func TestSetupDecorator_BlockMaxGas(t *testing.T) {
 	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	sud := ante.NewSetUpContextDecorator(suite.env)
+	sud := ante.NewSetUpContextDecorator(suite.env, suite.consensusKeeper)
 	antehandler := sdk.ChainAnteDecorators(sud)
 
 	suite.ctx = suite.ctx.
@@ -63,7 +63,7 @@ func TestSetup(t *testing.T) {
 	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	sud := ante.NewSetUpContextDecorator(suite.env)
+	sud := ante.NewSetUpContextDecorator(suite.env, suite.consensusKeeper)
 	antehandler := sdk.ChainAnteDecorators(sud)
 
 	// Set height to non-zero value for GasMeter to be set
@@ -98,7 +98,7 @@ func TestRecoverPanic(t *testing.T) {
 	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	sud := ante.NewSetUpContextDecorator(suite.env)
+	sud := ante.NewSetUpContextDecorator(suite.env, suite.consensusKeeper)
 	antehandler := sdk.ChainAnteDecorators(sud, OutOfGasDecorator{})
 
 	// Set height to non-zero value for GasMeter to be set
@@ -117,7 +117,7 @@ func TestRecoverPanic(t *testing.T) {
 
 type OutOfGasDecorator struct{}
 
-// AnteDecorator that will throw OutOfGas panic
+// AnteHandle that will throw OutOfGas panic
 func (ogd OutOfGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	overLimit := ctx.GasMeter().Limit() + 1
 

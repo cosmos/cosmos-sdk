@@ -2,7 +2,7 @@ package collections
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -53,7 +53,7 @@ func TestMap_Clear(t *testing.T) {
 		err := m.Clear(ctx, nil)
 		require.NoError(t, err)
 		err = m.Walk(ctx, nil, func(key, value uint64) (bool, error) {
-			return false, fmt.Errorf("should never be called")
+			return false, errors.New("should never be called")
 		})
 		require.NoError(t, err)
 	})

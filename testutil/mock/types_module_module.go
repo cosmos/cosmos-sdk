@@ -8,12 +8,13 @@ import (
 	context "context"
 	reflect "reflect"
 
-	legacy "cosmossdk.io/core/legacy"
+	registry "cosmossdk.io/core/registry"
 	client "github.com/cosmos/cosmos-sdk/client"
 	types "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
 	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	grpc "google.golang.org/grpc"
 )
 
 // MockAppModuleBasic is a mock of AppModuleBasic interface.
@@ -52,7 +53,7 @@ func (mr *MockAppModuleBasicMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 i
 }
 
 // RegisterLegacyAminoCodec mocks base method.
-func (m *MockAppModuleBasic) RegisterLegacyAminoCodec(arg0 legacy.Amino) {
+func (m *MockAppModuleBasic) RegisterLegacyAminoCodec(arg0 registry.AminoRegistrar) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
 }
@@ -148,7 +149,7 @@ func (m *MockHasAminoCodec) EXPECT() *MockHasAminoCodecMockRecorder {
 }
 
 // RegisterLegacyAminoCodec mocks base method.
-func (m *MockHasAminoCodec) RegisterLegacyAminoCodec(arg0 legacy.Amino) {
+func (m *MockHasAminoCodec) RegisterLegacyAminoCodec(arg0 registry.AminoRegistrar) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
 }
@@ -262,6 +263,67 @@ func (m *MockHasServices) RegisterServices(arg0 module.Configurator) {
 func (mr *MockHasServicesMockRecorder) RegisterServices(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterServices", reflect.TypeOf((*MockHasServices)(nil).RegisterServices), arg0)
+}
+
+// MockhasServicesV1 is a mock of hasServicesV1 interface.
+type MockhasServicesV1 struct {
+	ctrl     *gomock.Controller
+	recorder *MockhasServicesV1MockRecorder
+}
+
+// MockhasServicesV1MockRecorder is the mock recorder for MockhasServicesV1.
+type MockhasServicesV1MockRecorder struct {
+	mock *MockhasServicesV1
+}
+
+// NewMockhasServicesV1 creates a new mock instance.
+func NewMockhasServicesV1(ctrl *gomock.Controller) *MockhasServicesV1 {
+	mock := &MockhasServicesV1{ctrl: ctrl}
+	mock.recorder = &MockhasServicesV1MockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockhasServicesV1) EXPECT() *MockhasServicesV1MockRecorder {
+	return m.recorder
+}
+
+// IsAppModule mocks base method.
+func (m *MockhasServicesV1) IsAppModule() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsAppModule")
+}
+
+// IsAppModule indicates an expected call of IsAppModule.
+func (mr *MockhasServicesV1MockRecorder) IsAppModule() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAppModule", reflect.TypeOf((*MockhasServicesV1)(nil).IsAppModule))
+}
+
+// IsOnePerModuleType mocks base method.
+func (m *MockhasServicesV1) IsOnePerModuleType() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsOnePerModuleType")
+}
+
+// IsOnePerModuleType indicates an expected call of IsOnePerModuleType.
+func (mr *MockhasServicesV1MockRecorder) IsOnePerModuleType() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOnePerModuleType", reflect.TypeOf((*MockhasServicesV1)(nil).IsOnePerModuleType))
+}
+
+// RegisterServices mocks base method.
+func (m *MockhasServicesV1) RegisterServices(arg0 grpc.ServiceRegistrar) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RegisterServices", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RegisterServices indicates an expected call of RegisterServices.
+func (mr *MockhasServicesV1MockRecorder) RegisterServices(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterServices", reflect.TypeOf((*MockhasServicesV1)(nil).RegisterServices), arg0)
 }
 
 // MockHasABCIEndBlock is a mock of HasABCIEndBlock interface.

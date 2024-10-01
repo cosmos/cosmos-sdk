@@ -25,12 +25,12 @@ func (k Keeper) Grants(ctx context.Context, req *authz.QueryGrantsRequest) (*aut
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	granter, err := k.authKeeper.AddressCodec().StringToBytes(req.Granter)
+	granter, err := k.addrCdc.StringToBytes(req.Granter)
 	if err != nil {
 		return nil, err
 	}
 
-	grantee, err := k.authKeeper.AddressCodec().StringToBytes(req.Grantee)
+	grantee, err := k.addrCdc.StringToBytes(req.Grantee)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (k Keeper) Grants(ctx context.Context, req *authz.QueryGrantsRequest) (*aut
 
 		authorizationAny, err := codectypes.NewAnyWithValue(authorization)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 		return &authz.QueryGrantsResponse{
 			Grants: []*authz.Grant{{
@@ -70,7 +70,7 @@ func (k Keeper) Grants(ctx context.Context, req *authz.QueryGrantsRequest) (*aut
 
 		authorizationAny, err := codectypes.NewAnyWithValue(auth1)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 		return &authz.Grant{
 			Authorization: authorizationAny,
@@ -95,7 +95,7 @@ func (k Keeper) GranterGrants(ctx context.Context, req *authz.QueryGranterGrants
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	granter, err := k.authKeeper.AddressCodec().StringToBytes(req.Granter)
+	granter, err := k.addrCdc.StringToBytes(req.Granter)
 	if err != nil {
 		return nil, err
 	}
@@ -111,12 +111,12 @@ func (k Keeper) GranterGrants(ctx context.Context, req *authz.QueryGranterGrants
 
 		any, err := codectypes.NewAnyWithValue(auth1)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 
 		grantee := firstAddressFromGrantStoreKey(key)
 
-		granteeAddr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
+		granteeAddr, err := k.addrCdc.BytesToString(grantee)
 		if err != nil {
 			return nil, err
 		}
@@ -146,7 +146,7 @@ func (k Keeper) GranteeGrants(ctx context.Context, req *authz.QueryGranteeGrants
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	grantee, err := k.authKeeper.AddressCodec().StringToBytes(req.Grantee)
+	grantee, err := k.addrCdc.StringToBytes(req.Grantee)
 	if err != nil {
 		return nil, err
 	}
@@ -166,10 +166,10 @@ func (k Keeper) GranteeGrants(ctx context.Context, req *authz.QueryGranteeGrants
 
 		authorizationAny, err := codectypes.NewAnyWithValue(auth1)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		granterAddr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+		granterAddr, err := k.addrCdc.BytesToString(granter)
 		if err != nil {
 			return nil, err
 		}

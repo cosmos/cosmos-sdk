@@ -3,6 +3,7 @@ package telemetry
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -16,7 +17,7 @@ import (
 
 // GlobalLabels defines the set of global labels that will be applied to all
 // metrics emitted using the telemetry package function wrappers.
-var GlobalLabels = []metrics.Label{} // nolint: ignore // false positive
+var GlobalLabels = []metrics.Label{} //nolint: ignore // false positive
 
 // NewLabel creates a new instance of Label with name and value
 func NewLabel(name, value string) metrics.Label {
@@ -56,12 +57,8 @@ type GatherResponse struct {
 	ContentType string
 }
 
-// New creates a new instance of Metrics
-func New(cfg Config) (_ *Metrics, rerr error) {
-	if !cfg.Enabled {
-		return nil, nil
-	}
-
+// NewMetrics creates a new instance of Metrics
+func NewMetrics(cfg *Config) (*Metrics, error) {
 	if numGlobalLabels := len(cfg.GlobalLabels); numGlobalLabels > 0 {
 		parsedGlobalLabels := make([]metrics.Label, numGlobalLabels)
 		for i, gl := range cfg.GlobalLabels {
@@ -88,12 +85,11 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		sink = memSink
 		inMemSig := metrics.DefaultInmemSignal(memSink)
 		defer func() {
-			if rerr != nil {
+			if err != nil {
 				inMemSig.Stop()
 			}
 		}()
 	}
-
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +141,7 @@ func (m *Metrics) Gather(format string) (GatherResponse, error) {
 // If Prometheus metrics are not enabled, it returns an error.
 func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
 	if !m.prometheusEnabled {
-		return GatherResponse{}, fmt.Errorf("prometheus metrics are not enabled")
+		return GatherResponse{}, errors.New("prometheus metrics are not enabled")
 	}
 
 	metricsFamilies, err := prometheus.DefaultGatherer.Gather()
@@ -171,7 +167,7 @@ func (m *Metrics) gatherPrometheus() (GatherResponse, error) {
 func (m *Metrics) gatherGeneric() (GatherResponse, error) {
 	gm, ok := m.sink.(DisplayableSink)
 	if !ok {
-		return GatherResponse{}, fmt.Errorf("non in-memory metrics sink does not support generic format")
+		return GatherResponse{}, errors.New("non in-memory metrics sink does not support generic format")
 	}
 
 	summary, err := gm.DisplayMetrics(nil, nil)

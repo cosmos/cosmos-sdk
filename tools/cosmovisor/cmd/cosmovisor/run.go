@@ -13,7 +13,7 @@ var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run an APP command.",
 	Long: `Run an APP command. This command is intended to be used by the cosmovisor binary.
-Provide cosmovisor config file path in command args or set env variables to load configuration.
+Provide '--cosmovisor-config' file path in command args or set env variables to load configuration.
 `,
 	SilenceUsage:       true,
 	DisableFlagParsing: true,
@@ -45,11 +45,11 @@ func run(cfgPath string, args []string, options ...RunOption) error {
 		return err
 	}
 
-	doUpgrade, err := launcher.Run(args, runCfg.StdOut, runCfg.StdErr)
+	doUpgrade, err := launcher.Run(args, runCfg.StdIn, runCfg.StdOut, runCfg.StdErr)
 	// if RestartAfterUpgrade, we launch after a successful upgrade (given that condition launcher.Run returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
 		logger.Info("upgrade detected, relaunching", "app", cfg.Name)
-		doUpgrade, err = launcher.Run(args, runCfg.StdOut, runCfg.StdErr)
+		doUpgrade, err = launcher.Run(args, runCfg.StdIn, runCfg.StdOut, runCfg.StdErr)
 	}
 
 	if doUpgrade && err == nil {

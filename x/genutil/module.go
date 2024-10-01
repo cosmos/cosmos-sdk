@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/genesis"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,7 +26,7 @@ type AppModule struct {
 	cdc              codec.Codec
 	accountKeeper    types.AccountKeeper
 	stakingKeeper    types.StakingKeeper
-	deliverTx        genesis.TxHandler
+	deliverTx        TxHandler // Unnecessary in server/v2 applications
 	txEncodingConfig client.TxEncodingConfig
 	genTxValidator   types.MessageValidator
 }
@@ -37,7 +36,7 @@ func NewAppModule(
 	cdc codec.Codec,
 	accountKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper,
-	deliverTx genesis.TxHandler,
+	deliverTx TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 	genTxValidator types.MessageValidator,
 ) module.AppModule {
@@ -76,14 +75,26 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 }
 
 // InitGenesis performs genesis initialization for the genutil module.
+// InitGenesis is skipped in a server/v2 application as DecodeGenesisJSON takes precedence.
 func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) ([]module.ValidatorUpdate, error) {
 	var genesisState types.GenesisState
 	am.cdc.MustUnmarshalJSON(data, &genesisState)
 	return InitGenesis(ctx, am.stakingKeeper, am.deliverTx, genesisState, am.txEncodingConfig)
 }
 
+// DecodeGenesisJSON returns the genesis transactions for the genutil module.
+// It is an alternative to InitGenesis and used in server/v2 applications.
+func (am AppModule) DecodeGenesisJSON(data json.RawMessage) ([]json.RawMessage, error) {
+	var genesisState types.GenesisState
+	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
+		return nil, err
+	}
+
+	return genesisState.GenTxs, nil
+}
+
 // ExportGenesis returns the exported genesis state as raw bytes for the genutil module.
-func (am AppModule) ExportGenesis(_ context.Context) (json.RawMessage, error) {
+func (am AppModule) ExportGenesis(context.Context) (json.RawMessage, error) {
 	return am.DefaultGenesis(), nil
 }
 
@@ -94,11 +105,3 @@ func (am AppModule) GenTxValidator() types.MessageValidator {
 
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return 1 }
-
-func (am AppModule) DecodeGenesisJSON(data json.RawMessage) ([]json.RawMessage, error) {
-	var genesisState types.GenesisState
-	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
-		return nil, err
-	}
-	return genesisState.GenTxs, nil
-}

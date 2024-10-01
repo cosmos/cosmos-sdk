@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/golang/protobuf/proto" // nolint: staticcheck // needed because gogoproto.Merge does not work consistently. See NOTE: comments.
+	"github.com/golang/protobuf/proto" //nolint: staticcheck // needed because gogoproto.Merge does not work consistently. See NOTE: comments.
 	"google.golang.org/grpc"
 	proto2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -43,9 +43,8 @@ func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.
 	}
 	if isProtov2Handler {
 		return makeProtoV2HybridHandler(methodDesc, cdc, method, handler)
-	} else {
-		return makeGogoHybridHandler(methodDesc, cdc, method, handler)
 	}
+	return makeGogoHybridHandler(methodDesc, cdc, method, handler)
 }
 
 // makeProtoV2HybridHandler returns a handler that can handle both gogo and protov2 messages.

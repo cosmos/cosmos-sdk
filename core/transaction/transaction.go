@@ -1,13 +1,22 @@
 package transaction
 
-import (
-	gogoproto "github.com/cosmos/gogoproto/proto"
-)
-
 type (
-	Msg      = gogoproto.Message
+	// Msg uses structural types to define the interface for a message.
+	Msg = interface {
+		Reset()
+		String() string
+		ProtoMessage()
+	}
 	Identity = []byte
 )
+
+// GenericMsg defines a generic version of a Msg.
+// The GenericMsg refers to the non pointer version of Msg,
+// and is required to allow its instantiations in generic contexts.
+type GenericMsg[T any] interface {
+	*T
+	Msg
+}
 
 // Codec defines the TX codec, which converts a TX from bytes to its concrete representation.
 type Codec[T Tx] interface {
@@ -18,6 +27,8 @@ type Codec[T Tx] interface {
 	DecodeJSON([]byte) (T, error)
 }
 
+// Tx defines the interface for a transaction.
+// All custom transactions must implement this interface.
 type Tx interface {
 	// Hash returns the unique identifier for the Tx.
 	Hash() [32]byte

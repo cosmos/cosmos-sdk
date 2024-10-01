@@ -19,8 +19,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
-	vesting "cosmossdk.io/x/auth/vesting/types"
 	"cosmossdk.io/x/bank/keeper"
 	banktestutil "cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -34,6 +32,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 const (
@@ -578,6 +578,9 @@ func (suite *KeeperTestSuite) TestSupply_BurnCoins() {
 
 	suite.mockBurnCoins(burnerAcc)
 	require.NoError(keeper.BurnCoins(ctx, burnerAcc.GetAddress(), initCoins))
+
+	suite.mockBurnCoins(burnerAcc)
+	require.ErrorContains(keeper.BurnCoins(ctx, burnerAcc.GetAddress(), sdk.Coins{sdk.Coin{Denom: "asd", Amount: math.NewInt(-1)}}), "-1asd: invalid coins")
 
 	supplyAfterBurn, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
@@ -1374,30 +1377,26 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 	suite.mockSendCoins(suite.ctx, acc0, accAddrs[1])
 	require.NoError(suite.bankKeeper.SendCoins(suite.ctx, accAddrs[0], accAddrs[1], newCoins))
 	event1 := coreevent.Event{
-		Type:       banktypes.EventTypeTransfer,
-		Attributes: []coreevent.Attribute{},
+		Type: banktypes.EventTypeTransfer,
+		Attributes: func() ([]coreevent.Attribute, error) {
+			return []coreevent.Attribute{
+				{Key: banktypes.AttributeKeyRecipient, Value: acc1StrAddr},
+				{Key: banktypes.AttributeKeySender, Value: acc0StrAddr},
+				{Key: sdk.AttributeKeyAmount, Value: newCoins.String()},
+			}, nil
+		},
 	}
-	event1.Attributes = append(
-		event1.Attributes,
-		coreevent.Attribute{Key: banktypes.AttributeKeyRecipient, Value: acc1StrAddr},
-	)
-	event1.Attributes = append(
-		event1.Attributes,
-		coreevent.Attribute{Key: banktypes.AttributeKeySender, Value: acc0StrAddr},
-	)
-	event1.Attributes = append(
-		event1.Attributes,
-		coreevent.Attribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()},
-	)
 
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
 	// events are shifted due to the funding account events
 	events := ctx.EventManager().Events()
 	require.Equal(8, len(events))
 	require.Equal(event1.Type, events[7].Type)
-	for i := range event1.Attributes {
-		require.Equal(event1.Attributes[i].Key, events[7].Attributes[i].Key)
-		require.Equal(event1.Attributes[i].Value, events[7].Attributes[i].Value)
+	attrs, err := event1.Attributes()
+	require.NoError(err)
+	for i := range attrs {
+		require.Equal(attrs[i].Key, events[7].Attributes[i].Key)
+		require.Equal(attrs[i].Value, events[7].Attributes[i].Value)
 	}
 }
 
@@ -1459,38 +1458,41 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	require.Equal(25, len(events)) // 25 due to account funding + coin_spent + coin_recv events
 
 	event1 := coreevent.Event{
-		Type:       banktypes.EventTypeTransfer,
-		Attributes: []coreevent.Attribute{},
+		Type: banktypes.EventTypeTransfer,
+		Attributes: func() ([]coreevent.Attribute, error) {
+			return []coreevent.Attribute{
+				{Key: banktypes.AttributeKeyRecipient, Value: acc2StrAddr},
+				{Key: sdk.AttributeKeySender, Value: acc0StrAddr},
+				{Key: sdk.AttributeKeyAmount, Value: newCoins.String()},
+			}, nil
+		},
 	}
-	event1.Attributes = append(
-		event1.Attributes,
-		coreevent.Attribute{Key: banktypes.AttributeKeyRecipient, Value: acc2StrAddr},
-	)
-	event1.Attributes = append(
-		event1.Attributes,
-		coreevent.Attribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()})
+
 	event2 := coreevent.Event{
-		Type:       banktypes.EventTypeTransfer,
-		Attributes: []coreevent.Attribute{},
+		Type: banktypes.EventTypeTransfer,
+		Attributes: func() ([]coreevent.Attribute, error) {
+			attrs := []coreevent.Attribute{
+				{Key: banktypes.AttributeKeyRecipient, Value: acc3StrAddr},
+				{Key: sdk.AttributeKeySender, Value: acc0StrAddr},
+				{Key: sdk.AttributeKeyAmount, Value: newCoins2.String()},
+			}
+			return attrs, nil
+		},
 	}
-	event2.Attributes = append(
-		event2.Attributes,
-		coreevent.Attribute{Key: banktypes.AttributeKeyRecipient, Value: acc3StrAddr},
-	)
-	event2.Attributes = append(
-		event2.Attributes,
-		coreevent.Attribute{Key: sdk.AttributeKeyAmount, Value: newCoins2.String()},
-	)
 	// events are shifted due to the funding account events
 	require.Equal(event1.Type, events[22].Type)
-	for i := range event1.Attributes {
-		require.Equal(event1.Attributes[i].Key, events[22].Attributes[i].Key)
-		require.Equal(event1.Attributes[i].Value, events[22].Attributes[i].Value)
+	attrs1, err := event1.Attributes()
+	require.NoError(err)
+	for i := range attrs1 {
+		require.Equal(attrs1[i].Key, events[22].Attributes[i].Key)
+		require.Equal(attrs1[i].Value, events[22].Attributes[i].Value)
 	}
 	require.Equal(event2.Type, events[24].Type)
-	for i := range event2.Attributes {
-		require.Equal(event2.Attributes[i].Key, events[24].Attributes[i].Key)
-		require.Equal(event2.Attributes[i].Value, events[24].Attributes[i].Value)
+	attrs2, err := event2.Attributes()
+	require.NoError(err)
+	for i := range attrs2 {
+		require.Equal(attrs2[i].Key, events[24].Attributes[i].Key)
+		require.Equal(attrs2[i].Value, events[24].Attributes[i].Value)
 	}
 }
 
@@ -1526,6 +1528,28 @@ func (suite *KeeperTestSuite) TestSpendableCoins() {
 
 	suite.mockSpendableCoins(ctx, vacc)
 	require.Equal(origCoins.Sub(lockedCoins...)[0], suite.bankKeeper.SpendableCoin(ctx, accAddrs[0], "stake"))
+
+	acc2 := authtypes.NewBaseAccountWithAddress(accAddrs[2])
+	lockedCoins2 := sdk.NewCoins(sdk.NewInt64Coin("stake", 50), sdk.NewInt64Coin("tarp", 40), sdk.NewInt64Coin("rope", 30))
+	balanceCoins2 := sdk.NewCoins(sdk.NewInt64Coin("stake", 49), sdk.NewInt64Coin("tarp", 40), sdk.NewInt64Coin("rope", 31), sdk.NewInt64Coin("pole", 20))
+	expCoins2 := sdk.NewCoins(sdk.NewInt64Coin("rope", 1), sdk.NewInt64Coin("pole", 20))
+	vacc2, err := vesting.NewPermanentLockedAccount(acc2, lockedCoins2)
+	suite.Require().NoError(err)
+
+	// Go back to the suite's context since mockFundAccount uses that; FundAccount would fail for bad mocking otherwise.
+	ctx = sdk.UnwrapSDKContext(suite.ctx)
+	suite.mockFundAccount(accAddrs[2])
+	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[2], balanceCoins2))
+	suite.mockSpendableCoins(ctx, vacc2)
+	require.Equal(expCoins2, suite.bankKeeper.SpendableCoins(ctx, accAddrs[2]))
+	suite.mockSpendableCoins(ctx, vacc2)
+	require.Equal(sdk.NewInt64Coin("stake", 0), suite.bankKeeper.SpendableCoin(ctx, accAddrs[2], "stake"))
+	suite.mockSpendableCoins(ctx, vacc2)
+	require.Equal(sdk.NewInt64Coin("tarp", 0), suite.bankKeeper.SpendableCoin(ctx, accAddrs[2], "tarp"))
+	suite.mockSpendableCoins(ctx, vacc2)
+	require.Equal(sdk.NewInt64Coin("rope", 1), suite.bankKeeper.SpendableCoin(ctx, accAddrs[2], "rope"))
+	suite.mockSpendableCoins(ctx, vacc2)
+	require.Equal(sdk.NewInt64Coin("pole", 20), suite.bankKeeper.SpendableCoin(ctx, accAddrs[2], "pole"))
 }
 
 func (suite *KeeperTestSuite) TestVestingAccountSend() {

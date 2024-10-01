@@ -4,13 +4,13 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/appmodule/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth/ante"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -18,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 func TestValidateBasic(t *testing.T) {
@@ -98,7 +99,7 @@ func TestValidateMemo(t *testing.T) {
 }
 
 func TestConsumeGasForTxSize(t *testing.T) {
-	t.Skip() //  TODO(@julienrbrt) Fix after https://github.com/cosmos/cosmos-sdk/pull/20072
+	t.Skip() // TO FIX BEFORE 0.52 FINAL.
 
 	suite := SetupTestSuite(t, true)
 
@@ -188,10 +189,12 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 	suite := SetupTestSuite(t, true)
 
 	mockHeaderService := &mockHeaderService{}
-	antehandler := sdk.ChainAnteDecorators(ante.NewTxTimeoutHeightDecorator(appmodule.Environment{HeaderService: mockHeaderService}))
+	antehandler := sdk.ChainAnteDecorators(ante.NewTxTimeoutHeightDecorator(appmodulev2.Environment{HeaderService: mockHeaderService}))
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
+
+	currentTime := time.Now()
 
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
@@ -199,20 +202,25 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 	gasLimit := testdata.NewTestGasLimit()
 
 	testCases := []struct {
-		name        string
-		timeout     uint64
-		height      int64
-		expectedErr error
+		name             string
+		timeout          uint64
+		height           int64
+		timeoutTimestamp time.Time
+		timestamp        time.Time
+		expectedErr      error
 	}{
-		{"default value", 0, 10, nil},
-		{"no timeout (greater height)", 15, 10, nil},
-		{"no timeout (same height)", 10, 10, nil},
-		{"timeout (smaller height)", 9, 10, sdkerrors.ErrTxTimeoutHeight},
+		{"default value", 0, 10, time.Time{}, time.Time{}, nil},
+		{"no timeout (greater height)", 15, 10, time.Time{}, time.Time{}, nil},
+		{"no timeout (same height)", 10, 10, time.Time{}, time.Time{}, nil},
+		{"timeout (smaller height)", 9, 10, time.Time{}, time.Time{}, sdkerrors.ErrTxTimeoutHeight},
+		{"no timeout (timeout after timestamp)", 0, 20, currentTime.Add(time.Minute), currentTime, nil},
+		{"no timeout (current time)", 0, 20, currentTime, currentTime, nil},
+		{"timeout before timestamp", 0, 20, currentTime, currentTime.Add(time.Minute), sdkerrors.ErrTxTimeout},
+		{"tx contain both timeouts, timeout (timeout before timestamp)", 15, 10, currentTime, currentTime.Add(time.Minute), sdkerrors.ErrTxTimeout},
+		{"tx contain both timeout, no timeout", 15, 10, currentTime.Add(time.Minute), currentTime, nil},
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -222,12 +230,14 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 			suite.txBuilder.SetGasLimit(gasLimit)
 			suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
 			suite.txBuilder.SetTimeoutHeight(tc.timeout)
+			suite.txBuilder.SetTimeoutTimestamp(tc.timeoutTimestamp)
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 			tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 			require.NoError(t, err)
 
 			mockHeaderService.WithBlockHeight(tc.height)
+			mockHeaderService.WithBlockTime(tc.timestamp)
 			_, err = antehandler(suite.ctx, tx, true)
 			require.ErrorIs(t, err, tc.expectedErr)
 		})
@@ -246,4 +256,8 @@ func (m *mockHeaderService) HeaderInfo(_ context.Context) header.Info {
 
 func (m *mockHeaderService) WithBlockHeight(height int64) {
 	m.exp.Height = height
+}
+
+func (m *mockHeaderService) WithBlockTime(blocktime time.Time) {
+	m.exp.Time = blocktime
 }

@@ -67,19 +67,18 @@ type RootStore interface {
 	// SetMetrics sets the telemetry handler on the RootStore.
 	SetMetrics(m metrics.Metrics)
 
+	Prune(version uint64) error
+
 	io.Closer
 }
 
-// UpgradeableRootStore extends the RootStore interface to support loading versions
-// with upgrades.
-type UpgradeableRootStore interface {
-	RootStore
-
+// UpgradeableStore defines the interface for upgrading store keys.
+type UpgradeableStore interface {
 	// LoadVersionAndUpgrade behaves identically to LoadVersion except it also
 	// accepts a StoreUpgrades object that defines a series of transformations to
 	// apply to store keys (if any).
 	//
-	// Note, handling StoreUpgrades is optional depending on the underlying RootStore
+	// Note, handling StoreUpgrades is optional depending on the underlying store
 	// implementation.
 	LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreUpgrades) error
 }

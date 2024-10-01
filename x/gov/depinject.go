@@ -2,23 +2,21 @@ package gov
 
 import (
 	"fmt"
+	"maps"
 	"slices"
-	"sort"
 	"strings"
-
-	"golang.org/x/exp/maps"
 
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	authtypes "cosmossdk.io/x/auth/types"
 	govclient "cosmossdk.io/x/gov/client"
 	"cosmossdk.io/x/gov/keeper"
 	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -122,12 +120,9 @@ func InvokeSetHooks(keeper *keeper.Keeper, govHooks map[string]govtypes.GovHooks
 
 	// Default ordering is lexical by module name.
 	// Explicit ordering can be added to the module config if required.
-	modNames := maps.Keys(govHooks)
-	order := modNames
-	sort.Strings(order)
-
+	modNames := slices.Sorted(maps.Keys(govHooks))
 	var multiHooks govtypes.MultiGovHooks
-	for _, modName := range order {
+	for _, modName := range modNames {
 		hook, ok := govHooks[modName]
 		if !ok {
 			return fmt.Errorf("can't find staking hooks for module %s", modName)

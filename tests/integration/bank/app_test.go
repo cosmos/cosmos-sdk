@@ -12,9 +12,6 @@ import (
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	_ "cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/auth"
-	_ "cosmossdk.io/x/auth/tx/config"
-	authtypes "cosmossdk.io/x/auth/types"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
@@ -36,6 +33,9 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type (
@@ -97,6 +97,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 				configurator.AuthModule(),
 				configurator.StakingModule(),
 				configurator.TxModule(),
+				configurator.ValidateModule(),
 				configurator.ConsensusModule(),
 				configurator.BankModule(),
 				configurator.GovModule(),
@@ -118,7 +119,7 @@ func checkBalance(t *testing.T, baseApp *baseapp.BaseApp, addr sdk.AccAddress, b
 	t.Helper()
 	ctxCheck := baseApp.NewContext(true)
 	keeperBalances := keeper.GetAllBalances(ctxCheck, addr)
-	require.True(t, balances.Equal(keeperBalances))
+	require.True(t, balances.Equal(keeperBalances), balances.String(), keeperBalances.String())
 }
 
 func TestSendNotEnoughBalance(t *testing.T) {
@@ -476,4 +477,48 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestSendToNonExistingAccount tests sending coins to an account that does not exist, and this account
+// must not be created.
+func TestSendToNonExistingAccount(t *testing.T) {
+	acc1 := authtypes.NewBaseAccountWithAddress(addr1)
+	genAccs := []authtypes.GenesisAccount{acc1}
+	s := createTestSuite(t, genAccs)
+	baseApp := s.App.BaseApp
+	ctx := baseApp.NewContext(false)
+
+	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	_, err := baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: baseApp.LastBlockHeight() + 1})
+	require.NoError(t, err)
+	_, err = baseApp.Commit()
+	require.NoError(t, err)
+
+	addr2Str, err := s.AccountKeeper.AddressCodec().BytesToString(addr2)
+	require.NoError(t, err)
+	sendMsg := types.NewMsgSend(addr1.String(), addr2Str, coins)
+	h := header.Info{Height: baseApp.LastBlockHeight() + 1}
+	txConfig := moduletestutil.MakeTestTxConfig(cdctestutil.CodecOptions{})
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, h, []sdk.Msg{sendMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
+	require.NoError(t, err)
+
+	// Check that the account was not created
+	acc2 := s.AccountKeeper.GetAccount(baseApp.NewContext(true), addr2)
+	require.Nil(t, acc2)
+
+	// But it does have a balance
+	checkBalance(t, baseApp, addr2, coins, s.BankKeeper)
+
+	// Now we send coins back and the account should be created
+	sendMsg = types.NewMsgSend(addr2Str, addr1.String(), coins)
+	h = header.Info{Height: baseApp.LastBlockHeight() + 1}
+	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, baseApp, h, []sdk.Msg{sendMsg}, "", []uint64{0}, []uint64{0}, true, true, priv2)
+	require.NoError(t, err)
+
+	// Balance has been reduced
+	checkBalance(t, baseApp, addr2, sdk.NewCoins(), s.BankKeeper)
+
+	// Check that the account was created
+	acc2 = s.AccountKeeper.GetAccount(baseApp.NewContext(true), addr2)
+	require.NotNil(t, acc2, "account should have been created %s", addr2.String())
 }

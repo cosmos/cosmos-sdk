@@ -1,4 +1,4 @@
-go 1.22.2
+go 1.23
 
 use (
 	.
@@ -26,7 +26,9 @@ use (
 	./tools/confix
 	./tools/hubl
 	./x/accounts
+	./x/accounts/defaults/base
 	./x/accounts/defaults/lockup
+	./x/accounts/defaults/multisig
 	./x/auth
 	./x/authz
 	./x/bank

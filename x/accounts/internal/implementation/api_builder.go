@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"cosmossdk.io/core/transaction"
 )
 
 var (
@@ -22,7 +24,7 @@ type InitBuilder struct {
 	// handler is the handler function that will be called when the smart account is initialized.
 	// Although the function here is defined to take an any, the smart account will work
 	// with a typed version of it.
-	handler func(ctx context.Context, initRequest ProtoMsg) (initResponse ProtoMsg, err error)
+	handler func(ctx context.Context, initRequest transaction.Msg) (initResponse transaction.Msg, err error)
 
 	// schema is the schema of the message that will be passed to the handler function.
 	schema HandlerSchema
@@ -30,7 +32,7 @@ type InitBuilder struct {
 
 // makeHandler returns the handler function that will be called when the smart account is initialized.
 // It returns an error if no handler was registered.
-func (i *InitBuilder) makeHandler() (func(ctx context.Context, initRequest ProtoMsg) (initResponse ProtoMsg, err error), error) {
+func (i *InitBuilder) makeHandler() (func(ctx context.Context, initRequest transaction.Msg) (initResponse transaction.Msg, err error), error) {
 	if i.handler == nil {
 		return nil, errNoInitHandler
 	}
@@ -40,7 +42,7 @@ func (i *InitBuilder) makeHandler() (func(ctx context.Context, initRequest Proto
 // NewExecuteBuilder creates a new ExecuteBuilder instance.
 func NewExecuteBuilder() *ExecuteBuilder {
 	return &ExecuteBuilder{
-		handlers:       make(map[string]func(ctx context.Context, executeRequest ProtoMsg) (executeResponse ProtoMsg, err error)),
+		handlers:       make(map[string]func(ctx context.Context, executeRequest transaction.Msg) (executeResponse transaction.Msg, err error)),
 		handlersSchema: make(map[string]HandlerSchema),
 	}
 }
@@ -49,7 +51,7 @@ func NewExecuteBuilder() *ExecuteBuilder {
 // to a handler function for a specific account.
 type ExecuteBuilder struct {
 	// handlers is a map of handler functions that will be called when the smart account is executed.
-	handlers map[string]func(ctx context.Context, executeRequest ProtoMsg) (executeResponse ProtoMsg, err error)
+	handlers map[string]func(ctx context.Context, executeRequest transaction.Msg) (executeResponse transaction.Msg, err error)
 
 	// handlersSchema is a map of schemas for the messages that will be passed to the handler functions
 	// and the messages that will be returned by the handler functions.
@@ -59,10 +61,10 @@ type ExecuteBuilder struct {
 	err error
 }
 
-func (r *ExecuteBuilder) makeHandler() (func(ctx context.Context, executeRequest ProtoMsg) (executeResponse ProtoMsg, err error), error) {
+func (r *ExecuteBuilder) makeHandler() (func(ctx context.Context, executeRequest transaction.Msg) (executeResponse transaction.Msg, err error), error) {
 	// if no handler is registered it's fine, it means the account will not be accepting execution or query messages.
 	if len(r.handlers) == 0 {
-		return func(ctx context.Context, _ ProtoMsg) (_ ProtoMsg, err error) {
+		return func(ctx context.Context, _ transaction.Msg) (_ transaction.Msg, err error) {
 			return nil, errNoExecuteHandler
 		}, nil
 	}
@@ -72,7 +74,7 @@ func (r *ExecuteBuilder) makeHandler() (func(ctx context.Context, executeRequest
 	}
 
 	// build the real execution handler
-	return func(ctx context.Context, executeRequest ProtoMsg) (executeResponse ProtoMsg, err error) {
+	return func(ctx context.Context, executeRequest transaction.Msg) (executeResponse transaction.Msg, err error) {
 		messageName := MessageName(executeRequest)
 		handler, ok := r.handlers[messageName]
 		if !ok {
@@ -96,7 +98,7 @@ type QueryBuilder struct {
 	er *ExecuteBuilder
 }
 
-func (r *QueryBuilder) makeHandler() (func(ctx context.Context, queryRequest ProtoMsg) (queryResponse ProtoMsg, err error), error) {
+func (r *QueryBuilder) makeHandler() (func(ctx context.Context, queryRequest transaction.Msg) (queryResponse transaction.Msg, err error), error) {
 	return r.er.makeHandler()
 }
 

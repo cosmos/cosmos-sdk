@@ -9,14 +9,13 @@ import (
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/log"
+	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	banktypes "cosmossdk.io/x/bank/types"
 	minttypes "cosmossdk.io/x/mint/types"
 
@@ -31,23 +30,24 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // SetupOptions defines arguments that are passed into `Simapp` constructor.
 type SetupOptions struct {
 	Logger  log.Logger
-	DB      *dbm.MemDB
+	DB      corestore.KVStoreWithBatch
 	AppOpts servertypes.AppOptions
 }
 
 func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = invCheckPeriod
 
-	app := NewSimApp(coretesting.NewNopLogger(), db, nil, true, appOptions)
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, appOptions)
 	if withGenesis {
 		return app, app.DefaultGenesis()
 	}
@@ -65,15 +65,19 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 	validator := cmttypes.NewValidator(pubKey, 1)
 	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
+	app := NewSimApp(options.Logger, options.DB, nil, true, options.AppOpts)
+
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	accAddr, err := app.InterfaceRegistry().SigningContext().AddressCodec().BytesToString(acc.GetAddress())
+	require.NoError(t, err)
+
 	balance := banktypes.Balance{
-		Address: acc.GetAddress().String(),
+		Address: accAddr,
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
 	}
 
-	app := NewSimApp(options.Logger, options.DB, nil, true, options.AppOpts)
 	genesisState := app.DefaultGenesis()
 	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 	require.NoError(t, err)
@@ -107,11 +111,14 @@ func Setup(t *testing.T, isCheckTx bool) *SimApp {
 	validator := cmttypes.NewValidator(pubKey, 1)
 	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
+	sApp, _ := setup(true, 0)
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	accAddr, err := sApp.interfaceRegistry.SigningContext().AddressCodec().BytesToString(acc.GetAddress())
+	require.NoError(t, err)
 	balance := banktypes.Balance{
-		Address: acc.GetAddress().String(),
+		Address: accAddr,
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
 	}
 
@@ -170,9 +177,11 @@ func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	accAddr, err := app.interfaceRegistry.SigningContext().AddressCodec().BytesToString(acc.GetAddress())
+	require.NoError(t, err)
 	balances := []banktypes.Balance{
 		{
-			Address: acc.GetAddress().String(),
+			Address: accAddr,
 			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
 		},
 	}
@@ -226,11 +235,11 @@ func NewTestNetworkFixture() network.TestFixture {
 	}
 	defer os.RemoveAll(dir)
 
-	app := NewSimApp(coretesting.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
+	app := NewSimApp(log.NewNopLogger(), coretesting.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
 
 	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return NewSimApp(
-			val.GetLogger(), dbm.NewMemDB(), nil, true,
+			val.GetLogger(), coretesting.NewMemDB(), nil, true,
 			simtestutil.NewAppOptionsWithFlagHome(client.GetConfigFromViper(val.GetViper()).RootDir),
 			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),

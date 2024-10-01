@@ -1640,7 +1640,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 			expErr:    true,
 			expErrMsg: "not found",
 		},
-		"empty depositer": {
+		"empty depositor": {
 			preRun: func() uint64 {
 				return pID
 			},
@@ -2008,7 +2008,6 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			msg := tc.input()
 			exec := func(updateParams *v1.MsgUpdateParams) error {
@@ -2154,7 +2153,6 @@ func (suite *KeeperTestSuite) TestMsgUpdateMessageParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			_, err := suite.msgSrvr.UpdateMessageParams(suite.ctx, tc.input)
 			if tc.expErrMsg != "" {
@@ -2308,7 +2306,6 @@ func (suite *KeeperTestSuite) TestMsgSudoExec() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			_, err := suite.msgSrvr.SudoExec(suite.ctx, tc.input)
 			if tc.expErrMsg != "" {

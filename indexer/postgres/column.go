@@ -8,7 +8,7 @@ import (
 )
 
 // createColumnDefinition writes a column definition within a CREATE TABLE statement for the field.
-func (tm *ObjectIndexer) createColumnDefinition(writer io.Writer, field schema.Field) error {
+func (tm *objectIndexer) createColumnDefinition(writer io.Writer, field schema.Field) error {
 	_, err := fmt.Fprintf(writer, "%q ", field.Name)
 	if err != nil {
 		return err
@@ -25,7 +25,7 @@ func (tm *ObjectIndexer) createColumnDefinition(writer io.Writer, field schema.F
 	} else {
 		switch field.Kind {
 		case schema.EnumKind:
-			_, err = fmt.Fprintf(writer, "%q", enumTypeName(tm.moduleName, field.EnumDefinition))
+			_, err = fmt.Fprintf(writer, "%q", enumTypeName(tm.moduleName, field.ReferencedType))
 			if err != nil {
 				return err
 			}
@@ -88,9 +88,9 @@ func simpleColumnType(kind schema.Kind) string {
 		return "BIGINT"
 	case schema.Uint64Kind:
 		return "NUMERIC"
-	case schema.IntegerStringKind:
+	case schema.IntegerKind:
 		return "NUMERIC"
-	case schema.DecimalStringKind:
+	case schema.DecimalKind:
 		return "NUMERIC"
 	case schema.Float32Kind:
 		return "REAL"
@@ -100,7 +100,7 @@ func simpleColumnType(kind schema.Kind) string {
 		return "JSONB"
 	case schema.DurationKind:
 		return "BIGINT"
-	case schema.Bech32AddressKind:
+	case schema.AddressKind:
 		return "TEXT"
 	default:
 		return ""
@@ -110,7 +110,7 @@ func simpleColumnType(kind schema.Kind) string {
 // updatableColumnName is the name of the insertable/updatable column name for the field.
 // This is the field name in most cases, except for time columns which are stored as nanos
 // and then converted to timestamp generated columns.
-func (tm *ObjectIndexer) updatableColumnName(field schema.Field) (name string, err error) {
+func (tm *objectIndexer) updatableColumnName(field schema.Field) (name string, err error) {
 	name = field.Name
 	if field.Kind == schema.TimeKind {
 		name = fmt.Sprintf("%s_nanos", name)

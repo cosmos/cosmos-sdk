@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"time"
 
@@ -36,6 +37,9 @@ var (
 	// UintValue represents a collections.ValueCodec to work with Uint.
 	UintValue collcodec.ValueCodec[math.Uint] = uintValueCodec{}
 
+	// LegacyDecValue represents a collections.ValueCodec to work with LegacyDec.
+	LegacyDecValue collcodec.ValueCodec[math.LegacyDec] = legacyDecValueCodec{}
+
 	// TimeKey represents a collections.KeyCodec to work with time.Time
 	// Deprecated: exists only for state compatibility reasons, should not
 	// be used for new storage keys using time. Please use the time KeyCodec
@@ -56,8 +60,9 @@ var (
 )
 
 const (
-	Int  string = "math.Int"
-	Uint string = "math.Uint"
+	Int       string = "math.Int"
+	Uint      string = "math.Uint"
+	LegacyDec string = "math.LegacyDec"
 )
 
 type addressUnion interface {
@@ -245,6 +250,42 @@ func (i uintValueCodec) ValueType() string {
 	return Uint
 }
 
+type legacyDecValueCodec struct{}
+
+func (i legacyDecValueCodec) Encode(value math.LegacyDec) ([]byte, error) {
+	return value.Marshal()
+}
+
+func (i legacyDecValueCodec) Decode(b []byte) (math.LegacyDec, error) {
+	v := new(math.LegacyDec)
+	err := v.Unmarshal(b)
+	if err != nil {
+		return math.LegacyDec{}, err
+	}
+	return *v, nil
+}
+
+func (i legacyDecValueCodec) EncodeJSON(value math.LegacyDec) ([]byte, error) {
+	return value.MarshalJSON()
+}
+
+func (i legacyDecValueCodec) DecodeJSON(b []byte) (math.LegacyDec, error) {
+	v := new(math.LegacyDec)
+	err := v.UnmarshalJSON(b)
+	if err != nil {
+		return math.LegacyDec{}, err
+	}
+	return *v, nil
+}
+
+func (i legacyDecValueCodec) Stringify(value math.LegacyDec) string {
+	return value.String()
+}
+
+func (i legacyDecValueCodec) ValueType() string {
+	return LegacyDec
+}
+
 type timeKeyCodec struct{}
 
 func (timeKeyCodec) Encode(buffer []byte, key time.Time) (int, error) {
@@ -255,7 +296,7 @@ var timeSize = len(FormatTimeBytes(time.Time{}))
 
 func (timeKeyCodec) Decode(buffer []byte) (int, time.Time, error) {
 	if len(buffer) != timeSize {
-		return 0, time.Time{}, fmt.Errorf("invalid time buffer size")
+		return 0, time.Time{}, errors.New("invalid time buffer size")
 	}
 	t, err := ParseTimeBytes(buffer)
 	if err != nil {

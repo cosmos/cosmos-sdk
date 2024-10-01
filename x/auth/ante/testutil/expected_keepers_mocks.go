@@ -10,9 +10,8 @@ import (
 
 	address "cosmossdk.io/core/address"
 	appmodule "cosmossdk.io/core/appmodule"
-	types "cosmossdk.io/x/auth/types"
-	types0 "cosmossdk.io/x/consensus/types"
-	types1 "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
+	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -54,10 +53,10 @@ func (mr *MockAccountKeeperMockRecorder) AddressCodec() *gomock.Call {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types1.AccAddress) types1.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
-	ret0, _ := ret[0].(types1.AccountI)
+	ret0, _ := ret[0].(types.AccountI)
 	return ret0
 }
 
@@ -82,10 +81,10 @@ func (mr *MockAccountKeeperMockRecorder) GetEnvironment() *gomock.Call {
 }
 
 // GetModuleAddress mocks base method.
-func (m *MockAccountKeeper) GetModuleAddress(moduleName string) types1.AccAddress {
+func (m *MockAccountKeeper) GetModuleAddress(moduleName string) types.AccAddress {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetModuleAddress", moduleName)
-	ret0, _ := ret[0].(types1.AccAddress)
+	ret0, _ := ret[0].(types.AccAddress)
 	return ret0
 }
 
@@ -96,10 +95,10 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(moduleName interface{}
 }
 
 // GetParams mocks base method.
-func (m *MockAccountKeeper) GetParams(ctx context.Context) types.Params {
+func (m *MockAccountKeeper) GetParams(ctx context.Context) types0.Params {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetParams", ctx)
-	ret0, _ := ret[0].(types.Params)
+	ret0, _ := ret[0].(types0.Params)
 	return ret0
 }
 
@@ -110,10 +109,10 @@ func (mr *MockAccountKeeperMockRecorder) GetParams(ctx interface{}) *gomock.Call
 }
 
 // NewAccountWithAddress mocks base method.
-func (m *MockAccountKeeper) NewAccountWithAddress(ctx context.Context, addr types1.AccAddress) types1.AccountI {
+func (m *MockAccountKeeper) NewAccountWithAddress(ctx context.Context, addr types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccountWithAddress", ctx, addr)
-	ret0, _ := ret[0].(types1.AccountI)
+	ret0, _ := ret[0].(types.AccountI)
 	return ret0
 }
 
@@ -124,7 +123,7 @@ func (mr *MockAccountKeeperMockRecorder) NewAccountWithAddress(ctx, addr interfa
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types1.AccountI) {
+func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types.AccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", ctx, acc)
 }
@@ -159,7 +158,7 @@ func (m *MockFeegrantKeeper) EXPECT() *MockFeegrantKeeperMockRecorder {
 }
 
 // UseGrantedFees mocks base method.
-func (m *MockFeegrantKeeper) UseGrantedFees(ctx context.Context, granter, grantee types1.AccAddress, fee types1.Coins, msgs []types1.Msg) error {
+func (m *MockFeegrantKeeper) UseGrantedFees(ctx context.Context, granter, grantee types.AccAddress, fee types.Coins, msgs []types.Msg) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UseGrantedFees", ctx, granter, grantee, fee, msgs)
 	ret0, _ := ret[0].(error)
@@ -195,32 +194,18 @@ func (m *MockConsensusKeeper) EXPECT() *MockConsensusKeeperMockRecorder {
 	return m.recorder
 }
 
-// GetCometInfo mocks base method.
-func (m *MockConsensusKeeper) GetCometInfo(ctx context.Context, request *types0.QueryGetCometInfoRequest) (*types0.QueryGetCometInfoResponse, error) {
+// BlockParams mocks base method.
+func (m *MockConsensusKeeper) BlockParams(arg0 context.Context) (uint64, uint64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCometInfo", ctx, request)
-	ret0, _ := ret[0].(*types0.QueryGetCometInfoResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "BlockParams", arg0)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(uint64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
-// GetCometInfo indicates an expected call of GetCometInfo.
-func (mr *MockConsensusKeeperMockRecorder) GetCometInfo(ctx, request interface{}) *gomock.Call {
+// BlockParams indicates an expected call of BlockParams.
+func (mr *MockConsensusKeeperMockRecorder) BlockParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCometInfo", reflect.TypeOf((*MockConsensusKeeper)(nil).GetCometInfo), ctx, request)
-}
-
-// Params mocks base method.
-func (m *MockConsensusKeeper) Params(arg0 context.Context, arg1 *types0.QueryParamsRequest) (*types0.QueryParamsResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Params", arg0, arg1)
-	ret0, _ := ret[0].(*types0.QueryParamsResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Params indicates an expected call of Params.
-func (mr *MockConsensusKeeperMockRecorder) Params(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Params", reflect.TypeOf((*MockConsensusKeeper)(nil).Params), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BlockParams", reflect.TypeOf((*MockConsensusKeeper)(nil).BlockParams), arg0)
 }

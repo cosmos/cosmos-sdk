@@ -1,13 +1,13 @@
 package orm
 
 import (
-	"fmt"
+	"errors"
 	"reflect"
 
 	"github.com/cosmos/gogoproto/proto"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/group/errors"
+	grouperrors "cosmossdk.io/x/group/errors"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -20,7 +20,7 @@ const defaultPageLimit = 100
 type IteratorFunc func(dest proto.Message) (RowID, error)
 
 // LoadNext loads the next value in the sequence into the pointer passed as dest and returns the key. If there
-// are no more items the errors.ErrORMIteratorDone error is returned
+// are no more items the grouperrors.ErrORMIteratorDone error is returned
 // The key is the rowID and not any MultiKeyIndex key.
 func (i IteratorFunc) LoadNext(dest proto.Message) (RowID, error) {
 	return i(dest)
@@ -35,10 +35,10 @@ func NewSingleValueIterator(rowID RowID, val []byte) Iterator {
 	var closed bool
 	return IteratorFunc(func(dest proto.Message) (RowID, error) {
 		if dest == nil {
-			return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "destination object must not be nil")
+			return nil, errorsmod.Wrap(grouperrors.ErrORMInvalidArgument, "destination object must not be nil")
 		}
 		if closed || val == nil {
-			return nil, errors.ErrORMIteratorDone
+			return nil, grouperrors.ErrORMIteratorDone
 		}
 		closed = true
 		return rowID, proto.Unmarshal(val, dest)
@@ -48,7 +48,7 @@ func NewSingleValueIterator(rowID RowID, val []byte) Iterator {
 // Iterator that return ErrORMInvalidIterator only.
 func NewInvalidIterator() Iterator {
 	return IteratorFunc(func(dest proto.Message) (RowID, error) {
-		return nil, errors.ErrORMInvalidIterator
+		return nil, grouperrors.ErrORMInvalidIterator
 	})
 }
 
@@ -63,20 +63,20 @@ type LimitedIterator struct {
 // max can be 0 or any positive number
 func LimitIterator(parent Iterator, max int) (*LimitedIterator, error) {
 	if max < 0 {
-		return nil, errors.ErrORMInvalidArgument.Wrap("quantity must not be negative")
+		return nil, grouperrors.ErrORMInvalidArgument.Wrap("quantity must not be negative")
 	}
 	if parent == nil {
-		return nil, errors.ErrORMInvalidArgument.Wrap("parent iterator must not be nil")
+		return nil, grouperrors.ErrORMInvalidArgument.Wrap("parent iterator must not be nil")
 	}
 	return &LimitedIterator{remainingCount: max, parentIterator: parent}, nil
 }
 
 // LoadNext loads the next value in the sequence into the pointer passed as dest and returns the key. If there
-// are no more items or the defined max number of elements was returned the `errors.ErrORMIteratorDone` error is returned
+// are no more items or the defined max number of elements was returned the `grouperrors.ErrORMIteratorDone` error is returned
 // The key is the rowID and not any MultiKeyIndex key.
 func (i *LimitedIterator) LoadNext(dest proto.Message) (RowID, error) {
 	if i.remainingCount == 0 {
-		return nil, errors.ErrORMIteratorDone
+		return nil, grouperrors.ErrORMIteratorDone
 	}
 	i.remainingCount--
 	return i.parentIterator.LoadNext(dest)
@@ -91,7 +91,7 @@ func (i LimitedIterator) Close() error {
 // When the iterator is closed or has no elements the according error is passed as return value.
 func First(it Iterator, dest proto.Message) (RowID, error) {
 	if it == nil {
-		return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "iterator must not be nil")
+		return nil, errorsmod.Wrap(grouperrors.ErrORMInvalidArgument, "iterator must not be nil")
 	}
 	defer it.Close()
 	binKey, err := it.LoadNext(dest)
@@ -136,7 +136,7 @@ func Paginate(
 	countTotal := pageRequest.CountTotal
 
 	if offset > 0 && key != nil {
-		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+		return nil, errors.New("invalid request, either offset or key is expected, got both")
 	}
 
 	if limit == 0 {
@@ -147,7 +147,7 @@ func Paginate(
 	}
 
 	if it == nil {
-		return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "iterator must not be nil")
+		return nil, errorsmod.Wrap(grouperrors.ErrORMInvalidArgument, "iterator must not be nil")
 	}
 	defer it.Close()
 
@@ -177,11 +177,11 @@ func Paginate(
 
 		modelProto, ok := model.Interface().(proto.Message)
 		if !ok {
-			return nil, errorsmod.Wrapf(errors.ErrORMInvalidArgument, "%s should implement codec.ProtoMarshaler", elemType)
+			return nil, errorsmod.Wrapf(grouperrors.ErrORMInvalidArgument, "%s should implement codec.ProtoMarshaler", elemType)
 		}
 		binKey, err := it.LoadNext(modelProto)
 		if err != nil {
-			if errors.ErrORMIteratorDone.Is(err) {
+			if grouperrors.ErrORMIteratorDone.Is(err) {
 				break
 			}
 			return nil, err
@@ -237,7 +237,7 @@ type ModelSlicePtr interface{}
 //	require.NoError(t, err)
 func ReadAll(it Iterator, dest ModelSlicePtr) ([]RowID, error) {
 	if it == nil {
-		return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "iterator must not be nil")
+		return nil, errorsmod.Wrap(grouperrors.ErrORMInvalidArgument, "iterator must not be nil")
 	}
 	defer it.Close()
 
@@ -261,7 +261,7 @@ func ReadAll(it Iterator, dest ModelSlicePtr) ([]RowID, error) {
 		switch {
 		case err == nil:
 			tmpSlice = reflect.Append(tmpSlice, val)
-		case errors.ErrORMIteratorDone.Is(err):
+		case grouperrors.ErrORMIteratorDone.Is(err):
 			destRef.Set(tmpSlice)
 			return rowIDs, nil
 		default:
@@ -276,14 +276,14 @@ func ReadAll(it Iterator, dest ModelSlicePtr) ([]RowID, error) {
 // It overwrites destRef and tmpSlice using reflection.
 func assertDest(dest ModelSlicePtr, destRef, tmpSlice *reflect.Value) (reflect.Type, error) {
 	if dest == nil {
-		return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "destination must not be nil")
+		return nil, errorsmod.Wrap(grouperrors.ErrORMInvalidArgument, "destination must not be nil")
 	}
 	tp := reflect.ValueOf(dest)
 	if tp.Kind() != reflect.Ptr {
-		return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "destination must be a pointer to a slice")
+		return nil, errorsmod.Wrap(grouperrors.ErrORMInvalidArgument, "destination must be a pointer to a slice")
 	}
 	if tp.Elem().Kind() != reflect.Slice {
-		return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "destination must point to a slice")
+		return nil, errorsmod.Wrap(grouperrors.ErrORMInvalidArgument, "destination must point to a slice")
 	}
 
 	// Since dest is just an interface{}, we overwrite destRef using reflection
@@ -291,15 +291,15 @@ func assertDest(dest ModelSlicePtr, destRef, tmpSlice *reflect.Value) (reflect.T
 	*destRef = tp.Elem()
 	// We need to verify that we can call Set() on destRef.
 	if !destRef.CanSet() {
-		return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "destination not assignable")
+		return nil, errorsmod.Wrap(grouperrors.ErrORMInvalidArgument, "destination not assignable")
 	}
 
 	elemType := reflect.TypeOf(dest).Elem().Elem()
 
 	protoMarshaler := reflect.TypeOf((*proto.Message)(nil)).Elem()
 	if !elemType.Implements(protoMarshaler) &&
-		!reflect.PtrTo(elemType).Implements(protoMarshaler) {
-		return nil, errorsmod.Wrapf(errors.ErrORMInvalidArgument, "unsupported type :%s", elemType)
+		!reflect.PointerTo(elemType).Implements(protoMarshaler) {
+		return nil, errorsmod.Wrapf(grouperrors.ErrORMInvalidArgument, "unsupported type :%s", elemType)
 	}
 
 	// tmpSlice is a slice value for the specified type

@@ -53,7 +53,7 @@ The usage of extension interfaces allows modules to define only the functionalit
 https://github.com/cosmos/cosmos-sdk/blob/eee5e21e1c8d0995b6d4f83b7f55ec0b58d27ba7/core/appmodule/module.go#L74-L78
 ```
 
-* `RegisterLegacyAminoCodec(*codec.LegacyAmino)`: Registers the `amino` codec for the module, which is used to marshal and unmarshal structs to/from `[]byte` in order to persist them in the module's `KVStore`.
+* `RegisterLegacyAminoCodec(registry.AminoRegistrar)`: Registers the `amino` codec for the module, which is used to marshal and unmarshal structs to/from `[]byte` in order to persist them in the module's `KVStore`.
 
 ### `HasRegisterInterfaces`
 
@@ -260,7 +260,7 @@ Here's an example of a concrete integration within an `simapp`:
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go#L411-L434
 ```
 
-This is the same example from `runtime` (the package that powers app v2):
+This is the same example from `runtime` (the package that powers app di):
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/runtime/module.go#L61

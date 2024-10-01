@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -45,7 +46,7 @@ func (gs GenesisState) Validate() error {
 	for _, e := range gs.Evidence {
 		evi, ok := e.GetCachedValue().(exported.Evidence)
 		if !ok {
-			return fmt.Errorf("expected evidence")
+			return errors.New("expected evidence")
 		}
 		if err := evi.ValidateBasic(); err != nil {
 			return err

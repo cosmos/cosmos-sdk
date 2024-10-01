@@ -21,7 +21,7 @@ Get familiar with the SDK and explore its main concepts.
 * [**Core Concepts**](learn/advanced/00-baseapp.md) -  Read about the core concepts like baseapp, the store, or the server.
 * [**Building Modules**](build/building-modules/00-intro.md) -  Discover how to build modules for the Cosmos SDK.
 * [**Running a Node**](https://docs.cosmos.network/main/user/run-node/keyring) - Running and interacting with nodes using the CLI and API.
-* [**Modules**](./build/modules/README.md) - Explore existing modules to build your application with.
+* [**Modules**](./build/building-modules/00-intro.md) - Explore existing modules to build your application with.
 
 ## Explore the Stack
 
@@ -34,4 +34,4 @@ Check out the docs for the various parts of the Cosmos stack.
 
 * [**GitHub Discussions**](https://github.com/orgs/cosmos/discussions) - Ask questions and discuss SDK development on GitHub.
 * [**Discord**](https://discord.gg/interchain) - Chat with Cosmos developers on Discord.
-* [**Found an issue?**](https://github.com/cosmos/cosmos-sdk/edit/main/docs/docs/README.md) - Help us improve this page by suggesting edits on GitHub.
+* [**Found an issue?**](https://github.com/cosmos/cosmos-sdk/edit/main/docs/Introduction.md) - Help us improve this page by suggesting edits on GitHub.

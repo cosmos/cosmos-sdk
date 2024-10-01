@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -12,8 +13,6 @@ import (
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/auth/ante"
-	authsigning "cosmossdk.io/x/auth/signing"
 	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 
@@ -25,6 +24,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func newWrapperFromDecodedTx(
@@ -176,6 +177,11 @@ func (w *gogoTxWrapper) GetMemo() string { return w.Tx.Body.Memo }
 
 // GetTimeoutHeight returns the transaction's timeout height (if set).
 func (w *gogoTxWrapper) GetTimeoutHeight() uint64 { return w.Tx.Body.TimeoutHeight }
+
+// GetTimeoutTimeStamp returns the transaction's timeout timestamp (if set).
+func (w *gogoTxWrapper) GetTimeoutTimeStamp() time.Time {
+	return w.Tx.Body.TimeoutTimestamp.AsTime()
+}
 
 // GetUnordered returns the transaction's unordered field (if set).
 func (w *gogoTxWrapper) GetUnordered() bool { return w.Tx.Body.Unordered }

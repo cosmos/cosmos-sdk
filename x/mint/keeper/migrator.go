@@ -8,11 +8,11 @@ import (
 
 // Migrator is a struct for handling in-place state migrations.
 type Migrator struct {
-	keeper Keeper
+	keeper *Keeper
 }
 
 // NewMigrator returns Migrator instance for the state migration.
-func NewMigrator(k Keeper) Migrator {
+func NewMigrator(k *Keeper) Migrator {
 	return Migrator{
 		keeper: k,
 	}
@@ -22,7 +22,7 @@ func NewMigrator(k Keeper) Migrator {
 // version 2. Specifically, it takes the parameters that are currently stored
 // and managed by the x/params modules and stores them directly into the x/mint
 // module state.
-func (m Migrator) Migrate1to2(ctx context.Context) error {
+func (m Migrator) Migrate1to2(_ context.Context) error {
 	return nil
 }
 

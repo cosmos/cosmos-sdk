@@ -33,13 +33,6 @@ import (
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/auth"
-	"cosmossdk.io/x/auth/migrations/legacytx"
-	"cosmossdk.io/x/auth/signing"
-	"cosmossdk.io/x/auth/tx"
-	authtypes "cosmossdk.io/x/auth/types"
-	"cosmossdk.io/x/auth/vesting"
-	vestingtypes "cosmossdk.io/x/auth/vesting/types"
 	authztypes "cosmossdk.io/x/authz"
 	authzmodule "cosmossdk.io/x/authz/module"
 	"cosmossdk.io/x/bank"
@@ -75,6 +68,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
 // TestAminoJSON_Equivalence tests that x/tx/Encoder encoding is equivalent to the legacy Encoder encoding.
@@ -377,10 +377,12 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"staking/create_validator": {
 			gogo: &stakingtypes.MsgCreateValidator{Pubkey: pubkeyAny},
 			pulsar: &stakingapi.MsgCreateValidator{
-				Pubkey:      pubkeyAnyPulsar,
-				Description: &stakingapi.Description{},
-				Commission:  &stakingapi.CommissionRates{},
-				Value:       &v1beta1.Coin{},
+				Pubkey: pubkeyAnyPulsar,
+				Description: &stakingapi.Description{
+					Metadata: &stakingapi.Metadata{},
+				},
+				Commission: &stakingapi.CommissionRates{},
+				Value:      &v1beta1.Coin{},
 			},
 		},
 		"staking/msg_cancel_unbonding_delegation_response": {

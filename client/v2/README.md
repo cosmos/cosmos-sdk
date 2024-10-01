@@ -38,7 +38,7 @@ Here are the steps to use AutoCLI:
 
 1. Ensure your app's modules implements the `appmodule.AppModule` interface.
 2. (optional) Configure how to behave as `autocli` command generation, by implementing the `func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions` method on the module.
-3. Use the `autocli.AppOptions` struct to specify the modules you defined. If you are using `depinject` / app v2, it can automatically create an instance of `autocli.AppOptions` based on your app's configuration.
+3. Use the `autocli.AppOptions` struct to specify the modules you defined. If you are using `depinject`, it can automatically create an instance of `autocli.AppOptions` based on your app's configuration.
 4. Use the `EnhanceRootCommand()` method provided by `autocli` to add the CLI commands for the specified modules to your root command.
 
 :::tip
@@ -131,6 +131,30 @@ AutoCLI can create a gov proposal of any tx by simply setting the `GovProposal` 
 Users can however use the `--no-proposal` flag to disable the proposal creation (which is useful if the authority isn't the gov module on a chain).
 :::
 
+### Conventions for the `Use` field in Cobra
+
+According to the [Cobra documentation](https://pkg.go.dev/github.com/spf13/cobra#Command) the following conventions should be followed for the `Use` field in Cobra commands:
+
+1. **Required arguments**:
+   * Should not be enclosed in brackets. They can be enclosed in angle brackets `< >` for clarity.
+   * Example: `command <required_argument>`
+
+2. **Optional arguments**:
+   * Should be enclosed in square brackets `[ ]`.
+   * Example: `command [optional_argument]`
+
+3. **Alternative (mutually exclusive) arguments**:
+   * Should be enclosed in curly braces `{ }`.
+   * Example: `command {-a | -b}` for required alternatives.
+   * Example: `command [-a | -b]` for optional alternatives.
+
+4. **Multiple arguments**:
+   * Indicated with `...` after the argument.
+   * Example: `command argument...`
+
+5. **Combination of options**:
+   * Example: `command [-F file | -D dir]... [-f format] profile`
+
 ### Specifying Subcommands
 
 By default, `autocli` generates a command for each method in your gRPC service. However, you can specify subcommands to group related commands together. To specify subcommands, use the `autocliv1.ServiceCommandDescriptor` struct.
@@ -217,7 +241,7 @@ https://github.com/cosmos/cosmos-sdk/blob/main/client/grpc/cmtservice/autocli.go
 
 To further enhance your CLI experience with Cosmos SDK-based blockchains, you can use `hubl`. `hubl` is a tool that allows you to query any Cosmos SDK-based blockchain using the new AutoCLI feature of the Cosmos SDK. With `hubl`, you can easily configure a new chain and query modules with just a few simple commands.
 
-For more information on `hubl`, including how to configure a new chain and query a module, see the [Hubl documentation](https://docs.cosmos.network/main/tooling/hubl).
+For more information on `hubl`, including how to configure a new chain and query a module, see the [Hubl documentation](https://docs.cosmos.network/main/build/tooling/hubl).
 
 # Off-Chain
 

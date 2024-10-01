@@ -1,6 +1,10 @@
 package cometbft
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+)
 
 // Query flags
 const (
@@ -38,12 +42,20 @@ func AddQueryFlagsToCmd(cmd *cobra.Command) {
 	_ = cmd.MarkFlagRequired(FlagChainID)
 }
 
+// start flags are prefixed with the server name
+// as the config in prefixed with the server name
+// this allows viper to properly bind the flags
+func prefix(f string) string {
+	return fmt.Sprintf("%s.%s", ServerName, f)
+}
+
 // Server flags
-const (
-	Standalone     = "standalone"
-	FlagAddress    = "address"
-	FlagTransport  = "transport"
-	FlagHaltHeight = "halt-height"
-	FlagHaltTime   = "halt-time"
-	FlagTrace      = "trace"
+var (
+	Standalone        = prefix("standalone")
+	FlagAddress       = prefix("address")
+	FlagTransport     = prefix("transport")
+	FlagHaltHeight    = prefix("halt-height")
+	FlagHaltTime      = prefix("halt-time")
+	FlagTrace         = prefix("trace")
+	FlagMempoolMaxTxs = prefix("mempool.max-txs")
 )

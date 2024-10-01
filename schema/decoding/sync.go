@@ -8,7 +8,6 @@ import (
 // SyncSource is an interface that allows indexers to start indexing modules with pre-existing state.
 // It should generally be a wrapper around the key-value store.
 type SyncSource interface {
-
 	// IterateAllKVPairs iterates over all key-value pairs for a given module.
 	IterateAllKVPairs(moduleName string, fn func(key, value []byte) error) error
 }
@@ -28,7 +27,7 @@ func Sync(listener appdata.Listener, source SyncSource, resolver DecoderResolver
 		return nil
 	}
 
-	return resolver.IterateAll(func(moduleName string, cdc schema.ModuleCodec) error {
+	return resolver.AllDecoders(func(moduleName string, cdc schema.ModuleCodec) error {
 		if opts.ModuleFilter != nil && !opts.ModuleFilter(moduleName) {
 			// ignore this module
 			return nil

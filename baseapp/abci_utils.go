@@ -23,7 +23,7 @@ import (
 )
 
 type (
-	// ValidatorStore defines the interface contract require for verifying vote
+	// ValidatorStore defines the interface contract required for verifying vote
 	// extension signatures. Typically, this will be implemented by the x/staking
 	// module, which has knowledge of the CometBFT public key.
 	ValidatorStore interface {
@@ -47,7 +47,7 @@ func ValidateVoteExtensions(
 	extCommit abci.ExtendedCommitInfo,
 ) error {
 	// Get values from context
-	cp := ctx.ConsensusParams() // nolint:staticcheck // ignore linting error
+	cp := ctx.ConsensusParams() //nolint:staticcheck // ignore linting error
 	currentHeight := ctx.HeaderInfo().Height
 	chainID := ctx.HeaderInfo().ChainID
 	commitInfo := ctx.CometInfo().LastCommit
@@ -84,7 +84,7 @@ func ValidateVoteExtensions(
 		totalVP += vote.Validator.Power
 
 		// Only check + include power if the vote is a commit vote. There must be super-majority, otherwise the
-		// previous block (the block vote is for) could not have been committed.
+		// previous block (the block the vote is for) could not have been committed.
 		if vote.BlockIdFlag != cmtproto.BlockIDFlagCommit {
 			continue
 		}
@@ -258,11 +258,22 @@ func (h *DefaultProposalHandler) SetTxSelector(ts TxSelector) {
 func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error) {
 		var maxBlockGas uint64
-		if b := ctx.ConsensusParams().Block; b != nil { // nolint:staticcheck // ignore linting error
+		if b := ctx.ConsensusParams().Block; b != nil { //nolint:staticcheck // ignore linting error
 			maxBlockGas = uint64(b.MaxGas)
 		}
 
 		defer h.txSelector.Clear()
+
+		// decode transactions
+		decodedTxs := make([]sdk.Tx, len(req.Txs))
+		for i, txBz := range req.Txs {
+			tx, err := h.txVerifier.TxDecode(txBz)
+			if err != nil {
+				return nil, err
+			}
+
+			decodedTxs[i] = tx
+		}
 
 		// If the mempool is nil or NoOp we simply return the transactions
 		// requested from CometBFT, which, by default, should be in FIFO order.
@@ -270,13 +281,8 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 		// Note, we still need to ensure the transactions returned respect req.MaxTxBytes.
 		_, isNoOp := h.mempool.(mempool.NoOpMempool)
 		if h.mempool == nil || isNoOp {
-			for _, txBz := range req.Txs {
-				tx, err := h.txVerifier.TxDecode(txBz)
-				if err != nil {
-					return nil, err
-				}
-
-				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, tx, txBz)
+			for i, tx := range decodedTxs {
+				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, tx, req.Txs[i])
 				if stop {
 					break
 				}
@@ -285,39 +291,49 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			return &abci.PrepareProposalResponse{Txs: h.txSelector.SelectedTxs(ctx)}, nil
 		}
 
-		iterator := h.mempool.Select(ctx, req.Txs)
 		selectedTxsSignersSeqs := make(map[string]uint64)
-		var selectedTxsNums int
-		for iterator != nil {
-			memTx := iterator.Tx()
-			signerData, err := h.signerExtAdapter.GetSigners(memTx)
-			if err != nil {
-				return nil, err
-			}
-
-			// If the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
-			// so we add them and continue given that we don't need to check the sequence.
-			shouldAdd := true
+		var (
+			resError        error
+			selectedTxsNums int
+			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid dead lock
+		)
+		h.mempool.SelectBy(ctx, decodedTxs, func(memTx sdk.Tx) bool {
+			unorderedTx, ok := memTx.(sdk.TxWithUnordered)
+			isUnordered := ok && unorderedTx.GetUnordered()
 			txSignersSeqs := make(map[string]uint64)
-			for _, signer := range signerData {
-				seq, ok := selectedTxsSignersSeqs[signer.Signer.String()]
-				if !ok {
-					txSignersSeqs[signer.Signer.String()] = signer.Sequence
-					continue
+
+			// if the tx is unordered, we don't need to check the sequence, we just add it
+			if !isUnordered {
+				signerData, err := h.signerExtAdapter.GetSigners(memTx)
+				if err != nil {
+					// propagate the error to the caller
+					resError = err
+					return false
 				}
 
-				// If we have seen this signer before in this block, we must make
-				// sure that the current sequence is seq+1; otherwise is invalid
-				// and we skip it.
-				if seq+1 != signer.Sequence {
-					shouldAdd = false
-					break
+				// If the signers aren't in selectedTxsSignersSeqs then we haven't seen them before
+				// so we add them and continue given that we don't need to check the sequence.
+				shouldAdd := true
+				for _, signer := range signerData {
+					signerKey := string(signer.Signer)
+					seq, ok := selectedTxsSignersSeqs[signerKey]
+					if !ok {
+						txSignersSeqs[signerKey] = signer.Sequence
+						continue
+					}
+
+					// If we have seen this signer before in this block, we must make
+					// sure that the current sequence is seq+1; otherwise is invalid
+					// and we skip it.
+					if seq+1 != signer.Sequence {
+						shouldAdd = false
+						break
+					}
+					txSignersSeqs[signerKey] = signer.Sequence
 				}
-				txSignersSeqs[signer.Signer.String()] = signer.Sequence
-			}
-			if !shouldAdd {
-				iterator = iterator.Next()
-				continue
+				if !shouldAdd {
+					return true
+				}
 			}
 
 			// NOTE: Since transaction verification was already executed in CheckTx,
@@ -326,35 +342,46 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 			// check again.
 			txBz, err := h.txVerifier.PrepareProposalVerifyTx(memTx)
 			if err != nil {
-				err := h.mempool.Remove(memTx)
-				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-					return nil, err
-				}
+				invalidTxs = append(invalidTxs, memTx)
 			} else {
 				stop := h.txSelector.SelectTxForProposal(ctx, uint64(req.MaxTxBytes), maxBlockGas, memTx, txBz)
 				if stop {
-					break
+					return false
 				}
 
 				txsLen := len(h.txSelector.SelectedTxs(ctx))
-				for sender, seq := range txSignersSeqs {
-					// If txsLen != selectedTxsNums is true, it means that we've
-					// added a new tx to the selected txs, so we need to update
-					// the sequence of the sender.
-					if txsLen != selectedTxsNums {
-						selectedTxsSignersSeqs[sender] = seq
-					} else if _, ok := selectedTxsSignersSeqs[sender]; !ok {
-						// The transaction hasn't been added but it passed the
-						// verification, so we know that the sequence is correct.
-						// So we set this sender's sequence to seq-1, in order
-						// to avoid unnecessary calls to PrepareProposalVerifyTx.
-						selectedTxsSignersSeqs[sender] = seq - 1
+				// If the tx is unordered, we don't need to update the sender sequence.
+				if !isUnordered {
+					for sender, seq := range txSignersSeqs {
+						// If txsLen != selectedTxsNums is true, it means that we've
+						// added a new tx to the selected txs, so we need to update
+						// the sequence of the sender.
+						if txsLen != selectedTxsNums {
+							selectedTxsSignersSeqs[sender] = seq
+						} else if _, ok := selectedTxsSignersSeqs[sender]; !ok {
+							// The transaction hasn't been added but it passed the
+							// verification, so we know that the sequence is correct.
+							// So we set this sender's sequence to seq-1, in order
+							// to avoid unnecessary calls to PrepareProposalVerifyTx.
+							selectedTxsSignersSeqs[sender] = seq - 1
+						}
 					}
 				}
 				selectedTxsNums = txsLen
 			}
 
-			iterator = iterator.Next()
+			return true
+		})
+
+		if resError != nil {
+			return nil, resError
+		}
+
+		for _, tx := range invalidTxs {
+			err := h.mempool.Remove(tx)
+			if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+				return nil, err
+			}
 		}
 
 		return &abci.PrepareProposalResponse{Txs: h.txSelector.SelectedTxs(ctx)}, nil
@@ -384,7 +411,7 @@ func (h *DefaultProposalHandler) ProcessProposalHandler() sdk.ProcessProposalHan
 		var totalTxGas uint64
 
 		var maxBlockGas int64
-		if b := ctx.ConsensusParams().Block; b != nil { // nolint:staticcheck // ignore linting error
+		if b := ctx.ConsensusParams().Block; b != nil { //nolint:staticcheck // ignore linting error
 			maxBlockGas = b.MaxGas
 		}
 

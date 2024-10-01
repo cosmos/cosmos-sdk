@@ -1,4 +1,4 @@
-package appmodule
+package appmodulev2
 
 import (
 	"context"
@@ -30,6 +30,8 @@ type HasABCIGenesis interface {
 	ExportGenesis(ctx context.Context) (json.RawMessage, error)
 }
 
+// GenesisDecoder is an alternative to the InitGenesis method.
+// It is implemented by the genutil module to decode genTxs.
 type GenesisDecoder interface {
 	DecodeGenesisJSON(data json.RawMessage) ([]json.RawMessage, error)
 }

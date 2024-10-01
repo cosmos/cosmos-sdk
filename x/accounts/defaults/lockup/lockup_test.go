@@ -53,7 +53,6 @@ func TestInitLockupAccount(t *testing.T) {
 	}
 
 	for _, test := range testcases {
-		test := test
 		_, err := baseLockup.Init(ctx, &test.msg)
 		if test.expErr != nil {
 			require.Equal(t, test.expErr, err)

@@ -7,6 +7,7 @@ import (
 	"math"
 
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/schema"
 )
 
 var (
@@ -90,6 +91,22 @@ type Collection interface {
 	ValueCodec() codec.UntypedValueCodec
 
 	genesisHandler
+
+	// collectionSchemaCodec returns the schema codec for this collection.
+	schemaCodec() (*collectionSchemaCodec, error)
+
+	// isSecondaryIndex indicates that this collection represents a secondary index
+	// in the schema and should be excluded from the module's user facing schema.
+	isSecondaryIndex() bool
+}
+
+// collectionSchemaCodec maps a collection to a schema object type and provides
+// decoders and encoders to and from schema values and raw kv-store bytes.
+type collectionSchemaCodec struct {
+	coll         Collection
+	objectType   schema.StateObjectType
+	keyDecoder   func([]byte) (any, error)
+	valueDecoder func([]byte) (any, error)
 }
 
 // Prefix defines a segregation bytes namespace for specific collections objects.
@@ -157,3 +174,5 @@ func (c collectionImpl[K, V]) exportGenesis(ctx context.Context, w io.Writer) er
 }
 
 func (c collectionImpl[K, V]) defaultGenesis(w io.Writer) error { return c.m.defaultGenesis(w) }
+
+func (c collectionImpl[K, V]) isSecondaryIndex() bool { return c.m.isSecondaryIndex }

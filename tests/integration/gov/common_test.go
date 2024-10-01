@@ -13,8 +13,6 @@ import (
 	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/math"
 	_ "cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/auth"
-	authtypes "cosmossdk.io/x/auth/types"
 	_ "cosmossdk.io/x/bank"
 	_ "cosmossdk.io/x/consensus"
 	"cosmossdk.io/x/gov/types"
@@ -29,12 +27,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
 	valTokens           = sdk.TokensFromConsensusPower(42, sdk.DefaultPowerReduction)
 	TestProposal        = v1beta1.NewTextProposal("Test", "description")
-	TestDescription     = stakingtypes.NewDescription("T", "E", "S", "T", "Z")
+	TestDescription     = stakingtypes.NewDescription("T", "E", "S", "T", "Z", stakingtypes.Metadata{})
 	TestCommissionRates = stakingtypes.NewCommissionRates(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec())
 )
 

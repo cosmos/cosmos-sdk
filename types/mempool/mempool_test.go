@@ -1,6 +1,7 @@
 package mempool_test
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -11,9 +12,8 @@ import (
 
 	_ "cosmossdk.io/api/cosmos/counter/v1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
-	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/x/auth/signing"
+	"cosmossdk.io/log"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -23,6 +23,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // testPubKey is a dummy implementation of PubKey used for testing.
@@ -174,7 +175,7 @@ func fetchTxs(iterator mempool.Iterator, maxBytes int64) []sdk.Tx {
 
 func (s *MempoolTestSuite) TestDefaultMempool() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, false, coretesting.NewNopLogger())
+	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
 	txCount := 1000
 	var txs []testTx
@@ -217,7 +218,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 
 	// a tx which does not implement SigVerifiableTx should not be inserted
 	tx := &sigErrTx{getSigs: func() ([]txsigning.SignatureV2, error) {
-		return nil, fmt.Errorf("error")
+		return nil, errors.New("error")
 	}}
 	require.Error(t, s.mempool.Insert(ctx, tx))
 	require.Error(t, s.mempool.Remove(tx))
@@ -266,7 +267,7 @@ func TestMempoolTestSuite(t *testing.T) {
 }
 
 func (s *MempoolTestSuite) TestSampleTxs() {
-	ctxt := sdk.NewContext(nil, false, coretesting.NewNopLogger())
+	ctxt := sdk.NewContext(nil, false, log.NewNopLogger())
 	t := s.T()
 	s.resetMempool()
 	mp := s.mempool

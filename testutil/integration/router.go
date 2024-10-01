@@ -7,18 +7,16 @@ import (
 	cmtabcitypes "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cosmos/cosmos-db"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	corestore "cosmossdk.io/core/store"
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	authtx "cosmossdk.io/x/auth/tx"
-	authtypes "cosmossdk.io/x/auth/types"
-	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
-	consensusparamtypes "cosmossdk.io/x/consensus/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,9 +25,13 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
-const appName = "integration-app"
+const (
+	appName   = "integration-app"
+	consensus = "consensus"
+)
 
 // App is a test application that can be used to test the integration of modules.
 type App struct {
@@ -53,15 +55,16 @@ func NewIntegrationApp(
 	modules map[string]appmodule.AppModule,
 	msgRouter *baseapp.MsgServiceRouter,
 	grpcRouter *baseapp.GRPCQueryRouter,
+	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	moduleManager := module.NewManagerFromMap(modules)
 	moduleManager.RegisterInterfaces(interfaceRegistry)
 
 	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), addressCodec, validatorCodec, authtx.DefaultSignModes)
-	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
+	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), append(baseAppOptions, baseapp.SetChainID(appName))...)
 	bApp.MountKVStores(keys)
 
 	bApp.SetInitChainer(func(_ sdk.Context, _ *cmtabcitypes.InitChainRequest) (*cmtabcitypes.InitChainResponse, error) {
@@ -88,14 +91,12 @@ func NewIntegrationApp(
 	grpcRouter.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetGRPCQueryRouter(grpcRouter)
 
-	if keys[consensusparamtypes.StoreKey] != nil {
-		// set baseApp param store
-		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcRouter), runtime.EnvWithMsgRouterService(msgRouter)), authtypes.NewModuleAddress("gov").String())
-		bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
-		consensusparamtypes.RegisterQueryServer(grpcRouter, consensusParamsKeeper)
+	if keys[consensus] != nil {
+		cps := newParamStore(runtime.NewKVStoreService(keys[consensus]), appCodec)
+		bApp.SetParamStore(cps)
 
 		params := cmttypes.ConsensusParamsFromProto(*simtestutil.DefaultConsensusParams) // This fills up missing param sections
-		err := consensusParamsKeeper.ParamsStore.Set(sdkCtx, params.ToProto())
+		err := cps.Set(sdkCtx, params.ToProto())
 		if err != nil {
 			panic(fmt.Errorf("failed to set consensus params: %w", err))
 		}
@@ -201,7 +202,7 @@ func (app *App) QueryHelper() *baseapp.QueryServiceTestHelper {
 
 // CreateMultiStore is a helper for setting up multiple stores for provided modules.
 func CreateMultiStore(keys map[string]*storetypes.KVStoreKey, logger log.Logger) storetypes.CommitMultiStore {
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	cms := store.NewCommitMultiStore(db, logger, metrics.NewNoOpMetrics())
 
 	for key := range keys {
@@ -210,4 +211,27 @@ func CreateMultiStore(keys map[string]*storetypes.KVStoreKey, logger log.Logger)
 
 	_ = cms.LoadLatestVersion()
 	return cms
+}
+
+type paramStoreService struct {
+	ParamsStore collections.Item[cmtproto.ConsensusParams]
+}
+
+func newParamStore(storeService corestore.KVStoreService, cdc codec.Codec) paramStoreService {
+	sb := collections.NewSchemaBuilder(storeService)
+	return paramStoreService{
+		ParamsStore: collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
+	}
+}
+
+func (pss paramStoreService) Get(ctx context.Context) (cmtproto.ConsensusParams, error) {
+	return pss.ParamsStore.Get(ctx)
+}
+
+func (pss paramStoreService) Has(ctx context.Context) (bool, error) {
+	return pss.ParamsStore.Has(ctx)
+}
+
+func (pss paramStoreService) Set(ctx context.Context, cp cmtproto.ConsensusParams) error {
+	return pss.ParamsStore.Set(ctx, cp)
 }

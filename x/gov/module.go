@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	govclient "cosmossdk.io/x/gov/client"
 	"cosmossdk.io/x/gov/client/cli"
@@ -22,6 +21,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -37,7 +37,6 @@ var (
 
 	_ appmodule.AppModule             = AppModule{}
 	_ appmodule.HasEndBlocker         = AppModule{}
-	_ appmodule.HasServices           = AppModule{}
 	_ appmodule.HasMigrations         = AppModule{}
 	_ appmodule.HasRegisterInterfaces = AppModule{}
 	_ appmodule.HasGenesis            = AppModule{}
@@ -80,9 +79,9 @@ func (AppModule) Name() string {
 }
 
 // RegisterLegacyAminoCodec registers the gov module's types for the given codec.
-func (AppModule) RegisterLegacyAminoCodec(cdc legacy.Amino) {
-	v1beta1.RegisterLegacyAminoCodec(cdc)
-	v1.RegisterLegacyAminoCodec(cdc)
+func (AppModule) RegisterLegacyAminoCodec(registrar registry.AminoRegistrar) {
+	v1beta1.RegisterLegacyAminoCodec(registrar)
+	v1.RegisterLegacyAminoCodec(registrar)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the gov module.
@@ -211,27 +210,32 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the gov content functions used to
-// simulate governance proposals.
-func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent { //nolint:staticcheck // used for legacy testing
-	return simulation.ProposalContents()
-}
-
-// ProposalMsgs returns all the gov msgs used to simulate governance proposals.
-func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
-	return simulation.ProposalMsgs()
-}
-
 // RegisterStoreDecoder registers a decoder for gov module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[govtypes.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
 }
 
-// WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.TxConfig,
-		am.accountKeeper, am.bankKeeper, am.keeper,
-		simState.ProposalMsgs, simState.LegacyProposalContents,
-	)
+// ProposalMsgsX returns msgs used for governance proposals for simulations.
+func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("submit_text_proposal", 5), simulation.TextProposalFactory())
+}
+
+func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry, proposalMsgIter simsx.WeightedProposalMsgIter,
+	legacyProposals []simtypes.WeightedProposalContent, //nolint:staticcheck // used for legacy proposal types
+) {
+	// submit proposal for each payload message
+	for weight, factory := range proposalMsgIter {
+		// use a ratio so that we don't flood with gov ops
+		reg.Add(weight/25, simulation.MsgSubmitProposalFactory(am.keeper, factory))
+	}
+	for _, wContent := range legacyProposals {
+		reg.Add(weights.Get(wContent.AppParamsKey(), uint32(wContent.DefaultWeight())), simulation.MsgSubmitLegacyProposalFactory(am.keeper, wContent.ContentSimulatorFn()))
+	}
+
+	state := simulation.NewSharedState()
+	reg.Add(weights.Get("msg_deposit", 100), simulation.MsgDepositFactory(am.keeper, state))
+	reg.Add(weights.Get("msg_vote", 67), simulation.MsgVoteFactory(am.keeper, state))
+	reg.Add(weights.Get("msg_weighted_vote", 33), simulation.MsgWeightedVoteFactory(am.keeper, state))
+	reg.Add(weights.Get("cancel_proposal", 5), simulation.MsgCancelProposalFactory(am.keeper, state))
+	reg.Add(weights.Get("legacy_text_proposal", 5), simulation.MsgSubmitLegacyProposalFactory(am.keeper, simulation.SimulateLegacyTextProposalContent))
 }

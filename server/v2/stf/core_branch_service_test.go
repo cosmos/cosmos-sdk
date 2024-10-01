@@ -2,11 +2,10 @@ package stf
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
-	"github.com/stretchr/testify/require"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/server/v2/stf/branch"
@@ -61,19 +60,32 @@ func TestBranchService(t *testing.T) {
 			kvSet(t, ctx, "cookies")
 			return nil
 		})
-		require.NoError(t, err)
-		require.NotZero(t, gasUsed)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if gasUsed == 0 {
+			t.Error("expected non-zero gasUsed")
+		}
 		stateHas(t, stfCtx.state, "cookies")
 	})
 
 	t.Run("fail - reverts state", func(t *testing.T) {
 		stfCtx := makeContext()
+		originalGas := stfCtx.meter.Remaining()
 		gasUsed, err := branchService.ExecuteWithGasLimit(stfCtx, 10000, func(ctx context.Context) error {
 			kvSet(t, ctx, "cookies")
-			return fmt.Errorf("fail")
+			return errors.New("fail")
 		})
-		require.Error(t, err)
-		require.NotZero(t, gasUsed)
+		if err == nil {
+			t.Error("expected error")
+		}
+		if gasUsed == 0 {
+			t.Error("expected non-zero gasUsed")
+		}
+		if stfCtx.meter.Remaining() != originalGas-gasUsed {
+			t.Error("expected gas to be reverted")
+		}
+
 		stateNotHas(t, stfCtx.state, "cookies")
 	})
 
@@ -85,9 +97,15 @@ func TestBranchService(t *testing.T) {
 			_ = state.Set([]byte("not out of gas"), []byte{})
 			return state.Set([]byte("out of gas"), []byte{})
 		})
-		require.Error(t, err)
-		require.NotZero(t, gasUsed)
+		if err == nil {
+			t.Error("expected error")
+		}
+		if gasUsed == 0 {
+			t.Error("expected non-zero gasUsed")
+		}
 		stateNotHas(t, stfCtx.state, "cookies")
-		require.Equal(t, uint64(1000), stfCtx.meter.Limit()-stfCtx.meter.Remaining())
+		if stfCtx.meter.Limit()-stfCtx.meter.Remaining() != 1000 {
+			t.Error("expected gas limit precision to be 1000")
+		}
 	})
 }

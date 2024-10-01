@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	"cosmossdk.io/server/v2/appmanager"
 	"errors"
 	"net/http"
 
@@ -39,6 +40,14 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.L
 	s.logger = logger.With(log.ModuleKey, s.Name())
 
 	s.config = s.Config().(*Config)
+
+	var appManager *appmanager.AppManager[T]
+	appManager = appI.GetAppManager()
+
+	s.router = mux.NewRouter()
+	s.router.PathPrefix("/").Handler(&DefaultHandler[T]{
+		appManager: appManager,
+	})
 
 	return nil
 }

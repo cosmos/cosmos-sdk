@@ -4,6 +4,7 @@ use crate::encoder::{EncodeError};
 use crate::structs::{StructDecodeVisitor, StructEncodeVisitor, StructType};
 use crate::value::SchemaValue;
 use crate::buffer::{Writer, WriterFactory};
+use crate::list::ListEncodeVisitor;
 use crate::state_object::ObjectValue;
 
 pub fn encode_value<'a, V: SchemaValue<'a>, F: WriterFactory>(value: &V, writer_factory: F) -> Result<F::Output, EncodeError> {
@@ -36,17 +37,15 @@ impl<'a, W: Writer> crate::encoder::Encoder for Encoder<'a, W> {
         self.writer.write(x.as_bytes())
     }
 
-    fn encode_list_slice<'c, V: SchemaValue<'c>>(&mut self, x: &[V]) -> Result<(), EncodeError> {
+    fn encode_list(&mut self, visitor: &dyn ListEncodeVisitor) -> Result<(), EncodeError> {
         let mut sub = Encoder { writer: self.writer };
         let mut inner = InnerEncoder::<W> { outer: &mut sub };
-        for v in x.iter().rev() {
-            <V as SchemaValue>::encode(v, &mut inner)?;
-        }
-        self.encode_u32(x.len() as u32)?;
+        let size = visitor.encode(&mut inner)?;
+        self.encode_u32(size)?;
         Ok(())
     }
 
-    fn encode_struct<V: StructEncodeVisitor>(&mut self, visitor: &V, struct_type: &StructType) -> Result<(), EncodeError>  {
+    fn encode_struct(&mut self, visitor: &dyn StructEncodeVisitor, struct_type: &StructType) -> Result<(), EncodeError> {
         let mut i = struct_type.fields.len();
         let mut sub = Encoder { writer: self.writer };
         let mut inner = InnerEncoder::<W> { outer: &mut sub };
@@ -87,16 +86,14 @@ impl crate::encoder::Encoder for EncodeSizer {
         Ok(())
     }
 
-    fn encode_list_slice<'a, V: SchemaValue<'a>>(&mut self, xs: &[V]) -> Result<(), EncodeError> {
+    fn encode_list(&mut self, visitor: &dyn ListEncodeVisitor) -> Result<(), EncodeError> {
         self.size += 4;
         let mut sub = InnerEncodeSizer { outer: self };
-        for x in xs.iter() {
-            <V as SchemaValue>::encode(x, &mut sub)?;
-        }
+        visitor.encode(&mut sub)?;
         Ok(())
     }
 
-    fn encode_struct<V: StructEncodeVisitor>(&mut self, visitor: &V, struct_type: &StructType) -> Result<(), EncodeError> {
+    fn encode_struct(&mut self, visitor: &dyn StructEncodeVisitor, struct_type: &StructType) -> Result<(), EncodeError> {
         let mut i = 0;
         let mut sub = InnerEncodeSizer { outer: self };
         for f in struct_type.fields {
@@ -132,17 +129,20 @@ impl<'b, 'a: 'b, W: Writer> crate::encoder::Encoder for InnerEncoder<'a, 'b, W> 
         self.encode_u32(x.len() as u32)
     }
 
-    fn encode_list_slice<'c, V: SchemaValue<'c>>(&mut self, x: &[V]) -> Result<(), EncodeError> {
-        self.outer.encode_list_slice(x)
-        // TODO: prefix with length of actual encoded data
+    fn encode_list(&mut self, visitor: &dyn ListEncodeVisitor) -> Result<(), EncodeError> {
+        let end_pos = self.outer.writer.pos(); // this is a reverse writer so we start at the end
+        self.outer.encode_list(visitor)?;
+        let start_pos = self.outer.writer.pos(); // now we know the start position
+        let size = (end_pos - start_pos) as u32;
+        self.outer.encode_u32(size)
     }
 
-    fn encode_struct<V: StructEncodeVisitor>(&mut self, visitor: &V, struct_type: &StructType) -> Result<(), EncodeError> {
+    fn encode_struct(&mut self, visitor: &dyn StructEncodeVisitor, struct_type: &StructType) -> Result<(), EncodeError> {
         let end_pos = self.outer.writer.pos(); // this is a reverse writer so we start at the end
         self.outer.encode_struct(visitor, struct_type)?;
         let start_pos = self.outer.writer.pos(); // now we know the start position
-        let len = (end_pos - start_pos) as u32;
-        self.outer.encode_u32(len)
+        let size = (end_pos - start_pos) as u32;
+        self.outer.encode_u32(size)
     }
 
     fn encode_account_id(&mut self, x: AccountID) -> Result<(), EncodeError> {
@@ -174,12 +174,12 @@ impl<'a> crate::encoder::Encoder for InnerEncodeSizer<'a> {
         self.outer.encode_str(x)
     }
 
-    fn encode_list_slice<'b, V: SchemaValue<'b>>(&mut self, xs: &[V]) -> Result<(), EncodeError> {
+    fn encode_list(&mut self, visitor: &dyn ListEncodeVisitor) -> Result<(), EncodeError> {
         self.outer.size += 4; // for the for bytes size
-        self.outer.encode_list_slice(xs)
+        self.outer.encode_list(visitor)
     }
 
-    fn encode_struct<V: StructEncodeVisitor>(&mut self, visitor: &V, struct_type: &StructType) -> Result<(), EncodeError>  {
+    fn encode_struct(&mut self, visitor: &dyn StructEncodeVisitor, struct_type: &StructType) -> Result<(), EncodeError> {
         self.outer.size += 4;
         self.outer.encode_struct(visitor, struct_type)
     }

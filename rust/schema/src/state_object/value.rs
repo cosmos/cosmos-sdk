@@ -8,22 +8,19 @@ use crate::state_object::value_field::ObjectFieldValue;
 use crate::structs::{StructDecodeVisitor, StructEncodeVisitor, StructType};
 use crate::value::SchemaValue;
 
-/// Encode an object value with the given prefix.
-pub fn encode_object_value<'a, V: ObjectValue, F: WriterFactory>(prefix: &[u8], value: &V::In<'a>, writer_factory: F) -> Result<F::Output, EncodeError> {
+/// Encode an object value.
+pub fn encode_object_value<'a, V: ObjectValue, F: WriterFactory>(value: &V::In<'a>, writer_factory: F) -> Result<F::Output, EncodeError> {
     let mut sizer = crate::binary::encoder::EncodeSizer { size: 0 };
     let mut inner = crate::binary::encoder::InnerEncodeSizer { outer: &mut sizer };
     V::encode(&value, &mut inner)?;
-    let size = sizer.size + prefix.len();
-    let mut writer = writer_factory.new_reverse(size)?;
+    let mut writer = writer_factory.new_reverse(sizer.size)?;
     let mut encoder = crate::binary::encoder::Encoder { writer: &mut writer };
     let mut inner = crate::binary::encoder::InnerEncoder { outer: &mut encoder };
     V::encode(&value, &mut inner)?;
-    // we write the prefix last because we are encoding in reverse order
-    writer.write(prefix)?;
     writer.finish()
 }
 
-/// Decode an object value. This function assumes that the input has already had any prefix stripped.
+/// Decode an object value.
 pub fn decode_object_value<'a, V: ObjectValue>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<V::Out<'a>, DecodeError> {
     let mut decoder = crate::binary::decoder::Decoder { buf: input, scope: memory_manager };
     V::decode(&mut decoder, memory_manager)
@@ -75,7 +72,7 @@ impl<A: ObjectFieldValue> ObjectValue for A {
     fn decode<'a, D: Decoder<'a>>(decoder: &mut D, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
         struct Visitor<'a, A: SchemaValue<'a>>(A::DecodeState);
         unsafe impl <'a, A: SchemaValue<'a>> StructDecodeVisitor<'a> for Visitor<'a, A> {
-            fn decode_field<D: Decoder<'a>>(&mut self, index: usize, decoder: &mut D) -> Result<(), DecodeError> {
+            fn decode_field(&mut self, index: usize, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
                 match index {
                     0 => <A as SchemaValue<'a>>::visit_decode_state(&mut self.0, decoder),
                     _ => Err(DecodeError::UnknownFieldNumber),
@@ -98,7 +95,7 @@ impl<A: ObjectFieldValue> ObjectValue for (A,) {
     fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
         struct Visitor<'b, A>(&'b (A,));
         unsafe impl <'b, 'a:'b, A: SchemaValue<'a>> StructEncodeVisitor for Visitor<'b, A> {
-            fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError> {
+            fn encode_field(&self, index: usize, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
                 match index {
                     0 => <A as SchemaValue<'a>>::encode(&self.0.0, encoder),
                     _ =>
@@ -124,7 +121,7 @@ impl<A: ObjectFieldValue, B: ObjectFieldValue> ObjectValue for (A, B) {
     fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
         struct EncodeVisitor<'b, A, B>(&'b (A, B));
         unsafe impl <'b, 'a:'b, A: SchemaValue<'a>, B: SchemaValue<'a>> StructEncodeVisitor for EncodeVisitor<'b, A, B> {
-            fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError> {
+            fn encode_field(&self, index: usize, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
                 match index {
                     0 => <A as SchemaValue<'a>>::encode(&self.0.0, encoder),
                     1 => <B as SchemaValue<'a>>::encode(&self.0.1, encoder),
@@ -140,7 +137,7 @@ impl<A: ObjectFieldValue, B: ObjectFieldValue> ObjectValue for (A, B) {
     fn decode<'a, D: Decoder<'a>>(decoder: &mut D, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
         struct Visitor<'a, A: SchemaValue<'a>, B: SchemaValue<'a>>(A::DecodeState, B::DecodeState);
         unsafe impl <'a, A: SchemaValue<'a>, B: SchemaValue<'a>> StructDecodeVisitor<'a> for Visitor<'a, A, B> {
-            fn decode_field<D: Decoder<'a>>(&mut self, index: usize, decoder: &mut D) -> Result<(), DecodeError> {
+            fn decode_field(&mut self, index: usize, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
                 match index {
                     0 => <A as SchemaValue<'a>>::visit_decode_state(&mut self.0, decoder),
                     1 => <B as SchemaValue<'a>>::visit_decode_state(&mut self.1, decoder),
@@ -167,7 +164,7 @@ impl<A: ObjectFieldValue, B: ObjectFieldValue, C: ObjectFieldValue> ObjectValue 
     fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
         struct EncodeVisitor<'b, A, B, C>(&'b (A, B, C));
         unsafe impl <'b, 'a:'b, A: SchemaValue<'a>, B: SchemaValue<'a>, C: SchemaValue<'a>> StructEncodeVisitor for EncodeVisitor<'b, A, B, C> {
-            fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError> {
+            fn encode_field(&self, index: usize, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
                 match index {
                     0 => <A as SchemaValue<'a>>::encode(&self.0.0, encoder),
                     1 => <B as SchemaValue<'a>>::encode(&self.0.1, encoder),
@@ -184,7 +181,7 @@ impl<A: ObjectFieldValue, B: ObjectFieldValue, C: ObjectFieldValue> ObjectValue 
     fn decode<'a, D: Decoder<'a>>(decoder: &mut D, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
         struct Visitor<'a, A: SchemaValue<'a>, B: SchemaValue<'a>, C: SchemaValue<'a>>(A::DecodeState, B::DecodeState, C::DecodeState);
         unsafe impl <'a, A: SchemaValue<'a>, B: SchemaValue<'a>, C: SchemaValue<'a>> StructDecodeVisitor<'a> for Visitor<'a, A, B, C> {
-            fn decode_field<D: Decoder<'a>>(&mut self, index: usize, decoder: &mut D) -> Result<(), DecodeError> {
+            fn decode_field(&mut self, index: usize, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
                 match index {
                     0 => <A as SchemaValue<'a>>::visit_decode_state(&mut self.0, decoder),
                     1 => <B as SchemaValue<'a>>::visit_decode_state(&mut self.1, decoder),
@@ -213,7 +210,7 @@ impl<A: ObjectFieldValue, B: ObjectFieldValue, C: ObjectFieldValue, D: ObjectFie
     fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
         struct EncodeVisitor<'b, A, B, C, D>(&'b (A, B, C, D));
         unsafe impl <'b, 'a:'b, A: SchemaValue<'a>, B: SchemaValue<'a>, C: SchemaValue<'a>, D: SchemaValue<'a>> StructEncodeVisitor for EncodeVisitor<'b, A, B, C, D> {
-            fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError> {
+            fn encode_field(&self, index: usize, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
                 match index {
                     0 => <A as SchemaValue<'a>>::encode(&self.0.0, encoder),
                     1 => <B as SchemaValue<'a>>::encode(&self.0.1, encoder),
@@ -231,7 +228,7 @@ impl<A: ObjectFieldValue, B: ObjectFieldValue, C: ObjectFieldValue, D: ObjectFie
     fn decode<'a, DEC: Decoder<'a>>(decoder: &mut DEC, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
         struct Visitor<'a, A: SchemaValue<'a>, B: SchemaValue<'a>, C: SchemaValue<'a>, D: SchemaValue<'a>>(A::DecodeState, B::DecodeState, C::DecodeState, D::DecodeState);
         unsafe impl <'a, A: SchemaValue<'a>, B: SchemaValue<'a>, C: SchemaValue<'a>, D: SchemaValue<'a>> StructDecodeVisitor<'a> for Visitor<'a, A, B, C, D> {
-            fn decode_field<DEC: Decoder<'a>>(&mut self, index: usize, decoder: &mut DEC) -> Result<(), DecodeError> {
+            fn decode_field(&mut self, index: usize, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
                 match index {
                     0 => <A as SchemaValue<'a>>::visit_decode_state(&mut self.0, decoder),
                     1 => <B as SchemaValue<'a>>::visit_decode_state(&mut self.1, decoder),

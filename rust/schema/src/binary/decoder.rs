@@ -2,7 +2,7 @@ use alloc::string::String;
 use bump_scope::{BumpScope, BumpString};
 use ixc_message_api::AccountID;
 use crate::decoder::{decode, DecodeError};
-use crate::list::ListVisitor;
+use crate::list::ListDecodeVisitor;
 use crate::mem::MemoryManager;
 use crate::state_object::ObjectValue;
 use crate::structs::{StructDecodeVisitor, StructType};
@@ -57,7 +57,7 @@ impl<'a> crate::decoder::Decoder<'a> for Decoder<'a> {
         Ok(String::from_utf8(bz.to_vec()).map_err(|_| DecodeError::InvalidData)?)
     }
 
-    fn decode_struct<V: StructDecodeVisitor<'a>>(&mut self, visitor: &mut V, struct_type: &StructType) -> Result<(), DecodeError> {
+    fn decode_struct(&mut self, visitor: &mut dyn StructDecodeVisitor<'a>, struct_type: &StructType) -> Result<(), DecodeError> {
         let mut i = 0;
         let mut sub = Decoder { buf: self.buf, scope: self.scope };
         let mut inner = InnerDecoder { outer: &mut sub };
@@ -68,7 +68,7 @@ impl<'a> crate::decoder::Decoder<'a> for Decoder<'a> {
         Ok(())
     }
 
-    fn decode_list<T, V: ListVisitor<'a, T>>(&mut self, visitor: &mut V) -> Result<(), DecodeError> {
+    fn decode_list(&mut self, visitor: &mut dyn ListDecodeVisitor<'a>) -> Result<(), DecodeError> {
         let size = self.decode_u32()? as usize;
         visitor.init(size, &self.scope)?;
         let mut sub = Decoder { buf: self.buf, scope: self.scope };
@@ -115,14 +115,14 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for InnerDecoder<'b, 'a> {
         Ok(String::from_utf8(bz.to_vec()).map_err(|_| DecodeError::InvalidData)?)
     }
 
-    fn decode_struct<V: StructDecodeVisitor<'a>>(&mut self, visitor: &mut V, struct_type: &StructType) -> Result<(), DecodeError> {
+    fn decode_struct(&mut self, visitor: &mut dyn StructDecodeVisitor<'a>, struct_type: &StructType) -> Result<(), DecodeError> {
         let size = self.decode_u32()? as usize;
         let bz = self.outer.read_bytes(size)?;
         let mut sub = Decoder { buf: bz, scope: self.outer.scope };
         sub.decode_struct(visitor, struct_type)
     }
 
-    fn decode_list<T, V: ListVisitor<'a, T>>(&mut self, visitor: &mut V) -> Result<(), DecodeError> {
+    fn decode_list(&mut self, visitor: &mut dyn ListDecodeVisitor<'a>) -> Result<(), DecodeError> {
         let size = self.decode_u32()? as usize;
         let bz = self.outer.read_bytes(size)?;
         let mut sub = Decoder { buf: bz, scope: self.outer.scope };

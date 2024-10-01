@@ -1,6 +1,7 @@
 use crate::kind::Kind;
 
 #[non_exhaustive]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct OneOfType<'a> {
     pub name: &'a str,
     pub cases: &'a [OneOfCase<'a>],
@@ -9,6 +10,7 @@ pub struct OneOfType<'a> {
 }
 
 #[non_exhaustive]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct OneOfCase<'a> {
     pub name: &'a str,
     pub discriminant: i32,

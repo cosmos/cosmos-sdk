@@ -3,6 +3,7 @@ use crate::structs::{StructEncodeVisitor, StructType};
 use crate::value::{SchemaValue};
 use core::fmt::Display;
 use ixc_message_api::AccountID;
+use crate::list::ListEncodeVisitor;
 
 /// The trait that encoders must implement.
 pub trait Encoder {
@@ -14,11 +15,10 @@ pub trait Encoder {
     fn encode_u128(&mut self, x: u128) -> Result<(), EncodeError>;
     /// Encode a `str`.
     fn encode_str(&mut self, x: &str) -> Result<(), EncodeError>;
-    // fn encode_list_iterator<V, I: Iterator<Item=&V>>(&mut self, size: Option<usize>, );
-    /// Encode a list slice.
-    fn encode_list_slice<'a, V: SchemaValue<'a>>(&mut self, xs: &[V]) -> Result<(), EncodeError>;
+    /// Encode a list.
+    fn encode_list(&mut self, visitor: &dyn ListEncodeVisitor) -> Result<(), EncodeError>;
     /// Encode a struct.
-    fn encode_struct<V: StructEncodeVisitor>(&mut self, visitor: &V, struct_type: &StructType) -> Result<(), EncodeError>;
+    fn encode_struct(&mut self, visitor: &dyn StructEncodeVisitor, struct_type: &StructType) -> Result<(), EncodeError>;
     /// Encode an account ID.
     fn encode_account_id(&mut self, x: AccountID) -> Result<(), EncodeError>;
 }

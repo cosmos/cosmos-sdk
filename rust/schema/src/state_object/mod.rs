@@ -16,6 +16,7 @@ use crate::field::Field;
 
 /// A type representing objects stored in key-value store state.
 #[non_exhaustive]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct StateObjectType<'a> {
     /// The name of the object.
     pub name: &'a str,

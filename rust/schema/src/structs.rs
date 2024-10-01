@@ -45,16 +45,17 @@ pub unsafe trait StructSchema {
 /// StructDecodeVisitor is the trait that should be derived to decode a struct.
 pub unsafe trait StructDecodeVisitor<'a> {
     /// Decode a field from the input data.
-    fn decode_field<D: Decoder<'a>>(&mut self, index: usize, decoder: &mut D) -> Result<(), DecodeError>;
+    fn decode_field(&mut self, index: usize, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError>;
 }
 
 /// StructEncodeVisitor is the trait that should be derived to encode a struct.
 pub unsafe trait StructEncodeVisitor {
     /// Encode a field to the output data.
-    fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError>;
+    fn encode_field(&self, index: usize, encoder: &mut dyn Encoder) -> Result<(), EncodeError>;
 }
 
 /// StructType contains the schema of a struct.
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct StructType<'a> {
     /// The name of the struct.
     pub name: &'a str,

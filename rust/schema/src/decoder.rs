@@ -1,7 +1,7 @@
 //! The decoder trait and error type.
 
 use ixc_message_api::AccountID;
-use crate::list::ListVisitor;
+use crate::list::ListDecodeVisitor;
 use crate::mem::MemoryManager;
 use crate::structs::{StructDecodeVisitor, StructType};
 use crate::value::SchemaValue;
@@ -20,9 +20,9 @@ pub trait Decoder<'a> {
     /// Decode an owned `String`.
     fn decode_owned_str(&mut self) -> Result<alloc::string::String, DecodeError>;
     /// Decode a struct.
-    fn decode_struct<V: StructDecodeVisitor<'a>>(&mut self, visitor: &mut V, struct_type: &StructType) -> Result<(), DecodeError>;
+    fn decode_struct(&mut self, visitor: &mut dyn StructDecodeVisitor<'a>, struct_type: &StructType) -> Result<(), DecodeError>;
     /// Decode a list.
-    fn decode_list<T, V: ListVisitor<'a, T>>(&mut self, visitor: &mut V) -> Result<(), DecodeError>;
+    fn decode_list(&mut self, visitor: &mut dyn ListDecodeVisitor<'a>) -> Result<(), DecodeError>;
     /// Decode an account ID.
     fn decode_account_id(&mut self) -> Result<AccountID, DecodeError>;
     /// Get the memory manager.

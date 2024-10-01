@@ -1,6 +1,7 @@
 use crate::kind::Kind;
 
 #[non_exhaustive]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct EnumType<'a> {
     pub name: &'a str,
     pub values: &'a [EnumValueDefinition<'a>],

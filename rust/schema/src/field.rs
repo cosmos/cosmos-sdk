@@ -5,7 +5,7 @@ use crate::types::{to_field, StructT, Type};
 use crate::value::SchemaValue;
 
 #[non_exhaustive]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Field<'a> {
     pub name: &'a str,
     pub kind: Kind,

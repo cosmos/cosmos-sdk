@@ -14,7 +14,7 @@ use crate::types::*;
 /// declared.
 pub trait SchemaValue<'a>
 where
-    Self: Sized + 'a,
+    Self: 'a,
 {
     /// The type of the value.
     type Type: Type;
@@ -23,17 +23,19 @@ where
     type DecodeState: Default;
 
     /// Decode the value from the decoder.
-    fn visit_decode_state<D: Decoder<'a>>(_state: &mut Self::DecodeState, _decoder: &mut D) -> Result<(), DecodeError> {
+    fn visit_decode_state(_state: &mut Self::DecodeState, _decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
         unimplemented!("decode")
     }
 
     /// Finish decoding the value, return it and return the memory handle if needed.
-    fn finish_decode_state(_state: Self::DecodeState, _mem: &'a MemoryManager) -> Result<Self, DecodeError> {
+    fn finish_decode_state(_state: Self::DecodeState, _mem: &'a MemoryManager) -> Result<Self, DecodeError>
+        where Self: Sized
+    {
         unimplemented!("finish")
     }
 
     /// Encode the value to the encoder.
-    fn encode<E: Encoder>(&self, _encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode(&self, _encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
         unimplemented!("encode")
     }
 }
@@ -51,7 +53,7 @@ impl<'a> SchemaValue<'a> for u32 {
     type Type = U32T;
     type DecodeState = u32;
 
-    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
         *state = decoder.decode_u32()?;
         Ok(())
     }
@@ -60,7 +62,7 @@ impl<'a> SchemaValue<'a> for u32 {
         Ok(state)
     }
 
-    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
         encoder.encode_u32(*self)
     }
 }
@@ -69,7 +71,7 @@ impl<'a> SchemaValue<'a> for u64 {
     type Type = U64T;
     type DecodeState = u64;
 
-    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
         *state = decoder.decode_u64()?;
         Ok(())
     }
@@ -78,7 +80,7 @@ impl<'a> SchemaValue<'a> for u64 {
         Ok(state)
     }
 
-    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
         encoder.encode_u64(*self)
     }
 }
@@ -87,7 +89,7 @@ impl<'a> SchemaValue<'a> for u128 {
     type Type = UIntNT<16>;
     type DecodeState = u128;
 
-    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
         *state = decoder.decode_u128()?;
         Ok(())
     }
@@ -96,7 +98,7 @@ impl<'a> SchemaValue<'a> for u128 {
         Ok(state)
     }
 
-    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
         encoder.encode_u128(*self)
     }
 }
@@ -129,7 +131,7 @@ impl<'a> SchemaValue<'a> for &'a str {
     type Type = StrT;
     type DecodeState = &'a str;
 
-    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
         *state = decoder.decode_borrowed_str()?;
         Ok(())
     }
@@ -138,7 +140,7 @@ impl<'a> SchemaValue<'a> for &'a str {
         Ok(state)
     }
 
-    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
         encoder.encode_str(self)
     }
 }
@@ -148,7 +150,7 @@ impl<'a> SchemaValue<'a> for alloc::string::String {
     type Type = StrT;
     type DecodeState = alloc::string::String;
 
-    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
         *state = decoder.decode_owned_str()?;
         Ok(())
     }
@@ -175,15 +177,15 @@ impl<'a> SchemaValue<'a> for &'a [u8] {
     type Type = BytesT;
     type DecodeState = &'a [u8];
 
-    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
-        todo!()
-    }
-
-    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
         todo!()
     }
 
     fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError> {
+        todo!()
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
         todo!()
     }
 }
@@ -200,11 +202,7 @@ where V::Type: ListElementType
     type Type = ListT<V::Type>;
     type DecodeState = AllocatorVecBuilder<'a, V>;
 
-    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
-        encoder.encode_list_slice(self)
-    }
-
-    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
         decoder.decode_list(state)
     }
 
@@ -213,6 +211,11 @@ where V::Type: ListElementType
             None => Ok(&[]),
             Some(xs) => Ok(mem_handle.unpack_slice(xs))
         }
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        // encoder.encode_list_slice(self)
+        todo!()
     }
 }
 
@@ -223,7 +226,7 @@ where
     type Type = ListT<V::Type>;
     type DecodeState = AllocatorVecBuilder<'a, V>;
 
-    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
         decoder.decode_list(state)
     }
 
@@ -243,8 +246,9 @@ where
     type Type = ListT<V::Type>;
     type DecodeState = alloc::vec::Vec<V>;
 
-    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
-        encoder.encode_list_slice(self.as_slice())
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        // encoder.encode_list_slice(self.as_slice())
+        todo!()
     }
 }
 
@@ -252,16 +256,16 @@ impl<'a> SchemaValue<'a> for ixc_message_api::AccountID {
     type Type = AccountIdT;
     type DecodeState = ixc_message_api::AccountID;
 
-    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
-        *state = decoder.decode_account_id()?;
-        Ok(())
-    }
+    // fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+    //     *state = decoder.decode_account_id()?;
+    //     Ok(())
+    // }
 
     fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError> {
         Ok(state)
     }
 
-    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
         encoder.encode_account_id(*self)
     }
 }

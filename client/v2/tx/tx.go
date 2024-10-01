@@ -155,7 +155,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg)
 		}
 	}
 
-	builder, err := txf.BuildUnsignedTx(msgs...)
+	err := txf.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg)
 			return errors.New("failed to encode transaction: tx json encoder is nil")
 		}
 
-		unsigTx, err := builder.GetTx()
+		unsigTx, err := txf.getTx()
 		if err != nil {
 			return err
 		}
@@ -191,7 +191,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg)
 		}
 	}
 
-	signedTx, err := txf.sign(clientCtx.CmdContext, builder, true)
+	signedTx, err := txf.sign(clientCtx.CmdContext, true)
 	if err != nil {
 		return err
 	}

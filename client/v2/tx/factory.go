@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"math/big"
 	"strings"
 
@@ -42,6 +43,8 @@ type Factory struct {
 	conn             gogogrpc.ClientConn
 	txConfig         TxConfig
 	txParams         TxParameters
+
+	tx txState
 }
 
 func NewFactoryFromFlagSet(flags *pflag.FlagSet, keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever account.AccountRetriever,
@@ -77,6 +80,8 @@ func NewFactory(keybase keyring.Keyring, cdc codec.BinaryCodec, accRetriever acc
 		conn:             conn,
 		txConfig:         txConfig,
 		txParams:         parameters,
+
+		tx: txState{},
 	}, nil
 }
 
@@ -143,20 +148,20 @@ func prepareTxParams(parameters TxParameters, accRetriever account.AccountRetrie
 
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
 // Once created, the fee, memo, and messages are set.
-func (f *Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
+func (f *Factory) BuildUnsignedTx(msgs ...transaction.Msg) error {
 	fees := f.txParams.fees
 
 	isGasPriceZero, err := coins.IsZero(f.txParams.gasPrices)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if !isGasPriceZero {
 		areFeesZero, err := coins.IsZero(fees)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if !areFeesZero {
-			return nil, errors.New("cannot provide both fees and gas prices")
+			return errors.New("cannot provide both fees and gas prices")
 		}
 
 		// f.gas is an uint64 and we should convert to LegacyDec
@@ -170,7 +175,7 @@ func (f *Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
 		for i, gp := range f.txParams.gasPrices {
 			fee, err := math.LegacyNewDecFromStr(gp.Amount)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			fee = fee.Mul(glDec)
 			fees[i] = &base.Coin{Denom: gp.Denom, Amount: fee.Ceil().RoundInt().String()}
@@ -178,37 +183,35 @@ func (f *Factory) BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error) {
 	}
 
 	if err := validateMemo(f.txParams.memo); err != nil {
-		return nil, err
+		return err
 	}
 
-	txBuilder := f.txConfig.NewTxBuilder()
-	if err := txBuilder.SetMsgs(msgs...); err != nil {
-		return nil, err
-	}
+	f.tx.msgs = msgs
+	f.tx.memo = f.txParams.memo
+	f.tx.fees = fees
+	f.tx.gasLimit = f.txParams.gas
+	f.tx.unordered = f.txParams.unordered
+	f.tx.timeoutTimestamp = f.txParams.timeoutTimestamp
 
-	txBuilder.SetMemo(f.txParams.memo)
-	txBuilder.SetFeeAmount(fees)
-	txBuilder.SetGasLimit(f.txParams.gas)
-	err = txBuilder.SetFeeGranter(f.txParams.feeGranter)
+	err = f.tx.SetFeeGranter(f.txParams.feeGranter)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	err = txBuilder.SetFeePayer(f.txParams.feePayer)
+	err = f.tx.SetFeePayer(f.txParams.feePayer)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	txBuilder.SetTimeoutTimestamp(f.txParams.timeoutTimestamp)
 
-	return txBuilder, nil
+	return nil
 }
 
 func (f *Factory) BuildsSignedTx(ctx context.Context, msgs ...transaction.Msg) (Tx, error) {
-	tx, err := f.BuildUnsignedTx(msgs...)
+	err := f.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return nil, err
 	}
 
-	return f.sign(ctx, tx, true)
+	return f.sign(ctx, true)
 }
 
 // calculateGas calculates the gas required for the given messages.
@@ -254,7 +257,7 @@ func (f *Factory) UnsignedTxString(msgs ...transaction.Msg) (string, error) {
 		}
 	}
 
-	builder, err := f.BuildUnsignedTx(msgs...)
+	err := f.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return "", err
 	}
@@ -264,7 +267,7 @@ func (f *Factory) UnsignedTxString(msgs ...transaction.Msg) (string, error) {
 		return "", errors.New("cannot print unsigned tx: tx json encoder is nil")
 	}
 
-	tx, err := builder.GetTx()
+	tx, err := f.getTx()
 	if err != nil {
 		return "", err
 	}
@@ -281,7 +284,7 @@ func (f *Factory) UnsignedTxString(msgs ...transaction.Msg) (string, error) {
 // the encoded transaction or an error if the unsigned transaction cannot be
 // built.
 func (f *Factory) BuildSimTx(msgs ...transaction.Msg) ([]byte, error) {
-	txb, err := f.BuildUnsignedTx(msgs...)
+	err := f.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +301,7 @@ func (f *Factory) BuildSimTx(msgs ...transaction.Msg) ([]byte, error) {
 		Data:     f.getSimSignatureData(pk),
 		Sequence: f.sequence(),
 	}
-	if err := txb.SetSignatures(sig); err != nil {
+	if err := f.SetSignatures(sig); err != nil {
 		return nil, err
 	}
 
@@ -307,7 +310,7 @@ func (f *Factory) BuildSimTx(msgs ...transaction.Msg) ([]byte, error) {
 		return nil, fmt.Errorf("cannot simulate tx: tx encoder is nil")
 	}
 
-	tx, err := txb.GetTx()
+	tx, err := f.getTx()
 	if err != nil {
 		return nil, err
 	}
@@ -319,8 +322,7 @@ func (f *Factory) BuildSimTx(msgs ...transaction.Msg) ([]byte, error) {
 // ones if overwrite=true (otherwise, the signature will be appended).
 // Signing a transaction with multiple signers in the DIRECT mode is not supported and will
 // return an error.
-// An error is returned upon failure.
-func (f *Factory) sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bool) (Tx, error) {
+func (f *Factory) sign(ctx context.Context, overwriteSig bool) (Tx, error) {
 	if f.keybase == nil {
 		return nil, errors.New("keybase must be set prior to signing a transaction")
 	}
@@ -371,7 +373,7 @@ func (f *Factory) sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bo
 
 	var prevSignatures []Signature
 	if !overwriteSig {
-		tx, err := txBuilder.GetTx()
+		tx, err := f.getTx()
 		if err != nil {
 			return nil, err
 		}
@@ -389,11 +391,11 @@ func (f *Factory) sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bo
 		sigs = append(sigs, prevSignatures...)
 		sigs = append(sigs, sig)
 	}
-	if err := txBuilder.SetSignatures(sigs...); err != nil {
+	if err := f.SetSignatures(sigs...); err != nil {
 		return nil, err
 	}
 
-	tx, err := txBuilder.GetTx()
+	tx, err := f.getTx()
 	if err != nil {
 		return nil, err
 	}
@@ -402,7 +404,7 @@ func (f *Factory) sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bo
 		return nil, err
 	}
 
-	bytesToSign, err := f.getSignBytesAdapter(ctx, signerData, txBuilder)
+	bytesToSign, err := f.getSignBytesAdapter(ctx, signerData)
 	if err != nil {
 		return nil, err
 	}
@@ -425,22 +427,22 @@ func (f *Factory) sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bo
 	}
 
 	if overwriteSig {
-		err = txBuilder.SetSignatures(sig)
+		err = f.SetSignatures(sig)
 	} else {
 		prevSignatures = append(prevSignatures, sig)
-		err = txBuilder.SetSignatures(prevSignatures...)
+		err = f.SetSignatures(prevSignatures...)
 	}
 
 	if err != nil {
 		return nil, fmt.Errorf("unable to set signatures on payload: %w", err)
 	}
 
-	return txBuilder.GetTx()
+	return f.getTx()
 }
 
 // getSignBytesAdapter returns the sign bytes for a given transaction and sign mode.
-func (f *Factory) getSignBytesAdapter(ctx context.Context, signerData signing.SignerData, builder TxBuilder) ([]byte, error) {
-	txData, err := builder.GetSigningTxData()
+func (f *Factory) getSignBytesAdapter(ctx context.Context, signerData signing.SignerData) ([]byte, error) {
+	txData, err := f.getSigningTxData()
 	if err != nil {
 		return nil, err
 	}
@@ -529,6 +531,148 @@ func (f *Factory) getSimSignatureData(pk cryptotypes.PubKey) SignatureData {
 		BitArray:   &apicrypto.CompactBitArray{},
 		Signatures: multiSignatureData,
 	}
+}
+
+// TODO: to factory
+func (f *Factory) getTx() (*wrappedTx, error) {
+	msgs, err := msgsV1toAnyV2(f.tx.msgs)
+	if err != nil {
+		return nil, err
+	}
+
+	body := &apitx.TxBody{
+		Messages:                    msgs,
+		Memo:                        f.tx.memo,
+		TimeoutHeight:               f.tx.timeoutHeight,
+		TimeoutTimestamp:            timestamppb.New(f.tx.timeoutTimestamp),
+		Unordered:                   f.tx.unordered,
+		ExtensionOptions:            f.tx.extensionOptions,
+		NonCriticalExtensionOptions: f.tx.nonCriticalExtensionOptions,
+	}
+
+	fee, err := f.tx.getFee()
+	if err != nil {
+		return nil, err
+	}
+
+	authInfo := &apitx.AuthInfo{
+		SignerInfos: f.tx.signerInfos,
+		Fee:         fee,
+	}
+
+	bodyBytes, err := marshalOption.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+
+	authInfoBytes, err := marshalOption.Marshal(authInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	txRawBytes, err := marshalOption.Marshal(&apitx.TxRaw{
+		BodyBytes:     bodyBytes,
+		AuthInfoBytes: authInfoBytes,
+		Signatures:    f.tx.signatures,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	decodedTx, err := f.txConfig.Decoder().Decode(txRawBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return newWrapperTx(f.cdc, decodedTx), nil
+}
+
+// getSigningTxData returns a TxData with the txBuilder info.
+func (f *Factory) getSigningTxData() (*signing.TxData, error) {
+	tx, err := f.getTx()
+	if err != nil {
+		return nil, err
+	}
+
+	return &signing.TxData{
+		Body:                       tx.Tx.Body,
+		AuthInfo:                   tx.Tx.AuthInfo,
+		BodyBytes:                  tx.TxRaw.BodyBytes,
+		AuthInfoBytes:              tx.TxRaw.AuthInfoBytes,
+		BodyHasUnknownNonCriticals: tx.TxBodyHasUnknownNonCriticals,
+	}, nil
+}
+
+// SetSignatures sets the signatures for the transaction builder.
+// It takes a variable number of Signature arguments and processes each one to extract the mode information and raw signature.
+// It also converts the public key to the appropriate format and sets the signer information.
+// TODO: to factory
+func (f *Factory) SetSignatures(signatures ...Signature) error {
+	n := len(signatures)
+	signerInfos := make([]*apitx.SignerInfo, n)
+	rawSignatures := make([][]byte, n)
+
+	for i, sig := range signatures {
+		var (
+			modeInfo *apitx.ModeInfo
+			pubKey   *codectypes.Any
+			err      error
+			anyPk    *anypb.Any
+		)
+
+		modeInfo, rawSignatures[i] = SignatureDataToModeInfoAndSig(sig.Data)
+		if sig.PubKey != nil {
+			pubKey, err = codectypes.NewAnyWithValue(sig.PubKey)
+			if err != nil {
+				return err
+			}
+			anyPk = &anypb.Any{
+				TypeUrl: pubKey.TypeUrl,
+				Value:   pubKey.Value,
+			}
+		}
+
+		signerInfos[i] = &apitx.SignerInfo{
+			PublicKey: anyPk,
+			ModeInfo:  modeInfo,
+			Sequence:  sig.Sequence,
+		}
+	}
+
+	f.tx.signerInfos = signerInfos
+	f.tx.signatures = rawSignatures
+
+	return nil
+}
+
+// msgsV1toAnyV2 converts a slice of transaction.Msg (v1) to a slice of anypb.Any (v2).
+// It first converts each transaction.Msg into a codectypes.Any and then converts
+// these into anypb.Any.
+// TODO: to factory
+func msgsV1toAnyV2(msgs []transaction.Msg) ([]*anypb.Any, error) {
+	anys := make([]*codectypes.Any, len(msgs))
+	for i, msg := range msgs {
+		anyMsg, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, err
+		}
+		anys[i] = anyMsg
+	}
+
+	return intoAnyV2(anys), nil
+}
+
+// intoAnyV2 converts a slice of codectypes.Any (v1) to a slice of anypb.Any (v2).
+// TODO: to factory
+func intoAnyV2(v1s []*codectypes.Any) []*anypb.Any {
+	v2s := make([]*anypb.Any, len(v1s))
+	for i, v1 := range v1s {
+		v2s[i] = &anypb.Any{
+			TypeUrl: v1.TypeUrl,
+			Value:   v1.Value,
+		}
+	}
+	return v2s
 }
 
 // checkMultipleSigners checks that there can be maximum one DIRECT signer in

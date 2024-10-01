@@ -38,7 +38,6 @@ var (
 type TxConfig interface {
 	TxEncodingConfig
 	TxSigningConfig
-	TxBuilderProvider
 }
 
 // TxEncodingConfig defines the interface for transaction encoding and decoding.
@@ -52,6 +51,8 @@ type TxEncodingConfig interface {
 	TxJSONEncoder() txEncoder
 	// TxJSONDecoder returns a decoder for JSON transaction decoding.
 	TxJSONDecoder() txDecoder
+	// TODO: godoc
+	Decoder() Decoder
 }
 
 // TxSigningConfig defines the interface for transaction signing configurations.
@@ -105,7 +106,6 @@ func (c *ConfigOptions) validate() error {
 
 // txConfig is a struct that embeds TxBuilderProvider, TxEncodingConfig, and TxSigningConfig interfaces.
 type txConfig struct {
-	TxBuilderProvider
 	TxEncodingConfig
 	TxSigningConfig
 }
@@ -134,7 +134,6 @@ func NewTxConfig(options ConfigOptions) (TxConfig, error) {
 	}
 
 	return &txConfig{
-		TxBuilderProvider: NewBuilderProvider(options.AddressCodec, options.Decoder, options.Cdc),
 		TxEncodingConfig: defaultEncodingConfig{
 			cdc:     options.Cdc,
 			decoder: options.Decoder,
@@ -167,6 +166,11 @@ func (t defaultEncodingConfig) TxJSONEncoder() txEncoder {
 // TxJSONDecoder returns the default JSON transaction decoder.
 func (t defaultEncodingConfig) TxJSONDecoder() txDecoder {
 	return decodeJsonTx(t.cdc, t.decoder)
+}
+
+// TODO: godoc
+func (t defaultEncodingConfig) Decoder() Decoder {
+	return t.decoder
 }
 
 // defaultTxSigningConfig is a struct that holds the signing context and handler map.

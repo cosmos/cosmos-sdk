@@ -34,6 +34,16 @@ type InitBuilder = implementation.InitBuilder
 // AccountCreatorFunc is the exported type of AccountCreatorFunc.
 type AccountCreatorFunc = implementation.AccountCreatorFunc
 
+func DIAccount[A Interface](name string, constructor func(deps Dependencies) (A, error)) DepinjectAccount {
+	return DepinjectAccount{MakeAccount: AddAccount(name, constructor)}
+}
+
+type DepinjectAccount struct {
+	MakeAccount AccountCreatorFunc
+}
+
+func (DepinjectAccount) IsManyPerContainerType() {}
+
 // Dependencies is the exported type of Dependencies.
 type Dependencies = implementation.Dependencies
 

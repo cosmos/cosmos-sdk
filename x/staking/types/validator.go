@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -188,13 +189,14 @@ func (v Validator) IsUnbonding() bool {
 // constant used in flags to indicate that description field should not be updated
 const DoNotModifyDesc = "[do-not-modify]"
 
-func NewDescription(moniker, identity, website, securityContact, details string) Description {
+func NewDescription(moniker, identity, website, securityContact, details string, metadata Metadata) Description {
 	return Description{
 		Moniker:         moniker,
 		Identity:        identity,
 		Website:         website,
 		SecurityContact: securityContact,
 		Details:         details,
+		Metadata:        metadata,
 	}
 }
 
@@ -221,13 +223,18 @@ func (d Description) UpdateDescription(d2 Description) (Description, error) {
 		d2.Details = d.Details
 	}
 
+	if d2.Metadata.ProfilePicUri == DoNotModifyDesc {
+		d2.Metadata.ProfilePicUri = d.Metadata.ProfilePicUri
+	}
+
 	return NewDescription(
 		d2.Moniker,
 		d2.Identity,
 		d2.Website,
 		d2.SecurityContact,
 		d2.Details,
-	).EnsureLength()
+		d.Metadata,
+	).Validate()
 }
 
 // EnsureLength ensures the length of a validator's description.
@@ -253,6 +260,40 @@ func (d Description) EnsureLength() (Description, error) {
 	}
 
 	return d, nil
+}
+
+func (d Description) IsEmpty() bool {
+	return d.Moniker == "" && d.Details == "" && d.Identity == "" && d.Website == "" && d.SecurityContact == "" &&
+		d.Metadata.ProfilePicUri == "" && len(d.Metadata.SocialHandleUris) == 0
+}
+
+// Validate calls metadata.Validate() description.EnsureLength()
+func (d Description) Validate() (Description, error) {
+	if err := d.Metadata.Validate(); err != nil {
+		return d, err
+	}
+
+	return d.EnsureLength()
+}
+
+// Validate checks that the metadata fields are valid. For the ProfilePicUri, checks if a valid URI.
+func (m Metadata) Validate() error {
+	if m.ProfilePicUri != "" {
+		_, err := url.ParseRequestURI(m.ProfilePicUri)
+		if err != nil {
+			return errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid profile_pic_uri format: %s, err: %s", m.ProfilePicUri, err)
+		}
+	}
+
+	if m.SocialHandleUris != nil {
+		for _, socialHandleUri := range m.SocialHandleUris {
+			_, err := url.ParseRequestURI(socialHandleUri)
+			if err != nil {
+				return errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid social_handle_uri: %s, err: %s", socialHandleUri, err)
+			}
+		}
+	}
+	return nil
 }
 
 // ModuleValidatorUpdate returns a appmodule.ValidatorUpdate from a staking validator type

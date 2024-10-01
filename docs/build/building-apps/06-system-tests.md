@@ -48,9 +48,11 @@ connections. Prefer any other node's log to find stack traces or error messages.
 Using system tests for state setup during debugging has become very handy:
 
 - Start the test with one node only and verbose output:
+
   ```sh
   go test -v -tags=system_test ./ --run TestAccountCreation --verbose --nodes-count=1
   ```
+
 - Copy the CLI command for the transaction and modify the test to stop before the command
 - Start the node with `--home=<project-home>/tests/systemtests/testnet/node0/<binary-name>/` in debug mode
 - Execute CLI command from shell and enter breakpoints

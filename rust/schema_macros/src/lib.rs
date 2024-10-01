@@ -8,7 +8,7 @@ use syn::{Data, Lifetime, Member};
 
 /// This derives a struct codec.
 #[manyhow]
-#[proc_macro_derive(SchemaValue, attributes(sealed))]
+#[proc_macro_derive(SchemaValue, attributes(sealed, schema, proto))]
 pub fn derive_schema_value(input: syn::DeriveInput) -> manyhow::Result<TokenStream2> {
     let struct_name = input.ident;
     let str = match &input.data {
@@ -83,7 +83,7 @@ pub fn derive_schema_value(input: syn::DeriveInput) -> manyhow::Result<TokenStre
 
         unsafe impl #impl_generics ::ixc_schema::types::ReferenceableType for #struct_name #ty_generics #where_clause {
             const SCHEMA_TYPE: Option<::ixc_schema::schema::SchemaType<'static>> = Some(
-                ::ixc_schema::schema::SchemaType::Struct(Self::STRUCT_TYPE)
+                ::ixc_schema::schema::SchemaType::Struct(<Self as ::ixc_schema::structs::StructSchema>::STRUCT_TYPE)
             );
         }
 
@@ -112,7 +112,7 @@ pub fn derive_schema_value(input: syn::DeriveInput) -> manyhow::Result<TokenStre
                         }
                     }
                 }
-                decoder.decode_struct(&mut Visitor { state }, &Self::STRUCT_TYPE)
+                decoder.decode_struct(&mut Visitor { state }, &<Self as ::ixc_schema::structs::StructSchema>::STRUCT_TYPE)
             }
 
             fn finish_decode_state(state: Self::DecodeState, mem: &'a ::ixc_schema::mem::MemoryManager) -> Result<Self, ::ixc_schema::decoder::DecodeError> {
@@ -123,7 +123,7 @@ pub fn derive_schema_value(input: syn::DeriveInput) -> manyhow::Result<TokenStre
             }
 
             fn encode(&self, encoder: &mut dyn ::ixc_schema::encoder::Encoder) -> Result<(), ::ixc_schema::encoder::EncodeError> {
-                encoder.encode_struct(self, &Self::STRUCT_TYPE)
+                encoder.encode_struct(self, &<Self as ::ixc_schema::structs::StructSchema>::STRUCT_TYPE)
             }
         }
 

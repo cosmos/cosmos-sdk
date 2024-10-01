@@ -92,9 +92,9 @@ func updateValidators(
 
 		if update.Power == 0 {
 			if _, ok := current[str]; !ok {
-				tb.Fatalf("tried to delete a nonexistent validator: %s", str)
+				tb.Logf("tried to delete a nonexistent validator: %s", str)
+				continue
 			}
-
 			event("end_block", "validator_updates", "kicked")
 			delete(current, str)
 		} else if _, ok := current[str]; ok {
@@ -151,10 +151,13 @@ func RandomRequestFinalizeBlock(
 			signed = false
 		}
 
+		var commitStatus cmtproto.BlockIDFlag
 		if signed {
 			event("begin_block", "signing", "signed")
+			commitStatus = cmtproto.BlockIDFlagCommit
 		} else {
 			event("begin_block", "signing", "missed")
+			commitStatus = cmtproto.BlockIDFlagAbsent
 		}
 
 		voteInfos[i] = abci.VoteInfo{
@@ -162,7 +165,7 @@ func RandomRequestFinalizeBlock(
 				Address: SumTruncated(mVal.val.PubKeyBytes),
 				Power:   mVal.val.Power,
 			},
-			BlockIdFlag: cmtproto.BlockIDFlagCommit,
+			BlockIdFlag: commitStatus,
 		}
 	}
 
@@ -187,15 +190,17 @@ func RandomRequestFinalizeBlock(
 		params.evidenceFraction = 0.9
 	}
 
+	totalBlocksProcessed := len(pastTimes)
+	startHeight := blockHeight - int64(totalBlocksProcessed) + 1
 	for r.Float64() < params.EvidenceFraction() {
 		vals := voteInfos
 		height := blockHeight
 		misbehaviorTime := time
-		if r.Float64() < params.PastEvidenceFraction() && height > 1 {
-			height = int64(r.Intn(int(height)-1)) + 1 // CometBFT starts at height 1
-			// array indices offset by one
-			misbehaviorTime = pastTimes[height-1]
-			vals = pastVoteInfos[height-1]
+		if r.Float64() < params.PastEvidenceFraction() && totalBlocksProcessed > 1 {
+			n := int64(r.Intn(totalBlocksProcessed))
+			misbehaviorTime = pastTimes[n]
+			vals = pastVoteInfos[n]
+			height = startHeight + n
 		}
 
 		validator := vals[r.Intn(len(vals))].Validator

@@ -48,7 +48,7 @@ contributors, the general procedure for contributing has been established:
       to begin work.
 5. To submit your work as a contribution to the repository follow standard GitHub best practices. See [pull request guideline](#pull-requests) below.
 
-**Note:** For very small or blatantly obvious problems, you are
+**Note 1:** For very small or blatantly obvious problems, you are
 not required to an open issue to submit a PR, but be aware that for more complex
 problems/features, if a PR is opened before an adequate design discussion has
 taken place in a GitHub issue, that PR runs a high likelihood of being rejected.
@@ -128,9 +128,7 @@ NOTE: when merging, GitHub will squash commits and rebase on top of the main.
 
 ### Pull Request Templates
 
-There are three PR templates. The [default template](./.github/PULL_REQUEST_TEMPLATE.md) is for types `fix`, `feat`, and `refactor`. We also have a [docs template](./.github/PULL_REQUEST_TEMPLATE/docs.md) for documentation changes. When previewing a PR before it has been opened, you can change the template by adding one of the following parameters to the url:
-
-* `template=docs.md`
+There are three PR templates. The [default template](./.github/PULL_REQUEST_TEMPLATE.md) is used for PR types such as `fix`, `feat`,`docs`, and `refactor`, among others. These are just a few examples. For more details, please refer to the default template.
 
 ### Pull Request Accountability
 
@@ -202,7 +200,7 @@ that you would like early feedback and tagging whoever you would like to receive
 Codeowners are marked automatically as the reviewers.
 
 All PRs require at least two review approvals before they can be merged (one review might be acceptable in
-the case of minor changes to [docs](./.github/PULL_REQUEST_TEMPLATE/docs.md) changes that do not affect production code). Each PR template has a reviewers checklist that must be completed before the PR can be merged. Each reviewer is responsible
+the case of minor changes to docs changes that do not affect production code). Each PR template has a reviewers checklist that must be completed before the PR can be merged. Each reviewer is responsible
 for all checked items unless they have indicated otherwise by leaving their handle next to specific
 items. In addition, use the following review explanations:
 

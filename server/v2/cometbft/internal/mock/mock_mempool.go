@@ -15,5 +15,6 @@ type MockMempool[T transaction.Tx] struct{}
 
 func (MockMempool[T]) Insert(context.Context, T) error                 { return nil }
 func (MockMempool[T]) Select(context.Context, []T) mempool.Iterator[T] { return nil }
+func (MockMempool[T]) SelectBy(context.Context, []T, func(T) bool)     {}
 func (MockMempool[T]) CountTx() int                                    { return 0 }
-func (MockMempool[T]) Remove([]T) error                                { return nil }
+func (MockMempool[T]) Remove(T) error                                  { return nil }

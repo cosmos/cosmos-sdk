@@ -106,7 +106,7 @@ For non depinject users, simply call `RegisterLegacyAminoCodec` and `RegisterInt
 
 Additionally, thanks to the genesis simplification, as explained in [the genesis interface update](#genesis-interface), the module manager `InitGenesis` and `ExportGenesis` methods do not require the codec anymore.
 
-##### GRPC WEB
+##### gRPC Web
 
 Grpc-web embedded client has been removed from the server. If you would like to use grpc-web, you can use the [envoy proxy](https://www.envoyproxy.io/docs/envoy/latest/start/start). Here's how to set it up:
 
@@ -319,6 +319,11 @@ used as a TTL for the transaction and is used to provide replay protection. See
 [ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-transactions.md)
 for more details.
 
+#### Sign Mode Textual
+
+With the split of `x/auth/tx/config` in two (x/auth/tx/config as depinject module for txconfig and tx options) and `x/validate`, sign mode textual is no more automatically configured when using runtime (it was previously the case).
+For the same instructions than for legacy app wiring to enable sign mode textual (see in v0.50 UPGRADING documentation).
+
 ### Depinject `app_config.go` / `app.yml`
 
 With the introduction of [environment in modules](#core-api), depinject automatically creates the environment for all modules.
@@ -459,7 +464,7 @@ if err != nil {
 }
 ```
 
-### `x/crisis`
+#### `x/crisis`
 
 The `x/crisis` module was removed due to it not being supported or functional any longer. 
 
@@ -502,6 +507,11 @@ storetypes.StoreUpgrades{
 			},
 }
 ```
+
+#### `x/validate`
+
+Introducing `x/validate` a module that is solely used for registering default ante/post handlers and global tx validators when using runtime and runtime/v2. If you wish to set your custom ante/post handlers, no need to use this module.
+You can however always extend them by adding extra tx validators (see `x/validate` documentation).
 
 ## [v0.50.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.0-alpha.0)
 
@@ -628,7 +638,7 @@ simd config migrate v0.50
 
 If you were using `<appd> config [key]` or `<appd> config [key] [value]` to set and get values from the `client.toml`, replace it with `<appd> config get client [key]` and `<appd> config set client [key] [value]`. The extra verbosity is due to the extra functionalities added in config.
 
-More information about [confix](https://docs.cosmos.network/main/tooling/confix) and how to add it in your application binary in the [documentation](https://docs.cosmos.network/main/tooling/confix).
+More information about [confix](https://docs.cosmos.network/main/build/tooling/confix) and how to add it in your application binary in the [documentation](https://docs.cosmos.network/main/build/tooling/confix).
 
 #### gRPC-Web
 
@@ -935,6 +945,55 @@ To find out more please read the [signer field](https://github.com/cosmos/cosmos
 #### `x/auth`
 
 For ante handler construction via `ante.NewAnteHandler`, the field `ante.HandlerOptions.SignModeHandler` has been updated to `x/tx/signing/HandlerMap` from `x/auth/signing/SignModeHandler`. Callers typically fetch this value from `client.TxConfig.SignModeHandler()` (which is also changed) so this change should be transparent to most users.
+
+##### Account Migration Guide: x/auth to x/accounts
+
+Users can now migrate accounts from `x/auth` to `x/accounts` using the `auth.MsgMigrateAccount` message. Currently, this migration is only supported for `BaseAccount` due to security considerations.
+
+###### Migration Process
+
+The migration process allows an auth BaseAccount to migrate to any kind of x/accounts supported account type, here we will show how to migrate from a legacy x/auth `BaseAccount` to a `x/accounts` `BaseAccount`
+
+####### Migrating to x/accounts/defaults/base
+
+To migrate to the `BaseAccount` in `x/accounts`, follow these steps:
+
+1. Send a `basev1.MsgInit` message.
+2. This process allows you to:
+    - Switch to a new public key
+    - Reset your sequence number
+
+> **Important**: If you intend to keep the same public key, ensure you use your current sequence number.
+
+###### Example: x/auth.MsgMigrateAccount
+
+Here's an example of the `x/auth.MsgMigrateAccount` message structure:
+
+```json
+{
+  "signer": "cosmos1w43tr39v3lzvxz969e4ty9a74rq9nw7563tqvy",
+  "account_type": "base",
+  "account_init_msg": {
+    "@type": "/cosmos.accounts.defaults.base.v1.MsgInit",
+    "pub_key": {
+      "@type": "/cosmos.crypto.secp256k1.PubKey",
+      "key": "AkeoE1z32tlQyE7xpx3v+JE9XJL0trVQBFoDCn0pGl3w"
+    },
+    "init_sequence": "100"
+  }
+}
+```
+
+**Field Descriptions**
+
+- `signer`: The address of the account you want to migrate from.
+- `account_type`: The new account type you want to migrate to (depends on what's installed on the chain).
+- `account_init_msg`: The custom initialization message for the new account.
+    - `@type`: Specifies the type of account (in this case, x/accounts base account).
+    - `pub_key`: The public key for the account. You can migrate to a different public key if desired.
+    - `init_sequence`: The new sequence number for the account.
+
+> **Warning**: If you're keeping the same public key, make sure to use your current sequence number to prevent potential replay attacks.
 
 #### `x/capability`
 

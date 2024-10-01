@@ -15,8 +15,21 @@ type Field struct {
 	// Nullable indicates whether null values are accepted for the field. Key fields CANNOT be nullable.
 	Nullable bool `json:"nullable,omitempty"`
 
-	// ReferencedType is the referenced type name when Kind is EnumKind.
+	// ReferencedType is the referenced type name when Kind is EnumKind, StructKind or OneOfKind.
 	ReferencedType string `json:"referenced_type,omitempty"`
+
+	// ElementKind is the element type when Kind is ListKind.
+	// Support for this is currently UNIMPLEMENTED, this notice will be removed when it is added.
+	ElementKind Kind `json:"element_kind,omitempty"`
+
+	// Size specifies the size or max-size of a field.
+	// Support for this is currently UNIMPLEMENTED, this notice will be removed when it is added.
+	// Its specific meaning may vary depending on the field kind.
+	// For IntNKind and UintNKind fields, it specifies the bit width of the field.
+	// For StringKind, BytesKind, AddressKind, and JSONKind, fields it specifies the maximum length rather than a fixed length.
+	// If it is 0, such fields have no maximum length.
+	// It is invalid to have a non-zero Size for other kinds.
+	Size uint32 `json:"size,omitempty"`
 }
 
 // Validate validates the field.

@@ -11,8 +11,6 @@ import (
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
@@ -159,9 +157,7 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 	pv, err := pvm.LoadOrGenFilePV(
 		s.config.ConfigTomlConfig.PrivValidatorKeyFile(),
 		s.config.ConfigTomlConfig.PrivValidatorStateFile(),
-		func() (cmtcrypto.PrivKey, error) {
-			return cmted25519.GenPrivKey(), nil
-		},
+		s.serverOptions.KeygenF,
 	)
 	if err != nil {
 		return err
@@ -275,7 +271,7 @@ func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 
 // Config returns the (app.toml) server configuration.
 func (s *CometBFTServer[T]) Config() any {
-	if s.config.AppTomlConfig == nil || s.config.AppTomlConfig == (&AppTomlConfig{}) {
+	if s.config.AppTomlConfig == nil || s.config.AppTomlConfig.Address == "" {
 		cfg := &Config{AppTomlConfig: DefaultAppTomlConfig()}
 		// overwrite the default config with the provided options
 		for _, opt := range s.cfgOptions {

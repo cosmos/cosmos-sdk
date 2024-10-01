@@ -2,7 +2,6 @@ version: v1
 directories:
   - proto
   - x/accounts/proto
-  - x/auth/proto
   - x/authz/proto
   - x/bank/proto
   - x/circuit/proto

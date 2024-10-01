@@ -11,13 +11,14 @@ import (
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	errorsmod "cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors/v2"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/client/grpc/cmtservice"
@@ -122,20 +123,29 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 	}
 
 	resp, err := c.app.ValidateTx(ctx, decodedTx)
+	// we do not want to return a cometbft error, but a check tx response with the error
+	if err != nil && !errors.Is(err, resp.Error) {
+		return nil, err
+	}
+
+	events, err := intoABCIEvents(resp.Events, c.indexedEvents)
 	if err != nil {
 		return nil, err
 	}
 
 	cometResp := &abciproto.CheckTxResponse{
-		Code:      resp.Code,
+		Code:      0,
 		GasWanted: uint64ToInt64(resp.GasWanted),
 		GasUsed:   uint64ToInt64(resp.GasUsed),
-		Events:    intoABCIEvents(resp.Events, c.indexedEvents),
+		Events:    events,
 	}
 	if resp.Error != nil {
-		cometResp.Code = 1
-		cometResp.Log = resp.Error.Error()
+		space, code, log := errorsmod.ABCIInfo(resp.Error, c.cfg.AppTomlConfig.Trace)
+		cometResp.Code = code
+		cometResp.Codespace = space
+		cometResp.Log = log
 	}
+
 	return cometResp, nil
 }
 
@@ -152,7 +162,7 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 		cp, err := c.GetConsensusParams(ctx)
 		// if the consensus params are not found, we set the app version to 0
 		// in the case that the start version is > 0
-		if cp == nil || errors.Is(err, errors.New("collections: not found")) {
+		if cp == nil || errors.Is(err, collections.ErrNotFound) {
 			appVersion = 0
 		} else if err != nil {
 			return nil, err
@@ -191,7 +201,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 		}
 		res, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
 		if err != nil {
-			resp := queryResult(err)
+			resp := QueryResult(err, c.cfg.AppTomlConfig.Trace)
 			resp.Height = req.Height
 			return resp, err
 
@@ -278,10 +288,10 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		return nil, fmt.Errorf("genesis state init failure: %w", err)
 	}
 
-	// TODO necessary? where should this WARN live if it all. helpful for testing
 	for _, txRes := range blockresponse.TxResults {
-		if txRes.Error != nil {
-			c.logger.Warn("genesis tx failed", "code", txRes.Code, "error", txRes.Error)
+		if err := txRes.Error; err != nil {
+			space, code, log := errorsmod.ABCIInfo(err, c.cfg.AppTomlConfig.Trace)
+			c.logger.Warn("genesis tx failed", "codespace", space, "code", code, "log", log)
 		}
 	}
 
@@ -467,9 +477,10 @@ func (c *Consensus[T]) FinalizeBlock(
 	}
 
 	// remove txs from the mempool
-	err = c.mempool.Remove(decodedTxs)
-	if err != nil {
-		return nil, fmt.Errorf("unable to remove txs: %w", err)
+	for _, tx := range decodedTxs {
+		if err = c.mempool.Remove(tx); err != nil {
+			return nil, fmt.Errorf("unable to remove tx: %w", err)
+		}
 	}
 
 	c.lastCommittedHeight.Store(req.Height)
@@ -479,7 +490,7 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	return finalizeBlockResponse(resp, cp, appHash, c.indexedEvents)
+	return finalizeBlockResponse(resp, cp, appHash, c.indexedEvents, c.cfg.AppTomlConfig.Trace)
 }
 
 // Commit implements types.Application.

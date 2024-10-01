@@ -365,6 +365,12 @@ func (s *SystemUnderTest) PrintBuffer() {
 	})
 }
 
+// AwaitNBlocks blocks until the current height + n block is reached. An optional timeout parameter can be passed to abort early
+func (s *SystemUnderTest) AwaitNBlocks(t *testing.T, n int64, timeout ...time.Duration) {
+	t.Helper()
+	s.AwaitBlockHeight(t, s.CurrentHeight()+n, timeout...)
+}
+
 // AwaitBlockHeight blocks until te target height is reached. An optional timeout parameter can be passed to abort early
 func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, timeout ...time.Duration) {
 	t.Helper()

@@ -50,10 +50,9 @@ func TestBankV2SendTxCmd(t *testing.T) {
 	valBalanceAfer := gjson.Get(valRaw, "balance.amount").Int()
 
 	// TODO: Make DeductFee ante handler work with bank/v2
-	require.Equal(t, valBalanceAfer, valBalance - transferAmount)
+	require.Equal(t, valBalanceAfer, valBalance-transferAmount)
 
 	receiverRaw := cli.CustomQuery("q", "bankv2", "balance", receiverAddr, denom)
 	receiverBalance := gjson.Get(receiverRaw, "balance.amount").Int()
 	require.Equal(t, receiverBalance, transferAmount)
-
 }

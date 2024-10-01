@@ -4,15 +4,13 @@ package systemtests
 
 import (
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func TestBankSendTxCmd(t *testing.T) {
@@ -53,7 +51,7 @@ func TestBankSendTxCmd(t *testing.T) {
 	insufficientCmdArgs = append(insufficientCmdArgs, fmt.Sprintf("%d%s", valBalance, denom), "--fees=10stake")
 	rsp = cli.Run(insufficientCmdArgs...)
 	RequireTxFailure(t, rsp)
-	require.Contains(t, rsp, sdkerrors.ErrInsufficientFunds.Error())
+	require.Contains(t, rsp, "insufficient funds")
 
 	// test tx bank send with unauthorized signature
 	assertUnauthorizedErr := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
@@ -234,10 +232,11 @@ func TestBankGRPCQueries(t *testing.T) {
 	blockHeight := sut.CurrentHeight()
 
 	supplyTestCases := []struct {
-		name    string
-		url     string
-		headers map[string]string
-		expOut  string
+		name        string
+		url         string
+		headers     map[string]string
+		expHttpCode int
+		expOut      string
 	}{
 		{
 			"test GRPC total supply",
@@ -245,12 +244,14 @@ func TestBankGRPCQueries(t *testing.T) {
 			map[string]string{
 				blockHeightHeader: fmt.Sprintf("%d", blockHeight),
 			},
+			http.StatusOK,
 			expTotalSupplyOutput,
 		},
 		{
 			"test GRPC total supply of a specific denom",
 			supplyUrl + "/by_denom?denom=" + newDenom,
 			map[string]string{},
+			http.StatusOK,
 			specificDenomOutput,
 		},
 		{
@@ -259,67 +260,75 @@ func TestBankGRPCQueries(t *testing.T) {
 			map[string]string{
 				blockHeightHeader: fmt.Sprintf("%d", blockHeight+5),
 			},
+			http.StatusInternalServerError,
 			"invalid height",
 		},
 		{
 			"test GRPC total supply of a bogus denom",
 			supplyUrl + "/by_denom?denom=foobar",
 			map[string]string{},
+			http.StatusOK,
+			// http.StatusNotFound,
 			bogusDenomOutput,
 		},
 	}
 
 	for _, tc := range supplyTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
-			require.NoError(t, err)
+			resp := GetRequestWithHeaders(t, tc.url, tc.headers, tc.expHttpCode)
 			require.Contains(t, string(resp), tc.expOut)
 		})
 	}
 
 	// test denom metadata endpoint
 	denomMetadataUrl := baseurl + "/cosmos/bank/v1beta1/denoms_metadata"
-	dmTestCases := []GRPCTestCase{
+	dmTestCases := []RestTestCase{
 		{
 			"test GRPC client metadata",
 			denomMetadataUrl,
+			http.StatusOK,
 			fmt.Sprintf(`{"metadatas":%s,"pagination":{"next_key":null,"total":"2"}}`, bankDenomMetadata),
 		},
 		{
 			"test GRPC client metadata of a specific denom",
 			denomMetadataUrl + "/uatom",
+			http.StatusOK,
 			fmt.Sprintf(`{"metadata":%s}`, atomDenomMetadata),
 		},
 		{
 			"test GRPC client metadata of a bogus denom",
 			denomMetadataUrl + "/foobar",
+			http.StatusNotFound,
 			`{"code":5, "message":"client metadata for denom foobar", "details":[]}`,
 		},
 	}
 
-	RunGRPCQueries(t, dmTestCases)
+	RunRestQueries(t, dmTestCases)
 
 	// test bank balances endpoint
 	balanceUrl := baseurl + "/cosmos/bank/v1beta1/balances/"
 	allBalancesOutput := `{"balances":[` + specificDenomOutput + `,{"denom":"stake","amount":"10000000"}],"pagination":{"next_key":null,"total":"2"}}`
 
-	balanceTestCases := []GRPCTestCase{
+	balanceTestCases := []RestTestCase{
 		{
 			"test GRPC total account balance",
 			balanceUrl + account1Addr,
+			http.StatusOK,
 			allBalancesOutput,
 		},
 		{
 			"test GRPC account balance of a specific denom",
 			fmt.Sprintf("%s%s/by_denom?denom=%s", balanceUrl, account1Addr, newDenom),
+			http.StatusOK,
 			fmt.Sprintf(`{"balance":%s}`, specificDenomOutput),
 		},
 		{
 			"test GRPC account balance of a bogus denom",
 			fmt.Sprintf("%s%s/by_denom?denom=foobar", balanceUrl, account1Addr),
+			http.StatusOK,
 			fmt.Sprintf(`{"balance":%s}`, bogusDenomOutput),
 		},
 	}
 
-	RunGRPCQueries(t, balanceTestCases)
+	RunRestQueries(t, balanceTestCases)
 }

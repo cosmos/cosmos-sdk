@@ -4,6 +4,7 @@ use crate::packet::MessagePacket;
 
 /// A pointer to input or output data in a message packet.
 #[derive(Copy, Clone)]
+#[repr(C)]
 pub union DataPointer {
     /// A pointer to the data outside the message packet itself.
     pub native_pointer: NativePointer,
@@ -21,6 +22,7 @@ impl Default for DataPointer {
 
 /// A pointer to data outside the message packet.
 #[derive(Copy, Clone)]
+#[repr(C)]
 pub struct NativePointer {
     /// The length of the data.
     pub len: u32,
@@ -40,8 +42,9 @@ impl Default for NativePointer {
     }
 }
 
-#[derive(Default, Copy, Clone)]
 /// A pointer to data inside the message packet.
+#[derive(Default, Copy, Clone)]
+#[repr(C)]
 pub struct LocalPointer {
     /// The length of the data.
     pub len: u32,
@@ -75,8 +78,11 @@ impl DataPointer {
     /// Sets a slice of bytes as the data that lives outside the message packet.
     pub unsafe fn set_slice(&mut self, data: *const [u8]) {
         unsafe {
-            self.native_pointer.pointer = data as *const ();
             let len = (*data).len() as u32;
+            if len == 0 {
+                return;
+            }
+            self.native_pointer.pointer = data as *const ();
             self.native_pointer.len = len;
             self.native_pointer.capacity = len;
         }

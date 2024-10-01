@@ -45,3 +45,4 @@ pub const fn sort_routes<const N: usize, T>(mut arr: [Route<T>; N]) -> [Route<T>
 }
 
 // TODO: can use https://docs.rs/array-concat/latest/array_concat/ to concat arrays then the above function to sort
+// or https://docs.rs/constcat/latest/constcat/

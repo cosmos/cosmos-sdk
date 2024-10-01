@@ -1,5 +1,5 @@
 //! **WARNING: This is an API preview! Most code won't work or even type check properly!**
-//! This is a macro utility crate for interchain_core.
+//! This is a macro utility crate for ixc_core.
 
 use proc_macro::{TokenStream};
 use std::default::Default;
@@ -29,17 +29,17 @@ pub fn account_handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result
     }
 
     push_item(items, quote! {
-        impl ::interchain_core::handler::Handler for #handler {
+        impl ::ixc_core::handler::Handler for #handler {
             type Init = ();
         }
     })?;
     let client_ident = format_ident!("{}Client", handler);
     push_item(items, quote! {
-        pub struct #client_ident(::interchain_message_api::Address);
+        pub struct #client_ident(::ixc_message_api::AccountID);
     })?;
     push_item(items, quote! {
-        impl ::interchain_core::handler::AccountClient for #client_ident {
-            fn address(&self) -> &::interchain_message_api::Address {
+        impl ::ixc_core::handler::Client for #client_ident {
+            fn account_id(&self) -> ::ixc_message_api::AccountID {
                 &self.0
             }
         }
@@ -49,29 +49,29 @@ pub fn account_handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result
         pub struct #client_factory_ident;
     })?;
     push_item(items, quote! {
-        unsafe impl ::interchain_core::resource::Resource for #client_factory_ident {
-            unsafe fn new(initializer: &mut ::interchain_core::resource::Initializer) -> Result<Self, ::interchain_core::resource::InitializationError> {
+        unsafe impl ::ixc_core::resource::Resource for #client_factory_ident {
+            unsafe fn new(initializer: &mut ::ixc_core::resource::Initializer) -> Result<Self, ::ixc_core::resource::InitializationError> {
                 todo!()
             }
         }
     })?;
     push_item(items, quote! {
-        impl ::interchain_core::handler::AccountClientFactory for #client_factory_ident {
+        impl ::ixc_core::handler::ClientFactory for #client_factory_ident {
             type Client = #client_ident;
 
-            fn new_client(address: &::interchain_message_api::Address) -> Self::Client {
-                #client_ident(address.clone())
+            fn new_client(account_id: ::ixc_message_api::AccountID) -> Self::Client {
+                #client_ident(account_id)
             }
         }
     })?;
-    push_item(items, quote! {
-        impl ::interchain_core::handler::AccountAPI for #handler {
-            type ClientFactory = #client_factory_ident;
-        }
-    })?;
-    push_item(items, quote! {
-        impl ::interchain_core::handler::AccountHandler for #handler {}
-    })?;
+    // push_item(items, quote! {
+    //     impl ::ixc_core::handler::HandlerAPI for #handler {
+    //         type ClientFactory = #client_factory_ident;
+    //     }
+    // })?;
+    // push_item(items, quote! {
+    //     impl ::ixc_message_api::handler::RawHandler for #handler {}
+    // })?;
 
 
     let mut client_fn_impls = vec![];
@@ -113,7 +113,6 @@ pub fn account_handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result
             }
         }
         push_item(items, quote! {
-            #[derive(StructCodec)]
             pub struct #msg_struct_name {
                 #(#msg_fields)*
             }
@@ -256,7 +255,7 @@ pub fn derive_resources(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
     let name = input.ident;
     let expanded = quote! {
-        unsafe impl ::interchain_core::resource::Resources for #name {
+        unsafe impl ::ixc_core::resource::Resources for #name {
         }
     };
     expanded.into()

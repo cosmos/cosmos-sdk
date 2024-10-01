@@ -1,7 +1,6 @@
 //! Handler traits for account and module handlers.
 use ixc_message_api::AccountID;
 use ixc_message_api::handler::RawHandler;
-use ixc_schema::StructCodec;
 use crate::resource::{InitializationError, Initializer, Resource};
 use crate::routes::Router;
 

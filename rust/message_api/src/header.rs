@@ -15,7 +15,7 @@ pub struct MessageHeader {
     /// The sender account of the message.
     pub sender_account: AccountID, // 8 bytes
     /// The message selector.
-    pub message_selector: u64, // 8 bytes
+    pub message_selector: MessageSelector, // 8 bytes
     /// The gas limit.
     pub gas_limit: u64, // 8 bytes
     /// The gas consumed.
@@ -31,6 +31,9 @@ pub struct MessageHeader {
 
     reserved: [u8; 32],
 }
+
+/// A message selector code.
+pub type MessageSelector = u64;
 
 #[cfg(test)]
 mod tests {

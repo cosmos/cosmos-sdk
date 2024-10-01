@@ -55,3 +55,6 @@ default = ["core_macros", "schema_macros", "state_objects_macros"]
 core_macros = []
 schema_macros = []
 state_objects_macros = []
+
+[profile.release]
+lto = true

@@ -12,10 +12,11 @@ struct NativeVM {
 
 impl NativeVM {
     fn register_handler<H: RawHandler>(&mut self, handler: H) {
-        let id = self.next_handler_id;
-        self.next_handler_id += 1;
-        self.handler_names.insert(id, handler.name());
-        self.handlers.insert(id, Box::new(handler));
+        // let id = self.next_handler_id;
+        // self.next_handler_id += 1;
+        // self.handler_names.insert(id, handler.name());
+        // self.handlers.insert(id, Box::new(handler));
+        todo!()
     }
 }
 
@@ -25,15 +26,16 @@ impl VM for NativeVM {
     }
 
     fn run_handler(&self, vm_handler_id: &str, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend) -> Result<(), ErrorCode> {
-        if let Some(handler) = self.handlers.get(vm_handler_id) {
-            let code = handler.handle(message_packet, callbacks)
-                .map_err(|code| ErrorCode::HandlerSystemError(code))?;
-            match code {
-                HandlerCode::Ok => ErrorCode::Ok,
-                HandlerCode::HandlerError(code) => ErrorCode::HandlerSystemError(code),
-            }
-        } else {
-            ErrorCode::RuntimeSystemError(SystemErrorCode::HandlerNotFound)
-        }
+        // if let Some(handler) = self.handlers.get(vm_handler_id) {
+        //     let code = handler.handle(message_packet, callbacks)
+        //         .map_err(|code| ErrorCode::HandlerSystemError(code))?;
+        //     match code {
+        //         HandlerCode::Ok => ErrorCode::Ok,
+        //         HandlerCode::HandlerError(code) => ErrorCode::HandlerSystemError(code),
+        //     }
+        // } else {
+        //     ErrorCode::RuntimeSystemError(SystemErrorCode::HandlerNotFound)
+        // }
+        todo!()
     }
 }

@@ -71,7 +71,7 @@ impl Transaction for Tx {
             return Err(PushFrameError::VolatileAccessError);
         }
         self.current_frame.store.stores.insert(self.current_frame.account, self.current_store.clone());
-        self.current_store = self.current_frame.store.stores.get(&account).unwrap_or_default().clone();
+        self.current_store = self.current_frame.store.stores.get(&account).map(|s| s.clone()).unwrap_or_default();
         let next_frame = Frame {
             store: self.current_frame.store.clone(),
             account,
@@ -90,7 +90,7 @@ impl Transaction for Tx {
                 previous_frame.changes.append(&mut self.current_frame.changes);
             }
             self.current_frame = previous_frame;
-            self.current_store = self.current_frame.store.stores.get(&self.current_frame.account).unwrap_or_default().clone();
+            self.current_store = self.current_frame.store.stores.get(&self.current_frame.account).map(|s| s.clone()).unwrap_or_default();
             Ok(())
         } else {
             Err(PopFrameError::NoFrames)
@@ -123,39 +123,42 @@ impl Tx {
             previous_frame.store.stores.insert(self.current_frame.account, self.current_store.clone());
             previous_frame.changes.append(&mut self.current_frame.changes);
             self.current_frame = previous_frame;
-            self.current_store = self.current_frame.store.stores.get(&self.current_frame.account).unwrap_or_default().clone();
+            self.current_store = self.current_frame.store.stores.get(&self.current_frame.account).map(|s| s.clone()).unwrap_or_default();
             true
         } else {
             false
         }
     }
 
-    fn kv_get(&self, packet: &mut MessagePacket, backend: &dyn HostBackend) -> Result<ErrorCode, Error> {
-        self.track_access(packet.in1().get(), Access::Read)?;
-        match self.current_store.kv_store.get(&packet.in1().get()) {
-            None => unsafe {
-                // TODO what should we do when not found?
-                packet.out1().set_slice(&[]);
-            }
-            Some(value) => unsafe {
-                let out = backend.alloc(Layout::from_size_align_unchecked(value.len(), 16))?;
-                let out_slice = core::slice::from_raw_parts_mut(out, value.len());
-                out_slice.copy_from_slice(value.as_slice());
-                packet.out1().set_slice(out_slice);
-            }
-        }
-        Ok(ErrorCode::Ok)
+    unsafe fn kv_get(&self, packet: &mut MessagePacket, backend: &dyn HostBackend) -> Result<ErrorCode, Error> {
+        // let key = packet.header().in_pointer1.get(packet);
+        // self.track_access(key, Access::Read)?;
+        // match self.current_store.kv_store.get(key) {
+        //     None => unsafe {
+        //         // TODO what should we do when not found?
+        //         packet.out1().set_slice(&[]);
+        //     }
+        //     Some(value) => unsafe {
+        //         let out = backend.alloc(Layout::from_size_align_unchecked(value.len(), 16))?;
+        //         let out_slice = core::slice::from_raw_parts_mut(out, value.len());
+        //         out_slice.copy_from_slice(value.as_slice());
+        //         packet.out1().set_slice(out_slice);
+        //     }
+        // }
+        // Ok(ErrorCode::Ok)
+        todo!()
     }
 
     fn kv_set(&mut self, packet: &mut MessagePacket) -> Result<ErrorCode, Error> {
-        self.track_access(packet.in1().get(), Access::Write)?;
-        self.current_frame.changes.push(Update {
-            account: self.current_frame.account,
-            key: packet.in1().get().to_vec(),
-            operation: Operation::Set(packet.in2().get().to_vec()),
-        });
-        self.current_store.kv_store.insert(packet.in1().get().to_vec(), packet.in2().get().to_vec());
-        Ok(ErrorCode::Ok)
+        // self.track_access(packet.in1().get(), Access::Write)?;
+        // self.current_frame.changes.push(Update {
+        //     account: self.current_frame.account,
+        //     key: packet.in1().get().to_vec(),
+        //     operation: Operation::Set(packet.in2().get().to_vec()),
+        // });
+        // self.current_store.kv_store.insert(packet.in1().get().to_vec(), packet.in2().get().to_vec());
+        // Ok(ErrorCode::Ok)
+        todo!()
     }
 
     fn track_access(&self, key: &[u8], access: Access) -> Result<(), AccessError> {

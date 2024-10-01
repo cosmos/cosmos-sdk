@@ -8,7 +8,7 @@ pub use ixc_core::resource::Resources;
 #[doc(inline)]
 pub use ixc_message_api::AccountID;
 #[doc(inline)]
-pub use ixc_schema::{StructCodec, EnumCodec, OneOfCodec};
+pub use ixc_schema::{SchemaValue};
 #[doc(inline)]
 pub use state_objects::*;
 #[doc(inline)]

@@ -40,6 +40,13 @@ impl ErrorMessage {
             msg,
         }
     }
+
+    fn new_fmt(args: core::fmt::Arguments<'_>) -> Self {
+        #[cfg(feature = "std")]
+        let mut message = String::new();
+        core::fmt::write(&mut message, args).unwrap();
+        ErrorMessage::new(message)
+    }
 }
 
 impl<'a> Debug for ErrorMessage {
@@ -85,7 +92,7 @@ impl<'a> SchemaValue<'a> for ErrorMessage {
 #[macro_export]
 macro_rules! fmt_error {
     ($($arg:tt)*) => {
-        $crate::error:ErrorMessage::new(core::format!($($arg)*))
+        $crate::error::ErrorMessage::new(core::format_args!($($arg)*))
     };
 }
 

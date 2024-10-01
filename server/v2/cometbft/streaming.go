@@ -66,8 +66,8 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 	if c.listener.StartBlock != nil {
 		if err := c.listener.StartBlock(appdata.StartBlockData{
 			Height:      uint64(height),
-			HeaderBytes: nil, // TODO: need to pass header bytes
-			HeaderJSON:  nil, // TODO: need to pass header json
+			HeaderBytes: nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
+			HeaderJSON:  nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
 		}); err != nil {
 			return err
 		}
@@ -78,7 +78,7 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 			if err := c.listener.OnTx(appdata.TxData{
 				TxIndex: int32(i),
 				Bytes:   func() ([]byte, error) { return tx, nil },
-				JSON:    nil, // TODO: need to pass tx json
+				JSON:    nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
 			}); err != nil {
 				return err
 			}

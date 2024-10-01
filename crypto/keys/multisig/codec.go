@@ -15,7 +15,6 @@ const (
 	PubKeyAminoRoute = "tendermint/PubKeyMultisigThreshold"
 )
 
-// nolint
 // Deprecated: Amino is being deprecated in the SDK. But even if you need to
 // use Amino for some reason, please use `codec/legacy.Cdc` instead.
 var AminoCdc = codec.NewLegacyAmino()

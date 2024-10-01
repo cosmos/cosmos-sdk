@@ -78,10 +78,9 @@ func TestSignAndValidateSecp256k1(t *testing.T) {
 	ok := ecdsa.Verify(btcPubKey.ToECDSA(), msgHash, r, s)
 	require.True(t, ok)
 
-	sig2, err := btcecdsa.SignCompact(btcPrivKey, msgHash, false)
+	sig2 := btcecdsa.SignCompact(btcPrivKey, msgHash, false)
 	// Chop off compactSigRecoveryCode.
 	sig2 = sig2[1:]
-	require.NoError(t, err)
 	pubKey.VerifySignature(msg, sig2)
 
 	// ----

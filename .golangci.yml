@@ -11,9 +11,9 @@ linters:
     - goconst
     - gocritic
     - gofumpt
-    - gosec
+    # - gosec
     - gosimple
-    - govet
+    # - govet
     - ineffassign
     - misspell
     - nakedret

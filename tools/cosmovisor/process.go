@@ -165,6 +165,12 @@ pollLoop:
 				}
 				if err := os.WriteFile(cfg.UpgradeInfoBatchFilePath(), jsonBytes, 0o600); err != nil {
 					logger.Warn("error writing upgrade-info.json.batch", "error", err)
+					// remove the upgrade-info.json.batch file to avoid non-deterministic behavior
+					err := os.Remove(cfg.UpgradeInfoBatchFilePath())
+					if err != nil && !os.IsNotExist(err) {
+						logger.Warn("error removing upgrade-info.json.batch", "error", err)
+						return
+					}
 					continue
 				}
 				prevUpgradeHeight = upcomingUpgrade

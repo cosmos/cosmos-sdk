@@ -39,12 +39,17 @@ func MsgCreateValidatorFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.Ms
 		}
 
 		selfDelegation := valOper.LiquidBalance().RandSubsetCoin(reporter, bondDenom)
+
 		description := types.NewDescription(
 			r.StringN(10),
 			r.StringN(10),
 			r.StringN(10),
 			r.StringN(10),
 			r.StringN(10),
+			types.Metadata{
+				ProfilePicUri:    RandURIOfHostLength(r.Rand, 10),
+				SocialHandleUris: RandSocialHandleURIs(r.Rand, 2, 10),
+			},
 		)
 
 		maxCommission := math.LegacyNewDecWithPrec(int64(r.IntInRange(0, 100)), 2)
@@ -138,7 +143,10 @@ func MsgEditValidatorFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgE
 		}
 		valOpAddrBz := must(k.ValidatorAddressCodec().StringToBytes(val.GetOperator()))
 		valOper := testData.GetAccountbyAccAddr(reporter, valOpAddrBz)
-		d := types.NewDescription(r.StringN(10), r.StringN(10), r.StringN(10), r.StringN(10), r.StringN(10))
+		d := types.NewDescription(r.StringN(10), r.StringN(10), r.StringN(10), r.StringN(10), r.StringN(10), types.Metadata{
+			ProfilePicUri:    RandURIOfHostLength(r.Rand, 10),
+			SocialHandleUris: RandSocialHandleURIs(r.Rand, 2, 10),
+		})
 
 		msg := types.NewMsgEditValidator(val.GetOperator(), d, &newCommissionRate, nil)
 		return []simsx.SimAccount{valOper}, msg

@@ -1,6 +1,6 @@
 //! Encoder trait and error type.
 use crate::structs::{StructEncodeVisitor, StructType};
-use crate::value::{Value};
+use crate::value::{SchemaValue};
 use core::fmt::Display;
 use ixc_message_api::AccountID;
 
@@ -16,7 +16,7 @@ pub trait Encoder {
     fn encode_str(&mut self, x: &str) -> Result<(), EncodeError>;
     // fn encode_list_iterator<V, I: Iterator<Item=&V>>(&mut self, size: Option<usize>, );
     /// Encode a list slice.
-    fn encode_list_slice<'a, V: Value<'a>>(&mut self, xs: &[V]) -> Result<(), EncodeError>;
+    fn encode_list_slice<'a, V: SchemaValue<'a>>(&mut self, xs: &[V]) -> Result<(), EncodeError>;
     /// Encode a struct.
     fn encode_struct<V: StructEncodeVisitor>(&mut self, visitor: &V, struct_type: &StructType) -> Result<(), EncodeError>;
     /// Encode an account ID.

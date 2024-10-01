@@ -2,7 +2,7 @@ use alloy_sol_types::abi::encode;
 use alloy_sol_types::SolValue;
 use ixc_schema::encoder::EncodeError;
 use ixc_schema::structs::StructEncodeVisitor;
-use ixc_schema::value::Value;
+use ixc_schema::value::SchemaValue;
 
 struct Encoder {}
 
@@ -21,7 +21,7 @@ impl ixc_schema::encoder::Encoder for Encoder {
         todo!()
     }
 
-    fn encode_list_slice<'a, V: Value<'a>>(&mut self, xs: &[V]) -> Result<(), EncodeError> {
+    fn encode_list_slice<'a, V: SchemaValue<'a>>(&mut self, xs: &[V]) -> Result<(), EncodeError> {
         todo!()
     }
 

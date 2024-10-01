@@ -3,15 +3,14 @@ use crate::buffer::{Writer, WriterFactory};
 use crate::decoder::DecodeError;
 use crate::encoder::EncodeError;
 use crate::mem::MemoryManager;
-use crate::value::Value;
-use bump_scope::{Bump, BumpVec};
+use crate::value::SchemaValue;
 
 /// Trait implemented by encoding protocols.
 pub trait Codec {
     /// Encode a value.
-    fn encode_value<'a, V: Value<'a>, F: WriterFactory>(value: &V, writer_factory: F) -> Result<F::Output, EncodeError>;
+    fn encode_value<'a, V: SchemaValue<'a>, F: WriterFactory>(value: &V, writer_factory: F) -> Result<F::Output, EncodeError>;
     /// Decode a value.
-    fn decode_value<'a, V: Value<'a>>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<V, DecodeError>;
+    fn decode_value<'a, V: SchemaValue<'a>>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<V, DecodeError>;
 }
 
 // #[cfg(test)]

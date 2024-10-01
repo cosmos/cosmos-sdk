@@ -12,7 +12,7 @@ use crate::types::*;
 /// Any type used directly as a message function argument or struct field must implement this trait.
 /// Unlike [`ObjectFieldValue`] it takes a lifetime parameter so value may already be borrowed where it is
 /// declared.
-pub trait Value<'a>
+pub trait SchemaValue<'a>
 where
     Self: Sized + 'a,
 {
@@ -23,31 +23,31 @@ where
     type DecodeState: Default;
 
     /// Decode the value from the decoder.
-    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+    fn visit_decode_state<D: Decoder<'a>>(_state: &mut Self::DecodeState, _decoder: &mut D) -> Result<(), DecodeError> {
         unimplemented!("decode")
     }
 
     /// Finish decoding the value, return it and return the memory handle if needed.
-    fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError> {
+    fn finish_decode_state(_state: Self::DecodeState, _mem: &'a MemoryManager) -> Result<Self, DecodeError> {
         unimplemented!("finish")
     }
 
     /// Encode the value to the encoder.
-    fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode<E: Encoder>(&self, _encoder: &mut E) -> Result<(), EncodeError> {
         unimplemented!("encode")
     }
 }
 
-impl<'a> Value<'a> for u8 {
+impl<'a> SchemaValue<'a> for u8 {
     type Type = U8T;
     type DecodeState = u8;
 }
-impl<'a> Value<'a> for u16 {
+impl<'a> SchemaValue<'a> for u16 {
     type Type = U16T;
     type DecodeState = u16;
 }
 
-impl<'a> Value<'a> for u32 {
+impl<'a> SchemaValue<'a> for u32 {
     type Type = U32T;
     type DecodeState = u32;
 
@@ -56,7 +56,7 @@ impl<'a> Value<'a> for u32 {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, _: &'a MemoryManager) -> Result<Self, DecodeError> {
         Ok(state)
     }
 
@@ -65,7 +65,7 @@ impl<'a> Value<'a> for u32 {
     }
 }
 
-impl<'a> Value<'a> for u64 {
+impl<'a> SchemaValue<'a> for u64 {
     type Type = U64T;
     type DecodeState = u64;
 
@@ -74,7 +74,7 @@ impl<'a> Value<'a> for u64 {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, _: &'a MemoryManager) -> Result<Self, DecodeError> {
         Ok(state)
     }
 
@@ -83,7 +83,7 @@ impl<'a> Value<'a> for u64 {
     }
 }
 
-impl<'a> Value<'a> for u128 {
+impl<'a> SchemaValue<'a> for u128 {
     type Type = UIntNT<16>;
     type DecodeState = u128;
 
@@ -92,7 +92,7 @@ impl<'a> Value<'a> for u128 {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, _: &'a MemoryManager) -> Result<Self, DecodeError> {
         Ok(state)
     }
 
@@ -101,31 +101,31 @@ impl<'a> Value<'a> for u128 {
     }
 }
 
-impl<'a> Value<'a> for i8 {
+impl<'a> SchemaValue<'a> for i8 {
     type Type = I8T;
     type DecodeState = i8;
 }
-impl<'a> Value<'a> for i16 {
+impl<'a> SchemaValue<'a> for i16 {
     type Type = I16T;
     type DecodeState = i16;
 }
-impl<'a> Value<'a> for i32 {
+impl<'a> SchemaValue<'a> for i32 {
     type Type = I32T;
     type DecodeState = i32;
 }
-impl<'a> Value<'a> for i64 {
+impl<'a> SchemaValue<'a> for i64 {
     type Type = I64T;
     type DecodeState = i64;
 }
-impl<'a> Value<'a> for i128 {
+impl<'a> SchemaValue<'a> for i128 {
     type Type = IntNT<16>;
     type DecodeState = i128;
 }
-impl<'a> Value<'a> for bool {
+impl<'a> SchemaValue<'a> for bool {
     type Type = Bool;
     type DecodeState = bool;
 }
-impl<'a> Value<'a> for &'a str {
+impl<'a> SchemaValue<'a> for &'a str {
     type Type = StrT;
     type DecodeState = &'a str;
 
@@ -134,7 +134,7 @@ impl<'a> Value<'a> for &'a str {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, _: &'a MemoryManager) -> Result<Self, DecodeError> {
         Ok(state)
     }
 
@@ -144,7 +144,7 @@ impl<'a> Value<'a> for &'a str {
 }
 
 #[cfg(feature = "std")]
-impl<'a> Value<'a> for alloc::string::String {
+impl<'a> SchemaValue<'a> for alloc::string::String {
     type Type = StrT;
     type DecodeState = alloc::string::String;
 
@@ -153,26 +153,25 @@ impl<'a> Value<'a> for alloc::string::String {
         Ok(())
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, _: &'a MemoryManager) -> Result<Self, DecodeError> {
         Ok(state)
     }
 }
 
-impl<'a> Value<'a> for simple_time::Time {
+impl<'a> SchemaValue<'a> for simple_time::Time {
     type Type = TimeT;
     type DecodeState = simple_time::Time;
 }
-impl<'a> Value<'a> for simple_time::Duration {
+impl<'a> SchemaValue<'a> for simple_time::Duration {
     type Type = DurationT;
     type DecodeState = simple_time::Duration;
 }
-impl<'a, V: Value<'a>> Value<'a> for Option<V> {
+impl<'a, V: SchemaValue<'a>> SchemaValue<'a> for Option<V> {
     type Type = NullableT<V::Type>;
     type DecodeState = Option<V::DecodeState>;
 }
 
-impl<'a> Value<'a> for &'a [u8]
-{
+impl<'a> SchemaValue<'a> for &'a [u8] {
     type Type = BytesT;
     type DecodeState = &'a [u8];
 
@@ -184,18 +183,18 @@ impl<'a> Value<'a> for &'a [u8]
         todo!()
     }
 
-    fn finish_decode_state(state: Self::DecodeState, mem_handle: &'a MemoryManager) -> Result<Self, DecodeError> {
+    fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError> {
         todo!()
     }
 }
 
 /// A trait that must be implemented by value types that can be used as list elements.
-pub trait ListElementValue<'a>: Value<'a>
+pub trait ListElementValue<'a>: SchemaValue<'a>
 where
     Self::Type: ListElementType,
 {}
 
-impl<'a, V: ListElementValue<'a>> Value<'a> for &'a [V]
+impl<'a, V: ListElementValue<'a>> SchemaValue<'a> for &'a [V]
 where V::Type: ListElementType
 {
     type Type = ListT<V::Type>;
@@ -217,7 +216,7 @@ where V::Type: ListElementType
     }
 }
 
-impl<'a, V: Value<'a>> Value<'a> for allocator_api2::vec::Vec<V, &'a dyn allocator_api2::alloc::Allocator>
+impl<'a, V: SchemaValue<'a>> SchemaValue<'a> for allocator_api2::vec::Vec<V, &'a dyn allocator_api2::alloc::Allocator>
 where
     V::Type: ListElementType,
 {
@@ -237,7 +236,7 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<'a, V: Value<'a>> Value<'a> for alloc::vec::Vec<V>
+impl<'a, V: SchemaValue<'a>> SchemaValue<'a> for alloc::vec::Vec<V>
 where
     V::Type: ListElementType,
 {
@@ -249,8 +248,8 @@ where
     }
 }
 
-impl<'a> Value<'a> for ixc_message_api::AccountID {
-    type Type = AccountID_T;
+impl<'a> SchemaValue<'a> for ixc_message_api::AccountID {
+    type Type = AccountIdT;
     type DecodeState = ixc_message_api::AccountID;
 
     fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
@@ -268,9 +267,9 @@ impl<'a> Value<'a> for ixc_message_api::AccountID {
 }
 
 #[cfg(feature = "arrayvec")]
-impl<'a, T: Type, V: Value<'a, T>, const N: usize> Value<'a, ListT<T>> for arrayvec::ArrayVec<T, N> {}
+impl<'a, T: Type, V: SchemaValue<'a, T>, const N: usize> SchemaValue<'a, ListT<T>> for arrayvec::ArrayVec<T, N> {}
 #[cfg(feature = "arrayvec")]
-impl<'a, const N: usize> Value<'a, StrT> for arrayvec::ArrayString<T, N> {}
+impl<'a, const N: usize> SchemaValue<'a, StrT> for arrayvec::ArrayString<T, N> {}
 
 
 /// ResponseValue is a trait that must be implemented by types that can be used as the return value.
@@ -297,7 +296,7 @@ impl <'a> ResponseValue<'a> for () {
     }
 }
 
-impl<'a, V: Value<'a>> ResponseValue<'a> for V
+impl<'a, V: SchemaValue<'a>> ResponseValue<'a> for V
 {
     type Value = V;
 

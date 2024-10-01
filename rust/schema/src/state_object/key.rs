@@ -5,15 +5,17 @@ use crate::mem::MemoryManager;
 use crate::state_object::value::ObjectValue;
 use crate::state_object::KeyFieldValue;
 
-/// Encode an object key.
-pub fn encode_object_key<'a, K: ObjectKey, F: WriterFactory>(key: &K::In<'a>, writer_factory: F) -> Result<F::Output, EncodeError> {
-    let out_size = <K as ObjectKey>::out_size(key);
+/// Encode an object key with the given prefix.
+pub fn encode_object_key<'a, K: ObjectKey, F: WriterFactory>(prefix: &[u8], key: &K::In<'a>, writer_factory: F) -> Result<F::Output, EncodeError> {
+    let out_size = <K as ObjectKey>::out_size(key) + prefix.len();
     let mut writer = writer_factory.new_reverse(out_size)?;
     <K as ObjectKey>::encode(key, &mut writer)?;
+    // write the prefix last because we are encoding in reverse order
+    writer.write(prefix)?;
     writer.finish()
 }
 
-/// Decode an object key.
+/// Decode an object key. This function assumes that the input has already had any prefix stripped.
 pub fn decode_object_key<'a, K: ObjectKey>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<K::Out<'a>, DecodeError> {
     <K as ObjectKey>::decode(input, memory_manager)
 }

@@ -2,33 +2,21 @@ use bump_scope::BumpScope;
 use ixc_message_api::AccountID;
 use crate::encoder::{EncodeError};
 use crate::structs::{StructDecodeVisitor, StructEncodeVisitor, StructType};
-use crate::value::Value;
+use crate::value::SchemaValue;
 use crate::buffer::{Writer, WriterFactory};
 use crate::state_object::ObjectValue;
 
-pub fn encode_value<'a, V: Value<'a>, F: WriterFactory>(value: &V, writer_factory: F) -> Result<F::Output, EncodeError> {
+pub fn encode_value<'a, V: SchemaValue<'a>, F: WriterFactory>(value: &V, writer_factory: F) -> Result<F::Output, EncodeError> {
     let mut sizer = EncodeSizer { size: 0 };
-    <V as Value<'a>>::encode(value, &mut sizer)?;
+    <V as SchemaValue<'a>>::encode(value, &mut sizer)?;
     let mut writer = writer_factory.new_reverse(sizer.size)?;
     let mut encoder = Encoder { writer: &mut writer };
-    <V as Value<'a>>::encode(value, &mut encoder)?;
+    <V as SchemaValue<'a>>::encode(value, &mut encoder)?;
     writer.finish()
 }
 
-/// Encode an object value.
-pub fn encode_object_value<'a, V: ObjectValue, F: WriterFactory>(value: &V::In<'a>, writer_factory: F) -> Result<F::Output, EncodeError> {
-    let mut sizer = EncodeSizer { size: 0 };
-    let mut inner = InnerEncodeSizer { outer: &mut sizer };
-    V::encode(&value, &mut inner)?;
-    let mut writer = writer_factory.new_reverse(sizer.size)?;
-    let mut encoder = Encoder { writer: &mut writer };
-    let mut inner = InnerEncoder { outer: &mut encoder };
-    V::encode(&value, &mut inner)?;
-    writer.finish()
-}
-
-struct Encoder<'a, W> {
-    writer: &'a mut W,
+pub(crate) struct Encoder<'a, W> {
+    pub(crate) writer: &'a mut W,
 }
 
 impl<'a, W: Writer> crate::encoder::Encoder for Encoder<'a, W> {
@@ -48,11 +36,11 @@ impl<'a, W: Writer> crate::encoder::Encoder for Encoder<'a, W> {
         self.writer.write(x.as_bytes())
     }
 
-    fn encode_list_slice<'c, V: Value<'c>>(&mut self, x: &[V]) -> Result<(), EncodeError> {
+    fn encode_list_slice<'c, V: SchemaValue<'c>>(&mut self, x: &[V]) -> Result<(), EncodeError> {
         let mut sub = Encoder { writer: self.writer };
         let mut inner = InnerEncoder::<W> { outer: &mut sub };
         for v in x.iter().rev() {
-            <V as Value>::encode(v, &mut inner)?;
+            <V as SchemaValue>::encode(v, &mut inner)?;
         }
         self.encode_u32(x.len() as u32)?;
         Ok(())
@@ -74,8 +62,8 @@ impl<'a, W: Writer> crate::encoder::Encoder for Encoder<'a, W> {
     }
 }
 
-struct EncodeSizer {
-    size: usize,
+pub(crate) struct EncodeSizer {
+    pub(crate) size: usize,
 }
 
 impl crate::encoder::Encoder for EncodeSizer {
@@ -99,11 +87,11 @@ impl crate::encoder::Encoder for EncodeSizer {
         Ok(())
     }
 
-    fn encode_list_slice<'a, V: Value<'a>>(&mut self, xs: &[V]) -> Result<(), EncodeError> {
+    fn encode_list_slice<'a, V: SchemaValue<'a>>(&mut self, xs: &[V]) -> Result<(), EncodeError> {
         self.size += 4;
         let mut sub = InnerEncodeSizer { outer: self };
         for x in xs.iter() {
-            <V as Value>::encode(x, &mut sub)?;
+            <V as SchemaValue>::encode(x, &mut sub)?;
         }
         Ok(())
     }
@@ -124,8 +112,8 @@ impl crate::encoder::Encoder for EncodeSizer {
     }
 }
 
-struct InnerEncoder<'b, 'a: 'b, W> {
-    outer: &'b mut Encoder<'a, W>,
+pub(crate) struct InnerEncoder<'b, 'a: 'b, W> {
+    pub(crate) outer: &'b mut Encoder<'a, W>,
 }
 
 impl<'b, 'a: 'b, W: Writer> crate::encoder::Encoder for InnerEncoder<'a, 'b, W> {
@@ -144,7 +132,7 @@ impl<'b, 'a: 'b, W: Writer> crate::encoder::Encoder for InnerEncoder<'a, 'b, W> 
         self.encode_u32(x.len() as u32)
     }
 
-    fn encode_list_slice<'c, V: Value<'c>>(&mut self, x: &[V]) -> Result<(), EncodeError> {
+    fn encode_list_slice<'c, V: SchemaValue<'c>>(&mut self, x: &[V]) -> Result<(), EncodeError> {
         self.outer.encode_list_slice(x)
         // TODO: prefix with length of actual encoded data
     }
@@ -162,8 +150,8 @@ impl<'b, 'a: 'b, W: Writer> crate::encoder::Encoder for InnerEncoder<'a, 'b, W> 
     }
 }
 
-struct InnerEncodeSizer<'a> {
-    outer: &'a mut EncodeSizer,
+pub(crate) struct InnerEncodeSizer<'a> {
+    pub(crate) outer: &'a mut EncodeSizer,
 }
 
 impl<'a> crate::encoder::Encoder for InnerEncodeSizer<'a> {
@@ -186,7 +174,7 @@ impl<'a> crate::encoder::Encoder for InnerEncodeSizer<'a> {
         self.outer.encode_str(x)
     }
 
-    fn encode_list_slice<'b, V: Value<'b>>(&mut self, xs: &[V]) -> Result<(), EncodeError> {
+    fn encode_list_slice<'b, V: SchemaValue<'b>>(&mut self, xs: &[V]) -> Result<(), EncodeError> {
         self.outer.size += 4; // for the for bytes size
         self.outer.encode_list_slice(xs)
     }

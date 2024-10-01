@@ -6,22 +6,16 @@ use crate::list::ListVisitor;
 use crate::mem::MemoryManager;
 use crate::state_object::ObjectValue;
 use crate::structs::{StructDecodeVisitor, StructType};
-use crate::value::Value;
+use crate::value::SchemaValue;
 
-pub fn decode_value<'a, V: Value<'a>>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<V, DecodeError> {
+pub fn decode_value<'a, V: SchemaValue<'a>>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<V, DecodeError> {
     let mut decoder = Decoder { buf: input, scope: memory_manager };
     decode(&mut decoder)
 }
 
-/// Decode an object value.
-pub fn decode_object_value<'a, V: ObjectValue>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<V::Out<'a>, DecodeError> {
-    let mut decoder = Decoder { buf: input, scope: memory_manager };
-    V::decode(&mut decoder, memory_manager)
-}
-
-struct Decoder<'a> {
-    buf: &'a [u8],
-    scope: &'a MemoryManager,
+pub(crate) struct Decoder<'a> {
+    pub(crate) buf: &'a [u8],
+    pub(crate) scope: &'a MemoryManager,
 }
 
 impl <'a> Decoder<'a> {
@@ -160,7 +154,7 @@ mod tests {
     use crate::state_object::ObjectFieldValue;
     use crate::structs::{to_struct_type, StructDecodeVisitor, StructEncodeVisitor, StructSchema, StructType};
     use crate::types::{to_field, StrT, StructT, UIntNT};
-    use crate::value::{ListElementValue, Value};
+    use crate::value::{ListElementValue, SchemaValue};
 
     #[test]
     fn test_u32_decode() {
@@ -210,8 +204,8 @@ mod tests {
     unsafe impl<'a> StructEncodeVisitor for Coin<'a> {
         fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError> {
             match index {
-                0 => <&'a str as Value<'a>>::encode(&self.denom, encoder),
-                1 => <u128 as Value<'a>>::encode(&self.amount, encoder),
+                0 => <&'a str as SchemaValue<'a>>::encode(&self.denom, encoder),
+                1 => <u128 as SchemaValue<'a>>::encode(&self.amount, encoder),
                 _ => Err(EncodeError::UnknownError),
             }
         }
@@ -219,19 +213,19 @@ mod tests {
 
     const COIN_STRUCT_TYPE: StructType = to_struct_type::<Coin<'static>>();
 
-    impl<'a> Value<'a> for Coin<'a> {
+    impl<'a> SchemaValue<'a> for Coin<'a> {
         type Type = StructT<Coin<'a>>;
-        type DecodeState = (<&'a str as Value<'a>>::DecodeState, <u128 as Value<'a>>::DecodeState);
+        type DecodeState = (<&'a str as SchemaValue<'a>>::DecodeState, <u128 as SchemaValue<'a>>::DecodeState);
 
         fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
             struct Visitor<'b, 'a: 'b> {
-                state: &'b mut <Coin<'a> as Value<'a>>::DecodeState,
+                state: &'b mut <Coin<'a> as SchemaValue<'a>>::DecodeState,
             }
             unsafe impl<'b, 'a: 'b> StructDecodeVisitor<'a> for Visitor<'b, 'a> {
                 fn decode_field<D: Decoder<'a>>(&mut self, index: usize, decoder: &mut D) -> Result<(), DecodeError> {
                     match index {
-                        0 => <&'a str as Value<'a>>::visit_decode_state(&mut self.state.0, decoder),
-                        1 => <u128 as Value<'a>>::visit_decode_state(&mut self.state.1, decoder),
+                        0 => <&'a str as SchemaValue<'a>>::visit_decode_state(&mut self.state.0, decoder),
+                        1 => <u128 as SchemaValue<'a>>::visit_decode_state(&mut self.state.1, decoder),
                         _ => Err(DecodeError::UnknownFieldNumber),
                     }
                 }
@@ -241,8 +235,8 @@ mod tests {
 
         fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError> {
             let states = (
-                <&'a str as Value<'a>>::finish_decode_state(state.0, mem)?,
-                <u128 as Value<'a>>::finish_decode_state(state.1, mem)?,
+                <&'a str as SchemaValue<'a>>::finish_decode_state(state.0, mem)?,
+                <u128 as SchemaValue<'a>>::finish_decode_state(state.1, mem)?,
             );
             Ok(Coin { denom: states.0, amount: states.1 })
         }

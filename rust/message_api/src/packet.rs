@@ -1,6 +1,5 @@
 //! This module contains the definition of the `MessagePacket` struct.
 
-use allocator_api2::alloc::Allocator;
 use crate::header::MessageHeader;
 
 /// A packet containing a message and its header.

@@ -1,15 +1,15 @@
 use crate::types::ListElementType;
-use crate::value::{ListElementValue, Value};
+use crate::value::{ListElementValue, SchemaValue};
 
 /// This trait describes value types that are to be used as generic parameters
 /// where there is no lifetime parameter available.
-/// Any types implementing this trait relate themselves to a type implementing [`Value`]
+/// Any types implementing this trait relate themselves to a type implementing [`SchemaValue`]
 /// so that generic types taking a `Value` type parameter can use a borrowed value if possible.
 pub trait ObjectFieldValue {
     /// The type that is used when inputting object values to functions.
-    type In<'a>: Value<'a>;
+    type In<'a>: SchemaValue<'a>;
     /// The type that is used in function return values.
-    type Out<'a>: Value<'a>;
+    type Out<'a>: SchemaValue<'a>;
 }
 
 impl ObjectFieldValue for u8 {
@@ -88,9 +88,9 @@ impl<V: ObjectFieldValue> ObjectFieldValue for Option<V> {
 impl<V: ObjectFieldValue> ObjectFieldValue for [V]
 where
         for<'a> <V as ObjectFieldValue>::In<'a>: ListElementValue<'a>,
-        for<'a> <<V as ObjectFieldValue>::In<'a> as Value<'a>>::Type: ListElementType,
+        for<'a> <<V as ObjectFieldValue>::In<'a> as SchemaValue<'a>>::Type: ListElementType,
         for<'a> <V as ObjectFieldValue>::Out<'a>: ListElementValue<'a>,
-        for<'a> <<V as ObjectFieldValue>::Out<'a> as Value<'a>>::Type: ListElementType,
+        for<'a> <<V as ObjectFieldValue>::Out<'a> as SchemaValue<'a>>::Type: ListElementType,
 {
     type In<'a> = &'a [V::In<'a>];
     type Out<'a> = &'a [V::Out<'a>];

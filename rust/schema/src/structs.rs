@@ -19,24 +19,19 @@ use crate::field::Field;
 /// ```
 /// use ixc_schema::StructCodec;
 ///
-/// #[derive(StructCodec)]
+/// #[derive(SchemaValue)]
 /// pub struct MyStruct<'a> {
 ///   pub field1: u8,
 ///   pub field2: &'a str,
 /// }
 ///
 ///
-/// #[derive(StructCodec)]
+/// #[derive(SchemaValue)]
 /// pub struct MyStruct2 {
 ///   pub field1: simple_time::Time,
 ///   pub field2: ixc_message_api::Address,
 /// }
 /// ```
-pub unsafe trait StructCodec {
-    /// A dummy function for derived macro type checking.
-    fn dummy(&self);
-}
-
 /// StructSchema is the trait that should be derived to define the schema of a struct.
 pub unsafe trait StructSchema {
     /// The name of the struct.

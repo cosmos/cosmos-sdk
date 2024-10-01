@@ -2,7 +2,7 @@ use crate::decoder::{DecodeError, Decoder};
 use crate::encoder::{EncodeError, Encoder};
 use crate::kind::Kind;
 use crate::types::{to_field, StructT, Type};
-use crate::value::Value;
+use crate::value::SchemaValue;
 
 #[non_exhaustive]
 #[derive(Debug, Clone)]

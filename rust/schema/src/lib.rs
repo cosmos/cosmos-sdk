@@ -21,7 +21,7 @@ mod fields;
 pub mod buffer;
 pub mod mem;
 mod mem2;
+mod schema;
+mod message;
 
-pub use structs::{StructCodec};
-pub use r#enum::{EnumCodec};
-pub use oneof::{OneOfCodec};
+pub use value::SchemaValue;

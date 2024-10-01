@@ -8,7 +8,7 @@ use ixc_schema::decoder::{DecodeError, Decoder};
 use ixc_schema::encoder::{EncodeError, Encoder};
 use ixc_schema::mem::MemoryManager;
 use ixc_schema::types::StrT;
-use ixc_schema::value::{Value, ResponseValue};
+use ixc_schema::value::{SchemaValue, ResponseValue};
 
 /// The standard error wrapper for handler functions.
 #[derive(Debug, Clone)]
@@ -63,7 +63,7 @@ impl<'a, E: core::error::Error> From<E> for ErrorMessage {
     }
 }
 
-impl<'a> Value<'a> for ErrorMessage {
+impl<'a> SchemaValue<'a> for ErrorMessage {
     type Type = StrT;
     type DecodeState = String;
 

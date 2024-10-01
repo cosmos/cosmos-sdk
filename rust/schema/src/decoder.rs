@@ -4,7 +4,7 @@ use ixc_message_api::AccountID;
 use crate::list::ListVisitor;
 use crate::mem::MemoryManager;
 use crate::structs::{StructDecodeVisitor, StructType};
-use crate::value::Value;
+use crate::value::SchemaValue;
 
 /// The trait that decoders must implement.
 pub trait Decoder<'a> {
@@ -30,7 +30,7 @@ pub trait Decoder<'a> {
 }
 
 /// Decode a single value.
-pub fn decode<'a, D: Decoder<'a>, V: Value<'a>>(decoder: &mut D) -> Result<V, DecodeError> {
+pub fn decode<'a, D: Decoder<'a>, V: SchemaValue<'a>>(decoder: &mut D) -> Result<V, DecodeError> {
     let mut state = V::DecodeState::default();
     V::visit_decode_state(&mut state, decoder)?;
     V::finish_decode_state(state, decoder.mem_manager())

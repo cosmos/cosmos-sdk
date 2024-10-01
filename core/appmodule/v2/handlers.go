@@ -110,9 +110,14 @@ func RegisterPostMsgHandler[Req, Resp transaction.Msg](
 	router.RegisterPostMsgHandler(msgName, untypedHandler)
 }
 
+// Handler defines a handler descriptor.
 type Handler struct {
-	Func        HandlerFunc
-	MakeMsg     func() transaction.Msg
+	// Func defines the actual handler, the function that runs a request and returns a response.
+	// Can be query handler or msg handler.
+	Func HandlerFunc
+	// MakeMsg instantiates the type of the request, can be used in decoding contexts.
+	MakeMsg func() transaction.Msg
+	// MakeMsgResp instantiates a new response, can be used in decoding contexts.
 	MakeMsgResp func() transaction.Msg
 }
 

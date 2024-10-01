@@ -23,7 +23,8 @@ func NewPrepareUpgradeCmd() *cobra.Command {
 		Use:   "prepare-upgrade",
 		Short: "Prepare for the next upgrade",
 		Long: `Prepare for the next upgrade by downloading and verifying the upgrade binary.
-This command will query the chain for the current upgrade plan and download the specified binary.`,
+This command will query the chain for the current upgrade plan and download the specified binary.
+gRPC must be enabled on the node for this command to work.`,
 		RunE:         prepareUpgradeHandler,
 		SilenceUsage: false,
 		Args:         cobra.NoArgs,
@@ -54,7 +55,8 @@ func prepareUpgradeHandler(cmd *cobra.Command, _ []string) error {
 	}
 
 	if upgradeInfo == nil {
-		return fmt.Errorf("no active upgrade plan found")
+		logger.Info("No active upgrade plan found")
+		return nil
 	}
 
 	logger.Info("Preparing for upgrade", "name", upgradeInfo.Name, "height", upgradeInfo.Height)

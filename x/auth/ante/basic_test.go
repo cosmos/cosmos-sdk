@@ -99,7 +99,7 @@ func TestValidateMemo(t *testing.T) {
 }
 
 func TestConsumeGasForTxSize(t *testing.T) {
-	t.Skip() //  TODO(@julienrbrt) Fix after https://github.com/cosmos/cosmos-sdk/pull/20072
+	t.Skip() // TO FIX BEFORE 0.52 FINAL.
 
 	suite := SetupTestSuite(t, true)
 
@@ -221,8 +221,6 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 

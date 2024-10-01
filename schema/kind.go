@@ -116,23 +116,25 @@ const (
 	// Value Binary Encoding: 8-byte unsigned little-endian encoding.
 	Uint64Kind
 
-	// IntegerStringKind represents an arbitrary precision integer number.
-	// Go Encoding: string which matches the IntegerFormat regex
+	// IntegerKind represents an arbitrary precision integer number.
+	// Support for expressing the maximum bit precision of values will be added in the future.
+	// Go Encoding: string which matches the IntegerFormat regex (unstable, subject to change).
 	// JSON Encoding: base10 integer string
 	// Canonically encoded values should include no leading zeros.
-	// Key Binary Encoding: string encoding with no leading zeros.
-	// Value Binary Encoding: string encoding with no leading zeros.
-	IntegerStringKind
+	// Equality comparison with integers should be done using numerical equality rather
+	// than string equality.
+	IntegerKind
 
-	// DecimalStringKind represents an arbitrary precision decimal or integer number.
+	// DecimalKind represents an arbitrary precision decimal or integer number.
+	// Support for optionally limiting the precision may be added in the future.
 	// Go Encoding: string which matches the DecimalFormat regex
 	// JSON Encoding: base10 decimal string
 	// Canonically encoded values should include no leading zeros or trailing zeros,
 	// and exponential notation with a lowercase 'e' should be used for any numbers
 	// with an absolute value less than or equal to 1e-6 or greater than or equal to 1e6.
-	// Key Binary Encoding: string encoding with the above canonicalization rules.
-	// Value Binary Encoding: string encoding with the above canonicalization rules.
-	DecimalStringKind
+	// Equality comparison with decimals should be done using numerical equality rather
+	// than string equality.
+	DecimalKind
 
 	// BoolKind represents a boolean true or false value.
 	// Go Encoding: bool
@@ -306,9 +308,9 @@ func (t Kind) String() string {
 		return "int64"
 	case Uint64Kind:
 		return "uint64"
-	case DecimalStringKind:
+	case DecimalKind:
 		return "decimal"
-	case IntegerStringKind:
+	case IntegerKind:
 		return "integer"
 	case BoolKind:
 		return "bool"
@@ -388,13 +390,13 @@ func (t Kind) ValidateValueType(value interface{}) error {
 		if !ok {
 			return fmt.Errorf("expected uint64, got %T", value)
 		}
-	case IntegerStringKind:
+	case IntegerKind:
 		_, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("expected string, got %T", value)
 		}
 
-	case DecimalStringKind:
+	case DecimalKind:
 		_, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("expected string, got %T", value)
@@ -467,11 +469,11 @@ func (t Kind) ValidateValue(value interface{}) error {
 				return fmt.Errorf("expected string without null characters, got %s", value)
 			}
 		}
-	case IntegerStringKind:
+	case IntegerKind:
 		if !integerRegex.Match([]byte(value.(string))) {
 			return fmt.Errorf("expected base10 integer, got %s", value)
 		}
-	case DecimalStringKind:
+	case DecimalKind:
 		if !decimalRegex.Match([]byte(value.(string))) {
 			return fmt.Errorf("expected decimal number, got %s", value)
 		}
@@ -503,7 +505,7 @@ var (
 )
 
 // KindForGoValue finds the simplest kind that can represent the given go value. It will not, however,
-// return kinds such as IntegerStringKind, DecimalStringKind, AddressKind, or EnumKind which all can be
+// return kinds such as IntegerKind, DecimalKind, AddressKind, or EnumKind which all can be
 // represented as strings.
 func KindForGoValue(value interface{}) Kind {
 	switch value.(type) {

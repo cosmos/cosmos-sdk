@@ -12,7 +12,6 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -47,10 +46,10 @@ func New[T transaction.Tx](cfgOptions ...CfgOption) *Server[T] {
 
 // Init returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server.
-func (s *Server[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
-	cfg := s.Config().(*Config)
-	if v != nil {
-		if err := serverv2.UnmarshalSubConfig(v, s.Name(), &cfg); err != nil {
+func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
+	serverCfg := s.Config().(*Config)
+	if len(cfg) > 0 {
+		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
@@ -58,8 +57,8 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logge
 
 	grpcSrv := grpc.NewServer(
 		grpc.ForceServerCodec(newProtoCodec(appI.InterfaceRegistry()).GRPCCodec()),
-		grpc.MaxSendMsgSize(cfg.MaxSendMsgSize),
-		grpc.MaxRecvMsgSize(cfg.MaxRecvMsgSize),
+		grpc.MaxSendMsgSize(serverCfg.MaxSendMsgSize),
+		grpc.MaxRecvMsgSize(serverCfg.MaxRecvMsgSize),
 		grpc.UnknownServiceHandler(
 			makeUnknownServiceHandler(methodsMap, appI.GetAppManager()),
 		),
@@ -69,7 +68,7 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logge
 	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(methodsMap)), logger.With("sub-module", "grpc-reflection"))
 
 	s.grpcSrv = grpcSrv
-	s.config = cfg
+	s.config = serverCfg
 	s.logger = logger.With(log.ModuleKey, s.Name())
 
 	return nil
@@ -149,7 +148,7 @@ func (s *Server[T]) Name() string {
 }
 
 func (s *Server[T]) Config() any {
-	if s.config == nil || s.config == (&Config{}) {
+	if s.config == nil || s.config.Address == "" {
 		cfg := DefaultConfig()
 		// overwrite the default config with the provided options
 		for _, opt := range s.cfgOptions {
@@ -164,6 +163,7 @@ func (s *Server[T]) Config() any {
 
 func (s *Server[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
+		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil
 	}
 
@@ -172,24 +172,12 @@ func (s *Server[T]) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to listen on address %s: %w", s.config.Address, err)
 	}
 
-	errCh := make(chan error)
-
-	// Start the gRPC in an external goroutine as Serve is blocking and will return
-	// an error upon failure, which we'll send on the error channel that will be
-	// consumed by the for block below.
-	go func() {
-		s.logger.Info("starting gRPC server...", "address", s.config.Address)
-		errCh <- s.grpcSrv.Serve(listener)
-	}()
-
-	// Start a blocking select to wait for an indication to stop the server or that
-	// the server failed to start properly.
-	err = <-errCh
-	if err != nil {
-		s.logger.Error("failed to start gRPC server", "err", err)
+	s.logger.Info("starting gRPC server...", "address", s.config.Address)
+	if err := s.grpcSrv.Serve(listener); err != nil {
+		return fmt.Errorf("failed to start gRPC server: %w", err)
 	}
 
-	return err
+	return nil
 }
 
 func (s *Server[T]) Stop(ctx context.Context) error {
@@ -199,6 +187,10 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 
 	s.logger.Info("stopping gRPC server...", "address", s.config.Address)
 	s.grpcSrv.GracefulStop()
-
 	return nil
+}
+
+// GetGRPCServer returns the underlying gRPC server.
+func (s *Server[T]) GetGRPCServer() *grpc.Server {
+	return s.grpcSrv
 }

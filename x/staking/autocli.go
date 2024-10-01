@@ -113,17 +113,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "delegator_addr"},
 						{ProtoField: "src_validator_addr"},
-						{ProtoField: "dst_validator_addr"},
+						{ProtoField: "dst_validator_addr", Optional: true},
 					},
 				},
 				{
-					RpcMethod: "HistoricalInfo",
-					Use:       "historical-info <height>",
-					Short:     "Query historical info at given height",
-					Example:   fmt.Sprintf("$ %s query staking historical-info 5", version.AppName),
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "height"},
-					},
+					RpcMethod: "HistoricalInfo", // Deprecated query
+					Skip:      true,
 				},
 				{
 					RpcMethod: "Pool",

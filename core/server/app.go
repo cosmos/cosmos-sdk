@@ -39,10 +39,6 @@ type TxResult struct {
 	Resp []transaction.Msg
 	// Error produced by the transaction.
 	Error error
-	// Code produced by the transaction.
-	// A non-zero code is an error that is either define by the module via the cosmossdk.io/errors/v2 package
-	// or injected through the antehandler along the execution of the transaction.
-	Code uint32
 	// GasWanted is the maximum units of work we allow this tx to perform.
 	GasWanted uint64
 	// GasUsed is the amount of gas actually consumed.
@@ -50,7 +46,7 @@ type TxResult struct {
 }
 
 // VersionModifier defines the interface fulfilled by BaseApp
-// which allows getting and setting it's appVersion field. This
+// which allows getting and setting its appVersion field. This
 // in turn updates the consensus params that are sent to the
 // consensus engine in EndBlock
 type VersionModifier interface {

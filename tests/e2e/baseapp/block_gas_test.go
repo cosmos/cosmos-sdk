@@ -10,9 +10,9 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -88,6 +88,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 					configurator.AccountsModule(),
 					configurator.AuthModule(),
 					configurator.TxModule(),
+					configurator.ValidateModule(),
 					configurator.ConsensusModule(),
 					configurator.BankModule(),
 					configurator.StakingModule(),
@@ -102,7 +103,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			&appBuilder)
 		require.NoError(t, err)
 
-		bapp := appBuilder.Build(dbm.NewMemDB(), nil)
+		bapp := appBuilder.Build(coretesting.NewMemDB(), nil)
 		err = bapp.Load(true)
 		require.NoError(t, err)
 

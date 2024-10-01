@@ -8,11 +8,6 @@ import (
 
 var _ epochstypes.EpochHooks = AppModule{}
 
-// GetModuleName implements types.EpochHooks.
-func (am AppModule) GetModuleName() string {
-	return am.Name()
-}
-
 // BeforeEpochStart calls the mint function.
 func (am AppModule) BeforeEpochStart(ctx context.Context, epochIdentifier string, epochNumber int64) error {
 	minter, err := am.keeper.Minter.Get(ctx)
@@ -22,7 +17,7 @@ func (am AppModule) BeforeEpochStart(ctx context.Context, epochIdentifier string
 
 	oldMinter := minter
 
-	err = am.mintFn(ctx, am.keeper.Environment, &minter, epochIdentifier, epochNumber)
+	err = am.keeper.MintFn(ctx, &minter, epochIdentifier, epochNumber)
 	if err != nil {
 		return err
 	}

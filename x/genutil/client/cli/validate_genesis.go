@@ -2,7 +2,10 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -32,7 +35,7 @@ func ValidateGenesisCmd(genMM genesisMM) *cobra.Command {
 
 			appGenesis, err := types.AppGenesisFromFile(genesis)
 			if err != nil {
-				return err
+				return enrichUnmarshalError(err)
 			}
 
 			if err := appGenesis.ValidateAndComplete(); err != nil {
@@ -41,12 +44,19 @@ func ValidateGenesisCmd(genMM genesisMM) *cobra.Command {
 
 			var genState map[string]json.RawMessage
 			if err = json.Unmarshal(appGenesis.AppState, &genState); err != nil {
+				if strings.Contains(err.Error(), "unexpected end of JSON input") {
+					return fmt.Errorf("app_state is missing in the genesis file: %s", err.Error())
+				}
 				return fmt.Errorf("error unmarshalling genesis doc %s: %w", genesis, err)
 			}
 
 			if genMM != nil {
 				if err = genMM.ValidateGenesis(genState); err != nil {
-					return fmt.Errorf("error validating genesis file %s: %w", genesis, err)
+					errStr := fmt.Sprintf("error validating genesis file %s: %s", genesis, err.Error())
+					if errors.Is(err, io.EOF) {
+						errStr = fmt.Sprintf("%s: section is missing in the app_state", errStr)
+					}
+					return fmt.Errorf("%s", errStr)
 				}
 			}
 
@@ -54,4 +64,12 @@ func ValidateGenesisCmd(genMM genesisMM) *cobra.Command {
 			return nil
 		},
 	}
+}
+
+func enrichUnmarshalError(err error) error {
+	var syntaxErr *json.SyntaxError
+	if errors.As(err, &syntaxErr) {
+		return fmt.Errorf("error at offset %d: %s", syntaxErr.Offset, syntaxErr.Error())
+	}
+	return err
 }

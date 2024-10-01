@@ -83,7 +83,7 @@ func (s *CLITestSuite) TestTxInitCmd() {
 				Response: sdk.MsgTypeURL(&types.Empty{})[1:],
 			},
 		})
-		c := clitestutil.NewMockCometRPCWithValue(bz)
+		c := clitestutil.NewMockCometRPCWithResponseQueryValue(bz)
 		return s.baseCtx.WithClient(c)
 	}
 	s.clientCtx = ctxGen()
@@ -119,7 +119,6 @@ func (s *CLITestSuite) TestTxInitCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 

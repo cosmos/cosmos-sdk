@@ -21,9 +21,9 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	vestingtestutil "github.com/cosmos/cosmos-sdk/x/auth/vesting/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
@@ -50,7 +50,6 @@ func (s *VestingAccountTestSuite) SetupTest() {
 
 	// gomock initializations
 	ctrl := gomock.NewController(&testing.T{})
-	acctsModKeeper := vestingtestutil.NewMockAccountsModKeeper(ctrl)
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
@@ -65,7 +64,7 @@ func (s *VestingAccountTestSuite) SetupTest() {
 		env,
 		encCfg.Codec,
 		authtypes.ProtoBaseAccount,
-		acctsModKeeper,
+		authtestutil.NewMockAccountsModKeeper(ctrl),
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
@@ -917,8 +916,6 @@ func TestGenesisAccountValidate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		t.Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.expErr, tt.acc.Validate() != nil)
 		})

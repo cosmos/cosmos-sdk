@@ -8,7 +8,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/legacy"
+	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -37,6 +37,7 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 	if err := depinject.Inject(
 		depinject.Configs(
 			simapp.AppConfig(),
+			runtime.DefaultServiceBindings(),
 			depinject.Supply(log.NewNopLogger()),
 			depinject.Provide(
 				codec.ProvideInterfaceRegistry,
@@ -82,7 +83,7 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 		},
 	}
 
-	initRootCmd[T](rootCmd, clientCtx.TxConfig, moduleManager)
+	initRootCmd(rootCmd, clientCtx.TxConfig, moduleManager)
 
 	nodeCmds := nodeservice.NewNodeCommands()
 	autoCliOpts.ModuleOptions = make(map[string]*autocliv1.ModuleOptions)
@@ -99,7 +100,7 @@ func ProvideClientContext(
 	appCodec codec.Codec,
 	interfaceRegistry codectypes.InterfaceRegistry,
 	txConfigOpts tx.ConfigOptions,
-	legacyAmino legacy.Amino,
+	legacyAmino registry.AminoRegistrar,
 	addressCodec address.Codec,
 	validatorAddressCodec address.ValidatorAddressCodec,
 	consensusAddressCodec address.ConsensusAddressCodec,
@@ -108,7 +109,7 @@ func ProvideClientContext(
 
 	amino, ok := legacyAmino.(*codec.LegacyAmino)
 	if !ok {
-		panic("legacy.Amino must be an *codec.LegacyAmino instance for legacy ClientContext")
+		panic("registry.AminoRegistrar must be an *codec.LegacyAmino instance for legacy ClientContext")
 	}
 
 	clientCtx := client.Context{}.

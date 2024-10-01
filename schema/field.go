@@ -51,14 +51,11 @@ func (c Field) Validate(typeSet TypeSet) error {
 			return fmt.Errorf("enum field %q must have a referenced type", c.Name)
 		}
 
-		ty, ok := typeSet.LookupType(c.ReferencedType)
+		_, ok := typeSet.LookupEnumType(c.ReferencedType)
 		if !ok {
-			return fmt.Errorf("enum field %q references unknown type %q", c.Name, c.ReferencedType)
+			return fmt.Errorf("can't find enum type %q referenced by field %q", c.ReferencedType, c.Name)
 		}
 
-		if _, ok := ty.(EnumType); !ok {
-			return fmt.Errorf("enum field %q references non-enum type %q", c.Name, c.ReferencedType)
-		}
 	default:
 		if c.ReferencedType != "" {
 			return fmt.Errorf("field %q with kind %q cannot have a referenced type", c.Name, c.Kind)
@@ -85,17 +82,13 @@ func (c Field) ValidateValue(value interface{}, typeSet TypeSet) error {
 
 	switch c.Kind {
 	case EnumKind:
-		ty, ok := typeSet.LookupType(c.ReferencedType)
+		enumType, ok := typeSet.LookupEnumType(c.ReferencedType)
 		if !ok {
 			return fmt.Errorf("enum field %q references unknown type %q", c.Name, c.ReferencedType)
 		}
-		enumType, ok := ty.(EnumType)
-		if !ok {
-			return fmt.Errorf("enum field %q references non-enum type %q", c.Name, c.ReferencedType)
-		}
 		err := enumType.ValidateValue(value.(string))
 		if err != nil {
-			return fmt.Errorf("invalid value for enum field %q: %v", c.Name, err)
+			return fmt.Errorf("invalid value for enum field %q: %v", c.Name, err) //nolint:errorlint // false positive due to using go1.12
 		}
 	default:
 	}

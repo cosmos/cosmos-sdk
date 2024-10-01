@@ -90,6 +90,14 @@ func BatchUpgradeWatcher(ctx context.Context, cfg *Config, logger log.Logger) {
 	var conn *grpc.ClientConn
 	var grpcErr error
 
+	defer func() {
+		if conn != nil {
+			if err := conn.Close(); err != nil {
+				logger.Warn("couldn't stop gRPC client", "error", err)
+			}
+		}
+	}()
+
 	// Wait for the chain process to be ready
 pollLoop:
 	for {
@@ -105,12 +113,6 @@ pollLoop:
 		}
 	}
 
-	defer func() {
-		if err := conn.Close(); err != nil {
-			logger.Warn("couldn't stop gRPC client", "error", err)
-		}
-	}()
-
 	client := cmtservice.NewServiceClient(conn)
 
 	var prevUpgradeHeight int64 = -1
@@ -123,7 +125,7 @@ pollLoop:
 				uInfos, err = loadBatchUpgradeFile(cfg)
 				if err != nil {
 					logger.Warn("failed to load batch upgrade file", "error", err)
-					return
+					continue
 				}
 			}
 		case <-ctx.Done():

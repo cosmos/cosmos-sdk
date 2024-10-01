@@ -4,10 +4,10 @@ package math
 import (
 	"fmt"
 
+	"github.com/cockroachdb/apd/v3"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/group/errors"
-
-	"github.com/cockroachdb/apd/v3"
 )
 
 // Dec is a wrapper struct around apd.Decimal that does no mutation of apd.Decimal's when performing

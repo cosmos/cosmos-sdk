@@ -6,10 +6,14 @@ mod vm;
 use ixc_message_api::{AccountID};
 use ixc_core::{Context};
 use ixc_core::handler::{HandlerAPI, Handler};
+use ixc_hypervisor::Hypervisor;
+use crate::store::{Store, VersionedMultiStore};
 
 /// Defines a test harness for running tests against account and module implementations.
 #[derive(Default)]
-pub struct TestApp {}
+pub struct TestApp {
+    hypervisor: Hypervisor<VersionedMultiStore>
+}
 
 impl TestApp {
     // /// Adds a module to the test harness.

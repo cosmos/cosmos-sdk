@@ -1,10 +1,10 @@
 //! **WARNING: This is an API preview! Most code won't work or even type check properly!**
 //! Macros for generating code for the schema crate.
 
-use proc_macro2::{Span, TokenStream as TokenStream2};
 use manyhow::{bail, manyhow};
+use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::quote;
-use syn::{Data, Lifetime, Member};
+use syn::{Data, Lifetime};
 
 /// This derives a struct codec.
 #[manyhow]

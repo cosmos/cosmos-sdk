@@ -5,21 +5,32 @@ use crate::handler::HandlerErrorCode;
 /// Error codes that can be returned by the system.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum SystemErrorCode {
-    /// Out of gas error.
-    OutOfGas,
+
+    // System restricted error codes:
+
     /// Fatal execution error that likely cannot be recovered from.
-    FatalExecutionError,
+    FatalExecutionError = 1,
     /// Account not-found error.
-    AccountNotFound,
+    AccountNotFound = 2,
     /// Message handler not-found error.
-    HandlerNotFound,
+    HandlerNotFound = 3,
     /// The caller attempted to impersonate another caller and was not authorized.
-    UnauthorizedCallerAccess,
+    UnauthorizedCallerAccess = 4,
     /// The handler code was invalid or failed to execute properly within its virtual machine.
-    InvalidHandler,
+    InvalidHandler = 5,
     /// The handler returned an invalid error code.
-    UnknownHandlerError,
-    /// The system encountered an unknown error.
+    UnknownHandlerError = 6,
+
+    // System errors that can be returned by handlers:
+
+    /// The handler doesn't handle the specified message.
+    MessageNotHandled = 128,
+    /// Encoding error.
+    EncodingError = 129,
+    /// Out of gas error.
+    OutOfGas = 130,
+
+    /// An unknown error code in the system range.
     Unknown(u32),
 }
 

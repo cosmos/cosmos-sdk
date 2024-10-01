@@ -2,7 +2,7 @@
 //!
 //! Virtual Machine API
 use ixc_message_api::code::ErrorCode;
-use ixc_message_api::handler::{HostBackend};
+use ixc_message_api::handler::{Allocator, HostBackend};
 use ixc_message_api::packet::MessagePacket;
 
 /// A unique identifier for a handler implementation.
@@ -20,7 +20,7 @@ pub trait VM {
     /// Describe a handler within the virtual machine.
     fn describe_handler(&self, vm_handler_id: &str) -> Option<HandlerDescriptor>;
     /// Run a handler within the virtual machine.
-    fn run_handler(&self, vm_handler_id: &str, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend) -> Result<(), ErrorCode>;
+    fn run_handler(&self, vm_handler_id: &str, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), ErrorCode>;
 }
 
 #[non_exhaustive]

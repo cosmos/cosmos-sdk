@@ -74,11 +74,7 @@ impl<'a> SchemaValue<'a> for ErrorMessage {
     type Type = StrT;
     type DecodeState = String;
 
-    fn encode<E: Encoder>(&self, encoder: &mut E) -> core::result::Result<(), EncodeError> {
-        encoder.encode_str(&self.msg)
-    }
-
-    fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> core::result::Result<(), DecodeError> {
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> core::result::Result<(), DecodeError> {
         *state = decoder.decode_owned_str()?;
         Ok(())
     }
@@ -86,6 +82,11 @@ impl<'a> SchemaValue<'a> for ErrorMessage {
     fn finish_decode_state(msg: Self::DecodeState, _mem_handle: &'a MemoryManager) -> core::result::Result<Self, DecodeError> {
         Ok(ErrorMessage { msg })
     }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> core::result::Result<(), EncodeError> {
+        encoder.encode_str(&self.msg)
+    }
+
 }
 
 /// Format an error message.

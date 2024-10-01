@@ -157,6 +157,9 @@ mod tests {
     use crate::types::{to_field, ReferenceableType, StrT, StructT, UIntNT};
     use crate::value::{ListElementValue, SchemaValue};
 
+    extern crate ixc_schema_macros;
+    use ixc_schema_macros::*;
+
     #[test]
     fn test_u32_decode() {
         let buf: [u8; 4] = [10, 0, 0, 0];
@@ -181,7 +184,7 @@ mod tests {
         assert_eq!(x, "hello");
     }
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, SchemaValue)]
     struct Coin<'a> {
         denom: &'a str,
         amount: u128,
@@ -193,69 +196,68 @@ mod tests {
         }
     }
 
+    // unsafe impl<'a> ReferenceableType for Coin<'a> {
+    //     const SCHEMA_TYPE: Option<SchemaType<'static>> = Some(
+    //         SchemaType::Struct(Self::STRUCT_TYPE)
+    //     );
+    // }
 
-    unsafe impl<'a> ReferenceableType for Coin<'a> {
-        const SCHEMA_TYPE: Option<SchemaType<'static>> = Some(
-            SchemaType::Struct(Self::STRUCT_TYPE)
-        );
-    }
+    // unsafe impl<'a> StructSchema for Coin<'a> {
+    //     const STRUCT_TYPE: StructType<'static> = StructType {
+    //         name: "Coin",
+    //         fields: &[
+    //             to_field::<StrT>().with_name("denom"),
+    //             to_field::<UIntNT<16>>().with_name("amount"),
+    //         ],
+    //         sealed: true,
+    //     };
+    // }
 
-    unsafe impl<'a> StructSchema for Coin<'a> {
-        const STRUCT_TYPE: StructType<'static> = StructType {
-            name: "Coin",
-            fields: &[
-                to_field::<StrT>().with_name("denom"),
-                to_field::<UIntNT<16>>().with_name("amount"),
-            ],
-            sealed: true,
-        };
-    }
+    // unsafe impl<'a> StructEncodeVisitor for Coin<'a> {
+    //     fn encode_field(&self, index: usize, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+    //         match index {
+    //             0 => <&'a str as SchemaValue<'a>>::encode(&self.denom, encoder),
+    //             1 => <u128 as SchemaValue<'a>>::encode(&self.amount, encoder),
+    //             _ => Err(EncodeError::UnknownError),
+    //         }
+    //     }
+    // }
 
-    unsafe impl<'a> StructEncodeVisitor for Coin<'a> {
-        fn encode_field(&self, index: usize, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
-            match index {
-                0 => <&'a str as SchemaValue<'a>>::encode(&self.denom, encoder),
-                1 => <u128 as SchemaValue<'a>>::encode(&self.amount, encoder),
-                _ => Err(EncodeError::UnknownError),
-            }
-        }
-    }
+    // impl<'a> SchemaValue<'a> for Coin<'a> {
+    //     type Type = StructT<Coin<'a>>;
+    //     type DecodeState = (<&'a str as SchemaValue<'a>>::DecodeState, <u128 as SchemaValue<'a>>::DecodeState);
+    //
+    //     fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+    //         struct Visitor<'b, 'a: 'b> {
+    //             state: &'b mut <Coin<'a> as SchemaValue<'a>>::DecodeState,
+    //         }
+    //         unsafe impl<'b, 'a: 'b> StructDecodeVisitor<'a> for Visitor<'b, 'a> {
+    //             fn decode_field(&mut self, index: usize, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+    //                 match index {
+    //                     0 => <&'a str as SchemaValue<'a>>::visit_decode_state(&mut self.state.0, decoder),
+    //                     1 => <u128 as SchemaValue<'a>>::visit_decode_state(&mut self.state.1, decoder),
+    //                     _ => Err(DecodeError::UnknownFieldNumber),
+    //                 }
+    //             }
+    //         }
+    //         decoder.decode_struct(&mut Visitor { state }, &Self::STRUCT_TYPE)
+    //     }
+    //
+    //     fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError> {
+    //         let states = (
+    //             <&'a str as SchemaValue<'a>>::finish_decode_state(state.0, mem)?,
+    //             <u128 as SchemaValue<'a>>::finish_decode_state(state.1, mem)?,
+    //         );
+    //         Ok(Coin { denom: states.0, amount: states.1 })
+    //     }
+    //
+    //     /// Encode the value to the encoder.
+    //     fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+    //         encoder.encode_struct(self, &Self::STRUCT_TYPE)
+    //     }
+    // }
 
-    impl<'a> SchemaValue<'a> for Coin<'a> {
-        type Type = StructT<Coin<'a>>;
-        type DecodeState = (<&'a str as SchemaValue<'a>>::DecodeState, <u128 as SchemaValue<'a>>::DecodeState);
-
-        fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
-            struct Visitor<'b, 'a: 'b> {
-                state: &'b mut <Coin<'a> as SchemaValue<'a>>::DecodeState,
-            }
-            unsafe impl<'b, 'a: 'b> StructDecodeVisitor<'a> for Visitor<'b, 'a> {
-                fn decode_field(&mut self, index: usize, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
-                    match index {
-                        0 => <&'a str as SchemaValue<'a>>::visit_decode_state(&mut self.state.0, decoder),
-                        1 => <u128 as SchemaValue<'a>>::visit_decode_state(&mut self.state.1, decoder),
-                        _ => Err(DecodeError::UnknownFieldNumber),
-                    }
-                }
-            }
-            decoder.decode_struct(&mut Visitor { state }, &Self::STRUCT_TYPE)
-        }
-
-        fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError> {
-            let states = (
-                <&'a str as SchemaValue<'a>>::finish_decode_state(state.0, mem)?,
-                <u128 as SchemaValue<'a>>::finish_decode_state(state.1, mem)?,
-            );
-            Ok(Coin { denom: states.0, amount: states.1 })
-        }
-
-        /// Encode the value to the encoder.
-        fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
-            encoder.encode_struct(self, &Self::STRUCT_TYPE)
-        }
-    }
-
-    impl<'a> ListElementValue<'a> for Coin<'a> {}
+    // impl<'a> ListElementValue<'a> for Coin<'a> {}
     impl<'a> ObjectFieldValue for Coin<'a> {
         type In<'b> = Coin<'b>;
         type Out<'b> = Coin<'b>;

@@ -4,6 +4,9 @@
 #[cfg(feature = "std")]
 extern crate alloc;
 
+// this is to allow this crate to use its own macros
+extern crate self as ixc_schema;
+
 pub mod value;
 pub mod types;
 pub mod structs;
@@ -20,7 +23,7 @@ mod field;
 mod fields;
 pub mod buffer;
 pub mod mem;
-mod mem2;
+mod bump;
 mod schema;
 mod message;
 

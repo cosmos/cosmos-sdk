@@ -4,9 +4,6 @@ use crate::packet::MessagePacket;
 
 /// A handler for an account.
 pub trait RawHandler {
-    /// The name of the handler.
-    fn name(&self) -> &'static str;
-    //
     /// Handle a message packet.
     fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend) -> Result<(), HandlerErrorCode>;
 }

@@ -1,9 +1,8 @@
 #![allow(missing_docs)]
 
 use ixc_core_macros::package_root;
-use crate::counter::Counter;
 
-// #[ixc::account_handler(Counter)]
+#[ixc::account_handler(Counter)]
 pub mod counter {
     use ixc::*;
 

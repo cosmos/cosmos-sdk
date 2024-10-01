@@ -24,23 +24,26 @@ type validator struct {
 	Website           string
 	Security          string
 	Details           string
+	Metadata          types.Metadata
 	CommissionRates   types.CommissionRates
 	MinSelfDelegation math.Int
 }
 
 func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, error) {
 	type internalVal struct {
-		Amount              string          `json:"amount"`
-		PubKey              json.RawMessage `json:"pubkey"`
-		Moniker             string          `json:"moniker"`
-		Identity            string          `json:"identity,omitempty"`
-		Website             string          `json:"website,omitempty"`
-		Security            string          `json:"security,omitempty"`
-		Details             string          `json:"details,omitempty"`
-		CommissionRate      string          `json:"commission-rate"`
-		CommissionMaxRate   string          `json:"commission-max-rate"`
-		CommissionMaxChange string          `json:"commission-max-change-rate"`
-		MinSelfDelegation   string          `json:"min-self-delegation"`
+		Amount                    string          `json:"amount"`
+		PubKey                    json.RawMessage `json:"pubkey"`
+		Moniker                   string          `json:"moniker"`
+		Identity                  string          `json:"identity,omitempty"`
+		Website                   string          `json:"website,omitempty"`
+		Security                  string          `json:"security,omitempty"`
+		Details                   string          `json:"details,omitempty"`
+		MetadataProfilePicUri     string          `json:"metadata-profile-pic-uri,omitempty"`
+		MetadataSocialHandlesUris []string        `json:"metadata-social-handles-uris,omitempty"`
+		CommissionRate            string          `json:"commission-rate"`
+		CommissionMaxRate         string          `json:"commission-max-rate"`
+		CommissionMaxChange       string          `json:"commission-max-change-rate"`
+		MinSelfDelegation         string          `json:"min-self-delegation"`
 	}
 
 	contents, err := os.ReadFile(path)
@@ -87,6 +90,11 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 		return validator{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
 	}
 
+	metadata, err := buildMetadata(v.MetadataProfilePicUri, v.MetadataSocialHandlesUris)
+	if err != nil {
+		return validator{}, err
+	}
+
 	return validator{
 		Amount:            amount,
 		PubKey:            pk,
@@ -95,6 +103,7 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 		Website:           v.Website,
 		Security:          v.Security,
 		Details:           v.Details,
+		Metadata:          metadata,
 		CommissionRates:   commissionRates,
 		MinSelfDelegation: minSelfDelegation,
 	}, nil
@@ -123,4 +132,13 @@ func buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr string) (commiss
 	commission = types.NewCommissionRates(rate, maxRate, maxChangeRate)
 
 	return commission, nil
+}
+
+func buildMetadata(profilePicUri string, socialHandlesUris []string) (metadata types.Metadata, err error) {
+	metadata.ProfilePicUri = profilePicUri
+	metadata.SocialHandleUris = socialHandlesUris
+	if err := metadata.Validate(); err != nil {
+		return metadata, err
+	}
+	return metadata, nil
 }

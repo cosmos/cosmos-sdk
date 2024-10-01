@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
+	dbm "cosmossdk.io/store/db"
 	"cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/types"
 )
@@ -15,7 +16,7 @@ import (
 func setupStore(b *testing.B, storeCount uint) (Store, map[string]types.StoreKey) {
 	b.Helper()
 
-	db := dbm.NewMemDB()
+	db := coretesting.NewMemDB()
 	storeKeys := make(map[string]types.StoreKey)
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for i := uint(0); i < storeCount; i++ {
@@ -30,7 +31,7 @@ func setupStore(b *testing.B, storeCount uint) (Store, map[string]types.StoreKey
 	return NewStore(db, stores, storeKeys, nil, types.TraceContext{}), storeKeys
 }
 
-func benchmarkStore(b *testing.B, storeCount, keyCount uint) {
+func benchmarkStore(b *testing.B, storeCount, runnerCount, keyCount uint) {
 	b.Helper()
 	store, storeKeys := setupStore(b, storeCount)
 	b.ResetTimer()
@@ -47,19 +48,23 @@ func benchmarkStore(b *testing.B, storeCount, keyCount uint) {
 			}
 		}
 		b.StartTimer()
-		store.Write()
+		err := store.writeStoresParallel(int(runnerCount))
+		require.NoError(b, err)
 	}
 }
 
 func BenchmarkCacheMultiStore(b *testing.B) {
 	storeCounts := []uint{2, 4, 8, 16, 32}
+	runnerCounts := []uint{1, 2, 4, 8, 16}
 	keyCounts := []uint{100, 1000, 10000}
 
 	for _, storeCount := range storeCounts {
 		for _, keyCount := range keyCounts {
-			b.Run(fmt.Sprintf("storeCount=%d/keyCount=%d", storeCount, keyCount), func(sub *testing.B) {
-				benchmarkStore(sub, storeCount, keyCount)
-			})
+			for _, runnerCount := range runnerCounts {
+				b.Run(fmt.Sprintf("storeCount=%d/runnerCount=%d/keyCount=%d/", storeCount, runnerCount, keyCount), func(sub *testing.B) {
+					benchmarkStore(sub, storeCount, runnerCount, keyCount)
+				})
+			}
 		}
 	}
 }

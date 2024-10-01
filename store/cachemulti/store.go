@@ -1,20 +1,26 @@
 package cachemulti
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"sync"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
-	"golang.org/x/sync/errgroup"
 )
 
-// storeNameCtxKey is the TraceContext metadata key that identifies
-// the store which emitted a given trace.
-const storeNameCtxKey = "store_name"
+const (
+	// storeNameCtxKey is the TraceContext metadata key that identifies
+	// the store which emitted a given trace.
+	storeNameCtxKey = "store_name"
+	// maxRunners is the maximum number of concurrent goroutines that
+	// can be used to write to the underlying stores in parallel.
+	maxRunners = 4
+)
 
 //----------------------------------------
 // Store
@@ -122,22 +128,46 @@ func (cms Store) GetStoreType() types.StoreType {
 // Write calls Write on each underlying store.
 func (cms Store) Write() {
 	cms.db.Write()
-	eg := new(errgroup.Group)
-	for _, store := range cms.stores {
-		s := store // https://golang.org/doc/faq#closures_and_goroutines
-		eg.Go(func() (err error) {
-			defer func() {
-				if r := recover(); r != nil {
-					err = fmt.Errorf("panic in Write: %v", r)
-				}
-			}()
-			s.Write()
-			return nil
-		})
-	}
-	if err := eg.Wait(); err != nil {
+
+	if err := cms.writeStoresParallel(maxRunners); err != nil {
 		panic(err)
 	}
+}
+
+func (cms Store) writeStoresParallel(runnerCount int) error {
+	sem := make(chan struct{}, runnerCount)      // Semaphore to limit number of concurrent goroutines
+	errChan := make(chan error, len(cms.stores)) // Channel to collect errors from goroutines
+	var wg sync.WaitGroup
+
+	for storeKey, store := range cms.stores {
+		wg.Add(1)
+		sem <- struct{}{}
+
+		go func() {
+			defer func() {
+				wg.Done()
+				<-sem // Release the slot
+
+				if r := recover(); r != nil {
+					errChan <- fmt.Errorf("panic in Write for store %s: %v", storeKey.Name(), r)
+				}
+			}()
+			store.Write()
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(errChan)
+	}()
+
+	// Collect errors from goroutines
+	var allErrors []error
+	for err := range errChan {
+		allErrors = append(allErrors, err)
+	}
+
+	return errors.Join(allErrors...)
 }
 
 // Implements CacheWrapper.

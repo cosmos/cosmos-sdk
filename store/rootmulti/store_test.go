@@ -1033,10 +1033,7 @@ func TestCommitStores(t *testing.T) {
 }
 
 func TestCacheMultiStoreWrite(t *testing.T) {
-	// for testing the cacheMultiStore parallel write, file based db is used
-	db, err := dbm.NewDB("test", dbm.GoLevelDBBackend, t.TempDir())
-	require.NoError(t, err)
-
+	db := coretesting.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	require.NoError(t, ms.LoadLatestVersion())
 

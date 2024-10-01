@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/gogoproto/proto"
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"github.com/cosmos/gogoproto/types/any/test"
-
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"gotest.tools/v3/assert"
+
+	"cosmossdk.io/core/gas"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -85,6 +87,7 @@ func DeterministicIterations[request, response proto.Message](
 	if gasOverwrite { // to handle regressions, i.e. check that gas consumption didn't change
 		gasConsumed = ctx.GasMeter().GasConsumed() - before
 	}
+	t.Logf("gas consumed: %d", gasConsumed)
 
 	for i := 0; i < iterCount; i++ {
 		before := ctx.GasMeter().GasConsumed()
@@ -92,5 +95,32 @@ func DeterministicIterations[request, response proto.Message](
 		assert.Equal(t, ctx.GasMeter().GasConsumed()-before, gasConsumed)
 		assert.NilError(t, err)
 		assert.DeepEqual(t, res, prevRes)
+	}
+}
+
+func DeterministicIterationsV2[request, response proto.Message](
+	t *testing.T,
+	req request,
+	meterFn func() gas.Meter,
+	queryFn func(request) (response, error),
+	assertGas func(*testing.T, gas.Gas),
+	assertResponse func(*testing.T, response),
+) {
+	t.Helper()
+	prevRes, err := queryFn(req)
+	gasMeter := meterFn()
+	gasConsumed := gasMeter.Consumed()
+	require.NoError(t, err)
+	assertGas(t, gasConsumed)
+
+	for i := 0; i < iterCount; i++ {
+		res, err := queryFn(req)
+		require.NoError(t, err)
+		sameGas := gasMeter.Consumed()
+		require.Equal(t, gasConsumed, sameGas)
+		require.Equal(t, res, prevRes)
+		if assertResponse != nil {
+			assertResponse(t, res)
+		}
 	}
 }

@@ -22,7 +22,6 @@ func NewDB(dbType DBType, name, dataDir string, opts store.DBOptions) (corestore
 	switch dbType {
 	case DBTypeGoLevelDB:
 		return NewGoLevelDB(name, dataDir, opts)
-
 	case DBTypePebbleDB:
 		return NewPebbleDB(name, dataDir)
 	}

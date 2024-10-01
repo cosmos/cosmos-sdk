@@ -109,7 +109,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		)
 	}
 
-	if _, err := msg.Description.EnsureLength(); err != nil {
+	if _, err := msg.Description.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -176,7 +176,7 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
-	if msg.Description == (types.Description{}) {
+	if msg.Description.IsEmpty() {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 

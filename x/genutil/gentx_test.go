@@ -36,7 +36,7 @@ var (
 	pk2   = priv2.PubKey()
 	addr1 = sdk.AccAddress(pk1.Address())
 	addr2 = sdk.AccAddress(pk2.Address())
-	desc  = stakingtypes.NewDescription("testname", "", "", "", "")
+	desc  = stakingtypes.NewDescription("testname", "", "", "", "", stakingtypes.Metadata{})
 	comm  = stakingtypes.CommissionRates{}
 )
 

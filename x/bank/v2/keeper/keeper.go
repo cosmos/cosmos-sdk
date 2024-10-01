@@ -258,18 +258,3 @@ func newBalancesIndexes(sb *collections.SchemaBuilder) BalancesIndexes {
 type BalancesIndexes struct {
 	Denom *indexes.ReversePair[[]byte, string, math.Int]
 }
-
-// AppendSendRestriction adds the provided SendRestrictionFn to run after previously provided restrictions.
-func (k Keeper) AppendSendRestriction(restriction types.SendRestrictionFn) {
-	k.sendRestriction.append(restriction)
-}
-
-// PrependSendRestriction adds the provided SendRestrictionFn to run before previously provided restrictions.
-func (k Keeper) PrependSendRestriction(restriction types.SendRestrictionFn) {
-	k.sendRestriction.prepend(restriction)
-}
-
-// ClearSendRestriction removes the send restriction (if there is one).
-func (k Keeper) ClearSendRestriction() {
-	k.sendRestriction.clear()
-}

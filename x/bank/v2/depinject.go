@@ -98,7 +98,7 @@ func InvokeSetSendRestrictions(
 			return fmt.Errorf("can't find send restriction for module %s", module)
 		}
 
-		keeper.AppendSendRestriction(restriction)
+		keeper.AppendGlobalSendRestriction(restriction)
 	}
 
 	return nil

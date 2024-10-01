@@ -202,7 +202,7 @@ func (suite *KeeperTestSuite) TestSendCoins_WithRestriction() {
 		}
 		return to, nil
 	}
-	suite.bankKeeper.AppendSendRestriction(addrRestrictFunc)
+	suite.bankKeeper.AppendGlobalSendRestriction(addrRestrictFunc)
 
 	err := suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[0], sendAmt)
 	require.Error(err)
@@ -215,7 +215,7 @@ func (suite *KeeperTestSuite) TestSendCoins_WithRestriction() {
 		}
 		return to, nil
 	}
-	suite.bankKeeper.AppendSendRestriction(amtRestrictFunc)
+	suite.bankKeeper.AppendGlobalSendRestriction(amtRestrictFunc)
 
 	// Pass the 1st but failt at the 2nd
 	err = suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendAmt)

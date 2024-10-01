@@ -151,9 +151,10 @@ mod tests {
     use crate::encoder::{EncodeError, Encoder};
     use crate::field::Field;
     use crate::mem::MemoryManager;
+    use crate::schema::SchemaType;
     use crate::state_object::ObjectFieldValue;
-    use crate::structs::{to_struct_type, StructDecodeVisitor, StructEncodeVisitor, StructSchema, StructType};
-    use crate::types::{to_field, StrT, StructT, UIntNT};
+    use crate::structs::{StructDecodeVisitor, StructEncodeVisitor, StructSchema, StructType};
+    use crate::types::{to_field, ReferenceableType, StrT, StructT, UIntNT};
     use crate::value::{ListElementValue, SchemaValue};
 
     #[test]
@@ -192,17 +193,26 @@ mod tests {
         }
     }
 
+
+    unsafe impl<'a> ReferenceableType for Coin<'a> {
+        const SCHEMA_TYPE: Option<SchemaType<'static>> = Some(
+            SchemaType::Struct(Self::STRUCT_TYPE)
+        );
+    }
+
     unsafe impl<'a> StructSchema for Coin<'a> {
-        const NAME: &'static str = "Coin";
-        const FIELDS: &'static [Field<'static>] = &[
-            to_field::<StrT>().with_name("denom"),
-            to_field::<UIntNT<16>>().with_name("amount"),
-        ];
-        const SEALED: bool = false;
+        const STRUCT_TYPE: StructType<'static> = StructType {
+            name: "Coin",
+            fields: &[
+                to_field::<StrT>().with_name("denom"),
+                to_field::<UIntNT<16>>().with_name("amount"),
+            ],
+            sealed: true,
+        };
     }
 
     unsafe impl<'a> StructEncodeVisitor for Coin<'a> {
-        fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError> {
+        fn encode_field(&self, index: usize, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
             match index {
                 0 => <&'a str as SchemaValue<'a>>::encode(&self.denom, encoder),
                 1 => <u128 as SchemaValue<'a>>::encode(&self.amount, encoder),
@@ -211,18 +221,16 @@ mod tests {
         }
     }
 
-    const COIN_STRUCT_TYPE: StructType = to_struct_type::<Coin<'static>>();
-
     impl<'a> SchemaValue<'a> for Coin<'a> {
         type Type = StructT<Coin<'a>>;
         type DecodeState = (<&'a str as SchemaValue<'a>>::DecodeState, <u128 as SchemaValue<'a>>::DecodeState);
 
-        fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
+        fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
             struct Visitor<'b, 'a: 'b> {
                 state: &'b mut <Coin<'a> as SchemaValue<'a>>::DecodeState,
             }
             unsafe impl<'b, 'a: 'b> StructDecodeVisitor<'a> for Visitor<'b, 'a> {
-                fn decode_field<D: Decoder<'a>>(&mut self, index: usize, decoder: &mut D) -> Result<(), DecodeError> {
+                fn decode_field(&mut self, index: usize, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
                     match index {
                         0 => <&'a str as SchemaValue<'a>>::visit_decode_state(&mut self.state.0, decoder),
                         1 => <u128 as SchemaValue<'a>>::visit_decode_state(&mut self.state.1, decoder),
@@ -230,7 +238,7 @@ mod tests {
                     }
                 }
             }
-            decoder.decode_struct(&mut Visitor { state }, &COIN_STRUCT_TYPE)
+            decoder.decode_struct(&mut Visitor { state }, &Self::STRUCT_TYPE)
         }
 
         fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError> {
@@ -242,8 +250,8 @@ mod tests {
         }
 
         /// Encode the value to the encoder.
-        fn encode<E: Encoder>(&self, encoder: &mut E) -> Result<(), EncodeError> {
-            encoder.encode_struct(self, &COIN_STRUCT_TYPE)
+        fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+            encoder.encode_struct(self, &Self::STRUCT_TYPE)
         }
     }
 

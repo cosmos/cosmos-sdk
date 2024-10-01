@@ -8,29 +8,27 @@ use syn::Data;
 
 /// This derives a struct codec.
 #[manyhow]
-#[proc_macro_derive(StructCodec)]
-pub fn derive_struct_codec(input: syn::DeriveInput) -> manyhow::Result<TokenStream2> {
+#[proc_macro_derive(SchemaValue)]
+pub fn derive_schema_value(input: syn::DeriveInput) -> manyhow::Result<TokenStream2> {
     let struct_name = input.ident;
     let str = match &input.data {
         Data::Struct(str) => {
             str
         }
         _ => {
-            bail!("StructCodec can only be derived for structs");
+            bail!("only know how to derive SchemaValue for structs, currently");
         }
     };
     let dummy_impls = str.fields.iter().map(|field| {
         let field_name = field.ident.as_ref().unwrap();
         let field_type = &field.ty;
         quote! {
-                    <#field_type as ::interchain_schema::value::MaybeBorrowed>::dummy();
-                }
+
+        }
     });
     Ok(quote! {
-        unsafe impl StructCodec for #struct_name {
-            fn dummy(&self) {
-                #(#dummy_impls)*
-            }
+        unsafe impl <'a> SchemaValue<'a> for #struct_name {
+            type Type = ::ixc_schema::types::StructT(#struct_name);
         }
     }.into())
 }

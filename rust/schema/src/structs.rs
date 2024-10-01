@@ -2,6 +2,7 @@
 use crate::decoder::{DecodeError, Decoder};
 use crate::encoder::{EncodeError, Encoder};
 use crate::field::Field;
+use crate::types::ReferenceableType;
 
 /// StructCodec is the trait that should be derived to encode and decode a struct.
 ///
@@ -17,7 +18,7 @@ use crate::field::Field;
 ///
 /// Example:
 /// ```
-/// use ixc_schema::StructCodec;
+/// use ixc_schema::SchemaValue;
 ///
 /// #[derive(SchemaValue)]
 /// pub struct MyStruct<'a> {
@@ -29,17 +30,13 @@ use crate::field::Field;
 /// #[derive(SchemaValue)]
 /// pub struct MyStruct2 {
 ///   pub field1: simple_time::Time,
-///   pub field2: ixc_message_api::Address,
+///   pub field2: ixc_message_api::AccountID,
 /// }
 /// ```
 /// StructSchema is the trait that should be derived to define the schema of a struct.
-pub unsafe trait StructSchema {
-    /// The name of the struct.
-    const NAME: &'static str;
-    /// The fields of the struct.
-    const FIELDS: &'static [Field<'static>];
-    /// Whether the struct is sealed.
-    const SEALED: bool;
+pub unsafe trait StructSchema: ReferenceableType {
+    /// The schema of the struct.
+    const STRUCT_TYPE: StructType<'static>;
 }
 
 /// StructDecodeVisitor is the trait that should be derived to decode a struct.
@@ -64,13 +61,4 @@ pub struct StructType<'a> {
     /// Sealed indicates whether new fields can be added to the struct.
     /// If sealed is true, the struct is considered sealed and new fields cannot be added.
     pub sealed: bool,
-}
-
-/// Convert StructSchema to StructType.
-pub const fn to_struct_type<T: StructSchema>() -> StructType<'static> {
-    StructType {
-        name: T::NAME,
-        fields: T::FIELDS,
-        sealed: T::SEALED,
-    }
 }

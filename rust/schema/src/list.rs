@@ -8,6 +8,7 @@ use crate::value::SchemaValue;
 pub trait ListEncodeVisitor {
     fn size_hint(&self) -> Option<u32>;
     fn encode(&self, encoder: &mut dyn Encoder) -> Result<u32, EncodeError>;
+    fn encode_reverse(&self, encoder: &mut dyn Encoder) -> Result<u32, EncodeError>;
 }
 
 pub trait ListDecodeVisitor<'a> {
@@ -59,5 +60,46 @@ impl<'a, T: SchemaValue<'a>> ListDecodeVisitor<'a> for alloc::vec::Vec<T> {
         T::visit_decode_state(&mut state, decoder)?;
         self.push(T::finish_decode_state(state, decoder.mem_manager())?);
         Ok(())
+    }
+}
+
+impl<'a, T: SchemaValue<'a>> ListEncodeVisitor for &'a [T] {
+    fn size_hint(&self) -> Option<u32> {
+        Some(self.len() as u32)
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<u32, EncodeError> {
+        for x in self.iter() {
+            x.encode(encoder)?;
+        }
+        Ok(self.len() as u32)
+    }
+
+    fn encode_reverse(&self, encoder: &mut dyn Encoder) -> Result<u32, EncodeError> {
+        for x in self.iter().rev() {
+            x.encode(encoder)?;
+        }
+        Ok(self.len() as u32)
+    }
+}
+
+#[cfg(feature = "std")]
+impl<'a, T: SchemaValue<'a>> ListEncodeVisitor for alloc::vec::Vec<T> {
+    fn size_hint(&self) -> Option<u32> {
+        Some(self.len() as u32)
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<u32, EncodeError> {
+        for x in self.iter() {
+            x.encode(encoder)?;
+        }
+        Ok(self.len() as u32)
+    }
+
+    fn encode_reverse(&self, encoder: &mut dyn Encoder) -> Result<u32, EncodeError> {
+        for x in self.iter().rev() {
+            x.encode(encoder)?;
+        }
+        Ok(self.len() as u32)
     }
 }

@@ -9,6 +9,8 @@
 
 use crate::field::Field;
 use crate::kind::Kind;
+use crate::schema::SchemaType;
+use crate::structs::StructSchema;
 
 /// The `Type` trait is implemented for all types that can be used in the schema.
 pub trait Type: Private {
@@ -25,9 +27,19 @@ pub trait Type: Private {
     const ELEMENT_KIND: Option<Kind> = None;
 
     /// The type that this type references, if any, otherwise ().
-    type ReferencedType;
+    type ReferencedType: ReferenceableType;
 }
 trait Private {}
+
+/// The trait implemented for types that can be referenced by other types.
+pub unsafe trait ReferenceableType {
+    /// The schema type of the referenced type.
+    const SCHEMA_TYPE: Option<SchemaType<'static>>;
+}
+
+unsafe impl ReferenceableType for () {
+    const SCHEMA_TYPE: Option<SchemaType<'static>> = None;
+}
 
 /// The `U8T` type represents an unsigned 8-bit integer.
 pub struct U8T;
@@ -165,8 +177,8 @@ impl Type for DurationT {
 pub struct NullableT<T> {
     _phantom: core::marker::PhantomData<T>,
 }
-impl <T> Private for NullableT<T> {}
-impl <T: Type> Type for NullableT<T> {
+impl<T> Private for NullableT<T> {}
+impl<T: Type> Type for NullableT<T> {
     const NULLABLE: bool = true;
     const KIND: Kind = T::KIND;
     type ReferencedType = T::ReferencedType;
@@ -176,30 +188,30 @@ impl <T: Type> Type for NullableT<T> {
 pub struct ListT<T: ListElementType> {
     _phantom: core::marker::PhantomData<T>,
 }
-impl <T:ListElementType> Private for ListT<T> {}
-impl <T:ListElementType> Type for ListT<T> {
+impl<T: ListElementType> Private for ListT<T> {}
+impl<T: ListElementType> Type for ListT<T> {
     const KIND: Kind = Kind::List;
     const ELEMENT_KIND: Option<Kind> = Some(T::KIND);
-    type ReferencedType = T;
+    type ReferencedType = T::ReferencedType;
 }
 
 /// The `StructT` type represents a struct type.
 pub struct StructT<T> {
     _phantom: core::marker::PhantomData<T>,
 }
-impl <T> Private for StructT<T> {}
-impl <T> Type for StructT<T> {
+impl<T> Private for StructT<T> {}
+impl<T: StructSchema> Type for StructT<T> {
     const KIND: Kind = Kind::Struct;
     type ReferencedType = T;
 }
-impl <T> ListElementType for StructT<T> {}
+impl<T: StructSchema> ListElementType for StructT<T> {}
 
 /// Represents a type that can be used as an element in a list.
 pub(crate) trait ListElementType: Type {}
 
 /// Converts a type to a field.
 pub const fn to_field<T: Type>() -> Field<'static> {
-    Field{
+    Field {
         name: "",
         kind: T::KIND,
         nullable: T::NULLABLE,

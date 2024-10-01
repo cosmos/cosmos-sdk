@@ -214,8 +214,7 @@ where V::Type: ListElementType
     }
 
     fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
-        // encoder.encode_list_slice(self)
-        todo!()
+        encoder.encode_list(self)
     }
 }
 
@@ -247,8 +246,7 @@ where
     type DecodeState = alloc::vec::Vec<V>;
 
     fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
-        // encoder.encode_list_slice(self.as_slice())
-        todo!()
+        encoder.encode_list(self)
     }
 }
 

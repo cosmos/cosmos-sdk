@@ -4,7 +4,7 @@ use thiserror::Error;
 use ixc_message_api::AccountID;
 use ixc_message_api::code::ErrorCode;
 use ixc_message_api::packet::MessagePacket;
-use ixc_message_api::handler::{AllocError, HostBackend};
+use ixc_message_api::handler::{HostBackend, RawHandler};
 use ixc_hypervisor::{KVStore, PopFrameError, PushFrameError, Transaction};
 
 pub struct VersionedMultiStore {
@@ -60,7 +60,7 @@ pub struct Tx {
 }
 
 impl Transaction for Tx {
-    type KVStore = ();
+    type KVStore = Store;
 
     fn init_account_storage(&mut self, account: AccountID, storage_params: &[u8]) {
         todo!()
@@ -104,6 +104,10 @@ impl Transaction for Tx {
     fn rollback(self) {}
 
     fn manager_state(&self) -> &mut Self::KVStore {
+        todo!()
+    }
+
+    fn handler(&self) -> &dyn RawHandler {
         todo!()
     }
 }
@@ -162,11 +166,14 @@ impl Tx {
 
 #[derive(Debug, Error)]
 enum Error {
-    AllocError(#[from] AllocError),
+    #[error("allocation error")]
+    AllocError(#[from] allocator_api2::alloc::AllocError),
+    #[error("access error")]
     AccessError(#[from] AccessError),
 }
 
 #[derive(Debug, Error)]
+#[error("access error")]
 struct AccessError;
 
 #[derive(Clone)]

@@ -16,6 +16,7 @@ ixc_hypervisor = { path = "../vm/hypervisor" }
 imbl = "3.0.0"
 arc-swap = "1.7.1"
 thiserror = "1.0.64"
+allocator-api2 = "0.2.18"
 
 [lints]
 workspace = true

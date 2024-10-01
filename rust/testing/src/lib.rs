@@ -1,12 +1,11 @@
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 
-mod manager;
 mod store;
 mod vm;
 
-use ixc_message_api::{AccountID, Address};
+use ixc_message_api::{AccountID};
 use ixc_core::{Context};
-use ixc_core::handler::{HandlerAPI, AccountHandler, Handler, ModuleAPI, ModuleHandler};
+use ixc_core::handler::{HandlerAPI, Handler};
 
 /// Defines a test harness for running tests against account and module implementations.
 #[derive(Default)]
@@ -95,7 +94,7 @@ pub struct AccountInstance<'a, H: Handler> {
     _phantom2: std::marker::PhantomData<H>,
 }
 
-impl <'a, H: Handler> AccountInstance<'a, H> {
+impl<'a, H: Handler> AccountInstance<'a, H> {
     /// Returns the address of the account.
     fn account_id(&self) -> AccountID {
         todo!()
@@ -105,7 +104,7 @@ impl <'a, H: Handler> AccountInstance<'a, H> {
     /// This can be used for reading its internal state.
     fn with_context<F, R>(&self, f: F) -> R
     where
-        F: FnOnce(&Context, &H) -> R
+        F: FnOnce(&Context, &H) -> R,
     {
         todo!()
     }
@@ -114,27 +113,27 @@ impl <'a, H: Handler> AccountInstance<'a, H> {
     /// This can be used for reading and modifying its internal state.
     fn with_context_mut<F, R>(&mut self, f: F) -> R
     where
-        F: FnOnce(&Context) -> R
+        F: FnOnce(&Context) -> R,
     {
         todo!()
     }
 }
 
 /// Defines a mock module handler composed of mock module and account API trait implementations.
-pub struct MockModule {}
-
-impl MockModule {
-    /// Adds a mock module API implementation to the mock module handler.
-    fn add_mock_module_api<A: ModuleAPI>(&mut self, mock: A) {
-        todo!()
-    }
-
-    /// Adds a mock account API implementation to the mock module handler.
-    fn add_mock_account_api<A: HandlerAPI>(&mut self, mock: A) {
-        todo!()
-    }
-}
-
+// pub struct MockModule {}
+//
+// impl MockModule {
+//     /// Adds a mock module API implementation to the mock module handler.
+//     fn add_mock_module_api<A: ModuleAPI>(&mut self, mock: A) {
+//         todo!()
+//     }
+//
+//     /// Adds a mock account API implementation to the mock module handler.
+//     fn add_mock_account_api<A: HandlerAPI>(&mut self, mock: A) {
+//         todo!()
+//     }
+// }
+//
 
 /// Defines a mock account handler composed of mock account API trait implementations.
 pub struct MockAccount {}

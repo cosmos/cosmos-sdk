@@ -10,21 +10,22 @@ pub mod counter {
 
     impl Counter {
         #[on_create]
-        pub fn create(ctx: &mut Context) {
+        pub fn create(&self, ctx: &mut Context, init_value: u64) -> Result<()> {
+            self.value.set(ctx, init_value)
         }
 
         #[publish]
-        pub fn get(&self, ctx: &Context) -> Response<u64> {
-            // self.value.get(ctx)
-            todo!()
+        pub fn get(&self, ctx: &Context) -> Result<u64> {
+            self.value.get(ctx)
         }
 
         #[publish]
-        pub fn inc(&mut self, ctx: &mut Context) -> Response<()> {
-            // let value = self.value.get(ctx)?;
-            // let new_value = value.checked_add(1).ok_or(())?;
-            // self.value.set(ctx, new_value)
-            todo!()
+        pub fn inc(&mut self, ctx: &mut Context) -> Result<()> {
+            let value = self.value.get(ctx)?;
+            let new_value = value.checked_add(1).ok_or(
+                fmt_error!("overflow when incrementing counter")
+            )?;
+            self.value.set(ctx, new_value)
         }
     }
 }

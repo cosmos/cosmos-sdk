@@ -165,5 +165,6 @@ func (r coreRouterImpl) Invoke(ctx context.Context, req transaction.Msg) (res tr
 	if !exists {
 		return nil, fmt.Errorf("%w: %s", ErrNoHandler, typeName)
 	}
+
 	return handler(ctx, req)
 }

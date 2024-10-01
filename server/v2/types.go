@@ -17,5 +17,4 @@ type AppI[T transaction.Tx] interface {
 	InterfaceRegistry() server.InterfaceRegistry
 	GetAppManager() *appmanager.AppManager[T]
 	GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message
-	GetStore() any
 }

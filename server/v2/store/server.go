@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
+	storev2 "cosmossdk.io/store/v2"
 )
 
 var (
@@ -22,15 +23,14 @@ const ServerName = "store"
 // Server manages store config and contains prune & snapshot commands
 type Server[T transaction.Tx] struct {
 	config *Config
-	// saving appCreator for only RestoreSnapshotCmd
-	appCreator serverv2.AppCreator[T]
+	store  storev2.Backend
 }
 
-func New[T transaction.Tx](appCreator serverv2.AppCreator[T]) *Server[T] {
-	return &Server[T]{appCreator: appCreator}
+func New[T transaction.Tx](store storev2.Backend) *Server[T] {
+	return &Server[T]{store: store}
 }
 
-func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
+func (s *Server[T]) Init(_ serverv2.AppI[T], cfg map[string]any, _ log.Logger) error {
 	serverCfg := s.Config().(*Config)
 	if len(cfg) > 0 {
 		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
@@ -46,11 +46,11 @@ func (s *Server[T]) Name() string {
 	return ServerName
 }
 
-func (s *Server[T]) Start(ctx context.Context) error {
+func (s *Server[T]) Start(context.Context) error {
 	return nil
 }
 
-func (s *Server[T]) Stop(ctx context.Context) error {
+func (s *Server[T]) Stop(context.Context) error {
 	return nil
 }
 
@@ -63,7 +63,7 @@ func (s *Server[T]) CLICommands() serverv2.CLIConfig {
 			s.ListSnapshotsCmd(),
 			s.DumpArchiveCmd(),
 			s.LoadArchiveCmd(),
-			s.RestoreSnapshotCmd(s.appCreator),
+			s.RestoreSnapshotCmd(s.store),
 		},
 	}
 }

@@ -63,7 +63,7 @@ func TestServer(t *testing.T) {
 	err = grpcServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
 	require.NoError(t, err)
 
-	storeServer := store.New[transaction.Tx](nil /* nil appCreator as not using CLI commands */)
+	storeServer := store.New[transaction.Tx](nil /* nil store is not using CLI commands */)
 	err = storeServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
 	require.NoError(t, err)
 

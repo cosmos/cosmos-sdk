@@ -32,6 +32,7 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 		autoCliOpts   autocli.AppOptions
 		moduleManager *runtime.MM[T]
 		clientCtx     client.Context
+		storeBuilder  runtime.StoreBuilder
 	)
 
 	if err := depinject.Inject(
@@ -51,6 +52,7 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 				std.RegisterLegacyAminoCodec,
 			),
 		),
+		&storeBuilder,
 		&autoCliOpts,
 		&moduleManager,
 		&clientCtx,
@@ -83,7 +85,8 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, clientCtx.TxConfig, moduleManager)
+	store := storeBuilder.Get()
+	initRootCmd(rootCmd, clientCtx.TxConfig, store, moduleManager)
 
 	nodeCmds := nodeservice.NewNodeCommands()
 	autoCliOpts.ModuleOptions = make(map[string]*autocliv1.ModuleOptions)

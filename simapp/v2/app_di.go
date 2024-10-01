@@ -210,6 +210,6 @@ func (app *SimApp[T]) TxConfig() client.TxConfig {
 }
 
 // GetStore gets the app store.
-func (app *SimApp[T]) GetStore() any {
+func (app *SimApp[T]) GetStore() runtime.Store {
 	return app.App.GetStore()
 }

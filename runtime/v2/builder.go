@@ -182,7 +182,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 				return nil, errors.New("cannot init genesis on non-zero state")
 			}
 			genesisCtx := services.NewGenesisContext(a.branch(zeroState))
-			genesisState, err := genesisCtx.Run(ctx, func(ctx context.Context) error {
+			genesisState, err := genesisCtx.Mutate(ctx, func(ctx context.Context) error {
 				err = a.app.moduleManager.InitGenesisJSON(ctx, genesisJSON, txHandler)
 				if err != nil {
 					return fmt.Errorf("failed to init genesis: %w", err)
@@ -238,7 +238,11 @@ func AppBuilderWithBranch[T transaction.Tx](branch func(state store.ReaderMap) s
 
 // AppBuilderWithTxValidator sets the tx validator for the app.
 // It overrides all default tx validators defined by modules.
-func AppBuilderWithTxValidator[T transaction.Tx](txValidators func(ctx context.Context, tx T) error) AppBuilderOption[T] {
+func AppBuilderWithTxValidator[T transaction.Tx](
+	txValidators func(
+		ctx context.Context, tx T,
+	) error,
+) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.txValidator = txValidators
 	}
@@ -246,7 +250,11 @@ func AppBuilderWithTxValidator[T transaction.Tx](txValidators func(ctx context.C
 
 // AppBuilderWithPostTxExec sets logic that will be executed after each transaction.
 // When not provided, a no-op function will be used.
-func AppBuilderWithPostTxExec[T transaction.Tx](postTxExec func(ctx context.Context, tx T, success bool) error) AppBuilderOption[T] {
+func AppBuilderWithPostTxExec[T transaction.Tx](
+	postTxExec func(
+		ctx context.Context, tx T, success bool,
+	) error,
+) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.postTxExec = postTxExec
 	}

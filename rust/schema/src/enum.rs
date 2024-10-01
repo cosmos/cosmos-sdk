@@ -1,3 +1,4 @@
+use ixc_schema_macros::SchemaValue;
 use crate::kind::Kind;
 
 #[non_exhaustive]
@@ -10,7 +11,7 @@ pub struct EnumType<'a> {
 }
 
 #[non_exhaustive]
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, SchemaValue)]
 pub struct EnumValueDefinition<'a> {
     pub name: &'a str,
     pub value: i32,

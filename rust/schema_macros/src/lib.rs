@@ -35,7 +35,7 @@ pub fn derive_schema_value(input: syn::DeriveInput) -> manyhow::Result<TokenStre
         let field_name = field.ident.as_ref().unwrap();
         let field_type = &field.ty;
         quote! {
-                to_field::<<#field_type as ::ixc_schema::SchemaValue<'a>>::Type>().with_name(stringify!(#field_name)),
+               ::ixc_schema::types::to_field::<<#field_type as ::ixc_schema::SchemaValue<'a>>::Type>().with_name(stringify!(#field_name)),
         }
     });
     let encode_matchers = str.fields.iter().enumerate().map(|(index, field)| {
@@ -74,7 +74,7 @@ pub fn derive_schema_value(input: syn::DeriveInput) -> manyhow::Result<TokenStre
     });
     Ok(quote! {
         unsafe impl #impl_generics ::ixc_schema::structs::StructSchema for #struct_name #ty_generics #where_clause {
-            const STRUCT_TYPE: StructType<'static> = StructType {
+            const STRUCT_TYPE: ::ixc_schema::structs::StructType<'static> = ::ixc_schema::structs::StructType {
                 name: stringify!(#struct_name),
                 fields: &[#(#fields)*],
                 sealed: false,
@@ -108,7 +108,7 @@ pub fn derive_schema_value(input: syn::DeriveInput) -> manyhow::Result<TokenStre
                     fn decode_field(&mut self, index: usize, decoder: &mut dyn ::ixc_schema::decoder::Decoder<'a>) -> Result<(), ::ixc_schema::decoder::DecodeError> {
                         match index {
                             #(#decode_matchers)*
-                            _ => Err(DecodeError::UnknownFieldNumber),
+                            _ => Err(::ixc_schema::decoder::DecodeError::UnknownFieldNumber),
                         }
                     }
                 }

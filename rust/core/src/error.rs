@@ -23,7 +23,7 @@ pub enum Error<E: ResponseValue<'static>> {
 
 /// The standard result type which wraps specific error types in the generic Error type
 /// to include system error codes.
-pub type Result<'a, R, E: ResponseValue<'static> = ErrorMessage> = core::result::Result<R, Error<E>>;
+pub type Result<R, E: ResponseValue<'static> = ErrorMessage> = core::result::Result<R, Error<E>>;
 
 /// A simple error type which just contains an error message.
 #[derive(Clone)]

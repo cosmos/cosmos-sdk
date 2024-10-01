@@ -4,12 +4,19 @@ use ixc_message_api::AccountID;
 use crate::decoder::{decode, DecodeError};
 use crate::list::ListVisitor;
 use crate::mem::MemoryManager;
+use crate::state_object::ObjectValue;
 use crate::structs::{StructDecodeVisitor, StructType};
 use crate::value::Value;
 
 pub fn decode_value<'a, V: Value<'a>>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<V, DecodeError> {
     let mut decoder = Decoder { buf: input, scope: memory_manager };
     decode(&mut decoder)
+}
+
+/// Decode an object value.
+pub fn decode_object_value<'a, V: ObjectValue>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<V::Out<'a>, DecodeError> {
+    let mut decoder = Decoder { buf: input, scope: memory_manager };
+    V::decode(&mut decoder, memory_manager)
 }
 
 struct Decoder<'a> {

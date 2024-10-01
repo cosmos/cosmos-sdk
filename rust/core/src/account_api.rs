@@ -6,7 +6,7 @@ use crate::context::Context;
 /// Self-destructs the account.
 ///
 /// SAFETY: This function is unsafe because it can be used to destroy the account and all its state.
-pub unsafe fn self_destruct<'a, 'b>(ctx: &mut Context<'a>) -> crate::error::Result<'b, ()> {
+pub unsafe fn self_destruct(ctx: &mut Context) -> crate::error::Result<()> {
     unimplemented!()
 }
 

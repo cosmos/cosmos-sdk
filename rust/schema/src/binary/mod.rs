@@ -24,3 +24,6 @@ impl Codec for NativeBinaryCodec {
         decoder::decode_value(input, memory_manager)
     }
 }
+
+pub use encoder::encode_object_value;
+pub use decoder::decode_object_value;

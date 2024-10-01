@@ -20,7 +20,7 @@ pub trait ObjectValue {
     const PSEUDO_TYPE: StructType<'static>;
 
     /// Encode each part of the value in reverse order.
-    fn encode<'a, E: Encoder>(value: Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError>;
+    fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError>;
 
     /// Decode the value from the decoder.
     fn decode<'a, D: Decoder<'a>>(decoder: &mut D, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError>;
@@ -32,7 +32,7 @@ impl ObjectValue for () {
     type Out<'a> = ();
     const PSEUDO_TYPE: StructType<'static> = unnamed_struct_type::<Self::FieldTypes<'static>>();
 
-    fn encode<'a, E: Encoder>(value: Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
         Ok(())
     }
 
@@ -47,19 +47,8 @@ impl<A: ObjectFieldValue> ObjectValue for A {
     type Out<'a> = A::Out<'a>;
     const PSEUDO_TYPE: StructType<'static> = unnamed_struct_type::<Self::FieldTypes<'static>>();
 
-    fn encode<'a, E: Encoder>(value: Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
-        struct Visitor<A>(A);
-        unsafe impl <'a, A: Value<'a>> StructEncodeVisitor for Visitor<A> {
-            fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError> {
-                match index {
-                    0 => <A as Value<'a>>::encode(&self.0, encoder),
-                    _ =>
-                        Err(EncodeError::UnknownError),
-                }
-            }
-        }
-
-        encoder.encode_struct(&Visitor(value), &Self::PSEUDO_TYPE)
+    fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
+        todo!()
     }
 
     fn decode<'a, D: Decoder<'a>>(decoder: &mut D, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
@@ -85,8 +74,19 @@ impl<A: ObjectFieldValue> ObjectValue for (A,) {
     type Out<'a> = (A::Out<'a>,);
     const PSEUDO_TYPE: StructType<'static> = unnamed_struct_type::<Self::FieldTypes<'static>>();
 
-    fn encode<'a, E: Encoder>(value: Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
-        <A as ObjectValue>::encode(value.0, encoder)
+    fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
+        struct Visitor<'b, A>(&'b (A,));
+        unsafe impl <'b, 'a:'b, A: Value<'a>> StructEncodeVisitor for Visitor<'b, A> {
+            fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError> {
+                match index {
+                    0 => <A as Value<'a>>::encode(&self.0.0, encoder),
+                    _ =>
+                        Err(EncodeError::UnknownError),
+                }
+            }
+        }
+
+        encoder.encode_struct(&Visitor(value), &Self::PSEUDO_TYPE)
     }
 
     fn decode<'a, D: Decoder<'a>>(decoder: &mut D, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
@@ -100,9 +100,9 @@ impl<A: ObjectFieldValue, B: ObjectFieldValue> ObjectValue for (A, B) {
     type Out<'a> = (A::Out<'a>, B::Out<'a>);
     const PSEUDO_TYPE: StructType<'static> = unnamed_struct_type::<Self::FieldTypes<'static>>();
 
-    fn encode<'a, E: Encoder>(value: Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
-        struct EncodeVisitor<A, B>((A, B));
-        unsafe impl <'a, A: Value<'a>, B: Value<'a>> StructEncodeVisitor for EncodeVisitor<A, B> {
+    fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
+        struct EncodeVisitor<'b, A, B>(&'b (A, B));
+        unsafe impl <'b, 'a:'b, A: Value<'a>, B: Value<'a>> StructEncodeVisitor for EncodeVisitor<'b, A, B> {
             fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError> {
                 match index {
                     0 => <A as Value<'a>>::encode(&self.0.0, encoder),
@@ -143,9 +143,9 @@ impl<A: ObjectFieldValue, B: ObjectFieldValue, C: ObjectFieldValue> ObjectValue 
     type Out<'a> = (A::Out<'a>, B::Out<'a>, C::Out<'a>);
     const PSEUDO_TYPE: StructType<'static> = unnamed_struct_type::<Self::FieldTypes<'static>>();
 
-    fn encode<'a, E: Encoder>(value: Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
-        struct EncodeVisitor<A, B, C>((A, B, C));
-        unsafe impl <'a, A: Value<'a>, B: Value<'a>, C: Value<'a>> StructEncodeVisitor for EncodeVisitor<A, B, C> {
+    fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
+        struct EncodeVisitor<'b, A, B, C>(&'b (A, B, C));
+        unsafe impl <'b, 'a:'b, A: Value<'a>, B: Value<'a>, C: Value<'a>> StructEncodeVisitor for EncodeVisitor<'b, A, B, C> {
             fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError> {
                 match index {
                     0 => <A as Value<'a>>::encode(&self.0.0, encoder),
@@ -189,9 +189,9 @@ impl<A: ObjectFieldValue, B: ObjectFieldValue, C: ObjectFieldValue, D: ObjectFie
     type Out<'a> = (A::Out<'a>, B::Out<'a>, C::Out<'a>, D::Out<'a>);
     const PSEUDO_TYPE: StructType<'static> = unnamed_struct_type::<Self::FieldTypes<'static>>();
 
-    fn encode<'a, E: Encoder>(value: Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
-        struct EncodeVisitor<A, B, C, D>((A, B, C, D));
-        unsafe impl <'a, A: Value<'a>, B: Value<'a>, C: Value<'a>, D: Value<'a>> StructEncodeVisitor for EncodeVisitor<A, B, C, D> {
+    fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
+        struct EncodeVisitor<'b, A, B, C, D>(&'b (A, B, C, D));
+        unsafe impl <'b, 'a:'b, A: Value<'a>, B: Value<'a>, C: Value<'a>, D: Value<'a>> StructEncodeVisitor for EncodeVisitor<'b, A, B, C, D> {
             fn encode_field<E: Encoder>(&self, index: usize, encoder: &mut E) -> Result<(), EncodeError> {
                 match index {
                     0 => <A as Value<'a>>::encode(&self.0.0, encoder),

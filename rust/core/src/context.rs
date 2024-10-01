@@ -56,7 +56,7 @@ impl<'a> Context<'a> {
     /// Static account client instances should be preferred wherever possible,
     /// so that static dependency analysis can be performed.
     pub unsafe fn dynamic_invoke<'b, M: Message<'b>>(&'a mut self, account: AccountID, message: M)
-        -> crate::error::Result<'a, <M::Response<'a> as ResponseValue<'a>>::Value, M::Error> {
+        -> crate::error::Result<<M::Response<'a> as ResponseValue<'a>>::Value, M::Error> {
         // encode the message body
         let msg_body = M::Codec::encode_value(&message, &self.mem as &dyn Allocator).
             map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;

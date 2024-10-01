@@ -477,7 +477,7 @@ var newConfig = func(
 		CustomPreUpgrade:         customPreUpgrade,
 		DisableRecase:            disableRecase,
 		ShutdownGrace:            time.Duration(shutdownGrace),
-		CosmosGrpcEndpoint:       "localhost:9090",
+		DaemonGrpcEndpoint:       "localhost:9090",
 	}
 }
 

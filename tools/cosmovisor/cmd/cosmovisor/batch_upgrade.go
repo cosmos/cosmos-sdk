@@ -9,16 +9,41 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/tools/cosmovisor"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 func NewBatchAddUpgradeCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:          "add-batch-upgrade <upgrade1-name>:<path-to-exec1>:<upgrade1-height> .. <upgradeN-name>:<path-to-execN>:<upgradeN-height>",
-		Short:        "Add APP upgrades binary to cosmovisor",
+	cmd := &cobra.Command{
+		Use:   "add-batch-upgrade [flags]",
+		Short: "Add multiple upgrade binaries at specified heights to cosmovisor",
+		Long: `This command allows you to specify multiple upgrades at once at specific heights, copying or creating a batch upgrade file that's actively watched during 'cosmovisor run'.
+You can provide upgrades in two ways:
+
+1. Using --upgrade-file: Specify a path to a batch upgrade file ie. a JSON array of upgrade-info objects.
+   The file is validated before it's copied over to the upgrade directory.
+
+2. Using --upgrade-list: Provide a comma-separated list of upgrades.
+   Each upgrade is defined by three colon-separated values:
+   a. upgrade-name: A unique identifier for the upgrade
+   b. path-to-exec: The file path to the upgrade's executable binary
+   c. upgrade-height: The block height at which the upgrade should occur
+   This creates a batch upgrade JSON file with the upgrade-info objects in the upgrade directory.
+
+Note: You must provide either --upgrade-file or --upgrade-list.`,
+		Example: `cosmovisor add-batch-upgrade --upgrade-list upgrade_v2:/path/to/v2/binary:1000000,upgrade_v3:/path/to/v3/binary:2000000
+
+cosmovisor add-batch-upgrade --upgrade-file /path/to/batch_upgrade.json`,
 		SilenceUsage: true,
-		Args:         cobra.MinimumNArgs(1),
+		Args:         cobra.NoArgs,
 		RunE:         addBatchUpgrade,
 	}
+
+	cmd.Flags().String("upgrade-file", "", "Path to a batch upgrade file which is a JSON array of upgrade-info objects")
+	cmd.Flags().StringSlice("upgrade-list", []string{}, "List of comma-separated upgrades in the format 'name:path/to/binary:height'")
+
+	return cmd
 }
 
 // addBatchUpgrade takes in multiple specified upgrades and creates a single
@@ -28,8 +53,28 @@ func addBatchUpgrade(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	upgradeFile, err := cmd.Flags().GetString("upgrade-file")
+	if err == nil && upgradeFile != "" {
+		info, err := os.Stat(upgradeFile)
+		if err != nil {
+			return fmt.Errorf("error getting reading upgrade file %s: %w", upgradeFile, err)
+		}
+		if info.IsDir() {
+			return fmt.Errorf("upgrade file %s is a directory", upgradeFile)
+		}
+		return processUpgradeFile(cfg, upgradeFile)
+	}
+	upgradeList, err := cmd.Flags().GetStringSlice("upgrade-list")
+	if err != nil || len(upgradeList) == 0 {
+		return fmt.Errorf("either --upgrade-file or --upgrade-list must be provided")
+	}
+	return processUpgradeList(cfg, upgradeList)
+}
+
+// processUpgradeList takes in a list of upgrades and creates a batch upgrade file
+func processUpgradeList(cfg *cosmovisor.Config, upgradeList []string) error {
 	upgradeInfoPaths := []string{}
-	for i, as := range args {
+	for i, as := range upgradeList {
 		a := strings.Split(as, ":")
 		if len(a) != 3 {
 			return fmt.Errorf("argument at position %d (%s) is invalid", i, as)
@@ -77,4 +122,17 @@ func addBatchUpgrade(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+// processUpgradeFile takes in a batch upgrade file, validates it and copies it to the upgrade directory
+func processUpgradeFile(cfg *cosmovisor.Config, upgradeFile string) error {
+	b, err := os.ReadFile(upgradeFile)
+	if err != nil {
+		return fmt.Errorf("error reading upgrade file %s: %w", upgradeFile, err)
+	}
+	var batch []upgradetypes.Plan
+	if err := json.Unmarshal(b, &batch); err != nil {
+		return fmt.Errorf("error unmarshalling upgrade file %s: %w", upgradeFile, err)
+	}
+	return copyFile(upgradeFile, cfg.UpgradeInfoBatchFilePath())
 }

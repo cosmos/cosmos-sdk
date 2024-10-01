@@ -38,7 +38,7 @@ const (
 	EnvTimeFormatLogs           = "COSMOVISOR_TIMEFORMAT_LOGS"
 	EnvCustomPreupgrade         = "COSMOVISOR_CUSTOM_PREUPGRADE"
 	EnvDisableRecase            = "COSMOVISOR_DISABLE_RECASE"
-	EnvCosmosGrpcEndpoint       = "COSMOS_GRPC_ENDPOINT"
+	EnvDaemonGrpcEndpoint       = "DAEMON_GRPC_ENDPOINT"
 )
 
 const (
@@ -69,7 +69,7 @@ type Config struct {
 	TimeFormatLogs           string        `toml:"cosmovisor_timeformat_logs" mapstructure:"cosmovisor_timeformat_logs" default:"kitchen"`
 	CustomPreUpgrade         string        `toml:"cosmovisor_custom_preupgrade" mapstructure:"cosmovisor_custom_preupgrade" default:""`
 	DisableRecase            bool          `toml:"cosmovisor_disable_recase" mapstructure:"cosmovisor_disable_recase" default:"false"`
-	CosmosGrpcEndpoint       string        `toml:"cosmos_grpc_endpoint" mapstructure:"cosmos_grpc_endpoint" default:"localhost:9090"`
+	DaemonGrpcEndpoint       string        `toml:"daemon_grpc_endpoint" mapstructure:"daemon_grpc_endpoint" default:"localhost:9090"`
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -218,15 +218,15 @@ func GetConfigFromEnv(skipValidate bool) (*Config, error) {
 		Name:               os.Getenv(EnvName),
 		DataBackupPath:     os.Getenv(EnvDataBackupPath),
 		CustomPreUpgrade:   os.Getenv(EnvCustomPreupgrade),
-		CosmosGrpcEndpoint: os.Getenv(EnvCosmosGrpcEndpoint),
+		DaemonGrpcEndpoint: os.Getenv(EnvDaemonGrpcEndpoint),
 	}
 
 	if cfg.DataBackupPath == "" {
 		cfg.DataBackupPath = cfg.Home
 	}
 
-	if cfg.CosmosGrpcEndpoint == "" {
-		cfg.CosmosGrpcEndpoint = "localhost:9090"
+	if cfg.DaemonGrpcEndpoint == "" {
+		cfg.DaemonGrpcEndpoint = "localhost:9090"
 	}
 
 	var err error
@@ -560,7 +560,7 @@ func (cfg Config) DetailString() string {
 		{EnvTimeFormatLogs, cfg.TimeFormatLogs},
 		{EnvCustomPreupgrade, cfg.CustomPreUpgrade},
 		{EnvDisableRecase, fmt.Sprintf("%t", cfg.DisableRecase)},
-		{EnvCosmosGrpcEndpoint, cfg.CosmosGrpcEndpoint},
+		{EnvDaemonGrpcEndpoint, cfg.DaemonGrpcEndpoint},
 	}
 
 	derivedEntries := []struct{ name, value string }{

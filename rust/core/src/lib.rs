@@ -15,7 +15,7 @@ pub mod account_api;
 pub mod handler;
 pub mod resource;
 pub mod error;
-mod routes;
+pub mod routes;
 
 pub use context::Context;
 pub use events::EventBus;

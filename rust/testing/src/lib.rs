@@ -3,16 +3,30 @@
 mod store;
 mod vm;
 
+use std::sync::{Arc, RwLock};
 use ixc_message_api::{AccountID};
 use ixc_core::{Context};
 use ixc_core::handler::{HandlerAPI, Handler};
 use ixc_hypervisor::Hypervisor;
 use crate::store::{Store, VersionedMultiStore};
+use crate::vm::{NativeVM, NativeVMImpl};
 
 /// Defines a test harness for running tests against account and module implementations.
-#[derive(Default)]
 pub struct TestApp {
-    hypervisor: Hypervisor<VersionedMultiStore>
+    hypervisor: Hypervisor<VersionedMultiStore>,
+    native_vm: NativeVM,
+}
+
+impl Default for TestApp {
+    fn default() -> Self {
+        let mut hypervisor: Hypervisor<VersionedMultiStore> = Default::default();
+        let native_vm = NativeVM::new();
+        hypervisor.register_vm("native", Box::new(native_vm.clone())).unwrap();
+        Self {
+            hypervisor,
+            native_vm,
+        }
+    }
 }
 
 impl TestApp {
@@ -26,10 +40,11 @@ impl TestApp {
     //     todo!()
     // }
     //
-    // /// Adds a mock module to the test harness.
-    // pub fn add_account<H: AccountHandler>(&mut self, caller: &Address, init: H::Init) -> Result<AccountInstance<H>, ()> {
-    //     todo!()
-    // }
+    /// Adds an account to the test harness.
+    pub fn create_account<'a, H: Handler>(&self, ctx: &mut Context, init: &H::Init<'a>) -> Result<AccountInstance<H>, ()> {
+        // self.native_vm.register_handler()
+        todo!()
+    }
     //
     // /// Adds a mock account to the test harness with the given address.
     // pub fn add_account_with_address<H: AccountHandler>(&mut self, caller: &Address, address: &Address, init: H::Init) -> Result<AccountInstance<H>, ()> {
@@ -46,10 +61,17 @@ impl TestApp {
     //     todo!()
     // }
     //
-    // /// Creates a new random client address that can be used in calls.
-    // pub fn new_client_address(&mut self) -> Address {
-    //     todo!()
-    // }
+
+    /// Creates a new random client account that can be used in calls.
+    pub fn new_client_account(&mut self) -> AccountID {
+        todo!()
+    }
+
+    /// Creates a new client for the given account.
+    pub fn client_context_for(&mut self, account_id: AccountID) -> &mut Context {
+        todo!()
+    }
+
     //
     // /// Creates a new client context with a random address.
     // pub fn client_context(&mut self, address: &Address) -> &mut Context {

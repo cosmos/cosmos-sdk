@@ -2,7 +2,7 @@ use allocator_api2::alloc::Allocator;
 use imbl::{HashMap, OrdMap, Vector};
 use ixc::message_selector;
 use ixc_hypervisor::{CommitError, NewTxError, PopFrameError, PushFrameError, StateHandler, Transaction};
-use ixc_message_api::code::ErrorCode;
+use ixc_message_api::code::{ErrorCode, SystemErrorCode};
 use ixc_message_api::header::MessageSelector;
 use ixc_message_api::packet::MessagePacket;
 use ixc_message_api::AccountID;
@@ -187,30 +187,35 @@ impl Tx {
 
     unsafe fn get(&self, packet: &mut MessagePacket, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
         let key = packet.header().in_pointer1.get(packet);
-        self.track_access(key, Access::Read)?;
+        self.track_access(key, Access::Read)
+            .map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::InvalidHandler))?;
         match self.current_store.kv_store.get(key) {
             None => unsafe {
                 // TODO what should we do when not found?
-                packet.out1().set_slice(&[]);
+                packet.header_mut().out_pointer1.set_slice(&[]);
             }
             Some(value) => unsafe {
-                let out = allocator.alloc(Layout::from_size_align_unchecked(value.len(), 16))?;
-                let out_slice = core::slice::from_raw_parts_mut(out, value.len());
+                let out = allocator.allocate(Layout::from_size_align_unchecked(value.len(), 16)).
+                    map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::FatalExecutionError))?;
+                let out_slice = core::slice::from_raw_parts_mut(out.as_ptr() as *mut u8, value.len());
                 out_slice.copy_from_slice(value.as_slice());
-                packet.out1().set_slice(out_slice);
+                packet.header_mut().out_pointer1.set_slice(out_slice);
             }
         }
         Ok(())
     }
 
     unsafe fn set(&mut self, packet: &mut MessagePacket) -> Result<(), ErrorCode> {
-        self.track_access(packet.in1().get(), Access::Write)?;
+        let key = packet.header().in_pointer1.get(packet);
+        let value = packet.header().in_pointer2.get(packet);
+        self.track_access(key, Access::Write)
+            .map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::InvalidHandler))?;
         self.current_frame.changes.push(Update {
             account: self.current_frame.account,
-            key: packet.in1().get().to_vec(),
-            operation: Operation::Set(packet.in2().get().to_vec()),
+            key: key.to_vec(),
+            operation: Operation::Set(value.to_vec()),
         });
-        self.current_store.kv_store.insert(packet.in1().get().to_vec(), packet.in2().get().to_vec());
+        self.current_store.kv_store.insert(key.to_vec(), value.to_vec());
         Ok(())
     }
 

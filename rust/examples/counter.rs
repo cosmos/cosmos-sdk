@@ -1,6 +1,12 @@
 #![allow(missing_docs)]
 
+use ixc_core::handler::{Handler, HandlerAPI};
+use ixc_core::resource::Resources;
+use ixc_core::routes::exec_route;
 use ixc_core_macros::package_root;
+use ixc_message_api::handler::{Allocator, HandlerError, HostBackend, RawHandler};
+use ixc_message_api::packet::MessagePacket;
+use crate::counter::Counter;
 
 // #[ixc::account_handler(Counter)]
 pub mod counter {
@@ -34,6 +40,25 @@ pub mod counter {
     }
 }
 
+impl HandlerAPI for Counter { type ClientFactory = (); }
+
+unsafe impl ixc_core::routes::Router for Counter {
+    const SORTED_ROUTES: &'static [ixc_core::routes::Route<Self>] = &[];
+}
+
+impl RawHandler for Counter {
+    fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), HandlerError> {
+        exec_route(self, message_packet, callbacks, allocator)
+    }
+}
+
+unsafe impl Resources for Counter {}
+
+impl Handler for Counter {
+    const NAME: &'static str = "Counter";
+    type Init = u64;
+}
+
 #[cfg(test)]
 mod tests {
     use ixc_testing::*;
@@ -42,8 +67,9 @@ mod tests {
     #[test]
     fn test_counter() {
         let mut app = TestApp::default();
-        // let alice = app.new_client_address();
-        // let counter_inst = app.add_account::<Counter>(&alice, ()).unwrap();
+        let alice = app.new_client_account();
+        let alice_ctx = app.client_context_for(alice);
+        let counter_inst = app.create_account::<Counter>(alice_ctx, ()).unwrap();
     }
 }
 

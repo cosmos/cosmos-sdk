@@ -1,20 +1,27 @@
-use ixc_message_api::handler::{HandlerError, HandlerErrorCode};
+//! Routing system for message packets.
+
+use allocator_api2::alloc::Allocator;
+use ixc_message_api::handler::{HandlerError, HandlerErrorCode, HostBackend};
 use ixc_message_api::packet::MessagePacket;
 
+/// A router for message packets.
 pub unsafe trait Router
 where
     Self: 'static,
 {
+    /// The routes sorted by message selector.
     const SORTED_ROUTES: &'static [Route<Self>];
 }
 
-pub type Route<T> = (u64, fn(&T, &mut MessagePacket) -> Result<(), HandlerError>);
+/// A route for a message packet.
+pub type Route<T> = (u64, fn(&T, &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), HandlerError>);
 
-pub fn exec_route<R: Router>(r: &R, packet: &mut MessagePacket) -> Result<(), HandlerError> {
+/// Execute a message packet on a router.
+pub fn exec_route<R: Router>(r: &R, packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), HandlerError> {
     let res = R::SORTED_ROUTES.binary_search_by_key(&packet.header().message_selector, |(selector, _)| *selector);
     match res {
         Ok(idx) => {
-            R::SORTED_ROUTES[idx].1(r, packet)
+            R::SORTED_ROUTES[idx].1(r, packet, callbacks, allocator)
         }
         Err(_) => {
             Err(HandlerError::KnownCode(HandlerErrorCode::MessageNotHandled))
@@ -22,6 +29,7 @@ pub fn exec_route<R: Router>(r: &R, packet: &mut MessagePacket) -> Result<(), Ha
     }
 }
 
+/// Sorts the routes by message selector.
 pub const fn sort_routes<const N: usize, T>(mut arr: [Route<T>; N]) -> [Route<T>; N] {
     // const bubble sort
     loop {

@@ -4,8 +4,8 @@ use crate::handler::HandlerErrorCode;
 
 /// Error codes that can be returned by the system.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[repr(u16)]
 pub enum SystemErrorCode {
-
     // System restricted error codes:
 
     /// Fatal execution error that likely cannot be recovered from.
@@ -31,7 +31,7 @@ pub enum SystemErrorCode {
     OutOfGas = 130,
 
     /// An unknown error code in the system range.
-    Unknown(u32),
+    Unknown(u8),
 }
 
 /// Error and success codes returned by the message API.

@@ -1,13 +1,16 @@
 //! Handler traits for account and module handlers.
 use ixc_message_api::AccountID;
 use ixc_message_api::handler::RawHandler;
-use crate::resource::{InitializationError, Initializer, Resource};
+use ixc_schema::SchemaValue;
+use crate::resource::{InitializationError, Initializer, Resource, Resources};
 use crate::routes::Router;
 
 /// Handler trait for account and module handlers.
-pub trait Handler: HandlerAPI + RawHandler {
+pub trait Handler: HandlerAPI + RawHandler + Resources {
+    /// The name of the handler.
+    const NAME: &'static str;
     /// The parameter used for initializing the handler.
-    type Init /*: StructCodec*/;
+    type Init<'a>: SchemaValue<'a>;
 }
 
 /// Account API trait.

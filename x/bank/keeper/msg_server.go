@@ -3,12 +3,9 @@ package keeper
 import (
 	"context"
 
-	"github.com/hashicorp/go-metrics"
-
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/bank/types"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -64,18 +61,6 @@ func (k msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSend
 	if err != nil {
 		return nil, err
 	}
-
-	defer func() {
-		for _, a := range msg.Amount {
-			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
-					[]string{"tx", "msg", "send"},
-					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
-				)
-			}
-		}
-	}()
 
 	return &types.MsgSendResponse{}, nil
 }
@@ -177,7 +162,7 @@ func (k msgServer) SetSendEnabled(ctx context.Context, msg *types.MsgSetSendEnab
 	return &types.MsgSetSendEnabledResponse{}, nil
 }
 
-func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
+func (k msgServer) Burn(ctx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
 	var (
 		from []byte
 		err  error
@@ -205,7 +190,7 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBu
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, coins.String())
 	}
 
-	err = k.BurnCoins(goCtx, from, coins)
+	err = k.BurnCoins(ctx, from, coins)
 	if err != nil {
 		return nil, err
 	}

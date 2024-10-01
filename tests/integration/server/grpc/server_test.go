@@ -13,9 +13,6 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	_ "cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/auth"
-	authclient "cosmossdk.io/x/auth/client"
-	_ "cosmossdk.io/x/auth/tx/config"
 	_ "cosmossdk.io/x/bank"
 	banktypes "cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus"
@@ -34,6 +31,9 @@ import (
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 type IntegrationTestSuite struct {
@@ -56,6 +56,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		configurator.StakingModule(),
 		configurator.ConsensusModule(),
 		configurator.TxModule(),
+		configurator.ValidateModule(),
 	))
 	s.NoError(err)
 	s.cfg.NumValidators = 1

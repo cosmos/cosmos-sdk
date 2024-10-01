@@ -4,7 +4,7 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 
-	coreapp "cosmossdk.io/core/app"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/appmanager"
@@ -14,9 +14,8 @@ type AppCreator[T transaction.Tx] func(log.Logger, *viper.Viper) AppI[T]
 
 type AppI[T transaction.Tx] interface {
 	Name() string
-	InterfaceRegistry() coreapp.InterfaceRegistry
+	InterfaceRegistry() server.InterfaceRegistry
 	GetAppManager() *appmanager.AppManager[T]
-	GetConsensusAuthority() string
 	GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message
 	GetStore() any
 }

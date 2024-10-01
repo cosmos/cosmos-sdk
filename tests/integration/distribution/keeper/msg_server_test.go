@@ -15,14 +15,11 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtestutil "cosmossdk.io/x/auth/testutil"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/consensus"
+	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
 	consensustypes "cosmossdk.io/x/consensus/types"
 	"cosmossdk.io/x/distribution"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
@@ -43,6 +40,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -132,7 +134,8 @@ func initFixture(t *testing.T) *fixture {
 	grpcRouter := baseapp.NewGRPCQueryRouter()
 	cometService := runtime.NewContextAwareCometInfoService()
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcRouter), runtime.EnvWithMsgRouterService(msgRouter)), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), cometService)
+	consensusParamsKeeper := consensusparamkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensustypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcRouter), runtime.EnvWithMsgRouterService(msgRouter)), authtypes.NewModuleAddress("gov").String())
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcRouter), runtime.EnvWithMsgRouterService(msgRouter)), accountKeeper, bankKeeper, consensusParamsKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), cometService)
 	require.NoError(t, stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams()))
 
 	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[pooltypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, stakingKeeper, authority.String())
@@ -141,11 +144,12 @@ func initFixture(t *testing.T) *fixture {
 		cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[distrtypes.StoreKey]), logger), accountKeeper, bankKeeper, stakingKeeper, cometService, distrtypes.ModuleName, authority.String(),
 	)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
+	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
-	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper)
+	distrModule := distribution.NewAppModule(cdc, distrKeeper, stakingKeeper)
 	poolModule := protocolpool.NewAppModule(cdc, poolKeeper, accountKeeper, bankKeeper)
+	consensusModule := consensus.NewAppModule(cdc, consensusParamsKeeper)
 
 	addr := sdk.AccAddress(PKS[0].Address())
 	valAddr := sdk.ValAddress(addr)
@@ -171,11 +175,12 @@ func initFixture(t *testing.T) *fixture {
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
 		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{
-			authtypes.ModuleName:    authModule,
-			banktypes.ModuleName:    bankModule,
-			stakingtypes.ModuleName: stakingModule,
-			distrtypes.ModuleName:   distrModule,
-			pooltypes.ModuleName:    poolModule,
+			authtypes.ModuleName:      authModule,
+			banktypes.ModuleName:      bankModule,
+			stakingtypes.ModuleName:   stakingModule,
+			distrtypes.ModuleName:     distrModule,
+			pooltypes.ModuleName:      poolModule,
+			consensustypes.ModuleName: consensusModule,
 		},
 		msgRouter,
 		grpcRouter,
@@ -326,7 +331,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	height := f.app.LastBlockHeight()
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
@@ -464,7 +468,6 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			tc.preRun()
 			res, err := f.app.RunMsg(
@@ -561,7 +564,6 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
@@ -595,7 +597,6 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 				}, remainder.Commission)
 			}
 		})
-
 	}
 }
 
@@ -661,7 +662,6 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
@@ -803,7 +803,6 @@ func TestMsgUpdateParams(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
@@ -886,7 +885,6 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
@@ -987,7 +985,6 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,

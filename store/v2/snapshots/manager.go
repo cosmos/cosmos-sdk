@@ -400,7 +400,6 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 
 	// chStorage is the channel to pass the KV pairs to the storage snapshotter.
 	chStorage := make(chan *corestore.StateChanges, defaultStorageChannelBufferSize)
-	defer close(chStorage)
 
 	storageErrs := make(chan error, 1)
 	go func() {
@@ -415,6 +414,7 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 	if err != nil {
 		return errorsmod.Wrap(err, "multistore restore")
 	}
+	close(chStorage)
 
 	for {
 		if nextItem.Item == nil {
@@ -437,8 +437,11 @@ func (m *Manager) doRestoreSnapshot(snapshot types.Snapshot, chChunks <-chan io.
 			return errorsmod.Wrapf(err, "extension %s restore", metadata.Name)
 		}
 
-		if nextItem.GetExtensionPayload() != nil {
+		payload := nextItem.GetExtensionPayload()
+		if payload != nil && len(payload.Payload) != 0 {
 			return fmt.Errorf("extension %s don't exhausted payload stream", metadata.Name)
+		} else {
+			break
 		}
 	}
 

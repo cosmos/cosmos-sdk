@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
-	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -264,7 +263,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 	testCases := []struct {
 		msg         string
 		malleate    func()
-		deliverTxFn genesis.TxHandler
+		deliverTxFn genutil.TxHandler
 		expPass     bool
 	}{
 		{

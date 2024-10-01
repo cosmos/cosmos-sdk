@@ -20,7 +20,8 @@ import (
 
 // EndBlocker is called every block.
 func (k Keeper) EndBlocker(ctx context.Context) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
+	start := telemetry.Now()
+	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyEndBlocker)
 
 	// delete dead proposals from store and returns theirs deposits.
 	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
@@ -288,7 +289,7 @@ func safeExecuteHandler(ctx context.Context, msg sdk.Msg, router router.Service)
 		}
 	}()
 
-	res, err = router.InvokeUntyped(ctx, msg)
+	res, err = router.Invoke(ctx, msg)
 	return
 }
 

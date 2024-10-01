@@ -10,7 +10,6 @@ import (
 	time "time"
 
 	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
-	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/crypto/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
@@ -38,20 +37,6 @@ func NewMockStakingKeeper(ctrl *gomock.Controller) *MockStakingKeeper {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 	return m.recorder
-}
-
-// ConsensusAddressCodec mocks base method.
-func (m *MockStakingKeeper) ConsensusAddressCodec() address.Codec {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ConsensusAddressCodec")
-	ret0, _ := ret[0].(address.Codec)
-	return ret0
-}
-
-// ConsensusAddressCodec indicates an expected call of ConsensusAddressCodec.
-func (mr *MockStakingKeeperMockRecorder) ConsensusAddressCodec() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConsensusAddressCodec", reflect.TypeOf((*MockStakingKeeper)(nil).ConsensusAddressCodec))
 }
 
 // ValidatorByConsAddr mocks base method.
@@ -253,4 +238,44 @@ func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types0.AccountI)
 func (mr *MockAccountKeeperMockRecorder) SetAccount(ctx, acc interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetAccount), ctx, acc)
+}
+
+// MockConsensusKeeper is a mock of ConsensusKeeper interface.
+type MockConsensusKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockConsensusKeeperMockRecorder
+}
+
+// MockConsensusKeeperMockRecorder is the mock recorder for MockConsensusKeeper.
+type MockConsensusKeeperMockRecorder struct {
+	mock *MockConsensusKeeper
+}
+
+// NewMockConsensusKeeper creates a new mock instance.
+func NewMockConsensusKeeper(ctrl *gomock.Controller) *MockConsensusKeeper {
+	mock := &MockConsensusKeeper{ctrl: ctrl}
+	mock.recorder = &MockConsensusKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockConsensusKeeper) EXPECT() *MockConsensusKeeperMockRecorder {
+	return m.recorder
+}
+
+// EvidenceParams mocks base method.
+func (m *MockConsensusKeeper) EvidenceParams(arg0 context.Context) (int64, time.Duration, uint64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EvidenceParams", arg0)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(time.Duration)
+	ret2, _ := ret[2].(uint64)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
+}
+
+// EvidenceParams indicates an expected call of EvidenceParams.
+func (mr *MockConsensusKeeperMockRecorder) EvidenceParams(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EvidenceParams", reflect.TypeOf((*MockConsensusKeeper)(nil).EvidenceParams), arg0)
 }

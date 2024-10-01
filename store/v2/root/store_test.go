@@ -55,7 +55,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 	tree := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
 	tree2 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
 	tree3 := iavl.NewIavlTree(dbm.NewMemDB(), noopLog, iavl.DefaultConfig())
-	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, dbm.NewMemDB(), noopLog)
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree, testStoreKey2: tree2, testStoreKey3: tree3}, nil, dbm.NewMemDB(), noopLog)
 	s.Require().NoError(err)
 
 	pm := pruning.NewManager(sc, ss, nil, nil)
@@ -79,7 +79,7 @@ func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, iavl.DefaultConfig())
 	}
 
-	sc, err := commitment.NewCommitStore(multiTrees, dbm.NewMemDB(), noopLog)
+	sc, err := commitment.NewCommitStore(multiTrees, nil, dbm.NewMemDB(), noopLog)
 	s.Require().NoError(err)
 
 	pm := pruning.NewManager(sc, ss, config, config)
@@ -373,10 +373,23 @@ func (s *RootStoreTestSuite) TestStateAt() {
 
 			reader, err := ro.GetReader(testStoreKeyBytes)
 			s.Require().NoError(err)
+			isExist, err := reader.Has([]byte(key))
+			s.Require().NoError(err)
+			s.Require().True(isExist)
 			result, err := reader.Get([]byte(key))
 			s.Require().NoError(err)
 			s.Require().Equal([]byte(val), result)
 		}
+
+		// non-existent key
+		reader, err := ro.GetReader(testStoreKey2Bytes)
+		s.Require().NoError(err)
+		isExist, err := reader.Has([]byte("key"))
+		s.Require().NoError(err)
+		s.Require().False(isExist)
+		v, err := reader.Get([]byte("key"))
+		s.Require().NoError(err)
+		s.Require().Nil(v)
 	}
 }
 
@@ -443,7 +456,6 @@ func (s *RootStoreTestSuite) TestPrune() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 
 		s.newStoreWithPruneConfig(&tc.po)
 
@@ -563,7 +575,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	ss := storage.NewStorageStore(sqliteDB, noopLog)
 
 	tree := iavl.NewIavlTree(mdb1, noopLog, iavl.DefaultConfig())
-	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, mdb2, noopLog)
+	sc, err := commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog)
 	s.Require().NoError(err)
 
 	pm := pruning.NewManager(sc, ss, pruneOpt, pruneOpt)
@@ -593,7 +605,7 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 	ss = storage.NewStorageStore(sqliteDB, noopLog)
 
 	tree = iavl.NewIavlTree(mdb1, noopLog, iavl.DefaultConfig())
-	sc, err = commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, mdb2, noopLog)
+	sc, err = commitment.NewCommitStore(map[string]commitment.Tree{testStoreKey: tree}, nil, mdb2, noopLog)
 	s.Require().NoError(err)
 
 	pm = pruning.NewManager(sc, ss, pruneOpt, pruneOpt)
@@ -624,13 +636,13 @@ func (s *RootStoreTestSuite) TestMultiStore_PruningRestart() {
 
 	for v := uint64(1); v <= actualHeightToPrune; v++ {
 		checkErr := func() bool {
-			if err = s.rootStore.LoadVersion(v); err != nil {
+			if _, err = s.rootStore.StateAt(v); err != nil {
 				return true
 			}
 			return false
 		}
 		// wait for async pruning process to finish
-		s.Require().Eventually(checkErr, 5*time.Second, 100*time.Millisecond, "expected error when loading height: %d", v)
+		s.Require().Eventually(checkErr, 10*time.Second, 1*time.Second, "expected error when loading height: %d", v)
 	}
 }
 
@@ -650,7 +662,7 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, iavl.DefaultConfig())
 	}
 
-	sc, err := commitment.NewCommitStore(multiTrees, mdb2, noopLog)
+	sc, err := commitment.NewCommitStore(multiTrees, nil, mdb2, noopLog)
 	s.Require().NoError(err)
 
 	pm := pruning.NewManager(sc, ss, nil, nil)
@@ -737,7 +749,7 @@ func (s *RootStoreTestSuite) TestMultiStoreRestart() {
 		multiTrees[storeKey] = iavl.NewIavlTree(prefixDB, noopLog, iavl.DefaultConfig())
 	}
 
-	sc, err = commitment.NewCommitStore(multiTrees, mdb2, noopLog)
+	sc, err = commitment.NewCommitStore(multiTrees, nil, mdb2, noopLog)
 	s.Require().NoError(err)
 
 	pm = pruning.NewManager(sc, ss, nil, nil)

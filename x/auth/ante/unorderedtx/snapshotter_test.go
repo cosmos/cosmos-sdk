@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/x/auth/ante/unorderedtx"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 )
 
 func TestSnapshotter(t *testing.T) {
@@ -39,12 +39,19 @@ func TestSnapshotter(t *testing.T) {
 	err = s.RestoreExtension(50, 2, pr)
 	require.Error(t, err)
 
-	// restore with timestamp > timeout time which should result in no unordered txs synced
+	// restore with timestamp > timeout time which should result in all unordered txs synced,
+	// even the ones that have timed out.
 	txm2 := unorderedtx.NewManager(dataDir)
 	s2 := unorderedtx.NewSnapshotter(txm2)
-	err = s2.RestoreExtension(uint64(currentTime.Add(time.Second*200).Unix()), unorderedtx.SnapshotFormat, pr)
+	err = s2.RestoreExtension(1, unorderedtx.SnapshotFormat, pr)
 	require.NoError(t, err)
-	require.Empty(t, txm2.Size())
+	require.Equal(t, 100, txm2.Size())
+
+	// start the manager and wait a bit for the background purge loop to run
+	txm2.Start()
+	txm2.OnNewBlock(currentTime.Add(time.Second * 200)) // blocks until channel is read in purge loop
+	// the loop runs every 5 seconds, so we need to wait for that
+	require.Eventually(t, func() bool { return txm2.Size() == 0 }, 6*time.Second, 500*time.Millisecond)
 
 	// restore with timestamp < timeout time which should result in all unordered txs synced
 	txm3 := unorderedtx.NewManager(dataDir)

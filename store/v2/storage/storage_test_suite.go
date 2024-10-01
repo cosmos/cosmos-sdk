@@ -411,11 +411,11 @@ func (s *StorageTestSuite) TestDatabaseIterator_SkipVersion() {
 
 	defer db.Close()
 
-	DBApplyChangeset(s.T(), db, 58827506, storeKey1, [][]byte{[]byte("keyC")}, [][]byte{[]byte("value003")})
-	DBApplyChangeset(s.T(), db, 58827506, storeKey1, [][]byte{[]byte("keyE")}, [][]byte{[]byte("value000")})
-	DBApplyChangeset(s.T(), db, 58827506, storeKey1, [][]byte{[]byte("keyF")}, [][]byte{[]byte("value000")})
-	DBApplyChangeset(s.T(), db, 58833605, storeKey1, [][]byte{[]byte("keyC")}, [][]byte{[]byte("value004")})
-	DBApplyChangeset(s.T(), db, 58833606, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value006")})
+	dbApplyChangeset(s.T(), db, 58827506, storeKey1, [][]byte{[]byte("keyC")}, [][]byte{[]byte("value003")})
+	dbApplyChangeset(s.T(), db, 58827506, storeKey1, [][]byte{[]byte("keyE")}, [][]byte{[]byte("value000")})
+	dbApplyChangeset(s.T(), db, 58827506, storeKey1, [][]byte{[]byte("keyF")}, [][]byte{[]byte("value000")})
+	dbApplyChangeset(s.T(), db, 58833605, storeKey1, [][]byte{[]byte("keyC")}, [][]byte{[]byte("value004")})
+	dbApplyChangeset(s.T(), db, 58833606, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value006")})
 
 	itr, err := db.Iterator(storeKey1Bytes, 58831525, []byte("key"), nil)
 	s.Require().NoError(err)
@@ -435,15 +435,15 @@ func (s *StorageTestSuite) TestDatabaseIterator_ForwardIteration() {
 	s.Require().NoError(err)
 	defer db.Close()
 
-	DBApplyChangeset(s.T(), db, 8, storeKey1, [][]byte{[]byte("keyA")}, [][]byte{[]byte("value001")})
-	DBApplyChangeset(s.T(), db, 9, storeKey1, [][]byte{[]byte("keyB")}, [][]byte{[]byte("value002")})
-	DBApplyChangeset(s.T(), db, 10, storeKey1, [][]byte{[]byte("keyC")}, [][]byte{[]byte("value003")})
-	DBApplyChangeset(s.T(), db, 11, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value004")})
+	dbApplyChangeset(s.T(), db, 8, storeKey1, [][]byte{[]byte("keyA")}, [][]byte{[]byte("value001")})
+	dbApplyChangeset(s.T(), db, 9, storeKey1, [][]byte{[]byte("keyB")}, [][]byte{[]byte("value002")})
+	dbApplyChangeset(s.T(), db, 10, storeKey1, [][]byte{[]byte("keyC")}, [][]byte{[]byte("value003")})
+	dbApplyChangeset(s.T(), db, 11, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value004")})
 
-	DBApplyChangeset(s.T(), db, 2, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value007")})
-	DBApplyChangeset(s.T(), db, 3, storeKey1, [][]byte{[]byte("keyE")}, [][]byte{[]byte("value008")})
-	DBApplyChangeset(s.T(), db, 4, storeKey1, [][]byte{[]byte("keyF")}, [][]byte{[]byte("value009")})
-	DBApplyChangeset(s.T(), db, 5, storeKey1, [][]byte{[]byte("keyH")}, [][]byte{[]byte("value010")})
+	dbApplyChangeset(s.T(), db, 2, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value007")})
+	dbApplyChangeset(s.T(), db, 3, storeKey1, [][]byte{[]byte("keyE")}, [][]byte{[]byte("value008")})
+	dbApplyChangeset(s.T(), db, 4, storeKey1, [][]byte{[]byte("keyF")}, [][]byte{[]byte("value009")})
+	dbApplyChangeset(s.T(), db, 5, storeKey1, [][]byte{[]byte("keyH")}, [][]byte{[]byte("value010")})
 
 	itr, err := db.Iterator(storeKey1Bytes, 6, nil, []byte("keyZ"))
 	s.Require().NoError(err)
@@ -463,14 +463,14 @@ func (s *StorageTestSuite) TestDatabaseIterator_ForwardIterationHigher() {
 	s.Require().NoError(err)
 	defer db.Close()
 
-	DBApplyChangeset(s.T(), db, 9, storeKey1, [][]byte{[]byte("keyB")}, [][]byte{[]byte("value002")})
-	DBApplyChangeset(s.T(), db, 10, storeKey1, [][]byte{[]byte("keyC")}, [][]byte{[]byte("value003")})
-	DBApplyChangeset(s.T(), db, 11, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value004")})
+	dbApplyChangeset(s.T(), db, 9, storeKey1, [][]byte{[]byte("keyB")}, [][]byte{[]byte("value002")})
+	dbApplyChangeset(s.T(), db, 10, storeKey1, [][]byte{[]byte("keyC")}, [][]byte{[]byte("value003")})
+	dbApplyChangeset(s.T(), db, 11, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value004")})
 
-	DBApplyChangeset(s.T(), db, 12, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value007")})
-	DBApplyChangeset(s.T(), db, 13, storeKey1, [][]byte{[]byte("keyE")}, [][]byte{[]byte("value008")})
-	DBApplyChangeset(s.T(), db, 14, storeKey1, [][]byte{[]byte("keyF")}, [][]byte{[]byte("value009")})
-	DBApplyChangeset(s.T(), db, 15, storeKey1, [][]byte{[]byte("keyH")}, [][]byte{[]byte("value010")})
+	dbApplyChangeset(s.T(), db, 12, storeKey1, [][]byte{[]byte("keyD")}, [][]byte{[]byte("value007")})
+	dbApplyChangeset(s.T(), db, 13, storeKey1, [][]byte{[]byte("keyE")}, [][]byte{[]byte("value008")})
+	dbApplyChangeset(s.T(), db, 14, storeKey1, [][]byte{[]byte("keyF")}, [][]byte{[]byte("value009")})
+	dbApplyChangeset(s.T(), db, 15, storeKey1, [][]byte{[]byte("keyH")}, [][]byte{[]byte("value010")})
 
 	itr, err := db.Iterator(storeKey1Bytes, 6, nil, []byte("keyZ"))
 	s.Require().NoError(err)
@@ -482,6 +482,33 @@ func (s *StorageTestSuite) TestDatabaseIterator_ForwardIterationHigher() {
 		count++
 	}
 
+	s.Require().Equal(0, count)
+}
+
+func (s *StorageTestSuite) TestDatabaseIterator_WithDelete() {
+	db, err := s.NewDB(s.T().TempDir())
+	s.Require().NoError(err)
+	defer db.Close()
+
+	dbApplyChangeset(s.T(), db, 1, storeKey1, [][]byte{[]byte("keyA")}, [][]byte{[]byte("value001")})
+	dbApplyChangeset(s.T(), db, 2, storeKey1, [][]byte{[]byte("keyA")}, [][]byte{nil}) // delete
+
+	itr, err := db.Iterator(storeKey1Bytes, 1, nil, nil)
+	s.Require().NoError(err)
+
+	count := 0
+	for ; itr.Valid(); itr.Next() {
+		count++
+	}
+	s.Require().Equal(1, count)
+
+	itr, err = db.Iterator(storeKey1Bytes, 2, nil, nil)
+	s.Require().NoError(err)
+
+	count = 0
+	for ; itr.Valid(); itr.Next() {
+		count++
+	}
 	s.Require().Equal(0, count)
 }
 
@@ -640,7 +667,220 @@ func (s *StorageTestSuite) TestDatabase_Prune_KeepRecent() {
 	s.Require().Equal([]byte("val200"), bz)
 }
 
-func DBApplyChangeset(
+func (s *StorageTestSuite) TestDatabase_Restore() {
+	db, err := s.NewDB(s.T().TempDir())
+	s.Require().NoError(err)
+	defer db.Close()
+
+	toVersion := uint64(10)
+	keyCount := 10
+
+	// for versions 1-10, set 10 keys
+	for v := uint64(1); v <= toVersion; v++ {
+		cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{storeKey1: {}})
+		for i := 0; i < keyCount; i++ {
+			key := fmt.Sprintf("key%03d", i)
+			val := fmt.Sprintf("val%03d-%03d", i, v)
+
+			cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val)})
+		}
+
+		s.Require().NoError(db.ApplyChangeset(v, cs))
+	}
+
+	latestVersion, err := db.GetLatestVersion()
+	s.Require().NoError(err)
+	s.Require().Equal(uint64(10), latestVersion)
+
+	chStorage := make(chan *corestore.StateChanges, 5)
+
+	go func() {
+		for i := uint64(11); i <= 15; i++ {
+			kvPairs := []corestore.KVPair{}
+			for j := 0; j < keyCount; j++ {
+				key := fmt.Sprintf("key%03d-%03d", j, i)
+				val := fmt.Sprintf("val%03d-%03d", j, i)
+
+				kvPairs = append(kvPairs, corestore.KVPair{Key: []byte(key), Value: []byte(val)})
+			}
+			chStorage <- &corestore.StateChanges{
+				Actor:        storeKey1Bytes,
+				StateChanges: kvPairs,
+			}
+		}
+		close(chStorage)
+	}()
+
+	// restore with snapshot version smaller than latest version
+	// should return an error
+	err = db.Restore(9, chStorage)
+	s.Require().Error(err)
+
+	// restore
+	err = db.Restore(11, chStorage)
+	s.Require().NoError(err)
+
+	// check the storage
+	for i := uint64(11); i <= 15; i++ {
+		for j := 0; j < keyCount; j++ {
+			key := fmt.Sprintf("key%03d-%03d", j, i)
+			val := fmt.Sprintf("val%03d-%03d", j, i)
+
+			v, err := db.Get(storeKey1Bytes, 11, []byte(key))
+			s.Require().NoError(err)
+			s.Require().Equal([]byte(val), v)
+		}
+	}
+}
+
+func (s *StorageTestSuite) TestUpgradable() {
+	ss, err := s.NewDB(s.T().TempDir())
+	s.Require().NoError(err)
+	defer ss.Close()
+
+	// Ensure the database is upgradable.
+	if _, ok := ss.db.(store.UpgradableDatabase); !ok {
+		s.T().Skip("database is not upgradable")
+	}
+
+	storeKeys := []string{"store1", "store2", "store3"}
+	uptoVersion := uint64(50)
+	keyCount := 10
+	for _, storeKey := range storeKeys {
+		for v := uint64(1); v <= uptoVersion; v++ {
+			keys := make([][]byte, keyCount)
+			vals := make([][]byte, keyCount)
+			for i := 0; i < keyCount; i++ {
+				keys[i] = []byte(fmt.Sprintf("key%03d", i))
+				vals[i] = []byte(fmt.Sprintf("val%03d-%03d", i, v))
+			}
+			dbApplyChangeset(s.T(), ss, v, storeKey, keys, vals)
+		}
+	}
+
+	// prune storekeys (`store2`, `store3`)
+	removedStoreKeys := []string{storeKeys[1], storeKeys[2]}
+	err = ss.PruneStoreKeys(removedStoreKeys, uptoVersion)
+	s.Require().NoError(err)
+	// should be able to query before Prune for removed storeKeys
+	for _, storeKey := range removedStoreKeys {
+		for v := uint64(1); v <= uptoVersion; v++ {
+			for i := 0; i < keyCount; i++ {
+				bz, err := ss.Get([]byte(storeKey), v, []byte(fmt.Sprintf("key%03d", i)))
+				s.Require().NoError(err)
+				s.Require().Equal([]byte(fmt.Sprintf("val%03d-%03d", i, v)), bz)
+			}
+		}
+	}
+	s.Require().NoError(ss.Prune(uptoVersion))
+	// should not be able to query after Prune
+	// skip the test of RocksDB
+	if !slices.Contains(s.SkipTests, "TestUpgradable_Prune") {
+		for _, storeKey := range removedStoreKeys {
+			// it will return error ErrVersionPruned
+			for v := uint64(1); v <= uptoVersion; v++ {
+				for i := 0; i < keyCount; i++ {
+					_, err := ss.Get([]byte(storeKey), v, []byte(fmt.Sprintf("key%03d", i)))
+					s.Require().Error(err)
+				}
+			}
+			v := uptoVersion + 1
+			for i := 0; i < keyCount; i++ {
+				val, err := ss.Get([]byte(storeKey), v, []byte(fmt.Sprintf("key%03d", i)))
+				s.Require().NoError(err)
+				s.Require().Nil(val)
+			}
+		}
+	}
+}
+
+func (s *StorageTestSuite) TestRemovingOldStoreKey() {
+	ss, err := s.NewDB(s.T().TempDir())
+	s.Require().NoError(err)
+	defer ss.Close()
+
+	// Ensure the database is upgradable.
+	if _, ok := ss.db.(store.UpgradableDatabase); !ok {
+		s.T().Skip("database is not upgradable")
+	}
+
+	storeKeys := []string{"store1", "store2", "store3"}
+	uptoVersion := uint64(50)
+	keyCount := 10
+	for _, storeKey := range storeKeys {
+		for v := uint64(1); v <= uptoVersion; v++ {
+			keys := make([][]byte, keyCount)
+			vals := make([][]byte, keyCount)
+			for i := 0; i < keyCount; i++ {
+				keys[i] = []byte(fmt.Sprintf("key%03d-%03d", i, v))
+				vals[i] = []byte(fmt.Sprintf("val%03d-%03d", i, v))
+			}
+			dbApplyChangeset(s.T(), ss, v, storeKey, keys, vals)
+		}
+	}
+
+	// remove `store1` and `store3`
+	removedStoreKeys := []string{storeKeys[0], storeKeys[2]}
+	err = ss.PruneStoreKeys(removedStoreKeys, uptoVersion)
+	s.Require().NoError(err)
+	// should be able to query before Prune for removed storeKeys
+	for _, storeKey := range removedStoreKeys {
+		for v := uint64(1); v <= uptoVersion; v++ {
+			for i := 0; i < keyCount; i++ {
+				bz, err := ss.Get([]byte(storeKey), v, []byte(fmt.Sprintf("key%03d-%03d", i, v)))
+				s.Require().NoError(err)
+				s.Require().Equal([]byte(fmt.Sprintf("val%03d-%03d", i, v)), bz)
+			}
+		}
+	}
+	// add `store1` back
+	newStoreKeys := []string{storeKeys[0], storeKeys[1]}
+	newVersion := uptoVersion + 10
+	for _, storeKey := range newStoreKeys {
+		for v := uptoVersion + 1; v <= newVersion; v++ {
+			keys := make([][]byte, keyCount)
+			vals := make([][]byte, keyCount)
+			for i := 0; i < keyCount; i++ {
+				keys[i] = []byte(fmt.Sprintf("key%03d-%03d", i, v))
+				vals[i] = []byte(fmt.Sprintf("val%03d-%03d", i, v))
+			}
+			dbApplyChangeset(s.T(), ss, v, storeKey, keys, vals)
+		}
+	}
+
+	s.Require().NoError(ss.Prune(newVersion))
+	// skip the test of RocksDB
+	if !slices.Contains(s.SkipTests, "TestUpgradable_Prune") {
+		for _, storeKey := range removedStoreKeys {
+			queryVersion := newVersion + 1
+			// should not be able to query after Prune during 1 ~ uptoVersion
+			for v := uint64(1); v <= uptoVersion; v++ {
+				for i := 0; i < keyCount; i++ {
+					val, err := ss.Get([]byte(storeKey), queryVersion, []byte(fmt.Sprintf("key%03d", i)))
+					s.Require().NoError(err)
+					s.Require().Nil(val)
+				}
+			}
+			// should be able to query after Prune during uptoVersion + 1 ~ newVersion
+			// for `store1` added back
+			for v := uptoVersion + 1; v <= newVersion; v++ {
+				for i := 0; i < keyCount; i++ {
+					val, err := ss.Get([]byte(storeKey), queryVersion, []byte(fmt.Sprintf("key%03d-%03d", i, v)))
+					s.Require().NoError(err)
+					if storeKey == storeKeys[0] {
+						// `store1` is added back
+						s.Require().Equal([]byte(fmt.Sprintf("val%03d-%03d", i, v)), val)
+					} else {
+						// `store3` is removed
+						s.Require().Nil(val)
+					}
+				}
+			}
+		}
+	}
+}
+
+func dbApplyChangeset(
 	t *testing.T,
 	db store.VersionedDatabase,
 	version uint64,

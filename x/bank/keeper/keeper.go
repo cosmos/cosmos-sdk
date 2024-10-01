@@ -8,13 +8,13 @@ import (
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ Keeper = (*BaseKeeper)(nil)
@@ -150,7 +150,7 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 	if err != nil {
 		return err
 	}
-	if err := k.EventService.EventManager(ctx).EmitKV(
+	if err = k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCoinSpent,
 		event.NewAttribute(types.AttributeKeySpender, delAddrStr),
 		event.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
@@ -158,12 +158,7 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 		return err
 	}
 
-	err = k.addCoins(ctx, moduleAccAddr, amt)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return k.addCoins(ctx, moduleAccAddr, amt)
 }
 
 // UndelegateCoins performs undelegation by crediting amt coins to an account with
@@ -181,8 +176,7 @@ func (k BaseKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegato
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	err := k.subUnlockedCoins(ctx, moduleAccAddr, amt)
-	if err != nil {
+	if err := k.subUnlockedCoins(ctx, moduleAccAddr, amt); err != nil {
 		return err
 	}
 
@@ -190,12 +184,7 @@ func (k BaseKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegato
 		return errorsmod.Wrap(err, "failed to track undelegation")
 	}
 
-	err = k.addCoins(ctx, delegatorAddr, amt)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return k.addCoins(ctx, delegatorAddr, amt)
 }
 
 // GetSupply retrieves the Supply from store
@@ -414,12 +403,13 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		k.setSupply(ctx, supply)
 	}
 
-	k.Logger.Debug("burned tokens from account", "amount", amounts.String(), "from", address)
-
 	addrStr, err := k.ak.AddressCodec().BytesToString(acc.GetAddress())
 	if err != nil {
 		return err
 	}
+
+	k.Logger.Debug("burned tokens from account", "amount", amounts.String(), "from", addrStr)
+
 	// emit burn event
 	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCoinBurn,

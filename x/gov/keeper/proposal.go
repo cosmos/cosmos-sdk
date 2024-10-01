@@ -27,11 +27,15 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		return v1.Proposal{}, err
 	}
 
+	proposerAddr, err := k.authKeeper.AddressCodec().BytesToString(proposer)
+	if err != nil {
+		return v1.Proposal{}, err
+	}
+
 	// additional checks per proposal types
 	switch proposalType {
 	case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
-		proposerStr, _ := k.authKeeper.AddressCodec().BytesToString(proposer)
-		if len(params.OptimisticAuthorizedAddresses) > 0 && !slices.Contains(params.OptimisticAuthorizedAddresses, proposerStr) {
+		if len(params.OptimisticAuthorizedAddresses) > 0 && !slices.Contains(params.OptimisticAuthorizedAddresses, proposerAddr) {
 			return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposer, "proposer is not authorized to submit optimistic proposal")
 		}
 	case v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE:
@@ -43,20 +47,35 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 	msgs := make([]string, 0, len(messages)) // will hold a string slice of all Msg type URLs.
 
 	// Loop through all messages and confirm that each has a handler and the gov module account as the only signer
+	var currentMessagedBasedParams *v1.MessageBasedParams
 	for _, msg := range messages {
 		msgs = append(msgs, sdk.MsgTypeURL(msg))
 
 		// check if any of the message has message based params
-		hasMessagedBasedParams, err := k.MessageBasedParams.Has(ctx, sdk.MsgTypeURL(msg))
+		hasMessagedBasedParams := true
+		messagedBasedParams, err := k.MessageBasedParams.Get(ctx, sdk.MsgTypeURL(msg))
 		if err != nil {
-			return v1.Proposal{}, err
+			if !errorsmod.IsOf(err, collections.ErrNotFound) {
+				return v1.Proposal{}, err
+			}
+
+			hasMessagedBasedParams = false
 		}
 
 		if hasMessagedBasedParams {
-			// TODO(@julienrbrt), in the future, we can check if all messages have the same params
-			// and if so, we can allow the proposal.
-			if len(messages) > 1 {
-				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalMsg, "cannot submit multiple messages proposal with message based params")
+			// set initial value for currentMessagedBasedParams
+			if currentMessagedBasedParams == nil {
+				currentMessagedBasedParams = &messagedBasedParams
+			}
+
+			// check if newly fetched messagedBasedParams is different from the previous fetched params
+			isEqual, err := currentMessagedBasedParams.Equal(&messagedBasedParams)
+			if err != nil {
+				return v1.Proposal{}, err
+			}
+
+			if len(messages) > 1 && !isEqual {
+				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalMsg, "cannot submit multiple messages proposal with different message based params")
 			}
 
 			if proposalType != v1.ProposalType_PROPOSAL_TYPE_STANDARD {
@@ -83,9 +102,9 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		if !bytes.Equal(signers[0], k.GetGovernanceAccount(ctx).GetAddress()) {
 			addr, err := k.authKeeper.AddressCodec().BytesToString(signers[0])
 			if err != nil {
-				return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidSigner, err.Error())
+				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidSigner, err.Error())
 			}
-			return v1.Proposal{}, errorsmod.Wrapf(types.ErrInvalidSigner, addr)
+			return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidSigner, addr)
 		}
 
 		if err := k.MsgRouterService.CanInvoke(ctx, sdk.MsgTypeURL(msg)); err != nil {
@@ -131,10 +150,6 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		return v1.Proposal{}, err
 	}
 
-	proposerAddr, err := k.authKeeper.AddressCodec().BytesToString(proposer)
-	if err != nil {
-		return v1.Proposal{}, err
-	}
 	submitTime := k.HeaderService.HeaderInfo(ctx).Time
 	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*params.MaxDepositPeriod), metadata, title, summary, proposerAddr, proposalType)
 	if err != nil {

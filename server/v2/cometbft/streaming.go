@@ -3,9 +3,10 @@ package cometbft
 import (
 	"context"
 
-	coreappmgr "cosmossdk.io/core/app"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
+	errorsmod "cosmossdk.io/errors/v2"
 	"cosmossdk.io/server/v2/streaming"
 )
 
@@ -14,31 +15,40 @@ func (c *Consensus[T]) streamDeliverBlockChanges(
 	ctx context.Context,
 	height int64,
 	txs [][]byte,
-	txResults []coreappmgr.TxResult,
+	txResults []server.TxResult,
 	events []event.Event,
 	stateChanges []store.StateChanges,
 ) error {
 	// convert txresults to streaming txresults
 	streamingTxResults := make([]*streaming.ExecTxResult, len(txResults))
 	for i, txResult := range txResults {
+		space, code, log := errorsmod.ABCIInfo(txResult.Error, c.cfg.AppTomlConfig.Trace)
+
+		events, err := streaming.IntoStreamingEvents(txResult.Events)
+		if err != nil {
+			return err
+		}
+
 		streamingTxResults[i] = &streaming.ExecTxResult{
-			Code:      txResult.Code,
-			Data:      txResult.Data,
-			Log:       txResult.Log,
-			Info:      txResult.Info,
+			Code:      code,
+			Codespace: space,
+			Log:       log,
 			GasWanted: uint64ToInt64(txResult.GasWanted),
 			GasUsed:   uint64ToInt64(txResult.GasUsed),
-			Events:    streaming.IntoStreamingEvents(txResult.Events),
-			Codespace: txResult.Codespace,
+			Events:    events,
 		}
 	}
 
 	for _, streamingListener := range c.streaming.Listeners {
+		events, err := streaming.IntoStreamingEvents(events)
+		if err != nil {
+			return err
+		}
 		if err := streamingListener.ListenDeliverBlock(ctx, streaming.ListenDeliverBlockRequest{
 			BlockHeight: height,
 			Txs:         txs,
 			TxResults:   streamingTxResults,
-			Events:      streaming.IntoStreamingEvents(events),
+			Events:      events,
 		}); err != nil {
 			c.logger.Error("ListenDeliverBlock listening hook failed", "height", height, "err", err)
 		}

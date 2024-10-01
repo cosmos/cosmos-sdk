@@ -35,6 +35,9 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
         * Tooling is tracked and tested directly on main.
         * This does not apply for tooling depending on the SDK (e.g. `confix`)
     * Update `Dockerfile` to not use latest go.mod and go.sum files.
+* Remove all other components that do not depend on the SDK from the release branch (See [Go Monorepo Branching Strategy](#go-monorepo-branching-strategy)).
+    * Delete `log`, `core`, `errors`, ... packages
+    * Update all the remaining `go.mod` files to use the latest released versions (the ones tagged from main) or latest commits from the main branch.
 * Create a new annotated git tag for a release candidate (eg: `git tag -a v1.1.0-rc1`) in the release branch.
     * from this point we unfreeze main.
     * the SDK teams collaborate and do their best to run testnets in order to validate the release.
@@ -209,10 +212,10 @@ Their responsibilities include:
 
 Currently residing Stable Release Managers:
 
-* @tac0turtle - Marko Baricevic
-* @julienrbrt - Julien Robert
-
-## Cosmos SDK Modules
+* [@tac0turtle - Marko Baricevic](https://github.com/tac0turtle)
+* [@julienrbrt - Julien Robert](https://github.com/julienrbrt)
+  
+## Cosmos SDK Modules Tagging Strategy
 
 The Cosmos SDK repository is a mono-repo where its Go modules have a different release process and cadence than the Cosmos SDK itself.
 There are two types of modules:
@@ -236,3 +239,28 @@ Those modules can be considered as part of the Cosmos SDK, but features and impr
 ### Modules that do not depend on the Cosmos SDK
 
 Modules that do not depend on the Cosmos SDK can be released at any time from the `main` branch of the Cosmos SDK repository.
+
+## Go Monorepo Branching Strategy
+
+The Cosmos SDK uses a monorepo structure with multiple Go modules. Some components are tagged from the main branch, while others are tagged from release branches, as described above.
+
+Here's the strategy for managing this structure:
+
+All modules that do not depend on the Cosmos SDK and tagged from main in a release branch must be removed from the release branch.
+
+### Rationale
+
+This strategy provides several benefits:
+
+1. Clean separation: Release branches only contain components that are actually released from those branches.
+2. Avoid confusion: Prevents having outdated versions of standalone go modules in release branches.
+3. Accurate representation: The release branch accurately represents what's being released from that branch.
+4. Consistency: Aligns with the tagging strategy - components tagged from main aren't in release branches, and vice versa.
+
+### Additional Considerations
+
+* When backporting changes, be aware that standalone go modules changes will not be present in release branches.
+* To reference the full state of the SDK at the time of branching, consider creating a separate tag on main at the point where each release branch is created.
+* Ensure thorough testing of the release branch structure to avoid any integration issues.
+
+This branching strategy helps maintain a clear separation between components tagged from main and those tagged from release branches, while ensuring that release branches accurately represent the state of components that depend on the SDK.

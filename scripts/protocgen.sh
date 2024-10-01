@@ -29,7 +29,7 @@ for dir in $proto_dirs; do
 
   # check if buf.gen.gogo.yaml exists in the proto directory
   if [ -f "buf.gen.gogo.yaml" ]; then
-      for file in $(find . -maxdepth 5 -name '*.proto'); do
+      for file in $(find . -maxdepth 8 -name '*.proto'); do
         # this regex checks if a proto file has its go_package set to cosmossdk.io/api/...
         # gogo proto files SHOULD ONLY be generated if this is false
         # we don't want gogo proto to run for proto files which are natively built for google.golang.org/protobuf
@@ -56,5 +56,10 @@ done
 # move generated files to the right places
 cp -r github.com/cosmos/cosmos-sdk/* ./
 rm -rf github.com
+
+# UNTIL WE FIGURE OUT ABOUT COSMOSSDK.IO/API, DO NOT GENERATE PULSAR FILES FOR NEW MODULES
+# unfortunately, there is no way to do it nicely directly in the buf.gen.pulsar.yaml file (https://github.com/bufbuild/buf/issues/224)
+rm -r api/cosmos/bank/v2
+rm -r api/cosmos/bank/module/v2
 
 go mod tidy

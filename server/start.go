@@ -9,6 +9,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 	"runtime/pprof"
 	"strings"
 	"time"
@@ -18,6 +19,8 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
@@ -36,6 +39,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
@@ -117,7 +121,7 @@ const (
 type StartCmdOptions[T types.Application] struct {
 	// DBOpener can be used to customize db opening, for example customize db options or support different db backends,
 	// default to the builtin db opener.
-	DBOpener func(rootDir string, backendType dbm.BackendType) (dbm.DB, error)
+	DBOpener func(rootDir string, backendType dbm.BackendType) (corestore.KVStoreWithBatch, error)
 	// PostSetup can be used to setup extra services under the same cancellable context,
 	// it's not called in stand-alone mode, only for in-process mode.
 	PostSetup func(app T, svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
@@ -126,7 +130,7 @@ type StartCmdOptions[T types.Application] struct {
 	// AddFlags add custom flags to start cmd
 	AddFlags func(cmd *cobra.Command)
 	// StartCommandHandler can be used to customize the start command handler
-	StartCommandHandler func(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator[T], inProcessConsensus bool, opts StartCmdOptions[T]) error
+	StartCommandHandler func(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator[T], withCMT bool, opts StartCmdOptions[T]) error
 }
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -371,11 +375,16 @@ func startCmtNode(
 		return nil, cleanupFn, err
 	}
 
+	pv, err := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile(), app.ValidatorKeyProvider())
+	if err != nil {
+		return nil, cleanupFn, err
+	}
+
 	cmtApp := NewCometABCIWrapper(app)
 	tmNode, err = node.NewNode(
 		ctx,
 		cfg,
-		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
+		pv,
 		nodeKey,
 		proxy.NewLocalClientCreator(cmtApp),
 		getGenDocProvider(cfg),
@@ -415,31 +424,28 @@ func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
 // getGenDocProvider returns a function which returns the genesis doc from the genesis file.
 func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, error) {
 	return func() (node.ChecksummedGenesisDoc, error) {
+		defaultGenesisDoc := node.ChecksummedGenesisDoc{
+			Sha256Checksum: []byte{},
+		}
+
 		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
 		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
+			return defaultGenesisDoc, err
 		}
 
 		gen, err := appGenesis.ToGenesisDoc()
 		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
+			return defaultGenesisDoc, err
 		}
+
 		genbz, err := gen.AppState.MarshalJSON()
 		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
+			return defaultGenesisDoc, err
 		}
 
 		bz, err := json.Marshal(genbz)
 		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
+			return defaultGenesisDoc, err
 		}
 		sum := sha256.Sum256(bz)
 
@@ -667,7 +673,7 @@ func InPlaceTestnetCreator[T types.Application](testnetAppCreator types.AppCreat
 	}
 
 	cmd := &cobra.Command{
-		Use:   "in-place-testnet [newChainID] [newOperatorAddress]",
+		Use:   "in-place-testnet <newChainID> <newOperatorAddress>",
 		Short: "Create and start a testnet from current local state",
 		Long: `Create and start a testnet from current local state.
 After utilizing this command the network will start. If the network is stopped,
@@ -753,7 +759,7 @@ you want to test the upgrade handler itself.
 
 // testnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
 // that the state in the data folder represents. The chainID of the local genesis file is modified to match the provided chainID.
-func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCreator[T], db dbm.DB, traceWriter io.WriteCloser) (*T, error) {
+func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCreator[T], db corestore.KVStoreWithBatch, traceWriter io.WriteCloser) (*T, error) {
 	config := ctx.Config
 
 	newChainID, ok := ctx.Viper.Get(KeyNewChainID).(string)
@@ -775,6 +781,17 @@ func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCr
 		return nil, err
 	}
 
+	// Regenerate addrbook.json to prevent peers on old network from causing error logs.
+	addrBookPath := filepath.Join(config.RootDir, "config", "addrbook.json")
+	if err := os.Remove(addrBookPath); err != nil && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("failed to remove existing addrbook.json: %w", err)
+	}
+
+	emptyAddrBook := []byte("{}")
+	if err := os.WriteFile(addrBookPath, emptyAddrBook, 0o600); err != nil {
+		return nil, fmt.Errorf("failed to create empty addrbook.json: %w", err)
+	}
+
 	// Load the comet genesis doc provider.
 	genDocProvider := node.DefaultGenesisDocProviderFunc(config)
 
@@ -793,7 +810,12 @@ func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCr
 	defer blockStore.Close()
 	defer stateDB.Close()
 
-	privValidator := pvm.LoadOrGenFilePV(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile())
+	privValidator, err := pvm.LoadOrGenFilePV(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile(), func() (cmtcrypto.PrivKey, error) {
+		return cmted25519.GenPrivKey(), nil
+	}) // TODO: make this modular
+	if err != nil {
+		return nil, err
+	}
 	userPubKey, err := privValidator.GetPubKey()
 	if err != nil {
 		return nil, err
@@ -820,7 +842,7 @@ func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCr
 	_, context := getCtx(ctx, true)
 	clientCreator := proxy.NewLocalClientCreator(cmtApp)
 	metrics := node.DefaultMetricsProvider(cmtcfg.DefaultConfig().Instrumentation)
-	_, _, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID) // nolint: dogsled // function from comet
+	_, _, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID) //nolint: dogsled // function from comet
 	proxyApp := proxy.NewAppConns(clientCreator, proxyMetrics)
 	if err := proxyApp.Start(); err != nil {
 		return nil, fmt.Errorf("error starting proxy app connections: %w", err)
@@ -909,7 +931,7 @@ func testnetify[T types.Application](ctx *Context, testnetAppCreator types.AppCr
 		return nil, err
 	}
 
-	// Create ValidatorSet struct containing just our valdiator.
+	// Create ValidatorSet struct containing just our validator.
 	newVal := &cmttypes.Validator{
 		Address:     validatorAddress,
 		PubKey:      userPubKey,

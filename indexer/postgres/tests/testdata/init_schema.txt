@@ -1,11 +1,14 @@
-Creating enum type
-CREATE TYPE "test_my_enum" AS ENUM ('a', 'b', 'c');
-
-Creating enum type
-CREATE TYPE "test_vote_type" AS ENUM ('yes', 'no', 'abstain');
-
-Creating table test_all_kinds
-CREATE TABLE IF NOT EXISTS "test_all_kinds" (
+INFO: Starting indexing
+INFO: Starting indexer
+  target_name: postgres
+  type: postgres
+DEBUG: Creating enum type
+  sql: CREATE TYPE "test_my_enum" AS ENUM ('a', 'b', 'c');
+DEBUG: Creating enum type
+  sql: CREATE TYPE "test_vote_type" AS ENUM ('yes', 'no', 'abstain');
+DEBUG: Creating table %s
+  table: test_all_kinds
+  sql: CREATE TABLE IF NOT EXISTS "test_all_kinds" (
 	"id" BIGINT NOT NULL,
 	"ts" TIMESTAMPTZ GENERATED ALWAYS AS (nanos_to_timestamptz("ts_nanos")) STORED,
 	"ts_nanos" BIGINT NOT NULL,
@@ -27,15 +30,15 @@ CREATE TABLE IF NOT EXISTS "test_all_kinds" (
 	"duration" BIGINT NOT NULL,
 	"float32" REAL NOT NULL,
 	"float64" DOUBLE PRECISION NOT NULL,
-	"bech32address" TEXT NOT NULL,
+	"address" TEXT NOT NULL,
 	"enum" "test_my_enum" NOT NULL,
 	"json" JSONB NOT NULL,
 	PRIMARY KEY ("id", "ts_nanos")
 );
 GRANT SELECT ON TABLE "test_all_kinds" TO PUBLIC;
-
-Creating table test_singleton
-CREATE TABLE IF NOT EXISTS "test_singleton" (
+DEBUG: Creating table %s
+  table: test_singleton
+  sql: CREATE TABLE IF NOT EXISTS "test_singleton" (
 	_id INTEGER NOT NULL CHECK (_id = 1),
 	"foo" TEXT NOT NULL,
 	"bar" INTEGER NULL,
@@ -43,9 +46,9 @@ CREATE TABLE IF NOT EXISTS "test_singleton" (
 	PRIMARY KEY (_id)
 );
 GRANT SELECT ON TABLE "test_singleton" TO PUBLIC;
-
-Creating table test_vote
-CREATE TABLE IF NOT EXISTS "test_vote" (
+DEBUG: Creating table %s
+  table: test_vote
+  sql: CREATE TABLE IF NOT EXISTS "test_vote" (
 	"proposal" BIGINT NOT NULL,
 	"address" TEXT NOT NULL,
 	"vote" "test_vote_type" NOT NULL,
@@ -53,4 +56,3 @@ CREATE TABLE IF NOT EXISTS "test_vote" (
 	PRIMARY KEY ("proposal", "address")
 );
 GRANT SELECT ON TABLE "test_vote" TO PUBLIC;
-

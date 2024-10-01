@@ -74,7 +74,7 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 
 		for i := 0; i < txPerHeight; i++ {
 			counter := int64(blockN*txPerHeight + i)
-			tx := newTxCounter(t, suite.txConfig, counter, counter)
+			tx := newTxCounter(t, suite.txConfig, suite.ac, counter, counter)
 
 			txBytes, err := suite.txConfig.TxEncoder()(tx)
 			require.NoError(t, err)

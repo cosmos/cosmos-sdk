@@ -16,8 +16,8 @@ import (
 	"cosmossdk.io/store/v2/root"
 )
 
-// QueryBlockResultsCmd implements the default command for a BlockResults query.
-func (s *StoreComponent[T]) PrunesCmd() *cobra.Command {
+// PrunesCmd implements the default command for pruning app history states.
+func (s *Server[T]) PrunesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prune [pruning-method]",
 		Short: "Prune app history states by keeping the recent heights and deleting old heights",
@@ -44,12 +44,8 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			}
 
 			logger := log.NewLogger(cmd.OutOrStdout())
-			home, err := cmd.Flags().GetString(serverv2.FlagHome)
-			if err != nil {
-				return err
-			}
 
-			rootStore, keepRecent, err := createRootStore(cmd, home, vp, logger)
+			rootStore, keepRecent, err := createRootStore(cmd, vp, logger)
 			if err != nil {
 				return fmt.Errorf("can not create root store %w", err)
 			}
@@ -78,14 +74,14 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 	}
 
 	cmd.Flags().String(FlagAppDBBackend, "", "The type of database for application and snapshots databases")
-	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
+	cmd.Flags().Uint64(FlagKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
 
 	return cmd
 }
 
-func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger log.Logger) (storev2.RootStore, uint64, error) {
+func createRootStore(cmd *cobra.Command, v *viper.Viper, logger log.Logger) (storev2.RootStore, uint64, error) {
 	tempViper := v
-
+	rootDir := v.GetString(serverv2.FlagHome)
 	// handle FlagAppDBBackend
 	var dbType db.DBType
 	if cmd.Flags().Changed(FlagAppDBBackend) {
@@ -95,7 +91,7 @@ func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger 
 		}
 		dbType = db.DBType(dbStr)
 	} else {
-		dbType = db.DBType(v.GetString("store.app-db-backend"))
+		dbType = db.DBType(v.GetString(FlagAppDBBackend))
 	}
 	scRawDb, err := db.NewDB(dbType, "application", filepath.Join(rootDir, "data"), nil)
 	if err != nil {
@@ -103,8 +99,8 @@ func createRootStore(cmd *cobra.Command, rootDir string, v *viper.Viper, logger 
 	}
 
 	// handle KeepRecent & Interval flags
-	if cmd.Flags().Changed(FlagPruningKeepRecent) {
-		keepRecent, err := cmd.Flags().GetUint64(FlagPruningKeepRecent)
+	if cmd.Flags().Changed(FlagKeepRecent) {
+		keepRecent, err := cmd.Flags().GetUint64(FlagKeepRecent)
 		if err != nil {
 			return nil, 0, err
 		}

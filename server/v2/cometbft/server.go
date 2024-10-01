@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	abciserver "github.com/cometbft/cometbft/abci/server"
@@ -16,12 +17,12 @@ import (
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
+	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
@@ -55,17 +56,40 @@ func New[T transaction.Tx](txCodec transaction.Codec[T], serverOptions ServerOpt
 	}
 }
 
-func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger log.Logger) error {
+func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
+	home, _ := cfg[serverv2.FlagHome].(string)
+
 	// get configs (app.toml + config.toml) from viper
 	appTomlConfig := s.Config().(*AppTomlConfig)
-	if v != nil {
-		if err := serverv2.UnmarshalSubConfig(v, s.Name(), &appTomlConfig); err != nil {
+	configTomlConfig := cmtcfg.DefaultConfig().SetRoot(home)
+	if len(cfg) > 0 {
+		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &appTomlConfig); err != nil {
+			return fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+
+		if err := serverv2.UnmarshalSubConfig(cfg, "", &configTomlConfig); err != nil {
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
+
 	s.config = Config{
-		ConfigTomlConfig: getConfigTomlFromViper(v),
+		ConfigTomlConfig: configTomlConfig,
 		AppTomlConfig:    appTomlConfig,
+	}
+
+	chainID, _ := cfg[FlagChainID].(string)
+	if chainID == "" {
+		// fallback to genesis chain-id
+		reader, err := os.Open(filepath.Join(home, "config", "genesis.json"))
+		if err != nil {
+			panic(err)
+		}
+		defer reader.Close()
+
+		chainID, err = genutiltypes.ParseChainIDFromGenesis(reader)
+		if err != nil {
+			panic(fmt.Errorf("failed to parse chain-id from genesis file: %w", err))
+		}
 	}
 
 	indexEvents := make(map[string]struct{}, len(s.config.AppTomlConfig.IndexEvents))
@@ -78,14 +102,14 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 	consensus := NewConsensus(
 		s.logger,
 		appI.Name(),
-		appI.GetConsensusAuthority(),
 		appI.GetAppManager(),
-		s.serverOptions.Mempool,
+		s.serverOptions.Mempool(cfg),
 		indexEvents,
 		appI.GetGPRCMethodsToMessageMap(),
 		store,
 		s.config,
 		s.initTxCodec,
+		chainID,
 	)
 	consensus.prepareProposalHandler = s.serverOptions.PrepareProposalHandler
 	consensus.processProposalHandler = s.serverOptions.ProcessProposalHandler
@@ -101,7 +125,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], v *viper.Viper, logger l
 	if err != nil {
 		return err
 	}
-	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.serverOptions.SnapshotOptions, sc, ss, nil, s.logger)
+	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.serverOptions.SnapshotOptions(cfg), sc, ss, nil, s.logger)
 
 	s.Consensus = consensus
 
@@ -130,10 +154,19 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 		return err
 	}
 
+	pv, err := pvm.LoadOrGenFilePV(
+		s.config.ConfigTomlConfig.PrivValidatorKeyFile(),
+		s.config.ConfigTomlConfig.PrivValidatorStateFile(),
+		s.serverOptions.KeygenF,
+	)
+	if err != nil {
+		return err
+	}
+
 	s.Node, err = node.NewNode(
 		ctx,
 		s.config.ConfigTomlConfig,
-		pvm.LoadOrGenFilePV(s.config.ConfigTomlConfig.PrivValidatorKeyFile(), s.config.ConfigTomlConfig.PrivValidatorStateFile()),
+		pv,
 		nodeKey,
 		proxy.NewConsensusSyncLocalClientCreator(s.Consensus),
 		getGenDocProvider(s.config.ConfigTomlConfig),
@@ -203,6 +236,7 @@ func (s *CometBFTServer[T]) StartCmdFlags() *pflag.FlagSet {
 	flags.Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
 	flags.Bool(FlagTrace, false, "Provide full stack traces for errors in ABCI Log")
 	flags.Bool(Standalone, false, "Run app without CometBFT")
+	flags.Int(FlagMempoolMaxTxs, mempool.DefaultMaxTx, "Sets MaxTx value for the app-side mempool")
 
 	// add comet flags, we use an empty command to avoid duplicating CometBFT's AddNodeFlags.
 	// we can then merge the flag sets.
@@ -216,18 +250,19 @@ func (s *CometBFTServer[T]) StartCmdFlags() *pflag.FlagSet {
 func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 	return serverv2.CLIConfig{
 		Commands: []*cobra.Command{
-			s.StatusCommand(),
-			s.ShowNodeIDCmd(),
-			s.ShowValidatorCmd(),
-			s.ShowAddressCmd(),
-			s.VersionCmd(),
+			StatusCommand(),
+			ShowNodeIDCmd(),
+			ShowValidatorCmd(),
+			ShowAddressCmd(),
+			VersionCmd(),
+			s.BootstrapStateCmd(),
 			cmtcmd.ResetAllCmd,
 			cmtcmd.ResetStateCmd,
 		},
 		Queries: []*cobra.Command{
-			s.QueryBlockCmd(),
-			s.QueryBlocksCmd(),
-			s.QueryBlockResultsCmd(),
+			QueryBlockCmd(),
+			QueryBlocksCmd(),
+			QueryBlockResultsCmd(),
 		},
 	}
 }
@@ -236,7 +271,7 @@ func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 
 // Config returns the (app.toml) server configuration.
 func (s *CometBFTServer[T]) Config() any {
-	if s.config.AppTomlConfig == nil || s.config.AppTomlConfig == (&AppTomlConfig{}) {
+	if s.config.AppTomlConfig == nil || s.config.AppTomlConfig.Address == "" {
 		cfg := &Config{AppTomlConfig: DefaultAppTomlConfig()}
 		// overwrite the default config with the provided options
 		for _, opt := range s.cfgOptions {

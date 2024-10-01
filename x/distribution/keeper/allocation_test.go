@@ -14,7 +14,6 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/distribution/keeper"
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
@@ -27,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var _ comet.Service = (*emptyCometService)(nil)
@@ -374,4 +374,132 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	val2OutstandingRewards, err := distrKeeper.ValidatorOutstandingRewards.Get(ctx, valAddr2)
 	require.NoError(t, err)
 	require.True(t, val2OutstandingRewards.Rewards.IsValid())
+}
+
+func TestAllocateTokensToValidatorWithoutCommission(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	cdcOpts := codectestutil.CodecOptions{}
+	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, distribution.AppModule{})
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+
+	valCodec := address.NewBech32Codec("cosmosvaloper")
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
+
+	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	require.NoError(t, err)
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		env,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		testCometService,
+		"fee_collector",
+		authorityAddr,
+	)
+
+	// create validator with 0% commission
+	operatorAddr, err := stakingKeeper.ValidatorAddressCodec().BytesToString(valConsPk0.Address())
+	require.NoError(t, err)
+	val, err := distrtestutil.CreateValidator(valConsPk0, operatorAddr, math.NewInt(100))
+	require.NoError(t, err)
+	val.Commission = stakingtypes.NewCommission(math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0))
+	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk0)).Return(val, nil).AnyTimes()
+
+	// allocate tokens
+	tokens := sdk.DecCoins{
+		{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(10)},
+	}
+	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
+
+	// check commission
+	var expectedCommission sdk.DecCoins = nil
+
+	valBz, err := valCodec.StringToBytes(val.GetOperator())
+	require.NoError(t, err)
+
+	valCommission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valBz)
+	require.NoError(t, err)
+	require.Equal(t, expectedCommission, valCommission.Commission)
+
+	// check current rewards
+	expectedRewards := tokens
+
+	currentRewards, err := distrKeeper.ValidatorCurrentRewards.Get(ctx, valBz)
+	require.NoError(t, err)
+	require.Equal(t, expectedRewards, currentRewards.Rewards)
+}
+
+func TestAllocateTokensWithZeroTokens(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	cdcOpts := codectestutil.CodecOptions{}
+	encCfg := moduletestutil.MakeTestEncodingConfig(cdcOpts, distribution.AppModule{})
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+
+	valCodec := address.NewBech32Codec("cosmosvaloper")
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
+
+	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
+	require.NoError(t, err)
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		env,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		testCometService,
+		"fee_collector",
+		authorityAddr,
+	)
+
+	// create validator with 50% commission
+	operatorAddr, err := stakingKeeper.ValidatorAddressCodec().BytesToString(valConsPk0.Address())
+	require.NoError(t, err)
+	val, err := distrtestutil.CreateValidator(valConsPk0, operatorAddr, math.NewInt(100))
+	require.NoError(t, err)
+	val.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	stakingKeeper.EXPECT().ValidatorByConsAddr(gomock.Any(), sdk.GetConsAddress(valConsPk0)).Return(val, nil).AnyTimes()
+
+	// allocate zero tokens
+	tokens := sdk.DecCoins{}
+	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
+
+	// check commission
+	var expected sdk.DecCoins = nil
+
+	valBz, err := valCodec.StringToBytes(val.GetOperator())
+	require.NoError(t, err)
+
+	valCommission, err := distrKeeper.ValidatorsAccumulatedCommission.Get(ctx, valBz)
+	require.NoError(t, err)
+	require.Equal(t, expected, valCommission.Commission)
+
+	// check current rewards
+	currentRewards, err := distrKeeper.ValidatorCurrentRewards.Get(ctx, valBz)
+	require.NoError(t, err)
+	require.Equal(t, expected, currentRewards.Rewards)
 }

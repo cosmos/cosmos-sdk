@@ -32,6 +32,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### API Breaking Changes
 
 * [#19443](https://github.com/cosmos/cosmos-sdk/pull/19443) `NewKeeper` takes an `appmodule.Environment` instead of individual services.
+* [#21259](https://github.com/cosmos/cosmos-sdk/pull/21259) Upgrade has been migrated to cosrestore.StoreUpgrades. Renaming keys support has been removed from the upgrade module.
+* [#21480](https://github.com/cosmos/cosmos-sdk/pull/21480) ConsensusKeeper is required to be passed to the keeper. 
 
 ### State Machine Breaking
 

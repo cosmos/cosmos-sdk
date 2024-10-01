@@ -22,14 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32" //nolint:staticcheck // we're using this to support the legacy way of dealing with bech32
 )
 
-const (
-	pubStr     = "pub"
-	valoper    = "valoper"
-	valoperpub = "valoperpub"
-	valcons    = "valcons"
-	valconspub = "valconspub"
-)
-
 type addressTestSuite struct {
 	suite.Suite
 }
@@ -42,17 +34,22 @@ func (s *addressTestSuite) SetupSuite() {
 	s.T().Parallel()
 }
 
-var invalidStrs = []string{
-	"hello, world!",
-	"0xAA",
-	"AAA",
-	types.Bech32PrefixAccAddr + "AB0C",
-	types.Bech32PrefixAccPub + "1234",
-	types.Bech32PrefixValAddr + "5678",
-	types.Bech32PrefixValPub + "BBAB",
-	types.Bech32PrefixConsAddr + "FF04",
-	types.Bech32PrefixConsPub + "6789",
-}
+var (
+	invalidStrs = []string{
+		"hello, world!",
+		"0xAA",
+		"AAA",
+		types.Bech32PrefixAccAddr + "AB0C",
+		types.Bech32PrefixAccPub + "1234",
+		types.Bech32PrefixValAddr + "5678",
+		types.Bech32PrefixValPub + "BBAB",
+		types.Bech32PrefixConsAddr + "FF04",
+		types.Bech32PrefixConsPub + "6789",
+	}
+
+	addr10byte = []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	addr20byte = []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
+)
 
 func (s *addressTestSuite) testMarshal(original, res interface{}, marshal func() ([]byte, error), unmarshal func([]byte) error) {
 	bz, err := marshal()
@@ -161,6 +158,12 @@ func (s *addressTestSuite) TestUnmarshalYAMLWithInvalidInput() {
 	s.Require().Equal(types.ErrEmptyHexAddress, err)
 }
 
+func setConfigWithPrefix(conf *types.Config, prefix string) {
+	conf.SetBech32PrefixForAccount(prefix, types.GetBech32PrefixAccPub(prefix))
+	conf.SetBech32PrefixForValidator(types.GetBech32PrefixValAddr(prefix), types.GetBech32PrefixValPub(prefix))
+	conf.SetBech32PrefixForConsensusNode(types.GetBech32PrefixConsAddr(prefix), types.GetBech32PrefixConsPub(prefix))
+}
+
 // Test that the account address cache ignores the bech32 prefix setting, retrieving bech32 addresses from the cache.
 // This will cause the AccAddress.String() to print out unexpected prefixes if the config was changed between bech32 lookups.
 // See https://github.com/cosmos/cosmos-sdk/issues/15317.
@@ -173,18 +176,14 @@ func (s *addressTestSuite) TestAddrCache() {
 	// Set SDK bech32 prefixes to 'osmo'
 	prefix := "osmo"
 	conf := types.GetConfig()
-	conf.SetBech32PrefixForAccount(prefix, prefix+pubStr)
-	conf.SetBech32PrefixForValidator(prefix+valoper, prefix+valoperpub)
-	conf.SetBech32PrefixForConsensusNode(prefix+valcons, prefix+valconspub)
+	setConfigWithPrefix(conf, prefix)
 
 	acc := types.AccAddress(pub.Address())
 	osmoAddrBech32 := acc.String()
 
 	// Set SDK bech32 to 'cosmos'
 	prefix = "cosmos"
-	conf.SetBech32PrefixForAccount(prefix, prefix+pubStr)
-	conf.SetBech32PrefixForValidator(prefix+valoper, prefix+valoperpub)
-	conf.SetBech32PrefixForConsensusNode(prefix+valcons, prefix+valconspub)
+	setConfigWithPrefix(conf, prefix)
 
 	// We name this 'addrCosmos' to prove a point, but the bech32 address will still begin with 'osmo' due to the cache behavior.
 	addrCosmos := types.AccAddress(pub.Address())
@@ -210,18 +209,14 @@ func (s *addressTestSuite) TestAddrCacheDisabled() {
 	// Set SDK bech32 prefixes to 'osmo'
 	prefix := "osmo"
 	conf := types.GetConfig()
-	conf.SetBech32PrefixForAccount(prefix, prefix+pubStr)
-	conf.SetBech32PrefixForValidator(prefix+valoper, prefix+valoperpub)
-	conf.SetBech32PrefixForConsensusNode(prefix+valcons, prefix+valconspub)
+	setConfigWithPrefix(conf, prefix)
 
 	acc := types.AccAddress(pub.Address())
 	osmoAddrBech32 := acc.String()
 
 	// Set SDK bech32 to 'cosmos'
 	prefix = "cosmos"
-	conf.SetBech32PrefixForAccount(prefix, prefix+pubStr)
-	conf.SetBech32PrefixForValidator(prefix+valoper, prefix+valoperpub)
-	conf.SetBech32PrefixForConsensusNode(prefix+valcons, prefix+valconspub)
+	setConfigWithPrefix(conf, prefix)
 
 	addrCosmos := types.AccAddress(pub.Address())
 	cosmosAddrBech32 := addrCosmos.String()
@@ -409,8 +404,6 @@ func (s *addressTestSuite) TestAddressInterface() {
 }
 
 func (s *addressTestSuite) TestBech32ifyAddressBytes() {
-	addr10byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
 	type args struct {
 		prefix string
 		bs     []byte
@@ -429,7 +422,6 @@ func (s *addressTestSuite) TestBech32ifyAddressBytes() {
 		{"20-byte address", args{"prefixb", addr20byte}, "prefixb1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnrujsuw", false},
 	}
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			got, err := types.Bech32ifyAddressBytes(tt.args.prefix, tt.args.bs)
 			if (err != nil) != tt.wantErr {
@@ -442,8 +434,6 @@ func (s *addressTestSuite) TestBech32ifyAddressBytes() {
 }
 
 func (s *addressTestSuite) TestMustBech32ifyAddressBytes() {
-	addr10byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
 	type args struct {
 		prefix string
 		bs     []byte
@@ -462,7 +452,6 @@ func (s *addressTestSuite) TestMustBech32ifyAddressBytes() {
 		{"20-byte address", args{"prefixb", addr20byte}, "prefixb1qqqsyqcyq5rqwzqfpg9scrgwpugpzysnrujsuw", false},
 	}
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			if tt.wantPanic {
 				require.Panics(t, func() { types.MustBech32ifyAddressBytes(tt.args.prefix, tt.args.bs) })
@@ -536,7 +525,7 @@ func (s *addressTestSuite) TestGetFromBech32() {
 }
 
 func (s *addressTestSuite) TestMustValAddressFromBech32() {
-	valAddress1 := types.ValAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	valAddress1 := types.ValAddress(addr20byte)
 	valAddress2 := types.MustValAddressFromBech32(valAddress1.String())
 
 	s.Require().Equal(valAddress1, valAddress2)
@@ -589,7 +578,7 @@ func (s *addressTestSuite) TestGetBech32PrefixConsPub() {
 }
 
 func (s *addressTestSuite) TestMustAccAddressFromBech32() {
-	accAddress1 := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	accAddress1 := types.AccAddress(addr20byte)
 	accAddress2 := types.MustAccAddressFromBech32(accAddress1.String())
 	s.Require().Equal(accAddress1, accAddress2)
 }
@@ -628,10 +617,9 @@ func (s *addressTestSuite) TestUnmarshalYAMLAccAddressWithEmptyString() {
 }
 
 func (s *addressTestSuite) TestFormatAccAddressAsString() {
-	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
 	accAddr := types.AccAddress(addr20byte)
 
-	actual := fmt.Sprintf("%s", accAddr) // this will call internally  the method AccAddress.Format
+	actual := fmt.Sprintf("%s", accAddr) // this will internally calls AccAddress.Format method
 
 	hrp := types.GetConfig().GetBech32AccountAddrPrefix()
 	expected, err := bech32.ConvertAndEncode(hrp, addr20byte)
@@ -640,9 +628,9 @@ func (s *addressTestSuite) TestFormatAccAddressAsString() {
 }
 
 func (s *addressTestSuite) TestFormatAccAddressAsPointer() {
-	accAddr := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	accAddr := types.AccAddress(addr20byte)
 	ptrAddr := &accAddr
-	actual := fmt.Sprintf("%p", ptrAddr) // this will call internally  the method AccAddress.Format
+	actual := fmt.Sprintf("%p", ptrAddr) // this will internally calls AccAddress.Format method
 	expected := fmt.Sprintf("0x%x", uintptr(unsafe.Pointer(&accAddr)))
 	s.Require().Equal(expected, actual)
 }
@@ -684,7 +672,6 @@ func (s *addressTestSuite) TestUnmarshalYAMLValAddressWithEmptyString() {
 }
 
 func (s *addressTestSuite) TestFormatValAddressAsString() {
-	addr20byte := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
 	accAddr := types.ValAddress(addr20byte)
 
 	actual := fmt.Sprintf("%s", accAddr)
@@ -696,7 +683,7 @@ func (s *addressTestSuite) TestFormatValAddressAsString() {
 }
 
 func (s *addressTestSuite) TestFormatValAddressAsPointer() {
-	accAddr := types.AccAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	accAddr := types.AccAddress(addr20byte)
 	ptrAddr := &accAddr
 	actual := fmt.Sprintf("%p", ptrAddr)
 	expected := uintptr(unsafe.Pointer(&accAddr))
@@ -704,7 +691,7 @@ func (s *addressTestSuite) TestFormatValAddressAsPointer() {
 }
 
 func (s *addressTestSuite) TestFormatValAddressWhenVerbIsDifferentFromSOrP() {
-	myAddr := types.ValAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	myAddr := types.ValAddress(addr20byte)
 	exp := "000102030405060708090A0B0C0D0E0F10111213"
 	spec := []string{"%v", "%#v", "%t", "%b", "%c", "%d", "%o", "%O", "%x", "%X", "%U", "%e", "%E", "%f", "%F", "%g", "%G"}
 	for _, v := range spec {
@@ -740,7 +727,7 @@ func (s *addressTestSuite) TestUnmarshalYAMLConsAddressWithEmptyString() {
 }
 
 func (s *addressTestSuite) TestFormatConsAddressAsString() {
-	consAddr := types.ConsAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	consAddr := types.ConsAddress(addr20byte)
 	actual := fmt.Sprintf("%s", consAddr)
 
 	hrp := types.GetConfig().GetBech32ConsensusAddrPrefix()
@@ -750,7 +737,7 @@ func (s *addressTestSuite) TestFormatConsAddressAsString() {
 }
 
 func (s *addressTestSuite) TestFormatConsAddressAsPointer() {
-	consAddr := types.ConsAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	consAddr := types.ConsAddress(addr20byte)
 
 	ptrAddr := &consAddr
 	actual := fmt.Sprintf("%p", ptrAddr)
@@ -759,7 +746,7 @@ func (s *addressTestSuite) TestFormatConsAddressAsPointer() {
 }
 
 func (s *addressTestSuite) TestFormatConsAddressWhenVerbIsDifferentFromSOrP() {
-	myAddr := types.ConsAddress([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19})
+	myAddr := types.ConsAddress(addr20byte)
 	exp := "000102030405060708090A0B0C0D0E0F10111213"
 	spec := []string{"%v", "%#v", "%t", "%b", "%c", "%d", "%o", "%O", "%x", "%X", "%U", "%e", "%E", "%f", "%F", "%g", "%G"}
 	for _, v := range spec {

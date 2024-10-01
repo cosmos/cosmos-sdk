@@ -1,6 +1,7 @@
 package decoding
 
 import (
+	"fmt"
 	"sort"
 
 	"cosmossdk.io/schema"
@@ -8,8 +9,14 @@ import (
 
 // DecoderResolver is an interface that allows indexers to discover and use module decoders.
 type DecoderResolver interface {
-	// IterateAll iterates over all available module decoders.
-	IterateAll(func(moduleName string, cdc schema.ModuleCodec) error) error
+	// DecodeModuleName decodes a module name from a byte slice passed as the actor in a KVPairUpdate.
+	DecodeModuleName([]byte) (string, error)
+
+	// EncodeModuleName encodes a module name into a byte slice that can be used as the actor in a KVPairUpdate.
+	EncodeModuleName(string) ([]byte, error)
+
+	// AllDecoders iterates over all available module decoders.
+	AllDecoders(func(moduleName string, cdc schema.ModuleCodec) error) error
 
 	// LookupDecoder looks up a specific module decoder.
 	LookupDecoder(moduleName string) (decoder schema.ModuleCodec, found bool, err error)
@@ -27,7 +34,21 @@ type moduleSetDecoderResolver struct {
 	moduleSet map[string]interface{}
 }
 
-func (a moduleSetDecoderResolver) IterateAll(f func(string, schema.ModuleCodec) error) error {
+func (a moduleSetDecoderResolver) DecodeModuleName(bytes []byte) (string, error) {
+	if _, ok := a.moduleSet[string(bytes)]; ok {
+		return string(bytes), nil
+	}
+	return "", fmt.Errorf("module %s not found", bytes)
+}
+
+func (a moduleSetDecoderResolver) EncodeModuleName(s string) ([]byte, error) {
+	if _, ok := a.moduleSet[s]; ok {
+		return []byte(s), nil
+	}
+	return nil, fmt.Errorf("module %s not found", s)
+}
+
+func (a moduleSetDecoderResolver) AllDecoders(f func(string, schema.ModuleCodec) error) error {
 	keys := make([]string, 0, len(a.moduleSet))
 	for k := range a.moduleSet {
 		keys = append(keys, k)

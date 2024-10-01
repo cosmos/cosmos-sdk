@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/staking/types"
@@ -16,6 +17,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -63,7 +65,12 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 		vals.Validators = append(vals.Validators, *val)
 		valInfo := types.ValidatorInfo{}
 
-		cpk, ok := val.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
+		cv := val.ConsensusPubkey.GetCachedValue()
+		if cv == nil {
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "public key cached value is nil")
+		}
+
+		cpk, ok := cv.(cryptotypes.PubKey)
 		if ok {
 			consAddr, err := k.consensusAddressCodec.BytesToString(cpk.Address())
 			if err == nil {
@@ -404,12 +411,12 @@ func (k Querier) DelegatorUnbondingDelegations(ctx context.Context, req *types.Q
 }
 
 // HistoricalInfo queries the historical info for given height
-func (k Querier) HistoricalInfo(ctx context.Context, req *types.QueryHistoricalInfoRequest) (*types.QueryHistoricalInfoResponse, error) { // nolint:staticcheck // SA1019: deprecated endpoint
+func (k Querier) HistoricalInfo(ctx context.Context, req *types.QueryHistoricalInfoRequest) (*types.QueryHistoricalInfoResponse, error) { //nolint:staticcheck // SA1019: deprecated endpoint
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	return nil, status.Error(codes.Internal, "this endpoint has been deprecated and removed in 0.52")
+	return nil, status.Error(codes.Internal, "this endpoint has been deprecated and removed since v0.52")
 }
 
 // Redelegations queries redelegations of given address

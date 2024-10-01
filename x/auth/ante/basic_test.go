@@ -8,10 +8,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/appmodule/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth/ante"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -19,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 func TestValidateBasic(t *testing.T) {
@@ -99,7 +99,7 @@ func TestValidateMemo(t *testing.T) {
 }
 
 func TestConsumeGasForTxSize(t *testing.T) {
-	t.Skip() //  TODO(@julienrbrt) Fix after https://github.com/cosmos/cosmos-sdk/pull/20072
+	t.Skip() // TO FIX BEFORE 0.52 FINAL.
 
 	suite := SetupTestSuite(t, true)
 
@@ -189,7 +189,7 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 	suite := SetupTestSuite(t, true)
 
 	mockHeaderService := &mockHeaderService{}
-	antehandler := sdk.ChainAnteDecorators(ante.NewTxTimeoutHeightDecorator(appmodule.Environment{HeaderService: mockHeaderService}))
+	antehandler := sdk.ChainAnteDecorators(ante.NewTxTimeoutHeightDecorator(appmodulev2.Environment{HeaderService: mockHeaderService}))
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
@@ -221,8 +221,6 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 

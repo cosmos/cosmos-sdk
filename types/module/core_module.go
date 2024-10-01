@@ -9,7 +9,6 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	storetypes "cosmossdk.io/store/types"
 
@@ -198,9 +197,9 @@ func (c coreAppModuleAdaptor) RegisterInterfaces(reg registry.InterfaceRegistrar
 }
 
 // RegisterLegacyAminoCodec implements HasAminoCodec
-func (c coreAppModuleAdaptor) RegisterLegacyAminoCodec(amino legacy.Amino) {
+func (c coreAppModuleAdaptor) RegisterLegacyAminoCodec(amino registry.AminoRegistrar) {
 	if mod, ok := c.module.(interface {
-		RegisterLegacyAminoCodec(amino legacy.Amino)
+		RegisterLegacyAminoCodec(amino registry.AminoRegistrar)
 	}); ok {
 		mod.RegisterLegacyAminoCodec(amino)
 	}
@@ -208,7 +207,7 @@ func (c coreAppModuleAdaptor) RegisterLegacyAminoCodec(amino legacy.Amino) {
 
 // RegisterServices implements HasServices
 func (c coreAppModuleAdaptor) RegisterServices(cfg Configurator) {
-	if module, ok := c.module.(appmodule.HasServices); ok {
+	if module, ok := c.module.(hasServicesV1); ok {
 		err := module.RegisterServices(cfg)
 		if err != nil {
 			panic(err)

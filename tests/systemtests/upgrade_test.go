@@ -38,7 +38,7 @@ func TestChainUpgrade(t *testing.T) {
 		upgradeName         = "v050-to-v051"
 	)
 
-	sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight))
+	sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight+1))
 
 	cli := NewCLIWrapper(t, sut, verbose)
 	govAddr := sdk.AccAddress(address.Module("gov")).String()
@@ -106,8 +106,8 @@ func FetchExecutable(t *testing.T, version string) string {
 	}
 	destFile := cacheFile
 	t.Log("+++ version not in cache, downloading from docker image")
-	runShellCmd(t, "docker", "pull", "ghcr.io/cosmos/simapp:"+version)
-	runShellCmd(t, "docker", "create", "--name=ci_temp", "ghcr.io/cosmos/simapp:"+version)
-	runShellCmd(t, "docker", "cp", "ci_temp:/usr/bin/simd", destFile)
+	MustRunShellCmd(t, "docker", "pull", "ghcr.io/cosmos/simapp:"+version)
+	MustRunShellCmd(t, "docker", "create", "--name=ci_temp", "ghcr.io/cosmos/simapp:"+version)
+	MustRunShellCmd(t, "docker", "cp", "ci_temp:/usr/bin/simd", destFile)
 	return destFile
 }

@@ -3,12 +3,11 @@ package runtime
 import (
 	"encoding/json"
 	"errors"
+	"slices"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"golang.org/x/exp/slices"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
-	"cosmossdk.io/core/legacy"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -41,12 +40,14 @@ type App[T transaction.Tx] struct {
 	// modules configuration
 	storeKeys          []string
 	interfaceRegistrar registry.InterfaceRegistrar
-	amino              legacy.Amino
+	amino              registry.AminoRegistrar
 	moduleManager      *MM[T]
 
 	// GRPCMethodsToMessageMap maps gRPC method name to a function that decodes the request
 	// bytes into a gogoproto.Message, which then can be passed to appmanager.
 	GRPCMethodsToMessageMap map[string]func() gogoproto.Message
+
+	storeLoader StoreLoader
 }
 
 // Name returns the app name.
@@ -69,14 +70,24 @@ func (a *App[T]) DefaultGenesis() map[string]json.RawMessage {
 	return a.moduleManager.DefaultGenesis()
 }
 
+// SetStoreLoader sets the store loader.
+func (a *App[T]) SetStoreLoader(loader StoreLoader) {
+	a.storeLoader = loader
+}
+
 // LoadLatest loads the latest version.
 func (a *App[T]) LoadLatest() error {
-	return a.db.LoadLatestVersion()
+	return a.storeLoader(a.db)
 }
 
 // LoadHeight loads a particular height
 func (a *App[T]) LoadHeight(height uint64) error {
 	return a.db.LoadVersion(height)
+}
+
+// LoadLatestHeight loads the latest height.
+func (a *App[T]) LoadLatestHeight() (uint64, error) {
+	return a.db.GetLatestVersion()
 }
 
 // Close is called in start cmd to gracefully cleanup resources.
@@ -103,15 +114,6 @@ func (a *App[T]) UnsafeFindStoreKey(storeKey string) (string, error) {
 // GetStore returns the app store.
 func (a *App[T]) GetStore() Store {
 	return a.db
-}
-
-// GetLogger returns the app logger.
-func (a *App[T]) GetLogger() log.Logger {
-	return a.logger
-}
-
-func (a *App[T]) ExecuteGenesisTx(_ []byte) error {
-	panic("App.ExecuteGenesisTx not supported in runtime/v2")
 }
 
 func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {

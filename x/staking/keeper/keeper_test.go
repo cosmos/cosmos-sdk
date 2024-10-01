@@ -14,8 +14,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
-	consensustypes "cosmossdk.io/x/consensus/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -31,6 +29,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	addresstypes "github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -81,14 +80,11 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	// create consensus keeper
 	ck := stakingtestutil.NewMockConsensusKeeper(ctrl)
-	ck.EXPECT().Params(gomock.Any(), gomock.Any()).Return(&consensustypes.QueryParamsResponse{
-		Params: simtestutil.DefaultConsensusParams,
-	}, nil).AnyTimes()
+	ck.EXPECT().ValidatorPubKeyTypes(gomock.Any()).Return(simtestutil.DefaultConsensusParams.Validator.PubKeyTypes, nil).AnyTimes()
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
-	consensustypes.RegisterQueryServer(queryHelper, ck)
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
-	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(queryHelper.GRPCQueryRouter), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()))
+	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()))
 	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(stakingtypes.GovModuleName))
 	s.Require().NoError(err)
 	keeper := stakingkeeper.NewKeeper(
@@ -96,6 +92,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		env,
 		accountKeeper,
 		bankKeeper,
+		ck,
 		authority,
 		address.NewBech32Codec("cosmosvaloper"),
 		address.NewBech32Codec("cosmosvalcons"),

@@ -7,6 +7,8 @@ import (
 )
 
 type Store interface {
+	storev2.Backend
+
 	// GetLatestVersion returns the latest version that consensus has been made on
 	GetLatestVersion() (uint64, error)
 	// StateLatest returns a readonly view over the latest
@@ -30,10 +32,4 @@ type Store interface {
 
 	// LastCommitID returns a CommitID pertaining to the last commitment.
 	LastCommitID() (proof.CommitID, error)
-
-	// GetStateStorage returns the SS backend.
-	GetStateStorage() storev2.VersionedDatabase
-
-	// GetStateCommitment returns the SC backend.
-	GetStateCommitment() storev2.Committer
 }

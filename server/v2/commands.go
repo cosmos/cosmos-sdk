@@ -33,7 +33,7 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 }
 
 // AddCommands add the server commands to the root command
-// It configure the config handling and the logger handling
+// It configures the config handling and the logger handling
 func AddCommands[T transaction.Tx](
 	rootCmd *cobra.Command,
 	newApp AppCreator[T],

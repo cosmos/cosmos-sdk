@@ -43,14 +43,21 @@ type CometBFTServer[T transaction.Tx] struct {
 
 	initTxCodec   transaction.Codec[T]
 	logger        log.Logger
+	store         types.Store
 	serverOptions ServerOptions[T]
 	config        Config
 	cfgOptions    []CfgOption
 }
 
-func New[T transaction.Tx](txCodec transaction.Codec[T], serverOptions ServerOptions[T], cfgOptions ...CfgOption) *CometBFTServer[T] {
+func New[T transaction.Tx](
+	txCodec transaction.Codec[T],
+	store types.Store,
+	serverOptions ServerOptions[T],
+	cfgOptions ...CfgOption,
+) *CometBFTServer[T] {
 	return &CometBFTServer[T]{
 		initTxCodec:   txCodec,
+		store:         store,
 		serverOptions: serverOptions,
 		cfgOptions:    cfgOptions,
 	}
@@ -98,7 +105,6 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	}
 
 	s.logger = logger.With(log.ModuleKey, s.Name())
-	store := appI.GetStore().(types.Store)
 	consensus := NewConsensus(
 		s.logger,
 		appI.Name(),
@@ -106,7 +112,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		s.serverOptions.Mempool(cfg),
 		indexEvents,
 		appI.GetGPRCMethodsToMessageMap(),
-		store,
+		s.store,
 		s.config,
 		s.initTxCodec,
 		chainID,
@@ -118,8 +124,8 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	consensus.addrPeerFilter = s.serverOptions.AddrPeerFilter
 	consensus.idPeerFilter = s.serverOptions.IdPeerFilter
 
-	ss := store.GetStateStorage().(snapshots.StorageSnapshotter)
-	sc := store.GetStateCommitment().(snapshots.CommitSnapshotter)
+	ss := s.store.GetStateStorage().(snapshots.StorageSnapshotter)
+	sc := s.store.GetStateCommitment().(snapshots.CommitSnapshotter)
 
 	snapshotStore, err := GetSnapshotStore(s.config.ConfigTomlConfig.RootDir)
 	if err != nil {

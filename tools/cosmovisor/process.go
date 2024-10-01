@@ -72,18 +72,18 @@ func BatchUpgradeWatcher(ctx context.Context, cfg *Config, logger log.Logger) {
 	uInfos, err := loadBatchUpgradeFile(cfg)
 	if err != nil {
 		logger.Warn("failed to load batch upgrade file", "error", err)
-		return
+		uInfos = []upgradetypes.Plan{}
 	}
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		logger.Warn(fmt.Sprintf("failed to init watcher: %s", err))
+		logger.Warn("failed to init watcher", "error", err)
 		return
 	}
 	defer watcher.Close()
 	err = watcher.Add(filepath.Dir(cfg.UpgradeInfoBatchFilePath()))
 	if err != nil {
-		logger.Warn("failed to init watcher", "error", err)
+		logger.Warn("watcher failed to add upgrade directory", "error", err)
 		return
 	}
 

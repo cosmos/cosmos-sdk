@@ -14,7 +14,7 @@ import (
 
 const (
 	ModuleName = "runtime"
-	FlagHome   = "home"
+	flagHome   = "home"
 )
 
 // validateProtoAnnotations validates that the proto annotations are correct.

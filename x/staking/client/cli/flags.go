@@ -15,12 +15,14 @@ const (
 	FlagSharesAmount        = "shares-amount"
 	FlagSharesFraction      = "shares-fraction"
 
-	FlagMoniker         = "moniker"
-	FlagEditMoniker     = "new-moniker"
-	FlagIdentity        = "identity"
-	FlagWebsite         = "website"
-	FlagSecurityContact = "security-contact"
-	FlagDetails         = "details"
+	FlagMoniker                  = "moniker"
+	FlagEditMoniker              = "new-moniker"
+	FlagIdentity                 = "identity"
+	FlagWebsite                  = "website"
+	FlagSecurityContact          = "security-contact"
+	FlagDetails                  = "details"
+	FlagMetadataProfilePicUri    = "metadata-profile-pic-uri"
+	FlagMetadataSocialHandleUris = "metadata-social-handle-uris"
 
 	FlagCommissionRate          = "commission-rate"
 	FlagCommissionMaxRate       = "commission-max-rate"
@@ -89,6 +91,8 @@ func flagSetDescriptionEdit() *flag.FlagSet {
 	fs.String(FlagWebsite, types.DoNotModifyDesc, "The validator's (optional) website")
 	fs.String(FlagSecurityContact, types.DoNotModifyDesc, "The validator's (optional) security contact email")
 	fs.String(FlagDetails, types.DoNotModifyDesc, "The validator's (optional) details")
+	fs.String(FlagMetadataProfilePicUri, "", "The  validator's profile pic uri")
+	fs.StringArray(FlagMetadataSocialHandleUris, []string{}, "The  validator's social handles uris")
 
 	return fs
 }

@@ -1147,7 +1147,9 @@ func (rs *Store) flushMetadata(db corestore.KVStoreWithBatch, version int64, cIn
 	rs.logger.Debug("flushing metadata", "height", version)
 	batch := db.NewBatch()
 	defer func() {
-		_ = batch.Close()
+		if err := batch.Close(); err != nil {
+			rs.logger.Error("call flushMetadata error on batch close", "err", err)
+		}
 	}()
 
 	if cInfo != nil {

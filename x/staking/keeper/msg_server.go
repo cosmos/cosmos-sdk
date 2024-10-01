@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/hashicorp/go-metrics"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -21,7 +20,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -111,7 +109,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		)
 	}
 
-	if _, err := msg.Description.EnsureLength(); err != nil {
+	if _, err := msg.Description.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -178,7 +176,7 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
-	if msg.Description == (types.Description{}) {
+	if msg.Description.IsEmpty() {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 
@@ -301,17 +299,6 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 		return nil, err
 	}
 
-	if msg.Amount.Amount.IsInt64() {
-		defer func() {
-			telemetry.IncrCounter(1, types.ModuleName, "delegate")
-			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
-				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
-			)
-		}()
-	}
-
 	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeDelegate,
 		event.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
@@ -374,17 +361,6 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 		return nil, err
 	}
 
-	if msg.Amount.Amount.IsInt64() {
-		defer func() {
-			telemetry.IncrCounter(1, types.ModuleName, "redelegate")
-			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
-				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
-			)
-		}()
-	}
-
 	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeRedelegate,
 		event.NewAttribute(types.AttributeKeySrcValidator, msg.ValidatorSrcAddress),
@@ -443,17 +419,6 @@ func (k msgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*t
 	}
 
 	undelegatedCoin := sdk.NewCoin(msg.Amount.Denom, undelegatedAmt)
-
-	if msg.Amount.Amount.IsInt64() {
-		defer func() {
-			telemetry.IncrCounter(1, types.ModuleName, "undelegate")
-			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
-				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
-			)
-		}()
-	}
 
 	if err := k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeUnbond,

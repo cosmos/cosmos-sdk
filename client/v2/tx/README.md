@@ -5,25 +5,24 @@ The tx package provides a robust set of tools for building, signing, and managin
 This package includes several key components:
 
 1. Transaction Factory
-2. Transaction Builder
-3. Transaction Config
-4. Transaction Encoder/Decoder
-5. Signature Handling
+2. Transaction Config
+3. Transaction Encoder/Decoder
+4. Signature Handling
 
 ## Architecture
 
 ```mermaid
 graph TD
     A[Client] --> B[Factory]
-    B --> C[TxBuilder]
     B --> D[TxConfig]
     D --> E[TxEncodingConfig]
     D --> F[TxSigningConfig]
-    C --> G[Tx]
+    B --> G[Tx]
     G --> H[Encoder]
     G --> I[Decoder]
     F --> J[SignModeHandler]
     F --> K[SigningContext]
+    B --> L[AuxTxBuilder]
 ```
 
 ## Key Components
@@ -42,7 +41,6 @@ classDiagram
         <<interface>>
         TxEncodingConfig
         TxSigningConfig
-        TxBuilderProvider
     }
 
     class TxEncodingConfig {
@@ -51,6 +49,7 @@ classDiagram
         TxDecoder() txDecoder
         TxJSONEncoder() txEncoder
         TxJSONDecoder() txDecoder
+        Decoder() Decoder
     }
 
     class TxSigningConfig {
@@ -61,12 +60,7 @@ classDiagram
         UnmarshalSignatureJSON([]byte) ([]Signature, error)
     }
 
-    class TxBuilderProvider {
-        <<interface>>
-    }
-
     class txConfig {
-        TxBuilderProvider
         TxEncodingConfig
         TxSigningConfig
     }
@@ -93,84 +87,8 @@ classDiagram
     TxConfig <|-- txConfig
     TxEncodingConfig <|.. defaultEncodingConfig
     TxSigningConfig <|.. defaultTxSigningConfig
-    txConfig *-- TxBuilderProvider
     txConfig *-- defaultEncodingConfig
     txConfig *-- defaultTxSigningConfig
-```
-
-### TxBuilder
-
-`TxBuilder` is responsible for constructing the transaction.
-
-```mermaid
-classDiagram
-    class TxBuilder {
-        <<interface>>
-        GetTx() (Tx, error)
-        GetSigningTxData() (*signing.TxData, error)
-        SetMsgs(...transaction.Msg) error
-        SetMemo(string)
-        SetFeeAmount([]*base.Coin)
-        SetGasLimit(uint64)
-        SetTimeoutHeight(uint64)
-        SetFeePayer(string) error
-        SetFeeGranter(string) error
-        SetUnordered(bool)
-        SetSignatures(...Signature) error
-    }
-
-    class ExtendedTxBuilder {
-        <<interface>>
-        +SetExtensionOptions(...*gogoany.Any)
-    }
-
-    class txBuilder {
-        addressCodec address.Codec
-        decoder Decoder
-        codec codec.BinaryCodec
-        msgs []transaction.Msg
-        timeoutHeight uint64
-        granter []byte
-        payer []byte
-        unordered bool
-        memo string
-        gasLimit uint64
-        fees []*base.Coin
-        signerInfos []*apitx.SignerInfo
-        signatures [][]byte
-        extensionOptions []*anypb.Any
-        nonCriticalExtensionOptions []*anypb.Any
-        GetTx() (Tx, error)
-        GetSigningTxData() (*signing.TxData, error)
-        SetMsgs(...transaction.Msg) error
-        SetMemo(string)
-        SetFeeAmount([]*base.Coin)
-        SetGasLimit(uint64)
-        SetTimeoutHeight(uint64)
-        SetFeePayer(string) error
-        SetFeeGranter(string) error
-        SetUnordered(bool)
-        SetSignatures(...Signature) error
-        getTx() (*wrappedTx, error)
-        getFee() (*apitx.Fee, error)
-    }
-
-    class TxBuilderProvider {
-        <<interface>>
-        NewTxBuilder() TxBuilder
-    }
-
-    class BuilderProvider {
-        addressCodec address.Codec
-        decoder Decoder
-        codec codec.BinaryCodec
-        NewTxBuilder() TxBuilder
-    }
-
-    TxBuilder <|.. txBuilder : implements
-    ExtendedTxBuilder <|.. txBuilder : implements
-    TxBuilderProvider <|.. BuilderProvider : implements
-    BuilderProvider ..> txBuilder : creates
 ```
 
 ### Factory
@@ -179,8 +97,10 @@ The `Factory` is the main entry point for creating and managing transactions. It
 
 - Account preparation
 - Gas calculation
-- Transaction simulation
 - Unsigned transaction building
+- Transaction signing
+- Transaction simulation
+- Transaction broadcasting
 
 ```mermaid
 classDiagram
@@ -192,46 +112,64 @@ classDiagram
         conn gogogrpc.ClientConn
         txConfig TxConfig
         txParams TxParameters
+        tx txState
 
         NewFactory(keybase, cdc, accRetriever, txConfig, ac, conn, parameters) Factory
         Prepare() error
-        BuildUnsignedTx(msgs ...transaction.Msg) (TxBuilder, error)
+        BuildUnsignedTx(msgs ...transaction.Msg) error
         BuildsSignedTx(ctx context.Context, msgs ...transaction.Msg) (Tx, error)
         calculateGas(msgs ...transaction.Msg) error
         Simulate(msgs ...transaction.Msg) (*apitx.SimulateResponse, uint64, error)
         UnsignedTxString(msgs ...transaction.Msg) (string, error)
         BuildSimTx(msgs ...transaction.Msg) ([]byte, error)
-        sign(ctx context.Context, txBuilder TxBuilder, overwriteSig bool) (Tx, error)
+        sign(ctx context.Context, overwriteSig bool) (Tx, error)
         WithGas(gas uint64)
         WithSequence(sequence uint64)
         WithAccountNumber(accnum uint64)
-        preprocessTx(keyname string, builder TxBuilder) error
-        accountNumber() uint64
-        sequence() uint64
-        GgasAdjustment() float64
-        keyring() keyring.Keyring
-        simulateAndExecute() bool
-        signMode() apitxsigning.SignMode
-        getSimPK() (cryptotypes.PubKey, error)
-        getSimSignatureData(pk cryptotypes.PubKey) SignatureData
-        getSignBytesAdapter(ctx context.Context, signerData signing.SignerData, builder TxBuilder) ([]byte, error)
+        getTx() (Tx, error)
+        getFee() (*apitx.Fee, error)
+        getSigningTxData() (signing.TxData, error)
+        setSignatures(...Signature) error
     }
 
     class TxParameters {
         <<struct>>
+        chainID string
+        AccountConfig
+        GasConfig
+        FeeConfig
+        SignModeConfig
+        TimeoutConfig
+        MemoConfig
     }
 
     class TxConfig {
         <<interface>>
     }
 
-    class TxBuilder {
+    class Tx {
         <<interface>>
+    }
+
+    class txState {
+        <<struct>>
+        msgs []transaction.Msg
+        memo string
+        fees []*base.Coin
+        gasLimit uint64
+        feeGranter []byte
+        feePayer []byte
+        timeoutHeight uint64
+        unordered bool
+        timeoutTimestamp uint64
+        signatures []Signature
+        signerInfos []*apitx.SignerInfo
     }
 
     Factory *-- TxParameters
     Factory *-- TxConfig
-    Factory ..> TxBuilder : creates and uses
+    Factory *-- txState
+    Factory ..> Tx : creates
 ```
 
 ### Encoder/Decoder
@@ -332,6 +270,7 @@ sequenceDiagram
     ctx.PrintProto-->>GenerateOrBroadcastTxCLI: Return result
     GenerateOrBroadcastTxCLI-->>User: Return result
 ```
+
 #### Generate Only
 ```mermaid
 sequenceDiagram
@@ -339,7 +278,6 @@ sequenceDiagram
     participant GenerateOrBroadcastTxCLI
     participant generateOnly
     participant Factory
-    participant TxBuilder
     participant ctx.PrintString
 
     User->>GenerateOrBroadcastTxCLI: Call with generateOnly flag
@@ -353,24 +291,16 @@ sequenceDiagram
     end
 
     generateOnly->>Factory: UnsignedTxString(msgs...)
-    Factory->>Factory: SimulateAndExecute()
-    alt SimulateAndExecute is true
-        Factory->>Factory: calculateGas(msgs...)
-        Factory->>Factory: Simulate(msgs...)
-        Factory->>Factory: WithGas(adjusted)
-    end
-
     Factory->>Factory: BuildUnsignedTx(msgs...)
-    Factory->>TxBuilder: NewTxBuilder()
-    Factory->>TxBuilder: SetMsgs(msgs...)
-    Factory->>TxBuilder: SetMemo(f.txParams.memo)
-    Factory->>TxBuilder: SetFeeAmount(fees)
-    Factory->>TxBuilder: SetGasLimit(f.txParams.gas)
-    Factory->>TxBuilder: SetFeeGranter(f.txParams.feeGranter)
-    Factory->>TxBuilder: SetFeePayer(f.txParams.feePayer)
-    Factory->>TxBuilder: SetTimeoutHeight(f.txParams.timeoutHeight)
+    Factory->>Factory: setMsgs(msgs...)
+    Factory->>Factory: setMemo(f.txParams.memo)
+    Factory->>Factory: setFees(f.txParams.gasPrices)
+    Factory->>Factory: setGasLimit(f.txParams.gas)
+    Factory->>Factory: setFeeGranter(f.txParams.feeGranter)
+    Factory->>Factory: setFeePayer(f.txParams.feePayer)
+    Factory->>Factory: setTimeoutHeight(f.txParams.timeoutHeight)
 
-    Factory->>TxBuilder: GetTx()
+    Factory->>Factory: getTx()
     Factory->>Factory: txConfig.TxJSONEncoder()
     Factory->>Factory: encoder(tx)
 
@@ -393,13 +323,6 @@ sequenceDiagram
     User->>GenerateOrBroadcastTxCLI: Call with dryRun flag
     GenerateOrBroadcastTxCLI->>dryRun: Call
 
-    dryRun->>Factory: Check txParams.offline
-    alt txParams.offline is true
-        Factory-->>dryRun: Return error (cannot use offline mode)
-        dryRun-->>GenerateOrBroadcastTxCLI: Return error
-        GenerateOrBroadcastTxCLI-->>User: Return error
-    end
-
     dryRun->>Factory: Prepare()
     alt Error in Prepare
         Factory-->>dryRun: Return error
@@ -412,13 +335,10 @@ sequenceDiagram
     Factory->>Factory: BuildUnsignedTx(msgs...)
     Factory->>Factory: getSimPK()
     Factory->>Factory: getSimSignatureData(pk)
-    Factory->>Factory: SetSignatures(sig)
-    Factory->>Factory: TxEncoder()(tx)
+    Factory->>Factory: setSignatures(sig)
+    Factory->>Factory: getTx()
+    Factory->>Factory: txConfig.TxEncoder()(tx)
     
-    Factory->>Factory: txConfig.SignModeHandler().GetSignBytes()
-    Factory->>Factory: keybase.Sign()
-    Factory->>Factory: SetSignatures()
-
     Factory->>ServiceClient: Simulate(context.Background(), &apitx.SimulateRequest{})
     ServiceClient->>Factory: Return result
     
@@ -441,7 +361,6 @@ sequenceDiagram
     participant GenerateOrBroadcastTxCLI
     participant BroadcastTx
     participant Factory
-    participant TxBuilder
     participant clientCtx
 
     User->>GenerateOrBroadcastTxCLI: Call
@@ -454,7 +373,6 @@ sequenceDiagram
         GenerateOrBroadcastTxCLI-->>User: Return error
     end
 
-    BroadcastTx->>Factory: SimulateAndExecute()
     alt SimulateAndExecute is true
         BroadcastTx->>Factory: calculateGas(msgs...)
         Factory->>Factory: Simulate(msgs...)
@@ -462,17 +380,16 @@ sequenceDiagram
     end
 
     BroadcastTx->>Factory: BuildUnsignedTx(msgs...)
-    Factory->>TxBuilder: NewTxBuilder()
-    Factory->>TxBuilder: SetMsgs(msgs...)
-    Factory->>TxBuilder: SetMemo(memo)
-    Factory->>TxBuilder: SetFeeAmount(fees)
-    Factory->>TxBuilder: SetGasLimit(gas)
-    Factory->>TxBuilder: SetFeeGranter(feeGranter)
-    Factory->>TxBuilder: SetFeePayer(feePayer)
-    Factory->>TxBuilder: SetTimeoutHeight(timeoutHeight)
+    Factory->>Factory: setMsgs(msgs...)
+    Factory->>Factory: setMemo(f.txParams.memo)
+    Factory->>Factory: setFees(f.txParams.gasPrices)
+    Factory->>Factory: setGasLimit(f.txParams.gas)
+    Factory->>Factory: setFeeGranter(f.txParams.feeGranter)
+    Factory->>Factory: setFeePayer(f.txParams.feePayer)
+    Factory->>Factory: setTimeoutHeight(f.txParams.timeoutHeight)
 
     alt !clientCtx.SkipConfirm
-        BroadcastTx->>TxBuilder: GetTx()
+        BroadcastTx->>Factory: getTx()
         BroadcastTx->>Factory: txConfig.TxJSONEncoder()
         BroadcastTx->>clientCtx: PrintRaw(txBytes)
         BroadcastTx->>clientCtx: Input.GetConfirmation()
@@ -482,12 +399,13 @@ sequenceDiagram
         end
     end
 
-    BroadcastTx->>Factory: sign(ctx, builder, true)
+    BroadcastTx->>Factory: BuildsSignedTx(ctx, msgs...)
+    Factory->>Factory: sign(ctx, true)
     Factory->>Factory: keybase.GetPubKey(fromName)
     Factory->>Factory: getSignBytesAdapter()
     Factory->>Factory: keybase.Sign(fromName, bytesToSign, signMode)
-    Factory->>TxBuilder: SetSignatures(sig)
-    Factory->>TxBuilder: GetTx()
+    Factory->>Factory: setSignatures(sig)
+    Factory->>Factory: getTx()
 
     BroadcastTx->>Factory: txConfig.TxEncoder()
     BroadcastTx->>clientCtx: BroadcastTx(txBytes)
@@ -509,19 +427,39 @@ sequenceDiagram
 To use the `tx` package, typically you would:
 
 1. Create a `Factory`
-2. Prepare the account
-3. Build an unsigned transaction
-4. Simulate the transaction (optional)
-5. Sign the transaction
-6. Broadcast the transaction
+2. Simulate the transaction (optional)
+3. Build a signed transaction
+4. Encode the transaction
+5. Broadcast the transaction
 
 Here's a simplified example:
 
 ```go
-factory, _ := NewFactory(...)
-factory.Prepare()
-txBuilder, _ := factory.BuildUnsignedTx(msgs...)
-factory.Sign(ctx, txBuilder, true)
-txBytes, _ := factory.txConfig.TxEncoder()(txBuilder.GetTx())
-// Broadcast txBytes
+// Create a Factory
+factory, err := NewFactory(keybase, cdc, accountRetriever, txConfig, addressCodec, conn, txParameters)
+if err != nil {
+    return err
+}
+
+// Simulate the transaction (optional)
+simRes, gas, err := factory.Simulate(msgs...)
+if err != nil {
+    return err
+}
+factory.WithGas(gas)
+
+// Build a signed transaction
+signedTx, err := factory.BuildsSignedTx(context.Background(), msgs...)
+if err != nil {
+    return err
+}
+
+// Encode the transaction
+txBytes, err := factory.txConfig.TxEncoder()(signedTx)
+if err != nil {
+    return err
+}
+
+// Broadcast the transaction
+// (This step depends on your specific client implementation)
 ```

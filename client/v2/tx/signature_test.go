@@ -61,7 +61,7 @@ func TestSignatureDataToModeInfoAndSig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			modeInfo, signature := SignatureDataToModeInfoAndSig(tt.data)
+			modeInfo, signature := signatureDataToModeInfoAndSig(tt.data)
 			require.Equal(t, tt.mIResult, modeInfo)
 			require.Equal(t, tt.sigResult, signature)
 		})
@@ -130,7 +130,7 @@ func TestModeInfoAndSigToSignatureData(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ModeInfoAndSigToSignatureData(tt.args.modeInfo(), tt.args.sig)
+			got, err := modeInfoAndSigToSignatureData(tt.args.modeInfo(), tt.args.sig)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ModeInfoAndSigToSignatureData() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -285,7 +285,7 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 
 // GetAuxSignerData returns the builder's AuxSignerData.
 func (b *AuxTxBuilder) GetAuxSignerData() (*apitx.AuxSignerData, error) {
-	if err := validateAuxSignerData(b.auxSignerData); err != nil { // TODO
+	if err := validateAuxSignerData(b.auxSignerData); err != nil {
 		return nil, err
 	}
 

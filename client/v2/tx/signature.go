@@ -38,8 +38,8 @@ type MultiSignatureData struct {
 func (m *SingleSignatureData) isSignatureData() {}
 func (m *MultiSignatureData) isSignatureData()  {}
 
-// SignatureDataToModeInfoAndSig converts SignatureData to ModeInfo and its corresponding raw signature.
-func SignatureDataToModeInfoAndSig(data SignatureData) (*apitx.ModeInfo, []byte) {
+// signatureDataToModeInfoAndSig converts SignatureData to ModeInfo and its corresponding raw signature.
+func signatureDataToModeInfoAndSig(data SignatureData) (*apitx.ModeInfo, []byte) {
 	if data == nil {
 		return nil, nil
 	}
@@ -56,7 +56,7 @@ func SignatureDataToModeInfoAndSig(data SignatureData) (*apitx.ModeInfo, []byte)
 		sigs := make([][]byte, len(data.Signatures))
 
 		for i, d := range data.Signatures {
-			modeInfos[i], sigs[i] = SignatureDataToModeInfoAndSig(d)
+			modeInfos[i], sigs[i] = signatureDataToModeInfoAndSig(d)
 		}
 
 		multisig := cryptotypes.MultiSignature{Signatures: sigs}
@@ -78,8 +78,8 @@ func SignatureDataToModeInfoAndSig(data SignatureData) (*apitx.ModeInfo, []byte)
 	}
 }
 
-// ModeInfoAndSigToSignatureData converts ModeInfo and a raw signature to SignatureData.
-func ModeInfoAndSigToSignatureData(modeInfo *apitx.ModeInfo, sig []byte) (SignatureData, error) {
+// modeInfoAndSigToSignatureData converts ModeInfo and a raw signature to SignatureData.
+func modeInfoAndSigToSignatureData(modeInfo *apitx.ModeInfo, sig []byte) (SignatureData, error) {
 	switch mi := modeInfo.Sum.(type) {
 	case *apitx.ModeInfo_Single_:
 		return &SingleSignatureData{
@@ -97,7 +97,7 @@ func ModeInfoAndSigToSignatureData(modeInfo *apitx.ModeInfo, sig []byte) (Signat
 
 		sigsV2 := make([]SignatureData, len(sigs))
 		for i, mi := range multi.ModeInfos {
-			sigsV2[i], err = ModeInfoAndSigToSignatureData(mi, sigs[i])
+			sigsV2[i], err = modeInfoAndSigToSignatureData(mi, sigs[i])
 			if err != nil {
 				return nil, err
 			}
@@ -126,11 +126,11 @@ func decodeMultiSignatures(bz []byte) ([][]byte, error) {
 	return multisig.Signatures, nil
 }
 
-// SignatureDataToProto converts a SignatureData interface to a protobuf SignatureDescriptor_Data.
+// signatureDataToProto converts a SignatureData interface to a protobuf SignatureDescriptor_Data.
 // This function supports both SingleSignatureData and MultiSignatureData types.
 // For SingleSignatureData, it directly maps the signature mode and signature bytes to the protobuf structure.
 // For MultiSignatureData, it recursively converts each signature in the collection to the corresponding protobuf structure.
-func SignatureDataToProto(data SignatureData) (*apitxsigning.SignatureDescriptor_Data, error) {
+func signatureDataToProto(data SignatureData) (*apitxsigning.SignatureDescriptor_Data, error) {
 	switch data := data.(type) {
 	case *SingleSignatureData:
 		// Handle single signature data conversion.
@@ -147,7 +147,7 @@ func SignatureDataToProto(data SignatureData) (*apitxsigning.SignatureDescriptor
 		descDatas := make([]*apitxsigning.SignatureDescriptor_Data, len(data.Signatures))
 
 		for i, j := range data.Signatures {
-			descDatas[i], err = SignatureDataToProto(j)
+			descDatas[i], err = signatureDataToProto(j)
 			if err != nil {
 				return nil, err
 			}

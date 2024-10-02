@@ -81,7 +81,7 @@ func (w wrappedTx) GetSignatures() ([]Signature, error) {
 				PubKey: pubKeys[i],
 			}
 		} else {
-			sigData, err := ModeInfoAndSigToSignatureData(si.ModeInfo, sigs[i])
+			sigData, err := modeInfoAndSigToSignatureData(si.ModeInfo, sigs[i])
 			if err != nil {
 				return nil, err
 			}

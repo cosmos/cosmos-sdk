@@ -34,7 +34,7 @@ var (
 )
 
 // TxConfig is an interface that a client can use to generate a concrete transaction type
-// defined by the application. The returned type must implement the TxBuilder interface.
+// defined by the application.
 type TxConfig interface {
 	TxEncodingConfig
 	TxSigningConfig
@@ -51,7 +51,7 @@ type TxEncodingConfig interface {
 	TxJSONEncoder() txEncoder
 	// TxJSONDecoder returns a decoder for JSON transaction decoding.
 	TxJSONDecoder() txDecoder
-	// TODO: godoc
+	// Decoder returns the Decoder interface for decoding transaction bytes into a DecodedTx.
 	Decoder() Decoder
 }
 
@@ -104,7 +104,7 @@ func (c *ConfigOptions) validate() error {
 	return nil
 }
 
-// txConfig is a struct that embeds TxBuilderProvider, TxEncodingConfig, and TxSigningConfig interfaces.
+// txConfig is a struct that embeds TxEncodingConfig and TxSigningConfig interfaces.
 type txConfig struct {
 	TxEncodingConfig
 	TxSigningConfig
@@ -168,7 +168,7 @@ func (t defaultEncodingConfig) TxJSONDecoder() txDecoder {
 	return decodeJsonTx(t.cdc, t.decoder)
 }
 
-// TODO: godoc
+// Decoder returns the Decoder instance associated with this encoding configuration.
 func (t defaultEncodingConfig) Decoder() Decoder {
 	return t.decoder
 }
@@ -216,7 +216,7 @@ func (t defaultTxSigningConfig) MarshalSignatureJSON(signatures []Signature) ([]
 	descriptor := make([]*apitxsigning.SignatureDescriptor, len(signatures))
 
 	for i, sig := range signatures {
-		descData, err := SignatureDataToProto(sig.Data)
+		descData, err := signatureDataToProto(sig.Data)
 		if err != nil {
 			return nil, err
 		}

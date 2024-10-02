@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"math/big"
 	"strings"
+
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/cosmos/go-bip39"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -353,14 +354,16 @@ func (f *Factory) sign(ctx context.Context, overwriteSig bool) (Tx, error) {
 		Address: addr,
 	}
 
-	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on
-	// TxBuilder under the hood, and SignerInfos is needed to be generated the
-	// sign bytes. This is the reason for setting SetSignatures here, with a
-	// nil signature.
+	// For SIGN_MODE_DIRECT, we need to set the SignerInfos before generating
+	// the sign bytes. This is done by calling setSignatures with a nil
+	// signature, which in turn calls setSignerInfos internally.
 	//
-	// Note: this line is not needed for SIGN_MODE_LEGACY_AMINO, but putting it
-	// also doesn't affect its generated sign bytes, so for code's simplicity
-	// sake, we put it here.
+	// For SIGN_MODE_LEGACY_AMINO, this step is not strictly necessary,
+	// but we include it for consistency across all sign modes.
+	// It does not affect the generated sign bytes for LEGACY_AMINO.
+	//
+	// By setting the signatures here, we ensure that the correct SignerInfos
+	// are in place for all subsequent operations, regardless of the sign mode.
 	sigData := SingleSignatureData{
 		SignMode:  f.txParams.signMode,
 		Signature: nil,
@@ -586,7 +589,7 @@ func (f *Factory) getTx() (*wrappedTx, error) {
 	return newWrapperTx(f.cdc, decodedTx), nil
 }
 
-// getSigningTxData returns a TxData with the txBuilder info.
+// getSigningTxData returns a TxData with the current txState info.
 func (f *Factory) getSigningTxData() (*signing.TxData, error) {
 	tx, err := f.getTx()
 	if err != nil {
@@ -618,7 +621,7 @@ func (f *Factory) setSignatures(signatures ...Signature) error {
 			anyPk    *anypb.Any
 		)
 
-		modeInfo, rawSignatures[i] = SignatureDataToModeInfoAndSig(sig.Data)
+		modeInfo, rawSignatures[i] = signatureDataToModeInfoAndSig(sig.Data)
 		if sig.PubKey != nil {
 			pubKey, err = codectypes.NewAnyWithValue(sig.PubKey)
 			if err != nil {
@@ -643,7 +646,7 @@ func (f *Factory) setSignatures(signatures ...Signature) error {
 	return nil
 }
 
-// getFee computes the transaction fee information for the txBuilder.
+// getFee computes the transaction fee information.
 // It returns a pointer to an apitx.Fee struct containing the fee amount, gas limit, payer, and granter information.
 // If the granter or payer addresses are set, it converts them from bytes to string using the addressCodec.
 func (f *Factory) getFee() (fee *apitx.Fee, err error) {

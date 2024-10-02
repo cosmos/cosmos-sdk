@@ -6,9 +6,16 @@ import (
 	"encoding/json"
 	"fmt"
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"io"
+	"github.com/gogo/protobuf/jsonpb"
 	"net/http"
+	"reflect"
 	"strings"
+)
+
+const (
+	ContentTypeJSON        = "application/json"
+	ContentTypeOctetStream = "application/octet-stream"
+	ContentTypeProtobuf    = "application/x-protobuf"
 )
 
 type DefaultHandler[T transaction.Tx] struct {
@@ -23,27 +30,31 @@ func (h *DefaultHandler[T]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Error reading body", http.StatusBadRequest)
-		return
+	contentType := r.Header.Get("Content-Type")
+	if contentType != ContentTypeJSON {
+		contentType = ContentTypeJSON
 	}
-	defer r.Body.Close()
 
-	requestType := gogoproto.MessageType(r.URL.Path)
+	requestType := gogoproto.MessageType(path)
 	if requestType == nil {
 		http.Error(w, "Unknown request type", http.StatusNotFound)
 		return
 	}
 
-	var data map[string]interface{}
-	if err := json.Unmarshal(body, &data); err != nil {
+	msg := reflect.New(requestType.Elem()).Interface().(gogoproto.Message)
+
+	err := jsonpb.Unmarshal(r.Body, msg)
+	if err != nil {
 		http.Error(w, "Error parsing body", http.StatusBadRequest)
+		fmt.Fprintf(w, "Error parsing body: %v\n", err)
 		return
 	}
 
-	fmt.Fprintf(w, "Ruta accedida: %s\n", path)
-	fmt.Fprintf(w, "Datos recibidos:\n")
+	query, err := h.appManager.Query(r.Context(), 0, msg)
+	if err != nil {
+		http.Error(w, "Error querying", http.StatusInternalServerError)
+		return
+	}
 
-	json.NewEncoder(w).Encode(data)
+	json.NewEncoder(w).Encode(query)
 }

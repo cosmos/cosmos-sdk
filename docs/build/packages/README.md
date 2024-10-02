@@ -9,7 +9,7 @@ It lists all standalone Go modules that are part of the Cosmos SDK.
 
 :::tip
 For more information on SDK modules, see the [SDK Modules](https://docs.cosmos.network/main/modules) section.
-For more information on SDK tooling, see the [Tooling](https://docs.cosmos.network/main/tooling) section.
+For more information on SDK tooling, see the [Tooling](https://docs.cosmos.network/main/build/tooling) section.
 :::
 
 ## Core

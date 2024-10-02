@@ -105,7 +105,7 @@ pollLoop:
 		case <-ctx.Done():
 			return
 		default:
-			conn, grpcErr = grpc.NewClient(cfg.DaemonGrpcEndpoint, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			conn, grpcErr = grpc.NewClient(cfg.GRPCAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 			if grpcErr == nil {
 				break pollLoop
 			}

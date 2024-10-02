@@ -477,7 +477,6 @@ var newConfig = func(
 		CustomPreUpgrade:         customPreUpgrade,
 		DisableRecase:            disableRecase,
 		ShutdownGrace:            time.Duration(shutdownGrace),
-		DaemonGrpcEndpoint:       "localhost:9090",
 	}
 }
 

@@ -16,8 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-var MULTISIG_ACCOUNT = "multisig-account"
-
 var (
 	MembersPrefix   = collections.NewPrefix(0)
 	SequencePrefix  = collections.NewPrefix(1)

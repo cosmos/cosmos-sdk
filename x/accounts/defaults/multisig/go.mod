@@ -4,7 +4,7 @@ go 1.23.1
 
 require (
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v1.0.0-alpha.3
+	cosmossdk.io/core v1.0.0-alpha.4
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
@@ -23,7 +23,7 @@ require (
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.4.1 // indirect
-	cosmossdk.io/schema v0.3.0 // indirect
+	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.3 // indirect
@@ -175,12 +175,6 @@ replace (
 	cosmossdk.io/store => ../../../../store
 	cosmossdk.io/x/accounts => ../../.
 	cosmossdk.io/x/bank => ../../../bank
-	cosmossdk.io/x/consensus => ../../../consensus
-	cosmossdk.io/x/distribution => ../../../distribution
-	cosmossdk.io/x/gov => ../../../gov
-	cosmossdk.io/x/mint => ../../../mint
-	cosmossdk.io/x/protocolpool => ../../../protocolpool
-	cosmossdk.io/x/slashing => ../../../slashing
 	cosmossdk.io/x/staking => ../../../staking
 	cosmossdk.io/x/tx => ../../../tx
 )

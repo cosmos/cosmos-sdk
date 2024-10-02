@@ -33,12 +33,12 @@ const (
 	EnvDataBackupPath           = "DAEMON_DATA_BACKUP_DIR"
 	EnvInterval                 = "DAEMON_POLL_INTERVAL"
 	EnvPreupgradeMaxRetries     = "DAEMON_PREUPGRADE_MAX_RETRIES"
+	EnvGRPCAddress              = "DAEMON_GRPC_ADDRESS"
 	EnvDisableLogs              = "COSMOVISOR_DISABLE_LOGS"
 	EnvColorLogs                = "COSMOVISOR_COLOR_LOGS"
 	EnvTimeFormatLogs           = "COSMOVISOR_TIMEFORMAT_LOGS"
 	EnvCustomPreupgrade         = "COSMOVISOR_CUSTOM_PREUPGRADE"
 	EnvDisableRecase            = "COSMOVISOR_DISABLE_RECASE"
-	EnvDaemonGrpcEndpoint       = "DAEMON_GRPC_ENDPOINT"
 )
 
 const (
@@ -64,12 +64,12 @@ type Config struct {
 	UnsafeSkipBackup         bool          `toml:"unsafe_skip_backup" mapstructure:"unsafe_skip_backup" default:"false"`
 	DataBackupPath           string        `toml:"daemon_data_backup_dir" mapstructure:"daemon_data_backup_dir"`
 	PreUpgradeMaxRetries     int           `toml:"daemon_preupgrade_max_retries" mapstructure:"daemon_preupgrade_max_retries" default:"0"`
+	GRPCAddress              string        `toml:"daemon_grpc_address" mapstructure:"daemon_grpc_address"`
 	DisableLogs              bool          `toml:"cosmovisor_disable_logs" mapstructure:"cosmovisor_disable_logs" default:"false"`
 	ColorLogs                bool          `toml:"cosmovisor_color_logs" mapstructure:"cosmovisor_color_logs" default:"true"`
 	TimeFormatLogs           string        `toml:"cosmovisor_timeformat_logs" mapstructure:"cosmovisor_timeformat_logs" default:"kitchen"`
 	CustomPreUpgrade         string        `toml:"cosmovisor_custom_preupgrade" mapstructure:"cosmovisor_custom_preupgrade" default:""`
 	DisableRecase            bool          `toml:"cosmovisor_disable_recase" mapstructure:"cosmovisor_disable_recase" default:"false"`
-	DaemonGrpcEndpoint       string        `toml:"daemon_grpc_endpoint" mapstructure:"daemon_grpc_endpoint" default:"localhost:9090"`
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -214,19 +214,14 @@ func GetConfigFromFile(filePath string) (*Config, error) {
 func GetConfigFromEnv(skipValidate bool) (*Config, error) {
 	var errs []error
 	cfg := &Config{
-		Home:               os.Getenv(EnvHome),
-		Name:               os.Getenv(EnvName),
-		DataBackupPath:     os.Getenv(EnvDataBackupPath),
-		CustomPreUpgrade:   os.Getenv(EnvCustomPreupgrade),
-		DaemonGrpcEndpoint: os.Getenv(EnvDaemonGrpcEndpoint),
+		Home:             os.Getenv(EnvHome),
+		Name:             os.Getenv(EnvName),
+		DataBackupPath:   os.Getenv(EnvDataBackupPath),
+		CustomPreUpgrade: os.Getenv(EnvCustomPreupgrade),
 	}
 
 	if cfg.DataBackupPath == "" {
 		cfg.DataBackupPath = cfg.Home
-	}
-
-	if cfg.DaemonGrpcEndpoint == "" {
-		cfg.DaemonGrpcEndpoint = "localhost:9090"
 	}
 
 	var err error
@@ -292,6 +287,11 @@ func GetConfigFromEnv(skipValidate bool) (*Config, error) {
 	envPreUpgradeMaxRetriesVal := os.Getenv(EnvPreupgradeMaxRetries)
 	if cfg.PreUpgradeMaxRetries, err = strconv.Atoi(envPreUpgradeMaxRetriesVal); err != nil && envPreUpgradeMaxRetriesVal != "" {
 		errs = append(errs, fmt.Errorf("%s could not be parsed to int: %w", EnvPreupgradeMaxRetries, err))
+	}
+
+	cfg.GRPCAddress = os.Getenv(EnvGRPCAddress)
+	if cfg.GRPCAddress == "" {
+		cfg.GRPCAddress = "localhost:9090"
 	}
 
 	if !skipValidate {
@@ -560,7 +560,6 @@ func (cfg Config) DetailString() string {
 		{EnvTimeFormatLogs, cfg.TimeFormatLogs},
 		{EnvCustomPreupgrade, cfg.CustomPreUpgrade},
 		{EnvDisableRecase, fmt.Sprintf("%t", cfg.DisableRecase)},
-		{EnvDaemonGrpcEndpoint, cfg.DaemonGrpcEndpoint},
 	}
 
 	derivedEntries := []struct{ name, value string }{

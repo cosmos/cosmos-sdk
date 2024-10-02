@@ -53,6 +53,7 @@ type SystemUnderTest struct {
 	// since Tendermint consensus does not allow specifying it directly.
 	blockTime         time.Duration
 	rpcAddr           string
+	apiAddr           string
 	initialNodesCount int
 	nodesCount        int
 	minGasPrice       string
@@ -86,6 +87,7 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 		outputDir:         "./testnet",
 		blockTime:         blockTime,
 		rpcAddr:           "tcp://localhost:26657",
+		apiAddr:           fmt.Sprintf("http://localhost:%d", apiPortStart),
 		initialNodesCount: nodesCount,
 		outBuff:           ring.New(100),
 		errBuff:           ring.New(100),
@@ -129,6 +131,11 @@ func (s *SystemUnderTest) SetupChain() {
 	}
 
 	genesisBz, err = sjson.SetRawBytes(genesisBz, "consensus.params.block.max_gas", []byte(fmt.Sprintf(`"%d"`, 10_000_000)))
+	if err != nil {
+		panic(fmt.Sprintf("failed set block max gas: %s", err))
+	}
+	// Short period for gov
+	genesisBz, err = sjson.SetRawBytes(genesisBz, "app_state.gov.params.voting_period", []byte(fmt.Sprintf(`"%s"`, "8s")))
 	if err != nil {
 		panic(fmt.Sprintf("failed set block max gas: %s", err))
 	}
@@ -631,6 +638,10 @@ func (s *SystemUnderTest) Logf(msg string, args ...interface{}) {
 func (s *SystemUnderTest) RPCClient(t *testing.T) RPCClient {
 	t.Helper()
 	return NewRPCClient(t, s.rpcAddr)
+}
+
+func (s *SystemUnderTest) APIAddress() string {
+	return s.apiAddr
 }
 
 func (s *SystemUnderTest) AllPeers(t *testing.T) []string {

@@ -18,7 +18,7 @@ func TestRouter(t *testing.T) {
 
 	expectedResp := &gogotypes.StringValue{Value: "test"}
 
-	router := coreRouterImpl{handlers: map[string]appmodulev2.Handler{
+	router := coreRouterImpl{handlers: map[string]appmodulev2.HandlerFunc{
 		gogoproto.MessageName(expectedMsg): func(ctx context.Context, gotMsg transaction.Msg) (msgResp transaction.Msg, err error) {
 			if !reflect.DeepEqual(expectedMsg, gotMsg) {
 				t.Errorf("expected message: %v, got: %v", expectedMsg, gotMsg)

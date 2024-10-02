@@ -2,9 +2,6 @@ package tx
 
 import (
 	"context"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,7 +13,10 @@ import (
 	"cosmossdk.io/x/tx/signing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )
 
@@ -461,7 +461,6 @@ func TestFactory_getTx(t *testing.T) {
 		{
 			name: "empty tx",
 			txSetter: func(f *Factory) {
-
 			},
 			checkResult: func(tx Tx) {
 				wTx, ok := tx.(*wrappedTx)

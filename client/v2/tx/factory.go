@@ -7,12 +7,11 @@ import (
 	"math/big"
 	"strings"
 
-	"google.golang.org/protobuf/types/known/timestamppb"
-
 	"github.com/cosmos/go-bip39"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/pflag"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
 	apicrypto "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"

@@ -52,39 +52,6 @@ impl<'a> Context<'a> {
     //     unimplemented!()
     // }
 
-    /// Dynamically invokes an account message.
-    /// Static account client instances should be preferred wherever possible,
-    /// so that static dependency analysis can be performed.
-    pub unsafe fn dynamic_invoke<'b, M: Message<'b>>(&'a mut self, account: AccountID, message: M)
-        -> crate::Result<<M::Response<'a> as OptionalValue<'a>>::Value, M::Error> {
-        // encode the message body
-        let msg_body = M::Codec::encode_value(&message, &self.mem as &dyn Allocator).
-            map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-
-        // create the message packet and fill in call details
-        let packet = self.mem.allocate_packet(0)
-            .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-        let header = packet.header_mut();
-        header.sender_account = self.message_packet.header().account;
-        header.account = account;
-        header.in_pointer1.set_slice(msg_body);
-        header.message_selector = M::SELECTOR;
-
-        // invoke the message
-        let res = self.backend.invoke(packet, &self.mem)
-            .map_err(|_| todo!());
-
-        match res {
-            Ok(_) => {
-                let res = M::Response::<'a>::decode_value::<M::Codec>(packet, &self.mem).
-                    map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-                Ok(res)
-            }
-            Err(_) => {
-                todo!()
-            }
-        }
-    }
 
     // /// Dynamically invokes a message that does not modify state.
     // pub fn dynamic_invoke_readonly<'b, M: Message<'b>>(&self, account: &AccountID, message: M) -> Response<M::Response, M::Error> {

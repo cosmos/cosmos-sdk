@@ -10,6 +10,8 @@ pub union DataPointer {
     pub native_pointer: NativePointer,
     /// A pointer to the data inside the message packet.
     pub local_pointer: LocalPointer,
+    /// A wrapper for a u64 value.
+    pub u64_wrapper: U64Wrapper
 }
 
 impl Default for DataPointer {
@@ -40,6 +42,16 @@ impl Default for NativePointer {
             pointer: core::ptr::null(),
         }
     }
+}
+
+/// A wrapper for a u64 value.
+#[derive(Copy, Clone, Default)]
+#[repr(C)]
+pub struct U64Wrapper  {
+    /// Zero
+    pub zero: u64,
+    /// The value
+    pub value: u64
 }
 
 /// A pointer to data inside the message packet.
@@ -85,6 +97,21 @@ impl DataPointer {
             self.native_pointer.pointer = data as *const ();
             self.native_pointer.len = len;
             self.native_pointer.capacity = len;
+        }
+    }
+
+    /// Pack a u64 value into the pointer.
+    pub unsafe fn set_u64(&mut self, data: u64) {
+        unsafe {
+            self.u64_wrapper.zero = 0;
+            self.u64_wrapper.value = data;
+        }
+    }
+
+    /// Unpack a u64 value from the pointer.
+    pub unsafe fn get_u64(&self) -> u64 {
+        unsafe {
+            self.u64_wrapper.value
         }
     }
 }

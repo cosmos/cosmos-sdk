@@ -32,7 +32,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
         impl ::ixc_core::handler::Handler for #handler {
             const NAME: &'static str = stringify!(#handler);
             type Init<'a> = ();
-            type InitCodec: ::ixc_schema::codec::Codec = ::ixc_schema::binary::Codec;
+            type InitCodec = ::ixc_schema::binary::NativeBinaryCodec;
         }
     })?;
     let client_ident = format_ident!("{}Client", handler);

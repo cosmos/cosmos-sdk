@@ -286,7 +286,7 @@ pub trait OptionalValue<'a> {
     fn decode_value<C: Codec>(message_packet: &'a MessagePacket, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError>;
 
     /// Encode the value to the message packet.
-    fn encode_value<C: Codec>(value: &Self::Value, message_packet: &'a mut MessagePacket, allocator: &'a dyn Allocator) -> Result<(), EncodeError>;
+    fn encode_value<'b, C: Codec>(value: &Self::Value, message_packet: &'b mut MessagePacket, allocator: &'b dyn Allocator) -> Result<(), EncodeError>;
 }
 
 impl <'a> OptionalValue<'a> for () {
@@ -296,7 +296,7 @@ impl <'a> OptionalValue<'a> for () {
         Ok(())
     }
 
-    fn encode_value<C: Codec>(value: &Self::Value, message_packet: &'a mut MessagePacket, allocator: &'a dyn Allocator) -> Result<(), EncodeError> {
+    fn encode_value<'b, C: Codec>(value: &Self::Value, message_packet: &'b mut MessagePacket, allocator: &'b dyn Allocator) -> Result<(), EncodeError> {
         Ok(())
     }
 }
@@ -309,7 +309,7 @@ impl<'a, V: SchemaValue<'a>> OptionalValue<'a> for V
         unsafe { C::decode_value(message_packet.header().out_pointer1.get(message_packet), memory_manager) }
     }
 
-    fn encode_value<C: Codec>(value: &Self::Value, message_packet: &'a mut MessagePacket, allocator: &'a dyn Allocator) -> Result<(), EncodeError> {
+    fn encode_value<'b, C: Codec>(value: &Self::Value, message_packet: &'b mut MessagePacket, allocator: &'b dyn Allocator) -> Result<(), EncodeError> {
         let res = C::encode_value(value, allocator)?;
         unsafe { message_packet.header_mut().out_pointer1.set_slice(res); }
         Ok(())

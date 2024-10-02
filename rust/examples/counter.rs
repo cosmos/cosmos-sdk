@@ -64,6 +64,7 @@ unsafe impl ixc_core::routes::Router for Counter {
 
 #[cfg(test)]
 mod tests {
+    use ixc_core::account_api::create_account;
     use ixc_core::handler::Handler;
     use ixc_testing::*;
     use super::counter::*;
@@ -72,9 +73,9 @@ mod tests {
     fn test_counter() {
         let mut app = TestApp::default();
         app.register_handler::<Counter>().unwrap();
-        let alice = app.new_client_account();
-        let alice_ctx = app.client_context_for(alice);
-        let counter_client = Counter::create_account(alice_ctx, ()).unwrap();
+        let alice = app.new_client_account().unwrap();
+        let mut alice_ctx = app.client_context_for(alice);
+        let counter_client = create_account::<Counter>(&mut alice_ctx, &()).unwrap();
     }
 }
 

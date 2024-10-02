@@ -2,30 +2,31 @@
 
 use ixc_core_macros::message_selector;
 use ixc_message_api::AccountID;
+use ixc_message_api::code::SystemErrorCode;
 use ixc_message_api::handler::{HandlerErrorCode, Allocator};
 use ixc_schema::codec::Codec;
 use ixc_schema::value::OptionalValue;
 use crate::context::Context;
 use crate::error::Error;
+use crate::error::Error::SystemError;
 use crate::handler::Handler;
+use crate::low_level::create_packet;
 
+/// Creates a new account for the specified handler.
 pub fn create_account<'a, H: Handler>(ctx: &mut Context, init: &<H::Init<'a> as OptionalValue<'a>>::Value) -> crate::Result<H::Client> {
-    let packet = ctx.memory_manager().allocate_packet(0)
-        .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+    let packet = create_packet(ctx, HYPERVISOR_ACCOUNT, CREATE_SELECTOR)?;
 
     <H::Init<'_> as OptionalValue<'_>>::encode_value::<H::InitCodec>(init, packet, ctx.memory_manager() as &dyn Allocator).
         map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
 
-    let header = packet.header_mut();
-    header.sender_account = ctx.account_id();
-    header.account = HYPERVISOR_ACCOUNT;
-    header.message_selector = CREATE_SELECTOR;
     unsafe {
         ctx.host_backend().invoke(packet, ctx.memory_manager())
-            .map_err(|_| todo!())?
+            .map_err(|_| Error::SystemError(SystemErrorCode::UnknownHandlerError))?;
+
+        let new_account_id = packet.header().in_pointer1.get_u64();
+
+        Ok(H::new_client(AccountID::new(new_account_id)))
     }
-    // TODO decode the account ID from the response
-    Ok(H::new_client(AccountID::new(0)))
 }
 
 /// Self-destructs the account.

@@ -3,41 +3,81 @@
 mod store;
 mod vm;
 
+use std::cell::RefCell;
 use std::sync::{Arc, RwLock};
 use allocator_api2::alloc::Allocator;
 use ixc_message_api::{AccountID};
 use ixc_core::{Context};
-use ixc_core::handler::{HandlerAPI, Handler};
-use ixc_core::resource::{InitializationError, ResourceScope};
+use ixc_core::account_api::create_account;
+use ixc_core::handler::{HandlerAPI, Handler, ClientFactory, Client};
+use ixc_core::resource::{InitializationError, ResourceScope, Resources};
+use ixc_core::routes::{Route, Router};
 use ixc_hypervisor::Hypervisor;
+use ixc_message_api::code::ErrorCode;
 use ixc_message_api::handler::{HandlerError, HandlerErrorCode, HostBackend, RawHandler};
+use ixc_message_api::header::MessageHeader;
 use ixc_message_api::packet::MessagePacket;
+use ixc_schema::mem::MemoryManager;
 use crate::store::{Store, VersionedMultiStore};
 use crate::vm::{NativeVM, NativeVMImpl};
 
 /// Defines a test harness for running tests against account and module implementations.
 pub struct TestApp {
-    hypervisor: Hypervisor<VersionedMultiStore>,
+    hypervisor: RefCell<Hypervisor<VersionedMultiStore>>,
     native_vm: NativeVM,
+    mem: MemoryManager
 }
 
 impl Default for TestApp {
     fn default() -> Self {
         let mut hypervisor: Hypervisor<VersionedMultiStore> = Default::default();
         let native_vm = NativeVM::new();
-        native_vm.register_handler::<DefaultAccount>("default", DefaultAccount {});
         hypervisor.register_vm("native", Box::new(native_vm.clone())).unwrap();
-        Self {
-            hypervisor,
+        let mem = MemoryManager::new();
+        let mut test_app = Self {
+            hypervisor: RefCell::new(hypervisor),
             native_vm,
-        }
+            mem,
+        };
+        test_app.register_handler::<DefaultAccount>().unwrap();
+        test_app
     }
 }
 
-struct DefaultAccount {}
+struct DefaultAccount;
+struct DefaultAccountClient(AccountID);
+
+unsafe impl Router for DefaultAccount { const SORTED_ROUTES: &'static [Route<Self>] = &[]; }
+
+unsafe impl Resources for DefaultAccount {
+    unsafe fn new(scope: &ResourceScope) -> Result<Self, InitializationError> {
+        Ok(DefaultAccount {})
+    }
+}
+
+impl ClientFactory for DefaultAccount {
+    type Client = DefaultAccountClient;
+
+    fn new_client(account_id: AccountID) -> Self::Client {
+        DefaultAccountClient(account_id)
+    }
+}
+
+impl Client for DefaultAccountClient {
+    fn account_id(&self) -> AccountID {
+        self.0
+    }
+}
+
+impl Handler for DefaultAccount {
+    const NAME: &'static str = "ixc_testing.DefaultAccount";
+    type Init<'a> = ();
+    type InitCodec = ixc_schema::binary::NativeBinaryCodec;
+}
+
 impl RawHandler for DefaultAccount {
     fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), HandlerError> {
-        Err(HandlerError::KnownCode(HandlerErrorCode::MessageNotHandled))
+        ixc_core::routes::exec_route(self, message_packet, callbacks, allocator)
     }
 }
 
@@ -81,13 +121,19 @@ impl TestApp {
     //
 
     /// Creates a new random client account that can be used in calls.
-    pub fn new_client_account(&mut self) -> AccountID {
-        self.hypervisor.invoke();
+    pub fn new_client_account(&mut self) -> core::result::Result<AccountID, ()> {
+        let mut ctx = self.client_context_for(AccountID::new(1));
+        let client = create_account::<DefaultAccount>(&mut ctx, &())
+            .map_err(|_| ())?;
+        Ok(client.0)
     }
 
     /// Creates a new client for the given account.
-    pub fn client_context_for(&mut self, account_id: AccountID) -> &mut Context {
-        todo!()
+    pub fn client_context_for(&mut self, account_id: AccountID) -> Context
+    {
+        let packet = self.mem.allocate_packet(0).unwrap();
+        let ctx = Context::new(packet, self);
+        ctx
     }
 
     //
@@ -109,6 +155,12 @@ impl TestApp {
     /// Returns a mutable reference to the test storage.
     pub fn storage_mut(&mut self) -> &mut TestStorage {
         todo!()
+    }
+}
+
+impl HostBackend for TestApp {
+    fn invoke(&self, message_packet: &mut MessagePacket, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
+        self.hypervisor.borrow_mut().invoke(message_packet, allocator)
     }
 }
 

@@ -62,6 +62,7 @@ impl<ST: StateHandler> Hypervisor<ST> {
 
         res
     }
+
 }
 
 /// The state handler traits the hypervisor expects.
@@ -202,7 +203,7 @@ impl<TX: Transaction> ExecContext<TX> {
         match message_packet.header().message_selector {
             CREATE_SELECTOR => unsafe {
                 // get the input data
-                let create_header = message_packet.header();
+                let create_header = message_packet.header_mut();
                 let handler_id = create_header.in_pointer1.get(message_packet);
                 let init_data = create_header.in_pointer2.get(message_packet);
 
@@ -233,7 +234,7 @@ impl<TX: Transaction> ExecContext<TX> {
                 tx.pop_frame(res.is_ok()).
                     map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::FatalExecutionError))?;
 
-                // TODO write the account ID to the response
+                create_header.in_pointer1.set_u64(id.get());
 
                 match res {
                     Err(ErrorCode::HandlerSystemError(HandlerErrorCode::MessageNotHandled)) => {

@@ -82,6 +82,9 @@ func UnmarshalConfig(cfg map[string]any) *root.Config {
 	if err := serverv2.UnmarshalSubConfig(cfg, ServerName, config); err != nil {
 		panic(fmt.Sprintf("failed to unmarshal config: %v", err))
 	}
-	config.Home = cfg["home"].(string)
+	home := cfg["home"]
+	if home != nil {
+		config.Home = home.(string)
+	}
 	return config
 }

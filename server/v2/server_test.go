@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -35,8 +36,8 @@ type mockApp[T transaction.Tx] struct {
 	serverv2.AppI[T]
 }
 
-func (*mockApp[T]) GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message {
-	return map[string]func() gogoproto.Message{}
+func (*mockApp[T]) GetQueryHandlers() map[string]appmodulev2.Handler {
+	return map[string]appmodulev2.Handler{}
 }
 
 func (*mockApp[T]) GetAppManager() *appmanager.AppManager[T] {

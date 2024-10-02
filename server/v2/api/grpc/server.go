@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
@@ -53,7 +54,7 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.L
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
-	methodsMap := appI.GetGPRCMethodsToMessageMap()
+	methodsMap := appI.GetQueryHandlers()
 
 	grpcSrv := grpc.NewServer(
 		grpc.ForceServerCodec(newProtoCodec(appI.InterfaceRegistry()).GRPCCodec()),
@@ -80,7 +81,7 @@ func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 	return flags
 }
 
-func makeUnknownServiceHandler(messageMap map[string]func() proto.Message, querier interface {
+func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier interface {
 	Query(ctx context.Context, version uint64, msg proto.Message) (proto.Message, error)
 },
 ) grpc.StreamHandler {
@@ -89,12 +90,12 @@ func makeUnknownServiceHandler(messageMap map[string]func() proto.Message, queri
 		if !ok {
 			return status.Error(codes.InvalidArgument, "unable to get method")
 		}
-		makeMsg, exists := messageMap[method]
+		handler, exists := handlers[method]
 		if !exists {
 			return status.Errorf(codes.Unimplemented, "gRPC method %s is not handled", method)
 		}
 		for {
-			req := makeMsg()
+			req := handler()
 			err := stream.RecvMsg(req)
 			if err != nil {
 				if errors.Is(err, io.EOF) {

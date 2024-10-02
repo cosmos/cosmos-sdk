@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sync/atomic"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -61,7 +62,7 @@ type Consensus[T transaction.Tx] struct {
 	addrPeerFilter types.PeerFilter // filter peers by address and port
 	idPeerFilter   types.PeerFilter // filter peers by node ID
 
-	grpcMethodsMap map[string]func() transaction.Msg // maps gRPC method to message creator func
+	queryHandlersMap map[string]appmodulev2.Handler
 }
 
 func NewConsensus[T transaction.Tx](
@@ -70,7 +71,7 @@ func NewConsensus[T transaction.Tx](
 	app *appmanager.AppManager[T],
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
-	gRPCMethodsMap map[string]func() transaction.Msg,
+	queryHandlersMap map[string]appmodulev2.Handler,
 	store types.Store,
 	cfg Config,
 	txCodec transaction.Codec[T],
@@ -79,7 +80,7 @@ func NewConsensus[T transaction.Tx](
 	return &Consensus[T]{
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
-		grpcMethodsMap:         gRPCMethodsMap,
+		queryHandlersMap:       queryHandlersMap,
 		app:                    app,
 		cfg:                    cfg,
 		store:                  store,
@@ -192,6 +193,8 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 // It is called by cometbft to query application state.
 func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (resp *abciproto.QueryResponse, err error) {
 	// check if it's a gRPC method
+	desc, err := gogoproto.MergedRegistry()
+
 	makeGRPCRequest, isGRPC := c.grpcMethodsMap[req.Path]
 	if isGRPC {
 		protoRequest := makeGRPCRequest()

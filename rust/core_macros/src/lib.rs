@@ -19,7 +19,7 @@ struct HandlerArgs(syn::Ident);
 /// This derives an account handler.
 #[manyhow]
 #[proc_macro_attribute]
-pub fn account_handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenStream2> {
+pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenStream2> {
     let HandlerArgs(handler) = deluxe::parse2(attr)?;
     let items = &mut item.content.as_mut().unwrap().1;
 
@@ -217,12 +217,6 @@ struct PublishFn {
     publish: Option<Publish>,
 }
 
-/// This derives an module handler.
-#[proc_macro_attribute]
-pub fn module_handler(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    item
-}
-
 /// This publishes a trait or struct impl block or a single fn within an impl block.
 #[manyhow]
 #[proc_macro_attribute]
@@ -230,18 +224,11 @@ pub fn publish(_attr: TokenStream2, item: TokenStream2) -> manyhow::Result<Token
     bail!("the #[publish] attribute is being used in the wrong context, possibly #[module_handler] or #[account_handler] has not been applied to the enclosing module")
 }
 
-/// This attribute macro should be attached to a trait that implements a account API.
+/// This attribute macro should be attached to a trait that implements a handler API.
 #[proc_macro_attribute]
-pub fn account_api(_attr: TokenStream, item: TokenStream) -> TokenStream {
+pub fn handler_api(_attr: TokenStream, item: TokenStream) -> TokenStream {
     item
 }
-
-/// This attribute macro should be attached to a trait that implements a module API.
-#[proc_macro_attribute]
-pub fn module_api(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    item
-}
-
 /// This attribute macro should be attached to the fn which is called when an account is created.
 #[manyhow]
 #[proc_macro_attribute]
@@ -272,8 +259,6 @@ pub fn package_root(item: TokenStream) -> TokenStream {
     // expanded.into()
     TokenStream::default()
 }
-
-
 
 /// Creates the message selector for the given message name.
 #[proc_macro]

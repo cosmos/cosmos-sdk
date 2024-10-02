@@ -33,7 +33,7 @@ const (
 // kv-store keys, and app modules. Using the built-in indexer framework is mutually exclusive from using other
 // types of streaming listeners.
 func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*storetypes.KVStoreKey, appModules map[string]any) error {
-	listener, err := indexer.StartManager(indexer.ManagerOptions{
+	listener, err := indexer.StartIndexing(indexer.IndexingOptions{
 		Config:     indexerOpts,
 		Resolver:   decoding.ModuleSetDecoderResolver(appModules),
 		SyncSource: nil,
@@ -47,7 +47,7 @@ func (app *BaseApp) EnableIndexer(indexerOpts interface{}, keys map[string]*stor
 	app.cms.AddListeners(exposedKeys)
 
 	app.streamingManager = storetypes.StreamingManager{
-		ABCIListeners: []storetypes.ABCIListener{listenerWrapper{listener}},
+		ABCIListeners: []storetypes.ABCIListener{listenerWrapper{listener.Listener}},
 		StopNodeOnErr: true,
 	}
 

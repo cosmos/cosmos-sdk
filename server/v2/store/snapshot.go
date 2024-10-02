@@ -24,7 +24,7 @@ import (
 
 const SnapshotFileName = "_snapshot"
 
-// QueryBlockResultsCmd implements the default command for a BlockResults query.
+// ExportSnapshotCmd exports app state to snapshot store.
 func (s *Server[T]) ExportSnapshotCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",

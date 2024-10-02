@@ -11,6 +11,7 @@ import (
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
@@ -123,7 +124,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 
 	resp, err := c.app.ValidateTx(ctx, decodedTx)
 	// we do not want to return a cometbft error, but a check tx response with the error
-	if err != nil && err != resp.Error {
+	if err != nil && !errors.Is(err, resp.Error) {
 		return nil, err
 	}
 
@@ -161,7 +162,7 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 		cp, err := c.GetConsensusParams(ctx)
 		// if the consensus params are not found, we set the app version to 0
 		// in the case that the start version is > 0
-		if cp == nil || errors.Is(err, errors.New("collections: not found")) {
+		if cp == nil || errors.Is(err, collections.ErrNotFound) {
 			appVersion = 0
 		} else if err != nil {
 			return nil, err

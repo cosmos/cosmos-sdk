@@ -3,11 +3,16 @@ package runtime
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/stf"
 	storev2 "cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/proof"
+	"cosmossdk.io/store/v2/root"
 )
 
 // NewKVStoreService creates a new KVStoreService.
@@ -57,6 +62,58 @@ type Store interface {
 
 	// LastCommitID returns the latest commit ID
 	LastCommitID() (proof.CommitID, error)
+}
+
+// StoreBuilder is a builder for a store/v2 RootStore satisfying the Store interface.
+type StoreBuilder struct {
+	store Store
+}
+
+// Build creates a new store/v2 RootStore.
+func (sb *StoreBuilder) Build(
+	logger log.Logger,
+	storeKeys []string,
+	config server.DynamicConfig,
+	options root.Options,
+) (Store, error) {
+	if sb.store != nil {
+		return sb.store, nil
+	}
+	home := config.GetString(flagHome)
+	scRawDb, err := db.NewDB(
+		db.DBType(config.GetString("store.app-db-backend")),
+		"application",
+		filepath.Join(home, "data"),
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create SCRawDB: %w", err)
+	}
+
+	factoryOptions := &root.FactoryOptions{
+		Logger:  logger,
+		RootDir: home,
+		Options: options,
+		// STF needs to store a bit of state
+		StoreKeys: append(storeKeys, "stf"),
+		SCRawDB:   scRawDb,
+	}
+
+	rs, err := root.CreateRootStore(factoryOptions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create root store: %w", err)
+	}
+	sb.store = rs
+	return sb.store, nil
+}
+
+// Get returns the Store.  Build must be called before calling Get or the result will be nil.
+func (sb *StoreBuilder) Get() Store {
+	return sb.store
+}
+
+func ProvideStoreBuilder() *StoreBuilder {
+	return &StoreBuilder{}
 }
 
 // StoreLoader allows for custom loading of the store, this is useful when upgrading the store from a previous version

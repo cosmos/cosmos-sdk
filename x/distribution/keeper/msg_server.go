@@ -4,12 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/go-metrics"
-
 	"cosmossdk.io/errors"
 	"cosmossdk.io/x/distribution/types"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -61,18 +58,6 @@ func (k msgServer) WithdrawDelegatorReward(ctx context.Context, msg *types.MsgWi
 		return nil, err
 	}
 
-	defer func() {
-		for _, a := range amount {
-			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
-					[]string{"tx", "msg", "withdraw_reward"},
-					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
-				)
-			}
-		}
-	}()
-
 	return &types.MsgWithdrawDelegatorRewardResponse{Amount: amount}, nil
 }
 
@@ -86,18 +71,6 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 	if err != nil {
 		return nil, err
 	}
-
-	defer func() {
-		for _, a := range amount {
-			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
-					[]string{"tx", "msg", "withdraw_commission"},
-					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
-				)
-			}
-		}
-	}()
 
 	return &types.MsgWithdrawValidatorCommissionResponse{Amount: amount}, nil
 }

@@ -275,7 +275,7 @@ https://github.com/cosmos/gaia/blob/26ae7c2/cmd/gaiad/cmd/root.go#L39-L80
 
 ## Dependencies and Makefile
 
-This section is optional, as developers are free to choose their dependency manager and project building method. That said, the current most used framework for versioning control is [`go.mod`](https://github.com/golang/go/wiki/Modules). It ensures each of the libraries used throughout the application are imported with the correct version.
+This section is optional, as developers are free to choose their dependency manager and project building method. That said, the current most used framework for versioning control is [`go.mod`](https://go.dev/wiki/Modules). It ensures each of the libraries used throughout the application are imported with the correct version.
 
 The following is the `go.mod` of the [Cosmos Hub](https://github.com/cosmos/gaia), provided as an example.
 

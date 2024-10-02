@@ -2,6 +2,8 @@ package cometbft
 
 import (
 	"context"
+	"cosmossdk.io/server/v2/store"
+	"cosmossdk.io/store/v2/root"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -23,7 +25,6 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/mempool"
-	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -43,7 +44,7 @@ type CometBFTServer[T transaction.Tx] struct {
 
 	initTxCodec   transaction.Codec[T]
 	logger        log.Logger
-	store         types.Store
+	storeBuilder  root.Builder
 	serverOptions ServerOptions[T]
 	config        Config
 	cfgOptions    []CfgOption
@@ -51,13 +52,13 @@ type CometBFTServer[T transaction.Tx] struct {
 
 func New[T transaction.Tx](
 	txCodec transaction.Codec[T],
-	store types.Store,
+	storeBuilder root.Builder,
 	serverOptions ServerOptions[T],
 	cfgOptions ...CfgOption,
 ) *CometBFTServer[T] {
 	return &CometBFTServer[T]{
 		initTxCodec:   txCodec,
-		store:         store,
+		storeBuilder:  storeBuilder,
 		serverOptions: serverOptions,
 		cfgOptions:    cfgOptions,
 	}
@@ -104,6 +105,8 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		indexEvents[e] = struct{}{}
 	}
 
+	rs, err := s.storeBuilder.Build(logger, store.UnmarshalConfig(cfg))
+
 	s.logger = logger.With(log.ModuleKey, s.Name())
 	consensus := NewConsensus(
 		s.logger,
@@ -112,7 +115,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		s.serverOptions.Mempool(cfg),
 		indexEvents,
 		appI.GetGPRCMethodsToMessageMap(),
-		s.store,
+		rs,
 		s.config,
 		s.initTxCodec,
 		chainID,
@@ -124,8 +127,8 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	consensus.addrPeerFilter = s.serverOptions.AddrPeerFilter
 	consensus.idPeerFilter = s.serverOptions.IdPeerFilter
 
-	ss := s.store.GetStateStorage().(snapshots.StorageSnapshotter)
-	sc := s.store.GetStateCommitment().(snapshots.CommitSnapshotter)
+	ss := rs.GetStateStorage().(snapshots.StorageSnapshotter)
+	sc := rs.GetStateCommitment().(snapshots.CommitSnapshotter)
 
 	snapshotStore, err := GetSnapshotStore(s.config.ConfigTomlConfig.RootDir)
 	if err != nil {

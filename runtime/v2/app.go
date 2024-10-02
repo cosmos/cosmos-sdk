@@ -2,9 +2,6 @@ package runtime
 
 import (
 	"encoding/json"
-	"errors"
-	"slices"
-
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
@@ -37,8 +34,6 @@ type App[T transaction.Tx] struct {
 	logger log.Logger
 	config *runtimev2.Module
 
-	// modules configuration
-	storeKeys          []string
 	interfaceRegistrar registry.InterfaceRegistrar
 	amino              registry.AminoRegistrar
 	moduleManager      *MM[T]
@@ -93,22 +88,6 @@ func (a *App[T]) LoadLatestHeight() (uint64, error) {
 // Close is called in start cmd to gracefully cleanup resources.
 func (a *App[T]) Close() error {
 	return nil
-}
-
-// GetStoreKeys returns all the app store keys.
-func (a *App[T]) GetStoreKeys() []string {
-	return a.storeKeys
-}
-
-// UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.
-// NOTE: This should only be used in testing.
-func (a *App[T]) UnsafeFindStoreKey(storeKey string) (string, error) {
-	i := slices.IndexFunc(a.storeKeys, func(s string) bool { return s == storeKey })
-	if i == -1 {
-		return "", errors.New("store key not found")
-	}
-
-	return a.storeKeys[i], nil
 }
 
 // GetStore returns the app store.

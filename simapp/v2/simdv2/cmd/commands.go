@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"cosmossdk.io/store/v2/root"
 	"errors"
 	"fmt"
 
@@ -17,7 +18,6 @@ import (
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/api/telemetry"
 	"cosmossdk.io/server/v2/cometbft"
-	cometbfttypes "cosmossdk.io/server/v2/cometbft/types"
 	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
@@ -44,7 +44,7 @@ func newApp[T transaction.Tx](logger log.Logger, viper *viper.Viper) serverv2.Ap
 func initRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
-	store cometbfttypes.Store,
+	storeBuilder root.Builder,
 	moduleManager *runtimev2.MM[T],
 ) {
 	cfg := sdk.GetConfig()
@@ -54,7 +54,7 @@ func initRootCmd[T transaction.Tx](
 		genutilcli.InitCmd(moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		NewTestnetCmd(store, moduleManager),
+		NewTestnetCmd(storeBuilder, moduleManager),
 	)
 
 	logger, err := serverv2.NewLogger(viper.New(), rootCmd.OutOrStdout())
@@ -79,12 +79,12 @@ func initRootCmd[T transaction.Tx](
 		initServerConfig(),
 		cometbft.New(
 			&genericTxDecoder[T]{txConfig},
-			store,
+			storeBuilder,
 			initCometOptions[T](),
 			initCometConfig(),
 		),
 		grpc.New[T](),
-		serverstore.New[T](store),
+		serverstore.New[T](storeBuilder),
 		telemetry.New[T](),
 	); err != nil {
 		panic(err)

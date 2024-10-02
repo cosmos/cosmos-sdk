@@ -1,10 +1,10 @@
 package db
 
 import (
+	"cosmossdk.io/store/v2"
 	"fmt"
 
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/store/v2"
 )
 
 type DBType string

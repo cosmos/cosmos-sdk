@@ -14,13 +14,13 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/simapp/v2"
+	"cosmossdk.io/store/v2/root"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -32,25 +32,14 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 		autoCliOpts   autocli.AppOptions
 		moduleManager *runtime.MM[T]
 		clientCtx     client.Context
-		storeBuilder  runtime.StoreBuilder
+		storeBuilder  root.Builder
 	)
 
 	if err := depinject.Inject(
 		depinject.Configs(
 			simapp.AppConfig(),
-			runtime.DefaultServiceBindings(),
+			depinject.Provide(ProvideClientContext),
 			depinject.Supply(log.NewNopLogger()),
-			depinject.Provide(
-				codec.ProvideInterfaceRegistry,
-				codec.ProvideAddressCodec,
-				codec.ProvideProtoCodec,
-				codec.ProvideLegacyAmino,
-				ProvideClientContext,
-			),
-			depinject.Invoke(
-				std.RegisterInterfaces,
-				std.RegisterLegacyAminoCodec,
-			),
 		),
 		&storeBuilder,
 		&autoCliOpts,
@@ -85,8 +74,7 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 		},
 	}
 
-	store := storeBuilder.Get()
-	initRootCmd(rootCmd, clientCtx.TxConfig, store, moduleManager)
+	initRootCmd(rootCmd, clientCtx.TxConfig, storeBuilder, moduleManager)
 
 	nodeCmds := nodeservice.NewNodeCommands()
 	autoCliOpts.ModuleOptions = make(map[string]*autocliv1.ModuleOptions)

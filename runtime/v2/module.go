@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"cosmossdk.io/store/v2/root"
 	"fmt"
 	"os"
 	"slices"
@@ -19,7 +20,6 @@ import (
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/registry"
-	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
@@ -27,7 +27,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
-	rootstore "cosmossdk.io/store/v2/root"
 )
 
 var (
@@ -97,9 +96,9 @@ func init() {
 	appconfig.Register(&runtimev2.Module{},
 		appconfig.Provide(
 			ProvideAppBuilder[transaction.Tx],
-			ProvideEnvironment[transaction.Tx],
 			ProvideModuleManager[transaction.Tx],
-			ProvideStoreBuilder,
+			ProvideEnvironment,
+			ProvideKVService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -127,7 +126,6 @@ func ProvideAppBuilder[T transaction.Tx](
 
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
 	app := &App[T]{
-		storeKeys:               nil,
 		interfaceRegistrar:      interfaceRegistrar,
 		amino:                   amino,
 		msgRouterBuilder:        msgRouterBuilder,
@@ -149,12 +147,7 @@ type AppInputs struct {
 	InterfaceRegistrar registry.InterfaceRegistrar
 	LegacyAmino        registry.AminoRegistrar
 	Logger             log.Logger
-	// StoreBuilder is a builder for a store/v2 RootStore satisfying the Store interface
-	StoreBuilder *StoreBuilder
-	// StoreOptions are required as input for the StoreBuilder. If not provided, the default options are used.
-	StoreOptions *rootstore.Options `optional:"true"`
-	// DynamicConfig can be nil in client wiring, but is required in server wiring.
-	DynamicConfig server.DynamicConfig `optional:"true"`
+	StoreBuilder       root.Builder
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -164,24 +157,9 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager = inputs.ModuleManager
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
-
-	if inputs.DynamicConfig == nil {
-		return
-	}
-	storeOptions := rootstore.DefaultStoreOptions()
-	if inputs.StoreOptions != nil {
-		storeOptions = *inputs.StoreOptions
-	}
-	var err error
-	app.db, err = inputs.StoreBuilder.Build(
-		inputs.Logger,
-		app.storeKeys,
-		inputs.DynamicConfig,
-		storeOptions,
-	)
-	if err != nil {
-		panic(err)
-	}
+	// STF requires some state to run
+	inputs.StoreBuilder.RegisterKey("stf")
+	inputs.AppBuilder.storeBuilder = inputs.StoreBuilder
 }
 
 func ProvideModuleManager[T transaction.Tx](
@@ -192,44 +170,50 @@ func ProvideModuleManager[T transaction.Tx](
 	return NewModuleManager[T](logger, config, modules)
 }
 
-// ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
-func ProvideEnvironment[T transaction.Tx](
-	logger log.Logger,
+func ProvideKVService(
 	config *runtimev2.Module,
 	key depinject.ModuleKey,
-	appBuilder *AppBuilder[T],
 	kvFactory store.KVStoreServiceFactory,
-	headerService header.Service,
-	eventService event.Service,
-) (
-	appmodulev2.Environment,
-	store.KVStoreService,
-	store.MemoryStoreService,
-) {
-	var (
-		kvService    store.KVStoreService     = failingStoreService{}
-		memKvService store.MemoryStoreService = failingStoreService{}
-	)
-
+	storeBuilder root.Builder,
+) (store.KVStoreService, store.MemoryStoreService) {
 	// skips modules that have no store
-	if !slices.Contains(config.SkipStoreKeys, key.Name()) {
-		var kvStoreKey string
-		storeKeyOverride := storeKeyOverride(config, key.Name())
-		if storeKeyOverride != nil {
-			kvStoreKey = storeKeyOverride.KvStoreKey
-		} else {
-			kvStoreKey = key.Name()
-		}
-
-		registerStoreKey(appBuilder, kvStoreKey)
-		kvService = kvFactory([]byte(kvStoreKey))
-
-		memStoreKey := fmt.Sprintf("memory:%s", key.Name())
-		registerStoreKey(appBuilder, memStoreKey)
-		memKvService = stf.NewMemoryStoreService([]byte(memStoreKey))
+	if slices.Contains(config.SkipStoreKeys, key.Name()) {
+		return nil, nil
+	}
+	var kvStoreKey string
+	override := storeKeyOverride(config, key.Name())
+	if override != nil {
+		kvStoreKey = override.KvStoreKey
+	} else {
+		kvStoreKey = key.Name()
 	}
 
-	env := appmodulev2.Environment{
+	storeBuilder.RegisterKey(kvStoreKey)
+	fmt.Printf("provision store key=%s", kvStoreKey)
+
+	return kvFactory([]byte(kvStoreKey)),
+		stf.NewMemoryStoreService([]byte(fmt.Sprintf("memory:%s", kvStoreKey)))
+}
+
+func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.StoreKeyConfig {
+	for _, cfg := range config.OverrideStoreKeys {
+		if cfg.ModuleName == moduleName {
+			return cfg
+		}
+	}
+	return nil
+}
+
+// ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
+func ProvideEnvironment(
+	logger log.Logger,
+	key depinject.ModuleKey,
+	kvService store.KVStoreService,
+	memKvService store.MemoryStoreService,
+	headerService header.Service,
+	eventService event.Service,
+) appmodulev2.Environment {
+	return appmodulev2.Environment{
 		Logger:             logger,
 		BranchService:      stf.BranchService{},
 		EventService:       eventService,
@@ -241,22 +225,6 @@ func ProvideEnvironment[T transaction.Tx](
 		KVStoreService:     kvService,
 		MemStoreService:    memKvService,
 	}
-
-	return env, kvService, memKvService
-}
-
-func registerStoreKey[T transaction.Tx](builder *AppBuilder[T], key string) {
-	builder.app.storeKeys = append(builder.app.storeKeys, key)
-}
-
-func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.StoreKeyConfig {
-	for _, cfg := range config.OverrideStoreKeys {
-		if cfg.ModuleName == moduleName {
-			return cfg
-		}
-	}
-
-	return nil
 }
 
 // DefaultServiceBindings provides default services for the following service interfaces:

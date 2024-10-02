@@ -18,7 +18,8 @@
       "request": "launch",
       "mode": "debug",
       "program": "${workspaceFolder}/simapp/v2/simdv2",
-      "args": ["start"],
+      "args": ["config", "set", "client", "simapp-v2-chain"],
+      // "args": ["start"],
       "buildFlags": ""
     },
     {

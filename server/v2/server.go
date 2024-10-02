@@ -61,6 +61,7 @@ const (
 
 var _ ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
 
+// Server is the top-level server component which contains all over server components.
 type Server[T transaction.Tx] struct {
 	logger     log.Logger
 	components []ServerComponent[T]

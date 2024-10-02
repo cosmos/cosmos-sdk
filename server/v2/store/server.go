@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	storev2 "cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/root"
 )
 
 var (
@@ -22,23 +23,23 @@ const ServerName = "store"
 
 // Server manages store config and contains prune & snapshot commands
 type Server[T transaction.Tx] struct {
-	config *Config
-	store  storev2.Backend
+	config  *root.Config
+	builder root.Builder
+	backend storev2.Backend
 }
 
-func New[T transaction.Tx](store storev2.Backend) *Server[T] {
-	return &Server[T]{store: store}
+func New[T transaction.Tx](builder root.Builder) *Server[T] {
+	return &Server[T]{builder: builder}
 }
 
-func (s *Server[T]) Init(_ serverv2.AppI[T], cfg map[string]any, _ log.Logger) error {
-	serverCfg := s.Config().(*Config)
-	if len(cfg) > 0 {
-		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
-		}
+func (s *Server[T]) Init(_ serverv2.AppI[T], cfg map[string]any, log log.Logger) error {
+	s.config = UnmarshalConfig(cfg)
+	var err error
+	s.backend, err = s.builder.Build(log, s.config)
+	if err != nil {
+		return fmt.Errorf("failed to create store backend: %w", err)
 	}
 
-	s.config = serverCfg
 	return nil
 }
 
@@ -63,15 +64,24 @@ func (s *Server[T]) CLICommands() serverv2.CLIConfig {
 			s.ListSnapshotsCmd(),
 			s.DumpArchiveCmd(),
 			s.LoadArchiveCmd(),
-			s.RestoreSnapshotCmd(s.store),
+			s.RestoreSnapshotCmd(s.backend),
 		},
 	}
 }
 
 func (s *Server[T]) Config() any {
 	if s.config == nil || s.config.AppDBBackend == "" {
-		return DefaultConfig()
+		return root.DefaultConfig()
 	}
 
 	return s.config
+}
+
+func UnmarshalConfig(cfg map[string]any) *root.Config {
+	config := &root.Config{}
+	if err := serverv2.UnmarshalSubConfig(cfg, ServerName, config); err != nil {
+		panic(fmt.Sprintf("failed to unmarshal config: %v", err))
+	}
+	config.Home = cfg["home"].(string)
+	return config
 }

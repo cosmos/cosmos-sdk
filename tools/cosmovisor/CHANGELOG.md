@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * [#21462](https://github.com/cosmos/cosmos-sdk/pull/21462) Pass `stdin` to binary.
+* [#21971](https://github.com/cosmos/cosmos-sdk/pull/21971) Support Custom path to application data directory
 
 ### Features
 

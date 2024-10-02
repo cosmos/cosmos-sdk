@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-	"cosmossdk.io/store/v2/root"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,6 +15,7 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
+	"cosmossdk.io/store/v2/root"
 )
 
 // AppBuilder is a type that is injected into a container by the runtime/v2 module

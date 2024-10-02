@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"cosmossdk.io/store/v2/root"
 	"fmt"
 	"os"
 	"slices"
@@ -27,6 +26,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
+	"cosmossdk.io/store/v2/root"
 )
 
 var (
@@ -178,7 +178,7 @@ func ProvideKVService(
 ) (store.KVStoreService, store.MemoryStoreService) {
 	// skips modules that have no store
 	if slices.Contains(config.SkipStoreKeys, key.Name()) {
-		return nil, nil
+		return &failingStoreService{}, &failingStoreService{}
 	}
 	var kvStoreKey string
 	override := storeKeyOverride(config, key.Name())
@@ -189,10 +189,7 @@ func ProvideKVService(
 	}
 
 	storeBuilder.RegisterKey(kvStoreKey)
-	fmt.Printf("provision store key=%s", kvStoreKey)
-
-	return kvFactory([]byte(kvStoreKey)),
-		stf.NewMemoryStoreService([]byte(fmt.Sprintf("memory:%s", kvStoreKey)))
+	return kvFactory([]byte(kvStoreKey)), stf.NewMemoryStoreService([]byte(fmt.Sprintf("memory:%s", kvStoreKey)))
 }
 
 func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.StoreKeyConfig {

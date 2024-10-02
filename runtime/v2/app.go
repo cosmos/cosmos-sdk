@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"encoding/json"
+
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"

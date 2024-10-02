@@ -78,7 +78,9 @@ func (s *Server[T]) Config() any {
 }
 
 func UnmarshalConfig(cfg map[string]any) *root.Config {
-	config := &root.Config{}
+	config := &root.Config{
+		Options: root.DefaultStoreOptions(),
+	}
 	if err := serverv2.UnmarshalSubConfig(cfg, ServerName, config); err != nil {
 		panic(fmt.Sprintf("failed to unmarshal config: %v", err))
 	}

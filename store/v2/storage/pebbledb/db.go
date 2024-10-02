@@ -212,10 +212,7 @@ func (db *Database) Prune(version uint64) (err error) {
 
 	batch := db.storage.NewBatch()
 	defer func() {
-		cErr := batch.Close()
-		if err == nil {
-			err = cErr
-		}
+		err = errors.Join(err, batch.Close())
 	}()
 
 	var (
@@ -339,10 +336,7 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 func (db *Database) PruneStoreKeys(storeKeys []string, version uint64) (err error) {
 	batch := db.storage.NewBatch()
 	defer func() {
-		cErr := batch.Close()
-		if err == nil {
-			err = cErr
-		}
+		err = errors.Join(err, batch.Close())
 	}()
 
 	for _, storeKey := range storeKeys {
@@ -444,10 +438,7 @@ func getMVCCSlice(db *pebble.DB, storeKey, key []byte, version uint64) ([]byte, 
 func (db *Database) deleteRemovedStoreKeys(version uint64) (err error) {
 	batch := db.storage.NewBatch()
 	defer func() {
-		cErr := batch.Close()
-		if err == nil {
-			err = cErr
-		}
+		err = errors.Join(err, batch.Close())
 	}()
 
 	end := encoding.BuildPrefixWithVersion(removedStoreKeyPrefix, version+1)

@@ -13,6 +13,10 @@ import (
 	"sync"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
+	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
@@ -20,12 +24,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
-
-	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
-	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
 const (
@@ -89,9 +87,7 @@ func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier 
 	Query(ctx context.Context, version uint64, msg gogoproto.Message) (gogoproto.Message, error)
 },
 ) grpc.StreamHandler {
-	getRegistry := sync.OnceValues(func() (*protoregistry.Files, error) {
-		return gogoproto.MergedRegistry()
-	})
+	getRegistry := sync.OnceValues(gogoproto.MergedRegistry)
 
 	return func(srv any, stream grpc.ServerStream) error {
 		method, ok := grpc.MethodFromServerStream(stream)

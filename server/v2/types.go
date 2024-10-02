@@ -1,9 +1,9 @@
 package serverv2
 
 import (
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"github.com/spf13/viper"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"

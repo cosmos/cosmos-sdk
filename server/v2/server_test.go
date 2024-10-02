@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	coreserver "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"

@@ -185,8 +185,9 @@ mod tests {
     }
 
     #[derive(Debug, PartialEq, SchemaValue)]
-    struct Coin<'a> {
-        denom: &'a str,
+    #[sealed]
+    struct Coin<'b> {
+        denom: &'b str,
         amount: u128,
     }
 
@@ -194,11 +195,6 @@ mod tests {
         fn drop(&mut self) {
             std::println!("drop Coin");
         }
-    }
-
-    impl<'a> ObjectFieldValue for Coin<'a> {
-        type In<'b> = Coin<'b>;
-        type Out<'b> = Coin<'b>;
     }
 
     #[test]

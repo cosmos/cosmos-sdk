@@ -2,40 +2,60 @@
 //! Macros for generating code for the schema crate.
 
 use manyhow::{bail, manyhow};
-use proc_macro2::{Span, TokenStream as TokenStream2};
+use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use quote::quote;
-use syn::{Data, Lifetime};
+use syn::{Attribute, Data, DataStruct, Lifetime};
 
 /// This derives a struct codec.
 #[manyhow]
 #[proc_macro_derive(SchemaValue, attributes(sealed, schema, proto))]
 pub fn derive_schema_value(input: syn::DeriveInput) -> manyhow::Result<TokenStream2> {
-    let struct_name = input.ident;
-    let str = match &input.data {
+    match &input.data {
         Data::Struct(str) => {
-            str
+            return derive_struct_schema(&input, str);
         }
-        _ => bail!("only know how to derive SchemaValue for structs, currently")
-    };
+        _ => bail!("only know how to derive SchemaValue for structs")
+    }
+}
 
+fn derive_struct_schema(input: &syn::DeriveInput, str: &DataStruct) -> manyhow::Result<TokenStream2> {
+    let struct_name = &input.ident;
     // extract struct lifetime
-    let mut generics = input.generics;
+    let generics = &input.generics;
     if generics.lifetimes().count() > 1 {
         bail!("only one lifetime parameter is allowed")
     }
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
     let lifetime = if let Some(lifetime) = generics.lifetimes().next() {
         lifetime.lifetime.clone()
     } else {
         Lifetime::new("'a", Span::call_site())
     };
-    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    let lifetime2 = if lifetime.ident == "b" {
+        Lifetime::new("'c", Span::call_site())
+    } else {
+        Lifetime::new("'b", Span::call_site())
+    };
+    let ty_generics2 = if let Some(lifetime) = generics.lifetimes().next() {
+        quote! { < #lifetime2 > }
+    } else {
+        quote! {}
+    };
 
-    // TODO: extract either non_exhaustive or sealed attribute
+    let sealed = has_attribute(&input.attrs, "sealed");
+    let non_exhaustive = has_attribute(&input.attrs, "non_exhaustive");
+    if !sealed && !non_exhaustive {
+        bail!("struct must have either a #[sealed] or #[non_exhaustive] attribute to indicate whether adding new fields is or is not a breaking change")
+    }
+    if sealed && non_exhaustive {
+        bail!("struct cannot be both sealed and non_exhaustive")
+    }
+
     let fields = str.fields.iter().map(|field| {
         let field_name = field.ident.as_ref().unwrap();
         let field_type = &field.ty;
         quote! {
-               ::ixc_schema::types::to_field::<<#field_type as ::ixc_schema::SchemaValue<'a>>::Type>().with_name(stringify!(#field_name)),
+               ::ixc_schema::types::to_field::<<#field_type as ::ixc_schema::SchemaValue< '_ >>::Type>().with_name(stringify!(#field_name)),
         }
     });
     let encode_matchers = str.fields.iter().enumerate().map(|(index, field)| {
@@ -48,7 +68,7 @@ pub fn derive_schema_value(input: syn::DeriveInput) -> manyhow::Result<TokenStre
     let decode_states = str.fields.iter().map(|field| {
         let field_type = &field.ty;
         quote! {
-            <#field_type as ::ixc_schema::SchemaValue<'a>>::DecodeState,
+            <#field_type as ::ixc_schema::SchemaValue< #lifetime >>::DecodeState,
         }
     });
     let decode_matchers = str.fields.iter().enumerate().map(|(index, field)| {
@@ -63,7 +83,7 @@ pub fn derive_schema_value(input: syn::DeriveInput) -> manyhow::Result<TokenStre
         let field_type = &field.ty;
         let tuple_index = syn::Index::from(index);
         quote! {
-            let #field_name = <#field_type as ::ixc_schema::SchemaValue<'a>>::finish_decode_state(state.#tuple_index, mem)?;
+            let #field_name = <#field_type as ::ixc_schema::SchemaValue< #lifetime >>::finish_decode_state(state.#tuple_index, mem)?;
         }
     });
     let field_inits = str.fields.iter().enumerate().map(|(index, field)| {
@@ -77,7 +97,7 @@ pub fn derive_schema_value(input: syn::DeriveInput) -> manyhow::Result<TokenStre
             const STRUCT_TYPE: ::ixc_schema::structs::StructType<'static> = ::ixc_schema::structs::StructType {
                 name: stringify!(#struct_name),
                 fields: &[#(#fields)*],
-                sealed: false,
+                sealed: #sealed,
             };
         }
 
@@ -100,12 +120,12 @@ pub fn derive_schema_value(input: syn::DeriveInput) -> manyhow::Result<TokenStre
             type Type = ::ixc_schema::types::StructT< #struct_name #ty_generics >;
             type DecodeState = (#(#decode_states)*);
 
-            fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn ::ixc_schema::decoder::Decoder<'a>) -> Result<(), ::ixc_schema::decoder::DecodeError> {
-                struct Visitor<'b, #lifetime : 'b> {
-                    state: &'b mut < #struct_name #ty_generics as ::ixc_schema::SchemaValue<'a>>::DecodeState,
+            fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn ::ixc_schema::decoder::Decoder< #lifetime >) -> Result<(), ::ixc_schema::decoder::DecodeError> {
+                struct Visitor< #lifetime2 , #lifetime : #lifetime2 > {
+                    state: &#lifetime2 mut < #struct_name #ty_generics as ::ixc_schema::SchemaValue< #lifetime >>::DecodeState,
                 }
-                unsafe impl<'b, 'a: 'b> ::ixc_schema::structs::StructDecodeVisitor<'a> for Visitor<'b, 'a> {
-                    fn decode_field(&mut self, index: usize, decoder: &mut dyn ::ixc_schema::decoder::Decoder<'a>) -> Result<(), ::ixc_schema::decoder::DecodeError> {
+                unsafe impl< #lifetime2, #lifetime : #lifetime2 > ::ixc_schema::structs::StructDecodeVisitor< #lifetime > for Visitor< #lifetime2, #lifetime > {
+                    fn decode_field(&mut self, index: usize, decoder: &mut dyn ::ixc_schema::decoder::Decoder< #lifetime >) -> Result<(), ::ixc_schema::decoder::DecodeError> {
                         match index {
                             #(#decode_matchers)*
                             _ => Err(::ixc_schema::decoder::DecodeError::UnknownFieldNumber),
@@ -115,7 +135,7 @@ pub fn derive_schema_value(input: syn::DeriveInput) -> manyhow::Result<TokenStre
                 decoder.decode_struct(&mut Visitor { state }, &<Self as ::ixc_schema::structs::StructSchema>::STRUCT_TYPE)
             }
 
-            fn finish_decode_state(state: Self::DecodeState, mem: &'a ::ixc_schema::mem::MemoryManager) -> Result<Self, ::ixc_schema::decoder::DecodeError> {
+            fn finish_decode_state(state: Self::DecodeState, mem: &#lifetime ::ixc_schema::mem::MemoryManager) -> Result<Self, ::ixc_schema::decoder::DecodeError> {
                 #(#finishers)*
                 Ok( #struct_name {
                     #(#field_inits)*
@@ -128,10 +148,22 @@ pub fn derive_schema_value(input: syn::DeriveInput) -> manyhow::Result<TokenStre
         }
 
         impl < #lifetime > ::ixc_schema::value::ListElementValue < #lifetime > for #struct_name #ty_generics #where_clause {}
-        // TODO: need to change lifetime 'b
-        // impl < #lifetime > ObjectFieldValue < #lifetime > for #struct_name #ty_generics #where_clause {
-        //     type In<'b> = Coin<'b>;
-        //     type Out<'b> = Coin<'b>;
-        // }
+        impl #impl_generics ::ixc_schema::state_object::ObjectFieldValue for #struct_name #ty_generics #where_clause {
+            type In< #lifetime2 > = #struct_name #ty_generics2;
+            type Out< #lifetime2 > = #struct_name #ty_generics2;
+        }
     }.into())
+}
+
+fn has_attribute<I>(attrs: &Vec<Attribute>, ident: &I) -> bool
+where
+    I: ?Sized,
+    Ident: PartialEq<I>,
+{
+    for attr in attrs {
+        if attr.path().is_ident(ident) {
+            return true;
+        }
+    }
+    false
 }

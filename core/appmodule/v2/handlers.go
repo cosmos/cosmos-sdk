@@ -110,9 +110,14 @@ func RegisterPostMsgHandler[Req, Resp transaction.Msg](
 	router.RegisterPostMsgHandler(msgName, untypedHandler)
 }
 
+// Handler defines a handler descriptor.
 type Handler struct {
-	Func        HandlerFunc
-	MakeMsg     func() transaction.Msg
+	// Func defines the actual handler, the function that runs a request and returns a response.
+	// Can be query handler or msg handler.
+	Func HandlerFunc
+	// MakeMsg instantiates the type of the request, can be used in decoding contexts.
+	MakeMsg func() transaction.Msg
+	// MakeMsgResp instantiates a new response, can be used in decoding contexts.
 	MakeMsgResp func() transaction.Msg
 }
 
@@ -148,21 +153,21 @@ type HasQueryHandlers interface {
 //
 //	func (m Module) RegisterMsgHandlers(router appmodule.MsgRouter) {
 //		handlers := keeper.NewHandlers(m.keeper)
-//	    err := appmodule.RegisterHandler(router, gogoproto.MessageName(types.MsgMint{}), handlers.MsgMint)
+//	    err := appmodule.RegisterHandler(router, handlers.MsgMint)
 //	}
 //
 //	func (m Module) RegisterQueryHandlers(router appmodule.QueryRouter) {
 //		handlers := keeper.NewHandlers(m.keeper)
-//	    err := appmodule.RegisterHandler(router, gogoproto.MessageName(types.QueryBalanceRequest{}), handlers.QueryBalance)
+//	    err := appmodule.RegisterHandler(router, handlers.QueryBalance)
 //	}
 //
 // ```
-func RegisterMsgHandler[Req, Resp transaction.Msg](
+func RegisterMsgHandler[Req, Resp any, PReq transaction.GenericMsg[Req], PResp transaction.GenericMsg[Resp]](
 	router MsgRouter,
-	handler func(ctx context.Context, msg Req) (msgResp Resp, err error),
+	handler func(ctx context.Context, msg PReq) (msgResp PResp, err error),
 ) {
 	untypedHandler := func(ctx context.Context, m transaction.Msg) (transaction.Msg, error) {
-		typed, ok := m.(Req)
+		typed, ok := m.(PReq)
 		if !ok {
 			return nil, fmt.Errorf("unexpected type %T, wanted: %T", m, *new(Req))
 		}
@@ -172,10 +177,10 @@ func RegisterMsgHandler[Req, Resp transaction.Msg](
 	router.RegisterHandler(Handler{
 		Func: untypedHandler,
 		MakeMsg: func() transaction.Msg {
-			return *new(Req)
+			return PReq(new(Req))
 		},
 		MakeMsgResp: func() transaction.Msg {
-			return *new(Resp)
+			return PResp(new(Resp))
 		},
 	})
 }

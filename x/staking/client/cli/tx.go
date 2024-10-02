@@ -72,6 +72,7 @@ Where validator.json contains:
 	"website": "validator's (optional) website",
 	"security": "validator's (optional) security contact email",
 	"details": "validator's (optional) details",
+	"metadata-profile-pic-uri": "link to validator's (optional) profile picture",
 	"commission-rate": "0.1",
 	"commission-max-rate": "0.2",
 	"commission-max-change-rate": "0.01",
@@ -129,7 +130,15 @@ func NewEditValidatorCmd() *cobra.Command {
 			website, _ := cmd.Flags().GetString(FlagWebsite)
 			security, _ := cmd.Flags().GetString(FlagSecurityContact)
 			details, _ := cmd.Flags().GetString(FlagDetails)
-			description := types.NewDescription(moniker, identity, website, security, details)
+			profilePicUri, _ := cmd.Flags().GetString(FlagMetadataProfilePicUri)
+			socialHandlesUris, _ := cmd.Flags().GetStringArray(FlagMetadataSocialHandleUris)
+
+			metadata := types.Metadata{
+				ProfilePicUri:    profilePicUri,
+				SocialHandleUris: socialHandlesUris,
+			}
+
+			description := types.NewDescription(moniker, identity, website, security, details, metadata)
 
 			var newRate *math.LegacyDec
 
@@ -183,6 +192,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 		val.Website,
 		val.Security,
 		val.Details,
+		val.Metadata,
 	)
 
 	valStr, err := valAc.BytesToString(sdk.ValAddress(valAddr))
@@ -225,6 +235,8 @@ func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc
 	fsCreateValidator.String(FlagSecurityContact, "", "The validator's (optional) security contact email")
 	fsCreateValidator.String(FlagDetails, "", "The validator's (optional) details")
 	fsCreateValidator.String(FlagIdentity, "", "The (optional) identity signature (ex. UPort or Keybase)")
+	fsCreateValidator.String(FlagMetadataProfilePicUri, "", "The  validator's profile pic uri")
+	fsCreateValidator.StringArray(FlagMetadataSocialHandleUris, []string{}, "The  validator's social handles uris")
 	fsCreateValidator.AddFlagSet(FlagSetCommissionCreate())
 	fsCreateValidator.AddFlagSet(FlagSetMinSelfDelegation())
 	fsCreateValidator.AddFlagSet(FlagSetAmount())
@@ -263,6 +275,7 @@ type TxCreateValidatorConfig struct {
 	SecurityContact string
 	Details         string
 	Identity        string
+	Metadata        types.Metadata
 }
 
 func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, chainID string, valPubKey cryptotypes.PubKey) (TxCreateValidatorConfig, error) {
@@ -302,6 +315,14 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 		return c, err
 	}
 
+	profilePicUri, err := flagSet.GetString(FlagMetadataProfilePicUri)
+	if err != nil {
+		return c, err
+	}
+	metadata := types.Metadata{
+		ProfilePicUri: profilePicUri,
+	}
+
 	c.Amount, err = flagSet.GetString(FlagAmount)
 	if err != nil {
 		return c, err
@@ -338,6 +359,7 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 	c.SecurityContact = securityContact
 	c.Details = details
 	c.Identity = identity
+	c.Metadata = metadata
 	c.ChainID = chainID
 	c.Moniker = moniker
 
@@ -379,6 +401,7 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 		config.Website,
 		config.SecurityContact,
 		config.Details,
+		config.Metadata,
 	)
 
 	// get the initial validator commission parameters

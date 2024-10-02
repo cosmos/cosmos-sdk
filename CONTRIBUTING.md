@@ -200,7 +200,7 @@ that you would like early feedback and tagging whoever you would like to receive
 Codeowners are marked automatically as the reviewers.
 
 All PRs require at least two review approvals before they can be merged (one review might be acceptable in
-the case of minor changes to [docs](./.github/PULL_REQUEST_TEMPLATE/docs.md) changes that do not affect production code). Each PR template has a reviewers checklist that must be completed before the PR can be merged. Each reviewer is responsible
+the case of minor changes to docs changes that do not affect production code). Each PR template has a reviewers checklist that must be completed before the PR can be merged. Each reviewer is responsible
 for all checked items unless they have indicated otherwise by leaving their handle next to specific
 items. In addition, use the following review explanations:
 
@@ -236,7 +236,7 @@ Within the Cosmos SDK we have two forms of documenting decisions, Request For Co
 
 ## Dependencies
 
-We use [Go Modules](https://github.com/golang/go/wiki/Modules) to manage
+We use [Go Modules](https://go.dev/wiki/Modules) to manage
 dependency versions.
 
 The main branch of every Cosmos repository should just build with `go get`,
@@ -300,7 +300,7 @@ For example, in vscode your `.vscode/settings.json` should look like:
 
 User-facing repos should adhere to the trunk based development branching model: https://trunkbaseddevelopment.com. User branches should start with a user name, example: `{moniker}/{issue#}-branch-name`.
 
-The Cosmos SDK repository is a [multi Go module](https://github.com/golang/go/wiki/Modules#is-it-possible-to-add-a-module-to-a-multi-module-repository) repository. It means that we have more than one Go module in a single repository.
+The Cosmos SDK repository is a [multi Go module](https://go.dev/wiki/Modules#is-it-possible-to-add-a-module-to-a-multi-module-repository) repository. It means that we have more than one Go module in a single repository.
 
 The Cosmos SDK utilizes [semantic versioning](https://semver.org/).
 

@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v0.7.6
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v1.0.0-alpha.3
+	cosmossdk.io/core v1.0.0-alpha.4
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.4.1
@@ -49,7 +49,7 @@ require (
 require (
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
-	google.golang.org/grpc v1.67.0
+	google.golang.org/grpc v1.67.1
 )
 
 require (
@@ -223,7 +223,7 @@ require (
 	google.golang.org/api v0.192.0 // indirect
 	google.golang.org/genproto v0.0.0-20240814211410-ddb44dafa142 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240924160255-9d4c2d233b61 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240930140551-af27646dc61f // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.1 // indirect

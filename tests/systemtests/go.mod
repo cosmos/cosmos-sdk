@@ -20,12 +20,13 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
-	google.golang.org/grpc v1.67.0 // indirect
+	google.golang.org/grpc v1.67.1
 )
 
 require (
 	cosmossdk.io/math v1.3.0
 	github.com/cometbft/cometbft v0.38.8
+	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/creachadair/tomledit v0.0.26
 	github.com/tidwall/gjson v1.14.2
 	github.com/tidwall/sjson v1.2.5
@@ -153,7 +154,7 @@ require (
 	golang.org/x/term v0.24.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240924160255-9d4c2d233b61 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240930140551-af27646dc61f // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

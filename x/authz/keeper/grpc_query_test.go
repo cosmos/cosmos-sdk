@@ -21,9 +21,9 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 		expAuthorization authz.Authorization
 	)
 
-	addr0, err := suite.accountKeeper.AddressCodec().BytesToString(addrs[0])
+	addr0, err := suite.addrCdc.BytesToString(addrs[0])
 	suite.Require().NoError(err)
-	addr1, err := suite.accountKeeper.AddressCodec().BytesToString(addrs[1])
+	addr1, err := suite.addrCdc.BytesToString(addrs[1])
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -137,7 +137,7 @@ func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 	require := suite.Require()
 	queryClient, addrs := suite.queryClient, suite.addrs
 
-	addr0, err := suite.accountKeeper.AddressCodec().BytesToString(addrs[0])
+	addr0, err := suite.addrCdc.BytesToString(addrs[0])
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -209,9 +209,9 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 	require := suite.Require()
 	queryClient, addrs := suite.queryClient, suite.addrs
 
-	addr0, err := suite.accountKeeper.AddressCodec().BytesToString(addrs[0])
+	addr0, err := suite.addrCdc.BytesToString(addrs[0])
 	suite.Require().NoError(err)
-	addr2, err := suite.accountKeeper.AddressCodec().BytesToString(addrs[2])
+	addr2, err := suite.addrCdc.BytesToString(addrs[2])
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -299,7 +299,7 @@ func (suite *TestSuite) createSendAuthorization(grantee, granter sdk.AccAddress)
 func (suite *TestSuite) createSendAuthorizationWithAllowList(grantee, granter sdk.AccAddress) authz.Authorization {
 	exp := suite.ctx.HeaderInfo().Time.Add(time.Hour)
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
-	addr, err := suite.accountKeeper.AddressCodec().BytesToString(suite.addrs[5])
+	addr, err := suite.addrCdc.BytesToString(suite.addrs[5])
 	suite.Require().NoError(err)
 	authorization := &banktypes.SendAuthorization{SpendLimit: newCoins, AllowList: []string{addr}}
 	err = suite.authzKeeper.SaveGrant(suite.ctx, grantee, granter, authorization, &exp)

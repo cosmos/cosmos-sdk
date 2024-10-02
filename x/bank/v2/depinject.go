@@ -1,6 +1,11 @@
 package bankv2
 
 import (
+	"fmt"
+	"maps"
+	"slices"
+	"sort"
+
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
@@ -22,6 +27,7 @@ func init() {
 	appconfig.RegisterModule(
 		&moduletypes.Module{},
 		appconfig.Provide(ProvideModule),
+		appconfig.Invoke(InvokeSetSendRestrictions),
 	)
 }
 
@@ -60,4 +66,40 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		Keeper: k,
 		Module: m,
 	}
+}
+
+func InvokeSetSendRestrictions(
+	config *moduletypes.Module,
+	keeper keeper.Keeper,
+	restrictions map[string]types.SendRestrictionFn,
+) error {
+	if config == nil {
+		return nil
+	}
+
+	modules := slices.Collect(maps.Keys(restrictions))
+	order := config.RestrictionsOrder
+	if len(order) == 0 {
+		order = modules
+		sort.Strings(order)
+	}
+
+	if len(order) != len(modules) {
+		return fmt.Errorf("len(restrictions order: %v) != len(restriction modules: %v)", order, modules)
+	}
+
+	if len(modules) == 0 {
+		return nil
+	}
+
+	for _, module := range order {
+		restriction, ok := restrictions[module]
+		if !ok {
+			return fmt.Errorf("can't find send restriction for module %s", module)
+		}
+
+		keeper.AppendGlobalSendRestriction(restriction)
+	}
+
+	return nil
 }

@@ -34,7 +34,7 @@ You can provide upgrades in two ways:
 Note: You must provide either --upgrade-file or --upgrade-list.`,
 		Example: `cosmovisor add-batch-upgrade --upgrade-list upgrade_v2:/path/to/v2/binary:1000000,upgrade_v3:/path/to/v3/binary:2000000
 
-cosmovisor add-batch-upgrade --upgrade-file /path/to/batch_upgrade.json`,
+cosmovisor add-batch-upgrade --upgrade-file /path/to/batch_upgrade.csv`,
 		SilenceUsage: true,
 		Args:         cobra.NoArgs,
 		RunE:         addBatchUpgrade,

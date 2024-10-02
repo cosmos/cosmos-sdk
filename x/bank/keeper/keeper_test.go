@@ -790,6 +790,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 	suite.Require().NoError(err)
 	fromAcc := authtypes.NewBaseAccountWithAddress(fromAddr)
 	inputAccs := []sdk.AccountI{fromAcc}
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, inputAccs[0].GetAddress()).Return(inputAccs[0]).AnyTimes()
 	toAddr1 := accAddrs[1]
 	toAddr1Str, err := suite.authKeeper.AddressCodec().BytesToString(toAddr1)
 	suite.Require().NoError(err)
@@ -980,7 +981,6 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 			actualRestrictionArgs = nil
 			suite.bankKeeper.SetSendRestriction(tc.fn)
 			ctx := suite.ctx
-			suite.mockInputOutputCoins(inputAccs, tc.outputAddrs)
 			input := banktypes.Input{
 				Address: fromStrAddr,
 				Coins:   tc.inputCoins,

@@ -571,7 +571,7 @@ func TestQuo(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, gotErr := spec.x.Quo(spec.y)
 			if name == "1.234 / -123 = 1.111" {
-				fmt.Println("got", got)
+				t.Log("got", got)
 			}
 
 			if spec.expErr != nil {
@@ -642,7 +642,7 @@ func TestQuoExact(t *testing.T) {
 			y:   NewDecWithPrec(1234, -3),
 			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
 		},
-		"-1.234 / 1234 = -121.766": {
+		"-1.234 / 1.234 = -1": {
 			x:   NewDecWithPrec(-1234, -3),
 			y:   NewDecWithPrec(1234, -3),
 			exp: must(NewDecFromString("-1.000000000000000000000000000000000")),
@@ -1286,4 +1286,200 @@ func must[T any](r T, err error) T {
 		panic(err)
 	}
 	return r
+}
+
+func TestMarshal(t *testing.T) {
+	specs := map[string]struct {
+		x   Dec
+		exp string
+	}{
+		"No trailing zeros": {
+			x:   NewDecFromInt64(123456),
+			exp: "1.23456E+5",
+		},
+		"Trailing zeros": {
+			x:   NewDecFromInt64(123456000),
+			exp: "1.23456E+8",
+		},
+		"Zero value": {
+			x:   NewDecFromInt64(0),
+			exp: "0E+0",
+		},
+		"-0": {
+			x:   NewDecFromInt64(-0),
+			exp: "0E+0",
+		},
+		"Decimal value": {
+			x:   must(NewDecFromString("1.30000")),
+			exp: "1.3E+0",
+		},
+		"Positive value": {
+			x:   NewDecFromInt64(10),
+			exp: "1E+1",
+		},
+		"negative value": {
+			x:   NewDecFromInt64(-10),
+			exp: "-1E+1",
+		},
+		"max decimal": {
+			x:   must(NewDecFromString("9." + strings.Repeat("0", 34))),
+			exp: "9E+0",
+		},
+		"min decimal": {
+			x:   must(NewDecFromString("-1." + strings.Repeat("0", 34))),
+			exp: "-1E+0",
+		},
+		"5 decimal places": {
+			x:   must(NewDecFromString("0.00001")),
+			exp: "1E-5",
+		},
+		"6 decimal places": {
+			x:   must(NewDecFromString("0.000001")),
+			exp: "1E-6",
+		},
+		"7 decimal places": {
+			x:   must(NewDecFromString("0.0000001")),
+			exp: "1E-7",
+		},
+		"4 decimal places before the comma": {
+			x:   must(NewDecFromString("1000")),
+			exp: "1E+3",
+		},
+		"5 decimal places before the comma": {
+			x:   must(NewDecFromString("10000")),
+			exp: "1E+4",
+		},
+		"6 decimal places before the comma": {
+			x:   must(NewDecFromString("100000")),
+			exp: "1E+5",
+		},
+		"7 decimal places before the comma": {
+			x:   must(NewDecFromString("1000000")),
+			exp: "1E+6",
+		},
+		"1e100000": {
+			x:   NewDecWithPrec(1, 100_000),
+			exp: "1E+100000",
+		},
+		"1.1e100000": {
+			x:   NewDecWithPrec(11, 100_000),
+			exp: "1.1E+100001",
+		},
+		"1.e100000": {
+			x:   NewDecWithPrec(1, 100_000),
+			exp: "1E+100000",
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			marshaled, err := spec.x.Marshal()
+			require.NoError(t, err)
+			assert.Equal(t, spec.exp, string(marshaled))
+		})
+	}
+}
+
+func TestUnMarshal(t *testing.T) {
+	specs := map[string]struct {
+		x      string
+		exp    Dec
+		expErr error
+	}{
+		"Leading zeros": {
+			x:   "000123456",
+			exp: NewDecFromInt64(123456),
+		},
+		"Trailing zeros": {
+			x:   "1.00000",
+			exp: NewDecFromInt64(1),
+		},
+		"Small e": {
+			x:   "1.23456e+8",
+			exp: NewDecFromInt64(123456000),
+		},
+		"xxx": {
+			x:   "1.23E+2",
+			exp: NewDecFromInt64(123),
+		},
+		"Zero value": {
+			x:   "0",
+			exp: NewDecFromInt64(0),
+		},
+		"-0": {
+			x:   "-0",
+			exp: NewDecFromInt64(0),
+		},
+		"0E+0": {
+			x:   "0E+0",
+			exp: NewDecFromInt64(0),
+		},
+		"Decimal value": {
+			x:   "1.3000",
+			exp: NewDecWithPrec(13, -1),
+		},
+		"Positive value": {
+			x:   "1E+1",
+			exp: NewDecFromInt64(10),
+		},
+		"negative value": {
+			x:   "-1E+1",
+			exp: NewDecFromInt64(-10),
+		},
+		"Min Exponent": {
+			x:   "1E-100000",
+			exp: NewDecWithPrec(1, -100_000),
+		},
+		"Below Min Exponent": {
+			x:      "1.1E-100001",
+			expErr: ErrInvalidDec,
+		},
+		"1E100000": {
+			x:   "1E+100000",
+			exp: NewDecWithPrec(1, 100_000),
+		},
+		"Above Max Exponent": {
+			x:      "1.1E+100001",
+			expErr: ErrInvalidDec,
+		},
+		"-1E100000": {
+			x:   "-1e100000",
+			exp: NewDecWithPrec(-1, 100_000),
+		},
+		"9E100000": {
+			x:   "9e100000",
+			exp: NewDecWithPrec(9, 100_000),
+		},
+		"NaN": {
+			x:      "NaN",
+			expErr: ErrInvalidDec,
+		},
+		"currency string": {
+			x:      "1foo",
+			expErr: ErrInvalidDec,
+		},
+		".": {
+			x:      ".",
+			expErr: ErrInvalidDec,
+		},
+		"0.": {
+			x:   "0.",
+			exp: NewDecFromInt64(0),
+		},
+		".0": {
+			x:   ".0",
+			exp: NewDecFromInt64(0),
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			var unmarshaled Dec
+			err := unmarshaled.Unmarshal([]byte(spec.x))
+			if spec.expErr != nil {
+				require.ErrorIs(t, err, spec.expErr)
+				return
+			}
+			require.NoError(t, err)
+			assert.True(t, spec.exp.Equal(unmarshaled))
+		})
+	}
 }

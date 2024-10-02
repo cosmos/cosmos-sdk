@@ -35,6 +35,11 @@ impl<'a> crate::decoder::Decoder<'a> for Decoder<'a> {
         Ok(u32::from_le_bytes(bz.try_into().unwrap()))
     }
 
+    fn decode_i32(&mut self) -> Result<i32, DecodeError> {
+        let bz = self.read_bytes(4)?;
+        Ok(i32::from_le_bytes(bz.try_into().unwrap()))
+    }
+
     fn decode_u64(&mut self) -> Result<u64, DecodeError> {
         let bz = self.read_bytes(8)?;
         Ok(u64::from_le_bytes(bz.try_into().unwrap()))
@@ -96,6 +101,8 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for InnerDecoder<'b, 'a> {
     fn decode_u32(&mut self) -> Result<u32, DecodeError> {
         self.outer.decode_u32()
     }
+
+    fn decode_i32(&mut self) -> Result<i32, DecodeError> { self.outer.decode_i32() }
 
     fn decode_u64(&mut self) -> Result<u64, DecodeError> { self.outer.decode_u64() }
 

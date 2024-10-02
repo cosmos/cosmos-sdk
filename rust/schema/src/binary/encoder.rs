@@ -5,6 +5,7 @@ use crate::structs::{StructDecodeVisitor, StructEncodeVisitor, StructType};
 use crate::value::SchemaValue;
 use crate::buffer::{Writer, WriterFactory};
 use crate::list::ListEncodeVisitor;
+use crate::r#enum::EnumType;
 use crate::state_object::ObjectValue;
 
 pub fn encode_value<'a, V: SchemaValue<'a>, F: WriterFactory>(value: &V, writer_factory: F) -> Result<F::Output, EncodeError> {
@@ -22,6 +23,10 @@ pub(crate) struct Encoder<'a, W> {
 
 impl<'a, W: Writer> crate::encoder::Encoder for Encoder<'a, W> {
     fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError> {
+        self.writer.write(&x.to_le_bytes())
+    }
+
+    fn encode_i32(&mut self, x: i32) -> Result<(), EncodeError> {
         self.writer.write(&x.to_le_bytes())
     }
 
@@ -71,6 +76,11 @@ impl crate::encoder::Encoder for EncodeSizer {
         Ok(())
     }
 
+    fn encode_i32(&mut self, x: i32) -> Result<(), EncodeError> {
+        self.size += 4;
+        Ok(())
+    }
+
     fn encode_u64(&mut self, x: u64) -> Result<(), EncodeError> {
         self.size += 8;
         Ok(())
@@ -107,6 +117,10 @@ impl crate::encoder::Encoder for EncodeSizer {
         self.size += 8;
         Ok(())
     }
+
+    fn encode_enum(&mut self, x: i32, enum_type: &EnumType) -> Result<(), EncodeError> {
+        self.encode_i32(x)
+    }
 }
 
 pub(crate) struct InnerEncoder<'b, 'a: 'b, W> {
@@ -117,6 +131,8 @@ impl<'b, 'a: 'b, W: Writer> crate::encoder::Encoder for InnerEncoder<'a, 'b, W> 
     fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError> {
         self.outer.encode_u32(x)
     }
+
+    fn encode_i32(&mut self, x: i32) -> Result<(), EncodeError> { self.outer.encode_i32(x) }
 
     fn encode_u64(&mut self, x: u64) -> Result<(), EncodeError> { self.outer.encode_u64(x) }
 
@@ -156,6 +172,11 @@ pub(crate) struct InnerEncodeSizer<'a> {
 
 impl<'a> crate::encoder::Encoder for InnerEncodeSizer<'a> {
     fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError> {
+        self.outer.size += 4;
+        Ok(())
+    }
+
+    fn encode_i32(&mut self, x: i32) -> Result<(), EncodeError> {
         self.outer.size += 4;
         Ok(())
     }

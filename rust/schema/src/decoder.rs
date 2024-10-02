@@ -1,8 +1,10 @@
 //! The decoder trait and error type.
 
 use ixc_message_api::AccountID;
+use crate::encoder::EncodeError;
 use crate::list::ListDecodeVisitor;
 use crate::mem::MemoryManager;
+use crate::r#enum::EnumType;
 use crate::structs::{StructDecodeVisitor, StructType};
 use crate::value::SchemaValue;
 
@@ -10,6 +12,8 @@ use crate::value::SchemaValue;
 pub trait Decoder<'a> {
     /// Decode a `u32`.
     fn decode_u32(&mut self) -> Result<u32, DecodeError>;
+    /// Decode a `i32`.
+    fn decode_i32(&mut self) -> Result<i32, DecodeError>;
     /// Decode a `u64`.
     fn decode_u64(&mut self) -> Result<u64, DecodeError>;
     /// Decode a `u128`.
@@ -25,6 +29,10 @@ pub trait Decoder<'a> {
     fn decode_list(&mut self, visitor: &mut dyn ListDecodeVisitor<'a>) -> Result<(), DecodeError>;
     /// Decode an account ID.
     fn decode_account_id(&mut self) -> Result<AccountID, DecodeError>;
+    /// Encode an enum value.
+    fn decode_enum(&mut self, enum_type: &EnumType) -> Result<i32, DecodeError> {
+        self.decode_i32()
+    }
     /// Get the memory manager.
     fn mem_manager(&self) -> &'a MemoryManager;
 }

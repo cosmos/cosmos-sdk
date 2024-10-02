@@ -19,6 +19,7 @@ where
     /// The type of the value.
     type Type: Type;
 
+
     /// In progress decoding state.
     type DecodeState: Default;
 
@@ -41,16 +42,16 @@ where
 }
 
 impl<'a> SchemaValue<'a> for u8 {
-    type Type = U8T;
+    type Type = u8;
     type DecodeState = u8;
 }
 impl<'a> SchemaValue<'a> for u16 {
-    type Type = U16T;
+    type Type = u16;
     type DecodeState = u16;
 }
 
 impl<'a> SchemaValue<'a> for u32 {
-    type Type = U32T;
+    type Type = u32;
     type DecodeState = u32;
 
     fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
@@ -68,7 +69,7 @@ impl<'a> SchemaValue<'a> for u32 {
 }
 
 impl<'a> SchemaValue<'a> for u64 {
-    type Type = U64T;
+    type Type = u64;
     type DecodeState = u64;
 
     fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
@@ -104,19 +105,19 @@ impl<'a> SchemaValue<'a> for u128 {
 }
 
 impl<'a> SchemaValue<'a> for i8 {
-    type Type = I8T;
+    type Type = i8;
     type DecodeState = i8;
 }
 impl<'a> SchemaValue<'a> for i16 {
-    type Type = I16T;
+    type Type = i16;
     type DecodeState = i16;
 }
 impl<'a> SchemaValue<'a> for i32 {
-    type Type = I32T;
+    type Type = i32;
     type DecodeState = i32;
 }
 impl<'a> SchemaValue<'a> for i64 {
-    type Type = I64T;
+    type Type = i64;
     type DecodeState = i64;
 }
 impl<'a> SchemaValue<'a> for i128 {
@@ -124,7 +125,7 @@ impl<'a> SchemaValue<'a> for i128 {
     type DecodeState = i128;
 }
 impl<'a> SchemaValue<'a> for bool {
-    type Type = Bool;
+    type Type = bool;
     type DecodeState = bool;
 }
 impl<'a> SchemaValue<'a> for &'a str {
@@ -169,7 +170,7 @@ impl<'a> SchemaValue<'a> for simple_time::Duration {
     type DecodeState = simple_time::Duration;
 }
 impl<'a, V: SchemaValue<'a>> SchemaValue<'a> for Option<V> {
-    type Type = NullableT<V::Type>;
+    type Type = Option<V::Type>;
     type DecodeState = Option<V::DecodeState>;
 }
 

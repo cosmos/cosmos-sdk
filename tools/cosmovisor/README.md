@@ -136,6 +136,16 @@ Please note that `$DAEMON_HOME/cosmovisor` only stores the *application binaries
 ├── data
 └── cosmovisor
 ```
+Otherwise, if you decide to set `$DAEMON_HOME` to an arbitrary location, such as `$HOME/.simapp_manager`, and use the `--home` flag of the application as `$HOME/.simapp`, you must explicitly set the `DAEMON_DATA_DIR` to the application's data directory path, `$HOME/.simapp/data`. Your directory structure will look like this:
+
+```text
+$HOME
+ ├── .simapp
+ │   ├── config
+ │   └── data
+ └── .simapp_manager
+     └── cosmovisor
+```
 
 ## Usage
 

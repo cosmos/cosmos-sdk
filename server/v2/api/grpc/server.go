@@ -98,7 +98,7 @@ func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier 
 		// if this fails we cannot serve queries anymore...
 		registry, err := getRegistry()
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get registry: %w", err)
 		}
 		fullName := protoreflect.FullName(strings.ReplaceAll(method, "/", "."))
 		// get descriptor from the invoke method

@@ -54,7 +54,7 @@ func addMsgHandlerToSTF[T any, PT interface {
 		t.Errorf("Failed to register handler: %v", err)
 	}
 
-	msgRouter, err := msgRouterBuilder.Build()
+	msgRouter, err := msgRouterBuilder.build()
 	if err != nil {
 		t.Errorf("Failed to build message router: %v", err)
 	}

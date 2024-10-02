@@ -8,11 +8,11 @@ use ixc_schema::decoder::{DecodeError, Decoder};
 use ixc_schema::encoder::{EncodeError, Encoder};
 use ixc_schema::mem::MemoryManager;
 use ixc_schema::types::StrT;
-use ixc_schema::value::{SchemaValue, ResponseValue};
+use ixc_schema::value::{SchemaValue, OptionalValue};
 
 /// The standard error wrapper for handler functions.
 #[derive(Debug, Clone)]
-pub enum Error<E: ResponseValue<'static>> {
+pub enum Error<E: OptionalValue<'static>> {
     /// A system error occurred.
     SystemError(SystemErrorCode),
     /// A known handler error occurred.
@@ -20,10 +20,6 @@ pub enum Error<E: ResponseValue<'static>> {
     /// A custom handler error occurred.
     HandlerError(E), // TODO response body
 }
-
-/// The standard result type which wraps specific error types in the generic Error type
-/// to include system error codes.
-pub type Result<R, E: ResponseValue<'static> = ErrorMessage> = core::result::Result<R, Error<E>>;
 
 /// A simple error type which just contains an error message.
 #[derive(Clone)]

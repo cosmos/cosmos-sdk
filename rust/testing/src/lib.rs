@@ -4,10 +4,14 @@ mod store;
 mod vm;
 
 use std::sync::{Arc, RwLock};
+use allocator_api2::alloc::Allocator;
 use ixc_message_api::{AccountID};
 use ixc_core::{Context};
 use ixc_core::handler::{HandlerAPI, Handler};
+use ixc_core::resource::{InitializationError, ResourceScope};
 use ixc_hypervisor::Hypervisor;
+use ixc_message_api::handler::{HandlerError, HandlerErrorCode, HostBackend, RawHandler};
+use ixc_message_api::packet::MessagePacket;
 use crate::store::{Store, VersionedMultiStore};
 use crate::vm::{NativeVM, NativeVMImpl};
 
@@ -21,6 +25,7 @@ impl Default for TestApp {
     fn default() -> Self {
         let mut hypervisor: Hypervisor<VersionedMultiStore> = Default::default();
         let native_vm = NativeVM::new();
+        native_vm.register_handler::<DefaultAccount>("default", DefaultAccount {});
         hypervisor.register_vm("native", Box::new(native_vm.clone())).unwrap();
         Self {
             hypervisor,
@@ -29,7 +34,20 @@ impl Default for TestApp {
     }
 }
 
+struct DefaultAccount {}
+impl RawHandler for DefaultAccount {
+    fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), HandlerError> {
+        Err(HandlerError::KnownCode(HandlerErrorCode::MessageNotHandled))
+    }
+}
+
 impl TestApp {
+    /// Registers a handler with the test harness so that accounts backed by this handler can be created.
+    pub fn register_handler<H: Handler>(&mut self) -> core::result::Result<(), InitializationError>{
+        let scope = ResourceScope::default();
+        unsafe { self.native_vm.register_handler::<H>(H::NAME, H::new(&scope)?); }
+        Ok(())
+    }
     // /// Adds a module to the test harness.
     // pub fn add_module<H: ModuleHandler>(&mut self, module_name: &str, init: H::Init) -> Result<AccountInstance<H>, ()> {
     //     todo!()
@@ -40,11 +58,11 @@ impl TestApp {
     //     todo!()
     // }
     //
-    /// Adds an account to the test harness.
-    pub fn create_account<'a, H: Handler>(&self, ctx: &mut Context, init: &H::Init<'a>) -> Result<AccountInstance<H>, ()> {
-        // self.native_vm.register_handler()
-        todo!()
-    }
+    // /// Adds an account to the test harness.
+    // pub fn create_account<'a, H: Handler>(&self, ctx: &mut Context, init: &H::Init<'a>) -> Result<AccountInstance<H>, ()> {
+    //     // self.native_vm.register_handler()
+    //     todo!()
+    // }
     //
     // /// Adds a mock account to the test harness with the given address.
     // pub fn add_account_with_address<H: AccountHandler>(&mut self, caller: &Address, address: &Address, init: H::Init) -> Result<AccountInstance<H>, ()> {
@@ -64,7 +82,7 @@ impl TestApp {
 
     /// Creates a new random client account that can be used in calls.
     pub fn new_client_account(&mut self) -> AccountID {
-        todo!()
+        self.hypervisor.invoke();
     }
 
     /// Creates a new client for the given account.

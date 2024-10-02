@@ -3,12 +3,12 @@ use allocator_api2::alloc::Allocator;
 use crate::error::Error;
 use crate::message::Message;
 use ixc_message_api::handler::{HandlerErrorCode, HostBackend};
-use ixc_message_api::header::{MessageHeader, MESSAGE_HEADER_SIZE};
+use ixc_message_api::header::{MessageHeader, MessageSelector, MESSAGE_HEADER_SIZE};
 use ixc_message_api::packet::MessagePacket;
 use ixc_message_api::AccountID;
 use ixc_schema::codec::Codec;
 use ixc_schema::mem::MemoryManager;
-use ixc_schema::value::ResponseValue;
+use ixc_schema::value::OptionalValue;
 
 /// Context wraps a single message request (and possibly response as well) along with
 /// the router callbacks necessary for making nested message calls.
@@ -56,7 +56,7 @@ impl<'a> Context<'a> {
     /// Static account client instances should be preferred wherever possible,
     /// so that static dependency analysis can be performed.
     pub unsafe fn dynamic_invoke<'b, M: Message<'b>>(&'a mut self, account: AccountID, message: M)
-        -> crate::error::Result<<M::Response<'a> as ResponseValue<'a>>::Value, M::Error> {
+        -> crate::Result<<M::Response<'a> as OptionalValue<'a>>::Value, M::Error> {
         // encode the message body
         let msg_body = M::Codec::encode_value(&message, &self.mem as &dyn Allocator).
             map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;

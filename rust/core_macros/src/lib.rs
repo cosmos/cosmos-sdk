@@ -30,7 +30,9 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
 
     push_item(items, quote! {
         impl ::ixc_core::handler::Handler for #handler {
-            type Init = ();
+            const NAME: &'static str = stringify!(#handler);
+            type Init<'a> = ();
+            type InitCodec: ::ixc_schema::codec::Codec = ::ixc_schema::binary::Codec;
         }
     })?;
     let client_ident = format_ident!("{}Client", handler);
@@ -40,23 +42,12 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
     push_item(items, quote! {
         impl ::ixc_core::handler::Client for #client_ident {
             fn account_id(&self) -> ::ixc_message_api::AccountID {
-                &self.0
-            }
-        }
-    })?;
-    let client_factory_ident = format_ident!("{}ClientFactory", handler);
-    push_item(items, quote! {
-        pub struct #client_factory_ident;
-    })?;
-    push_item(items, quote! {
-        unsafe impl ::ixc_core::resource::Resource for #client_factory_ident {
-            unsafe fn new(initializer: &mut ::ixc_core::resource::Initializer) -> Result<Self, ::ixc_core::resource::InitializationError> {
-                todo!()
+                self.0
             }
         }
     })?;
     push_item(items, quote! {
-        impl ::ixc_core::handler::ClientFactory for #client_factory_ident {
+        impl ::ixc_core::handler::ClientFactory for #handler {
             type Client = #client_ident;
 
             fn new_client(account_id: ::ixc_message_api::AccountID) -> Self::Client {
@@ -64,14 +55,13 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
             }
         }
     })?;
-    // push_item(items, quote! {
-    //     impl ::ixc_core::handler::HandlerAPI for #handler {
-    //         type ClientFactory = #client_factory_ident;
-    //     }
-    // })?;
-    // push_item(items, quote! {
-    //     impl ::ixc_message_api::handler::RawHandler for #handler {}
-    // })?;
+    push_item(items, quote! {
+        impl ::ixc_message_api::handler::RawHandler for #handler {
+            fn handle(&self, message_packet: &mut ::ixc_message_api::packet::MessagePacket, callbacks: &dyn ixc_message_api::handler::HostBackend, allocator: &dyn ::ixc_message_api::handler::Allocator) -> ::core::result::Result<(), ::ixc_message_api::handler::HandlerError> {
+                ::ixc_core::routes::exec_route(self, message_packet, callbacks, allocator)
+            }
+        }
+    })?;
 
 
     let mut client_fn_impls = vec![];

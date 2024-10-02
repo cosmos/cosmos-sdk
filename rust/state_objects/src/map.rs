@@ -3,6 +3,7 @@
 use bump_scope::allocator_api2::alloc::Allocator;
 use ixc_core::error::Error;
 use ixc_core::{Context, Result};
+use ixc_core::resource::{InitializationError, StateObject};
 use ixc_core_macros::message_selector;
 use ixc_message_api::handler::HandlerErrorCode;
 use ixc_message_api::packet::MessagePacket;
@@ -13,7 +14,9 @@ use ixc_schema::state_object::{decode_object_value, encode_object_key, encode_ob
 /// A key-value map.
 pub struct Map<K, V> {
     _phantom: std::marker::PhantomData<(K, V)>,
-    prefix: &'static [u8],
+    #[cfg(feature = "std")]
+    prefix: Vec<u8>,
+    // TODO no_std prefix
 }
 
 impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
@@ -24,7 +27,7 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
 
     /// Gets the value of the map at the given key.
     pub fn get<'key, 'value>(&self, ctx: &'value Context<'key>, key: &K::In<'key>) -> Result<Option<V::Out<'value>>> {
-        let key_bz = encode_object_key::<K, &dyn Allocator>(self.prefix, key, ctx.memory_manager() as &dyn Allocator)
+        let key_bz = encode_object_key::<K, &dyn Allocator>(&self.prefix, key, ctx.memory_manager() as &dyn Allocator)
             .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
 
         let value_bz = KVStoreClient.get(ctx, key_bz)?;
@@ -45,7 +48,7 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
 
     /// Sets the value of the map at the given key.
     pub fn set<'key, 'value>(&self, ctx: &mut Context<'key>, key: &K::In<'key>, value: &V::In<'value>) -> Result<()> {
-        let key_bz = encode_object_key::<K, &dyn Allocator>(self.prefix, key, ctx.memory_manager() as &dyn Allocator)
+        let key_bz = encode_object_key::<K, &dyn Allocator>(&self.prefix, key, ctx.memory_manager() as &dyn Allocator)
             .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
         let value_bz = encode_object_value::<V, &dyn Allocator>(value, ctx.memory_manager() as &dyn Allocator)
             .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
@@ -66,7 +69,7 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
 
     /// Deletes the value of the map at the given key.
     pub fn delete<'key>(&self, ctx: &mut Context<'key>, key: &K::In<'key>) -> Result<()> {
-        let key_bz = encode_object_key::<K, &dyn Allocator>(self.prefix, key, ctx.memory_manager() as &dyn Allocator)
+        let key_bz = encode_object_key::<K, &dyn Allocator>(&self.prefix, key, ctx.memory_manager() as &dyn Allocator)
             .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
         unsafe { KVStoreClient.delete(ctx, key_bz) }
     }
@@ -130,3 +133,14 @@ impl KVStoreClient {
     }
 }
 
+unsafe impl <K, V> StateObject for Map<K, V> {
+    unsafe fn new(scope: &[u8], p: u8) -> core::result::Result<Self, InitializationError> {
+        let mut prefix = Vec::from(scope);
+        prefix.push(p);
+        Ok(Self {
+            _phantom: std::marker::PhantomData,
+            #[cfg(feature = "std")]
+            prefix,
+        })
+    }
+}

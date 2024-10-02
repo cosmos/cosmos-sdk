@@ -1,16 +1,21 @@
 //! Handler traits for account and module handlers.
 use ixc_message_api::AccountID;
 use ixc_message_api::handler::RawHandler;
+use ixc_schema::codec::Codec;
 use ixc_schema::SchemaValue;
-use crate::resource::{InitializationError, Initializer, Resource, Resources};
+use ixc_schema::value::OptionalValue;
+use crate::Context;
+use crate::resource::{InitializationError, Resources};
 use crate::routes::Router;
 
 /// Handler trait for account and module handlers.
-pub trait Handler: HandlerAPI + RawHandler + Resources {
+pub trait Handler: RawHandler + Router + Resources + ClientFactory {
     /// The name of the handler.
     const NAME: &'static str;
     /// The parameter used for initializing the handler.
-    type Init<'a>: SchemaValue<'a>;
+    type Init<'a>: OptionalValue<'a>;
+    /// The codec used for initializing the handler.
+    type InitCodec: Codec;
 }
 
 /// Account API trait.
@@ -20,7 +25,7 @@ pub trait HandlerAPI: Router {
 }
 
 /// Account factory trait.
-pub trait ClientFactory: Resource {
+pub trait ClientFactory {
     /// Account client type.
     type Client: Client;
 
@@ -46,11 +51,11 @@ pub trait Client {
 /// Mixes in an account handler into another account handler.
 pub struct Mixin<H: Handler>(H);
 
-unsafe impl<H: Handler> Resource for Mixin<H> {
-    unsafe fn new(initializer: &mut Initializer) -> Result<Self, InitializationError> {
-        todo!()
-    }
-}
+// unsafe impl<H: Handler> Resource for Mixin<H> {
+//     unsafe fn new(initializer: &mut Initializer) -> Result<Self, InitializationError> {
+//         todo!()
+//     }
+// }
 
 impl<H: Handler> core::ops::Deref for Mixin<H> {
     type Target = H;

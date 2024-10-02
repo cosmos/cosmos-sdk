@@ -275,8 +275,10 @@ impl<'a, T: Type, V: SchemaValue<'a, T>, const N: usize> SchemaValue<'a, ListT<T
 impl<'a, const N: usize> SchemaValue<'a, StrT> for arrayvec::ArrayString<T, N> {}
 
 
-/// ResponseValue is a trait that must be implemented by types that can be used as the return value.
-pub trait ResponseValue<'a> {
+/// OptionalValue is a trait that must be implemented by types that can be used as the return value
+/// or anywhere else where a value may or may not be necessary.
+/// The unit type `()` is used to represent the absence of a value.
+pub trait OptionalValue<'a> {
     /// The value type that is returned.
     type Value;
 
@@ -287,7 +289,7 @@ pub trait ResponseValue<'a> {
     fn encode_value<C: Codec>(value: &Self::Value, message_packet: &'a mut MessagePacket, allocator: &'a dyn Allocator) -> Result<(), EncodeError>;
 }
 
-impl <'a> ResponseValue<'a> for () {
+impl <'a> OptionalValue<'a> for () {
     type Value = ();
 
     fn decode_value<C: Codec>(message_packet: &'a MessagePacket, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError> {
@@ -299,7 +301,7 @@ impl <'a> ResponseValue<'a> for () {
     }
 }
 
-impl<'a, V: SchemaValue<'a>> ResponseValue<'a> for V
+impl<'a, V: SchemaValue<'a>> OptionalValue<'a> for V
 {
     type Value = V;
 

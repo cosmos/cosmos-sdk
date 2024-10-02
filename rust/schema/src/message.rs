@@ -2,7 +2,7 @@ use ixc_message_api::header::MessageSelector;
 use crate::codec::Codec;
 use crate::SchemaValue;
 use crate::structs::StructSchema;
-use crate::value::ResponseValue;
+use crate::value::OptionalValue;
 
 #[non_exhaustive]
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -15,7 +15,7 @@ pub struct MessageDescriptor<'a> {
 
 pub trait Message<'a>: SchemaValue<'a> + StructSchema {
     const SELECTOR: MessageSelector;
-    type Response<'b>: ResponseValue<'b>;
-    type Error: ResponseValue<'static>; // TODO just accept error codes
+    type Response<'b>: OptionalValue<'b>;
+    type Error: OptionalValue<'static>; // TODO just accept error codes
     type Codec: Codec;
 }

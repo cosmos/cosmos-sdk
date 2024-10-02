@@ -1,16 +1,20 @@
 #![allow(missing_docs)]
 
-use ixc_core::handler::{Handler, HandlerAPI};
-use ixc_core::resource::Resources;
+use ixc_core::Context;
+use ixc_core::handler::{ClientFactory, Handler, HandlerAPI};
+use ixc_core::resource::{InitializationError, ResourceScope, Resources, StateObject};
 use ixc_core::routes::exec_route;
 use ixc_core_macros::package_root;
+use ixc_message_api::AccountID;
 use ixc_message_api::handler::{Allocator, HandlerError, HostBackend, RawHandler};
 use ixc_message_api::packet::MessagePacket;
+use state_objects::Item;
 use crate::counter::Counter;
 
-// #[ixc::account_handler(Counter)]
+#[ixc::handler(Counter)]
 pub mod counter {
     use ixc::*;
+    use ixc_core::resource::{InitializationError, ResourceScope, StateObject};
 
     // #[derive(Resources)]
     pub struct Counter {
@@ -38,38 +42,39 @@ pub mod counter {
             self.value.set(ctx, new_value)
         }
     }
-}
 
-impl HandlerAPI for Counter { type ClientFactory = (); }
+    unsafe impl Resources for Counter {
+        unsafe fn new(scope: &ResourceScope) -> core::result::Result<Self, InitializationError> {
+            Ok(Counter {
+                value: Item::new(scope.state_scope, 0)?,
+            })
+        }
+    }
+}
 
 unsafe impl ixc_core::routes::Router for Counter {
     const SORTED_ROUTES: &'static [ixc_core::routes::Route<Self>] = &[];
 }
 
-impl RawHandler for Counter {
-    fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), HandlerError> {
-        exec_route(self, message_packet, callbacks, allocator)
-    }
-}
-
-unsafe impl Resources for Counter {}
-
-impl Handler for Counter {
-    const NAME: &'static str = "Counter";
-    type Init = u64;
-}
+// impl RawHandler for Counter {
+//     fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), HandlerError> {
+//         exec_route(self, message_packet, callbacks, allocator)
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
+    use ixc_core::handler::Handler;
     use ixc_testing::*;
     use super::counter::*;
 
     #[test]
     fn test_counter() {
         let mut app = TestApp::default();
+        app.register_handler::<Counter>().unwrap();
         let alice = app.new_client_account();
         let alice_ctx = app.client_context_for(alice);
-        let counter_inst = app.create_account::<Counter>(alice_ctx, ()).unwrap();
+        let counter_client = Counter::create_account(alice_ctx, ()).unwrap();
     }
 }
 

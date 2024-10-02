@@ -17,3 +17,7 @@ thiserror = "1.0.63"
 
 [lints]
 workspace = true
+
+[features]
+default = ["std"]
+std = []

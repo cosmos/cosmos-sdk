@@ -233,6 +233,8 @@ impl<TX: Transaction> ExecContext<TX> {
                 tx.pop_frame(res.is_ok()).
                     map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::FatalExecutionError))?;
 
+                // TODO write the account ID to the response
+
                 match res {
                     Err(ErrorCode::HandlerSystemError(HandlerErrorCode::MessageNotHandled)) => {
                         // the on_create handler was not found which is not an error,

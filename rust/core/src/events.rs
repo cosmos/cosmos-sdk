@@ -7,7 +7,7 @@ pub struct EventBus<T> {
 
 impl<T> EventBus<T> {
     /// Emits an event to the event bus.
-    pub fn emit<U>(&mut self, ctx: &mut Context, event: T) -> crate::error::Result<()> {
+    pub fn emit<U>(&mut self, ctx: &mut Context, event: T) -> crate::Result<()> {
         todo!()
     }
 }

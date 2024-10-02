@@ -70,7 +70,7 @@ clear improvements to be made or to remove legacy dependencies (for instance on
 amino or gogo proto), as long the old package attempts
 to avoid API breakage with aliases and wrappers
 * care should be taken when simply trying to turn an existing package into a
-new go module: https://github.com/golang/go/wiki/Modules#is-it-possible-to-add-a-module-to-a-multi-module-repository.
+new go module: https://go.dev/wiki/Modules#is-it-possible-to-add-a-module-to-a-multi-module-repository.
 In general, it seems safer to just create a new module path (appending v2, v3, etc.
 if necessary), rather than trying to make an old package a new module.
 

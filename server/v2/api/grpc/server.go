@@ -12,11 +12,6 @@ import (
 	"strings"
 	"sync"
 
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
-	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
@@ -24,6 +19,12 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
+	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
 const (

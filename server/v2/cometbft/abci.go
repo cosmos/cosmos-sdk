@@ -5,12 +5,16 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"strings"
+	"sync"
 	"sync/atomic"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
@@ -63,6 +67,7 @@ type Consensus[T transaction.Tx] struct {
 	idPeerFilter   types.PeerFilter // filter peers by node ID
 
 	queryHandlersMap map[string]appmodulev2.Handler
+	getProtoRegistry func() (*protoregistry.Files, error)
 }
 
 func NewConsensus[T transaction.Tx](
@@ -78,14 +83,12 @@ func NewConsensus[T transaction.Tx](
 	chainId string,
 ) *Consensus[T] {
 	return &Consensus[T]{
+		logger:                 logger,
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
-		queryHandlersMap:       queryHandlersMap,
 		app:                    app,
-		cfg:                    cfg,
-		store:                  store,
-		logger:                 logger,
 		txCodec:                txCodec,
+		store:                  store,
 		streaming:              streaming.Manager{},
 		snapshotManager:        nil,
 		mempool:                mp,
@@ -94,9 +97,8 @@ func NewConsensus[T transaction.Tx](
 		processProposalHandler: nil,
 		verifyVoteExt:          nil,
 		extendVote:             nil,
-		chainID:                chainId,
-		indexedEvents:          indexedEvents,
-		initialHeight:          0,
+		queryHandlersMap:       queryHandlersMap,
+		getProtoRegistry:       sync.OnceValues(func() (*protoregistry.Files, error) { return gogoproto.MergedRegistry() }),
 	}
 }
 
@@ -192,12 +194,27 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 // Query implements types.Application.
 // It is called by cometbft to query application state.
 func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (resp *abciproto.QueryResponse, err error) {
-	// check if it's a gRPC method
-	desc, err := gogoproto.MergedRegistry()
+	// if this fails  then we cannot serve queries anymore
+	registry, err := c.getProtoRegistry()
+	if err != nil {
+		return nil, err
+	}
 
-	makeGRPCRequest, isGRPC := c.grpcMethodsMap[req.Path]
+	fullName := protoreflect.FullName(strings.ReplaceAll(req.Path, "/", "."))
+
+	desc, err := registry.FindDescriptorByName(fullName)
+	if err != nil {
+		return nil, err
+	}
+
+	md, ok := desc.(protoreflect.MethodDescriptor)
+	if !ok {
+		return nil, fmt.Errorf("proto descriptor %s not found in registry", req.Path)
+	}
+
+	handler, isGRPC := c.queryHandlersMap[string(md.Input().FullName())]
 	if isGRPC {
-		protoRequest := makeGRPCRequest()
+		protoRequest := handler.MakeMsg()
 		err = gogoproto.Unmarshal(req.Data, protoRequest) // TODO: use codec
 		if err != nil {
 			return nil, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)

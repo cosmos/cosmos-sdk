@@ -9,14 +9,18 @@ import (
 	"net"
 	"slices"
 	"strconv"
+	"strings"
+	"sync"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -82,20 +86,41 @@ func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 }
 
 func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier interface {
-	Query(ctx context.Context, version uint64, msg proto.Message) (proto.Message, error)
+	Query(ctx context.Context, version uint64, msg gogoproto.Message) (gogoproto.Message, error)
 },
 ) grpc.StreamHandler {
+	getRegistry := sync.OnceValues(func() (*protoregistry.Files, error) {
+		return gogoproto.MergedRegistry()
+	})
+
 	return func(srv any, stream grpc.ServerStream) error {
 		method, ok := grpc.MethodFromServerStream(stream)
 		if !ok {
 			return status.Error(codes.InvalidArgument, "unable to get method")
 		}
-		handler, exists := handlers[method]
+		// if this fails we cannot serve queries anymore...
+		registry, err := getRegistry()
+		if err != nil {
+			return err
+		}
+		fullName := protoreflect.FullName(strings.ReplaceAll(method, "/", "."))
+		// get descriptor from the invoke method
+		desc, err := registry.FindDescriptorByName(fullName)
+		if err != nil {
+			return fmt.Errorf("failed to find descriptor %s: %w", method, err)
+		}
+		md, ok := desc.(protoreflect.MethodDescriptor)
+		if !ok {
+			return fmt.Errorf("%s is not a method", method)
+		}
+		// find handler
+		handler, exists := handlers[string(md.Input().FullName())]
 		if !exists {
 			return status.Errorf(codes.Unimplemented, "gRPC method %s is not handled", method)
 		}
+
 		for {
-			req := handler()
+			req := handler.MakeMsg()
 			err := stream.RecvMsg(req)
 			if err != nil {
 				if errors.Is(err, io.EOF) {

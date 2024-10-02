@@ -57,11 +57,11 @@ func NewSTF[T transaction.Tx](
 	postTxExec func(ctx context.Context, tx T, success bool) error,
 	branch func(store store.ReaderMap) store.WriterMap,
 ) (*STF[T], error) {
-	msgRouter, err := msgRouterBuilder.Build()
+	msgRouter, err := msgRouterBuilder.build()
 	if err != nil {
 		return nil, fmt.Errorf("build msg router: %w", err)
 	}
-	queryRouter, err := queryRouterBuilder.Build()
+	queryRouter, err := queryRouterBuilder.build()
 	if err != nil {
 		return nil, fmt.Errorf("build query router: %w", err)
 	}

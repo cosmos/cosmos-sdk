@@ -42,6 +42,7 @@ cosmovisor add-batch-upgrade --upgrade-file /path/to/batch_upgrade.json`,
 
 	cmd.Flags().String("upgrade-file", "", "Path to a batch upgrade file which is a JSON array of upgrade-info objects")
 	cmd.Flags().StringSlice("upgrade-list", []string{}, "List of comma-separated upgrades in the format 'name:path/to/binary:height'")
+	cmd.MarkFlagsMutuallyExclusive("upgrade-file", "upgrade-list")
 
 	return cmd
 }

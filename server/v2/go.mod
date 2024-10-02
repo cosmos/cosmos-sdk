@@ -8,7 +8,6 @@ replace (
 	cosmossdk.io/server/v2/stf => ./stf
 	cosmossdk.io/store/v2 => ../../store/v2
 	cosmossdk.io/store/v2/db => ../../store/v2/db
-	cosmossdk.io/store/v2 => ../../store/v2
 	cosmossdk.io/x/tx => ../../x/tx
 )
 

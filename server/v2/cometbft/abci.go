@@ -83,12 +83,13 @@ func NewConsensus[T transaction.Tx](
 	chainId string,
 ) *Consensus[T] {
 	return &Consensus[T]{
-		logger:                 logger,
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
 		app:                    app,
-		txCodec:                txCodec,
+		cfg:                    cfg,
 		store:                  store,
+		logger:                 logger,
+		txCodec:                txCodec,
 		streaming:              streaming.Manager{},
 		snapshotManager:        nil,
 		mempool:                mp,
@@ -97,6 +98,9 @@ func NewConsensus[T transaction.Tx](
 		processProposalHandler: nil,
 		verifyVoteExt:          nil,
 		extendVote:             nil,
+		chainID:                chainId,
+		indexedEvents:          indexedEvents,
+		initialHeight:          0,
 		queryHandlersMap:       queryHandlersMap,
 		getProtoRegistry:       sync.OnceValues(func() (*protoregistry.Files, error) { return gogoproto.MergedRegistry() }),
 	}

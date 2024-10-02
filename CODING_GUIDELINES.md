@@ -104,7 +104,7 @@ Make sure your code is well tested:
 We expect tests to use `require` or `assert` rather than `t.Skip` or `t.Fail`,
 unless there is a reason to do otherwise.
 When testing a function under a variety of different inputs, we prefer to use
-[table driven tests](https://github.com/golang/go/wiki/TableDrivenTests).
+[table driven tests](https://go.dev/wiki/TableDrivenTests).
 Table driven test error messages should follow the following format
 `<desc>, tc #<index>, i #<index>`.
 `<desc>` is an optional short description of what's failing, `tc` is the

@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"github.com/spf13/pflag"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	base "cosmossdk.io/api/cosmos/base/v1beta1"
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	keyring2 "cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/internal/coins"
 	"cosmossdk.io/core/address"
@@ -109,6 +111,24 @@ type GasEstimateResponse struct {
 
 func (gr GasEstimateResponse) String() string {
 	return fmt.Sprintf("gas estimate: %d", gr.GasEstimate)
+}
+
+// txState represents the internal state of a transaction.
+type txState struct {
+	msgs             []transaction.Msg
+	timeoutHeight    uint64
+	timeoutTimestamp time.Time
+	granter          []byte
+	payer            []byte
+	unordered        bool
+	memo             string
+	gasLimit         uint64
+	fees             []*base.Coin
+	signerInfos      []*apitx.SignerInfo
+	signatures       [][]byte
+
+	extensionOptions            []*anypb.Any
+	nonCriticalExtensionOptions []*anypb.Any
 }
 
 // Tx defines the interface for transaction operations.

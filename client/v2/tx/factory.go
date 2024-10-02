@@ -193,11 +193,11 @@ func (f *Factory) BuildUnsignedTx(msgs ...transaction.Msg) error {
 	f.tx.unordered = f.txParams.unordered
 	f.tx.timeoutTimestamp = f.txParams.timeoutTimestamp
 
-	err = f.tx.SetFeeGranter(f.txParams.feeGranter)
+	err = f.setFeeGranter(f.txParams.feeGranter)
 	if err != nil {
 		return err
 	}
-	err = f.tx.SetFeePayer(f.txParams.feePayer)
+	err = f.setFeePayer(f.txParams.feePayer)
 	if err != nil {
 		return err
 	}
@@ -301,7 +301,7 @@ func (f *Factory) BuildSimTx(msgs ...transaction.Msg) ([]byte, error) {
 		Data:     f.getSimSignatureData(pk),
 		Sequence: f.sequence(),
 	}
-	if err := f.SetSignatures(sig); err != nil {
+	if err := f.setSignatures(sig); err != nil {
 		return nil, err
 	}
 
@@ -391,7 +391,7 @@ func (f *Factory) sign(ctx context.Context, overwriteSig bool) (Tx, error) {
 		sigs = append(sigs, prevSignatures...)
 		sigs = append(sigs, sig)
 	}
-	if err := f.SetSignatures(sigs...); err != nil {
+	if err := f.setSignatures(sigs...); err != nil {
 		return nil, err
 	}
 
@@ -427,10 +427,10 @@ func (f *Factory) sign(ctx context.Context, overwriteSig bool) (Tx, error) {
 	}
 
 	if overwriteSig {
-		err = f.SetSignatures(sig)
+		err = f.setSignatures(sig)
 	} else {
 		prevSignatures = append(prevSignatures, sig)
-		err = f.SetSignatures(prevSignatures...)
+		err = f.setSignatures(prevSignatures...)
 	}
 
 	if err != nil {
@@ -533,7 +533,6 @@ func (f *Factory) getSimSignatureData(pk cryptotypes.PubKey) SignatureData {
 	}
 }
 
-// TODO: to factory
 func (f *Factory) getTx() (*wrappedTx, error) {
 	msgs, err := msgsV1toAnyV2(f.tx.msgs)
 	if err != nil {
@@ -550,7 +549,7 @@ func (f *Factory) getTx() (*wrappedTx, error) {
 		NonCriticalExtensionOptions: f.tx.nonCriticalExtensionOptions,
 	}
 
-	fee, err := f.tx.getFee()
+	fee, err := f.getFee()
 	if err != nil {
 		return nil, err
 	}
@@ -603,11 +602,10 @@ func (f *Factory) getSigningTxData() (*signing.TxData, error) {
 	}, nil
 }
 
-// SetSignatures sets the signatures for the transaction builder.
+// setSignatures sets the signatures for the transaction builder.
 // It takes a variable number of Signature arguments and processes each one to extract the mode information and raw signature.
 // It also converts the public key to the appropriate format and sets the signer information.
-// TODO: to factory
-func (f *Factory) SetSignatures(signatures ...Signature) error {
+func (f *Factory) setSignatures(signatures ...Signature) error {
 	n := len(signatures)
 	signerInfos := make([]*apitx.SignerInfo, n)
 	rawSignatures := make([][]byte, n)
@@ -645,10 +643,71 @@ func (f *Factory) SetSignatures(signatures ...Signature) error {
 	return nil
 }
 
+// getFee computes the transaction fee information for the txBuilder.
+// It returns a pointer to an apitx.Fee struct containing the fee amount, gas limit, payer, and granter information.
+// If the granter or payer addresses are set, it converts them from bytes to string using the addressCodec.
+func (f *Factory) getFee() (fee *apitx.Fee, err error) {
+	granterStr := ""
+	if f.tx.granter != nil {
+		granterStr, err = f.ac.BytesToString(f.tx.granter)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	payerStr := ""
+	if f.tx.payer != nil {
+		payerStr, err = f.ac.BytesToString(f.tx.payer)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	fee = &apitx.Fee{
+		Amount:   f.tx.fees,
+		GasLimit: f.tx.gasLimit,
+		Payer:    payerStr,
+		Granter:  granterStr,
+	}
+
+	return fee, nil
+}
+
+// setFeePayer sets the fee payer for the transaction.
+func (f *Factory) setFeePayer(feePayer string) error {
+	if feePayer == "" {
+		return nil
+	}
+
+	addr, err := f.ac.StringToBytes(feePayer)
+	if err != nil {
+		return err
+	}
+	f.tx.payer = addr
+	return nil
+}
+
+// setFeeGranter sets the fee granter's address in the transaction builder.
+// If the feeGranter string is empty, the function returns nil without setting an address.
+// It converts the feeGranter string to bytes using the address codec and sets it as the granter address.
+// Returns an error if the conversion fails.
+func (f *Factory) setFeeGranter(feeGranter string) error {
+	if feeGranter == "" {
+		return nil
+	}
+
+	addr, err := f.ac.StringToBytes(feeGranter)
+	if err != nil {
+		return err
+	}
+	f.tx.granter = addr
+
+	return nil
+}
+
 // msgsV1toAnyV2 converts a slice of transaction.Msg (v1) to a slice of anypb.Any (v2).
 // It first converts each transaction.Msg into a codectypes.Any and then converts
 // these into anypb.Any.
-// TODO: to factory
 func msgsV1toAnyV2(msgs []transaction.Msg) ([]*anypb.Any, error) {
 	anys := make([]*codectypes.Any, len(msgs))
 	for i, msg := range msgs {
@@ -663,7 +722,6 @@ func msgsV1toAnyV2(msgs []transaction.Msg) ([]*anypb.Any, error) {
 }
 
 // intoAnyV2 converts a slice of codectypes.Any (v1) to a slice of anypb.Any (v2).
-// TODO: to factory
 func intoAnyV2(v1s []*codectypes.Any) []*anypb.Any {
 	v2s := make([]*anypb.Any, len(v1s))
 	for i, v1 := range v1s {

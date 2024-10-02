@@ -16,25 +16,27 @@ import (
 func getWrappedTx(t *testing.T) *wrappedTx {
 	t.Helper()
 
+	f, err := NewFactory(keybase, cdc, mockAccountRetriever{}, txConf, ac, mockClientConn{}, TxParameters{})
+	require.NoError(t, err)
+
 	pk := secp256k1.GenPrivKey().PubKey()
 	addr, _ := ac.BytesToString(pk.Address())
-	b := newTxBuilder(ac, decoder, cdc)
 
-	err := b.SetMsgs([]transaction.Msg{&countertypes.MsgIncreaseCounter{
+	f.tx.msgs = []transaction.Msg{&countertypes.MsgIncreaseCounter{
 		Signer: addr,
 		Count:  0,
-	}}...)
+	}}
 	require.NoError(t, err)
 
-	err = b.SetFeePayer(addr)
+	err = f.setFeePayer(addr)
 	require.NoError(t, err)
 
-	b.SetFeeAmount([]*base.Coin{{
+	f.tx.fees = []*base.Coin{{
 		Denom:  "cosmos",
 		Amount: "1000",
-	}})
+	}}
 
-	err = b.SetSignatures([]Signature{{
+	err = f.setSignatures([]Signature{{
 		PubKey: pk,
 		Data: &SingleSignatureData{
 			SignMode:  apisigning.SignMode_SIGN_MODE_DIRECT,
@@ -43,7 +45,7 @@ func getWrappedTx(t *testing.T) *wrappedTx {
 		Sequence: 0,
 	}}...)
 	require.NoError(t, err)
-	wTx, err := b.getTx()
+	wTx, err := f.getTx()
 	require.NoError(t, err)
 	return wTx
 }

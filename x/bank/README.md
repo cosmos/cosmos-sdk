@@ -81,11 +81,11 @@ type ModuleAccount interface {
 > **WARNING!**
 > Any module or message handler that allows either direct or indirect sending of funds must explicitly guarantee those funds cannot be sent to module accounts (unless allowed).
 
-The bank `Keeper` interface also introduces new wrapper functions for the auth `Keeper`
+The supply `Keeper` interface also introduces new wrapper functions for the auth `Keeper`
 and the bank `SendKeeper` in order to be able to:
 
-* Get `ModuleAccount`s by providing the its `Name`.
-* Send coins from and to other `ModuleAccount`s by passing the `Name` or standard `Account`s
+* Get `ModuleAccount`s by providing its `Name`.
+* Send coins from and to other `ModuleAccount`s by passing only the `Name` or standard `Account`s
   (`BaseAccount` or legacy `VestingAccount`).
 * `Mint` or `Burn` coins for a `ModuleAccount` (restricted to its permissions).
 
@@ -93,7 +93,7 @@ and the bank `SendKeeper` in order to be able to:
 
 Each `ModuleAccount` has a different set of permissions that provide different
 object capabilities to perform certain actions. Permissions need to be
-registered upon the creation of the `BaseKeeper` so that every time a
+registered upon the creation of the supply `Keeper` so that every time a
 `ModuleAccount` calls the allowed functions, the `Keeper` can lookup the
 permissions to that specific account and perform or not perform the action.
 
@@ -111,7 +111,6 @@ The `x/bank` module keeps state of the following primary objects:
 2. Denomination metadata
 3. The total supply of all balances
 4. Information on which denominations are allowed to be sent.
-5. Infotmation on which accounts are not allowed to send or received funds.
 
 In addition, the `x/bank` module keeps the following indexes to manage the
 aforementioned state:

@@ -20,6 +20,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors/v2"
 	"cosmossdk.io/log"
+	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/client/grpc/cmtservice"
 	"cosmossdk.io/server/v2/cometbft/handlers"
@@ -40,6 +41,7 @@ type Consensus[T transaction.Tx] struct {
 	txCodec          transaction.Codec[T]
 	store            types.Store
 	streaming        streaming.Manager
+	listener         *appdata.Listener
 	snapshotManager  *snapshots.Manager
 	mempool          mempool.Mempool[T]
 
@@ -102,6 +104,11 @@ func NewConsensus[T transaction.Tx](
 // SetStreamingManager sets the streaming manager for the consensus module.
 func (c *Consensus[T]) SetStreamingManager(sm streaming.Manager) {
 	c.streaming = sm
+}
+
+// SetListener sets the listener for the consensus module.
+func (c *Consensus[T]) SetListener(l *appdata.Listener) {
+	c.listener = l
 }
 
 // RegisterSnapshotExtensions registers the given extensions with the consensus module's snapshot manager.

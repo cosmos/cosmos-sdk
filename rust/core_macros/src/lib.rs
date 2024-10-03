@@ -64,8 +64,10 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
     })?;
 
     let mut client_fn_impls = vec![];
+    let mut routes = vec![];
     for publish_target in publish_targets.iter() {
-        let ident_camel = publish_target.signature.ident.to_string().to_upper_camel_case();
+        let fn_name = &publish_target.signature.ident;
+        let ident_camel = fn_name.to_string().to_upper_camel_case();
         let msg_struct_name = format_ident!("{}{}Msg", handler, ident_camel);
         if publish_target.on_create.is_some() {
             continue;
@@ -99,7 +101,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
                                 #ident: #ty,
                             });
                             msg_fields_access.push(quote! {
-                                msg.#ident;
+                                msg.#ident,
                             });
                             msg_fields_init.push(quote! {
                                 #ident,
@@ -143,11 +145,30 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
                 unsafe { ::ixc_core::low_level::dynamic_invoke(#context_name, self.0, msg) }
             }
         });
+        routes.push(quote!{
+                (<#msg_struct_name as ::ixc_core::message::Message>::SELECTOR, |h: &#handler, packet, cb, a| {
+                    unsafe {
+                        let mem = ::ixc_schema::mem::MemoryManager::new();
+                        ::ixc_core::message::handle_message::< #msg_struct_name , #handler >(h, packet, cb, &mem, a, |h, ctx, msg| {
+                            h.#fn_name(ctx, #(#msg_fields_access)*)
+                        })
+                    }
+                }),
+        })
     }
 
     push_item(items, quote! {
         impl #client_ident {
             #(#client_fn_impls)*
+        }
+    })?;
+
+    push_item(items, quote!{
+        unsafe impl ::ixc_core::routes::Router for #handler {
+            const SORTED_ROUTES: &'static [::ixc_core::routes::Route<Self>] =
+                &::ixc_core::routes::sort_routes([
+                    #(#routes)*
+                ]);
         }
     })?;
 

@@ -13,16 +13,16 @@ use ixc_schema::value::OptionalValue;
 /// Context wraps a single message request (and possibly response as well) along with
 /// the router callbacks necessary for making nested message calls.
 pub struct Context<'a> {
-    mem: MemoryManager,
-    message_packet: &'a MessagePacket<'a>,
-    backend: &'a dyn HostBackend,
+    pub(crate) mem: &'a MemoryManager,
+    pub(crate) message_packet: &'a MessagePacket<'a>,
+    pub(crate) backend: &'a dyn HostBackend,
 }
 
 impl<'a> Context<'a> {
     /// Create a new context from a message packet and host callbacks.
-    pub fn new(message_packet: &'a MessagePacket<'a>, host_callbacks: &'a dyn HostBackend) -> Self {
+    pub fn new(message_packet: &'a MessagePacket<'a>, host_callbacks: &'a dyn HostBackend, mem: &'a MemoryManager) -> Self {
         Self {
-            mem: MemoryManager::new(),
+            mem,
             message_packet,
             backend: host_callbacks,
         }

@@ -136,7 +136,7 @@ impl TestApp {
             let packet_box = Box::new_in(MessagePacket::allocate(&self.mem, 0).unwrap(), &self.mem);
             packet_box.header_mut().account = account_id;
             let raw = Box::into_raw(packet_box);
-            let ctx = Context::new(&*raw, self);
+            let ctx = Context::new(&*raw, self, &self.mem);
             ctx
         }
     }

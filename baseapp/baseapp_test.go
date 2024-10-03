@@ -85,6 +85,26 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	app.SetTxEncoder(txConfig.TxEncoder())
 	app.SetVersionModifier(newMockedVersionModifier(0))
 
+	// for event tests
+	app.SetPreBlocker(func(ctx sdk.Context, req *abci.FinalizeBlockRequest) error {
+		ctx.EventManager().EmitEvent(sdk.NewEvent("pre-block"))
+		return nil
+	})
+	app.SetBeginBlocker(func(_ sdk.Context) (sdk.BeginBlock, error) {
+		return sdk.BeginBlock{
+			Events: []abci.Event{
+				{Type: "begin-block"},
+			},
+		}, nil
+	})
+	app.SetEndBlocker(func(_ sdk.Context) (sdk.EndBlock, error) {
+		return sdk.EndBlock{
+			Events: []abci.Event{
+				{Type: "end-block"},
+			},
+		}, nil
+	})
+
 	// mount stores and seal
 	require.Nil(t, app.LoadLatestVersion())
 
@@ -596,7 +616,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 	res, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
-	require.Empty(t, res.Events)
+	require.Len(t, res.Events, 3)
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
 	ctx := getFinalizeBlockStateCtx(suite.baseApp)
@@ -613,7 +633,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 	res, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
-	require.Empty(t, res.Events)
+	require.Len(t, res.Events, 3)
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
 	ctx = getFinalizeBlockStateCtx(suite.baseApp)
@@ -669,7 +689,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 
 	res, err := suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
-	require.Empty(t, res.Events)
+	require.Len(t, res.Events, 3)
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
 	// PostHandler runs on successful message execution
@@ -682,7 +702,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 	require.NoError(t, err)
 	res, err = suite.baseApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
-	require.Empty(t, res.Events)
+	require.Len(t, res.Events, 3)
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
 	require.True(t, postHandlerRun)

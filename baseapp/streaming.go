@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
@@ -143,16 +144,74 @@ func exposeStoreKeysSorted(keysStr []string, keys map[string]*storetypes.KVStore
 	return exposeStoreKeys
 }
 
+func eventToAppDataEvent(event abci.Event) (appdata.Event, error) {
+	appdataEvent := appdata.Event{
+		Type: event.Type,
+		Attributes: func() ([]appdata.EventAttribute, error) {
+			attrs := make([]appdata.EventAttribute, len(event.Attributes))
+			for j, attr := range event.Attributes {
+				attrs[j] = appdata.EventAttribute{
+					Key:   attr.Key,
+					Value: attr.Value,
+				}
+			}
+			return attrs, nil
+		},
+	}
+
+	for _, attr := range event.Attributes {
+		if attr.Key == "mode" {
+			switch attr.Value {
+			case "PreBlock":
+				appdataEvent.BlockStage = appdata.PreBlockStage
+			case "BeginBlock":
+				appdataEvent.BlockStage = appdata.BeginBlockStage
+			case "EndBlock":
+				appdataEvent.BlockStage = appdata.EndBlockStage
+			default:
+				appdataEvent.BlockStage = appdata.UnknownBlockStage
+			}
+		} else if attr.Key == "tx_index" {
+			txIndex, err := strconv.Atoi(attr.Value)
+			if err != nil {
+				return appdata.Event{}, err
+			}
+			appdataEvent.TxIndex = int32(txIndex + 1)
+			appdataEvent.BlockStage = appdata.TxProcessingStage
+		} else if attr.Key == "msg_index" {
+			msgIndex, err := strconv.Atoi(attr.Value)
+			if err != nil {
+				return appdata.Event{}, err
+			}
+			appdataEvent.MsgIndex = int32(msgIndex + 1)
+		} else if attr.Key == "event_index" {
+			eventIndex, err := strconv.Atoi(attr.Value)
+			if err != nil {
+				return appdata.Event{}, err
+			}
+			appdataEvent.EventIndex = int32(eventIndex + 1)
+		}
+	}
+
+	return appdataEvent, nil
+}
+
 type listenerWrapper struct {
 	listener appdata.Listener
+}
+
+// NewListenerWrapper creates a new listenerWrapper.
+// It is only used for testing purposes.
+func NewListenerWrapper(listener appdata.Listener) listenerWrapper {
+	return listenerWrapper{listener: listener}
 }
 
 func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
 	if p.listener.StartBlock != nil {
 		if err := p.listener.StartBlock(appdata.StartBlockData{
 			Height:      uint64(req.Height),
-			HeaderBytes: nil, // TODO: need to define a header struct including enc/decoding
-			HeaderJSON:  nil, // TODO: need to define a header json struct
+			HeaderBytes: nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
+			HeaderJSON:  nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
 		}); err != nil {
 			return err
 		}
@@ -162,7 +221,7 @@ func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.Finaliz
 			if err := p.listener.OnTx(appdata.TxData{
 				TxIndex: int32(i),
 				Bytes:   func() ([]byte, error) { return tx, nil },
-				JSON:    nil, // TODO: need to define a tx json struct
+				JSON:    nil, // TODO: https://github.com/cosmos/cosmos-sdk/issues/22009
 			}); err != nil {
 				return err
 			}
@@ -170,22 +229,24 @@ func (p listenerWrapper) ListenFinalizeBlock(_ context.Context, req abci.Finaliz
 	}
 	if p.listener.OnEvent != nil {
 		events := make([]appdata.Event, len(res.Events))
+		var err error
 		for i, event := range res.Events {
-			events[i] = appdata.Event{
-				BlockStage: appdata.UnknownBlockStage,
-				Type:       event.Type,
-				Data:       nil,
-				Attributes: func() ([]appdata.EventAttribute, error) {
-					attrs := make([]appdata.EventAttribute, len(event.Attributes))
-					for j, attr := range event.Attributes {
-						attrs[j] = appdata.EventAttribute{
-							Key:   attr.Key,
-							Value: attr.Value,
-						}
-					}
-					return attrs, nil
-				},
+			events[i], err = eventToAppDataEvent(event)
+			if err != nil {
+				return err
 			}
+		}
+		for _, txResult := range res.TxResults {
+			for _, event := range txResult.Events {
+				appdataEvent, err := eventToAppDataEvent(event)
+				if err != nil {
+					return err
+				}
+				events = append(events, appdataEvent)
+			}
+		}
+		if err := p.listener.OnEvent(appdata.EventData{Events: events}); err != nil {
+			return err
 		}
 	}
 

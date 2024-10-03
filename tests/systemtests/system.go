@@ -373,11 +373,7 @@ func (s *SystemUnderTest) AwaitNBlocks(t *testing.T, n int64, timeout ...time.Du
 	s.AwaitBlockHeight(t, s.CurrentHeight()+n, timeout...)
 }
 
-<<<<<<< HEAD
-// AwaitBlockHeight blocks until te target height is reached. An optional timeout parameter can be passed to abort early
-=======
 // AwaitBlockHeight blocks until the target height is reached. An optional timeout parameter can be passed to abort early
->>>>>>> ef8e2d4fa (test(server/v2): Add system-test for store's command (#21357))
 func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, timeout ...time.Duration) {
 	t.Helper()
 	require.Greater(t, targetHeight, s.currentHeight.Load())

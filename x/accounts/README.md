@@ -33,6 +33,7 @@ It's crucial to understand that an account's state is isolated. This means:
 2. States are not shared even between accounts of the same type.
 
 For example, consider two accounts of type Counter:
+
 - One located at address "cosmos123"
 - Another at address "cosmos456"
 
@@ -40,19 +41,21 @@ These accounts do not share the same collections.Item instance. Instead, each ma
 
 ```go
 type Account struct {
-	// We will define that the account contains in its state a counter, it's an item.
-	// It could also be a map or whatever!
-	Counter collections.Item[uint64]
+ // We will define that the account contains in its state a counter, it's an item.
+ // It could also be a map or whatever!
+ Counter collections.Item[uint64]
 }
 ```
 
 ### Init
 
 Creating an account begins with defining its init message. This message is processed when an account is created, similar to:
+
 - The `instantiate` method in a CosmWasm contract
 - The `constructor` in an EVM contract
 
 For an account to be a valid `x/account` implementer, it must define both:
+
 1. An `Init` method
 2. An init message
 
@@ -102,6 +105,7 @@ func (a Account) RegisterInitHandler(builder *accountstd.InitBuilder) {
 ### Execute Handlers
 
 Execute handlers are methods that an account can execute, defined as messages. These executions can be triggered:
+
 - During block execution (not queries) through transactions
 - During begin or end block
 
@@ -171,10 +175,12 @@ value and returning the new value in the response.
 ### Query Handlers
 
 Query Handlers are read-only methods implemented by an account to expose information about itself. This information can be accessed by:
+
 - External clients (e.g., CLI, wallets)
 - Other modules and accounts within the system
 
 Query handlers can be invoked:
+
 1. By external clients
 2. During block execution
 
@@ -333,6 +339,7 @@ Accounts can handle various messages and queries, allowing for flexible interfac
 This flexibility enables defining interfaces as common sets of messages and/or queries that accounts can handle.
 
 Example: Transaction Authentication
+
 - We define a `MsgAuthenticate` message.
 - Any account capable of handling `MsgAuthenticate` is considered to implement the `Authentication` interface.
 - This approach allows for standardized interaction patterns across different account types.
@@ -384,7 +391,6 @@ graph TD
     H --> I
 ```
 
-
 ## Implementing the Authentication Interface
 
 To implement the Authentication interface, an account must handle the execution of `MsgAuthenticate`. Here's an example of how to do this:
@@ -427,7 +433,6 @@ func (a Account) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 2. **Authentication Safety**: Ensure your authentication mechanism is secure:
    - Prevent replay attacks by making it impossible to reuse the same action with the same signature.
 
-
 #### Implementation example
 
 Please find an example [here](./defaults/base/account.go).
@@ -437,7 +442,7 @@ Please find an example [here](./defaults/base/account.go).
 ## Overview
 
 The x/auth module provides a mechanism for custom account types to be exposed via its `Account` and `AccountInfo` gRPC
-queries. This feature is particularly useful for ensuring compatibility with existing wallets that have not yet integrated 
+queries. This feature is particularly useful for ensuring compatibility with existing wallets that have not yet integrated
 with x/accounts but still need to parse account information post-migration.
 
 ## Implementation
@@ -486,8 +491,8 @@ func (a Account) AuthRetroCompatibility(ctx context.Context, _ *authtypes.QueryL
 
 ## Usage Notes
 
-* Implement this handler only for account types you want to expose via x/auth gRPC methods.
-* The `info` field in the response can be nil if your account doesn't fit the `BaseAccount` structure.
+- Implement this handler only for account types you want to expose via x/auth gRPC methods.
+- The `info` field in the response can be nil if your account doesn't fit the `BaseAccount` structure.
 
 # Genesis
 
@@ -497,10 +502,10 @@ In order to create accounts at genesis, the `x/accounts` module allows developer
 a list of genesis `MsgInit` messages that will be executed in the `x/accounts` genesis flow.
 
 The init messages are generated offline. You can also use the following CLI command to generate the
-json messages: `simd accounts tx init [account type] [msg] --from me --genesis`. This will generate 
+json messages: `simd accounts tx init [account type] [msg] --from me --genesis`. This will generate
 a jsonified init message wrapped in an x/accounts `MsgInit`.
 
-This follows the same initialization flow and rules that would happen if the chain is running. 
+This follows the same initialization flow and rules that would happen if the chain is running.
 The only concrete difference is that this is happening at the genesis block.
 
 For example, given the following `genesis.json` file:

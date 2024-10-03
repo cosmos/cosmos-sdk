@@ -11,6 +11,7 @@ import (
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
@@ -19,6 +20,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors/v2"
 	"cosmossdk.io/log"
+	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/client/grpc/cmtservice"
 	"cosmossdk.io/server/v2/cometbft/handlers"
@@ -39,6 +41,7 @@ type Consensus[T transaction.Tx] struct {
 	txCodec          transaction.Codec[T]
 	store            types.Store
 	streaming        streaming.Manager
+	listener         *appdata.Listener
 	snapshotManager  *snapshots.Manager
 	mempool          mempool.Mempool[T]
 
@@ -103,6 +106,11 @@ func (c *Consensus[T]) SetStreamingManager(sm streaming.Manager) {
 	c.streaming = sm
 }
 
+// SetListener sets the listener for the consensus module.
+func (c *Consensus[T]) SetListener(l *appdata.Listener) {
+	c.listener = l
+}
+
 // RegisterSnapshotExtensions registers the given extensions with the consensus module's snapshot manager.
 // It allows additional snapshotter implementations to be used for creating and restoring snapshots.
 func (c *Consensus[T]) RegisterSnapshotExtensions(extensions ...snapshots.ExtensionSnapshotter) error {
@@ -123,7 +131,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 
 	resp, err := c.app.ValidateTx(ctx, decodedTx)
 	// we do not want to return a cometbft error, but a check tx response with the error
-	if err != nil && err != resp.Error {
+	if err != nil && !errors.Is(err, resp.Error) {
 		return nil, err
 	}
 
@@ -161,7 +169,7 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 		cp, err := c.GetConsensusParams(ctx)
 		// if the consensus params are not found, we set the app version to 0
 		// in the case that the start version is > 0
-		if cp == nil || errors.Is(err, errors.New("collections: not found")) {
+		if cp == nil || errors.Is(err, collections.ErrNotFound) {
 			appVersion = 0
 		} else if err != nil {
 			return nil, err

@@ -24,7 +24,7 @@ When needed, `BeginBlocker` and `EndBlocker` are implemented as part of the [`Ha
 
 The actual implementation of `BeginBlocker` and `EndBlocker` in `abci.go` are very similar to that of a [`Msg` service](./03-msg-services.md):
 
-* They generally use the [`keeper`](./06-keeper.md) and [`ctx`](../../learn/advanced/02-context.md) to retrieve information about the latest state.
+* They generally use the [`keeper`](./06-keeper.md) and [`ctx`](https://pkg.go.dev/context) to retrieve information about the latest state.
 * If needed, they use the `keeper` and `ctx` to trigger state-transitions.
 * If needed, they can emit [`events`](../../learn/advanced/08-events.md) via the `environments`'s `EventManager`.
 
@@ -35,13 +35,20 @@ It is possible for developers to define the order of execution between the `Begi
 See an example implementation of `BeginBlocker` from the `distribution` module:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/distribution/abci.go#L14-L38
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/distribution/keeper/abci.go#L13-L40
 ```
 
-and an example implementation of `EndBlocker` from the `staking` module:
+and an example of `EndBlocker` from the `gov` module:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/staking/keeper/abci.go#L22-L27
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/gov/keeper/abci.go#L22
 ```
+
+and an example implementation of `EndBlocker` with validator updates from the `staking` module:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/staking/keeper/abci.go#L12-L17
+```
+
 
 <!-- TODO: leaving this here to update docs with core api changes  -->

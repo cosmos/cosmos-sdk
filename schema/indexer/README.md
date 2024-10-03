@@ -6,7 +6,7 @@ Indexer implementations should be registered with the `indexer.Register` functio
 
 # Integrating the Indexer Manager
 
-The indexer manager should be used for managing all indexers and should be integrated directly with applications wishing to support indexing. The `StartManager` function is used to start the manager. The configuration options for the manager and all indexer targets should be passed as the ManagerOptions.Config field and should match the json structure of ManagerConfig. An example configuration section in `app.toml` might look like this:
+The indexer manager should be used for managing all indexers and should be integrated directly with applications wishing to support indexing. The `StartIndexing` function is used to start the manager. The configuration options for the manager and all indexer targets should be passed as the ManagerOptions.Config field and should match the json structure of ManagerConfig. An example configuration section in `app.toml` might look like this:
 
 ```toml
 [indexer.target.postgres]

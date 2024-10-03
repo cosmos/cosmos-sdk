@@ -16,6 +16,7 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/api/rest"
+	"cosmossdk.io/server/v2/api/telemetry"
 	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
@@ -82,6 +83,7 @@ func initRootCmd[T transaction.Tx](
 		),
 		grpc.New[T](),
 		store.New[T](newApp),
+		telemetry.New[T](),
 		rest.New[T](),
 	); err != nil {
 		panic(err)

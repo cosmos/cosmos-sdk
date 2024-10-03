@@ -6,14 +6,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/hashicorp/go-metrics"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/bank/v2/types"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -84,18 +82,6 @@ func (h handlers) MsgSend(ctx context.Context, msg *types.MsgSend) (*types.MsgSe
 	if err != nil {
 		return nil, err
 	}
-
-	defer func() {
-		for _, a := range msg.Amount {
-			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
-					[]string{"tx", "msg", "send"},
-					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
-				)
-			}
-		}
-	}()
 
 	return &types.MsgSendResponse{}, nil
 }

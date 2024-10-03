@@ -10,7 +10,8 @@ import (
 
 // BeginBlocker mints new tokens for the previous block.
 func (k Keeper) BeginBlocker(ctx context.Context) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
+	start := telemetry.Now()
+	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker)
 
 	// fetch stored minter & params
 	minter, err := k.Minter.Get(ctx)

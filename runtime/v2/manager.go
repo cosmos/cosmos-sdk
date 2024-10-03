@@ -614,6 +614,52 @@ func (m *MM[T]) assertNoForgottenModules(
 	return nil
 }
 
+func registerServices[T transaction.Tx](s appmodulev2.AppModule, app *App[T], registry *protoregistry.Files) error {
+	c := &configurator{
+		grpcQueryDecoders: map[string]func() gogoproto.Message{},
+		stfQueryRouter:    app.queryRouterBuilder,
+		stfMsgRouter:      app.msgRouterBuilder,
+		registry:          registry,
+		err:               nil,
+	}
+
+	if services, ok := s.(hasServicesV1); ok {
+		if err := services.RegisterServices(c); err != nil {
+			return fmt.Errorf("unable to register services: %w", err)
+		}
+	} else {
+		// If module not implement RegisterServices, register msg & query handler.
+		if module, ok := s.(appmodulev2.HasMsgHandlers); ok {
+			wrapper := stfRouterWrapper{stfRouter: app.msgRouterBuilder}
+			module.RegisterMsgHandlers(&wrapper)
+			if wrapper.error != nil {
+				return fmt.Errorf("unable to register handlers: %w", wrapper.error)
+			}
+		}
+
+		if module, ok := s.(appmodulev2.HasQueryHandlers); ok {
+			wrapper := stfRouterWrapper{stfRouter: app.msgRouterBuilder}
+			module.RegisterQueryHandlers(&wrapper)
+
+			for path, decoder := range wrapper.decoders {
+				app.GRPCMethodsToMessageMap[path] = decoder
+			}
+		}
+
+	}
+
+	if c.err != nil {
+		app.logger.Warn("error registering services", "error", c.err)
+	}
+
+	// merge maps
+	for path, decoder := range c.grpcQueryDecoders {
+		app.GRPCMethodsToMessageMap[path] = decoder
+	}
+
+	return nil
+}
+
 var _ grpc.ServiceRegistrar = (*configurator)(nil)
 
 type configurator struct {
@@ -755,4 +801,37 @@ func defaultMigrationsOrder(modules []string) []string {
 // This API is part of core/appmodule but commented out for dependencies.
 type hasServicesV1 interface {
 	RegisterServices(grpc.ServiceRegistrar) error
+}
+
+var _ appmodulev2.MsgRouter = (*stfRouterWrapper)(nil)
+
+// stfRouterWrapper wraps the stf router and implements the core appmodulev2.MsgRouter
+// interface.
+// The difference between this type and stf router is that the stf router expects
+// us to provide it the msg name, but the core router interface does not have
+// such requirement.
+type stfRouterWrapper struct {
+	stfRouter *stf.MsgRouterBuilder
+
+	error error
+
+	decoders map[string]func() gogoproto.Message
+}
+
+func (s *stfRouterWrapper) RegisterHandler(handler appmodulev2.Handler) {
+	req := handler.MakeMsg()
+	requestName := gogoproto.MessageName(req)
+	if requestName == "" {
+		s.error = errors.Join(s.error, fmt.Errorf("unable to extract request name for type: %T", req))
+	}
+
+	// register handler to stf router
+	err := s.stfRouter.RegisterHandler(requestName, handler.Func)
+	s.error = errors.Join(s.error, err)
+
+	// also make the decoder
+	if s.error == nil {
+		s.decoders = map[string]func() gogoproto.Message{}
+	}
+	s.decoders[requestName] = handler.MakeMsg
 }

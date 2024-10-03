@@ -4,16 +4,23 @@ use core::cmp::max;
 use core::ptr::NonNull;
 use allocator_api2::alloc::{AllocError, Allocator};
 
-// Work in progress on a custom bump allocator to avoid a dependency and customize chunk size.
+// Very simple, custom bump allocator to avoid third party dependencies,
+// reduce code size, and customize where chunks are allocated from and their sizes.
 #[derive(Default)]
 pub struct Bump {
+    // the current chunk that is being allocated, if any
     cur: Cell<Option<NonNull<Footer>>>,
 }
 
+// a footer describing the chunk that is at the end of the chunk
 struct Footer {
+    // the start of the chunk that originally got allocated
     start: NonNull<u8>,
+    // the current allocation position in the chunk
     pos: Cell<NonNull<u8>>,
+    // a pointer to the footer of the previous chunk used in this allocator
     prev: Option<NonNull<Footer>>,
+    // the layout of the chunk
     layout: Layout,
 }
 
@@ -50,14 +57,18 @@ unsafe impl Allocator for Bump {
         }
     }
 
-    unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout) {}
+    unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout) {
+        // we don't need to deallocate, because this is a bump allocator
+        // and we deallocate everything at once when the allocator is dropped
+    }
+
+    // TODO: attempt to extend the memory block in place
+    // unsafe fn grow(&self, ptr: NonNull<u8>, old_layout: Layout, new_layout: Layout) -> Result<NonNull<[u8]>, AllocError> {
+    //     todo!()
+    // }
 }
 
 impl Bump {
-    fn new() -> Self {
-        Self::default()
-    }
-
     unsafe fn alloc_chunk(&self, start_size: usize, layout: Layout) -> Result<NonNull<[u8]>, AllocError> {
         let mut size = start_size;
         // the minimum size is the size of the layout plus the size of the footer

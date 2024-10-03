@@ -80,6 +80,11 @@ func (s *Server[T]) Config() any {
 	return s.config
 }
 
+// UnmarshalConfig unmarshals the store config from the given map.
+// If the config is not found in the map, the default config is returned.
+// If the home directory is found in the map, it sets the home directory in the config.
+// An empty home directory *is* permitted at this stage, but attempting to build
+// the store with an empty home directory will fail.
 func UnmarshalConfig(cfg map[string]any) (*root.Config, error) {
 	config := &root.Config{
 		Options: root.DefaultStoreOptions(),

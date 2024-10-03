@@ -341,6 +341,12 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error
 func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (types.PubKey, string, error) {
 	publicKey, addr, err := device.GetAddressPubKeySECP256K1(path.DerivationPath(), hrp)
 	if err != nil {
+		// Check special case if user is trying to use an index > 100
+		if path.AddressIndex > 100 {
+			return nil, "", fmt.Errorf("%w: cannot derive paths where index > 100: %s "+
+				"This is a security measure to avoid very hard to find derivation paths introduced by a possible attacker. "+
+				"You can disable this by setting expert mode in your ledger device. Do this at your own risk", err, path)
+		}
 		return nil, "", fmt.Errorf("%w: address rejected for path %s", err, path)
 	}
 

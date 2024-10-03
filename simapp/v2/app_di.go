@@ -1,10 +1,7 @@
 package simapp
 
 import (
-	serverstore "cosmossdk.io/server/v2/store"
-	"cosmossdk.io/store/v2/root"
 	_ "embed"
-	"sync"
 
 	"github.com/spf13/viper"
 
@@ -15,6 +12,8 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
+	serverstore "cosmossdk.io/server/v2/store"
+	"cosmossdk.io/store/v2/root"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
 	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
@@ -53,18 +52,6 @@ func init() {
 	}
 }
 
-var (
-	singletonScopedStoreBuilder root.Builder
-	singletonScopedOnce         sync.Once
-)
-
-func ProvideSingletonScopedStoreBuilder() root.Builder {
-	singletonScopedOnce.Do(func() {
-		singletonScopedStoreBuilder = root.NewBuilder()
-	})
-	return singletonScopedStoreBuilder
-}
-
 // AppConfig returns the default app config.
 func AppConfig() depinject.Config {
 	return depinject.Configs(
@@ -75,7 +62,7 @@ func AppConfig() depinject.Config {
 			codec.ProvideAddressCodec,
 			codec.ProvideProtoCodec,
 			codec.ProvideLegacyAmino,
-			ProvideSingletonScopedStoreBuilder,
+			runtime.ProvideSingletonScopedStoreBuilder,
 		),
 		depinject.Invoke(
 			std.RegisterInterfaces,

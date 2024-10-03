@@ -3,12 +3,28 @@ package runtime
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/server/v2/stf"
 	storev2 "cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/proof"
+	"cosmossdk.io/store/v2/root"
 )
+
+var (
+	storeBuilderSingleton      root.Builder
+	storeBuilderSingletoneOnce sync.Once
+)
+
+// ProvideSingletonScopedStoreBuilder returns a store builder that is a singleton
+// in the scope of the process lifetime.
+func ProvideSingletonScopedStoreBuilder() root.Builder {
+	storeBuilderSingletoneOnce.Do(func() {
+		storeBuilderSingleton = root.NewBuilder()
+	})
+	return storeBuilderSingleton
+}
 
 // NewKVStoreService creates a new KVStoreService.
 // This wrapper is kept for backwards compatibility.

@@ -5,6 +5,7 @@ package systemtests
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"testing"
 	"time"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -32,7 +32,7 @@ func TestQueryNodeInfo(t *testing.T) {
 	assert.Equal(t, res.ApplicationVersion.Version, v)
 
 	// TODO: we should be adding a way to distinguish a v2. Eventually we should skip some v2 system depending on the consensus engine we want to test
-	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/node_info", baseurl))
+	restRes := GetRequest(t, mustV(url.JoinPath(baseurl, "/cosmos/base/tendermint/v1beta1/node_info")))
 	assert.NoError(t, err)
 	assert.Equal(t, gjson.GetBytes(restRes, "application_version.version").String(), res.ApplicationVersion.Version)
 }
@@ -46,8 +46,7 @@ func TestQuerySyncing(t *testing.T) {
 	res, err := qc.GetSyncing(context.Background(), &cmtservice.GetSyncingRequest{})
 	assert.NoError(t, err)
 
-	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/syncing", baseurl))
-	assert.NoError(t, err)
+	restRes := GetRequest(t, mustV(url.JoinPath(baseurl, "/cosmos/base/tendermint/v1beta1/syncing")))
 	assert.Equal(t, gjson.GetBytes(restRes, "syncing").Bool(), res.Syncing)
 }
 
@@ -61,8 +60,7 @@ func TestQueryLatestBlock(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, res.SdkBlock.Header.ProposerAddress, "cosmosvalcons")
 
-	_, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/latest", baseurl))
-	assert.NoError(t, err)
+	_ = GetRequest(t, mustV(url.JoinPath(baseurl, "/cosmos/base/tendermint/v1beta1/blocks/latest")))
 }
 
 func TestQueryBlockByHeight(t *testing.T) {
@@ -78,8 +76,7 @@ func TestQueryBlockByHeight(t *testing.T) {
 	assert.Equal(t, res.SdkBlock.Header.Height, int64(2))
 	assert.Contains(t, res.SdkBlock.Header.ProposerAddress, "cosmosvalcons")
 
-	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/%d", baseurl, 2))
-	assert.NoError(t, err)
+	restRes := GetRequest(t, mustV(url.JoinPath(baseurl, "/cosmos/base/tendermint/v1beta1/blocks/2")))
 	assert.Equal(t, gjson.GetBytes(restRes, "sdk_block.header.height").Int(), int64(2))
 	assert.Contains(t, gjson.GetBytes(restRes, "sdk_block.header.proposer_address").String(), "cosmosvalcons")
 }
@@ -106,8 +103,7 @@ func TestQueryLatestValidatorSet(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, len(res.Validators), 2)
 
-	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=%d&pagination.limit=%d", baseurl, 0, 2))
-	assert.NoError(t, err)
+	restRes := GetRequest(t, mustV(url.JoinPath(baseurl, "/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=0&pagination.limit=2")))
 	assert.Equal(t, len(gjson.GetBytes(restRes, "validators").Array()), 2)
 }
 
@@ -144,6 +140,7 @@ func TestLatestValidatorSet(t *testing.T) {
 		})
 	}
 }
+
 func TestLatestValidatorSet_GRPCGateway(t *testing.T) {
 	sut.ResetChain(t)
 	sut.StartChain(t)
@@ -164,8 +161,7 @@ func TestLatestValidatorSet_GRPCGateway(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			rsp, err := testutil.GetRequest(fmt.Sprintf("%s%s", baseurl, tc.url))
-			assert.NoError(t, err)
+			rsp := GetRequest(t, mustV(url.JoinPath(baseurl, tc.url)))
 			if tc.expErr {
 				errMsg := gjson.GetBytes(rsp, "message").String()
 				assert.Contains(t, errMsg, tc.expErrMsg)
@@ -230,8 +226,7 @@ func TestValidatorSetByHeight_GRPCGateway(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			rsp, err := testutil.GetRequest(tc.url)
-			assert.NoError(t, err)
+			rsp := GetRequest(t, tc.url)
 			if tc.expErr {
 				errMsg := gjson.GetBytes(rsp, "message").String()
 				assert.Contains(t, errMsg, tc.expErrMsg)

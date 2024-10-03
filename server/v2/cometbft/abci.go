@@ -250,12 +250,13 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 		return nil, false, err
 	}
 
+	path := strings.TrimPrefix(req.Path, "/")
+	pathFullName := protoreflect.FullName(strings.ReplaceAll(path, "/", "."))
+
 	// in order to check if it's a gRPC query we ensure that there's a descriptor
 	// for the path, if such descriptor exists, and it is a method descriptor
 	// then we assume this is a gRPC query.
-	fullName := protoreflect.FullName(strings.ReplaceAll(req.Path, "/", "."))
-
-	desc, err := registry.FindDescriptorByName(fullName)
+	desc, err := registry.FindDescriptorByName(pathFullName)
 	if err != nil {
 		return nil, false, err
 	}
@@ -267,7 +268,7 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 
 	handler, found := c.queryHandlersMap[string(md.Input().FullName())]
 	if !found {
-		return nil, true, fmt.Errorf("no query handler found for %s", fullName)
+		return nil, true, fmt.Errorf("no query handler found for %s", req.Path)
 	}
 	protoRequest := handler.MakeMsg()
 	err = gogoproto.Unmarshal(req.Data, protoRequest) // TODO: use codec

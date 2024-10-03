@@ -14,12 +14,12 @@ and `ProcessProposal` for the new proposal.
 Here is the implementation of the default implementation:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go#L153-L159
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/baseapp/abci_utils.go#L224-L231
 ```
 
 Like `PrepareProposal` this implementation is the default and can be modified by
 the application developer in [`app_di.go`](https://docs.cosmos.network/main/build/building-apps/app-go-di). If you decide to implement
-your own `ProcessProposal` handler, you must be sure to ensure that the transactions
+your own `ProcessProposal` handler, you must ensure that the transactions
 provided in the proposal DO NOT exceed the maximum block gas and `maxtxbytes` (if set).
 
 ```go

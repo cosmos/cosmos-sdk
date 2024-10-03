@@ -270,9 +270,9 @@ When extracting a package to its own go modules, some extra steps are required, 
 
 ## Protobuf
 
-We use [Protocol Buffers](https://developers.google.com/protocol-buffers) along with [gogoproto](https://github.com/cosmos/gogoproto) to generate code for use in Cosmos SDK.
+We use [Protocol Buffers](https://protobuf.dev) along with [gogoproto](https://github.com/cosmos/gogoproto) to generate code for use in Cosmos SDK.
 
-For deterministic behavior around Protobuf tooling, everything is containerized using Docker. Make sure to have Docker installed on your machine, or head to [Docker's website](https://docs.docker.com/get-docker/) to install it.
+For deterministic behavior around Protobuf tooling, everything is containerized using Docker. Make sure to have Docker installed on your machine, or head to [Docker's website](https://docs.docker.com/get-started/get-docker/) to install it.
 
 For formatting code in `.proto` files, you can run `make proto-format` command.
 

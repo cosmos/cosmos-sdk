@@ -55,7 +55,7 @@ func (a addressValue) String() string {
 // Set implements the flag.Value interface for addressValue.
 func (a *addressValue) Set(s string) error {
 	// we get the keyring on set, as in NewValue the context is the parent context (before RunE)
-	keyring := getKeyringFromCtx(a.ctx, a.addressCodec)
+	keyring := getKeyringFromCtx(a.ctx)
 	addr, err := keyring.LookupAddressByKeyName(s)
 	if err == nil {
 		addrStr, err := a.addressCodec.BytesToString(addr)
@@ -110,7 +110,7 @@ func (a consensusAddressValue) String() string {
 
 func (a *consensusAddressValue) Set(s string) error {
 	// we get the keyring on set, as in NewValue the context is the parent context (before RunE)
-	keyring := getKeyringFromCtx(a.ctx, a.addressCodec)
+	keyring := getKeyringFromCtx(a.ctx)
 	addr, err := keyring.LookupAddressByKeyName(s)
 	if err == nil {
 		addrStr, err := a.addressCodec.BytesToString(addr)
@@ -147,11 +147,11 @@ func (a *consensusAddressValue) Set(s string) error {
 	return nil
 }
 
-func getKeyringFromCtx(ctx *context.Context, ac address.Codec) keyring.Keyring {
+func getKeyringFromCtx(ctx *context.Context) keyring.Keyring {
 	dctx := *ctx
 	if dctx != nil {
 		if clientCtx := dctx.Value(client.ClientContextKey); clientCtx != nil {
-			k, err := sdkkeyring.NewAutoCLIKeyring(clientCtx.(*client.Context).Keyring, ac)
+			k, err := sdkkeyring.NewAutoCLIKeyring(clientCtx.(*client.Context).Keyring, clientCtx.(*client.Context).AddressCodec)
 			if err != nil {
 				panic(fmt.Errorf("failed to create keyring: %w", err))
 			}

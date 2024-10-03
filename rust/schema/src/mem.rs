@@ -64,10 +64,10 @@ impl MemoryManager {
         };
         let header_ptr = (&self.bump).allocate_zeroed(layout)?;
         let header_ptr: *mut MessageHeader = header_ptr.cast().as_ptr();
-        let packet = unsafe { MessagePacket::new(header_ptr, size) };
-        let packet_ref: &MessagePacket = &packet;
-        // we transmute the packet to have the appropriate lifetime of &self
-        unsafe { transmute(packet_ref) }
+        unsafe {
+            let packet = Box::new_in(MessagePacket::new(header_ptr, size), &self.bump);
+            Ok(&mut *Box::into_raw(packet))
+        }
     }
 }
 

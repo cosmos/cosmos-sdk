@@ -19,7 +19,10 @@ pub fn create_account<'a, H: Handler>(ctx: &mut Context, init: &<H::Init<'a> as 
     <H::Init<'_> as OptionalValue<'_>>::encode_value::<H::InitCodec>(init, packet, ctx.memory_manager() as &dyn Allocator).
         map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
 
+
     unsafe {
+        packet.header_mut().in_pointer2.set_slice(H::NAME.as_bytes());
+
         ctx.host_backend().invoke(packet, ctx.memory_manager())
             .map_err(|_| Error::SystemError(SystemErrorCode::UnknownHandlerError))?;
 

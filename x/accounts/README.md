@@ -218,10 +218,9 @@ func (a Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 This implementation defines a `QueryCounter` method that retrieves the current counter value and returns it in the response.
 The `RegisterQueryHandlers` method registers this query handler with the system.
 
-### The Account constructor
+### The Account Constructor
 
-What we have created so far is a super simple basic account, which acts as a counter, now we create an account constructor 
-function.
+After creating our basic counter account, we implement the account constructor function:
 
 ```go
 package counter
@@ -231,76 +230,114 @@ import (
    "cosmossdk.io/x/accounts/accountstd"
 )
 
-var CounterPrefix = collections.NewPrefix(1)
-
 func NewAccount(deps accountstd.Dependencies) (Account, error) {
    return Account{
-      Counter:        collections.NewItem(deps.SchemaBuilder, CounterPrefix, "counter", collections.Uint64Value),
+      Counter: collections.NewItem(deps.SchemaBuilder, CounterPrefix, "counter", collections.Uint64Value),
    }, nil
 }
 
 type Account struct {
-   //
+   Counter collections.Item[uint64]
 }
 
-// the code of the exampl above...
+// Rest of the Account implementation...
 ```
 
-The `accounstd.Dependencies` type contains an environment populated with things like `AddressCodec`, `SchemaBuilder` 
-(note you do not need to build it, the accounts module will do it for you), `HeaderService`, etc.
+The `accountstd.Dependencies` type provides an environment with essential components:
+
+1. `AddressCodec`: For encoding and decoding addresses
+2. `SchemaBuilder`: For schema construction (handled by the accounts module)
+3. `HeaderService`: For accessing block header information
+4. Other useful services and utilities
+
+These dependencies allow the account to interact with the blockchain system.
 
 # App Wiring
 
-NOTE: assumes you have wired the `x/accounts` module in your application already. If you have not, follow the example
-in Simapp.
+Note: This assumes you've already wired the `x/accounts` module in your application. If not, refer to the Simapp example.
 
-Now that we have created our basic account, we can wire it to the `x/accounts` module.
+After creating our basic account, we wire it to the `x/accounts` module.
 
-## Depinject
+## Depinject Method
 
-We can do it using depinject, you would define the depinject constructor:
+Define the depinject constructor:
 
 ```go
 package counterdepinject
 
 func ProvideAccount() accountstd.DepinjectAccount {
-	return accountstd.DIAccount("counter", counter.NewAccount)
+    return accountstd.DIAccount("counter", counter.NewAccount)
 }
 ```
 
-And then add this to the application:
+Add this to the application:
 
 ```go
 package app
 
 func NewApp() *App {
-	...
-   appConfig = depinject.Configs(
-      AppConfig(),
-      depinject.Supply(
-         // supply the application options
-         appOpts,
-         // supply the logger
-         logger,
-      ),
-      depinject.Provide(
-         // inject desired account types:
-         counterdepinject.ProvideAccount,
-      ),
-   )
-   ...
+    // ...
+    appConfig = depinject.Configs(
+        AppConfig(),
+        depinject.Supply(
+            appOpts,
+            logger,
+        ),
+        depinject.Provide(
+            counterdepinject.ProvideAccount,
+        ),
+    )
+    // ...
 }
 ```
 
-## Manual
+## Manual Method
 
-## Initting the Account with CLI
+Add the account to the x/accounts Keeper:
 
-Now that we have wired the counter, let's see how we can initialize it.
+```go
+accountsKeeper, err := accounts.NewKeeper(
+    appCodec,
+    runtime.NewEnvironment(/* ... */),
+    signingCtx.AddressCodec(),
+    appCodec.InterfaceRegistry(),
+    
+    accountstd.AddAccount("counter", counter.NewAccount), // Add account here
+    // Add more accounts if needed
+)
+```
 
+Choose the method that best fits your application structure.
 
+## The accountsstd Package
 
-## Interfaces as messages and queries
+The `accountsstd` package provides utility functions for use within account init, execution, or query handlers. Key functions include:
+
+1. `Whoami()`: Retrieves the address of the current account.
+2. `Sender()`: Gets the address of the transaction sender (not available in queries).
+3. `Funds()`: Retrieves funds provided by the sender during Init or Execution.
+4. `ExecModule()`: Allows the account to execute a module message.
+   Note: Impersonation is prevented. An account can't send messages on behalf of others.
+5. `QueryModule()`: Enables querying a module.
+
+These functions, along with others, facilitate account operations and interactions within the system.
+For a comprehensive list of available utilities, refer to the Go documentation.
+
+## Interfaces via Messages and Queries
+
+Accounts can handle various messages and queries, allowing for flexible interface definitions:
+
+1. Multiple account types can handle the same message or query.
+2. Different accounts (even with the same type but different addresses) can process identical messages or queries.
+
+This flexibility enables defining interfaces as common sets of messages and/or queries that accounts can handle.
+
+Example: Transaction Authentication
+- We define a `MsgAuthenticate` message.
+- Any account capable of handling `MsgAuthenticate` is considered to implement the `Authentication` interface.
+- This approach allows for standardized interaction patterns across different account types.
+
+(Note: More details on the `Authentication` interface will be provided later.)
 
 ## Full Examples
 

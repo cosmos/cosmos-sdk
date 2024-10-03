@@ -116,32 +116,3 @@ The Keeper of the `x/nft` module provides several functions to manage NFTs:
 * `GetNFTsOfClassByOwner`: Retrieves all NFTs of a specific class belonging to an owner.
 * `GetBalance`: Retrieves the balance of NFTs of a specific class for an owner.
 * `GetTotalSupply`: Retrieves the total supply of NFTs of a specific class.
-
-## Module Architecture
-
-Here's a high-level overview of the NFT module architecture:
-
-```mermaid
-graph TD
-    A[Client] -->|Transactions| B(NFT Module)
-    A -->|Queries| B
-    B -->|State Management| C[Keeper]
-    C -->|Store| D[KVStore]
-    C -->|Events| E[EventManager]
-    B -->|Message Handling| F[MsgServer]
-    F -->|State Changes| C
-    B -->|Query Handling| G[QueryServer]
-    G -->|Read State| C
-    H[Other Modules] -->|Integrate| B
-```
-
-This diagram illustrates the following components and their interactions:
-
-1. **Client**: Represents external interactions with the module through transactions and queries.
-2. **NFT Module**: The main entry point for the module, handling message routing and query processing.
-3. **Keeper**: Manages the module's state and provides methods for state manipulation.
-4. **KVStore**: The underlying key-value store for persisting NFT data.
-5. **EventManager**: Handles the emission of events during state changes.
-6. **MsgServer**: Implements the message handling logic for NFT-related transactions.
-7. **QueryServer**: Implements the query handling logic for NFT-related queries.
-8. **Other Modules**: Represents potential integration points with other Cosmos SDK modules.

@@ -14,6 +14,7 @@ pub(crate) mod encoder;
 pub(crate) mod decoder;
 
 /// A codec for encoding and decoding values using the native binary format.
+#[derive(Default)]
 pub struct NativeBinaryCodec;
 
 impl Codec for NativeBinaryCodec {

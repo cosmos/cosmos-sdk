@@ -33,6 +33,7 @@ impl Default for TestApp {
         let mut hypervisor: Hypervisor<VersionedMultiStore> = Default::default();
         let native_vm = NativeVM::new();
         hypervisor.register_vm("native", Box::new(native_vm.clone())).unwrap();
+        hypervisor.set_default_vm("native").unwrap();
         let mem = MemoryManager::new();
         let mut test_app = Self {
             hypervisor: RefCell::new(hypervisor),

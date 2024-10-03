@@ -47,10 +47,10 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
     // }
 
     /// Sets the value of the map at the given key.
-    pub fn set<'key, 'value>(&self, ctx: &'value mut Context<'key>, key: &K::In<'key>, value: &V::In<'value>) -> Result<()> {
-        let key_bz = encode_object_key::<K>(&self.prefix, key, ctx.memory_manager())
+    pub fn set<'key, 'value>(&self, ctx: &'value mut Context<'key>, key: K::In<'key>, value: V::In<'value>) -> Result<()> {
+        let key_bz = encode_object_key::<K>(&self.prefix, &key, ctx.memory_manager())
             .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-        let value_bz = encode_object_value::<V>(value, ctx.memory_manager())
+        let value_bz = encode_object_value::<V>(&value, ctx.memory_manager())
             .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
         unsafe { KVStoreClient.set(ctx, key_bz, value_bz) }
     }

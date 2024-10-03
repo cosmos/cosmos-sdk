@@ -27,11 +27,6 @@ type Builder interface {
 	Get() store.RootStore
 }
 
-// NamespaceOptions are options for registering a namespace.
-type NamespaceOptions struct {
-	CommitmentType string
-}
-
 var _ Builder = (*builder)(nil)
 
 // builder is the default builder for a store/v2 RootStore satisfying the Store interface.

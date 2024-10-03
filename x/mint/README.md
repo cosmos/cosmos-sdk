@@ -109,7 +109,7 @@ related to minting (in the `data` field)
 * Minter: `0x00 -> ProtocolBuffer(minter)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L11-L29
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L11-L29
 ```
 
 ### Params
@@ -122,7 +122,7 @@ A value of `0` indicates an unlimited supply.
 * Params: `mint/params -> legacy_amino(params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L31-L73
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L31-L73
 ```
 
 ## Epoch minting
@@ -315,6 +315,12 @@ simd query mint params [flags]
 
 Example:
 
+```shell
+simd query mint params
+```
+
+Example Output:
+
 ```yml
 blocks_per_year: "4360000"
 goal_bonded: "0.670000000000000000"
@@ -323,6 +329,28 @@ inflation_min: "0.070000000000000000"
 inflation_rate_change: "0.130000000000000000"
 mint_denom: stake
 max_supply: "0"
+```
+
+#### Transactions
+
+The `tx` commands allow users to interact with the `mint` module.
+
+```shell
+simd tx mint --help
+```
+
+##### update-params-proposal
+
+The `update-params-proposal` command allows users to submit a proposal to update the mint module parameters (Note: the entire params must be provided).
+
+```shell
+simd tx mint update-params-proposal [flags]
+```
+
+Example:
+
+```shell
+simd tx mint update-params-proposal '{ "mint_denom": "stake" }'
 ```
 
 ### gRPC

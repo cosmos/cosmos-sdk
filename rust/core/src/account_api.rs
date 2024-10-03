@@ -14,17 +14,17 @@ use crate::low_level::create_packet;
 
 /// Creates a new account for the specified handler.
 pub fn create_account<'a, H: Handler>(ctx: &mut Context, init: &<H::Init<'a> as OptionalValue<'a>>::Value) -> crate::Result<H::Client> {
-    let packet = create_packet(ctx, HYPERVISOR_ACCOUNT, CREATE_SELECTOR)?;
+    let mut packet = create_packet(ctx, HYPERVISOR_ACCOUNT, CREATE_SELECTOR)?;
 
     let cdc = H::InitCodec::default();
-    <H::Init<'_> as OptionalValue<'_>>::encode_value(&cdc, init, packet, ctx.memory_manager() as &dyn Allocator).
+    <H::Init<'_> as OptionalValue<'_>>::encode_value(&cdc, init, &mut packet, ctx.memory_manager() as &dyn Allocator).
         map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
 
 
     unsafe {
         packet.header_mut().in_pointer2.set_slice(H::NAME.as_bytes());
 
-        ctx.host_backend().invoke(packet, ctx.memory_manager())
+        ctx.host_backend().invoke(&mut packet, ctx.memory_manager())
             .map_err(|_| Error::SystemError(SystemErrorCode::UnknownHandlerError))?;
 
         let new_account_id = packet.header().in_pointer1.get_u64();

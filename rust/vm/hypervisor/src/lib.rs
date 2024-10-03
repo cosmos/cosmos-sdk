@@ -223,14 +223,14 @@ impl<TX: Transaction> ExecContext<TX> {
                     map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::InvalidHandler))?;
 
                 // create a packet for calling on_create
-                let mut on_create_header = MessageHeader::default();
+                let mut on_create_packet = MessagePacket::allocate(allocator, 0).
+                    map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::FatalExecutionError))?;
+                let mut on_create_header = on_create_packet.header_mut();
                 // TODO: how do we specify a selector that can only be called by the system?
                 on_create_header.account = id;
                 on_create_header.sender_account = create_header.account;
                 on_create_header.message_selector = ON_CREATE_SELECTOR;
                 on_create_header.in_pointer1.set_slice(init_data);
-                let on_create_header_ptr: *mut MessageHeader = &mut on_create_header;
-                let mut on_create_packet = unsafe { MessagePacket::new(on_create_header_ptr, size_of::<MessageHeader>()) };
 
                 let res = vm.run_handler(&handler_id.vm_handler_id, &mut on_create_packet, self, allocator);
                 tx.pop_frame(res.is_ok()).

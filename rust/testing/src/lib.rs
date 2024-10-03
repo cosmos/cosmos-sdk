@@ -4,8 +4,8 @@ mod store;
 mod vm;
 
 use std::cell::RefCell;
-use std::sync::{Arc, RwLock};
 use allocator_api2::alloc::Allocator;
+use allocator_api2::boxed::Box;
 use ixc_message_api::{AccountID};
 use ixc_core::{Context};
 use ixc_core::account_api::create_account;
@@ -25,14 +25,14 @@ use crate::vm::{NativeVM, NativeVMImpl};
 pub struct TestApp {
     hypervisor: RefCell<Hypervisor<VersionedMultiStore>>,
     native_vm: NativeVM,
-    mem: MemoryManager
+    mem: MemoryManager,
 }
 
 impl Default for TestApp {
     fn default() -> Self {
         let mut hypervisor: Hypervisor<VersionedMultiStore> = Default::default();
         let native_vm = NativeVM::new();
-        hypervisor.register_vm("native", Box::new(native_vm.clone())).unwrap();
+        hypervisor.register_vm("native", std::boxed::Box::new(native_vm.clone())).unwrap();
         hypervisor.set_default_vm("native").unwrap();
         let mem = MemoryManager::new();
         let mut test_app = Self {
@@ -84,7 +84,7 @@ impl RawHandler for DefaultAccount {
 
 impl TestApp {
     /// Registers a handler with the test harness so that accounts backed by this handler can be created.
-    pub fn register_handler<H: Handler>(&mut self) -> core::result::Result<(), InitializationError>{
+    pub fn register_handler<H: Handler>(&mut self) -> core::result::Result<(), InitializationError> {
         let scope = ResourceScope::default();
         unsafe { self.native_vm.register_handler::<H>(H::NAME, H::new(&scope)?); }
         Ok(())
@@ -132,10 +132,13 @@ impl TestApp {
     /// Creates a new client for the given account.
     pub fn client_context_for(&mut self, account_id: AccountID) -> Context
     {
-        let packet = self.mem.allocate_packet(0).unwrap();
-        packet.header_mut().account = account_id;
-        let ctx = Context::new(packet, self);
-        ctx
+        unsafe {
+            let packet_box = Box::new_in(MessagePacket::allocate(&self.mem, 0).unwrap(), &self.mem);
+            packet_box.header_mut().account = account_id;
+            let raw = Box::into_raw(packet_box);
+            let ctx = Context::new(&*raw, self);
+            ctx
+        }
     }
 
     //

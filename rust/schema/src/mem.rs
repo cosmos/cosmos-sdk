@@ -54,23 +54,6 @@ impl MemoryManager {
             slice
         }
     }
-
-    /// Allocates a message packet in the owned bump allocator.
-    pub fn allocate_packet(&self, extra_capacity: usize) -> Result<&mut MessagePacket, AllocError> {
-        let size = MESSAGE_HEADER_SIZE + extra_capacity;
-        let layout = unsafe {
-            Layout::from_size_align_unchecked(
-                size,
-                align_of::<MessageHeader>(),
-            )
-        };
-        let header_ptr = (&self.bump).allocate_zeroed(layout)?;
-        let header_ptr: *mut MessageHeader = header_ptr.cast().as_ptr();
-        unsafe {
-            let packet = Box::new_in(MessagePacket::new(header_ptr, size), &self.bump);
-            Ok(&mut *Box::into_raw(packet))
-        }
-    }
 }
 
 unsafe impl Allocator for MemoryManager {

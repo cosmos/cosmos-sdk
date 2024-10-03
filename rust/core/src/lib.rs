@@ -16,7 +16,7 @@ pub mod handler;
 pub mod resource;
 pub mod error;
 pub mod routes;
-mod low_level;
+pub mod low_level;
 
 pub use context::Context;
 pub use events::EventBus;

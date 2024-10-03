@@ -3,6 +3,7 @@
 use bump_scope::allocator_api2::alloc::Allocator;
 use ixc_core::error::Error;
 use ixc_core::{Context, Result};
+use ixc_core::low_level::create_packet;
 use ixc_core::resource::{InitializationError, StateObject};
 use ixc_core_macros::message_selector;
 use ixc_message_api::handler::HandlerErrorCode;
@@ -83,21 +84,11 @@ const SET_SELECTOR: MessageSelector = message_selector!("ixc.store.v1.set");
 const DELETE_SELECTOR: MessageSelector = message_selector!("ixc.store.v1.delete");
 
 
-fn create_packet<'a>(ctx: &'a Context, selector: MessageSelector) -> Result<&'a mut MessagePacket> {
-    let mut packet = ctx.memory_manager().allocate_packet(0)
-        .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-    let header = packet.header_mut();
-    header.sender_account = ctx.account_id();
-    header.account = STATE_ACCOUNT;
-    header.message_selector = selector;
-    Ok(packet)
-}
-
 struct KVStoreClient;
 
 impl KVStoreClient {
     pub fn get<'a>(&self, ctx: &'a Context, key: &[u8]) -> Result<Option<&'a [u8]>> {
-        let mut packet = create_packet(ctx, GET_SELECTOR)?;
+        let mut packet = create_packet(ctx, STATE_ACCOUNT, GET_SELECTOR)?;
         let header = packet.header_mut();
         unsafe {
             header.in_pointer1.set_slice(key);
@@ -105,12 +96,12 @@ impl KVStoreClient {
             ctx.host_backend().invoke(&mut packet, &ctx.memory_manager()).
                 map_err(|_| todo!())?;
         }
-        let res_bz = unsafe { packet.header().out_pointer1.get(packet) };
+        let res_bz = unsafe { packet.header().out_pointer1.get(&packet) };
         Ok(Some(res_bz))
     }
 
     pub unsafe fn set(&self, ctx: &Context, key: &[u8], value: &[u8]) -> Result<()> {
-        let mut packet = create_packet(ctx, SET_SELECTOR)?;
+        let mut packet = create_packet(ctx, STATE_ACCOUNT, SET_SELECTOR)?;
         let header = packet.header_mut();
         unsafe {
             header.in_pointer1.set_slice(key);
@@ -122,7 +113,7 @@ impl KVStoreClient {
     }
 
     pub unsafe fn delete(&self, ctx: &Context, key: &[u8]) -> Result<()> {
-        let mut packet = create_packet(ctx, DELETE_SELECTOR)?;
+        let mut packet = create_packet(ctx, STATE_ACCOUNT, DELETE_SELECTOR)?;
         let header = packet.header_mut();
         unsafe {
             header.in_pointer1.set_slice(key);

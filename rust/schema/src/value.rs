@@ -287,7 +287,7 @@ pub trait OptionalValue<'a> {
     type Value;
 
     /// Decode the value from the input.
-    fn decode_value(cdc: &dyn Codec, message_packet: &'a MessagePacket, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError>;
+    fn decode_value(cdc: &dyn Codec, message_packet: &MessagePacket<'a>, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError>;
 
     /// Encode the value to the message packet.
     fn encode_value<'b>(cdc: &dyn Codec, value: &Self::Value, message_packet: &'b mut MessagePacket, allocator: &'b dyn Allocator) -> Result<(), EncodeError>;
@@ -296,7 +296,7 @@ pub trait OptionalValue<'a> {
 impl<'a> OptionalValue<'a> for () {
     type Value = ();
 
-    fn decode_value(cdc: &dyn Codec, message_packet: &'a MessagePacket, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError> {
+    fn decode_value(cdc: &dyn Codec, message_packet: &MessagePacket<'a>, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError> {
         Ok(())
     }
 
@@ -309,7 +309,7 @@ impl<'a, V: SchemaValue<'a>> OptionalValue<'a> for V
 {
     type Value = V;
 
-    fn decode_value(cdc: &dyn Codec, message_packet: &'a MessagePacket, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError> {
+    fn decode_value(cdc: &dyn Codec, message_packet: &MessagePacket<'a>, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError> {
         unsafe { decode_value(cdc, message_packet.header().out_pointer1.get(message_packet), memory_manager) }
     }
 

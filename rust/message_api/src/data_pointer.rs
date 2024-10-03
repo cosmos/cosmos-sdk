@@ -69,7 +69,7 @@ pub struct LocalPointer {
 
 impl DataPointer {
     /// Gets the data that the pointer points to as a slice of bytes.
-    pub unsafe fn get<'a>(&self, message_packet: &'a MessagePacket) -> &'a [u8] {
+    pub unsafe fn get<'a>(&self, message_packet: &MessagePacket<'a>) -> &'a [u8] {
         if self.local_pointer.zero == 0 {
             if self.local_pointer.offset < MESSAGE_HEADER_SIZE as u32 {
                 return &[];
@@ -78,7 +78,7 @@ impl DataPointer {
                 return &[];
             }
             unsafe {
-                let data = message_packet.data as *const u8;
+                let data = message_packet.data.as_ptr() as *const u8;
                 return core::slice::from_raw_parts(data.offset(self.local_pointer.offset as isize), self.local_pointer.len as usize);
             }
         }

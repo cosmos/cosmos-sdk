@@ -1,3 +1,4 @@
+//! Low-level utilities for working with message structs and message packets directly.
 use allocator_api2::alloc::Allocator;
 use ixc_message_api::AccountID;
 use ixc_message_api::handler::{HandlerErrorCode};
@@ -21,18 +22,18 @@ pub unsafe fn dynamic_invoke<'a, 'b, M: Message<'b>>(context: &'a Context, accou
         map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
 
     // create the message packet and fill in call details
-    let packet = create_packet(context, account, M::SELECTOR)
+    let mut packet = create_packet(context, account, M::SELECTOR)
         .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
     let header = packet.header_mut();
     header.in_pointer1.set_slice(msg_body);
 
     // invoke the message
-    let res = context.host_backend().invoke(packet, mem)
+    let res = context.host_backend().invoke(&mut packet, mem)
         .map_err(|_| todo!());
 
     match res {
         Ok(_) => {
-            let res = M::Response::<'a>::decode_value(&cdc, packet, mem).
+            let res = M::Response::<'a>::decode_value(&cdc, &packet, mem).
                 map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
             Ok(res)
         }
@@ -42,12 +43,15 @@ pub unsafe fn dynamic_invoke<'a, 'b, M: Message<'b>>(context: &'a Context, accou
     }
 }
 
-pub fn create_packet<'a>(context: &'a Context, account: AccountID, selector: u64) -> Result<&'a mut MessagePacket> {
-    let packet = context.memory_manager().allocate_packet(0)
-        .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-    let header = packet.header_mut();
-    header.sender_account = context.account_id();
-    header.account = account;
-    header.message_selector = selector;
-    Ok(packet)
+/// Create a new message packet with the given account and message selector.
+pub fn create_packet<'a>(context: &'a Context, account: AccountID, selector: u64) -> Result<MessagePacket<'a>> {
+    unsafe {
+        let packet = MessagePacket::allocate(context.memory_manager(), 0)
+            .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+        let header = packet.header_mut();
+        header.sender_account = context.account_id();
+        header.account = account;
+        header.message_selector = selector;
+        Ok(packet)
+    }
 }

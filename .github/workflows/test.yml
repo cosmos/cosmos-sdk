@@ -144,7 +144,7 @@ jobs:
           name: "${{ github.sha }}-e2e-coverage"
           path: ./tests/e2e-profile.out
 
-  test-system:
+  test-system: # v2 system tests are in v2-test.yml
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -177,16 +177,6 @@ jobs:
         if: env.GIT_DIFF
         run: |
           make test-system
-      - uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: "testnet-setup"
-          path: ./systemtests/testnet/
-          retention-days: 3
-      - name: system tests v2
-        if: env.GIT_DIFF
-        run: |
-          COSMOS_BUILD_OPTIONS=v2 make test-system
       - uses: actions/upload-artifact@v3
         if: failure()
         with:

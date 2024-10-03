@@ -312,6 +312,7 @@ The following hooks impact the slashing state:
 * `AfterValidatorBonded` creates a `ValidatorSigningInfo` instance as described in the following section.
 * `AfterValidatorCreated` stores a validator's consensus key.
 * `AfterValidatorRemoved` removes a validator's consensus key.
+* `AfterConsensusPubKeyUpdate` handles the rotation of signing info and updates the address-pubkey relation after a consensus key update.
 
 ### Validator Bonded
 
@@ -631,6 +632,20 @@ Example:
 
 ```bash
 simd tx slashing unjail --from mykey
+```
+
+#### update-params-proposal
+
+The `update-params-proposal` command allows users to submit a governance proposal to update the slashing module parameters:
+
+```bash
+simd tx slashing update-params-proposal <params> [flags]
+```
+
+Example:
+
+```bash
+simd tx slashing update-params-proposal '{ "signed_blocks_window": "100" }'
 ```
 
 ### gRPC

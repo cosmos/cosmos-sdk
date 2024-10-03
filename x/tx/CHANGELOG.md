@@ -33,12 +33,12 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
-<<<<<<< HEAD
-=======
-* [#21825](https://github.com/cosmos/cosmos-sdk/pull/21825) Fix decimal encoding and field ordering in Amino JSON encoder.
-* [#21850](https://github.com/cosmos/cosmos-sdk/pull/21850) Support bytes field as signer.
+## [v0.13.6](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.6) - 2024-10-XX
 
->>>>>>> 2d40cc1ab (fix(x/tx): fix amino json drift from legacy spec (#21825))
+### Bug Fixes
+
+* [#21825](https://github.com/cosmos/cosmos-sdk/pull/21825) Fix decimal encoding and field ordering in Amino JSON encoder.
+
 ## [v0.13.5](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.5) - 2024-09-18
 
 ### Improvements

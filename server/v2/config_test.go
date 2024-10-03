@@ -1,7 +1,6 @@
 package serverv2_test
 
 import (
-	"cosmossdk.io/store/v2/root"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,6 +10,7 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
 	store "cosmossdk.io/server/v2/store"
+	"cosmossdk.io/store/v2/root"
 )
 
 func TestReadConfig(t *testing.T) {

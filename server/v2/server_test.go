@@ -2,8 +2,6 @@ package serverv2_test
 
 import (
 	"context"
-	storev2 "cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/root"
 	"os"
 	"path/filepath"
 	"testing"
@@ -21,6 +19,8 @@ import (
 	grpc "cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/store"
+	storev2 "cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/root"
 )
 
 type mockInterfaceRegistry struct{}

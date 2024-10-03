@@ -9,16 +9,23 @@ type StateObjectType struct {
 	Name string `json:"name"`
 
 	// KeyFields is a list of fields that make up the primary key of the object.
-	// It can be empty in which case indexers should assume that this object is
+	// It can be empty, in which case, indexers should assume that this object is
 	// a singleton and only has one value. Field names must be unique within the
 	// object between both key and value fields.
-	// Key fields CANNOT be nullable and Float32Kind, Float64Kind, and JSONKind types
-	// are not allowed.
+	// Key fields CANNOT be nullable and Float32Kind, Float64Kind, JSONKind, StructKind,
+	// OneOfKind, RepeatedKind, ListKind or ObjectKind
+	// are NOT ALLOWED.
+	// It is an INCOMPATIBLE change to add, remove or change fields in the key as this
+	// changes the underlying primary key of the object.
 	KeyFields []Field `json:"key_fields,omitempty"`
 
 	// ValueFields is a list of fields that are not part of the primary key of the object.
 	// It can be empty in the case where all fields are part of the primary key.
 	// Field names must be unique within the object between both key and value fields.
+	// ObjectKind fields are not allowed.
+	// It is a COMPATIBLE change to add new value fields to an object type because
+	// this does not affect the primary key of the object.
+	// Existing value fields should not be removed or modified.
 	ValueFields []Field `json:"value_fields,omitempty"`
 
 	// RetainDeletions is a flag that indicates whether the indexer should retain

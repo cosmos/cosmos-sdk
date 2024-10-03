@@ -41,7 +41,7 @@ func TestInitGenesis(t *testing.T) {
 		Status:          types.Bonded,
 		Tokens:          valTokens,
 		DelegatorShares: math.LegacyNewDecFromInt(valTokens),
-		Description:     types.NewDescription("hoop", "", "", "", ""),
+		Description:     types.NewDescription("hoop", "", "", "", "", types.Metadata{}),
 	}
 	assert.NilError(t, f.stakingKeeper.SetValidator(f.sdkCtx, bondedVal))
 
@@ -67,7 +67,7 @@ func TestInitGenesis(t *testing.T) {
 		Status:          types.Bonded,
 		Tokens:          valTokens,
 		DelegatorShares: math.LegacyNewDecFromInt(valTokens),
-		Description:     types.NewDescription("hoop", "", "", "", ""),
+		Description:     types.NewDescription("hoop", "", "", "", "", types.Metadata{}),
 	}
 	bondedVal2 := types.Validator{
 		OperatorAddress: sdk.ValAddress(addrs[2]).String(),
@@ -75,7 +75,7 @@ func TestInitGenesis(t *testing.T) {
 		Status:          types.Bonded,
 		Tokens:          valTokens,
 		DelegatorShares: math.LegacyNewDecFromInt(valTokens),
-		Description:     types.NewDescription("bloop", "", "", "", ""),
+		Description:     types.NewDescription("bloop", "", "", "", "", types.Metadata{}),
 	}
 
 	// append new bonded validators to the list
@@ -148,7 +148,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 		Jailed:          false,
 		Tokens:          math.NewInt(10),
 		DelegatorShares: math.LegacyNewDecFromInt(math.NewInt(10)),
-		Description:     types.NewDescription("bloop", "", "", "", ""),
+		Description:     types.NewDescription("bloop", "", "", "", "", types.Metadata{}),
 	}
 
 	params := types.Params{
@@ -195,7 +195,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 		validators[i], err = types.NewValidator(
 			sdk.ValAddress(addrs[i]).String(),
 			PKs[i],
-			types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""),
+			types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", "", types.Metadata{}),
 		)
 		assert.NilError(t, err)
 		validators[i].Status = types.Bonded

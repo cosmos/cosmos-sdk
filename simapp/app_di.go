@@ -15,6 +15,9 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
+	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
+	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
+	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	consensuskeeper "cosmossdk.io/x/consensus/keeper"
@@ -154,6 +157,27 @@ func NewSimApp(
 
 				// For providing a custom inflation function for x/mint add here your
 				// custom function that implements the minttypes.MintFn interface.
+			),
+			depinject.Provide(
+				// inject desired account types:
+				multisigdepinject.ProvideAccount,
+				basedepinject.ProvideAccount,
+				lockupdepinject.ProvideAllLockupAccounts,
+
+				// provide base account options
+				basedepinject.ProvideSecp256K1PubKey,
+				// if you want to provide a custom public key you
+				// can do it from here.
+				// Example:
+				// 		basedepinject.ProvideCustomPubkey[Ed25519PublicKey]()
+				//
+				// You can also provide a custom public key with a custom validation function:
+				//
+				// 		basedepinject.ProvideCustomPubKeyAndValidationFunc(func(pub Ed25519PublicKey) error {
+				//			if len(pub.Key) != 64 {
+				//				return fmt.Errorf("invalid pub key size")
+				//			}
+				// 		})
 			),
 		)
 	)

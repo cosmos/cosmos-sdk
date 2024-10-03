@@ -18,7 +18,7 @@ import (
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
-	errorsmod "cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors/v2"
 	consensus "cosmossdk.io/x/consensus/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -70,6 +70,7 @@ func finalizeBlockResponse(
 	cp *cmtproto.ConsensusParams,
 	appHash []byte,
 	indexSet map[string]struct{},
+	debug bool,
 ) (*abci.FinalizeBlockResponse, error) {
 	allEvents := append(in.BeginBlockEvents, in.EndBlockEvents...)
 
@@ -78,7 +79,7 @@ func finalizeBlockResponse(
 		return nil, err
 	}
 
-	txResults, err := intoABCITxResults(in.TxResults, indexSet)
+	txResults, err := intoABCITxResults(in.TxResults, indexSet, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -107,29 +108,20 @@ func intoABCIValidatorUpdates(updates []appmodulev2.ValidatorUpdate) []abci.Vali
 	return valsetUpdates
 }
 
-func intoABCITxResults(results []server.TxResult, indexSet map[string]struct{}) ([]*abci.ExecTxResult, error) {
+func intoABCITxResults(results []server.TxResult, indexSet map[string]struct{}, debug bool) ([]*abci.ExecTxResult, error) {
 	res := make([]*abci.ExecTxResult, len(results))
 	for i := range results {
-		if results[i].Error != nil {
-			space, code, log := errorsmod.ABCIInfo(results[i].Error, true)
-			res[i] = &abci.ExecTxResult{
-				Codespace: space,
-				Code:      code,
-				Log:       log,
-			}
-
-			continue
-		}
 		events, err := intoABCIEvents(results[i].Events, indexSet)
 		if err != nil {
 			return nil, err
 		}
+
 		res[i] = responseExecTxResultWithEvents(
 			results[i].Error,
 			results[i].GasWanted,
 			results[i].GasUsed,
 			events,
-			false,
+			debug,
 		)
 	}
 
@@ -387,10 +379,10 @@ func (c *Consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, com
 func (c *Consensus[T]) checkHalt(height int64, time time.Time) error {
 	var halt bool
 	switch {
-	case c.cfg.AppTomlConfig.HaltHeight > 0 && uint64(height) > c.cfg.AppTomlConfig.HaltHeight:
+	case c.cfg.AppTomlConfig.HaltHeight > 0 && uint64(height) >= c.cfg.AppTomlConfig.HaltHeight:
 		halt = true
 
-	case c.cfg.AppTomlConfig.HaltTime > 0 && time.Unix() > int64(c.cfg.AppTomlConfig.HaltTime):
+	case c.cfg.AppTomlConfig.HaltTime > 0 && time.Unix() >= int64(c.cfg.AppTomlConfig.HaltTime):
 		halt = true
 	}
 
@@ -407,15 +399,4 @@ func uint64ToInt64(u uint64) int64 {
 		return math.MaxInt64
 	}
 	return int64(u)
-}
-
-// queryResult returns a ResponseQuery from an error. It will try to parse ABCI
-// info from the error.
-func queryResult(err error) *abci.QueryResponse {
-	space, code, log := errorsmod.ABCIInfo(err, false)
-	return &abci.QueryResponse{
-		Codespace: space,
-		Code:      code,
-		Log:       log,
-	}
 }

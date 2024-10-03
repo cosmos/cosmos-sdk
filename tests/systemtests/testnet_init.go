@@ -162,7 +162,6 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 		EditToml(filepath.Join(nodeDir, "app.toml"), func(doc *tomledit.Document) {
 			UpdatePort(doc, apiPortStart+i, "api", "address")
 			UpdatePort(doc, grpcPortStart+i, "grpc", "address")
-			SetBool(doc, true, "grpc-web", "enable")
 		})
 	}
 }

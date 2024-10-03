@@ -18,6 +18,7 @@ type keyGenF = func() (cmtcrypto.PrivKey, error)
 type ServerOptions[T transaction.Tx] struct {
 	PrepareProposalHandler     handlers.PrepareHandler[T]
 	ProcessProposalHandler     handlers.ProcessHandler[T]
+	CheckTxHandler             handlers.CheckTxHandler[T]
 	VerifyVoteExtensionHandler handlers.VerifyVoteExtensionhandler
 	ExtendVoteHandler          handlers.ExtendVoteHandler
 	KeygenF                    keyGenF
@@ -35,6 +36,7 @@ func DefaultServerOptions[T transaction.Tx]() ServerOptions[T] {
 	return ServerOptions[T]{
 		PrepareProposalHandler:     handlers.NoOpPrepareProposal[T](),
 		ProcessProposalHandler:     handlers.NoOpProcessProposal[T](),
+		CheckTxHandler:             nil,
 		VerifyVoteExtensionHandler: handlers.NoOpVerifyVoteExtensionHandler(),
 		ExtendVoteHandler:          handlers.NoOpExtendVote(),
 		Mempool:                    func(cfg map[string]any) mempool.Mempool[T] { return mempool.NoOpMempool[T]{} },

@@ -105,7 +105,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		appI.GetAppManager(),
 		s.serverOptions.Mempool(cfg),
 		indexEvents,
-		appI.GetGPRCMethodsToMessageMap(),
+		appI.GetQueryHandlers(),
 		store,
 		s.config,
 		s.initTxCodec,

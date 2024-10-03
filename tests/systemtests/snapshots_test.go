@@ -4,13 +4,13 @@ package systemtests
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestSnapshots(t *testing.T) {
-
 	sut.ResetChain(t)
 	cli := NewCLIWrapper(t, sut, verbose)
 	sut.StartChain(t)

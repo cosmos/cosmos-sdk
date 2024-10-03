@@ -22,6 +22,9 @@ sidebar_position: 1
 * [Messages](#messages)
     * [MsgSend](#msgsend)
 * [Events](#events)
+* [Queries](#queries)
+* [Keeper Functions](#keeper-functions)
+* [Module Architecture](#module-architecture)
 
 ## Concepts
 
@@ -86,4 +89,59 @@ The message handling should fail if:
 
 ## Events
 
-The nft module emits proto events defined in [the Protobuf reference](https://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.nft.v1beta1).
+The NFT module emits proto events defined in [the Protobuf reference](https://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.nft.v1beta1).
+
+## Queries
+
+The `x/nft` module provides several queries to retrieve information about NFTs and classes:
+
+* `Balance`: Returns the number of NFTs of a given class owned by the owner.
+* `Owner`: Returns the owner of an NFT based on its class and ID.
+* `Supply`: Returns the number of NFTs from the given class.
+* `NFTs`: Queries all NFTs of a given class or owner.
+* `NFT`: Returns an NFT based on its class and ID.
+* `Class`: Returns an NFT class based on its ID.
+* `Classes`: Returns all NFT classes.
+
+## Keeper Functions
+
+The Keeper of the `x/nft` module provides several functions to manage NFTs:
+
+* `Mint`: Mints a new NFT.
+* `Burn`: Burns an existing NFT.
+* `Update`: Updates an existing NFT.
+* `Transfer`: Transfers an NFT from one owner to another.
+* `GetNFT`: Retrieves information about a specific NFT.
+* `GetNFTsOfClass`: Retrieves all NFTs of a specific class.
+* `GetNFTsOfClassByOwner`: Retrieves all NFTs of a specific class belonging to an owner.
+* `GetBalance`: Retrieves the balance of NFTs of a specific class for an owner.
+* `GetTotalSupply`: Retrieves the total supply of NFTs of a specific class.
+
+## Module Architecture
+
+Here's a high-level overview of the NFT module architecture:
+
+```mermaid
+graph TD
+    A[Client] -->|Transactions| B(NFT Module)
+    A -->|Queries| B
+    B -->|State Management| C[Keeper]
+    C -->|Store| D[KVStore]
+    C -->|Events| E[EventManager]
+    B -->|Message Handling| F[MsgServer]
+    F -->|State Changes| C
+    B -->|Query Handling| G[QueryServer]
+    G -->|Read State| C
+    H[Other Modules] -->|Integrate| B
+```
+
+This diagram illustrates the following components and their interactions:
+
+1. **Client**: Represents external interactions with the module through transactions and queries.
+2. **NFT Module**: The main entry point for the module, handling message routing and query processing.
+3. **Keeper**: Manages the module's state and provides methods for state manipulation.
+4. **KVStore**: The underlying key-value store for persisting NFT data.
+5. **EventManager**: Handles the emission of events during state changes.
+6. **MsgServer**: Implements the message handling logic for NFT-related transactions.
+7. **QueryServer**: Implements the query handling logic for NFT-related queries.
+8. **Other Modules**: Represents potential integration points with other Cosmos SDK modules.

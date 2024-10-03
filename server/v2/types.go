@@ -1,9 +1,9 @@
 package serverv2
 
 import (
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -16,6 +16,6 @@ type AppI[T transaction.Tx] interface {
 	Name() string
 	InterfaceRegistry() server.InterfaceRegistry
 	GetAppManager() *appmanager.AppManager[T]
-	GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message
+	GetQueryHandlers() map[string]appmodulev2.Handler
 	GetStore() any
 }

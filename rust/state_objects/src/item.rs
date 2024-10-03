@@ -21,8 +21,8 @@ where
     }
 
     /// Sets the value of the item.
-    pub fn set(&self, ctx: &mut Context, value: V::In<'_>) -> Result<()> {
-        self.map.set(ctx, &(), &value)
+    pub fn set<'value>(&self, ctx: &'value mut Context, value: &V::In<'value>) -> Result<()> {
+        self.map.set(ctx, &(), value)
     }
 }
 

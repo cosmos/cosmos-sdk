@@ -15,7 +15,7 @@ pub trait Handler: RawHandler + Router + Resources + ClientFactory {
     /// The parameter used for initializing the handler.
     type Init<'a>: OptionalValue<'a>;
     /// The codec used for initializing the handler.
-    type InitCodec: Codec;
+    type InitCodec: Codec + Default;
 }
 
 /// Account API trait.

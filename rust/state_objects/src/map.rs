@@ -27,7 +27,7 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
 
     /// Gets the value of the map at the given key.
     pub fn get<'key, 'value>(&self, ctx: &'value Context<'key>, key: &K::In<'key>) -> Result<Option<V::Out<'value>>> {
-        let key_bz = encode_object_key::<K, &dyn Allocator>(&self.prefix, key, ctx.memory_manager() as &dyn Allocator)
+        let key_bz = encode_object_key::<K>(&self.prefix, key, ctx.memory_manager())
             .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
 
         let value_bz = KVStoreClient.get(ctx, key_bz)?;
@@ -47,10 +47,10 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
     // }
 
     /// Sets the value of the map at the given key.
-    pub fn set<'key, 'value>(&self, ctx: &mut Context<'key>, key: &K::In<'key>, value: &V::In<'value>) -> Result<()> {
-        let key_bz = encode_object_key::<K, &dyn Allocator>(&self.prefix, key, ctx.memory_manager() as &dyn Allocator)
+    pub fn set<'key, 'value>(&self, ctx: &'value mut Context<'key>, key: &K::In<'key>, value: &V::In<'value>) -> Result<()> {
+        let key_bz = encode_object_key::<K>(&self.prefix, key, ctx.memory_manager())
             .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-        let value_bz = encode_object_value::<V, &dyn Allocator>(value, ctx.memory_manager() as &dyn Allocator)
+        let value_bz = encode_object_value::<V>(value, ctx.memory_manager())
             .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
         unsafe { KVStoreClient.set(ctx, key_bz, value_bz) }
     }
@@ -69,7 +69,7 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
 
     /// Deletes the value of the map at the given key.
     pub fn delete<'key>(&self, ctx: &mut Context<'key>, key: &K::In<'key>) -> Result<()> {
-        let key_bz = encode_object_key::<K, &dyn Allocator>(&self.prefix, key, ctx.memory_manager() as &dyn Allocator)
+        let key_bz = encode_object_key::<K>(&self.prefix, key, ctx.memory_manager())
             .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
         unsafe { KVStoreClient.delete(ctx, key_bz) }
     }

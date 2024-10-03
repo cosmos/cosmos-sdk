@@ -10,7 +10,17 @@ use crate::structs::{StructDecodeVisitor, StructEncodeVisitor, StructType};
 use crate::value::SchemaValue;
 
 /// Encode an object value.
-pub fn encode_object_value<'a, >(value: &dyn ValueEncodeVisitor, writer_factory: &'a dyn WriterFactory) -> Result<&'a [u8], EncodeError> {
+pub fn encode_object_value<'a, V: ObjectValue>(value: &V::In<'a>, writer_factory: &'a dyn WriterFactory) -> Result<&'a [u8], EncodeError> {
+    struct Visitor<'b, 'c, U:ObjectValue>(&'c U::In<'b>);
+    impl <'b, 'c, U:ObjectValue> ValueEncodeVisitor for Visitor<'b, 'c, U> {
+        fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+            U::encode(self.0, encoder)
+        }
+    }
+    do_encode_object_value(&Visitor::<V>(value), writer_factory)
+}
+
+fn do_encode_object_value<'a>(value: &dyn ValueEncodeVisitor, writer_factory: &'a dyn WriterFactory) -> Result<&'a [u8], EncodeError> {
     let mut sizer = crate::binary::encoder::EncodeSizer { size: 0 };
     let mut inner = crate::binary::encoder::InnerEncodeSizer { outer: &mut sizer };
     value.encode(&mut inner)?;
@@ -39,10 +49,10 @@ pub trait ObjectValue {
     const PSEUDO_TYPE: StructType<'static>;
 
     /// Encode each part of the value in reverse order.
-    fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError>;
+    fn encode<'a>(value: &Self::In<'a>, encoder: &mut dyn Encoder) -> Result<(), EncodeError>;
 
     /// Decode the value from the decoder.
-    fn decode<'a, D: Decoder<'a>>(decoder: &mut D, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError>;
+    fn decode<'a>(decoder: &mut dyn Decoder<'a>, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError>;
 }
 
 impl ObjectValue for () {
@@ -51,11 +61,11 @@ impl ObjectValue for () {
     type Out<'a> = ();
     const PSEUDO_TYPE: StructType<'static> = unnamed_struct_type::<Self::FieldTypes<'static>>();
 
-    fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode<'a>(value: &Self::In<'a>, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
         Ok(())
     }
 
-    fn decode<'a, D: Decoder<'a>>(decoder: &mut D, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
+    fn decode<'a>(decoder: &mut dyn Decoder<'a>, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
         Ok(())
     }
 }
@@ -66,11 +76,11 @@ impl<A: ObjectFieldValue> ObjectValue for A {
     type Out<'a> = A::Out<'a>;
     const PSEUDO_TYPE: StructType<'static> = unnamed_struct_type::<Self::FieldTypes<'static>>();
 
-    fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode<'a>(value: &Self::In<'a>, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
         todo!()
     }
 
-    fn decode<'a, D: Decoder<'a>>(decoder: &mut D, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
+    fn decode<'a>(decoder: &mut dyn Decoder<'a>, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
         struct Visitor<'a, A: SchemaValue<'a>>(A::DecodeState);
         unsafe impl <'a, A: SchemaValue<'a>> StructDecodeVisitor<'a> for Visitor<'a, A> {
             fn decode_field(&mut self, index: usize, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
@@ -93,7 +103,7 @@ impl<A: ObjectFieldValue> ObjectValue for (A,) {
     type Out<'a> = (A::Out<'a>,);
     const PSEUDO_TYPE: StructType<'static> = unnamed_struct_type::<Self::FieldTypes<'static>>();
 
-    fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode<'a>(value: &Self::In<'a>, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
         struct Visitor<'b, A>(&'b (A,));
         unsafe impl <'b, 'a:'b, A: SchemaValue<'a>> StructEncodeVisitor for Visitor<'b, A> {
             fn encode_field(&self, index: usize, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
@@ -108,7 +118,7 @@ impl<A: ObjectFieldValue> ObjectValue for (A,) {
         encoder.encode_struct(&Visitor(value), &Self::PSEUDO_TYPE)
     }
 
-    fn decode<'a, D: Decoder<'a>>(decoder: &mut D, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
+    fn decode<'a>(decoder: &mut dyn Decoder<'a>, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
         Ok((<A as ObjectValue>::decode(decoder, mem)?,))
     }
 }
@@ -119,7 +129,7 @@ impl<A: ObjectFieldValue, B: ObjectFieldValue> ObjectValue for (A, B) {
     type Out<'a> = (A::Out<'a>, B::Out<'a>);
     const PSEUDO_TYPE: StructType<'static> = unnamed_struct_type::<Self::FieldTypes<'static>>();
 
-    fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode<'a>(value: &Self::In<'a>, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
         struct EncodeVisitor<'b, A, B>(&'b (A, B));
         unsafe impl <'b, 'a:'b, A: SchemaValue<'a>, B: SchemaValue<'a>> StructEncodeVisitor for EncodeVisitor<'b, A, B> {
             fn encode_field(&self, index: usize, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
@@ -135,7 +145,7 @@ impl<A: ObjectFieldValue, B: ObjectFieldValue> ObjectValue for (A, B) {
         encoder.encode_struct(&EncodeVisitor(value), &Self::PSEUDO_TYPE)
     }
 
-    fn decode<'a, D: Decoder<'a>>(decoder: &mut D, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
+    fn decode<'a>(decoder: &mut dyn Decoder<'a>, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
         struct Visitor<'a, A: SchemaValue<'a>, B: SchemaValue<'a>>(A::DecodeState, B::DecodeState);
         unsafe impl <'a, A: SchemaValue<'a>, B: SchemaValue<'a>> StructDecodeVisitor<'a> for Visitor<'a, A, B> {
             fn decode_field(&mut self, index: usize, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
@@ -162,7 +172,7 @@ impl<A: ObjectFieldValue, B: ObjectFieldValue, C: ObjectFieldValue> ObjectValue 
     type Out<'a> = (A::Out<'a>, B::Out<'a>, C::Out<'a>);
     const PSEUDO_TYPE: StructType<'static> = unnamed_struct_type::<Self::FieldTypes<'static>>();
 
-    fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode<'a>(value: &Self::In<'a>, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
         struct EncodeVisitor<'b, A, B, C>(&'b (A, B, C));
         unsafe impl <'b, 'a:'b, A: SchemaValue<'a>, B: SchemaValue<'a>, C: SchemaValue<'a>> StructEncodeVisitor for EncodeVisitor<'b, A, B, C> {
             fn encode_field(&self, index: usize, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
@@ -179,7 +189,7 @@ impl<A: ObjectFieldValue, B: ObjectFieldValue, C: ObjectFieldValue> ObjectValue 
         encoder.encode_struct(&EncodeVisitor(value), &Self::PSEUDO_TYPE)
     }
 
-    fn decode<'a, D: Decoder<'a>>(decoder: &mut D, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
+    fn decode<'a>(decoder: &mut dyn Decoder<'a>, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
         struct Visitor<'a, A: SchemaValue<'a>, B: SchemaValue<'a>, C: SchemaValue<'a>>(A::DecodeState, B::DecodeState, C::DecodeState);
         unsafe impl <'a, A: SchemaValue<'a>, B: SchemaValue<'a>, C: SchemaValue<'a>> StructDecodeVisitor<'a> for Visitor<'a, A, B, C> {
             fn decode_field(&mut self, index: usize, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
@@ -208,7 +218,7 @@ impl<A: ObjectFieldValue, B: ObjectFieldValue, C: ObjectFieldValue, D: ObjectFie
     type Out<'a> = (A::Out<'a>, B::Out<'a>, C::Out<'a>, D::Out<'a>);
     const PSEUDO_TYPE: StructType<'static> = unnamed_struct_type::<Self::FieldTypes<'static>>();
 
-    fn encode<'a, E: Encoder>(value: &Self::In<'a>, encoder: &mut E) -> Result<(), EncodeError> {
+    fn encode<'a>(value: &Self::In<'a>, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
         struct EncodeVisitor<'b, A, B, C, D>(&'b (A, B, C, D));
         unsafe impl <'b, 'a:'b, A: SchemaValue<'a>, B: SchemaValue<'a>, C: SchemaValue<'a>, D: SchemaValue<'a>> StructEncodeVisitor for EncodeVisitor<'b, A, B, C, D> {
             fn encode_field(&self, index: usize, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
@@ -226,7 +236,7 @@ impl<A: ObjectFieldValue, B: ObjectFieldValue, C: ObjectFieldValue, D: ObjectFie
         encoder.encode_struct(&EncodeVisitor(value), &Self::PSEUDO_TYPE)
     }
 
-    fn decode<'a, DEC: Decoder<'a>>(decoder: &mut DEC, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
+    fn decode<'a>(decoder: &mut dyn Decoder<'a>, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
         struct Visitor<'a, A: SchemaValue<'a>, B: SchemaValue<'a>, C: SchemaValue<'a>, D: SchemaValue<'a>>(A::DecodeState, B::DecodeState, C::DecodeState, D::DecodeState);
         unsafe impl <'a, A: SchemaValue<'a>, B: SchemaValue<'a>, C: SchemaValue<'a>, D: SchemaValue<'a>> StructDecodeVisitor<'a> for Visitor<'a, A, B, C, D> {
             fn decode_field(&mut self, index: usize, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {

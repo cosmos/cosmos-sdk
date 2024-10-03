@@ -16,7 +16,8 @@ use crate::low_level::create_packet;
 pub fn create_account<'a, H: Handler>(ctx: &mut Context, init: &<H::Init<'a> as OptionalValue<'a>>::Value) -> crate::Result<H::Client> {
     let packet = create_packet(ctx, HYPERVISOR_ACCOUNT, CREATE_SELECTOR)?;
 
-    <H::Init<'_> as OptionalValue<'_>>::encode_value::<H::InitCodec>(init, packet, ctx.memory_manager() as &dyn Allocator).
+    let cdc = H::InitCodec::default();
+    <H::Init<'_> as OptionalValue<'_>>::encode_value(&cdc, init, packet, ctx.memory_manager() as &dyn Allocator).
         map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
 
 

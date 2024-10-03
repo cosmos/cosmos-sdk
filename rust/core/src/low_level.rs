@@ -2,7 +2,8 @@ use allocator_api2::alloc::Allocator;
 use ixc_message_api::AccountID;
 use ixc_message_api::handler::{HandlerErrorCode};
 use ixc_message_api::packet::MessagePacket;
-use ixc_schema::codec::Codec;
+use ixc_schema::buffer::WriterFactory;
+use ixc_schema::codec::{decode_value, Codec};
 use ixc_schema::value::OptionalValue;
 use crate::{Context, Result};
 use crate::error::Error;
@@ -15,7 +16,8 @@ pub unsafe fn dynamic_invoke<'a, 'b, M: Message<'b>>(context: &'a Context, accou
                                                  -> crate::Result<<M::Response<'a> as OptionalValue<'a>>::Value, M::Error> {
     // encode the message body
     let mem = context.memory_manager();
-    let msg_body = M::Codec::encode_value(&message, mem as &dyn Allocator).
+    let cdc = M::Codec::default();
+    let msg_body = cdc.encode_value(&message, mem).
         map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
 
     // create the message packet and fill in call details
@@ -30,7 +32,7 @@ pub unsafe fn dynamic_invoke<'a, 'b, M: Message<'b>>(context: &'a Context, accou
 
     match res {
         Ok(_) => {
-            let res = M::Response::<'a>::decode_value::<M::Codec>(packet, mem).
+            let res = M::Response::<'a>::decode_value(&cdc, packet, mem).
                 map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
             Ok(res)
         }

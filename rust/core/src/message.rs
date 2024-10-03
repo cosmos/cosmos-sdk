@@ -6,5 +6,5 @@ pub trait Message<'a>: SchemaValue<'a> + StructSchema {
     const SELECTOR: u64;
     type Response<'b>: OptionalValue<'b>;
     type Error: OptionalValue<'static>;
-    type Codec: Codec;
+    type Codec: Codec + Default;
 }

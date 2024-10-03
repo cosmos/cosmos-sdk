@@ -5,6 +5,7 @@ use allocator_api2::alloc::Allocator;
 use core::alloc::Layout;
 use core::ptr::slice_from_raw_parts_mut;
 use crate::decoder::DecodeError;
+use crate::mem::MemoryManager;
 
 /// A factory for creating writers.
 pub trait WriterFactory {
@@ -20,6 +21,19 @@ pub trait Writer {
     fn pos(&self) -> usize;
 }
 
+impl<'a> WriterFactory for MemoryManager {
+    fn new_reverse(&self, size: usize) -> Result<ReverseSliceWriter, EncodeError> {
+        unsafe {
+            let ptr = self.allocate_zeroed(
+                Layout::from_size_align_unchecked(size, 1)
+            ).map_err(|_| EncodeError::OutOfSpace)?;
+            Ok(ReverseSliceWriter {
+                buf: &mut *ptr.as_ptr(),
+                pos: size,
+            })
+        }
+    }
+}
 
 impl<'a> WriterFactory for &'a dyn Allocator {
     fn new_reverse(&self, size: usize) -> Result<ReverseSliceWriter, EncodeError> {

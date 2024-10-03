@@ -35,7 +35,7 @@ func GetRequest(t *testing.T, url string) []byte {
 
 func GetRequestWithHeaders(t *testing.T, url string, headers map[string]string, expCode int) []byte {
 	t.Helper()
-	req, err := http.NewRequest("GET", url, nil) //nolint:gosec // only used for testing
+	req, err := http.NewRequest("GET", url, nil)
 	require.NoError(t, err)
 
 	for key, value := range headers {

@@ -276,14 +276,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			},
 		},
 		"staking/create_validator": {
-<<<<<<< HEAD
-			gogo: &stakingtypes.MsgCreateValidator{Pubkey: pubkeyAny},
-			pulsar: &stakingapi.MsgCreateValidator{
-				Pubkey:      pubkeyAnyPulsar,
-				Description: &stakingapi.Description{},
-				Commission:  &stakingapi.CommissionRates{},
-				Value:       &v1beta1.Coin{},
-=======
 			gogo: &stakingtypes.MsgCreateValidator{
 				Pubkey: pubkeyAny,
 				Commission: stakingtypes.CommissionRates{
@@ -292,7 +284,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 					MaxChangeRate: math.LegacyZeroDec(),
 				},
 				MinSelfDelegation: math.NewIntFromUint64(10),
->>>>>>> 2d40cc1ab (fix(x/tx): fix amino json drift from legacy spec (#21825))
 			},
 		},
 		"staking/msg_cancel_unbonding_delegation_response": {

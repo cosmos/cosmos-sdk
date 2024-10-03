@@ -229,7 +229,7 @@ mod tests {
     fn test_u32_encode() {
         let x = 10u32;
         let mem = MemoryManager::new();
-        let res = encode_value(&x, &mem as &dyn Allocator).unwrap();
+        let res = encode_value(&x, &mem).unwrap();
         assert_eq!(res, &[10, 0, 0, 0]);
     }
 }

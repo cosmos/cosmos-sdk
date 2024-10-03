@@ -24,7 +24,7 @@ mod fields;
 pub mod buffer;
 pub mod mem;
 mod bump;
-mod schema;
+pub mod schema;
 mod message;
 
 pub use value::SchemaValue;

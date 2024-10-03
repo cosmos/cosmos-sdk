@@ -164,12 +164,13 @@ mod tests {
 
     extern crate ixc_schema_macros;
     use ixc_schema_macros::*;
+    use crate::binary::NativeBinaryCodec;
 
     #[test]
     fn test_u32_decode() {
         let buf: [u8; 4] = [10, 0, 0, 0];
         let mut mem = MemoryManager::new();
-        let x = decode_value::<u32>(&buf, &mut mem).unwrap();
+        let x = crate::codec::decode_value::<u32>(&NativeBinaryCodec, &buf, &mem).unwrap();
         assert_eq!(x, 10);
     }
 
@@ -177,7 +178,7 @@ mod tests {
     fn test_decode_borrowed_string() {
         let str = "hello";
         let mut mem = MemoryManager::new();
-        let x = decode_value::<&str>(str.as_bytes(), &mut mem).unwrap();
+        let x = crate::codec::decode_value::<&str>(&NativeBinaryCodec, str.as_bytes(), &mem).unwrap();
         assert_eq!(x, "hello");
     }
 
@@ -185,7 +186,7 @@ mod tests {
     fn test_decode_owned_string() {
         let str = "hello";
         let mut mem = MemoryManager::new();
-        let x = decode_value::<alloc::string::String>(str.as_bytes(), &mut mem).unwrap();
+        let x = crate::codec::decode_value::<alloc::string::String>(&NativeBinaryCodec, str.as_bytes(), &mem).unwrap();
         assert_eq!(x, "hello");
     }
 
@@ -209,8 +210,8 @@ mod tests {
             amount: 1234567890,
         };
         let mem = MemoryManager::new();
-        let res = encode_value(&coin, &mem as &dyn Allocator).unwrap();
-        let decoded = decode_value::<Coin>(res, &mem).unwrap();
+        let res = encode_value(&coin, &mem).unwrap();
+        let decoded = crate::codec::decode_value::<Coin>(&NativeBinaryCodec, res, &mem).unwrap();
         assert_eq!(decoded, coin);
     }
 
@@ -224,8 +225,8 @@ mod tests {
             amount: 9876543210,
         }];
         let mem = MemoryManager::new();
-        let res = encode_value(&coins, &mem as &dyn Allocator).unwrap();
-        let decoded = decode_value::<&[Coin]>(&res, &mem).unwrap();
+        let res = encode_value(&coins, &mem).unwrap();
+        let decoded = crate::codec::decode_value::<&[Coin]>(&NativeBinaryCodec, &res, &mem).unwrap();
         assert_eq!(decoded, coins);
     }
 }

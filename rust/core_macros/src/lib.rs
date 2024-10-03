@@ -3,10 +3,10 @@
 
 use proc_macro::{TokenStream};
 use std::default::Default;
-use proc_macro2::TokenStream as TokenStream2;
-use manyhow::{bail, error_message, manyhow};
+use proc_macro2::{Ident, TokenStream as TokenStream2};
+use manyhow::{bail, ensure, error_message, manyhow};
 use quote::{format_ident, quote, ToTokens};
-use syn::{parse2, parse_macro_input, parse_quote, token, Attribute, File, Item, ItemImpl, ItemMod, LitStr, Type};
+use syn::{parse2, parse_macro_input, parse_quote, token, Attribute, File, Item, ItemImpl, ItemMod, LitStr, ReturnType, Type};
 use std::borrow::Borrow;
 use blake2::{Blake2b512, Digest};
 use deluxe::ExtractAttributes;
@@ -63,37 +63,46 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
         }
     })?;
 
-
     let mut client_fn_impls = vec![];
     for publish_target in publish_targets.iter() {
+        let ident_camel = publish_target.signature.ident.to_string().to_upper_camel_case();
+        let msg_struct_name = format_ident!("{}{}Msg", handler, ident_camel);
         if publish_target.on_create.is_some() {
             continue;
         }
         let signature = publish_target.signature.clone();
-        client_fn_impls.push(quote! {
-            #signature {
-                todo!()
-            }
-        });
-        let ident_camel = publish_target.signature.ident.to_string().to_upper_camel_case();
-        let msg_struct_name = format_ident!("{}{}Msg", handler, ident_camel);
         let mut msg_fields = vec![];
+        let mut msg_fields_access = vec![];
+        let mut msg_fields_init = vec![];
+        let mut have_lifetimes = false;
+        let mut context_name: Option<Ident> = None;
         for field in &publish_target.signature.inputs {
             match field {
                 syn::FnArg::Typed(pat_type) => {
-                    let field = match pat_type.pat.as_ref() {
+                    match pat_type.pat.as_ref() {
                         syn::Pat::Ident(ident) => {
-                            let ty = pat_type.ty.clone();
-                            match ty.as_ref() {
+                            let mut ty = pat_type.ty.clone();
+                            match ty.as_mut() {
                                 Type::Reference(tyref) => {
                                     if tyref.elem == parse_quote!(Context) {
+                                        context_name = Some(ident.ident.clone());
                                         continue;
                                     }
+                                    have_lifetimes = true;
+                                    assert!(tyref.lifetime.is_none(), "support for named lifetimes is unimplemented");
+                                    tyref.lifetime = Some(parse_quote!('a));
+                                    assert!(false, "no support for borrowed data yet!")
                                 }
                                 _ => {}
                             }
                             msg_fields.push(quote! {
                                 #ident: #ty,
+                            });
+                            msg_fields_access.push(quote! {
+                                msg.#ident;
+                            });
+                            msg_fields_init.push(quote! {
+                                #ident,
                             });
                         }
                         _ => bail!("expected identifier"),
@@ -103,10 +112,37 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
             }
         }
         push_item(items, quote! {
+            #[derive(::ixc_schema_macros::SchemaValue)]
+            #[sealed]
             pub struct #msg_struct_name {
                 #(#msg_fields)*
             }
-        })?
+        })?;
+        let selector = message_selector_from_str(msg_struct_name.to_string().as_str());
+        let return_type = match &signature.output {
+            ReturnType::Type(_, ty) => ty,
+            ReturnType::Default => {
+                bail!("expected return type")
+            }
+        };
+        push_item(items, quote! {
+            impl <'a> ::ixc_core::message::Message<'a> for #msg_struct_name {
+                const SELECTOR: ::ixc_message_api::header::MessageSelector = #selector;
+                type Response<'b> = <#return_type as ::ixc_core::message::ExtractResponseTypes>::Response;
+                type Error = ();
+                type Codec = ::ixc_schema::binary::NativeBinaryCodec;
+            }
+        })?;
+        ensure!(context_name.is_some(), "no context parameter found");
+        let context_name = context_name.unwrap();
+        client_fn_impls.push(quote! {
+            pub #signature {
+                let msg = #msg_struct_name {
+                    #(#msg_fields_init)*
+                };
+                unsafe { ::ixc_core::low_level::dynamic_invoke(#context_name, self.0, msg) }
+            }
+        });
     }
 
     push_item(items, quote! {
@@ -178,7 +214,7 @@ struct Publish {
     name: Option<String>,
 }
 
-#[derive(deluxe::ExtractAttributes)]
+#[derive(deluxe::ExtractAttributes, Debug)]
 #[deluxe(attributes(on_create))]
 struct OnCreate {
     message_name: Option<String>,
@@ -201,6 +237,7 @@ where
     Ok(Some(R::extract_attributes(t)?))
 }
 
+#[derive(Debug)]
 struct PublishFn {
     signature: syn::Signature,
     on_create: Option<OnCreate>,
@@ -254,8 +291,12 @@ pub fn package_root(item: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn message_selector(item: TokenStream) -> TokenStream {
     let input_str = parse_macro_input!(item as LitStr);
+    message_selector_from_str(&input_str.value()).into()
+}
+
+fn message_selector_from_str(msg: &str) -> TokenStream2 {
     let mut hasher = Blake2b512::new(); // TODO should we use 256 or 512?
-    hasher.update(input_str.value().as_bytes());
+    hasher.update(msg.as_bytes());
     let res = hasher.finalize();
     // take first 8 bytes and convert to u64
     let hash = u64::from_le_bytes(res[..8].try_into().unwrap());

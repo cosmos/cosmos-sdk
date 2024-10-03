@@ -108,7 +108,7 @@ fn derive_struct_schema(input: &syn::DeriveInput, str: &DataStruct) -> manyhow::
         }
 
         unsafe impl #impl_generics ::ixc_schema::structs::StructEncodeVisitor for #struct_name #ty_generics #where_clause {
-            fn encode_field(&self, index: usize, encoder: &mut dyn ::ixc_schema::encoder::Encoder) -> Result<(), ::ixc_schema::encoder::EncodeError> {
+            fn encode_field(&self, index: usize, encoder: &mut dyn ::ixc_schema::encoder::Encoder) -> ::core::result::Result<(), ::ixc_schema::encoder::EncodeError> {
                 match index {
                     #(#encode_matchers)*
                     _ => Err(::ixc_schema::encoder::EncodeError::UnknownError),
@@ -120,12 +120,12 @@ fn derive_struct_schema(input: &syn::DeriveInput, str: &DataStruct) -> manyhow::
             type Type = ::ixc_schema::types::StructT< #struct_name #ty_generics >;
             type DecodeState = (#(#decode_states)*);
 
-            fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn ::ixc_schema::decoder::Decoder< #lifetime >) -> Result<(), ::ixc_schema::decoder::DecodeError> {
+            fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn ::ixc_schema::decoder::Decoder< #lifetime >) -> ::core::result::Result<(), ::ixc_schema::decoder::DecodeError> {
                 struct Visitor< #lifetime2 , #lifetime : #lifetime2 > {
                     state: &#lifetime2 mut < #struct_name #ty_generics as ::ixc_schema::SchemaValue< #lifetime >>::DecodeState,
                 }
                 unsafe impl< #lifetime2, #lifetime : #lifetime2 > ::ixc_schema::structs::StructDecodeVisitor< #lifetime > for Visitor< #lifetime2, #lifetime > {
-                    fn decode_field(&mut self, index: usize, decoder: &mut dyn ::ixc_schema::decoder::Decoder< #lifetime >) -> Result<(), ::ixc_schema::decoder::DecodeError> {
+                    fn decode_field(&mut self, index: usize, decoder: &mut dyn ::ixc_schema::decoder::Decoder< #lifetime >) -> ::core::result::Result<(), ::ixc_schema::decoder::DecodeError> {
                         match index {
                             #(#decode_matchers)*
                             _ => Err(::ixc_schema::decoder::DecodeError::UnknownFieldNumber),
@@ -135,14 +135,14 @@ fn derive_struct_schema(input: &syn::DeriveInput, str: &DataStruct) -> manyhow::
                 decoder.decode_struct(&mut Visitor { state }, &<Self as ::ixc_schema::structs::StructSchema>::STRUCT_TYPE)
             }
 
-            fn finish_decode_state(state: Self::DecodeState, mem: &#lifetime ::ixc_schema::mem::MemoryManager) -> Result<Self, ::ixc_schema::decoder::DecodeError> {
+            fn finish_decode_state(state: Self::DecodeState, mem: &#lifetime ::ixc_schema::mem::MemoryManager) -> ::core::result::Result<Self, ::ixc_schema::decoder::DecodeError> {
                 #(#finishers)*
                 Ok( #struct_name {
                     #(#field_inits)*
                 })
             }
 
-            fn encode(&self, encoder: &mut dyn ::ixc_schema::encoder::Encoder) -> Result<(), ::ixc_schema::encoder::EncodeError> {
+            fn encode(&self, encoder: &mut dyn ::ixc_schema::encoder::Encoder) -> ::core::result::Result<(), ::ixc_schema::encoder::EncodeError> {
                 encoder.encode_struct(self, &<Self as ::ixc_schema::structs::StructSchema>::STRUCT_TYPE)
             }
         }

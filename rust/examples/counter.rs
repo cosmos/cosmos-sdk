@@ -14,6 +14,7 @@ pub mod counter {
     use ixc::*;
     use ixc_core::account_api::ON_CREATE_SELECTOR;
     use ixc_core::low_level::create_packet;
+    use ixc_core::message::Message;
     use ixc_core::resource::{InitializationError, ResourceScope, StateObject};
     use ixc_core::routes::{sort_routes, Route};
     use ixc_message_api::handler::{Allocator, HandlerError, HandlerErrorCode, HostBackend, RawHandler};
@@ -28,17 +29,17 @@ pub mod counter {
     }
 
     impl Counter {
-        // #[on_create]
+        #[on_create]
         pub fn create(&self, ctx: &mut Context, init_value: u64) -> Result<()> {
             self.value.set(ctx, init_value)
         }
 
-        // #[publish]
+        #[publish]
         pub fn get(&self, ctx: &Context) -> Result<u64> {
             self.value.get(ctx)
         }
 
-        // #[publish]
+        #[publish]
         pub fn inc(&self, ctx: &mut Context) -> Result<()> {
             let value = self.value.get(ctx)?;
             self.value.set(ctx, value + 1)
@@ -53,31 +54,28 @@ pub mod counter {
         }
     }
 
-    const GET_SELECTOR: MessageSelector = message_selector!("get");
-    const INC_SELECTOR: MessageSelector = message_selector!("inc");
-
     impl CounterClient {
-        pub fn get(&self, ctx: &Context) -> ixc_core::Result<u64> {
-            let mut packet = create_packet(ctx, self.0, GET_SELECTOR)?;
-            unsafe {
-                ctx.host_backend().invoke(&mut packet, ctx.memory_manager())
-                    .map_err(|e| ())?;
-                    // .map_err(|e| fmt_error!("unknown error: {:?}", e))?;
-                let cdc = NativeBinaryCodec::default();
-                let value = <u64 as OptionalValue<'_>>::decode_value(&cdc, &packet, ctx.memory_manager())
-                    .map_err(|e| ())?;
-                    // .map_err(|e| fmt_error!("decoding error: {:?}", e))?;
-                Ok(value)
-            }
-        }
-
-        pub fn inc(&self, ctx: &mut Context) -> Result<()> {
-            let mut packet = create_packet(ctx, self.0, INC_SELECTOR)?;
-            unsafe {
-                ctx.host_backend().invoke(&mut packet, ctx.memory_manager())
-                    .map_err(|e| ())
-            }
-        }
+        // pub fn get(&self, ctx: &Context) -> ixc_core::Result<u64> {
+        //     let mut packet = create_packet(ctx, self.0, GET_SELECTOR)?;
+        //     unsafe {
+        //         ctx.host_backend().invoke(&mut packet, ctx.memory_manager())
+        //             .map_err(|e| ())?;
+        //             // .map_err(|e| fmt_error!("unknown error: {:?}", e))?;
+        //         let cdc = NativeBinaryCodec::default();
+        //         let value = <u64 as OptionalValue<'_>>::decode_value(&cdc, &packet, ctx.memory_manager())
+        //             .map_err(|e| ())?;
+        //             // .map_err(|e| fmt_error!("decoding error: {:?}", e))?;
+        //         Ok(value)
+        //     }
+        // }
+        //
+        // pub fn inc(&self, ctx: &mut Context) -> Result<()> {
+        //     let mut packet = create_packet(ctx, self.0, INC_SELECTOR)?;
+        //     unsafe {
+        //         ctx.host_backend().invoke(&mut packet, ctx.memory_manager())
+        //             .map_err(|e| ())
+        //     }
+        // }
     }
 
     unsafe impl ixc_core::routes::Router for crate::counter::Counter {
@@ -88,14 +86,14 @@ pub mod counter {
                     counter.create(&mut context, 42).
                         map_err(|e| HandlerError::Custom(0))
                 }),
-                (GET_SELECTOR, |counter: &Counter, packet, cb, a| {
+                (<CounterGetMsg as Message>::SELECTOR, |counter: &Counter, packet, cb, a| {
                     let mut context = Context::new(packet, cb);
                     let res = counter.get(&mut context).
                         map_err(|e| HandlerError::Custom(0))?;
                     <u64 as OptionalValue<'_>>::encode_value(&NativeBinaryCodec::default(), &res, packet, a).
                         map_err(|e| HandlerError::Custom(0))
                 }),
-                (INC_SELECTOR, |counter: &Counter, packet, cb, a| {
+                (<CounterIncMsg as Message>::SELECTOR, |counter: &Counter, packet, cb, a| {
                     let mut context = Context::new(packet, cb);
                     counter.inc(&mut context).
                         map_err(|e| HandlerError::Custom(0))

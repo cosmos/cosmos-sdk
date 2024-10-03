@@ -10,7 +10,7 @@ extern crate alloc;
 
 mod context;
 mod events;
-mod message;
+pub mod message;
 pub mod account_api;
 pub mod handler;
 pub mod resource;

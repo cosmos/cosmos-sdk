@@ -31,7 +31,7 @@ pub unsafe fn dynamic_invoke<'a, 'b, M: Message<'b>>(context: &'a Context, accou
 
     // invoke the message
     let res = context.host_backend().invoke(&mut packet, mem)
-        .map_err(|_| todo!());
+        .map_err(|_| ());
 
     match res {
         Ok(_) => {

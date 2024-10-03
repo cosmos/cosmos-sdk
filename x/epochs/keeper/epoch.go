@@ -3,9 +3,10 @@ package keeper
 import (
 	"context"
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/x/epochs/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetEpochInfo returns epoch info by identifier.

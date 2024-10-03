@@ -1,15 +1,15 @@
 use alloc::string::String;
 use ixc_message_api::AccountID;
-use crate::decoder::{decode, DecodeError};
+use crate::codec::ValueDecodeVisitor;
+use crate::decoder::{DecodeError};
 use crate::list::ListDecodeVisitor;
 use crate::mem::MemoryManager;
 use crate::state_object::ObjectValue;
 use crate::structs::{StructDecodeVisitor, StructType};
 use crate::value::SchemaValue;
 
-pub fn decode_value<'a, V: SchemaValue<'a>>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<V, DecodeError> {
-    let mut decoder = Decoder { buf: input, scope: memory_manager };
-    decode(&mut decoder)
+pub fn decode_value<'a>(input: &'a [u8], memory_manager: &'a MemoryManager, visitor: &mut dyn ValueDecodeVisitor<'a>) -> Result<(), DecodeError> {
+    visitor.decode(&mut Decoder { buf: input, scope: memory_manager })
 }
 
 pub(crate) struct Decoder<'a> {

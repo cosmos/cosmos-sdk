@@ -8,28 +8,21 @@ use crate::decoder::DecodeError;
 
 /// A factory for creating writers.
 pub trait WriterFactory {
-    /// The type of output produced by the writer.
-    type Output;
     /// Create a new reverse writer.
-    fn new_reverse(&self, size: usize) -> Result<impl Writer<Output=Self::Output>, EncodeError>;
+    fn new_reverse(&self, size: usize) -> Result<ReverseSliceWriter, EncodeError>;
 }
 
 /// A writer that writes bytes slices in the order specified when it was created.
 pub trait Writer {
-    /// The type of output produced by the writer.
-    type Output;
     /// Write bytes to the buffer.
     fn write(&mut self, bytes: &[u8]) -> Result<(), EncodeError>;
     /// Get the current position in the buffer.
     fn pos(&self) -> usize;
-    /// Finish writing and return the output.
-    fn finish(self) -> Result<Self::Output, EncodeError>;
 }
 
-impl<'a> WriterFactory for &'a dyn Allocator {
-    type Output = &'a [u8];
 
-    fn new_reverse(&self, size: usize) -> Result<impl Writer<Output=Self::Output>, EncodeError> {
+impl<'a> WriterFactory for &'a dyn Allocator {
+    fn new_reverse(&self, size: usize) -> Result<ReverseSliceWriter, EncodeError> {
         unsafe {
             let ptr = self.allocate_zeroed(
                 Layout::from_size_align_unchecked(size, 1)
@@ -42,14 +35,13 @@ impl<'a> WriterFactory for &'a dyn Allocator {
     }
 }
 
-struct ReverseSliceWriter<'a> {
+/// A writer that writes bytes slices in reverse order.
+pub struct ReverseSliceWriter<'a> {
     buf: &'a mut [u8],
     pos: usize,
 }
 
 impl<'a> Writer for ReverseSliceWriter<'a> {
-    type Output = &'a [u8];
-
     fn write(&mut self, bytes: &[u8]) -> Result<(), EncodeError> {
         if self.pos < bytes.len() {
             return Err(EncodeError::OutOfSpace);
@@ -62,9 +54,12 @@ impl<'a> Writer for ReverseSliceWriter<'a> {
     fn pos(&self) -> usize {
         self.pos
     }
+}
 
-    fn finish(self) -> Result<&'a [u8], EncodeError> {
-        Ok(&self.buf[self.pos..])
+impl<'a> ReverseSliceWriter<'a> {
+    /// Finish writing and return the buffer.
+    pub fn finish(self) -> &'a [u8] {
+        &self.buf[self.pos..]
     }
 }
 

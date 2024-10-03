@@ -2,7 +2,8 @@
 
 use ixc_message_api::handler::Allocator;
 use ixc_message_api::packet::MessagePacket;
-use crate::codec::Codec;
+use ixc_schema::buffer::WriterFactory;
+use crate::codec::{decode_value, Codec};
 use crate::decoder::{DecodeError, Decoder};
 use crate::encoder::{EncodeError, Encoder};
 use crate::list::AllocatorVecBuilder;
@@ -24,13 +25,15 @@ where
     type DecodeState: Default;
 
     /// Decode the value from the decoder.
-    fn visit_decode_state(_state: &mut Self::DecodeState, _decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+    fn visit_decode_state(_state: &mut Self::DecodeState, _decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError>
+    {
         unimplemented!("decode")
     }
 
     /// Finish decoding the value, return it and return the memory handle if needed.
     fn finish_decode_state(_state: Self::DecodeState, _mem: &'a MemoryManager) -> Result<Self, DecodeError>
-        where Self: Sized
+    where
+        Self: Sized,
     {
         unimplemented!("finish")
     }
@@ -198,7 +201,8 @@ where
 {}
 
 impl<'a, V: ListElementValue<'a>> SchemaValue<'a> for &'a [V]
-where V::Type: ListElementType
+where
+    V::Type: ListElementType,
 {
     type Type = ListT<V::Type>;
     type DecodeState = AllocatorVecBuilder<'a, V>;
@@ -283,20 +287,20 @@ pub trait OptionalValue<'a> {
     type Value;
 
     /// Decode the value from the input.
-    fn decode_value<C: Codec>(message_packet: &'a MessagePacket, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError>;
+    fn decode_value(cdc: &dyn Codec, message_packet: &'a MessagePacket, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError>;
 
     /// Encode the value to the message packet.
-    fn encode_value<'b, C: Codec>(value: &Self::Value, message_packet: &'b mut MessagePacket, allocator: &'b dyn Allocator) -> Result<(), EncodeError>;
+    fn encode_value<'b>(cdc: &dyn Codec, value: &Self::Value, message_packet: &'b mut MessagePacket, allocator: &'b dyn Allocator) -> Result<(), EncodeError>;
 }
 
-impl <'a> OptionalValue<'a> for () {
+impl<'a> OptionalValue<'a> for () {
     type Value = ();
 
-    fn decode_value<C: Codec>(message_packet: &'a MessagePacket, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError> {
+    fn decode_value(cdc: &dyn Codec, message_packet: &'a MessagePacket, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError> {
         Ok(())
     }
 
-    fn encode_value<'b, C: Codec>(value: &Self::Value, message_packet: &'b mut MessagePacket, allocator: &'b dyn Allocator) -> Result<(), EncodeError> {
+    fn encode_value<'b>(cdc: &dyn Codec, value: &Self::Value, message_packet: &'b mut MessagePacket, allocator: &'b dyn Allocator) -> Result<(), EncodeError> {
         Ok(())
     }
 }
@@ -305,12 +309,12 @@ impl<'a, V: SchemaValue<'a>> OptionalValue<'a> for V
 {
     type Value = V;
 
-    fn decode_value<C: Codec>(message_packet: &'a MessagePacket, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError> {
-        unsafe { C::decode_value(message_packet.header().out_pointer1.get(message_packet), memory_manager) }
+    fn decode_value(cdc: &dyn Codec, message_packet: &'a MessagePacket, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError> {
+        unsafe { decode_value(cdc, message_packet.header().out_pointer1.get(message_packet), memory_manager) }
     }
 
-    fn encode_value<'b, C: Codec>(value: &Self::Value, message_packet: &'b mut MessagePacket, allocator: &'b dyn Allocator) -> Result<(), EncodeError> {
-        let res = C::encode_value(value, allocator)?;
+    fn encode_value<'b>(cdc: &dyn Codec, value: &Self::Value, message_packet: &'b mut MessagePacket, allocator: &'b dyn Allocator) -> Result<(), EncodeError> {
+        let res = cdc.encode_value(value, &allocator as &dyn WriterFactory)?;
         unsafe { message_packet.header_mut().out_pointer1.set_slice(res); }
         Ok(())
     }

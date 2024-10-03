@@ -37,13 +37,6 @@ pub trait Decoder<'a> {
     fn mem_manager(&self) -> &'a MemoryManager;
 }
 
-/// Decode a single value.
-pub fn decode<'a, D: Decoder<'a>, V: SchemaValue<'a>>(decoder: &mut D) -> Result<V, DecodeError> {
-    let mut state = V::DecodeState::default();
-    V::visit_decode_state(&mut state, decoder)?;
-    V::finish_decode_state(state, decoder.mem_manager())
-}
-
 /// A decoding error.
 #[derive(Debug)]
 pub enum DecodeError {

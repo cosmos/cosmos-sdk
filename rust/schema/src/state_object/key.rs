@@ -6,13 +6,13 @@ use crate::state_object::value::ObjectValue;
 use crate::state_object::KeyFieldValue;
 
 /// Encode an object key with the given prefix.
-pub fn encode_object_key<'a, K: ObjectKey, F: WriterFactory>(prefix: &[u8], key: &K::In<'a>, writer_factory: F) -> Result<F::Output, EncodeError> {
+pub fn encode_object_key<'a, 'b, K: ObjectKey>(prefix: &[u8], key: &K::In<'a>, writer_factory: &'b dyn WriterFactory) -> Result<&'b [u8], EncodeError> {
     let out_size = <K as ObjectKey>::out_size(key) + prefix.len();
     let mut writer = writer_factory.new_reverse(out_size)?;
     <K as ObjectKey>::encode(key, &mut writer)?;
     // write the prefix last because we are encoding in reverse order
     writer.write(prefix)?;
-    writer.finish()
+    Ok(writer.finish())
 }
 
 /// Decode an object key. This function assumes that the input has already had any prefix stripped.

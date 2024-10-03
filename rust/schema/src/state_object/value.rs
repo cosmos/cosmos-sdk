@@ -1,4 +1,5 @@
 use crate::buffer::{WriterFactory, Writer};
+use crate::codec::ValueEncodeVisitor;
 use crate::decoder::{DecodeError, Decoder};
 use crate::encoder::{EncodeError, Encoder};
 use crate::fields::FieldTypes;
@@ -9,15 +10,15 @@ use crate::structs::{StructDecodeVisitor, StructEncodeVisitor, StructType};
 use crate::value::SchemaValue;
 
 /// Encode an object value.
-pub fn encode_object_value<'a, V: ObjectValue, F: WriterFactory>(value: &V::In<'a>, writer_factory: F) -> Result<F::Output, EncodeError> {
+pub fn encode_object_value<'a, >(value: &dyn ValueEncodeVisitor, writer_factory: &'a dyn WriterFactory) -> Result<&'a [u8], EncodeError> {
     let mut sizer = crate::binary::encoder::EncodeSizer { size: 0 };
     let mut inner = crate::binary::encoder::InnerEncodeSizer { outer: &mut sizer };
-    V::encode(&value, &mut inner)?;
+    value.encode(&mut inner)?;
     let mut writer = writer_factory.new_reverse(sizer.size)?;
     let mut encoder = crate::binary::encoder::Encoder { writer: &mut writer };
     let mut inner = crate::binary::encoder::InnerEncoder { outer: &mut encoder };
-    V::encode(&value, &mut inner)?;
-    writer.finish()
+    value.encode(&mut inner)?;
+    Ok(writer.finish())
 }
 
 /// Decode an object value.

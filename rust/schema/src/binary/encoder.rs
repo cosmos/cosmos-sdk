@@ -3,17 +3,18 @@ use crate::encoder::{EncodeError};
 use crate::structs::{StructDecodeVisitor, StructEncodeVisitor, StructType};
 use crate::value::SchemaValue;
 use crate::buffer::{Writer, WriterFactory};
+use crate::codec::ValueEncodeVisitor;
 use crate::list::ListEncodeVisitor;
 use crate::r#enum::EnumType;
 use crate::state_object::ObjectValue;
 
-pub fn encode_value<'a, V: SchemaValue<'a>, F: WriterFactory>(value: &V, writer_factory: F) -> Result<F::Output, EncodeError> {
+pub fn encode_value<'a>(value: &dyn ValueEncodeVisitor, writer_factory: &'a dyn WriterFactory) -> Result<&'a [u8], EncodeError> {
     let mut sizer = EncodeSizer { size: 0 };
-    <V as SchemaValue<'a>>::encode(value, &mut sizer)?;
+    value.encode(&mut sizer)?;
     let mut writer = writer_factory.new_reverse(sizer.size)?;
     let mut encoder = Encoder { writer: &mut writer };
-    <V as SchemaValue<'a>>::encode(value, &mut encoder)?;
-    writer.finish()
+    value.encode(&mut encoder)?;
+    Ok(writer.finish())
 }
 
 pub(crate) struct Encoder<'a, W> {

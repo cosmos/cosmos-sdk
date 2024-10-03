@@ -6,7 +6,7 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	// pseudo version lower than the latest tag
-	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.3.0.20240926131628-f927e9b55173 // main
+	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.4 // main
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214 // main
 	cosmossdk.io/x/bank => ../../../x/bank
@@ -18,12 +18,12 @@ replace (
 require (
 	cosmossdk.io/api v0.8.0
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab
-	cosmossdk.io/core v1.0.0-alpha.3
+	cosmossdk.io/core v1.0.0-alpha.4
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.4.1
-	cosmossdk.io/server/v2 v2.0.0-20240927165321-7fe95fc3f945 // main
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240920095614-aa90bb43d8f8 // main
-	cosmossdk.io/server/v2/stf v0.0.0-20240926131628-f927e9b55173 // main
+	cosmossdk.io/server/v2 v2.0.0-20241003101412-c5889a418ae2 // main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20241003101412-c5889a418ae2 // main
+	cosmossdk.io/server/v2/stf v0.0.0-20241003101412-c5889a418ae2 // main
 	cosmossdk.io/store/v2 v2.0.0-20240916221850-7856d226038c // main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
@@ -43,6 +43,7 @@ require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.34.2-20240130113600-88ef6483f90f.2 // indirect
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // indirect
 	cosmossdk.io/depinject v1.0.0 // indirect
+	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
 	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
@@ -140,7 +141,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.20.4 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.59.1 // indirect
+	github.com/prometheus/common v0.60.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
@@ -176,18 +177,10 @@ require (
 	golang.org/x/tools v0.25.0 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142 // indirect
-<<<<<<< HEAD
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240924160255-9d4c2d233b61 // indirect
-	google.golang.org/grpc v1.67.0 // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
-=======
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240930140551-af27646dc61f // indirect
 	google.golang.org/grpc v1.67.1 // indirect
->>>>>>> 0f63adee9 (refactor(runtime/v2): untie runtimev2 from the legacy usage of gRPC (#22043))
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 )
-
-require cosmossdk.io/errors v1.0.1 // indirect

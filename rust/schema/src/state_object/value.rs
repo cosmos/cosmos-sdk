@@ -1,3 +1,4 @@
+use crate::binary::encoder::encode_value;
 use crate::buffer::{WriterFactory, Writer};
 use crate::codec::ValueEncodeVisitor;
 use crate::decoder::{DecodeError, Decoder};
@@ -17,18 +18,7 @@ pub fn encode_object_value<'a, V: ObjectValue>(value: &V::In<'a>, writer_factory
             U::encode(self.0, encoder)
         }
     }
-    do_encode_object_value(&Visitor::<V>(value), writer_factory)
-}
-
-fn do_encode_object_value<'a>(value: &dyn ValueEncodeVisitor, writer_factory: &'a dyn WriterFactory) -> Result<&'a [u8], EncodeError> {
-    let mut sizer = crate::binary::encoder::EncodeSizer { size: 0 };
-    let mut inner = crate::binary::encoder::InnerEncodeSizer { outer: &mut sizer };
-    value.encode(&mut inner)?;
-    let mut writer = writer_factory.new_reverse(sizer.size)?;
-    let mut encoder = crate::binary::encoder::Encoder { writer: &mut writer };
-    let mut inner = crate::binary::encoder::InnerEncoder { outer: &mut encoder };
-    value.encode(&mut inner)?;
-    Ok(writer.finish())
+    encode_value(&Visitor::<V>(value), writer_factory)
 }
 
 /// Decode an object value.
@@ -77,7 +67,18 @@ impl<A: ObjectFieldValue> ObjectValue for A {
     const PSEUDO_TYPE: StructType<'static> = unnamed_struct_type::<Self::FieldTypes<'static>>();
 
     fn encode<'a>(value: &Self::In<'a>, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
-        todo!()
+        struct Visitor<'b, A>(&'b A);
+        unsafe impl <'b, 'a:'b, A: SchemaValue<'a>> StructEncodeVisitor for Visitor<'b, A> {
+            fn encode_field(&self, index: usize, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+                match index {
+                    0 => <A as SchemaValue<'a>>::encode(&self.0, encoder),
+                    _ =>
+                        Err(EncodeError::UnknownError),
+                }
+            }
+        }
+
+        encoder.encode_struct(&Visitor(value), &Self::PSEUDO_TYPE)
     }
 
     fn decode<'a>(decoder: &mut dyn Decoder<'a>, mem: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {

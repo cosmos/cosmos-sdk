@@ -42,7 +42,7 @@ func (p Periods) TotalAmount() sdk.Coins {
 
 // String implements the fmt.Stringer interface
 func (p Periods) String() string {
-	periodsListString := make([]string, len(p))
+	periodsListString := make([]string, 0, len(p))
 	for _, period := range p {
 		periodsListString = append(periodsListString, period.String())
 	}

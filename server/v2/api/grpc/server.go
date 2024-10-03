@@ -9,14 +9,18 @@ import (
 	"net"
 	"slices"
 	"strconv"
+	"strings"
+	"sync"
 
-	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -53,7 +57,7 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.L
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
-	methodsMap := appI.GetGPRCMethodsToMessageMap()
+	methodsMap := appI.GetQueryHandlers()
 
 	grpcSrv := grpc.NewServer(
 		grpc.ForceServerCodec(newProtoCodec(appI.InterfaceRegistry()).GRPCCodec()),
@@ -80,21 +84,40 @@ func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 	return flags
 }
 
-func makeUnknownServiceHandler(messageMap map[string]func() proto.Message, querier interface {
-	Query(ctx context.Context, version uint64, msg proto.Message) (proto.Message, error)
+func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier interface {
+	Query(ctx context.Context, version uint64, msg gogoproto.Message) (gogoproto.Message, error)
 },
 ) grpc.StreamHandler {
+	getRegistry := sync.OnceValues(gogoproto.MergedRegistry)
+
 	return func(srv any, stream grpc.ServerStream) error {
 		method, ok := grpc.MethodFromServerStream(stream)
 		if !ok {
 			return status.Error(codes.InvalidArgument, "unable to get method")
 		}
-		makeMsg, exists := messageMap[method]
+		// if this fails we cannot serve queries anymore...
+		registry, err := getRegistry()
+		if err != nil {
+			return fmt.Errorf("failed to get registry: %w", err)
+		}
+		fullName := protoreflect.FullName(strings.ReplaceAll(method, "/", "."))
+		// get descriptor from the invoke method
+		desc, err := registry.FindDescriptorByName(fullName)
+		if err != nil {
+			return fmt.Errorf("failed to find descriptor %s: %w", method, err)
+		}
+		md, ok := desc.(protoreflect.MethodDescriptor)
+		if !ok {
+			return fmt.Errorf("%s is not a method", method)
+		}
+		// find handler
+		handler, exists := handlers[string(md.Input().FullName())]
 		if !exists {
 			return status.Errorf(codes.Unimplemented, "gRPC method %s is not handled", method)
 		}
+
 		for {
-			req := makeMsg()
+			req := handler.MakeMsg()
 			err := stream.RecvMsg(req)
 			if err != nil {
 				if errors.Is(err, io.EOF) {

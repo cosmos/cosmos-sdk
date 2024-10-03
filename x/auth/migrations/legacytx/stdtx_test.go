@@ -44,7 +44,11 @@ func TestStdSignBytes(t *testing.T) {
 		Amount:   []*basev1beta1.Coin{{Denom: "atom", Amount: "150"}},
 		GasLimit: 100000,
 	}
+<<<<<<< HEAD
 	msgStr := fmt.Sprintf(`{"type":"testpb/TestMsg","value":{"signers":["%s"]}}`, addr)
+=======
+	msgStr := fmt.Sprintf(`{"type":"testpb/TestMsg","value":{"decField":"0.000000000000000000","signers":["%s"]}}`, addr)
+>>>>>>> 2d40cc1ab (fix(x/tx): fix amino json drift from legacy spec (#21825))
 	tests := []struct {
 		name string
 		args args

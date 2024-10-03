@@ -589,14 +589,7 @@ The bank module contains the following parameters
 
 ### SendEnabled
 
-The SendEnabled parameter is now deprecated and not to be use. It is replaced
-with state store records.
-
-:::warning
-Note, SendEnabled is depreacted and only kept for backward compatibility.
-For genesis, use the newly added send_enabled field in the genesis object.
-Storage, lookup, and manipulation of this information is now in the keeper.
-:::
+SendEnabled is depreacted and only kept for backward compatibility. For genesis, use the newly added send_enabled field in the genesis object. Storage, lookup, and manipulation of this information is now in the keeper.
 
 ### DefaultSendEnabled
 

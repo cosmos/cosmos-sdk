@@ -9,17 +9,34 @@ import (
 	"cosmossdk.io/store/v2/db"
 )
 
+// Builder is the interface for a store/v2 RootStore builder.
+// RootStores built by the Cosmos SDK typically involve a 2 phase initialization:
+//  1. Namespace registration
+//  2. Configuration and loading
+//
+// The Builder interface is used to facilitate this pattern.  Namespaces (store keys) are registered
+// by calling RegisterNamespace before Build is called.  Build is then called with a Config
+// object and a RootStore is returned.  Calls to Get may return the `RootStore` if Build
+// was successful, but that's left up to the implementation.
 type Builder interface {
+	// Build creates a new store/v2 RootStore from the given Config.
 	Build(log.Logger, *Config) (store.RootStore, error)
-	RegisterKey(key string)
+	// RegisterKey registers a store key (namespace) to be used when building the RootStore.
+	RegisterKey(string)
+	// Get returns the Store.  Build should be called before calling Get or the result will be nil.
 	Get() store.RootStore
+}
+
+// NamespaceOptions are options for registering a namespace.
+type NamespaceOptions struct {
+	CommitmentType string
 }
 
 var _ Builder = (*builder)(nil)
 
-// builder is a builder for a store/v2 RootStore satisfying the Store interface
-// which is primarily used by depinject to assemble the store/v2 RootStore.  Users not using
-// depinject should use the Factory called in Build directly.
+// builder is the default builder for a store/v2 RootStore satisfying the Store interface.
+// Tangibly it combines store key registration and a top-level Config to create a RootStore by calling
+// the CreateRootStore factory function.
 type builder struct {
 	// input
 	storeKeys map[string]struct{}
@@ -74,7 +91,6 @@ func (sb *builder) Build(
 	return sb.store, nil
 }
 
-// Get returns the Store.  Build must be called before calling Get or the result will be nil.
 func (sb *builder) Get() store.RootStore {
 	return sb.store
 }

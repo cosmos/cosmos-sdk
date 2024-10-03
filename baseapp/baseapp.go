@@ -713,6 +713,15 @@ func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) ([]abci.Event, erro
 		ctx = ctx.WithBlockGasMeter(gasMeter)
 		app.finalizeBlockState.SetContext(ctx)
 		events = ctx.EventManager().ABCIEvents()
+
+		// append PreBlock attributes to all events
+		for i, event := range events {
+			events[i].Attributes = append(
+				event.Attributes,
+				abci.EventAttribute{Key: "mode", Value: "PreBlock"},
+				abci.EventAttribute{Key: "event_index", Value: strconv.Itoa(i)},
+			)
+		}
 	}
 	return events, nil
 }
@@ -734,6 +743,7 @@ func (app *BaseApp) beginBlock(_ *abci.FinalizeBlockRequest) (sdk.BeginBlock, er
 			resp.Events[i].Attributes = append(
 				event.Attributes,
 				abci.EventAttribute{Key: "mode", Value: "BeginBlock"},
+				abci.EventAttribute{Key: "event_index", Value: strconv.Itoa(i)},
 			)
 		}
 
@@ -796,6 +806,7 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 			eb.Events[i].Attributes = append(
 				event.Attributes,
 				abci.EventAttribute{Key: "mode", Value: "EndBlock"},
+				abci.EventAttribute{Key: "event_index", Value: strconv.Itoa(i)},
 			)
 		}
 
@@ -1088,6 +1099,12 @@ func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, reflectMsg pr
 		if moduleName := sdk.GetModuleNameFromTypeURL(eventMsgName); moduleName != "" {
 			msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeyModule, moduleName))
 		}
+	}
+
+	// append the event_index attribute to all events
+	msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute("event_index", "0"))
+	for i, event := range events {
+		events[i] = event.AppendAttributes(sdk.NewAttribute("event_index", strconv.Itoa(i+1)))
 	}
 
 	return sdk.Events{msgEvent}.AppendEvents(events), nil

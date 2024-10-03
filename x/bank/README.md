@@ -272,7 +272,7 @@ The composition will short-circuit when an error is encountered. I.e. if the fir
 Send restrictions can also be cleared by using `ClearSendRestriction`.
 
 During `SendCoins`, the send restriction is applied before coins are removed from the `from_address` and adding them to the `to_address`.
-During `InputOutputCoins`, the send restriction is applied after the input coins are removed, once for each output before the funds are added.
+During `InputOutputCoins`, the send restriction is applied before the input coins are removed, once for each output before the funds are added.
 
 Send Restrictions are not placed on `ModuleToAccount` or `ModuleToModule` transfers. This is done due to modules needing to move funds to user accounts and other module accounts. This is a design decision to allow for more flexibility in the state machine. The state machine should be able to move funds between module accounts and user accounts without restrictions.
 

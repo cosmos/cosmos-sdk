@@ -17,14 +17,12 @@ pub trait KeyFieldValue: ObjectFieldValue {
     }
 
     /// Decode the key segment as a non-terminal segment.
-    // TODO: make object safe
-    fn decode<'a, R: Reader<'a>>(reader: &mut R, memory_manager: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
+    fn decode<'a>(reader: &mut &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
         unimplemented!("decode")
     }
 
     /// Decode the key segment as the terminal segment.
-    // TODO: make object safe
-    fn decode_terminal<'a, R: Reader<'a>>(reader: &mut R, memory_manager: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
+    fn decode_terminal<'a>(reader: &mut &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
         Self::decode(reader, memory_manager)
     }
 

@@ -7,22 +7,21 @@ sidebar_position: 1
 `cosmovisor` is a process manager for Cosmos SDK application binaries that automates application binary switch at chain upgrades.
 It polls the `upgrade-info.json` file that is created by the x/upgrade module at upgrade height, and then can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
-* [Cosmovisor](#cosmovisor)
-  * [Design](#design)
-  * [Contributing](#contributing)
-  * [Setup](#setup)
+* [Design](#design)
+* [Contributing](#contributing)
+* [Setup](#setup)
     * [Installation](#installation)
     * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
     * [Folder Layout](#folder-layout)
-  * [Usage](#usage)
+* [Usage](#usage)
     * [Initialization](#initialization)
     * [Detecting Upgrades](#detecting-upgrades)
     * [Adding Upgrade Binary](#adding-upgrade-binary)
-    * [Preparing for an Upgrade](#preparing-for-an-upgrade)
     * [Auto-Download](#auto-download)
-  * [Example: SimApp Upgrade](#example-simapp-upgrade)
+    * [Preparing for an Upgrade](#preparing-for-an-upgrade)
+* [Example: SimApp Upgrade](#example-simapp-upgrade)
     * [Chain Setup](#chain-setup)
-      * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
+        * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
     * [Update App](#update-app)
 
 ## Design

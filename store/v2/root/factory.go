@@ -42,13 +42,19 @@ type Options struct {
 	IavlConfig      *iavl.Config         `mapstructure:"iavl-config" toml:"iavl-config"`
 }
 
+// Namespace is a store key and its commitment structure.
+type Namespace struct {
+	Name      string
+	Structure string
+}
+
 // FactoryOptions are the options for creating a root store.
 type FactoryOptions struct {
-	Logger    log.Logger
-	RootDir   string
-	Options   Options
-	StoreKeys []string
-	SCRawDB   corestore.KVStoreWithBatch
+	Logger     log.Logger
+	RootDir    string
+	Options    Options
+	Namespaces []Namespace
+	SCRawDB    corestore.KVStoreWithBatch
 }
 
 // DefaultStoreOptions returns the default options for creating a root store.
@@ -122,7 +128,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(opts.StoreKeys) == 0 {
+	if len(opts.Namespaces) == 0 {
 		lastCommitInfo, err := metadata.GetCommitInfo(latestVersion)
 		if err != nil {
 			return nil, err
@@ -131,7 +137,10 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 			return nil, fmt.Errorf("tried to construct a root store with no store keys specified but no commit info found for version %d", latestVersion)
 		}
 		for _, si := range lastCommitInfo.StoreInfos {
-			opts.StoreKeys = append(opts.StoreKeys, string(si.Name))
+			opts.Namespaces = append(opts.Namespaces, Namespace{
+				Name:      string(si.Name),
+				Structure: si.Structure,
+			})
 		}
 	}
 	removedStoreKeys, err := metadata.GetRemovedStoreKeys(latestVersion)
@@ -139,13 +148,17 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		return nil, err
 	}
 
-	newTreeFn := func(key string) (commitment.Tree, error) {
-		if internal.IsMemoryStoreKey(key) {
+	newTreeFn := func(ns Namespace) (commitment.Tree, error) {
+		if internal.IsMemoryStoreKey(string(ns.Name)) {
 			return mem.New(), nil
 		} else {
-			switch storeOpts.SCType {
+			scType := storeOpts.SCType
+			if ns.Structure != "" {
+				scType = SCType(ns.Structure)
+			}
+			switch scType {
 			case SCTypeIavl:
-				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, storeOpts.IavlConfig), nil
+				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(ns.Name)), opts.Logger, storeOpts.IavlConfig), nil
 			case SCTypeIavlV2:
 				return nil, errors.New("iavl v2 not supported")
 			default:
@@ -154,17 +167,18 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		}
 	}
 
-	trees := make(map[string]commitment.Tree, len(opts.StoreKeys))
-	for _, key := range opts.StoreKeys {
-		tree, err := newTreeFn(key)
+	trees := make(map[string]commitment.Tree, len(opts.Namespaces))
+	for _, ns := range opts.Namespaces {
+		tree, err := newTreeFn(ns)
 		if err != nil {
 			return nil, err
 		}
-		trees[key] = tree
+		trees[ns.Name] = tree
 	}
-	oldTrees := make(map[string]commitment.Tree, len(opts.StoreKeys))
+	oldTrees := make(map[string]commitment.Tree, len(opts.Namespaces))
 	for _, key := range removedStoreKeys {
-		tree, err := newTreeFn(string(key))
+		// TODO: removedStoreKeys must store commitment type or have a way to recover it
+		tree, err := newTreeFn(Namespace{Name: string(key), Structure: "iavl"})
 		if err != nil {
 			return nil, err
 		}

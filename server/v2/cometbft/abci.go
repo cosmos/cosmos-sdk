@@ -64,6 +64,7 @@ type Consensus[T transaction.Tx] struct {
 	processProposalHandler handlers.ProcessHandler[T]
 	verifyVoteExt          handlers.VerifyVoteExtensionhandler
 	extendVote             handlers.ExtendVoteHandler
+	checkTxHandler         handlers.CheckTxHandler[T]
 
 	addrPeerFilter types.PeerFilter // filter peers by address and port
 	idPeerFilter   types.PeerFilter // filter peers by node ID
@@ -136,31 +137,35 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		return nil, err
 	}
 
-	resp, err := c.app.ValidateTx(ctx, decodedTx)
-	// we do not want to return a cometbft error, but a check tx response with the error
-	if err != nil && !errors.Is(err, resp.Error) {
-		return nil, err
+	if c.checkTxHandler == nil {
+		resp, err := c.app.ValidateTx(ctx, decodedTx)
+		// we do not want to return a cometbft error, but a check tx response with the error
+		if err != nil && !errors.Is(err, resp.Error) {
+			return nil, err
+		}
+
+		events, err := intoABCIEvents(resp.Events, c.indexedEvents)
+		if err != nil {
+			return nil, err
+		}
+
+		cometResp := &abciproto.CheckTxResponse{
+			Code:      0,
+			GasWanted: uint64ToInt64(resp.GasWanted),
+			GasUsed:   uint64ToInt64(resp.GasUsed),
+			Events:    events,
+		}
+		if resp.Error != nil {
+			space, code, log := errorsmod.ABCIInfo(resp.Error, c.cfg.AppTomlConfig.Trace)
+			cometResp.Code = code
+			cometResp.Codespace = space
+			cometResp.Log = log
+		}
+
+		return cometResp, nil
 	}
 
-	events, err := intoABCIEvents(resp.Events, c.indexedEvents)
-	if err != nil {
-		return nil, err
-	}
-
-	cometResp := &abciproto.CheckTxResponse{
-		Code:      0,
-		GasWanted: uint64ToInt64(resp.GasWanted),
-		GasUsed:   uint64ToInt64(resp.GasUsed),
-		Events:    events,
-	}
-	if resp.Error != nil {
-		space, code, log := errorsmod.ABCIInfo(resp.Error, c.cfg.AppTomlConfig.Trace)
-		cometResp.Code = code
-		cometResp.Codespace = space
-		cometResp.Log = log
-	}
-
-	return cometResp, nil
+	return c.checkTxHandler(c.app.ValidateTx)
 }
 
 // Info implements types.Application.

@@ -1,5 +1,4 @@
 use alloc::string::String;
-use bump_scope::{BumpScope, BumpString};
 use ixc_message_api::AccountID;
 use crate::decoder::{decode, DecodeError};
 use crate::list::ListDecodeVisitor;
@@ -151,7 +150,6 @@ mod tests {
 
     use alloc::vec;
     use allocator_api2::alloc::Allocator;
-    use bump_scope::{Bump, BumpScope};
     use crate::binary::decoder::decode_value;
     use crate::binary::encoder::encode_value;
     use crate::decoder::{DecodeError, Decoder};

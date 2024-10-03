@@ -132,6 +132,7 @@ impl TestApp {
     pub fn client_context_for(&mut self, account_id: AccountID) -> Context
     {
         let packet = self.mem.allocate_packet(0).unwrap();
+        packet.header_mut().account = account_id;
         let ctx = Context::new(packet, self);
         ctx
     }

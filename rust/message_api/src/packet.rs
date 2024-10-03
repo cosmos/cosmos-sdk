@@ -16,7 +16,7 @@ impl MessagePacket {
 
     /// Returns the message header.
     pub fn header(&self) -> &MessageHeader {
-        unsafe { &*(self.data as *const MessageHeader) }
+        unsafe { &*self.data }
     }
 
     /// Returns a mutable reference to the message header.

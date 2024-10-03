@@ -4,10 +4,10 @@ use core::alloc::Layout;
 use allocator_api2::alloc::{AllocError, Allocator};
 use allocator_api2::boxed::Box;
 use allocator_api2::vec::Vec;
-use bump_scope::Bump;
 use core::cell::Cell;
 use core::mem::transmute;
 use core::ptr::{drop_in_place, NonNull};
+use bumpalo::Bump;
 use ixc_message_api::header::{MessageHeader, MESSAGE_HEADER_SIZE};
 use ixc_message_api::packet::MessagePacket;
 
@@ -62,7 +62,7 @@ impl MemoryManager {
                 align_of::<MessageHeader>(),
             )
         };
-        let header_ptr = self.bump.allocate_zeroed(layout)?;
+        let header_ptr = (&self.bump).allocate_zeroed(layout)?;
         let header_ptr: *mut MessageHeader = header_ptr.cast().as_ptr();
         let packet = unsafe { MessagePacket::new(header_ptr, size) };
         let packet_ref: &MessagePacket = &packet;
@@ -73,27 +73,27 @@ impl MemoryManager {
 
 unsafe impl Allocator for MemoryManager {
     fn allocate(&self, layout: Layout) -> Result<NonNull<[u8]>, AllocError> {
-        self.bump.allocate(layout)
+        (&self.bump).allocate(layout)
     }
 
     fn allocate_zeroed(&self, layout: Layout) -> Result<NonNull<[u8]>, AllocError> {
-        self.bump.allocate_zeroed(layout)
+        (&self.bump).allocate_zeroed(layout)
     }
 
     unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout) {
-        self.bump.deallocate(ptr, layout)
+        (&self.bump).deallocate(ptr, layout)
     }
 
     unsafe fn grow(&self, ptr: NonNull<u8>, old_layout: Layout, new_layout: Layout) -> Result<NonNull<[u8]>, AllocError> {
-        self.bump.grow(ptr, old_layout, new_layout)
+        (&self.bump).grow(ptr, old_layout, new_layout)
     }
 
     unsafe fn grow_zeroed(&self, ptr: NonNull<u8>, old_layout: Layout, new_layout: Layout) -> Result<NonNull<[u8]>, AllocError> {
-        self.bump.grow_zeroed(ptr, old_layout, new_layout)
+        (&self.bump).grow_zeroed(ptr, old_layout, new_layout)
     }
 
     unsafe fn shrink(&self, ptr: NonNull<u8>, old_layout: Layout, new_layout: Layout) -> Result<NonNull<[u8]>, AllocError> {
-        self.bump.shrink(ptr, old_layout, new_layout)
+        (&self.bump).shrink(ptr, old_layout, new_layout)
     }
 }
 

@@ -14,7 +14,7 @@ workspace = true
 ixc_message_api = { path = "../message_api" }
 ixc_schema_macros = { path = "../schema_macros" }
 simple_time = { path = "../util/simple_time", version = "0.0.1" }
-bump-scope = "0.9.0"
+bumpalo = { version = "3.16.0", features = ["allocator-api2"] }
 allocator-api2 = "0.2.18"
 num_enum = "0.7.3"
 impl-trait-for-tuples = "0.2.2"

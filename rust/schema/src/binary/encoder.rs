@@ -1,4 +1,3 @@
-use bump_scope::BumpScope;
 use ixc_message_api::AccountID;
 use crate::encoder::{EncodeError};
 use crate::structs::{StructDecodeVisitor, StructEncodeVisitor, StructType};
@@ -214,7 +213,6 @@ impl<'a> crate::encoder::Encoder for InnerEncodeSizer<'a> {
 #[cfg(test)]
 mod tests {
     use allocator_api2::alloc::Allocator;
-    use bump_scope::Bump;
     use crate::binary::encoder::encode_value;
     use crate::encoder::Encoder;
     use crate::mem::MemoryManager;

@@ -24,7 +24,6 @@ sidebar_position: 1
 * [Events](#events)
 * [Queries](#queries)
 * [Keeper Functions](#keeper-functions)
-* [Module Architecture](#module-architecture)
 
 ## Concepts
 

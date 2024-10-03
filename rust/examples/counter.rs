@@ -39,13 +39,9 @@ pub mod counter {
         }
 
         // #[publish]
-        pub fn inc(&mut self, ctx: &mut Context) -> Result<()> {
+        pub fn inc(&self, ctx: &mut Context) -> Result<()> {
             let value = self.value.get(ctx)?;
-            let new_value = value.checked_add(1).ok_or(
-                // fmt_error!("overflow when incrementing counter")
-                todo!()
-            )?;
-            self.value.set(ctx, new_value)
+            self.value.set(ctx, value + 1)
         }
     }
 
@@ -58,12 +54,9 @@ pub mod counter {
     }
 
     const GET_SELECTOR: MessageSelector = message_selector!("get");
+    const INC_SELECTOR: MessageSelector = message_selector!("inc");
 
     impl CounterClient {
-        pub fn inc(&mut self, ctx: &mut Context) -> Result<()> {
-            todo!()
-        }
-
         pub fn get(&self, ctx: &Context) -> ixc_core::Result<u64> {
             let mut packet = create_packet(ctx, self.0, GET_SELECTOR)?;
             unsafe {
@@ -75,6 +68,14 @@ pub mod counter {
                     .map_err(|e| ())?;
                     // .map_err(|e| fmt_error!("decoding error: {:?}", e))?;
                 Ok(value)
+            }
+        }
+
+        pub fn inc(&self, ctx: &mut Context) -> Result<()> {
+            let mut packet = create_packet(ctx, self.0, INC_SELECTOR)?;
+            unsafe {
+                ctx.host_backend().invoke(&mut packet, ctx.memory_manager())
+                    .map_err(|e| ())
             }
         }
     }
@@ -94,7 +95,11 @@ pub mod counter {
                     <u64 as OptionalValue<'_>>::encode_value(&NativeBinaryCodec::default(), &res, packet, a).
                         map_err(|e| HandlerError::Custom(0))
                 }),
-                // (message_selector!("inc"), |counter, ctx| counter.inc(ctx)),
+                (INC_SELECTOR, |counter: &Counter, packet, cb, a| {
+                    let mut context = Context::new(packet, cb);
+                    counter.inc(&mut context).
+                        map_err(|e| HandlerError::Custom(0))
+                }),
             ]);
     }
 
@@ -117,13 +122,10 @@ mod tests {
         let counter_client = create_account::<Counter>(&mut alice_ctx, &()).unwrap();
         let cur = counter_client.get(&alice_ctx).unwrap();
         assert_eq!(cur, 42);
+        counter_client.inc(&mut alice_ctx).unwrap();
+        let cur = counter_client.get(&alice_ctx).unwrap();
+        assert_eq!(cur, 43);
     }
-}
-
-// #[cfg(target_arch = "wasm32")]
-#[no_mangle]
-pub extern fn exec() -> u32 {
-    0
 }
 
 package_root!(counter::Counter);

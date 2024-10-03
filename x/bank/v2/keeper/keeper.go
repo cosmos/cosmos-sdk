@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/address"

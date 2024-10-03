@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -37,6 +38,12 @@ func run(cfgPath string, args []string, options ...RunOption) error {
 	runCfg := DefaultRunConfig
 	for _, opt := range options {
 		opt(&runCfg)
+	}
+
+	// set current working directory to $DAEMON_NAME/cosmosvisor
+	// to allow current symlink to be relative
+	if err = os.Chdir(cfg.Root()); err != nil {
+		return err
 	}
 
 	logger := cfg.Logger(runCfg.StdOut)

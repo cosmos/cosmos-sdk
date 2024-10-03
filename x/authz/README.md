@@ -38,12 +38,12 @@ The `x/authz` module defines interfaces and messages grant authorizations to per
 on behalf of one account to other accounts. The design is defined in the [ADR 030](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-030-authz-module.md).
 
 A *grant* is an allowance to execute a Msg by the grantee on behalf of the granter.
-Authorization is an interface that must be implemented by a concrete authorization logic to validate and execute grants. Authorizations are extensible and can be defined for any Msg service method even outside of the module where the Msg method is defined. See the `SendAuthorization` example in the next section for more details.
+Authorization is an interface that must be implemented by a concrete authorization logic to validate and execute grants. Authorizations are extensible and can be defined for any Msg service method, even if the Msg method is defined outside of the module. See the `SendAuthorization` example in the next section for more details.
 
-**Note:** The authz module is different from the [auth (authentication)](../modules/auth/) module that is responsible for specifying the base transaction and account types.
+**Note:** The authz module is different from the [auth (authentication)](../modules/auth/) module, which is responsible for specifying the base transaction and account types.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/authz/authorizations.go#L11-L25
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/authz/authorizations.go#L14-L28
 ```
 
 ### Built-in Authorizations
@@ -55,11 +55,11 @@ The Cosmos SDK `x/authz` module comes with following authorization types:
 `GenericAuthorization` implements the `Authorization` interface that gives unrestricted permission to execute the provided Msg on behalf of granter's account.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/authz/v1beta1/authz.proto#L14-L22
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/authz/proto/cosmos/authz/v1beta1/authz.proto#L14-L22
 ```
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/authz/generic_authorization.go#L16-L29
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/authz/generic_authorization.go#L18-L34
 ```
 
 * `msg` stores Msg type URL.
@@ -72,11 +72,11 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/authz/generic_authorizat
 * It takes an (optional) `AllowList` that specifies to which addresses a grantee can send token.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/authz.proto#L11-L30
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/bank/proto/cosmos/bank/v1beta1/authz.proto#L11-L29
 ```
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/bank/types/send_authorization.go#L29-L62
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/bank/types/send_authorization.go#L33-L73
 ```
 
 * `spend_limit` keeps track of how many coins are left in the authorization.
@@ -84,21 +84,21 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/bank/types/send_authoriz
 
 #### StakeAuthorization
 
-`StakeAuthorization` implements the `Authorization` interface for messages in the [staking module](https://docs.cosmos.network/main/build/modules/staking). It takes an `AuthorizationType` to specify whether you want to authorise delegating, undelegating or redelegating (i.e. these have to be authorised separately). It also takes an optional `MaxTokens` that keeps track of a limit to the amount of tokens that can be delegated/undelegated/redelegated. If left empty, the amount is unlimited. Additionally, this Msg takes an `AllowList` or a `DenyList`, which allows you to select which validators you allow or deny grantees to stake with.
+`StakeAuthorization` implements the `Authorization` interface for messages in the [staking module](https://docs.cosmos.network/main/build/modules/staking). It takes an `AuthorizationType` to specify whether you want to authorize delegation, undelegation, redelegation or cancel unbonding delegation, each of which must be authorized separately. It also takes an optional `MaxTokens` that keeps track of a limit to the amount of tokens that can be delegated/undelegated/redelegated. If left empty, the amount is unlimited. Additionally, this Msg takes an `AllowList` or a `DenyList`, enabling you to specify which validators the grantee can or cannot stake with.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1beta1/authz.proto#L11-L35
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/staking/proto/cosmos/staking/v1beta1/authz.proto#L11-L34
 ```
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/staking/types/authz.go#L15-L35
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/staking/types/authz.go#L78-L166
 ```
 
 ### Gas
 
-In order to prevent DoS attacks, granting `StakeAuthorization`s with `x/authz` incurs gas. `StakeAuthorization` allows you to authorize another account to delegate, undelegate, or redelegate to validators. The authorizer can define a list of validators they allow or deny delegations to. The Cosmos SDK iterates over these lists and charge 10 gas for each validator in both of the lists.
+To prevent DoS attacks, granting `StakeAuthorization`s with `x/authz` incurs gas. `StakeAuthorization` allows you to authorize another account to delegate, undelegate, or redelegate tokens to validators. The granter can define a list of validators for which they allow or deny delegations. The Cosmos SDK then iterates over these lists and charge 10 gas for each validator included in both lists.
 
-Since the state maintaining a list for granter, grantee pair with same expiration, we are iterating over the list to remove the grant (in case of any revoke of particular `msgType`) from the list and we are charging 20 gas per iteration.
+Since the state maintains a list of granter-grantee pairs with same expiration, we iterate over this list to remove the grant from the list (in case of any revoke of particular `msgType`), charging 20 gas for each iteration.
 
 ## State
 
@@ -111,17 +111,17 @@ Grants are identified by combining granter address (the address bytes of the gra
 The grant object encapsulates an `Authorization` type and an expiration timestamp:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/authz/v1beta1/authz.proto#L24-L32
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/authz/proto/cosmos/authz/v1beta1/authz.proto#L24-L32
 ```
 
 ### GrantQueue
 
 We are maintaining a queue for authz pruning. Whenever a grant is created, an item will be added to `GrantQueue` with a key of expiration, granter, grantee.
 
-In `EndBlock` (which runs for every block) we continuously check and prune the expired grants by forming a prefix key with current blocktime that passed the stored expiration in `GrantQueue`, we iterate through all the matched records from `GrantQueue` and delete them from the `GrantQueue` & `Grant`s store.
+In `EndBlock` (which runs for every block) we continuously check and prune the expired grants by forming a prefix key with current blocktime that passed the stored expiration in `GrantQueue`, we iterate through all the matched records from `GrantQueue` and delete maximum of 200 grants from the `GrantQueue` & `Grant`s store for each run.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/5f4ddc6f80f9707320eec42182184207fff3833a/x/authz/keeper/keeper.go#L378-L403
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/authz/keeper/keeper.go#L479-L520
 ```
 
 * GrantQueue: `0x02 | expiration_bytes | granter_address_len (1 byte) | granter_address_bytes | grantee_address_len (1 byte) | grantee_address_bytes -> ProtocolBuffer(GrantQueueItem)`
@@ -129,7 +129,7 @@ https://github.com/cosmos/cosmos-sdk/blob/5f4ddc6f80f9707320eec42182184207fff383
 The `expiration_bytes` are the expiration date in UTC with the format `"2006-01-02T15:04:05.000000000"`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/authz/keeper/keys.go#L77-L93
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/authz/keeper/keys.go#L84-L100
 ```
 
 The `GrantQueueItem` object contains the list of type urls between granter and grantee that expire at the time indicated in the key.
@@ -146,7 +146,7 @@ If there is already a grant for the `(granter, grantee, Authorization)` triple, 
 An authorization grant for authz `MsgGrant` is not allowed and will return an error. This is for preventing user from accidentally authorizing their entire account to a different account.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/authz/v1beta1/tx.proto#L35-L45
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/authz/proto/cosmos/authz/v1beta1/tx.proto#L45-L55
 ```
 
 The message handling should fail if:
@@ -161,7 +161,7 @@ The message handling should fail if:
 A grant can be removed with the `MsgRevoke` message.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/authz/v1beta1/tx.proto#L69-L78
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/authz/proto/cosmos/authz/v1beta1/tx.proto#L79-L88
 ```
 
 The message handling should fail if:
@@ -176,7 +176,7 @@ NOTE: The `MsgExec` message removes a grant if the grant has expired.
 The `MsgRevokeAll` message revokes all grants issued by the specified granter. This is useful for quickly removing all authorizations granted by a single granter without specifying individual message types or grantees.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/tree/main/x/authz/proto/cosmos/authz/v1beta1/tx.proto#L93-L100
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/authz/proto/cosmos/authz/v1beta1/tx.proto#L93-L100
 ```
 
 The message handling should fail if:
@@ -189,7 +189,7 @@ The message handling should fail if:
 When a grantee wants to execute a transaction on behalf of a granter, they must send `MsgExec`.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/authz/v1beta1/tx.proto#L52-L63
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/authz/proto/cosmos/authz/v1beta1/tx.proto#L60-L72
 ```
 
 The message handling should fail if:
@@ -314,6 +314,20 @@ Example:
 simd tx authz revoke cosmos1.. /cosmos.bank.v1beta1.MsgSend --from=cosmos1..
 ```
 
+##### revoke-all
+
+The `revoke-all` command allows a granter to revoke all authorizations created by the granter.
+
+```bash
+simd tx authz revoke-all --from=[granter] [flags]
+```
+
+Example:
+
+```bash
+simd tx authz revoke-all --from=cosmos1..
+```
+
 ### gRPC
 
 A user can query the `authz` module using gRPC endpoints.
@@ -335,27 +349,6 @@ grpcurl -plaintext \
     cosmos.authz.v1beta1.Query/Grants
 ```
 
-Example Output:
-
-```bash
-{
-  "grants": [
-    {
-      "authorization": {
-        "@type": "/cosmos.bank.v1beta1.SendAuthorization",
-        "spendLimit": [
-          {
-            "denom":"stake",
-            "amount":"100"
-          }
-        ]
-      },
-      "expiration": "2022-01-01T00:00:00Z"
-    }
-  ]
-}
-```
-
 ### REST
 
 A user can query the `authz` module using REST endpoints.
@@ -368,26 +361,4 @@ Example:
 
 ```bash
 curl "localhost:1317/cosmos/authz/v1beta1/grants?granter=cosmos1..&grantee=cosmos1..&msg_type_url=/cosmos.bank.v1beta1.MsgSend"
-```
-
-Example Output:
-
-```bash
-{
-  "grants": [
-    {
-      "authorization": {
-        "@type": "/cosmos.bank.v1beta1.SendAuthorization",
-        "spend_limit": [
-          {
-            "denom": "stake",
-            "amount": "100"
-          }
-        ]
-      },
-      "expiration": "2022-01-01T00:00:00Z"
-    }
-  ],
-  "pagination": null
-}
 ```

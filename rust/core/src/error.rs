@@ -30,14 +30,16 @@ pub struct ErrorMessage {
 }
 
 impl ErrorMessage {
-    fn new(msg: String) -> Self {
+    /// Create a new error message.
+    pub fn new(msg: String) -> Self {
         ErrorMessage {
             #[cfg(feature = "std")]
             msg,
         }
     }
 
-    fn new_fmt(args: core::fmt::Arguments<'_>) -> Self {
+    /// Format a new error message.
+    pub fn new_fmt(args: core::fmt::Arguments<'_>) -> Self {
         #[cfg(feature = "std")]
         let mut message = String::new();
         core::fmt::write(&mut message, args).unwrap();
@@ -89,7 +91,7 @@ impl<'a> SchemaValue<'a> for ErrorMessage {
 #[macro_export]
 macro_rules! fmt_error {
     ($($arg:tt)*) => {
-        $crate::error::ErrorMessage::new(core::format_args!($($arg)*))
+        $crate::error::ErrorMessage::new_fmt(core::format_args!($($arg)*))
     };
 }
 

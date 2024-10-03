@@ -14,16 +14,18 @@ use crate::message::Message;
 /// Static account client instances should be preferred wherever possible,
 /// so that static dependency analysis can be performed.
 pub unsafe fn dynamic_invoke<'a, 'b, M: Message<'b>>(context: &'a Context, account: AccountID, message: M)
-                                                 -> crate::Result<<M::Response<'a> as OptionalValue<'a>>::Value, M::Error> {
+                                                     -> crate::Result<<M::Response<'a> as OptionalValue<'a>>::Value> {
     // encode the message body
     let mem = context.memory_manager();
     let cdc = M::Codec::default();
-    let msg_body = cdc.encode_value(&message, mem).
-        map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+    let msg_body = cdc.encode_value(&message, mem)
+        // map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+        .map_err(|_| ())?;
 
     // create the message packet and fill in call details
     let mut packet = create_packet(context, account, M::SELECTOR)
-        .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+        // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+        .map_err(|_| ())?;
     let header = packet.header_mut();
     header.in_pointer1.set_slice(msg_body);
 
@@ -33,12 +35,14 @@ pub unsafe fn dynamic_invoke<'a, 'b, M: Message<'b>>(context: &'a Context, accou
 
     match res {
         Ok(_) => {
-            let res = M::Response::<'a>::decode_value(&cdc, &packet, mem).
-                map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+            let res = M::Response::<'a>::decode_value(&cdc, &packet, mem)
+                // map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+                .map_err(|_| ())?;
             Ok(res)
         }
         Err(_) => {
-            todo!()
+            //TODO
+            Err(())
         }
     }
 }
@@ -47,7 +51,8 @@ pub unsafe fn dynamic_invoke<'a, 'b, M: Message<'b>>(context: &'a Context, accou
 pub fn create_packet<'a>(context: &'a Context, account: AccountID, selector: u64) -> Result<MessagePacket<'a>> {
     unsafe {
         let packet = MessagePacket::allocate(context.memory_manager(), 0)
-            .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+            // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+            .map_err(|_| ())?;
         let header = packet.header_mut();
         header.sender_account = context.account_id();
         header.account = account;

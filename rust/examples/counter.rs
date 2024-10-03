@@ -1,21 +1,26 @@
 #![allow(missing_docs)]
 
+use crate::counter::{Counter, CounterClient};
 use ixc_core::account_api::ON_CREATE_SELECTOR;
-use ixc_core::Context;
 use ixc_core::handler::{ClientFactory, Handler, HandlerAPI};
-use ixc_core::resource::{InitializationError, ResourceScope, Resources, StateObject};
-use ixc_core::routes::{exec_route, sort_routes, Route};
-use ixc_core_macros::{message_selector, package_root};
-use ixc_message_api::AccountID;
+use ixc_core::resource::{Resources, StateObject};
+use ixc_core::routes::{sort_routes, Route};
+use ixc_core::Context;
+use ixc_core_macros::package_root;
 use ixc_message_api::handler::{Allocator, HandlerError, HostBackend, RawHandler};
-use ixc_message_api::packet::MessagePacket;
-use state_objects::Item;
-use crate::counter::Counter;
 
 #[ixc::handler(Counter)]
 pub mod counter {
     use ixc::*;
+    use ixc_core::account_api::ON_CREATE_SELECTOR;
+    use ixc_core::low_level::create_packet;
     use ixc_core::resource::{InitializationError, ResourceScope, StateObject};
+    use ixc_core::routes::{sort_routes, Route};
+    use ixc_message_api::handler::{Allocator, HandlerError, HandlerErrorCode, HostBackend, RawHandler};
+    use ixc_message_api::header::MessageSelector;
+    use ixc_schema::binary::NativeBinaryCodec;
+    use ixc_schema::codec::decode_value;
+    use ixc_schema::value::OptionalValue;
 
     // #[derive(Resources)]
     pub struct Counter {
@@ -51,33 +56,57 @@ pub mod counter {
             })
         }
     }
+
+    const GET_SELECTOR: MessageSelector = message_selector!("get");
+
+    impl CounterClient {
+        pub fn inc(&mut self, ctx: &mut Context) -> Result<()> {
+            todo!()
+        }
+
+        pub fn get(&self, ctx: &Context) -> ixc_core::Result<u64> {
+            let mut packet = create_packet(ctx, self.0, GET_SELECTOR)?;
+            unsafe {
+                ctx.host_backend().invoke(&mut packet, ctx.memory_manager())
+                    .map_err(|e| ())?;
+                    // .map_err(|e| fmt_error!("unknown error: {:?}", e))?;
+                let cdc = NativeBinaryCodec::default();
+                let value = <u64 as OptionalValue<'_>>::decode_value(&cdc, &packet, ctx.memory_manager())
+                    .map_err(|e| ())?;
+                    // .map_err(|e| fmt_error!("decoding error: {:?}", e))?;
+                Ok(value)
+            }
+        }
+    }
+
+    unsafe impl ixc_core::routes::Router for crate::counter::Counter {
+        const SORTED_ROUTES: &'static [Route<Self>] =
+            &sort_routes([
+                (ON_CREATE_SELECTOR, |counter: &Counter, packet, cb, a| {
+                    let mut context = Context::new(packet, cb);
+                    counter.create(&mut context, 42).
+                        map_err(|e| HandlerError::Custom(0))
+                }),
+                (GET_SELECTOR, |counter: &Counter, packet, cb, a| {
+                    let mut context = Context::new(packet, cb);
+                    let res = counter.get(&mut context).
+                        map_err(|e| HandlerError::Custom(0))?;
+                    <u64 as OptionalValue<'_>>::encode_value(&NativeBinaryCodec::default(), &res, packet, a).
+                        map_err(|e| HandlerError::Custom(0))
+                }),
+                // (message_selector!("inc"), |counter, ctx| counter.inc(ctx)),
+            ]);
+    }
+
+    // const INC_SELECTOR = message_selector!("inc");
 }
 
-unsafe impl ixc_core::routes::Router for Counter {
-    const SORTED_ROUTES: &'static [Route<Self>] =
-        &sort_routes([
-            (ON_CREATE_SELECTOR, |counter: &Counter, packet, cb, a| {
-                let mut context = Context::new(packet, cb);
-                counter.create(&mut context, 0);
-                todo!()
-            }),
-            // (message_selector!("get"), |counter, ctx| counter.get(ctx)),
-            // (message_selector!("inc"), |counter, ctx| counter.inc(ctx)),
-        ]);
-}
-
-// impl RawHandler for Counter {
-//     fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), HandlerError> {
-//         exec_route(self, message_packet, callbacks, allocator)
-//     }
-// }
 
 #[cfg(test)]
 mod tests {
-    use ixc_core::account_api::create_account;
-    use ixc_core::handler::Handler;
-    use ixc_testing::*;
     use super::counter::*;
+    use ixc_core::account_api::create_account;
+    use ixc_testing::*;
 
     #[test]
     fn test_counter() {
@@ -86,6 +115,8 @@ mod tests {
         let alice = app.new_client_account().unwrap();
         let mut alice_ctx = app.client_context_for(alice);
         let counter_client = create_account::<Counter>(&mut alice_ctx, &()).unwrap();
+        let cur = counter_client.get(&alice_ctx).unwrap();
+        assert_eq!(cur, 42);
     }
 }
 

@@ -29,7 +29,8 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
     /// Gets the value of the map at the given key.
     pub fn get<'key, 'value>(&self, ctx: &'value Context<'key>, key: &K::In<'key>) -> Result<Option<V::Out<'value>>> {
         let key_bz = encode_object_key::<K>(&self.prefix, key, ctx.memory_manager())
-            .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+            // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+            .map_err(|_| ())?;
 
         let value_bz = KVStoreClient.get(ctx, key_bz)?;
         let value_bz = match value_bz {
@@ -37,8 +38,9 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
             Some(value_bz) => value_bz,
         };
 
-        let value = decode_object_value::<V>(value_bz, ctx.memory_manager()).
-            map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+        let value = decode_object_value::<V>(value_bz, ctx.memory_manager())
+            // map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+            .map_err(|_| ())?;
         Ok(Some(value))
     }
 
@@ -50,9 +52,11 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
     /// Sets the value of the map at the given key.
     pub fn set<'key, 'value>(&self, ctx: &'value mut Context<'key>, key: K::In<'key>, value: V::In<'value>) -> Result<()> {
         let key_bz = encode_object_key::<K>(&self.prefix, &key, ctx.memory_manager())
-            .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+            // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+            .map_err(|_| ())?;
         let value_bz = encode_object_value::<V>(&value, ctx.memory_manager())
-            .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+            // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+            .map_err(|_| ())?;
         unsafe { KVStoreClient.set(ctx, key_bz, value_bz) }
     }
 
@@ -71,7 +75,8 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
     /// Deletes the value of the map at the given key.
     pub fn delete<'key>(&self, ctx: &mut Context<'key>, key: &K::In<'key>) -> Result<()> {
         let key_bz = encode_object_key::<K>(&self.prefix, key, ctx.memory_manager())
-            .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+            // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
+            .map_err(|_| ())?;
         unsafe { KVStoreClient.delete(ctx, key_bz) }
     }
 }
@@ -124,7 +129,7 @@ impl KVStoreClient {
     }
 }
 
-unsafe impl <K, V> StateObject for Map<K, V> {
+unsafe impl<K, V> StateObject for Map<K, V> {
     unsafe fn new(scope: &[u8], p: u8) -> core::result::Result<Self, InitializationError> {
         let mut prefix = Vec::from(scope);
         prefix.push(p);

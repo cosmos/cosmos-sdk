@@ -7,14 +7,16 @@ use allocator_api2::vec::Vec;
 use core::cell::Cell;
 use core::mem::transmute;
 use core::ptr::{drop_in_place, NonNull};
-use bumpalo::Bump;
 use ixc_message_api::header::{MessageHeader, MESSAGE_HEADER_SIZE};
 use ixc_message_api::packet::MessagePacket;
 
 /// A memory manager that tracks allocated memory using a bump allocator and ensures that
 /// memory is deallocated and dropped properly when the manager is dropped.
 pub struct MemoryManager {
-    pub(crate) bump: Bump,
+    #[cfg(feature = "bumpalo")]
+    bump: bumpalo::Bump,
+    #[cfg(not(feature = "bumpalo"))]
+    bump: crate::bump::Bump,
     drop_cells: Cell<Option<NonNull<DropCell>>>,
 }
 
@@ -27,7 +29,7 @@ impl MemoryManager {
     /// Create a new memory manager.
     pub fn new() -> MemoryManager {
         MemoryManager {
-            bump: Bump::new(),
+            bump: Default::default(),
             drop_cells: Cell::new(None),
         }
     }

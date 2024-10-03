@@ -49,7 +49,6 @@ func (sb *builder) Build(
 		filepath.Join(config.Home, "data"),
 		nil,
 	)
-	fmt.Printf("******* builder.Build config=%+v keys=%+v\n", config, sb.storeKeys)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create SCRawDB: %w", err)
 	}

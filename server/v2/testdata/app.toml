@@ -21,7 +21,6 @@ mock_field_two = 1
 minimum-gas-prices = '0stake'
 
 [store]
-Home = ''
 # The type of database for application and snapshots databases.
 app-db-backend = 'goleveldb'
 

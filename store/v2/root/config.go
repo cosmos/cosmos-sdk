@@ -8,7 +8,7 @@ func DefaultConfig() *Config {
 }
 
 type Config struct {
-	Home         string
+	Home         string  `toml:"-"` // this field is omitted in the TOML file
 	AppDBBackend string  `mapstructure:"app-db-backend" toml:"app-db-backend" comment:"The type of database for application and snapshots databases."`
 	Options      Options `mapstructure:"options" toml:"options"`
 }

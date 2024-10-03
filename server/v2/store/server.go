@@ -33,8 +33,11 @@ func New[T transaction.Tx](builder root.Builder) *Server[T] {
 }
 
 func (s *Server[T]) Init(_ serverv2.AppI[T], cfg map[string]any, log log.Logger) error {
-	s.config = UnmarshalConfig(cfg)
 	var err error
+	s.config, err = UnmarshalConfig(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal config: %w", err)
+	}
 	s.backend, err = s.builder.Build(log, s.config)
 	if err != nil {
 		return fmt.Errorf("failed to create store backend: %w", err)
@@ -77,16 +80,16 @@ func (s *Server[T]) Config() any {
 	return s.config
 }
 
-func UnmarshalConfig(cfg map[string]any) *root.Config {
+func UnmarshalConfig(cfg map[string]any) (*root.Config, error) {
 	config := &root.Config{
 		Options: root.DefaultStoreOptions(),
 	}
 	if err := serverv2.UnmarshalSubConfig(cfg, ServerName, config); err != nil {
-		panic(fmt.Sprintf("failed to unmarshal config: %v", err))
+		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
-	home := cfg["home"]
+	home := cfg[serverv2.FlagHome]
 	if home != nil {
 		config.Home = home.(string)
 	}
-	return config
+	return config, nil
 }

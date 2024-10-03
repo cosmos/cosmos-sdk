@@ -105,7 +105,14 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		indexEvents[e] = struct{}{}
 	}
 
-	rs, err := s.storeBuilder.Build(logger, store.UnmarshalConfig(cfg))
+	storeCfg, err := store.UnmarshalConfig(cfg)
+	if err != nil {
+		return err
+	}
+	rs, err := s.storeBuilder.Build(logger, storeCfg)
+	if err != nil {
+		return err
+	}
 
 	s.logger = logger.With(log.ModuleKey, s.Name())
 	consensus := NewConsensus(

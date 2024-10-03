@@ -179,7 +179,10 @@ func NewSimApp[T transaction.Tx](
 	}
 
 	// store/v2 follows a slightly more eager config life cycle than server components
-	storeConfig := serverstore.UnmarshalConfig(viper.AllSettings())
+	storeConfig, err := serverstore.UnmarshalConfig(viper.AllSettings())
+	if err != nil {
+		panic(err)
+	}
 	_, err = storeBuilder.Build(logger, storeConfig)
 	if err != nil {
 		panic(err)

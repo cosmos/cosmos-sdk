@@ -1,4 +1,4 @@
-use crate::buffer::{Reader, Writer, WriterFactory};
+use crate::buffer::{Reader, ReverseSliceWriter, Writer, WriterFactory};
 use crate::decoder::DecodeError;
 use crate::encoder::EncodeError;
 use crate::mem::MemoryManager;
@@ -23,7 +23,7 @@ pub fn decode_object_key<'a, K: ObjectKey>(input: &'a [u8], memory_manager: &'a 
 /// This trait is implemented for types that can be used as keys in state objects.
 pub trait ObjectKey: ObjectValue {
     /// Encode the key.
-    fn encode<'a, W: Writer>(key: &Self::In<'a>, writer: &mut W) -> Result<(), EncodeError>;
+    fn encode<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError>;
 
     /// Decode the key.
     fn decode<'a>(input: &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError>;
@@ -33,7 +33,7 @@ pub trait ObjectKey: ObjectValue {
 }
 
 impl ObjectKey for () {
-    fn encode<'a, W: Writer>(key: &Self::In<'a>, writer: &mut W) -> Result<(), EncodeError> {
+    fn encode<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError> {
         Ok(())
     }
 
@@ -45,7 +45,7 @@ impl ObjectKey for () {
 }
 
 impl<A: KeyFieldValue> ObjectKey for A {
-    fn encode<'a, W: Writer>(key: &Self::In<'a>, writer: &mut W) -> Result<(), EncodeError> {
+    fn encode<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError> {
         A::encode_terminal(key, writer)
     }
 
@@ -62,7 +62,7 @@ impl<A: KeyFieldValue> ObjectKey for A {
 }
 
 impl<A: KeyFieldValue> ObjectKey for (A,) {
-    fn encode<'a, W: Writer>(key: &Self::In<'a>, writer: &mut W) -> Result<(), EncodeError> {
+    fn encode<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError> {
         A::encode(&key.0, writer)
     }
 
@@ -79,7 +79,7 @@ impl<A: KeyFieldValue> ObjectKey for (A,) {
 }
 
 impl<A: KeyFieldValue, B: KeyFieldValue> ObjectKey for (A, B) {
-    fn encode<'a, W: Writer>(key: &Self::In<'a>, writer: &mut W) -> Result<(), EncodeError> {
+    fn encode<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError> {
         B::encode_terminal(&key.1, writer)?;
         A::encode(&key.0, writer)
     }
@@ -98,7 +98,7 @@ impl<A: KeyFieldValue, B: KeyFieldValue> ObjectKey for (A, B) {
 }
 
 impl<A: KeyFieldValue, B: KeyFieldValue, C: KeyFieldValue> ObjectKey for (A, B, C) {
-    fn encode<'a, W: Writer>(key: &Self::In<'a>, writer: &mut W) -> Result<(), EncodeError> {
+    fn encode<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError> {
         C::encode_terminal(&key.2, writer)?;
         B::encode(&key.1, writer)?;
         A::encode(&key.0, writer)
@@ -119,7 +119,7 @@ impl<A: KeyFieldValue, B: KeyFieldValue, C: KeyFieldValue> ObjectKey for (A, B, 
 }
 
 impl<A: KeyFieldValue, B: KeyFieldValue, C: KeyFieldValue, D: KeyFieldValue> ObjectKey for (A, B, C, D) {
-    fn encode<'a, W: Writer>(key: &Self::In<'a>, writer: &mut W) -> Result<(), EncodeError> {
+    fn encode<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError> {
         D::encode_terminal(&key.3, writer)?;
         C::encode(&key.2, writer)?;
         B::encode(&key.1, writer)?;

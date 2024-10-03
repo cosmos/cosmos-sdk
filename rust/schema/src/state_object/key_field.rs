@@ -1,4 +1,4 @@
-use crate::buffer::{Reader, Writer};
+use crate::buffer::{Reader, ReverseSliceWriter, Writer};
 use crate::decoder::DecodeError;
 use crate::encoder::EncodeError;
 use crate::mem::MemoryManager;
@@ -7,14 +7,12 @@ use crate::state_object::value_field::ObjectFieldValue;
 /// This trait is implemented for types that can be used as key fields in state objects.
 pub trait KeyFieldValue: ObjectFieldValue {
     /// Encode the key segment as a non-terminal segment.
-    // TODO: make object safe
-    fn encode<'a, W: Writer>(key: &Self::In<'a>, writer: &mut W) -> Result<(), EncodeError> {
+    fn encode<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError> {
         unimplemented!("encode")
     }
 
     /// Encode the key segment as the terminal segment.
-    // TODO: make object safe
-    fn encode_terminal<'a, W: Writer>(key: &Self::In<'a>, writer: &mut W) -> Result<(), EncodeError> {
+    fn encode_terminal<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError> {
         Self::encode(key, writer)
     }
 

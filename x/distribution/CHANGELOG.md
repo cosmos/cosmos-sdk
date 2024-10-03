@@ -32,6 +32,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * [#20790](https://github.com/cosmos/cosmos-sdk/pull/20790) `x/distribution` does not depend on `x/protocolpool` anymore, now `x/distribution` only does token transfers and `x/protocolpool` does the rest.
+* [#20219](https://github.com/cosmos/cosmos-sdk/issues/20219#event-14494455201) Mark more queries with module_query_safe.
 
 ### API Breaking Changes
 

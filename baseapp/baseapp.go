@@ -82,8 +82,8 @@ type BaseApp struct {
 
 	initChainer        sdk.InitChainer                // ABCI InitChain handler
 	preBlocker         sdk.PreBlocker                 // logic to run before BeginBlocker
-	beginBlocker       sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
-	endBlocker         sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
+	beginBlocker       sdk.BeginBlocker               // BeginBlock handler
+	endBlocker         sdk.EndBlocker                 // EndBlock handler
 	processProposal    sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
 	prepareProposal    sdk.PrepareProposalHandler     // ABCI PrepareProposal handler
 	extendVote         sdk.ExtendVoteHandler          // ABCI ExtendVote handler
@@ -91,7 +91,8 @@ type BaseApp struct {
 	prepareCheckStater sdk.PrepareCheckStater         // logic to run during commit using the checkState
 	precommiter        sdk.Precommiter                // logic to run during commit using the deliverState
 	versionModifier    server.VersionModifier         // interface to get and set the app version
-	checkTxHandler     sdk.CheckTxHandler
+	checkTxHandler     sdk.CheckTxHandler             // CheckTx handler
+	laneProvider       sdk.LaneProvider               // LaneProvider handler
 
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID

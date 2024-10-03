@@ -151,13 +151,18 @@ func (app *BaseApp) Info(_ *abci.InfoRequest) (*abci.InfoResponse, error) {
 			return nil, fmt.Errorf("failed getting app version: %w", err)
 		}
 	}
-
+	lanes, defaultLane, err := app.laneProvider()
+	if err != nil {
+		return nil, fmt.Errorf("failed getting lanes: %w", err)
+	}
 	return &abci.InfoResponse{
 		Data:             app.name,
 		Version:          app.version,
 		AppVersion:       appVersion,
 		LastBlockHeight:  lastCommitID.Version,
 		LastBlockAppHash: lastCommitID.Hash,
+		LanePriorities:   lanes,
+		DefaultLane:      defaultLane,
 	}, nil
 }
 

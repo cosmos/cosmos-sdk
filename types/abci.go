@@ -61,6 +61,9 @@ type BeginBlocker func(Context) (BeginBlock, error)
 // and allows for existing EndBlock functionality within applications.
 type EndBlocker func(Context) (EndBlock, error)
 
+// LaneProvider defines a function type alias for providing the lane for a given
+type LaneProvider func() (map[string]uint32, string, error)
+
 // EndBlock defines a type which contains endblock events and validator set updates
 type EndBlock struct {
 	ValidatorUpdates []abci.ValidatorUpdate

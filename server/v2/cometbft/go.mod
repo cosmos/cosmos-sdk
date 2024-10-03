@@ -21,18 +21,10 @@ require (
 	cosmossdk.io/core v1.0.0-alpha.3
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.4.1
-<<<<<<< HEAD
 	cosmossdk.io/server/v2 v2.0.0-20240927165321-7fe95fc3f945 // main
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240920095614-aa90bb43d8f8 // main
 	cosmossdk.io/server/v2/stf v0.0.0-20240926131628-f927e9b55173 // main
 	cosmossdk.io/store/v2 v2.0.0-20240916221850-7856d226038c // main
-=======
-	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9
-	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d
-	cosmossdk.io/server/v2/stf v0.0.0-20240708142107-25e99c54bac1
-	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
->>>>>>> bf95c814f (feat(server/v2/cometbft,stf): Listener integration in server/v2 (#21917))
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
@@ -51,12 +43,8 @@ require (
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // indirect
 	cosmossdk.io/depinject v1.0.0 // indirect
 	cosmossdk.io/math v1.3.0 // indirect
-<<<<<<< HEAD
-	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
+	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect
-=======
-	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
->>>>>>> bf95c814f (feat(server/v2/cometbft,stf): Listener integration in server/v2 (#21917))
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.4-0.20240918094839-0c8ad9d2c64b // indirect; main

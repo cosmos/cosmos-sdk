@@ -2,7 +2,6 @@ package tx
 
 import (
 	"bufio"
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -11,7 +10,6 @@ import (
 	"github.com/spf13/pflag"
 
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	apitx "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/client/v2/internal/account"
 	"cosmossdk.io/core/transaction"
 
@@ -30,12 +28,6 @@ func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs .
 	txf, err := newFactory(ctx, flagSet)
 	if err != nil {
 		return err
-	}
-
-	isAux, _ := flagSet.GetBool(flagAux)
-	if isAux {
-		offline, _ := flagSet.GetBool(flagOffline)
-		return generateAuxSignerData(ctx, txf, offline, msgs...)
 	}
 
 	genOnly, _ := flagSet.GetBool(flagGenerateOnly)
@@ -97,16 +89,6 @@ func validateMessages(msgs ...transaction.Msg) error {
 	}
 
 	return nil
-}
-
-// generateAuxSignerData simply generates and prints the AuxSignerData.
-func generateAuxSignerData(ctx client.Context, txf Factory, offline bool, msgs ...transaction.Msg) error {
-	auxSignerData, err := makeAuxSignerData(txf, offline, msgs...)
-	if err != nil {
-		return err
-	}
-
-	return ctx.PrintProto(auxSignerData)
 }
 
 // generateOnly prepares the transaction and prints the unsigned transaction string.
@@ -208,58 +190,6 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg)
 	}
 
 	return clientCtx.PrintProto(res)
-}
-
-// makeAuxSignerData generates an AuxSignerData from the client inputs.
-func makeAuxSignerData(f Factory, offline bool, msgs ...transaction.Msg) (*apitx.AuxSignerData, error) {
-	b := NewAuxTxBuilder()
-
-	b.SetAddress(f.txParams.fromAddress)
-	if offline {
-		b.SetAccountNumber(f.accountNumber())
-		b.SetSequence(f.sequence())
-	} else {
-		accNum, seq, err := f.accountRetriever.GetAccountNumberSequence(context.Background(), f.txParams.address)
-		if err != nil {
-			return nil, err
-		}
-		b.SetAccountNumber(accNum)
-		b.SetSequence(seq)
-	}
-
-	err := b.SetMsgs(msgs...)
-	if err != nil {
-		return nil, err
-	}
-
-	err = b.SetSignMode(f.signMode())
-	if err != nil {
-		return nil, err
-	}
-
-	pubKey, err := f.keybase.GetPubKey(f.txParams.fromName)
-	if err != nil {
-		return nil, err
-	}
-
-	err = b.SetPubKey(pubKey)
-	if err != nil {
-		return nil, err
-	}
-
-	b.SetChainID(f.txParams.chainID)
-	signBz, err := b.GetSignBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	sig, err := f.keybase.Sign(f.txParams.fromName, signBz, f.signMode())
-	if err != nil {
-		return nil, err
-	}
-	b.SetSignature(sig)
-
-	return b.GetAuxSignerData()
 }
 
 // countDirectSigners counts the number of DIRECT signers in a signature data.

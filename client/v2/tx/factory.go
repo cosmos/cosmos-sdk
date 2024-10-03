@@ -468,9 +468,6 @@ func (f *Factory) WithAccountNumber(accnum uint64) {
 	f.txParams.accountNumber = accnum
 }
 
-// accountNumber returns the account number.
-func (f *Factory) accountNumber() uint64 { return f.txParams.accountNumber }
-
 // sequence returns the sequence number.
 func (f *Factory) sequence() uint64 { return f.txParams.sequence }
 

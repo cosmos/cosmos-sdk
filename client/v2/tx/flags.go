@@ -25,7 +25,6 @@ const (
 	flagFeePayer         = "fee-payer"
 	flagFeeGranter       = "fee-granter"
 	flagUnordered        = "unordered"
-	flagAux              = "aux"
 	flagOffline          = "offline"
 	flagGenerateOnly     = "generate-only"
 )

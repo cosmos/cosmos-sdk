@@ -1,10 +1,11 @@
 #![allow(missing_docs)]
 
+use ixc_core::account_api::ON_CREATE_SELECTOR;
 use ixc_core::Context;
 use ixc_core::handler::{ClientFactory, Handler, HandlerAPI};
 use ixc_core::resource::{InitializationError, ResourceScope, Resources, StateObject};
-use ixc_core::routes::exec_route;
-use ixc_core_macros::package_root;
+use ixc_core::routes::{exec_route, sort_routes, Route};
+use ixc_core_macros::{message_selector, package_root};
 use ixc_message_api::AccountID;
 use ixc_message_api::handler::{Allocator, HandlerError, HostBackend, RawHandler};
 use ixc_message_api::packet::MessagePacket;
@@ -53,7 +54,16 @@ pub mod counter {
 }
 
 unsafe impl ixc_core::routes::Router for Counter {
-    const SORTED_ROUTES: &'static [ixc_core::routes::Route<Self>] = &[];
+    const SORTED_ROUTES: &'static [Route<Self>] =
+        &sort_routes([
+            (ON_CREATE_SELECTOR, |counter: &Counter, packet, cb, a| {
+                let mut context = Context::new(packet, cb);
+                counter.create(&mut context, 0);
+                todo!()
+            }),
+            // (message_selector!("get"), |counter, ctx| counter.get(ctx)),
+            // (message_selector!("inc"), |counter, ctx| counter.inc(ctx)),
+        ]);
 }
 
 // impl RawHandler for Counter {

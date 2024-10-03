@@ -138,13 +138,14 @@ impl<'a, TX: Transaction> ExecContext<TX> {
         self.parse_handler_id(&value)
     }
 
-    fn init_next_account(&self, tx: &mut TX, storage_params: &[u8]) -> Result<AccountID, PushFrameError> {
+    fn init_next_account(&self, tx: &mut TX, storage_params: &[u8], handler_id: &HandlerID) -> Result<AccountID, PushFrameError> {
         let id = tx.raw_kv_get(HYPERVISOR_ACCOUNT, b"next_account_id").map_or(ACCOUNT_ID_NON_RESERVED_START, |v| {
             u64::from_le_bytes(v.try_into().unwrap())
         });
         // we push a new storage frame here because if initialization fails all of this gets rolled back
         tx.init_account_storage(AccountID::new(id), storage_params)?;
         tx.raw_kv_set(HYPERVISOR_ACCOUNT, b"next_account_id", &(id + 1).to_le_bytes());
+        tx.raw_kv_set(HYPERVISOR_ACCOUNT, format!("h:{}", id).as_bytes(), format_handler_id(handler_id).as_bytes());
         Ok(AccountID::new(id))
     }
 
@@ -219,7 +220,7 @@ impl<TX: Transaction> ExecContext<TX> {
 
                 // get the next account ID and initialize the account storage
                 let storage_params = desc.storage_params.unwrap_or_default();
-                let id = self.init_next_account(tx, &storage_params).
+                let id = self.init_next_account(tx, &storage_params, &handler_id).
                     map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::InvalidHandler))?;
 
                 // create a packet for calling on_create
@@ -233,18 +234,19 @@ impl<TX: Transaction> ExecContext<TX> {
                 on_create_header.in_pointer1.set_slice(init_data);
 
                 let res = vm.run_handler(&handler_id.vm_handler_id, &mut on_create_packet, self, allocator);
-                tx.pop_frame(res.is_ok()).
+                let is_ok = match res {
+                    Ok(_) => true,
+                    Err(ErrorCode::HandlerSystemError(HandlerErrorCode::MessageNotHandled)) => true,
+                    _ => false,
+                };
+                tx.pop_frame(is_ok).
                     map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::FatalExecutionError))?;
 
-                create_header.in_pointer1.set_u64(id.get());
-
-                match res {
-                    Err(ErrorCode::HandlerSystemError(HandlerErrorCode::MessageNotHandled)) => {
-                        // the on_create handler was not found which is not an error,
-                        // so we return success
-                        Ok(())
-                    }
-                    _ => res
+                if is_ok {
+                    create_header.in_pointer1.set_u64(id.get());
+                    Ok(())
+                } else {
+                    res
                 }
             },
             _ => {
@@ -276,6 +278,10 @@ fn parse_handler_id(value: &[u8], default_vm: &Option<String>) -> Option<Handler
         vm: vm.to_string(),
         vm_handler_id: vm_handler_id.to_string(),
     })
+}
+
+fn format_handler_id(HandlerID { vm, vm_handler_id }: &HandlerID) -> String {
+    format!("{}:{}", vm, vm_handler_id)
 }
 
 #[cfg(test)]

@@ -8,7 +8,7 @@ use allocator_api2::alloc::Allocator;
 use allocator_api2::boxed::Box;
 use ixc_message_api::{AccountID};
 use ixc_core::{Context};
-use ixc_core::account_api::create_account;
+use ixc_core::account_api::{create_account, ROOT_ACCOUNT};
 use ixc_core::handler::{HandlerAPI, Handler, ClientFactory, Client};
 use ixc_core::resource::{InitializationError, ResourceScope, Resources};
 use ixc_core::routes::{Route, Router};
@@ -123,7 +123,7 @@ impl TestApp {
 
     /// Creates a new random client account that can be used in calls.
     pub fn new_client_account(&mut self) -> core::result::Result<AccountID, ()> {
-        let mut ctx = self.client_context_for(AccountID::new(1));
+        let mut ctx = self.client_context_for(ROOT_ACCOUNT);
         let client = create_account::<DefaultAccount>(&mut ctx, &())
             .map_err(|_| ())?;
         Ok(client.0)

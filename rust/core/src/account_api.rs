@@ -1,4 +1,4 @@
-//! Self-destruct functionality for accounts.
+//! The core account API.
 
 use ixc_core_macros::message_selector;
 use ixc_message_api::AccountID;
@@ -14,7 +14,7 @@ use crate::low_level::create_packet;
 
 /// Creates a new account for the specified handler.
 pub fn create_account<'a, H: Handler>(ctx: &mut Context, init: &<H::Init<'a> as OptionalValue<'a>>::Value) -> crate::Result<H::Client> {
-    let mut packet = create_packet(ctx, HYPERVISOR_ACCOUNT, CREATE_SELECTOR)?;
+    let mut packet = create_packet(ctx, ROOT_ACCOUNT, CREATE_SELECTOR)?;
 
     let cdc = H::InitCodec::default();
     <H::Init<'_> as OptionalValue<'_>>::encode_value(&cdc, init, &mut packet, ctx.memory_manager() as &dyn Allocator).
@@ -40,6 +40,10 @@ pub unsafe fn self_destruct(ctx: &mut Context) -> crate::Result<()> {
     unimplemented!()
 }
 
-const HYPERVISOR_ACCOUNT: AccountID = AccountID::new(1);
-
 const CREATE_SELECTOR: u64 = message_selector!("ixc.account.v1.create");
+
+/// The ID of the root account which creates and manages accounts.
+pub const ROOT_ACCOUNT: AccountID = AccountID::new(1);
+
+/// The message selector for the on_create message.
+pub const ON_CREATE_SELECTOR: u64 = message_selector!("ixc.account.v1.on_create");

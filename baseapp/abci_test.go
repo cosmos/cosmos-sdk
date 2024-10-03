@@ -2588,10 +2588,10 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check if the average price was available in FinalizeBlock's context
-	// avgPrice = getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1).Get([]byte("avgPrice"))
-	// require.NotNil(t, avgPrice)
-	// require.GreaterOrEqual(t, binary.BigEndian.Uint64(avgPrice), uint64(10000000))
-	// require.Less(t, binary.BigEndian.Uint64(avgPrice), uint64(11000000))
+	avgPrice = getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1).Get([]byte("avgPrice"))
+	require.NotNil(t, avgPrice)
+	require.GreaterOrEqual(t, binary.BigEndian.Uint64(avgPrice), uint64(10000000))
+	require.Less(t, binary.BigEndian.Uint64(avgPrice), uint64(11000000))
 
 	_, err = suite.baseApp.Commit()
 	require.NoError(t, err)

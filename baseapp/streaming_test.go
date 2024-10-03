@@ -14,6 +14,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ storetypes.ABCIListener = (*MockABCIListener)(nil)
@@ -196,7 +197,30 @@ func TestAppDataListener(t *testing.T) {
 	streamingManager := storetypes.StreamingManager{ABCIListeners: []storetypes.ABCIListener{baseapp.NewListenerWrapper(mockListener.Listener)}}
 	streamingManagerOpt := func(bapp *baseapp.BaseApp) { bapp.SetStreamingManager(streamingManager) }
 	addListenerOpt := func(bapp *baseapp.BaseApp) { bapp.CommitMultiStore().AddListeners([]storetypes.StoreKey{distKey1}) }
-	suite := NewBaseAppSuite(t, anteOpt, distOpt, streamingManagerOpt, addListenerOpt)
+
+	// for event tests
+	baseappOpts := func(app *baseapp.BaseApp) {
+		app.SetPreBlocker(func(ctx sdk.Context, req *abci.FinalizeBlockRequest) error {
+			ctx.EventManager().EmitEvent(sdk.NewEvent("pre-block"))
+			return nil
+		})
+		app.SetBeginBlocker(func(_ sdk.Context) (sdk.BeginBlock, error) {
+			return sdk.BeginBlock{
+				Events: []abci.Event{
+					{Type: "begin-block"},
+				},
+			}, nil
+		})
+		app.SetEndBlocker(func(_ sdk.Context) (sdk.EndBlock, error) {
+			return sdk.EndBlock{
+				Events: []abci.Event{
+					{Type: "end-block"},
+				},
+			}, nil
+		})
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt, distOpt, streamingManagerOpt, addListenerOpt, baseappOpts)
 
 	_, err := suite.baseApp.InitChain(
 		&abci.InitChainRequest{

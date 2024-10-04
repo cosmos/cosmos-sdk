@@ -3,6 +3,7 @@ package branch
 import (
 	"bytes"
 	"errors"
+	"fmt"
 
 	"github.com/tidwall/btree"
 )
@@ -165,7 +166,7 @@ func (mi *memIterator) Close() error {
 // Otherwise, it returns nil.
 func (mi *memIterator) Error() error {
 	if !mi.Valid() {
-		return errInvalidIterator
+		return fmt.Errorf("invalid iterator")
 	}
 	return nil
 }

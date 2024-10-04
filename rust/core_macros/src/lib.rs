@@ -145,16 +145,21 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
                 unsafe { ::ixc_core::low_level::dynamic_invoke(#context_name, self.0, msg) }
             }
         });
-        routes.push(quote!{
-                (<#msg_struct_name as ::ixc_core::message::Message>::SELECTOR, |h: &#handler, packet, cb, a| {
+        routes.push(quote! {
+                (< #msg_struct_name as ::ixc_core::message::Message >::SELECTOR, |h: &#handler, packet, cb, a| {
                     unsafe {
-                        let mem = ::ixc_schema::mem::MemoryManager::new();
-                        ::ixc_core::message::handle_message::< #msg_struct_name , #handler >(h, packet, cb, &mem, a, |h, ctx, msg| {
-                            h.#fn_name(ctx, #(#msg_fields_access)*)
-                        })
+                        let cdc = < #msg_struct_name as ::ixc_core::message::Message >::Codec::default();
+                        let in1 = packet.header().in_pointer1.get(packet);
+                        let mut ctx = ::ixc_core::Context::new(packet.header().context_info, cb);
+                        std::println!("step 1");
+                        let msg = ::ixc_schema::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
+                        std::println!("step 2");
+                        let res = h.#fn_name(&mut ctx, #(#msg_fields_access)*).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
+                        std::println!("step 3");
+                        <<#msg_struct_name as ::ixc_core::message::Message<'_>>::Response<'_> as ::ixc_schema::value::OptionalValue<'_>>::encode_value(&cdc, &res, packet, a).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))
                     }
                 }),
-        })
+        });
     }
 
     push_item(items, quote! {
@@ -163,7 +168,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
         }
     })?;
 
-    push_item(items, quote!{
+    push_item(items, quote! {
         unsafe impl ::ixc_core::routes::Router for #handler {
             const SORTED_ROUTES: &'static [::ixc_core::routes::Route<Self>] =
                 &::ixc_core::routes::sort_routes([

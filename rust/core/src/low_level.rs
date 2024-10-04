@@ -54,8 +54,8 @@ pub fn create_packet<'a>(context: &'a Context, account: AccountID, selector: u64
             // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
             .map_err(|_| ())?;
         let header = packet.header_mut();
-        header.sender_account = context.account_id();
-        header.account = account;
+        header.context_info.sender_account = context.account_id();
+        header.context_info.account = account;
         header.message_selector = selector;
         Ok(packet)
     }

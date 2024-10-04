@@ -1,42 +1,38 @@
-use core::mem::transmute;
-use allocator_api2::alloc::Allocator;
-use crate::error::Error;
-use crate::message::Message;
-use ixc_message_api::handler::{HandlerErrorCode, HostBackend};
-use ixc_message_api::header::{MessageHeader, MessageSelector, MESSAGE_HEADER_SIZE};
-use ixc_message_api::packet::MessagePacket;
+use core::cell::Cell;
+use ixc_message_api::handler::HostBackend;
 use ixc_message_api::AccountID;
-use ixc_schema::codec::Codec;
+use ixc_message_api::header::ContextInfo;
 use ixc_schema::mem::MemoryManager;
-use ixc_schema::value::OptionalValue;
 
 /// Context wraps a single message request (and possibly response as well) along with
 /// the router callbacks necessary for making nested message calls.
 pub struct Context<'a> {
-    pub(crate) mem: &'a MemoryManager,
-    pub(crate) message_packet: &'a MessagePacket<'a>,
+    pub(crate) mem: MemoryManager,
     pub(crate) backend: &'a dyn HostBackend,
+    pub(crate) context_info: ContextInfo,
+    gas_consumed: Cell<u64>,
 }
 
 impl<'a> Context<'a> {
     /// Create a new context from a message packet and host callbacks.
-    pub fn new(message_packet: &'a MessagePacket<'a>, host_callbacks: &'a dyn HostBackend, mem: &'a MemoryManager) -> Self {
+    pub fn new(context_info: ContextInfo, host_callbacks: &'a dyn HostBackend) -> Self {
         Self {
-            mem,
-            message_packet,
+            mem: MemoryManager::new(),
             backend: host_callbacks,
+            context_info,
+            gas_consumed: Cell::new(0),
         }
     }
 
     /// This is the address of the account that is getting called.
     /// In a receiving account, this is the account's own address.
     pub fn account_id(&self) -> AccountID {
-        self.message_packet.header().account
+        self.context_info.account
     }
 
     /// This is the address of the account which is making the message call.
     pub fn caller(&self) -> AccountID {
-        self.message_packet.header().sender_account
+        self.context_info.sender_account
     }
 
     // /// Returns a new response with the given value.

@@ -9,6 +9,7 @@ use ixc_core_macros::message_selector;
 use ixc_message_api::handler::HandlerErrorCode;
 use ixc_message_api::packet::MessagePacket;
 use ixc_message_api::AccountID;
+use ixc_message_api::code::ErrorCode;
 use ixc_message_api::header::MessageSelector;
 use ixc_schema::state_object::{decode_object_value, encode_object_key, encode_object_value, ObjectKey, ObjectValue};
 
@@ -98,8 +99,12 @@ impl KVStoreClient {
         unsafe {
             header.in_pointer1.set_slice(key);
             // TODO error code for not found
-            ctx.host_backend().invoke(&mut packet, &ctx.memory_manager()).
-                map_err(|_| todo!())?;
+            match ctx.host_backend().invoke(&mut packet, &ctx.memory_manager()) {
+                Ok(_) => {}
+                Err(_) => {
+                    return Ok(None);
+                }
+            }
         }
         let res_bz = unsafe { packet.header().out_pointer1.get(&packet) };
         Ok(Some(res_bz))

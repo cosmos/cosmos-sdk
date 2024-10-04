@@ -86,10 +86,13 @@ mod tests {
         let mut alice_ctx = app.client_context_for(alice);
         let counter_client = create_account::<Counter>(&mut alice_ctx, &()).unwrap();
         let cur = counter_client.get(&alice_ctx).unwrap();
-        assert_eq!(cur, 42);
+        assert_eq!(cur, 0);
         counter_client.inc(&mut alice_ctx).unwrap();
         let cur = counter_client.get(&alice_ctx).unwrap();
-        assert_eq!(cur, 43);
+        assert_eq!(cur, 1);
+        counter_client.add(&mut alice_ctx, 41).unwrap();
+        let cur = counter_client.get(&alice_ctx).unwrap();
+        assert_eq!(cur, 42);
     }
 }
 

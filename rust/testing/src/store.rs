@@ -9,6 +9,7 @@ use ixc_message_api::AccountID;
 use std::alloc::Layout;
 use std::cell::RefCell;
 use thiserror::Error;
+use ixc_message_api::code::ErrorCode::CustomHandlerError;
 
 #[derive(Default, Clone)]
 pub struct VersionedMultiStore {
@@ -182,7 +183,7 @@ impl Tx {
         match current_store.kv_store.get(key) {
             None => unsafe {
                 // TODO what should we do when not found?
-                packet.header_mut().out_pointer1.set_slice(&[]);
+                return Err(CustomHandlerError(0))
             }
             Some(value) => unsafe {
                 let out = allocator.allocate(Layout::from_size_align_unchecked(value.len(), 16)).

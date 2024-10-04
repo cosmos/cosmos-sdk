@@ -15,7 +15,7 @@ use ixc_core::routes::{Route, Router};
 use ixc_hypervisor::Hypervisor;
 use ixc_message_api::code::ErrorCode;
 use ixc_message_api::handler::{HandlerError, HandlerErrorCode, HostBackend, RawHandler};
-use ixc_message_api::header::MessageHeader;
+use ixc_message_api::header::{ContextInfo, MessageHeader};
 use ixc_message_api::packet::MessagePacket;
 use ixc_schema::mem::MemoryManager;
 use crate::store::{Store, VersionedMultiStore};
@@ -133,10 +133,11 @@ impl TestApp {
     pub fn client_context_for(&mut self, account_id: AccountID) -> Context
     {
         unsafe {
-            let packet_box = Box::new_in(MessagePacket::allocate(&self.mem, 0).unwrap(), &self.mem);
-            packet_box.header_mut().account = account_id;
-            let raw = Box::into_raw(packet_box);
-            let ctx = Context::new(&*raw, self, &self.mem);
+            let ctx = Context::new(ContextInfo{
+                account: account_id,
+                sender_account: account_id,
+                gas_limit: 0,
+            }, self);
             ctx
         }
     }

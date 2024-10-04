@@ -162,6 +162,15 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 		return err
 	}
 
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTransfer,
+			sdk.NewAttribute(types.AttributeKeyRecipient, moduleAccAddr.String()),
+			sdk.NewAttribute(types.AttributeKeySender, delegatorAddr.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+		),
+	)
+
 	return nil
 }
 
@@ -193,6 +202,16 @@ func (k BaseKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegato
 	if err != nil {
 		return err
 	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTransfer,
+			sdk.NewAttribute(types.AttributeKeyRecipient, delegatorAddr.String()),
+			sdk.NewAttribute(types.AttributeKeySender, moduleAccAddr.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+		),
+	)
 
 	return nil
 }

@@ -6,7 +6,7 @@ use std::default::Default;
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use manyhow::{bail, ensure, manyhow};
 use quote::{format_ident, quote, ToTokens};
-use syn::{parse2, parse_macro_input, parse_quote, Attribute, Data, DeriveInput, Item, ItemMod, ItemTrait, LitStr, ReturnType, Signature, Type};
+use syn::{parse2, parse_macro_input, parse_quote, Attribute, Data, DeriveInput, Item, ItemMod, ItemTrait, LitStr, ReturnType, Signature, TraitItem, Type};
 use std::borrow::Borrow;
 use blake2::{Blake2b512, Digest};
 use deluxe::ExtractAttributes;
@@ -55,20 +55,17 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
         }
     })?;
 
-    let mut client_fn_impls = vec![];
-    let mut routes: Vec<TokenStream2> = vec![];
-    let mut on_create_msg = quote! { () };
+    let mut builder = APIBuilder::default();
     for publish_target in publish_targets.iter() {
-        let APIMethodDeriveOut{route, client_method, on_create_msg: on_create } = derive_api_method(&handler, quote! {#handler}, publish_target, items)?;
-        routes.push(route);
-        if let Some(client_method) = client_method {
-            client_fn_impls.push(client_method);
-        }
-        if let Some(on_create) = on_create {
-            on_create_msg = on_create;
-        }
+        derive_api_method(&handler, quote! {#handler}, publish_target, &mut builder)?;
     }
 
+    items.append(&mut builder.items);
+
+    let on_create_msg = match builder.create_msg_name {
+        Some(msg) => quote! {#msg},
+        None => quote! {()},
+    };
     push_item(items, quote! {
         impl ::ixc_core::handler::Handler for #handler {
             const NAME: &'static str = stringify!(#handler);
@@ -83,12 +80,14 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
         }
     })?;
 
+    let client_fn_impls = &builder.client_methods;
     push_item(items, quote! {
         impl #client_ident {
             #(#client_fn_impls)*
         }
     })?;
 
+    let routes = &builder.routes;
     push_item(items, quote! {
         unsafe impl ::ixc_core::routes::Router for #handler {
             const SORTED_ROUTES: &'static [::ixc_core::routes::Route<Self>] =
@@ -139,7 +138,7 @@ fn collect_publish_targets(self_name: &syn::Ident, item: &mut Item, targets: &mu
                                         signature: impl_fn.sig.clone(),
                                         on_create,
                                         publish,
-                                        attrs: impl_fn.attrs.clone()
+                                        attrs: impl_fn.attrs.clone(),
                                     });
                                 }
                             }
@@ -190,7 +189,7 @@ struct PublishFn {
     signature: Signature,
     on_create: Option<OnCreate>,
     publish: Option<Publish>,
-    attrs: Vec<Attribute>
+    attrs: Vec<Attribute>,
 }
 
 /// This publishes a trait or struct impl block or a single fn within an impl block.
@@ -203,13 +202,36 @@ pub fn publish(_attr: TokenStream2, item: TokenStream2) -> manyhow::Result<Token
 /// This attribute macro should be attached to a trait that implements a handler API.
 #[manyhow]
 #[proc_macro_attribute]
-pub fn handler_api(attr: TokenStream2, mut item: ItemTrait) -> manyhow::Result<TokenStream2> {
+pub fn handler_api(attr: TokenStream2, mut item_trait: ItemTrait) -> manyhow::Result<TokenStream2> {
+    let mut builder = APIBuilder::default();
+    for item in &item_trait.items {
+        match item {
+            TraitItem::Fn(f) => {
+                let publish_target = PublishFn {
+                    signature: f.sig.clone(),
+                    on_create: None,
+                    publish: None,
+                    attrs: f.attrs.clone(),
+                };
+                derive_api_method(&item_trait.ident, quote! {#item_trait}, &publish_target, &mut builder)?;
+            }
+            _ => {}
+        }
+    }
     Ok(quote! {
-        #item
+        #item_trait
     })
 }
 
-fn derive_api_method(handler_ident: &Ident, handler_ty: TokenStream2, publish_target: &PublishFn, out_items: &mut Vec<Item>) -> manyhow::Result<APIMethodDeriveOut> {
+#[derive(Default)]
+struct APIBuilder {
+    items: Vec<Item>,
+    routes: Vec<TokenStream2>,
+    client_methods: Vec<TokenStream2>,
+    create_msg_name: Option<Ident>
+}
+
+fn derive_api_method(handler_ident: &Ident, handler_ty: TokenStream2, publish_target: &PublishFn, builder: &mut APIBuilder) -> manyhow::Result<()> {
     let signature = &publish_target.signature;
     let fn_name = &signature.ident;
     let ident_camel = fn_name.to_string().to_upper_camel_case();
@@ -255,7 +277,7 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: TokenStream2, publish_ta
             _ => {}
         }
     }
-    push_item(out_items, quote! {
+    push_item(&mut builder.items, quote! {
             #[derive(::ixc_schema_macros::SchemaValue)]
             #[sealed]
             pub struct #msg_struct_name {
@@ -270,7 +292,7 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: TokenStream2, publish_ta
         }
     };
     if publish_target.on_create.is_none() {
-        push_item(out_items, quote! {
+        push_item(&mut builder.items, quote! {
                 impl <'a> ::ixc_core::message::Message<'a> for #msg_struct_name {
                     const SELECTOR: ::ixc_message_api::header::MessageSelector = #selector;
                     type Response<'b> = <#return_type as ::ixc_core::message::ExtractResponseTypes>::Response;
@@ -280,9 +302,8 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: TokenStream2, publish_ta
             })?;
         ensure!(context_name.is_some(), "no context parameter found");
         let context_name = context_name.unwrap();
-        Ok(APIMethodDeriveOut {
-            route: quote! {
-                    (< #msg_struct_name as ::ixc_core::message::Message >::SELECTOR, |h: &#handler_ident, packet, cb, a| {
+        builder.routes.push(quote! {
+                    (< #msg_struct_name as ::ixc_core::message::Message >::SELECTOR, |h: & #handler_ty, packet, cb, a| {
                         unsafe {
                             let cdc = < #msg_struct_name as ::ixc_core::message::Message >::Codec::default();
                             let in1 = packet.header().in_pointer1.get(packet);
@@ -292,40 +313,30 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: TokenStream2, publish_ta
                             ::ixc_core::low_level::encode_optional_to_out1::< < #msg_struct_name as ::ixc_core::message::Message<'_> >::Response<'_> >(&cdc, &res, a, packet).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))
                         }
                     }),
-            },
-            client_method: Some(quote! {
+        });
+        builder.client_methods.push(quote! {
                 pub #signature {
                     let msg = #msg_struct_name {
                         #(#msg_fields_init)*
                     };
                     unsafe { ::ixc_core::low_level::dynamic_invoke(#context_name, self.0, msg) }
                 }
-            }),
-            on_create_msg: None,
-        })
+        });
     } else {
-        Ok(APIMethodDeriveOut {
-            route: quote! {
-                    (::ixc_core::account_api::ON_CREATE_SELECTOR, |h: &#handler_ident, packet, cb, a| {
-                        unsafe {
-                            let cdc = < #msg_struct_name as ::ixc_core::handler::InitMessage >::Codec::default();
-                            let in1 = packet.header().in_pointer1.get(packet);
-                            let mut ctx = ::ixc_core::Context::new(packet.header().context_info, cb);
-                            let msg = ::ixc_schema::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
-                            h.#fn_name(&mut ctx, #(#msg_fields_access)*).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))
-                        }
-                    }),
-            },
-            client_method: None,
-            on_create_msg: Some(quote! { #msg_struct_name }),
-        })
+        builder.routes.push(quote! {
+            (::ixc_core::account_api::ON_CREATE_SELECTOR, | h: & #handler_ty, packet, cb, a| {
+                unsafe {
+                    let cdc = < #msg_struct_name as::ixc_core::handler::InitMessage >::Codec::default();
+                    let in1 = packet.header().in_pointer1.get(packet);
+                    let mut ctx =::ixc_core::Context::new(packet.header().context_info, cb);
+                    let msg =::ixc_schema::codec::decode_value::< #msg_struct_name > ( & cdc, in1, ctx.memory_manager()).map_err( | e|::ixc_message_api::handler::HandlerError::Custom(0)) ?;
+                    h.#fn_name(& mut ctx, #(#msg_fields_access)*).map_err( | e |::ixc_message_api::handler::HandlerError::Custom(0))
+                }
+            })}
+        );
+        builder.create_msg_name = Some(msg_struct_name);
     }
-}
-
-struct APIMethodDeriveOut {
-    route: TokenStream2,
-    client_method: Option<TokenStream2>,
-    on_create_msg: Option<TokenStream2>,
+    Ok(())
 }
 
 /// This attribute macro should be attached to the fn which is called when an account is created.

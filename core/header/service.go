@@ -13,6 +13,21 @@ type Service interface {
 	HeaderInfo(context.Context) Info
 }
 
+type HeaderInfo interface {
+	Bytes() ([]byte, error)
+	FromBytes([]byte) error
+}
+
+type GenericService[T HeaderInfo] interface {
+	HeaderInfo(context.Context) T
+}
+
+// let consumers cast when necessary
+
+type CastingService interface {
+	HeaderInfo(context.Context) HeaderInfo
+}
+
 // Info defines a struct that contains information about the header
 type Info struct {
 	Height  int64     // Height returns the height of the block

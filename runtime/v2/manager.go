@@ -21,8 +21,10 @@ import (
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
 )
 
@@ -193,6 +195,7 @@ func (m *MM[T]) InitGenesisJSON(
 // ExportGenesisForModules performs export genesis functionality for modules
 func (m *MM[T]) ExportGenesisForModules(
 	ctx context.Context,
+	stateFactory func() store.WriterMap,
 	modulesToExport ...string,
 ) (map[string]json.RawMessage, error) {
 	if len(modulesToExport) == 0 {
@@ -203,17 +206,19 @@ func (m *MM[T]) ExportGenesisForModules(
 		return nil, err
 	}
 
+	type genesisResult struct {
+		bz  json.RawMessage
+		err error
+	}
+
 	type ModuleI interface {
 		ExportGenesis(ctx context.Context) (json.RawMessage, error)
 	}
 
-	genesisData := make(map[string]json.RawMessage)
-
-	// TODO: make async export genesis https://github.com/cosmos/cosmos-sdk/issues/21303
+	channels := make(map[string]chan genesisResult)
 	for _, moduleName := range modulesToExport {
 		mod := m.modules[moduleName]
 		var moduleI ModuleI
-
 		if module, hasGenesis := mod.(appmodulev2.HasGenesis); hasGenesis {
 			moduleI = module.(ModuleI)
 		} else if module, hasABCIGenesis := mod.(appmodulev2.HasABCIGenesis); hasABCIGenesis {
@@ -222,12 +227,29 @@ func (m *MM[T]) ExportGenesisForModules(
 			continue
 		}
 
-		res, err := moduleI.ExportGenesis(ctx)
-		if err != nil {
-			return nil, err
+		channels[moduleName] = make(chan genesisResult)
+		go func(moduleI ModuleI, ch chan genesisResult) {
+			genesisCtx := services.NewGenesisContext(stateFactory())
+			_, _ = genesisCtx.Run(ctx, func(ctx context.Context) error {
+				jm, err := moduleI.ExportGenesis(ctx)
+				if err != nil {
+					ch <- genesisResult{nil, err}
+					return err
+				}
+				ch <- genesisResult{jm, nil}
+				return nil
+			})
+		}(moduleI, channels[moduleName])
+	}
+
+	genesisData := make(map[string]json.RawMessage)
+	for moduleName := range channels {
+		res := <-channels[moduleName]
+		if res.err != nil {
+			return nil, fmt.Errorf("genesis export error in %s: %w", moduleName, res.err)
 		}
 
-		genesisData[moduleName] = res
+		genesisData[moduleName] = res.bz
 	}
 
 	return genesisData, nil
@@ -459,10 +481,8 @@ func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap
 func (m *MM[T]) RegisterServices(app *App[T]) error {
 	for _, module := range m.modules {
 		// register msg + query
-		if services, ok := module.(hasServicesV1); ok {
-			if err := registerServices(services, app, protoregistry.GlobalFiles); err != nil {
-				return err
-			}
+		if err := registerServices(module, app, protoregistry.GlobalFiles); err != nil {
+			return err
 		}
 
 		// register migrations
@@ -594,26 +614,47 @@ func (m *MM[T]) assertNoForgottenModules(
 	return nil
 }
 
-func registerServices[T transaction.Tx](s hasServicesV1, app *App[T], registry *protoregistry.Files) error {
-	c := &configurator{
-		grpcQueryDecoders: map[string]func() gogoproto.Message{},
-		stfQueryRouter:    app.queryRouterBuilder,
-		stfMsgRouter:      app.msgRouterBuilder,
-		registry:          registry,
-		err:               nil,
+func registerServices[T transaction.Tx](s appmodulev2.AppModule, app *App[T], registry *protoregistry.Files) error {
+	// case module with services
+	if services, ok := s.(hasServicesV1); ok {
+		c := &configurator{
+			queryHandlers:  map[string]appmodulev2.Handler{},
+			stfQueryRouter: app.queryRouterBuilder,
+			stfMsgRouter:   app.msgRouterBuilder,
+			registry:       registry,
+			err:            nil,
+		}
+		if err := services.RegisterServices(c); err != nil {
+			return fmt.Errorf("unable to register services: %w", err)
+		}
+
+		if c.err != nil {
+			app.logger.Warn("error registering services", "error", c.err)
+		}
+
+		// merge maps
+		for path, decoder := range c.queryHandlers {
+			app.QueryHandlers[path] = decoder
+		}
 	}
 
-	if err := s.RegisterServices(c); err != nil {
-		return fmt.Errorf("unable to register services: %w", err)
+	// if module implements register msg handlers
+	if module, ok := s.(appmodulev2.HasMsgHandlers); ok {
+		wrapper := stfRouterWrapper{stfRouter: app.msgRouterBuilder}
+		module.RegisterMsgHandlers(&wrapper)
+		if wrapper.error != nil {
+			return fmt.Errorf("unable to register handlers: %w", wrapper.error)
+		}
 	}
 
-	if c.err != nil {
-		app.logger.Warn("error registering services", "error", c.err)
-	}
+	// if module implements register query handlers
+	if module, ok := s.(appmodulev2.HasQueryHandlers); ok {
+		wrapper := stfRouterWrapper{stfRouter: app.queryRouterBuilder}
+		module.RegisterQueryHandlers(&wrapper)
 
-	// merge maps
-	for path, decoder := range c.grpcQueryDecoders {
-		app.GRPCMethodsToMessageMap[path] = decoder
+		for path, handler := range wrapper.handlers {
+			app.QueryHandlers[path] = handler
+		}
 	}
 
 	return nil
@@ -622,9 +663,7 @@ func registerServices[T transaction.Tx](s hasServicesV1, app *App[T], registry *
 var _ grpc.ServiceRegistrar = (*configurator)(nil)
 
 type configurator struct {
-	// grpcQueryDecoders is required because module expose queries through gRPC
-	// this provides a way to route to modules using gRPC.
-	grpcQueryDecoders map[string]func() gogoproto.Message
+	queryHandlers map[string]appmodulev2.Handler
 
 	stfQueryRouter *stf.MsgRouterBuilder
 	stfMsgRouter   *stf.MsgRouterBuilder
@@ -656,28 +695,31 @@ func (c *configurator) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 func (c *configurator) registerQueryHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
 	for _, md := range sd.Methods {
 		// TODO(tip): what if a query is not deterministic?
-		requestFullName, err := registerMethod(c.stfQueryRouter, sd, md, ss)
+
+		handler, err := grpcHandlerToAppModuleHandler(sd, md, ss)
 		if err != nil {
-			return fmt.Errorf("unable to register query handler %s.%s: %w", sd.ServiceName, md.MethodName, err)
+			return fmt.Errorf("unable to make a appmodulev2.HandlerFunc from gRPC handler (%s, %s): %w", sd.ServiceName, md.MethodName, err)
 		}
 
-		// register gRPC query method.
-		typ := gogoproto.MessageType(requestFullName)
-		if typ == nil {
-			return fmt.Errorf("unable to find message in gogotype registry: %w", err)
+		// register to stf query router.
+		err = c.stfQueryRouter.RegisterHandler(gogoproto.MessageName(handler.MakeMsg()), handler.Func)
+		if err != nil {
+			return fmt.Errorf("unable to register handler to stf router (%s, %s): %w", sd.ServiceName, md.MethodName, err)
 		}
-		decoderFunc := func() gogoproto.Message {
-			return reflect.New(typ.Elem()).Interface().(gogoproto.Message)
-		}
-		methodName := fmt.Sprintf("/%s/%s", sd.ServiceName, md.MethodName)
-		c.grpcQueryDecoders[methodName] = decoderFunc
+
+		// register query handler using the same mapping used in stf
+		c.queryHandlers[gogoproto.MessageName(handler.MakeMsg())] = handler
 	}
 	return nil
 }
 
 func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{}) error {
 	for _, md := range sd.Methods {
-		_, err := registerMethod(c.stfMsgRouter, sd, md, ss)
+		handler, err := grpcHandlerToAppModuleHandler(sd, md, ss)
+		if err != nil {
+			return err
+		}
+		err = c.stfMsgRouter.RegisterHandler(gogoproto.MessageName(handler.MakeMsg()), handler.Func)
 		if err != nil {
 			return fmt.Errorf("unable to register msg handler %s.%s: %w", sd.ServiceName, md.MethodName, err)
 		}
@@ -685,32 +727,27 @@ func (c *configurator) registerMsgHandlers(sd *grpc.ServiceDesc, ss interface{})
 	return nil
 }
 
-// requestFullNameFromMethodDesc returns the fully-qualified name of the request message of the provided service's method.
-func requestFullNameFromMethodDesc(sd *grpc.ServiceDesc, method grpc.MethodDesc) (protoreflect.FullName, error) {
-	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
-	desc, err := gogoproto.HybridResolver.FindDescriptorByName(methodFullName)
-	if err != nil {
-		return "", fmt.Errorf("cannot find method descriptor %s", methodFullName)
-	}
-	methodDesc, ok := desc.(protoreflect.MethodDescriptor)
-	if !ok {
-		return "", fmt.Errorf("invalid method descriptor %s", methodFullName)
-	}
-	return methodDesc.Input().FullName(), nil
-}
-
-func registerMethod(
-	stfRouter *stf.MsgRouterBuilder,
+// grpcHandlerToAppModuleHandler converts a gRPC handler into an appmodulev2.HandlerFunc.
+func grpcHandlerToAppModuleHandler(
 	sd *grpc.ServiceDesc,
 	md grpc.MethodDesc,
 	ss interface{},
-) (string, error) {
-	requestName, err := requestFullNameFromMethodDesc(sd, md)
+) (appmodulev2.Handler, error) {
+	requestName, responseName, err := requestFullNameFromMethodDesc(sd, md)
 	if err != nil {
-		return "", err
+		return appmodulev2.Handler{}, err
 	}
 
-	return string(requestName), stfRouter.RegisterHandler(string(requestName), func(
+	requestTyp := gogoproto.MessageType(string(requestName))
+	if requestTyp == nil {
+		return appmodulev2.Handler{}, fmt.Errorf("no proto message found for %s", requestName)
+	}
+	responseTyp := gogoproto.MessageType(string(responseName))
+	if responseTyp == nil {
+		return appmodulev2.Handler{}, fmt.Errorf("no proto message found for %s", responseName)
+	}
+
+	handlerFunc := func(
 		ctx context.Context,
 		msg transaction.Msg,
 	) (resp transaction.Msg, err error) {
@@ -719,7 +756,17 @@ func registerMethod(
 			return nil, err
 		}
 		return res.(transaction.Msg), nil
-	})
+	}
+
+	return appmodulev2.Handler{
+		Func: handlerFunc,
+		MakeMsg: func() transaction.Msg {
+			return reflect.New(requestTyp.Elem()).Interface().(transaction.Msg)
+		},
+		MakeMsgResp: func() transaction.Msg {
+			return reflect.New(responseTyp.Elem()).Interface().(transaction.Msg)
+		},
+	}, nil
 }
 
 func noopDecoder(_ interface{}) error { return nil }
@@ -733,6 +780,20 @@ func messagePassingInterceptor(msg transaction.Msg) grpc.UnaryServerInterceptor 
 	) (interface{}, error) {
 		return handler(ctx, msg)
 	}
+}
+
+// requestFullNameFromMethodDesc returns the fully-qualified name of the request message and response of the provided service's method.
+func requestFullNameFromMethodDesc(sd *grpc.ServiceDesc, method grpc.MethodDesc) (protoreflect.FullName, protoreflect.FullName, error) {
+	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
+	desc, err := gogoproto.HybridResolver.FindDescriptorByName(methodFullName)
+	if err != nil {
+		return "", "", fmt.Errorf("cannot find method descriptor %s", methodFullName)
+	}
+	methodDesc, ok := desc.(protoreflect.MethodDescriptor)
+	if !ok {
+		return "", "", fmt.Errorf("invalid method descriptor %s", methodFullName)
+	}
+	return methodDesc.Input().FullName(), methodDesc.Output().FullName(), nil
 }
 
 // defaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,
@@ -760,4 +821,37 @@ func defaultMigrationsOrder(modules []string) []string {
 // This API is part of core/appmodule but commented out for dependencies.
 type hasServicesV1 interface {
 	RegisterServices(grpc.ServiceRegistrar) error
+}
+
+var _ appmodulev2.MsgRouter = (*stfRouterWrapper)(nil)
+
+// stfRouterWrapper wraps the stf router and implements the core appmodulev2.MsgRouter
+// interface.
+// The difference between this type and stf router is that the stf router expects
+// us to provide it the msg name, but the core router interface does not have
+// such requirement.
+type stfRouterWrapper struct {
+	stfRouter *stf.MsgRouterBuilder
+
+	error error
+
+	handlers map[string]appmodulev2.Handler
+}
+
+func (s *stfRouterWrapper) RegisterHandler(handler appmodulev2.Handler) {
+	req := handler.MakeMsg()
+	requestName := gogoproto.MessageName(req)
+	if requestName == "" {
+		s.error = errors.Join(s.error, fmt.Errorf("unable to extract request name for type: %T", req))
+	}
+
+	// register handler to stf router
+	err := s.stfRouter.RegisterHandler(requestName, handler.Func)
+	s.error = errors.Join(s.error, err)
+
+	// also make the decoder
+	if s.error == nil {
+		s.handlers = map[string]appmodulev2.Handler{}
+	}
+	s.handlers[requestName] = handler
 }

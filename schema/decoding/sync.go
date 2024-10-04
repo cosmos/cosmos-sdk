@@ -27,7 +27,7 @@ func Sync(listener appdata.Listener, source SyncSource, resolver DecoderResolver
 		return nil
 	}
 
-	return resolver.IterateAll(func(moduleName string, cdc schema.ModuleCodec) error {
+	return resolver.AllDecoders(func(moduleName string, cdc schema.ModuleCodec) error {
 		if opts.ModuleFilter != nil && !opts.ModuleFilter(moduleName) {
 			// ignore this module
 			return nil

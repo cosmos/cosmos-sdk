@@ -1,3 +1,7 @@
+INFO: Starting indexing
+INFO: Starting indexer
+  target_name: postgres
+  type: postgres
 DEBUG: Creating enum type
   sql: CREATE TYPE "test_my_enum" AS ENUM ('a', 'b', 'c');
 DEBUG: Creating enum type

@@ -48,6 +48,7 @@ func initChain(
 		ChainId:         chainID,
 		ConsensusParams: consensusParams,
 		Time:            genesisTimestamp,
+		InitialHeight:   int64(config.InitialBlockHeight),
 	}
 	res, err := app.InitChain(&req)
 	if err != nil {
@@ -60,7 +61,7 @@ func initChain(
 
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided config.Seed.
-func SimulateFromSeed( // exists for backwards compatibility only
+func SimulateFromSeed(
 	tb testing.TB,
 	logger corelog.Logger,
 	w io.Writer,
@@ -72,7 +73,7 @@ func SimulateFromSeed( // exists for backwards compatibility only
 	config simtypes.Config,
 	cdc codec.JSONCodec,
 	addressCodec address.Codec,
-) (exportedParams Params, err error) {
+) (exportedParams Params, accs []simtypes.Account, err error) {
 	tb.Helper()
 	mode, _, _ := getTestingMode(tb)
 	return SimulateFromSeedX(tb, logger, w, app, appStateFn, randAccFn, ops, blockedAddrs, config, cdc, NewLogWriter(mode))
@@ -92,7 +93,7 @@ func SimulateFromSeedX(
 	config simtypes.Config,
 	cdc codec.JSONCodec,
 	logWriter LogWriter,
-) (exportedParams Params, err error) {
+) (exportedParams Params, accs []simtypes.Account, err error) {
 	tb.Helper()
 	defer func() {
 		if err != nil {
@@ -110,7 +111,7 @@ func SimulateFromSeedX(
 	logger.Debug("Randomized simulation setup", "params", mustMarshalJSONIndent(params))
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
-	accs := randAccFn(r, params.NumKeys())
+	accs = randAccFn(r, params.NumKeys())
 	eventStats := NewEventStats()
 
 	// Second variable to keep pending validator set (delayed one block since
@@ -119,7 +120,7 @@ func SimulateFromSeedX(
 	// At least 2 accounts must be added here, otherwise when executing SimulateMsgSend
 	// two accounts will be selected to meet the conditions from != to and it will fall into an infinite loop.
 	if len(accs) <= 1 {
-		return params, errors.New("at least two genesis accounts are required")
+		return params, accs, errors.New("at least two genesis accounts are required")
 	}
 
 	config.ChainID = chainID
@@ -129,6 +130,10 @@ func SimulateFromSeedX(
 		return blockedAddrs[acc.AddressBech32]
 	})
 	nextValidators := validators
+	if len(nextValidators) == 0 {
+		tb.Skip("skipping: empty validator set in genesis")
+		return params, accs, nil
+	}
 
 	var (
 		pastTimes          []time.Time
@@ -187,7 +192,7 @@ func SimulateFromSeedX(
 	}
 
 	if _, err := app.FinalizeBlock(finalizeBlockReq); err != nil {
-		return params, fmt.Errorf("block finalization failed at height %d: %w", blockHeight, err)
+		return params, accs, fmt.Errorf("block finalization failed at height %d: %+w", blockHeight, err)
 	}
 
 	for blockHeight < int64(config.NumBlocks+config.InitialBlockHeight) {
@@ -199,7 +204,7 @@ func SimulateFromSeedX(
 
 		res, err := app.FinalizeBlock(finalizeBlockReq)
 		if err != nil {
-			return params, fmt.Errorf("block finalization failed at height %d: %w", blockHeight, err)
+			return params, accs, fmt.Errorf("block finalization failed at height %d: %w", blockHeight, err)
 		}
 
 		ctx := app.NewContextLegacy(false, cmtproto.Header{
@@ -246,7 +251,7 @@ func SimulateFromSeedX(
 		if config.Commit {
 			app.SimWriteState()
 			if _, err := app.Commit(); err != nil {
-				return params, fmt.Errorf("commit failed at height %d: %w", blockHeight, err)
+				return params, accs, fmt.Errorf("commit failed at height %d: %w", blockHeight, err)
 			}
 		}
 
@@ -263,6 +268,10 @@ func SimulateFromSeedX(
 		// on the next block
 		validators = nextValidators
 		nextValidators = updateValidators(tb, r, params, validators, res.ValidatorUpdates, eventStats.Tally)
+		if len(nextValidators) == 0 {
+			tb.Skip("skipping: empty validator set")
+			return exportedParams, accs, err
+		}
 
 		// update the exported params
 		if config.ExportParamsPath != "" && int64(config.ExportParamsHeight) == blockHeight {
@@ -278,7 +287,7 @@ func SimulateFromSeedX(
 	} else {
 		eventStats.Print(w)
 	}
-	return exportedParams, err
+	return exportedParams, accs, err
 }
 
 type blockSimFn func(

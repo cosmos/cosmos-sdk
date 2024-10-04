@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -180,7 +181,8 @@ func (app *BaseApp) Query(_ context.Context, req *abci.QueryRequest) (resp *abci
 
 	telemetry.IncrCounter(1, "query", "count")
 	telemetry.IncrCounter(1, "query", req.Path)
-	defer telemetry.MeasureSince(telemetry.Now(), req.Path)
+	start := telemetry.Now()
+	defer telemetry.MeasureSince(start, req.Path)
 
 	if req.Path == QueryPathBroadcastTx {
 		return queryResult(errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can't route a broadcast tx message"), app.trace), nil
@@ -366,18 +368,27 @@ func (app *BaseApp) CheckTx(req *abci.CheckTxRequest) (*abci.CheckTxResponse, er
 		return nil, fmt.Errorf("unknown RequestCheckTx type: %s", req.Type)
 	}
 
-	gInfo, result, anteEvents, err := app.runTx(mode, req.Tx)
-	if err != nil {
-		return responseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
+	if app.checkTxHandler == nil {
+		gInfo, result, anteEvents, err := app.runTx(mode, req.Tx, nil)
+		if err != nil {
+			return responseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
+		}
+
+		return &abci.CheckTxResponse{
+			GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
+			GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+			Log:       result.Log,
+			Data:      result.Data,
+			Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+		}, nil
 	}
 
-	return &abci.CheckTxResponse{
-		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
-	}, nil
+	// Create wrapper to avoid users overriding the execution mode
+	runTx := func(txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+		return app.runTx(mode, txBytes, tx)
+	}
+
+	return app.checkTxHandler(runTx, req)
 }
 
 // PrepareProposal implements the PrepareProposal ABCI method and returns a
@@ -821,7 +832,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 	// NOTE: Not all raw transactions may adhere to the sdk.Tx interface, e.g.
 	// vote extensions, so skip those.
 	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
-	for _, rawTx := range req.Txs {
+	for txIndex, rawTx := range req.Txs {
 
 		response := app.deliverTx(rawTx)
 
@@ -831,6 +842,12 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 			return nil, ctx.Err()
 		default:
 			// continue
+		}
+
+		// append the tx index to the response.Events
+		for i, event := range response.Events {
+			response.Events[i].Attributes = append(event.Attributes,
+				abci.EventAttribute{Key: "tx_index", Value: strconv.Itoa(txIndex)})
 		}
 
 		txResults = append(txResults, response)

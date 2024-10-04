@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -12,21 +11,14 @@ import (
 	"cosmossdk.io/x/tx/signing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal"
 	"github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/pulsar/testpb"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 )
 
-func ProvideCustomGetSigners() signing.CustomGetSigner {
-	return signing.CustomGetSigner{
-		MsgType: proto.MessageName(&testpb.TestRepeatedFields{}),
-		Fn: func(msg proto.Message) ([][]byte, error) {
-			testMsg := msg.(*testpb.TestRepeatedFields)
-			// arbitrary logic
-			signer := testMsg.NullableDontOmitempty[1].Value
-			return [][]byte{[]byte(signer)}, nil
-		},
-	}
+func ProvideCustomGetSigner() signing.CustomGetSigner {
+	return internal.TestRepeatedFieldsSigner
 }
 
 func TestDefineCustomGetSigners(t *testing.T) {
@@ -41,7 +33,7 @@ func TestDefineCustomGetSigners(t *testing.T) {
 				configurator.ConsensusModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
-			depinject.Provide(ProvideCustomGetSigners),
+			depinject.Provide(ProvideCustomGetSigner),
 		),
 		&interfaceRegistry,
 	)

@@ -34,6 +34,7 @@ func Test_TestnetCmd(t *testing.T) {
 		configurator.StakingModule(),
 		configurator.ConsensusModule(),
 		configurator.TxModule(),
+		configurator.ValidateModule(),
 		configurator.MintModule(),
 	)
 	var moduleManager *module.Manager

@@ -240,6 +240,9 @@ func (s *ExecutionSummary) String() string {
 	for _, key := range keys {
 		sb.WriteString(fmt.Sprintf("%s: %d\n", key, s.counts[key]))
 	}
+	if len(s.skipReasons) != 0 {
+		sb.WriteString("\nSkip reasons:\n")
+	}
 	for m, c := range s.skipReasons {
 		values := maps.Values(c)
 		keys := maps.Keys(c)

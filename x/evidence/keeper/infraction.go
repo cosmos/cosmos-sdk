@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// HandleEquivocationEvidence implements an equivocation evidence handler. Assuming the
+// handleEquivocationEvidence implements an equivocation evidence handler. Assuming the
 // evidence is valid, the validator committing the misbehavior will be slashed,
 // jailed and tombstoned. Once tombstoned, the validator will not be able to
 // recover. Note, the evidence contains the block time and height at the time of
@@ -25,7 +25,7 @@ import (
 // TODO: Some of the invalid constraints listed above may need to be reconsidered
 // in the case of a lunatic attack.
 func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.Equivocation) error {
-	consAddr := evidence.GetConsensusAddress(k.stakingKeeper.ConsensusAddressCodec())
+	consAddr := evidence.GetConsensusAddress(k.consensusAddressCodec)
 
 	validator, err := k.stakingKeeper.ValidatorByConsAddr(ctx, consAddr)
 	if err != nil {

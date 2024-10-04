@@ -52,9 +52,6 @@ test-sim-multi-seed-short:
 	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestFullAppSimulation \
 		-NumBlocks=50 -Period=10 -FauxMerkle=true
 
-test-v2-sim-wip:
-	@echo "Running v2 simapp. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp/v2 && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestSimsAppV2
 
 test-sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."

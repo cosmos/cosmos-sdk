@@ -24,8 +24,8 @@ import (
 
 const SnapshotFileName = "_snapshot"
 
-// QueryBlockResultsCmd implements the default command for a BlockResults query.
-func (s *StoreComponent[T]) ExportSnapshotCmd() *cobra.Command {
+// ExportSnapshotCmd exports app state to snapshot store.
+func (s *Server[T]) ExportSnapshotCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export app state to snapshot store",
@@ -76,7 +76,7 @@ func (s *StoreComponent[T]) ExportSnapshotCmd() *cobra.Command {
 }
 
 // RestoreSnapshotCmd returns a command to restore a snapshot
-func (s *StoreComponent[T]) RestoreSnapshotCmd(newApp serverv2.AppCreator[T]) *cobra.Command {
+func (s *Server[T]) RestoreSnapshotCmd(newApp serverv2.AppCreator[T]) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "restore <height> <format>",
 		Short: "Restore app state from local snapshot",
@@ -113,7 +113,7 @@ func (s *StoreComponent[T]) RestoreSnapshotCmd(newApp serverv2.AppCreator[T]) *c
 }
 
 // ListSnapshotsCmd returns the command to list local snapshots
-func (s *StoreComponent[T]) ListSnapshotsCmd() *cobra.Command {
+func (s *Server[T]) ListSnapshotsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List local snapshots",
@@ -139,7 +139,7 @@ func (s *StoreComponent[T]) ListSnapshotsCmd() *cobra.Command {
 }
 
 // DeleteSnapshotCmd returns the command to delete a local snapshot
-func (s *StoreComponent[T]) DeleteSnapshotCmd() *cobra.Command {
+func (s *Server[T]) DeleteSnapshotCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "delete <height> <format>",
 		Short: "Delete a local snapshot",
@@ -167,7 +167,7 @@ func (s *StoreComponent[T]) DeleteSnapshotCmd() *cobra.Command {
 }
 
 // DumpArchiveCmd returns a command to dump the snapshot as portable archive format
-func (s *StoreComponent[T]) DumpArchiveCmd() *cobra.Command {
+func (s *Server[T]) DumpArchiveCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "dump <height> <format>",
 		Short: "Dump the snapshot as portable archive format",
@@ -260,7 +260,7 @@ func (s *StoreComponent[T]) DumpArchiveCmd() *cobra.Command {
 }
 
 // LoadArchiveCmd load a portable archive format snapshot into snapshot store
-func (s *StoreComponent[T]) LoadArchiveCmd() *cobra.Command {
+func (s *Server[T]) LoadArchiveCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "load <archive-file>",
 		Short: "Load a snapshot archive file (.tar.gz) into snapshot store",

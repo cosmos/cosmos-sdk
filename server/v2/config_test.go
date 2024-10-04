@@ -20,8 +20,8 @@ func TestReadConfig(t *testing.T) {
 	v, err := serverv2.ReadConfig(configPath)
 	require.NoError(t, err)
 
-	require.Equal(t, v.GetString("grpc.address"), grpc.DefaultConfig().Address)
-	require.Equal(t, v.GetString("store.app-db-backend"), store.DefaultConfig().AppDBBackend)
+	require.Equal(t, v.GetString(grpc.FlagAddress), grpc.DefaultConfig().Address)
+	require.Equal(t, v.GetString(store.FlagAppDBBackend), store.DefaultConfig().AppDBBackend)
 }
 
 func TestUnmarshalSubConfig(t *testing.T) {

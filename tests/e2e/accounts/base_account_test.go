@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"testing"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
 
 	"cosmossdk.io/simapp"

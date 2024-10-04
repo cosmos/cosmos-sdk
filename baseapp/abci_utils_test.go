@@ -691,6 +691,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			ph := baseapp.NewDefaultProposalHandler(mp, app)
 
 			for _, v := range tc.txInputs {
+				app.EXPECT().TxDecode(v.bz).Return(v.tx, nil).AnyTimes()
 				app.EXPECT().PrepareProposalVerifyTx(v.tx).Return(v.bz, nil).AnyTimes()
 				s.NoError(mp.Insert(s.ctx.WithPriority(v.priority), v.tx))
 				tc.req.Txs = append(tc.req.Txs, v.bz)

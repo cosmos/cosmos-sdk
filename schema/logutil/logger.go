@@ -21,6 +21,13 @@ type Logger interface {
 	Debug(msg string, keyVals ...interface{})
 }
 
+// ScopeableLogger is a logger that can be scoped with key/value pairs.
+// It is implemented by all the loggers in cosmossdk.io/log.
+type ScopeableLogger interface {
+	// WithContext returns a new logger with the provided key/value pairs set.
+	WithContext(keyVals ...interface{}) interface{}
+}
+
 // NoopLogger is a logger that doesn't do anything.
 type NoopLogger struct{}
 

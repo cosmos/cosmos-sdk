@@ -13,6 +13,12 @@ import (
 	"github.com/creachadair/tomledit/parser"
 )
 
+// isV2 checks if the tests run with simapp v2
+func isV2() bool {
+	buildOptions := os.Getenv("COSMOS_BUILD_OPTIONS")
+	return strings.Contains(buildOptions, "v2")
+}
+
 // SingleHostTestnetCmdInitializer default testnet cmd that supports the --single-host param
 type SingleHostTestnetCmdInitializer struct {
 	execBinary        string
@@ -53,10 +59,16 @@ func (s SingleHostTestnetCmdInitializer) Initialize() {
 		"--output-dir=" + s.outputDir,
 		"--validator-count=" + strconv.Itoa(s.initialNodesCount),
 		"--keyring-backend=test",
-		"--minimum-gas-prices=" + s.minGasPrice,
 		"--commit-timeout=" + s.commitTimeout.String(),
 		"--single-host",
 	}
+
+	if isV2() {
+		args = append(args, "--server.minimum-gas-prices="+s.minGasPrice)
+	} else {
+		args = append(args, "--minimum-gas-prices="+s.minGasPrice)
+	}
+
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
 	out, err := RunShellCmd(s.execBinary, args...)
 	if err != nil {
@@ -108,8 +120,14 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 		"--output-dir=" + s.outputDir,
 		"--v=" + strconv.Itoa(s.initialNodesCount),
 		"--keyring-backend=test",
-		"--minimum-gas-prices=" + s.minGasPrice,
 	}
+
+	if isV2() {
+		args = append(args, "--server.minimum-gas-prices="+s.minGasPrice)
+	} else {
+		args = append(args, "--minimum-gas-prices="+s.minGasPrice)
+	}
+
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
 
 	out, err := RunShellCmd(s.execBinary, args...)
@@ -144,7 +162,6 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 		EditToml(filepath.Join(nodeDir, "app.toml"), func(doc *tomledit.Document) {
 			UpdatePort(doc, apiPortStart+i, "api", "address")
 			UpdatePort(doc, grpcPortStart+i, "grpc", "address")
-			SetBool(doc, true, "grpc-web", "enable")
 		})
 	}
 }

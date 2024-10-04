@@ -50,7 +50,7 @@ func RandomGenesisSendEnabled(r *rand.Rand, bondDenom string) []types.SendEnable
 	//   P(sef)  = 18.0% = SendEnabled entry that does not equal the default   = P(stc') + P(sfc) = .045 + .135 = .180
 	//
 	//   P(t)    = 81.0% = Bond denom is sendable      = P(a'c) + P(st)  = .360 + .450 = .810
-	//   P(f)    = 19.0% = Bond demon is NOT sendable  = P(a'c') + P(sf) = .040 + .150 = .190
+	//   P(f)    = 19.0% = Bond denom is NOT sendable  = P(a'c') + P(sf) = .040 + .150 = .190
 
 	return rv
 }

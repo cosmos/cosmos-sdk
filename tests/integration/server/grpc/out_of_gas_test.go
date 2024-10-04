@@ -45,6 +45,7 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 		configurator.StakingModule(),
 		configurator.ConsensusModule(),
 		configurator.TxModule(),
+		configurator.ValidateModule(),
 	), baseapp.SetQueryGasLimit(10))
 	s.NoError(err)
 	s.cfg.NumValidators = 1

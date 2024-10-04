@@ -115,9 +115,9 @@ func MsgSubmitLegacyProposalFactory(k *keeper.Keeper, contentSimFn simtypes.Cont
 	})
 }
 
-func MsgSubmitProposalFactory(k *keeper.Keeper, payloadFactory simsx.SimMsgFactoryX) simsx.SimMsgFactoryX {
+func MsgSubmitProposalFactory(k *keeper.Keeper, payloadFactory simsx.FactoryMethod) simsx.SimMsgFactoryX {
 	return simsx.NewSimMsgFactoryWithFutureOps[*v1.MsgSubmitProposal](func(ctx context.Context, testData *simsx.ChainDataSource, reporter simsx.SimulationReporter, fOpsReg simsx.FutureOpsRegistry) ([]simsx.SimAccount, *v1.MsgSubmitProposal) {
-		_, proposalMsg := payloadFactory.Create()(ctx, testData, reporter)
+		_, proposalMsg := payloadFactory(ctx, testData, reporter)
 		return submitProposalWithVotesScheduled(ctx, k, testData, reporter, fOpsReg, proposalMsg)
 	})
 }

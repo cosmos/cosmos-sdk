@@ -1,6 +1,7 @@
 package simsx
 
 import (
+	"cmp"
 	"context"
 	"iter"
 	"maps"
@@ -36,7 +37,7 @@ type (
 )
 
 // WeightedProposalMsgIter iterator for weighted gov proposal payload messages
-type WeightedProposalMsgIter = iter.Seq2[uint32, SimMsgFactoryX]
+type WeightedProposalMsgIter = iter.Seq2[uint32, FactoryMethod]
 
 var _ Registry = &WeightedOperationRegistryAdapter{}
 
@@ -108,6 +109,7 @@ type HasFutureOpsRegistry interface {
 	SetFutureOpsRegistry(FutureOpsRegistry)
 }
 
+// msg factory to legacy Operation type
 func legacyOperationAdapter(l regCommon, fx SimMsgFactoryX) simtypes.Operation {
 	return func(
 		r *rand.Rand, app AppEntrypoint, ctx sdk.Context,
@@ -167,15 +169,15 @@ func (s UniqueTypeRegistry) Add(weight uint32, f SimMsgFactoryX) {
 }
 
 // Iterator returns an iterator function for a Go for loop sorted by weight desc.
-func (s UniqueTypeRegistry) Iterator() iter.Seq2[uint32, SimMsgFactoryX] {
+func (s UniqueTypeRegistry) Iterator() WeightedProposalMsgIter {
 	x := maps.Values(s)
 	sortedWeightedFactory := slices.SortedFunc(x, func(a, b WeightedFactory) int {
 		return a.Compare(b)
 	})
 
-	return func(yield func(uint32, SimMsgFactoryX) bool) {
+	return func(yield func(uint32, FactoryMethod) bool) {
 		for _, v := range sortedWeightedFactory {
-			if !yield(v.Weight, v.Factory) {
+			if !yield(v.Weight, v.Factory.Create()) {
 				return
 			}
 		}
@@ -202,5 +204,65 @@ func (f WeightedFactory) Compare(b WeightedFactory) int {
 		return -1
 	default:
 		return strings.Compare(sdk.MsgTypeURL(f.Factory.MsgType()), sdk.MsgTypeURL(b.Factory.MsgType()))
+	}
+}
+
+// WeightedFactoryMethod is a data tuple used for registering legacy proposal operations
+type WeightedFactoryMethod struct {
+	Weight  uint32
+	Factory FactoryMethod
+}
+
+type WeightedFactoryMethods []WeightedFactoryMethod
+
+// NewWeightedFactoryMethods constructor
+func NewWeightedFactoryMethods() WeightedFactoryMethods {
+	return make(WeightedFactoryMethods, 0)
+}
+
+// Add adds a new WeightedFactoryMethod to the WeightedFactoryMethods slice.
+// If weight is zero or f is nil, it returns without making any changes.
+func (s *WeightedFactoryMethods) Add(weight uint32, f FactoryMethod) {
+	if weight == 0 {
+		return
+	}
+	if f == nil {
+		panic("message factory must not be nil")
+	}
+	*s = append(*s, WeightedFactoryMethod{Weight: weight, Factory: f})
+}
+
+// Iterator returns an iterator function for a Go for loop sorted by weight desc.
+func (s WeightedFactoryMethods) Iterator() WeightedProposalMsgIter {
+	slices.SortFunc(s, func(e, e2 WeightedFactoryMethod) int {
+		return cmp.Compare(e.Weight, e2.Weight)
+	})
+	return func(yield func(uint32, FactoryMethod) bool) {
+		for _, v := range s {
+			if !yield(v.Weight, v.Factory) {
+				return
+			}
+		}
+	}
+}
+
+// legacy operation to Msg factory type
+func legacyToMsgFactoryAdapter(fn simtypes.MsgSimulatorFnX) FactoryMethod {
+	return func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
+		msg, err := fn(ctx, testData.r, testData.AllAccounts(), testData.AddressCodec())
+		if err != nil {
+			reporter.Skip(err.Error())
+			return nil, nil
+		}
+		return []SimAccount{}, msg
+	}
+}
+
+// AppendIterators takes multiple WeightedProposalMsgIter and returns a single iterator that sequentially yields items after each one.
+func AppendIterators(iterators ...WeightedProposalMsgIter) WeightedProposalMsgIter {
+	return func(yield func(uint32, FactoryMethod) bool) {
+		for _, it := range iterators {
+			it(yield)
+		}
 	}
 }

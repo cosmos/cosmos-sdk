@@ -18,7 +18,7 @@ type Type interface {
 type ReferenceType interface {
 	Type
 
-	// IsReferenceType is implemented if this is a reference type.
+	// isReferenceType is implemented if this is a reference type.
 	isReferenceType()
 }
 

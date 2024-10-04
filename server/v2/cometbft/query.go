@@ -7,7 +7,7 @@ import (
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 
-	errorsmod "cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors/v2"
 	"cosmossdk.io/server/v2/cometbft/types"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 )

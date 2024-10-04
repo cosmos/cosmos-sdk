@@ -12,49 +12,49 @@ import (
 )
 
 var (
-	_ serverv2.ServerComponent[transaction.Tx] = (*StoreComponent[transaction.Tx])(nil)
-	_ serverv2.HasConfig                       = (*StoreComponent[transaction.Tx])(nil)
-	_ serverv2.HasCLICommands                  = (*StoreComponent[transaction.Tx])(nil)
+	_ serverv2.ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
+	_ serverv2.HasConfig                       = (*Server[transaction.Tx])(nil)
+	_ serverv2.HasCLICommands                  = (*Server[transaction.Tx])(nil)
 )
 
 const ServerName = "store"
 
-// StoreComponent manages store config
-// and contains prune & snapshot commands
-type StoreComponent[T transaction.Tx] struct {
+// Server manages store config and contains prune & snapshot commands
+type Server[T transaction.Tx] struct {
 	config *Config
 	// saving appCreator for only RestoreSnapshotCmd
 	appCreator serverv2.AppCreator[T]
 }
 
-func New[T transaction.Tx](appCreator serverv2.AppCreator[T]) *StoreComponent[T] {
-	return &StoreComponent[T]{appCreator: appCreator}
+func New[T transaction.Tx](appCreator serverv2.AppCreator[T]) *Server[T] {
+	return &Server[T]{appCreator: appCreator}
 }
 
-func (s *StoreComponent[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
-	serverCfg := DefaultConfig()
+func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
+	serverCfg := s.Config().(*Config)
 	if len(cfg) > 0 {
 		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
+
 	s.config = serverCfg
 	return nil
 }
 
-func (s *StoreComponent[T]) Name() string {
+func (s *Server[T]) Name() string {
 	return ServerName
 }
 
-func (s *StoreComponent[T]) Start(ctx context.Context) error {
+func (s *Server[T]) Start(ctx context.Context) error {
 	return nil
 }
 
-func (s *StoreComponent[T]) Stop(ctx context.Context) error {
+func (s *Server[T]) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s *StoreComponent[T]) CLICommands() serverv2.CLIConfig {
+func (s *Server[T]) CLICommands() serverv2.CLIConfig {
 	return serverv2.CLIConfig{
 		Commands: []*cobra.Command{
 			s.PrunesCmd(),
@@ -68,10 +68,10 @@ func (s *StoreComponent[T]) CLICommands() serverv2.CLIConfig {
 	}
 }
 
-func (g *StoreComponent[T]) Config() any {
-	if g.config == nil || g.config == (&Config{}) {
+func (s *Server[T]) Config() any {
+	if s.config == nil || s.config.AppDBBackend == "" {
 		return DefaultConfig()
 	}
 
-	return g.config
+	return s.config
 }

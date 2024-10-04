@@ -9,24 +9,21 @@ use ixc_schema::value::OptionalValue;
 use crate::context::Context;
 use crate::error::Error;
 use crate::error::Error::SystemError;
-use crate::handler::Handler;
+use crate::handler::{ClientFactory, Handler, InitMessage};
 use crate::low_level::create_packet;
 
 /// Creates a new account for the specified handler.
-pub fn create_account<'a, H: Handler>(ctx: &mut Context, init: &<H::Init<'a> as OptionalValue<'a>>::Value) -> crate::Result<H::Client> {
+pub fn create_account<'a, I: InitMessage<'a>>(ctx: &mut Context, init: I) -> crate::Result<<<I as InitMessage<'a>>::Handler as ClientFactory>::Client> {
     let mut packet = create_packet(ctx, ROOT_ACCOUNT, CREATE_SELECTOR)?;
 
-    let cdc = H::InitCodec::default();
-    let init_bz = <H::Init<'_> as OptionalValue<'_>>::encode_value(&cdc, init, ctx.memory_manager()).
+    let cdc = I::Codec::default();
+    let init_bz = cdc.encode_value(&init, ctx.memory_manager())
         // map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-        map_err(|_| ())?;
-
+        .map_err(|_| ())?;
 
     unsafe {
-        packet.header_mut().in_pointer1.set_slice(H::NAME.as_bytes());
-        if let Some(init_bz) = init_bz {
-            packet.header_mut().in_pointer2.set_slice(init_bz);
-        }
+        packet.header_mut().in_pointer1.set_slice(I::Handler::NAME.as_bytes());
+        packet.header_mut().in_pointer2.set_slice(init_bz);
 
         ctx.host_backend().invoke(&mut packet, ctx.memory_manager())
             // .map_err(|_| Error::SystemError(SystemErrorCode::UnknownHandlerError))?;
@@ -34,7 +31,7 @@ pub fn create_account<'a, H: Handler>(ctx: &mut Context, init: &<H::Init<'a> as 
 
         let new_account_id = packet.header().in_pointer1.get_u64();
 
-        Ok(H::new_client(AccountID::new(new_account_id)))
+        Ok(I::Handler::new_client(AccountID::new(new_account_id)))
     }
 }
 

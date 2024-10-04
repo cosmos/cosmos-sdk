@@ -6,10 +6,11 @@ mod vm;
 use std::cell::RefCell;
 use allocator_api2::alloc::Allocator;
 use allocator_api2::boxed::Box;
+use ixc::SchemaValue;
 use ixc_message_api::{AccountID};
 use ixc_core::{Context};
 use ixc_core::account_api::{create_account, ROOT_ACCOUNT};
-use ixc_core::handler::{HandlerAPI, Handler, ClientFactory, Client};
+use ixc_core::handler::{HandlerAPI, Handler, ClientFactory, Client, InitMessage};
 use ixc_core::resource::{InitializationError, ResourceScope, Resources};
 use ixc_core::routes::{Route, Router};
 use ixc_hypervisor::Hypervisor;
@@ -17,6 +18,7 @@ use ixc_message_api::code::ErrorCode;
 use ixc_message_api::handler::{HandlerError, HandlerErrorCode, HostBackend, RawHandler};
 use ixc_message_api::header::{ContextInfo, MessageHeader};
 use ixc_message_api::packet::MessagePacket;
+use ixc_schema::binary::NativeBinaryCodec;
 use ixc_schema::mem::MemoryManager;
 use crate::store::{Store, VersionedMultiStore};
 use crate::vm::{NativeVM, NativeVMImpl};
@@ -72,8 +74,16 @@ impl Client for DefaultAccountClient {
 
 impl Handler for DefaultAccount {
     const NAME: &'static str = "ixc_testing.DefaultAccount";
-    type Init<'a> = ();
-    type InitCodec = ixc_schema::binary::NativeBinaryCodec;
+    type Init<'a> = CreateDefaultAccount;
+}
+
+#[derive(SchemaValue)]
+#[sealed]
+struct CreateDefaultAccount;
+
+impl <'a> InitMessage<'a> for CreateDefaultAccount {
+    type Handler = DefaultAccount;
+    type Codec = NativeBinaryCodec;
 }
 
 impl RawHandler for DefaultAccount {
@@ -124,7 +134,7 @@ impl TestApp {
     /// Creates a new random client account that can be used in calls.
     pub fn new_client_context(&self) -> core::result::Result<Context, ()> {
         let mut ctx = self.client_context_for(ROOT_ACCOUNT);
-        let client = create_account::<DefaultAccount>(&mut ctx, &())
+        let client = create_account(&mut ctx, CreateDefaultAccount)
             .map_err(|_| ())?;
         Ok(self.client_context_for(client.0))
     }

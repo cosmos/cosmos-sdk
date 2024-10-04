@@ -53,7 +53,7 @@ mod tests {
         app.register_handler::<SimpleAsset>().unwrap();
         let mut alice = app.new_client_context().unwrap();
         let mut bob = app.new_client_context();
-        create_account::<SimpleAsset>(&mut alice, &SimpleAssetInitMsg{ initial_balance: 100 }).unwrap();
+        create_account(&mut alice, SimpleAssetInitMsg{ initial_balance: 100 }).unwrap();
     }
 }
 

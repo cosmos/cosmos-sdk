@@ -153,7 +153,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
             routes.push(quote! {
                     (::ixc_core::account_api::ON_CREATE_SELECTOR, |h: &#handler, packet, cb, a| {
                         unsafe {
-                            let cdc = < #handler as ::ixc_core::handler::Handler >::InitCodec::default();
+                            let cdc = < #msg_struct_name as ::ixc_core::handler::InitMessage >::Codec::default();
                             let in1 = packet.header().in_pointer1.get(packet);
                             let mut ctx = ::ixc_core::Context::new(packet.header().context_info, cb);
                             let msg = ::ixc_schema::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
@@ -168,7 +168,13 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
         impl ::ixc_core::handler::Handler for #handler {
             const NAME: &'static str = stringify!(#handler);
             type Init<'a> = #on_create_msg;
-            type InitCodec = ::ixc_schema::binary::NativeBinaryCodec;
+        }
+    })?;
+
+    push_item(items, quote! {
+        impl <'a> ::ixc_core::handler::InitMessage<'a> for #on_create_msg {
+            type Handler = #handler;
+            type Codec = ::ixc_schema::binary::NativeBinaryCodec;
         }
     })?;
 

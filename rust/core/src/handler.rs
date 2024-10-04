@@ -3,6 +3,7 @@ use ixc_message_api::AccountID;
 use ixc_message_api::handler::RawHandler;
 use ixc_schema::codec::Codec;
 use ixc_schema::SchemaValue;
+use ixc_schema::structs::StructSchema;
 use ixc_schema::value::OptionalValue;
 use crate::Context;
 use crate::resource::{InitializationError, Resources};
@@ -13,9 +14,15 @@ pub trait Handler: RawHandler + Router + Resources + ClientFactory {
     /// The name of the handler.
     const NAME: &'static str;
     /// The parameter used for initializing the handler.
-    type Init<'a>: OptionalValue<'a>;
+    type Init<'a>: InitMessage<'a>;
+}
+
+/// A message which initializes a new account for a handler.
+pub trait InitMessage<'a>: SchemaValue<'a> + StructSchema {
+    /// The handle which the account will be created with.
+    type Handler: Handler;
     /// The codec used for initializing the handler.
-    type InitCodec: Codec + Default;
+    type Codec: Codec + Default;
 }
 
 /// Account API trait.

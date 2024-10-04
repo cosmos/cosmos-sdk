@@ -21,8 +21,8 @@ func (am AppModule) IsOnePerModuleType() {}
 func init() {
 	appconfig.RegisterModule(
 		&types.Module{},
-		appconfig.Invoke(InvokeSetHooks),
 		appconfig.Provide(ProvideModule),
+		appconfig.Invoke(InvokeSetHooks),
 	)
 }
 
@@ -51,8 +51,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 }
 
 func InvokeSetHooks(keeper *keeper.Keeper, counterHooks map[string]types.CounterHooksWrapper) error {
-	if keeper == nil || counterHooks == nil {
-		return nil
+	if keeper == nil {
+		return fmt.Errorf("keeper is nil")
+	}
+	if counterHooks == nil {
+		return fmt.Errorf("counterHooks is nil")
 	}
 
 	// Default ordering is lexical by module name.

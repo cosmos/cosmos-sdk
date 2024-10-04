@@ -7,6 +7,10 @@ import (
 	corestore "cosmossdk.io/core/store"
 )
 
+var (
+	errInvalidIterator = errors.New("invalid iterator")
+)
+
 // mergedIterator merges a parent Iterator and a cache Iterator.
 // The cache iterator may contain items that shadow or override items in the parent iterator.
 // If the cache iterator has the same key as the parent, the cache's value takes precedence.
@@ -52,7 +56,7 @@ func (i *mergedIterator[Parent, Cache]) Valid() bool {
 // It skips over deleted items (with nil values) and updates the current key and value.
 func (i *mergedIterator[Parent, Cache]) Next() {
 	if !i.valid {
-		i.err = errors.New("invalid iterator")
+		i.err = errInvalidIterator
 		return
 	}
 	i.advance()

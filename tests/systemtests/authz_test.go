@@ -607,7 +607,7 @@ func TestAuthzExecRedelegateAuthorization(t *testing.T) {
 		msgRedelegateTypeURL, granterAddr, val1Addr, val2Addr, testDenom, redelegationAmount)
 	execMsg := WriteToTempJSONFile(t, redelegateTx)
 
-	redelegateCmd := []string{"tx", "authz", "exec", execMsg.Name(), "--from=" + granteeAddr, "--gas=auto"}
+	redelegateCmd := []string{"tx", "authz", "exec", execMsg.Name(), "--from=" + granteeAddr, "--gas=500000", "--fees=10stake"}
 	rsp = cli.RunAndWait(redelegateCmd...)
 	RequireTxSuccess(t, rsp)
 

@@ -231,7 +231,7 @@ func NewKeeper(env appmodule.Environment, cdc codec.Codec, accKeeper group.Accou
 }
 
 // GetGroupSequence returns the current value of the group table sequence
-func (k Keeper) GetGroupSequence(ctx sdk.Context) uint64 {
+func (k Keeper) GetGroupSequence(ctx context.Context) uint64 {
 	return k.groupTable.Sequence().CurVal(k.KVStoreService.OpenKVStore(ctx))
 }
 
@@ -379,8 +379,6 @@ func (k Keeper) PruneProposals(ctx context.Context) error {
 		return nil
 	}
 	for _, proposal := range proposals {
-		proposal := proposal
-
 		err := k.pruneProposal(ctx, proposal.Id)
 		if err != nil {
 			return err

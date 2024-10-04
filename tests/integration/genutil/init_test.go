@@ -37,7 +37,7 @@ import (
 )
 
 var testMbm = module.NewManager(
-	staking.NewAppModule(makeCodec(), nil, nil, nil),
+	staking.NewAppModule(makeCodec(), nil),
 	genutil.NewAppModule(makeCodec(), nil, nil, nil, nil, nil),
 )
 
@@ -61,7 +61,6 @@ func TestInitCmd(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			home := t.TempDir()
 			logger := log.NewNopLogger()

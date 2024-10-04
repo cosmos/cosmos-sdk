@@ -52,30 +52,38 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 		require.NoError(t, err)
 	})
 
-	cfg, err := postgresConfigToIndexerConfig(postgres.Config{
-		DatabaseURL:            dbUrl,
-		DisableRetainDeletions: !retainDeletions,
-	})
-	require.NoError(t, err)
-
 	debugLog := &strings.Builder{}
 
-	pgIndexer, err := postgres.StartIndexer(indexer.InitParams{
-		Config:       cfg,
+	res, err := indexer.StartIndexing(indexer.IndexingOptions{
+		Config: indexer.IndexingConfig{
+			Target: map[string]indexer.Config{
+				"postgres": {
+					Type: "postgres",
+					Config: postgres.Config{
+						DatabaseURL:            dbUrl,
+						DisableRetainDeletions: !retainDeletions,
+					},
+				},
+			},
+		},
 		Context:      ctx,
 		Logger:       &prettyLogger{debugLog},
 		AddressCodec: addressutil.HexAddressCodec{},
 	})
 	require.NoError(t, err)
+	require.NoError(t, err)
 
 	sim, err := appdatasim.NewSimulator(appdatasim.Options{
-		Listener:  pgIndexer.Listener,
+		Listener:  res.Listener,
 		AppSchema: indexertesting.ExampleAppSchema,
 		StateSimOptions: statesim.Options{
 			CanRetainDeletions: retainDeletions,
 		},
 	})
 	require.NoError(t, err)
+
+	pgIndexerView := res.IndexerInfos["postgres"].View
+	require.NotNil(t, pgIndexerView)
 
 	blockDataGen := sim.BlockDataGenN(10, 100)
 	numBlocks := 200
@@ -93,7 +101,7 @@ func testPostgresIndexer(t *testing.T, retainDeletions bool) {
 		require.NoError(t, sim.ProcessBlockData(blockData), debugLog.String())
 
 		// compare the expected state in the simulator to the actual state in the indexer and expect the diff to be empty
-		require.Empty(t, appdatasim.DiffAppData(sim, pgIndexer.View), debugLog.String())
+		require.Empty(t, appdatasim.DiffAppData(sim, pgIndexerView), debugLog.String())
 
 		// reset the debug log after each successful block so that it doesn't get too long when debugging
 		debugLog.Reset()

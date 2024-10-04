@@ -10,7 +10,7 @@ Key features and principles:
 4. Modules depend solely on core APIs for maximum compatibility.
 5. New API additions undergo thorough consideration to maintain stability.
 6. Adheres to a no-breaking-changes policy for reliable dependency management.
-7. Aimed to have zero dependencies, ensuring a lightweight and self-contained foundation.
+7. Aimed to only depend on `schema`, ensuring a lightweight and self-contained foundation.
 
 The core module offers the [appmodule](https://pkg.go.dev/cosmossdk.io/core/appmodule) and [appmodule/v2](https://pkg.go.dev/cosmossdk.io/core/appmodule/v2) packages that include APIs to describe how modules can be written.
 Additionally, it contains all core services APIs that can be used in modules to interact with the SDK, majoritarily via the `appmodule.Environment` struct.

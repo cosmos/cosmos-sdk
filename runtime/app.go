@@ -6,6 +6,8 @@ import (
 	"slices"
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"google.golang.org/grpc"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
@@ -30,6 +32,9 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
+// KeyGenF is a function that generates a private key for use by comet.
+type KeyGenF = func() (cmtcrypto.PrivKey, error)
+
 // App is a wrapper around BaseApp and ModuleManager that can be used in hybrid
 // app.go/app config scenarios or directly as a servertypes.Application instance.
 // To get an instance of *App, *AppBuilder must be requested as a dependency
@@ -45,7 +50,7 @@ type App struct {
 	ModuleManager      *module.Manager
 	UnorderedTxManager *unorderedtx.Manager
 
-	configurator      module.Configurator // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+	configurator      module.Configurator //nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 	config            *runtimev1alpha1.Module
 	storeKeys         []storetypes.StoreKey
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -251,7 +256,7 @@ func (a *App) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
 }
 
 // Configurator returns the app's configurator.
-func (a *App) Configurator() module.Configurator { // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+func (a *App) Configurator() module.Configurator { //nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 	return a.configurator
 }
 
@@ -307,4 +312,11 @@ var _ servertypes.Application = &App{}
 // This API is part of core/appmodule but commented out for dependencies.
 type hasServicesV1 interface {
 	RegisterServices(grpc.ServiceRegistrar) error
+}
+
+// ValidatorKeyProvider returns a function that generates a private key for use by comet.
+func (a *App) ValidatorKeyProvider() KeyGenF {
+	return func() (cmtcrypto.PrivKey, error) {
+		return cmted25519.GenPrivKey(), nil
+	}
 }

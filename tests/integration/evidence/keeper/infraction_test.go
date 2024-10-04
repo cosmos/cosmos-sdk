@@ -154,14 +154,14 @@ func initFixture(tb testing.TB) *fixture {
 
 	stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(slashingKeeper.Hooks()))
 
-	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter)), stakingKeeper, slashingKeeper, consensusParamsKeeper, addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr))
+	evidenceKeeper := keeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[evidencetypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(grpcQueryRouter), runtime.EnvWithMsgRouterService(msgRouter)), stakingKeeper, slashingKeeper, consensusParamsKeeper, addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr), stakingKeeper.ConsensusAddressCodec())
 	router := evidencetypes.NewRouter()
 	router = router.AddRoute(evidencetypes.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper)
 	slashingModule := slashing.NewAppModule(cdc, slashingKeeper, accountKeeper, bankKeeper, stakingKeeper, cdc.InterfaceRegistry(), cometInfoService)
 	evidenceModule := evidence.NewAppModule(cdc, *evidenceKeeper, cometInfoService)
 	consensusModule := consensus.NewAppModule(cdc, consensusParamsKeeper)

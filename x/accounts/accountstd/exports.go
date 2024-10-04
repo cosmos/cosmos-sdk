@@ -4,6 +4,7 @@ package accountstd
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/core/transaction"
@@ -13,7 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
-var accountsModuleAddress = address.Module("accounts")
+var (
+	accountsModuleAddress = address.Module("accounts")
+	ErrInvalidType        = errors.New("invalid type")
+)
 
 // Interface is the exported interface of an Account.
 type Interface = implementation.Account
@@ -29,6 +33,16 @@ type InitBuilder = implementation.InitBuilder
 
 // AccountCreatorFunc is the exported type of AccountCreatorFunc.
 type AccountCreatorFunc = implementation.AccountCreatorFunc
+
+func DIAccount[A Interface](name string, constructor func(deps Dependencies) (A, error)) DepinjectAccount {
+	return DepinjectAccount{MakeAccount: AddAccount(name, constructor)}
+}
+
+type DepinjectAccount struct {
+	MakeAccount AccountCreatorFunc
+}
+
+func (DepinjectAccount) IsManyPerContainerType() {}
 
 // Dependencies is the exported type of Dependencies.
 type Dependencies = implementation.Dependencies
@@ -91,13 +105,21 @@ func SenderIsAccountsModule(ctx context.Context) bool {
 // returns nil.
 func Funds(ctx context.Context) sdk.Coins { return implementation.Funds(ctx) }
 
-func ExecModule(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
-	return implementation.ExecModule(ctx, msg)
+func ExecModule[MsgResp, Msg transaction.Msg](ctx context.Context, msg Msg) (resp MsgResp, err error) {
+	untyped, err := implementation.ExecModule(ctx, msg)
+	if err != nil {
+		return resp, err
+	}
+	return assertOrErr[MsgResp](untyped)
 }
 
 // QueryModule can be used by an account to execute a module query.
-func QueryModule(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
-	return implementation.QueryModule(ctx, req)
+func QueryModule[Resp, Req transaction.Msg](ctx context.Context, req Req) (resp Resp, err error) {
+	untyped, err := implementation.QueryModule(ctx, req)
+	if err != nil {
+		return resp, err
+	}
+	return assertOrErr[Resp](untyped)
 }
 
 // UnpackAny unpacks a protobuf Any message generically.
@@ -120,7 +142,7 @@ func ExecModuleAnys(ctx context.Context, msgs []*implementation.Any) ([]*impleme
 		if err != nil {
 			return nil, fmt.Errorf("error unpacking message %d: %w", i, err)
 		}
-		resp, err := ExecModule(ctx, concreteMessage)
+		resp, err := implementation.ExecModule(ctx, concreteMessage)
 		if err != nil {
 			return nil, fmt.Errorf("error executing message %d: %w", i, err)
 		}
@@ -132,4 +154,13 @@ func ExecModuleAnys(ctx context.Context, msgs []*implementation.Any) ([]*impleme
 		responses[i] = respAnyPB
 	}
 	return responses, nil
+}
+
+// asserts the given any to the provided generic, returns ErrInvalidType if it can't.
+func assertOrErr[T any](r any) (concrete T, err error) {
+	concrete, ok := r.(T)
+	if !ok {
+		return concrete, ErrInvalidType
+	}
+	return concrete, nil
 }

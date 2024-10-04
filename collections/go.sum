@@ -1,7 +1,9 @@
-cosmossdk.io/core v1.0.0-alpha.2 h1:epU0Xwces4Rgl5bMhHHkXGaGDcyucNGlC/JDH+Suckg=
-cosmossdk.io/core v1.0.0-alpha.2/go.mod h1:abgLjeFLhtuKIYZWSPlVUgQBrKObO7ULV35KYfexE90=
-cosmossdk.io/schema v0.2.0 h1:UH5CR1DqUq8yP+5Np8PbvG4YX0zAUsTN2Qk6yThmfMk=
-cosmossdk.io/schema v0.2.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
+cosmossdk.io/core v1.0.0-alpha.4 h1:9iuroT9ejDYETCsGkzkvs/wAY/5UFl7nCIINFRxyMJY=
+cosmossdk.io/core v1.0.0-alpha.4/go.mod h1:3u9cWq1FAVtiiCrDPpo4LhR+9V6k/ycSG4/Y/tREWCY=
+cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 h1:NxxUo0GMJUbIuVg0R70e3cbn9eFTEuMr7ev1AFvypdY=
+cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29/go.mod h1:8s2tPeJtSiQuoyPmr2Ag7meikonISO4Fv4MoO8+ORrs=
+cosmossdk.io/schema v0.3.0 h1:01lcaM4trhzZ1HQTfTV8z6Ma1GziOZ/YmdzBN3F720c=
+cosmossdk.io/schema v0.3.0/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

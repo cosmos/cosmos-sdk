@@ -765,8 +765,6 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
-
 		s.T().Run(tc.name, func(t *testing.T) {
 			s.setEnv(t, &tc.envVals)
 			cfg, err := GetConfigFromEnv(false)

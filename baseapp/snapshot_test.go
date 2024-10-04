@@ -245,7 +245,6 @@ func TestABCI_OfferSnapshot_Errors(t *testing.T) {
 		}, abci.OFFER_SNAPSHOT_RESULT_REJECT},
 	}
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			resp, err := suite.baseApp.OfferSnapshot(&abci.OfferSnapshotRequest{Snapshot: tc.snapshot})
 			require.NoError(t, err)

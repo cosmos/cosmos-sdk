@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-func (a *App) registerRuntimeServices(cfg module.Configurator) error { // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+func (a *App) registerRuntimeServices(cfg module.Configurator) error { //nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 	autocliv1.RegisterQueryServer(cfg.QueryServer(), services.NewAutoCLIQueryService(a.ModuleManager.Modules))
 
 	reflectionSvc, err := services.NewReflectionService()

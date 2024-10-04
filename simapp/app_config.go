@@ -28,6 +28,7 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
+	validatemodulev1 "cosmossdk.io/api/cosmos/validate/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/accounts"
@@ -69,11 +70,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	_ "github.com/cosmos/cosmos-sdk/testutil/x/counter" // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"   // import for side-effects
+	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting" // import for side-effects
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/validate"
 )
 
 var (
@@ -181,9 +183,18 @@ var (
 					// SkipStoreKeys is an optional list of store keys to skip when constructing the
 					// module's keeper. This is useful when a module does not have a store key.
 					SkipStoreKeys: []string{
-						"tx",
+						authtxconfig.DepinjectModuleName,
+						validate.ModuleName,
 					},
 				}),
+			},
+			{
+				Name:   authtxconfig.DepinjectModuleName, // x/auth/tx/config depinject module (not app module), use to provide tx configuration
+				Config: appconfig.WrapAny(&txconfigv1.Config{}),
+			},
+			{
+				Name:   validate.ModuleName,
+				Config: appconfig.WrapAny(&validatemodulev1.Module{}),
 			},
 			{
 				Name: authtypes.ModuleName,
@@ -217,12 +228,6 @@ var (
 			{
 				Name:   slashingtypes.ModuleName,
 				Config: appconfig.WrapAny(&slashingmodulev1.Module{}),
-			},
-			{
-				Name: "tx",
-				Config: appconfig.WrapAny(&txconfigv1.Config{
-					SkipAnteHandler: true, // SimApp is using non default AnteHandler such as circuit and unorderedtx decorators
-				}),
 			},
 			{
 				Name:   genutiltypes.ModuleName,

@@ -146,8 +146,8 @@ func initFixture(t *testing.T) *fixture {
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
-	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper)
+	distrModule := distribution.NewAppModule(cdc, distrKeeper, stakingKeeper)
 	poolModule := protocolpool.NewAppModule(cdc, poolKeeper, accountKeeper, bankKeeper)
 	consensusModule := consensus.NewAppModule(cdc, consensusParamsKeeper)
 
@@ -331,7 +331,6 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	height := f.app.LastBlockHeight()
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
@@ -469,7 +468,6 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			tc.preRun()
 			res, err := f.app.RunMsg(
@@ -566,7 +564,6 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
@@ -600,7 +597,6 @@ func TestMsgWithdrawValidatorCommission(t *testing.T) {
 				}, remainder.Commission)
 			}
 		})
-
 	}
 }
 
@@ -666,7 +662,6 @@ func TestMsgFundCommunityPool(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
@@ -808,7 +803,6 @@ func TestMsgUpdateParams(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
@@ -891,7 +885,6 @@ func TestMsgCommunityPoolSpend(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,
@@ -992,7 +985,6 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.msg,

@@ -2,6 +2,8 @@ package runtime
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"io"
 
 	"cosmossdk.io/core/store"
@@ -184,6 +186,11 @@ func KVStoreAdapter(store store.KVStore) storetypes.KVStore {
 // UpgradeStoreLoader is used to prepare baseapp with a fixed StoreLoader
 // pattern. This is useful for custom upgrade loading logic.
 func UpgradeStoreLoader(upgradeHeight int64, storeUpgrades *store.StoreUpgrades) baseapp.StoreLoader {
+	// sanity checks on store upgrades
+	if err := checkStoreUpgrade(storeUpgrades); err != nil {
+		panic(err)
+	}
+
 	return func(ms storetypes.CommitMultiStore) error {
 		if upgradeHeight == ms.LastCommitID().Version+1 {
 			// Check if the current commit version and upgrade height matches
@@ -199,4 +206,41 @@ func UpgradeStoreLoader(upgradeHeight int64, storeUpgrades *store.StoreUpgrades)
 		// Otherwise load default store loader
 		return baseapp.DefaultStoreLoader(ms)
 	}
+}
+
+// checkStoreUpgrade performs sanity checks on the store upgrades
+func checkStoreUpgrade(storeUpgrades *store.StoreUpgrades) error {
+	if storeUpgrades == nil {
+		return errors.New("store upgrades cannot be nil")
+	}
+
+	// check for duplicates
+	addedFilter := make(map[string]struct{})
+	deletedFilter := make(map[string]struct{})
+
+	for _, key := range storeUpgrades.Added {
+		if _, ok := addedFilter[key]; ok {
+			return fmt.Errorf("store upgrade has duplicate key %s in added", key)
+		}
+		addedFilter[key] = struct{}{}
+	}
+	for _, key := range storeUpgrades.Deleted {
+		if _, ok := deletedFilter[key]; ok {
+			return fmt.Errorf("store upgrade has duplicate key %s in deleted", key)
+		}
+		deletedFilter[key] = struct{}{}
+	}
+
+	for _, key := range storeUpgrades.Added {
+		if _, ok := deletedFilter[key]; ok {
+			return fmt.Errorf("store upgrade has key %s in both added and deleted", key)
+		}
+	}
+	for _, key := range storeUpgrades.Deleted {
+		if _, ok := addedFilter[key]; ok {
+			return fmt.Errorf("store upgrade has key %s in both added and deleted", key)
+		}
+	}
+
+	return nil
 }

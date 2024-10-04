@@ -591,7 +591,6 @@ func TestFormatIntCorrectness(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.in, func(t *testing.T) {
 			got, err := math.FormatInt(tt.in)
 			if err != nil {

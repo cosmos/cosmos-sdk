@@ -9,14 +9,18 @@ import (
 	"net"
 	"slices"
 	"strconv"
+	"strings"
+	"sync"
 
-	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -53,7 +57,7 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.L
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
-	methodsMap := appI.GetGPRCMethodsToMessageMap()
+	methodsMap := appI.GetQueryHandlers()
 
 	grpcSrv := grpc.NewServer(
 		grpc.ForceServerCodec(newProtoCodec(appI.InterfaceRegistry()).GRPCCodec()),
@@ -80,21 +84,42 @@ func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 	return flags
 }
 
-func makeUnknownServiceHandler(messageMap map[string]func() proto.Message, querier interface {
-	Query(ctx context.Context, version uint64, msg proto.Message) (proto.Message, error)
+func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier interface {
+	Query(ctx context.Context, version uint64, msg gogoproto.Message) (gogoproto.Message, error)
 },
 ) grpc.StreamHandler {
+	getRegistry := sync.OnceValues(gogoproto.MergedRegistry)
+
 	return func(srv any, stream grpc.ServerStream) error {
 		method, ok := grpc.MethodFromServerStream(stream)
 		if !ok {
 			return status.Error(codes.InvalidArgument, "unable to get method")
 		}
-		makeMsg, exists := messageMap[method]
+		// if this fails we cannot serve queries anymore...
+		registry, err := getRegistry()
+		if err != nil {
+			return fmt.Errorf("failed to get registry: %w", err)
+		}
+
+		method = strings.TrimPrefix(method, "/")
+		fullName := protoreflect.FullName(strings.ReplaceAll(method, "/", "."))
+		// get descriptor from the invoke method
+		desc, err := registry.FindDescriptorByName(fullName)
+		if err != nil {
+			return fmt.Errorf("failed to find descriptor %s: %w", method, err)
+		}
+		md, ok := desc.(protoreflect.MethodDescriptor)
+		if !ok {
+			return fmt.Errorf("%s is not a method", method)
+		}
+		// find handler
+		handler, exists := handlers[string(md.Input().FullName())]
 		if !exists {
 			return status.Errorf(codes.Unimplemented, "gRPC method %s is not handled", method)
 		}
+
 		for {
-			req := makeMsg()
+			req := handler.MakeMsg()
 			err := stream.RecvMsg(req)
 			if err != nil {
 				if errors.Is(err, io.EOF) {
@@ -148,7 +173,7 @@ func (s *Server[T]) Name() string {
 }
 
 func (s *Server[T]) Config() any {
-	if s.config == nil || s.config == (&Config{}) {
+	if s.config == nil || s.config.Address == "" {
 		cfg := DefaultConfig()
 		// overwrite the default config with the provided options
 		for _, opt := range s.cfgOptions {
@@ -163,6 +188,7 @@ func (s *Server[T]) Config() any {
 
 func (s *Server[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
+		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil
 	}
 
@@ -171,24 +197,12 @@ func (s *Server[T]) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to listen on address %s: %w", s.config.Address, err)
 	}
 
-	errCh := make(chan error)
-
-	// Start the gRPC in an external goroutine as Serve is blocking and will return
-	// an error upon failure, which we'll send on the error channel that will be
-	// consumed by the for block below.
-	go func() {
-		s.logger.Info("starting gRPC server...", "address", s.config.Address)
-		errCh <- s.grpcSrv.Serve(listener)
-	}()
-
-	// Start a blocking select to wait for an indication to stop the server or that
-	// the server failed to start properly.
-	err = <-errCh
-	if err != nil {
-		s.logger.Error("failed to start gRPC server", "err", err)
+	s.logger.Info("starting gRPC server...", "address", s.config.Address)
+	if err := s.grpcSrv.Serve(listener); err != nil {
+		return fmt.Errorf("failed to start gRPC server: %w", err)
 	}
 
-	return err
+	return nil
 }
 
 func (s *Server[T]) Stop(ctx context.Context) error {
@@ -198,6 +212,10 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 
 	s.logger.Info("stopping gRPC server...", "address", s.config.Address)
 	s.grpcSrv.GracefulStop()
-
 	return nil
+}
+
+// GetGRPCServer returns the underlying gRPC server.
+func (s *Server[T]) GetGRPCServer() *grpc.Server {
+	return s.grpcSrv
 }

@@ -179,6 +179,13 @@ func (c CLIWrapper) RunAndWait(args ...string) string {
 	return txResult
 }
 
+// RunCommandWithArgs use for run cli command, not tx
+func (c CLIWrapper) RunCommandWithArgs(args ...string) string {
+	c.t.Helper()
+	execOutput, _ := c.run(args)
+	return execOutput
+}
+
 // AwaitTxCommitted wait for tx committed on chain
 // returns the server execution result and true when found within 3 blocks.
 func (c CLIWrapper) AwaitTxCommitted(submitResp string, timeout ...time.Duration) (string, bool) {

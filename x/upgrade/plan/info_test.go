@@ -24,7 +24,7 @@ func TestInfoTestSuite(t *testing.T) {
 	suite.Run(t, new(InfoTestSuite))
 }
 
-// saveSrcTestFile saves a TestFile in this test's Home/src directory.
+// saveTestFile saves a TestFile in this test's Home/src directory.
 // The full path to the saved file is returned.
 func (s *InfoTestSuite) saveTestFile(f *TestFile) string {
 	fullName, err := f.SaveIn(s.Home)

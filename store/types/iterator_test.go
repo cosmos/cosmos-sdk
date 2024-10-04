@@ -84,7 +84,6 @@ func TestPaginatedIterator(t *testing.T) {
 			reverse: true,
 		},
 	} {
-		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			var iter types.Iterator
 			if tc.reverse {

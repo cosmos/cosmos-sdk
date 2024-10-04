@@ -82,6 +82,12 @@ func newPebbleDBIterator(src *pebble.Iterator, prefix, mvccStart, mvccEnd []byte
 			// so there exists at least one version of currKey SeekLT may move to.
 			itr.valid = itr.source.SeekLT(MVCCEncode(currKey, itr.version+1))
 		}
+
+		// The cursor might now be pointing at a key/value pair that is tombstoned.
+		// If so, we must move the cursor.
+		if itr.valid && itr.cursorTombstoned() {
+			itr.Next()
+		}
 	}
 	return itr
 }

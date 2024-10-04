@@ -36,7 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-<!-- ## [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0) -->
+## [v1.0.0-alpha.3](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.3)
+
+### Features
+
+* [#21719](https://github.com/cosmos/cosmos-sdk/pull/21719) Make `core/event` as a type alias of `schema/appdata`.
+
 ## [v1.0.0-alpha.2](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.2)
 
 ### Features

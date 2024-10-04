@@ -357,7 +357,6 @@ func (s *E2ETestSuite) TestCLIQueryTxCmdByHash() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxCmd()
 			clientCtx := val.GetClientCtx()
@@ -490,7 +489,6 @@ func (s *E2ETestSuite) TestCLIQueryTxCmdByEvents() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxCmd()
 			clientCtx := val.GetClientCtx()
@@ -570,7 +568,6 @@ func (s *E2ETestSuite) TestCLIQueryTxsCmdByEvents() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxsByEventsCmd()
 			clientCtx := val.GetClientCtx()
@@ -1503,7 +1500,6 @@ func (s *E2ETestSuite) TestAuxSigner() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			_, err := govtestutil.MsgSubmitLegacyProposal(
 				val.GetClientCtx(),
@@ -1730,7 +1726,6 @@ func (s *E2ETestSuite) TestAuxToFeeWithTips() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := govtestutil.MsgSubmitLegacyProposal(
 				val.GetClientCtx(),

@@ -43,25 +43,19 @@ func (a AppManager[T]) InitGenesis(
 	initGenesisJSON []byte,
 	txDecoder transaction.Codec[T],
 ) (*server.BlockResponse, corestore.WriterMap, error) {
-	v, zeroState, err := a.db.StateLatest()
-	if err != nil {
-		return nil, nil, fmt.Errorf("unable to get latest state: %w", err)
-	}
-	if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
-		return nil, nil, errors.New("cannot init genesis on non-zero state")
-	}
-
 	var genTxs []T
-	genesisState, err := a.stf.RunWithCtx(ctx, zeroState, func(ctx context.Context) error {
-		return a.initGenesis(ctx, bytes.NewBuffer(initGenesisJSON), func(jsonTx json.RawMessage) error {
+	genesisState, err := a.initGenesis(
+		ctx,
+		bytes.NewBuffer(initGenesisJSON),
+		func(jsonTx json.RawMessage) error {
 			genTx, err := txDecoder.DecodeJSON(jsonTx)
 			if err != nil {
 				return fmt.Errorf("failed to decode genesis transaction: %w", err)
 			}
 			genTxs = append(genTxs, genTx)
 			return nil
-		})
-	})
+		},
+	)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to import genesis state: %w", err)
 	}
@@ -89,29 +83,11 @@ func (a AppManager[T]) InitGenesis(
 
 // ExportGenesis exports the genesis state of the application.
 func (a AppManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byte, error) {
-	zeroState, err := a.db.StateAt(version)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get latest state: %w", err)
+	if a.exportGenesis == nil {
+		return nil, errors.New("export genesis function not set")
 	}
 
-	bz := make([]byte, 0)
-	_, err = a.stf.RunWithCtx(ctx, zeroState, func(ctx context.Context) error {
-		if a.exportGenesis == nil {
-			return errors.New("export genesis function not set")
-		}
-
-		bz, err = a.exportGenesis(ctx, version)
-		if err != nil {
-			return fmt.Errorf("failed to export genesis state: %w", err)
-		}
-
-		return nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to export genesis state: %w", err)
-	}
-
-	return bz, nil
+	return a.exportGenesis(ctx, version)
 }
 
 func (a AppManager[T]) DeliverBlock(
@@ -180,10 +156,6 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request transa
 // QueryWithState executes a query with the provided state. This allows to process a query
 // independently of the db state. For example, it can be used to process a query with temporary
 // and uncommitted state
-func (a AppManager[T]) QueryWithState(
-	ctx context.Context,
-	state corestore.ReaderMap,
-	request transaction.Msg,
-) (transaction.Msg, error) {
+func (a AppManager[T]) QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Msg) (transaction.Msg, error) {
 	return a.stf.Query(ctx, state, a.config.QueryGasLimit, request)
 }

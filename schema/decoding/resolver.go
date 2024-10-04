@@ -15,8 +15,8 @@ type DecoderResolver interface {
 	// EncodeModuleName encodes a module name into a byte slice that can be used as the actor in a KVPairUpdate.
 	EncodeModuleName(string) ([]byte, error)
 
-	// IterateAll iterates over all available module decoders.
-	IterateAll(func(moduleName string, cdc schema.ModuleCodec) error) error
+	// AllDecoders iterates over all available module decoders.
+	AllDecoders(func(moduleName string, cdc schema.ModuleCodec) error) error
 
 	// LookupDecoder looks up a specific module decoder.
 	LookupDecoder(moduleName string) (decoder schema.ModuleCodec, found bool, err error)
@@ -48,7 +48,7 @@ func (a moduleSetDecoderResolver) EncodeModuleName(s string) ([]byte, error) {
 	return nil, fmt.Errorf("module %s not found", s)
 }
 
-func (a moduleSetDecoderResolver) IterateAll(f func(string, schema.ModuleCodec) error) error {
+func (a moduleSetDecoderResolver) AllDecoders(f func(string, schema.ModuleCodec) error) error {
 	keys := make([]string, 0, len(a.moduleSet))
 	for k := range a.moduleSet {
 		keys = append(keys, k)

@@ -26,6 +26,7 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 * [Staking](./staking/README.md) - Proof-of-Stake layer for public blockchains.
 * [Tx](./tx/README.md) - Tx utilities for the Cosmos SDK.
 * [Upgrade](./upgrade/README.md) - Software upgrades handling and coordination.
+* [Validate](./validate/README.md) - Global ante/post handlers and tx validator setup.
 
 To learn more about the process of building modules, visit the [building modules reference documentation](https://docs.cosmos.network/main/building-modules/intro).
 

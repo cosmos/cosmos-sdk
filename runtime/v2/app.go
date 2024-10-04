@@ -5,9 +5,8 @@ import (
 	"errors"
 	"slices"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -43,9 +42,8 @@ type App[T transaction.Tx] struct {
 	amino              registry.AminoRegistrar
 	moduleManager      *MM[T]
 
-	// GRPCMethodsToMessageMap maps gRPC method name to a function that decodes the request
-	// bytes into a gogoproto.Message, which then can be passed to appmanager.
-	GRPCMethodsToMessageMap map[string]func() gogoproto.Message
+	// QueryHandlers defines the query handlers
+	QueryHandlers map[string]appmodulev2.Handler
 
 	storeLoader StoreLoader
 }
@@ -120,6 +118,6 @@ func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
 	return a.AppManager
 }
 
-func (a *App[T]) GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message {
-	return a.GRPCMethodsToMessageMap
+func (a *App[T]) GetQueryHandlers() map[string]appmodulev2.Handler {
+	return a.QueryHandlers
 }

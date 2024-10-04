@@ -1,4 +1,4 @@
-golangci_version=v1.60.1
+golangci_version=v1.61.0
 golangci_installed_version=$(shell golangci-lint version --format short 2>/dev/null)
 
 #? setup-pre-commit: Set pre-commit git hook

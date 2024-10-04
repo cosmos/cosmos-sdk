@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/schema/appdata"
 	stfgas "cosmossdk.io/server/v2/stf/gas"
 	"cosmossdk.io/server/v2/stf/internal"
 )
@@ -56,11 +57,11 @@ func NewSTF[T transaction.Tx](
 	postTxExec func(ctx context.Context, tx T, success bool) error,
 	branch func(store store.ReaderMap) store.WriterMap,
 ) (*STF[T], error) {
-	msgRouter, err := msgRouterBuilder.Build()
+	msgRouter, err := msgRouterBuilder.build()
 	if err != nil {
 		return nil, fmt.Errorf("build msg router: %w", err)
 	}
-	queryRouter, err := queryRouterBuilder.Build()
+	queryRouter, err := queryRouterBuilder.build()
 	if err != nil {
 		return nil, fmt.Errorf("build query router: %w", err)
 	}
@@ -122,7 +123,6 @@ func (s STF[T]) DeliverBlock(
 
 	// reset events
 	exCtx.events = make([]event.Event, 0)
-
 	// begin block
 	var beginBlockEvents []event.Event
 	if !block.IsGenesis {
@@ -146,7 +146,7 @@ func (s STF[T]) DeliverBlock(
 		if err = isCtxCancelled(ctx); err != nil {
 			return nil, nil, err
 		}
-		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi)
+		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi, int32(i+1))
 	}
 	// reset events
 	exCtx.events = make([]event.Event, 0)
@@ -172,6 +172,7 @@ func (s STF[T]) deliverTx(
 	tx T,
 	execMode transaction.ExecMode,
 	hi header.Info,
+	txIndex int32,
 ) server.TxResult {
 	// recover in the case of a panic
 	var recoveryError error
@@ -194,17 +195,32 @@ func (s STF[T]) deliverTx(
 			Error: recoveryError,
 		}
 	}
-
 	validateGas, validationEvents, err := s.validateTx(ctx, state, gasLimit, tx, execMode)
 	if err != nil {
 		return server.TxResult{
 			Error: err,
 		}
 	}
+	events := make([]event.Event, 0)
+	// set the event indexes, set MsgIndex to 0 in validation events
+	for i, e := range validationEvents {
+		e.BlockStage = appdata.TxProcessingStage
+		e.TxIndex = txIndex
+		e.MsgIndex = 0
+		e.EventIndex = int32(i + 1)
+		events = append(events, e)
+	}
 
 	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
+	// set the TxIndex in the exec events
+	for _, e := range execEvents {
+		e.BlockStage = appdata.TxProcessingStage
+		e.TxIndex = txIndex
+		events = append(events, e)
+	}
+
 	return server.TxResult{
-		Events:    append(validationEvents, execEvents...),
+		Events:    events,
 		GasUsed:   execGas + validateGas,
 		GasWanted: gasLimit,
 		Resp:      execResp,
@@ -270,6 +286,12 @@ func (s STF[T]) execTx(
 		if applyErr != nil {
 			return nil, 0, nil, applyErr
 		}
+		// set the event indexes, set MsgIndex to -1 in post tx events
+		for i := range postTxCtx.events {
+			postTxCtx.events[i].EventIndex = int32(i + 1)
+			postTxCtx.events[i].MsgIndex = -1
+		}
+
 		return nil, gasUsed, postTxCtx.events, txErr
 	}
 	// tx execution went fine, now we use the same state to run the post tx exec handler,
@@ -288,6 +310,11 @@ func (s STF[T]) execTx(
 	applyErr := applyStateChanges(state, execState)
 	if applyErr != nil {
 		return nil, 0, nil, applyErr
+	}
+	// set the event indexes, set MsgIndex to -1 in post tx events
+	for i := range postTxCtx.events {
+		postTxCtx.events[i].EventIndex = int32(i + 1)
+		postTxCtx.events[i].MsgIndex = -1
 	}
 
 	return msgsResp, gasUsed, append(runTxMsgsEvents, postTxCtx.events...), nil
@@ -315,17 +342,24 @@ func (s STF[T]) runTxMsgs(
 	execCtx := s.makeContext(ctx, RuntimeIdentity, state, execMode)
 	execCtx.setHeaderInfo(hi)
 	execCtx.setGasLimit(gasLimit)
+	events := make([]event.Event, 0)
 	for i, msg := range msgs {
 		execCtx.sender = txSenders[i]
+		execCtx.events = make([]event.Event, 0) // reset events
 		resp, err := s.msgRouter.Invoke(execCtx, msg)
 		if err != nil {
-			return nil, 0, nil, fmt.Errorf("message execution at index %d failed: %w", i, err)
+			return nil, 0, nil, err // do not wrap the error or we lose the original error type
 		}
 		msgResps[i] = resp
+		for j, e := range execCtx.events {
+			e.MsgIndex = int32(i + 1)
+			e.EventIndex = int32(j + 1)
+			events = append(events, e)
+		}
 	}
 
 	consumed := execCtx.meter.Limit() - execCtx.meter.Remaining()
-	return msgResps, consumed, execCtx.events, nil
+	return msgResps, consumed, events, nil
 }
 
 // preBlock executes the pre block logic.
@@ -338,11 +372,9 @@ func (s STF[T]) preBlock(
 		return nil, err
 	}
 
-	for i, e := range ctx.events {
-		ctx.events[i].Attributes = append(
-			e.Attributes,
-			event.Attribute{Key: "mode", Value: "PreBlock"},
-		)
+	for i := range ctx.events {
+		ctx.events[i].BlockStage = appdata.PreBlockStage
+		ctx.events[i].EventIndex = int32(i + 1)
 	}
 
 	return ctx.events, nil
@@ -357,11 +389,9 @@ func (s STF[T]) beginBlock(
 		return nil, err
 	}
 
-	for i, e := range ctx.events {
-		ctx.events[i].Attributes = append(
-			e.Attributes,
-			event.Attribute{Key: "mode", Value: "BeginBlock"},
-		)
+	for i := range ctx.events {
+		ctx.events[i].BlockStage = appdata.BeginBlockStage
+		ctx.events[i].EventIndex = int32(i + 1)
 	}
 
 	return ctx.events, nil
@@ -375,33 +405,30 @@ func (s STF[T]) endBlock(
 	if err != nil {
 		return nil, nil, err
 	}
-
-	events, valsetUpdates, err := s.validatorUpdates(ctx)
+	events := ctx.events
+	ctx.events = make([]event.Event, 0) // reset events
+	valsetUpdates, err := s.validatorUpdates(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	ctx.events = append(ctx.events, events...)
-
-	for i, e := range ctx.events {
-		ctx.events[i].Attributes = append(
-			e.Attributes,
-			event.Attribute{Key: "mode", Value: "BeginBlock"},
-		)
+	events = append(events, ctx.events...)
+	for i := range events {
+		events[i].BlockStage = appdata.EndBlockStage
+		events[i].EventIndex = int32(i + 1)
 	}
 
-	return ctx.events, valsetUpdates, nil
+	return events, valsetUpdates, nil
 }
 
 // validatorUpdates returns the validator updates for the current block. It is called by endBlock after the endblock execution has concluded
 func (s STF[T]) validatorUpdates(
 	ctx *executionContext,
-) ([]event.Event, []appmodulev2.ValidatorUpdate, error) {
+) ([]appmodulev2.ValidatorUpdate, error) {
 	valSetUpdates, err := s.doValidatorUpdate(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return ctx.events, valSetUpdates, nil
+	return valSetUpdates, nil
 }
 
 // Simulate simulates the execution of a tx on the provided state.
@@ -416,7 +443,7 @@ func (s STF[T]) Simulate(
 	if err != nil {
 		return server.TxResult{}, nil
 	}
-	txr := s.deliverTx(ctx, simulationState, tx, internal.ExecModeSimulate, hi)
+	txr := s.deliverTx(ctx, simulationState, tx, internal.ExecModeSimulate, hi, 0)
 
 	return txr, simulationState
 }
@@ -454,19 +481,6 @@ func (s STF[T]) Query(
 	queryCtx.setHeaderInfo(hi)
 	queryCtx.setGasLimit(gasLimit)
 	return s.queryRouter.Invoke(queryCtx, req)
-}
-
-// RunWithCtx is made to support genesis, if genesis was just the execution of messages instead
-// of being something custom then we would not need this. PLEASE DO NOT USE.
-// TODO: Remove
-func (s STF[T]) RunWithCtx(
-	ctx context.Context,
-	state store.ReaderMap,
-	closure func(ctx context.Context) error,
-) (store.WriterMap, error) {
-	branchedState := s.branchFn(state)
-	stfCtx := s.makeContext(ctx, nil, branchedState, internal.ExecModeFinalize)
-	return branchedState, closure(stfCtx)
 }
 
 // clone clones STF.

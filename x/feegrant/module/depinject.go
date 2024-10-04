@@ -7,9 +7,13 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
+	"cosmossdk.io/x/feegrant/simulation"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simsx"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -35,6 +39,23 @@ type FeegrantInputs struct {
 
 func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
 	k := keeper.NewKeeper(in.Environment, in.Cdc, in.AccountKeeper)
-	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
+	m := NewAppModule(in.Cdc, k, in.Registry)
 	return k, m
+}
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the feegrant module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// RegisterStoreDecoder registers a decoder for feegrant module's types
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
+	sdr[feegrant.StoreKey] = simulation.NewDecodeStore(am.cdc)
+}
+
+func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("msg_grant_fee_allowance", 100), simulation.MsgGrantAllowanceFactory(am.keeper))
+	reg.Add(weights.Get("msg_grant_revoke_allowance", 100), simulation.MsgRevokeAllowanceFactory(am.keeper))
 }

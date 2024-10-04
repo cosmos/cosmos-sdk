@@ -20,6 +20,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	serverv2 "cosmossdk.io/server/v2"
 	comettypes "cosmossdk.io/server/v2/cometbft/types"
+	serverv2store "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2/db"
 	banktypes "cosmossdk.io/x/bank/types"
 
@@ -36,7 +37,7 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	logger := log.NewTestLogger(t)
 
 	vp := viper.New()
-	vp.Set("store.app-db-backend", string(db.DBTypeGoLevelDB))
+	vp.Set(serverv2store.FlagAppDBBackend, string(db.DBTypeGoLevelDB))
 	vp.Set(serverv2.FlagHome, t.TempDir())
 
 	app := NewSimApp[transaction.Tx](logger, vp)

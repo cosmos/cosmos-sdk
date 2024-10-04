@@ -236,7 +236,6 @@ func (suite *SubspaceTestSuite) TestSetParamSet() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			suite.Require().Panics(func() {
 				suite.ss.SetParamSet(suite.ctx, tc.ps)

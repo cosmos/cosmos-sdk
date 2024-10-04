@@ -17,18 +17,28 @@ This document specifies the `x/auth/tx` package of the Cosmos SDK.
 
 This package represents the Cosmos SDK implementation of the `client.TxConfig`, `client.TxBuilder`, `client.TxEncoder` and `client.TxDecoder` interfaces.
 
-It contains as well a depinject module and app module the registration of ante/post handler via `runtime` and tx validator via `runtime/v2`.
-
 ## Contents
 
-* [Transactions](#transactions)
+* [`x/auth/tx`](#xauthtx)
+  * [Abstract](#abstract)
+  * [Contents](#contents)
+  * [Transactions](#transactions)
     * [`TxConfig`](#txconfig)
     * [`TxBuilder`](#txbuilder)
     * [`TxEncoder`/ `TxDecoder`](#txencoder-txdecoder)
-* [Depinject \& App Module](#depinject--app-module)
-* [Client](#client)
+  * [`x/auth/tx/config`](#xauthtxconfig)
+    * [Storage](#storage)
+  * [Client](#client)
     * [CLI](#cli)
+      * [Query](#query)
+      * [Transactions](#transactions-1)
+      * [`encode`](#encode)
+      * [`decode`](#decode)
     * [gRPC](#grpc)
+      * [`TxDecode`](#txdecode)
+      * [`TxEncode`](#txencode)
+      * [`TxDecodeAmino`](#txdecodeamino)
+      * [`TxEncodeAmino`](#txencodeamino)
 
 ## Transactions
 
@@ -60,12 +70,21 @@ A `client.TxBuilder` can be accessed with `TxConfig.NewTxBuilder()`.
 
 More information about `TxEncoder` and `TxDecoder` can be found [here](https://docs.cosmos.network/main/core/encoding#transaction-encoding).
 
-## Depinject & App Module
+## `x/auth/tx/config`
 
-The `x/auth/tx/config` contains a depinject module and app module.
-The depinject module is there to setup ante/post handlers on an runtime app (via baseapp options) and the tx validator on the runtime/v2 app (via app module). It as well outputs the `TxConfig` and `TxConfigOptions` for the app.
+The `x/auth/tx/config` contains a depinject module.
+The depinject module is to outputs the `TxConfig` and `TxConfigOptions` for the app.
 
-The app module is purely there for registering tx validators, due to the design of tx validators (tx validator belong to modules).
+### Storage
+
+This module has no store key. Do not forget to add the module name in the `SkipStoreKeys` runtime config present in the app config.
+
+```go
+SkipStoreKeys: []string{
+	authtxconfig.DepinjectModuleName,
+	validate.ModuleName,
+},
+```
 
 ## Client
 

@@ -35,7 +35,6 @@ func TestNewGrant(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		tc := tc
 		t.Run(tc.title, func(t *testing.T) {
 			_, err := NewGrant(tc.blockTime, tc.a, tc.expire)
 			expecError(require.New(t), tc.err, err)
@@ -59,7 +58,6 @@ func TestValidateBasic(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		tc := tc
 		t.Run(tc.title, func(t *testing.T) {
 			grant := Grant{
 				Authorization: tc.authorization,

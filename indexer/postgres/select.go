@@ -14,7 +14,7 @@ import (
 	"cosmossdk.io/schema"
 )
 
-// Count returns the number of rows in the table.
+// count returns the number of rows in the table.
 func (tm *objectIndexer) count(ctx context.Context, conn dbConn) (int, error) {
 	sqlStr := fmt.Sprintf("SELECT COUNT(*) FROM %q;", tm.tableName())
 	if tm.options.logger != nil {

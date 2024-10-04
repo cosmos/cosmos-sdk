@@ -368,7 +368,7 @@ func BootstrapStateCmd[T types.Application](appCreator types.AppCreator[T]) *cob
 		Use:     "bootstrap-state",
 		Short:   "Bootstrap CometBFT state at an arbitrary block height using a light client",
 		Args:    cobra.NoArgs,
-		Example: fmt.Sprintf("%s bootstrap-state --height 1000000", version.AppName),
+		Example: "bootstrap-state --height 1000000",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			logger := log.NewLogger(cmd.OutOrStdout())

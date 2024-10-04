@@ -13,7 +13,9 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/store/v2/root"
-	consensuskeeper "cosmossdk.io/x/consensus/keeper"
+	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
+	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
+	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -38,8 +40,7 @@ type SimApp[T transaction.Tx] struct {
 
 	// required keepers during wiring
 	// others keepers are all in the app
-	UpgradeKeeper         *upgradekeeper.Keeper
-	ConsensusParamsKeeper consensuskeeper.Keeper
+	UpgradeKeeper *upgradekeeper.Keeper
 }
 
 func init() {
@@ -63,14 +64,14 @@ func NewSimApp[T transaction.Tx](
 	viper *viper.Viper,
 ) *SimApp[T] {
 	var (
-		app          = &SimApp[T]{}
-		appBuilder   *runtime.AppBuilder[T]
-		err          error
-		storeOptions = &root.Options{}
+		app        = &SimApp[T]{}
+		appBuilder *runtime.AppBuilder[T]
+		err        error
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
 			AppConfig(),
+			runtime.DefaultServiceBindings(),
 			depinject.Supply(
 				logger,
 				viper,
@@ -120,6 +121,25 @@ func NewSimApp[T transaction.Tx](
 				codec.ProvideAddressCodec,
 				codec.ProvideProtoCodec,
 				codec.ProvideLegacyAmino,
+				// inject desired account types:
+				multisigdepinject.ProvideAccount,
+				basedepinject.ProvideAccount,
+				lockupdepinject.ProvideAllLockupAccounts,
+
+				// provide base account options
+				basedepinject.ProvideSecp256K1PubKey,
+				// if you want to provide a custom public key you
+				// can do it from here.
+				// Example:
+				// 		basedepinject.ProvideCustomPubkey[Ed25519PublicKey]()
+				//
+				// You can also provide a custom public key with a custom validation function:
+				//
+				// 		basedepinject.ProvideCustomPubKeyAndValidationFunc(func(pub Ed25519PublicKey) error {
+				//			if len(pub.Key) != 64 {
+				//				return fmt.Errorf("invalid pub key size")
+				//			}
+				// 		})
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,
@@ -128,6 +148,19 @@ func NewSimApp[T transaction.Tx](
 		)
 	)
 
+	// the subsection of config that contains the store options (in app.toml [store.options] header)
+	// is unmarshaled into a store.Options struct and passed to the store builder.
+	// future work may move this specification and retrieval into store/v2.
+	// If these options are not specified then default values will be used.
+	if sub := viper.Sub("store.options"); sub != nil {
+		storeOptions := &root.Options{}
+		err := sub.Unmarshal(storeOptions)
+		if err != nil {
+			panic(err)
+		}
+		appConfig = depinject.Configs(appConfig, depinject.Supply(storeOptions))
+	}
+
 	if err := depinject.Inject(appConfig,
 		&appBuilder,
 		&app.appCodec,
@@ -135,20 +168,11 @@ func NewSimApp[T transaction.Tx](
 		&app.txConfig,
 		&app.interfaceRegistry,
 		&app.UpgradeKeeper,
-		&app.ConsensusParamsKeeper,
 	); err != nil {
 		panic(err)
 	}
 
-	var builderOpts []runtime.AppBuilderOption[T]
-	if sub := viper.Sub("store.options"); sub != nil {
-		err = sub.Unmarshal(storeOptions)
-		if err != nil {
-			panic(err)
-		}
-		builderOpts = append(builderOpts, runtime.AppBuilderWithStoreOptions[T](storeOptions))
-	}
-	app.App, err = appBuilder.Build(builderOpts...)
+	app.App, err = appBuilder.Build()
 	if err != nil {
 		panic(err)
 	}
@@ -184,11 +208,6 @@ func (app *SimApp[T]) InterfaceRegistry() server.InterfaceRegistry {
 // TxConfig returns SimApp's TxConfig.
 func (app *SimApp[T]) TxConfig() client.TxConfig {
 	return app.txConfig
-}
-
-// GetConsensusAuthority gets the consensus authority.
-func (app *SimApp[T]) GetConsensusAuthority() string {
-	return app.ConsensusParamsKeeper.GetAuthority()
 }
 
 // GetStore gets the app store.

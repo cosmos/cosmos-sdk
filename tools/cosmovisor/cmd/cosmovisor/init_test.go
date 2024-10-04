@@ -355,8 +355,6 @@ func (s *InitTestSuite) TestInitializeCosmovisorNegativeValidation() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
-
 		s.T().Run(tc.name, func(t *testing.T) {
 			s.setEnv(t, &tc.env)
 			buffer, logger := s.NewCapturingLogger()

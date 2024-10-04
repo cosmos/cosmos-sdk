@@ -129,8 +129,6 @@ func TestQueryGroupInfo(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := fixture.queryClient.GroupInfo(fixture.ctx, &tc.req)
 			if tc.expErrMsg != "" {
@@ -169,7 +167,6 @@ func TestQueryGroupPolicyInfo(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := fixture.queryClient.GroupPolicyInfo(fixture.ctx, &tc.req)
 			if tc.expErrMsg != "" {
@@ -210,7 +207,6 @@ func TestQueryGroupMembers(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			resp, err := fixture.queryClient.GroupMembers(fixture.ctx, &tc.req)
 			if tc.expErrMsg != "" {
@@ -256,7 +252,6 @@ func TestQueryGroupsByAdmin(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			resp, err := fixture.queryClient.GroupsByAdmin(fixture.ctx, &tc.req)
 			if tc.expErrMsg != "" {
@@ -297,7 +292,6 @@ func TestQueryGroupPoliciesByGroup(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			resp, err := fixture.keeper.GroupPoliciesByGroup(fixture.ctx, &tc.req)
 			if tc.expErrMsg != "" {
@@ -343,7 +337,6 @@ func TestQueryGroupPoliciesByAdmin(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			resp, err := fixture.keeper.GroupPoliciesByAdmin(fixture.ctx, &tc.req)
 			if tc.expErrMsg != "" {

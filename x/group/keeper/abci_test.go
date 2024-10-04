@@ -332,7 +332,6 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 		},
 	}
 	for msg, spec := range specs {
-		spec := spec
 		s.Run(msg, func() {
 			proposalID := spec.setupProposal(ctx)
 
@@ -544,7 +543,6 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 
 	for msg, spec := range specs {
 		s.Run(msg, func() {
-			spec := spec
 			pID := spec.preRun(ctx)
 
 			err := s.groupKeeper.EndBlocker(spec.newCtx)

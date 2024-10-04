@@ -48,7 +48,7 @@ Key features of the new minting mechanism:
 4. **Flexible Inflation**: The inflation rate can be adjusted based on various parameters, not just the bonded ratio.
 
 The default minting function, if no custom one is provided, is implemented in the `DefaultMintFn`. 
-This function is called during the `BeginBlocker` and is responsible for minting new tokens, implementations details can be found [here](#default-configuration).
+This function is called during the `BeginBlocker` and is responsible for minting new tokens, implementation details can be found [here](#default-configuration).
 
 ### Inflation
 

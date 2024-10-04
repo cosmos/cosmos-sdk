@@ -52,7 +52,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Improvements
 
 * (sims) [#21613](https://github.com/cosmos/cosmos-sdk/pull/21613) Add sims2 framework and factory methods for simpler message factories in modules
-* (testutil/counter)[#21892](https://github.com/cosmos/cosmos-sdk/pull/21892) Add support for hooks injection with depinject.
 
 ### Bug Fixes
 

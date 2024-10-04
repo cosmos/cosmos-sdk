@@ -601,6 +601,8 @@ func TestAuthzExecRedelegateAuthorization(t *testing.T) {
 		"--from", granterAddr)
 	RequireTxSuccess(t, rsp)
 
+	sut.AwaitNBlocks(t, 2)
+
 	var redelegationAmount int64 = 10
 
 	redelegateTx := fmt.Sprintf(`{"@type":"%s","delegator_address":"%s","validator_src_address":"%s","validator_dst_address":"%s","amount":{"denom":"%s","amount":"%d"}}`,

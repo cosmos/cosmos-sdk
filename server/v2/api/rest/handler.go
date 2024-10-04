@@ -13,10 +13,12 @@ import (
 )
 
 const (
-	ContentTypeJSON        = "application/json"
-	ContentTypeOctetStream = "application/octet-stream"
-	ContentTypeProtobuf    = "application/x-protobuf"
+	ContentTypeJSON = "application/json"
 )
+
+func NewDefaultHandler(appManager *appmanager.AppManager[transaction.Tx]) http.Handler {
+	return &DefaultHandler[transaction.Tx]{appManager: appManager}
+}
 
 type DefaultHandler[T transaction.Tx] struct {
 	appManager *appmanager.AppManager[T]

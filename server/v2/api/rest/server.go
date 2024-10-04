@@ -2,7 +2,6 @@ package rest
 
 import (
 	"context"
-	"cosmossdk.io/server/v2/appmanager"
 	"errors"
 	"net/http"
 
@@ -11,6 +10,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/appmanager"
 )
 
 const (

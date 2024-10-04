@@ -3,9 +3,9 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.23.1
 
 require (
-	cosmossdk.io/api v0.7.5
+	cosmossdk.io/api v0.7.6
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v1.0.0-alpha.3
+	cosmossdk.io/core v1.0.0-alpha.4
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
@@ -25,7 +25,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
-	google.golang.org/grpc v1.66.2
+	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.34.2
 	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
@@ -65,7 +65,7 @@ require (
 	cloud.google.com/go/storage v1.43.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/schema v0.3.0 // indirect
+	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -176,7 +176,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.20.4 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.59.1 // indirect
+	github.com/prometheus/common v0.60.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
@@ -210,7 +210,7 @@ require (
 	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.29.0 // indirect
-	golang.org/x/oauth2 v0.22.0 // indirect
+	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/term v0.24.0 // indirect
@@ -220,7 +220,7 @@ require (
 	google.golang.org/api v0.192.0 // indirect
 	google.golang.org/genproto v0.0.0-20240814211410-ddb44dafa142 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240930140551-af27646dc61f // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect

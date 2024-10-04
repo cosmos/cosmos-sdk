@@ -105,7 +105,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		appI.GetAppManager(),
 		s.serverOptions.Mempool(cfg),
 		indexEvents,
-		appI.GetGPRCMethodsToMessageMap(),
+		appI.GetQueryHandlers(),
 		store,
 		s.config,
 		s.initTxCodec,
@@ -113,6 +113,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	)
 	consensus.prepareProposalHandler = s.serverOptions.PrepareProposalHandler
 	consensus.processProposalHandler = s.serverOptions.ProcessProposalHandler
+	consensus.checkTxHandler = s.serverOptions.CheckTxHandler
 	consensus.verifyVoteExt = s.serverOptions.VerifyVoteExtensionHandler
 	consensus.extendVote = s.serverOptions.ExtendVoteHandler
 	consensus.addrPeerFilter = s.serverOptions.AddrPeerFilter
@@ -271,7 +272,7 @@ func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 
 // Config returns the (app.toml) server configuration.
 func (s *CometBFTServer[T]) Config() any {
-	if s.config.AppTomlConfig == nil || s.config.AppTomlConfig == (&AppTomlConfig{}) {
+	if s.config.AppTomlConfig == nil || s.config.AppTomlConfig.Address == "" {
 		cfg := &Config{AppTomlConfig: DefaultAppTomlConfig()}
 		// overwrite the default config with the provided options
 		for _, opt := range s.cfgOptions {

@@ -3,8 +3,8 @@ module cosmossdk.io/client/v2
 go 1.23.1
 
 require (
-	cosmossdk.io/api v0.7.5
-	cosmossdk.io/core v1.0.0-alpha.3
+	cosmossdk.io/api v0.7.6
+	cosmossdk.io/core v1.0.0-alpha.4
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
@@ -13,7 +13,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
-	google.golang.org/grpc v1.66.2
+	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.34.2
 	gotest.tools/v3 v3.5.1
 	sigs.k8s.io/yaml v1.4.0
@@ -27,7 +27,7 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.4.1 // indirect
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/schema v0.3.0 // indirect
+	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -53,7 +53,7 @@ require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22 // indirect
 	github.com/cosmos/crypto v0.1.2 // indirect
-	github.com/cosmos/go-bip39 v1.0.0 // indirect
+	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/iavl v1.3.0 // indirect
@@ -127,7 +127,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.20.4 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.59.1 // indirect
+	github.com/prometheus/common v0.60.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
@@ -163,8 +163,8 @@ require (
 	golang.org/x/text v0.18.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240604185151-ef581f913117 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240930140551-af27646dc61f // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	pgregory.net/rapid v1.1.0 // indirect

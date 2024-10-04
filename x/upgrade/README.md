@@ -106,7 +106,7 @@ the `Plan`, which targets a specific `Handler`, is persisted and scheduled. The
 upgrade can be delayed or hastened by updating the `Plan.Height` in a new proposal.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/upgrade/v1beta1/tx.proto#L29-L41
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/upgrade/proto/cosmos/upgrade/v1beta1/tx.proto#L29-L40
 ```
 
 #### Cancelling Upgrade Proposals
@@ -118,7 +118,7 @@ Of course this requires that the upgrade was known to be a bad idea well before 
 upgrade itself, to allow time for a vote.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/upgrade/v1beta1/tx.proto#L48-L57
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/upgrade/proto/cosmos/upgrade/v1beta1/tx.proto#L47-L55
 ```
 
 If such a possibility is desired, the upgrade height is to be
@@ -315,6 +315,28 @@ time: "0001-01-01T00:00:00Z"
 upgraded_client_state: null
 ```
 
+##### authority
+
+The `authority` command allows users to query the address that is authorized to submit upgrade proposals.
+
+```bash
+simd query upgrade authority [flags]
+```
+
+This command returns the bech32-encoded address of the account that has the authority to submit upgrade proposals.
+
+Example:
+
+```bash
+simd query upgrade authority
+```
+
+Example Output:
+
+```bash
+cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn
+```
+
 #### Transactions
 
 The upgrade module supports the following transactions:
@@ -326,10 +348,10 @@ simd tx upgrade software-upgrade v2 --title="Test Proposal" --summary="testing" 
 --upgrade-info '{ "binaries": { "linux/amd64":"https://example.com/simd.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f" } }' --from cosmos1..
 ```
 
-* `cancel-software-upgrade` - cancels a previously submitted upgrade proposal:
+* `cancel-upgrade-proposal` - cancels a previously submitted upgrade proposal:
 
 ```bash
-simd tx upgrade cancel-software-upgrade --title="Test Proposal" --summary="testing" --deposit="100000000stake" --from cosmos1..
+simd tx upgrade cancel-upgrade-proposal --title="Test Proposal" --summary="testing" --deposit="100000000stake" --from cosmos1..
 ```
 
 ### REST
@@ -467,6 +489,28 @@ Example Output:
 }
 ```
 
+#### Authority
+
+`Authority` queries the address that is authorized to submit upgrade proposals.
+
+```bash
+/cosmos/upgrade/v1beta1/authority
+```
+
+Example:
+
+```bash
+curl -X GET "http://localhost:1317/cosmos/upgrade/v1beta1/authority" -H "accept: application/json"
+```
+
+Example Output:
+
+```json
+{
+"address": "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
+}
+```
+
 ### gRPC
 
 A user can query the `upgrade` module using gRPC endpoints.
@@ -507,7 +551,7 @@ cosmos.upgrade.v1beta1.Query/CurrentPlan
 Example:
 
 ```bash
-grpcurl -plaintext localhost:9090 cosmos.slashing.v1beta1.Query/CurrentPlan
+grpcurl -plaintext localhost:9090 cosmos.upgrade.v1beta1.Query/CurrentPlan
 ```
 
 Example Output:
@@ -529,7 +573,7 @@ cosmos.upgrade.v1beta1.Query/ModuleVersions
 Example:
 
 ```bash
-grpcurl -plaintext localhost:9090 cosmos.slashing.v1beta1.Query/ModuleVersions
+grpcurl -plaintext localhost:9090 cosmos.upgrade.v1beta1.Query/ModuleVersions
 ```
 
 Example Output:
@@ -602,6 +646,28 @@ Example Output:
       "version": "1"
     }
   ]
+}
+```
+
+#### Authority
+
+`Authority` queries the address that is authorized to submit upgrade proposals.
+
+```bash
+cosmos.upgrade.v1beta1.Query/Authority
+```
+
+Example:
+
+```bash
+grpcurl -plaintext localhost:9090 cosmos.upgrade.v1beta1.Query/Authority
+```
+
+Example Output:
+
+```json
+{
+  "address": "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
 }
 ```
 

@@ -38,7 +38,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod:      "AccountAddressByID",
 					Use:            "address-by-acc-num <acc-num>",
 					Short:          "Query account address by account number",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "account_id"}},
 				},
 				{
 					RpcMethod: "ModuleAccounts",

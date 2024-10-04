@@ -11,20 +11,20 @@ Hooks are functions that are called before and/or after certain events in the mo
 1. Define the hook interface and a wrapper implementing `depinject.OnePerModuleType`:
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.52/testutil/x/counter/types/expected_keepers.go#L5-L12
+    https://github.com/cosmos/cosmos-sdk/blob/71c603a2a5a103df00f216d78ec8b108ed64ae28/testutil/x/counter/types/expected_keepers.go#L5-L12
     ```
 
 2. Add a `CounterHooks` field to the keeper:
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.52/testutil/x/counter/keeper/keeper.go#L25
+    https://github.com/cosmos/cosmos-sdk/blob/71c603a2a5a103df00f216d78ec8b108ed64ae28/testutil/x/counter/keeper/keeper.go#L25
     
     ```
 
 3. Create a `depinject` invoker function
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.52/testutil/x/counter/depinject.go#L53-L75   
+    https://github.com/cosmos/cosmos-sdk/blob/71c603a2a5a103df00f216d78ec8b108ed64ae28/testutil/x/counter/depinject.go#L53-L75   
     ```
 
 4. Inject the hooks during app initialization:

@@ -22,6 +22,8 @@ sidebar_position: 1
 * [Messages](#messages)
     * [MsgSend](#msgsend)
 * [Events](#events)
+* [Queries](#queries)
+* [Keeper Functions](#keeper-functions)
 
 ## Concepts
 
@@ -86,4 +88,30 @@ The message handling should fail if:
 
 ## Events
 
-The nft module emits proto events defined in [the Protobuf reference](https://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.nft.v1beta1).
+The NFT module emits proto events defined in [the Protobuf reference](https://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.nft.v1beta1).
+
+## Queries
+
+The `x/nft` module provides several queries to retrieve information about NFTs and classes:
+
+* `Balance`: Returns the number of NFTs of a given class owned by the owner.
+* `Owner`: Returns the owner of an NFT based on its class and ID.
+* `Supply`: Returns the number of NFTs from the given class.
+* `NFTs`: Queries all NFTs of a given class or owner.
+* `NFT`: Returns an NFT based on its class and ID.
+* `Class`: Returns an NFT class based on its ID.
+* `Classes`: Returns all NFT classes.
+
+## Keeper Functions
+
+The Keeper of the `x/nft` module provides several functions to manage NFTs:
+
+* `Mint`: Mints a new NFT.
+* `Burn`: Burns an existing NFT.
+* `Update`: Updates an existing NFT.
+* `Transfer`: Transfers an NFT from one owner to another.
+* `GetNFT`: Retrieves information about a specific NFT.
+* `GetNFTsOfClass`: Retrieves all NFTs of a specific class.
+* `GetNFTsOfClassByOwner`: Retrieves all NFTs of a specific class belonging to an owner.
+* `GetBalance`: Retrieves the balance of NFTs of a specific class for an owner.
+* `GetTotalSupply`: Retrieves the total supply of NFTs of a specific class.

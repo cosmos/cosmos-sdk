@@ -1,16 +1,15 @@
 syntax = "proto3";
 package cosmos.staking.v1beta1;
 
+import "amino/amino.proto";
+import "cometbft/abci/v1/types.proto";
+import "cometbft/types/v1/types.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
-
-import "cosmos_proto/cosmos.proto";
-import "cosmos/base/v1beta1/coin.proto";
-import "amino/amino.proto";
-import "cometbft/types/v1/types.proto";
-import "cometbft/abci/v1/types.proto";
 
 option go_package = "cosmossdk.io/x/staking/types";
 
@@ -79,6 +78,19 @@ message Description {
   string security_contact = 4;
   // details define other optional details.
   string details = 5;
+  // metadata defines extra information about the validator.
+  Metadata metadata = 6 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// Metadata defines extra information about the validator.
+message Metadata {
+  option (gogoproto.equal) = true;
+
+  // profile_pic_uri defines a link to the validator profile picture.
+  string profile_pic_uri = 1;
+
+  // social_handle_uris defines a string array of uris to the validator's social handles.
+  repeated string social_handle_uris = 2;
 }
 
 // Validator defines a validator, together with the total amount of the
@@ -221,7 +233,8 @@ message UnbondingDelegation {
   string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // entries are the unbonding delegation entries.
   repeated UnbondingDelegationEntry entries = 3
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true]; // unbonding delegation entries
+      [(gogoproto.nullable)   = false,
+       (amino.dont_omitempty) = true]; // unbonding delegation entries
 }
 
 // UnbondingDelegationEntry defines an unbonding object with relevant metadata.
@@ -294,7 +307,8 @@ message Redelegation {
   string validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
   // entries are the redelegation entries.
   repeated RedelegationEntry entries = 4
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true]; // redelegation entries
+      [(gogoproto.nullable)   = false,
+       (amino.dont_omitempty) = true]; // redelegation entries
 }
 
 // Params defines the parameters for the x/staking module.

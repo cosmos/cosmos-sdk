@@ -16,7 +16,7 @@ pub struct ResourceScope<'a> {
 
 /// A resource is anything that an account or module can use to store its own
 /// state or interact with other accounts and modules.
-pub unsafe trait StateObject: Sized {
+pub unsafe trait StateObjectResource: Sized {
     /// Creates a new resource.
     /// This should only be called in generated code.
     /// Do not call this function directly.

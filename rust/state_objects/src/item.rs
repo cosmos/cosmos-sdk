@@ -1,7 +1,7 @@
 //! The item module contains the `Item` struct, which represents a single item in storage.
 
 use ixc_core::{Context, Result};
-use ixc_core::resource::{InitializationError, StateObject};
+use ixc_core::resource::{InitializationError, StateObjectResource};
 use ixc_schema::state_object::ObjectValue;
 use crate::Map;
 
@@ -26,7 +26,7 @@ where
     }
 }
 
-unsafe impl <T> StateObject for Item<T> {
+unsafe impl <T> StateObjectResource for Item<T> {
     unsafe fn new(scope: &[u8], prefix: u8) -> core::result::Result<Self, InitializationError> {
         Ok(Self {
             map: Map::new(scope, prefix)?,

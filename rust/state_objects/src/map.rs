@@ -4,7 +4,7 @@ use bump_scope::allocator_api2::alloc::Allocator;
 use ixc_core::error::Error;
 use ixc_core::{Context, Result};
 use ixc_core::low_level::create_packet;
-use ixc_core::resource::{InitializationError, StateObject};
+use ixc_core::resource::{InitializationError, StateObjectResource};
 use ixc_core_macros::message_selector;
 use ixc_message_api::handler::HandlerErrorCode;
 use ixc_message_api::packet::MessagePacket;
@@ -134,7 +134,7 @@ impl KVStoreClient {
     }
 }
 
-unsafe impl<K, V> StateObject for Map<K, V> {
+unsafe impl<K, V> StateObjectResource for Map<K, V> {
     unsafe fn new(scope: &[u8], p: u8) -> core::result::Result<Self, InitializationError> {
         let mut prefix = Vec::from(scope);
         prefix.push(p);

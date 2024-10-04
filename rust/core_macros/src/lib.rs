@@ -6,7 +6,7 @@ use std::default::Default;
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use manyhow::{bail, ensure, error_message, manyhow};
 use quote::{format_ident, quote, ToTokens};
-use syn::{parse2, parse_macro_input, parse_quote, token, Attribute, File, Item, ItemImpl, ItemMod, LitStr, ReturnType, Type};
+use syn::{parse2, parse_macro_input, parse_quote, token, Attribute, Data, DeriveInput, File, Item, ItemImpl, ItemMod, LitStr, ReturnType, Type};
 use std::borrow::Borrow;
 use blake2::{Blake2b512, Digest};
 use deluxe::ExtractAttributes;
@@ -290,15 +290,44 @@ pub fn on_create(_attr: TokenStream2, item: TokenStream2) -> manyhow::Result<Tok
 }
 
 /// Derive the `Resources` trait for a struct.
+#[manyhow]
 #[proc_macro_derive(Resources, attributes(state, client))]
-pub fn derive_resources(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as syn::DeriveInput);
+pub fn derive_resources(input: DeriveInput) -> manyhow::Result<TokenStream2> {
     let name = input.ident;
-    let expanded = quote! {
-        unsafe impl ::ixc_core::resource::Resources for #name {
-        }
+    let mut str = match input.data {
+        Data::Struct(str) => str,
+        _ => bail!("can only derive Resources on structs"),
     };
-    expanded.into()
+    let mut field_inits = vec![];
+    let mut prefix = 0u8;
+    for field in str.fields.iter_mut() {
+        let field_name = field.ident.as_ref().unwrap().clone();
+        let ty = &field.ty.clone();
+        if let Some(state) = maybe_extract_attribute::<_, State>(field)? {
+            prefix = state.prefix.unwrap_or(prefix);
+            field_inits.push(quote! {
+                #field_name: <#ty as ::ixc_core::resource::StateObjectResource>::new(scope.state_scope, #prefix)?
+            });
+            prefix += 1;
+        } else {
+            bail!("only fields with #[state] attribute are supported currently");
+        }
+    }
+    Ok(quote! {
+        unsafe impl ::ixc_core::resource::Resources for #name {
+            unsafe fn new(scope: &::ixc_core::resource::ResourceScope) -> ::core::result::Result<Self, ::ixc_core::resource::InitializationError> {
+                Ok(Self {
+                    #(#field_inits),*
+                })
+            }
+        }
+    })
+}
+
+#[derive(deluxe::ExtractAttributes, Debug)]
+#[deluxe(attributes(state))]
+struct State {
+    prefix: Option<u8>,
 }
 
 /// This attribute bundles account and module handlers into a package root which can be

@@ -394,9 +394,9 @@ The `AnteHandler` operates on a copy of the cached context, allowing it to perfo
 
 Key operations performed by the `AnteHandler` include:
 
-- **Signature Verification**: Ensures that the transaction's signatures are valid.
-- **Sequence Checking**: Verifies and increments the sequence numbers to prevent replay attacks.
-- **Fee Deduction**: Deducts the transaction fees from the accounts involved, typically starting with the first signer.
+* **Signature Verification**: Ensures that the transaction's signatures are valid.
+* **Sequence Checking**: Verifies and increments the sequence numbers to prevent replay attacks.
+* **Fee Deduction**: Deducts the transaction fees from the accounts involved, typically starting with the first signer.
 
 These operations are crucial for maintaining the security and integrity of transactions on the blockchain.
 
@@ -460,7 +460,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci.go#L623
 
 #### PreBlock 
 
-* Run the application's [`preBlocker()`](../beginner/00-app-anatomy.md#preblocker), which mainly runs the [`PreBlocker()`](../../build/building-modules/17-preblock.md#preblock) method of each of the modules.
+* Run the application's [`preBlocker()`](../beginner/00-app-anatomy.md#preblocker), which mainly runs the [`PreBlocker()`](../../build/building-modules/06-preblock-beginblock-endblock.md#preblock) method of each of the modules.
 
 #### BeginBlock 
 
@@ -473,7 +473,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci.go#L623
   This function also resets the [main gas meter](../beginner/04-gas-fees.md#main-gas-meter).
 
 * Initialize the [block gas meter](../beginner/04-gas-fees.md#block-gas-meter) with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters.
-* Run the application's [`beginBlocker()`](../beginner/00-app-anatomy.md#beginblocker-and-endblocker), which mainly runs the [`BeginBlocker()`](../../build/building-modules/06-beginblock-endblock.md#beginblock) method of each of the modules.
+* Run the application's [`beginBlocker()`](../beginner/00-app-anatomy.md#beginblocker-and-endblocker), which mainly runs the [`BeginBlocker()`](../../build/building-modules/06-preblock-beginblock-endblock.md#beginblock) method of each of the modules.
 * Set the [`VoteInfos`](https://docs.cometbft.com/v1.0/spec/abci/abci++_methods#voteinfo) of the application, i.e. the list of validators whose _precommit_ for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./02-context.md) so that it can be used during transaction execution and EndBlock.
 
 #### Transaction Execution

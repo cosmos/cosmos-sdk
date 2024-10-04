@@ -97,7 +97,7 @@ Consensus is the component that controls the interaction with the consensus engi
     * Immediate execution differs from what Cosmos SDK utilizes today. In CometBFT, consensus at height N is executed at height N+1.
     * Immediate execution refers to coming to consensus at height N for the transactions in the same block.
 * **Optimistic** 
-    * Optimistic execution can mean different things to different applications. THe way we imagine it working is that consensus may not be made on every block. Instead consensus is made after execution. This design favors a fast chain as it will not slow down for execution until the optimistic window  may be exceeded.
+    * Optimistic execution means different things to different applications. The way we imagine it working is that consensus may not be made on every block. Instead consensus is made after execution. This design favors a fast chain as it will not slow down for execution until the optimistic window  may be exceeded.
 * **Delayed**
     * Delayed execution is the default execution model in CometBFT. Consensus is made after execution, but the execution may be delayed until the next block.
 
@@ -110,7 +110,7 @@ Since consensus servers can be swapped there are certain features features speci
 * Vote Extensions
 * Snapshots
 
-If another consensus server would like to utilize the above features they can be copied or implmented in the server. 
+If another consensus server would like to utilize the above features they can be copied or implemented in the server. 
 
 ```mermaid
 graph TD
@@ -122,9 +122,43 @@ graph TD
 Consensus <-->|ABCI| A[CometBFT]
 ```
 
+:::Note
+ABCI, Vote Extensions, and Prepare & Process Proposal are primitives of cometbft, V2 is not tied to these features, teams do not have to adhere to them if they implement their own consensus engine.
+:::
+
 ### State Transition Function
 
 The state transition function is the component that handles the execution of transactions. It is responsible for calling the correct message handler for the transaction. The state transition function is stateless, it is handed a read only view of state and returns state changes, the changes returned can be handled by consensus in anyway needed. 
+
+The state transition function interface is simple and meant to be as light weight as possible. This is the only interface that is required to be implemented by bespoke consensus engines.
+
+```mermaid
+graph TD    
+    subgraph STF[State Transition Funciton]
+        BR --> DB
+        subgraph DB[DeliverBlock]
+            PB[PreBlock]
+            BB[BeginBlock]
+            DT["Deliver Transaction(s)"]
+            EB[EndBlock]
+        end
+        BR[BlockRequest]
+        Q[Query]
+        S[Simulate]
+        VT[Validate TX]
+    end
+    C -->|Decoded Transactions| STF
+    DBR --> STF
+    STF --> |ChangeSets, Events, Transaction Results| C2
+    C2 -->|Commit To DB| D
+
+    C[Consensus]
+    C2[Consensus]
+    D[DataBase]
+    DBR[DataBase Reader]
+```
+
+State Transition function interface: 
 
 ```go
 type StateTransitionFunction[T transaction.Tx] interface {

@@ -16,7 +16,7 @@ where
 {
     /// Gets the value of the item.
     pub fn get<'value>(&self, ctx: &'value Context) -> Result<V::Out<'value>> {
-        let v = self.map.get(ctx, &())?;
+        let v = self.map.get(ctx, ())?;
         Ok(v.unwrap_or_default())
     }
 

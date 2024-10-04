@@ -28,8 +28,8 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
     // }
 
     /// Gets the value of the map at the given key.
-    pub fn get<'key, 'value>(&self, ctx: &'value Context<'key>, key: &K::In<'key>) -> Result<Option<V::Out<'value>>> {
-        let key_bz = encode_object_key::<K>(&self.prefix, key, ctx.memory_manager())
+    pub fn get<'key, 'value>(&self, ctx: &'value Context<'key>, key: K::In<'key>) -> Result<Option<V::Out<'value>>> {
+        let key_bz = encode_object_key::<K>(&self.prefix, &key, ctx.memory_manager())
             // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
             .map_err(|_| ())?;
 

@@ -122,7 +122,7 @@ impl TestApp {
     //
 
     /// Creates a new random client account that can be used in calls.
-    pub fn new_client_context(&mut self) -> core::result::Result<Context, ()> {
+    pub fn new_client_context(&self) -> core::result::Result<Context, ()> {
         let mut ctx = self.client_context_for(ROOT_ACCOUNT);
         let client = create_account::<DefaultAccount>(&mut ctx, &())
             .map_err(|_| ())?;

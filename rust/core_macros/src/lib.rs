@@ -338,6 +338,8 @@ pub fn derive_resources(input: DeriveInput) -> manyhow::Result<TokenStream2> {
 #[deluxe(attributes(state))]
 struct State {
     prefix: Option<u8>,
+    key: Option<Vec<Ident>>,
+    value: Option<Vec<Ident>>,
 }
 
 /// This attribute bundles account and module handlers into a package root which can be

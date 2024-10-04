@@ -1,3 +1,5 @@
+//go:build system_test
+
 package systemtests
 
 import (
@@ -15,6 +17,10 @@ import (
 	"github.com/tidwall/sjson"
 )
 
+const (
+	distrTestDenom = "stake"
+)
+
 func TestWithdrawAllRewardsCmd(t *testing.T) {
 	// scenario: test distribution withdraw all rewards command
 	// given a running chain
@@ -25,17 +31,15 @@ func TestWithdrawAllRewardsCmd(t *testing.T) {
 	newAddr := cli.AddKey("newAddr")
 	require.NotEmpty(t, newAddr)
 
-	testDenom := "stake"
-
 	var initialAmount int64 = 10000000
-	initialBalance := fmt.Sprintf("%d%s", initialAmount, testDenom)
+	initialBalance := fmt.Sprintf("%d%s", initialAmount, distrTestDenom)
 	sut.ModifyGenesisCLI(t,
 		[]string{"genesis", "add-genesis-account", newAddr, initialBalance},
 	)
 	sut.StartChain(t)
 
 	// query balance
-	newAddrBal := cli.QueryBalance(newAddr, testDenom)
+	newAddrBal := cli.QueryBalance(newAddr, distrTestDenom)
 	require.Equal(t, initialAmount, newAddrBal)
 
 	// query validator operator address
@@ -46,22 +50,22 @@ func TestWithdrawAllRewardsCmd(t *testing.T) {
 	val2Addr := validators[1].String()
 
 	var delegationAmount int64 = 100000
-	delegation := fmt.Sprintf("%d%s", delegationAmount, testDenom)
+	delegation := fmt.Sprintf("%d%s", delegationAmount, distrTestDenom)
 
 	// delegate tokens to validator1
-	rsp = cli.RunAndWait("tx", "staking", "delegate", val1Addr, delegation, "--from="+newAddr, "--fees=1"+testDenom)
+	rsp = cli.RunAndWait("tx", "staking", "delegate", val1Addr, delegation, "--from="+newAddr, "--fees=1"+distrTestDenom)
 	RequireTxSuccess(t, rsp)
 
 	// delegate tokens to validator2
-	rsp = cli.RunAndWait("tx", "staking", "delegate", val2Addr, delegation, "--from="+newAddr, "--fees=1"+testDenom)
+	rsp = cli.RunAndWait("tx", "staking", "delegate", val2Addr, delegation, "--from="+newAddr, "--fees=1"+distrTestDenom)
 	RequireTxSuccess(t, rsp)
 
 	// check updated balance: newAddrBal - delegatedBal - fees
 	expBal := newAddrBal - (delegationAmount * 2) - 2
-	newAddrBal = cli.QueryBalance(newAddr, testDenom)
+	newAddrBal = cli.QueryBalance(newAddr, distrTestDenom)
 	require.Equal(t, expBal, newAddrBal)
 
-	withdrawCmdArgs := []string{"tx", "distribution", "withdraw-all-rewards", "--from=" + newAddr, "--fees=1" + testDenom}
+	withdrawCmdArgs := []string{"tx", "distribution", "withdraw-all-rewards", "--from=" + newAddr, "--fees=1" + distrTestDenom}
 
 	// test with --max-msgs
 	testCases := []struct {
@@ -112,13 +116,12 @@ func TestDistrValidatorGRPCQueries(t *testing.T) {
 	valOperAddr := cli.GetKeyAddrPrefix("node0", "val")
 	require.NotEmpty(t, valOperAddr)
 
-	denom := "stake"
 	sut.StartChain(t)
 
 	sut.AwaitNBlocks(t, 3)
 
 	baseurl := sut.APIAddress()
-	expectedAmountOutput := fmt.Sprintf(`{"denom":"%s","amount":"203.105000000000000000"}`, denom)
+	expectedAmountOutput := fmt.Sprintf(`{"denom":"%s","amount":"203.105000000000000000"}`, distrTestDenom)
 
 	// test params grpc endpoint
 	paramsURL := baseurl + "/cosmos/distribution/v1beta1/params"
@@ -231,7 +234,6 @@ func TestDistrDelegatorGRPCQueries(t *testing.T) {
 
 	sut.ResetChain(t)
 	cli := NewCLIWrapper(t, sut, verbose)
-	denom := "stake"
 
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
@@ -241,7 +243,7 @@ func TestDistrDelegatorGRPCQueries(t *testing.T) {
 
 	// update commission rate of node0 validator
 	// generate new gentx and copy it to genesis.json before starting network
-	rsp := cli.RunCommandWithArgs("genesis", "gentx", "node0", "100000000"+denom, "--chain-id="+cli.chainID, "--commission-rate=0.01", "--home", sut.nodePath(0), "--keyring-backend=test")
+	rsp := cli.RunCommandWithArgs("genesis", "gentx", "node0", "100000000"+distrTestDenom, "--chain-id="+cli.chainID, "--commission-rate=0.01", "--home", sut.nodePath(0), "--keyring-backend=test")
 	// extract gentx path from above command output
 	re := regexp.MustCompile(`"(.*?\.json)"`)
 	match := re.FindStringSubmatch(rsp)
@@ -262,7 +264,7 @@ func TestDistrDelegatorGRPCQueries(t *testing.T) {
 	require.NotEmpty(t, delAddr)
 
 	var initialAmount int64 = 1000000000
-	initialBalance := fmt.Sprintf("%d%s", initialAmount, denom)
+	initialBalance := fmt.Sprintf("%d%s", initialAmount, distrTestDenom)
 	sut.ModifyGenesisCLI(t,
 		[]string{"genesis", "add-genesis-account", delAddr, initialBalance},
 	)
@@ -270,7 +272,7 @@ func TestDistrDelegatorGRPCQueries(t *testing.T) {
 	sut.StartChain(t)
 
 	// delegate some tokens to valOperAddr
-	rsp = cli.RunAndWait("tx", "staking", "delegate", valOperAddr, "100000000"+denom, "--from="+delAddr)
+	rsp = cli.RunAndWait("tx", "staking", "delegate", valOperAddr, "100000000"+distrTestDenom, "--from="+delAddr)
 	RequireTxSuccess(t, rsp)
 
 	sut.AwaitNBlocks(t, 5)

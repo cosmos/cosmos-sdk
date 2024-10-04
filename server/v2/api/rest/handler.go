@@ -1,15 +1,17 @@
 package rest
 
 import (
-	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/server/v2/appmanager"
 	"encoding/json"
 	"fmt"
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/gogo/protobuf/jsonpb"
 	"net/http"
 	"reflect"
 	"strings"
+
+	gogoproto "github.com/cosmos/gogoproto/proto"
+	"github.com/gogo/protobuf/jsonpb"
+
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/server/v2/appmanager"
 )
 
 const (

@@ -45,9 +45,7 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.L
 	appManager = appI.GetAppManager()
 
 	s.router = mux.NewRouter()
-	s.router.PathPrefix("/").Handler(&DefaultHandler[T]{
-		appManager: appManager,
-	})
+	s.router.PathPrefix("/").Handler(NewDefaultHandler(appManager))
 
 	return nil
 }

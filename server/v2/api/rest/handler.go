@@ -16,8 +16,8 @@ const (
 	ContentTypeJSON = "application/json"
 )
 
-func NewDefaultHandler(appManager *appmanager.AppManager[transaction.Tx]) http.Handler {
-	return &DefaultHandler[transaction.Tx]{appManager: appManager}
+func NewDefaultHandler[T transaction.Tx](appManager *appmanager.AppManager[T]) http.Handler {
+	return &DefaultHandler[T]{appManager: appManager}
 }
 
 type DefaultHandler[T transaction.Tx] struct {

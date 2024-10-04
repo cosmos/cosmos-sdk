@@ -27,26 +27,6 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
         collect_publish_targets(&handler, item, &mut publish_targets)?;
     }
 
-    let client_ident = format_ident!("{}Client", handler);
-    push_item(items, quote! {
-        pub struct #client_ident(::ixc_message_api::AccountID);
-    })?;
-    push_item(items, quote! {
-        impl ::ixc_core::handler::Client for #client_ident {
-            fn account_id(&self) -> ::ixc_message_api::AccountID {
-                self.0
-            }
-        }
-    })?;
-    push_item(items, quote! {
-        impl ::ixc_core::handler::ClientFactory for #handler {
-            type Client = #client_ident;
-
-            fn new_client(account_id: ::ixc_message_api::AccountID) -> Self::Client {
-                #client_ident(account_id)
-            }
-        }
-    })?;
     push_item(items, quote! {
         impl ::ixc_message_api::handler::RawHandler for #handler {
             fn handle(&self, message_packet: &mut ::ixc_message_api::packet::MessagePacket, callbacks: &dyn ixc_message_api::handler::HostBackend, allocator: &dyn ::ixc_message_api::handler::Allocator) -> ::core::result::Result<(), ::ixc_message_api::handler::HandlerError> {
@@ -57,10 +37,12 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
 
     let mut builder = APIBuilder::default();
     for publish_target in publish_targets.iter() {
-        derive_api_method(&handler, quote! {#handler}, publish_target, &mut builder)?;
+        derive_api_method(&handler, &quote! {#handler}, publish_target, &mut builder)?;
     }
 
-    items.append(&mut builder.items);
+    let client_ident = format_ident!("{}Client", handler);
+    builder.define_client(&client_ident)?;
+    builder.define_client_factory(&client_ident, &quote! {#handler})?;
 
     let on_create_msg = match builder.create_msg_name {
         Some(msg) => quote! {#msg},
@@ -80,13 +62,6 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
         }
     })?;
 
-    let client_fn_impls = &builder.client_methods;
-    push_item(items, quote! {
-        impl #client_ident {
-            #(#client_fn_impls)*
-        }
-    })?;
-
     let routes = &builder.routes;
     push_item(items, quote! {
         unsafe impl ::ixc_core::routes::Router for #handler {
@@ -96,6 +71,8 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
                 ]);
         }
     })?;
+
+    items.append(&mut builder.items);
 
     let expanded = quote! {
         #item
@@ -204,6 +181,8 @@ pub fn publish(_attr: TokenStream2, item: TokenStream2) -> manyhow::Result<Token
 #[proc_macro_attribute]
 pub fn handler_api(attr: TokenStream2, mut item_trait: ItemTrait) -> manyhow::Result<TokenStream2> {
     let mut builder = APIBuilder::default();
+    let trait_ident = &item_trait.ident;
+    let dyn_trait = quote!(dyn #trait_ident);
     for item in &item_trait.items {
         match item {
             TraitItem::Fn(f) => {
@@ -213,13 +192,29 @@ pub fn handler_api(attr: TokenStream2, mut item_trait: ItemTrait) -> manyhow::Re
                     publish: None,
                     attrs: f.attrs.clone(),
                 };
-                derive_api_method(&item_trait.ident, quote! {#item_trait}, &publish_target, &mut builder)?;
+                derive_api_method(trait_ident, &dyn_trait, &publish_target, &mut builder)?;
             }
             _ => {}
         }
     }
+
+    let client_ident = format_ident!("{}Client", trait_ident);
+    builder.define_client(&client_ident)?;
+    builder.define_client_factory(&client_ident, &quote! {#client_ident})?;
+    //builder.define_client_factory(&client_ident, &dyn_trait)?;
+    let items = &mut builder.items;
+    let routes = &builder.routes;
     Ok(quote! {
         #item_trait
+
+        #(#items)*
+
+        unsafe impl ::ixc_core::routes::Router for dyn #trait_ident {
+            const SORTED_ROUTES: &'static [::ixc_core::routes::Route<Self>] =
+                &::ixc_core::routes::sort_routes([
+                    #(#routes)*
+                ]);
+        }
     })
 }
 
@@ -228,17 +223,45 @@ struct APIBuilder {
     items: Vec<Item>,
     routes: Vec<TokenStream2>,
     client_methods: Vec<TokenStream2>,
-    create_msg_name: Option<Ident>
+    create_msg_name: Option<Ident>,
 }
 
-fn derive_api_method(handler_ident: &Ident, handler_ty: TokenStream2, publish_target: &PublishFn, builder: &mut APIBuilder) -> manyhow::Result<()> {
+impl APIBuilder {
+    fn define_client(&mut self, client_ident: &Ident) -> manyhow::Result<()> {
+        push_item(&mut self.items, quote! {
+            pub struct #client_ident(::ixc_message_api::AccountID);
+        })?;
+        push_item(&mut self.items, quote! {
+            impl ::ixc_core::handler::Client for #client_ident {
+                fn account_id(&self) -> ::ixc_message_api::AccountID {
+                    self.0
+                }
+            }
+        })
+    }
+
+    fn define_client_factory(&mut self, client_ident: &Ident, factory_target: &TokenStream2) -> manyhow::Result<()> {
+        push_item(&mut self.items, quote! {
+            impl ::ixc_core::handler::ClientFactory for #factory_target {
+                type Client = #client_ident;
+
+                fn new_client(account_id: ::ixc_message_api::AccountID) -> Self::Client {
+                    #client_ident(account_id)
+                }
+            }
+        })
+    }
+}
+
+fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_target: &PublishFn, builder: &mut APIBuilder) -> manyhow::Result<()> {
     let signature = &publish_target.signature;
     let fn_name = &signature.ident;
     let ident_camel = fn_name.to_string().to_upper_camel_case();
     let msg_struct_name = format_ident!("{}{}", handler_ident, ident_camel);
     let signature = signature.clone();
     let mut msg_fields = vec![];
-    let mut msg_fields_access = vec![];
+    let mut msg_deconstruct = vec![];
+    let mut fn_ctr_args = vec![];
     let mut msg_fields_init = vec![];
     let mut have_lifetimes = false;
     let mut context_name: Option<Ident> = None;
@@ -254,18 +277,31 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: TokenStream2, publish_ta
                                     context_name = Some(ident.ident.clone());
                                     continue;
                                 }
+
                                 have_lifetimes = true;
-                                assert!(tyref.lifetime.is_none(), "support for named lifetimes is unimplemented");
+                                assert!(tyref.lifetime.is_none() ||
+                                            tyref.lifetime.as_ref().unwrap().ident == "a"
+                                        , "lifetime must be either unnamed or called 'a");
                                 tyref.lifetime = Some(parse_quote!('a));
-                                assert!(false, "no support for borrowed data yet!")
+                            }
+                            Type::Path(path) => {
+                                if let Some(s) = path.path.segments.first() {
+                                    if s.ident == "EventBus" {
+                                        fn_ctr_args.push(quote! { Default::default(), });
+                                        continue;
+                                    }
+                                }
                             }
                             _ => {}
                         }
                         msg_fields.push(quote! {
                                 pub #ident: #ty,
                             });
-                        msg_fields_access.push(quote! {
-                                msg.#ident,
+                        msg_deconstruct.push(quote! {
+                                #ident,
+                            });
+                        fn_ctr_args.push(quote! {
+                                #ident,
                             });
                         msg_fields_init.push(quote! {
                                 #ident,
@@ -277,10 +313,15 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: TokenStream2, publish_ta
             _ => {}
         }
     }
+    let opt_lifetime = if have_lifetimes {
+        quote! { <'a> }
+    } else {
+        quote! {}
+    };
     push_item(&mut builder.items, quote! {
             #[derive(::ixc_schema_macros::SchemaValue)]
             #[sealed]
-            pub struct #msg_struct_name {
+            pub struct #msg_struct_name #opt_lifetime {
                 #(#msg_fields)*
             }
         })?;
@@ -293,7 +334,7 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: TokenStream2, publish_ta
     };
     if publish_target.on_create.is_none() {
         push_item(&mut builder.items, quote! {
-                impl <'a> ::ixc_core::message::Message<'a> for #msg_struct_name {
+                impl <'a> ::ixc_core::message::Message<'a> for #msg_struct_name #opt_lifetime {
                     const SELECTOR: ::ixc_message_api::header::MessageSelector = #selector;
                     type Response<'b> = <#return_type as ::ixc_core::message::ExtractResponseTypes>::Response;
                     type Error = ();
@@ -308,8 +349,8 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: TokenStream2, publish_ta
                             let cdc = < #msg_struct_name as ::ixc_core::message::Message >::Codec::default();
                             let in1 = packet.header().in_pointer1.get(packet);
                             let mut ctx = ::ixc_core::Context::new(packet.header().context_info, cb);
-                            let msg = ::ixc_schema::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
-                            let res = h.#fn_name(&mut ctx, #(#msg_fields_access)*).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
+                            let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc_schema::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
+                            let res = h.#fn_name(&mut ctx, #(#fn_ctr_args)*).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
                             ::ixc_core::low_level::encode_optional_to_out1::< < #msg_struct_name as ::ixc_core::message::Message<'_> >::Response<'_> >(&cdc, &res, a, packet).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))
                         }
                     }),
@@ -329,8 +370,8 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: TokenStream2, publish_ta
                     let cdc = < #msg_struct_name as::ixc_core::handler::InitMessage >::Codec::default();
                     let in1 = packet.header().in_pointer1.get(packet);
                     let mut ctx =::ixc_core::Context::new(packet.header().context_info, cb);
-                    let msg =::ixc_schema::codec::decode_value::< #msg_struct_name > ( & cdc, in1, ctx.memory_manager()).map_err( | e|::ixc_message_api::handler::HandlerError::Custom(0)) ?;
-                    h.#fn_name(& mut ctx, #(#msg_fields_access)*).map_err( | e |::ixc_message_api::handler::HandlerError::Custom(0))
+                    let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc_schema::codec::decode_value::< #msg_struct_name > ( & cdc, in1, ctx.memory_manager()).map_err( | e|::ixc_message_api::handler::HandlerError::Custom(0)) ?;
+                    h.#fn_name(& mut ctx, #(#fn_ctr_args)*).map_err( | e |::ixc_message_api::handler::HandlerError::Custom(0))
                 }
             }),}
         );

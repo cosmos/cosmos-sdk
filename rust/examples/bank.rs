@@ -2,6 +2,7 @@
 #[ixc::handler(Bank)]
 pub mod bank {
     use ixc::*;
+    use ixc_core::handler::ClientFactory;
 
     #[derive(Resources)]
     pub struct Bank {
@@ -19,7 +20,7 @@ pub mod bank {
     #[handler_api]
     pub trait BankAPI {
         fn get_balance(&self, ctx: &Context, account: AccountID, denom: &str) -> Result<u128>;
-        fn send(&self, ctx: &mut Context, to: AccountID, amount: &[Coin], evt: &mut EventBus<EventSend>) -> Result<()>;
+        fn send<'a>(&self, ctx: &'a mut Context, to: AccountID, amount: &[Coin<'a>], evt: EventBus<EventSend<'_>>) -> Result<()>;
     }
 
     #[derive(SchemaValue)]
@@ -37,11 +38,12 @@ pub mod bank {
         }
     }
 
-    impl BankAPI for Bank {fn get_balance(&self, ctx: &Context, account: AccountID, denom: &str) -> Result<u128> {
+    impl BankAPI for Bank {
+        fn get_balance(&self, ctx: &Context, account: AccountID, denom: &str) -> Result<u128> {
             self.balances.get(ctx, (account, denom))
-    }
+        }
 
-        fn send(&self, ctx: &mut Context, to: AccountID, amount: &[Coin], evt: &mut EventBus<EventSend>) -> Result<()> {
+        fn send(&self, ctx: &mut Context, to: AccountID, amount: &[Coin], evt: EventBus<EventSend>) -> Result<()> {
             for coin in amount {
                 self.balances.safe_sub(ctx, (ctx.caller(), coin.denom), coin.amount)?;
                 self.balances.add(ctx, (to, coin.denom), coin.amount)?;
@@ -53,6 +55,18 @@ pub mod bank {
             }
             Ok(())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::bank::*;
+    use ixc_testing::*;
+
+    #[test]
+    fn test() {
+        let mut app = TestApp::default();
+        app.register_handler::<Bank>().unwrap();
     }
 }
 

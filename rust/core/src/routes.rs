@@ -30,7 +30,7 @@ pub fn exec_route<R: Router>(r: &R, packet: &mut MessagePacket, callbacks: &dyn 
 }
 
 /// Sorts the routes by message selector.
-pub const fn sort_routes<const N: usize, T>(mut arr: [Route<T>; N]) -> [Route<T>; N] {
+pub const fn sort_routes<const N: usize, T: ?Sized>(mut arr: [Route<T>; N]) -> [Route<T>; N] {
     // const bubble sort
     loop {
         let mut swapped = false;

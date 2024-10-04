@@ -1,25 +1,25 @@
 #![allow(missing_docs)]
-#[ixc::module_handler(Bank)]
+#[ixc::handler(Bank)]
 pub mod bank {
     use ixc::*;
 
     pub struct Bank {
         #[schema(name(address, denom), value(amount))]
-        balances: UIntMap<(Address, String), u128>,
+        balances: Map<(AccountID, String), u128>,
     }
 
-    #[derive(StructCodec)]
+    #[derive(SchemaValue)]
     pub struct Coin<'a> {
         pub denom: &'a str,
         pub amount: u128,
     }
 
-    #[module_api]
+    #[handler_api]
     pub trait BankAPI {
-        fn send(&self, ctx: &mut Context, to: Address, amount: &[Coin], evt: &mut EventBus<EventSend>) -> Response<()>;
+        fn send(&self, ctx: &mut Context, to: AccountID, amount: &[Coin], evt: &mut EventBus<EventSend>) -> Result<()>;
     }
 
-    #[derive(StructCodec)]
+    #[derive(SchemaValue)]
     pub struct EventSend<'a> {
         pub from: Address,
         pub to: Address,
@@ -27,7 +27,7 @@ pub mod bank {
     }
 
     impl BankAPI for Bank {
-        fn send(&self, ctx: &mut Context, to: Address, amount: &[Coin], evt: &mut EventBus<EventSend>) -> Response<()> {
+        fn send(&self, ctx: &mut Context, to: AccountID, amount: &[Coin], evt: &mut EventBus<EventSend>) -> Result<()> {
             for coin in amount {
                 self.balances.safe_sub(ctx, (ctx.sender(), coin.denom), coin.amount)?;
                 self.balances.add(ctx, (to, coin.denom), coin.amount)?;

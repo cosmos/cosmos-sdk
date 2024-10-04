@@ -16,7 +16,7 @@ pub mod simple_asset {
         #[on_create]
         pub fn init(&self, ctx: &mut Context, initial_balance: u128) -> Result<()> {
             let owner = ctx.caller();
-            self.owner.set(ctx, owner)?;
+            self.owner.set(ctx, &owner)?;
             self.balances.set(ctx, owner, initial_balance)
         }
 

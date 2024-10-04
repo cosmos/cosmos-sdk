@@ -1,5 +1,6 @@
 //! The map module contains the `Map` struct, which represents a key-value map in storage.
 
+use std::borrow::Borrow;
 use bump_scope::allocator_api2::alloc::Allocator;
 use ixc_core::error::Error;
 use ixc_core::{Context, Result};
@@ -28,8 +29,11 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
     // }
 
     /// Gets the value of the map at the given key.
-    pub fn get<'key, 'value>(&self, ctx: &'value Context<'key>, key: K::In<'key>) -> Result<Option<V::Out<'value>>> {
-        let key_bz = encode_object_key::<K>(&self.prefix, &key, ctx.memory_manager())
+    pub fn get<'a, 'b, L>(&self, ctx: &'a Context, key: L) -> Result<Option<V::Out<'a>>>
+    where
+        L: Borrow<K::In<'b>>,
+    {
+        let key_bz = encode_object_key::<K>(&self.prefix, key.borrow(), ctx.memory_manager())
             // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
             .map_err(|_| ())?;
 
@@ -45,37 +49,27 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
         Ok(Some(value))
     }
 
-    // /// Gets the value of the map at the given key, possibly from a previous block.
-    // pub fn stale_get<'key>(&self, ctx: &Context<'key>, key: K::Value<'key>) -> Result<'key, V::Value<'key>> {
-    //     todo!()
-    // }
-
     /// Sets the value of the map at the given key.
-    pub fn set<'key, 'value>(&self, ctx: &'value mut Context<'key>, key: K::In<'key>, value: V::In<'value>) -> Result<()> {
-        let key_bz = encode_object_key::<K>(&self.prefix, &key, ctx.memory_manager())
+    pub fn set<'a, L, U>(&self, ctx: &mut Context, key: L, value: U) -> Result<()>
+    where
+        L: Borrow<K::In<'a>>,
+        U: Borrow<V::In<'a>>,
+    {
+        let key_bz = encode_object_key::<K>(&self.prefix, key.borrow(), ctx.memory_manager())
             // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
             .map_err(|_| ())?;
-        let value_bz = encode_object_value::<V>(&value, ctx.memory_manager())
+        let value_bz = encode_object_value::<V>(value.borrow(), ctx.memory_manager())
             // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
             .map_err(|_| ())?;
         unsafe { KVStoreClient.set(ctx, key_bz, value_bz) }
     }
 
-    // /// Updates the value of the map at the given key.
-    // pub fn update<'key, 'value>(&self, ctx: &mut Context<'key>, key: K::In<'key>, updater: impl FnOnce(Option<V::In<'value>>) -> Option<V::In<'value>>) -> Result<()> {
-    //     todo!()
-    // }
-
-    // /// Lazily updates the value of the map at the given key at some later point in time.
-    // /// This function is unsafe because updater must be commutative and that cannot be guaranteed by the type system.
-    // pub unsafe fn lazy_update<'a, 'b>(&self, ctx: &mut Context<'a>, key: K::Value<'a>, updater: impl FnOnce(Option<V::Value<'b>>) -> Option<V::Value<'b>>) -> Response<()> {
-    //     todo!()
-    // }
-    //
-
     /// Deletes the value of the map at the given key.
-    pub fn delete<'key>(&self, ctx: &mut Context<'key>, key: &K::In<'key>) -> Result<()> {
-        let key_bz = encode_object_key::<K>(&self.prefix, key, ctx.memory_manager())
+    pub fn delete<'a, L>(&self, ctx: &mut Context, key: L) -> Result<()>
+    where
+        L: Borrow<K::In<'a>>,
+    {
+        let key_bz = encode_object_key::<K>(&self.prefix, key.borrow(), ctx.memory_manager())
             // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
             .map_err(|_| ())?;
         unsafe { KVStoreClient.delete(ctx, key_bz) }

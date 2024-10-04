@@ -11,9 +11,9 @@ use crate::structs::{StructDecodeVisitor, StructEncodeVisitor, StructType};
 use crate::value::SchemaValue;
 
 /// Encode an object value.
-pub fn encode_object_value<'a, V: ObjectValue>(value: &V::In<'a>, writer_factory: &'a dyn WriterFactory) -> Result<&'a [u8], EncodeError> {
-    struct Visitor<'b, 'c, U:ObjectValue>(&'c U::In<'b>);
-    impl <'b, 'c, U:ObjectValue> ValueEncodeVisitor for Visitor<'b, 'c, U> {
+pub fn encode_object_value<'a, 'b, V: ObjectValue>(value: &V::In<'b>, writer_factory: &'a dyn WriterFactory) -> Result<&'a [u8], EncodeError> {
+    struct Visitor<'c, 'd, U:ObjectValue>(&'c U::In<'d>);
+    impl <'c, 'd, U:ObjectValue> ValueEncodeVisitor for Visitor<'c, 'd, U> {
         fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
             U::encode(self.0, encoder)
         }

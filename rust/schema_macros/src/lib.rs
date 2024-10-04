@@ -147,6 +147,10 @@ fn derive_struct_schema(input: &syn::DeriveInput, str: &DataStruct) -> manyhow::
             }
         }
 
+        // impl < #lifetime > ::ixc_schema::SchemaValue < #lifetime > for &#lifetime #struct_name #ty_generics #where_clause {
+        //     type Type = ::ixc_schema::types::StructT< #struct_name #ty_generics >;
+        // }
+
         impl < #lifetime > ::ixc_schema::value::ListElementValue < #lifetime > for #struct_name #ty_generics #where_clause {}
         impl #impl_generics ::ixc_schema::state_object::ObjectFieldValue for #struct_name #ty_generics #where_clause {
             type In< #lifetime2 > = #struct_name #ty_generics2;

@@ -18,6 +18,6 @@ pub use set::{Set};
 pub use item::{Item};
 pub use index::{Index};
 pub use unique::{UniqueIndex};
-pub use uint_map::{UIntMap};
+// pub use uint_map::{UIntMap};
 pub use ordered_map::{OrderedMap};
 pub use ordered_set::{OrderedSet};

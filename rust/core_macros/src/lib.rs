@@ -332,7 +332,7 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: TokenStream2, publish_ta
                     let msg =::ixc_schema::codec::decode_value::< #msg_struct_name > ( & cdc, in1, ctx.memory_manager()).map_err( | e|::ixc_message_api::handler::HandlerError::Custom(0)) ?;
                     h.#fn_name(& mut ctx, #(#msg_fields_access)*).map_err( | e |::ixc_message_api::handler::HandlerError::Custom(0))
                 }
-            })}
+            }),}
         );
         builder.create_msg_name = Some(msg_struct_name);
     }

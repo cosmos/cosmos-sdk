@@ -82,10 +82,7 @@ func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo)
 
 	batch := m.kv.NewBatch()
 	defer func() {
-		cErr := batch.Close()
-		if err == nil {
-			err = cErr
-		}
+		err = errors.Join(err, batch.Close())
 	}()
 	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 	value, err := cInfo.Marshal()
@@ -114,10 +111,7 @@ func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo)
 func (m *MetadataStore) flushRemovedStoreKeys(version uint64, storeKeys []string) (err error) {
 	batch := m.kv.NewBatch()
 	defer func() {
-		cErr := batch.Close()
-		if err == nil {
-			err = cErr
-		}
+		err = errors.Join(err, batch.Close())
 	}()
 
 	for _, storeKey := range storeKeys {

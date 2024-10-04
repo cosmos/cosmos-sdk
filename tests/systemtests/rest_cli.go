@@ -1,38 +1,39 @@
 package systemtests
 
 import (
+	"io"
+	"net/http"
 	"regexp"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/stretchr/testify/require"
 )
 
-type GRPCTestCase struct {
-	name   string
-	url    string
-	expOut string
+type RestTestCase struct {
+	name    string
+	url     string
+	expCode int
+	expOut  string
 }
 
-// RunGRPCQueries runs given grpc testcases by making requests and
+// RunRestQueries runs given Rest testcases by making requests and
 // checking response with expected output
-func RunGRPCQueries(t *testing.T, testCases []GRPCTestCase) {
+func RunRestQueries(t *testing.T, testCases []RestTestCase) {
 	t.Helper()
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := testutil.GetRequest(tc.url)
-			require.NoError(t, err)
+			resp := GetRequestWithHeaders(t, tc.url, nil, tc.expCode)
 			require.JSONEq(t, tc.expOut, string(resp))
 		})
 	}
 }
 
-// TestGRPCQueryIgnoreNumbers runs given grpc testcases by making requests and
+// TestRestQueryIgnoreNumbers runs given rest testcases by making requests and
 // checking response with expected output ignoring number values
 // This method is used when number values in response are non-deterministic
-func TestGRPCQueryIgnoreNumbers(t *testing.T, testCases []GRPCTestCase) {
+func TestRestQueryIgnoreNumbers(t *testing.T, testCases []RestTestCase) {
 	t.Helper()
 
 	for _, tc := range testCases {
@@ -55,4 +56,31 @@ func TestGRPCQueryIgnoreNumbers(t *testing.T, testCases []GRPCTestCase) {
 			require.JSONEq(t, expectedJSON, actualJSON)
 		})
 	}
+}
+
+func GetRequest(t *testing.T, url string) []byte {
+	t.Helper()
+	return GetRequestWithHeaders(t, url, nil, http.StatusOK)
+}
+
+func GetRequestWithHeaders(t *testing.T, url string, headers map[string]string, expCode int) []byte {
+	t.Helper()
+	req, err := http.NewRequest("GET", url, nil)
+	require.NoError(t, err)
+
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	httpClient := &http.Client{}
+	res, err := httpClient.Do(req)
+	require.NoError(t, err)
+	defer func() {
+		_ = res.Body.Close()
+	}()
+	require.Equal(t, expCode, res.StatusCode, "status code should be %d, got: %d", expCode, res.StatusCode)
+
+	body, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+	return body
 }

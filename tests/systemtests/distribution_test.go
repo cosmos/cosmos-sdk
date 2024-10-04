@@ -1,9 +1,8 @@
-//go:build system_test
-
 package systemtests
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -124,95 +123,106 @@ func TestDistrValidatorGRPCQueries(t *testing.T) {
 	// test params grpc endpoint
 	paramsURL := baseurl + "/cosmos/distribution/v1beta1/params"
 
-	paramsTestCases := []GRPCTestCase{
+	paramsTestCases := []RestTestCase{
 		{
 			"gRPC request params",
 			paramsURL,
+			http.StatusOK,
 			`{"params":{"community_tax":"0.020000000000000000","base_proposer_reward":"0.000000000000000000","bonus_proposer_reward":"0.000000000000000000","withdraw_addr_enabled":true}}`,
 		},
 	}
-	RunGRPCQueries(t, paramsTestCases)
+	RunRestQueries(t, paramsTestCases)
 
 	// test validator distribution info grpc endpoint
 	validatorsURL := baseurl + `/cosmos/distribution/v1beta1/validators/%s`
 	decodingFailedOutput := `{"code":2, "message":"decoding bech32 failed: invalid separator index -1", "details":[]}`
 	validatorsOutput := fmt.Sprintf(`{"operator_address":"%s","self_bond_rewards":[],"commission":[%s]}`, valAddr, expectedAmountOutput)
 
-	validatorsTestCases := []GRPCTestCase{
+	validatorsTestCases := []RestTestCase{
 		{
 			"invalid validator gRPC request with wrong validator address",
 			fmt.Sprintf(validatorsURL, "wrongaddress"),
+			http.StatusInternalServerError,
 			decodingFailedOutput,
 		},
 		{
 			"gRPC request validator with valid validator address",
 			fmt.Sprintf(validatorsURL, valOperAddr),
+			http.StatusOK,
 			validatorsOutput,
 		},
 	}
-	TestGRPCQueryIgnoreNumbers(t, validatorsTestCases)
+	TestRestQueryIgnoreNumbers(t, validatorsTestCases)
 
 	// test outstanding rewards grpc endpoint
 	outstandingRewardsURL := baseurl + `/cosmos/distribution/v1beta1/validators/%s/outstanding_rewards`
 
-	rewardsTestCases := []GRPCTestCase{
+	rewardsTestCases := []RestTestCase{
 		{
 			"invalid outstanding rewards gRPC request with wrong validator address",
 			fmt.Sprintf(outstandingRewardsURL, "wrongaddress"),
+			http.StatusInternalServerError,
 			decodingFailedOutput,
 		},
 		{
 			"gRPC request outstanding rewards with valid validator address",
 			fmt.Sprintf(outstandingRewardsURL, valOperAddr),
+			http.StatusOK,
 			fmt.Sprintf(`{"rewards":{"rewards":[%s]}}`, expectedAmountOutput),
 		},
 	}
-	TestGRPCQueryIgnoreNumbers(t, rewardsTestCases)
+	TestRestQueryIgnoreNumbers(t, rewardsTestCases)
 
 	// test validator commission grpc endpoint
 	commissionURL := baseurl + `/cosmos/distribution/v1beta1/validators/%s/commission`
 
-	commissionTestCases := []GRPCTestCase{
+	commissionTestCases := []RestTestCase{
 		{
 			"invalid commission gRPC request with wrong validator address",
 			fmt.Sprintf(commissionURL, "wrongaddress"),
+			http.StatusInternalServerError,
 			decodingFailedOutput,
 		},
 		{
 			"gRPC request commission with valid validator address",
 			fmt.Sprintf(commissionURL, valOperAddr),
+			http.StatusOK,
 			fmt.Sprintf(`{"commission":{"commission":[%s]}}`, expectedAmountOutput),
 		},
 	}
-	TestGRPCQueryIgnoreNumbers(t, commissionTestCases)
+	TestRestQueryIgnoreNumbers(t, commissionTestCases)
 
 	// test validator slashes grpc endpoint
 	slashURL := baseurl + `/cosmos/distribution/v1beta1/validators/%s/slashes`
 	invalidHeightOutput := `{"code":3, "message":"strconv.ParseUint: parsing \"-3\": invalid syntax", "details":[]}`
 
-	slashTestCases := []GRPCTestCase{
+	slashTestCases := []RestTestCase{
 		{
 			"invalid slashes gRPC request with wrong validator address",
 			fmt.Sprintf(slashURL, "wrongaddress"),
+			http.StatusBadRequest,
 			`{"code":3, "message":"invalid validator address", "details":[]}`,
 		},
 		{
 			"invalid start height",
 			fmt.Sprintf(slashURL+`?starting_height=%s&ending_height=%s`, valOperAddr, "-3", "3"),
+			http.StatusBadRequest,
 			invalidHeightOutput,
 		},
 		{
 			"invalid end height",
 			fmt.Sprintf(slashURL+`?starting_height=%s&ending_height=%s`, valOperAddr, "1", "-3"),
+			http.StatusBadRequest,
 			invalidHeightOutput,
 		},
 		{
 			"valid request get slashes",
 			fmt.Sprintf(slashURL+`?starting_height=%s&ending_height=%s`, valOperAddr, "1", "3"),
+			http.StatusOK,
 			`{"slashes":[],"pagination":{"next_key":null,"total":"0"}}`,
 		},
 	}
-	RunGRPCQueries(t, slashTestCases)
+	RunRestQueries(t, slashTestCases)
 }
 
 func TestDistrDelegatorGRPCQueries(t *testing.T) {
@@ -273,59 +283,67 @@ func TestDistrDelegatorGRPCQueries(t *testing.T) {
 	expectedAmountOutput := `{"denom":"stake","amount":"0.121275000000000000"}`
 	rewardsOutput := fmt.Sprintf(`{"rewards":[{"validator_address":"%s","reward":[%s]}],"total":[%s]}`, valOperAddr, expectedAmountOutput, expectedAmountOutput)
 
-	delegatorRewardsTestCases := []GRPCTestCase{
+	delegatorRewardsTestCases := []RestTestCase{
 		{
 			"wrong delegator address",
 			fmt.Sprintf(delegatorRewardsURL, "wrongdeladdress"),
+			http.StatusInternalServerError,
 			decodingFailedOutput,
 		},
 		{
 			"valid rewards request with valid delegator address",
 			fmt.Sprintf(delegatorRewardsURL, delAddr),
+			http.StatusOK,
 			rewardsOutput,
 		},
 		{
 			"wrong validator address (specific validator rewards)",
 			fmt.Sprintf(delegatorRewardsURL+`/%s`, delAddr, "wrongvaladdress"),
+			http.StatusInternalServerError,
 			decodingFailedOutput,
 		},
 		{
 			"valid request(specific validator rewards)",
 			fmt.Sprintf(delegatorRewardsURL+`/%s`, delAddr, valOperAddr),
+			http.StatusOK,
 			fmt.Sprintf(`{"rewards":[%s]}`, expectedAmountOutput),
 		},
 	}
-	TestGRPCQueryIgnoreNumbers(t, delegatorRewardsTestCases)
+	TestRestQueryIgnoreNumbers(t, delegatorRewardsTestCases)
 
 	// test delegator validators grpc endpoint
 	delegatorValsURL := baseurl + `/cosmos/distribution/v1beta1/delegators/%s/validators`
-	valsTestCases := []GRPCTestCase{
+	valsTestCases := []RestTestCase{
 		{
 			"invalid delegator validators gRPC request with wrong delegator address",
 			fmt.Sprintf(delegatorValsURL, "wrongaddress"),
+			http.StatusInternalServerError,
 			decodingFailedOutput,
 		},
 		{
 			"gRPC request delegator validators with valid delegator address",
 			fmt.Sprintf(delegatorValsURL, delAddr),
+			http.StatusOK,
 			fmt.Sprintf(`{"validators":["%s"]}`, valOperAddr),
 		},
 	}
-	RunGRPCQueries(t, valsTestCases)
+	RunRestQueries(t, valsTestCases)
 
 	// test withdraw address grpc endpoint
 	withdrawAddrURL := baseurl + `/cosmos/distribution/v1beta1/delegators/%s/withdraw_address`
-	withdrawAddrTestCases := []GRPCTestCase{
+	withdrawAddrTestCases := []RestTestCase{
 		{
 			"invalid withdraw address gRPC request with wrong delegator address",
 			fmt.Sprintf(withdrawAddrURL, "wrongaddress"),
+			http.StatusInternalServerError,
 			decodingFailedOutput,
 		},
 		{
 			"gRPC request withdraw address with valid delegator address",
 			fmt.Sprintf(withdrawAddrURL, delAddr),
+			http.StatusOK,
 			fmt.Sprintf(`{"withdraw_address":"%s"}`, delAddr),
 		},
 	}
-	RunGRPCQueries(t, withdrawAddrTestCases)
+	RunRestQueries(t, withdrawAddrTestCases)
 }

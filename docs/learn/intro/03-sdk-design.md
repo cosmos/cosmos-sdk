@@ -22,7 +22,7 @@ Here is a simplified view of how transactions are handled by an application buil
 Here is an example of this from `simapp`, the Cosmos SDK demonstration app:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go#L170-L212
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/simapp/app.go#L145-L186
 ```
 
 The goal of `baseapp` is to provide a secure interface between the store and the extensible state machine while defining as little about the state machine as possible (staying true to the ABCI).
@@ -33,7 +33,7 @@ For more on `baseapp`, please click [here](../advanced/00-baseapp.md).
 
 The Cosmos SDK provides a [`multistore`](../advanced/04-store.md#multistore) for persisting state. The multistore allows developers to declare any number of [`KVStores`](../advanced/04-store.md#base-layer-kvstores). These `KVStores` only accept the `[]byte` type as value and therefore any custom structure needs to be marshalled using [a codec](../advanced/05-encoding.md) before being stored.
 
-The multistore abstraction is used to divide the state in distinct compartments, each managed by its own module. For more on the multistore, click [here](../advanced/04-store.md#multistore)
+The multistore abstraction is used to divide the state in distinct compartments, each managed by its own module. For more on the multistore, click [here](../advanced/04-store.md#multistore).
 
 ## Modules
 
@@ -61,6 +61,6 @@ Cosmos SDK modules are defined in the `x/` folder of the Cosmos SDK. Some core m
 
 * `x/auth`: Used to manage accounts and signatures.
 * `x/bank`: Used to enable tokens and token transfers.
-* `x/staking` + `x/slashing`: Used to build Proof-Of-Stake blockchains.
+* `x/staking` + `x/slashing`: Used to build Proof-of-Stake blockchains.
 
-In addition to the already existing modules in `x/`, that anyone can use in their app, the Cosmos SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://tutorials.cosmos.network/).
+In addition to the already existing modules in `x/`, which anyone can use in their app, the Cosmos SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://tutorials.cosmos.network/).

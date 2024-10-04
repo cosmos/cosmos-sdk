@@ -38,6 +38,9 @@ type Keeper struct {
 	// Legacy Proposal router
 	legacyRouter v1beta1.Router
 
+	// Tally handler for tallying votes. If not provided, the default one will be used.
+	tallyHandler v1.TallyHandler
+
 	// Msg server router
 	router baseapp.MessageRouter
 
@@ -147,6 +150,12 @@ func (k *Keeper) SetLegacyRouter(router v1beta1.Router) {
 	// could create invalid or non-deterministic behavior.
 	router.Seal()
 	k.legacyRouter = router
+}
+
+// SetTallyHandler sets the tally handler for governance
+func (keeper *Keeper) SetTallyHandler(th v1.TallyHandler) *Keeper {
+	keeper.tallyHandler = th
+	return keeper
 }
 
 // Logger returns a module-specific logger.

@@ -125,16 +125,6 @@ Previously the `module.AppModule` interface was containing all the methods that 
 https://github.com/cosmos/cosmos-sdk/blob/28fa3b8/core/appmodule/v2/module.go#L14-L20
 ```
 
-### `HasInvariants`
-
-This interface defines one method. It allows to checks if a module can register invariants.
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/module/module.go#L202-L205
-```
-
-* `RegisterInvariants(sdk.InvariantRegistry)`: Registers the [`invariants`](./07-invariants.md) of the module. If an invariant deviates from its predicted value, the [`InvariantRegistry`](./07-invariants.md#registry) triggers appropriate logic (most often the chain will be halted).
-
 ### `HasServices`
 
 This interface defines one method. It allows to checks if a module can register invariants.
@@ -238,7 +228,6 @@ The module manager is used throughout the application whenever an action on a co
 * `SetOrderPrecommiters(moduleNames ...string)`: Sets the order in which the `Precommit()` function of each module will be called during commit of each block. This function is generally called from the application's main [constructor function](../../learn/beginner/00-app-anatomy.md#constructor-function).
 * `SetOrderPrepareCheckStaters(moduleNames ...string)`: Sets the order in which the `PrepareCheckState()` function of each module will be called during commit of each block. This function is generally called from the application's main [constructor function](../../learn/beginner/00-app-anatomy.md#constructor-function).
 * `SetOrderMigrations(moduleNames ...string)`: Sets the order of migrations to be run. If not set then migrations will be run with an order defined in `DefaultMigrationsOrder`.
-* `RegisterInvariants(ir sdk.InvariantRegistry)`: Registers the [invariants](./07-invariants.md) of module implementing the `HasInvariants` interface.
 * `RegisterServices(cfg Configurator)`: Registers the services of modules implementing the `HasServices` interface.
 * `InitGenesis(ctx context.Context, genesisData map[string]json.RawMessage)`: Calls the [`InitGenesis`](./08-genesis.md#initgenesis) function of each module when the application is first started, in the order defined in `OrderInitGenesis`. Returns an `abci.InitChainResponse` to the underlying consensus engine, which can contain validator updates.
 * `ExportGenesis(ctx context.Context)`: Calls the [`ExportGenesis`](./08-genesis.md#exportgenesis) function of each module, in the order defined in `OrderExportGenesis`. The export constructs a genesis file from a previously existing state, and is mainly used when a hard-fork upgrade of the chain is required.

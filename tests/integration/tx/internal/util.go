@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -26,7 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	gogoproto "github.com/cosmos/gogoproto/proto"
 )
 
 var TestRepeatedFieldsSigner = signing.CustomGetSigner{

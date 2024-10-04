@@ -18,7 +18,9 @@ pub trait Handler: RawHandler + Router + Resources + ClientFactory {
 }
 
 /// A message which initializes a new account for a handler.
-pub trait InitMessage<'a>: SchemaValue<'a> + StructSchema {
+pub trait InitMessage<'a>: SchemaValue<'a> + StructSchema
+// TODO required a sealed struct
+{
     /// The handle which the account will be created with.
     type Handler: Handler;
     /// The codec used for initializing the handler.

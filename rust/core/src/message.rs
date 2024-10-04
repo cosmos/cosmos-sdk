@@ -11,7 +11,9 @@ use ixc_schema::value::{OptionalValue, SchemaValue};
 use crate::Context;
 
 /// The Message trait for invoking messages dynamically.
-pub trait Message<'a>: SchemaValue<'a> + StructSchema {
+pub trait Message<'a>: SchemaValue<'a> + StructSchema
+// TODO required a sealed struct
+{
     /// The message selector.
     const SELECTOR: MessageSelector;
     /// The optional response type.

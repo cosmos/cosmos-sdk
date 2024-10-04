@@ -8,7 +8,7 @@ pub use ixc_core::resource::Resources;
 #[doc(inline)]
 pub use ixc_message_api::AccountID;
 #[doc(inline)]
-pub use ixc_schema::{SchemaValue};
+pub use ixc_schema::{SchemaValue, Str};
 #[doc(inline)]
 pub use state_objects::*;
 #[doc(inline)]

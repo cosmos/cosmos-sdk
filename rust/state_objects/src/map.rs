@@ -16,7 +16,8 @@ use ixc_schema::state_object::{decode_object_value, encode_object_key, encode_ob
 
 /// A key-value map.
 pub struct Map<K, V> {
-    _phantom: std::marker::PhantomData<(K, V)>,
+    _k: std::marker::PhantomData<K>,
+    _v: std::marker::PhantomData<V>,
     #[cfg(feature = "std")]
     prefix: Vec<u8>,
     // TODO no_std prefix
@@ -133,7 +134,8 @@ unsafe impl<K, V> StateObjectResource for Map<K, V> {
         let mut prefix = Vec::from(scope);
         prefix.push(p);
         Ok(Self {
-            _phantom: std::marker::PhantomData,
+            _k: std::marker::PhantomData,
+            _v: std::marker::PhantomData,
             #[cfg(feature = "std")]
             prefix,
         })

@@ -56,7 +56,9 @@ impl ObjectFieldValue for bool {
     type In<'a> = bool;
     type Out<'a> = bool;
 }
-impl ObjectFieldValue for str {
+/// This type is used to represent a borrowed &str in a state object.
+pub struct Str;
+impl ObjectFieldValue for Str {
     type In<'a> = &'a str;
     type Out<'a> = &'a str;
 }

@@ -3,6 +3,7 @@ use crate::decoder::DecodeError;
 use crate::encoder::EncodeError;
 use crate::mem::MemoryManager;
 use crate::state_object::value_field::ObjectFieldValue;
+use crate::Str;
 
 /// This trait is implemented for types that can be used as key fields in state objects.
 pub trait KeyFieldValue: ObjectFieldValue {
@@ -106,7 +107,7 @@ impl KeyFieldValue for ixc_message_api::AccountID {
     }
 }
 
-impl KeyFieldValue for str {
+impl KeyFieldValue for Str {
     fn out_size<'a>(key: &Self::In<'a>) -> usize { key.len() + 4 }
     fn out_size_terminal<'a>(key: &Self::In<'a>) -> usize { key.len() }
 }

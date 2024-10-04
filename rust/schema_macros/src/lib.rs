@@ -45,7 +45,7 @@ fn derive_struct_schema(input: &syn::DeriveInput, str: &DataStruct) -> manyhow::
     let sealed = has_attribute(&input.attrs, "sealed");
     let non_exhaustive = has_attribute(&input.attrs, "non_exhaustive");
     if !sealed && !non_exhaustive {
-        bail!("struct must have either a #[sealed] or #[non_exhaustive] attribute to indicate whether adding new fields is or is not a breaking change")
+        bail!("struct must have either a #[sealed] or #[non_exhaustive] attribute to indicate whether adding new fields is or is not a breaking change. Only sealed structs can be used as input types and cannot have new fields added.")
     }
     if sealed && non_exhaustive {
         bail!("struct cannot be both sealed and non_exhaustive")

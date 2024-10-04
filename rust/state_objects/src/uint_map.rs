@@ -8,11 +8,13 @@ pub struct UIntMap<K, V: UInt> {
     map: Map<K, V>,
 }
 
-pub trait UInt: ObjectFieldValue<In<'static>=Self, Out<'static>=Self> + Sized + Clone + 'static
+pub trait UInt: ObjectFieldValue
+where
+        for<'a> <Self as ObjectFieldValue>::In: Into<u128>,
+        <Self as ObjectFieldValue>::Out: From<u128>,
 {
     fn add(self, other: Self) -> Option<Self>;
     fn sub(self, other: Self) -> Option<Self>;
-    const ZERO: Self;
 }
 
 impl UInt for u128 {
@@ -23,19 +25,16 @@ impl UInt for u128 {
     fn sub(self, other: Self) -> Option<Self> {
         self.checked_sub(other)
     }
-
-    const ZERO: Self = 0;
 }
 
 impl<K: ObjectKey, V: UInt> UIntMap<K, V> {
     /// Gets the current value for the given key, defaulting always to 0.
-    pub fn get<'a, L>(&self, ctx: &Context, key: L) -> Result<V>
+    pub fn get<'a, L>(&self, ctx: &'a Context, key: L) -> Result<V>
     where
         L: Borrow<K::In<'a>>,
     {
-        // let value = self.map.get(ctx, key)?.clone();
-        // Ok(value.unwrap_or(V::ZERO))
-        todo!()
+        let value = self.map.get(ctx, key)?;
+        Ok(value.unwrap_or_default())
     }
 
     /// Adds the given value to the current value for the given key.

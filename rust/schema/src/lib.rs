@@ -28,3 +28,4 @@ pub mod schema;
 mod message;
 
 pub use value::SchemaValue;
+pub use state_object::Str;

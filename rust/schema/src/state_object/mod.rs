@@ -8,7 +8,7 @@ mod prefix;
 mod field_types;
 
 pub use value::{ObjectValue, encode_object_value, decode_object_value};
-pub use value_field::ObjectFieldValue;
+pub use value_field::{ObjectFieldValue, Str};
 pub use key_field::KeyFieldValue;
 pub use prefix::PrefixKey;
 pub use key::{ObjectKey, encode_object_key, decode_object_key};

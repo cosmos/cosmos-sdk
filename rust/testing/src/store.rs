@@ -43,12 +43,12 @@ impl StateHandler for VersionedMultiStore {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct MultiStore {
     stores: HashMap<AccountID, Store>,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct Store {
     kv_store: OrdMap<Vec<u8>, Vec<u8>>,
     accumulator_store: OrdMap<Vec<u8>, u128>,

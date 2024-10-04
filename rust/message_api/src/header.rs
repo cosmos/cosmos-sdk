@@ -34,8 +34,8 @@ pub struct MessageHeader {
 pub struct ContextInfo {
     /// The target account of the message.
     pub account: AccountID, // 8 bytes
-    /// The sender account of the message.
-    pub sender_account: AccountID, // 8 bytes
+    /// The account sending the message.
+    pub caller: AccountID, // 8 bytes
     /// The gas limit.
     pub gas_limit: u64, // 8 bytes
 }

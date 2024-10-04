@@ -259,10 +259,10 @@ impl<'a> SchemaValue<'a> for ixc_message_api::AccountID {
     type Type = AccountIdT;
     type DecodeState = ixc_message_api::AccountID;
 
-    // fn visit_decode_state<D: Decoder<'a>>(state: &mut Self::DecodeState, decoder: &mut D) -> Result<(), DecodeError> {
-    //     *state = decoder.decode_account_id()?;
-    //     Ok(())
-    // }
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+        *state = decoder.decode_account_id()?;
+        Ok(())
+    }
 
     fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError> {
         Ok(state)

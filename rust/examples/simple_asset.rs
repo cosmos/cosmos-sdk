@@ -8,15 +8,16 @@ pub mod simple_asset {
         #[state]
         owner: Item<AccountID>,
 
-        #[state]
+        #[state(key(account), value(balance))]
         balances: Map<AccountID, u128>,
     }
 
     impl SimpleAsset {
         #[on_create]
         pub fn init(&self, ctx: &mut Context, initial_balance: u128) -> Result<()> {
-            self.owner.set(ctx, ctx.caller())?;
-            self.balances.set(ctx, ctx.caller(), initial_balance)
+            let owner = ctx.caller();
+            self.owner.set(ctx, owner)?;
+            self.balances.set(ctx, owner, initial_balance)
         }
 
         #[publish]
@@ -43,7 +44,6 @@ pub mod simple_asset {
 #[cfg(test)]
 mod tests {
     use ixc_core::account_api::create_account;
-    use ixc_core::handler::ClientFactory;
     use ixc_testing::*;
     use crate::simple_asset::{SimpleAsset, SimpleAssetInitMsg};
 
@@ -52,8 +52,14 @@ mod tests {
         let mut app = TestApp::default();
         app.register_handler::<SimpleAsset>().unwrap();
         let mut alice = app.new_client_context().unwrap();
-        let mut bob = app.new_client_context();
-        create_account(&mut alice, SimpleAssetInitMsg{ initial_balance: 100 }).unwrap();
+        let mut bob = app.new_client_context().unwrap();
+        let asset_client = create_account(&mut alice, SimpleAssetInitMsg{ initial_balance: 100 }).unwrap();
+        let alice_balance = asset_client.get_balance(&alice, alice.account_id()).unwrap();
+        assert_eq!(alice_balance, 100);
+        asset_client.send(&mut alice, 50, bob.account_id()).unwrap();
+        let alice_balance = asset_client.get_balance(&alice, alice.account_id()).unwrap();
+        assert_eq!(alice_balance, 50);
+        let bob_balance = asset_client.get_balance(&bob, bob.account_id()).unwrap();
     }
 }
 

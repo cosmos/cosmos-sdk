@@ -49,6 +49,14 @@ impl KeyFieldValue for u32 {
 
 impl KeyFieldValue for u64 {
     fn out_size<'a>(key: &Self::In<'a>) -> usize { 8 }
+    fn encode<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError> {
+        writer.write(&key.to_be_bytes())
+    }
+
+    fn decode<'a>(reader: &mut &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
+        let bz = reader.read_bytes(8)?;
+        Ok(u64::from_be_bytes(bz.try_into().unwrap()))
+    }
 }
 
 impl KeyFieldValue for u128 {
@@ -89,6 +97,13 @@ impl KeyFieldValue for simple_time::Duration {
 
 impl KeyFieldValue for ixc_message_api::AccountID {
     fn out_size<'a>(key: &Self::In<'a>) -> usize { 8 }
+    fn encode<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError> {
+        writer.write(&key.get().to_be_bytes())
+    }
+    fn decode<'a>(reader: &mut &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
+        let bz = reader.read_bytes(8)?;
+        Ok(ixc_message_api::AccountID::new(u64::from_be_bytes(bz.try_into().unwrap())))
+    }
 }
 
 impl KeyFieldValue for str {

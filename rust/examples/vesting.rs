@@ -1,5 +1,5 @@
 #![allow(missing_docs)]
-#[ixc::module_handler(FixedVesting)]
+#[ixc::handler(FixedVesting)]
 mod vesting {
     use ixc::*;
 
@@ -8,11 +8,17 @@ mod vesting {
     use crate::vesting::block_api::BlockInfoAPI;
     use crate::vesting::vesting_api::{UnlockError, UnlockEvent, VestingAPI};
 
+    #[derive(Resources)]
     pub struct FixedVesting {
+        #[state]
         amount: Item<Option<Coin>>,
+        #[state]
         beneficiary: Item<Address>,
+        #[state]
         unlock_time: Item<Time>,
+        #[client]
         bank_client : BankAPI::Client,
+        #[client]
         block_client : BlockInfoAPI::Client,
     }
 

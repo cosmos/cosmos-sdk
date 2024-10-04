@@ -32,7 +32,7 @@ impl<'a> Context<'a> {
 
     /// This is the address of the account which is making the message call.
     pub fn caller(&self) -> AccountID {
-        self.context_info.sender_account
+        self.context_info.caller
     }
 
     // /// Returns a new response with the given value.

@@ -56,7 +56,7 @@ impl<ST: StateHandler> Hypervisor<ST> {
 
     /// Invoke a message packet.
     pub fn invoke(&mut self, message_packet: &mut MessagePacket, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
-        let tx = self.state_handler.new_transaction(message_packet.header().context_info.sender_account, true).
+        let tx = self.state_handler.new_transaction(message_packet.header().context_info.caller, true).
             map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::FatalExecutionError))?;
         let mut exec_context = ExecContext {
             vmdata: self.vmdata.clone(),
@@ -165,7 +165,7 @@ impl<TX: Transaction> HostBackend for ExecContext<TX> {
         // get the mutable transaction from the RefCell
         // check if the caller matches the active account
         let account = self.tx.borrow().active_account();
-        if message_packet.header().context_info.sender_account != account {
+        if message_packet.header().context_info.caller != account {
             return Err(ErrorCode::RuntimeSystemError(SystemErrorCode::UnauthorizedCallerAccess));
         }
         // TODO support authorization middleware
@@ -225,7 +225,7 @@ impl<TX: Transaction> ExecContext<TX> {
                 let mut on_create_header = on_create_packet.header_mut();
                 // TODO: how do we specify a selector that can only be called by the system?
                 on_create_header.context_info.account = id;
-                on_create_header.context_info.sender_account = create_header.context_info.account;
+                on_create_header.context_info.caller = create_header.context_info.caller;
                 on_create_header.message_selector = ON_CREATE_SELECTOR;
                 on_create_header.in_pointer1.set_slice(init_data);
 

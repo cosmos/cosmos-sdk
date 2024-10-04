@@ -9,7 +9,7 @@ use allocator_api2::boxed::Box;
 use ixc::SchemaValue;
 use ixc_message_api::{AccountID};
 use ixc_core::{Context};
-use ixc_core::account_api::{create_account, ROOT_ACCOUNT};
+use ixc_core::account_api::{ROOT_ACCOUNT};
 use ixc_core::handler::{HandlerAPI, Handler, ClientFactory, Client, InitMessage};
 use ixc_core::resource::{InitializationError, ResourceScope, Resources};
 use ixc_core::routes::{Route, Router};
@@ -22,6 +22,8 @@ use ixc_schema::binary::NativeBinaryCodec;
 use ixc_schema::mem::MemoryManager;
 use crate::store::{Store, VersionedMultiStore};
 use crate::vm::{NativeVM, NativeVMImpl};
+
+pub use ixc_core::account_api::create_account;
 
 /// Defines a test harness for running tests against account and module implementations.
 pub struct TestApp {
@@ -132,11 +134,17 @@ impl TestApp {
     //
 
     /// Creates a new random client account that can be used in calls.
-    pub fn new_client_context(&self) -> core::result::Result<Context, ()> {
+    pub fn new_client_account(&self) -> core::result::Result<AccountID, ()> {
         let mut ctx = self.client_context_for(ROOT_ACCOUNT);
         let client = create_account(&mut ctx, CreateDefaultAccount)
             .map_err(|_| ())?;
-        Ok(self.client_context_for(client.0))
+        Ok(client.0)
+    }
+
+    /// Creates a new random client account that can be used in calls and wraps it in a context.
+    pub fn new_client_context(&self) -> core::result::Result<Context, ()> {
+        let account_id = self.new_client_account()?;
+        Ok(self.client_context_for(account_id))
     }
 
     /// Creates a new client for the given account.
@@ -145,7 +153,7 @@ impl TestApp {
         unsafe {
             let ctx = Context::new(ContextInfo{
                 account: account_id,
-                sender_account: account_id,
+                caller: account_id,
                 gas_limit: 0,
             }, self);
             ctx

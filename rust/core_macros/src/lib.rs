@@ -4,14 +4,13 @@
 use proc_macro::{TokenStream};
 use std::default::Default;
 use proc_macro2::{Ident, TokenStream as TokenStream2};
-use manyhow::{bail, ensure, error_message, manyhow};
+use manyhow::{bail, ensure, manyhow};
 use quote::{format_ident, quote, ToTokens};
-use syn::{parse2, parse_macro_input, parse_quote, token, Attribute, Data, DeriveInput, File, Item, ItemImpl, ItemMod, LitStr, ReturnType, Type};
+use syn::{parse2, parse_macro_input, parse_quote, Data, DeriveInput, Item, ItemMod, LitStr, ReturnType, Type};
 use std::borrow::Borrow;
 use blake2::{Blake2b512, Digest};
 use deluxe::ExtractAttributes;
-use heck::{AsUpperCamelCase, ToUpperCamelCase};
-use syn::token::Impl;
+use heck::{ToUpperCamelCase};
 
 #[derive(deluxe::ParseMetaItem)]
 struct HandlerArgs(syn::Ident);
@@ -28,13 +27,6 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
         collect_publish_targets(&handler, item, &mut publish_targets)?;
     }
 
-    push_item(items, quote! {
-        impl ::ixc_core::handler::Handler for #handler {
-            const NAME: &'static str = stringify!(#handler);
-            type Init<'a> = ();
-            type InitCodec = ::ixc_schema::binary::NativeBinaryCodec;
-        }
-    })?;
     let client_ident = format_ident!("{}Client", handler);
     push_item(items, quote! {
         pub struct #client_ident(::ixc_message_api::AccountID);
@@ -65,13 +57,11 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
 
     let mut client_fn_impls = vec![];
     let mut routes = vec![];
+    let mut on_create_msg = quote! { () };
     for publish_target in publish_targets.iter() {
         let fn_name = &publish_target.signature.ident;
         let ident_camel = fn_name.to_string().to_upper_camel_case();
         let msg_struct_name = format_ident!("{}{}Msg", handler, ident_camel);
-        if publish_target.on_create.is_some() {
-            continue;
-        }
         let signature = publish_target.signature.clone();
         let mut msg_fields = vec![];
         let mut msg_fields_access = vec![];
@@ -98,7 +88,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
                                 _ => {}
                             }
                             msg_fields.push(quote! {
-                                #ident: #ty,
+                                pub #ident: #ty,
                             });
                             msg_fields_access.push(quote! {
                                 msg.#ident,
@@ -127,40 +117,60 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
                 bail!("expected return type")
             }
         };
-        push_item(items, quote! {
-            impl <'a> ::ixc_core::message::Message<'a> for #msg_struct_name {
-                const SELECTOR: ::ixc_message_api::header::MessageSelector = #selector;
-                type Response<'b> = <#return_type as ::ixc_core::message::ExtractResponseTypes>::Response;
-                type Error = ();
-                type Codec = ::ixc_schema::binary::NativeBinaryCodec;
-            }
-        })?;
-        ensure!(context_name.is_some(), "no context parameter found");
-        let context_name = context_name.unwrap();
-        client_fn_impls.push(quote! {
-            pub #signature {
-                let msg = #msg_struct_name {
-                    #(#msg_fields_init)*
-                };
-                unsafe { ::ixc_core::low_level::dynamic_invoke(#context_name, self.0, msg) }
-            }
-        });
-        routes.push(quote! {
-                (< #msg_struct_name as ::ixc_core::message::Message >::SELECTOR, |h: &#handler, packet, cb, a| {
-                    unsafe {
-                        let cdc = < #msg_struct_name as ::ixc_core::message::Message >::Codec::default();
-                        let in1 = packet.header().in_pointer1.get(packet);
-                        let mut ctx = ::ixc_core::Context::new(packet.header().context_info, cb);
-                        std::println!("step 1");
-                        let msg = ::ixc_schema::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
-                        std::println!("step 2");
-                        let res = h.#fn_name(&mut ctx, #(#msg_fields_access)*).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
-                        std::println!("step 3");
-                        <<#msg_struct_name as ::ixc_core::message::Message<'_>>::Response<'_> as ::ixc_schema::value::OptionalValue<'_>>::encode_value(&cdc, &res, packet, a).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))
-                    }
-                }),
-        });
+        if publish_target.on_create.is_none() {
+            push_item(items, quote! {
+                impl <'a> ::ixc_core::message::Message<'a> for #msg_struct_name {
+                    const SELECTOR: ::ixc_message_api::header::MessageSelector = #selector;
+                    type Response<'b> = <#return_type as ::ixc_core::message::ExtractResponseTypes>::Response;
+                    type Error = ();
+                    type Codec = ::ixc_schema::binary::NativeBinaryCodec;
+                }
+            })?;
+            ensure!(context_name.is_some(), "no context parameter found");
+            let context_name = context_name.unwrap();
+            client_fn_impls.push(quote! {
+                pub #signature {
+                    let msg = #msg_struct_name {
+                        #(#msg_fields_init)*
+                    };
+                    unsafe { ::ixc_core::low_level::dynamic_invoke(#context_name, self.0, msg) }
+                }
+            });
+            routes.push(quote! {
+                    (< #msg_struct_name as ::ixc_core::message::Message >::SELECTOR, |h: &#handler, packet, cb, a| {
+                        unsafe {
+                            let cdc = < #msg_struct_name as ::ixc_core::message::Message >::Codec::default();
+                            let in1 = packet.header().in_pointer1.get(packet);
+                            let mut ctx = ::ixc_core::Context::new(packet.header().context_info, cb);
+                            let msg = ::ixc_schema::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
+                            let res = h.#fn_name(&mut ctx, #(#msg_fields_access)*).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
+                            ::ixc_core::low_level::encode_optional_to_out1::< < #msg_struct_name as ::ixc_core::message::Message<'_> >::Response<'_> >(&cdc, &res, a, packet).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))
+                        }
+                    }),
+            });
+        } else {
+            on_create_msg = quote! { #msg_struct_name };
+            routes.push(quote! {
+                    (::ixc_core::account_api::ON_CREATE_SELECTOR, |h: &#handler, packet, cb, a| {
+                        unsafe {
+                            let cdc = < #handler as ::ixc_core::handler::Handler >::InitCodec::default();
+                            let in1 = packet.header().in_pointer1.get(packet);
+                            let mut ctx = ::ixc_core::Context::new(packet.header().context_info, cb);
+                            let msg = ::ixc_schema::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
+                            h.#fn_name(&mut ctx, #(#msg_fields_access)*).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))
+                        }
+                    }),
+            });
+        }
     }
+
+    push_item(items, quote! {
+        impl ::ixc_core::handler::Handler for #handler {
+            const NAME: &'static str = stringify!(#handler);
+            type Init<'a> = #on_create_msg;
+            type InitCodec = ::ixc_schema::binary::NativeBinaryCodec;
+        }
+    })?;
 
     push_item(items, quote! {
         impl #client_ident {

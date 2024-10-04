@@ -39,14 +39,6 @@ pub mod counter {
             self.value.set(ctx, current + value)
         }
     }
-
-    // unsafe impl Resources for Counter {
-    //     unsafe fn new(scope: &ResourceScope) -> core::result::Result<Self, InitializationError> {
-    //         Ok(Self {
-    //             value: <Item<u64> as StateObjectResource>::new(scope.state_scope, 0)?,
-    //         })
-    //     }
-    // }
 }
 
 
@@ -60,17 +52,16 @@ mod tests {
     fn test_counter() {
         let mut app = TestApp::default();
         app.register_handler::<Counter>().unwrap();
-        let alice = app.new_client_account().unwrap();
-        let mut alice_ctx = app.client_context_for(alice);
-        let counter_client = create_account::<Counter>(&mut alice_ctx, &()).unwrap();
+        let mut alice_ctx = app.new_client_context().unwrap();
+        let counter_client = create_account::<Counter>(&mut alice_ctx, &CounterCreateMsg{init_value: 41}).unwrap();
         let cur = counter_client.get(&alice_ctx).unwrap();
-        assert_eq!(cur, 0);
+        assert_eq!(cur, 41);
         counter_client.inc(&mut alice_ctx).unwrap();
         let cur = counter_client.get(&alice_ctx).unwrap();
-        assert_eq!(cur, 1);
-        counter_client.add(&mut alice_ctx, 41).unwrap();
-        let cur = counter_client.get(&alice_ctx).unwrap();
         assert_eq!(cur, 42);
+        counter_client.add(&mut alice_ctx, 12).unwrap();
+        let cur = counter_client.get(&alice_ctx).unwrap();
+        assert_eq!(cur, 54);
     }
 }
 

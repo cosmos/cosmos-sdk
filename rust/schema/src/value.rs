@@ -286,22 +286,22 @@ pub trait OptionalValue<'a> {
     /// The value type that is returned.
     type Value;
 
-    /// Decode the value from the input.
-    fn decode_value(cdc: &dyn Codec, message_packet: &MessagePacket<'a>, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError>;
+    /// Decode the value.
+    fn decode_value(cdc: &dyn Codec, data: &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError>;
 
-    /// Encode the value to the message packet.
-    fn encode_value<'b>(cdc: &dyn Codec, value: &Self::Value, message_packet: &'b mut MessagePacket, allocator: &'b dyn Allocator) -> Result<(), EncodeError>;
+    /// Encode the value.
+    fn encode_value<'b>(cdc: &dyn Codec, value: &Self::Value, writer_factory: &'b dyn WriterFactory) -> Result<Option<&'b [u8]>, EncodeError>;
 }
 
 impl<'a> OptionalValue<'a> for () {
     type Value = ();
 
-    fn decode_value(cdc: &dyn Codec, message_packet: &MessagePacket<'a>, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError> {
+    fn decode_value(cdc: &dyn Codec, data: &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError> {
         Ok(())
     }
 
-    fn encode_value<'b>(cdc: &dyn Codec, value: &Self::Value, message_packet: &'b mut MessagePacket, allocator: &'b dyn Allocator) -> Result<(), EncodeError> {
-        Ok(())
+    fn encode_value<'b>(cdc: &dyn Codec, value: &Self::Value, writer_factory: &'b dyn WriterFactory) -> Result<Option<&'b [u8]>, EncodeError> {
+        Ok(None)
     }
 }
 
@@ -309,13 +309,11 @@ impl<'a, V: SchemaValue<'a>> OptionalValue<'a> for V
 {
     type Value = V;
 
-    fn decode_value(cdc: &dyn Codec, message_packet: &MessagePacket<'a>, memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError> {
-        unsafe { decode_value(cdc, message_packet.header().out_pointer1.get(message_packet), memory_manager) }
+    fn decode_value(cdc: &dyn Codec, data: &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Value, DecodeError> {
+        unsafe { decode_value(cdc, data, memory_manager) }
     }
 
-    fn encode_value<'b>(cdc: &dyn Codec, value: &Self::Value, message_packet: &'b mut MessagePacket, allocator: &'b dyn Allocator) -> Result<(), EncodeError> {
-        let res = cdc.encode_value(value, &allocator as &dyn WriterFactory)?;
-        unsafe { message_packet.header_mut().out_pointer1.set_slice(res); }
-        Ok(())
+    fn encode_value<'b>(cdc: &dyn Codec, value: &Self::Value, writer_factory: &'b dyn WriterFactory) -> Result<Option<&'b [u8]>, EncodeError> {
+        Ok(Some(cdc.encode_value(value, writer_factory)?))
     }
 }

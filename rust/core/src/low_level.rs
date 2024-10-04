@@ -5,6 +5,7 @@ use ixc_message_api::handler::{HandlerErrorCode};
 use ixc_message_api::packet::MessagePacket;
 use ixc_schema::buffer::WriterFactory;
 use ixc_schema::codec::{decode_value, Codec};
+use ixc_schema::encoder::EncodeError;
 use ixc_schema::value::OptionalValue;
 use crate::{Context, Result};
 use crate::error::Error;
@@ -33,9 +34,11 @@ pub unsafe fn dynamic_invoke<'a, 'b, M: Message<'b>>(context: &'a Context, accou
     let res = context.host_backend().invoke(&mut packet, mem)
         .map_err(|_| ());
 
+    let out1 = header.out_pointer1.get(&packet);
+
     match res {
         Ok(_) => {
-            let res = M::Response::<'a>::decode_value(&cdc, &packet, mem)
+            let res = M::Response::<'a>::decode_value(&cdc, &out1, mem)
                 // map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
                 .map_err(|_| ())?;
             Ok(res)
@@ -59,4 +62,12 @@ pub fn create_packet<'a>(context: &'a Context, account: AccountID, selector: u64
         header.message_selector = selector;
         Ok(packet)
     }
+}
+
+/// Encodes the optional value to the out1 pointer of the message packet. Used for encoding the response of a message in macros.
+pub fn encode_optional_to_out1<'b, 'a, V: OptionalValue<'a>>(cdc: &dyn Codec, value: &V::Value, writer_factory: &'b dyn Allocator, message_packet: &'b mut MessagePacket) -> core::result::Result<(), EncodeError>{
+    if let Some(out1) = V::encode_value(cdc, value, &writer_factory as &dyn WriterFactory)? {
+        unsafe { message_packet.header_mut().out_pointer1.set_slice(out1); }
+    }
+    Ok(())
 }

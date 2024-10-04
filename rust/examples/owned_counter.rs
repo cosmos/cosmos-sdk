@@ -55,7 +55,7 @@ mod tests {
         let mut app = TestApp::default();
         let mut alice = app.new_client_context();
         let mut bob = app.new_client_context();
-        let (counter, _) = app.new_client_account::<OwnedCounter>(&mut alice, ());
+        let (counter, _) = app.new_client_context::<OwnedCounter>(&mut alice, ());
         assert_eq!(counter.get(&mut alice).unwrap(), 0);
     }
 }

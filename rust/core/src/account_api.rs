@@ -17,13 +17,16 @@ pub fn create_account<'a, H: Handler>(ctx: &mut Context, init: &<H::Init<'a> as 
     let mut packet = create_packet(ctx, ROOT_ACCOUNT, CREATE_SELECTOR)?;
 
     let cdc = H::InitCodec::default();
-    <H::Init<'_> as OptionalValue<'_>>::encode_value(&cdc, init, &mut packet, ctx.memory_manager() as &dyn Allocator).
+    let init_bz = <H::Init<'_> as OptionalValue<'_>>::encode_value(&cdc, init, ctx.memory_manager()).
         // map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
         map_err(|_| ())?;
 
 
     unsafe {
-        packet.header_mut().in_pointer2.set_slice(H::NAME.as_bytes());
+        packet.header_mut().in_pointer1.set_slice(H::NAME.as_bytes());
+        if let Some(init_bz) = init_bz {
+            packet.header_mut().in_pointer2.set_slice(init_bz);
+        }
 
         ctx.host_backend().invoke(&mut packet, ctx.memory_manager())
             // .map_err(|_| Error::SystemError(SystemErrorCode::UnknownHandlerError))?;

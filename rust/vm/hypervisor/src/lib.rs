@@ -203,8 +203,8 @@ impl<TX: Transaction> ExecContext<TX> {
             CREATE_SELECTOR => unsafe {
                 // get the input data
                 let create_header = message_packet.header_mut();
-                let init_data = create_header.in_pointer1.get(message_packet);
-                let handler_id = create_header.in_pointer2.get(message_packet);
+                let handler_id = create_header.in_pointer1.get(message_packet);
+                let init_data = create_header.in_pointer2.get(message_packet);
 
                 // resolve the handler ID and retrieve the VM
                 let handler_id = self.parse_handler_id(handler_id).

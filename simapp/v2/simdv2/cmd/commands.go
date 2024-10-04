@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"cosmossdk.io/store/v2/root"
 	"errors"
 	"fmt"
 
@@ -20,6 +19,7 @@ import (
 	"cosmossdk.io/server/v2/cometbft"
 	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
+	"cosmossdk.io/store/v2/root"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 
 	"github.com/cosmos/cosmos-sdk/client"

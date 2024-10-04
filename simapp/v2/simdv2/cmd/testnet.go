@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bufio"
-	"cosmossdk.io/store/v2/root"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -24,6 +23,7 @@ import (
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/server/v2/store"
+	"cosmossdk.io/store/v2/root"
 	banktypes "cosmossdk.io/x/bank/types"
 	bankv2types "cosmossdk.io/x/bank/v2/types"
 	stakingtypes "cosmossdk.io/x/staking/types"

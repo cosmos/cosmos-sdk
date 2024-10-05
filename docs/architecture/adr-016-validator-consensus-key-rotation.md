@@ -81,7 +81,7 @@ Also, it should be noted that this ADR includes only the simplest form of consen
     }
     ```
 
-5. `ApplyAndReturnValidatorSetUpdates` checks if there is `ConsPubKeyRotationHistory` with `ConsPubKeyRotationHistory.RotatedHeight == ctx.BlockHeight()` and if so, generates 2 `ValidatorUpdate` , one for a remove validator and one for creating a new validator
+5. `ApplyAndReturnValidatorSetUpdates` checks if there is `ConsPubKeyRotationHistory` with `ConsPubKeyRotationHistory.RotatedHeight == ctx.BlockHeight()` and if so, generates 2 `ValidatorUpdate` , one for a remove validator and one for create a new validator
 
     ```go
     abci.ValidatorUpdate{

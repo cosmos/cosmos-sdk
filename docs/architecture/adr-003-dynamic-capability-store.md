@@ -9,7 +9,7 @@
 
 Full implementation of the [IBC specification](https://github.com/cosmos/ibc) requires the ability to create and authenticate object-capability keys at runtime (i.e., during transaction execution),
 as described in [ICS 5](https://github.com/cosmos/ibc/tree/master/spec/core/ics-005-port-allocation#technical-specification). In the IBC specification, capability keys are created for each newly initialised
-port & channel, and are used to authenticate future usage of the port or channel. Since channels and potentially ports can be initialised during transaction execution, the state machine must be able to create
+port & channel, and are used to authenticate future usage of the port or channel. Since channels and potential ports can be initialised during transaction execution, the state machine must be able to create
 object-capability keys at this time.
 
 At present, the Cosmos SDK does not have the ability to do this. Object-capability keys are currently pointers (memory addresses) of `StoreKey` structs created at application initialisation in `app.go` ([example](https://github.com/cosmos/gaia/blob/dcbddd9f04b3086c0ad07ee65de16e7adedc7da4/app/app.go#L132))
@@ -27,15 +27,15 @@ the `CapabilityKeeper` will be hooked up to modules through unique function refe
 (by calling `ScopeToModule`, defined below) so that it can identify the calling module when later
 invoked.
 
-When the initial state is loaded from disk, the `CapabilityKeeper`'s `Initialise` function will create
+When the initial state is loaded from the disk, the `CapabilityKeeper`'s `Initialise` function will create
 new capability keys for all previously allocated capability identifiers (allocated during execution of
 past transactions and assigned to particular modes), and keep them in a memory-only store while the
 chain is running.
 
 The `CapabilityKeeper` will include a persistent `KVStore`, a `MemoryStore`, and an in-memory map.
 The persistent `KVStore` tracks which capability is owned by which modules.
-The `MemoryStore` stores a forward mapping that map from module name, capability tuples to capability names and
-a reverse mapping that map from module name, capability name to the capability index.
+The `MemoryStore` stores a forward mapping that maps from module name, capability tuples to capability names and
+a reverse mapping that maps from module name, capability name to the capability index.
 Since we cannot marshal the capability into a `KVStore` and unmarshal without changing the memory location of the capability,
 the reverse mapping in the KVStore will simply map to an index. This index can then be used as a key in the ephemeral
 go-map to retrieve the capability at the original memory location.
@@ -277,7 +277,7 @@ ck.InitialiseAndSeal(initialContext)
 
 #### Creating, passing, claiming and using capabilities
 
-Consider the case where `mod1` wants to create a capability, associate it with a resource (e.g. an IBC channel) by name, then pass it to `mod2` which will use it later:
+Consider the case where `mod1` wants to create a capability, associate it with a resource (e.g. an IBC channel) by name, and then pass it to `mod2` which will use it later:
 
 Module 1 would have the following code:
 
@@ -327,12 +327,12 @@ Proposed.
 ### Positive
 
 * Dynamic capability support.
-* Allows CapabilityKeeper to return same capability pointer from go-map while reverting any writes to the persistent `KVStore` and in-memory `MemoryStore` on tx failure.
+* Allows CapabilityKeeper to return the same capability pointer from go-map while reverting any writes to the persistent `KVStore` and in-memory `MemoryStore` on tx failure.
 
 ### Negative
 
 * Requires an additional keeper.
-* Some overlap with existing `StoreKey` system (in the future they could be combined, since this is a superset functionality-wise).
+* Some overlap with the existing `StoreKey` system (in the future they could be combined, since this is a superset functionality-wise).
 * Requires an extra level of indirection in the reverse mapping, since MemoryStore must map to index which must then be used as key in a go map to retrieve the actual capability
 
 ### Neutral

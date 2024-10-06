@@ -40,7 +40,6 @@ The above interfaces are mostly embedding smaller interfaces (extension interfac
 * [`appmodule.HasEndBlocker`](#hasendblocker): The extension interface that contains information about the `AppModule` and `EndBlock`.
 * [`appmodule.HasService` / `module.HasServices`](#hasservices): The extension interface for modules to register services.
 * [`module.HasABCIEndBlock`](#hasabciendblock): The extension interface that contains information about the `AppModule`, `EndBlock` and returns an updated validator set.
-* (legacy) [`module.HasInvariants`](#hasinvariants): The extension interface for registering invariants.
 * (legacy) [`module.HasConsensusVersion`](#hasconsensusversion): The extension interface for declaring a module consensus version.
 
 The `AppModule` interface exists to define inter-dependent module methods. Many modules need to interact with other modules, typically through [`keeper`s](./06-keeper.md), which means there is a need for an interface where modules list their `keeper`s and other methods that require a reference to another module's object. `AppModule` interface extension, such as `HasBeginBlocker` and `HasEndBlocker`, also enables the module manager to set the order of execution between module's methods like `BeginBlock` and `EndBlock`, which is important in cases where the order of execution between modules matters in the context of the application.

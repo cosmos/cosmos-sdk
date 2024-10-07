@@ -116,4 +116,4 @@ uses these flags in ante handlers to skip certain checks while in `Check` or `Si
 https://github.com/cosmos/cosmos-sdk/blob/core/v1.0.0-alpha.4/core/store/service.go#L5-L11
 ```
 
-The KVStore service abstracts access to, and creation of, key-value stores.  Most use cases will be backed by a merkle-tree store, but developers can provide their own implementations if needed.
+The KVStore service abstracts access to, and creation of, key-value stores.  Most use cases will be backed by a merkle-tree store, but developers can provide their own implementations if needed.  In the case of the `KVStoreService` implementation provided in `Environment`, module developers should understand that calling `OpenKVStore` will return a store already scoped to the module's prefix.  The wiring for this scoping is specified in `runtime`.

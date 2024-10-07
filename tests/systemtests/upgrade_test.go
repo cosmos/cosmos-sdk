@@ -23,19 +23,19 @@ func TestChainUpgrade(t *testing.T) {
 	// then the chain upgrades successfully
 	sut.StopChain()
 
-	legacyBinary := FetchExecutable(t, "v0.50")
+	legacyBinary := FetchExecutable(t, "v0.52")
 	t.Logf("+++ legacy binary: %s\n", legacyBinary)
 	currentBranchBinary := sut.execBinary
 	currentInitializer := sut.testnetInitializer
 	sut.SetExecBinary(legacyBinary)
-	sut.SetTestnetInitializer(NewModifyConfigYamlInitializer(legacyBinary, sut))
+	sut.SetTestnetInitializer(InitializerWithBinary(legacyBinary, sut))
 	sut.SetupChain()
 	votingPeriod := 5 * time.Second // enough time to vote
 	sut.ModifyGenesisJSON(t, SetGovVotingPeriod(t, votingPeriod))
 
 	const (
 		upgradeHeight int64 = 22
-		upgradeName         = "v050-to-v051"
+		upgradeName         = "v052-to-v054" // must match UpgradeName in simapp/upgrades.go
 	)
 
 	sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight+1))

@@ -1,3 +1,4 @@
+//! Traits for encoding and decoding list types.
 use allocator_api2::alloc::Allocator;
 use allocator_api2::vec::Vec;
 use crate::decoder::{DecodeError, Decoder};
@@ -5,17 +6,27 @@ use crate::encoder::{EncodeError, Encoder};
 use crate::mem::MemoryManager;
 use crate::value::SchemaValue;
 
+/// A visitor for encoding list types.
 pub trait ListEncodeVisitor {
+    /// Get the size of the list if it is known or None if it is not known.
     fn size_hint(&self) -> Option<u32>;
+    /// Encode the list.
     fn encode(&self, encoder: &mut dyn Encoder) -> Result<u32, EncodeError>;
+    /// Encode the list in reverse order.
     fn encode_reverse(&self, encoder: &mut dyn Encoder) -> Result<u32, EncodeError>;
 }
 
+/// A visitor for decoding list types.
 pub trait ListDecodeVisitor<'a> {
+    /// Initialize the visitor with the length of the list.
+    /// This method may or may not be called depending on whether the underlying
+    /// encoding specifies the length of the list.
     fn init(&mut self, len: usize, scope: &'a MemoryManager) -> Result<(), DecodeError>;
+    /// Decode the next element in the list.
     fn next(&mut self, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError>;
 }
 
+/// A builder for decoding Vec's with a specified allocator.
 pub struct AllocatorVecBuilder<'a, T: SchemaValue<'a>> {
     pub(crate) xs: Option<Vec<T, &'a dyn Allocator>>,
 }

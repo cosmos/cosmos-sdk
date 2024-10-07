@@ -15,7 +15,7 @@ mod oneof;
 pub mod state_object;
 pub mod codec;
 pub mod decoder;
-mod list;
+pub mod list;
 pub mod binary;
 pub mod encoder;
 mod kind;

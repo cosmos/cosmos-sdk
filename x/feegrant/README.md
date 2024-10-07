@@ -101,7 +101,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/feegrant/proto/cosmo
 `feegrant` module introduces a `FeeGranter` flag for CLI for the sake of executing transactions with fee granter. When this flag is set, `clientCtx` will append the granter account address for transactions generated through CLI.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/client/cmd.go#L256-L267
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/client/cmd.go#L269-L280
 ```
 
 ```go reference

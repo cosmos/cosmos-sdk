@@ -11,6 +11,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/signing/aminojson"
+	"cosmossdk.io/x/tx/signing/textual"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -171,7 +172,7 @@ func (b *Builder) BuildQueryMethodCommand(ctx context.Context, descriptor protor
 }
 
 func encoder(encoder aminojson.Encoder) aminojson.Encoder {
-	return encoder.DefineTypeEncoding("google.protobuf.Duration", func(_ *aminojson.Encoder, msg protoreflect.Message, w io.Writer) error {
+	customEncoder := encoder.DefineTypeEncoding("google.protobuf.Duration", func(_ *aminojson.Encoder, msg protoreflect.Message, w io.Writer) error {
 		var (
 			secondsName protoreflect.Name = "seconds"
 			nanosName   protoreflect.Name = "nanos"
@@ -231,4 +232,18 @@ func encoder(encoder aminojson.Encoder) aminojson.Encoder {
 		_, err = fmt.Fprintf(w, `"%s"`, sdk.NewDecCoinFromDec(denom, amountDec)) // TODO(@julienrbrt): Eventually remove this SDK dependency
 		return err
 	})
+
+	customEncoder.DefineScalarEncoding("cosmos.Dec", func(_ *aminojson.Encoder, value protoreflect.Value, w io.Writer) error {
+		// this is a hack to use textual definition of decimal rendering instead of duplication the whole encoder here
+		// if we were to remove textual, let's just copy the code from encoder logic here
+		formatted, err := textual.NewDecValueRenderer().Format(context.Background(), value)
+		if err != nil {
+			return fmt.Errorf("cannot format decimal: %w", err)
+		}
+
+		_, err = fmt.Fprintf(w, `"%s"`, formatted[0].Content)
+		return nil
+	})
+
+	return customEncoder
 }

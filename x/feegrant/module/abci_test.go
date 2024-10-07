@@ -3,7 +3,6 @@ package module_test
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/header"
@@ -38,7 +37,6 @@ func TestFeegrantPruning(t *testing.T) {
 	now := testCtx.Ctx.HeaderInfo().Time
 	oneDay := now.AddDate(0, 0, 1)
 
-	ctrl := gomock.NewController(t)
 	ac := address.NewBech32Codec("cosmos")
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())

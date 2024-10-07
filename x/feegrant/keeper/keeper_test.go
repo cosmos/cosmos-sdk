@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
@@ -45,8 +44,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 
 	// setup gomock and initialize some globally expected executions
-	ctrl := gomock.NewController(suite.T())
-
 	ac := codecaddress.NewBech32Codec("cosmos")
 	for _, addr := range suite.addrs {
 		str, err := ac.BytesToString(addr)

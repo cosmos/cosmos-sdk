@@ -31,12 +31,13 @@ func TestBankStateCompatibility(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 
 	// gomock initializations
 	ctrl := gomock.NewController(t)
 	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
+	authKeeper.EXPECT().AddressCodec().Return(ac).AnyTimes()
 
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
 	addr, err := ac.BytesToString(accAddrs[4])
 	require.NoError(t, err)
 	authority, err := ac.BytesToString(authtypes.NewModuleAddress(banktypes.GovModuleName))
@@ -45,7 +46,6 @@ func TestBankStateCompatibility(t *testing.T) {
 	k := keeper.NewBaseKeeper(
 		env,
 		encCfg.Codec,
-		ac,
 		authKeeper,
 		map[string]bool{addr: true},
 		authority,

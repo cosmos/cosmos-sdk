@@ -144,13 +144,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
 	authKeeper := banktestutil.NewMockAccountKeeper(ctrl)
+	authKeeper.EXPECT().AddressCodec().Return(ac).AnyTimes()
 	suite.ctx = ctx
 	suite.authKeeper = authKeeper
 	suite.addrCdc = ac
 	suite.bankKeeper = keeper.NewBaseKeeper(
 		env,
 		encCfg.Codec,
-		ac,
 		suite.authKeeper,
 		map[string]bool{addr: true},
 		authority,
@@ -317,7 +317,6 @@ func (suite *KeeperTestSuite) TestGetAuthority() {
 		return keeper.NewBaseKeeper(
 			env,
 			moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec,
-			suite.addrCdc,
 			suite.authKeeper,
 			nil,
 			authority,

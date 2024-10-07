@@ -3,9 +3,12 @@ package systemtests
 import (
 	"io"
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 type RestTestCase struct {
@@ -24,6 +27,34 @@ func RunRestQueries(t *testing.T, testCases []RestTestCase) {
 		t.Run(tc.name, func(t *testing.T) {
 			resp := GetRequestWithHeaders(t, tc.url, nil, tc.expCode)
 			require.JSONEq(t, tc.expOut, string(resp))
+		})
+	}
+}
+
+// TestRestQueryIgnoreNumbers runs given rest testcases by making requests and
+// checking response with expected output ignoring number values
+// This method is used when number values in response are non-deterministic
+func TestRestQueryIgnoreNumbers(t *testing.T, testCases []RestTestCase) {
+	t.Helper()
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := testutil.GetRequest(tc.url)
+			require.NoError(t, err)
+
+			// regular expression pattern to match any numeric value in the JSON
+			numberRegexPattern := `"\d+(\.\d+)?"`
+
+			// compile the regex
+			r, err := regexp.Compile(numberRegexPattern)
+			require.NoError(t, err)
+
+			// replace all numeric values in the above JSONs with `NUMBER` text
+			expectedJSON := r.ReplaceAllString(tc.expOut, `"NUMBER"`)
+			actualJSON := r.ReplaceAllString(string(resp), `"NUMBER"`)
+
+			// compare two jsons
+			require.JSONEq(t, expectedJSON, actualJSON)
 		})
 	}
 }

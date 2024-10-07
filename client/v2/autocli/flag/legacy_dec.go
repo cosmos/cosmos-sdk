@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
+
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -34,7 +35,10 @@ func (a *decValue) Set(s string) error {
 	if err != nil {
 		return err
 	}
-	a.value = dec.String()
+
+	// we need to convert from float representation to non-float representation using default precision
+	// 0.5 -> 500000000000000000
+	a.value = dec.BigInt().String()
 
 	return nil
 }

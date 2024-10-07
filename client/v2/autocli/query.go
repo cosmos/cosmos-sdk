@@ -255,7 +255,7 @@ func encoder(encoder aminojson.Encoder) aminojson.Encoder {
 		}
 
 		_, err = fmt.Fprintf(w, `"%s"`, formatted)
-		return nil
+		return err
 	})
 
 	return customEncoder

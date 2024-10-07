@@ -454,6 +454,7 @@ var newConfig = func(
 	skipBackup bool,
 	dataBackupPath string,
 	interval, preupgradeMaxRetries int,
+	grpcAddress string,
 	disableLogs, colorLogs bool,
 	timeFormatLogs string,
 	customPreUpgrade string,
@@ -470,6 +471,7 @@ var newConfig = func(
 		PollInterval:             time.Millisecond * time.Duration(interval),
 		UnsafeSkipBackup:         skipBackup,
 		DataBackupPath:           dataBackupPath,
+		GRPCAddress:              grpcAddress,
 		PreUpgradeMaxRetries:     preupgradeMaxRetries,
 		DisableLogs:              disableLogs,
 		ColorLogs:                colorLogs,
@@ -518,7 +520,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		{
 			name:             "all good",
 			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen", "preupgrade.sh", "true", "10s"},
-			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, false, true, time.Kitchen, "preupgrade.sh", true, 10000000000),
+			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, "localhost:9090", false, true, time.Kitchen, "preupgrade.sh", true, 10000000000),
 			expectedErrCount: 0,
 		},
 		{
@@ -538,25 +540,25 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		{
 			name:             "download bin not set",
 			envVals:          cosmovisorEnv{absPath, "testname", "", "true", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen", "", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, true, absPath, 303, 1, false, true, time.Kitchen, "", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, true, absPath, 303, 1, "localhost:9090", false, true, time.Kitchen, "", false, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "download bin true",
 			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, false, true, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, "localhost:9090", false, true, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "download bin false",
 			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, true, absPath, 303, 1, false, true, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, true, absPath, 303, 1, "localhost:9090", false, true, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "download ensure checksum true",
 			envVals:          cosmovisorEnv{absPath, "testname", "true", "false", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", true, false, false, 600, true, absPath, 303, 1, false, true, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", true, false, false, 600, true, absPath, 303, 1, "localhost:9090", false, true, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
@@ -568,19 +570,19 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		{
 			name:             "restart upgrade not set",
 			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", true, true, true, 600, true, absPath, 303, 1, false, true, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", true, true, true, 600, true, absPath, 303, 1, "localhost:9090", false, true, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "restart upgrade true",
 			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "true", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", true, true, true, 600, true, absPath, 303, 1, false, true, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", true, true, true, 600, true, absPath, 303, 1, "localhost:9090", false, true, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "restart upgrade true",
 			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, false, true, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, "localhost:9090", false, true, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
@@ -592,19 +594,19 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		{
 			name:             "skip unsafe backups not set",
 			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "", "", "303ms", "1", "false", "true", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, false, absPath, 303, 1, false, true, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, false, absPath, 303, 1, "localhost:9090", false, true, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "skip unsafe backups true",
 			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "true", "", "303ms", "1", "false", "true", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, false, true, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, true, absPath, 303, 1, "localhost:9090", false, true, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "skip unsafe backups false",
 			envVals:          cosmovisorEnv{absPath, "testname", "true", "true", "false", "600ms", "false", "", "303ms", "1", "false", "true", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, false, absPath, 303, 1, false, true, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", true, true, false, 600, false, absPath, 303, 1, "localhost:9090", false, true, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
@@ -622,7 +624,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		{
 			name:             "poll interval not set",
 			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "", "1", "false", "false", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 300, 1, false, false, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 300, 1, "localhost:9090", false, false, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
@@ -634,7 +636,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		{
 			name:             "poll interval 1s",
 			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "1s", "1", "false", "false", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 1000, 1, false, false, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 1000, 1, "localhost:9090", false, false, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
@@ -658,7 +660,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		{
 			name:             "restart delay not set",
 			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "", "false", "", "303ms", "1", "false", "false", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 0, false, absPath, 303, 1, false, false, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 0, false, absPath, 303, 1, "localhost:9090", false, false, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
@@ -670,7 +672,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		{
 			name:             "restart delay 1s",
 			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "1s", "false", "", "303ms", "1", "false", "false", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 1000, false, absPath, 303, 1, false, false, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 1000, false, absPath, 303, 1, "localhost:9090", false, false, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
@@ -688,19 +690,19 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		{
 			name:             "prepupgrade max retries 0",
 			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "0", "false", "false", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, false, false, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, "localhost:9090", false, false, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "prepupgrade max retries not set",
 			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "", "false", "false", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, false, false, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, "localhost:9090", false, false, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "prepupgrade max retries 5",
 			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "5", "false", "false", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 5, false, false, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 5, "localhost:9090", false, false, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
@@ -712,7 +714,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		{
 			name:             "disable logs good",
 			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "", "true", "false", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, true, false, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, "localhost:9090", true, false, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
@@ -724,19 +726,19 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		{
 			name:             "disable logs color good",
 			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "", "true", "false", "kitchen", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, true, false, time.Kitchen, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, "localhost:9090", true, false, time.Kitchen, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "disable logs timestamp",
 			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "", "true", "false", "", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, true, false, "", "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, "localhost:9090", true, false, "", "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
 			name:             "enable rf3339 logs timestamp",
 			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "", "true", "true", "rfc3339", "preupgrade.sh", "", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, true, true, time.RFC3339, "preupgrade.sh", false, 0),
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, "localhost:9090", true, true, time.RFC3339, "preupgrade.sh", false, 0),
 			expectedErrCount: 0,
 		},
 		{
@@ -748,7 +750,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		{
 			name:             "disable recase good",
 			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "", "true", "true", "rfc3339", "preupgrade.sh", "true", ""},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, true, true, time.RFC3339, "preupgrade.sh", true, 0),
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, "localhost:9090", true, true, time.RFC3339, "preupgrade.sh", true, 0),
 			expectedErrCount: 0,
 		},
 		{
@@ -759,7 +761,7 @@ func (s *argsTestSuite) TestGetConfigFromEnv() {
 		{
 			name:             "shutdown grace good",
 			envVals:          cosmovisorEnv{absPath, "testname", "false", "true", "false", "600ms", "false", "", "406ms", "", "true", "true", "rfc3339", "preupgrade.sh", "true", "15s"},
-			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, true, true, time.RFC3339, "preupgrade.sh", true, 15000000000),
+			expectedCfg:      newConfig(absPath, "testname", false, true, false, 600, false, absPath, 406, 0, "localhost:9090", true, true, time.RFC3339, "preupgrade.sh", true, 15000000000),
 			expectedErrCount: 0,
 		},
 	}
@@ -794,7 +796,7 @@ func (s *argsTestSuite) setUpDir() string {
 func (s *argsTestSuite) setupConfig(home string) string {
 	s.T().Helper()
 
-	cfg := newConfig(home, "test", true, true, true, 406, false, home, 8, 0, false, true, "kitchen", "", true, 10000000000)
+	cfg := newConfig(home, "test", true, true, true, 406, false, home, 8, 0, "localhost:9090", false, true, "kitchen", "", true, 10000000000)
 	path := filepath.Join(home, rootName, "config.toml")
 	f, err := os.Create(path)
 	s.Require().NoError(err)
@@ -824,7 +826,7 @@ func (s *argsTestSuite) TestConfigFromFile() {
 		{
 			name: "valid config",
 			expectedCfg: func() *Config {
-				return newConfig(home, "test", true, true, true, 406, false, home, 8, 0, false, true, time.Kitchen, "", true, 10000000000)
+				return newConfig(home, "test", true, true, true, 406, false, home, 8, 0, "localhost:9090", false, true, time.Kitchen, "", true, 10000000000)
 			},
 			filePath:      cfgFilePath,
 			expectedError: "",
@@ -839,13 +841,13 @@ func (s *argsTestSuite) TestConfigFromFile() {
 				os.Setenv(EnvName, "env-name")
 			},
 			expectedCfg: func() *Config {
-				return newConfig(home, "env-name", true, true, true, 406, false, home, 8, 0, false, true, time.Kitchen, "", true, 10000000000)
+				return newConfig(home, "env-name", true, true, true, 406, false, home, 8, 0, "localhost:9090", false, true, time.Kitchen, "", true, 10000000000)
 			},
 		},
 		{
 			name: "empty config file path will load config from ENV variables",
 			expectedCfg: func() *Config {
-				return newConfig(home, "test", true, true, true, 406, false, home, 8, 0, false, true, time.Kitchen, "", true, 10000000000)
+				return newConfig(home, "test", true, true, true, 406, false, home, 8, 0, "localhost:9090", false, true, time.Kitchen, "", true, 10000000000)
 			},
 			filePath:      "",
 			expectedError: "",

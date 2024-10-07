@@ -173,7 +173,7 @@ func (keeper Keeper) CancelProposal(ctx context.Context, proposalID uint64, prop
 	}
 
 	if proposal.VotingStartTime != nil {
-		err = keeper.deleteVotes(ctx, proposal.Id)
+		err = keeper.DeleteVote(ctx, proposal.Id)
 		if err != nil {
 			return err
 		}

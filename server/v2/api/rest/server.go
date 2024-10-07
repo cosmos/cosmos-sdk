@@ -5,8 +5,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/gorilla/mux"
-
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -19,7 +17,7 @@ const (
 
 type Server[T transaction.Tx] struct {
 	logger log.Logger
-	router *mux.Router
+	router *http.ServeMux
 
 	httpServer *http.Server
 	config     *Config
@@ -44,8 +42,8 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.L
 	var appManager *appmanager.AppManager[T]
 	appManager = appI.GetAppManager()
 
-	s.router = mux.NewRouter()
-	s.router.PathPrefix("/").Handler(NewDefaultHandler(appManager))
+	s.router = http.NewServeMux()
+	s.router.Handle("/", NewDefaultHandler(appManager))
 
 	return nil
 }

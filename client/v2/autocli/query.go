@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"strings"
 	"time"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/signing/aminojson"
-	"cosmossdk.io/x/tx/signing/textual"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -234,14 +234,27 @@ func encoder(encoder aminojson.Encoder) aminojson.Encoder {
 	})
 
 	customEncoder.DefineScalarEncoding("cosmos.Dec", func(_ *aminojson.Encoder, value protoreflect.Value, w io.Writer) error {
-		// this is a hack to use textual definition of decimal rendering instead of duplication the whole encoder here
-		// if we were to remove textual, let's just copy the code from encoder logic here
-		formatted, err := textual.NewDecValueRenderer().Format(context.Background(), value)
-		if err != nil {
-			return fmt.Errorf("cannot format decimal: %w", err)
+		decStr := value.String()
+
+		// If the decimal doesn't contain a point, we assume it's a value formatted using the legacy
+		// `math.Dec`. So we try to parse it as an integer and then convert it to a
+		// decimal.
+		if !strings.Contains(decStr, ".") {
+			parsedInt, ok := new(big.Int).SetString(decStr, 10)
+			if !ok {
+				return fmt.Errorf("invalid decimal: %s", decStr)
+			}
+
+			// We assume the decimal has 18 digits of precision.
+			decStr = math.LegacyNewDecFromBigIntWithPrec(parsedInt, math.LegacyPrecision).String()
 		}
 
-		_, err = fmt.Fprintf(w, `"%s"`, formatted[0].Content)
+		formatted, err := math.FormatDec(decStr)
+		if err != nil {
+			return fmt.Errorf("cannot format decimal %s: %w", decStr, err)
+		}
+
+		_, err = fmt.Fprintf(w, `"%s"`, formatted)
 		return nil
 	})
 

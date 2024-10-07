@@ -113,14 +113,19 @@ func (cfg *Config) UpgradeInfoFilePath() string {
 
 // SymLinkToGenesis creates a symbolic link from "./current" to the genesis directory.
 func (cfg *Config) SymLinkToGenesis() (string, error) {
-	genesis := filepath.Join(cfg.Root(), genesisDir)
-	link := filepath.Join(cfg.Root(), currentLink)
-
-	if err := os.Symlink(genesis, link); err != nil {
+	// workdir is set to cosmovisor directory so relative
+	// symlinks are getting resolved correctly
+	if err := os.Symlink(genesisDir, currentLink); err != nil {
 		return "", err
 	}
+
+	res, err := filepath.EvalSymlinks(cfg.GenesisBin())
+	if err != nil {
+		return "", err
+	}
+
 	// and return the genesis binary
-	return cfg.GenesisBin(), nil
+	return res, nil
 }
 
 // WaitRestartDelay will block and wait until the RestartDelay has elapsed.
@@ -134,27 +139,24 @@ func (cfg *Config) WaitRestartDelay() {
 // This will resolve the symlink to the underlying directory to make it easier to debug
 func (cfg *Config) CurrentBin() (string, error) {
 	cur := filepath.Join(cfg.Root(), currentLink)
+
 	// if nothing here, fallback to genesis
-	info, err := os.Lstat(cur)
-	if err != nil {
-		// Create symlink to the genesis
-		return cfg.SymLinkToGenesis()
-	}
 	// if it is there, ensure it is a symlink
-	if info.Mode()&os.ModeSymlink == 0 {
+	info, err := os.Lstat(cur)
+	if err != nil || (info.Mode()&os.ModeSymlink == 0) {
 		// Create symlink to the genesis
 		return cfg.SymLinkToGenesis()
 	}
 
-	// resolve it
-	dest, err := os.Readlink(cur)
+	res, err := filepath.EvalSymlinks(cur)
 	if err != nil {
 		// Create symlink to the genesis
 		return cfg.SymLinkToGenesis()
 	}
 
 	// and return the binary
-	binpath := filepath.Join(dest, "bin", cfg.Name)
+	binpath := filepath.Join(res, "bin", cfg.Name)
+
 	return binpath, nil
 }
 
@@ -385,24 +387,23 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 	}
 
 	// set a symbolic link
-	link := filepath.Join(cfg.Root(), currentLink)
 	safeName := url.PathEscape(u.Name)
-	upgrade := filepath.Join(cfg.Root(), upgradesDir, safeName)
+	upgrade := filepath.Join(upgradesDir, safeName)
 
 	// remove link if it exists
-	if _, err := os.Stat(link); err == nil {
-		if err := os.Remove(link); err != nil {
+	if _, err := os.Stat(currentLink); err == nil {
+		if err := os.Remove(currentLink); err != nil {
 			return fmt.Errorf("failed to remove existing link: %w", err)
 		}
 	}
 
 	// point to the new directory
-	if err := os.Symlink(upgrade, link); err != nil {
+	if err := os.Symlink(upgrade, currentLink); err != nil {
 		return fmt.Errorf("creating current symlink: %w", err)
 	}
 
 	cfg.currentUpgrade = u
-	f, err := os.Create(filepath.Join(upgrade, upgradetypes.UpgradeInfoFilename))
+	f, err := os.Create(filepath.Join(cfg.Root(), upgrade, upgradetypes.UpgradeInfoFilename))
 	if err != nil {
 		return err
 	}

@@ -42,6 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#21891](https://github.com/cosmos/cosmos-sdk/pull/21891) create `current` symlink as relative
 * [#21462](https://github.com/cosmos/cosmos-sdk/pull/21462) Pass `stdin` to binary.
 
 ### Features

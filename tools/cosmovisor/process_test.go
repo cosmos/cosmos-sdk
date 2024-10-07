@@ -1,5 +1,4 @@
-//go:build linux
-// +build linux
+//go:build linux || darwin
 
 package cosmovisor_test
 
@@ -20,12 +19,26 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
+var workDir string
+
+func init() {
+	workDir, _ = os.Getwd()
+}
+
 // TestLaunchProcess will try running the script a few times and watch upgrades work properly
 // and args are passed through
 func TestLaunchProcess(t *testing.T) {
 	// binaries from testdata/validate directory
-	home := copyTestData(t, "validate")
-	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 15, UnsafeSkipBackup: true}
+	cfg := prepareConfig(
+		t,
+		fmt.Sprintf("%s/%s", workDir, "testdata/validate"),
+		cosmovisor.Config{
+			Name:             "dummyd",
+			PollInterval:     15,
+			UnsafeSkipBackup: true,
+		},
+	)
+
 	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
@@ -33,7 +46,11 @@ func TestLaunchProcess(t *testing.T) {
 	stdout, stderr := newBuffer(), newBuffer()
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(t, err)
-	require.Equal(t, cfg.GenesisBin(), currentBin)
+
+	rPath, err := filepath.EvalSymlinks(cfg.GenesisBin())
+	require.NoError(t, err)
+
+	require.Equal(t, rPath, currentBin)
 
 	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(t, err)
@@ -51,7 +68,10 @@ func TestLaunchProcess(t *testing.T) {
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
 
-	require.Equal(t, cfg.UpgradeBin("chain2"), currentBin)
+	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain2"))
+	require.NoError(t, err)
+
+	require.Equal(t, rPath, currentBin)
 	args = []string{"second", "run", "--verbose"}
 	stdout.Reset()
 	stderr.Reset()
@@ -63,14 +83,26 @@ func TestLaunchProcess(t *testing.T) {
 	require.Equal(t, "Chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
 
 	// ended without other upgrade
-	require.Equal(t, cfg.UpgradeBin("chain2"), currentBin)
+	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain2"))
+	require.NoError(t, err)
+
+	require.Equal(t, rPath, currentBin)
 }
 
 // TestPlanDisableRecase will test upgrades without lower case plan names
 func TestPlanDisableRecase(t *testing.T) {
 	// binaries from testdata/validate directory
-	home := copyTestData(t, "norecase")
-	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20, UnsafeSkipBackup: true, DisableRecase: true}
+	cfg := prepareConfig(
+		t,
+		fmt.Sprintf("%s/%s", workDir, "testdata/norecase"),
+		cosmovisor.Config{
+			Name:             "dummyd",
+			PollInterval:     20,
+			UnsafeSkipBackup: true,
+			DisableRecase:    true,
+		},
+	)
+
 	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
@@ -78,7 +110,11 @@ func TestPlanDisableRecase(t *testing.T) {
 	stdout, stderr := newBuffer(), newBuffer()
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(t, err)
-	require.Equal(t, cfg.GenesisBin(), currentBin)
+
+	rPath, err := filepath.EvalSymlinks(cfg.GenesisBin())
+	require.NoError(t, err)
+
+	require.Equal(t, rPath, currentBin)
 
 	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(t, err)
@@ -96,7 +132,9 @@ func TestPlanDisableRecase(t *testing.T) {
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
 
-	require.Equal(t, cfg.UpgradeBin("Chain2"), currentBin)
+	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("Chain2"))
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 	args = []string{"second", "run", "--verbose"}
 	stdout.Reset()
 	stderr.Reset()
@@ -108,13 +146,24 @@ func TestPlanDisableRecase(t *testing.T) {
 	require.Equal(t, "Chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
 
 	// ended without other upgrade
-	require.Equal(t, cfg.UpgradeBin("Chain2"), currentBin)
+	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("Chain2"))
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 }
 
 func TestLaunchProcessWithRestartDelay(t *testing.T) {
 	// binaries from testdata/validate directory
-	home := copyTestData(t, "validate")
-	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", RestartDelay: 5 * time.Second, PollInterval: 20, UnsafeSkipBackup: true}
+	cfg := prepareConfig(
+		t,
+		fmt.Sprintf("%s/%s", workDir, "testdata/validate"),
+		cosmovisor.Config{
+			Name:             "dummyd",
+			RestartDelay:     5 * time.Second,
+			PollInterval:     20,
+			UnsafeSkipBackup: true,
+		},
+	)
+
 	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
@@ -122,7 +171,10 @@ func TestLaunchProcessWithRestartDelay(t *testing.T) {
 	stdout, stderr := newBuffer(), newBuffer()
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(t, err)
-	require.Equal(t, cfg.GenesisBin(), currentBin)
+
+	rPath, err := filepath.EvalSymlinks(cfg.GenesisBin())
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 
 	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(t, err)
@@ -144,8 +196,17 @@ func TestLaunchProcessWithRestartDelay(t *testing.T) {
 // TestPlanShutdownGrace will test upgrades without lower case plan names
 func TestPlanShutdownGrace(t *testing.T) {
 	// binaries from testdata/validate directory
-	home := copyTestData(t, "dontdie")
-	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 15, UnsafeSkipBackup: true, ShutdownGrace: 2 * time.Second}
+	cfg := prepareConfig(
+		t,
+		fmt.Sprintf("%s/%s", workDir, "testdata/dontdie"),
+		cosmovisor.Config{
+			Name:             "dummyd",
+			PollInterval:     15,
+			UnsafeSkipBackup: true,
+			ShutdownGrace:    2 * time.Second,
+		},
+	)
+
 	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output
@@ -153,7 +214,9 @@ func TestPlanShutdownGrace(t *testing.T) {
 	stdout, stderr := newBuffer(), newBuffer()
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(t, err)
-	require.Equal(t, cfg.GenesisBin(), currentBin)
+	rPath, err := filepath.EvalSymlinks(cfg.GenesisBin())
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 
 	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(t, err)
@@ -171,7 +234,9 @@ func TestPlanShutdownGrace(t *testing.T) {
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
 
-	require.Equal(t, cfg.UpgradeBin("chain2"), currentBin)
+	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain2"))
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 	args = []string{"second", "run", "--verbose"}
 	stdout.Reset()
 	stderr.Reset()
@@ -183,7 +248,9 @@ func TestPlanShutdownGrace(t *testing.T) {
 	require.Equal(t, "Chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
 
 	// ended without other upgrade
-	require.Equal(t, cfg.UpgradeBin("chain2"), currentBin)
+	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain2"))
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 }
 
 // TestLaunchProcess will try running the script a few times and watch upgrades work properly
@@ -193,15 +260,26 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 	// genesis -> chain2-zip_bin
 	// chain2-zip_bin -> ref_to_chain3-zip_dir.json = (json for the next download instructions) -> chain3-zip_dir
 	// chain3-zip_dir - doesn't upgrade
-	home := copyTestData(t, "download")
-	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PollInterval: 100, UnsafeSkipBackup: true}
+	cfg := prepareConfig(
+		t,
+		fmt.Sprintf("%s/%s", workDir, "testdata/download"),
+		cosmovisor.Config{
+			Name:                  "autod",
+			AllowDownloadBinaries: true,
+			PollInterval:          100,
+			UnsafeSkipBackup:      true,
+		},
+	)
+
 	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(t, err)
-	require.Equal(t, cfg.GenesisBin(), currentBin)
+	rPath, err := filepath.EvalSymlinks(cfg.GenesisBin())
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 
 	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(t, err)
@@ -216,7 +294,10 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 	require.Equal(t, "Genesis autod. Args: some args "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain2" NEEDED at height: 49: zip_binary`+"\n", stdout.String())
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
-	require.Equal(t, cfg.UpgradeBin("chain2"), currentBin)
+
+	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain2"))
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 
 	// start chain2
 	stdout.Reset()
@@ -231,7 +312,9 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 	require.True(t, doUpgrade)
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
-	require.Equal(t, cfg.UpgradeBin("chain3"), currentBin)
+	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain3"))
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 
 	// run the last chain
 	args = []string{"end", "--halt", upgradeFilename}
@@ -246,7 +329,9 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 	// and this doesn't upgrade
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
-	require.Equal(t, cfg.UpgradeBin("chain3"), currentBin)
+	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain3"))
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 }
 
 // TestLaunchProcessWithDownloadsAndMissingPreupgrade will try running the script a few times and watch upgrades work properly
@@ -256,22 +341,28 @@ func TestLaunchProcessWithDownloadsAndMissingPreupgrade(t *testing.T) {
 	// genesis -> chain2-zip_bin
 	// chain2-zip_bin -> ref_to_chain3-zip_dir.json = (json for the next download instructions) -> chain3-zip_dir
 	// chain3-zip_dir - doesn't upgrade
-	home := copyTestData(t, "download")
-	cfg := &cosmovisor.Config{
-		Home:                  home,
-		Name:                  "autod",
-		AllowDownloadBinaries: true,
-		PollInterval:          100,
-		UnsafeSkipBackup:      true,
-		CustomPreUpgrade:      "missing.sh",
-	}
+	cfg := prepareConfig(
+		t,
+		fmt.Sprintf("%s/%s", workDir, "testdata/download"),
+		cosmovisor.Config{
+			Name:                  "autod",
+			AllowDownloadBinaries: true,
+			PollInterval:          100,
+			UnsafeSkipBackup:      true,
+			CustomPreUpgrade:      "missing.sh",
+		},
+	)
+
 	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(t, err)
-	require.Equal(t, cfg.GenesisBin(), currentBin)
+
+	rPath, err := filepath.EvalSymlinks(cfg.GenesisBin())
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(t, err)
 
@@ -292,15 +383,18 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	// genesis -> chain2-zip_bin
 	// chain2-zip_bin -> ref_to_chain3-zip_dir.json = (json for the next download instructions) -> chain3-zip_dir
 	// chain3-zip_dir - doesn't upgrade
-	home := copyTestData(t, "download")
-	cfg := &cosmovisor.Config{
-		Home:                  home,
-		Name:                  "autod",
-		AllowDownloadBinaries: true,
-		PollInterval:          100,
-		UnsafeSkipBackup:      true,
-		CustomPreUpgrade:      "preupgrade.sh",
-	}
+	cfg := prepareConfig(
+		t,
+		fmt.Sprintf("%s/%s", workDir, "testdata/download"),
+		cosmovisor.Config{
+			Name:                  "autod",
+			AllowDownloadBinaries: true,
+			PollInterval:          100,
+			UnsafeSkipBackup:      true,
+			CustomPreUpgrade:      "preupgrade.sh",
+		},
+	)
+
 	buf := newBuffer() // inspect output using buf.String()
 	logger := log.NewLogger(buf).With(log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
@@ -308,7 +402,9 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	// should run the genesis binary and produce expected output
 	currentBin, err := cfg.CurrentBin()
 	require.NoError(t, err)
-	require.Equal(t, cfg.GenesisBin(), currentBin)
+	rPath, err := filepath.EvalSymlinks(cfg.GenesisBin())
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 	launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	require.NoError(t, err)
 
@@ -323,10 +419,13 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	require.Equal(t, "Genesis autod. Args: some args "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain2" NEEDED at height: 49: zip_binary`+"\n", stdout.String())
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
-	require.Equal(t, cfg.UpgradeBin("chain2"), currentBin)
+
+	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain2"))
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 
 	// should have preupgrade.sh results
-	require.FileExists(t, filepath.Join(home, "upgrade_name_chain2_height_49"))
+	require.FileExists(t, filepath.Join(cfg.Home, "upgrade_name_chain2_height_49"))
 
 	// start chain2
 	stdout.Reset()
@@ -341,10 +440,12 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	require.True(t, doUpgrade)
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
-	require.Equal(t, cfg.UpgradeBin("chain3"), currentBin)
+	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain3"))
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 
 	// should have preupgrade.sh results
-	require.FileExists(t, filepath.Join(home, "upgrade_name_chain3_height_936"))
+	require.FileExists(t, filepath.Join(cfg.Home, "upgrade_name_chain3_height_936"))
 
 	// run the last chain
 	args = []string{"end", "--halt", upgradeFilename}
@@ -359,7 +460,9 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	// and this doesn't upgrade
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
-	require.Equal(t, cfg.UpgradeBin("chain3"), currentBin)
+	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain3"))
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
 }
 
 // TestSkipUpgrade tests heights that are identified to be skipped and return if upgrade height matches the skip heights

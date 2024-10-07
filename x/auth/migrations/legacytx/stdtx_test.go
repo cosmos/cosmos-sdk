@@ -44,7 +44,7 @@ func TestStdSignBytes(t *testing.T) {
 		Amount:   []*basev1beta1.Coin{{Denom: "atom", Amount: "150"}},
 		GasLimit: 100000,
 	}
-	msgStr := fmt.Sprintf(`{"type":"testpb/TestMsg","value":{"decField":"0","signers":["%s"]}}`, addr)
+	msgStr := fmt.Sprintf(`{"type":"testpb/TestMsg","value":{"decField":"0.000000000000000000","signers":["%s"]}}`, addr)
 	tests := []struct {
 		name string
 		args args

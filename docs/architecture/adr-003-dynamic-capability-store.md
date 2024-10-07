@@ -34,8 +34,8 @@ chain is running.
 
 The `CapabilityKeeper` will include a persistent `KVStore`, a `MemoryStore`, and an in-memory map.
 The persistent `KVStore` tracks which capability is owned by which modules.
-The `MemoryStore` stores a forward mapping that map from module name, capability tuples to capability names and
-a reverse mapping that map from module name, capability name to the capability index.
+The `MemoryStore` stores a forward mapping that maps from module name, capability tuples to capability names and
+a reverse mapping that maps from module name, capability name to the capability index.
 Since we cannot marshal the capability into a `KVStore` and unmarshal without changing the memory location of the capability,
 the reverse mapping in the KVStore will simply map to an index. This index can then be used as a key in the ephemeral
 go-map to retrieve the capability at the original memory location.
@@ -277,7 +277,7 @@ ck.InitialiseAndSeal(initialContext)
 
 #### Creating, passing, claiming and using capabilities
 
-Consider the case where `mod1` wants to create a capability, associate it with a resource (e.g. an IBC channel) by name, then pass it to `mod2` which will use it later:
+Consider the case where `mod1` wants to create a capability, associate it with a resource (e.g. an IBC channel) by name, and then pass it to `mod2` which will use it later:
 
 Module 1 would have the following code:
 
@@ -327,12 +327,12 @@ Proposed.
 ### Positive
 
 * Dynamic capability support.
-* Allows CapabilityKeeper to return same capability pointer from go-map while reverting any writes to the persistent `KVStore` and in-memory `MemoryStore` on tx failure.
+* Allows CapabilityKeeper to return the same capability pointer from go-map while reverting any writes to the persistent `KVStore` and in-memory `MemoryStore` on tx failure.
 
 ### Negative
 
 * Requires an additional keeper.
-* Some overlap with existing `StoreKey` system (in the future they could be combined, since this is a superset functionality-wise).
+* Some overlap with the existing `StoreKey` system (in the future they could be combined, since this is a superset functionality-wise).
 * Requires an extra level of indirection in the reverse mapping, since MemoryStore must map to index which must then be used as key in a go map to retrieve the actual capability
 
 ### Neutral

@@ -21,11 +21,13 @@ type Keeper struct {
 	appmodule.Environment
 
 	CountStore collections.Item[int64]
+
+	hooks types.CounterHooks
 }
 
-func NewKeeper(env appmodule.Environment) Keeper {
+func NewKeeper(env appmodule.Environment) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
-	return Keeper{
+	return &Keeper{
 		Environment: env,
 		CountStore:  collections.NewItem(sb, collections.NewPrefix(0), "count", collections.Int64Value),
 	}
@@ -67,6 +69,10 @@ func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter
 		return nil, err
 	}
 
+	if err := k.Hooks().AfterIncreaseCount(ctx, num+msg.Count); err != nil {
+		return nil, err
+	}
+
 	if err := k.EventService.EventManager(ctx).EmitKV(
 		"increase_counter",
 		event.NewAttribute("signer", msg.Signer),
@@ -77,4 +83,24 @@ func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter
 	return &types.MsgIncreaseCountResponse{
 		NewCount: num + msg.Count,
 	}, nil
+}
+
+// Hooks gets the hooks for counter Keeper
+func (k *Keeper) Hooks() types.CounterHooks {
+	if k.hooks == nil {
+		// return a no-op implementation if no hooks are set
+		return types.MultiCounterHooks{}
+	}
+
+	return k.hooks
+}
+
+// SetHooks sets the hooks for counter
+func (k *Keeper) SetHooks(gh types.CounterHooks) *Keeper {
+	if k.hooks != nil {
+		panic("cannot set governance hooks twice")
+	}
+
+	k.hooks = gh
+	return k
 }

@@ -104,7 +104,7 @@ System tests are at the top of the [test pyramid](https://martinfowler.com/artic
 They test the whole application flow as black box, from the user perspective. They are located under [`/tests/systemtests`](https://github.com/cosmos/cosmos-sdk/tree/main/tests/systemtests).
 
 For that, the SDK is using the `simapp` binary, but you should use your own binary.
-More details about system test can be found in [building-apps](https://docs.cosmos.network/main/build/building-apps/06-system-tests.md)
+More details about system test can be found in [building-apps](https://docs.cosmos.network/main/build/building-apps/system-tests)
 
 
 ## Learn More

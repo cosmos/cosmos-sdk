@@ -766,6 +766,11 @@ func (s *SystemUnderTest) CurrentHeight() int64 {
 	return s.currentHeight.Load()
 }
 
+// NodesCount returns the number of node instances used
+func (s *SystemUnderTest) NodesCount() int {
+	return s.nodesCount
+}
+
 type Node struct {
 	ID      string
 	IP      string

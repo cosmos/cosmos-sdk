@@ -8,6 +8,9 @@
 #[cfg(feature = "std")]
 extern crate alloc;
 
+// this is to allow this crate to use its own macros
+extern crate self as ixc_core;
+
 mod context;
 mod events;
 pub mod message;

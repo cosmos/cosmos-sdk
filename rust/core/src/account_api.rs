@@ -1,6 +1,6 @@
 //! The core account API.
 
-use ixc_core_macros::message_selector;
+use ixc_core_macros::{handler_api, message_selector};
 use ixc_message_api::AccountID;
 use ixc_message_api::code::SystemErrorCode;
 use ixc_message_api::handler::{HandlerErrorCode, Allocator};
@@ -49,3 +49,18 @@ pub const ROOT_ACCOUNT: AccountID = AccountID::new(1);
 
 /// The message selector for the on_create message.
 pub const ON_CREATE_SELECTOR: u64 = message_selector!("ixc.account.v1.on_create");
+
+// #[ixc_schema_macros::handler_api]
+/// The API for converting between native addresses and account IDs.
+/// Native addresses have both a byte representation and a string representation.
+/// The mapping between addresses and account IDs is assumed to be stateful.
+pub trait AddressAPI {
+    /// Convert an account ID to a byte representation.
+    fn to_bytes<'a>(&self, ctx: &'a Context, account_id: AccountID) -> crate::Result<&'a [u8]>;
+    /// Convert a byte representation to an account ID.
+    fn from_bytes<'a>(&self, ctx: &'a Context, address_bytes: &[u8]) -> crate::Result<AccountID>;
+    /// Convert an account ID to a string representation.
+    fn to_string<'a>(&self, ctx: &'a Context, account_id: AccountID) -> crate::Result<&'a str>;
+    /// Convert a string representation to an account ID.
+    fn from_string<'a>(&self, ctx: &'a Context, address_string: &str) -> crate::Result<AccountID>;
+}

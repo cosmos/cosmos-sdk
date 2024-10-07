@@ -1,5 +1,6 @@
 mod encoder;
 mod decoder;
+mod wire;
 
 use ixc_schema::buffer::WriterFactory;
 use ixc_schema::codec::{Codec, ValueDecodeVisitor, ValueEncodeVisitor};

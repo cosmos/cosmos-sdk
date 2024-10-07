@@ -235,6 +235,9 @@ func encoder(encoder aminojson.Encoder) aminojson.Encoder {
 
 	customEncoder.DefineScalarEncoding("cosmos.Dec", func(_ *aminojson.Encoder, value protoreflect.Value, w io.Writer) error {
 		decStr := value.String()
+		if strings.Contains(decStr, "[") { // check if it's a bytes field (e.g mint inflation)
+			decStr = string(value.Bytes())
+		}
 
 		// If the decimal doesn't contain a point, we assume it's a value formatted using the legacy
 		// `math.Dec`. So we try to parse it as an integer and then convert it to a

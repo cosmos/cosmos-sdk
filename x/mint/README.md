@@ -8,15 +8,12 @@ sidebar_position: 1
 
 * [Concepts](#concepts)
     * [The Minting Mechanism](#the-minting-mechanism)
-<<<<<<< HEAD
-=======
     * [Inflation](#inflation)
     * [Provisions](#provisions)
         * [Relation to Inflation](#relation-to-inflation)
         * [Usage per Block](#usage-per-block-default-function)
         * [Example](#example)
     * [Bonding](#bonding)
->>>>>>> 8e3438246 (docs: Update mint docs (#22108))
 * [State](#state)
     * [Minter](#minter)
     * [Params](#params)
@@ -69,8 +66,6 @@ In the default implementation, inflation is calculated as follows:
 Inflation = CurrentInflation + (1 - BondedRatio / GoalBonded) * (InflationRateChange / BlocksPerYear)
 ```
 
-<<<<<<< HEAD
-=======
 ### Provisions
 
 Provisions are the number of tokens generated and distributed in each block. They are directly related to the inflation rate and the current total supply of tokens. The amount of provisions generated per block is calculated based on the annual provisions, which are determined by the inflation rate and the total supply of tokens.
@@ -110,7 +105,6 @@ Key aspects of bonding in relation to the x/mint module:
 1. **Bonded Ratio**: This is the proportion of the total token supply that is currently staked (bonded) in the network.
 2. **Goal Bonded Ratio**: A target percentage of tokens that should ideally be bonded, defined in the module parameters.
 3. **Inflation Adjustment**: The bonded ratio is used to adjust the inflation rate, encouraging or discouraging bonding as needed to maintain network security and token liquidity.
->>>>>>> 8e3438246 (docs: Update mint docs (#22108))
 
 ## State
 

@@ -4,6 +4,7 @@ package systemtests
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -606,7 +607,7 @@ func TestAuthzExecRedelegateAuthorization(t *testing.T) {
 		msgRedelegateTypeURL, granterAddr, val1Addr, val2Addr, testDenom, redelegationAmount)
 	execMsg := WriteToTempJSONFile(t, redelegateTx)
 
-	redelegateCmd := []string{"tx", "authz", "exec", execMsg.Name(), "--from=" + granteeAddr, "--gas=auto"}
+	redelegateCmd := []string{"tx", "authz", "exec", execMsg.Name(), "--from=" + granteeAddr, "--gas=500000", "--fees=10stake"}
 	rsp = cli.RunAndWait(redelegateCmd...)
 	RequireTxSuccess(t, rsp)
 
@@ -670,73 +671,84 @@ func TestAuthzGRPCQueries(t *testing.T) {
 	invalidMsgTypeOutput := `{"code":2, "message":"codespace authz code 2: authorization not found: authorization not found for invalidMsg type", "details":[]}`
 	expGrantOutput := fmt.Sprintf(`{"grants":[{%s}],"pagination":null}`, grant1)
 
-	grantTestCases := []GRPCTestCase{
+	grantTestCases := []RestTestCase{
 		{
 			"invalid granter address",
 			fmt.Sprintf(grantURL, "invalid_granter", grantee1Addr, msgSendTypeURL),
+			http.StatusInternalServerError,
 			bech32FailOutput,
 		},
 		{
 			"invalid grantee address",
 			fmt.Sprintf(grantURL, granterAddr, "invalid_grantee", msgSendTypeURL),
+			http.StatusInternalServerError,
 			bech32FailOutput,
 		},
 		{
 			"with empty granter",
 			fmt.Sprintf(grantURL, "", grantee1Addr, msgSendTypeURL),
+			http.StatusInternalServerError,
 			emptyStrOutput,
 		},
 		{
 			"with empty grantee",
 			fmt.Sprintf(grantURL, granterAddr, "", msgSendTypeURL),
+			http.StatusInternalServerError,
 			emptyStrOutput,
 		},
 		{
 			"invalid msg-type",
 			fmt.Sprintf(grantURL, granterAddr, grantee1Addr, "invalidMsg"),
+			http.StatusInternalServerError,
 			invalidMsgTypeOutput,
 		},
 		{
 			"valid grant query",
 			fmt.Sprintf(grantURL, granterAddr, grantee1Addr, msgSendTypeURL),
+			http.StatusOK,
 			expGrantOutput,
 		},
 	}
 
-	RunGRPCQueries(t, grantTestCases)
+	RunRestQueries(t, grantTestCases)
 
 	// test query grants grpc endpoint
 	grantsURL := baseurl + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s"
 
-	grantsTestCases := []GRPCTestCase{
+	grantsTestCases := []RestTestCase{
 		{
 			"expect single grant",
 			fmt.Sprintf(grantsURL, granterAddr, grantee1Addr),
+			http.StatusOK,
 			fmt.Sprintf(`{"grants":[{%s}],"pagination":{"next_key":null,"total":"1"}}`, grant1),
 		},
 		{
 			"expect two grants",
 			fmt.Sprintf(grantsURL, granterAddr, grantee2Addr),
+			http.StatusOK,
 			fmt.Sprintf(`{"grants":[{%s},{%s}],"pagination":{"next_key":null,"total":"2"}}`, grant2, grant3),
 		},
 		{
 			"expect single grant with pagination",
 			fmt.Sprintf(grantsURL+"&pagination.limit=1", granterAddr, grantee2Addr),
+			http.StatusOK,
 			fmt.Sprintf(`{"grants":[{%s}],"pagination":{"next_key":"L2Nvc21vcy5nb3YudjEuTXNnVm90ZQ==","total":"0"}}`, grant2),
 		},
 		{
 			"expect single grant with pagination limit and offset",
 			fmt.Sprintf(grantsURL+"&pagination.limit=1&pagination.offset=1", granterAddr, grantee2Addr),
+			http.StatusOK,
 			fmt.Sprintf(`{"grants":[{%s}],"pagination":{"next_key":null,"total":"0"}}`, grant3),
 		},
 		{
 			"expect two grants with pagination",
 			fmt.Sprintf(grantsURL+"&pagination.limit=2", granterAddr, grantee2Addr),
+			http.StatusOK,
 			fmt.Sprintf(`{"grants":[{%s},{%s}],"pagination":{"next_key":null,"total":"0"}}`, grant2, grant3),
 		},
 	}
 
-	RunGRPCQueries(t, grantsTestCases)
+	RunRestQueries(t, grantsTestCases)
 
 	// test query grants by granter grpc endpoint
 	grantsByGranterURL := baseurl + "/cosmos/authz/v1beta1/grants/granter/%s"
@@ -745,49 +757,55 @@ func TestAuthzGRPCQueries(t *testing.T) {
 	granterQueryOutput := fmt.Sprintf(`{"grants":[{"granter":"%s","grantee":"%s",%s}],"pagination":{"next_key":null,"total":"1"}}`,
 		grantee1Addr, grantee2Addr, grant4)
 
-	granterTestCases := []GRPCTestCase{
+	granterTestCases := []RestTestCase{
 		{
 			"invalid granter account address",
 			fmt.Sprintf(grantsByGranterURL, "invalid address"),
+			http.StatusInternalServerError,
 			decodingFailedOutput,
 		},
 		{
 			"no authorizations found from granter",
 			fmt.Sprintf(grantsByGranterURL, grantee2Addr),
+			http.StatusOK,
 			noAuthorizationsOutput,
 		},
 		{
 			"valid granter query",
 			fmt.Sprintf(grantsByGranterURL, grantee1Addr),
+			http.StatusOK,
 			granterQueryOutput,
 		},
 	}
 
-	RunGRPCQueries(t, granterTestCases)
+	RunRestQueries(t, granterTestCases)
 
 	// test query grants by grantee grpc endpoint
 	grantsByGranteeURL := baseurl + "/cosmos/authz/v1beta1/grants/grantee/%s"
 	grantee1GrantsOutput := fmt.Sprintf(`{"grants":[{"granter":"%s","grantee":"%s",%s}],"pagination":{"next_key":null,"total":"1"}}`, granterAddr, grantee1Addr, grant1)
 
-	granteeTestCases := []GRPCTestCase{
+	granteeTestCases := []RestTestCase{
 		{
 			"invalid grantee account address",
 			fmt.Sprintf(grantsByGranteeURL, "invalid address"),
+			http.StatusInternalServerError,
 			decodingFailedOutput,
 		},
 		{
 			"no authorizations found from grantee",
 			fmt.Sprintf(grantsByGranteeURL, granterAddr),
+			http.StatusOK,
 			noAuthorizationsOutput,
 		},
 		{
 			"valid grantee query",
 			fmt.Sprintf(grantsByGranteeURL, grantee1Addr),
+			http.StatusOK,
 			grantee1GrantsOutput,
 		},
 	}
 
-	RunGRPCQueries(t, granteeTestCases)
+	RunRestQueries(t, granteeTestCases)
 }
 
 func setupChain(t *testing.T) (*CLIWrapper, string, string) {

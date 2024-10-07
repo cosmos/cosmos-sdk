@@ -28,7 +28,11 @@ See this [section](https://docs.google.com/document/d/1l6uXIjTPHOOWM5N4sUUmUfCZv
 
 ## Pruning
 
-<!-- TODO -->
+Pruning is the process of efficiently managing and removing outdated data from the 
+State Commitment (SC). To facilitate this, the SC backend must implement the `Pruner` 
+interface, allowing the `PruningManager` to execute data pruning operations according 
+to the specified `PruningOption`. Optionally, the SC backend can implement the
+`PausablePruner` interface to pause pruning during a commit.
 
 ## State Sync
 

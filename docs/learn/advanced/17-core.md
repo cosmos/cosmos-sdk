@@ -14,12 +14,14 @@ The `Environment` struct is a core component of the Cosmos SDK.  It provides acc
 https://github.com/cosmos/cosmos-sdk/blob/core/v1.0.0-alpha.4/core/appmodule/v2/environment.go#L16-L29
 ```
 
-Historically the SDK has used the [Context](02-context.md) to pass around services and data.  `Environment` is a newer construct that is intended to replace the `Context` in many cases.  `Context` will be deprecated in the future on the same timeline as [Baseapp](00-baseapp.md).
+Historically the SDK has used an [sdk.Context](02-context.md) to pass around services and data.
+`Environment` is a newer construct that is intended to replace an `sdk.Context` in many cases.
+`sdk.Context` will be deprecated in the future on the same timeline as [Baseapp](00-baseapp.md).
 
 ## Branch Service
 
 The [BranchService](https://pkg.go.dev/cosmossdk.io/core/branch#Service.Execute) provides an
-interface to execution arbitrary code in a branched store.  This is useful for executing code
+interface to execute arbitrary code in a branched store.  This is useful for executing code
 that needs to make changes to the store, but may need to be rolled back if an error occurs.
 Below is a contrived example based on the `x/epoch` module's BeginBlocker logic.
 

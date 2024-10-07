@@ -10,19 +10,38 @@ use crate::value::SchemaValue;
 
 /// The trait that decoders must implement.
 pub trait Decoder<'a> {
+    /// Decode a `bool`.
+    fn decode_bool(&mut self) -> Result<bool, DecodeError>;
+    /// Decode a `u8`.
+    fn decode_u8(&mut self) -> Result<u8, DecodeError>;
+    /// Decode a `u16`.
+    fn decode_u16(&mut self) -> Result<u16, DecodeError>;
     /// Decode a `u32`.
     fn decode_u32(&mut self) -> Result<u32, DecodeError>;
-    /// Decode a `i32`.
-    fn decode_i32(&mut self) -> Result<i32, DecodeError>;
     /// Decode a `u64`.
     fn decode_u64(&mut self) -> Result<u64, DecodeError>;
     /// Decode a `u128`.
     fn decode_u128(&mut self) -> Result<u128, DecodeError>;
+    /// Decode a `i8`.
+    fn decode_i8(&mut self) -> Result<i8, DecodeError>;
+    /// Decode a `i16`.
+    fn decode_i16(&mut self) -> Result<i16, DecodeError>;
+    /// Decode a `i32`.
+    fn decode_i32(&mut self) -> Result<i32, DecodeError>;
+    /// Decode a `i64`.
+    fn decode_i64(&mut self) -> Result<i64, DecodeError>;
+    /// Decode a `i128`.
+    fn decode_i128(&mut self) -> Result<i128, DecodeError>;
     /// Decode a borrowed `str`.
     fn decode_borrowed_str(&mut self) -> Result<&'a str, DecodeError>;
     #[cfg(feature = "std")]
     /// Decode an owned `String`.
     fn decode_owned_str(&mut self) -> Result<alloc::string::String, DecodeError>;
+    /// Decode borrowed bytes.
+    fn decode_borrowed_bytes(&mut self) -> Result<&'a [u8], DecodeError>;
+    #[cfg(feature = "std")]
+    /// Decode owned bytes.
+    fn decode_owned_bytes(&mut self) -> Result<alloc::vec::Vec<u8>, DecodeError>;
     /// Decode a struct.
     fn decode_struct(&mut self, visitor: &mut dyn StructDecodeVisitor<'a>, struct_type: &StructType) -> Result<(), DecodeError>;
     /// Decode a list.
@@ -33,6 +52,11 @@ pub trait Decoder<'a> {
     fn decode_enum(&mut self, enum_type: &EnumType) -> Result<i32, DecodeError> {
         self.decode_i32()
     }
+    /// Decode time.
+    fn decode_time(&mut self) -> Result<simple_time::Time, DecodeError>;
+    /// Decode duration.
+    fn decode_duration(&mut self) -> Result<simple_time::Duration, DecodeError>;
+
     /// Get the memory manager.
     fn mem_manager(&self) -> &'a MemoryManager;
 }
@@ -47,82 +71,3 @@ pub enum DecodeError {
     /// An unknown and unhandled field number was encountered.
     UnknownFieldNumber
 }
-
-// pub trait DecodeHelper<'a>: Default {
-//     type Value;
-//     type MemoryHandle;
-//
-//     fn finish(self) -> (Self::Value, Option(Self::MemoryHandle));
-// }
-//
-// impl<'a> DecodeHelper<'a> for i32 {
-//     type Value = i32;
-//     type MemoryHandle = ();
-//
-//     fn finish(self) -> (Self::Value, Option(Self::MemoryHandle)) {
-//         (self, None)
-//     }
-// }
-//
-// #[derive(Default)]
-// pub struct BorrowedStrHelper<'a> {
-//     pub(crate) s: &'a str,
-//     pub(crate) owner: Option<BumpString<'a, 'a>>,
-// }
-//
-// impl<'a> DecodeHelper<'a> for BorrowedStrHelper<'a> {
-//     type Value = &'a str;
-//     type MemoryHandle = Option<BumpString<'a, 'a>>;
-//
-//     fn finish(self) -> (Self::Value, Self::MemoryHandle) {
-//         (self.s, self.owner)
-//     }
-// }
-//
-//
-// pub struct SliceHelper<'a, T: ArgValue<'a>> {
-//     // TODO maybe there's a way that the underlying data could already be a slice so we can just borrow:
-//     // pub(crate) s: &'a [T],
-//     // TODO why not MutBumpVec?
-//     pub(crate) vec: Option<BumpVec<'a, 'a, T>>,
-//     pub(crate) helpers: BumpVec<'a, 'a, T::DecodeState::MemoryHandle>,
-// }
-//
-// impl<'a, T: ArgValue<'a>> Default for SliceHelper<'a, T> {
-//     fn default() -> Self {
-//         Self {
-//             vec: None,
-//         }
-//     }
-// }
-//
-// impl<'a, T: ArgValue<'a>> DecodeHelper<'a> for SliceHelper<'a, T> {
-//     type Value = &'a [T];
-//     type MemoryHandle = (BumpVec<'a, 'a, T>, BumpVec<'a, 'a, T::DecodeState::MemoryHandle>);
-//
-//     fn finish(self) -> (Self::Value, Self::MemoryHandle) {
-//         todo!()
-//     }
-// }
-//
-// impl<'a, T: ArgValue<'a>> ListVisitor<'a, T> for SliceHelper<'a, T> {
-//     fn init(&mut self, len: usize, scope: &'a mut BumpScope<'a>) -> Result<(), DecodeError> {
-//         let mut vec = BumpVec::new_in(scope);
-//         vec.reserve(len);
-//         Ok(())
-//     }
-//
-//     fn next<D: Decoder<'a>>(&mut self, decoder: &mut D) -> Result<(), DecodeError> {
-//         let vec = if let Some(vec) = &mut self.vec {
-//             vec
-//         } else {
-//             let mut vec= BumpVec::new_in(decoder.scope());
-//             self.vec = Some(vec);
-//             self.vec.as_mut().unwrap()
-//         };
-//         let helper: T::DecodeState = Default::default();
-//         helper.decode(decoder)?;
-//         let (value, memory_handle) = helper.finish();
-//         vec.push(value);
-//     }
-// }

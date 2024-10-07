@@ -8,16 +8,32 @@ use crate::r#enum::EnumType;
 
 /// The trait that encoders must implement.
 pub trait Encoder {
+    /// Encode a `bool`.
+    fn encode_bool(&mut self, x: bool) -> Result<(), EncodeError>;
+    /// Encode a `u8`.
+    fn encode_u8(&mut self, x: u8) -> Result<(), EncodeError>;
+    /// Encode a `u16`.
+    fn encode_u16(&mut self, x: u16) -> Result<(), EncodeError>;
     /// Encode a `u32`.
     fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError>;
-    /// Encode a `i32`.
-    fn encode_i32(&mut self, x: i32) -> Result<(), EncodeError>;
     /// Encode a `u64`.
     fn encode_u64(&mut self, x: u64) -> Result<(), EncodeError>;
     /// Encode a `u128`.
     fn encode_u128(&mut self, x: u128) -> Result<(), EncodeError>;
+    /// Encode an `i8`.
+    fn encode_i8(&mut self, x: i8) -> Result<(), EncodeError>;
+    /// Encode an `i16`.
+    fn encode_i16(&mut self, x: i16) -> Result<(), EncodeError>;
+    /// Encode an `i32`.
+    fn encode_i32(&mut self, x: i32) -> Result<(), EncodeError>;
+    /// Encode an `i64`.
+    fn encode_i64(&mut self, x: i64) -> Result<(), EncodeError>;
+    /// Encode an `i128`.
+    fn encode_i128(&mut self, x: i128) -> Result<(), EncodeError>;
     /// Encode a `str`.
     fn encode_str(&mut self, x: &str) -> Result<(), EncodeError>;
+    /// Encode bytes.
+    fn encode_bytes(&mut self, x: &[u8]) -> Result<(), EncodeError>;
     /// Encode a list.
     fn encode_list(&mut self, visitor: &dyn ListEncodeVisitor) -> Result<(), EncodeError>;
     /// Encode a struct.
@@ -28,6 +44,10 @@ pub trait Encoder {
     fn encode_enum(&mut self, x: i32, enum_type: &EnumType) -> Result<(), EncodeError> {
         self.encode_i32(x)
     }
+    /// Encode time.
+    fn encode_time(&mut self, x: simple_time::Time) -> Result<(), EncodeError>;
+    /// Encode duration.
+    fn encode_duration(&mut self, x: simple_time::Duration) -> Result<(), EncodeError>;
 }
 
 /// An encoding error.

@@ -1,5 +1,7 @@
 use alloc::string::String;
+use alloc::vec::Vec;
 use ixc_message_api::AccountID;
+use simple_time::{Duration, Time};
 use crate::codec::ValueDecodeVisitor;
 use crate::decoder::{DecodeError};
 use crate::list::ListDecodeVisitor;
@@ -91,6 +93,61 @@ impl<'a> crate::decoder::Decoder<'a> for Decoder<'a> {
     fn mem_manager(&self) -> &'a MemoryManager {
         &self.scope
     }
+
+    fn decode_bool(&mut self) -> Result<bool, DecodeError> {
+        let bz = self.read_bytes(1)?;
+        Ok(bz[0] != 0)
+    }
+
+    fn decode_u8(&mut self) -> Result<u8, DecodeError> {
+        let bz = self.read_bytes(1)?;
+        Ok(bz[0])
+    }
+
+    fn decode_u16(&mut self) -> Result<u16, DecodeError> {
+        let bz = self.read_bytes(2)?;
+        Ok(u16::from_le_bytes(bz.try_into().unwrap()))
+    }
+
+    fn decode_i8(&mut self) -> Result<i8, DecodeError> {
+        let bz = self.read_bytes(1)?;
+        Ok(bz[0] as i8)
+    }
+
+    fn decode_i64(&mut self) -> Result<i64, DecodeError> {
+        let bz = self.read_bytes(8)?;
+        Ok(i64::from_le_bytes(bz.try_into().unwrap()))
+    }
+
+    fn decode_i128(&mut self) -> Result<i128, DecodeError> {
+        let bz = self.read_bytes(16)?;
+        Ok(i128::from_le_bytes(bz.try_into().unwrap()))
+    }
+
+    fn decode_borrowed_bytes(&mut self) -> Result<&'a [u8], DecodeError> {
+        let bz = self.buf;
+        self.buf = &[];
+        Ok(bz)
+    }
+
+    fn decode_owned_bytes(&mut self) -> Result<Vec<u8>, DecodeError> {
+        let bz = self.buf;
+        self.buf = &[];
+        Ok(bz.to_vec())
+    }
+
+    fn decode_time(&mut self) -> Result<Time, DecodeError> {
+        todo!()
+    }
+
+    fn decode_duration(&mut self) -> Result<Duration, DecodeError> {
+        todo!()
+    }
+
+    fn decode_i16(&mut self) -> Result<i16, DecodeError> {
+        let bz = self.read_bytes(2)?;
+        Ok(i16::from_le_bytes(bz.try_into().unwrap()))
+    }
 }
 
 struct InnerDecoder<'b, 'a: 'b> {
@@ -141,6 +198,54 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for InnerDecoder<'b, 'a> {
 
     fn mem_manager(&self) -> &'a MemoryManager {
         &self.outer.scope
+    }
+
+    fn decode_bool(&mut self) -> Result<bool, DecodeError> {
+        self.outer.decode_bool()
+    }
+
+    fn decode_u8(&mut self) -> Result<u8, DecodeError> {
+        self.outer.decode_u8()
+    }
+
+    fn decode_u16(&mut self) -> Result<u16, DecodeError> {
+        self.outer.decode_u16()
+    }
+
+    fn decode_i8(&mut self) -> Result<i8, DecodeError> {
+        self.outer.decode_i8()
+    }
+
+    fn decode_i64(&mut self) -> Result<i64, DecodeError> {
+        self.outer.decode_i64()
+    }
+
+    fn decode_i128(&mut self) -> Result<i128, DecodeError> {
+        self.outer.decode_i128()
+    }
+
+    fn decode_borrowed_bytes(&mut self) -> Result<&'a [u8], DecodeError> {
+        let size = self.decode_u32()? as usize;
+        let bz = self.outer.read_bytes(size)?;
+        Ok(bz)
+    }
+
+    fn decode_owned_bytes(&mut self) -> Result<Vec<u8>, DecodeError> {
+        let size = self.decode_u32()? as usize;
+        let bz = self.outer.read_bytes(size)?;
+        Ok(bz.to_vec())
+    }
+
+    fn decode_time(&mut self) -> Result<Time, DecodeError> {
+        todo!()
+    }
+
+    fn decode_duration(&mut self) -> Result<Duration, DecodeError> {
+        todo!()
+    }
+
+    fn decode_i16(&mut self) -> Result<i16, DecodeError> {
+        self.outer.decode_i16()
     }
 }
 

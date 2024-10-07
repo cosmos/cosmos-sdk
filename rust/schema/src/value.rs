@@ -25,32 +25,53 @@ where
     type DecodeState: Default;
 
     /// Decode the value from the decoder.
-    fn visit_decode_state(_state: &mut Self::DecodeState, _decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError>
-    {
-        unimplemented!("decode")
-    }
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError>;
 
     /// Finish decoding the value, return it and return the memory handle if needed.
-    fn finish_decode_state(_state: Self::DecodeState, _mem: &'a MemoryManager) -> Result<Self, DecodeError>
+    fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError>
     where
-        Self: Sized,
-    {
-        unimplemented!("finish")
-    }
+        Self: Sized;
 
     /// Encode the value to the encoder.
-    fn encode(&self, _encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
-        unimplemented!("encode")
-    }
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError>;
 }
 
 impl<'a> SchemaValue<'a> for u8 {
     type Type = u8;
     type DecodeState = u8;
+
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+        *state = decoder.decode_u8()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError>
+    where
+        Self: Sized
+    {
+        Ok(state)
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        encoder.encode_u8(*self)
+    }
 }
 impl<'a> SchemaValue<'a> for u16 {
     type Type = u16;
     type DecodeState = u16;
+
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+        *state = decoder.decode_u16()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, _: &'a MemoryManager) -> Result<Self, DecodeError> {
+        Ok(state)
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        encoder.encode_u16(*self)
+    }
 }
 
 impl<'a> SchemaValue<'a> for u32 {
@@ -110,27 +131,111 @@ impl<'a> SchemaValue<'a> for u128 {
 impl<'a> SchemaValue<'a> for i8 {
     type Type = i8;
     type DecodeState = i8;
+
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+        *state = decoder.decode_i8()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, _: &'a MemoryManager) -> Result<Self, DecodeError> {
+        Ok(state)
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        encoder.encode_i8(*self)
+    }
 }
+
 impl<'a> SchemaValue<'a> for i16 {
     type Type = i16;
     type DecodeState = i16;
+
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+        *state = decoder.decode_i16()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, _: &'a MemoryManager) -> Result<Self, DecodeError> {
+        Ok(state)
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        encoder.encode_i16(*self)
+    }
 }
+
 impl<'a> SchemaValue<'a> for i32 {
     type Type = i32;
     type DecodeState = i32;
+
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+        *state = decoder.decode_i32()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, _: &'a MemoryManager) -> Result<Self, DecodeError> {
+        Ok(state)
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        encoder.encode_i32(*self)
+    }
 }
+
 impl<'a> SchemaValue<'a> for i64 {
     type Type = i64;
     type DecodeState = i64;
+
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+        *state = decoder.decode_i64()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, _: &'a MemoryManager) -> Result<Self, DecodeError> {
+        Ok(state)
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        encoder.encode_i64(*self)
+    }
 }
+
 impl<'a> SchemaValue<'a> for i128 {
     type Type = IntNT<16>;
     type DecodeState = i128;
+
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+        *state = decoder.decode_i128()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, _: &'a MemoryManager) -> Result<Self, DecodeError> {
+        Ok(state)
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        encoder.encode_i128(*self)
+    }
 }
+
 impl<'a> SchemaValue<'a> for bool {
     type Type = bool;
     type DecodeState = bool;
+
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+        *state = decoder.decode_bool()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, _: &'a MemoryManager) -> Result<Self, DecodeError> {
+        Ok(state)
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        encoder.encode_bool(*self)
+    }
 }
+
 impl<'a> SchemaValue<'a> for &'a str {
     type Type = StrT;
     type DecodeState = &'a str;
@@ -162,19 +267,67 @@ impl<'a> SchemaValue<'a> for alloc::string::String {
     fn finish_decode_state(state: Self::DecodeState, _: &'a MemoryManager) -> Result<Self, DecodeError> {
         Ok(state)
     }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        encoder.encode_str(self)
+    }
 }
 
 impl<'a> SchemaValue<'a> for simple_time::Time {
     type Type = TimeT;
     type DecodeState = simple_time::Time;
+
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+        *state = decoder.decode_time()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, _: &'a MemoryManager) -> Result<Self, DecodeError> {
+        Ok(state)
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        encoder.encode_time(*self)
+    }
 }
+
 impl<'a> SchemaValue<'a> for simple_time::Duration {
     type Type = DurationT;
     type DecodeState = simple_time::Duration;
+
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+        *state = decoder.decode_duration()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, _: &'a MemoryManager) -> Result<Self, DecodeError> {
+        Ok(state)
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        encoder.encode_duration(*self)
+    }
 }
+
+
 impl<'a, V: SchemaValue<'a>> SchemaValue<'a> for Option<V> {
     type Type = Option<V::Type>;
     type DecodeState = Option<V::DecodeState>;
+
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+        todo!()
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError>
+    where
+        Self: Sized
+    {
+        todo!()
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        todo!()
+    }
 }
 
 impl<'a> SchemaValue<'a> for &'a [u8] {
@@ -240,6 +393,11 @@ where
             Some(xs) => Ok(xs)
         }
     }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        // encoder.encode_list(self)
+        todo!()
+    }
 }
 
 #[cfg(feature = "std")]
@@ -249,6 +407,17 @@ where
 {
     type Type = ListT<V::Type>;
     type DecodeState = alloc::vec::Vec<V>;
+
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+        todo!()
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError>
+    where
+        Self: Sized
+    {
+        todo!()
+    }
 
     fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
         encoder.encode_list(self)

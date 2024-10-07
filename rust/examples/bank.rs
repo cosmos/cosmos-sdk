@@ -56,6 +56,29 @@ pub mod bank {
             Ok(())
         }
     }
+    // unsafe impl ::ixc_core::routes::Router for dyn BankAPI {
+    //     const SORTED_ROUTES: &'static [::ixc_core::routes::Route<Self>] = &::ixc_core::routes::sort_routes([(<BankAPIGetBalance as ::ixc_core::message::Message>::SELECTOR, |h: &dyn BankAPI, packet, cb, a| {
+    //         unsafe {
+    //             let cdc = <BankAPIGetBalance as ::ixc_core::message::Message>::Codec::default();
+    //             let in1 = packet.header().in_pointer1.get(packet);
+    //             let mut ctx = ::ixc_core::Context::new(packet.header().context_info, cb);
+    //             let BankAPIGetBalance {
+    //                 account, denom, } = ::ixc_schema::codec::decode_value::<BankAPIGetBalance>(&cdc, in1, ctx.memory_manager()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
+    //             let res = h.get_balance(core::mem::transmute(&ctx), account, denom).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
+    //             ::ixc_core::low_level::encode_optional_to_out1::<<BankAPIGetBalance as ::ixc_core::message::Message<'_>>::Response<'_>>(&cdc, &res, a, packet).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))
+    //         }
+    //     }), (<BankAPISend as ::ixc_core::message::Message>::SELECTOR, |h: &dyn BankAPI, packet, cb, a| {
+    //         unsafe {
+    //             let cdc = <BankAPISend as ::ixc_core::message::Message>::Codec::default();
+    //             let in1 = packet.header().in_pointer1.get(packet);
+    //             let mut ctx = ::ixc_core::Context::new(packet.header().context_info, cb);
+    //             let BankAPISend {
+    //                 to, amount, } = ::ixc_schema::codec::decode_value::<BankAPISend>(&cdc, in1, ctx.memory_manager()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
+    //             let res = h.send(core::mem::transmute(&ctx), to, amount, Default::default()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
+    //             ::ixc_core::low_level::encode_optional_to_out1::<<BankAPISend as ::ixc_core::message::Message<'_>>::Response<'_>>(&cdc, &res, a, packet).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))
+    //         }
+    //     }), ]);
+    // }
 }
 
 #[cfg(test)]

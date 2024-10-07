@@ -1,4 +1,5 @@
 use ixc_message_api::AccountID;
+use simple_time::{Duration, Time};
 use crate::encoder::{EncodeError};
 use crate::structs::{StructDecodeVisitor, StructEncodeVisitor, StructType};
 use crate::value::SchemaValue;
@@ -64,6 +65,46 @@ impl<'a, W: Writer> crate::encoder::Encoder for Encoder<'a, W> {
     fn encode_account_id(&mut self, x: AccountID) -> Result<(), EncodeError> {
         self.encode_u64(x.get())
     }
+
+    fn encode_bool(&mut self, x: bool) -> Result<(), EncodeError> {
+        self.encode_u8(if x { 1 } else { 0 })
+    }
+
+    fn encode_u8(&mut self, x: u8) -> Result<(), EncodeError> {
+        self.writer.write(&[x])
+    }
+
+    fn encode_u16(&mut self, x: u16) -> Result<(), EncodeError> {
+        self.writer.write(&x.to_le_bytes())
+    }
+
+    fn encode_i8(&mut self, x: i8) -> Result<(), EncodeError> {
+        self.writer.write(&[x as u8])
+    }
+
+    fn encode_i16(&mut self, x: i16) -> Result<(), EncodeError> {
+        self.writer.write(&x.to_le_bytes())
+    }
+
+    fn encode_i64(&mut self, x: i64) -> Result<(), EncodeError> {
+        self.writer.write(&x.to_le_bytes())
+    }
+
+    fn encode_i128(&mut self, x: i128) -> Result<(), EncodeError> {
+        self.writer.write(&x.to_le_bytes())
+    }
+
+    fn encode_bytes(&mut self, x: &[u8]) -> Result<(), EncodeError> {
+        self.writer.write(x)
+    }
+
+    fn encode_time(&mut self, x: Time) -> Result<(), EncodeError> {
+        todo!()
+    }
+
+    fn encode_duration(&mut self, x: Duration) -> Result<(), EncodeError> {
+        todo!()
+    }
 }
 
 pub(crate) struct EncodeSizer {
@@ -121,6 +162,54 @@ impl crate::encoder::Encoder for EncodeSizer {
     fn encode_enum(&mut self, x: i32, enum_type: &EnumType) -> Result<(), EncodeError> {
         self.encode_i32(x)
     }
+
+    fn encode_bool(&mut self, x: bool) -> Result<(), EncodeError> {
+        self.size += 1;
+        Ok(())
+    }
+
+    fn encode_u8(&mut self, x: u8) -> Result<(), EncodeError> {
+        self.size += 1;
+        Ok(())
+    }
+
+    fn encode_u16(&mut self, x: u16) -> Result<(), EncodeError> {
+        self.size += 2;
+        Ok(())
+    }
+
+    fn encode_i8(&mut self, x: i8) -> Result<(), EncodeError> {
+        self.size += 1;
+        Ok(())
+    }
+
+    fn encode_i16(&mut self, x: i16) -> Result<(), EncodeError> {
+        self.size += 2;
+        Ok(())
+    }
+
+    fn encode_i64(&mut self, x: i64) -> Result<(), EncodeError> {
+        self.size += 8;
+        Ok(())
+    }
+
+    fn encode_i128(&mut self, x: i128) -> Result<(), EncodeError> {
+        self.size += 16;
+        Ok(())
+    }
+
+    fn encode_bytes(&mut self, x: &[u8]) -> Result<(), EncodeError> {
+        self.size += x.len();
+        Ok(())
+    }
+
+    fn encode_time(&mut self, x: Time) -> Result<(), EncodeError> {
+        todo!()
+    }
+
+    fn encode_duration(&mut self, x: Duration) -> Result<(), EncodeError> {
+        todo!()
+    }
 }
 
 pub(crate) struct InnerEncoder<'b, 'a: 'b, W> {
@@ -163,6 +252,47 @@ impl<'b, 'a: 'b, W: Writer> crate::encoder::Encoder for InnerEncoder<'a, 'b, W> 
 
     fn encode_account_id(&mut self, x: AccountID) -> Result<(), EncodeError> {
         self.outer.encode_account_id(x)
+    }
+
+    fn encode_bool(&mut self, x: bool) -> Result<(), EncodeError> {
+        self.outer.encode_bool(x)
+    }
+
+    fn encode_u8(&mut self, x: u8) -> Result<(), EncodeError> {
+        self.outer.encode_u8(x)
+    }
+
+    fn encode_u16(&mut self, x: u16) -> Result<(), EncodeError> {
+        self.outer.encode_u16(x)
+    }
+
+    fn encode_i8(&mut self, x: i8) -> Result<(), EncodeError> {
+        self.outer.encode_i8(x)
+    }
+
+    fn encode_i16(&mut self, x: i16) -> Result<(), EncodeError> {
+        self.outer.encode_i16(x)
+    }
+
+    fn encode_i64(&mut self, x: i64) -> Result<(), EncodeError> {
+        self.outer.encode_i64(x)
+    }
+
+    fn encode_i128(&mut self, x: i128) -> Result<(), EncodeError> {
+        self.outer.encode_i128(x)
+    }
+
+    fn encode_bytes(&mut self, x: &[u8]) -> Result<(), EncodeError> {
+        self.outer.encode_bytes(x)?;
+        self.encode_u32(x.len() as u32)
+    }
+
+    fn encode_time(&mut self, x: Time) -> Result<(), EncodeError> {
+        todo!()
+    }
+
+    fn encode_duration(&mut self, x: Duration) -> Result<(), EncodeError> {
+        todo!()
     }
 }
 
@@ -208,6 +338,54 @@ impl<'a> crate::encoder::Encoder for InnerEncodeSizer<'a> {
     fn encode_account_id(&mut self, x: AccountID) -> Result<(), EncodeError> {
         self.outer.size += 8;
         Ok(())
+    }
+
+    fn encode_bool(&mut self, x: bool) -> Result<(), EncodeError> {
+        self.outer.size += 1;
+        Ok(())
+    }
+
+    fn encode_u8(&mut self, x: u8) -> Result<(), EncodeError> {
+        self.outer.size += 1;
+        Ok(())
+    }
+
+    fn encode_u16(&mut self, x: u16) -> Result<(), EncodeError> {
+        self.outer.size += 2;
+        Ok(())
+    }
+
+    fn encode_i8(&mut self, x: i8) -> Result<(), EncodeError> {
+        self.outer.size += 1;
+        Ok(())
+    }
+
+    fn encode_i16(&mut self, x: i16) -> Result<(), EncodeError> {
+        self.outer.size += 2;
+        Ok(())
+    }
+
+    fn encode_i64(&mut self, x: i64) -> Result<(), EncodeError> {
+        self.outer.size += 8;
+        Ok(())
+    }
+
+    fn encode_i128(&mut self, x: i128) -> Result<(), EncodeError> {
+        self.outer.size += 16;
+        Ok(())
+    }
+
+    fn encode_bytes(&mut self, x: &[u8]) -> Result<(), EncodeError> {
+        self.outer.size += 4;
+        self.outer.encode_bytes(x)
+    }
+
+    fn encode_time(&mut self, x: Time) -> Result<(), EncodeError> {
+        todo!()
+    }
+
+    fn encode_duration(&mut self, x: Duration) -> Result<(), EncodeError> {
+        todo!()
     }
 }
 

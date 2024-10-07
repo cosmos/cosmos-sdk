@@ -209,12 +209,12 @@ pub fn handler_api(attr: TokenStream2, mut item_trait: ItemTrait) -> manyhow::Re
 
         #(#items)*
 
-        unsafe impl ::ixc_core::routes::Router for dyn #trait_ident {
-            const SORTED_ROUTES: &'static [::ixc_core::routes::Route<Self>] =
-                &::ixc_core::routes::sort_routes([
-                    #(#routes)*
-                ]);
-        }
+        // unsafe impl ::ixc_core::routes::Router for dyn #trait_ident {
+        //     const SORTED_ROUTES: &'static [::ixc_core::routes::Route<Self>] =
+        //         &::ixc_core::routes::sort_routes([
+        //             #(#routes)*
+        //         ]);
+        // }
     })
 }
 
@@ -350,7 +350,7 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                             let in1 = packet.header().in_pointer1.get(packet);
                             let mut ctx = ::ixc_core::Context::new(packet.header().context_info, cb);
                             let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc_schema::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
-                            let res = h.#fn_name(&mut ctx, #(#fn_ctr_args)*).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
+                            let res = h.#fn_name(&ctx, #(#fn_ctr_args)*).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
                             ::ixc_core::low_level::encode_optional_to_out1::< < #msg_struct_name as ::ixc_core::message::Message<'_> >::Response<'_> >(&cdc, &res, a, packet).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))
                         }
                     }),

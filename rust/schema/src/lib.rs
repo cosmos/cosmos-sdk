@@ -26,6 +26,7 @@ pub mod mem;
 mod bump;
 pub mod schema;
 mod message;
+mod json;
 
 pub use value::SchemaValue;
 pub use state_object::Str;

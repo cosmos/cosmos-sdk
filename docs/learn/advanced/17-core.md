@@ -46,9 +46,13 @@ committed.  If an error occurs, the changes will be rolled back.
 
 ## Event Service
 
-The Event Service returns a handle to an [Event Manager](https://pkg.go.dev/cosmossdk.io/core@v1.0.0-alpha.4/event#Manager) which can be used to emit events.  For for information on how to emit events and their meaning in the SDK see the [Events](08-events.md) document.
+The Event Service returns a handle to an [EventManager](https://pkg.go.dev/cosmossdk.io/core@v1.0.0-alpha.4/event#Manager) 
+which can be used to emit events.  For for information on how to emit events and their meaning
+in the SDK see the [Events](08-events.md) document.
 
-Note that core's `EventManager` API is a subset of the EventManager API described above; the latter will be deprecated and removed in the future.  Roughly speaking legacy `EmitTypeEvent` maps to `Emit` and legacy `EmitEvent` maps to `EmitKV`.
+Note that core's `EventManager` API is a subset of the EventManager API described above; the
+latter will be deprecated and removed in the future.  Roughly speaking legacy `EmitTypeEvent`
+maps to `Emit` and legacy `EmitEvent` maps to `EmitKV`.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/core/v1.0.0-alpha.4/core/event/service.go#L18-L29
@@ -56,7 +60,9 @@ https://github.com/cosmos/cosmos-sdk/blob/core/v1.0.0-alpha.4/core/event/service
 
 ## Gas Service
 
-The gas service encapsulates both gas configuration and a gas meter.  Gas consumption is largely handled at the framework level for transaction processing and state access but modules can choose to use the gas service directly if needed.
+The gas service encapsulates both gas configuration and a gas meter.  Gas consumption is largely
+handled at the framework level for transaction processing and state access but modules can
+choose to use the gas service directly if needed.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/core/v1.0.0-alpha.4/core/gas/service.go#L26-L54
@@ -64,7 +70,8 @@ https://github.com/cosmos/cosmos-sdk/blob/core/v1.0.0-alpha.4/core/gas/service.g
 
 ## Header Service
 
-The header service provides access to the current block header.  This is useful for modules that need to access the block header fields like `Time` and `Height` during transaction processing.
+The header service provides access to the current block header.  This is useful for modules that
+need to access the block header fields like `Time` and `Height` during transaction processing.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/a3729c1ad6ba2fb46f879ec7ea67c3afc02e9859/core/header/service.go#L11-L23
@@ -76,7 +83,8 @@ Core's service oriented architecture (SOA) allows for chain developers to define
 implementation of the `HeaderService` interface.  This would involve creating a new struct that
 satisfies `HeaderService` but composes additional logic on top.  An example of where this would
 happen (when using depinject is shown below).  Note this example is taken from `runtime/v2` but
-could easily be adapted to `runtime/v1` (the default runtime 0.52).  This same pattern can be replicated for any core service.
+could easily be adapted to `runtime/v1` (the default runtime 0.52).  This same pattern can be
+replicated for any core service.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/489aaae40234f1015a7bbcfa9384a89dc8de8153/runtime/v2/module.go#L262-L288
@@ -98,7 +106,9 @@ https://github.com/cosmos/cosmos-sdk/blob/core/v1.0.0-alpha.4/core/router/servic
 
 Both are exposed to modules so that arbitrary messages and queries can be routed to the
 appropriate handler.  This powerful abstraction allows module developers to fully decouple
-modules from each other by using only the proto message for dispatching.   This is particularly useful for modules like `x/accounts` which require a dynamic dispatch mechanism in order to function.
+modules from each other by using only the proto message for dispatching.   This is particularly
+useful for modules like `x/accounts` which require a dynamic dispatch mechanism in order to
+function.
 
 ## TransactionService
 
@@ -108,7 +118,8 @@ https://github.com/cosmos/cosmos-sdk/blob/core/v1.0.0-alpha.4/core/transaction/s
 
 The transaction service provides access to the execution mode a state machine transaction is
 running in, which may be one of `Check`, `Recheck`, `Simulate` or `Finalize`.  The SDK primarily
-uses these flags in ante handlers to skip certain checks while in `Check` or `Simulate` modes, but module developers may find uses for them as well.
+uses these flags in ante handlers to skip certain checks while in `Check` or `Simulate` modes,
+but module developers may find uses for them as well.
 
 ## KVStore Service
 
@@ -116,4 +127,8 @@ uses these flags in ante handlers to skip certain checks while in `Check` or `Si
 https://github.com/cosmos/cosmos-sdk/blob/core/v1.0.0-alpha.4/core/store/service.go#L5-L11
 ```
 
-The KVStore service abstracts access to, and creation of, key-value stores.  Most use cases will be backed by a merkle-tree store, but developers can provide their own implementations if needed.  In the case of the `KVStoreService` implementation provided in `Environment`, module developers should understand that calling `OpenKVStore` will return a store already scoped to the module's prefix.  The wiring for this scoping is specified in `runtime`.
+The KVStore service abstracts access to, and creation of, key-value stores.  Most use cases will
+be backed by a merkle-tree store, but developers can provide their own implementations if
+needed.  In the case of the `KVStoreService` implementation provided in `Environment`, module
+developers should understand that calling `OpenKVStore` will return a store already scoped to
+the module's prefix.  The wiring for this scoping is specified in `runtime`.

@@ -3,9 +3,9 @@ package flag
 import (
 	"context"
 
-	"cosmossdk.io/math"
-
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/math"
 )
 
 type decType struct{}

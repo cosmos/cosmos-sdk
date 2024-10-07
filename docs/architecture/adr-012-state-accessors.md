@@ -15,7 +15,7 @@ value and finally unmarshal. Usually this is done by declaring `Keeper.GetXXX` a
 which are repetitive and hard to maintain.
 
 Second, this makes it harder to align with the object capability theorem: the right to access the
-state is defined as a `StoreKey`, which gives full access on the entire Merkle tree, so a module cannot
+state is defined as a `StoreKey`, which gives full access to the entire Merkle tree, so a module cannot
 send the access right to a specific key-value pair (or a set of key-value pairs) to another module safely.
 
 Finally, because the getter/setter functions are defined as methods of a module's `Keeper`, the reviewers

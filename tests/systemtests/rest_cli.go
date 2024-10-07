@@ -79,9 +79,9 @@ func GetRequestWithHeaders(t *testing.T, url string, headers map[string]string, 
 	defer func() {
 		_ = res.Body.Close()
 	}()
-	require.Equal(t, expCode, res.StatusCode, "status code should be %d, got: %d", expCode, res.StatusCode)
-
 	body, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
+	require.Equal(t, expCode, res.StatusCode, "status code should be %d, got: %d, %s", expCode, res.StatusCode, body)
+
 	return body
 }

@@ -57,6 +57,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Bug Fixes 
 
 * (sims) [#21952](https://github.com/cosmos/cosmos-sdk/pull/21952) Use liveness matrix for validator sign status in sims
+* (baseapp) [#21003](https://github.com/cosmos/cosmos-sdk/pull/21003) Align block header when query with latest height.
 
 ### API Breaking Changes
 

@@ -57,12 +57,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 ### Bug Fixes 
 
 * (sims) [#21952](https://github.com/cosmos/cosmos-sdk/pull/21952) Use liveness matrix for validator sign status in sims
-<<<<<<< HEAD
-=======
-* (sims) [#21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims test when running dry on validators
-* (cli) [#21919](https://github.com/cosmos/cosmos-sdk/pull/21919) Query address-by-acc-num by account_id instead of id.
 * (baseapp) [#21003](https://github.com/cosmos/cosmos-sdk/pull/21003) Align block header when query with latest height.
->>>>>>> 6cc6a6c5b (fix(baseapp): align block header when query with latest height (#21003))
 
 ### API Breaking Changes
 

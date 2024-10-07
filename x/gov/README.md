@@ -37,8 +37,6 @@ staking token of the chain.
     * [Parameters and base types](#parameters-and-base-types)
     * [Deposit](#deposit-1)
     * [ValidatorGovInfo](#validatorgovinfo)
-    * [Stores](#stores)
-    * [Proposal Processing Queue](#proposal-processing-queue)
     * [Legacy Proposal](#legacy-proposal)
 * [Messages](#messages)
     * [Proposal Submission](#proposal-submission-1)

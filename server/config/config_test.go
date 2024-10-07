@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -30,6 +31,15 @@ func TestGetAndSetMinimumGas(t *testing.T) {
 	cfg.SetMinGasPrices(input)
 	require.Equal(t, "1.000000000000000000bar,5.000000000000000000foo", cfg.MinGasPrices)
 	require.EqualValues(t, cfg.GetMinGasPrices(), input)
+}
+
+func TestGetMinimumGasWithSemicolon(t *testing.T) {
+	cfg := DefaultConfig()
+	cfg.MinGasPrices = "0.001bar;5.00foo;0.01zoo"
+
+	exp, err := sdk.ParseDecCoins(strings.ReplaceAll(cfg.MinGasPrices, ";", ","))
+	require.NoError(t, err)
+	require.EqualValues(t, cfg.GetMinGasPrices(), exp)
 }
 
 func TestIndexEventsMarshalling(t *testing.T) {

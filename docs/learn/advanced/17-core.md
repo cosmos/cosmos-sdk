@@ -4,11 +4,16 @@ sidebar_position: 1
 
 # Core
 
-Core is package which specifies the interfaces for core components of the Cosmos SDK.  Other packages in the SDK implement these interfaces to provide the core functionality.  This design provides modularity and flexibility to the SDK, allowing developers to swap out implementations of core components as needed.  As such it is often referred to as the Core API.
+Core is package which specifies the interfaces for core components of the Cosmos SDK.  Other
+packages in the SDK implement these interfaces to provide the core functionality.  This design
+provides modularity and flexibility to the SDK, allowing developers to swap out implementations
+of core components as needed.  As such it is often referred to as the Core API.
 
 ## Environment
 
-The `Environment` struct is a core component of the Cosmos SDK.  It provides access to the core services of the SDK, such as the KVStore, EventManager, and Logger.  The `Environment` struct is passed to modules and other components of the SDK to provide access to these services.
+The `Environment` struct is a core component of the Cosmos SDK.  It provides access to the core
+services of the SDK, such as the KVStore, EventManager, and Logger.  The `Environment` struct is
+passed to modules and other components of the SDK to provide access to these services.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/core/v1.0.0-alpha.4/core/appmodule/v2/environment.go#L16-L29
@@ -49,7 +54,7 @@ committed.  If an error occurs, the changes will be rolled back.
 ## Event Service
 
 The Event Service returns a handle to an [EventManager](https://pkg.go.dev/cosmossdk.io/core@v1.0.0-alpha.4/event#Manager) 
-which can be used to emit events.  For for information on how to emit events and their meaning
+which can be used to emit events.  For information on how to emit events and their meaning
 in the SDK see the [Events](08-events.md) document.
 
 Note that core's `EventManager` API is a subset of the EventManager API described above; the

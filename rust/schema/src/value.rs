@@ -335,15 +335,34 @@ impl<'a> SchemaValue<'a> for &'a [u8] {
     type DecodeState = &'a [u8];
 
     fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
-        todo!()
+        *state = decoder.decode_borrowed_bytes()?;
+        Ok(())
     }
 
     fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError> {
-        todo!()
+        Ok(state)
     }
 
     fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
-        todo!()
+        encoder.encode_bytes(self)
+    }
+}
+
+impl<'a> SchemaValue<'a> for alloc::vec::Vec<u8> {
+    type Type = BytesT;
+    type DecodeState = alloc::vec::Vec<u8>;
+
+    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
+        *state = decoder.decode_owned_bytes()?;
+        Ok(())
+    }
+
+    fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError> {
+        Ok(state)
+    }
+
+    fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
+        encoder.encode_bytes(self)
     }
 }
 
@@ -376,7 +395,7 @@ where
     }
 }
 
-impl<'a, V: SchemaValue<'a>> SchemaValue<'a> for allocator_api2::vec::Vec<V, &'a dyn allocator_api2::alloc::Allocator>
+impl<'a, V: ListElementValue<'a>> SchemaValue<'a> for allocator_api2::vec::Vec<V, &'a dyn allocator_api2::alloc::Allocator>
 where
     V::Type: ListElementType,
 {
@@ -401,7 +420,7 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<'a, V: SchemaValue<'a>> SchemaValue<'a> for alloc::vec::Vec<V>
+impl<'a, V: ListElementValue<'a>> SchemaValue<'a> for alloc::vec::Vec<V>
 where
     V::Type: ListElementType,
 {
@@ -409,14 +428,14 @@ where
     type DecodeState = alloc::vec::Vec<V>;
 
     fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
-        todo!()
+        decoder.decode_list(state)
     }
 
     fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError>
     where
         Self: Sized
     {
-        todo!()
+        Ok(state)
     }
 
     fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
@@ -486,3 +505,22 @@ impl<'a, V: SchemaValue<'a>> OptionalValue<'a> for V
         Ok(Some(cdc.encode_value(value, writer_factory)?))
     }
 }
+
+impl <'a> ListElementValue<'a> for u16 {}
+impl <'a> ListElementValue<'a> for u32 {}
+impl <'a> ListElementValue<'a> for u64 {}
+impl <'a> ListElementValue<'a> for u128 {}
+impl <'a> ListElementValue<'a> for i8 {}
+impl <'a> ListElementValue<'a> for i16 {}
+impl <'a> ListElementValue<'a> for i32 {}
+impl <'a> ListElementValue<'a> for i64 {}
+impl <'a> ListElementValue<'a> for i128 {}
+impl <'a> ListElementValue<'a> for bool {}
+impl <'a> ListElementValue<'a> for &'a str {}
+#[cfg(feature = "std")]
+impl <'a> ListElementValue<'a> for alloc::string::String {}
+impl <'a> ListElementValue<'a> for &'a [u8] {}
+#[cfg(feature = "std")]
+impl <'a> ListElementValue<'a> for alloc::vec::Vec<u8> {}
+impl <'a> ListElementValue<'a> for simple_time::Time {}
+impl <'a> ListElementValue<'a> for simple_time::Duration {}

@@ -2,40 +2,64 @@ use ixc_schema::encoder::EncodeError;
 use ixc_schema::structs::{StructEncodeVisitor, StructType};
 use integer_encoding::VarInt;
 use ixc_schema::buffer::{ReverseSliceWriter, Writer};
-use crate::wire::{default_wire_info, default_wire_type, WireInfo, WireType};
+use crate::wire::{default_wire_info, WireInfo, WireType};
 
 struct Encoder<'a> {
     writer: ReverseSliceWriter<'a>,
     cur_tag: u64,
     cur_wire_info: WireInfo,
-    unpacked: bool
+    unpacked: bool,
+    emit_defaults: bool,
 }
 
-impl <'a> ixc_schema::encoder::Encoder for Encoder<'a> {
+impl<'a> ixc_schema::encoder::Encoder for Encoder<'a> {
     fn encode_bool(&mut self, x: bool) -> Result<(), EncodeError> {
-        todo!()
+        if !x && !self.emit_defaults {
+            return Ok(());
+        }
+        self.writer.write(&[x as u8])
     }
 
     fn encode_u8(&mut self, x: u8) -> Result<(), EncodeError> {
-        todo!()
+        if x == 0 && !self.emit_defaults {
+            return Ok(());
+        }
+        let mut buf = [0u8; 2];
+        let n = <u8 as VarInt>::encode_var(x, &mut buf);
+        self.writer.write(&buf[..n])
     }
 
     fn encode_u16(&mut self, x: u16) -> Result<(), EncodeError> {
-        todo!()
+        if x == 0 && !self.emit_defaults {
+            return Ok(());
+        }
+        let mut buf = [0u8; 3];
+        let n = <u16 as VarInt>::encode_var(x, &mut buf);
+        self.writer.write(&buf[..n])
     }
 
     fn encode_u32(&mut self, x: u32) -> Result<(), EncodeError> {
-        todo!()
+        if x == 0 && !self.emit_defaults {
+            return Ok(());
+        }
+        let mut buf = [0u8; 5];
+        let n = <u32 as VarInt>::encode_var(x, &mut buf);
+        self.writer.write(&buf[..n])
     }
 
     fn encode_u64(&mut self, x: u64) -> Result<(), EncodeError> {
-        // fixed size buffer
-        // <u64 as VarInt>::encode_var(x, &mut self.writer);
-        todo!()
+        if x == 0 && !self.emit_defaults {
+            return Ok(());
+        }
+        let mut buf = [0u8; 10];
+        let n = <u64 as VarInt>::encode_var(x, &mut buf);
+        self.writer.write(&buf[..n])
     }
 
     fn encode_u128(&mut self, x: u128) -> Result<(), EncodeError> {
-        todo!()
+        if x == 0 && !self.emit_defaults {
+            return Ok(());
+        }
     }
 
     fn encode_i8(&mut self, x: i8) -> Result<(), EncodeError> {
@@ -87,7 +111,7 @@ impl <'a> ixc_schema::encoder::Encoder for Encoder<'a> {
             let end_pos = self.writer.pos();
             visitor.visit_field(field, self)?;
             // TODO deal with optional fields, approaches:
-            // - pass an encoder instance which doesn't emit defaults when we don't have an Option type
+            // - pass an encoder instance or set some flag which doesn't emit defaults when we don't have an Option type
             //   and does emit them when we do
             // - change the visit_field signature to return a bool indicating whether the field had a default value
             //   and then we can decide whether to write the tag or not

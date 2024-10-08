@@ -391,6 +391,7 @@ impl<'a> crate::encoder::Encoder for InnerEncodeSizer<'a> {
 
 #[cfg(test)]
 mod tests {
+    use core::ops::{ShlAssign, ShrAssign};
     use allocator_api2::alloc::Allocator;
     use crate::binary::encoder::encode_value;
     use crate::encoder::Encoder;
@@ -411,3 +412,4 @@ mod tests {
         assert_eq!(res, &[10, 0, 0, 0]);
     }
 }
+

@@ -5,10 +5,15 @@ use crate::kind::Kind;
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct Field<'a> {
+    /// The name of the field.
     pub name: &'a str,
+    /// The kind of the field.
     pub kind: Kind,
+    /// Whether the field is nullable.
     pub nullable: bool,
+    /// The element kind for list fields.
     pub element_kind: Option<Kind>,
+    /// The referenced type for fields which reference another type.
     pub referenced_type: &'a str,
 }
 

@@ -38,6 +38,7 @@ pub const fn to_field<T: Type>() -> Field<'static> {
         name: "",
         kind: T::KIND,
         nullable: T::NULLABLE,
+        element_kind: None,
         referenced_type: "", // TODO
     }
 }

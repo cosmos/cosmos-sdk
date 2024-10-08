@@ -202,6 +202,7 @@ require (
 // replace (
 // 	<temporary replace>
 // )
+replace cosmossdk.io/x/tx => ../x/tx
 
 // Below are the long-lived replace for tests.
 replace (

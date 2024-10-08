@@ -339,6 +339,11 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		// This test cases demonstrates the expected contract and proper way to set a cosmos.Dec field represented
 		// as bytes in protobuf message, namely:
 		// dec10bz, _ := types.NewDec(10).Marshal()
+		"gov/v1_params": {
+			gogo: &gov_v1_types.Params{
+				Quorum: math.LegacyMustNewDecFromStr("0.33").String(),
+			},
+		},
 		"slashing/params/dec": {
 			gogo: &slashingtypes.Params{
 				DowntimeJailDuration: 1e9 + 7,

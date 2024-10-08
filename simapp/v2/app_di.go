@@ -1,6 +1,10 @@
 package simapp
 
 import (
+	"context"
+	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/runtime/v2/services"
+	"cosmossdk.io/store/v2"
 	_ "embed"
 
 	"github.com/spf13/viper"
@@ -30,6 +34,12 @@ import (
 // DefaultNodeHome default home directories for the application daemon
 var DefaultNodeHome string
 
+// readonlyStateViewer is a function that allows viewing the state of the application at a given version.
+// version is the version of the state to view.
+// fn is the function that will be called with the context that has the state at the given version,
+// presumably for side effects (like genesis export).
+type readonlyStateViewer func(version uint64, fn func(ctx context.Context) error) error
+
 // SimApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
@@ -39,6 +49,8 @@ type SimApp[T transaction.Tx] struct {
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
+	store             store.RootStore
+	readonlyViewer    readonlyStateViewer
 
 	// required keepers during wiring
 	// others keepers are all in the app
@@ -173,9 +185,27 @@ func NewSimApp[T transaction.Tx](
 	if err != nil {
 		panic(err)
 	}
-	_, err = storeBuilder.Build(logger, storeConfig)
+
+	app.store, err = storeBuilder.Build(logger, storeConfig)
 	if err != nil {
 		panic(err)
+	}
+
+	// create readonly view for genesis export
+	app.readonlyViewer = func(version uint64, f func(ctx context.Context) error) error {
+		var (
+			readerMap corestore.ReaderMap
+			roErr     error
+		)
+		if version == 0 {
+			_, readerMap, roErr = st.StateLatest()
+		} else {
+			readerMap, roErr = st.StateAt(version)
+		}
+		if roErr != nil {
+			return roErr
+		}
+		return services.NewGenesisContext(readerMap).Read(context.Background(), f)
 	}
 
 	app.App, err = appBuilder.Build()
@@ -214,9 +244,4 @@ func (app *SimApp[T]) InterfaceRegistry() server.InterfaceRegistry {
 // TxConfig returns SimApp's TxConfig.
 func (app *SimApp[T]) TxConfig() client.TxConfig {
 	return app.txConfig
-}
-
-// GetStore gets the app store.
-func (app *SimApp[T]) GetStore() any {
-	return app.App.GetStore()
 }

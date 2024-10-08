@@ -54,7 +54,7 @@ flowchart LR
     A -->|"For each T in B: apply(T)"| B
 ```
 
-In a blockchain context, the state machine is deterministic. This means that if a node is started at a given state and replays the same sequence of transactions, it will always end up with the same final state.
+In a blockchain context, the state machine is [deterministic](https://en.wikipedia.org/wiki/Deterministic_system). This means that if a node is started at a given state and replays the same sequence of transactions, it will always end up with the same final state.
 
 The Cosmos SDK gives developers maximum flexibility to define the state of their application, transaction types and state transition functions. The process of building state machines with the Cosmos SDK will be described more in-depth in the following sections. But first, let us see how the state machine is replicated using various consensus engines, such as CometBFT.
 
@@ -117,7 +117,7 @@ Note that **CometBFT only handles transaction bytes**. It has no knowledge of wh
 
 Here are the most important messages of the ABCI:
 
-* `CheckTx`: When a transaction is received by CometBFT, it is passed to the application to check if a few basic requirements are met. `CheckTx` is used to protect the mempool of full-nodes against spam transactions. . A special handler called the [`AnteHandler`](../beginner/04-gas-fees.md#antehandler) is used to execute a series of validation steps such as checking for sufficient fees and validating the signatures. If the checks are valid, the transaction is added to the [mempool](https://docs.cometbft.com/v1.0/explanation/core/mempool) and relayed to peer nodes. Note that transactions are not processed (i.e. no modification of the state occurs) with `CheckTx` since they have not been included in a block yet.
+* `CheckTx`: When a transaction is received by CometBFT, it is passed to the application to check if a few basic requirements are met. `CheckTx` is used to protect the mempool of full-nodes against spam transactions. A special handler called the [`AnteHandler`](../beginner/04-gas-fees.md#antehandler) is used to execute a series of validation steps such as checking for sufficient fees and validating the signatures. If the checks are valid, the transaction is added to the [mempool](https://docs.cometbft.com/v1.0/explanation/core/mempool) and relayed to peer nodes. Note that transactions are not processed (i.e. no modification of the state occurs) with `CheckTx` since they have not been included in a block yet.
 * `DeliverTx`: When a [valid block](https://docs.cometbft.com/v1.0/spec/core/data_structures#block) is received by CometBFT, each transaction in the block is passed to the application via `DeliverTx` in order to be processed. It is during this stage that the state transitions occur. The `AnteHandler` executes again, along with the actual [`Msg` service](../../build/building-modules/03-msg-services.md) RPC for each message in the transaction.
 * `BeginBlock`/`EndBlock`: These messages are executed at the beginning and the end of each block, whether the block contains transactions or not. It is useful to trigger automatic execution of logic. Proceed with caution though, as computationally expensive loops could slow down your blockchain, or even freeze it if the loop is infinite.
 
@@ -136,4 +136,4 @@ If we use the example of Rollkit, a user initiates a transaction, which is then 
 
 The Interoperability Layer enables communication and interaction between different blockchains. This layer facilitates cross-chain transactions and data sharing, allowing various blockchain networks to interoperate seamlessly. Interoperability is key for building a connected ecosystem of blockchains, enhancing their functionality and reach.
 
-In this case we have separated the layers even further to really illustrate the components that make-up the blockchain architecture and it is important to note that the Cosmos SDK is designed to be interoperable with other blockchains. This is achieved through the use of the Inter-Blockchain Communication (IBC) protocol, which allows different blockchains to communicate and transfer assets between each other.
+In this case we have separated the layers even further to really illustrate the components that make-up the blockchain architecture and it is important to note that the Cosmos SDK is designed to be interoperable with other blockchains. This is achieved through the use of the [Inter-Blockchain Communication (IBC) protocol](https://www.ibcprotocol.dev/), which allows different blockchains to communicate and transfer assets between each other.

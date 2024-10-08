@@ -196,7 +196,7 @@ func unmarshalIndexingConfig(cfg interface{}) (*IndexingConfig, error) {
 	return &res, err
 }
 
-func unmarshalIndexerCustomConfig(cfg interface{}, expectedType interface{}) (interface{}, error) {
+func unmarshalIndexerCustomConfig(cfg, expectedType interface{}) (interface{}, error) {
 	typ := reflect.TypeOf(expectedType)
 	if reflect.TypeOf(cfg).AssignableTo(typ) {
 		return cfg, nil

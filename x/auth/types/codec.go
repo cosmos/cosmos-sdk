@@ -59,5 +59,6 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	registrar.RegisterImplementations((*coretransaction.Msg)(nil),
 		&MsgUpdateParams{},
 		&MsgNonAtomicExec{},
+		&MsgMigrateAccount{},
 	)
 }

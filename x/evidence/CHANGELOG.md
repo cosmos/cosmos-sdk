@@ -32,6 +32,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19482](https://github.com/cosmos/cosmos-sdk/pull/19482) `appmodule.Environment` is passed to `NewKeeper` instead of individual services
 * [#19627](https://github.com/cosmos/cosmos-sdk/pull/19627) `NewAppModule` now takes in a `codec.Codec` as its first argument
 * [#21480](https://github.com/cosmos/cosmos-sdk/pull/21480) ConsensusKeeper is required to be passed to the keeper. 
+* [#21859](https://github.com/cosmos/cosmos-sdk/pull/21859) `NewKeeper` now takes in a consensus codec to avoid reliance on staking for decoding addresses.
 
 
 ## [v0.1.1](https://github.com/cosmos/cosmos-sdk/releases/tag/x/evidence/v0.1.1) - 2024-04-22

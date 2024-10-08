@@ -39,34 +39,21 @@ var (
 // AppModule implements an application module for the mint module.
 type AppModule struct {
 	cdc        codec.Codec
-	keeper     keeper.Keeper
+	keeper     *keeper.Keeper
 	authKeeper types.AccountKeeper
-
-	// mintFn is used to mint new coins during BeginBlock. This function is in charge of
-	// minting new coins based on arbitrary logic, previously done through InflationCalculationFn.
-	// If mintFn is nil, the default minting logic is used.
-	mintFn types.MintFn
 }
 
 // NewAppModule creates a new AppModule object.
 // If the mintFn argument is nil, then the default minting function will be used.
 func NewAppModule(
 	cdc codec.Codec,
-	keeper keeper.Keeper,
+	keeper *keeper.Keeper,
 	ak types.AccountKeeper,
-	mintFn types.MintFn,
 ) AppModule {
-	// If mintFn is nil, use the default minting function.
-	// This check also happens in ProvideModule when used with depinject.
-	if mintFn == nil {
-		mintFn = keeper.DefaultMintFn(types.DefaultInflationCalculationFn)
-	}
-
 	return AppModule{
 		cdc:        cdc,
 		keeper:     keeper,
 		authKeeper: ak,
-		mintFn:     mintFn,
 	}
 }
 
@@ -159,7 +146,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return am.keeper.BeginBlocker(ctx, am.mintFn)
+	return am.keeper.BeginBlocker(ctx)
 }
 
 // AppModuleSimulation functions

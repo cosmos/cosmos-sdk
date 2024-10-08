@@ -51,6 +51,20 @@ func NewSingleHostTestnetCmdInitializer(
 	}
 }
 
+// InitializerWithBinary creates new SingleHostTestnetCmdInitializer from sut with given binary
+func InitializerWithBinary(binary string, sut *SystemUnderTest) TestnetInitializer {
+	return NewSingleHostTestnetCmdInitializer(
+		binary,
+		WorkDir,
+		sut.chainID,
+		sut.outputDir,
+		sut.initialNodesCount,
+		sut.minGasPrice,
+		sut.CommitTimeout(),
+		sut.Log,
+	)
+}
+
 func (s SingleHostTestnetCmdInitializer) Initialize() {
 	args := []string{
 		"testnet",
@@ -162,7 +176,6 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 		EditToml(filepath.Join(nodeDir, "app.toml"), func(doc *tomledit.Document) {
 			UpdatePort(doc, apiPortStart+i, "api", "address")
 			UpdatePort(doc, grpcPortStart+i, "grpc", "address")
-			SetBool(doc, true, "grpc-web", "enable")
 		})
 	}
 }

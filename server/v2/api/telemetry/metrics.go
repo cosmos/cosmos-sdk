@@ -57,12 +57,8 @@ type GatherResponse struct {
 	ContentType string
 }
 
-// New creates a new instance of Metrics
-func New(cfg Config) (_ *Metrics, rerr error) {
-	if !cfg.Enabled {
-		return nil, nil
-	}
-
+// NewMetrics creates a new instance of Metrics
+func NewMetrics(cfg *Config) (*Metrics, error) {
 	if numGlobalLabels := len(cfg.GlobalLabels); numGlobalLabels > 0 {
 		parsedGlobalLabels := make([]metrics.Label, numGlobalLabels)
 		for i, gl := range cfg.GlobalLabels {
@@ -89,12 +85,11 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		sink = memSink
 		inMemSig := metrics.DefaultInmemSignal(memSink)
 		defer func() {
-			if rerr != nil {
+			if err != nil {
 				inMemSig.Stop()
 			}
 		}()
 	}
-
 	if err != nil {
 		return nil, err
 	}

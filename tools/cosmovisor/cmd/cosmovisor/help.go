@@ -18,7 +18,7 @@ the proposal. Cosmovisor interprets that data to perform an update: switch a cur
 and restart the App.
 
 Configuration of Cosmovisor is done through environment variables, which are
-documented in: https://docs.cosmos.network/main/tooling/cosmovisor`,
+documented in: https://docs.cosmos.network/main/build/tooling/cosmovisor`,
 		cosmovisor.EnvName, cosmovisor.EnvHome,
 	)
 }

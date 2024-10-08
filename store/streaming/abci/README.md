@@ -27,7 +27,7 @@ To generate the stubs the local client implementation can call, run the followin
 make proto-gen
 ```
 
-For other languages you'll need to [download](https://github.com/cosmos/cosmos-sdk/blob/main/third_party/proto/README.md)
+For other languages you'll need to [download](https://github.com/cosmos/cosmos-sdk/blob/main/proto/README.md#generate)
 the CosmosSDK protos into your project and compile. For language specific compilation instructions visit
 [https://github.com/grpc](https://github.com/grpc) and look in the `examples` folder of your
 language of choice `https://github.com/grpc/grpc-{language}/tree/master/examples` and [https://grpc.io](https://grpc.io)

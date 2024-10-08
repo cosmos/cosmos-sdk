@@ -575,8 +575,6 @@ func TestBinaryFlag(t *testing.T) {
 }
 
 func TestAddressValidation(t *testing.T) {
-	t.Skip() // TODO(@julienrbrt) re-able with better keyring instiantiation
-
 	fixture := initFixture(t)
 
 	_, err := runCmd(fixture, buildModuleQueryCommand,

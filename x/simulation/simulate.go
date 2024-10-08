@@ -130,6 +130,10 @@ func SimulateFromSeedX(
 		return blockedAddrs[acc.AddressBech32]
 	})
 	nextValidators := validators
+	if len(nextValidators) == 0 {
+		tb.Skip("skipping: empty validator set in genesis")
+		return params, accs, nil
+	}
 
 	var (
 		pastTimes          []time.Time
@@ -264,6 +268,10 @@ func SimulateFromSeedX(
 		// on the next block
 		validators = nextValidators
 		nextValidators = updateValidators(tb, r, params, validators, res.ValidatorUpdates, eventStats.Tally)
+		if len(nextValidators) == 0 {
+			tb.Skip("skipping: empty validator set")
+			return exportedParams, accs, err
+		}
 
 		// update the exported params
 		if config.ExportParamsPath != "" && int64(config.ExportParamsHeight) == blockHeight {

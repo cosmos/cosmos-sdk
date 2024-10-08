@@ -52,6 +52,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Improvements
 
+* (crypto/ledger) [#22116](https://github.com/cosmos/cosmos-sdk/pull/22116) Improve error message when deriving paths using index >100
 * (sims) [#21613](https://github.com/cosmos/cosmos-sdk/pull/21613) Add sims2 framework and factory methods for simpler message factories in modules
 * (modules) [#21963](https://github.com/cosmos/cosmos-sdk/pull/21963) Duplicatable metrics are no more collected in modules. They were unecessary overhead.
 
@@ -60,6 +61,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (sims) [#21952](https://github.com/cosmos/cosmos-sdk/pull/21952) Use liveness matrix for validator sign status in sims
 * (sims) [#21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims test when running dry on validators
 * (cli) [#21919](https://github.com/cosmos/cosmos-sdk/pull/21919) Query address-by-acc-num by account_id instead of id.
+* (baseapp) [#21003](https://github.com/cosmos/cosmos-sdk/pull/21003) Align block header when query with latest height.
 
 ### API Breaking Changes
 

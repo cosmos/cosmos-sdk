@@ -10,14 +10,12 @@ This document specifies the bank module of the Cosmos SDK.
 
 The bank module is responsible for handling multi-asset coin transfers between
 accounts and tracking special-case pseudo-transfers which must work differently
-with particular kinds of accounts (notably delegating/undelegating for vesting
+with particular kinds of accounts (notably delegating/undelegating for legacy vesting
 accounts). It exposes several interfaces with varying capabilities for secure
 interaction with other modules which must alter user balances.
 
 In addition, the bank module tracks and provides query support for the total
 supply of all assets used in the application.
-
-This module is used in the Cosmos Hub.
 
 ## Contents
 
@@ -51,9 +49,9 @@ The `supply` functionality:
 
 ### Total Supply
 
-The total `Supply` of the network is equal to the sum of all coins from the
-account. The total supply is updated every time a `Coin` is minted (eg: as part
-of the inflation mechanism) or burned (eg: due to slashing or if a governance
+The total `Supply` of the network is equal to the sum of all coins from all
+accounts within a chain. The total supply is updated every time a `Coin` is minted 
+(eg: as part of the inflation mechanism) or burned (eg: due to slashing or if a governance
 proposal is vetoed).
 
 ## Module Accounts
@@ -83,13 +81,12 @@ type ModuleAccount interface {
 > **WARNING!**
 > Any module or message handler that allows either direct or indirect sending of funds must explicitly guarantee those funds cannot be sent to module accounts (unless allowed).
 
-The supply `Keeper` also introduces new wrapper functions for the auth `Keeper`
-and the bank `Keeper` that are related to `ModuleAccount`s in order to be able
-to:
+The supply `Keeper` interface also introduces new wrapper functions for the auth `Keeper`
+and the bank `SendKeeper` in order to be able to:
 
-* Get and set `ModuleAccount`s by providing the `Name`.
-* Send coins from and to other `ModuleAccount`s or standard `Account`s
-  (`BaseAccount` or `VestingAccount`) by passing only the `Name`.
+* Get `ModuleAccount`s by providing its `Name`.
+* Send coins from and to other `ModuleAccount`s by passing only the `Name` or standard `Account`s
+  (`BaseAccount` or legacy `VestingAccount`).
 * `Mint` or `Burn` coins for a `ModuleAccount` (restricted to its permissions).
 
 ### Permissions
@@ -122,6 +119,7 @@ aforementioned state:
 * Denom Metadata Index: `0x1 | byte(denom) -> ProtocolBuffer(Metadata)`
 * Balances Index: `0x2 | byte(address length) | []byte(address) | []byte(balance.Denom) -> ProtocolBuffer(balance)`
 * Reverse Denomination to Address Index: `0x03 | byte(denom) | 0x00 | []byte(address) -> 0`
+* Send enabled Denoms: `0x4 | string -> bool`
 
 ## Params
 
@@ -131,7 +129,7 @@ it can be updated with governance or the address with authority.
 * Params: `0x05 | ProtocolBuffer(Params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/bank.proto#L12-L23
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/bank/proto/cosmos/bank/v1beta1/bank.proto#L12-L23
 ```
 
 ## Keepers
@@ -142,11 +140,11 @@ should use the least-permissive interface that provides the functionality they
 require.
 
 Best practices dictate careful review of `bank` module code to ensure that
-permissions are limited in the way that you expect.
+permissions are limited in the way that you expected.
 
 ### Denied Addresses
 
-The `x/bank` module accepts a map of addresses that are considered blocklisted
+The `x/bank` module accepts a map of addresses (`blockedAddrs`) that are considered blocklisted
 from directly and explicitly receiving funds through means such as `MsgSend` and
 `MsgMultiSend` and direct API calls like `SendCoinsFromModuleToAccount`.
 
@@ -160,7 +158,7 @@ By providing the `x/bank` module with a blocklisted set of addresses, an error o
 
 #### Input
 
-An input of a multiparty transfer
+An input of a multi-send transaction
 
 ```protobuf
 // Input models transaction input.
@@ -172,7 +170,7 @@ message Input {
 
 #### Output
 
-An output of a multiparty transfer.
+An output of a multi-send transaction.
 
 ```protobuf
 // Output models transaction outputs.
@@ -195,8 +193,8 @@ type Keeper interface {
     SendKeeper
     WithMintCoinsRestriction(MintingRestrictionFn) BaseKeeper
 
-    InitGenesis(context.Context, *types.GenesisState)
-    ExportGenesis(context.Context) *types.GenesisState
+    InitGenesis(context.Context, *types.GenesisState) error
+    ExportGenesis(context.Context) (*types.GenesisState, error)
 
     GetSupply(ctx context.Context, denom string) sdk.Coin
     HasSupply(ctx context.Context, denom string) bool
@@ -213,13 +211,10 @@ type Keeper interface {
     DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
     UndelegateCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
     MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
-    BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+    BurnCoins(ctx context.Context, address []byte, amt sdk.Coins) error
 
     DelegateCoins(ctx context.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
     UndelegateCoins(ctx context.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
-
-    // GetAuthority gets the address capable of executing governance proposal messages. Usually the gov module account.
-    GetAuthority() string
 
     types.QueryServer
 }
@@ -274,17 +269,18 @@ Both functions compose the provided restriction with any previously provided res
 `AppendSendRestriction` adds the provided restriction to be run after any previously provided send restrictions.
 `PrependSendRestriction` adds the restriction to be run before any previously provided send restrictions.
 The composition will short-circuit when an error is encountered. I.e. if the first one returns an error, the second is not run.
+Send restrictions can also be cleared by using `ClearSendRestriction`.
 
-During `SendCoins`, the send restriction is applied before coins are removed from the from address and adding them to the to address.
-During `InputOutputCoins`, the send restriction is applied after the input coins are removed and once for each output before the funds are added.
-
-A send restriction function should make use of a custom value in the context to allow bypassing that specific restriction.
+During `SendCoins`, the send restriction is applied before coins are removed from the `from_address` and adding them to the `to_address`.
+During `InputOutputCoins`, the send restriction is applied before the input coins are removed, once for each output before the funds are added.
 
 Send Restrictions are not placed on `ModuleToAccount` or `ModuleToModule` transfers. This is done due to modules needing to move funds to user accounts and other module accounts. This is a design decision to allow for more flexibility in the state machine. The state machine should be able to move funds between module accounts and user accounts without restrictions.
 
 Secondly this limitation would limit the usage of the state machine even for itself. users would not be able to receive rewards, not be able to move funds between module accounts. In the case that a user sends funds from a user account to the community pool and then a governance proposal is used to get those tokens into the users account this would fall under the discretion of the app chain developer to what they would like to do here. We can not make strong assumptions here.
-Thirdly, this issue could lead into a chain halt if a token is disabled and the token is moved in the begin/endblock. This is the last reason we see the current change and more damaging then beneficial for users.
 
+Thirdly, this issue could lead into a chain halt if a token is disabled and the token is moved in the begin/endblock. This is the last reason we see the current change as they are more damaging then beneficial for users.
+
+A send restriction function should make use of a custom value in the context to allow bypassing that specific restriction.
 For example, in your module's keeper package, you'd define the send restriction function:
 
 ```golang
@@ -337,7 +333,8 @@ func HasBypass(ctx context.Context) bool {
 }
 ```
 
-Now, anywhere where you want to use `SendCoins` or `InputOutputCoins`, but you don't want your send restriction applied:
+Now, anywhere where you want to use `SendCoins` or `InputOutputCoins` but you don't want your send restriction applied 
+you just need to apply custom value in the context:
 
 ```golang
 func (k Keeper) DoThing(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
@@ -375,35 +372,35 @@ type ViewKeeper interface {
 Send coins from one address to another.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L38-L53
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/bank/proto/cosmos/bank/v1beta1/tx.proto#L44-L59
 ```
 
 The message will fail under the following conditions:
 
 * The coins do not have sending enabled
-* The `to` address is restricted
+* The `to_address` is restricted
 
 ### MsgMultiSend
 
-Send coins from one sender and to a series of different address. If any of the receiving addresses do not correspond to an existing account, a new account is created.
+Send coins from one sender and to a series of different address.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L58-L69
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/bank/proto/cosmos/bank/v1beta1/tx.proto#L65-L75
 ```
 
 The message will fail under the following conditions:
 
 * Any of the coins do not have sending enabled
-* Any of the `to` addresses are restricted
+* Any of the `to_address` are restricted
 * Any of the coins are locked
-* The inputs and outputs do not correctly correspond to one another
+* The inputs and outputs do not correctly correspond to one another (eg: total_in not equal to total_out)
 
 ### MsgUpdateParams
 
 The `bank` module params can be updated through `MsgUpdateParams`, which can be done using governance proposal. The signer will always be the `gov` module account address. 
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L74-L88
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/bank/proto/cosmos/bank/v1beta1/tx.proto#L81-L93
 ```
 
 The message handling can fail if:
@@ -412,30 +409,30 @@ The message handling can fail if:
 
 ### MsgSetSendEnabled
 
-Used with the x/gov module to set create/edit SendEnabled entries.
+Used with the x/gov module to create or edit SendEnabled entries.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L96-L117
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/bank/proto/cosmos/bank/v1beta1/tx.proto#L106-L122
 ```
 
 The message will fail under the following conditions:
 
-* The authority is not a decodable address.
-* The authority is not x/gov module's address.
-* There are multiple SendEnabled entries with the same Denom.
-* One or more SendEnabled entries has an invalid Denom.
+* The authority is not a decodable address
+* The authority is not x/gov module's address
+* There are multiple SendEnabled entries with the same Denom
+* One or more SendEnabled entries has an invalid Denom
 
 ### MsgBurn 
 
 Used to burn coins from an account. The coins are removed from the account and the total supply is reduced.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/1af000b3ef6296f9928caf494fe5bb812990f22d/proto/cosmos/bank/v1beta1/tx.proto#L131-L148
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/bank/proto/cosmos/bank/v1beta1/tx.proto#L130-L139
 ```
 
 This message will fail under the following conditions:
 
-* The signer is not present
+* The `from_address` is not a decodable address
 * The coins are not spendable
 * The coins are not positive
 * The coins are not valid
@@ -451,20 +448,20 @@ The bank module emits the following events:
 | Type     | Attribute Key | Attribute Value    |
 | -------- | ------------- | ------------------ |
 | transfer | recipient     | {recipientAddress} |
+| transfer | sender        | {senderAddress}    |
 | transfer | amount        | {amount}           |
 | message  | module        | bank               |
 | message  | action        | send               |
-| message  | sender        | {senderAddress}    |
 
 #### MsgMultiSend
 
 | Type     | Attribute Key | Attribute Value    |
 | -------- | ------------- | ------------------ |
 | transfer | recipient     | {recipientAddress} |
+| transfer | sender        | {senderAddress}    |
 | transfer | amount        | {amount}           |
 | message  | module        | bank               |
 | message  | action        | multisend          |
-| message  | sender        | {senderAddress}    |
 
 ### Keeper Events
 
@@ -592,9 +589,7 @@ The bank module contains the following parameters
 
 ### SendEnabled
 
-The SendEnabled parameter is now deprecated and not to be use. It is replaced
-with state store records.
-
+SendEnabled is depreacted and only kept for backward compatibility. For genesis, use the newly added send_enabled field in the genesis object. Storage, lookup, and manipulation of this information is now in the keeper.
 
 ### DefaultSendEnabled
 
@@ -616,6 +611,20 @@ The `query` commands allow users to query `bank` state.
 simd query bank --help
 ```
 
+##### balance
+
+The `balance` command allows users to query account balance by specific denom.
+
+```shell
+simd query bank balance [address] [denom] [flags]
+```
+
+Example:
+
+```shell
+simd query bank balance cosmos1.. stake
+```
+
 ##### balances
 
 The `balances` command allows users to query account balances by address.
@@ -630,49 +639,65 @@ Example:
 simd query bank balances cosmos1..
 ```
 
-Example Output:
+##### spendable balances
 
-```yml
-balances:
-- amount: "1000000000"
-  denom: stake
-pagination:
-  next_key: null
-  total: "0"
-```
-
-##### denom-metadata
-
-The `denom-metadata` command allows users to query metadata for coin denominations. A user can query metadata for a single denomination using the `--denom` flag or all denominations without it.
+The `spendable-balances` command allows users to query account spendable balances by address.
 
 ```shell
-simd query bank denom-metadata [flags]
+simd query spendable-balances [address] [flags]
 ```
 
 Example:
 
 ```shell
-simd query bank denom-metadata --denom stake
+simd query bank spendable-balances cosmos1..
 ```
 
-Example Output:
+##### spendable balance by denom
 
-```yml
-metadata:
-  base: stake
-  denom_units:
-  - aliases:
-    - STAKE
-    denom: stake
-  description: native staking token of simulation app
-  display: stake
-  name: SimApp Token
-  symbol: STK
+The `spendable-balance` command allows users to query account spendable balance by address for a specific denom.
+
+```shell
+simd query spendable-balance [address] [denom] [flags]
 ```
 
-##### total
+Example:
 
-The `total` command allows users to query the total supply of coins. A user can query the total supply for a single coin using the `--denom` flag or all coins without it.
+```shell
+simd query bank spendable-balance cosmos1.. stake
+```
+
+##### denom-metadata
+
+The `denom-metadata` command allows users to query metadata for coin denominations. 
+
+```shell
+simd query bank denom-metadata [denom]
+```
+
+Example:
+
+```shell
+simd query bank denom-metadata stake
+```
+
+##### denoms-metadata
+
+The `denoms-metadata` command allows users to query metadata for all coin denominations.
+
+```shell
+simd query bank denoms-metadata [flags]
+```
+
+Example:
+
+```shell
+simd query bank denoms-metadata
+```
+
+##### total supply
+
+The `total-supply` (or `total` for short) command allows users to query the total supply of coins.
 
 ```shell
 simd query bank total [flags]
@@ -684,11 +709,18 @@ Example:
 simd query bank total --denom stake
 ```
 
-Example Output:
+##### total supply of
 
-```yml
-amount: "10000000000"
-denom: stake
+The `total-supply-of` command allows users to query the total supply for a specific coin denominations.
+
+```shell
+simd query bank total-supply-of [denom]
+```
+
+Example:
+
+```shell
+simd query bank total-supply-of stake
 ```
 
 ##### send-enabled
@@ -705,16 +737,26 @@ Example:
 simd query bank send-enabled
 ```
 
-Example output:
+##### params
 
-```yml
-send_enabled:
-- denom: foocoin
-  enabled: true
-- denom: barcoin
-pagination:
-  next-key: null
-  total: 2 
+The `params` command allows users to query for the current bank parameters.
+
+```shell
+simd query bank params [flags]
+```
+
+##### denom owners
+
+The `denom-owners` command allows users to query for all account addresses that own a particular token denomination.
+
+```shell
+simd query bank denom-owners [denom] [flags]
+```
+
+Example:
+
+```shell
+simd query bank denom-owners stake
 ```
 
 #### Transactions
@@ -760,17 +802,6 @@ grpcurl -plaintext \
     cosmos.bank.v1beta1.Query/Balance
 ```
 
-Example Output:
-
-```json
-{
-  "balance": {
-    "denom": "stake",
-    "amount": "1000000000"
-  }
-}
-```
-
 ### AllBalances
 
 The `AllBalances` endpoint allows users to query account balance by address for all denominations.
@@ -786,22 +817,6 @@ grpcurl -plaintext \
     -d '{"address":"cosmos1.."}' \
     localhost:9090 \
     cosmos.bank.v1beta1.Query/AllBalances
-```
-
-Example Output:
-
-```json
-{
-  "balances": [
-    {
-      "denom": "stake",
-      "amount": "1000000000"
-    }
-  ],
-  "pagination": {
-    "total": "1"
-  }
-}
 ```
 
 ### DenomMetadata
@@ -821,28 +836,6 @@ grpcurl -plaintext \
     cosmos.bank.v1beta1.Query/DenomMetadata
 ```
 
-Example Output:
-
-```json
-{
-  "metadata": {
-    "description": "native staking token of simulation app",
-    "denomUnits": [
-      {
-        "denom": "stake",
-        "aliases": [
-          "STAKE"
-        ]
-      }
-    ],
-    "base": "stake",
-    "display": "stake",
-    "name": "SimApp Token",
-    "symbol": "STK"
-  }
-}
-```
-
 ### DenomsMetadata
 
 The `DenomsMetadata` endpoint allows users to query metadata for all coin denominations.
@@ -857,33 +850,6 @@ Example:
 grpcurl -plaintext \
     localhost:9090 \
     cosmos.bank.v1beta1.Query/DenomsMetadata
-```
-
-Example Output:
-
-```json
-{
-  "metadatas": [
-    {
-      "description": "native staking token of simulation app",
-      "denomUnits": [
-        {
-          "denom": "stake",
-          "aliases": [
-            "STAKE"
-          ]
-        }
-      ],
-      "base": "stake",
-      "display": "stake",
-      "name": "SimApp Token",
-      "symbol": "STK"
-    }
-  ],
-  "pagination": {
-    "total": "1"
-  }
-}
 ```
 
 ### DenomOwners
@@ -903,32 +869,6 @@ grpcurl -plaintext \
     cosmos.bank.v1beta1.Query/DenomOwners
 ```
 
-Example Output:
-
-```json
-{
-  "denomOwners": [
-    {
-      "address": "cosmos1..",
-      "balance": {
-        "denom": "stake",
-        "amount": "5000000000"
-      }
-    },
-    {
-      "address": "cosmos1..",
-      "balance": {
-        "denom": "stake",
-        "amount": "5000000000"
-      }
-    },
-  ],
-  "pagination": {
-    "total": "2"
-  }
-}
-```
-
 ### TotalSupply
 
 The `TotalSupply` endpoint allows users to query the total supply of all coins.
@@ -943,22 +883,6 @@ Example:
 grpcurl -plaintext \
     localhost:9090 \
     cosmos.bank.v1beta1.Query/TotalSupply
-```
-
-Example Output:
-
-```json
-{
-  "supply": [
-    {
-      "denom": "stake",
-      "amount": "10000000000"
-    }
-  ],
-  "pagination": {
-    "total": "1"
-  }
-}
 ```
 
 ### SupplyOf
@@ -978,17 +902,6 @@ grpcurl -plaintext \
     cosmos.bank.v1beta1.Query/SupplyOf
 ```
 
-Example Output:
-
-```json
-{
-  "amount": {
-    "denom": "stake",
-    "amount": "10000000000"
-  }
-}
-```
-
 ### Params
 
 The `Params` endpoint allows users to query the parameters of the `bank` module.
@@ -1003,16 +916,6 @@ Example:
 grpcurl -plaintext \
     localhost:9090 \
     cosmos.bank.v1beta1.Query/Params
-```
-
-Example Output:
-
-```json
-{
-  "params": {
-    "defaultSendEnabled": true
-  }
-}
 ```
 
 ### SendEnabled
@@ -1033,22 +936,3 @@ grpcurl -plaintext \
     cosmos.bank.v1beta1.Query/SendEnabled
 ```
 
-Example Output:
-
-```json
-{
-  "send_enabled": [
-    {
-      "denom": "foocoin",
-      "enabled": true
-    },
-    {
-      "denom": "barcoin"
-    }
-  ],
-  "pagination": {
-    "next-key": null,
-    "total": 2
-  }
-}
-```

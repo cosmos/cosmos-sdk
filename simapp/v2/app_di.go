@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
+	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2/root"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
@@ -57,6 +58,18 @@ func init() {
 func AppConfig() depinject.Config {
 	return depinject.Configs(
 		appConfig, // Alternatively use appconfig.LoadYAML(AppConfigYAML)
+		runtime.DefaultServiceBindings(),
+		depinject.Provide(
+			codec.ProvideInterfaceRegistry,
+			codec.ProvideAddressCodec,
+			codec.ProvideProtoCodec,
+			codec.ProvideLegacyAmino,
+			runtime.ProvideSingletonScopedStoreBuilder,
+		),
+		depinject.Invoke(
+			std.RegisterInterfaces,
+			std.RegisterLegacyAminoCodec,
+		),
 	)
 }
 
@@ -66,14 +79,14 @@ func NewSimApp[T transaction.Tx](
 	viper *viper.Viper,
 ) *SimApp[T] {
 	var (
-		app        = &SimApp[T]{}
-		appBuilder *runtime.AppBuilder[T]
-		err        error
+		app          = &SimApp[T]{}
+		appBuilder   *runtime.AppBuilder[T]
+		storeBuilder root.Builder
+		err          error
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
 			AppConfig(),
-			runtime.DefaultServiceBindings(),
 			depinject.Supply(
 				logger,
 				viper,
@@ -119,10 +132,6 @@ func NewSimApp[T transaction.Tx](
 				// interface.
 			),
 			depinject.Provide(
-				codec.ProvideInterfaceRegistry,
-				codec.ProvideAddressCodec,
-				codec.ProvideProtoCodec,
-				codec.ProvideLegacyAmino,
 				// inject desired account types:
 				multisigdepinject.ProvideAccount,
 				basedepinject.ProvideAccount,
@@ -143,27 +152,11 @@ func NewSimApp[T transaction.Tx](
 				//			}
 				// 		})
 			),
-			depinject.Invoke(
-				std.RegisterInterfaces,
-				std.RegisterLegacyAminoCodec,
-			),
 		)
 	)
 
-	// the subsection of config that contains the store options (in app.toml [store.options] header)
-	// is unmarshaled into a store.Options struct and passed to the store builder.
-	// future work may move this specification and retrieval into store/v2.
-	// If these options are not specified then default values will be used.
-	if sub := viper.Sub("store.options"); sub != nil {
-		storeOptions := &root.Options{}
-		err := sub.Unmarshal(storeOptions)
-		if err != nil {
-			panic(err)
-		}
-		appConfig = depinject.Configs(appConfig, depinject.Supply(storeOptions))
-	}
-
 	if err := depinject.Inject(appConfig,
+		&storeBuilder,
 		&appBuilder,
 		&app.appCodec,
 		&app.legacyAmino,
@@ -172,6 +165,16 @@ func NewSimApp[T transaction.Tx](
 		&app.UpgradeKeeper,
 		&app.StakingKeeper,
 	); err != nil {
+		panic(err)
+	}
+
+	// store/v2 follows a slightly more eager config life cycle than server components
+	storeConfig, err := serverstore.UnmarshalConfig(viper.AllSettings())
+	if err != nil {
+		panic(err)
+	}
+	_, err = storeBuilder.Build(logger, storeConfig)
+	if err != nil {
 		panic(err)
 	}
 

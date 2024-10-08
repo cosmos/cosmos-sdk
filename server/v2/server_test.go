@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	coreserver "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -18,6 +19,8 @@ import (
 	grpc "cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/store"
+	storev2 "cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/root"
 )
 
 type mockInterfaceRegistry struct{}
@@ -35,8 +38,8 @@ type mockApp[T transaction.Tx] struct {
 	serverv2.AppI[T]
 }
 
-func (*mockApp[T]) GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message {
-	return map[string]func() gogoproto.Message{}
+func (*mockApp[T]) GetQueryHandlers() map[string]appmodulev2.Handler {
+	return map[string]appmodulev2.Handler{}
 }
 
 func (*mockApp[T]) GetAppManager() *appmanager.AppManager[T] {
@@ -46,6 +49,18 @@ func (*mockApp[T]) GetAppManager() *appmanager.AppManager[T] {
 func (*mockApp[T]) InterfaceRegistry() coreserver.InterfaceRegistry {
 	return &mockInterfaceRegistry{}
 }
+
+var _ root.Builder = &mockStoreBuilder{}
+
+type mockStoreBuilder struct{}
+
+func (m mockStoreBuilder) Build(logger log.Logger, config *root.Config) (storev2.RootStore, error) {
+	return nil, nil
+}
+
+func (m mockStoreBuilder) RegisterKey(string) {}
+
+func (m mockStoreBuilder) Get() storev2.RootStore { return nil }
 
 func TestServer(t *testing.T) {
 	currentDir, err := os.Getwd()
@@ -63,7 +78,7 @@ func TestServer(t *testing.T) {
 	err = grpcServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
 	require.NoError(t, err)
 
-	storeServer := store.New[transaction.Tx](nil /* nil appCreator as not using CLI commands */)
+	storeServer := store.New[transaction.Tx](&mockStoreBuilder{})
 	err = storeServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
 	require.NoError(t, err)
 

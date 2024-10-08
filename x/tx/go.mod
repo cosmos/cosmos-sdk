@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	cosmossdk.io/api v0.7.6
-	cosmossdk.io/core v1.0.0-alpha.3
+	cosmossdk.io/core v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.3.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -15,7 +15,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.9.0
 	github.com/tendermint/go-amino v0.16.0
-	google.golang.org/protobuf v1.34.2
+	google.golang.org/protobuf v1.35.1
 	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
 )

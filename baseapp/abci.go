@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -142,7 +143,7 @@ func (app *BaseApp) Info(_ *abci.InfoRequest) (*abci.InfoResponse, error) {
 	lastCommitID := app.cms.LastCommitID()
 	appVersion := InitialAppVersion
 	if lastCommitID.Version > 0 {
-		ctx, err := app.CreateQueryContext(lastCommitID.Version, false)
+		ctx, err := app.CreateQueryContextWithCheckHeader(lastCommitID.Version, false, false)
 		if err != nil {
 			return nil, fmt.Errorf("failed creating query context: %w", err)
 		}
@@ -831,7 +832,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 	// NOTE: Not all raw transactions may adhere to the sdk.Tx interface, e.g.
 	// vote extensions, so skip those.
 	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
-	for _, rawTx := range req.Txs {
+	for txIndex, rawTx := range req.Txs {
 
 		response := app.deliverTx(rawTx)
 
@@ -841,6 +842,12 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 			return nil, ctx.Err()
 		default:
 			// continue
+		}
+
+		// append the tx index to the response.Events
+		for i, event := range response.Events {
+			response.Events[i].Attributes = append(event.Attributes,
+				abci.EventAttribute{Key: "tx_index", Value: strconv.Itoa(txIndex)})
 		}
 
 		txResults = append(txResults, response)
@@ -1215,6 +1222,12 @@ func checkNegativeHeight(height int64) error {
 // CreateQueryContext creates a new sdk.Context for a query, taking as args
 // the block height and whether the query needs a proof or not.
 func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, error) {
+	return app.CreateQueryContextWithCheckHeader(height, prove, true)
+}
+
+// CreateQueryContextWithCheckHeader creates a new sdk.Context for a query, taking as args
+// the block height, whether the query needs a proof or not, and whether to check the header or not.
+func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, checkHeader bool) (sdk.Context, error) {
 	if err := checkNegativeHeight(height); err != nil {
 		return sdk.Context{}, err
 	}
@@ -1238,17 +1251,44 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 			)
 	}
 
-	// when a client did not provide a query height, manually inject the latest
-	if height == 0 {
-		height = lastBlockHeight
-	}
-
-	if height <= 1 && prove {
+	if height > 0 && height <= 1 && prove {
 		return sdk.Context{},
 			errorsmod.Wrap(
 				sdkerrors.ErrInvalidRequest,
 				"cannot query with proof when height <= 1; please provide a valid height",
 			)
+	}
+
+	var header *cmtproto.Header
+	isLatest := height == 0
+	for _, state := range []*state{
+		app.checkState,
+		app.finalizeBlockState,
+	} {
+		if state != nil {
+			// branch the commit multi-store for safety
+			h := state.Context().BlockHeader()
+			if isLatest {
+				lastBlockHeight = qms.LatestVersion()
+			}
+			if !checkHeader || !isLatest || isLatest && h.Height == lastBlockHeight {
+				header = &h
+				break
+			}
+		}
+	}
+
+	if header == nil {
+		return sdk.Context{},
+			errorsmod.Wrapf(
+				sdkerrors.ErrInvalidHeight,
+				"header height in all state context is not latest height (%d)", lastBlockHeight,
+			)
+	}
+
+	// when a client did not provide a query height, manually inject the latest
+	if isLatest {
+		height = lastBlockHeight
 	}
 
 	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
@@ -1268,10 +1308,10 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 			ChainID: app.chainID,
 			Height:  height,
 		}).
-		WithBlockHeader(app.checkState.Context().BlockHeader()).
+		WithBlockHeader(*header).
 		WithBlockHeight(height)
 
-	if height != lastBlockHeight {
+	if !isLatest {
 		rms, ok := app.cms.(*rootmulti.Store)
 		if ok {
 			cInfo, err := rms.GetCommitInfo(height)
@@ -1280,7 +1320,6 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 			}
 		}
 	}
-
 	return ctx, nil
 }
 

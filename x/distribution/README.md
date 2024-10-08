@@ -74,7 +74,7 @@ which is considered computationally expensive.
 
 In conclusion, we can only have Atom commission and unbonded atoms
 provisions or bonded atom provisions with no Atom commission, and we elect to
-implement the former. Stakeholders wishing to rebond their provisions may elect
+implement the former. Stakeholders wishing to rebond their provisions, may elect
 to set up a script to periodically withdraw and rebond rewards.
 
 ## Contents
@@ -99,7 +99,7 @@ In Proof of Stake (PoS) blockchains, rewards gained from transaction fees are pa
 
 Rewards are calculated per period. The period is updated each time a validator's delegation changes, for example, when the validator receives a new delegation.
 The rewards for a single validator can then be calculated by taking the total rewards for the period before the delegation started, minus the current total rewards.
-To learn more, see the [F1 Fee Distribution paper](https://github.com/cosmos/cosmos-sdk/tree/main/docs/spec/fee_distribution/f1_fee_distr.pdf).
+To learn more, see the [F1 Fee Distribution paper](https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/docs/spec/fee_distribution/f1_fee_distr.pdf).
 
 The commission to the validator is paid when the validator is removed or when the validator requests a withdrawal.
 The commission is calculated and incremented at every `BeginBlock` operation to update accumulated fee amounts.
@@ -438,8 +438,6 @@ The distribution module emits the following events:
 
 | Type            | Attribute Key | Attribute Value    |
 |-----------------|---------------|--------------------|
-| proposer_reward | validator     | {validatorAddress} |
-| proposer_reward | reward        | {proposerReward}   |
 | commission      | amount        | {commissionAmount} |
 | commission      | validator     | {validatorAddress} |
 | rewards         | amount        | {rewardAmount}     |

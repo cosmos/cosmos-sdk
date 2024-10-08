@@ -17,5 +17,4 @@ type AppI[T transaction.Tx] interface {
 	InterfaceRegistry() server.InterfaceRegistry
 	GetAppManager() *appmanager.AppManager[T]
 	GetQueryHandlers() map[string]appmodulev2.Handler
-	GetStore() any
 }

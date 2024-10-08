@@ -8,6 +8,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/server/v2/store"
+	"cosmossdk.io/store/v2/root"
+
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
@@ -23,7 +26,6 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/mempool"
-	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -43,14 +45,21 @@ type CometBFTServer[T transaction.Tx] struct {
 
 	initTxCodec   transaction.Codec[T]
 	logger        log.Logger
+	storeBuilder  root.Builder
 	serverOptions ServerOptions[T]
 	config        Config
 	cfgOptions    []CfgOption
 }
 
-func New[T transaction.Tx](txCodec transaction.Codec[T], serverOptions ServerOptions[T], cfgOptions ...CfgOption) *CometBFTServer[T] {
+func New[T transaction.Tx](
+	txCodec transaction.Codec[T],
+	storeBuilder root.Builder,
+	serverOptions ServerOptions[T],
+	cfgOptions ...CfgOption,
+) *CometBFTServer[T] {
 	return &CometBFTServer[T]{
 		initTxCodec:   txCodec,
+		storeBuilder:  storeBuilder,
 		serverOptions: serverOptions,
 		cfgOptions:    cfgOptions,
 	}
@@ -97,8 +106,16 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		indexEvents[e] = struct{}{}
 	}
 
+	storeCfg, err := store.UnmarshalConfig(cfg)
+	if err != nil {
+		return err
+	}
+	rs, err := s.storeBuilder.Build(logger, storeCfg)
+	if err != nil {
+		return err
+	}
+
 	s.logger = logger.With(log.ModuleKey, s.Name())
-	store := appI.GetStore().(types.Store)
 	consensus := NewConsensus(
 		s.logger,
 		appI.Name(),
@@ -106,7 +123,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		s.serverOptions.Mempool(cfg),
 		indexEvents,
 		appI.GetQueryHandlers(),
-		store,
+		rs,
 		s.config,
 		s.initTxCodec,
 		chainID,
@@ -119,8 +136,8 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	consensus.addrPeerFilter = s.serverOptions.AddrPeerFilter
 	consensus.idPeerFilter = s.serverOptions.IdPeerFilter
 
-	ss := store.GetStateStorage().(snapshots.StorageSnapshotter)
-	sc := store.GetStateCommitment().(snapshots.CommitSnapshotter)
+	ss := rs.GetStateStorage().(snapshots.StorageSnapshotter)
+	sc := rs.GetStateCommitment().(snapshots.CommitSnapshotter)
 
 	snapshotStore, err := GetSnapshotStore(s.config.ConfigTomlConfig.RootDir)
 	if err != nil {

@@ -20,13 +20,14 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 	// given a running chain
 
 	sut.ResetChain(t)
+	require.GreaterOrEqual(t, sut.NodesCount(), 2)
+
 	cli := NewCLIWrapper(t, sut, verbose)
 
 	// get validator addresses
 	val1Addr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, val1Addr)
 
-	// get validator addresses
 	val2Addr := cli.GetKeyAddr("node1")
 	require.NotEmpty(t, val2Addr)
 
@@ -61,7 +62,7 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 		require.Equal(t, val2Addr, toAddr)
 
 		// write to temp file
-		opFile = storeTempFile(t, []byte(rsp))
+		opFile = StoreTempFile(t, []byte(rsp))
 		defer opFile.Close()
 
 		return false
@@ -69,10 +70,10 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 	_ = cli.WithRunErrorMatcher(assertGenOnlyOutput).Run(bankSendGenCmd...)
 
 	// query node0 account details
-	rsp := cli.CustomQuery("q", "auth", "account", val1Addr)
-	accSeq := gjson.Get(rsp, "account.value.sequence").Int()
-	// as node0 is the first account, assume accNum is 0
-	accNum := 0
+	rsp := cli.CustomQuery("q", "auth", "accounts")
+	details := gjson.Get(rsp, fmt.Sprintf("accounts.#(value.address==%s).value", val1Addr)).String()
+	accSeq := gjson.Get(details, "sequence").Int()
+	accNum := gjson.Get(details, "account_number").Int()
 	signTxCmd := []string{"tx", "sign", opFile.Name(), "--from=" + val1Addr}
 
 	testCases := []struct {
@@ -110,7 +111,7 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 				require.Len(t, signatures, 1)
 
 				// write to temp file
-				signFile = storeTempFile(t, []byte(rsp))
+				signFile = StoreTempFile(t, []byte(rsp))
 				defer signFile.Close()
 
 				return false
@@ -121,7 +122,7 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 
 			// validate signature
 			rsp = cli.RunCommandWithArgs(cli.withTXFlags("tx", "validate-signatures", signFile.Name(), "--from="+val1Addr)...)
-			require.Contains(t, rsp, val1Addr)
+			require.Contains(t, rsp, "[OK]")
 
 			// run broadcast tx command
 			broadcastCmd := []string{"tx", "broadcast", signFile.Name()}
@@ -143,7 +144,7 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 	rsp = cli.RunCommandWithArgs(cli.withTXFlags("tx", "sign", opFile.Name(), "--from="+val1Addr)...)
 	updated, err := sjson.Set(rsp, "auth_info.signer_infos.0.public_key", nil)
 	require.NoError(t, err)
-	newSignFile := storeTempFile(t, []byte(updated))
+	newSignFile := StoreTempFile(t, []byte(updated))
 	defer newSignFile.Close()
 
 	broadcastCmd := []string{"tx", "broadcast", newSignFile.Name()}
@@ -174,13 +175,14 @@ func TestAuthQueryTxCmds(t *testing.T) {
 	// given a running chain
 
 	sut.ResetChain(t)
+	require.GreaterOrEqual(t, sut.NodesCount(), 2)
+
 	cli := NewCLIWrapper(t, sut, verbose)
 
 	// get validator addresses
 	val1Addr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, val1Addr)
 
-	// get validator addresses
 	val2Addr := cli.GetKeyAddr("node1")
 	require.NotEmpty(t, val2Addr)
 
@@ -256,4 +258,39 @@ func TestAuthQueryTxCmds(t *testing.T) {
 			require.Equal(t, tc.expLen, len(txs))
 		})
 	}
+}
+
+func TestAuthMultisigTxCmds(t *testing.T) {
+	// scenario: test auth multisig tx commands
+	// given a running chain
+
+	sut.ResetChain(t)
+	cli := NewCLIWrapper(t, sut, verbose)
+
+	// get validator address
+	valAddr := cli.GetKeyAddr("node0")
+	require.NotEmpty(t, valAddr)
+
+	// add new keys for multisig
+	acc1Addr := cli.AddKey("acc1")
+	require.NotEmpty(t, acc1Addr)
+
+	acc2Addr := cli.AddKey("acc2")
+	require.NotEqual(t, acc1Addr, acc2Addr)
+
+	acc3Addr := cli.AddKey("acc3")
+	require.NotEqual(t, acc1Addr, acc3Addr)
+
+	out := cli.RunCommandWithArgs(cli.withKeyringFlags("keys", "add", "multi", "--multisig=acc1,acc2,acc3", "--multisig-threshold=2")...)
+	multiAddr := gjson.Get(out, "address").String()
+	require.NotEmpty(t, multiAddr)
+
+	sut.StartChain(t)
+
+	// fund multisig address some amount
+	var initialAmount int64 = 10000
+	_ = cli.FundAddress(multiAddr, fmt.Sprintf("%d%s", initialAmount, authTestDenom))
+
+	multiAddrBal := cli.QueryBalance(multiAddr, authTestDenom)
+	require.Equal(t, initialAmount, multiAddrBal)
 }

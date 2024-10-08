@@ -1,4 +1,4 @@
-# Module
+# x/accounts
 
 The x/accounts module enhances the Cosmos SDK by providing tools and infrastructure for creating advanced smart accounts.
 

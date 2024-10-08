@@ -66,7 +66,7 @@ func (i *mergedIterator[Parent, Cache]) Next() {
 // If the iterator is invalid, it returns nil.
 func (i *mergedIterator[Parent, Cache]) Key() []byte {
 	if !i.valid {
-		return nil
+		panic("called key on invalid iterator")
 	}
 	return i.currKey
 }
@@ -75,7 +75,7 @@ func (i *mergedIterator[Parent, Cache]) Key() []byte {
 // If the iterator is invalid, it returns nil.
 func (i *mergedIterator[Parent, Cache]) Value() []byte {
 	if !i.valid {
-		return nil
+		panic("called value on invalid iterator")
 	}
 	return i.currValue
 }

@@ -7,6 +7,52 @@ import (
 	corestore "cosmossdk.io/core/store"
 )
 
+func TestMergedIterator_Validity(t *testing.T) {
+	panics := func(f func()) {
+		defer func() {
+			r := recover()
+			if r == nil {
+				t.Error("panic expected")
+			}
+		}()
+
+		f()
+	}
+
+	t.Run("panics when calling key on invalid iter", func(t *testing.T) {
+		parent, err := newMemState().Iterator(nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		cache, err := newMemState().Iterator(nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		it := mergeIterators(parent, cache, true)
+		panics(func() {
+			it.Key()
+		})
+	})
+
+	t.Run("panics when calling value on invalid iter", func(t *testing.T) {
+		parent, err := newMemState().Iterator(nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		cache, err := newMemState().Iterator(nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		it := mergeIterators(parent, cache, true)
+
+		panics(func() {
+			it.Value()
+		})
+	})
+}
+
 func TestMergedIterator_Next(t *testing.T) {
 	specs := map[string]struct {
 		setup func() corestore.Iterator

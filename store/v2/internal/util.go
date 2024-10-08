@@ -1,6 +1,8 @@
 package internal
 
-import "strings"
+import (
+	"strings"
+)
 
 func IsMemoryStoreKey(key string) bool {
 	return strings.HasPrefix(key, "memory:")

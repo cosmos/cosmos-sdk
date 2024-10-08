@@ -10,12 +10,18 @@ import (
 )
 
 func TestFactory(t *testing.T) {
+	var namespaces []Namespace
+	for _, key := range storeKeys {
+		namespaces = append(namespaces, Namespace{
+			Name: key,
+		})
+	}
 	fop := FactoryOptions{
-		Logger:    coretesting.NewNopLogger(),
-		RootDir:   t.TempDir(),
-		Options:   DefaultStoreOptions(),
-		StoreKeys: storeKeys,
-		SCRawDB:   db.NewMemDB(),
+		Logger:     coretesting.NewNopLogger(),
+		RootDir:    t.TempDir(),
+		Options:    DefaultStoreOptions(),
+		Namespaces: namespaces,
+		SCRawDB:    db.NewMemDB(),
 	}
 
 	f, err := CreateRootStore(&fop)

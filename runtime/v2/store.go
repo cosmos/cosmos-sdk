@@ -90,13 +90,17 @@ func (sb *StoreBuilder) Build(
 		return nil, fmt.Errorf("failed to create SCRawDB: %w", err)
 	}
 
+	var namespaces []root.Namespace
+	for _, key := range storeKeys {
+		namespaces = append(namespaces, root.Namespace{Name: key})
+	}
 	factoryOptions := &root.FactoryOptions{
 		Logger:  logger,
 		RootDir: home,
 		Options: options,
 		// STF needs to store a bit of state
-		StoreKeys: append(storeKeys, "stf"),
-		SCRawDB:   scRawDb,
+		Namespaces: append(namespaces, root.Namespace{Name: "stf"}),
+		SCRawDB:    scRawDb,
 	}
 
 	rs, err := root.CreateRootStore(factoryOptions)

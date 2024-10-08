@@ -63,7 +63,7 @@ func (s Store) Set(key, value []byte) error {
 func (s Store) Delete(key []byte) error { return s.parent.Delete(s.key(key)) }
 
 // Implements KVStore
-// Check https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db.go#L106
+// Check https://github.com/cometbft/cometbft-db/blob/v1.0.1/prefixdb.go#L109
 func (s Store) Iterator(start, end []byte) (store.Iterator, error) {
 	newstart := cloneAppend(s.prefix, start)
 
@@ -83,7 +83,7 @@ func (s Store) Iterator(start, end []byte) (store.Iterator, error) {
 }
 
 // ReverseIterator implements KVStore
-// Check https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db.go#L129
+// Check https://github.com/cometbft/cometbft-db/blob/v1.0.1/prefixdb.go#L132
 func (s Store) ReverseIterator(start, end []byte) (store.Iterator, error) {
 	newstart := cloneAppend(s.prefix, start)
 

@@ -48,6 +48,20 @@ func ModuleSetGauge(module string, val float32, keys ...string) {
 	)
 }
 
+// ModuleIncrCounter increments a counter metric for a module with a given set of keys.
+// If any global labels are defined, they will be added to the module label.
+func ModuleIncrCounter(module string, val float32, keys ...string) {
+	if !IsTelemetryEnabled() {
+		return
+	}
+
+	metrics.IncrCounterWithLabels(
+		keys,
+		val,
+		append([]metrics.Label{NewLabel(MetricLabelNameModule, module)}, globalLabels...),
+	)
+}
+
 // IncrCounter provides a wrapper functionality for emitting a counter metric with
 // global labels (if any).
 func IncrCounter(val float32, keys ...string) {

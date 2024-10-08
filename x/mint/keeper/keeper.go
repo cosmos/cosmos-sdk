@@ -173,7 +173,7 @@ func DefaultMintFn(ic types.InflationCalculationFn, staking types.StakingKeeper,
 		}
 
 		if mintedCoin.Amount.IsInt64() {
-			defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
+			defer telemetry.ModuleIncrCounter(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
 		}
 
 		return env.EventService.EventManager(ctx).EmitKV(

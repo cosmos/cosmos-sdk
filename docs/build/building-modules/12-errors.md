@@ -14,6 +14,10 @@ common or general errors which can be further wrapped to provide additional spec
 
 There are two ways to return errors. You can register custom errors with a codespace that is meant to provide more information to clients and normal go errors. The Cosmos SDK uses a mixture of both. 
 
+:::Note
+Errors v2 has been created as a zero dependency errors package. GRPC errors and tracing support is removed natively from the errors package. Users are required to wrap stack traces and add tracing information to their errors.
+:::
+
 :::Warning
 If errors are registered they are part of consensus and cannot be changed in a minor release
 :::

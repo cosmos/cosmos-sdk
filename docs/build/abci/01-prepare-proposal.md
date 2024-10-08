@@ -24,12 +24,12 @@ it would like the block constructed.
 
 The Cosmos SDK defines the `DefaultProposalHandler` type, which provides applications with
 `PrepareProposal` and `ProcessProposal` handlers. If you decide to implement your
-own `PrepareProposal` handler, you must be sure to ensure that the transactions
+own `PrepareProposal` handler, you must ensure that the transactions
 selected DO NOT exceed the maximum block gas (if set) and the maximum bytes provided
 by `req.MaxBytes`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci_utils.go
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/baseapp/abci_utils.go
 ```
 
 This default implementation can be overridden by the application developer in
@@ -38,7 +38,7 @@ favor of a custom implementation in [`app_di.go`](https://docs.cosmos.network/ma
 ```go
 prepareOpt := func(app *baseapp.BaseApp) {
     abciPropHandler := baseapp.NewDefaultProposalHandler(mempool, app)
-    app.SetPrepareProposal(abciPropHandler.PrepareProposalHandler()))
+    app.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
 }
 
 baseAppOptions = append(baseAppOptions, prepareOpt)

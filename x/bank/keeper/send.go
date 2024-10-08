@@ -148,14 +148,15 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
-	err = k.subUnlockedCoins(ctx, inAddress, input.Coins)
-	if err != nil {
-		return err
+	// ensure all coins can be sent
+	type toSend struct {
+		AddressStr string
+		Address    []byte
+		Coins      sdk.Coins
 	}
-
-	var outAddress sdk.AccAddress
+	sending := make([]toSend, 0)
 	for _, out := range outputs {
-		outAddress, err = k.addrCdc.StringToBytes(out.Address)
+		outAddress, err := k.addrCdc.StringToBytes(out.Address)
 		if err != nil {
 			return err
 		}
@@ -165,13 +166,25 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			return err
 		}
 
-		if err := k.addCoins(ctx, outAddress, out.Coins); err != nil {
+		sending = append(sending, toSend{
+			Address:    outAddress,
+			AddressStr: out.Address,
+			Coins:      out.Coins,
+		})
+	}
+
+	if err := k.subUnlockedCoins(ctx, inAddress, input.Coins); err != nil {
+		return err
+	}
+
+	for _, out := range sending {
+		if err := k.addCoins(ctx, out.Address, out.Coins); err != nil {
 			return err
 		}
 
 		if err := k.EventService.EventManager(ctx).EmitKV(
 			types.EventTypeTransfer,
-			event.NewAttribute(types.AttributeKeyRecipient, out.Address),
+			event.NewAttribute(types.AttributeKeyRecipient, out.AddressStr),
 			event.NewAttribute(types.AttributeKeySender, input.Address),
 			event.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
 		); err != nil {

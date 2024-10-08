@@ -13,17 +13,23 @@ import (
 )
 
 var (
-	storeBuilderSingleton      root.Builder
-	storeBuilderSingletoneOnce sync.Once
+	storeBuilderSingleton     root.Builder
+	storeBuilderSingletonOnce sync.Once
 )
 
 // ProvideSingletonScopedStoreBuilder returns a store builder that is a singleton
 // in the scope of the process lifetime.
 func ProvideSingletonScopedStoreBuilder() root.Builder {
-	storeBuilderSingletoneOnce.Do(func() {
+	storeBuilderSingletonOnce.Do(func() {
 		storeBuilderSingleton = root.NewBuilder()
 	})
 	return storeBuilderSingleton
+}
+
+// ResetSingletonScopedStoreBuilder resets the singleton store builder.  Applications
+// should not ever need to call this, but it may be useful in tests.
+func ResetSingletonScopedStoreBuilder() {
+	storeBuilderSingletonOnce = sync.Once{}
 }
 
 // NewKVStoreService creates a new KVStoreService.

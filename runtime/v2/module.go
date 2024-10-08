@@ -228,6 +228,7 @@ func ProvideEnvironment(
 // - store.KVStoreServiceFactory
 // - header.Service
 // - comet.Service
+// - event.Service
 //
 // They are all required.  For most use cases these default services bindings should be sufficient.
 // Power users (or tests) may wish to provide their own services bindings, in which case they must

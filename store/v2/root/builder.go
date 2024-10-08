@@ -15,7 +15,7 @@ import (
 //  2. Configuration and loading
 //
 // The Builder interface is used to facilitate this pattern.  Namespaces (store keys) are registered
-// by calling RegisterNamespace before Build is called.  Build is then called with a Config
+// by calling RegisterKey before Build is called.  Build is then called with a Config
 // object and a RootStore is returned.  Calls to Get may return the `RootStore` if Build
 // was successful, but that's left up to the implementation.
 type Builder interface {

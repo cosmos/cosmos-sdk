@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	comettypes "cosmossdk.io/server/v2/cometbft/types"
 	serverv2store "cosmossdk.io/server/v2/store"
@@ -40,6 +41,7 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	vp.Set(serverv2store.FlagAppDBBackend, string(db.DBTypeGoLevelDB))
 	vp.Set(serverv2.FlagHome, t.TempDir())
 
+	runtime.ResetSingletonScopedStoreBuilder()
 	app := NewSimApp[transaction.Tx](logger, vp)
 	genesis := app.ModuleManager().DefaultGenesis()
 

@@ -86,38 +86,26 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/tests/integration/bank
 
 ## Simulations
 
-Simulations uses as well a minimal application, built with [`depinject`](../packages/01-depinject.md):
+Simulations fuzz tests for deterministic message execution. They use a minimal application, built with [`depinject`](../packages/01-depinject.md):
 
 :::note
-You can as well use the `AppConfig` `configurator` for creating an `AppConfig` [inline](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/slashing/app_test.go#L54-L62). There is no difference between those two ways, use whichever you prefer.
+Simulations have been refactored to message factories
 :::
 
-Following is an example for `x/gov/` simulations:
+An example for `x/bank/` simulations:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/gov/simulation/operations_test.go#L406-L430
+https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/bank/simulation/msg_factory.go#L13-L20
 ```
 
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/gov/simulation/operations_test.go#L90-L132
-```
+## System Tests
 
-## End-to-end Tests
+System tests are at the top of the [test pyramid](https://martinfowler.com/articles/practical-test-pyramid.html).
+They test the whole application flow as black box, from the user perspective. They are located under [`/tests/systemtests`](https://github.com/cosmos/cosmos-sdk/tree/main/tests/systemtests).
 
-End-to-end tests are at the top of the [test pyramid](https://martinfowler.com/articles/practical-test-pyramid.html).
-They must test the whole application flow, from the user perspective (for instance, CLI tests). They are located under [`/tests/e2e`](https://github.com/cosmos/cosmos-sdk/tree/main/tests/e2e).
+For that, the SDK is using the `simapp` binary, but you should use your own binary.
+More details about system test can be found in [building-apps](https://docs.cosmos.network/main/build/building-apps/system-tests)
 
-<!-- @julienrbrt: makes more sense to use an app wired app to have 0 simapp dependencies -->
-For that, the SDK is using `simapp` but you should use your own application (`appd`).
-Here are some examples:
-
-* SDK E2E tests: <https://github.com/cosmos/cosmos-sdk/tree/main/tests/e2e>.
-* Cosmos Hub E2E tests: <https://github.com/cosmos/gaia/tree/main/tests/e2e>.
-* Osmosis E2E tests: <https://github.com/osmosis-labs/osmosis/tree/main/tests/e2e>.
-
-:::note warning
-The SDK is in the process of creating its E2E tests, as defined in [ADR-59](https://docs.cosmos.network/main/build/architecture/adr-059-test-scopes). This page will eventually be updated with better examples.
-:::
 
 ## Learn More
 

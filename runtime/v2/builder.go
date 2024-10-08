@@ -6,19 +6,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"path/filepath"
 
 	"cosmossdk.io/core/appmodule"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
-	"cosmossdk.io/store/v2/db"
-	rootstore "cosmossdk.io/store/v2/root"
+	"cosmossdk.io/store/v2/root"
 )
 
 // AppBuilder is a type that is injected into a container by the runtime/v2 module
@@ -26,8 +23,7 @@ import (
 // the existing app.go initialization conventions.
 type AppBuilder[T transaction.Tx] struct {
 	app          *App[T]
-	config       server.DynamicConfig
-	storeOptions *rootstore.Options
+	storeBuilder root.Builder
 
 	// the following fields are used to overwrite the default
 	branch      func(state store.ReaderMap) store.WriterMap
@@ -68,14 +64,6 @@ func (a *AppBuilder[T]) RegisterModules(modules map[string]appmodulev2.AppModule
 	return nil
 }
 
-// RegisterStores registers the provided store keys.
-// This method should only be used for registering extra stores
-// which is necessary for modules that not registered using the app config.
-// To be used in combination of RegisterModules.
-func (a *AppBuilder[T]) RegisterStores(keys ...string) {
-	a.app.storeKeys = append(a.app.storeKeys, keys...)
-}
-
 // Build builds an *App instance.
 func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	for _, opt := range opts {
@@ -97,6 +85,11 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 		a.postTxExec = func(ctx context.Context, tx T, success bool) error {
 			return nil
 		}
+	}
+
+	a.app.db = a.storeBuilder.Get()
+	if a.app.db == nil {
+		return nil, fmt.Errorf("storeBuilder did not return a db")
 	}
 
 	if err := a.app.moduleManager.RegisterServices(a.app); err != nil {
@@ -121,37 +114,6 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 		return nil, fmt.Errorf("failed to create STF: %w", err)
 	}
 	a.app.stf = stf
-
-	home := a.config.GetString(FlagHome)
-	scRawDb, err := db.NewDB(
-		db.DBType(a.config.GetString("store.app-db-backend")),
-		"application",
-		filepath.Join(home, "data"),
-		nil,
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	var storeOptions rootstore.Options
-	if a.storeOptions != nil {
-		storeOptions = *a.storeOptions
-	} else {
-		storeOptions = rootstore.DefaultStoreOptions()
-	}
-	factoryOptions := &rootstore.FactoryOptions{
-		Logger:    a.app.logger,
-		RootDir:   home,
-		Options:   storeOptions,
-		StoreKeys: append(a.app.storeKeys, "stf"),
-		SCRawDB:   scRawDb,
-	}
-
-	rs, err := rootstore.CreateRootStore(factoryOptions)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create root store: %w", err)
-	}
-	a.app.db = rs
 
 	appManagerBuilder := appmanager.Builder[T]{
 		STF:                a.app.stf,
@@ -182,7 +144,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 				return nil, errors.New("cannot init genesis on non-zero state")
 			}
 			genesisCtx := services.NewGenesisContext(a.branch(zeroState))
-			genesisState, err := genesisCtx.Run(ctx, func(ctx context.Context) error {
+			genesisState, err := genesisCtx.Mutate(ctx, func(ctx context.Context) error {
 				err = a.app.moduleManager.InitGenesisJSON(ctx, genesisJSON, txHandler)
 				if err != nil {
 					return fmt.Errorf("failed to init genesis: %w", err)
@@ -238,7 +200,11 @@ func AppBuilderWithBranch[T transaction.Tx](branch func(state store.ReaderMap) s
 
 // AppBuilderWithTxValidator sets the tx validator for the app.
 // It overrides all default tx validators defined by modules.
-func AppBuilderWithTxValidator[T transaction.Tx](txValidators func(ctx context.Context, tx T) error) AppBuilderOption[T] {
+func AppBuilderWithTxValidator[T transaction.Tx](
+	txValidators func(
+		ctx context.Context, tx T,
+	) error,
+) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.txValidator = txValidators
 	}
@@ -246,14 +212,12 @@ func AppBuilderWithTxValidator[T transaction.Tx](txValidators func(ctx context.C
 
 // AppBuilderWithPostTxExec sets logic that will be executed after each transaction.
 // When not provided, a no-op function will be used.
-func AppBuilderWithPostTxExec[T transaction.Tx](postTxExec func(ctx context.Context, tx T, success bool) error) AppBuilderOption[T] {
+func AppBuilderWithPostTxExec[T transaction.Tx](
+	postTxExec func(
+		ctx context.Context, tx T, success bool,
+	) error,
+) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.postTxExec = postTxExec
-	}
-}
-
-func AppBuilderWithStoreOptions[T transaction.Tx](opts *rootstore.Options) AppBuilderOption[T] {
-	return func(a *AppBuilder[T]) {
-		a.storeOptions = opts
 	}
 }

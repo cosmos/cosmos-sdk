@@ -33,7 +33,7 @@ const (
 	SCTypeIavlV2 SCType = "iavl-v2"
 )
 
-// app.toml config options
+// Options are the options for creating a root store.
 type Options struct {
 	SSType          SSType               `mapstructure:"ss-type" toml:"ss-type" comment:"SState storage database type. Currently we support: \"sqlite\", \"pebble\" and \"rocksdb\""`
 	SCType          SCType               `mapstructure:"sc-type" toml:"sc-type" comment:"State commitment database type. Currently we support: \"iavl\" and \"iavl-v2\""`

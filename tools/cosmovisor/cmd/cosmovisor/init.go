@@ -14,7 +14,7 @@ import (
 	"cosmossdk.io/x/upgrade/plan"
 )
 
-func NewIntCmd() *cobra.Command {
+func NewInitCmd() *cobra.Command {
 	initCmd := &cobra.Command{
 		Use:   "init <path to executable>",
 		Short: "Initialize a cosmovisor daemon home directory.",
@@ -91,6 +91,12 @@ func InitializeCosmovisor(logger log.Logger, args []string) error {
 	logger.Info(fmt.Sprintf("making sure %q is executable", genBinExe))
 	if err = plan.EnsureBinary(genBinExe); err != nil {
 		return err
+	}
+
+	// set current working directory to $DAEMON_NAME/cosmosvisor
+	// to allow current symlink to be relative
+	if err = os.Chdir(cfg.Root()); err != nil {
+		return fmt.Errorf("failed to change directory to %s: %w", cfg.Root(), err)
 	}
 
 	logger.Info("checking on the current symlink and creating it if needed")

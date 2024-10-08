@@ -16,6 +16,8 @@ import (
 	"cosmossdk.io/x/tx/signing"
 )
 
+const cosmosDecType = "cosmos.Dec"
+
 // MessageEncoder is a function that can encode a protobuf protoreflect.Message to JSON.
 type MessageEncoder func(*Encoder, protoreflect.Message, io.Writer) error
 
@@ -68,8 +70,8 @@ func NewEncoder(options EncoderOptions) Encoder {
 	}
 	enc := Encoder{
 		cosmosProtoScalarEncoders: map[string]FieldEncoder{
-			"cosmos.Dec": cosmosDecEncoder,
-			"cosmos.Int": cosmosIntEncoder,
+			cosmosDecType: cosmosDecEncoder,
+			"cosmos.Int":  cosmosIntEncoder,
 		},
 		aminoMessageEncoders: map[string]MessageEncoder{
 			"key_field":        keyFieldEncoder,
@@ -366,7 +368,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		}
 
 		// encode value
-		if encoder := enc.getFieldEncoding(f); encoder != nil {
+		if encoder := enc.getFieldEncoder(f); encoder != nil {
 			err = encoder(&enc, v, writer)
 			if err != nil {
 				return err

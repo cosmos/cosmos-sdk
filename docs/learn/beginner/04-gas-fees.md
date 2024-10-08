@@ -52,7 +52,7 @@ By default, the Cosmos SDK makes use of two different gas meters, the [main gas 
 
 `ctx.GasMeter()` is the main gas meter of the application. The main gas meter is initialized in `FinalizeBlock` via `setFinalizeBlockState`, and then tracks gas consumption during execution sequences that lead to state-transitions, i.e. those originally triggered by [`FinalizeBlock`](../advanced/00-baseapp.md#finalizeblock). At the beginning of each transaction execution, the main gas meter **must be set to 0** in the [`AnteHandler`](#antehandler), so that it can track gas consumption per-transaction.
 
-Gas consumption can be done manually, generally by the module developer in the [`BeginBlocker`, `EndBlocker`](../../build/building-modules/06-beginblock-endblock.md) or [`Msg` service](../../build/building-modules/03-msg-services.md), but most of the time it is done automatically whenever there is a read or write to the store. This automatic gas consumption logic is implemented in a special store called [`GasKv`](../advanced/04-store.md#gaskv-store).
+Gas consumption can be done manually, generally by the module developer in the [`BeginBlocker`, `EndBlocker`](../../build/building-modules/06-preblock-beginblock-endblock.md) or [`Msg` service](../../build/building-modules/03-msg-services.md), but most of the time it is done automatically whenever there is a read or write to the store. This automatic gas consumption logic is implemented in a special store called [`GasKv`](../advanced/04-store.md#gaskv-store).
 
 ### Block Gas Meter
 

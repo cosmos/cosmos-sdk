@@ -11,6 +11,7 @@ import (
 var (
 	_ store.KVStoreService = (*GenesisKVStoreService)(nil)
 	_ header.Service       = (*GenesisHeaderService)(nil)
+	_ store.KVStore        = (*readonlyKVStore)(nil)
 )
 
 type genesisContextKeyType struct{}
@@ -21,28 +22,41 @@ var genesisContextKey = genesisContextKeyType{}
 // it backs the store.KVStoreService and header.Service interface implementations
 // defined in this file.
 type genesisContext struct {
-	state store.WriterMap
+	state store.ReaderMap
 }
 
 // NewGenesisContext creates a new genesis context.
-func NewGenesisContext(state store.WriterMap) genesisContext {
+func NewGenesisContext(state store.ReaderMap) genesisContext {
 	return genesisContext{
 		state: state,
 	}
 }
 
-// Run runs the provided function within the genesis context and returns an
+// Mutate runs the provided function within the genesis context and returns an
 // updated store.WriterMap containing the state modifications made during InitGenesis.
-func (g *genesisContext) Run(
+func (g genesisContext) Mutate(
 	ctx context.Context,
 	fn func(ctx context.Context) error,
 ) (store.WriterMap, error) {
+	writerMap, ok := g.state.(store.WriterMap)
+	if !ok {
+		return nil, fmt.Errorf("mutate requires a store.WriterMap, got a %T", g.state)
+	}
 	ctx = context.WithValue(ctx, genesisContextKey, g)
 	err := fn(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return g.state, nil
+	return writerMap, nil
+}
+
+// Read runs the provided function within the genesis context.
+func (g genesisContext) Read(
+	ctx context.Context,
+	fn func(ctx context.Context) error,
+) error {
+	ctx = context.WithValue(ctx, genesisContextKey, g)
+	return fn(ctx)
 }
 
 // GenesisKVStoreService is a store.KVStoreService implementation that is used during
@@ -71,15 +85,24 @@ func (g *GenesisKVStoreService) OpenKVStore(ctx context.Context) store.KVStore {
 	if v == nil {
 		return g.executionService.OpenKVStore(ctx)
 	}
-	genCtx, ok := v.(*genesisContext)
+	genCtx, ok := v.(genesisContext)
 	if !ok {
 		panic(fmt.Errorf("unexpected genesis context type: %T", v))
 	}
-	state, err := genCtx.state.GetWriter(g.actor)
+	writerMap, ok := genCtx.state.(store.WriterMap)
+	if ok {
+		state, err := writerMap.GetWriter(g.actor)
+		if err != nil {
+			panic(err)
+		}
+		return state
+
+	}
+	state, err := genCtx.state.GetReader(g.actor)
 	if err != nil {
 		panic(err)
 	}
-	return state
+	return readonlyKVStore{state}
 }
 
 // GenesisHeaderService is a header.Service implementation that is used during
@@ -104,4 +127,16 @@ func NewGenesisHeaderService(executionService header.Service) *GenesisHeaderServ
 	return &GenesisHeaderService{
 		executionService: executionService,
 	}
+}
+
+type readonlyKVStore struct {
+	store.Reader
+}
+
+func (r readonlyKVStore) Set(key, value []byte) error {
+	panic("tried to call Set on a readonly store")
+}
+
+func (r readonlyKVStore) Delete(key []byte) error {
+	panic("tried to call Delete on a readonly store")
 }

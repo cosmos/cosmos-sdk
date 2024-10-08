@@ -39,7 +39,7 @@ For continous, delayed, permanent locking account:
 }
 ```
 
-:::infor
+:::info
 `start_time` is only needed for continous locking account init process. For the other two, you dont have to set it in. Error will returned if `start_time` is not provided when creating continous locking account*
 :::
 

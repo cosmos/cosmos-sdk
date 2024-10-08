@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"context"
 	"encoding/json"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
@@ -90,23 +89,10 @@ func (a *App[T]) Close() error {
 	return nil
 }
 
-// GetStore returns the app store.
-func (a *App[T]) GetStore() Store {
-	return a.db
-}
-
 func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
 	return a.AppManager
 }
 
 func (a *App[T]) GetQueryHandlers() map[string]appmodulev2.Handler {
 	return a.QueryHandlers
-}
-
-func (a *App[T]) Query(ctx context.Context, gasLimit, version uint64, req transaction.Msg) (transaction.Msg, error) {
-	state, err := a.db.StateAt(version)
-	if err != nil {
-		return nil, err
-	}
-	return a.stf.Query(ctx, state, gasLimit, req)
 }

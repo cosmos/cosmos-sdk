@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	serverstore "cosmossdk.io/server/v2/store"
+	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/root"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
@@ -39,6 +40,7 @@ type SimApp[T transaction.Tx] struct {
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
+	store             store.RootStore
 
 	// required keepers during wiring
 	// others keepers are all in the app
@@ -173,7 +175,8 @@ func NewSimApp[T transaction.Tx](
 	if err != nil {
 		panic(err)
 	}
-	_, err = storeBuilder.Build(logger, storeConfig)
+
+	app.store, err = storeBuilder.Build(logger, storeConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -216,7 +219,6 @@ func (app *SimApp[T]) TxConfig() client.TxConfig {
 	return app.txConfig
 }
 
-// GetStore gets the app store.
-func (app *SimApp[T]) GetStore() any {
-	return app.App.GetStore()
+func (app *SimApp[T]) GetStore() store.RootStore {
+	return app.store
 }

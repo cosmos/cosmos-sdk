@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
@@ -74,17 +73,16 @@ func NewBaseSendKeeper(
 	env appmodule.Environment,
 	cdc codec.BinaryCodec,
 	ak types.AccountKeeper,
-	addrCdc address.Codec,
 	blockedAddrs map[string]bool,
 	authority string,
 ) BaseSendKeeper {
-	if _, err := addrCdc.StringToBytes(authority); err != nil {
+	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
 	return BaseSendKeeper{
 		Environment:     env,
-		BaseViewKeeper:  NewBaseViewKeeper(env, cdc, addrCdc, ak),
+		BaseViewKeeper:  NewBaseViewKeeper(env, cdc, ak),
 		cdc:             cdc,
 		ak:              ak,
 		blockedAddrs:    blockedAddrs,

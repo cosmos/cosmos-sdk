@@ -103,6 +103,8 @@ type Keeper struct {
 	// Account set and get their own state but this helps providing a nice mapping
 	// between: (account number, account state key) => account state value.
 	AccountsState collections.Map[collections.Pair[uint64, []byte], []byte]
+
+	bundlingDisabled bool // if this is set then bundling of txs is disallowed.
 }
 
 // IsAccountsModuleAccount check if an address belong to a smart account.
@@ -462,6 +464,10 @@ func (k Keeper) maybeSendFunds(ctx context.Context, from, to []byte, amt sdk.Coi
 	}
 
 	return nil
+}
+
+func (k *Keeper) DisableTxBundling() {
+	k.bundlingDisabled = true
 }
 
 const msgInterfaceName = "cosmos.accounts.v1.MsgInterface"

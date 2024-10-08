@@ -12,23 +12,22 @@
     * [Query account info](#query-account-info)
     * [Query periodic lockup account locking periods](#query-periodic-lockup-account-locking-periods)
 
+To learn more about lockup account, please also check out [readme](./README.md)
+
 ## Setup 
 
-To create a lockup account we need 2 wallets (newly created or use any of the existing wallet that you have) one for the granter and one for the owner of the lockup account. 
+To create a lockup account we need 2 wallets (newly created or use any of the existing wallet that you have) one for the creator and one for the owner of the lockup account. 
 
 ```bash
-simd keys add granter --keyring-backend test --home ./.testnets/node0/simd/
-simd keys add owner --keyring-backend test --home ./.testnets/node0/simd/
+simd keys add creator 
+simd keys add owner
 ```
 
 ## Init
 
-Normally the granter must have enough token to grant to the lockup account during the lockup account init process. The owner wallet should be associated with the individual that the granter want to grant the fund to.
+Normally the creator must have enough token to grant to the lockup account during the lockup account init process. The owner wallet should be associated with the individual that the creator want to grant the fund to.
 
-Now, the granter can craft the lockup account init messages. This message depend on what type of lockup account the granter want to create.
-
-</br>
-
+Now, the creator can craft the lockup account init messages. This message depend on what type of lockup account the creator want to create.
 For continous, delayed, permanent locking account:
 
 ```go
@@ -42,8 +41,6 @@ For continous, delayed, permanent locking account:
 :::infor
 *note: `start_time` is only needed for continous locking account init process. For the other two, you dont have to set it in. Error will returned if `start_time` is not provided when creating continous locking account*
 :::
-
-</br>
  
 For periodic locking account:
 
@@ -78,7 +75,7 @@ To initialize the account, we have to run the accounts init command passing the 
 
 ```bash
 initcontents=$(cat init.json)
-simd tx accounts init <lockup_type> $initcontents  --fees 5stake --chain-id $CHAINID --keyring-backend test --home ./.testnets/node0/simd/ --from granter
+simd tx accounts init <lockup_type> $initcontents --from creator
 ```
 
 Whereas the available `lockup_type` options are: 
@@ -99,7 +96,7 @@ To execute a message, we can use the command below:
 
 ```bash
 msgcontents=$(cat msg.json)
-simd tx accounts execute <account_address> <execute-msg-type-url> $msgcontents  --fees 5stake --chain-id $CHAINID --keyring-backend test --home ./.testnets/node0/simd/ --from owner
+simd tx accounts execute <account_address> <execute-msg-type-url> $msgcontents --from owner
 ```
 
 Whereas `execute-msg-type-url` and `msgcontents`  corresponds to lockup account available executions, which are:
@@ -210,7 +207,7 @@ To query a lockup account state, we can use the command below:
 
 ```bash
 querycontents=$(cat query.json)
-simd tx accounts query <account_address> <query-request-type-url> $querycontents  --fees 5stake --chain-id $CHAINID --keyring-backend test --home ./.testnets/node0/simd/ --from owner
+simd tx accounts query <account_address> <query-request-type-url> $querycontents --from owner
 ```
 
 ### Query account info

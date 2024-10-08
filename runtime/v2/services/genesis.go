@@ -85,7 +85,7 @@ func (g *GenesisKVStoreService) OpenKVStore(ctx context.Context) store.KVStore {
 	if v == nil {
 		return g.executionService.OpenKVStore(ctx)
 	}
-	genCtx, ok := v.(*genesisContext)
+	genCtx, ok := v.(genesisContext)
 	if !ok {
 		panic(fmt.Errorf("unexpected genesis context type: %T", v))
 	}

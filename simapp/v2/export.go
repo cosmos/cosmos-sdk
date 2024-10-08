@@ -2,7 +2,10 @@ package simapp
 
 import (
 	"context"
+
+	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/x/staking"
+
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
 )
 
@@ -24,14 +27,20 @@ func (app *SimApp[T]) ExportAppStateAndValidators(
 		return exportedApp, err
 	}
 
-	validators, err := staking.WriteValidators(ctx, app.StakingKeeper)
+	readerMap, err := app.GetStore().StateAt(latestHeight)
 	if err != nil {
-		return v2.ExportedApp{}, err
+		return exportedApp, err
+	}
+	genesisCtx := services.NewGenesisContext(readerMap)
+	err = genesisCtx.Read(ctx, func(ctx context.Context) error {
+		exportedApp.Validators, err = staking.WriteValidators(ctx, app.StakingKeeper)
+		return err
+	})
+	if err != nil {
+		return exportedApp, err
 	}
 
-	return v2.ExportedApp{
-		AppState:   genesis,
-		Height:     int64(latestHeight),
-		Validators: validators,
-	}, err
+	exportedApp.AppState = genesis
+	exportedApp.Height = int64(latestHeight)
+	return exportedApp, nil
 }

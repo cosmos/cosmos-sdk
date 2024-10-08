@@ -12,7 +12,7 @@ import (
 
 var _ types.KVStore = Store{}
 
-// Store is similar with cometbft/cometbft/libs/db/prefix_db
+// Store is similar with cometbft/cometbft-db/blob/v1.0.1/prefixdb.go
 // both gives access only to the limited subset of the store
 // for convenience or safety
 type Store struct {
@@ -192,7 +192,7 @@ func (pi *prefixIterator) Error() error {
 	return nil
 }
 
-// copied from github.com/cometbft/cometbft/libs/db/prefix_db.go
+// copied from github.com/cometbft/cometbft-db/blob/v1.0.1/prefixdb.go
 func stripPrefix(key, prefix []byte) []byte {
 	if len(key) < len(prefix) || !bytes.Equal(key[:len(prefix)], prefix) {
 		panic("should not happen")

@@ -5,6 +5,7 @@ package types
 
 import (
 	context "context"
+	errors "errors"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
@@ -1250,7 +1251,7 @@ func (m *QueryCurrentPlanRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryCurrentPlanRequest: wiretype end group for non-group")
+			return errors.New("proto: QueryCurrentPlanRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: QueryCurrentPlanRequest: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -1300,7 +1301,7 @@ func (m *QueryCurrentPlanResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryCurrentPlanResponse: wiretype end group for non-group")
+			return errors.New("proto: QueryCurrentPlanResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: QueryCurrentPlanResponse: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -1386,7 +1387,7 @@ func (m *QueryAppliedPlanRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryAppliedPlanRequest: wiretype end group for non-group")
+			return errors.New("proto: QueryAppliedPlanRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: QueryAppliedPlanRequest: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -1468,7 +1469,7 @@ func (m *QueryAppliedPlanResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryAppliedPlanResponse: wiretype end group for non-group")
+			return errors.New("proto: QueryAppliedPlanResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: QueryAppliedPlanResponse: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -1537,7 +1538,7 @@ func (m *QueryUpgradedConsensusStateRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryUpgradedConsensusStateRequest: wiretype end group for non-group")
+			return errors.New("proto: QueryUpgradedConsensusStateRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: QueryUpgradedConsensusStateRequest: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -1606,7 +1607,7 @@ func (m *QueryUpgradedConsensusStateResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryUpgradedConsensusStateResponse: wiretype end group for non-group")
+			return errors.New("proto: QueryUpgradedConsensusStateResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: QueryUpgradedConsensusStateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -1690,7 +1691,7 @@ func (m *QueryModuleVersionsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryModuleVersionsRequest: wiretype end group for non-group")
+			return errors.New("proto: QueryModuleVersionsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: QueryModuleVersionsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -1772,7 +1773,7 @@ func (m *QueryModuleVersionsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryModuleVersionsResponse: wiretype end group for non-group")
+			return errors.New("proto: QueryModuleVersionsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: QueryModuleVersionsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -1856,7 +1857,7 @@ func (m *QueryAuthorityRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryAuthorityRequest: wiretype end group for non-group")
+			return errors.New("proto: QueryAuthorityRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: QueryAuthorityRequest: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -1906,7 +1907,7 @@ func (m *QueryAuthorityResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryAuthorityResponse: wiretype end group for non-group")
+			return errors.New("proto: QueryAuthorityResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: QueryAuthorityResponse: illegal tag %d (wire type %d)", fieldNum, wire)
@@ -2045,7 +2046,7 @@ func skipQuery(dAtA []byte) (n int, err error) {
 }
 
 var (
-	ErrInvalidLengthQuery        = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowQuery          = fmt.Errorf("proto: integer overflow")
-	ErrUnexpectedEndOfGroupQuery = fmt.Errorf("proto: unexpected end of group")
+	ErrInvalidLengthQuery        = errors.New("proto: negative length found during unmarshaling")
+	ErrIntOverflowQuery          = errors.New("proto: integer overflow")
+	ErrUnexpectedEndOfGroupQuery = errors.New("proto: unexpected end of group")
 )

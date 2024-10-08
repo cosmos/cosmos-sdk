@@ -70,13 +70,10 @@ Iterate/backend_rocksdb_versiondb_opts-10          778ms ± 0%
 
 ## Pruning
 
-Pruning is an implementation and responsibility of the underlying SS backend.
-Specifically, the `StorageStore` accepts `store.PruningOption` which defines the
-pruning configuration. During `ApplyChangeset`, the `StorageStore` will check if
-pruning should occur based on the current height being committed. If so, it will
-delegate a `Prune` call on the underlying SS backend, which can be defined specific
-to the implementation, e.g. asynchronous or synchronous.
-
+Pruning is the process of efficiently managing and removing outdated or redundant 
+data from the State Storage (SS). To facilitate this, the SS backend must implement 
+the `Pruner` interface, allowing the `PruningManager` to execute data pruning operations 
+according to the specified `PruningOption`.
 
 ## State Sync
 

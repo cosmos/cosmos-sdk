@@ -236,7 +236,7 @@ Within the Cosmos SDK we have two forms of documenting decisions, Request For Co
 
 ## Dependencies
 
-We use [Go Modules](https://github.com/golang/go/wiki/Modules) to manage
+We use [Go Modules](https://go.dev/wiki/Modules) to manage
 dependency versions.
 
 The main branch of every Cosmos repository should just build with `go get`,
@@ -270,9 +270,9 @@ When extracting a package to its own go modules, some extra steps are required, 
 
 ## Protobuf
 
-We use [Protocol Buffers](https://developers.google.com/protocol-buffers) along with [gogoproto](https://github.com/cosmos/gogoproto) to generate code for use in Cosmos SDK.
+We use [Protocol Buffers](https://protobuf.dev) along with [gogoproto](https://github.com/cosmos/gogoproto) to generate code for use in Cosmos SDK.
 
-For deterministic behavior around Protobuf tooling, everything is containerized using Docker. Make sure to have Docker installed on your machine, or head to [Docker's website](https://docs.docker.com/get-docker/) to install it.
+For deterministic behavior around Protobuf tooling, everything is containerized using Docker. Make sure to have Docker installed on your machine, or head to [Docker's website](https://docs.docker.com/get-started/get-docker/) to install it.
 
 For formatting code in `.proto` files, you can run `make proto-format` command.
 
@@ -300,7 +300,7 @@ For example, in vscode your `.vscode/settings.json` should look like:
 
 User-facing repos should adhere to the trunk based development branching model: https://trunkbaseddevelopment.com. User branches should start with a user name, example: `{moniker}/{issue#}-branch-name`.
 
-The Cosmos SDK repository is a [multi Go module](https://github.com/golang/go/wiki/Modules#is-it-possible-to-add-a-module-to-a-multi-module-repository) repository. It means that we have more than one Go module in a single repository.
+The Cosmos SDK repository is a [multi Go module](https://go.dev/wiki/Modules#is-it-possible-to-add-a-module-to-a-multi-module-repository) repository. It means that we have more than one Go module in a single repository.
 
 The Cosmos SDK utilizes [semantic versioning](https://semver.org/).
 

@@ -10,7 +10,7 @@ cat > "$3" <<EOL
 {
 	"name": "chain3",
 	"height": 936,
-	"info": "{\"binaries\":{\"linux/amd64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/ref_to_chain3-zip_dir.json?checksum=sha256:6758973f7404f6d34381029931b85826fc7a6315584ede03bad4c19e9b787f6c\",\"linux/arm64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/ref_to_chain3-zip_dir.json?checksum=sha256:6758973f7404f6d34381029931b85826fc7a6315584ede03bad4c19e9b787f6c\",\"darwin/amd64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/ref_to_chain3-zip_dir.json?checksum=sha256:6758973f7404f6d34381029931b85826fc7a6315584ede03bad4c19e9b787f6c\",\"darwin/arm64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/ref_to_chain3-zip_dir.json?checksum=sha256:6758973f7404f6d34381029931b85826fc7a6315584ede03bad4c19e9b787f6c\"}}"
+	"info": "https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/ref_to_chain3-zip_dir.json?checksum=sha256:6758973f7404f6d34381029931b85826fc7a6315584ede03bad4c19e9b787f6c"
 }
 EOL
 

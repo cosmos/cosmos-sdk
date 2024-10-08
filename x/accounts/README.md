@@ -1,8 +1,8 @@
-# x/accounts Module
+# Module
 
 The x/accounts module enhances the Cosmos SDK by providing tools and infrastructure for creating advanced smart accounts.
 
-# Basics
+## Basics
 
 An account can be thought of as a simplified cosmos-sdk module that supports multiple deployments. This means:
 
@@ -16,16 +16,16 @@ An account can be thought of as a simplified cosmos-sdk module that supports mul
 
 This design allows for flexible and reusable account structures within the ecosystem.
 
-## Example account creation
+### Example account creation
 
-### Basic
+#### Basic
 
 Defining an account begins with creating a struct that encapsulates the account's state. If the account has no state, the
 struct is empty `type Account struct{}`.
 
 By default, accounts utilize collections to manage their state.
 
-#### State Isolation
+##### State Isolation
 
 It's crucial to understand that an account's state is isolated. This means:
 
@@ -47,7 +47,7 @@ type Account struct {
 }
 ```
 
-### Init
+#### Init
 
 Creating an account begins with defining its init message. This message is processed when an account is created, similar to:
 
@@ -102,7 +102,7 @@ func (a Account) RegisterInitHandler(builder *accountstd.InitBuilder) {
 }
 ```
 
-### Execute Handlers
+#### Execute Handlers
 
 Execute handlers are methods that an account can execute, defined as messages. These executions can be triggered:
 
@@ -172,7 +172,7 @@ func (a Account) RegisterInitHandler(builder *accountstd.InitBuilder) {
 This implementation defines an IncreaseCounter method that handles the MsgIncreaseCounter message, updating the counter
 value and returning the new value in the response.
 
-### Query Handlers
+#### Query Handlers
 
 Query Handlers are read-only methods implemented by an account to expose information about itself. This information can be accessed by:
 
@@ -224,7 +224,7 @@ func (a Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 This implementation defines a `QueryCounter` method that retrieves the current counter value and returns it in the response.
 The `RegisterQueryHandlers` method registers this query handler with the system.
 
-### The Account Constructor
+#### The Account Constructor
 
 After creating our basic counter account, we implement the account constructor function:
 
@@ -258,13 +258,13 @@ The `accountstd.Dependencies` type provides an environment with essential compon
 
 These dependencies allow the account to interact with the blockchain system.
 
-# App Wiring
+## App Wiring
 
 Note: This assumes you've already wired the `x/accounts` module in your application. If not, refer to the Simapp example.
 
 After creating our basic account, we wire it to the `x/accounts` module.
 
-## Depinject Method
+### Depinject Method
 
 Define the depinject constructor:
 
@@ -297,7 +297,7 @@ func NewApp() *App {
 }
 ```
 
-## Manual Method
+### Manual Method
 
 Add the account to the x/accounts Keeper:
 
@@ -315,7 +315,7 @@ accountsKeeper, err := accounts.NewKeeper(
 
 Choose the method that best fits your application structure.
 
-## The accountsstd Package
+### The accountsstd Package
 
 The `accountsstd` package provides utility functions for use within account init, execution, or query handlers. Key functions include:
 
@@ -329,7 +329,7 @@ The `accountsstd` package provides utility functions for use within account init
 These functions, along with others, facilitate account operations and interactions within the system.
 For a comprehensive list of available utilities, refer to the Go documentation.
 
-## Interfaces via Messages and Queries
+### Interfaces via Messages and Queries
 
 Accounts can handle various messages and queries, allowing for flexible interface definitions:
 
@@ -346,11 +346,11 @@ Example: Transaction Authentication
 
 (Note: More details on the `Authentication` interface will be provided later.)
 
-## Full Examples
+### Full Examples
 
 Some examples can be found in the [defaults](./defaults) package.
 
-# The Authentication Interface
+## The Authentication Interface
 
 x/accounts introduces the `Authentication` interface, allowing for flexible transaction (TX) authentication beyond traditional public key cryptography.
 
@@ -362,21 +362,21 @@ The key message type for authentication is `MsgAuthenticate`, which is defined i
 
 [interfaces/account_abstraction/v1/interface.proto](./proto/cosmos/accounts/interfaces/account_abstraction/v1/interface.proto)
 
-## Authentication Mechanism
+### Authentication Mechanism
 
-### AnteHandler in the SDK
+#### AnteHandler in the SDK
 
 The Cosmos SDK utilizes an `AnteHandler` to verify transaction (TX) integrity. Its primary function is to ensure that the messages within a transaction are correctly signed by the purported sender.
 
-### Authentication Flow for x/accounts Module
+#### Authentication Flow for x/accounts Module
 
 When the `AnteHandler` identifies that a message sender (and transaction signer) belongs to the x/accounts module, it delegates the authentication process to that module.
 
-#### Authentication Interface Requirement
+##### Authentication Interface Requirement
 
 For successful authentication, the account must implement the `Authentication` interface. If an account fails to implement this interface, it's considered non-externally owned, resulting in transaction rejection.
 
-##### Sequence Diagram
+###### Sequence Diagram
 
 ```mermaid
 graph TD
@@ -391,7 +391,7 @@ graph TD
     H --> I
 ```
 
-## Implementing the Authentication Interface
+### Implementing the Authentication Interface
 
 To implement the Authentication interface, an account must handle the execution of `MsgAuthenticate`. Here's an example of how to do this:
 
@@ -427,32 +427,32 @@ func (a Account) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 }
 ```
 
-### Key Implementation Points
+#### Key Implementation Points
 
 1. **Sender Verification**: Always verify that the sender is the x/accounts module. This prevents unauthorized accounts from triggering authentication.
 2. **Authentication Safety**: Ensure your authentication mechanism is secure:
    - Prevent replay attacks by making it impossible to reuse the same action with the same signature.
 
-#### Implementation example
+##### Implementation example
 
 Please find an example [here](./defaults/base/account.go).
 
-# Supporting Custom Accounts in the x/auth gRPC Server
+## Supporting Custom Accounts in the x/auth gRPC Server
 
-## Overview
+### Overview
 
 The x/auth module provides a mechanism for custom account types to be exposed via its `Account` and `AccountInfo` gRPC
 queries. This feature is particularly useful for ensuring compatibility with existing wallets that have not yet integrated
 with x/accounts but still need to parse account information post-migration.
 
-## Implementation
+### Implementation
 
 To support this feature, your custom account type needs to implement the `auth.QueryLegacyAccount` handler. Here are some important points to consider:
 
 1. **Selective Implementation**: This implementation is not required for every account type. It's only necessary for accounts you want to expose through the x/auth gRPC `Account` and `AccountInfo` methods.
 2. **Flexible Response**: The `info` field in the `QueryLegacyAccountResponse` is optional. If your custom account cannot be represented as a `BaseAccount`, you can leave this field empty.
 
-## Example Implementation
+### Example Implementation
 
 A concrete example of implementation can be found in `defaults/base/account.go`. Here's a simplified version:
 
@@ -489,14 +489,14 @@ func (a Account) AuthRetroCompatibility(ctx context.Context, _ *authtypes.QueryL
 }
 ```
 
-## Usage Notes
+### Usage Notes
 
 - Implement this handler only for account types you want to expose via x/auth gRPC methods.
 - The `info` field in the response can be nil if your account doesn't fit the `BaseAccount` structure.
 
-# Genesis
+## Genesis
 
-## Creating accounts on genesis
+### Creating accounts on genesis
 
 In order to create accounts at genesis, the `x/accounts` module allows developers to provide
 a list of genesis `MsgInit` messages that will be executed in the `x/accounts` genesis flow.

@@ -18,8 +18,6 @@ import (
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
 	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
-	distrkeeper "cosmossdk.io/x/distribution/keeper"
-	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
@@ -46,10 +44,8 @@ type SimApp[T transaction.Tx] struct {
 
 	// required keepers during wiring
 	// others keepers are all in the app
-	UpgradeKeeper  *upgradekeeper.Keeper
-	StakingKeeper  *stakingkeeper.Keeper
-	DistrKeeper    *distrkeeper.Keeper
-	SlashingKeeper *slashingkeeper.Keeper
+	UpgradeKeeper *upgradekeeper.Keeper
+	StakingKeeper *stakingkeeper.Keeper
 }
 
 func init() {
@@ -170,8 +166,6 @@ func NewSimApp[T transaction.Tx](
 		&app.interfaceRegistry,
 		&app.UpgradeKeeper,
 		&app.StakingKeeper,
-		&app.DistrKeeper,
-		&app.SlashingKeeper,
 	); err != nil {
 		panic(err)
 	}

@@ -48,6 +48,7 @@ mod tests {
         v: Vec<u8>,
         ls: Vec<String>,
         li: Vec<i32>,
+        lp: Vec<Prims>,
     }
 
     #[derive(SchemaValue, Debug, Eq, PartialEq, Arbitrary)]

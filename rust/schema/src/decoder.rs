@@ -69,5 +69,7 @@ pub enum DecodeError {
     /// The input data is invalid.
     InvalidData,
     /// An unknown and unhandled field number was encountered.
-    UnknownFieldNumber
+    UnknownFieldNumber,
+    /// The input data contains an invalid UTF-8 string.
+    InvalidUtf8,
 }

@@ -3,6 +3,8 @@
 pub mod bank {
     use ixc::*;
     use ixc_core::handler::ClientFactory;
+    use ixc_core::routes::Route;
+    use ixc_message_api::packet::MessagePacket;
 
     #[derive(Resources)]
     pub struct Bank {
@@ -33,17 +35,19 @@ pub mod bank {
 
     impl Bank {
         #[on_create]
-        fn create(&self, ctx: &mut Context) -> Result<()> {
+        fn create(&self, ctx: &mut Context, init_denom: &str, init_balance: u128) -> Result<()> {
+            self.balances.add(ctx, (ctx.caller(), init_denom), init_balance)?;
             Ok(())
         }
     }
 
+    #[publish]
     impl BankAPI for Bank {
         fn get_balance(&self, ctx: &Context, account: AccountID, denom: &str) -> Result<u128> {
             self.balances.get(ctx, (account, denom))
         }
 
-        fn send(&self, ctx: &mut Context, to: AccountID, amount: &[Coin], evt: EventBus<EventSend>) -> Result<()> {
+        fn send<'a>(&self, ctx: &'a mut Context, to: AccountID, amount: &[Coin<'a>], evt: EventBus<EventSend>) -> Result<()> {
             for coin in amount {
                 self.balances.safe_sub(ctx, (ctx.caller(), coin.denom), coin.amount)?;
                 self.balances.add(ctx, (to, coin.denom), coin.amount)?;
@@ -56,33 +60,11 @@ pub mod bank {
             Ok(())
         }
     }
-    // unsafe impl ::ixc_core::routes::Router for dyn BankAPI {
-    //     const SORTED_ROUTES: &'static [::ixc_core::routes::Route<Self>] = &::ixc_core::routes::sort_routes([(<BankAPIGetBalance as ::ixc_core::message::Message>::SELECTOR, |h: &dyn BankAPI, packet, cb, a| {
-    //         unsafe {
-    //             let cdc = <BankAPIGetBalance as ::ixc_core::message::Message>::Codec::default();
-    //             let in1 = packet.header().in_pointer1.get(packet);
-    //             let mut ctx = ::ixc_core::Context::new(packet.header().context_info, cb);
-    //             let BankAPIGetBalance {
-    //                 account, denom, } = ::ixc_schema::codec::decode_value::<BankAPIGetBalance>(&cdc, in1, ctx.memory_manager()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
-    //             let res = h.get_balance(core::mem::transmute(&ctx), account, denom).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
-    //             ::ixc_core::low_level::encode_optional_to_out1::<<BankAPIGetBalance as ::ixc_core::message::Message<'_>>::Response<'_>>(&cdc, &res, a, packet).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))
-    //         }
-    //     }), (<BankAPISend as ::ixc_core::message::Message>::SELECTOR, |h: &dyn BankAPI, packet, cb, a| {
-    //         unsafe {
-    //             let cdc = <BankAPISend as ::ixc_core::message::Message>::Codec::default();
-    //             let in1 = packet.header().in_pointer1.get(packet);
-    //             let mut ctx = ::ixc_core::Context::new(packet.header().context_info, cb);
-    //             let BankAPISend {
-    //                 to, amount, } = ::ixc_schema::codec::decode_value::<BankAPISend>(&cdc, in1, ctx.memory_manager()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
-    //             let res = h.send(core::mem::transmute(&ctx), to, amount, Default::default()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
-    //             ::ixc_core::low_level::encode_optional_to_out1::<<BankAPISend as ::ixc_core::message::Message<'_>>::Response<'_>>(&cdc, &res, a, packet).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))
-    //         }
-    //     }), ]);
-    // }
 }
 
 #[cfg(test)]
 mod tests {
+    use ixc_core::handler::{Client, ClientFactory};
     use super::bank::*;
     use ixc_testing::*;
 
@@ -90,6 +72,11 @@ mod tests {
     fn test() {
         let mut app = TestApp::default();
         app.register_handler::<Bank>().unwrap();
+        let mut alice = app.new_client_context().unwrap();
+        let bank_client = create_account(&mut alice, BankCreate { init_denom: "foo", init_balance: 1000 }).unwrap();
+        let bank_api_client = <dyn BankAPI as ClientFactory>::new_client(bank_client.account_id());
+        let alice_balance= bank_api_client.get_balance(&mut alice, bank_client.account_id(), "foo").unwrap();
+        assert_eq!(alice_balance, 1000);
     }
 }
 

@@ -41,6 +41,8 @@ simple_time = { path = "util/simple_time", version = "0.0.1" }
 ixc_core_macros = { path = "core_macros", version = "0.0.2" }
 ixc_schema_macros = { path = "schema_macros", version = "0.0.2" }
 state_objects_macros = { path = "state_objects_macros", version = "0.0.2" }
+constcat = "0.5.1"
+array-concat = "0.5.3"
 
 [dev-dependencies]
 ixc_testing = { path = "testing", version = "0.0.2" }

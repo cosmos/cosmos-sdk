@@ -23,6 +23,7 @@ pub mod low_level;
 
 pub use context::Context;
 pub use events::EventBus;
+
 use ixc_schema::value::OptionalValue;
 use crate::error::{Error, ErrorMessage};
 

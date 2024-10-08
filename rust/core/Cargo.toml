@@ -14,6 +14,7 @@ ixc_message_api = { path = "../message_api", version = "0.0.2" }
 ixc_schema = { path = "../schema", version = "0.0.2" }
 ixc_core_macros = { path = "../core_macros" }
 allocator-api2 = "0.2.18"
+constcat = "0.5.1"
 
 [features]
 default = ["std"]

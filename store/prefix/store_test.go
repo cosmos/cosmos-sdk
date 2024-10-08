@@ -237,7 +237,7 @@ func TestPrefixStoreReverseIteratorEdgeCase(t *testing.T) {
 	iter.Close()
 }
 
-// Tests below are ported from https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db_test.go
+// Tests below are ported from https://github.com/cometbft/cometbft-db/blob/v1.0.1/prefixdb_test.go
 
 func mockStoreWithStuff() types.KVStore {
 	db := coretesting.NewMemDB()

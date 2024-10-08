@@ -17,8 +17,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-const flagGenesisTime = "genesis-time"
-const v52 = "v0.52"
+const (
+	flagGenesisTime = "genesis-time"
+	v52             = "v0.52"
+)
 
 // MigrationMap is a map of SDK versions to their respective genesis migration functions.
 var MigrationMap = types.MigrationMap{

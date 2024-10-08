@@ -35,13 +35,13 @@ This module allows accounts to grant fee allowances and to use fees from their a
 `Grant` is stored in the KVStore to record a grant with full context. Every grant will contain `granter`, `grantee` and what kind of `allowance` is granted. `granter` is an account address who is giving permission to `grantee` (the beneficiary account address) to pay for some or all of `grantee`'s transaction fees. `allowance` defines what kind of fee allowance (`BasicAllowance` or `PeriodicAllowance`, see below) is granted to `grantee`. `allowance` accepts an interface which implements `FeeAllowanceI`, encoded as `Any` type. There can be only one existing fee grant allowed for a `grantee` and `granter`, self grants are not allowed.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/feegrant/proto/cosmos/feegrant/v1beta1/feegrant.proto#L86-L96
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/feegrant/proto/cosmos/feegrant/v1beta1/feegrant.proto#L86-L96
 ```
 
 `FeeAllowanceI` looks like:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/feegrant/fees.go#L10-L34
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/feegrant/fees.go#L10-L34
 ```
 
 ### Fee Allowance types
@@ -57,7 +57,7 @@ There are two types of fee allowances present at the moment:
 `BasicAllowance` is permission for `grantee` to use fee from a `granter`'s account. If any of the `spend_limit` or `expiration` reaches its limit, the grant will be removed from the state.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/feegrant/proto/cosmos/feegrant/v1beta1/feegrant.proto#L15-L33
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/feegrant/proto/cosmos/feegrant/v1beta1/feegrant.proto#L15-L33
 ```
 
 * `spend_limit` is the limit of coins that are allowed to be used from the `granter` account. If it is empty, it assumes there's no spend limit, `grantee` can use any number of available coins from `granter` account address before the expiration.
@@ -71,7 +71,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/feegrant/proto/cosmo
 `PeriodicAllowance` is a repeating fee allowance for the mentioned period, we can mention when the grant can expire as well as when a period can reset. We can also define the maximum number of coins that can be used in a mentioned period of time.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/feegrant/proto/cosmos/feegrant/v1beta1/feegrant.proto#L35-L71
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/feegrant/proto/cosmos/feegrant/v1beta1/feegrant.proto#L35-L71
 ```
 
 * `basic` is the instance of `BasicAllowance` which is optional for periodic fee allowance. If empty, the grant will have no `expiration` and no `spend_limit`.
@@ -89,7 +89,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/feegrant/proto/cosmo
 `AllowedMsgAllowance` is a fee allowance, it can be any of `BasicFeeAllowance`, `PeriodicAllowance` but restricted only to the allowed messages mentioned by the granter.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/feegrant/proto/cosmos/feegrant/v1beta1/feegrant.proto#L73-L84
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/feegrant/proto/cosmos/feegrant/v1beta1/feegrant.proto#L73-L84
 ```
 
 * `allowance` is either `BasicAllowance` or `PeriodicAllowance`.
@@ -101,19 +101,19 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/feegrant/proto/cosmo
 `feegrant` module introduces a `FeeGranter` flag for CLI for the sake of executing transactions with fee granter. When this flag is set, `clientCtx` will append the granter account address for transactions generated through CLI.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/client/cmd.go#L256-L267
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/client/cmd.go#L269-L280
 ```
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/client/tx/tx.go#L129-L131
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/client/tx/tx.go#L129-L131
 ```
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/auth/tx/builder.go#L208
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/auth/tx/builder.go#L208
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/proto/cosmos/tx/v1beta1/tx.proto#L216-L243
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/proto/cosmos/tx/v1beta1/tx.proto#L216-L243
 ```
 
 Example cmd:
@@ -147,7 +147,7 @@ Fee allowance grants are stored in the state as follows:
 * Grant: `0x00 | grantee_addr_len (1 byte) | grantee_addr_bytes |  granter_addr_len (1 byte) | granter_addr_bytes -> ProtocolBuffer(Grant)`
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/feegrant/feegrant.pb.go#L222-L230
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/feegrant/feegrant.pb.go#L222-L230
 ```
 
 ### FeeAllowanceQueue
@@ -165,7 +165,7 @@ Fee allowance queue keys are stored in the state as follows:
 A fee allowance grant will be created with the `MsgGrantAllowance` message.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/feegrant/proto/cosmos/feegrant/v1beta1/tx.proto#L30-L44
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/feegrant/proto/cosmos/feegrant/v1beta1/tx.proto#L30-L44
 ```
 
 ### Msg/RevokeAllowance
@@ -173,7 +173,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/feegrant/proto/cosmo
 An allowed grant fee allowance can be removed with the `MsgRevokeAllowance` message.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/feegrant/proto/cosmos/feegrant/v1beta1/tx.proto#L49-L62
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/feegrant/proto/cosmos/feegrant/v1beta1/tx.proto#L49-L62
 ```
 
 ## Events

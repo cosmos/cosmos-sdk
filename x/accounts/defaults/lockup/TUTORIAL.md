@@ -23,7 +23,7 @@ simd keys add owner --keyring-backend test --home ./.testnets/node0/simd/
 
 ## Init
 
-Normally the granter must have enough token to grant to the lockup account during the lockup account init process. The owner wallet should be associated with the individual that the granter want to grant the fund to.
+Normally the granter must have enough token to create to the lockup account during the lockup account init process. The owner wallet should be associated with the individual that the granter wants to create the lockup account for.
 
 Now, the granter can craft the lockup account init messages. This message depend on what type of lockup account the granter want to create.
 

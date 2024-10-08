@@ -82,13 +82,11 @@ func (i *mergedIterator[Parent, Cache]) Value() []byte {
 
 // Close closes both the parent and cache iterators.
 // It returns any error encountered during the closing of the iterators.
-func (i *mergedIterator[Parent, Cache]) Close() error {
-	err1 := i.parent.Close()
-	err2 := i.cache.Close()
-	if err1 != nil {
-		return err1
-	}
-	return err2
+func (i *mergedIterator[Parent, Cache]) Close() (err error) {
+	err = errors.Join(err, i.parent.Close())
+	err = errors.Join(err, i.cache.Close())
+	i.valid = false
+	return err
 }
 
 // Error returns any error that occurred during iteration.

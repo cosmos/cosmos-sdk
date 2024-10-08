@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math/big"
 	"strings"
 	"time"
 
@@ -172,7 +171,7 @@ func (b *Builder) BuildQueryMethodCommand(ctx context.Context, descriptor protor
 }
 
 func encoder(encoder aminojson.Encoder) aminojson.Encoder {
-	customEncoder := encoder.DefineTypeEncoding("google.protobuf.Duration", func(_ *aminojson.Encoder, msg protoreflect.Message, w io.Writer) error {
+	return encoder.DefineTypeEncoding("google.protobuf.Duration", func(_ *aminojson.Encoder, msg protoreflect.Message, w io.Writer) error {
 		var (
 			secondsName protoreflect.Name = "seconds"
 			nanosName   protoreflect.Name = "nanos"
@@ -232,34 +231,4 @@ func encoder(encoder aminojson.Encoder) aminojson.Encoder {
 		_, err = fmt.Fprintf(w, `"%s"`, sdk.NewDecCoinFromDec(denom, amountDec)) // TODO(@julienrbrt): Eventually remove this SDK dependency
 		return err
 	})
-
-	customEncoder.DefineScalarEncoding("cosmos.Dec", func(_ *aminojson.Encoder, value protoreflect.Value, w io.Writer) error {
-		decStr := value.String()
-		if strings.Contains(decStr, "[") { // check if it's a bytes field (e.g mint inflation)
-			decStr = string(value.Bytes())
-		}
-
-		// If the decimal doesn't contain a point, we assume it's a value formatted using the legacy
-		// `math.Dec`. So we try to parse it as an integer and then convert it to a
-		// decimal.
-		if !strings.Contains(decStr, ".") {
-			parsedInt, ok := new(big.Int).SetString(decStr, 10)
-			if !ok {
-				return fmt.Errorf("invalid decimal: %s", decStr)
-			}
-
-			// We assume the decimal has 18 digits of precision.
-			decStr = math.LegacyNewDecFromBigIntWithPrec(parsedInt, math.LegacyPrecision).String()
-		}
-
-		formatted, err := math.FormatDec(decStr)
-		if err != nil {
-			return fmt.Errorf("cannot format decimal %s: %w", decStr, err)
-		}
-
-		_, err = fmt.Fprintf(w, `"%s"`, formatted)
-		return err
-	})
-
-	return customEncoder
 }

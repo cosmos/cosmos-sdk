@@ -56,7 +56,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * [#21853](https://github.com/cosmos/cosmos-sdk/pull/21853) Fix `*big.Int` unmarshalling in txs.
-* [#21853](https://github.com/cosmos/cosmos-sdk/pull/21853) Fix `*big.Int` marshalling in queries.
 
 ## [v2.0.0-beta.5] - 2024-09-18
 

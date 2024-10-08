@@ -8,7 +8,7 @@ defined in ABCI++.
 ## Extend Vote
 
 ABCI2.0 (colloquially called ABCI++) allows an application to extend a pre-commit vote with arbitrary data. This process does NOT have to be deterministic, and the data returned can be unique to the
-validator process. The Cosmos SDK defines [`baseapp.ExtendVoteHandler`](https://github.com/cosmos/cosmos-sdk/blob/v0.50.1/types/abci.go#L26-L27):
+validator process. The Cosmos SDK defines [`baseapp.ExtendVoteHandler`](https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/types/abci.go#L26-L27):
 
 ```go
 type ExtendVoteHandler func(Context, *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error)
@@ -35,7 +35,7 @@ Click [here](https://docs.cosmos.network/main/build/abci/vote-extensions) if you
 
 Similar to extending a vote, an application can also verify vote extensions from
 other validators when validating their pre-commits. For a given vote extension,
-this process MUST be deterministic. The Cosmos SDK defines [`sdk.VerifyVoteExtensionHandler`](https://github.com/cosmos/cosmos-sdk/blob/v0.50.1/types/abci.go#L29-L31):
+this process MUST be deterministic. The Cosmos SDK defines [`sdk.VerifyVoteExtensionHandler`](https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/types/abci.go#L29-L31):
 
 ```go
 type VerifyVoteExtensionHandler func(Context, *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error)

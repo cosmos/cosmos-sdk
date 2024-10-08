@@ -23,7 +23,7 @@ import "cosmossdk.io/tools/confix/cmd"
 Find the following line:
 
 ```go
-initRootCmd(rootCmd, encodingConfig)
+initRootCmd(rootCmd, moduleManager)
 ```
 
 After that line, add the following:
@@ -39,10 +39,10 @@ An implementation example can be found in `simapp`.
 
 The command will be available as `simd config`.
 
-```tip
+:::tip
 Using confix directly in the application can have less features than using it standalone.
 This is because confix is versioned with the SDK, while `latest` is the standalone version.
-```
+:::
 
 ### Using Confix Standalone
 
@@ -138,7 +138,7 @@ confix view ~/.simapp/config/client.toml # views the current app client conf
 
 ### Maintainer
 
-At each SDK modification of the default configuration, add the default SDK config under `data/v0.XX-app.toml`.
+At each SDK modification of the default configuration, add the default SDK config under `data/vXX-app.toml`.
 This allows users to use the tool standalone.
 
 ### Compatibility
@@ -149,7 +149,8 @@ The recommended standalone version is `latest`, which is using the latest develo
 | ----------- | -------------- |
 | v0.50       | v0.1.x         |
 | v0.52       | v0.2.x         |
+| v2          | v0.2.x         |
 
 ## Credits
 
-This project is based on the [CometBFT RFC 019](https://github.com/cometbft/cometbft/blob/5013bc3f4a6d64dcc2bf02ccc002ebc9881c62e4/docs/rfc/rfc-019-config-version.md) and their own implementation of [confix](https://github.com/cometbft/cometbft/blob/v0.36.x/scripts/confix/confix.go).
+This project is based on the [CometBFT RFC 019](https://github.com/cometbft/cometbft/blob/5013bc3f4a6d64dcc2bf02ccc002ebc9881c62e4/docs/rfc/rfc-019-config-version.md) and their never released own implementation of [confix](https://github.com/cometbft/cometbft/blob/v0.36.x/scripts/confix/confix.go).

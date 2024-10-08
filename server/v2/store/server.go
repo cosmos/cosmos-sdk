@@ -19,7 +19,7 @@ var (
 
 const ServerName = "store"
 
-// StoreComponent manages store config and contains prune & snapshot commands
+// Server manages store config and contains prune & snapshot commands
 type Server[T transaction.Tx] struct {
 	config *Config
 	// saving appCreator for only RestoreSnapshotCmd

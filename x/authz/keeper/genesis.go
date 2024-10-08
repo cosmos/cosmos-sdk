@@ -18,11 +18,11 @@ func (k Keeper) InitGenesis(ctx context.Context, data *authz.GenesisState) error
 			continue
 		}
 
-		grantee, err := k.authKeeper.AddressCodec().StringToBytes(entry.Grantee)
+		grantee, err := k.addrCdc.StringToBytes(entry.Grantee)
 		if err != nil {
 			return err
 		}
-		granter, err := k.authKeeper.AddressCodec().StringToBytes(entry.Granter)
+		granter, err := k.addrCdc.StringToBytes(entry.Granter)
 		if err != nil {
 			return err
 		}
@@ -44,11 +44,11 @@ func (k Keeper) InitGenesis(ctx context.Context, data *authz.GenesisState) error
 func (k Keeper) ExportGenesis(ctx context.Context) (*authz.GenesisState, error) {
 	var entries []authz.GrantAuthorization
 	err := k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) (bool, error) {
-		granterAddr, err := k.authKeeper.AddressCodec().BytesToString(granter)
+		granterAddr, err := k.addrCdc.BytesToString(granter)
 		if err != nil {
 			return false, err
 		}
-		granteeAddr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
+		granteeAddr, err := k.addrCdc.BytesToString(grantee)
 		if err != nil {
 			return false, err
 		}

@@ -33,6 +33,8 @@ var (
 
 type Option func(a *Account)
 
+func (Option) IsManyPerContainerType() {}
+
 func NewAccount(name string, handlerMap *signing.HandlerMap, options ...Option) accountstd.AccountCreatorFunc {
 	return func(deps accountstd.Dependencies) (string, accountstd.Interface, error) {
 		acc := Account{

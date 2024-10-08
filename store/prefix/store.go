@@ -1,32 +1,30 @@
-// Package prefixstore provides a store that prefixes all keys with a given
-// prefix.
-// Implementation taken from cosmossdk.io/store/prefix, and adapted to
-// the cosmossdk.io/core/store.KVStore interface.
-package prefixstore
+package prefix
 
 import (
 	"bytes"
 	"errors"
+	"io"
 
-	"cosmossdk.io/core/store"
+	"cosmossdk.io/store/cachekv"
+	"cosmossdk.io/store/tracekv"
+	"cosmossdk.io/store/types"
 )
 
-// New creates a new prefix store using the provided bytes prefix.
-func New(store store.KVStore, prefix []byte) store.KVStore {
-	return Store{
-		parent: store,
-		prefix: prefix,
-	}
-}
-
-var _ store.KVStore = Store{}
+var _ types.KVStore = Store{}
 
 // Store is similar with cometbft/cometbft-db/blob/v1.0.1/prefixdb.go
 // both gives access only to the limited subset of the store
 // for convenience or safety
 type Store struct {
-	parent store.KVStore
+	parent types.KVStore
 	prefix []byte
+}
+
+func NewStore(parent types.KVStore, prefix []byte) Store {
+	return Store{
+		parent: parent,
+		prefix: prefix,
+	}
 }
 
 func cloneAppend(bz, tail []byte) (res []byte) {
@@ -44,27 +42,47 @@ func (s Store) key(key []byte) (res []byte) {
 	return
 }
 
-// Implements KVStore
-func (s Store) Get(key []byte) ([]byte, error) {
-	return s.parent.Get(s.key(key))
+// GetStoreType implements Store
+func (s Store) GetStoreType() types.StoreType {
+	return s.parent.GetStoreType()
 }
 
-// Implements KVStore
-func (s Store) Has(key []byte) (bool, error) {
+// CacheWrap implements CacheWrap
+func (s Store) CacheWrap() types.CacheWrap {
+	return cachekv.NewStore(s)
+}
+
+// CacheWrapWithTrace implements the KVStore interface.
+func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
+	return cachekv.NewStore(tracekv.NewStore(s, w, tc))
+}
+
+// Get implements KVStore
+func (s Store) Get(key []byte) []byte {
+	res := s.parent.Get(s.key(key))
+	return res
+}
+
+// Has implements KVStore
+func (s Store) Has(key []byte) bool {
 	return s.parent.Has(s.key(key))
 }
 
-// Implements KVStore
-func (s Store) Set(key, value []byte) error {
-	return s.parent.Set(s.key(key), value)
+// Set implements KVStore
+func (s Store) Set(key, value []byte) {
+	types.AssertValidKey(key)
+	types.AssertValidValue(value)
+	s.parent.Set(s.key(key), value)
 }
 
-// Implements KVStore
-func (s Store) Delete(key []byte) error { return s.parent.Delete(s.key(key)) }
+// Delete implements KVStore
+func (s Store) Delete(key []byte) {
+	s.parent.Delete(s.key(key))
+}
 
-// Implements KVStore
+// Iterator implements KVStore
 // Check https://github.com/cometbft/cometbft-db/blob/v1.0.1/prefixdb.go#L109
-func (s Store) Iterator(start, end []byte) (store.Iterator, error) {
+func (s Store) Iterator(start, end []byte) types.Iterator {
 	newstart := cloneAppend(s.prefix, start)
 
 	var newend []byte
@@ -74,17 +92,14 @@ func (s Store) Iterator(start, end []byte) (store.Iterator, error) {
 		newend = cloneAppend(s.prefix, end)
 	}
 
-	iter, err := s.parent.Iterator(newstart, newend)
-	if err != nil {
-		return nil, err
-	}
+	iter := s.parent.Iterator(newstart, newend)
 
-	return newPrefixIterator(s.prefix, start, end, iter), nil
+	return newPrefixIterator(s.prefix, start, end, iter)
 }
 
 // ReverseIterator implements KVStore
 // Check https://github.com/cometbft/cometbft-db/blob/v1.0.1/prefixdb.go#L132
-func (s Store) ReverseIterator(start, end []byte) (store.Iterator, error) {
+func (s Store) ReverseIterator(start, end []byte) types.Iterator {
 	newstart := cloneAppend(s.prefix, start)
 
 	var newend []byte
@@ -94,25 +109,22 @@ func (s Store) ReverseIterator(start, end []byte) (store.Iterator, error) {
 		newend = cloneAppend(s.prefix, end)
 	}
 
-	iter, err := s.parent.ReverseIterator(newstart, newend)
-	if err != nil {
-		return nil, err
-	}
+	iter := s.parent.ReverseIterator(newstart, newend)
 
-	return newPrefixIterator(s.prefix, start, end, iter), nil
+	return newPrefixIterator(s.prefix, start, end, iter)
 }
 
-var _ store.Iterator = (*prefixIterator)(nil)
+var _ types.Iterator = (*prefixIterator)(nil)
 
 type prefixIterator struct {
 	prefix []byte
 	start  []byte
 	end    []byte
-	iter   store.Iterator
+	iter   types.Iterator
 	valid  bool
 }
 
-func newPrefixIterator(prefix, start, end []byte, parent store.Iterator) *prefixIterator {
+func newPrefixIterator(prefix, start, end []byte, parent types.Iterator) *prefixIterator {
 	return &prefixIterator{
 		prefix: prefix,
 		start:  start,
@@ -122,17 +134,17 @@ func newPrefixIterator(prefix, start, end []byte, parent store.Iterator) *prefix
 	}
 }
 
-// Implements Iterator
+// Domain implements Iterator
 func (pi *prefixIterator) Domain() ([]byte, []byte) {
 	return pi.start, pi.end
 }
 
-// Implements Iterator
+// Valid implements Iterator
 func (pi *prefixIterator) Valid() bool {
 	return pi.valid && pi.iter.Valid()
 }
 
-// Implements Iterator
+// Next implements Iterator
 func (pi *prefixIterator) Next() {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Next()")
@@ -144,7 +156,7 @@ func (pi *prefixIterator) Next() {
 	}
 }
 
-// Implements Iterator
+// Key implements Iterator
 func (pi *prefixIterator) Key() (key []byte) {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Key()")
@@ -156,7 +168,7 @@ func (pi *prefixIterator) Key() (key []byte) {
 	return
 }
 
-// Implements Iterator
+// Value implements Iterator
 func (pi *prefixIterator) Value() []byte {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Value()")
@@ -165,7 +177,7 @@ func (pi *prefixIterator) Value() []byte {
 	return pi.iter.Value()
 }
 
-// Implements Iterator
+// Close implements Iterator
 func (pi *prefixIterator) Close() error {
 	return pi.iter.Close()
 }
@@ -191,33 +203,5 @@ func stripPrefix(key, prefix []byte) []byte {
 
 // wrapping types.PrefixEndBytes
 func cpIncr(bz []byte) []byte {
-	return prefixEndBytes(bz)
-}
-
-// prefixEndBytes returns the []byte that would end a
-// range query for all []byte with a certain prefix
-// Deals with last byte of prefix being FF without overflowing
-func prefixEndBytes(prefix []byte) []byte {
-	if len(prefix) == 0 {
-		return nil
-	}
-
-	end := make([]byte, len(prefix))
-	copy(end, prefix)
-
-	for {
-		if end[len(end)-1] != byte(255) {
-			end[len(end)-1]++
-			break
-		}
-
-		end = end[:len(end)-1]
-
-		if len(end) == 0 {
-			end = nil
-			break
-		}
-	}
-
-	return end
+	return types.PrefixEndBytes(bz)
 }

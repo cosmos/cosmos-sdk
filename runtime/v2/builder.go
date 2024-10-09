@@ -144,7 +144,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 				return nil, errors.New("cannot init genesis on non-zero state")
 			}
 			genesisCtx := services.NewGenesisContext(a.branch(zeroState))
-			genesisState, err := genesisCtx.Run(ctx, func(ctx context.Context) error {
+			genesisState, err := genesisCtx.Mutate(ctx, func(ctx context.Context) error {
 				err = a.app.moduleManager.InitGenesisJSON(ctx, genesisJSON, txHandler)
 				if err != nil {
 					return fmt.Errorf("failed to init genesis: %w", err)

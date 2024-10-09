@@ -89,11 +89,6 @@ func (a *App[T]) Close() error {
 	return nil
 }
 
-// GetStore returns the app store.
-func (a *App[T]) GetStore() Store {
-	return a.db
-}
-
 func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
 	return a.AppManager
 }

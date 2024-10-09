@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	storev2 "cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/root"
 )
 
@@ -45,7 +44,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 
 			logger := log.NewLogger(cmd.OutOrStdout())
 
-			rootStore, keepRecent, err := createRootStore(cmd, vp, logger)
+			rootStore, opts, err := createRootStore(vp, logger)
 			if err != nil {
 				return fmt.Errorf("can not create root store %w", err)
 			}
@@ -60,7 +59,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 				return fmt.Errorf("the database has no valid heights to prune, the latest height: %v", latestHeight)
 			}
 
-			diff := latestHeight - keepRecent
+			diff := latestHeight - opts.SCPruningOption.KeepRecent
 			cmd.Printf("pruning heights up to %v\n", diff)
 
 			err = rootStore.Prune(latestHeight)
@@ -79,66 +78,16 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 	return cmd
 }
 
-func createRootStore(cmd *cobra.Command, v *viper.Viper, logger log.Logger) (storev2.RootStore, uint64, error) {
-	tempViper := v
-	rootDir := v.GetString(serverv2.FlagHome)
-	// handle FlagAppDBBackend
-	var dbType db.DBType
-	if cmd.Flags().Changed(FlagAppDBBackend) {
-		dbStr, err := cmd.Flags().GetString(FlagAppDBBackend)
-		if err != nil {
-			return nil, 0, err
-		}
-		dbType = db.DBType(dbStr)
-	} else {
-		dbType = db.DBType(v.GetString(FlagAppDBBackend))
-	}
-	scRawDb, err := db.NewDB(dbType, "application", filepath.Join(rootDir, "data"), nil)
+func createRootStore(v *viper.Viper, logger log.Logger) (storev2.RootStore, root.Options, error) {
+	storeConfig, err := UnmarshalConfig(v.AllSettings())
 	if err != nil {
-		panic(err)
+		return nil, root.Options{}, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
-
-	// handle KeepRecent & Interval flags
-	if cmd.Flags().Changed(FlagKeepRecent) {
-		keepRecent, err := cmd.Flags().GetUint64(FlagKeepRecent)
-		if err != nil {
-			return nil, 0, err
-		}
-
-		// viper has an issue that we could not override subitem then Unmarshal key
-		// so we can not do viper.Set() as comment below
-		// https://github.com/spf13/viper/issues/1106
-		// Do it by a hacky: overwrite app.toml file then read config again.
-
-		// v.Set("store.options.sc-pruning-option.keep-recent", keepRecent) // entry that read from app.toml
-		// v.Set("store.options.ss-pruning-option.keep-recent", keepRecent)
-
-		err = overrideKeepRecent(filepath.Join(rootDir, "config"), keepRecent)
-		if err != nil {
-			return nil, 0, err
-		}
-
-		tempViper, err = serverv2.ReadConfig(filepath.Join(rootDir, "config"))
-		if err != nil {
-			return nil, 0, err
-		}
+	store, err := root.NewBuilder().Build(logger, storeConfig)
+	if err != nil {
+		return nil, root.Options{}, fmt.Errorf("failed to create store backend: %w", err)
 	}
-
-	storeOpts := root.DefaultStoreOptions()
-	if v != nil && v.Sub("store.options") != nil {
-		if err := v.Sub("store.options").Unmarshal(&storeOpts); err != nil {
-			return nil, 0, fmt.Errorf("failed to store options: %w", err)
-		}
-	}
-
-	store, err := root.CreateRootStore(&root.FactoryOptions{
-		Logger:  logger,
-		RootDir: rootDir,
-		Options: storeOpts,
-		SCRawDB: scRawDb,
-	})
-
-	return store, tempViper.GetUint64("store.options.sc-pruning-option.keep-recent"), err
+	return store, storeConfig.Options, nil
 }
 
 func overrideKeepRecent(configPath string, keepRecent uint64) error {

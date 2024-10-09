@@ -242,10 +242,10 @@ func DefaultServiceBindings() depinject.Config {
 				stf.NewKVStoreService(actor),
 			)
 		}
-		headerService header.Service = services.NewGenesisHeaderService(stf.HeaderService{})
-		cometService  comet.Service  = &services.ContextAwareCometInfoService{}
-		eventService                 = stf.NewEventService()
-		storeBuilder                 = root.NewBuilder()
+		cometService  comet.Service = &services.ContextAwareCometInfoService{}
+		headerService               = services.NewGenesisHeaderService(stf.HeaderService{})
+		eventService                = services.NewGenesisEventService(stf.NewEventService())
+		storeBuilder                = root.NewBuilder()
 	)
 	return depinject.Supply(
 		kvServiceFactory,

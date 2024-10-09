@@ -21,7 +21,6 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	serverv2store "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2/db"
-	"cosmossdk.io/store/v2/root"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -40,7 +39,7 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	vp.Set(serverv2store.FlagAppDBBackend, string(db.DBTypeGoLevelDB))
 	vp.Set(serverv2.FlagHome, t.TempDir())
 
-	app := NewSimApp[transaction.Tx](logger, vp, root.NewBuilder())
+	app := NewSimApp[transaction.Tx](logger, vp)
 	genesis := app.ModuleManager().DefaultGenesis()
 
 	privVal := mock.NewPV()

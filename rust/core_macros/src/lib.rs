@@ -262,7 +262,7 @@ pub fn handler_api(attr: TokenStream2, mut item_trait: ItemTrait) -> manyhow::Re
         }
 
         impl ::ixc_message_api::handler::RawHandler for dyn #trait_ident {
-            fn handle(&self, message_packet: &mut ::ixc_message_api::packet::MessagePacket, callbacks: &dyn ixc_message_api::handler::HostBackend, allocator: &dyn ::ixc_message_api::handler::Allocator) -> ::core::result::Result<(), ::ixc_message_api::handler::HandlerError> {
+            fn handle(&self, message_packet: &mut ::ixc_message_api::packet::MessagePacket, callbacks: &dyn ixc_message_api::handler::HostBackend, allocator: &dyn ::ixc_message_api::handler::Allocator) -> ::core::result::Result<(), ::ixc_message_api::code::ErrorCode> {
                 ::ixc_core::routes::exec_route(self, message_packet, callbacks, allocator)
             }
         }

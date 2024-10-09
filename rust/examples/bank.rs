@@ -41,7 +41,8 @@ pub mod bank {
     #[publish]
     impl BankAPI for Bank {
         fn get_balance(&self, ctx: &Context, account: AccountID, denom: &str) -> Result<u128> {
-            self.balances.get(ctx, (account, denom))
+            let amount = self.balances.get(ctx, (account, denom))?;
+            Ok(amount)
         }
 
         fn send<'a>(&self, ctx: &'a mut Context, to: AccountID, amount: &[Coin<'a>], evt: EventBus<EventSend>) -> Result<()> {
@@ -64,7 +65,6 @@ mod tests {
     use ixc_core::handler::{Client, ClientFactory};
     use super::bank::*;
     use ixc_testing::*;
-    use crate::bank;
 
     #[test]
     fn test() {
@@ -73,9 +73,13 @@ mod tests {
         let mut alice = app.new_client_context().unwrap();
         let mut bob = app.new_client_context().unwrap();
         let bank_client = create_account(&mut alice, BankCreate { init_denom: "foo", init_balance: 1000 }).unwrap();
-        bank_client.send(&mut alice, bob.account_id(), &[Coin { denom: "foo", amount: 100 }]).unwrap();
-        let alice_balance = bank_client.get_balance(&mut alice, bank_client.account_id(), "foo").unwrap();
+        let alice_balance = bank_client.get_balance(&alice, alice.account_id(), "foo").unwrap();
         assert_eq!(alice_balance, 1000);
+        bank_client.send(&mut alice, bob.account_id(), &[Coin { denom: "foo", amount: 100 }]).unwrap();
+        let alice_balance = bank_client.get_balance(&alice, alice.account_id(), "foo").unwrap();
+        assert_eq!(alice_balance, 900);
+        let bob_balance = bank_client.get_balance(&bob, bob.account_id(), "foo").unwrap();
+        assert_eq!(bob_balance, 100);
     }
 }
 

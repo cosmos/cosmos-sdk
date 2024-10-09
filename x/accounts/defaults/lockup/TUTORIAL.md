@@ -30,7 +30,7 @@ Normally the creator must have enough token to grant to the lockup account durin
 Now, the creator can craft the lockup account init messages. This message depend on what type of lockup account the creator want to create.
 For continous, delayed, permanent locking account:
 
-```go
+```json
 {
     "owner": "cosmos1vaqh39cdex9sgr69ef0tdln5cn0hdyd3s0lx45",
     "end_time": 1495793860
@@ -44,7 +44,7 @@ For continous, delayed, permanent locking account:
  
 For periodic locking account:
 
-```go
+```json
     {
       "owner": "cosmos1vaqh39cdex9sgr69ef0tdln5cn0hdyd3s0lx45",
       "locking_periods": [
@@ -107,7 +107,7 @@ The execute message type url for this execution is `cosmos.accounts.defaults.loc
 
 Example of json file:
 
-```go
+```json
 {
     "sender": "cosmos1vaqh39cdex9sgr69ef0tdln5cn0hdyd3s0lx45",
     "validator_address": "cosmosvaloper1vaqh39cdex9sgr69ef0tdln5cn0hdyd3s0lx45",
@@ -128,7 +128,7 @@ The execute message type url for this execution is `cosmos.accounts.defaults.loc
 
 Example of json file:
 
-```go
+```json
 {
     "sender": "cosmos1vaqh39cdex9sgr69ef0tdln5cn0hdyd3s0lx45",
     "validator_address": "cosmosvaloper1vaqh39cdex9sgr69ef0tdln5cn0hdyd3s0lx45",
@@ -149,7 +149,7 @@ The execute message type url for this execution is `cosmos.accounts.defaults.loc
 
 Example of json file:
 
-```go
+```json
 {
     "sender": "cosmos1vaqh39cdex9sgr69ef0tdln5cn0hdyd3s0lx45",
     "validator_address": "cosmosvaloper1vaqh39cdex9sgr69ef0tdln5cn0hdyd3s0lx45",
@@ -166,7 +166,7 @@ The execute message type url for this execution is `cosmos.accounts.defaults.loc
 
 Example of json file:
 
-```go
+```json
 {
     // lockup account owner address
     "withdrawer": "cosmos1vaqh39cdex9sgr69ef0tdln5cn0hdyd3s0lx46",
@@ -186,7 +186,7 @@ The execute message type url for this execution is `cosmos.accounts.defaults.loc
 
 Example of json file:
 
-```go
+```json
 {
     "sender": "cosmos1vaqh39cdex9sgr69ef0tdln5cn0hdyd3s0lx45",
     "to_address": "cosmos1vaqh39cdex9sgr69ef0tdln5cn0hdyd3s0lx46",

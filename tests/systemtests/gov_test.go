@@ -375,8 +375,13 @@ func TestQueryDeposit(t *testing.T) {
 
 	sut.ResetChain(t)
 	cli := NewCLIWrapper(t, sut, verbose)
-	// Set short period
-	sut.ModifyGenesisJSON(t, SetGovVotingPeriod(t, time.Second*8))
+	// short voting period
+	// update expedited voting period to avoid validation error
+	sut.ModifyGenesisJSON(
+		t,
+		SetGovVotingPeriod(t, time.Second*8),
+		SetGovExpeditedVotingPeriod(t, time.Second*7),
+	)
 
 	// get validator address
 	valAddr := gjson.Get(cli.Keys("keys", "list"), "0.address").String()

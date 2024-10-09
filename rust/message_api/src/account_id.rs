@@ -23,7 +23,7 @@ impl AccountID {
     /// Returns true if the account ID is zero.
     /// The account ID zero is reserved for the "null account" meaning
     /// that the account is not valid or does not exist.
-    pub fn is_null(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.0 == 0
     }
 }

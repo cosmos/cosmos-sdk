@@ -26,3 +26,32 @@ pub use context::Context;
 pub use events::EventBus;
 
 pub use result::{Result};
+
+/// Format an error message.
+#[macro_export]
+macro_rules! fmt_error {
+    ($code:ident, $($arg:tt)*) => {
+        $crate::error::HandlerError::new_fmt_with_code($code, core::format_args!($($arg)*))
+    };
+    ($($arg:tt)*) => {
+        $crate::error::HandlerError::new_fmt(core::format_args!($($arg)*))
+    };
+}
+
+/// Return an error with a formatted message.
+#[macro_export]
+macro_rules! bail {
+    ($($arg:tt)*) => {
+        return core::result::Result::Err($crate::fmt_error!($($arg)*));
+    };
+}
+
+/// Ensure a condition is true, otherwise return an error with a formatted message.
+#[macro_export]
+macro_rules! ensure {
+    ($cond:expr, $($arg:tt)*) => {
+        if !$cond {
+            return core::result::Result::Err($crate::fmt_error!($($arg)*));
+        }
+    };
+}

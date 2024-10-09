@@ -82,34 +82,34 @@ impl<E: Error, F: Into<u8> + TryFrom<u8> + Debug> From<E> for HandlerError<F> {
     }
 }
 
-/// Format an error message.
-#[macro_export]
-macro_rules! fmt_error {
-    ($code:ident, $($arg:tt)*) => {
-        $crate::error::HandlerError::new_fmt_with_code($code, core::format_args!($($arg)*))
-    };
-    ($($arg:tt)*) => {
-        $crate::error::HandlerError::new_fmt(core::format_args!($($arg)*))
-    };
-}
-
-/// Return an error with a formatted message.
-#[macro_export]
-macro_rules! bail {
-    ($($arg:tt)*) => {
-        return core::result::Err($crate::error::fmt_error!($($arg)*));
-    };
-}
-
-/// Ensure a condition is true, otherwise return an error with a formatted message.
-#[macro_export]
-macro_rules! ensure {
-    ($cond:expr, $($arg:tt)*) => {
-        if !$cond {
-            return core::result::Err($crate::error::fmt_error!($($arg)*));
-        }
-    };
-}
+// /// Format an error message.
+// #[macro_export]
+// macro_rules! fmt_error {
+//     ($code:ident, $($arg:tt)*) => {
+//         $crate::error::HandlerError::new_fmt_with_code($code, core::format_args!($($arg)*))
+//     };
+//     ($($arg:tt)*) => {
+//         $crate::error::HandlerError::new_fmt(core::format_args!($($arg)*))
+//     };
+// }
+//
+// /// Return an error with a formatted message.
+// #[macro_export]
+// macro_rules! bail {
+//     ($($arg:tt)*) => {
+//         return core::result::Err($crate::error::fmt_error!($($arg)*));
+//     };
+// }
+//
+// /// Ensure a condition is true, otherwise return an error with a formatted message.
+// #[macro_export]
+// macro_rules! ensure {
+//     ($cond:expr, $($arg:tt)*) => {
+//         if !$cond {
+//             return core::result::Err($crate::error::fmt_error!($($arg)*));
+//         }
+//     };
+// }
 
 /// The standard error type returned by client methods.
 #[derive(Clone)]

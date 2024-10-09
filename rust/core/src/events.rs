@@ -17,7 +17,8 @@ impl <T> Default for EventBus<T> {
 
 impl<T> EventBus<T> {
     /// Emits an event to the event bus.
-    pub fn emit<U>(&mut self, ctx: &mut Context, event: T) -> ClientResult<()> {
-        todo!()
+    pub fn emit(&mut self, ctx: &mut Context, event: &T) -> ClientResult<()> {
+        // TODO
+        Ok(())
     }
 }

@@ -36,11 +36,6 @@ import (
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2/cli"
 )
 
-func newApp[T transaction.Tx](logger log.Logger, viper *viper.Viper) serverv2.AppI[T] {
-	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
-	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper))
-}
-
 func initRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
@@ -71,10 +66,15 @@ func initRootCmd[T transaction.Tx](
 		offchain.OffChain(),
 	)
 
+	appCreator := func(logger log.Logger, viper *viper.Viper) serverv2.AppI[T] {
+		viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
+		return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper, storeBuilder))
+	}
+
 	// wire server commands
 	if err = serverv2.AddCommands(
 		rootCmd,
-		newApp,
+		appCreator,
 		logger,
 		initServerConfig(),
 		cometbft.New(
@@ -176,13 +176,13 @@ func appExport[T transaction.Tx](
 
 	var simApp *simapp.SimApp[T]
 	if height != -1 {
-		simApp = simapp.NewSimApp[T](logger, viper)
+		simApp = simapp.NewSimApp[T](logger, viper, root.NewBuilder())
 
 		if err := simApp.LoadHeight(uint64(height)); err != nil {
 			return genutilv2.ExportedApp{}, err
 		}
 	} else {
-		simApp = simapp.NewSimApp[T](logger, viper)
+		simApp = simapp.NewSimApp[T](logger, viper, root.NewBuilder())
 	}
 
 	return simApp.ExportAppStateAndValidators(jailAllowedAddrs)

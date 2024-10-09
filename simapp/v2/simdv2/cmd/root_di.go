@@ -32,14 +32,14 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 		autoCliOpts   autocli.AppOptions
 		moduleManager *runtime.MM[T]
 		clientCtx     client.Context
-		storeBuilder  root.Builder
+		storeBuilder  = root.NewBuilder()
 	)
 
 	if err := depinject.Inject(
 		depinject.Configs(
 			simapp.AppConfig(),
 			depinject.Provide(ProvideClientContext),
-			depinject.Supply(log.NewNopLogger()),
+			depinject.Supply(log.NewNopLogger(), storeBuilder),
 		),
 		&storeBuilder,
 		&autoCliOpts,

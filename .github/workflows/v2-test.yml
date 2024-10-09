@@ -109,3 +109,43 @@ jobs:
         if: env.GIT_DIFF
         run: |
           cd server/v2/cometbft && go test -mod=readonly -race -timeout 30m -tags='ledger test_ledger_mock'
+
+  test-system-v2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+          cache: true
+          cache-dependency-path: |
+            simapp/v2/go.sum
+            systemtest/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
+            **/Makefile
+            Makefile
+      - name: Install musl lib for simd (docker) binary
+        if: env.GIT_DIFF
+        run: |
+          sudo apt-get install -y musl
+      - name: system tests v2
+        if: env.GIT_DIFF
+        run: |
+          COSMOS_BUILD_OPTIONS=v2 make test-system
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: "testnet-setup"
+          path: ./systemtests/testnet/
+          retention-days: 3

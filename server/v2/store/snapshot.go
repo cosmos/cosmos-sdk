@@ -76,7 +76,7 @@ func (s *Server[T]) ExportSnapshotCmd() *cobra.Command {
 }
 
 // RestoreSnapshotCmd returns a command to restore a snapshot
-func (s *Server[T]) RestoreSnapshotCmd(newApp serverv2.AppCreator[T]) *cobra.Command {
+func (s *Server[T]) RestoreSnapshotCmd(rootStore storev2.Backend) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "restore <height> <format>",
 		Short: "Restore app state from local snapshot",
@@ -95,8 +95,6 @@ func (s *Server[T]) RestoreSnapshotCmd(newApp serverv2.AppCreator[T]) *cobra.Com
 			}
 
 			logger := log.NewLogger(cmd.OutOrStdout())
-			app := newApp(logger, v)
-			rootStore := app.GetStore().(storev2.RootStore)
 
 			sm, err := createSnapshotsManager(cmd, v, logger, rootStore)
 			if err != nil {
@@ -350,7 +348,9 @@ func (s *Server[T]) LoadArchiveCmd() *cobra.Command {
 	}
 }
 
-func createSnapshotsManager(cmd *cobra.Command, v *viper.Viper, logger log.Logger, store storev2.RootStore) (*snapshots.Manager, error) {
+func createSnapshotsManager(
+	cmd *cobra.Command, v *viper.Viper, logger log.Logger, store storev2.Backend,
+) (*snapshots.Manager, error) {
 	home := v.GetString(serverv2.FlagHome)
 	snapshotStore, err := snapshots.NewStore(filepath.Join(home, "data", "snapshots"))
 	if err != nil {
@@ -371,7 +371,11 @@ func createSnapshotsManager(cmd *cobra.Command, v *viper.Viper, logger log.Logge
 		}
 	}
 
-	sm := snapshots.NewManager(snapshotStore, snapshots.NewSnapshotOptions(interval, uint32(keepRecent)), store.GetStateCommitment().(snapshots.CommitSnapshotter), store.GetStateStorage().(snapshots.StorageSnapshotter), nil, logger)
+	sm := snapshots.NewManager(
+		snapshotStore, snapshots.NewSnapshotOptions(interval, uint32(keepRecent)),
+		store.GetStateCommitment().(snapshots.CommitSnapshotter),
+		store.GetStateStorage().(snapshots.StorageSnapshotter),
+		nil, logger)
 	return sm, nil
 }
 

@@ -8,13 +8,14 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestSubmitProposal(t *testing.T) {
@@ -39,7 +40,8 @@ func TestSubmitProposal(t *testing.T) {
 	"type": "Text",
 	"deposit": "-324foocoin"
 }`
-	invalidPropFile := testutil.WriteToNewTempFile(t, invalidProp)
+
+	invalidPropFile := StoreTempFile(t, []byte(invalidProp))
 	defer invalidPropFile.Close()
 
 	// Create a valid new proposal JSON.
@@ -62,7 +64,7 @@ func TestSubmitProposal(t *testing.T) {
 	"metadata": "%s",
 	"deposit": "%s"
 }`, govAddress, base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("stake", math.NewInt(100000)))
-	validPropFile := testutil.WriteToNewTempFile(t, validProp)
+	validPropFile := StoreTempFile(t, []byte(validProp))
 	defer validPropFile.Close()
 
 	testCases := []struct {
@@ -136,7 +138,7 @@ func TestSubmitLegacyProposal(t *testing.T) {
 		"type": "Text",
 	"deposit": "-324foocoin"
 	}`
-	invalidPropFile := testutil.WriteToNewTempFile(t, invalidProp)
+	invalidPropFile := StoreTempFile(t, []byte(invalidProp))
 	defer invalidPropFile.Close()
 
 	validProp := fmt.Sprintf(`{
@@ -145,7 +147,7 @@ func TestSubmitLegacyProposal(t *testing.T) {
 		  "type": "Text",
 		"deposit": "%s"
 	  }`, sdk.NewCoin("stake", math.NewInt(154310)))
-	validPropFile := testutil.WriteToNewTempFile(t, validProp)
+	validPropFile := StoreTempFile(t, []byte(validProp))
 	defer validPropFile.Close()
 
 	testCases := []struct {
@@ -253,7 +255,8 @@ func TestNewCmdWeightedVote(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String())}
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
+	}
 	rsp := cli.Run(proposalArgs...)
 	txResult, found := cli.AwaitTxCommitted(rsp)
 	require.True(t, found)
@@ -389,7 +392,8 @@ func TestQueryDeposit(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, valAddr),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String())}
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))).String()),
+	}
 	rsp := cli.Run(proposalArgs...)
 	txResult, found := cli.AwaitTxCommitted(rsp)
 	require.True(t, found)

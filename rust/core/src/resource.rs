@@ -25,4 +25,7 @@ pub unsafe trait StateObjectResource: Sized {
 
 /// An error that occurs during resource initialization.
 #[derive(Debug)]
-pub enum InitializationError {}
+pub enum InitializationError {
+    /// An non-specific error occurred.
+    Other,
+}

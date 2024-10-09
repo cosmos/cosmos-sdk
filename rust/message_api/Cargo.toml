@@ -11,3 +11,5 @@ workspace = true
 
 [dependencies]
 allocator-api2 = "0.2.18"
+num_enum = "0.7.3"
+thiserror = "1.0.64"

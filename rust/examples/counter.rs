@@ -3,7 +3,6 @@
 #[ixc::handler(Counter)]
 pub mod counter {
     use ixc::*;
-    use ixc_core::resource::{InitializationError, ResourceScope, StateObjectResource};
 
     #[derive(Resources)]
     pub struct Counter {
@@ -14,24 +13,28 @@ pub mod counter {
     impl Counter {
         #[on_create]
         pub fn create(&self, ctx: &mut Context, init_value: u64) -> Result<()> {
-            self.value.set(ctx, init_value)
+            self.value.set(ctx, init_value)?;
+            Ok(())
         }
 
         #[publish]
         pub fn get(&self, ctx: &Context) -> Result<u64> {
-            self.value.get(ctx)
+            let res = self.value.get(ctx)?;
+            Ok(res)
         }
 
         #[publish]
         pub fn inc(&self, ctx: &mut Context) -> Result<()> {
             let value = self.value.get(ctx)?;
-            self.value.set(ctx, value + 1)
+            self.value.set(ctx, value + 1)?;
+            Ok(())
         }
 
         #[publish]
         pub fn add(&self, ctx: &mut Context, value: u64) -> Result<()> {
             let current = self.value.get(ctx)?;
-            self.value.set(ctx, current + value)
+            self.value.set(ctx, current + value)?;
+            Ok(())
         }
     }
 }

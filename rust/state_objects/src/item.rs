@@ -3,6 +3,7 @@
 use std::borrow::Borrow;
 use ixc_core::{Context, Result};
 use ixc_core::resource::{InitializationError, StateObjectResource};
+use ixc_core::result::ClientResult;
 use ixc_schema::state_object::ObjectValue;
 use crate::Map;
 
@@ -16,13 +17,13 @@ where
         for<'a> V::Out<'a>: Default,
 {
     /// Gets the value of the item.
-    pub fn get<'value>(&self, ctx: &'value Context) -> Result<V::Out<'value>> {
+    pub fn get<'value>(&self, ctx: &'value Context) -> ClientResult<V::Out<'value>> {
         let v = self.map.get(ctx, ())?;
         Ok(v.unwrap_or_default())
-    }
+}
 
     /// Sets the value of the item.
-    pub fn set<'value, U>(&self, ctx: &'value mut Context, value: U) -> Result<()>
+    pub fn set<'value, U>(&self, ctx: &'value mut Context, value: U) -> ClientResult<()>
     where
         U: Borrow<V::In<'value>>,
     {

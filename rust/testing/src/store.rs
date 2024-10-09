@@ -2,14 +2,15 @@ use allocator_api2::alloc::Allocator;
 use imbl::{HashMap, OrdMap, Vector};
 use ixc::message_selector;
 use ixc_hypervisor::{CommitError, NewTxError, PopFrameError, PushFrameError, StateHandler, Transaction};
-use ixc_message_api::code::{ErrorCode, SystemErrorCode};
 use ixc_message_api::header::MessageSelector;
 use ixc_message_api::packet::MessagePacket;
 use ixc_message_api::AccountID;
 use std::alloc::Layout;
 use std::cell::RefCell;
 use thiserror::Error;
-use ixc_message_api::code::ErrorCode::CustomHandlerError;
+use ixc_message_api::code::ErrorCode;
+use ixc_message_api::code::ErrorCode::{HandlerCode, SystemCode};
+use ixc_message_api::code::SystemCode::{FatalExecutionError, InvalidHandler};
 
 #[derive(Default, Clone)]
 pub struct VersionedMultiStore {
@@ -176,18 +177,17 @@ impl Tx {
     unsafe fn get(&self, packet: &mut MessagePacket, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
         let key = packet.header().in_pointer1.get(packet);
         self.track_access(key, Access::Read)
-            .map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::InvalidHandler))?;
+            .map_err(|_| SystemCode(InvalidHandler))?;
         let mut current_frame = self.current_frame.borrow_mut();
         let account = current_frame.account;
         let current_store = current_frame.get_kv_store(account);
         match current_store.kv_store.get(key) {
             None => unsafe {
-                // TODO what should we do when not found?
-                return Err(CustomHandlerError(0))
+                return Err(HandlerCode(0)) // KV-stores should use handler code 0 to indicate not found
             }
             Some(value) => unsafe {
                 let out = allocator.allocate(Layout::from_size_align_unchecked(value.len(), 16)).
-                    map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::FatalExecutionError))?;
+                    map_err(|_| SystemCode(FatalExecutionError))?;
                 let out_slice = core::slice::from_raw_parts_mut(out.as_ptr() as *mut u8, value.len());
                 out_slice.copy_from_slice(value.as_slice());
                 packet.header_mut().out_pointer1.set_slice(out_slice);
@@ -200,7 +200,7 @@ impl Tx {
         let key = packet.header().in_pointer1.get(packet);
         let value = packet.header().in_pointer2.get(packet);
         self.track_access(key, Access::Write)
-            .map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::InvalidHandler))?;
+            .map_err(|_| SystemCode(InvalidHandler))?;
         let mut current_frame = self.current_frame.borrow_mut();
         let account = current_frame.account;
         let mut current_store = current_frame.get_kv_store(account);

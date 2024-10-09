@@ -1,14 +1,10 @@
 //! The Message trait for invoking messages dynamically.
 
-use allocator_api2::alloc::Allocator;
-use ixc_message_api::handler::{HandlerError, HostBackend};
+use core::fmt::Debug;
 use ixc_message_api::header::MessageSelector;
-use ixc_message_api::packet::MessagePacket;
-use ixc_schema::codec::{decode_value, Codec};
-use ixc_schema::mem::MemoryManager;
+use ixc_schema::codec::Codec;
 use ixc_schema::structs::StructSchema;
 use ixc_schema::value::{OptionalValue, SchemaValue};
-use crate::Context;
 
 /// The Message trait for invoking messages dynamically.
 pub trait Message<'a>: SchemaValue<'a> + StructSchema
@@ -19,21 +15,24 @@ pub trait Message<'a>: SchemaValue<'a> + StructSchema
     /// The optional response type.
     type Response<'b>: OptionalValue<'b>;
     /// The optional error type.
-    type Error: OptionalValue<'static>;
+    type Error: Into<u8> + TryFrom<u8> + Debug;
     /// The codec to use for encoding and decoding the message.
     type Codec: Codec + Default;
 }
 
 /// Extract the response and error types from a Result.
-/// Used internally for building the Message trait with a macro.
+/// Used internally in macros for building the Message implementation and ClientResult type.
 pub trait ExtractResponseTypes {
     /// The response type.
     type Response;
     /// The error type.
     type Error;
+    /// The client result type.
+    type ClientResult;
 }
 
-impl<R, E> ExtractResponseTypes for core::result::Result<R, E> {
+impl<R, E: Debug + Into<u8> + TryFrom<u8>> ExtractResponseTypes for crate::Result<R, E> {
     type Response = R;
     type Error = E;
+    type ClientResult = crate::result::ClientResult<R, E>;
 }

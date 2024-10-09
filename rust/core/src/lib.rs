@@ -20,15 +20,9 @@ pub mod resource;
 pub mod error;
 pub mod routes;
 pub mod low_level;
+pub mod result;
 
 pub use context::Context;
 pub use events::EventBus;
 
-use ixc_schema::value::OptionalValue;
-use crate::error::{Error, ErrorMessage};
-
-/// The standard result type which wraps specific error types in the generic Error type
-/// to include system error codes.
-// pub type Result<R, E: OptionalValue<'static> = ErrorMessage> = core::result::Result<R, E>;
-pub type Result<R> = core::result::Result<R, ()>;
-
+pub use result::{Result};

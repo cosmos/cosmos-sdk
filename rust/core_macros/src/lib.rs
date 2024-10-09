@@ -35,7 +35,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
 
     let client_ident = format_ident!("{}Client", handler);
     builder.define_client(&client_ident)?;
-    builder.define_client_impl(&quote! {#client_ident}, &quote!{pub})?;
+    builder.define_client_impl(&quote! {#client_ident}, &quote! {pub})?;
     builder.define_client_factory(&client_ident, &quote! {#handler})?;
 
     let on_create_msg = match builder.create_msg_name {
@@ -71,7 +71,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
     let mut trait_routers = vec![];
     for publish_trait in publish_traits.iter() {
         let trait_ident = &publish_trait.ident;
-        trait_routers.push(quote!{
+        trait_routers.push(quote! {
             if let Some(rt) = ::ixc_core::routes::find_route::<dyn #trait_ident>(sel) {
                 return rt.1(self, message_packet, callbacks, allocator)
             }
@@ -80,7 +80,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
 
     push_item(items, quote! {
         impl ::ixc_message_api::handler::RawHandler for #handler {
-            fn handle(&self, message_packet: &mut ::ixc_message_api::packet::MessagePacket, callbacks: &dyn ixc_message_api::handler::HostBackend, allocator: &dyn ::ixc_message_api::handler::Allocator) -> ::core::result::Result<(), ::ixc_message_api::handler::HandlerError> {
+            fn handle(&self, message_packet: &mut ::ixc_message_api::packet::MessagePacket, callbacks: &dyn ixc_message_api::handler::HostBackend, allocator: &dyn ::ixc_message_api::handler::Allocator) -> ::core::result::Result<(), ::ixc_message_api::code::ErrorCode> {
                 let sel = message_packet.header().message_selector;
                 if let Some(rt) = ::ixc_core::routes::find_route(sel) {
                     return rt.1(self, message_packet, callbacks, allocator)
@@ -88,7 +88,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
 
                 #(#trait_routers)*
 
-                Err(::ixc_message_api::handler::HandlerError::KnownCode(::ixc_message_api::handler::HandlerErrorCode::MessageNotHandled))
+                Err(::ixc_message_api::code::ErrorCode::SystemCode(::ixc_message_api::code::SystemCode::MessageNotHandled))
             }
         }
     })?;
@@ -241,11 +241,11 @@ pub fn handler_api(attr: TokenStream2, mut item_trait: ItemTrait) -> manyhow::Re
     let client_trait_ident = format_ident!("{}Client", trait_ident);
     let client_impl_ident = format_ident!("{}Impl", client_trait_ident);
     builder.define_client(&client_impl_ident)?;
-    builder.define_client_impl(&quote! {#client_trait_ident for #client_impl_ident}, &quote!{})?;
+    builder.define_client_impl(&quote! {#client_trait_ident for #client_impl_ident}, &quote! {})?;
     builder.define_client_impl(&quote! {<T: ::ixc_core::handler::HandlerClient> #client_trait_ident for T
-        where T::Handler: #trait_ident}, &quote!{})?;
+        where T::Handler: #trait_ident}, &quote! {})?;
     builder.define_client_factory(&client_impl_ident, &dyn_trait)?;
-    builder.define_client_factory(&client_impl_ident, &quote!{ #client_impl_ident})?;
+    builder.define_client_factory(&client_impl_ident, &quote! { #client_impl_ident})?;
     let items = &mut builder.items;
     let routes = &builder.routes;
     let client_signatures = &builder.client_signatures;
@@ -413,7 +413,7 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                 impl <'a> ::ixc_core::message::Message<'a> for #msg_struct_name #opt_lifetime {
                     const SELECTOR: ::ixc_message_api::header::MessageSelector = #selector;
                     type Response<'b> = <#return_type as ::ixc_core::message::ExtractResponseTypes>::Response;
-                    type Error = ();
+                    type Error = <#return_type as ::ixc_core::message::ExtractResponseTypes>::Error;
                     type Codec = ::ixc_schema::binary::NativeBinaryCodec;
                 }
             })?;
@@ -425,14 +425,17 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                             let cdc = < #msg_struct_name as ::ixc_core::message::Message<'_> >::Codec::default();
                             let in1 = packet.header().in_pointer1.get(packet);
                             let mut ctx = ::ixc_core::Context::new(packet.header().context_info, cb);
-                            let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc_schema::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager()).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
+                            let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc_schema::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager())?;
                             // NOTE: transmuting here is probably safe because there's nothing really to mutate, but ideally we should find
                             // a better way
-                            let res = h.#fn_name(core::mem::transmute(&ctx), #(#fn_ctr_args)*).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))?;
-                            ::ixc_core::low_level::encode_optional_to_out1::< < #msg_struct_name as ::ixc_core::message::Message<'_> >::Response<'_> >(&cdc, &res, a, packet).map_err(|e| ::ixc_message_api::handler::HandlerError::Custom(0))
+                            let res = h.#fn_name(core::mem::transmute(&ctx), #(#fn_ctr_args)*);
+                            ::ixc_core::low_level::encode_response::< #msg_struct_name >(&cdc, res, a, packet)
                         }
                     }),
         });
+        signature.output = parse_quote! {
+            -> <#return_type as ::ixc_core::message::ExtractResponseTypes>::ClientResult
+        };
         builder.client_signatures.push(signature.clone());
         builder.client_methods.push(quote! {
                 #signature {
@@ -449,10 +452,11 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                     let cdc = < #msg_struct_name #opt_underscore_lifetime as::ixc_core::handler::InitMessage<'_> >::Codec::default();
                     let in1 = packet.header().in_pointer1.get(packet);
                     let mut ctx =::ixc_core::Context::new(packet.header().context_info, cb);
-                    let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc_schema::codec::decode_value::< #msg_struct_name > ( & cdc, in1, ctx.memory_manager()).map_err( | e|::ixc_message_api::handler::HandlerError::Custom(0)) ?;
+                    let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc_schema::codec::decode_value::< #msg_struct_name > ( & cdc, in1, ctx.memory_manager())?;
                     // NOTE: transmuting here is probably safe because there's nothing really to mutate, but ideally we should find
                     // a better way
-                    h.#fn_name(core::mem::transmute(&ctx), #(#fn_ctr_args)*).map_err( | e |::ixc_message_api::handler::HandlerError::Custom(0))
+                    let res = h.#fn_name(core::mem::transmute(&ctx), #(#fn_ctr_args)*);
+                    ::ixc_core::low_level::encode_default_response(res, a, packet)
                 }
             }),}
         );

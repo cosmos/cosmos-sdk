@@ -1,33 +1,25 @@
 //! The core account API.
 
-use ixc_core_macros::{handler_api, message_selector};
-use ixc_message_api::AccountID;
-use ixc_message_api::code::SystemErrorCode;
-use ixc_message_api::handler::{HandlerErrorCode, Allocator};
-use ixc_schema::codec::Codec;
-use ixc_schema::value::OptionalValue;
 use crate::context::Context;
-use crate::error::Error;
-use crate::error::Error::SystemError;
 use crate::handler::{ClientFactory, Handler, InitMessage};
 use crate::low_level::create_packet;
+use ixc_core_macros::message_selector;
+use ixc_message_api::AccountID;
+use ixc_schema::codec::Codec;
+use crate::result::ClientResult;
 
 /// Creates a new account for the specified handler.
-pub fn create_account<'a, I: InitMessage<'a>>(ctx: &mut Context, init: I) -> crate::Result<<<I as InitMessage<'a>>::Handler as ClientFactory>::Client> {
+pub fn create_account<'a, I: InitMessage<'a>>(ctx: &mut Context, init: I) -> ClientResult<<<I as InitMessage<'a>>::Handler as ClientFactory>::Client> {
     let mut packet = create_packet(ctx, ROOT_ACCOUNT, CREATE_SELECTOR)?;
 
     let cdc = I::Codec::default();
-    let init_bz = cdc.encode_value(&init, ctx.memory_manager())
-        // map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-        .map_err(|_| ())?;
+    let init_bz = cdc.encode_value(&init, ctx.memory_manager())?;
 
     unsafe {
         packet.header_mut().in_pointer1.set_slice(I::Handler::NAME.as_bytes());
         packet.header_mut().in_pointer2.set_slice(init_bz);
 
-        ctx.host_backend().invoke(&mut packet, ctx.memory_manager())
-            // .map_err(|_| Error::SystemError(SystemErrorCode::UnknownHandlerError))?;
-            .map_err(|_| ())?;
+        ctx.host_backend().invoke(&mut packet, ctx.memory_manager())?;
 
         let new_account_id = packet.header().in_pointer1.get_u64();
 

@@ -13,6 +13,7 @@ ixc_schema = { path = "../schema", version = "0.0.2" }
 ixc_message_api = { path = "../message_api" }
 bump-scope = "0.9.2"
 simple_time = { path = "../util/simple_time", version = "0.0.1" }
+num_enum = "0.7.3"
 thiserror = "1.0.63"
 
 [lints]

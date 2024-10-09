@@ -1,8 +1,7 @@
 //! Rust Cosmos SDK RFC 003 hypervisor implementation.
 use ixc_core_macros::message_selector;
-use ixc_message_api::code::{ErrorCode, SystemErrorCode};
-use ixc_message_api::handler::{Allocator, HandlerErrorCode, HostBackend, RawHandler};
-use ixc_message_api::header::MessageHeader;
+use ixc_message_api::code::{ErrorCode};
+use ixc_message_api::handler::{Allocator, HostBackend, RawHandler};
 use ixc_message_api::packet::MessagePacket;
 use ixc_message_api::AccountID;
 use ixc_vm_api::{HandlerID, VM};
@@ -10,6 +9,8 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ops::DerefMut;
 use std::sync::Arc;
+use ixc_message_api::code::ErrorCode::SystemCode;
+use ixc_message_api::code::SystemCode::{FatalExecutionError, HandlerNotFound, InvalidHandler, UnauthorizedCallerAccess};
 
 /// Rust Cosmos SDK RFC 003 hypervisor implementation.
 pub struct Hypervisor<ST: StateHandler> {
@@ -57,7 +58,7 @@ impl<ST: StateHandler> Hypervisor<ST> {
     /// Invoke a message packet.
     pub fn invoke(&mut self, message_packet: &mut MessagePacket, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
         let tx = self.state_handler.new_transaction(message_packet.header().context_info.caller, true).
-            map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::FatalExecutionError))?;
+            map_err(|_| SystemCode(FatalExecutionError))?;
         let mut exec_context = ExecContext {
             vmdata: self.vmdata.clone(),
             tx: RefCell::new(tx),
@@ -66,7 +67,7 @@ impl<ST: StateHandler> Hypervisor<ST> {
         let tx = exec_context.tx.into_inner();
         if res.is_ok() {
             self.state_handler.commit(tx)
-                .map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::FatalExecutionError))?;
+                .map_err(|_| SystemCode(FatalExecutionError))?;
         }
 
         res
@@ -166,7 +167,7 @@ impl<TX: Transaction> HostBackend for ExecContext<TX> {
         // check if the caller matches the active account
         let account = self.tx.borrow().active_account();
         if message_packet.header().context_info.caller != account {
-            return Err(ErrorCode::RuntimeSystemError(SystemErrorCode::UnauthorizedCallerAccess));
+            return Err(SystemCode(UnauthorizedCallerAccess));
         }
         // TODO support authorization middleware
 
@@ -180,18 +181,18 @@ impl<TX: Transaction> HostBackend for ExecContext<TX> {
 
         // find the account's handler ID and retrieve its VM
         let handler_id = self.get_account_handler_id(target_account).
-            ok_or(ErrorCode::RuntimeSystemError(SystemErrorCode::HandlerNotFound))?;
+            ok_or(SystemCode(HandlerNotFound))?;
         let vm = self.vmdata.vms.get(&handler_id.vm).
-            ok_or(ErrorCode::RuntimeSystemError(SystemErrorCode::HandlerNotFound))?;
+            ok_or(SystemCode(HandlerNotFound))?;
 
         // push an execution frame for the target account
         self.tx.borrow_mut().push_frame(target_account, false). // TODO add volatility support
-            map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::InvalidHandler))?;
+            map_err(|_| SystemCode(InvalidHandler))?;
         // run the handler
         let res = vm.run_handler(&handler_id.vm_handler_id, message_packet, self, allocator);
         // pop the execution frame
         self.tx.borrow_mut().pop_frame(res.is_ok()).
-            map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::InvalidHandler))?;
+            map_err(|_| SystemCode(InvalidHandler))?;
 
         res
     }
@@ -208,20 +209,20 @@ impl<TX: Transaction> ExecContext<TX> {
 
                 // resolve the handler ID and retrieve the VM
                 let handler_id = self.parse_handler_id(handler_id).
-                    ok_or(ErrorCode::RuntimeSystemError(SystemErrorCode::HandlerNotFound))?;
+                    ok_or(SystemCode(HandlerNotFound))?;
                 let vm = self.vmdata.vms.get(&handler_id.vm).
-                    ok_or(ErrorCode::RuntimeSystemError(SystemErrorCode::HandlerNotFound))?;
+                    ok_or(SystemCode(HandlerNotFound))?;
                 let desc = vm.describe_handler(&handler_id.vm_handler_id).
-                    ok_or(ErrorCode::RuntimeSystemError(SystemErrorCode::HandlerNotFound))?;
+                    ok_or(SystemCode(HandlerNotFound))?;
 
                 // get the next account ID and initialize the account storage
                 let storage_params = desc.storage_params.unwrap_or_default();
                 let id = self.init_next_account(&storage_params, &handler_id).
-                    map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::InvalidHandler))?;
+                    map_err(|_| SystemCode(InvalidHandler))?;
 
                 // create a packet for calling on_create
                 let mut on_create_packet = MessagePacket::allocate(allocator, 0).
-                    map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::FatalExecutionError))?;
+                    map_err(|_| SystemCode(FatalExecutionError))?;
                 let mut on_create_header = on_create_packet.header_mut();
                 // TODO: how do we specify a selector that can only be called by the system?
                 on_create_header.context_info.account = id;
@@ -232,11 +233,11 @@ impl<TX: Transaction> ExecContext<TX> {
                 let res = vm.run_handler(&handler_id.vm_handler_id, &mut on_create_packet, self, allocator);
                 let is_ok = match res {
                     Ok(_) => true,
-                    Err(ErrorCode::HandlerSystemError(HandlerErrorCode::MessageNotHandled)) => true,
+                    Err(SystemCode(ixc_message_api::code::SystemCode::MessageNotHandled)) => true,
                     _ => false,
                 };
                 self.tx.borrow_mut().pop_frame(is_ok).
-                    map_err(|_| ErrorCode::RuntimeSystemError(SystemErrorCode::FatalExecutionError))?;
+                    map_err(|_| SystemCode(FatalExecutionError))?;
 
                 if is_ok {
                     create_header.in_pointer1.set_u64(id.get());
@@ -246,7 +247,7 @@ impl<TX: Transaction> ExecContext<TX> {
                 }
             },
             _ => {
-                Err(ErrorCode::RuntimeSystemError(SystemErrorCode::HandlerNotFound))
+                Err(SystemCode(HandlerNotFound))
             }
         }
     }

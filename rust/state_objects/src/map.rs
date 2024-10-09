@@ -2,12 +2,12 @@
 
 use std::borrow::Borrow;
 use bump_scope::allocator_api2::alloc::Allocator;
-use ixc_core::error::Error;
+use ixc_core::error::HandlerError;
 use ixc_core::{Context, Result};
 use ixc_core::low_level::create_packet;
 use ixc_core::resource::{InitializationError, StateObjectResource};
+use ixc_core::result::ClientResult;
 use ixc_core_macros::message_selector;
-use ixc_message_api::handler::HandlerErrorCode;
 use ixc_message_api::packet::MessagePacket;
 use ixc_message_api::AccountID;
 use ixc_message_api::code::ErrorCode;
@@ -30,13 +30,11 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
     // }
 
     /// Gets the value of the map at the given key.
-    pub fn get<'a, 'b, L>(&self, ctx: &'a Context, key: L) -> Result<Option<V::Out<'a>>>
+    pub fn get<'a, 'b, L>(&self, ctx: &'a Context, key: L) -> ClientResult<Option<V::Out<'a>>>
     where
         L: Borrow<K::In<'b>>,
     {
-        let key_bz = encode_object_key::<K>(&self.prefix, key.borrow(), ctx.memory_manager())
-            // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-            .map_err(|_| ())?;
+        let key_bz = encode_object_key::<K>(&self.prefix, key.borrow(), ctx.memory_manager())?;
 
         let value_bz = KVStoreClient.get(ctx, key_bz)?;
         let value_bz = match value_bz {
@@ -44,35 +42,27 @@ impl<K: ObjectKey, V: ObjectValue> Map<K, V> {
             Some(value_bz) => value_bz,
         };
 
-        let value = decode_object_value::<V>(value_bz, ctx.memory_manager())
-            // map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-            .map_err(|_| ())?;
+        let value = decode_object_value::<V>(value_bz, ctx.memory_manager())?;
         Ok(Some(value))
     }
 
     /// Sets the value of the map at the given key.
-    pub fn set<'a, L, U>(&self, ctx: &mut Context, key: L, value: U) -> Result<()>
+    pub fn set<'a, L, U>(&self, ctx: &mut Context, key: L, value: U) -> ClientResult<()>
     where
         L: Borrow<K::In<'a>>,
         U: Borrow<V::In<'a>>,
     {
-        let key_bz = encode_object_key::<K>(&self.prefix, key.borrow(), ctx.memory_manager())
-            // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-            .map_err(|_| ())?;
-        let value_bz = encode_object_value::<V>(value.borrow(), ctx.memory_manager())
-            // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-            .map_err(|_| ())?;
+        let key_bz = encode_object_key::<K>(&self.prefix, key.borrow(), ctx.memory_manager())?;
+        let value_bz = encode_object_value::<V>(value.borrow(), ctx.memory_manager())?;
         unsafe { KVStoreClient.set(ctx, key_bz, value_bz) }
     }
 
     /// Deletes the value of the map at the given key.
-    pub fn delete<'a, L>(&self, ctx: &mut Context, key: L) -> Result<()>
+    pub fn delete<'a, L>(&self, ctx: &mut Context, key: L) -> ClientResult<()>
     where
         L: Borrow<K::In<'a>>,
     {
-        let key_bz = encode_object_key::<K>(&self.prefix, key.borrow(), ctx.memory_manager())
-            // .map_err(|_| Error::KnownHandlerError(HandlerErrorCode::EncodingError))?;
-            .map_err(|_| ())?;
+        let key_bz = encode_object_key::<K>(&self.prefix, key.borrow(), ctx.memory_manager())?;
         unsafe { KVStoreClient.delete(ctx, key_bz) }
     }
 }
@@ -88,42 +78,39 @@ const DELETE_SELECTOR: MessageSelector = message_selector!("ixc.store.v1.delete"
 struct KVStoreClient;
 
 impl KVStoreClient {
-    pub fn get<'a>(&self, ctx: &'a Context, key: &[u8]) -> Result<Option<&'a [u8]>> {
+    pub fn get<'a>(&self, ctx: &'a Context, key: &[u8]) -> ClientResult<Option<&'a [u8]>> {
         let mut packet = create_packet(ctx, STATE_ACCOUNT, GET_SELECTOR)?;
         let header = packet.header_mut();
         unsafe {
             header.in_pointer1.set_slice(key);
-            // TODO error code for not found
             match ctx.host_backend().invoke(&mut packet, &ctx.memory_manager()) {
-                Ok(_) => {}
-                Err(_) => {
+                Err(ErrorCode::HandlerCode(0)) => {
                     return Ok(None);
                 }
+                _ => {}
             }
         }
         let res_bz = unsafe { packet.header().out_pointer1.get(&packet) };
         Ok(Some(res_bz))
     }
 
-    pub unsafe fn set(&self, ctx: &Context, key: &[u8], value: &[u8]) -> Result<()> {
+    pub unsafe fn set(&self, ctx: &Context, key: &[u8], value: &[u8]) -> ClientResult<()> {
         let mut packet = create_packet(ctx, STATE_ACCOUNT, SET_SELECTOR)?;
         let header = packet.header_mut();
         unsafe {
             header.in_pointer1.set_slice(key);
             header.in_pointer2.set_slice(value);
-            ctx.host_backend().invoke(&mut packet, &ctx.memory_manager()).
-                map_err(|_| todo!())?;
+            ctx.host_backend().invoke(&mut packet, &ctx.memory_manager())?;
         }
         Ok(())
     }
 
-    pub unsafe fn delete(&self, ctx: &Context, key: &[u8]) -> Result<()> {
+    pub unsafe fn delete(&self, ctx: &Context, key: &[u8]) -> ClientResult<()> {
         let mut packet = create_packet(ctx, STATE_ACCOUNT, DELETE_SELECTOR)?;
         let header = packet.header_mut();
         unsafe {
             header.in_pointer1.set_slice(key);
-            ctx.host_backend().invoke(&mut packet, &ctx.memory_manager()).
-                map_err(|_| todo!())?;
+            ctx.host_backend().invoke(&mut packet, &ctx.memory_manager())?;
         }
         Ok(())
     }

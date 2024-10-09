@@ -2,7 +2,8 @@
 
 use core::mem::MaybeUninit;
 use allocator_api2::alloc::Allocator;
-use ixc_message_api::handler::{HandlerError, HandlerErrorCode, HostBackend};
+use ixc_message_api::code::{ErrorCode, SystemCode};
+use ixc_message_api::handler::{HostBackend};
 use ixc_message_api::header::MessageSelector;
 use ixc_message_api::packet::MessagePacket;
 
@@ -21,7 +22,7 @@ pub unsafe trait Router where Self: 'static
 // }
 
 /// A route for a message packet.
-pub type Route<T> = (u64, fn(&T, &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), HandlerError>);
+pub type Route<T> = (u64, fn(&T, &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), ErrorCode>);
 // pub type Route<T>  = (u64, &'static dyn FnOnce(&T, &mut MessagePacket, &dyn HostBackend, &dyn Allocator) -> Result<(), HandlerError>);
 
 
@@ -29,13 +30,13 @@ pub type Route<T> = (u64, fn(&T, &mut MessagePacket, callbacks: &dyn HostBackend
 // pub type DynRoute<T> = (u64, for<'b, 'a:'b> fn(&'b (dyn T + 'a), &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), HandlerError>);
 
 /// Execute a message packet on a router.
-pub fn exec_route<R: Router + ?Sized>(rtr: &R, packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), HandlerError> {
+pub fn exec_route<R: Router + ?Sized>(rtr: &R, packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
     match find_route(packet.header().message_selector) {
         Some(rt) => {
             rt.1(rtr, packet, callbacks, allocator)
         }
         None => {
-            Err(HandlerError::KnownCode(HandlerErrorCode::MessageNotHandled))
+            Err(ErrorCode::SystemCode(SystemCode::MessageNotHandled))
         }
     }
 }

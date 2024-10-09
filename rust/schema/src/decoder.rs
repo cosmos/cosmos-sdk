@@ -1,6 +1,9 @@
 //! The decoder trait and error type.
 
+use core::error::Error;
+use core::fmt::{Display, Formatter};
 use ixc_message_api::AccountID;
+use ixc_message_api::code::{ErrorCode, SystemCode};
 use crate::encoder::EncodeError;
 use crate::list::ListDecodeVisitor;
 use crate::mem::MemoryManager;
@@ -62,7 +65,8 @@ pub trait Decoder<'a> {
 }
 
 /// A decoding error.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum DecodeError {
     /// The input data is out of data.
     OutOfData,
@@ -72,4 +76,23 @@ pub enum DecodeError {
     UnknownFieldNumber,
     /// The input data contains an invalid UTF-8 string.
     InvalidUtf8,
+}
+
+impl Display for DecodeError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        match self {
+            DecodeError::OutOfData => write!(f, "out of data"),
+            DecodeError::InvalidData => write!(f, "invalid data"),
+            DecodeError::UnknownFieldNumber => write!(f, "unknown field number"),
+            DecodeError::InvalidUtf8 => write!(f, "invalid UTF-8"),
+        }
+    }
+}
+
+impl Error for DecodeError {}
+
+impl From<DecodeError> for ErrorCode {
+    fn from(value: DecodeError) -> Self {
+        ErrorCode::SystemCode(SystemCode::EncodingError)
+    }
 }

@@ -1,8 +1,12 @@
 //! Encoder trait and error type.
+
+use core::error::Error;
 use crate::structs::{StructEncodeVisitor, StructType};
 use crate::value::{SchemaValue};
 use core::fmt::Display;
 use ixc_message_api::AccountID;
+use ixc_message_api::code::{ErrorCode, SystemCode};
+use crate::decoder::DecodeError;
 use crate::list::ListEncodeVisitor;
 use crate::r#enum::EnumType;
 
@@ -51,10 +55,28 @@ pub trait Encoder {
 }
 
 /// An encoding error.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum EncodeError {
     /// An unknown error occurred.
     UnknownError,
     /// The output buffer is out of space.
     OutOfSpace,
+}
+
+impl Display for EncodeError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            EncodeError::UnknownError => write!(f, "unknown error"),
+            EncodeError::OutOfSpace => write!(f, "out of space"),
+        }
+    }
+}
+
+impl Error for EncodeError {}
+
+impl From<EncodeError> for ErrorCode {
+    fn from(value: EncodeError) -> Self {
+        ErrorCode::SystemCode(SystemCode::EncodingError)
+    }
 }

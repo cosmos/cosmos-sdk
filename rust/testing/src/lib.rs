@@ -15,7 +15,7 @@ use ixc_core::resource::{InitializationError, ResourceScope, Resources};
 use ixc_core::routes::{Route, Router};
 use ixc_hypervisor::Hypervisor;
 use ixc_message_api::code::ErrorCode;
-use ixc_message_api::handler::{HandlerError, HandlerErrorCode, HostBackend, RawHandler};
+use ixc_message_api::handler::{HostBackend, RawHandler};
 use ixc_message_api::header::{ContextInfo, MessageHeader};
 use ixc_message_api::packet::MessagePacket;
 use ixc_schema::binary::NativeBinaryCodec;
@@ -89,7 +89,7 @@ impl <'a> InitMessage<'a> for CreateDefaultAccount {
 }
 
 impl RawHandler for DefaultAccount {
-    fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), HandlerError> {
+    fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
         ixc_core::routes::exec_route(self, message_packet, callbacks, allocator)
     }
 }

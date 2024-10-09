@@ -1,11 +1,27 @@
 //! Error and success codes returned by the message API.
 
-use crate::handler::HandlerErrorCode;
+use core::fmt::{Debug};
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-/// Error codes that can be returned by the system.
+/// Error and success codes returned by the message API.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-#[repr(u16)]
-pub enum SystemErrorCode {
+#[non_exhaustive]
+pub enum ErrorCode<E: Into<u8> + TryFrom<u8> + Debug = u8> {
+    /// A known system error code.
+    SystemCode(SystemCode),
+
+    /// A custom error code returned by a handler.
+    HandlerCode(E),
+
+    /// Unknown error code.
+    Unknown(u16),
+}
+
+/// A known system error code.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, IntoPrimitive, TryFromPrimitive)]
+#[repr(u8)]
+#[non_exhaustive]
+pub enum SystemCode {
     // System restricted error codes:
 
     /// Fatal execution error that likely cannot be recovered from.
@@ -16,34 +32,62 @@ pub enum SystemErrorCode {
     HandlerNotFound = 3,
     /// The caller attempted to impersonate another caller and was not authorized.
     UnauthorizedCallerAccess = 4,
-    /// The handler code was invalid or failed to execute properly within its virtual machine.
+    /// The handler code was invalid, failed to execute properly within its virtual machine
+    /// or otherwise behaved incorrectly.
     InvalidHandler = 5,
-    /// The handler returned an invalid error code.
-    UnknownHandlerError = 6,
 
-    // System errors that can be returned by handlers:
+    // Known errors that can be returned by handlers or the system:
 
+    /// Any uncategorized error.
+    Other = 128,
     /// The handler doesn't handle the specified message.
-    MessageNotHandled = 128,
+    MessageNotHandled = 129,
     /// Encoding error.
-    EncodingError = 129,
+    EncodingError = 130,
     /// Out of gas error.
-    OutOfGas = 130,
-
-    /// An unknown error code in the system range.
-    Unknown(u8),
+    OutOfGas = 131,
 }
 
-/// Error and success codes returned by the message API.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum ErrorCode {
-    /// An error that can only be returned by the system, in the range of 0..127.
-    RuntimeSystemError(SystemErrorCode),
-    /// A predefined error code returned by handler implementations libraries,
-    /// in the range of 128..255.
-    HandlerSystemError(HandlerErrorCode),
-    /// A custom error code returned by a handler.
-    CustomHandlerError(u16)
+impl<E: Into<u8> + TryFrom<u8> + Debug> From<u16> for ErrorCode<E> {
+    fn from(value: u16) -> Self {
+        match value {
+            0..256 => {
+                if let Ok(e) = SystemCode::try_from(value as u8) {
+                    ErrorCode::SystemCode(e)
+                } else {
+                    ErrorCode::Unknown(value)
+                }
+            }
+            256..512 => {
+                if let Ok(e) = E::try_from((value - 256) as u8) {
+                    ErrorCode::HandlerCode(e)
+                } else {
+                    ErrorCode::Unknown(value)
+                }
+            }
+            _ => ErrorCode::Unknown(value),
+        }
+    }
+}
+
+
+impl<E: Into<u8> + TryFrom<u8> + Debug> Into<u16> for ErrorCode<E> {
+    fn into(self) -> u16 {
+        match self {
+            ErrorCode::SystemCode(e) => e as u16,
+            ErrorCode::HandlerCode(e) => e.into() as u16 + 256,
+            ErrorCode::Unknown(e) => e,
+        }
+    }
+}
+
+impl SystemCode {
+    /// Returns `true` if the code is a valid code for a handler to return directly,
+    /// or `false` if the code is in the reserved system range.
+    pub fn valid_handler_code(&self) -> bool {
+        let code: u8 = (*self).into();
+        code >= 128
+    }
 }
 
 // impl From<u32> for Code {
@@ -81,8 +125,4 @@ pub enum ErrorCode {
 //         }
 //     }
 // }
-
-// pub type Handler = unsafe fn(account_handler_id: u64, message_packet: *mut u8, packet_len: u32) -> u32;
-//
-// pub type InvokeFn = unsafe fn(message_packet: *mut u8, packet_len: u32) -> u32;
 

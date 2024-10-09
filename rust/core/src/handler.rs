@@ -1,13 +1,11 @@
 //! Handler traits for account and module handlers.
-use ixc_message_api::AccountID;
-use ixc_message_api::handler::RawHandler;
-use ixc_schema::codec::Codec;
-use ixc_schema::SchemaValue;
-use ixc_schema::structs::StructSchema;
-use ixc_schema::value::OptionalValue;
-use crate::Context;
-use crate::resource::{InitializationError, Resources};
+use crate::resource::Resources;
 use crate::routes::Router;
+use ixc_message_api::handler::RawHandler;
+use ixc_message_api::AccountID;
+use ixc_schema::codec::Codec;
+use ixc_schema::structs::StructSchema;
+use ixc_schema::SchemaValue;
 
 /// Handler trait for account and module handlers.
 pub trait Handler: RawHandler + Router + Resources + ClientFactory {
@@ -53,47 +51,3 @@ pub trait HandlerClient: Client {
     /// The handler type.
     type Handler: Handler;
 }
-
-// /// Module handler trait.
-// pub trait ModuleHandler: ModuleAPI + Handler {}
-//
-// /// Module API trait.
-// pub trait ModuleAPI {
-//     /// Module client type.
-//     type Client: Resource;
-// }
-//
-/// Mixes in an account handler into another account handler.
-pub struct Mixin<H: Handler>(H);
-
-// unsafe impl<H: Handler> Resource for Mixin<H> {
-//     unsafe fn new(initializer: &mut Initializer) -> Result<Self, InitializationError> {
-//         todo!()
-//     }
-// }
-
-impl<H: Handler> core::ops::Deref for Mixin<H> {
-    type Target = H;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-//
-// /// Mixes in a module handler into another module handler.
-// pub struct ModuleMixin<H: ModuleHandler>(H);
-//
-// unsafe impl<H: ModuleHandler> Resource for ModuleMixin<H> {
-//     unsafe fn new(initializer: &mut Initializer) -> Result<Self, InitializationError> {
-//         todo!()
-//     }
-// }
-//
-// impl<H: ModuleHandler> core::ops::Deref for ModuleMixin<H> {
-//     type Target = H;
-//
-//     fn deref(&self) -> &Self::Target {
-//         &self.0
-//     }
-// }

@@ -1,38 +1,36 @@
 //! Basic error handling utilities.
 
-use alloc::string::{String, ToString};
+use alloc::format;
+use alloc::string::String;
+use core::error::Error;
 use core::fmt::{Debug, Display, Formatter};
-use ixc_message_api::code::SystemErrorCode;
-use ixc_message_api::handler::HandlerErrorCode;
-use ixc_schema::decoder::{DecodeError, Decoder};
-use ixc_schema::encoder::{EncodeError, Encoder};
-use ixc_schema::mem::MemoryManager;
-use ixc_schema::types::StrT;
-use ixc_schema::value::{SchemaValue, OptionalValue};
+use ixc_message_api::code::{ErrorCode, SystemCode};
+use ixc_schema::decoder::DecodeError;
+use ixc_schema::encoder::EncodeError;
 
-/// The standard error wrapper for handler functions.
-#[derive(Debug, Clone)]
-pub enum Error<E: OptionalValue<'static>> {
-    /// A system error occurred.
-    SystemError(SystemErrorCode),
-    /// A known handler error occurred.
-    KnownHandlerError(HandlerErrorCode),
-    /// A custom handler error occurred.
-    HandlerError(E), // TODO response body
-}
-
-/// A simple error type which just contains an error message.
+/// The standard error type returned by handlers.
 #[derive(Clone)]
-pub struct ErrorMessage {
+pub struct HandlerError<E: Into<u8> + TryFrom<u8> + Debug> {
+    pub(crate) code: Option<E>,
     #[cfg(feature = "std")]
-    msg: String,
+    pub(crate) msg: String,
     // TODO no std version - fixed length 256 byte string probably
 }
 
-impl ErrorMessage {
+impl<E: Into<u8> + TryFrom<u8> + Debug> HandlerError<E> {
     /// Create a new error message.
     pub fn new(msg: String) -> Self {
-        ErrorMessage {
+        HandlerError {
+            code: None,
+            #[cfg(feature = "std")]
+            msg,
+        }
+    }
+
+    /// Create a new error message with a code.
+    pub fn new_with_code(code: E, msg: String) -> Self {
+        HandlerError {
+            code: Some(code),
             #[cfg(feature = "std")]
             msg,
         }
@@ -43,55 +41,55 @@ impl ErrorMessage {
         #[cfg(feature = "std")]
         let mut message = String::new();
         core::fmt::write(&mut message, args).unwrap();
-        ErrorMessage::new(message)
+        HandlerError::new(message)
+    }
+
+    /// Format a new error message with a code.
+    pub fn new_fmt_with_code(code: E, args: core::fmt::Arguments<'_>) -> Self {
+        #[cfg(feature = "std")]
+        let mut message = String::new();
+        core::fmt::write(&mut message, args).unwrap();
+        HandlerError::new(message)
     }
 }
 
-impl<'a> Debug for ErrorMessage {
+impl<E: Into<u8> + TryFrom<u8> + Debug> Debug for HandlerError<E> {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}", self.msg)
-    }
-}
-
-impl<'a> Display for ErrorMessage {
-    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}", self.msg)
-    }
-}
-
-impl<'a, E: core::error::Error> From<E> for ErrorMessage {
-    fn from(value: E) -> Self {
-        ErrorMessage {
-            #[cfg(feature = "std")]
-            msg: value.to_string(),
+        if let Some(code) = &self.code {
+            write!(f, "code: {:?}: {}", code, self.msg)
+        } else {
+            write!(f, "{}", self.msg)
         }
     }
 }
 
-impl<'a> SchemaValue<'a> for ErrorMessage {
-    type Type = StrT;
-    type DecodeState = String;
-
-    fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> core::result::Result<(), DecodeError> {
-        *state = decoder.decode_owned_str()?;
-        Ok(())
+impl<E: Into<u8> + TryFrom<u8> + Debug> Display for HandlerError<E> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        if let Some(code) = &self.code {
+            write!(f, "code: {:?}: {}", code, self.msg)
+        } else {
+            write!(f, "{}", self.msg)
+        }
     }
+}
 
-    fn finish_decode_state(msg: Self::DecodeState, _mem_handle: &'a MemoryManager) -> core::result::Result<Self, DecodeError> {
-        Ok(ErrorMessage { msg })
+impl<E: Error, F: Into<u8> + TryFrom<u8> + Debug> From<E> for HandlerError<F> {
+    fn from(value: E) -> Self {
+        HandlerError {
+            code: None,
+            msg: format!("got error: {}", value),
+        }
     }
-
-    fn encode(&self, encoder: &mut dyn Encoder) -> core::result::Result<(), EncodeError> {
-        encoder.encode_str(&self.msg)
-    }
-
 }
 
 /// Format an error message.
 #[macro_export]
 macro_rules! fmt_error {
+    ($code:ident, $($arg:tt)*) => {
+        $crate::error::HandlerError::new_fmt_with_code($code, core::format_args!($($arg)*))
+    };
     ($($arg:tt)*) => {
-        $crate::error::ErrorMessage::new_fmt(core::format_args!($($arg)*))
+        $crate::error::HandlerError::new_fmt(core::format_args!($($arg)*))
     };
 }
 
@@ -111,4 +109,102 @@ macro_rules! ensure {
             return core::result::Err($crate::error::fmt_error!($($arg)*));
         }
     };
+}
+
+/// The standard error type returned by client methods.
+#[derive(Clone)]
+pub struct ClientError<E: Into<u8> + TryFrom<u8> + Debug> {
+    /// The error code.
+    pub code: ErrorCode<E>,
+    /// The error message.
+    #[cfg(feature = "std")]
+    pub message: String,
+    // TODO no std version - fixed length 256 byte string probably
+}
+
+impl<E: Into<u8> + TryFrom<u8> + Debug> ClientError<E> {
+    /// Creates a new client error.
+    pub fn new(code: ErrorCode<E>, msg: String) -> Self {
+        ClientError {
+            code,
+            #[cfg(feature = "std")]
+            message: msg,
+        }
+    }
+}
+
+impl<E: Into<u8> + TryFrom<u8> + Debug> Debug for ClientError<E> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        match self.code {
+            ErrorCode::SystemCode(SystemCode::Other) => write!(f, "{}", self.message),
+            _ => write!(f, "code: {:?}: {}", self.code, self.message)
+        }
+    }
+}
+
+impl<E: Into<u8> + TryFrom<u8> + Debug> Display for ClientError<E> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        match self.code {
+            ErrorCode::SystemCode(SystemCode::Other) => write!(f, "{}", self.message),
+            _ => write!(f, "code: {:?}: {}", self.code, self.message)
+        }
+    }
+}
+
+impl<E: Into<u8> + TryFrom<u8> + Debug> Error for ClientError<E> {}
+
+impl<E: Into<u8> + TryFrom<u8> + Debug> From<ErrorCode> for ClientError<E> {
+    fn from(value: ErrorCode) -> Self {
+        let code = convert_error_code(value);
+        ClientError {
+            code,
+            #[cfg(feature = "std")]
+            message: String::new(),
+        }
+    }
+}
+
+impl<E: Into<u8> + TryFrom<u8> + Debug> From<EncodeError> for ClientError<E> {
+    fn from(value: EncodeError) -> Self {
+        ClientError {
+            code: ErrorCode::SystemCode(SystemCode::EncodingError),
+            #[cfg(feature = "std")]
+            message: format!("encoding error: {:?}", value),
+        }
+    }
+}
+
+impl<E: Into<u8> + TryFrom<u8> + Debug> From<DecodeError> for ClientError<E> {
+    fn from(value: DecodeError) -> Self {
+        ClientError {
+            code: ErrorCode::SystemCode(SystemCode::EncodingError),
+            #[cfg(feature = "std")]
+            message: format!("decoding error: {:?}", value),
+        }
+    }
+}
+
+impl<E: Into<u8> + TryFrom<u8> + Debug> From<allocator_api2::alloc::AllocError> for ClientError<E> {
+    fn from(_: allocator_api2::alloc::AllocError) -> Self {
+        ClientError {
+            code: ErrorCode::SystemCode(SystemCode::EncodingError),
+            #[cfg(feature = "std")]
+            message: "allocation error".into(),
+        }
+    }
+}
+
+/// Converts an error code with one handler code to an error code with another handler code.
+pub fn convert_error_code<E: Into<u8> + TryFrom<u8> + Debug, F: Into<u8> + TryFrom<u8> + Debug>(code: ErrorCode<E>) -> ErrorCode<F> {
+    let c: u16 = code.into();
+    ErrorCode::<F>::from(c)
+}
+
+/// Converts an error code with one handler code to an error code with another handler code.
+pub fn convert_client_error<E: Into<u8> + TryFrom<u8> + Debug, F: Into<u8> + TryFrom<u8> + Debug>(err: ClientError<E>) -> ClientError<F> {
+    ClientError {
+        code: convert_error_code(err.code),
+        #[cfg(feature = "std")]
+        message: err.message,
+    }
 }

@@ -42,16 +42,12 @@ func TestQueryBySig(t *testing.T) {
 	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
 	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
 	txFile := StoreTempFile(t, []byte(res))
-	fmt.Println("txFile", txFile)
 
 	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", valAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet/node0/simd")
-	fmt.Println("res", res)
 	sig := gjson.Get(res, "signatures.0").String()
-	fmt.Println("sig", sig)
 	signedTxFile := StoreTempFile(t, []byte(res))
 
 	res = cli.Run("tx", "broadcast", signedTxFile.Name())
-	fmt.Println("res", res)
 	RequireTxSuccess(t, res)
 
 	sigFormatted := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, sig)
@@ -428,15 +424,12 @@ func TestTxDecode_GRPC(t *testing.T) {
 	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
 	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
 	txFile := StoreTempFile(t, []byte(res))
-	fmt.Println("txFile", txFile)
 
 	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", valAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet/node0/simd")
 	signedTxFile := StoreTempFile(t, []byte(res))
 
 	res = cli.RunCommandWithArgs("tx", "encode", signedTxFile.Name())
-	fmt.Println("res", res)
 	txBz, err := base64.StdEncoding.DecodeString(res)
-	fmt.Println("txBz", txBz, err)
 	invalidTxBytes := append(txBz, byte(0o00))
 
 	testCases := []struct {
@@ -464,4 +457,57 @@ func TestTxDecode_GRPC(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSimMultiSigTx(t *testing.T) {
+	sut.ResetChain(t)
+
+	cli := NewCLIWrapper(t, sut, verbose)
+	// get validator address
+	valAddr := cli.GetKeyAddr("node0")
+	require.NotEmpty(t, valAddr)
+
+	// add new key
+	_ = cli.AddKey("account1")
+	_ = cli.AddKey("account2")
+	denom := "stake"
+	var transferAmount int64 = 1000
+
+	sut.StartChain(t)
+
+	multiSigName := "multisig"
+	res := cli.RunCommandWithArgs("keys", "add", multiSigName, "--multisig=account1,account2", "--multisig-threshold=2", "--keyring-backend=test", "--home=./testnet")
+	multiSigAddr := cli.GetKeyAddr(multiSigName)
+
+	// Send from validator to multisig addr
+	rsp := cli.Run("tx", "bank", "send", valAddr, multiSigAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=1stake")
+	txResult, found := cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
+
+	multiSigBalance := cli.QueryBalance(multiSigAddr, denom)
+	require.Equal(t, multiSigBalance, transferAmount)
+
+	// Send from multisig to validator
+	// create unsign tx
+	var newTransferAmount int64 = 100
+	bankSendCmdArgs := []string{"tx", "bank", "send", multiSigAddr, valAddr, fmt.Sprintf("%d%s", newTransferAmount, denom), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	res = cli.RunCommandWithArgs(bankSendCmdArgs...)
+	txFile := StoreTempFile(t, []byte(res))
+
+	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", "account1"), fmt.Sprintf("--multisig=%s", multiSigAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet")
+	account1Signed := StoreTempFile(t, []byte(res))
+	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", "account2"), fmt.Sprintf("--multisig=%s", multiSigAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet")
+	account2Signed := StoreTempFile(t, []byte(res))
+
+	res = cli.RunCommandWithArgs("tx", "multisign-batch", txFile.Name(), multiSigName, account1Signed.Name(), account2Signed.Name(), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet")
+	txSignedFile := StoreTempFile(t, []byte(res))
+
+	res = cli.Run("tx", "broadcast", txSignedFile.Name())
+	RequireTxSuccess(t, res)
+	
+	multiSigBalance = cli.QueryBalance(multiSigAddr, denom)
+	require.Equal(t, multiSigBalance, transferAmount - newTransferAmount - 10)
+
+	
 }

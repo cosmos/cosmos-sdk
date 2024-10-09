@@ -97,7 +97,7 @@ A `query` is a request for information made by end-users of applications through
 
 ### gRPC Queries
 
-Queries should be defined using [Protobuf services](https://developers.google.com/protocol-buffers/docs/proto#services). A `Query` service should be created per module in `query.proto`. This service lists endpoints starting with `rpc`.
+Queries should be defined using [Protobuf services](https://protobuf.dev/programming-guides/proto2/). A `Query` service should be created per module in `query.proto`. This service lists endpoints starting with `rpc`.
 
 Here's an example of such a `Query` service definition:
 

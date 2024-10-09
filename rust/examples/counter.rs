@@ -1,10 +1,5 @@
 #![allow(missing_docs)]
 
-use ixc_core::handler::{ClientFactory, Handler, HandlerAPI};
-use ixc_core::resource::{Resources, StateObjectResource};
-use ixc_core_macros::package_root;
-use ixc_message_api::handler::{Allocator, HostBackend, RawHandler};
-
 #[ixc::handler(Counter)]
 pub mod counter {
     use ixc::*;
@@ -65,6 +60,6 @@ mod tests {
     }
 }
 
-package_root!(counter::Counter);
+ixc::package_root!(counter::Counter);
 
 fn main() {}

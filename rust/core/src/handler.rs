@@ -48,6 +48,12 @@ pub trait Client {
     fn account_id(&self) -> AccountID;
 }
 
+/// The client of a handler.
+pub trait HandlerClient: Client {
+    /// The handler type.
+    type Handler: Handler;
+}
+
 // /// Module handler trait.
 // pub trait ModuleHandler: ModuleAPI + Handler {}
 //

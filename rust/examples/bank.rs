@@ -2,9 +2,6 @@
 #[ixc::handler(Bank)]
 pub mod bank {
     use ixc::*;
-    use ixc_core::handler::ClientFactory;
-    use ixc_core::routes::Route;
-    use ixc_message_api::packet::MessagePacket;
 
     #[derive(Resources)]
     pub struct Bank {
@@ -67,15 +64,17 @@ mod tests {
     use ixc_core::handler::{Client, ClientFactory};
     use super::bank::*;
     use ixc_testing::*;
+    use crate::bank;
 
     #[test]
     fn test() {
         let mut app = TestApp::default();
         app.register_handler::<Bank>().unwrap();
         let mut alice = app.new_client_context().unwrap();
+        let mut bob = app.new_client_context().unwrap();
         let bank_client = create_account(&mut alice, BankCreate { init_denom: "foo", init_balance: 1000 }).unwrap();
-        let bank_api_client = <dyn BankAPI as ClientFactory>::new_client(bank_client.account_id());
-        let alice_balance= bank_api_client.get_balance(&mut alice, bank_client.account_id(), "foo").unwrap();
+        bank_client.send(&mut alice, bob.account_id(), &[Coin { denom: "foo", amount: 100 }]).unwrap();
+        let alice_balance = bank_client.get_balance(&mut alice, bank_client.account_id(), "foo").unwrap();
         assert_eq!(alice_balance, 1000);
     }
 }

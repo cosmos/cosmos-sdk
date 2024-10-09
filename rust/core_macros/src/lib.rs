@@ -6,11 +6,12 @@ use std::default::Default;
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use manyhow::{bail, ensure, manyhow};
 use quote::{format_ident, quote, ToTokens};
-use syn::{parse2, parse_macro_input, parse_quote, Attribute, Data, DeriveInput, Item, ItemMod, ItemTrait, LitStr, ReturnType, Signature, TraitItem, Type};
+use syn::{parse2, parse_macro_input, parse_quote, Attribute, Data, DeriveInput, Item, ItemMod, ItemTrait, LitStr, ReturnType, Signature, TraitItem, Type, Visibility};
 use std::borrow::Borrow;
 use blake2::{Blake2b512, Digest};
 use deluxe::ExtractAttributes;
 use heck::{ToUpperCamelCase};
+use syn::punctuated::Punctuated;
 
 #[derive(deluxe::ParseMetaItem)]
 struct HandlerArgs(syn::Ident);
@@ -34,6 +35,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
 
     let client_ident = format_ident!("{}Client", handler);
     builder.define_client(&client_ident)?;
+    builder.define_client_impl(&quote! {#client_ident}, &quote!{pub})?;
     builder.define_client_factory(&client_ident, &quote! {#handler})?;
 
     let on_create_msg = match builder.create_msg_name {
@@ -91,6 +93,11 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
         }
     })?;
 
+    push_item(items, quote! {
+        impl ::ixc_core::handler::HandlerClient for #client_ident {
+            type Handler = #handler;
+        }
+    })?;
 
     items.append(&mut builder.items);
 
@@ -231,12 +238,17 @@ pub fn handler_api(attr: TokenStream2, mut item_trait: ItemTrait) -> manyhow::Re
         }
     }
 
-    let client_ident = format_ident!("{}Client", trait_ident);
-    builder.define_client(&client_ident)?;
-    builder.define_client_factory(&client_ident, &quote! {#client_ident})?;
-    builder.define_client_factory(&client_ident, &dyn_trait)?;
+    let client_trait_ident = format_ident!("{}Client", trait_ident);
+    let client_impl_ident = format_ident!("{}Impl", client_trait_ident);
+    builder.define_client(&client_impl_ident)?;
+    builder.define_client_impl(&quote! {#client_trait_ident for #client_impl_ident}, &quote!{})?;
+    builder.define_client_impl(&quote! {<T: ::ixc_core::handler::HandlerClient> #client_trait_ident for T
+        where T::Handler: #trait_ident}, &quote!{})?;
+    builder.define_client_factory(&client_impl_ident, &dyn_trait)?;
+    builder.define_client_factory(&client_impl_ident, &quote!{ #client_impl_ident})?;
     let items = &mut builder.items;
     let routes = &builder.routes;
+    let client_signatures = &builder.client_signatures;
     Ok(quote! {
         #item_trait
 
@@ -254,6 +266,10 @@ pub fn handler_api(attr: TokenStream2, mut item_trait: ItemTrait) -> manyhow::Re
                 ::ixc_core::routes::exec_route(self, message_packet, callbacks, allocator)
             }
         }
+
+        pub trait #client_trait_ident {
+            #( #client_signatures; )*
+        }
     })
 }
 
@@ -261,6 +277,7 @@ pub fn handler_api(attr: TokenStream2, mut item_trait: ItemTrait) -> manyhow::Re
 struct APIBuilder {
     items: Vec<Item>,
     routes: Vec<TokenStream2>,
+    client_signatures: Vec<Signature>,
     client_methods: Vec<TokenStream2>,
     create_msg_name: Option<Ident>,
     create_msg_lifetime: TokenStream2,
@@ -277,14 +294,18 @@ impl APIBuilder {
                     self.0
                 }
             }
-        })?;
+        })
+    }
+
+    fn define_client_impl(&mut self, impl_target: &TokenStream2, visibility: &TokenStream2) -> manyhow::Result<()> {
         let client_methods = &self.client_methods;
         push_item(&mut self.items, quote! {
-            impl #client_ident {
-                #(#client_methods)*
+            impl #impl_target {
+                #(#visibility #client_methods)*
             }
         })
     }
+
 
     fn define_client_factory(&mut self, client_ident: &Ident, factory_target: &TokenStream2) -> manyhow::Result<()> {
         push_item(&mut self.items, quote! {
@@ -304,7 +325,8 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
     let fn_name = &signature.ident;
     let ident_camel = fn_name.to_string().to_upper_camel_case();
     let msg_struct_name = format_ident!("{}{}", handler_ident, ident_camel);
-    let signature = signature.clone();
+    let mut signature = signature.clone();
+    let mut new_inputs = Punctuated::new();
     let mut msg_fields = vec![];
     let mut msg_deconstruct = vec![];
     let mut fn_ctr_args = vec![];
@@ -321,6 +343,7 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                             Type::Reference(tyref) => {
                                 if tyref.elem == parse_quote!(Context) {
                                     context_name = Some(ident.ident.clone());
+                                    new_inputs.push(field.clone());
                                     continue;
                                 }
 
@@ -358,7 +381,9 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
             }
             _ => {}
         }
+        new_inputs.push(field.clone());
     }
+    signature.inputs = new_inputs;
     let opt_lifetime = if have_lifetimes {
         quote! { <'a> }
     } else {
@@ -408,12 +433,13 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                         }
                     }),
         });
+        builder.client_signatures.push(signature.clone());
         builder.client_methods.push(quote! {
-                pub #signature {
+                #signature {
                     let msg = #msg_struct_name {
                         #(#msg_fields_init)*
                     };
-                    unsafe { ::ixc_core::low_level::dynamic_invoke(#context_name, self.0, msg) }
+                    unsafe { ::ixc_core::low_level::dynamic_invoke(#context_name, ::ixc_core::handler::Client::account_id(self), msg) }
                 }
         });
     } else {

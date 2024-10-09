@@ -132,12 +132,17 @@ func (s *SystemUnderTest) SetupChain() {
 
 	genesisBz, err = sjson.SetRawBytes(genesisBz, "consensus.params.block.max_gas", []byte(fmt.Sprintf(`"%d"`, 10_000_000)))
 	if err != nil {
-		panic(fmt.Sprintf("failed set block max gas: %s", err))
+		panic(fmt.Sprintf("failed to set block max gas: %s", err))
 	}
 	// Short period for gov
 	genesisBz, err = sjson.SetRawBytes(genesisBz, "app_state.gov.params.voting_period", []byte(fmt.Sprintf(`"%s"`, "8s")))
 	if err != nil {
-		panic(fmt.Sprintf("failed set block max gas: %s", err))
+		panic(fmt.Sprintf("failed to set regular voting period: %s", err))
+	}
+	// update expedited voting period to avoid validation error
+	genesisBz, err = sjson.SetRawBytes(genesisBz, "app_state.gov.params.expedited_voting_period", []byte(fmt.Sprintf(`"%s"`, "7s")))
+	if err != nil {
+		panic(fmt.Sprintf("failed to set expedited voting period: %s", err))
 	}
 	s.withEachNodeHome(func(i int, home string) {
 		if err := saveGenesis(home, genesisBz); err != nil {
@@ -759,6 +764,11 @@ func (s *SystemUnderTest) anyNodeRunning() bool {
 
 func (s *SystemUnderTest) CurrentHeight() int64 {
 	return s.currentHeight.Load()
+}
+
+// NodesCount returns the number of node instances used
+func (s *SystemUnderTest) NodesCount() int {
+	return s.nodesCount
 }
 
 type Node struct {

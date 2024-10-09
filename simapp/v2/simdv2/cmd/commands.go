@@ -19,7 +19,6 @@ import (
 	"cosmossdk.io/server/v2/cometbft"
 	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
-	"cosmossdk.io/store/v2/root"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -36,10 +35,14 @@ import (
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2/cli"
 )
 
+func newApp[T transaction.Tx](logger log.Logger, viper *viper.Viper) serverv2.AppI[T] {
+	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
+	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper))
+}
+
 func initRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
-	storeBuilder root.Builder,
 	moduleManager *runtimev2.MM[T],
 ) {
 	cfg := sdk.GetConfig()
@@ -49,7 +52,7 @@ func initRootCmd[T transaction.Tx](
 		genutilcli.InitCmd(moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		NewTestnetCmd(storeBuilder, moduleManager),
+		NewTestnetCmd(moduleManager),
 	)
 
 	logger, err := serverv2.NewLogger(viper.New(), rootCmd.OutOrStdout())
@@ -66,25 +69,19 @@ func initRootCmd[T transaction.Tx](
 		offchain.OffChain(),
 	)
 
-	appCreator := func(logger log.Logger, viper *viper.Viper) serverv2.AppI[T] {
-		viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
-		return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper, storeBuilder))
-	}
-
 	// wire server commands
 	if err = serverv2.AddCommands(
 		rootCmd,
-		appCreator,
+		newApp,
 		logger,
 		initServerConfig(),
 		cometbft.New(
 			&genericTxDecoder[T]{txConfig},
-			storeBuilder,
 			initCometOptions[T](),
 			initCometConfig(),
 		),
 		grpc.New[T](),
-		serverstore.New[T](storeBuilder),
+		serverstore.New[T](),
 		telemetry.New[T](),
 	); err != nil {
 		panic(err)
@@ -176,13 +173,13 @@ func appExport[T transaction.Tx](
 
 	var simApp *simapp.SimApp[T]
 	if height != -1 {
-		simApp = simapp.NewSimApp[T](logger, viper, root.NewBuilder())
+		simApp = simapp.NewSimApp[T](logger, viper)
 
 		if err := simApp.LoadHeight(uint64(height)); err != nil {
 			return genutilv2.ExportedApp{}, err
 		}
 	} else {
-		simApp = simapp.NewSimApp[T](logger, viper, root.NewBuilder())
+		simApp = simapp.NewSimApp[T](logger, viper)
 	}
 
 	return simApp.ExportAppStateAndValidators(jailAllowedAddrs)

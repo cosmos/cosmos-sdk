@@ -3,6 +3,8 @@ package simapp
 import (
 	_ "embed"
 
+	"cosmossdk.io/store/v2/root"
+
 	"github.com/spf13/viper"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
@@ -14,7 +16,6 @@ import (
 	"cosmossdk.io/runtime/v2"
 	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/root"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
 	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
@@ -78,12 +79,12 @@ func AppConfig() depinject.Config {
 func NewSimApp[T transaction.Tx](
 	logger log.Logger,
 	viper *viper.Viper,
-	storeBuilder root.Builder,
 ) *SimApp[T] {
 	var (
-		app        = &SimApp[T]{}
-		appBuilder *runtime.AppBuilder[T]
-		err        error
+		app          = &SimApp[T]{}
+		appBuilder   *runtime.AppBuilder[T]
+		err          error
+		storeBuilder root.Builder
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -91,7 +92,6 @@ func NewSimApp[T transaction.Tx](
 			depinject.Supply(
 				logger,
 				viper,
-				storeBuilder,
 
 				// ADVANCED CONFIGURATION
 

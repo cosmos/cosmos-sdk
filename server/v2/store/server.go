@@ -24,12 +24,11 @@ const ServerName = "store"
 // Server manages store config and contains prune & snapshot commands
 type Server[T transaction.Tx] struct {
 	config  *root.Config
-	builder root.Builder
 	backend storev2.Backend
 }
 
-func New[T transaction.Tx](builder root.Builder) *Server[T] {
-	return &Server[T]{builder: builder}
+func New[T transaction.Tx]() *Server[T] {
+	return &Server[T]{}
 }
 
 func (s *Server[T]) Init(_ serverv2.AppI[T], cfg map[string]any, log log.Logger) error {
@@ -38,7 +37,7 @@ func (s *Server[T]) Init(_ serverv2.AppI[T], cfg map[string]any, log log.Logger)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal config: %w", err)
 	}
-	s.backend, err = s.builder.Build(log, s.config)
+	s.backend, err = root.NewBuilder().Build(log, s.config)
 	if err != nil {
 		return fmt.Errorf("failed to create store backend: %w", err)
 	}
@@ -90,7 +89,7 @@ func UnmarshalConfig(cfg map[string]any) (*root.Config, error) {
 		Options: root.DefaultStoreOptions(),
 	}
 	if err := serverv2.UnmarshalSubConfig(cfg, ServerName, config); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal store config: %w", err)
 	}
 	home := cfg[serverv2.FlagHome]
 	if home != nil {

@@ -229,6 +229,7 @@ func ProvideEnvironment(
 // - header.Service
 // - comet.Service
 // - event.Service
+// - store/v2/root.Builder
 //
 // They are all required.  For most use cases these default services bindings should be sufficient.
 // Power users (or tests) may wish to provide their own services bindings, in which case they must
@@ -244,11 +245,13 @@ func DefaultServiceBindings() depinject.Config {
 		headerService header.Service = services.NewGenesisHeaderService(stf.HeaderService{})
 		cometService  comet.Service  = &services.ContextAwareCometInfoService{}
 		eventService                 = stf.NewEventService()
+		storeBuilder                 = root.NewBuilder()
 	)
 	return depinject.Supply(
 		kvServiceFactory,
 		headerService,
 		cometService,
 		eventService,
+		storeBuilder,
 	)
 }

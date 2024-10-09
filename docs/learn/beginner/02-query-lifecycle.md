@@ -41,7 +41,7 @@ The CLI understands a specific set of commands, defined in a hierarchical struct
 
 ### gRPC
 
-Another interface through which users can make queries is [gRPC](https://grpc.io) requests to a [gRPC server](../advanced/06-grpc_rest.md#grpc-server). The endpoints are defined as [Protocol Buffers](https://developers.google.com/protocol-buffers) service methods inside `.proto` files, written in Protobuf's own language-agnostic interface definition language (IDL). The Protobuf ecosystem developed tools for code-generation from `*.proto` files into various languages. These tools allow to build gRPC clients easily.
+Another interface through which users can make queries is [gRPC](https://grpc.io) requests to a [gRPC server](../advanced/06-grpc_rest.md#grpc-server). The endpoints are defined as [Protocol Buffers](https://protobuf.dev/) service methods inside `.proto` files, written in Protobuf's own language-agnostic interface definition language (IDL). The Protobuf ecosystem developed tools for code-generation from `*.proto` files into various languages. These tools allow to build gRPC clients easily.
 
 One such tool is [grpcurl](https://github.com/fullstorydev/grpcurl), and a gRPC request for `MyQuery` using this client looks like:
 

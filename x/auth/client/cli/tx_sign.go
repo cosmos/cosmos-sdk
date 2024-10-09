@@ -98,10 +98,13 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		if !clientCtx.Offline && multisigKey == "" {
-			from, err := cmd.Flags().GetString(flags.FlagFrom)
-			if err != nil {
-				return err
+		if !clientCtx.Offline {
+			from := multisigKey
+			if multisigKey == "" {
+				from, err = cmd.Flags().GetString(flags.FlagFrom)
+				if err != nil {
+					return err
+				}
 			}
 
 			fromAddr, _, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), from)
@@ -267,7 +270,7 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 		multisigAddr,
 		clientCtx.FromName,
 		txBuilder,
-		clientCtx.Offline,
+		true,
 		true,
 	); err != nil {
 		return err

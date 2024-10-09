@@ -63,7 +63,6 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 
 		// write to temp file
 		opFile = StoreTempFile(t, []byte(rsp))
-		defer opFile.Close()
 
 		return false
 	}
@@ -112,7 +111,6 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 
 				// write to temp file
 				signFile = StoreTempFile(t, []byte(rsp))
-				defer signFile.Close()
 
 				return false
 			}
@@ -145,7 +143,6 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 	updated, err := sjson.Set(rsp, "auth_info.signer_infos.0.public_key", nil)
 	require.NoError(t, err)
 	newSignFile := StoreTempFile(t, []byte(updated))
-	defer newSignFile.Close()
 
 	broadcastCmd := []string{"tx", "broadcast", newSignFile.Name()}
 	rsp = cli.RunCommandWithArgs(cli.withTXFlags(broadcastCmd...)...)
@@ -260,8 +257,8 @@ func TestAuthQueryTxCmds(t *testing.T) {
 	}
 }
 
-func TestAuthMultisigTxCmds(t *testing.T) {
-	// scenario: test auth multisig tx commands
+func TestAuthMultisignTxCmd(t *testing.T) {
+	// scenario: test auth multisign tx command
 	// given a running chain
 
 	sut.ResetChain(t)
@@ -293,4 +290,83 @@ func TestAuthMultisigTxCmds(t *testing.T) {
 
 	multiAddrBal := cli.QueryBalance(multiAddr, authTestDenom)
 	require.Equal(t, initialAmount, multiAddrBal)
+
+	valAddrBal := cli.QueryBalance(valAddr, authTestDenom)
+
+	var transferAmount int64 = 100
+	var feeAmount int64 = 1
+
+	// run bank tx send with --generate-only flag
+	bankSendGenCmd := []string{
+		"tx", "bank", "send", multiAddr, valAddr,
+		fmt.Sprintf("%d%s", transferAmount, authTestDenom),
+		fmt.Sprintf("--fees=%d%s", feeAmount, authTestDenom),
+		"--generate-only",
+	}
+
+	rsp := cli.RunCommandWithArgs(cli.withTXFlags(bankSendGenCmd...)...)
+	txFile := StoreTempFile(t, []byte(rsp))
+
+	// sign above transaction with multisig accounts and
+	// execute multisign transaction
+	signTxCmd := cli.withKeyringFlags("tx", "sign", txFile.Name(), "--multisig="+multiAddr, "--chain-id="+cli.chainID)
+	multiSignTxCmd := cli.withKeyringFlags("tx", "multisign", txFile.Name(), "multi", "--chain-id="+cli.chainID)
+
+	// multisign testcases
+	testCases := []struct {
+		name        string
+		signingAccs []string
+		expErrMsg   string
+	}{
+		{
+			"minimum threshold not reached",
+			[]string{acc1Addr},
+			"signature size is incorrect",
+		},
+		{
+			"valid multisign tx with two signers",
+			[]string{acc1Addr, acc2Addr},
+			"",
+		},
+		{
+			"valid multisign tx with three signed files",
+			[]string{acc1Addr, acc2Addr, acc3Addr},
+			"",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// append signed files to multisign command
+			cmd := multiSignTxCmd
+			for _, acc := range tc.signingAccs {
+				rsp = cli.RunCommandWithArgs(append(signTxCmd, "--from="+acc)...)
+				signFile := StoreTempFile(t, []byte(rsp))
+				cmd = append(cmd, signFile.Name())
+			}
+			rsp = cli.RunCommandWithArgs(cmd...)
+			multiSignFile := StoreTempFile(t, []byte(rsp))
+
+			// run broadcast tx command
+			broadcastCmd := []string{"tx", "broadcast", multiSignFile.Name()}
+			if tc.expErrMsg != "" {
+				rsp = cli.RunCommandWithArgs(cli.withTXFlags(broadcastCmd...)...)
+				RequireTxFailure(t, rsp)
+				require.Contains(t, rsp, tc.expErrMsg)
+				return
+			}
+
+			rsp = cli.RunAndWait(broadcastCmd...)
+			RequireTxSuccess(t, rsp)
+
+			// query balance and confirm transaction
+			expMultiBal := multiAddrBal - transferAmount - feeAmount
+			multiAddrBal = cli.QueryBalance(multiAddr, authTestDenom)
+			require.Equal(t, expMultiBal, multiAddrBal)
+
+			expVal2Bal := valAddrBal + transferAmount
+			valAddrBal = cli.QueryBalance(valAddr, authTestDenom)
+			require.Equal(t, expVal2Bal, valAddrBal)
+		})
+	}
 }

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/core/event"
@@ -112,11 +113,11 @@ type readonlyKVStore struct {
 }
 
 func (r readonlyKVStore) Set(key, value []byte) error {
-	panic("tried to call Set on a readonly store")
+	return errors.New("tried to call Set on a readonly store")
 }
 
 func (r readonlyKVStore) Delete(key []byte) error {
-	panic("tried to call Delete on a readonly store")
+	return errors.New("tried to call Delete on a readonly store")
 }
 
 // GenesisHeaderService is a header.Service implementation that is used during

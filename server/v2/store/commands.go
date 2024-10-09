@@ -2,9 +2,6 @@ package store
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -88,21 +85,4 @@ func createRootStore(v *viper.Viper, logger log.Logger) (storev2.RootStore, root
 		return nil, root.Options{}, fmt.Errorf("failed to create store backend: %w", err)
 	}
 	return store, storeConfig.Options, nil
-}
-
-func overrideKeepRecent(configPath string, keepRecent uint64) error {
-	bz, err := os.ReadFile(filepath.Join(configPath, "app.toml"))
-	if err != nil {
-		return err
-	}
-	lines := strings.Split(string(bz), "\n")
-
-	for i, line := range lines {
-		if strings.Contains(line, "keep-recent") {
-			lines[i] = fmt.Sprintf("keep-recent = %d", keepRecent)
-		}
-	}
-	output := strings.Join(lines, "\n")
-
-	return os.WriteFile(filepath.Join(configPath, "app.toml"), []byte(output), 0o600)
 }

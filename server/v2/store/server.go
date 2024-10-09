@@ -31,17 +31,8 @@ func New[T transaction.Tx]() *Server[T] {
 	return &Server[T]{}
 }
 
-func (s *Server[T]) Init(_ serverv2.AppI[T], cfg map[string]any, log log.Logger) error {
-	var err error
-	s.config, err = UnmarshalConfig(cfg)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal config: %w", err)
-	}
-	s.backend, err = root.NewBuilder().Build(log, s.config)
-	if err != nil {
-		return fmt.Errorf("failed to create store backend: %w", err)
-	}
-
+func (s *Server[T]) Init(app serverv2.AppI[T], _ map[string]any, _ log.Logger) error {
+	s.backend = app.GetStore()
 	return nil
 }
 

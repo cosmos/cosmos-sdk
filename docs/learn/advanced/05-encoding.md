@@ -17,9 +17,9 @@ While encoding in the Cosmos SDK used to be mainly handled by `go-amino` codec, 
 ## Encoding
 
 The Cosmos SDK supports two wire encoding protocols.  Binary encoding is fulfilled by [Protocol
-Buffers](https://developers.google.com/protocol-buffers), specifically the
+Buffers](https://protobuf.dev/), specifically the
 [gogoprotobuf](https://github.com/cosmos/gogoproto/) implementation, which is a subset of
-[Proto3](https://developers.google.com/protocol-buffers/docs/proto3)  with an extension for
+[Proto3](https://protobuf.dev/programming-guides/proto3/)  with an extension for
 interface support.  Text encoding is fulfilled by [Amino](https://github.com/tendermint/go-amino).
 
 Due to Amino having significant performance drawbacks, being reflection-based, and not having
@@ -52,7 +52,7 @@ Modules are encouraged to utilize Protobuf encoding for their respective types. 
 
 ### Guidelines for protobuf message definitions
 
-In addition to [following official Protocol Buffer guidelines](https://developers.google.com/protocol-buffers/docs/proto3#simple), we recommend using these annotations in .proto files when dealing with interfaces:
+In addition to [following official Protocol Buffer guidelines](https://protobuf.dev/programming-guides/proto3/#simple), we recommend using these annotations in .proto files when dealing with interfaces:
 
 * use `cosmos_proto.accepts_interface` to annotate `Any` fields that accept interfaces
     * pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
@@ -240,5 +240,5 @@ Protobuf types can be defined to encode:
 
 #### Naming and conventions
 
-We encourage developers to follow industry guidelines: [Protocol Buffers style guide](https://developers.google.com/protocol-buffers/docs/style)
+We encourage developers to follow industry guidelines: [Protocol Buffers style guide](https://protobuf.dev/programming-guides/style/)
 and [Buf](https://buf.build/docs/style-guide), see more details in [ADR 023](../../architecture/adr-023-protobuf-naming.md)

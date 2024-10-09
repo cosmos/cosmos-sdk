@@ -53,6 +53,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#17709](https://github.com/cosmos/cosmos-sdk/pull/17709) Address codecs have been removed from `autocli.AppOptions` and `flag.Builder`. Instead client/v2 uses the address codecs present in the context (introduced in [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503)).
 
+### Bug Fixes
+
+* [#21853](https://github.com/cosmos/cosmos-sdk/pull/21853) Fix `*big.Int` unmarshalling in txs.
+
 ## [v2.0.0-beta.5] - 2024-09-18
 
 ### Improvements

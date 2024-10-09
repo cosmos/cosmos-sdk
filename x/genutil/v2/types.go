@@ -3,6 +3,8 @@ package v2
 import (
 	"context"
 	"encoding/json"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // AppExporter is a function that dumps all app state to
@@ -20,4 +22,6 @@ type ExportedApp struct {
 	AppState json.RawMessage
 	// Height is the app's latest block height.
 	Height int64
+	// Validators is the exported validator set.
+	Validators []sdk.GenesisValidator
 }

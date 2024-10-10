@@ -36,6 +36,9 @@ cp ../depinject/README.md ./build/packages/01-depinject.md
 cp ../collections/README.md ./build/packages/02-collections.md
 cp ../orm/README.md ./build/packages/03-orm.md
 
+## Update user docs with rosetta
+wget -O "./user/run-node/04-rosetta.md" "https://raw.githubusercontent.com/cosmos/rosetta/main/README.md"
+
 ## Add architecture documentation
 cp -r ./architecture ./build
 

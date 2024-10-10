@@ -77,8 +77,3 @@ func (opts *PruningOption) ShouldPrune(version uint64) (bool, uint64) {
 
 	return false, 0
 }
-
-// DBOptions defines the interface of a database options.
-type DBOptions interface {
-	Get(string) interface{}
-}

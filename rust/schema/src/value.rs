@@ -3,7 +3,7 @@
 use ixc_message_api::handler::Allocator;
 use ixc_message_api::packet::MessagePacket;
 use ixc_schema::buffer::WriterFactory;
-use crate::codec::{decode_value, Codec};
+use crate::codec::{decode_value, Codec, ValueDecodeVisitor};
 use crate::decoder::{DecodeError, Decoder};
 use crate::encoder::{EncodeError, Encoder};
 use crate::list::AllocatorVecBuilder;
@@ -315,18 +315,36 @@ impl<'a, V: SchemaValue<'a>> SchemaValue<'a> for Option<V> {
     type DecodeState = Option<V::DecodeState>;
 
     fn visit_decode_state(state: &mut Self::DecodeState, decoder: &mut dyn Decoder<'a>) -> Result<(), DecodeError> {
-        todo!()
+        struct Visitor<'b, U:SchemaValue<'b>>(U::DecodeState);
+        // TODO can we reduce the duplication between this and codec::decode_value?
+        impl <'b, U:SchemaValue<'b>> ValueDecodeVisitor<'b> for Visitor<'b, U> {
+            fn decode(&mut self, decoder: &mut dyn Decoder<'b>) -> Result<(), DecodeError> {
+                U::visit_decode_state(&mut self.0, decoder)
+            }
+        }
+        let mut visitor = Visitor::<V>(V::DecodeState::default());
+        if decoder.decode_option(&mut visitor)? {
+            *state = Some(visitor.0);
+        }
+        Ok(())
     }
 
     fn finish_decode_state(state: Self::DecodeState, mem: &'a MemoryManager) -> Result<Self, DecodeError>
     where
         Self: Sized
     {
-        todo!()
+        state.map(|state| V::finish_decode_state(state, mem)).transpose()
     }
 
     fn encode(&self, encoder: &mut dyn Encoder) -> Result<(), EncodeError> {
-        todo!()
+        match self {
+            Some(value) => {
+                encoder.encode_option(Some(value))
+            }
+            None => {
+                encoder.encode_option(None)
+            }
+        }
     }
 }
 

@@ -121,6 +121,13 @@ impl Transaction for Tx {
         self.current_frame.borrow().account
     }
 
+    fn self_destruct_account(&mut self) -> Result<(), ()> {
+        let mut current_frame = self.current_frame.borrow_mut();
+        let account = current_frame.account;
+        current_frame.store.stores.remove(&account);
+        Ok(())
+    }
+
     fn raw_kv_get(&self, account_id: AccountID, key: &[u8]) -> Option<Vec<u8>> {
         let current_frame = self.current_frame.borrow();
         current_frame.store.stores.get(&account_id).and_then(|s| s.kv_store.get(key).cloned())
@@ -247,7 +254,7 @@ pub struct Frame {
 
 impl Frame {
     fn get_kv_store(&mut self, account_id: AccountID) -> &mut Store {
-        if  self.store.stores.contains_key(&account_id) {
+        if self.store.stores.contains_key(&account_id) {
             self.store.stores.get_mut(&account_id).unwrap()
         } else {
             self.store.stores.insert(account_id, Store::default());

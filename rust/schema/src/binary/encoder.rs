@@ -107,6 +107,14 @@ impl<'a, W: Writer> crate::encoder::Encoder for Encoder<'a, W> {
         /// TODO find a more efficient way to encode duration
         self.encode_i128(x.nanos())
     }
+
+    fn encode_option(&mut self, visitor: Option<&dyn ValueEncodeVisitor>) -> Result<(), EncodeError> {
+        if let Some(visitor) = visitor {
+            visitor.encode(self)
+        } else {
+            Ok(())
+        }
+    }
 }
 
 pub(crate) struct EncodeSizer {
@@ -212,6 +220,14 @@ impl crate::encoder::Encoder for EncodeSizer {
     fn encode_duration(&mut self, x: Duration) -> Result<(), EncodeError> {
         self.encode_i128(x.nanos())
     }
+
+    fn encode_option(&mut self, visitor: Option<&dyn ValueEncodeVisitor>) -> Result<(), EncodeError> {
+        if let Some(visitor) = visitor {
+            visitor.encode(self)
+        } else {
+            Ok(())
+        }
+    }
 }
 
 pub(crate) struct InnerEncoder<'b, 'a: 'b, W> {
@@ -295,6 +311,16 @@ impl<'b, 'a: 'b, W: Writer> crate::encoder::Encoder for InnerEncoder<'a, 'b, W> 
 
     fn encode_duration(&mut self, x: Duration) -> Result<(), EncodeError> {
         self.encode_i128(x.nanos())
+    }
+
+    fn encode_option(&mut self, visitor: Option<&dyn ValueEncodeVisitor>) -> Result<(), EncodeError> {
+        if let Some(visitor) = visitor {
+            visitor.encode(self)?;
+            self.encode_bool(true)?;
+        } else {
+            self.encode_bool(false)?;
+        }
+        Ok(())
     }
 }
 
@@ -389,12 +415,18 @@ impl<'a> crate::encoder::Encoder for InnerEncodeSizer<'a> {
     fn encode_duration(&mut self, x: Duration) -> Result<(), EncodeError> {
         self.encode_i128(x.nanos())
     }
+
+    fn encode_option(&mut self, visitor: Option<&dyn ValueEncodeVisitor>) -> Result<(), EncodeError> {
+        self.outer.size += 1;
+        if let Some(visitor) = visitor {
+            visitor.encode(self)?;
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use core::ops::{ShlAssign, ShrAssign};
-    use allocator_api2::alloc::Allocator;
     use crate::binary::encoder::encode_value;
     use crate::encoder::Encoder;
     use crate::mem::MemoryManager;

@@ -148,6 +148,15 @@ impl<'a> crate::decoder::Decoder<'a> for Decoder<'a> {
         let bz = self.read_bytes(2)?;
         Ok(i16::from_le_bytes(bz.try_into().unwrap()))
     }
+
+    fn decode_option(&mut self, visitor: &mut dyn ValueDecodeVisitor<'a>) -> Result<bool, DecodeError> {
+        if self.buf.is_empty() {
+            Ok(false)
+        } else {
+            visitor.decode(&mut Decoder { buf: self.buf, scope: self.scope })?;
+            Ok(true)
+        }
+    }
 }
 
 struct InnerDecoder<'b, 'a: 'b> {
@@ -246,6 +255,16 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for InnerDecoder<'b, 'a> {
 
     fn decode_i16(&mut self) -> Result<i16, DecodeError> {
         self.outer.decode_i16()
+    }
+
+    fn decode_option(&mut self, visitor: &mut dyn ValueDecodeVisitor<'a>) -> Result<bool, DecodeError> {
+        let present = self.decode_bool()?;
+        if present {
+            visitor.decode(self)?;
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     }
 }
 

@@ -4,6 +4,7 @@ use core::error::Error;
 use core::fmt::{Display, Formatter};
 use ixc_message_api::AccountID;
 use ixc_message_api::code::{ErrorCode, SystemCode};
+use ixc_schema::codec::ValueDecodeVisitor;
 use crate::encoder::EncodeError;
 use crate::list::ListDecodeVisitor;
 use crate::mem::MemoryManager;
@@ -49,6 +50,9 @@ pub trait Decoder<'a> {
     fn decode_struct(&mut self, visitor: &mut dyn StructDecodeVisitor<'a>, struct_type: &StructType) -> Result<(), DecodeError>;
     /// Decode a list.
     fn decode_list(&mut self, visitor: &mut dyn ListDecodeVisitor<'a>) -> Result<(), DecodeError>;
+    /// Decode an optional value. The visitor will only be called if the value is present.
+    /// Returns `true` if the value is present, `false` if it is not.
+    fn decode_option(&mut self, visitor: &mut dyn ValueDecodeVisitor<'a>) -> Result<bool, DecodeError>;
     /// Decode an account ID.
     fn decode_account_id(&mut self) -> Result<AccountID, DecodeError>;
     /// Encode an enum value.

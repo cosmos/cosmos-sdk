@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::ops::DerefMut;
 use std::sync::Arc;
 use ixc_message_api::code::ErrorCode::SystemCode;
-use ixc_message_api::code::SystemCode::{FatalExecutionError, HandlerNotFound, InvalidHandler, UnauthorizedCallerAccess};
+use ixc_message_api::code::SystemCode::{AccountNotFound, FatalExecutionError, HandlerNotFound, InvalidHandler, MessageNotHandled, UnauthorizedCallerAccess};
 
 /// Rust Cosmos SDK RFC 003 hypervisor implementation.
 pub struct Hypervisor<ST: StateHandler> {
@@ -103,6 +103,8 @@ pub trait Transaction {
     fn pop_frame(&mut self, commit: bool) -> Result<(), PopFrameError>;
     /// Get the active account.
     fn active_account(&self) -> AccountID;
+    /// Removes the data for the active account.
+    fn self_destruct_account(&mut self) -> Result<(), ()>;
     /// Directly read a key from the account's KV store.
     fn raw_kv_get(&self, account_id: AccountID, key: &[u8]) -> Option<Vec<u8>>;
     /// Directly write a key to the account's raw KV store.
@@ -152,6 +154,14 @@ impl<'a, TX: Transaction> ExecContext<TX> {
         Ok(AccountID::new(id))
     }
 
+    fn destroy_current_account_data(&self) -> Result<(), ()> {
+        let current_account = self.tx.borrow().active_account();
+        let id: u64 = current_account.into();
+        let key = format!("h:{}", id);
+        self.tx.borrow().raw_kv_delete(HYPERVISOR_ACCOUNT, key.as_bytes());
+        self.tx.borrow_mut().self_destruct_account()
+    }
+
     fn parse_handler_id(&self, value: &[u8]) -> Option<HandlerID> {
         parse_handler_id(value, &self.vmdata.default_vm)
     }
@@ -182,7 +192,7 @@ impl<TX: Transaction> HostBackend for ExecContext<TX> {
 
         // find the account's handler ID and retrieve its VM
         let handler_id = self.get_account_handler_id(target_account).
-            ok_or(SystemCode(HandlerNotFound))?;
+            ok_or(SystemCode(AccountNotFound))?;
         let vm = self.vmdata.vms.get(&handler_id.vm).
             ok_or(SystemCode(HandlerNotFound))?;
 
@@ -247,8 +257,12 @@ impl<TX: Transaction> ExecContext<TX> {
                     res
                 }
             },
+            SELF_DESTRUCT_SELECTOR => {
+                self.destroy_current_account_data().
+                    map_err(|_| SystemCode(FatalExecutionError))
+            }
             _ => {
-                Err(SystemCode(HandlerNotFound))
+                Err(SystemCode(MessageNotHandled))
             }
         }
     }
@@ -256,6 +270,7 @@ impl<TX: Transaction> ExecContext<TX> {
 
 const CREATE_SELECTOR: u64 = message_selector!("ixc.account.v1.create");
 const ON_CREATE_SELECTOR: u64 = message_selector!("ixc.account.v1.on_create");
+const SELF_DESTRUCT_SELECTOR: u64 = message_selector!("ixc.account.v1.self_destruct");
 
 fn parse_handler_id(value: &[u8], default_vm: &Option<String>) -> Option<HandlerID> {
     let str = String::from_utf8(value.to_vec()).ok()?;

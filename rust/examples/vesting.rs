@@ -10,11 +10,11 @@ mod vesting {
     #[derive(Resources)]
     pub struct FixedVesting {
         #[state]
-        amount: Item<Option<Coin>>,
+        pub(crate) amount: Item<Option<Coin>>,
         #[state]
-        beneficiary: Item<AccountID>,
+        pub(crate) beneficiary: Item<AccountID>,
         #[state]
-        unlock_time: Item<Time>,
+        pub(crate) unlock_time: Item<Time>,
         #[client(65536)]
         bank_client: <dyn BankAPI as Service>::Client,
         #[client(65537)]
@@ -44,8 +44,7 @@ mod vesting {
                     amount,
                 })?;
             } else {
-                // return Err(UnlockError::FundsNotReceivedYet);
-                todo!()
+                bail!(UnlockError::FundsNotReceivedYet);
             }
             unsafe { ixc_core::account_api::self_destruct(ctx)?; }
             Ok(())
@@ -53,13 +52,12 @@ mod vesting {
     }
 
 
-
     #[handler_api]
     pub trait VestingAPI {
         fn unlock<'a>(&self, ctx: &'a mut Context, eb: &mut EventBus<UnlockEvent>) -> Result<(), UnlockError>;
     }
 
-    #[derive(SchemaValue, Clone)]
+    #[derive(SchemaValue, Clone, PartialEq, Debug)]
     #[sealed]
     pub struct Coin {
         pub denom: String,
@@ -74,7 +72,7 @@ mod vesting {
 
     #[handler_api]
     pub trait ReceiveHook {
-        fn on_receive<'a>(&self, ctx: &mut Context<'a>, from: AccountID, denom: &str, amount: u128) -> Result<()>;
+        fn on_receive<'a>(&self, ctx: &mut Context<'a>, from: AccountID, amount: &[Coin]) -> Result<()>;
     }
 
     #[handler_api]
@@ -85,18 +83,19 @@ mod vesting {
 
     #[publish]
     impl ReceiveHook for FixedVesting {
-        fn on_receive<'a>(&self, ctx: &mut Context<'a>, from: AccountID, denom: &str, amount: u128) -> Result<()> {
+        fn on_receive<'a>(&self, ctx: &mut Context<'a>, from: AccountID, amount: &[Coin]) -> Result<()> {
             if ctx.caller() != self.bank_client.account_id() {
                 bail!("only the bank can send funds to this account");
             }
             if let Some(_) = self.amount.get(ctx)? {
                 bail!("already received deposit");
             }
+            if amount.len() != 1 {
+                bail!("expected exactly one coin");
+            }
+            let coin = &amount[0];
             // Set the amount to unlock
-            self.amount.set(ctx, Some(Coin{
-                denom: denom.to_string(),
-                amount,
-            }))?;
+            self.amount.set(ctx, Some(coin.clone()))?;
             Ok(())
         }
     }
@@ -131,8 +130,12 @@ mod vesting {
 
 #[cfg(test)]
 mod tests {
+    use std::ops::{AddAssign, SubAssign};
+    use std::sync::{Arc, RwLock};
     use ixc_core::account_api::ROOT_ACCOUNT;
     use ixc_core::handler::{Client, Service};
+    use ixc_message_api::code::ErrorCode::{HandlerCode, SystemCode};
+    use ixc_message_api::code::SystemCode::{AccountNotFound, HandlerNotFound};
     use ixc_testing::*;
     use simple_time::{Duration, Time};
     use super::vesting::*;
@@ -145,34 +148,69 @@ mod tests {
 
         // initialize block info
         let mut bank_mock = MockBankAPI::new();
-        bank_mock.expect_send().returning(|_, _, _| Ok(()));
+        // expect send to be called once with the correct coins
+        let coins = vec![Coin { denom: "foo".to_string(), amount: 1000 }];
+        let expected_coins = coins.clone();
+        bank_mock.expect_send().times(1).returning(move |_, _, coins| {
+            assert_eq!(coins, expected_coins);
+            Ok(())
+        });
         let bank_id = app.add_mock(&mut root, MockHandler::of::<dyn BankAPI>(Box::new(bank_mock))).unwrap();
         let mut bank_ctx = app.client_context_for(bank_id);
 
         // initialize block info
         let mut block_mock = MockBlockInfoAPI::new();
-        // expect the unlock time to be 7 days from the default time
-        let time0 = Time::default();
-        block_mock.expect_get_block_time().returning(move |_| Ok(time0));
-        let time1 = time0.add(Duration::DAY * 7);
-        block_mock.expect_get_block_time().returning(move |_| Ok(time1));
+        let cur_time = Arc::new(RwLock::new(Time::default()));
+        let cur_time_copy = cur_time.clone();
+        block_mock.expect_get_block_time().returning(move |_| Ok(cur_time_copy.read().unwrap().clone()));
         let block_id = app.add_mock(&mut root, MockHandler::of::<dyn BlockInfoAPI>(Box::new(block_mock))).unwrap();
 
         // initialize the vesting account
         let beneficiary = app.new_client_account().unwrap();
-        let unlock_time = time0.add(Duration::DAY * 5);
+        let unlock_time = Time::default().add(Duration::DAY * 5);
         let vesting_acct = create_account(&mut root, FixedVestingCreate {
             beneficiary,
             unlock_time,
         }).unwrap();
 
+        // try to unlock before the initial deposit but after the unlock time (we're time traveling)
+        cur_time.write().unwrap().add_assign(Duration::DAY * 6);
+        let res = vesting_acct.unlock(&mut root);
+        assert!(res.is_err());
+        assert_eq!(res.unwrap_err().code, HandlerCode(UnlockError::FundsNotReceivedYet));
+
         // pretend to be bank and deposit the initial funds
         let receive_hook_client = <dyn ReceiveHook>::new_client(vesting_acct.account_id());
         let funder_id = app.new_client_account().unwrap();
-        receive_hook_client.on_receive(&mut bank_ctx, funder_id, "foo", 1000).unwrap();
+        receive_hook_client.on_receive(&mut bank_ctx, funder_id, &coins).unwrap();
         // expect that sending a second time returns an error
-        let res = receive_hook_client.on_receive(&mut bank_ctx, funder_id, "foo", 1000);
+        let res = receive_hook_client.on_receive(&mut bank_ctx, funder_id, &coins);
         assert!(res.is_err());
+
+        // peek inside to make sure everything is setup correctly
+        app.exec_in(&vesting_acct, |vesting, ctx| {
+            let beneficiary = vesting.beneficiary.get(ctx).unwrap();
+            assert_eq!(beneficiary, beneficiary);
+            let unlock_time = vesting.unlock_time.get(ctx).unwrap();
+            assert_eq!(unlock_time, unlock_time);
+            let amount = vesting.amount.get(ctx).unwrap();
+            assert_eq!(amount, Some(Coin { denom: "foo".to_string(), amount: 1000 }));
+        });
+
+        // try unlocking before the unlock time
+        cur_time.write().unwrap().sub_assign(Duration::DAY * 6);
+        let res = vesting_acct.unlock(&mut root);
+        assert!(res.is_err());
+        assert_eq!(res.unwrap_err().code, HandlerCode(UnlockError::NotTimeYet));
+        // try unlocking after the unlock time
+        cur_time.write().unwrap().add_assign(Duration::DAY * 6);
+        vesting_acct.unlock(&mut root).unwrap();
+        // TODO check for unlock event
+        // since the unlock succeeded, if we try to unlock again we should get account not found,
+        // because the account self-destructed
+        let res = vesting_acct.unlock(&mut root);
+        assert!(res.is_err());
+        assert_eq!(res.unwrap_err().code, SystemCode(AccountNotFound));
     }
 }
 

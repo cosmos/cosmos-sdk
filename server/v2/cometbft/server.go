@@ -140,7 +140,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 			Logger:   s.logger.With(log.ModuleKey, "indexer"),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to start indexing: %w", err)
 		}
 		consensus.listener = &listener.Listener
 	}

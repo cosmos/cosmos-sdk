@@ -1,5 +1,11 @@
 #![allow(missing_docs)]
 
+use std::ptr::NonNull;
+use ixc_message_api::code::ErrorCode;
+use ixc_message_api::handler::{Allocator, RawHandler};
+use ixc_message_api::header::MessageHeader;
+use ixc_message_api::packet::MessagePacket;
+
 #[ixc::handler(Counter)]
 pub mod counter {
     use ixc::*;
@@ -65,5 +71,51 @@ mod tests {
 }
 
 ixc::package_root!(counter::Counter);
+
+#[cfg(target_arch = "wasm32")]
+#[no_mangle]
+unsafe extern "C" fn handle(packet: *mut u8, len: usize) -> u32 {
+    let scope = ixc_core::resource::ResourceScope::default();
+    let handler = <crate::counter::Counter as ixc_core::resource::Resources>::new(&scope).unwrap();
+    let mut packet = ::ixc_message_api::packet::MessagePacket::new(NonNull::new_unchecked(packet as *mut MessageHeader), len);
+    struct Callbacks;
+    impl ::ixc_message_api::handler::HostBackend for Callbacks {
+        fn invoke(&self, message_packet: &mut MessagePacket, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
+            let (ptr, size) = unsafe { message_packet.raw_parts() };
+            let code: u32 = unsafe { invoke(ptr.as_ptr() as *const u8, size) };
+            if code != 0 {
+                Err(ErrorCode::from(code as u16))
+            } else {
+                Ok(())
+            }
+        }
+    }
+    let res = handler.handle(&mut packet, &Callbacks, &allocator_api2::alloc::Global);
+    match res {
+        Ok(()) => 0,
+        Err(code) => {
+            let c: u16 = code.into();
+            c as u32
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+#[no_mangle]
+unsafe extern "C" fn alloc(size: usize, align: usize) -> *mut u8 {
+    std::alloc::alloc(std::alloc::Layout::from_size_align(size, align).unwrap())
+}
+
+#[cfg(target_arch = "wasm32")]
+#[no_mangle]
+unsafe extern "C" fn free(ptr: *mut u8, size: usize) {
+    std::alloc::dealloc(ptr, std::alloc::Layout::from_size_align(size, 1).unwrap())
+}
+
+#[cfg(target_arch = "wasm32")]
+#[link(wasm_import_module = "ixc")]
+extern "C" {
+    fn invoke(packet: *const u8, len: usize) -> u32;
+}
 
 fn main() {}

@@ -83,7 +83,7 @@ const SET_SELECTOR: MessageSelector = message_selector!("ixc.store.v1.set");
 const DELETE_SELECTOR: MessageSelector = message_selector!("ixc.store.v1.delete");
 
 impl Transaction for Tx {
-    fn init_account_storage(&mut self, account: AccountID, _storage_params: &[u8]) -> Result<(), PushFrameError> {
+    fn init_account_storage(&mut self, account: AccountID) -> Result<(), PushFrameError> {
         self.push_frame(account, true)
     }
 

@@ -96,7 +96,7 @@ pub enum CommitError {
 /// A transaction.
 pub trait Transaction {
     /// Initialize the account storage and push a new frame for the newly initialized storage.
-    fn init_account_storage(&mut self, account: AccountID, storage_params: &[u8]) -> Result<(), PushFrameError>;
+    fn init_account_storage(&mut self, account: AccountID) -> Result<(), PushFrameError>;
     /// Push a new execution frame.
     fn push_frame(&mut self, account: AccountID, volatile: bool) -> Result<(), PushFrameError>;
     /// Pop the current execution frame.
@@ -142,13 +142,13 @@ impl<'a, TX: Transaction> ExecContext<TX> {
         self.parse_handler_id(&value)
     }
 
-    fn init_next_account(&self, storage_params: &[u8], handler_id: &HandlerID) -> Result<AccountID, PushFrameError> {
+    fn init_next_account(&self, handler_id: &HandlerID) -> Result<AccountID, PushFrameError> {
         let mut tx = self.tx.borrow_mut();
         let id = tx.raw_kv_get(HYPERVISOR_ACCOUNT, b"next_account_id").map_or(ACCOUNT_ID_NON_RESERVED_START, |v| {
             u64::from_le_bytes(v.try_into().unwrap())
         });
         // we push a new storage frame here because if initialization fails all of this gets rolled back
-        tx.init_account_storage(AccountID::new(id), storage_params)?;
+        tx.init_account_storage(AccountID::new(id))?;
         tx.raw_kv_set(HYPERVISOR_ACCOUNT, b"next_account_id", &(id + 1).to_le_bytes());
         tx.raw_kv_set(HYPERVISOR_ACCOUNT, format!("h:{}", id).as_bytes(), format_handler_id(handler_id).as_bytes());
         Ok(AccountID::new(id))
@@ -227,8 +227,7 @@ impl<TX: Transaction> ExecContext<TX> {
                     ok_or(SystemCode(HandlerNotFound))?;
 
                 // get the next account ID and initialize the account storage
-                let storage_params = desc.storage_params.unwrap_or_default();
-                let id = self.init_next_account(&storage_params, &handler_id).
+                let id = self.init_next_account(&handler_id).
                     map_err(|_| SystemCode(InvalidHandler))?;
 
                 // create a packet for calling on_create

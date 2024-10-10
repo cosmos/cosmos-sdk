@@ -50,6 +50,9 @@ arrayvec = "0.7.6"
 thiserror = "1.0.63"
 num_enum = "0.7.3"
 mockall = "0.13.0"
+allocator-api2 = "0.2.18"
+ixc_vm_api = { path = "vm/api" }
+wasmtime = "25.0.2"
 
 [lints]
 workspace = true
@@ -60,5 +63,6 @@ core_macros = []
 schema_macros = []
 state_objects_macros = []
 
-[profile.release]
-lto = true
+[[example]]
+name = "counter"
+crate-type = ["cdylib"]

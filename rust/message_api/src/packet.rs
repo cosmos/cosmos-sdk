@@ -45,4 +45,9 @@ impl <'a> MessagePacket<'a> {
     pub fn header_mut(&self) -> &'a mut MessageHeader {
         unsafe { &mut *self.data.as_ptr() }
     }
+
+    /// Returns the raw parts of the message packet.
+    pub unsafe fn raw_parts(&self) -> (NonNull<MessageHeader>, usize) {
+        (self.data, self.len)
+    }
 }

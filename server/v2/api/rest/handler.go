@@ -29,35 +29,19 @@ type DefaultHandler[T transaction.Tx] struct {
 }
 
 func (h *DefaultHandler[T]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/")
-
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	if err := h.validateMethodIsPOST(r); err != nil {
+		http.Error(w, err.Error(), http.StatusMethodNotAllowed)
 		return
 	}
 
-	contentType := r.Header.Get("Content-Type")
-	if contentType != ContentTypeJSON {
-		contentType = ContentTypeJSON
-	}
-
-	requestType := gogoproto.MessageType(path)
-	if requestType == nil {
-		http.Error(w, "Unknown request type", http.StatusNotFound)
+	if err := h.validateContentTypeIsJSON(r); err != nil {
+		http.Error(w, err.Error(), http.StatusUnsupportedMediaType)
 		return
 	}
 
-	msg, ok := reflect.New(requestType.Elem()).Interface().(gogoproto.Message)
-	if !ok {
-		http.Error(w, "Failed to create message instance", http.StatusInternalServerError)
-		return
-	}
-
-	defer r.Body.Close()
-	limitedReader := io.LimitReader(r.Body, MaxBodySize)
-	err := jsonpb.Unmarshal(limitedReader, msg)
+	msg, err := h.createMessage(r)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error parsing body: %v", err), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -71,4 +55,45 @@ func (h *DefaultHandler[T]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(query); err != nil {
 		http.Error(w, fmt.Sprintf("Error encoding response: %v", err), http.StatusInternalServerError)
 	}
+}
+
+// validateMethodIsPOST validates that the request method is POST.
+func (h *DefaultHandler[T]) validateMethodIsPOST(r *http.Request) error {
+	if r.Method != http.MethodPost {
+		return fmt.Errorf("method not allowed")
+	}
+	return nil
+}
+
+// validateContentTypeIsJSON validates that the request content type is JSON.
+func (h *DefaultHandler[T]) validateContentTypeIsJSON(r *http.Request) error {
+	contentType := r.Header.Get("Content-Type")
+	if contentType != ContentTypeJSON {
+		return fmt.Errorf("unsupported content type, expected %s", ContentTypeJSON)
+	}
+
+	return nil
+}
+
+// createMessage creates the message by unmarshalling the request body.
+func (h *DefaultHandler[T]) createMessage(r *http.Request) (gogoproto.Message, error) {
+	path := strings.TrimPrefix(r.URL.Path, "/")
+	requestType := gogoproto.MessageType(path)
+	if requestType == nil {
+		return nil, fmt.Errorf("unknown request type")
+	}
+
+	msg, ok := reflect.New(requestType.Elem()).Interface().(gogoproto.Message)
+	if !ok {
+		return nil, fmt.Errorf("failed to create message instance")
+	}
+
+	defer r.Body.Close()
+	limitedReader := io.LimitReader(r.Body, MaxBodySize)
+	err := jsonpb.Unmarshal(limitedReader, msg)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing body: %v", err)
+	}
+
+	return msg, nil
 }

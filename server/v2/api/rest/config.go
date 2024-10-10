@@ -16,3 +16,17 @@ type Config struct {
 	// Address defines the API server to listen on
 	Address string `mapstructure:"address" toml:"address" comment:"Address defines the REST server address to bind to."`
 }
+
+// OverwriteDefaultConfig overwrites the default config with the new config.
+func OverwriteDefaultConfig(newCfg *Config) CfgOption {
+	return func(cfg *Config) {
+		*cfg = *newCfg
+	}
+}
+
+// Disable the rest server by default (default enabled).
+func Disable() CfgOption {
+	return func(cfg *Config) {
+		cfg.Enable = false
+	}
+}

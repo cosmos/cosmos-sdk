@@ -16,6 +16,7 @@ require (
 	cosmossdk.io/core v1.0.0-alpha.4
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
 	cosmossdk.io/log v1.4.1
+	cosmossdk.io/schema v0.3.0
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -42,7 +43,6 @@ require (
 
 require (
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
-	cosmossdk.io/schema v0.3.0 // indirect
 	github.com/DataDog/datadog-go v4.8.3+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect

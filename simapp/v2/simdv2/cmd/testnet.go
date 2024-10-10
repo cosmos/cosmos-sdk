@@ -23,6 +23,7 @@ import (
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/server/v2/store"
+	"cosmossdk.io/store/v2/root"
 	banktypes "cosmossdk.io/x/bank/types"
 	bankv2types "cosmossdk.io/x/bank/v2/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -87,7 +88,7 @@ func addTestnetFlagsToCmd(cmd *cobra.Command) {
 
 // NewTestnetCmd creates a root testnet command with subcommands to run an in-process testnet or initialize
 // validator configuration files for running a multi-validator testnet in a separate process
-func NewTestnetCmd[T transaction.Tx](mm *runtimev2.MM[T]) *cobra.Command {
+func NewTestnetCmd[T transaction.Tx](sb root.Builder, mm *runtimev2.MM[T]) *cobra.Command {
 	testnetCmd := &cobra.Command{
 		Use:                        "testnet",
 		Short:                      "subcommands for starting or configuring local testnets",
@@ -96,13 +97,13 @@ func NewTestnetCmd[T transaction.Tx](mm *runtimev2.MM[T]) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	testnetCmd.AddCommand(testnetInitFilesCmd(mm))
+	testnetCmd.AddCommand(testnetInitFilesCmd(sb, mm))
 
 	return testnetCmd
 }
 
 // testnetInitFilesCmd returns a cmd to initialize all files for CometBFT testnet and application
-func testnetInitFilesCmd[T transaction.Tx](mm *runtimev2.MM[T]) *cobra.Command {
+func testnetInitFilesCmd[T transaction.Tx](sb root.Builder, mm *runtimev2.MM[T]) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init-files",
 		Short: "Initialize config directories & files for a multi-validator testnet running locally via separate processes (e.g. Docker Compose or similar)",
@@ -143,7 +144,7 @@ Example:
 				return err
 			}
 
-			return initTestnetFiles(clientCtx, cmd, config, mm, args)
+			return initTestnetFiles(clientCtx, sb, cmd, config, mm, args)
 		},
 	}
 
@@ -165,6 +166,7 @@ const nodeDirPerm = 0o755
 // initTestnetFiles initializes testnet files for a testnet to be run in a separate process
 func initTestnetFiles[T transaction.Tx](
 	clientCtx client.Context,
+	sb root.Builder,
 	cmd *cobra.Command,
 	nodeConfig *cmtconfig.Config,
 	mm *runtimev2.MM[T],
@@ -339,12 +341,13 @@ func initTestnetFiles[T transaction.Tx](
 		// Write server config
 		cometServer := cometbft.New[T](
 			&genericTxDecoder[T]{clientCtx.TxConfig},
+			sb,
 			cometbft.ServerOptions[T]{},
 			cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig),
 		)
-		storeServer := store.New[T](newApp)
+		storeServer := store.New[T](sb)
 		grpcServer := grpc.New[T](grpc.OverwriteDefaultConfig(grpcConfig))
-		server := serverv2.NewServer(log.NewNopLogger(), serverCfg, cometServer, grpcServer, storeServer)
+		server := serverv2.NewServer[T](log.NewNopLogger(), serverCfg, cometServer, grpcServer, storeServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {
 			return err

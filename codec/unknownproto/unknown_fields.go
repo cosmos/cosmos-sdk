@@ -222,7 +222,7 @@ var checks = [...]map[descriptorpb.FieldDescriptorProto_Type]bool{
 		descriptorpb.FieldDescriptorProto_TYPE_MESSAGE: true,
 		// The following types can be packed repeated.
 		// ref: "Only repeated fields of primitive numeric types (types which use the varint, 32-bit, or 64-bit wire types) can be declared "packed"."
-		// ref: https://developers.google.com/protocol-buffers/docs/encoding#packed
+		// ref: https://protobuf.dev/programming-guides/encoding/#packed
 		descriptorpb.FieldDescriptorProto_TYPE_INT32:    true,
 		descriptorpb.FieldDescriptorProto_TYPE_INT64:    true,
 		descriptorpb.FieldDescriptorProto_TYPE_UINT32:   true,
@@ -255,7 +255,7 @@ var checks = [...]map[descriptorpb.FieldDescriptorProto_Type]bool{
 }
 
 // canEncodeType returns true if the wireType is suitable for encoding the descriptor type.
-// See https://developers.google.com/protocol-buffers/docs/encoding#structure.
+// See https://protobuf.dev/programming-guides/encoding/#structure.
 func canEncodeType(wireType protowire.Type, descType descriptorpb.FieldDescriptorProto_Type) bool {
 	if iwt := int(wireType); iwt < 0 || iwt >= len(checks) {
 		return false

@@ -540,17 +540,17 @@ struct State {
 #[deluxe(attributes(client))]
 struct Client(u64);
 
-/// This attribute bundles account and module handlers into a package root which can be
-/// loaded into an application.
-#[proc_macro]
-pub fn package_root(item: TokenStream) -> TokenStream {
-    // let item = parse_macro_input!(item as File);
-    // let expanded = quote! {
-    //     #item
-    // };
-    // expanded.into()
-    TokenStream::default()
-}
+// /// This attribute bundles account and module handlers into a package root which can be
+// /// loaded into an application.
+// #[proc_macro]
+// pub fn package_root(item: TokenStream) -> TokenStream {
+//     // let item = parse_macro_input!(item as File);
+//     // let expanded = quote! {
+//     //     #item
+//     // };
+//     // expanded.into()
+//     TokenStream::default()
+// }
 
 /// Creates the message selector for the given message name.
 #[proc_macro]

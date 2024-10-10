@@ -2,6 +2,7 @@ use ixc_schema::encoder::EncodeError;
 use ixc_schema::structs::{StructEncodeVisitor, StructType};
 use integer_encoding::VarInt;
 use ixc_schema::buffer::{ReverseSliceWriter, Writer};
+use ixc_schema::codec::ValueEncodeVisitor;
 use crate::wire::{default_wire_info, WireInfo, WireType};
 
 struct Encoder<'a> {
@@ -129,6 +130,10 @@ impl<'a> ixc_schema::encoder::Encoder for Encoder<'a> {
             num += 1;
         }
         Ok(())
+    }
+
+    fn encode_option(&mut self, visitor: Option<&dyn ValueEncodeVisitor>) -> Result<(), EncodeError> {
+        todo!()
     }
 
     fn encode_account_id(&mut self, x: ixc_message_api::AccountID) -> Result<(), EncodeError> {

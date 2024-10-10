@@ -1,6 +1,5 @@
 //! Routing system for message packets.
 
-use core::mem::MaybeUninit;
 use allocator_api2::alloc::Allocator;
 use ixc_message_api::code::{ErrorCode, SystemCode};
 use ixc_message_api::handler::{HostBackend};
@@ -23,11 +22,6 @@ pub unsafe trait Router where Self: 'static
 
 /// A route for a message packet.
 pub type Route<T> = (u64, fn(&T, &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), ErrorCode>);
-// pub type Route<T>  = (u64, &'static dyn FnOnce(&T, &mut MessagePacket, &dyn HostBackend, &dyn Allocator) -> Result<(), HandlerError>);
-
-
-// pub type DynRoute<T> = (u64, fn(&dyn T, &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), HandlerError>);
-// pub type DynRoute<T> = (u64, for<'b, 'a:'b> fn(&'b (dyn T + 'a), &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), HandlerError>);
 
 /// Execute a message packet on a router.
 pub fn exec_route<R: Router + ?Sized>(rtr: &R, packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), ErrorCode> {

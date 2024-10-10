@@ -20,37 +20,39 @@ use crate::result::ClientResult;
 /// Dynamically invokes an account message.
 /// Static account client instances should be preferred wherever possible,
 /// so that static dependency analysis can be performed.
-pub unsafe fn dynamic_invoke<'a, 'b, M: Message<'b>>(context: &'a Context, account: AccountID, message: M)
+pub fn dynamic_invoke<'a, 'b, M: Message<'b>>(context: &'a Context, account: AccountID, message: M)
                                                      -> ClientResult<<M::Response<'a> as OptionalValue<'a>>::Value, M::Error> {
-    // encode the message body
-    let mem = context.memory_manager();
-    let cdc = M::Codec::default();
-    let msg_body = cdc.encode_value(&message, mem)?;
+    unsafe {
+        // encode the message body
+        let mem = context.memory_manager();
+        let cdc = M::Codec::default();
+        let msg_body = cdc.encode_value(&message, mem)?;
 
-    // create the message packet and fill in call details
-    let mut packet = create_packet(context, account, M::SELECTOR)?;
-    let header = packet.header_mut();
-    header.in_pointer1.set_slice(msg_body);
+        // create the message packet and fill in call details
+        let mut packet = create_packet(context, account, M::SELECTOR)?;
+        let header = packet.header_mut();
+        header.in_pointer1.set_slice(msg_body);
 
-    // invoke the message
-    let res = context.host_backend().invoke(&mut packet, mem);
+        // invoke the message
+        let res = context.host_backend().invoke(&mut packet, mem);
 
-    let out1 = header.out_pointer1.get(&packet);
+        let out1 = header.out_pointer1.get(&packet);
 
-    match res {
-        Ok(_) => {
-            let res = M::Response::<'a>::decode_value(&cdc, &out1, mem)?;
-            Ok(res)
-        }
-        Err(e) => {
-            let c: u16 = e.into();
-            let code = ErrorCode::<M::Error>::from(c);
-            let msg = String::from_utf8(out1.to_vec())
-                .map_err(|_| ErrorCode::SystemCode(SystemCode::EncodingError))?;
-            Err(ClientError {
-                message: msg,
-                code,
-            })
+        match res {
+            Ok(_) => {
+                let res = M::Response::<'a>::decode_value(&cdc, &out1, mem)?;
+                Ok(res)
+            }
+            Err(e) => {
+                let c: u16 = e.into();
+                let code = ErrorCode::<M::Error>::from(c);
+                let msg = String::from_utf8(out1.to_vec())
+                    .map_err(|_| ErrorCode::SystemCode(SystemCode::EncodingError))?;
+                Err(ClientError {
+                    message: msg,
+                    code,
+                })
+            }
         }
     }
 }

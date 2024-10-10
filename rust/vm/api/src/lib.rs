@@ -23,10 +23,7 @@ pub trait VM {
     fn run_handler(&self, vm_handler_id: &str, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), ErrorCode>;
 }
 
+/// A descriptor for a handler.
 #[non_exhaustive]
 #[derive(Debug, Default, Clone)]
-/// A descriptor for a handler.
-pub struct HandlerDescriptor {
-    /// The storage parameters for the handler for initializing its storage.
-    pub storage_params: Option<Vec<u8>>,
-}
+pub struct HandlerDescriptor {}

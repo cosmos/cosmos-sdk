@@ -1,3 +1,4 @@
+//! A codec for encoding and decoding protobuf values.
 mod encoder;
 mod decoder;
 mod wire;
@@ -9,6 +10,7 @@ use ixc_schema::encoder::EncodeError;
 use ixc_schema::mem::MemoryManager;
 use ixc_schema::value::SchemaValue;
 
+/// A codec for encoding and decoding protobuf values.
 pub struct ProtobufCodec;
 
 impl Codec for ProtobufCodec {

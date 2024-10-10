@@ -1,7 +1,7 @@
 use allocator_api2::alloc::Allocator;
 use imbl::{HashMap, OrdMap, Vector};
 use ixc::message_selector;
-use ixc_hypervisor::{CommitError, NewTxError, PopFrameError, PushFrameError, StateHandler, Transaction};
+use crate::hypervisor::{CommitError, NewTxError, PopFrameError, PushFrameError, StateHandler, Transaction};
 use ixc_message_api::header::MessageSelector;
 use ixc_message_api::packet::MessagePacket;
 use ixc_message_api::AccountID;
@@ -83,7 +83,7 @@ const SET_SELECTOR: MessageSelector = message_selector!("ixc.store.v1.set");
 const DELETE_SELECTOR: MessageSelector = message_selector!("ixc.store.v1.delete");
 
 impl Transaction for Tx {
-    fn init_account_storage(&mut self, account: AccountID, _storage_params: &[u8]) -> Result<(), PushFrameError> {
+    fn init_account_storage(&mut self, account: AccountID) -> Result<(), PushFrameError> {
         self.push_frame(account, true)
     }
 

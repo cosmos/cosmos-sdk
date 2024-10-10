@@ -1,3 +1,4 @@
+use ixc_schema::codec::ValueDecodeVisitor;
 use ixc_schema::decoder::DecodeError;
 use ixc_schema::mem::MemoryManager;
 use ixc_schema::structs::{StructDecodeVisitor, StructType};
@@ -78,6 +79,10 @@ impl <'a> ixc_schema::decoder::Decoder<'a> for Decoder<'a> {
         //    decode element
         // else
         //  decode next element
+        todo!()
+    }
+
+    fn decode_option(&mut self, visitor: &mut dyn ValueDecodeVisitor<'a>) -> Result<bool, DecodeError> {
         todo!()
     }
 

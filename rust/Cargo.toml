@@ -10,7 +10,7 @@ members = [
     "testing",
     "util/simple_time",
     "codecs/proto", "codecs/evm",
-    "vm/wasmtime", "vm/api", "vm/hypervisor",
+    "vm/wasmtime", "vm/api", "vm/hypervisor", "example",
 ]
 
 [workspace.package]

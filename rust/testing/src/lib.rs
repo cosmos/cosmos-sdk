@@ -2,6 +2,7 @@
 
 mod store;
 mod vm;
+mod hypervisor;
 
 use std::any::Any;
 use std::cell::{Cell, RefCell};
@@ -12,19 +13,19 @@ use ixc_core::{Context};
 use ixc_core::account_api::{create_account_raw, ROOT_ACCOUNT};
 use ixc_core::handler::{Handler, Service, Client, InitMessage, HandlerClient};
 use ixc_core::resource::{InitializationError, ResourceScope, Resources};
-use ixc_core::routes::{Route, Router};
-use ixc_hypervisor::Hypervisor;
+use ixc_core::routing::{Router};
+use crate::hypervisor::Hypervisor;
 use ixc_message_api::code::{ErrorCode, SystemCode};
 use ixc_message_api::handler::{HostBackend, RawHandler};
 use ixc_message_api::header::{ContextInfo};
 use ixc_message_api::packet::MessagePacket;
-use ixc_schema::binary::NativeBinaryCodec;
 use ixc_schema::mem::MemoryManager;
 use crate::store::{VersionedMultiStore};
 use crate::vm::{NativeVM};
-
-pub use ixc_core::account_api::create_account;
 use ixc_core::result::ClientResult;
+
+#[doc(hidden)]
+pub use ixc_core::account_api::create_account;
 
 /// Defines a test harness for running tests against account and module implementations.
 pub struct TestApp {
@@ -47,54 +48,8 @@ impl Default for TestApp {
             mem,
             mock_id: Cell::new(0),
         };
-        test_app.register_handler::<DefaultAccount>().unwrap();
+        test_app.register_handler::<default_account::DefaultAccount>().unwrap();
         test_app
-    }
-}
-
-struct DefaultAccount;
-struct DefaultAccountClient(AccountID);
-
-unsafe impl Router for DefaultAccount { const SORTED_ROUTES: &'static [Route<Self>] = &[]; }
-
-unsafe impl Resources for DefaultAccount {
-    unsafe fn new(scope: &ResourceScope) -> Result<Self, InitializationError> {
-        Ok(DefaultAccount {})
-    }
-}
-
-impl Service for DefaultAccount {
-    type Client = DefaultAccountClient;
-
-}
-
-impl Client for DefaultAccountClient {
-    fn new(account_id: AccountID) -> Self {
-        Self(account_id)
-    }
-
-    fn account_id(&self) -> AccountID {
-        self.0
-    }
-}
-
-impl Handler for DefaultAccount {
-    const NAME: &'static str = "ixc_testing.DefaultAccount";
-    type Init<'a> = CreateDefaultAccount;
-}
-
-#[derive(SchemaValue)]
-#[sealed]
-struct CreateDefaultAccount;
-
-impl <'a> InitMessage<'a> for CreateDefaultAccount {
-    type Handler = DefaultAccount;
-    type Codec = NativeBinaryCodec;
-}
-
-impl RawHandler for DefaultAccount {
-    fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
-        ixc_core::routes::exec_route(self, message_packet, callbacks, allocator)
     }
 }
 
@@ -108,8 +63,8 @@ impl TestApp {
     /// Creates a new random client account that can be used in calls.
     pub fn new_client_account(&self) -> ClientResult<AccountID> {
         let mut ctx = self.client_context_for(ROOT_ACCOUNT);
-        let client = create_account(&mut ctx, CreateDefaultAccount)?;
-        Ok(client.0)
+        let client = create_account(&mut ctx, default_account::DefaultAccountCreate{})?;
+        Ok(client.account_id())
     }
 
     /// Creates a new random client account that can be used in calls and wraps it in a context.
@@ -204,5 +159,18 @@ struct MockWrapper<T: RawHandler + ?Sized>(std::boxed::Box<T>);
 impl <T: RawHandler + ?Sized> RawHandler for MockWrapper<T> {
     fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
         self.0.handle(message_packet, callbacks, allocator)
+    }
+}
+
+#[ixc::handler(DefaultAccount)]
+mod default_account {
+    use ixc::*;
+
+    #[derive(Resources)]
+    pub struct DefaultAccount{}
+
+    impl DefaultAccount {
+        #[on_create]
+        pub fn create(&self, ctx: &mut Context) -> Result<()> { Ok(()) }
     }
 }

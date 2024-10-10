@@ -64,6 +64,4 @@ mod tests {
     }
 }
 
-ixc::package_root!(counter::Counter);
-
 fn main() {}

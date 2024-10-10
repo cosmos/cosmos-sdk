@@ -157,7 +157,7 @@ pub mod bank {
 mod tests {
     use ixc_core::account_api::ROOT_ACCOUNT;
     use ixc_core::handler::{Client, Service};
-    use ixc_core::routes::{find_route, Router};
+    use ixc_core::routing::{find_route, Router};
     use ixc_message_api::code::ErrorCode;
     use ixc_message_api::handler::{Allocator, HostBackend, RawHandler};
     use ixc_message_api::packet::MessagePacket;

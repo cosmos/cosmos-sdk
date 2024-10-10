@@ -11,9 +11,6 @@ which were passed around everywhere. This made it difficult to understand what w
 actually being passed around and what was being used.
 
 [`Context`] here is defined to have the following purposes:
-* wrap the message request header
+* wrap some basic information about the current call, but not the full message header
 * hold a handle to [`ixc_schema`]'s bump allocator
 * hold a handle to the function used to send messages
-
-We can summarize this by saying that [`Context`] is responsible for providing data
-and the current call, making new calls and managing memory.

@@ -14,6 +14,13 @@ pub use state_objects::{Map, Item, Accumulator, AccumulatorMap};
 #[doc(inline)]
 pub use simple_time::{Time, Duration};
 
+/// Re-exports for macros and other utilities.
+pub mod internal {
+    pub use ixc_core::*;
+    pub use ixc_schema::binary::NativeBinaryCodec;
+    pub use ixc_schema::codec::{decode_value};
+}
+
 #[cfg(feature = "core_macros")]
 #[allow(unused_imports)]
 #[macro_use]

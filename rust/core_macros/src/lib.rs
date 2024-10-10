@@ -1,5 +1,5 @@
 //! **WARNING: This is an API preview! Most code won't work or even type check properly!**
-//! This is a macro utility crate for ixc_core.
+//! This is the core macro utility crate for ixc.
 
 use proc_macro::{TokenStream};
 use std::default::Default;
@@ -44,24 +44,24 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
     };
     let create_msg_lifetime = &builder.create_msg_lifetime;
     push_item(items, quote! {
-        impl ::ixc_core::handler::Handler for #handler {
+        impl ::ixc::internal::handler::Handler for #handler {
             const NAME: &'static str = stringify!(#handler);
             type Init<'a> = #on_create_msg #create_msg_lifetime;
         }
     })?;
 
     push_item(items, quote! {
-        impl <'a> ::ixc_core::handler::InitMessage<'a> for #on_create_msg #create_msg_lifetime {
+        impl <'a> ::ixc::internal::handler::InitMessage<'a> for #on_create_msg #create_msg_lifetime {
             type Handler = #handler;
-            type Codec = ::ixc_schema::binary::NativeBinaryCodec;
+            type Codec = ::ixc::internal::NativeBinaryCodec;
         }
     })?;
 
     let routes = &builder.routes;
     push_item(items, quote! {
-        unsafe impl ::ixc_core::routes::Router for #handler {
-            const SORTED_ROUTES: &'static [::ixc_core::routes::Route<Self>] =
-                &::ixc_core::routes::sort_routes([
+        unsafe impl ::ixc::internal::routing::Router for #handler {
+            const SORTED_ROUTES: &'static [::ixc::internal::routing::Route<Self>] =
+                &::ixc::internal::routing::sort_routes([
                     #(#routes)*
                 ]);
         }
@@ -72,7 +72,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
     for publish_trait in publish_traits.iter() {
         let trait_ident = &publish_trait.ident;
         trait_routers.push(quote! {
-            if let Some(rt) = ::ixc_core::routes::find_route::<dyn #trait_ident>(sel) {
+            if let Some(rt) = ::ixc::internal::routing::find_route::<dyn #trait_ident>(sel) {
                 return rt.1(self, message_packet, callbacks, allocator)
             }
         })
@@ -82,7 +82,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
         impl ::ixc_message_api::handler::RawHandler for #handler {
             fn handle(&self, message_packet: &mut ::ixc_message_api::packet::MessagePacket, callbacks: &dyn ixc_message_api::handler::HostBackend, allocator: &dyn ::ixc_message_api::handler::Allocator) -> ::core::result::Result<(), ::ixc_message_api::code::ErrorCode> {
                 let sel = message_packet.header().message_selector;
-                if let Some(rt) = ::ixc_core::routes::find_route(sel) {
+                if let Some(rt) = ::ixc::internal::routing::find_route(sel) {
                     return rt.1(self, message_packet, callbacks, allocator)
                 }
 
@@ -94,7 +94,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
     })?;
 
     push_item(items, quote! {
-        impl ::ixc_core::handler::HandlerClient for #client_ident {
+        impl ::ixc::internal::handler::HandlerClient for #client_ident {
             type Handler = #handler;
         }
     })?;
@@ -242,7 +242,7 @@ pub fn handler_api(attr: TokenStream2, mut item_trait: ItemTrait) -> manyhow::Re
     let client_impl_ident = format_ident!("{}Impl", client_trait_ident);
     builder.define_client(&client_impl_ident)?;
     builder.define_client_impl(&quote! {#client_trait_ident for #client_impl_ident}, &quote! {})?;
-    builder.define_client_impl(&quote! {<T: ::ixc_core::handler::HandlerClient> #client_trait_ident for T
+    builder.define_client_impl(&quote! {<T: ::ixc::internal::handler::HandlerClient> #client_trait_ident for T
         where T::Handler: #trait_ident}, &quote! {})?;
     builder.define_client_factory(&client_impl_ident, &dyn_trait)?;
     builder.define_client_factory(&client_impl_ident, &quote! { #client_impl_ident})?;
@@ -254,16 +254,16 @@ pub fn handler_api(attr: TokenStream2, mut item_trait: ItemTrait) -> manyhow::Re
 
         #(#items)*
 
-        unsafe impl ::ixc_core::routes::Router for dyn #trait_ident {
-            const SORTED_ROUTES: &'static [::ixc_core::routes::Route<Self>] =
-                &::ixc_core::routes::sort_routes([
+        unsafe impl ::ixc::internal::routing::Router for dyn #trait_ident {
+            const SORTED_ROUTES: &'static [::ixc::internal::routing::Route<Self>] =
+                &::ixc::internal::routing::sort_routes([
                     #(#routes)*
                 ]);
         }
 
         impl ::ixc_message_api::handler::RawHandler for dyn #trait_ident {
             fn handle(&self, message_packet: &mut ::ixc_message_api::packet::MessagePacket, callbacks: &dyn ixc_message_api::handler::HostBackend, allocator: &dyn ::ixc_message_api::handler::Allocator) -> ::core::result::Result<(), ::ixc_message_api::code::ErrorCode> {
-                ::ixc_core::routes::exec_route(self, message_packet, callbacks, allocator)
+                ::ixc::internal::routing::exec_route(self, message_packet, callbacks, allocator)
             }
         }
 
@@ -289,7 +289,7 @@ impl APIBuilder {
             pub struct #client_ident(::ixc_message_api::AccountID);
         })?;
         push_item(&mut self.items, quote! {
-            impl ::ixc_core::handler::Client for #client_ident {
+            impl ::ixc::internal::handler::Client for #client_ident {
                 fn new(account_id: ::ixc_message_api::AccountID) -> Self {
                     Self(account_id)
                 }
@@ -313,7 +313,7 @@ impl APIBuilder {
 
     fn define_client_factory(&mut self, client_ident: &Ident, factory_target: &TokenStream2) -> manyhow::Result<()> {
         push_item(&mut self.items, quote! {
-            impl ::ixc_core::handler::Service for #factory_target {
+            impl ::ixc::internal::handler::Service for #factory_target {
                 type Client = #client_ident;
             }
         })
@@ -407,7 +407,7 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
         quote! {}
     };
     push_item(&mut builder.items, quote! {
-            #[derive(::ixc_schema_macros::SchemaValue)]
+            #[derive(::ixc::SchemaValue)]
             #[sealed]
             pub struct #msg_struct_name #opt_lifetime {
                 #(#msg_fields)*
@@ -422,31 +422,31 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
     };
     if publish_target.on_create.is_none() {
         push_item(&mut builder.items, quote! {
-                impl <'a> ::ixc_core::message::Message<'a> for #msg_struct_name #opt_lifetime {
+                impl <'a> ::ixc::internal::message::Message<'a> for #msg_struct_name #opt_lifetime {
                     const SELECTOR: ::ixc_message_api::header::MessageSelector = #selector;
-                    type Response<'b> = <#return_type as ::ixc_core::message::ExtractResponseTypes>::Response;
-                    type Error = <#return_type as ::ixc_core::message::ExtractResponseTypes>::Error;
-                    type Codec = ::ixc_schema::binary::NativeBinaryCodec;
+                    type Response<'b> = <#return_type as ::ixc::internal::message::ExtractResponseTypes>::Response;
+                    type Error = <#return_type as ::ixc::internal::message::ExtractResponseTypes>::Error;
+                    type Codec = ::ixc::internal::NativeBinaryCodec;
                 }
             })?;
         ensure!(context_name.is_some(), "no context parameter found");
         let context_name = context_name.unwrap();
         builder.routes.push(quote! {
-                    (< #msg_struct_name #opt_underscore_lifetime as ::ixc_core::message::Message >::SELECTOR, |h: &Self, packet, cb, a| {
+                    (< #msg_struct_name #opt_underscore_lifetime as ::ixc::internal::message::Message >::SELECTOR, |h: &Self, packet, cb, a| {
                         unsafe {
-                            let cdc = < #msg_struct_name as ::ixc_core::message::Message<'_> >::Codec::default();
+                            let cdc = < #msg_struct_name as ::ixc::internal::message::Message<'_> >::Codec::default();
                             let in1 = packet.header().in_pointer1.get(packet);
-                            let mut ctx = ::ixc_core::Context::new(packet.header().context_info, cb);
-                            let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc_schema::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager())?;
+                            let mut ctx = ::ixc::internal::Context::new(packet.header().context_info, cb);
+                            let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc::internal::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager())?;
                             // NOTE: transmuting here is probably safe because there's nothing really to mutate, but ideally we should find
                             // a better way
-                            let res = h.#fn_name(core::mem::transmute(&ctx), #(#fn_ctr_args)*);
-                            ::ixc_core::low_level::encode_response::< #msg_struct_name >(&cdc, res, a, packet)
+                            let res = h.#fn_name(::core::mem::transmute(&ctx), #(#fn_ctr_args)*);
+                            ::ixc::internal::low_level::encode_response::< #msg_struct_name >(&cdc, res, a, packet)
                         }
                     }),
         });
         signature.output = parse_quote! {
-            -> <#return_type as ::ixc_core::message::ExtractResponseTypes>::ClientResult
+            -> <#return_type as ::ixc::internal::message::ExtractResponseTypes>::ClientResult
         };
         builder.client_signatures.push(signature.clone());
         builder.client_methods.push(quote! {
@@ -454,21 +454,21 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                     let msg = #msg_struct_name {
                         #(#msg_fields_init)*
                     };
-                    unsafe { ::ixc_core::low_level::dynamic_invoke(#context_name, ::ixc_core::handler::Client::account_id(self), msg) }
+                    unsafe { ::ixc::internal::low_level::dynamic_invoke(#context_name, ::ixc::internal::handler::Client::account_id(self), msg) }
                 }
         });
     } else {
         builder.routes.push(quote! {
-            (::ixc_core::account_api::ON_CREATE_SELECTOR, | h: &Self, packet, cb, a| {
+            (::ixc::internal::account_api::ON_CREATE_SELECTOR, | h: &Self, packet, cb, a| {
                 unsafe {
-                    let cdc = < #msg_struct_name #opt_underscore_lifetime as::ixc_core::handler::InitMessage<'_> >::Codec::default();
+                    let cdc = < #msg_struct_name #opt_underscore_lifetime as::ixc::internal::handler::InitMessage<'_> >::Codec::default();
                     let in1 = packet.header().in_pointer1.get(packet);
-                    let mut ctx =::ixc_core::Context::new(packet.header().context_info, cb);
-                    let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc_schema::codec::decode_value::< #msg_struct_name > ( & cdc, in1, ctx.memory_manager())?;
+                    let mut ctx =::ixc::internal::Context::new(packet.header().context_info, cb);
+                    let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc::internal::decode_value::< #msg_struct_name > ( & cdc, in1, ctx.memory_manager())?;
                     // NOTE: transmuting here is probably safe because there's nothing really to mutate, but ideally we should find
                     // a better way
-                    let res = h.#fn_name(core::mem::transmute(&ctx), #(#fn_ctr_args)*);
-                    ::ixc_core::low_level::encode_default_response(res, a, packet)
+                    let res = h.#fn_name(::core::mem::transmute(&ctx), #(#fn_ctr_args)*);
+                    ::ixc::internal::low_level::encode_default_response(res, a, packet)
                 }
             }),}
         );
@@ -502,13 +502,13 @@ pub fn derive_resources(input: DeriveInput) -> manyhow::Result<TokenStream2> {
         if let Some(state) = maybe_extract_attribute::<_, State>(field)? {
             prefix = state.prefix.unwrap_or(prefix);
             field_inits.push(quote! {
-                #field_name: <#ty as ::ixc_core::resource::StateObjectResource>::new(scope.state_scope, #prefix)?
+                #field_name: <#ty as ::ixc::internal::resource::StateObjectResource>::new(scope.state_scope, #prefix)?
             });
             prefix += 1;
         }  else if let Some(client) = maybe_extract_attribute::<_, Client>(field)? {
             let account_id = client.0;
             field_inits.push(quote! {
-                #field_name: <#ty as ::ixc_core::handler::Client>::new(::ixc_message_api::AccountID::new(#account_id))
+                #field_name: <#ty as ::ixc::internal::handler::Client>::new(::ixc_message_api::AccountID::new(#account_id))
             });
         } else {
             // TODO handle case where both #[state] and #[client] are present
@@ -516,8 +516,8 @@ pub fn derive_resources(input: DeriveInput) -> manyhow::Result<TokenStream2> {
         }
     }
     Ok(quote! {
-        unsafe impl ::ixc_core::resource::Resources for #name {
-            unsafe fn new(scope: &::ixc_core::resource::ResourceScope) -> ::core::result::Result<Self, ::ixc_core::resource::InitializationError> {
+        unsafe impl ::ixc::internal::resource::Resources for #name {
+            unsafe fn new(scope: &::ixc::internal::resource::ResourceScope) -> ::core::result::Result<Self, ::ixc::internal::resource::InitializationError> {
                 Ok(Self {
                     #(#field_inits),*
                 })

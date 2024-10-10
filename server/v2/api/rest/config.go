@@ -9,10 +9,10 @@ func DefaultConfig() *Config {
 
 type CfgOption func(*Config)
 
-// Config defines configuration for the HTTP server.
+// Config defines configuration for the REST server.
 type Config struct {
-	// Enable defines if the HTTP server should be enabled.
-	Enable bool `mapstructure:"enable" toml:"enable" comment:"Enable defines if the HTTP server should be enabled."`
+	// Enable defines if the REST server should be enabled.
+	Enable bool `mapstructure:"enable" toml:"enable" comment:"Enable defines if the REST server should be enabled."`
 	// Address defines the API server to listen on
-	Address string `mapstructure:"address" toml:"address" comment:"Address defines the HTTP server address to bind to."`
+	Address string `mapstructure:"address" toml:"address" comment:"Address defines the REST server address to bind to."`
 }

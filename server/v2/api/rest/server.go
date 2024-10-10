@@ -54,12 +54,11 @@ func (s *Server[T]) Start(ctx context.Context) error {
 		Handler: s.router,
 	}
 
-	go func() {
-		s.logger.Info("Starting HTTP server", "address", s.config.Address)
-		if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			s.logger.Error("Failed to start HTTP server", "error", err)
-		}
-	}()
+	s.logger.Info("Starting HTTP server", "address", s.config.Address)
+	if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		s.logger.Error("Failed to start HTTP server", "error", err)
+		return err
+	}
 
 	return nil
 }

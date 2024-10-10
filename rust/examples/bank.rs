@@ -4,7 +4,7 @@ pub mod bank {
     use mockall::automock;
     use ixc::*;
     use ixc_core::error::unimplemented_ok;
-    use ixc_core::handler::ClientFactory;
+    use ixc_core::handler::Service;
 
     #[derive(Resources)]
     pub struct Bank {
@@ -156,7 +156,7 @@ pub mod bank {
 #[cfg(test)]
 mod tests {
     use ixc_core::account_api::ROOT_ACCOUNT;
-    use ixc_core::handler::{Client, ClientFactory};
+    use ixc_core::handler::{Client, Service};
     use ixc_core::routes::{find_route, Router};
     use ixc_message_api::code::ErrorCode;
     use ixc_message_api::handler::{Allocator, HostBackend, RawHandler};

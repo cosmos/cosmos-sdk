@@ -4,21 +4,21 @@ use alloc::format;
 use alloc::string::String;
 use core::error::Error;
 use core::fmt::{Debug, Display, Formatter};
-use ixc_message_api::code::{ErrorCode, SystemCode};
+use ixc_message_api::code::{ErrorCode, HandlerCode, SystemCode};
 use ixc_schema::decoder::DecodeError;
 use ixc_schema::encoder::EncodeError;
 use crate::result::ClientResult;
 
 /// The standard error type returned by handlers.
 #[derive(Clone)]
-pub struct HandlerError<E: Into<u8> + TryFrom<u8> + Debug> {
+pub struct HandlerError<E: HandlerCode = u8> {
     pub(crate) code: Option<E>,
     #[cfg(feature = "std")]
     pub(crate) msg: String,
     // TODO no std version - fixed length 256 byte string probably
 }
 
-impl<E: Into<u8> + TryFrom<u8> + Debug> HandlerError<E> {
+impl<E: HandlerCode> HandlerError<E> {
     /// Create a new error message.
     pub fn new(msg: String) -> Self {
         HandlerError {
@@ -50,11 +50,16 @@ impl<E: Into<u8> + TryFrom<u8> + Debug> HandlerError<E> {
         #[cfg(feature = "std")]
         let mut message = String::new();
         core::fmt::write(&mut message, args).unwrap();
-        HandlerError::new(message)
+        HandlerError::new_with_code(code, message)
+    }
+
+    /// Format a new error message with a code.
+    pub fn new_from_code(code: E) -> Self {
+        HandlerError::new_with_code(code, String::new())
     }
 }
 
-impl<E: Into<u8> + TryFrom<u8> + Debug> Debug for HandlerError<E> {
+impl<E: HandlerCode> Debug for HandlerError<E> {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         if let Some(code) = &self.code {
             write!(f, "code: {:?}: {}", code, self.msg)
@@ -64,7 +69,7 @@ impl<E: Into<u8> + TryFrom<u8> + Debug> Debug for HandlerError<E> {
     }
 }
 
-impl<E: Into<u8> + TryFrom<u8> + Debug> Display for HandlerError<E> {
+impl<E: HandlerCode> Display for HandlerError<E> {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         if let Some(code) = &self.code {
             write!(f, "code: {:?}: {}", code, self.msg)
@@ -74,7 +79,7 @@ impl<E: Into<u8> + TryFrom<u8> + Debug> Display for HandlerError<E> {
     }
 }
 
-impl<E: Error, F: Into<u8> + TryFrom<u8> + Debug> From<E> for HandlerError<F> {
+impl<E: Error, F: HandlerCode> From<E> for HandlerError<F> {
     fn from(value: E) -> Self {
         HandlerError {
             code: None,
@@ -114,7 +119,7 @@ impl<E: Error, F: Into<u8> + TryFrom<u8> + Debug> From<E> for HandlerError<F> {
 
 /// The standard error type returned by client methods.
 #[derive(Clone)]
-pub struct ClientError<E: Into<u8> + TryFrom<u8> + Debug> {
+pub struct ClientError<E: HandlerCode> {
     /// The error code.
     pub code: ErrorCode<E>,
     /// The error message.
@@ -123,7 +128,7 @@ pub struct ClientError<E: Into<u8> + TryFrom<u8> + Debug> {
     // TODO no std version - fixed length 256 byte string probably
 }
 
-impl<E: Into<u8> + TryFrom<u8> + Debug> ClientError<E> {
+impl<E: HandlerCode> ClientError<E> {
     /// Creates a new client error.
     pub fn new(code: ErrorCode<E>, msg: String) -> Self {
         ClientError {
@@ -134,7 +139,7 @@ impl<E: Into<u8> + TryFrom<u8> + Debug> ClientError<E> {
     }
 }
 
-impl<E: Into<u8> + TryFrom<u8> + Debug> Debug for ClientError<E> {
+impl<E: HandlerCode> Debug for ClientError<E> {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self.code {
             ErrorCode::SystemCode(SystemCode::Other) => write!(f, "{}", self.message),
@@ -143,7 +148,7 @@ impl<E: Into<u8> + TryFrom<u8> + Debug> Debug for ClientError<E> {
     }
 }
 
-impl<E: Into<u8> + TryFrom<u8> + Debug> Display for ClientError<E> {
+impl<E: HandlerCode> Display for ClientError<E> {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self.code {
             ErrorCode::SystemCode(SystemCode::Other) => write!(f, "{}", self.message),
@@ -152,9 +157,9 @@ impl<E: Into<u8> + TryFrom<u8> + Debug> Display for ClientError<E> {
     }
 }
 
-impl<E: Into<u8> + TryFrom<u8> + Debug> Error for ClientError<E> {}
+impl<E: HandlerCode> Error for ClientError<E> {}
 
-impl<E: Into<u8> + TryFrom<u8> + Debug> From<ErrorCode> for ClientError<E> {
+impl<E: HandlerCode> From<ErrorCode> for ClientError<E> {
     fn from(value: ErrorCode) -> Self {
         let code = convert_error_code(value);
         ClientError {
@@ -165,7 +170,7 @@ impl<E: Into<u8> + TryFrom<u8> + Debug> From<ErrorCode> for ClientError<E> {
     }
 }
 
-impl<E: Into<u8> + TryFrom<u8> + Debug> From<EncodeError> for ClientError<E> {
+impl<E: HandlerCode> From<EncodeError> for ClientError<E> {
     fn from(value: EncodeError) -> Self {
         ClientError {
             code: ErrorCode::SystemCode(SystemCode::EncodingError),
@@ -175,7 +180,7 @@ impl<E: Into<u8> + TryFrom<u8> + Debug> From<EncodeError> for ClientError<E> {
     }
 }
 
-impl<E: Into<u8> + TryFrom<u8> + Debug> From<DecodeError> for ClientError<E> {
+impl<E: HandlerCode> From<DecodeError> for ClientError<E> {
     fn from(value: DecodeError) -> Self {
         ClientError {
             code: ErrorCode::SystemCode(SystemCode::EncodingError),
@@ -185,7 +190,7 @@ impl<E: Into<u8> + TryFrom<u8> + Debug> From<DecodeError> for ClientError<E> {
     }
 }
 
-impl<E: Into<u8> + TryFrom<u8> + Debug> From<allocator_api2::alloc::AllocError> for ClientError<E> {
+impl<E: HandlerCode> From<allocator_api2::alloc::AllocError> for ClientError<E> {
     fn from(_: allocator_api2::alloc::AllocError) -> Self {
         ClientError {
             code: ErrorCode::SystemCode(SystemCode::EncodingError),
@@ -196,13 +201,13 @@ impl<E: Into<u8> + TryFrom<u8> + Debug> From<allocator_api2::alloc::AllocError> 
 }
 
 /// Converts an error code with one handler code to an error code with another handler code.
-pub fn convert_error_code<E: Into<u8> + TryFrom<u8> + Debug, F: Into<u8> + TryFrom<u8> + Debug>(code: ErrorCode<E>) -> ErrorCode<F> {
+pub fn convert_error_code<E: HandlerCode, F: HandlerCode>(code: ErrorCode<E>) -> ErrorCode<F> {
     let c: u16 = code.into();
     ErrorCode::<F>::from(c)
 }
 
 /// Converts an error code with one handler code to an error code with another handler code.
-pub fn convert_client_error<E: Into<u8> + TryFrom<u8> + Debug, F: Into<u8> + TryFrom<u8> + Debug>(err: ClientError<E>) -> ClientError<F> {
+pub fn convert_client_error<E: HandlerCode, F: HandlerCode>(err: ClientError<E>) -> ClientError<F> {
     ClientError {
         code: convert_error_code(err.code),
         #[cfg(feature = "std")]
@@ -211,7 +216,7 @@ pub fn convert_client_error<E: Into<u8> + TryFrom<u8> + Debug, F: Into<u8> + Try
 }
 
 /// Returns a default result if the error is `MessageNotHandled`.
-pub fn unimplemented_ok<R: Default, E: Into<u8> + TryFrom<u8> + Debug>(res: ClientResult<R, E>) -> ClientResult<R, E> {
+pub fn unimplemented_ok<R: Default, E: HandlerCode>(res: ClientResult<R, E>) -> ClientResult<R, E> {
     match res {
         Ok(r) => { Ok(r) }
         Err(e) => {

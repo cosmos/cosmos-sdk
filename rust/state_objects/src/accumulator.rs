@@ -7,15 +7,17 @@ use ixc_core::resource::{InitializationError, StateObjectResource};
 use ixc_core::result::ClientResult;
 use ixc_message_api::code::ErrorCode;
 use ixc_schema::state_object::ObjectKey;
-use crate::Map;
+use crate::{Item, Map};
 
-// pub struct Accumulator {}
+/// A 128-bit signed integer accumulator.
+pub struct Accumulator {
+    item: Item<u128>,
+}
 
 /// A map from keys to 128-bit unsigned integers that act as accumulators.
 pub struct AccumulatorMap<K> {
     map: Map<K, u128>,
 }
-
 
 /// An error that can occur when performing a safe subtraction.
 #[derive(Debug, Clone, TryFromPrimitive, IntoPrimitive)]
@@ -23,6 +25,33 @@ pub struct AccumulatorMap<K> {
 pub enum SafeSubError {
     /// The subtraction would result in a negative value.
     Underflow,
+}
+
+impl Accumulator {
+    /// Gets the current value, defaulting always to 0.
+    pub fn get<'a>(&self, ctx: &Context) -> ClientResult<u128> {
+        self.item.get(ctx)
+    }
+
+    /// Adds the given value to the current value.
+    pub fn add<'a>(&self, ctx: &mut Context, value: u128) -> ClientResult<u128>
+    {
+        let current = self.item.get(ctx)?;
+        let new_value = current.saturating_add(value);
+        self.item.set(ctx, &new_value)?;
+        Ok(new_value)
+    }
+
+    /// Subtracts the given value from the current value,
+    /// returning an error if the subtraction would result in a negative value.
+    pub fn safe_sub<'a>(&self, ctx: &mut Context, value: u128) -> ClientResult<u128, SafeSubError> {
+        let current = self.item.get(ctx).map_err(convert_client_error)?;
+        let new_value = current.checked_sub(value).ok_or_else(
+            || ClientError::new(ErrorCode::HandlerCode(SafeSubError::Underflow), "".to_string())
+        )?;
+        self.item.set(ctx, &new_value).map_err(convert_client_error)?;
+        Ok(new_value)
+    }
 }
 
 impl<K: ObjectKey> AccumulatorMap<K> {
@@ -58,6 +87,14 @@ impl<K: ObjectKey> AccumulatorMap<K> {
         )?;
         self.map.set(ctx, key.borrow(), &new_value).map_err(convert_client_error)?;
         Ok(new_value)
+    }
+}
+
+unsafe impl StateObjectResource for Accumulator {
+    unsafe fn new(scope: &[u8], prefix: u8) -> std::result::Result<Self, InitializationError> {
+        Ok(Accumulator {
+            item: Item::new(scope, prefix)?,
+        })
     }
 }
 

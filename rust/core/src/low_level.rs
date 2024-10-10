@@ -5,7 +5,7 @@ use core::alloc::Layout;
 use core::fmt::Debug;
 use allocator_api2::alloc::Allocator;
 use ixc_message_api::AccountID;
-use ixc_message_api::code::{ErrorCode, SystemCode};
+use ixc_message_api::code::{ErrorCode, HandlerCode, SystemCode};
 use ixc_message_api::packet::MessagePacket;
 use ixc_schema::buffer::WriterFactory;
 use ixc_schema::codec::{Codec};
@@ -56,7 +56,7 @@ pub unsafe fn dynamic_invoke<'a, 'b, M: Message<'b>>(context: &'a Context, accou
 }
 
 /// Create a new message packet with the given account and message selector.
-pub fn create_packet<'a, E: Into<u8> + TryFrom<u8> + Debug>(context: &'a Context, account: AccountID, selector: u64) -> ClientResult<MessagePacket<'a>, E> {
+pub fn create_packet<'a, E: HandlerCode>(context: &'a Context, account: AccountID, selector: u64) -> ClientResult<MessagePacket<'a>, E> {
     unsafe {
         let packet = MessagePacket::allocate(context.memory_manager(), 0)?;
         let header = packet.header_mut();
@@ -98,7 +98,7 @@ pub fn encode_default_response<'b>(res: crate::Result<()>, allocator: &'b dyn Al
 
 /// Encode a handler error to the out1 pointer of the message packet.
 /// Used for encoding the response of a message in macros.
-pub fn encode_handler_error<'b, E: Into<u8> + TryFrom<u8> + Debug>(err: HandlerError<E>, allocator: &'b dyn Allocator, message_packet: &'b mut MessagePacket) -> core::result::Result<(), ErrorCode> {
+pub fn encode_handler_error<'b, E: HandlerCode>(err: HandlerError<E>, allocator: &'b dyn Allocator, message_packet: &'b mut MessagePacket) -> core::result::Result<(), ErrorCode> {
     unsafe {
         let mem = allocator.allocate(Layout::from_size_align_unchecked(err.msg.len(), 1)).
             map_err(|_| ErrorCode::SystemCode(SystemCode::EncodingError))?;

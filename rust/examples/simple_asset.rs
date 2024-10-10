@@ -17,7 +17,8 @@ pub mod simple_asset {
         pub fn init(&self, ctx: &mut Context, initial_balance: u128) -> Result<()> {
             let owner = ctx.caller();
             self.owner.set(ctx, &owner)?;
-            self.balances.set(ctx, owner, initial_balance)
+            self.balances.set(ctx, owner, initial_balance)?;
+            Ok(())
         }
 
         #[publish]
@@ -30,9 +31,7 @@ pub mod simple_asset {
         pub fn send(&self, ctx: &mut Context, amount: u128, to: AccountID) -> Result<()> {
             let from = ctx.caller();
             let from_balance = self.balances.get(ctx, from)?.unwrap_or(0);
-            if from_balance < amount {
-                return Err(())
-            }
+            ensure!(from_balance >= amount, "insufficient balance");
             let to_balance = self.balances.get(ctx, to)?.unwrap_or(0);
             self.balances.set(ctx, from, from_balance - amount)?;
             self.balances.set(ctx, to, to_balance + amount)?;

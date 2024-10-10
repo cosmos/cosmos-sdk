@@ -48,6 +48,7 @@ array-concat = "0.5.3"
 ixc_testing = { path = "testing", version = "0.0.2" }
 arrayvec = "0.7.6"
 thiserror = "1.0.63"
+num_enum = "0.7.3"
 mockall = "0.13.0"
 
 [lints]

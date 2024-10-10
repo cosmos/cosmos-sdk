@@ -63,7 +63,7 @@ impl<'a, W: Writer> crate::encoder::Encoder for Encoder<'a, W> {
     }
 
     fn encode_account_id(&mut self, x: AccountID) -> Result<(), EncodeError> {
-        self.encode_u64(x.get())
+        self.encode_u64(x.into())
     }
 
     fn encode_bool(&mut self, x: bool) -> Result<(), EncodeError> {
@@ -99,11 +99,13 @@ impl<'a, W: Writer> crate::encoder::Encoder for Encoder<'a, W> {
     }
 
     fn encode_time(&mut self, x: Time) -> Result<(), EncodeError> {
-        todo!()
+        /// TODO find a more efficient way to encode time
+        self.encode_i128(x.unix_nanos())
     }
 
     fn encode_duration(&mut self, x: Duration) -> Result<(), EncodeError> {
-        todo!()
+        /// TODO find a more efficient way to encode duration
+        self.encode_i128(x.nanos())
     }
 }
 
@@ -204,11 +206,11 @@ impl crate::encoder::Encoder for EncodeSizer {
     }
 
     fn encode_time(&mut self, x: Time) -> Result<(), EncodeError> {
-        todo!()
+        self.encode_i128(x.unix_nanos())
     }
 
     fn encode_duration(&mut self, x: Duration) -> Result<(), EncodeError> {
-        todo!()
+        self.encode_i128(x.nanos())
     }
 }
 
@@ -288,11 +290,11 @@ impl<'b, 'a: 'b, W: Writer> crate::encoder::Encoder for InnerEncoder<'a, 'b, W> 
     }
 
     fn encode_time(&mut self, x: Time) -> Result<(), EncodeError> {
-        todo!()
+        self.encode_i128(x.unix_nanos())
     }
 
     fn encode_duration(&mut self, x: Duration) -> Result<(), EncodeError> {
-        todo!()
+        self.encode_i128(x.nanos())
     }
 }
 
@@ -381,11 +383,11 @@ impl<'a> crate::encoder::Encoder for InnerEncodeSizer<'a> {
     }
 
     fn encode_time(&mut self, x: Time) -> Result<(), EncodeError> {
-        todo!()
+        self.encode_i128(x.unix_nanos())
     }
 
     fn encode_duration(&mut self, x: Duration) -> Result<(), EncodeError> {
-        todo!()
+        self.encode_i128(x.nanos())
     }
 }
 

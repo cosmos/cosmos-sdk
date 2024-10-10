@@ -1,7 +1,7 @@
 //! The core account API.
 
 use crate::context::Context;
-use crate::handler::{ClientFactory, Handler, InitMessage};
+use crate::handler::{Service, Handler, InitMessage, Client};
 use crate::low_level::create_packet;
 use ixc_core_macros::message_selector;
 use ixc_message_api::AccountID;
@@ -9,12 +9,12 @@ use ixc_schema::codec::Codec;
 use crate::result::ClientResult;
 
 /// Creates a new account for the specified handler.
-pub fn create_account<'a, I: InitMessage<'a>>(ctx: &mut Context, init: I) -> ClientResult<<<I as InitMessage<'a>>::Handler as ClientFactory>::Client> {
+pub fn create_account<'a, I: InitMessage<'a>>(ctx: &mut Context, init: I) -> ClientResult<<<I as InitMessage<'a>>::Handler as Service>::Client> {
     let cdc = I::Codec::default();
     let init_bz = cdc.encode_value(&init, ctx.memory_manager())?;
 
     let account_id = do_create_account(ctx, I::Handler::NAME, &init_bz)?;
-    Ok(I::Handler::new_client(account_id))
+    Ok(<<I::Handler as Service>::Client as Client>::new(account_id))
 }
 
 /// Creates a new account for the named handler with opaque initialization data.
@@ -41,11 +41,17 @@ fn do_create_account<'a>(ctx: &Context, name: &str, init: &[u8]) -> ClientResult
 /// Self-destructs the account.
 ///
 /// SAFETY: This function is unsafe because it can be used to destroy the account and all its state.
-pub unsafe fn self_destruct(ctx: &mut Context) -> crate::Result<()> {
-    unimplemented!()
+pub unsafe fn self_destruct(ctx: &mut Context) -> ClientResult<()> {
+    let mut packet = create_packet(ctx, ROOT_ACCOUNT, SELF_DESTRUCT_SELECTOR)?;
+    unsafe {
+        ctx.host_backend().invoke(&mut packet, ctx.memory_manager())?;
+        Ok(())
+    }
 }
 
 const CREATE_SELECTOR: u64 = message_selector!("ixc.account.v1.create");
+
+const SELF_DESTRUCT_SELECTOR: u64 = message_selector!("ixc.account.v1.self_destruct");
 
 /// The ID of the root account which creates and manages accounts.
 pub const ROOT_ACCOUNT: AccountID = AccountID::new(1);

@@ -13,9 +13,9 @@ pub struct MessageDescriptor<'a> {
     pub events: &'a [&'a str],
 }
 
-pub trait Message<'a>: SchemaValue<'a> + StructSchema {
-    const SELECTOR: MessageSelector;
-    type Response<'b>: OptionalValue<'b>;
-    type Error: OptionalValue<'static>; // TODO just accept error codes
-    type Codec: Codec;
-}
+// pub trait Message<'a>: SchemaValue<'a> + StructSchema {
+//     const SELECTOR: MessageSelector;
+//     type Response<'b>: OptionalValue<'b>;
+//     type Error: OptionalValue<'static>; // TODO just accept error codes
+//     type Codec: Codec;
+// }

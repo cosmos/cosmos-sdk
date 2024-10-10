@@ -7,34 +7,31 @@ pub mod counter {
     #[derive(Resources)]
     pub struct Counter {
         #[state]
-        value: Item<u64>,
+        value: Accumulator,
     }
 
     impl Counter {
         #[on_create]
-        pub fn create(&self, ctx: &mut Context, init_value: u64) -> Result<()> {
-            self.value.set(ctx, init_value)?;
+        pub fn create(&self, ctx: &mut Context) -> Result<()> {
             Ok(())
         }
 
         #[publish]
-        pub fn get(&self, ctx: &Context) -> Result<u64> {
+        pub fn get(&self, ctx: &Context) -> Result<u128> {
             let res = self.value.get(ctx)?;
             Ok(res)
         }
 
         #[publish]
-        pub fn inc(&self, ctx: &mut Context) -> Result<()> {
-            let value = self.value.get(ctx)?;
-            self.value.set(ctx, value + 1)?;
-            Ok(())
+        pub fn inc(&self, ctx: &mut Context) -> Result<u128> {
+            let value = self.value.add(ctx, 1)?;
+            Ok(value)
         }
 
         #[publish]
-        pub fn add(&self, ctx: &mut Context, value: u64) -> Result<()> {
-            let current = self.value.get(ctx)?;
-            self.value.set(ctx, current + value)?;
-            Ok(())
+        pub fn dec(&self, ctx: &mut Context) -> Result<u128> {
+            let value = self.value.safe_sub(ctx, 1)?;
+            Ok(value)
         }
     }
 }
@@ -51,15 +48,19 @@ mod tests {
         let mut app = TestApp::default();
         app.register_handler::<Counter>().unwrap();
         let mut alice_ctx = app.new_client_context().unwrap();
-        let counter_client = create_account(&mut alice_ctx, CounterCreate{init_value: 41}).unwrap();
+        let counter_client = create_account(&mut alice_ctx, CounterCreate{}).unwrap();
         let cur = counter_client.get(&alice_ctx).unwrap();
-        assert_eq!(cur, 41);
-        counter_client.inc(&mut alice_ctx).unwrap();
-        let cur = counter_client.get(&alice_ctx).unwrap();
-        assert_eq!(cur, 42);
-        counter_client.add(&mut alice_ctx, 12).unwrap();
-        let cur = counter_client.get(&alice_ctx).unwrap();
-        assert_eq!(cur, 54);
+        assert_eq!(cur, 0);
+        let cur = counter_client.inc(&mut alice_ctx).unwrap();
+        assert_eq!(cur, 1);
+        let cur = counter_client.inc(&mut alice_ctx).unwrap();
+        assert_eq!(cur, 2);
+        let cur = counter_client.dec(&mut alice_ctx).unwrap();
+        assert_eq!(cur, 1);
+        let cur = counter_client.dec(&mut alice_ctx).unwrap();
+        assert_eq!(cur, 0);
+        let res = counter_client.dec(&mut alice_ctx);
+        assert!(res.is_err());
     }
 }
 

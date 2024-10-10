@@ -1,6 +1,7 @@
 //! The Message trait for invoking messages dynamically.
 
 use core::fmt::Debug;
+use ixc_message_api::code::HandlerCode;
 use ixc_message_api::header::MessageSelector;
 use ixc_schema::codec::Codec;
 use ixc_schema::structs::StructSchema;
@@ -15,7 +16,7 @@ pub trait Message<'a>: SchemaValue<'a> + StructSchema
     /// The optional response type.
     type Response<'b>: OptionalValue<'b>;
     /// The optional error type.
-    type Error: Into<u8> + TryFrom<u8> + Debug;
+    type Error: HandlerCode;
     /// The codec to use for encoding and decoding the message.
     type Codec: Codec + Default;
 }
@@ -31,7 +32,7 @@ pub trait ExtractResponseTypes {
     type ClientResult;
 }
 
-impl<R, E: Debug + Into<u8> + TryFrom<u8>> ExtractResponseTypes for crate::Result<R, E> {
+impl<R, E: HandlerCode> ExtractResponseTypes for crate::Result<R, E> {
     type Response = R;
     type Error = E;
     type ClientResult = crate::result::ClientResult<R, E>;

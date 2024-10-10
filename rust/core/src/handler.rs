@@ -8,7 +8,7 @@ use ixc_schema::structs::StructSchema;
 use ixc_schema::SchemaValue;
 
 /// Handler trait for account and module handlers.
-pub trait Handler: RawHandler + Router + Resources + ClientFactory {
+pub trait Handler: RawHandler + Router + Resources + Service {
     /// The name of the handler.
     const NAME: &'static str;
     /// The parameter used for initializing the handler.
@@ -25,24 +25,23 @@ pub trait InitMessage<'a>: SchemaValue<'a> + StructSchema
     type Codec: Codec + Default;
 }
 
-/// Account API trait.
-pub trait HandlerAPI: Router {
-    /// Account client factory type.
-    type ClientFactory: ClientFactory;
-}
-
-/// Account factory trait.
-pub trait ClientFactory {
-    /// Account client type.
+/// Something that implements a service and thus has an associated client type.
+pub trait Service {
+    /// The client type associated with the service.
     type Client: Client;
 
-    /// Create a new account client with the given address.
-    fn new_client(account_id: AccountID) -> Self::Client;
+    /// Create a new client for the service with the given account ID.
+    fn new_client(account_id: AccountID) -> Self::Client {
+        Self::Client::new(account_id)
+    }
 }
 
-/// Account client trait.
+/// The trait that clients of a service must implement.
 pub trait Client {
-    /// Get the address of the account.
+    /// Create a new client with the given account ID.
+    fn new(account_id: AccountID) -> Self;
+
+    /// Get the address of the account this client is associated with.
     fn account_id(&self) -> AccountID;
 }
 

@@ -209,7 +209,8 @@ impl KeyFieldValue for simple_time::Duration {
 
 impl KeyFieldValue for ixc_message_api::AccountID {
     fn encode<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError> {
-        writer.write(&key.get().to_be_bytes())
+        let id: u64 = (*key).into();
+        writer.write(&id.to_be_bytes())
     }
 
     fn decode<'a>(reader: &mut &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {

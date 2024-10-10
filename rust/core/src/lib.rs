@@ -30,11 +30,17 @@ pub use result::{Result};
 /// Format an error message.
 #[macro_export]
 macro_rules! fmt_error {
-    ($code:ident, $($arg:tt)*) => {
-        $crate::error::HandlerError::new_fmt_with_code($code, core::format_args!($($arg)*))
+    ($code:path) => {
+        $crate::error::HandlerError::new_from_code($code)
     };
-    ($($arg:tt)*) => {
-        $crate::error::HandlerError::new_fmt(core::format_args!($($arg)*))
+    ($code:path, $str:literal, $($arg:tt)*) => {
+        $crate::error::HandlerError::new_fmt_with_code($code, core::format_args!($str, $($arg)*))
+    };
+    ($str:literal) => {
+        $crate::error::HandlerError::new($str.to_string())
+    };
+    ($str:literal, $($arg:tt)*) => {
+        $crate::error::HandlerError::new_fmt(core::format_args!($str, $($arg)*))
     };
 }
 

@@ -134,7 +134,8 @@ struct ExecContext<TX: Transaction> {
 
 impl<'a, TX: Transaction> ExecContext<TX> {
     fn get_account_handler_id(&self, account_id: AccountID) -> Option<HandlerID> {
-        let key = format!("h:{}", account_id.get());
+        let id: u64 = account_id.into();
+        let key = format!("h:{}", id);
         let value = self.tx.borrow().raw_kv_get(HYPERVISOR_ACCOUNT, key.as_bytes())?;
         self.parse_handler_id(&value)
     }
@@ -240,7 +241,7 @@ impl<TX: Transaction> ExecContext<TX> {
                     map_err(|_| SystemCode(FatalExecutionError))?;
 
                 if is_ok {
-                    create_header.in_pointer1.set_u64(id.get());
+                    create_header.in_pointer1.set_u64(id.into());
                     Ok(())
                 } else {
                     res

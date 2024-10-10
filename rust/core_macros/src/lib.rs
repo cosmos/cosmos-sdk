@@ -290,6 +290,10 @@ impl APIBuilder {
         })?;
         push_item(&mut self.items, quote! {
             impl ::ixc_core::handler::Client for #client_ident {
+                fn new(account_id: ::ixc_message_api::AccountID) -> Self {
+                    Self(account_id)
+                }
+
                 fn account_id(&self) -> ::ixc_message_api::AccountID {
                     self.0
                 }
@@ -309,12 +313,8 @@ impl APIBuilder {
 
     fn define_client_factory(&mut self, client_ident: &Ident, factory_target: &TokenStream2) -> manyhow::Result<()> {
         push_item(&mut self.items, quote! {
-            impl ::ixc_core::handler::ClientFactory for #factory_target {
+            impl ::ixc_core::handler::Service for #factory_target {
                 type Client = #client_ident;
-
-                fn new_client(account_id: ::ixc_message_api::AccountID) -> Self::Client {
-                    #client_ident(account_id)
-                }
             }
         })
     }
@@ -347,6 +347,13 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                                             context_name = Some(ident.ident.clone());
                                             new_inputs.push(field.clone());
                                             continue;
+                                        }
+
+                                        if let Some(s) = path.path.segments.first() {
+                                            if s.ident == "EventBus" {
+                                                fn_ctr_args.push(quote! { &mut Default::default(), });
+                                                continue;
+                                            }
                                         }
                                     }
                                     _ => {}
@@ -498,8 +505,14 @@ pub fn derive_resources(input: DeriveInput) -> manyhow::Result<TokenStream2> {
                 #field_name: <#ty as ::ixc_core::resource::StateObjectResource>::new(scope.state_scope, #prefix)?
             });
             prefix += 1;
+        }  else if let Some(client) = maybe_extract_attribute::<_, Client>(field)? {
+            let account_id = client.0;
+            field_inits.push(quote! {
+                #field_name: <#ty as ::ixc_core::handler::Client>::new(::ixc_message_api::AccountID::new(#account_id))
+            });
         } else {
-            bail!("only fields with #[state] attribute are supported currently");
+            // TODO handle case where both #[state] and #[client] are present
+            bail!("only fields with #[state] or #[client] attributes are supported currently");
         }
     }
     Ok(quote! {
@@ -522,6 +535,10 @@ struct State {
     #[deluxe(default)]
     value: Vec<Ident>,
 }
+
+#[derive(deluxe::ExtractAttributes, Debug)]
+#[deluxe(attributes(client))]
+struct Client(u64);
 
 /// This attribute bundles account and module handlers into a package root which can be
 /// loaded into an application.

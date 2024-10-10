@@ -10,7 +10,7 @@ use ixc::SchemaValue;
 use ixc_message_api::{AccountID};
 use ixc_core::{Context};
 use ixc_core::account_api::{create_account_raw, ROOT_ACCOUNT};
-use ixc_core::handler::{HandlerAPI, Handler, ClientFactory, Client, InitMessage, HandlerClient};
+use ixc_core::handler::{Handler, Service, Client, InitMessage, HandlerClient};
 use ixc_core::resource::{InitializationError, ResourceScope, Resources};
 use ixc_core::routes::{Route, Router};
 use ixc_hypervisor::Hypervisor;
@@ -63,15 +63,16 @@ unsafe impl Resources for DefaultAccount {
     }
 }
 
-impl ClientFactory for DefaultAccount {
+impl Service for DefaultAccount {
     type Client = DefaultAccountClient;
 
-    fn new_client(account_id: AccountID) -> Self::Client {
-        DefaultAccountClient(account_id)
-    }
 }
 
 impl Client for DefaultAccountClient {
+    fn new(account_id: AccountID) -> Self {
+        Self(account_id)
+    }
+
     fn account_id(&self) -> AccountID {
         self.0
     }
@@ -175,7 +176,14 @@ impl MockHandler {
 
     /// Adds a mock handler API trait implementation to the mock handler.
     pub fn add_handler<T: RawHandler + ?Sized + 'static>(&mut self, mock: std::boxed::Box<T>) {
-        self.mocks.push(std::boxed::Box::new(MockWrapper::<T>(mock)));
+        self.mocks.push(Box::new(MockWrapper::<T>(mock)));
+    }
+
+    /// Creates a mock handler for one mock handler API trait implementation.
+    pub fn of<T: RawHandler + ?Sized + 'static>(mock: std::boxed::Box<T>) -> Self {
+        let mut mocks = MockHandler::new();
+        mocks.add_handler(Box::new(MockWrapper::<T>(mock)));
+        mocks
     }
 }
 

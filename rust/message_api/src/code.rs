@@ -4,9 +4,9 @@ use core::fmt::{Debug};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
 /// Error and success codes returned by the message API.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
-pub enum ErrorCode<E: Into<u8> + TryFrom<u8> + Debug = u8> {
+pub enum ErrorCode<E: HandlerCode = u8> {
     /// A known system error code.
     SystemCode(SystemCode),
 
@@ -16,6 +16,10 @@ pub enum ErrorCode<E: Into<u8> + TryFrom<u8> + Debug = u8> {
     /// Unknown error code.
     Unknown(u16),
 }
+
+/// A trait implemented by all types that can be used as custom handler error codes.
+pub trait HandlerCode: Into<u8> + TryFrom<u8> + Debug + Clone {}
+impl<T: Into<u8> + TryFrom<u8> + Debug + Clone> HandlerCode for T {}
 
 /// A known system error code.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, IntoPrimitive, TryFromPrimitive)]
@@ -48,7 +52,7 @@ pub enum SystemCode {
     OutOfGas = 131,
 }
 
-impl<E: Into<u8> + TryFrom<u8> + Debug> From<u16> for ErrorCode<E> {
+impl<E: HandlerCode> From<u16> for ErrorCode<E> {
     fn from(value: u16) -> Self {
         match value {
             0..256 => {
@@ -71,7 +75,7 @@ impl<E: Into<u8> + TryFrom<u8> + Debug> From<u16> for ErrorCode<E> {
 }
 
 
-impl<E: Into<u8> + TryFrom<u8> + Debug> Into<u16> for ErrorCode<E> {
+impl<E: HandlerCode> Into<u16> for ErrorCode<E> {
     fn into(self) -> u16 {
         match self {
             ErrorCode::SystemCode(e) => e as u16,
@@ -81,6 +85,16 @@ impl<E: Into<u8> + TryFrom<u8> + Debug> Into<u16> for ErrorCode<E> {
     }
 }
 
+impl<E: HandlerCode> PartialEq<Self> for ErrorCode<E> {
+    fn eq(&self, other: &Self) -> bool {
+        let a: u16 = self.clone().into();
+        let b: u16 = other.clone().into();
+        a == b
+    }
+}
+
+impl<E: HandlerCode> Eq for ErrorCode<E> {}
+
 impl SystemCode {
     /// Returns `true` if the code is a valid code for a handler to return directly,
     /// or `false` if the code is in the reserved system range.
@@ -89,40 +103,4 @@ impl SystemCode {
         code >= 128
     }
 }
-
-// impl From<u32> for Code {
-//     fn from(value: u32) -> Self {
-//         match value {
-//             0 => Code::Ok,
-//             1 => Code::OutOfGas,
-//             2 => Code::FatalExecutionError,
-//             3 => Code::AccountNotFound,
-//             4 => Code::MessageHandlerNotFound,
-//             5 => Code::InvalidStateAccess,
-//             6 => Code::UnauthorizedCallerAccess,
-//             7 => Code::InvalidHandler,
-//             8 => Code::UnknownHandlerError,
-//             ..=255 => Code::UnknownSystemError(value),
-//             _ => Code::HandlerError(value),
-//         }
-//     }
-// }
-//
-// impl Into<u32> for Code {
-//     fn into(self) -> u32 {
-//         match self {
-//             Code::Ok => 0,
-//             Code::OutOfGas => 1,
-//             Code::FatalExecutionError => 2,
-//             Code::AccountNotFound => 3,
-//             Code::MessageHandlerNotFound => 4,
-//             Code::InvalidStateAccess => 5,
-//             Code::UnauthorizedCallerAccess => 6,
-//             Code::InvalidHandler => 7,
-//             Code::UnknownHandlerError => 8,
-//             Code::UnknownSystemError(value) => value,
-//             Code::HandlerError(value) => value,
-//         }
-//     }
-// }
 

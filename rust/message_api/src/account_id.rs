@@ -10,14 +10,12 @@
 pub struct AccountID(u64);
 
 impl AccountID {
+    /// The empty account ID.
+    pub const EMPTY: AccountID = AccountID(0);
+
     /// Creates a new account ID from the given integer.
     pub const fn new(id: u64) -> Self {
         AccountID(id)
-    }
-
-    /// Returns the integer value of the account ID.
-    pub fn get(&self) -> u64 {
-        self.0
     }
 
     /// Returns true if the account ID is zero.
@@ -25,5 +23,17 @@ impl AccountID {
     /// that the account is not valid or does not exist.
     pub fn is_empty(&self) -> bool {
         self.0 == 0
+    }
+}
+
+impl Into<u64> for AccountID {
+    fn into(self) -> u64 {
+        self.0
+    }
+}
+
+impl From<u64> for AccountID {
+    fn from(value: u64) -> Self {
+        AccountID(value)
     }
 }

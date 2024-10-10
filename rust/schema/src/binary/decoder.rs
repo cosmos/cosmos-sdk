@@ -137,11 +137,11 @@ impl<'a> crate::decoder::Decoder<'a> for Decoder<'a> {
     }
 
     fn decode_time(&mut self) -> Result<Time, DecodeError> {
-        todo!()
+        Ok(Time::from_unix_nanos(self.decode_i128()?))
     }
 
     fn decode_duration(&mut self) -> Result<Duration, DecodeError> {
-        todo!()
+        Ok(Duration::from_nanos(self.decode_i128()?))
     }
 
     fn decode_i16(&mut self) -> Result<i16, DecodeError> {
@@ -237,11 +237,11 @@ impl<'b, 'a: 'b> crate::decoder::Decoder<'a> for InnerDecoder<'b, 'a> {
     }
 
     fn decode_time(&mut self) -> Result<Time, DecodeError> {
-        todo!()
+        self.outer.decode_time()
     }
 
     fn decode_duration(&mut self) -> Result<Duration, DecodeError> {
-        todo!()
+        self.outer.decode_duration()
     }
 
     fn decode_i16(&mut self) -> Result<i16, DecodeError> {

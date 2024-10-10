@@ -24,10 +24,9 @@ func DefaultAppTomlConfig() *AppTomlConfig {
 		Trace:           false,
 		Standalone:      false,
 		Mempool:         mempool.DefaultConfig(),
-		Indexer: indexer.Config{
-			Type:   "",
-			Config: map[string]interface{}{},
-			Filter: &indexer.FilterConfig{},
+		Indexer: indexer.IndexingConfig{
+			Target:            make(map[string]indexer.Config),
+			ChannelBufferSize: 1024,
 		},
 	}
 }
@@ -43,8 +42,8 @@ type AppTomlConfig struct {
 	Standalone      bool     `mapstructure:"standalone" toml:"standalone" comment:"standalone starts the application without the CometBFT node. The node should be started separately."`
 
 	// Sub configs
-	Mempool mempool.Config `mapstructure:"mempool" toml:"mempool" comment:"mempool defines the configuration for the SDK built-in app-side mempool implementations."`
-	Indexer indexer.Config `mapstructure:"indexer" toml:"indexer" comment:"indexer defines the configuration for the SDK built-in indexer implementation."`
+	Mempool mempool.Config         `mapstructure:"mempool" toml:"mempool" comment:"mempool defines the configuration for the SDK built-in app-side mempool implementations."`
+	Indexer indexer.IndexingConfig `mapstructure:"indexer" toml:"indexer" comment:"indexer defines the configuration for the SDK built-in indexer implementation."`
 }
 
 // CfgOption is a function that allows to overwrite the default server configuration.

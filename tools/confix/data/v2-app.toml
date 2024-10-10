@@ -23,22 +23,11 @@ max-txs = -1
 
 # indexer defines the configuration for the SDK built-in indexer implementation.
 [comet.indexer]
-# The name of the registered indexer type.
-type = ''
+# Buffer size of the channels used for buffering data sent to indexer go routines.
+channel_buffer_size = 1024
 
-# Indexer specific configuration options.
-[comet.indexer.config]
-
-# Filter configuration for the indexer. Currently UNSUPPORTED!
-[comet.indexer.filter]
-# Exclude all state updates.
-exclude_state = false
-# Exclude all events.
-exclude_events = false
-# Exclude all transactions.
-exclude_txs = false
-# Exclude all block headers.
-exclude_block_headers = false
+# Target is a map of named indexer targets to their configuration.
+[comet.indexer.target]
 
 [grpc]
 # Enable defines if the gRPC server should be enabled.

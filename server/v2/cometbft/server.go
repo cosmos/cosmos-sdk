@@ -146,7 +146,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.serverOptions.SnapshotOptions(cfg), sc, ss, nil, s.logger)
 
 	// initialize the indexer
-	if indexerCfg := s.config.AppTomlConfig.Indexer; indexerCfg.Type != "" {
+	if indexerCfg := s.config.AppTomlConfig.Indexer; len(indexerCfg.Target) > 0 {
 		listener, err := indexer.StartIndexing(indexer.IndexingOptions{
 			Config:   indexerCfg,
 			Resolver: appI.GetSchemaDecoderResolver(),

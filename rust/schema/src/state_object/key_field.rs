@@ -185,11 +185,13 @@ impl KeyFieldValue for bool {
 
 impl KeyFieldValue for simple_time::Time {
     fn encode<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError> {
-        todo!()
+        // TODO we only need 12 bytes max
+        <i128 as KeyFieldValue>::encode(&key.unix_nanos(), writer)
     }
 
     fn decode<'a>(reader: &mut &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
-        todo!()
+        <i128 as KeyFieldValue>::decode(reader, memory_manager)
+            .map(simple_time::Time::from_unix_nanos)
     }
 
     fn out_size<'a>(key: &Self::In<'a>) -> usize { 12 }
@@ -197,11 +199,13 @@ impl KeyFieldValue for simple_time::Time {
 
 impl KeyFieldValue for simple_time::Duration {
     fn encode<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError> {
-        todo!()
+        // TODO we only need 12 bytes max
+        <i128 as KeyFieldValue>::encode(&key.nanos(), writer)
     }
 
     fn decode<'a>(reader: &mut &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
-        todo!()
+        <i128 as KeyFieldValue>::decode(reader, memory_manager)
+            .map(simple_time::Duration::from_nanos)
     }
 
     fn out_size<'a>(key: &Self::In<'a>) -> usize { 12 }

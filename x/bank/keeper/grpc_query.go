@@ -37,7 +37,7 @@ func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	address, err := k.ak.AddressCodec().StringToBytes(req.Address)
+	address, err := k.addrCdc.StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
@@ -53,7 +53,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	addr, err := k.ak.AddressCodec().StringToBytes(req.Address)
+	addr, err := k.addrCdc.StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
@@ -86,7 +86,7 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	addr, err := k.ak.AddressCodec().StringToBytes(req.Address)
+	addr, err := k.addrCdc.StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
@@ -120,7 +120,7 @@ func (k BaseKeeper) SpendableBalanceByDenom(ctx context.Context, req *types.Quer
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	addr, err := k.ak.AddressCodec().StringToBytes(req.Address)
+	addr, err := k.addrCdc.StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
@@ -295,7 +295,7 @@ func (k BaseKeeper) DenomOwners(
 			if err != nil {
 				return nil, err
 			}
-			addr, err := k.ak.AddressCodec().BytesToString(key.K2())
+			addr, err := k.addrCdc.BytesToString(key.K2())
 			if err != nil {
 				return nil, err
 			}

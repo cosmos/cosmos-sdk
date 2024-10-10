@@ -4,7 +4,7 @@ on:
     paths:
       - build.mk
   schedule:
-    - cron: "*/15 * * * *" # Every 15 minutes
+    - cron: "15 */2 * * *" # Every two hours at xx:15 minutes
   workflow_dispatch:
 
 permissions:

@@ -8,8 +8,6 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/accounts/accountstd"
 	txdecode "cosmossdk.io/x/tx/decode"
-	txsigning "cosmossdk.io/x/tx/signing"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -29,11 +27,10 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Cdc            codec.Codec
-	Environment    appmodule.Environment
-	AddressCodec   address.Codec
-	Registry       cdctypes.InterfaceRegistry
-	SigningContext *txsigning.Context
+	Cdc          codec.Codec
+	Environment  appmodule.Environment
+	AddressCodec address.Codec
+	Registry     cdctypes.InterfaceRegistry
 
 	Accounts []accountstd.DepinjectAccount // at least one account must be provided
 }
@@ -52,7 +49,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	txDec, err := txdecode.NewDecoder(txdecode.Options{
-		SigningContext: in.SigningContext,
+		SigningContext: in.Registry.SigningContext(),
 		ProtoCodec:     in.Cdc,
 	})
 	if err != nil {

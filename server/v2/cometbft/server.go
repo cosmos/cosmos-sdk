@@ -20,6 +20,7 @@ import (
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/schema/indexer"
 	serverv2 "cosmossdk.io/server/v2"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/mempool"
@@ -131,6 +132,23 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		return err
 	}
 	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.serverOptions.SnapshotOptions(cfg), sc, ss, nil, s.logger)
+<<<<<<< HEAD
+=======
+
+	// initialize the indexer
+	if indexerCfg := s.config.AppTomlConfig.Indexer; len(indexerCfg.Target) > 0 {
+		listener, err := indexer.StartIndexing(indexer.IndexingOptions{
+			Config:   indexerCfg,
+			Resolver: appI.GetSchemaDecoderResolver(),
+			Logger:   s.logger.With(log.ModuleKey, "indexer"),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to start indexing: %w", err)
+		}
+		consensus.listener = &listener.Listener
+	}
+
+>>>>>>> e84c0eb86 (feat(server/v2): init the indexer in server/v2 (#22218))
 	s.Consensus = consensus
 
 	return nil

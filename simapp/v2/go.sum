@@ -210,6 +210,7 @@ cosmossdk.io/log v1.4.1 h1:wKdjfDRbDyZRuWa8M+9nuvpVYxrEOwbD/CA8hvhU8QM=
 cosmossdk.io/log v1.4.1/go.mod h1:k08v0Pyq+gCP6phvdI6RCGhLf/r425UT6Rk/m+o74rU=
 cosmossdk.io/math v1.3.0 h1:RC+jryuKeytIiictDslBP9i1fhkVm6ZDmZEoNP316zE=
 cosmossdk.io/math v1.3.0/go.mod h1:vnRTxewy+M7BtXBNFybkuhSH4WfedVAAnERHgVFhp3k=
+<<<<<<< HEAD
 cosmossdk.io/runtime/v2 v2.0.0-20241021134528-681366e3469c h1:f9qU7HpJ1CuUDj4OkHca4BFbSW4X3rAYgwzwFNXiBhg=
 cosmossdk.io/runtime/v2 v2.0.0-20241021134528-681366e3469c/go.mod h1:KROAOJt1EDL7nELDT7LPpFqWubhTJFD4Uwa1gy2/yxo=
 cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac h1:3joNZZWZ3k7fMsrBDL1ktuQ2xQwYLZOaDhkruadDFmc=
@@ -226,6 +227,10 @@ cosmossdk.io/store/v2 v2.0.0-20241017091405-f01baf302e2b h1:epPBD1ebUwat6Ruw40rs
 cosmossdk.io/store/v2 v2.0.0-20241017091405-f01baf302e2b/go.mod h1:BVn9FGr34kAIQKkrhA0aeFDVYdVEKw2FmSD+3FrayUE=
 cosmossdk.io/x/tx v0.13.4-0.20241003111526-30003f667944 h1:HLWNcAuIe0/5m4EyPWC+bLkJrxpN5xKpzQGeqLmdF5Y=
 cosmossdk.io/x/tx v0.13.4-0.20241003111526-30003f667944/go.mod h1:PpXcKmCpvC3vmWE8ha8MwAxsFT7sOG4t57Octwnm8k0=
+=======
+cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac h1:3joNZZWZ3k7fMsrBDL1ktuQ2xQwYLZOaDhkruadDFmc=
+cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
+>>>>>>> e84c0eb86 (feat(server/v2): init the indexer in server/v2 (#22218))
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=

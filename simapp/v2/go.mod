@@ -62,10 +62,17 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
+<<<<<<< HEAD
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241021134528-681366e3469c // indirect; main
 	cosmossdk.io/server/v2/stf v0.0.0-20241021134528-681366e3469c // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main
 	cosmossdk.io/x/tx v0.13.4-0.20241003111526-30003f667944 // indirect; main
+=======
+	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d // indirect
+	cosmossdk.io/server/v2/stf v0.0.0-20240708142107-25e99c54bac1 // indirect
+	cosmossdk.io/store v1.1.1 // indirect
+	cosmossdk.io/x/tx v0.13.5 // indirect
+>>>>>>> e84c0eb86 (feat(server/v2): init the indexer in server/v2 (#22218))
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

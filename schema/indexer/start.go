@@ -142,7 +142,7 @@ func StartIndexing(opts IndexingOptions) (IndexingTarget, error) {
 	}
 
 	bufSize := 1024
-	if cfg.ChannelBufferSize == 0 {
+	if cfg.ChannelBufferSize != 0 {
 		bufSize = cfg.ChannelBufferSize
 	}
 	asyncOpts := appdata.AsyncListenerOptions{

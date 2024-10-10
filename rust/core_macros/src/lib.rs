@@ -59,9 +59,9 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
 
     let routes = &builder.routes;
     push_item(items, quote! {
-        unsafe impl ::ixc_core::routes::Router for #handler {
-            const SORTED_ROUTES: &'static [::ixc_core::routes::Route<Self>] =
-                &::ixc_core::routes::sort_routes([
+        unsafe impl ::ixc_core::routing::Router for #handler {
+            const SORTED_ROUTES: &'static [::ixc_core::routing::Route<Self>] =
+                &::ixc_core::routing::sort_routes([
                     #(#routes)*
                 ]);
         }
@@ -72,7 +72,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
     for publish_trait in publish_traits.iter() {
         let trait_ident = &publish_trait.ident;
         trait_routers.push(quote! {
-            if let Some(rt) = ::ixc_core::routes::find_route::<dyn #trait_ident>(sel) {
+            if let Some(rt) = ::ixc_core::routing::find_route::<dyn #trait_ident>(sel) {
                 return rt.1(self, message_packet, callbacks, allocator)
             }
         })
@@ -82,7 +82,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
         impl ::ixc_message_api::handler::RawHandler for #handler {
             fn handle(&self, message_packet: &mut ::ixc_message_api::packet::MessagePacket, callbacks: &dyn ixc_message_api::handler::HostBackend, allocator: &dyn ::ixc_message_api::handler::Allocator) -> ::core::result::Result<(), ::ixc_message_api::code::ErrorCode> {
                 let sel = message_packet.header().message_selector;
-                if let Some(rt) = ::ixc_core::routes::find_route(sel) {
+                if let Some(rt) = ::ixc_core::routing::find_route(sel) {
                     return rt.1(self, message_packet, callbacks, allocator)
                 }
 
@@ -254,16 +254,16 @@ pub fn handler_api(attr: TokenStream2, mut item_trait: ItemTrait) -> manyhow::Re
 
         #(#items)*
 
-        unsafe impl ::ixc_core::routes::Router for dyn #trait_ident {
-            const SORTED_ROUTES: &'static [::ixc_core::routes::Route<Self>] =
-                &::ixc_core::routes::sort_routes([
+        unsafe impl ::ixc_core::routing::Router for dyn #trait_ident {
+            const SORTED_ROUTES: &'static [::ixc_core::routing::Route<Self>] =
+                &::ixc_core::routing::sort_routes([
                     #(#routes)*
                 ]);
         }
 
         impl ::ixc_message_api::handler::RawHandler for dyn #trait_ident {
             fn handle(&self, message_packet: &mut ::ixc_message_api::packet::MessagePacket, callbacks: &dyn ixc_message_api::handler::HostBackend, allocator: &dyn ::ixc_message_api::handler::Allocator) -> ::core::result::Result<(), ::ixc_message_api::code::ErrorCode> {
-                ::ixc_core::routes::exec_route(self, message_packet, callbacks, allocator)
+                ::ixc_core::routing::exec_route(self, message_packet, callbacks, allocator)
             }
         }
 

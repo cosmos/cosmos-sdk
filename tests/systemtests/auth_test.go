@@ -76,6 +76,8 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 }
 
 func testSignTxBroadcast(t *testing.T, cli *CLIWrapper, txCmd []string, prefix, fromAddr, toAddr string, amount, fees int64) {
+	t.Helper()
+
 	fromAddrBal := cli.QueryBalance(fromAddr, authTestDenom)
 	toAddrBal := cli.QueryBalance(toAddr, authTestDenom)
 

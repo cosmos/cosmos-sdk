@@ -220,10 +220,13 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 	// next we iterate over the distributions, calculate each recipient's share and the remaining pool funds
 	toDistribute := map[string]sdk.Coins{}
 	poolFunds := sdk.NewCoins()
-	fullAmountToDistribute := sdk.NewCoins()
+	amountToDistribute := sdk.NewCoins() // amount assigned to distributions
+	totalDistribution := sdk.NewCoins()  // total amount distributed to the pool, to then calculate the remaining pool funds
 
 	if err = k.Distributions.Walk(ctx, nil, func(key time.Time, amount types.DistributionAmount) (stop bool, err error) {
 		percentageToDistribute := math.LegacyZeroDec()
+		totalDistribution = totalDistribution.Add(amount.Amount...)
+
 		for _, f := range funds {
 			if f.Expiry != nil && f.Expiry.Before(key) {
 				continue
@@ -239,19 +242,13 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 			for _, denom := range amount.Amount.Denoms() {
 				am := sdk.NewCoin(denom, f.Percentage.MulInt(amount.Amount.AmountOf(denom)).TruncateInt())
 				toDistribute[f.Recipient] = toDistribute[f.Recipient].Add(am)
-				fullAmountToDistribute = fullAmountToDistribute.Add(am)
+				amountToDistribute = amountToDistribute.Add(am)
 			}
 		}
 
 		// sanity check for max percentage
 		if percentageToDistribute.GT(math.LegacyOneDec()) {
 			return true, errors.New("total funds percentage cannot exceed 100")
-		}
-
-		poolFunds = poolFunds.Add(amount.Amount.Sub(fullAmountToDistribute...)...)
-		for _, denom := range amount.Amount.Denoms() {
-			remaining := sdk.NewCoin(denom, math.LegacyOneDec().Sub(percentageToDistribute).MulInt(amount.Amount.AmountOf(denom)).TruncateInt())
-			poolFunds = poolFunds.Add(remaining)
 		}
 
 		return false, nil
@@ -269,13 +266,13 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 	}
 
 	// send the funds to the stream account to be distributed later, and the remaining to the community pool
-	streamAmt := fullAmountToDistribute
-	if !streamAmt.IsZero() {
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.StreamAccount, streamAmt); err != nil {
+	if !amountToDistribute.IsZero() {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.StreamAccount, amountToDistribute); err != nil {
 			return err
 		}
 	}
 
+	poolFunds = totalDistribution.Sub(amountToDistribute...)
 	if !poolFunds.IsZero() {
 		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, poolFunds); err != nil {
 			return err

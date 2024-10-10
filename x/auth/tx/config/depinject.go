@@ -53,6 +53,7 @@ type ModuleOutputs struct {
 	TxConfig            client.TxConfig
 	TxConfigOptions     tx.ConfigOptions
 	TxSigningHandlerMap *txsigning.HandlerMap
+	SigningContext      *txsigning.Context
 }
 
 func ProvideProtoRegistry() txsigning.ProtoFileResolver {
@@ -93,6 +94,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		TxConfig:            txConfig,
 		TxConfigOptions:     txConfigOptions,
 		TxSigningHandlerMap: txConfig.SignModeHandler(),
+		SigningContext:      in.Codec.InterfaceRegistry().SigningContext(),
 	}
 }
 

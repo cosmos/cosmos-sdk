@@ -31,9 +31,10 @@ func New[T transaction.Tx]() *Server[T] {
 	return &Server[T]{}
 }
 
-func (s *Server[T]) Init(app serverv2.AppI[T], _ map[string]any, _ log.Logger) error {
+func (s *Server[T]) Init(app serverv2.AppI[T], v map[string]any, _ log.Logger) (err error) {
 	s.backend = app.GetStore()
-	return nil
+	s.config, err = UnmarshalConfig(v)
+	return err
 }
 
 func (s *Server[T]) Name() string {

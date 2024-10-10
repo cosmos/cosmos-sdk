@@ -29,8 +29,11 @@ impl VM for SimpleWasmtimeVM {
         let module = Module::from_file(&engine, path).unwrap();
         let mut linker = Linker::new(&engine);
         linker.func_wrap("ixc", "invoke", |packet: *const u8, len: usize| -> u32 unsafe {
+            // TODO map guest inputs to host memory
             let mut message_packet = MessagePacket::new(NonNull::new(packet as *mut MessageHeader).unwrap(), len);
+            // maybe we should use system allocator
             let res = callbacks.invoke(&mut message_packet, allocator);
+            // TODO map host outputs to guest memory
             match res {
                 Ok(()) => 0,
                 Err(code) => code.into() as u32,

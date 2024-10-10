@@ -54,12 +54,7 @@ func (roa *Reader) Has(key []byte) (bool, error) {
 }
 
 func (roa *Reader) Get(key []byte) ([]byte, error) {
-	result, err := roa.rootStore.GetStateStorage().Get(roa.actor, roa.version, key)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	return roa.rootStore.GetStateStorage().Get(roa.actor, roa.version, key)
 }
 
 func (roa *Reader) Iterator(start, end []byte) (corestore.Iterator, error) {

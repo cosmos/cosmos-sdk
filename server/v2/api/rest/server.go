@@ -80,7 +80,7 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 }
 
 func (s *Server[T]) Config() any {
-	if s.config == nil || s.config == (&Config{}) {
+	if s.config == nil || s.config.Address == "" {
 		cfg := DefaultConfig()
 
 		for _, opt := range s.cfgOptions {

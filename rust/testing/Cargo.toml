@@ -10,9 +10,10 @@ license.workspace = true
 [dependencies]
 ixc = { path = "..", version = "0.0.2" }
 ixc_core = { path = "../core", version = "0.0.2" }
+ixc_core_macros = {path = "../core_macros", version = "0.0.2"}
 ixc_message_api = { path = "../message_api", version = "0.0.2" }
 ixc_vm_api = { path = "../vm/api" }
-ixc_hypervisor = { path = "../vm/hypervisor" }
+#ixc_hypervisor = { path = "../vm/hypervisor" }
 ixc_schema = { path = "../schema" }
 imbl = "3.0.0"
 arc-swap = "1.7.1"

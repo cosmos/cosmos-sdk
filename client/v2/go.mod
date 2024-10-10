@@ -14,7 +14,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	google.golang.org/grpc v1.67.1
-	google.golang.org/protobuf v1.34.2
+	google.golang.org/protobuf v1.35.1
 	gotest.tools/v3 v3.5.1
 	sigs.k8s.io/yaml v1.4.0
 )

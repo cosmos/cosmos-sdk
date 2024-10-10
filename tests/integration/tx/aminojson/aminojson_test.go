@@ -258,6 +258,11 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"gov/v1_msg_submit_proposal": {
 			gogo: &gov_v1_types.MsgSubmitProposal{},
 		},
+		"gov/v1_params": {
+			gogo: &gov_v1_types.Params{
+				Quorum: math.LegacyMustNewDecFromStr("0.33").String(),
+			},
+		},
 		"slashing/params/dec": {
 			gogo: &slashingtypes.Params{
 				DowntimeJailDuration:    1e9 + 7,

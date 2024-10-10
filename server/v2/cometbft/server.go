@@ -31,10 +31,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-const (
-	ServerName       = "comet"
-	IndexerConfigKey = "indexer"
-)
+const ServerName = "comet"
 
 var (
 	_ serverv2.ServerComponent[transaction.Tx] = (*CometBFTServer[transaction.Tx])(nil)
@@ -149,16 +146,16 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.serverOptions.SnapshotOptions(cfg), sc, ss, nil, s.logger)
 
 	// initialize the indexer
-	if indexerCfg, ok := cfg[IndexerConfigKey]; ok {
+	if indexerCfg := s.config.AppTomlConfig.Indexer; indexerCfg.Type != "" {
 		listener, err := indexer.StartIndexing(indexer.IndexingOptions{
 			Config:   indexerCfg,
 			Resolver: appI.GetSchemaDecoderResolver(),
-			Logger:   s.logger.With(log.ModuleKey, IndexerConfigKey),
+			Logger:   s.logger.With(log.ModuleKey, "indexer"),
 		})
 		if err != nil {
 			return err
 		}
-		consensus.SetListener(&listener.Listener)
+		consensus.listener = &listener.Listener
 	}
 
 	s.Consensus = consensus

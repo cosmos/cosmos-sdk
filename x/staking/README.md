@@ -69,20 +69,20 @@ Pool is used for tracking bonded and not-bonded token supply of the bond denomin
 LastTotalPower tracks the total amounts of bonded tokens recorded during the previous end block.
 Store entries prefixed with "Last" must remain unchanged until EndBlock.
 
-* LastTotalPower: `0x12 -> ProtocolBuffer(math.Int)`
+* LastTotalPower: `collections.NewPrefix(18)`
 
 ### UnbondingID
 
 UnbondingID stores the ID of the latest unbonding operation. It enables creating unique IDs for unbonding operations, i.e., UnbondingID is incremented every time a new unbonding operation (validator unbonding, unbonding delegation, redelegation) is initiated.
 
-* UnbondingID: `0x37 -> uint64`
+* UnbondingID: `55`
 
 ### Params
 
 The staking module stores its params in state with the prefix of `0x51`,
 it can be updated with governance or the address with authority.
 
-* Params: `0x51 | ProtocolBuffer(Params)`
+* Params: `81`
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L300-L328
@@ -117,18 +117,18 @@ required lookups for slashing and validator-set updates. A third special index
 throughout each block, unlike the first two indices which mirror the validator
 records within a block.
 
-* Validators: `0x21 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(validator)`
-* ValidatorsByConsAddr: `0x22 | ConsAddrLen (1 byte) | ConsAddr -> OperatorAddr`
-* ValidatorsByPower: `0x23 | BigEndian(ConsensusPower) | OperatorAddrLen (1 byte) | OperatorAddr -> OperatorAddr`
-* LastValidatorsPower: `0x11 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(ConsensusPower)`
-* ValidatorsByUnbondingID: `0x38 | UnbondingID ->  0x21 | OperatorAddrLen (1 byte) | OperatorAddr`
+* Validators: `33 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(validator)`
+* ValidatorsByConsAddr: `34 | ConsAddrLen (1 byte) | ConsAddr -> OperatorAddr`
+* ValidatorsByPower: `23 | BigEndian(ConsensusPower) | OperatorAddrLen (1 byte) | OperatorAddr -> OperatorAddr`
+* LastValidatorsPower: `17 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(ConsensusPower)`
+* UnbondingIndex: `56 | UnbondingID ->  21 | OperatorAddrLen (1 byte) | OperatorAddr`
 
 `Validators` is the primary index - it ensures that each operator can have only one
 associated validator, where the public key of that validator can change in the
 future. Delegators can refer to the immutable operator of the validator, without
 concern for the changing public key.
 
-`ValidatorsByUnbondingID` is an additional index that enables lookups for
+`UnbondingIndex` is an additional index that enables lookups for
  validators by the unbonding IDs corresponding to their current unbonding.
 
 `ValidatorByConsAddr` is an additional index that enables lookups for slashing.
@@ -161,9 +161,9 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos
 ### Delegation
 
 Delegations are identified by combining `DelegatorAddr` (the address of the delegator)
-with the `ValidatorAddr` Delegators are indexed in the store as follows:
+with the `ValidatorAddr`. Delegators are indexed in the store as follows:
 
-* Delegation: `0x31 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr -> ProtocolBuffer(delegation)`
+* Delegation: `49 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr -> ProtocolBuffer(delegation)`
 
 Stake holders may delegate coins to validators; under this circumstance their
 funds are held in a `Delegation` data structure. It is owned by one
@@ -183,7 +183,7 @@ validator and the number of shares issued so far:
 `Shares per Token = validator.TotalShares() / validator.Tokens()`
 
 Only the number of shares received is stored on the DelegationEntry. When a delegator then
-Undelegates, the token amount they receive is calculated from the number of shares they currently
+undelegates, the token amount they receive is calculated from the number of shares they currently
 hold and the inverse exchange rate:
 
 `Tokens per Share = validator.Tokens() / validatorShares()`
@@ -201,17 +201,17 @@ detected.
 
 `UnbondingDelegation` are indexed in the store as:
 
-* UnbondingDelegation: `0x32 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr -> ProtocolBuffer(unbondingDelegation)`
-* UnbondingDelegationsFromValidator: `0x33 | ValidatorAddrLen (1 byte) | ValidatorAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
-* UnbondingDelegationByUnbondingId: `0x38 | UnbondingId -> 0x32 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr`
+* UnbondingDelegation: `50 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr -> ProtocolBuffer(unbondingDelegation)`
+* UnbondingDelegationByValIndex: `51 | ValidatorAddrLen (1 byte) | ValidatorAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
+* UnbondingIndex: `56 | UnbondingId -> 0x32 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr`
  `UnbondingDelegation` is used in queries, to lookup all unbonding delegations for
  a given delegator.
 
-`UnbondingDelegationsFromValidator` is used in slashing, to lookup all
+`UnbondingDelegationByValIndex` is used in slashing, to lookup all
  unbonding delegations associated with a given validator that need to be
  slashed.
 
- `UnbondingDelegationByUnbondingId` is an additional index that enables
+ `UnbondingIndex` is an additional index that enables
  lookups for unbonding delegations by the unbonding IDs of the containing
  unbonding delegation entries.
 
@@ -232,23 +232,23 @@ committed by the source validator.
 
 `Redelegation` are indexed in the store as:
 
-* Redelegations: `0x34 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddr -> ProtocolBuffer(redelegation)`
-* RedelegationsBySrc: `0x35 | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
-* RedelegationsByDst: `0x36 | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
-* RedelegationByUnbondingId: `0x38 | UnbondingId -> 0x34 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddr`
+* Redelegations: `52 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr -> ProtocolBuffer(redelegation)`
+* RedelegationsByValSrc: `53 | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
+* RedelegationsByValDst: `54 | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
+* RedelegationByUnbondingId: `56 | UnbondingId -> 0x34 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddr`
 
  `Redelegations` is used for queries, to lookup all redelegations for a given
  delegator.
 
- `RedelegationsBySrc` is used for slashing based on the `ValidatorSrcAddr`.
+ `RedelegationsByValSrc` is used for slashing based on the `ValidatorSrcAddr`.
 
- `RedelegationsByDst` is used for slashing based on the `ValidatorDstAddr`
+ `RedelegationsByValDst` is used for slashing based on the `ValidatorDstAddr`
 
 The first map here is used for queries, to lookup all redelegations for a given
 delegator. The second map is used for slashing based on the `ValidatorSrcAddr`,
 while the third map is for slashing based on the `ValidatorDstAddr`.
 
-`RedelegationByUnbondingId` is an additional index that enables
+`UnbondingIndex` is an additional index that enables
  lookups for redelegations by the unbonding IDs of the containing
  redelegation entries.
 
@@ -317,7 +317,7 @@ element.
 For the purpose of tracking progress of unbonding delegations the unbonding
 delegations queue is kept.
 
-* UnbondingDelegation: `0x41 | format(time) -> []DVPair`
+* UnbondingQueue: `65 | format(time) -> []DVPair`
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L159-L173
@@ -328,7 +328,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos
 For the purpose of tracking progress of redelegations the redelegation queue is
 kept.
 
-* RedelegationQueue: `0x42 | format(time) -> []DVVTriplet`
+* RedelegationQueue: `66 | format(time) -> []DVVTriplet`
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L175-L191
@@ -339,7 +339,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos
 For the purpose of tracking progress of unbonding validators the validator
 queue is kept.
 
-* ValidatorQueueTime: `0x43 | format(time) -> []sdk.ValAddress`
+* ValidatorQueue: `67 | format(time) -> []sdk.ValAddress`
 
 The stored object by each key is an array of validator operator addresses from
 which the validator object can be accessed. Typically it is expected that only
@@ -348,7 +348,7 @@ that multiple validators exist in the queue at the same location.
 
 #### ValidatorConsensusKeyRotationRecordQueueKey
 
-For the purpose of tracking progress or consensus pubkey rotations the `ValidatorConsensusKeyRotationRecordQueueKey` kept.
+For the purpose of tracking progress of consensus pubkey rotations, the `ValidatorConsensusKeyRotationRecordQueueKey` is kept.
 
 * ValidatorConsensusKeyRotationRecordQueueKey: `103 | format(time) -> types.ValAddrsOfRotatedConsKeys`
 
@@ -360,9 +360,6 @@ the present store info and append the `ValAddress` to the array and set it back 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/release/v0.52.x/x/staking/proto/cosmos/staking/v1beta1/staking.proto#L420-L424
 ```
-
-
-
 
 ## State Transitions
 
@@ -401,7 +398,7 @@ When a validator begins the unbonding process the following operations occur:
 #### Unbonding to Unbonded
 
 A validator moves from unbonding to unbonded when the `ValidatorQueue` object
-moves from bonded to unbonded
+moves from bonded to unbonded.
 
 * update the `Validator` object for this validator
 * set `validator.Status` to `Unbonded`
@@ -423,7 +420,7 @@ Jailed validators are not present in any of the following stores:
 
 #### Delegate
 
-When a delegation occurs both the validator and the delegation objects are affected
+When a delegation occurs both the validator and the delegation objects are affected.
 
 * determine the delegators shares based on tokens delegated and the validator's exchange rate
 * remove tokens from the sending account
@@ -894,10 +891,12 @@ following hooks can registered with staking:
     * called when a delegation is created
 * `BeforeDelegationSharesModified(Context, AccAddress, ValAddress) error`
     * called when a delegation's shares are modified
-* `AfterDelegationModified(Context, AccAddress, ValAddress) error`
-    * called when a delegation is created or modified
 * `BeforeDelegationRemoved(Context, AccAddress, ValAddress) error`
     * called when a delegation is removed
+* `AfterDelegationModified(Context, AccAddress, ValAddress) error`
+    * called when a delegation is created or modified
+* `BeforeValidatorSlashed(Context, sdk.ValAddress, math.LegacyDec) error`
+    * called when a validator is slashed
 * `AfterUnbondingInitiated(Context, UnbondingID)`
     * called when an unbonding operation (validator unbonding, unbonding delegation, redelegation) was initiated
 * `AfterConsensusPubKeyUpdate(ctx Context, oldpubkey, newpubkey types.PubKey, fee sdk.Coin)`
@@ -916,11 +915,9 @@ The staking module emits the following events:
 | complete_unbonding    | validator             | {validatorAddress}        |
 | complete_unbonding    | delegator             | {delegatorAddress}        |
 | complete_redelegation | amount                | {totalRedelegationAmount} |
+| complete_redelegation | delegator             | {delegatorAddress}        |
 | complete_redelegation | source_validator      | {srcValidatorAddress}     |
 | complete_redelegation | destination_validator | {dstValidatorAddress}     |
-| complete_redelegation | delegator             | {delegatorAddress}        |
-
-## Msg's
 
 ### MsgCreateValidator
 
@@ -947,7 +944,9 @@ The staking module emits the following events:
 | Type     | Attribute Key | Attribute Value    |
 | -------- | ------------- | ------------------ |
 | delegate | validator     | {validatorAddress} |
+| delegate | delegator     | {delegatorAddress} |
 | delegate | amount        | {delegationAmount} |
+| delegate | new_shares    | {newShares}        |
 | message  | module        | staking            |
 | message  | action        | delegate           |
 | message  | sender        | {senderAddress}    |
@@ -957,6 +956,7 @@ The staking module emits the following events:
 | Type    | Attribute Key       | Attribute Value    |
 | ------- | ------------------- | ------------------ |
 | unbond  | validator           | {validatorAddress} |
+| unbond  | delegator           | {delegatorAddress} |
 | unbond  | amount              | {unbondAmount}     |
 | unbond  | completion_time [0] | {completionTime}   |
 | message | module              | staking            |

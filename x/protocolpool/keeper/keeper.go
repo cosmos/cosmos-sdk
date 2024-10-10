@@ -248,6 +248,7 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 			return true, errors.New("total funds percentage cannot exceed 100")
 		}
 
+		poolFunds = poolFunds.Add(amount.Amount.Sub(fullAmountToDistribute...)...)
 		for _, denom := range amount.Amount.Denoms() {
 			remaining := sdk.NewCoin(denom, math.LegacyOneDec().Sub(percentageToDistribute).MulInt(amount.Amount.AmountOf(denom)).TruncateInt())
 			poolFunds = poolFunds.Add(remaining)

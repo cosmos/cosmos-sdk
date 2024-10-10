@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -65,8 +64,8 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 
 	// sanity check to avoid trying to distribute more than what is available
 
-	if data.LastBalance.Amount.IsAnyGT(totalToBeDistributed) || !totalToBeDistributed.DenomsSubsetOf(data.LastBalance.Amount) {
-		return errors.New("total to be distributed is greater than the last balance" + fmt.Sprint(data.LastBalance.Amount, totalToBeDistributed))
+	if totalToBeDistributed.IsAnyGT(data.LastBalance.Amount) || !totalToBeDistributed.DenomsSubsetOf(data.LastBalance.Amount) {
+		return fmt.Errorf("total to be distributed is greater than the last balance: %s > %s", totalToBeDistributed, data.LastBalance.Amount)
 	}
 	return nil
 }

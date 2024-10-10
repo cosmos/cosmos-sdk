@@ -1,0 +1,22 @@
+[package]
+name = "example"
+version = "0.1.0"
+edition = "2021"
+repository.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+ixc = { path = ".." }
+# TODO: we want to be able to remove these transitive dependencies and just depend on ixc, but these
+# are needed for macros, for now
+ixc_core = { path = "../core" }
+ixc_schema = { path = "../schema" }
+ixc_message_api = { path = "../message_api" }
+
+[dev-dependencies]
+ixc_testing = { path = "../testing" }
+
+[lints]
+workspace = true

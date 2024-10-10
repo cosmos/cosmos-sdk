@@ -12,3 +12,4 @@ rm -rf build/spec
 rm -rf build/rfc
 rm -rf learn/advanced/17-autocli.md
 rm -rf build/migrations/02-upgrading.md
+rm -rf user/run-node/04-rosetta.md

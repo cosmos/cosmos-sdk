@@ -37,6 +37,9 @@ wget -O ./build/packages/01-depinject.md https://raw.githubusercontent.com/cosmo
 wget -O ./build/packages/02-collections.md https://raw.githubusercontent.com/cosmos/cosmos-sdk/main/tools/collections/README.md
 wget -O ./build/packages/03-orm.md https://raw.githubusercontent.com/cosmos/cosmos-sdk/main/tools/orm/README.md
 
+## Update user docs with rosetta
+wget -O "./user/run-node/04-rosetta.md" "https://raw.githubusercontent.com/cosmos/rosetta/main/README.md"
+
 ## Add architecture documentation
 cp -r ./architecture ./build
 

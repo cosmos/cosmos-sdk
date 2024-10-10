@@ -37,12 +37,12 @@ use syn::{parse_macro_input, Field};
 //     expanded.into()
 // }
 
-/// Derives the TableRow trait for the provided struct.
-#[proc_macro_derive(TableRow)]
-pub fn derive_table(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as syn::DeriveInput);
-    let name = input.ident;
-    let expanded = quote! {
-    };
-    expanded.into()
-}
+// /// Derives the TableRow trait for the provided struct.
+// #[proc_macro_derive(TableRow)]
+// pub fn derive_table(input: TokenStream) -> TokenStream {
+//     let input = parse_macro_input!(input as syn::DeriveInput);
+//     let name = input.ident;
+//     let expanded = quote! {
+//     };
+//     expanded.into()
+// }

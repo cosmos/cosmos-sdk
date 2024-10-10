@@ -2,16 +2,20 @@
 
 This crate provides a testing framework for Interchain SDK applications.
 
-## Writing Tests
+## Getting Started
 
-1. Start by writing tests as you would normally do in Rust.
+This framework works with regular rust `#[test]` functions. To write tests, follow the following steps
+
+1. Add a `use ixc::testing::*` statement (optional, but recommended)
 2. Define a `TestApp`
-3. Add real or mock modules & accounts to the `TestApp`
-4. Perform actions on the modules & accounts and assert the results
+3. Register the handler types we want to test
+4. Create account instances for real or mock handlers
+5. Perform actions on the accounts and assert the results
 
-Let's define a simple counter with two methods `get` and `inc`:
+Let's define a simple counter with one method `inc` which increments the counter and returns
+the new value:
 ```rust
-#[interchain_sdk::account_handler(Counter)]
+#[ixc::handler(Counter)]
 pub mod counter {
     use ixc::*;
 
@@ -20,25 +24,33 @@ pub mod counter {
         value: Item<u64>,
     }
 
-    impl OnCreate for Counter {
-        type InitMessage = ();
-
-        fn on_create(&self, ctx: &mut std::task::Context, init: &Self::InitMessage) -> Response<()> {
-            Ok(())
-        }
-    }
-
     #[publish]
     impl Counter {
-        pub fn get(&self, ctx: &Context) -> Response<u64> {
-            self.value.get(ctx)
-        }
-
-        pub fn inc(&mut self, ctx: &mut Context) -> Response<()> {
+        #[on_create]
+        pub fn create(&mut self, ctx: &mut Context) -> Result<()> { Ok(()) }
+        
+        pub fn inc(&mut self, ctx: &mut Context) -> Result<u64> {
             let value = self.value.get(ctx)?;
-            let new_value = value.checked_add(1).ok_or(())?;
-            self.value.set(ctx, new_value)
+            let new_value = value.checked_add(1).ok_or(
+                bail!("overflow when incrementing counter")
+            )?;
+            self.value.set(ctx, new_value)?;
+            Ok(new_value)
         }
+    }
+}
+```
+
+Now we can write a test for this counter:
+```rust
+#[cfg(test)]
+mod tests {
+    use ixc::testing::*;
+    use crate::counter::*;
+    
+    #[test]
+    fn test() {
+        let mut app = TestApp::new();
     }
 }
 ```

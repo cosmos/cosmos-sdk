@@ -10,7 +10,7 @@ pub use ixc_message_api::AccountID;
 #[doc(inline)]
 pub use ixc_schema::{SchemaValue, Str};
 #[doc(inline)]
-pub use state_objects::*;
+pub use state_objects::{Map, Item, Accumulator, AccumulatorMap};
 #[doc(inline)]
 pub use simple_time::{Time, Duration};
 

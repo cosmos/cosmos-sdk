@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/schema/decoding"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 )
@@ -95,4 +96,13 @@ func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
 
 func (a *App[T]) GetQueryHandlers() map[string]appmodulev2.Handler {
 	return a.QueryHandlers
+}
+
+// GetSchemaDecoderResolver returns the module schema resolver.
+func (a *App[T]) GetSchemaDecoderResolver() decoding.DecoderResolver {
+	moduleSet := map[string]any{}
+	for moduleName, module := range a.moduleManager.Modules() {
+		moduleSet[moduleName] = module
+	}
+	return decoding.ModuleSetDecoderResolver(moduleSet)
 }

@@ -10,7 +10,7 @@ pub mod bank {
     #[derive(Resources)]
     pub struct Bank {
         #[state(prefix = 1, key(address, denom), value(amount))]
-        balances: AccumulatorMap<(AccountID, Str)>,
+        pub(crate) balances: AccumulatorMap<(AccountID, Str)>,
         #[state(prefix = 2, key(denom), value(total))]
         supply: AccumulatorMap<Str>,
         #[state(prefix = 3)]
@@ -205,6 +205,13 @@ mod tests {
         assert_eq!(alice_balance, 900);
         let bob_balance = bank_client.get_balance(&bob, bob.account_id(), "foo").unwrap();
         assert_eq!(bob_balance, 100);
+
+        // look inside bank to check the balance of alice directly
+        app.exec_in(&bank_client, |bank, ctx| {
+            let alice_balance = bank.balances.get(ctx, (alice_id, "foo")).unwrap();
+            assert_eq!(alice_balance, 900);
+            Ok(())
+        }).unwrap();
     }
 }
 

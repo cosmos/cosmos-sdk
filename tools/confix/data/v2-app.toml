@@ -21,6 +21,25 @@ standalone = false
 # max-txs defines the maximum number of transactions that can be in the mempool. A value of 0 indicates an unbounded mempool, a negative value disables the app-side mempool.
 max-txs = -1
 
+# indexer defines the configuration for the SDK built-in indexer implementation.
+[comet.indexer]
+# The name of the registered indexer type.
+type = ''
+
+# Indexer specific configuration options.
+[comet.indexer.config]
+
+# Filter configuration for the indexer. Currently UNSUPPORTED!
+[comet.indexer.filter]
+# Exclude all state updates.
+exclude_state = false
+# Exclude all events.
+exclude_events = false
+# Exclude all transactions.
+exclude_txs = false
+# Exclude all block headers.
+exclude_block_headers = false
+
 [grpc]
 # Enable defines if the gRPC server should be enabled.
 enable = true
@@ -71,7 +90,7 @@ skip-fast-storage-upgrade = true
 # Enable enables the application telemetry functionality. When enabled, an in-memory sink is also enabled by default. Operators may also enabled other sinks such as Prometheus.
 enable = true
 # Address defines the metrics server address to bind to.
-address = 'localhost:1338'
+address = 'localhost:1318'
 # Prefixed with keys to separate services.
 service-name = ''
 # Enable prefixing gauge values with hostname.

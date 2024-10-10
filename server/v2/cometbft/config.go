@@ -3,6 +3,7 @@ package cometbft
 import (
 	cmtcfg "github.com/cometbft/cometbft/config"
 
+	"cosmossdk.io/schema/indexer"
 	"cosmossdk.io/server/v2/cometbft/mempool"
 )
 
@@ -23,6 +24,11 @@ func DefaultAppTomlConfig() *AppTomlConfig {
 		Trace:           false,
 		Standalone:      false,
 		Mempool:         mempool.DefaultConfig(),
+		Indexer: indexer.Config{
+			Type:   "",
+			Config: map[string]interface{}{},
+			Filter: &indexer.FilterConfig{},
+		},
 	}
 }
 
@@ -38,6 +44,7 @@ type AppTomlConfig struct {
 
 	// Sub configs
 	Mempool mempool.Config `mapstructure:"mempool" toml:"mempool" comment:"mempool defines the configuration for the SDK built-in app-side mempool implementations."`
+	Indexer indexer.Config `mapstructure:"indexer" toml:"indexer" comment:"indexer defines the configuration for the SDK built-in indexer implementation."`
 }
 
 // CfgOption is a function that allows to overwrite the default server configuration.

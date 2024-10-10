@@ -1,22 +1,22 @@
 # Crypto
 
-The `crypto` directory contains the components responsible for handling cryptographic operations, key management, and secure interactions with hardware wallets.
+The `crypto` directory includes three parts: `secure cryptographic computation`, `key generation and storage` and `secure interactions with hardware wallets`.
 
 ## Components
 
 ### Keyring
 
-Keyring is the primary interface for managing cryptographic keys. It provides a unified API to create, store, retrieve, and manage keys securely across different storage backends.
+Keyring includes unified APIS which contributes to the generation, storage and retrieval of keys. And the operations are adapted across various storage backends.
 
 #### Supported Backends
 
-* **OS**: Uses the operating system's default credential store.
-* **File**: Stores encrypted keyring in the application's configuration directory.
+* **OS**: The operating system's default credential storage.
+* **File**: Setting encrypted keyring on the configuration directory of APPs.
 * **KWallet**: Integrates with KDE Wallet Manager.
 * **Pass**: Leverages the `pass` command-line utility.
-* **Keyctl**: Uses Linux's kernel security key management system.
-* **Test**: Stores (insecurely) keys to disk for testing purposes.
-* **Memory**: Provides transient storage where keys are discarded when the process terminates.
+* **Keyctl**: Linux's kernel security key management system.
+* **Test**: Keep keys on disk for unit-test.
+* **Memory**: Keep keys on temporary cache but delete the process stops.
 
 ### Codec
 
@@ -24,13 +24,13 @@ The Codec component handles serialization and deserialization of cryptographic s
 
 ### Ledger Integration
 
-Support for Ledger hardware wallets is integrated to provide enhanced security for key management and signing operations. The Ledger integration supports SECP256K1 keys and offers various features:
+Support for Ledger hardware wallets is integrated to provide enhanced security for key management and signature operations. The Ledger integration supports SECP256K1 keys and offers various features:
 
 #### Key Features
 
 * **Public Key Retrieval**: Supports both safe (with user verification) and unsafe (without user verification) methods to retrieve public keys from the Ledger device.
 * **Address Generation**: Can generate and display Bech32 addresses on the Ledger device for user verification.
-* **Transaction Signing**: Allows signing of transactions with user confirmation on the Ledger device.
+* **Transaction Signing**: Allows signature of transactions with user confirmation on the Ledger device.
 * **Multiple HD Path Support**: Supports various BIP44 derivation paths for key generation and management.
 * **Customizable Options**: Provides options to customize Ledger usage, including app name, public key creation, and DER to BER signature conversion.
 

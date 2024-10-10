@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/simapp/v2"
-	"cosmossdk.io/store/v2/root"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -32,7 +31,6 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 		autoCliOpts   autocli.AppOptions
 		moduleManager *runtime.MM[T]
 		clientCtx     client.Context
-		storeBuilder  root.Builder
 	)
 
 	if err := depinject.Inject(
@@ -41,7 +39,6 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 			depinject.Provide(ProvideClientContext),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		&storeBuilder,
 		&autoCliOpts,
 		&moduleManager,
 		&clientCtx,
@@ -74,7 +71,7 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, clientCtx.TxConfig, storeBuilder, moduleManager)
+	initRootCmd(rootCmd, clientCtx.TxConfig, moduleManager)
 
 	nodeCmds := nodeservice.NewNodeCommands()
 	autoCliOpts.ModuleOptions = make(map[string]*autocliv1.ModuleOptions)

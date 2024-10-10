@@ -21,7 +21,7 @@ require (
 	cosmossdk.io/core v1.0.0-alpha.4
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.4.1
-	cosmossdk.io/server/v2 v2.0.0-20241008175849-325728a9fd6c // main
+	cosmossdk.io/server/v2 v2.0.0-20241010142940-dd2369daf2dc // main
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241008175849-325728a9fd6c // main
 	cosmossdk.io/server/v2/stf v0.0.0-20241008175849-325728a9fd6c // main
 	cosmossdk.io/store/v2 v2.0.0-20241008175849-325728a9fd6c // main

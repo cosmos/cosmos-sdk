@@ -66,7 +66,6 @@ func AppConfig() depinject.Config {
 			codec.ProvideAddressCodec,
 			codec.ProvideProtoCodec,
 			codec.ProvideLegacyAmino,
-			runtime.ProvideSingletonScopedStoreBuilder,
 		),
 		depinject.Invoke(
 			std.RegisterInterfaces,
@@ -83,8 +82,8 @@ func NewSimApp[T transaction.Tx](
 	var (
 		app          = &SimApp[T]{}
 		appBuilder   *runtime.AppBuilder[T]
-		storeBuilder root.Builder
 		err          error
+		storeBuilder root.Builder
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(

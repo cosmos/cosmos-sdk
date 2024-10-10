@@ -45,7 +45,6 @@ type CometBFTServer[T transaction.Tx] struct {
 
 	initTxCodec   transaction.Codec[T]
 	logger        log.Logger
-	storeBuilder  root.Builder
 	serverOptions ServerOptions[T]
 	config        Config
 	cfgOptions    []CfgOption
@@ -53,13 +52,11 @@ type CometBFTServer[T transaction.Tx] struct {
 
 func New[T transaction.Tx](
 	txCodec transaction.Codec[T],
-	storeBuilder root.Builder,
 	serverOptions ServerOptions[T],
 	cfgOptions ...CfgOption,
 ) *CometBFTServer[T] {
 	return &CometBFTServer[T]{
 		initTxCodec:   txCodec,
-		storeBuilder:  storeBuilder,
 		serverOptions: serverOptions,
 		cfgOptions:    cfgOptions,
 	}
@@ -106,16 +103,8 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		indexEvents[e] = struct{}{}
 	}
 
-	storeCfg, err := store.UnmarshalConfig(cfg)
-	if err != nil {
-		return err
-	}
-	rs, err := s.storeBuilder.Build(logger, storeCfg)
-	if err != nil {
-		return err
-	}
-
 	s.logger = logger.With(log.ModuleKey, s.Name())
+	rs := appI.GetStore()
 	consensus := NewConsensus(
 		s.logger,
 		appI.Name(),

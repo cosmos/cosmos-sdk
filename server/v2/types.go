@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/schema/decoding"
 	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/store/v2"
 )
 
 type AppCreator[T transaction.Tx] func(log.Logger, *viper.Viper) AppI[T]
@@ -18,6 +19,6 @@ type AppI[T transaction.Tx] interface {
 	InterfaceRegistry() server.InterfaceRegistry
 	GetAppManager() *appmanager.AppManager[T]
 	GetQueryHandlers() map[string]appmodulev2.Handler
-	// It is used to get the module schema resolver for the indexer.
+	GetStore() store.RootStore
 	GetSchemaDecoderResolver() decoding.DecoderResolver
 }

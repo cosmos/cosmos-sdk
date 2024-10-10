@@ -843,3 +843,15 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           projectBaseDir: x/upgrade/
+
+  test-system: # no system tests in v0.50, set to match required job
+    runs-on: ubuntu-latest
+    steps:
+      - name: do nothing
+        run: echo "no system tests in v0.50"
+
+  test-system-v2: # no system tests in v0.50, set to match required job
+    runs-on: ubuntu-latest
+    steps:
+      - name: do nothing
+        run: echo "no system tests in v0.50"

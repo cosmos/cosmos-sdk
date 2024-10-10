@@ -8,9 +8,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/server/v2/store"
-	"cosmossdk.io/store/v2/root"
-
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
@@ -23,15 +20,21 @@ import (
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/schema/indexer"
 	serverv2 "cosmossdk.io/server/v2"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/mempool"
+	"cosmossdk.io/server/v2/store"
+	"cosmossdk.io/store/v2/root"
 	"cosmossdk.io/store/v2/snapshots"
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-const ServerName = "comet"
+const (
+	ServerName       = "comet"
+	IndexerConfigKey = "indexer"
+)
 
 var (
 	_ serverv2.ServerComponent[transaction.Tx] = (*CometBFTServer[transaction.Tx])(nil)
@@ -144,6 +147,19 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		return err
 	}
 	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.serverOptions.SnapshotOptions(cfg), sc, ss, nil, s.logger)
+
+	// initialize the indexer
+	if indexerCfg, ok := cfg[IndexerConfigKey]; ok {
+		listener, err := indexer.StartIndexing(indexer.IndexingOptions{
+			Config:   indexerCfg,
+			Resolver: appI.GetSchemaDecoderResolver(),
+			Logger:   s.logger.With(log.ModuleKey, IndexerConfigKey),
+		})
+		if err != nil {
+			return err
+		}
+		consensus.SetListener(&listener.Listener)
+	}
 
 	s.Consensus = consensus
 

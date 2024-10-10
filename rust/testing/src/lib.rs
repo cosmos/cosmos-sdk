@@ -140,13 +140,15 @@ impl TestApp {
     }
 
     /// Executes a function in the context of a handler.
-    pub fn exec_in<HC: HandlerClient, F, R>(&self, client: &HC, f: F) -> ClientResult<R>
+    /// This provides a way for tests to peek inside and manipulate a handler's state directly.
+    /// This method will panic if we can't call into the handler, but panicking is acceptable in tests.
+    pub fn exec_in<HC: HandlerClient, F, R>(&self, client: &HC, f: F) -> R
     where
-        F: FnOnce(&HC::Handler, &mut Context)  -> ClientResult<R>,
+        F: FnOnce(&HC::Handler, &mut Context)  -> R,
     {
         // TODO lookup handler ID to make sure this is the correct handler
         let scope = ResourceScope::default();
-        let h = unsafe { HC::Handler::new(&scope) }.unwrap(); // TODO error
+        let h = unsafe { HC::Handler::new(&scope) }.unwrap();
         let mut ctx = self.client_context_for(client.account_id());
         f(&h, &mut ctx)
     }

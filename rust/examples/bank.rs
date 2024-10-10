@@ -5,14 +5,13 @@ pub mod bank {
     use ixc::*;
     use ixc_core::error::unimplemented_ok;
     use ixc_core::handler::ClientFactory;
-    use ixc_message_api::code::{ErrorCode};
 
     #[derive(Resources)]
     pub struct Bank {
         #[state(prefix = 1, key(address, denom), value(amount))]
         pub(crate) balances: AccumulatorMap<(AccountID, Str)>,
         #[state(prefix = 2, key(denom), value(total))]
-        supply: AccumulatorMap<Str>,
+        pub(crate) supply: AccumulatorMap<Str>,
         #[state(prefix = 3)]
         super_admin: Item<AccountID>,
         #[state(prefix = 4)]
@@ -206,12 +205,13 @@ mod tests {
         let bob_balance = bank_client.get_balance(&bob, bob.account_id(), "foo").unwrap();
         assert_eq!(bob_balance, 100);
 
-        // look inside bank to check the balance of alice directly
+        // look inside bank to check the balance of alice directly as well as the supply of foo
         app.exec_in(&bank_client, |bank, ctx| {
             let alice_balance = bank.balances.get(ctx, (alice_id, "foo")).unwrap();
             assert_eq!(alice_balance, 900);
-            Ok(())
-        }).unwrap();
+            let foo_supply = bank.supply.get(ctx, "foo").unwrap();
+            assert_eq!(foo_supply, 1000);
+        })
     }
 }
 

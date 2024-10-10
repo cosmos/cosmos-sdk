@@ -3,18 +3,18 @@
 mod store;
 mod vm;
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use allocator_api2::alloc::Allocator;
 use allocator_api2::boxed::Box;
 use ixc::SchemaValue;
 use ixc_message_api::{AccountID};
 use ixc_core::{Context};
-use ixc_core::account_api::{ROOT_ACCOUNT};
+use ixc_core::account_api::{create_account_raw, ROOT_ACCOUNT};
 use ixc_core::handler::{HandlerAPI, Handler, ClientFactory, Client, InitMessage};
 use ixc_core::resource::{InitializationError, ResourceScope, Resources};
 use ixc_core::routes::{Route, Router};
 use ixc_hypervisor::Hypervisor;
-use ixc_message_api::code::ErrorCode;
+use ixc_message_api::code::{ErrorCode, SystemCode};
 use ixc_message_api::handler::{HostBackend, RawHandler};
 use ixc_message_api::header::{ContextInfo, MessageHeader};
 use ixc_message_api::packet::MessagePacket;
@@ -24,12 +24,14 @@ use crate::store::{Store, VersionedMultiStore};
 use crate::vm::{NativeVM, NativeVMImpl};
 
 pub use ixc_core::account_api::create_account;
+use ixc_core::result::ClientResult;
 
 /// Defines a test harness for running tests against account and module implementations.
 pub struct TestApp {
     hypervisor: RefCell<Hypervisor<VersionedMultiStore>>,
     native_vm: NativeVM,
     mem: MemoryManager,
+    mock_id: Cell<u64>,
 }
 
 impl Default for TestApp {
@@ -43,6 +45,7 @@ impl Default for TestApp {
             hypervisor: RefCell::new(hypervisor),
             native_vm,
             mem,
+            mock_id: Cell::new(0),
         };
         test_app.register_handler::<DefaultAccount>().unwrap();
         test_app
@@ -98,7 +101,7 @@ impl TestApp {
     /// Registers a handler with the test harness so that accounts backed by this handler can be created.
     pub fn register_handler<H: Handler>(&mut self) -> core::result::Result<(), InitializationError> {
         let scope = ResourceScope::default();
-        unsafe { self.native_vm.register_handler::<H>(H::NAME, H::new(&scope)?); }
+        unsafe { self.native_vm.register_handler(H::NAME, std::boxed::Box::new(H::new(&scope)?)); }
         Ok(())
     }
     // /// Adds a module to the test harness.
@@ -134,15 +137,14 @@ impl TestApp {
     //
 
     /// Creates a new random client account that can be used in calls.
-    pub fn new_client_account(&self) -> core::result::Result<AccountID, ()> {
+    pub fn new_client_account(&self) -> ClientResult<AccountID> {
         let mut ctx = self.client_context_for(ROOT_ACCOUNT);
-        let client = create_account(&mut ctx, CreateDefaultAccount)
-            .map_err(|_| ())?;
+        let client = create_account(&mut ctx, CreateDefaultAccount)?;
         Ok(client.0)
     }
 
     /// Creates a new random client account that can be used in calls and wraps it in a context.
-    pub fn new_client_context(&self) -> core::result::Result<Context, ()> {
+    pub fn new_client_context(&self) -> ClientResult<Context> {
         let account_id = self.new_client_account()?;
         Ok(self.client_context_for(account_id))
     }
@@ -158,6 +160,15 @@ impl TestApp {
             }, self);
             ctx
         }
+    }
+
+    /// Adds a mock account handler to the test harness, instantiates it as an account and returns the account ID.
+    pub fn add_mock(&self, ctx: &mut Context, mock: MockHandler) -> ClientResult<AccountID> {
+        let mock_id = self.mock_id.get();
+        self.mock_id.set(mock_id + 1);
+        let handler_id = format!("mock{}", mock_id);
+        self.native_vm.register_handler(&handler_id, std::boxed::Box::new(mock));
+        create_account_raw(ctx, &handler_id, &[])
     }
 
     //
@@ -255,12 +266,41 @@ impl<'a, H: Handler> AccountInstance<'a, H> {
 // }
 //
 
-/// Defines a mock account handler composed of mock account API trait implementations.
-pub struct MockAccount {}
+/// Defines a mock account handler composed of mock handler API trait implementations.
+pub struct MockHandler {
+    mocks: Vec<std::boxed::Box<dyn RawHandler>>,
+}
 
-impl MockAccount {
+impl MockHandler {
+    /// Creates a new mock handler.
+    pub fn new() -> Self {
+        MockHandler {
+            mocks: Vec::new(),
+        }
+    }
+
     /// Adds a mock account API implementation to the mock account handler.
-    fn add_mock_account_api<A: HandlerAPI>(&mut self, mock: A) {
-        todo!()
+    pub fn add_handler<T: RawHandler + ?Sized + 'static>(&mut self, mock: std::boxed::Box<T>) {
+        self.mocks.push(std::boxed::Box::new(MockWrapper::<T>(mock)));
+    }
+}
+
+impl RawHandler for MockHandler {
+    fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
+        for mock in &self.mocks {
+            let res = mock.handle(message_packet, callbacks, allocator);
+            match res {
+                Err(ErrorCode::SystemCode(SystemCode::MessageNotHandled)) => continue,
+                _ => return res
+            }
+        }
+        Err(ErrorCode::SystemCode(SystemCode::MessageNotHandled))
+    }
+}
+
+struct MockWrapper<T: RawHandler + ?Sized>(std::boxed::Box<T>);
+impl <T: RawHandler + ?Sized> RawHandler for MockWrapper<T> {
+    fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
+        self.0.handle(message_packet, callbacks, allocator)
     }
 }

@@ -1,7 +1,9 @@
 #![allow(missing_docs)]
 #[ixc::handler(Bank)]
 pub mod bank {
+    use mockall::automock;
     use ixc::*;
+    use ixc_core::error::unimplemented_ok;
     use ixc_core::handler::ClientFactory;
     use ixc_message_api::code::{ErrorCode};
 
@@ -14,11 +16,13 @@ pub mod bank {
         #[state(prefix = 3)]
         super_admin: Item<AccountID>,
         #[state(prefix = 4)]
-        denom_admins: Map<Str, AccountID>,
+        global_send_hook: Item<AccountID>,
         #[state(prefix = 5)]
+        denom_admins: Map<Str, AccountID>,
+        #[state(prefix = 6)]
         denom_send_hooks: Map<Str, AccountID>,
         #[state(prefix = 6)]
-        global_send_hook: Item<AccountID>
+        denom_burn_hooks: Map<Str, AccountID>,
     }
 
     #[derive(SchemaValue, Clone)]
@@ -37,13 +41,21 @@ pub mod bank {
     }
 
     #[handler_api]
+    #[automock]
     pub trait SendHook {
-        fn on_send(&self, ctx: &mut Context, from: AccountID, to: AccountID, denom: &str, amount: u128) -> Result<()>;
+        fn on_send<'a>(&self, ctx: &mut Context<'a>, from: AccountID, to: AccountID, denom: &str, amount: u128) -> Result<()>;
     }
 
     #[handler_api]
+    #[automock]
+    pub trait BurnHook {
+        fn on_burn<'a>(&self, ctx: &mut Context<'a>, from: AccountID, denom: &str, amount: u128) -> Result<()>;
+    }
+
+    #[handler_api]
+    #[automock]
     pub trait ReceiveHook {
-        fn on_receive(&self, ctx: &mut Context, from: AccountID, denom: &str, amount: u128) -> Result<()>;
+        fn on_receive<'a>(&self, ctx: &mut Context<'a>, from: AccountID, denom: &str, amount: u128) -> Result<()>;
     }
 
     #[derive(SchemaValue)]
@@ -70,8 +82,22 @@ pub mod bank {
 
     impl Bank {
         #[on_create]
-        fn create(&self, ctx: &mut Context, init_denom: &str, init_balance: u128) -> Result<()> {
-            self.balances.add(ctx, (ctx.caller(), init_denom), init_balance)?;
+        pub fn create(&self, ctx: &mut Context) -> Result<()> {
+            self.super_admin.set(ctx, ctx.caller())?;
+            Ok(())
+        }
+
+        #[publish]
+        pub fn create_denom(&self, ctx: &mut Context, denom: &str, admin: AccountID) -> Result<()> {
+            ensure!(self.super_admin.get(ctx)? == ctx.caller(), "not authorized");
+            self.denom_admins.set(ctx, denom, admin)?;
+            Ok(())
+        }
+
+        #[publish]
+        pub fn set_global_send_hook(&self, ctx: &mut Context, hook: AccountID) -> Result<()> {
+            ensure!(self.super_admin.get(ctx)? == ctx.caller(), "not authorized");
+            self.global_send_hook.set(ctx, hook)?;
             Ok(())
         }
     }
@@ -96,15 +122,7 @@ pub mod bank {
                 }
                 let from = ctx.caller();
                 let receive_hook = <dyn ReceiveHook>::new_client(to);
-                match receive_hook.on_receive(ctx, from, coin.denom, coin.amount) {
-                    Ok(_) => {}
-                    Err(e) => {
-                        match e.code {
-                            ErrorCode::SystemCode(ixc_message_api::code::SystemCode::MessageNotHandled) => {}
-                            _ => bail!("receive blocked: {:?}", e),
-                        }
-                    }
-                }
+                unimplemented_ok(receive_hook.on_receive(ctx, from, coin.denom, coin.amount))?;
                 self.balances.safe_sub(ctx, (from, coin.denom), coin.amount)?;
                 self.balances.add(ctx, (to, coin.denom), coin.amount)?;
                 evt.emit(ctx, &EventSend {
@@ -138,20 +156,51 @@ pub mod bank {
 
 #[cfg(test)]
 mod tests {
+    use ixc_core::account_api::ROOT_ACCOUNT;
     use ixc_core::handler::{Client, ClientFactory};
+    use ixc_core::routes::{find_route, Router};
+    use ixc_message_api::code::ErrorCode;
+    use ixc_message_api::handler::{Allocator, HostBackend, RawHandler};
+    use ixc_message_api::packet::MessagePacket;
     use super::bank::*;
     use ixc_testing::*;
 
     #[test]
     fn test() {
+        // initialize the app
         let mut app = TestApp::default();
+        // register the Bank handler
         app.register_handler::<Bank>().unwrap();
+
+        // create a new client context for the root account and initialize bank
+        let mut root = app.client_context_for(ROOT_ACCOUNT);
+        let bank_client = create_account(&mut root, BankCreate {}).unwrap();
+
+        // register a mock global send hook to test that it is called
+        let mut mock_global_send_hook = MockSendHook::new();
+        // expect that the send hook is only called 1x in this test
+        mock_global_send_hook.expect_on_send().times(1).returning(|_, _, _, _, _| Ok(()));
+        let mut mock = MockHandler::new();
+        mock.add_handler::<dyn SendHook>(Box::new(mock_global_send_hook));
+        let mock_id = app.add_mock(&mut root, mock).unwrap();
+        bank_client.set_global_send_hook(&mut root, mock_id).unwrap();
+
+        // alice gets to manage the "foo" denom and mints herself 1000 foo coins
         let mut alice = app.new_client_context().unwrap();
-        let mut bob = app.new_client_context().unwrap();
-        let bank_client = create_account(&mut alice, BankCreate { init_denom: "foo", init_balance: 1000 }).unwrap();
-        let alice_balance = bank_client.get_balance(&alice, alice.account_id(), "foo").unwrap();
+        let alice_id = alice.account_id();
+        bank_client.create_denom(&mut root, "foo", alice_id).unwrap();
+        bank_client.mint(&mut alice, alice_id, "foo", 1000).unwrap();
+
+        // ensure alice has 1000 foo coins
+        let alice_balance = bank_client.get_balance(&alice, alice_id, "foo").unwrap();
         assert_eq!(alice_balance, 1000);
+
+
+        // alice sends 100 foo coins to bob
+        let mut bob = app.new_client_context().unwrap();
         bank_client.send(&mut alice, bob.account_id(), &[Coin { denom: "foo", amount: 100 }]).unwrap();
+
+        // ensure alice has 900 foo coins and bob has 100 foo coins
         let alice_balance = bank_client.get_balance(&alice, alice.account_id(), "foo").unwrap();
         assert_eq!(alice_balance, 900);
         let bob_balance = bank_client.get_balance(&bob, bob.account_id(), "foo").unwrap();

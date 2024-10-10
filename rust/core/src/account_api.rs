@@ -10,20 +10,31 @@ use crate::result::ClientResult;
 
 /// Creates a new account for the specified handler.
 pub fn create_account<'a, I: InitMessage<'a>>(ctx: &mut Context, init: I) -> ClientResult<<<I as InitMessage<'a>>::Handler as ClientFactory>::Client> {
-    let mut packet = create_packet(ctx, ROOT_ACCOUNT, CREATE_SELECTOR)?;
-
     let cdc = I::Codec::default();
     let init_bz = cdc.encode_value(&init, ctx.memory_manager())?;
 
+    let account_id = do_create_account(ctx, I::Handler::NAME, &init_bz)?;
+    Ok(I::Handler::new_client(account_id))
+}
+
+/// Creates a new account for the named handler with opaque initialization data.
+pub fn create_account_raw<'a>(ctx: &mut Context, name: &str, init: &[u8]) -> ClientResult<AccountID> {
+    do_create_account(ctx, name, init)
+}
+
+/// Creates a new account for the named handler with opaque initialization data.
+fn do_create_account<'a>(ctx: &Context, name: &str, init: &[u8]) -> ClientResult<AccountID> {
+    let mut packet = create_packet(ctx, ROOT_ACCOUNT, CREATE_SELECTOR)?;
+
     unsafe {
-        packet.header_mut().in_pointer1.set_slice(I::Handler::NAME.as_bytes());
-        packet.header_mut().in_pointer2.set_slice(init_bz);
+        packet.header_mut().in_pointer1.set_slice(name.as_bytes());
+        packet.header_mut().in_pointer2.set_slice(init);
 
         ctx.host_backend().invoke(&mut packet, ctx.memory_manager())?;
 
         let new_account_id = packet.header().in_pointer1.get_u64();
 
-        Ok(I::Handler::new_client(AccountID::new(new_account_id)))
+        Ok(AccountID::new(new_account_id))
     }
 }
 

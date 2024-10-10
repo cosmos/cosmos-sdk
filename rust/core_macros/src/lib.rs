@@ -341,10 +341,15 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                         let mut ty = pat_type.ty.clone();
                         match ty.as_mut() {
                             Type::Reference(tyref) => {
-                                if tyref.elem == parse_quote!(Context) {
-                                    context_name = Some(ident.ident.clone());
-                                    new_inputs.push(field.clone());
-                                    continue;
+                                match tyref.elem.borrow() {
+                                    Type::Path(path) => {
+                                        if path.path.segments.first().unwrap().ident == "Context" {
+                                            context_name = Some(ident.ident.clone());
+                                            new_inputs.push(field.clone());
+                                            continue;
+                                        }
+                                    }
+                                    _ => {}
                                 }
 
                                 have_lifetimes = true;

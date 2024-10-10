@@ -19,9 +19,9 @@ impl NativeVM {
         })))
     }
 
-    pub fn register_handler<H: RawHandler + 'static>(&self, name: &str, handler: H) {
+    pub fn register_handler(&self, name: &str, handler: Box<dyn RawHandler>) {
         let mut vm = self.0.write().unwrap();
-        vm.handlers.insert(name.to_string(), Box::new(handler));
+        vm.handlers.insert(name.to_string(), handler);
     }
 }
 

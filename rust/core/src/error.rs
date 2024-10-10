@@ -7,6 +7,7 @@ use core::fmt::{Debug, Display, Formatter};
 use ixc_message_api::code::{ErrorCode, SystemCode};
 use ixc_schema::decoder::DecodeError;
 use ixc_schema::encoder::EncodeError;
+use crate::result::ClientResult;
 
 /// The standard error type returned by handlers.
 #[derive(Clone)]
@@ -206,5 +207,18 @@ pub fn convert_client_error<E: Into<u8> + TryFrom<u8> + Debug, F: Into<u8> + Try
         code: convert_error_code(err.code),
         #[cfg(feature = "std")]
         message: err.message,
+    }
+}
+
+/// Returns a default result if the error is `MessageNotHandled`.
+pub fn unimplemented_ok<R: Default, E: Into<u8> + TryFrom<u8> + Debug>(res: ClientResult<R, E>) -> ClientResult<R, E> {
+    match res {
+        Ok(r) => { Ok(r) }
+        Err(e) => {
+            match e.code {
+                ErrorCode::SystemCode(SystemCode::MessageNotHandled) => { Ok(Default::default()) }
+                _ => Err(e)
+            }
+        }
     }
 }

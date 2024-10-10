@@ -2,6 +2,8 @@ package rest
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 	"strings"
@@ -15,6 +17,7 @@ import (
 
 const (
 	ContentTypeJSON = "application/json"
+	MaxBodySize     = 1 << 20 // 1 MB
 )
 
 func NewDefaultHandler[T transaction.Tx](appManager *appmanager.AppManager[T]) http.Handler {
@@ -44,11 +47,17 @@ func (h *DefaultHandler[T]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg := reflect.New(requestType.Elem()).Interface().(gogoproto.Message)
+	msg, ok := reflect.New(requestType.Elem()).Interface().(gogoproto.Message)
+	if !ok {
+		http.Error(w, "Failed to create message instance", http.StatusInternalServerError)
+		return
+	}
 
-	err := jsonpb.Unmarshal(r.Body, msg)
+	defer r.Body.Close()
+	limitedReader := io.LimitReader(r.Body, MaxBodySize)
+	err := jsonpb.Unmarshal(limitedReader, msg)
 	if err != nil {
-		http.Error(w, "Error parsing body", http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("Error parsing body: %v", err), http.StatusBadRequest)
 		return
 	}
 
@@ -58,5 +67,8 @@ func (h *DefaultHandler[T]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(query)
+	w.Header().Set("Content-Type", ContentTypeJSON)
+	if err := json.NewEncoder(w).Encode(query); err != nil {
+		http.Error(w, fmt.Sprintf("Error encoding response: %v", err), http.StatusInternalServerError)
+	}
 }

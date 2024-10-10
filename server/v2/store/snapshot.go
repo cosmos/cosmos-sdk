@@ -39,8 +39,7 @@ func (s *Server[T]) ExportSnapshotCmd() *cobra.Command {
 			}
 
 			logger := log.NewLogger(cmd.OutOrStdout())
-			// app := appCreator(logger, db, nil, viper)
-			rootStore, _, err := createRootStore(cmd, v, logger)
+			rootStore, _, err := createRootStore(v, logger)
 			if err != nil {
 				return err
 			}

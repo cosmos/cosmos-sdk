@@ -2,7 +2,6 @@ package rest
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"reflect"
 	"strings"
@@ -50,7 +49,6 @@ func (h *DefaultHandler[T]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := jsonpb.Unmarshal(r.Body, msg)
 	if err != nil {
 		http.Error(w, "Error parsing body", http.StatusBadRequest)
-		fmt.Fprintf(w, "Error parsing body: %v\n", err)
 		return
 	}
 

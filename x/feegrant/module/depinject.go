@@ -31,15 +31,16 @@ func init() {
 type FeegrantInputs struct {
 	depinject.In
 
-	Environment  appmodule.Environment
-	Cdc          codec.Codec
-	AddressCodec address.Codec
-	BankKeeper   feegrant.BankKeeper
-	Registry     cdctypes.InterfaceRegistry
+	Environment    appmodule.Environment
+	Cdc            codec.Codec
+	AddressCodec   address.Codec
+	BankKeeper     feegrant.BankKeeper
+	Registry       cdctypes.InterfaceRegistry
+	AccountsKeeper feegrant.AccountsKeeper
 }
 
 func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
-	k := keeper.NewKeeper(in.Environment, in.Cdc, in.AddressCodec)
+	k := keeper.NewKeeper(in.Environment, in.Cdc, in.AddressCodec, in.AccountsKeeper)
 	m := NewAppModule(in.Cdc, k, in.Registry)
 	return k, m
 }

@@ -61,6 +61,7 @@ const (
 
 var _ ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
 
+// Server is the top-level server component which contains all other server components.
 type Server[T transaction.Tx] struct {
 	logger     log.Logger
 	components []ServerComponent[T]
@@ -89,7 +90,6 @@ func (s *Server[T]) Start(ctx context.Context) error {
 
 	g, ctx := errgroup.WithContext(ctx)
 	for _, mod := range s.components {
-		mod := mod
 		g.Go(func() error {
 			return mod.Start(ctx)
 		})
@@ -110,7 +110,6 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 
 	g, ctx := errgroup.WithContext(ctx)
 	for _, mod := range s.components {
-		mod := mod
 		g.Go(func() error {
 			return mod.Stop(ctx)
 		})
@@ -198,7 +197,6 @@ func (s *Server[T]) Init(appI AppI[T], cfg map[string]any, logger log.Logger) er
 
 	var components []ServerComponent[T]
 	for _, mod := range s.components {
-		mod := mod
 		if err := mod.Init(appI, cfg, logger); err != nil {
 			return err
 		}

@@ -55,6 +55,7 @@ func NewIntegrationApp(
 	modules map[string]appmodule.AppModule,
 	msgRouter *baseapp.MsgServiceRouter,
 	grpcRouter *baseapp.GRPCQueryRouter,
+	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
 	db := coretesting.NewMemDB()
 
@@ -63,7 +64,7 @@ func NewIntegrationApp(
 	moduleManager.RegisterInterfaces(interfaceRegistry)
 
 	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), addressCodec, validatorCodec, authtx.DefaultSignModes)
-	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
+	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), append(baseAppOptions, baseapp.SetChainID(appName))...)
 	bApp.MountKVStores(keys)
 
 	bApp.SetInitChainer(func(_ sdk.Context, _ *cmtabcitypes.InitChainRequest) (*cmtabcitypes.InitChainResponse, error) {

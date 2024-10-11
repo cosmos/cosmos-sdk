@@ -33,7 +33,7 @@ const (
 	SCTypeIavlV2 SCType = "iavl-v2"
 )
 
-// app.toml config options
+// Options are the options for creating a root store.
 type Options struct {
 	SSType          SSType               `mapstructure:"ss-type" toml:"ss-type" comment:"SState storage database type. Currently we support: \"sqlite\", \"pebble\" and \"rocksdb\""`
 	SCType          SCType               `mapstructure:"sc-type" toml:"sc-type" comment:"State commitment database type. Currently we support: \"iavl\" and \"iavl-v2\""`
@@ -109,6 +109,8 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 			return nil, err
 		}
 		ssDb, err = rocksdb.New(dir)
+	default:
+		return nil, fmt.Errorf("unknown storage type: %s", opts.Options.SSType)
 	}
 	if err != nil {
 		return nil, err
@@ -168,12 +170,12 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		}
 		oldTrees[string(key)] = tree
 	}
+
 	sc, err = commitment.NewCommitStore(trees, oldTrees, opts.SCRawDB, opts.Logger)
 	if err != nil {
 		return nil, err
 	}
 
 	pm := pruning.NewManager(sc, ss, storeOpts.SCPruningOption, storeOpts.SSPruningOption)
-
 	return New(opts.Logger, ss, sc, pm, nil, nil)
 }

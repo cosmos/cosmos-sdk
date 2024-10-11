@@ -2,14 +2,14 @@ package schema
 
 import "fmt"
 
-// ValidateObjectKey validates that the value conforms to the set of fields as a Key in an ObjectUpdate.
-// See ObjectUpdate.Key for documentation on the requirements of such keys.
+// ValidateObjectKey validates that the value conforms to the set of fields as a Key in an StateObjectUpdate.
+// See StateObjectUpdate.Key for documentation on the requirements of such keys.
 func ValidateObjectKey(keyFields []Field, value interface{}, typeSet TypeSet) error {
 	return validateFieldsValue(keyFields, value, typeSet)
 }
 
-// ValidateObjectValue validates that the value conforms to the set of fields as a Value in an ObjectUpdate.
-// See ObjectUpdate.Value for documentation on the requirements of such values.
+// ValidateObjectValue validates that the value conforms to the set of fields as a Value in an StateObjectUpdate.
+// See StateObjectUpdate.Value for documentation on the requirements of such values.
 func ValidateObjectValue(valueFields []Field, value interface{}, typeSet TypeSet) error {
 	valueUpdates, ok := value.(ValueUpdates)
 	if !ok {

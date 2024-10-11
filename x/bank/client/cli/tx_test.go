@@ -148,7 +148,6 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 

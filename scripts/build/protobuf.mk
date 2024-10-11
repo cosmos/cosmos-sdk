@@ -1,4 +1,4 @@
-protoVer=0.15.0
+protoVer=0.15.1
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 

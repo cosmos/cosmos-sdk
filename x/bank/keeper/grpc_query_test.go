@@ -21,7 +21,7 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 	ctx, queryClient := suite.ctx, suite.queryClient
 	_, _, addr := testdata.KeyTestPubAddr()
 
-	addrStr, err := suite.authKeeper.AddressCodec().BytesToString(addr)
+	addrStr, err := suite.addrCdc.BytesToString(addr)
 	suite.Require().NoError(err)
 
 	origCoins := sdk.NewCoins(newBarCoin(30))
@@ -83,8 +83,6 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		suite.Run(tc.name, func() {
 			res, err := queryClient.Balance(gocontext.Background(), tc.req)
 			if tc.expectErrMsg == "" {
@@ -107,7 +105,7 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 	_, err := queryClient.AllBalances(gocontext.Background(), &types.QueryAllBalancesRequest{})
 	suite.Require().Error(err)
 
-	addrStr, err := suite.authKeeper.AddressCodec().BytesToString(addr)
+	addrStr, err := suite.addrCdc.BytesToString(addr)
 	suite.Require().NoError(err)
 
 	pageReq := &query.PageRequest{
@@ -180,7 +178,7 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 
 func (suite *KeeperTestSuite) TestSpendableBalances() {
 	_, _, addr := testdata.KeyTestPubAddr()
-	addrStr, err := suite.authKeeper.AddressCodec().BytesToString(addr)
+	addrStr, err := suite.addrCdc.BytesToString(addr)
 	suite.Require().NoError(err)
 
 	ctx := sdk.UnwrapSDKContext(suite.ctx)
@@ -243,7 +241,7 @@ func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
 	_, err := queryClient.SpendableBalanceByDenom(ctx, &types.QuerySpendableBalanceByDenomRequest{})
 	suite.Require().Error(err)
 
-	addrStr, err := suite.authKeeper.AddressCodec().BytesToString(addr)
+	addrStr, err := suite.addrCdc.BytesToString(addr)
 	suite.Require().NoError(err)
 
 	req := types.NewQuerySpendableBalanceByDenomRequest(addrStr, fooDenom)

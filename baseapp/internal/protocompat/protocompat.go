@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	"github.com/golang/protobuf/proto" // nolint: staticcheck // needed because gogoproto.Merge does not work consistently. See NOTE: comments.
+	"github.com/golang/protobuf/proto" //nolint: staticcheck // needed because gogoproto.Merge does not work consistently. See NOTE: comments.
 	"google.golang.org/grpc"
 	proto2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"

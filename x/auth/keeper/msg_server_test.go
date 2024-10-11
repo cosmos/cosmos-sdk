@@ -120,7 +120,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			_, err := s.msgServer.UpdateParams(s.ctx, tc.req)
 			if tc.expectErr {
@@ -190,7 +189,6 @@ func (s *KeeperTestSuite) TestNonAtomicExec() {
 		}).AnyTimes()
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			_, err := s.msgServer.NonAtomicExec(s.ctx, tc.req)
 			if tc.expectErr {

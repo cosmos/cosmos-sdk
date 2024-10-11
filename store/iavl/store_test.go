@@ -478,15 +478,15 @@ func TestIAVLStoreQuery(t *testing.T) {
 	v3 := []byte("val3")
 
 	ksub := []byte("key")
-	KVs0 := kv.Pairs{}
-	KVs1 := kv.Pairs{
-		Pairs: []kv.Pair{
+	KVs0 := kv.Pairs{} //nolint:staticcheck // We are in store v1.
+	KVs1 := kv.Pairs{  //nolint:staticcheck // We are in store v1.
+		Pairs: []kv.Pair{ //nolint:staticcheck // We are in store v1.
 			{Key: k1, Value: v1},
 			{Key: k2, Value: v2},
 		},
 	}
-	KVs2 := kv.Pairs{
-		Pairs: []kv.Pair{
+	KVs2 := kv.Pairs{ //nolint:staticcheck // We are in store v1.
+		Pairs: []kv.Pair{ //nolint:staticcheck // We are in store v1.
 			{Key: k1, Value: v3},
 			{Key: k2, Value: v2},
 		},
@@ -639,8 +639,6 @@ func TestSetInitialVersion(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			db := coretesting.NewMemDB()
 			store := tc.storeFn(db)

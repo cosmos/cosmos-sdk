@@ -90,7 +90,6 @@ func (s *decimalInternalTestSuite) TestDecMarshalJSON() {
 		{"12340Int", LegacyNewDec(12340), "\"12340.000000000000000000\"", false},
 	}
 	for _, tt := range tests {
-		tt := tt
 		s.T().Run(tt.name, func(t *testing.T) {
 			got, err := tt.d.MarshalJSON()
 			if (err != nil) != tt.wantErr {

@@ -13,7 +13,8 @@ import (
 // BeginBlocker check for infraction evidence or downtime of validators
 // on every begin block
 func BeginBlocker(ctx context.Context, k keeper.Keeper, cometService comet.Service) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
+	start := telemetry.Now()
+	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker)
 
 	// Retrieve CometBFT info, then iterate through all validator votes
 	// from the last commit. For each vote, handle the validator's signature, potentially

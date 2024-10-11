@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-func NewInt64Key[T ~int64]() KeyCodec[T] { return int64Key[T]{} }
+func NewInt64Key[T ~int64]() NameableKeyCodec[T] { return int64Key[T]{} }
 
 type int64Key[T ~int64] struct{}
 
@@ -64,7 +64,11 @@ func (i int64Key[T]) SizeNonTerminal(_ T) int {
 	return 8
 }
 
-func NewInt32Key[T ~int32]() KeyCodec[T] {
+func (i int64Key[T]) WithName(name string) KeyCodec[T] {
+	return NamedKeyCodec[T]{KeyCodec: i, Name: name}
+}
+
+func NewInt32Key[T ~int32]() NameableKeyCodec[T] {
 	return int32Key[T]{}
 }
 
@@ -120,4 +124,8 @@ func (i int32Key[T]) DecodeNonTerminal(buffer []byte) (int, T, error) {
 
 func (i int32Key[T]) SizeNonTerminal(_ T) int {
 	return 4
+}
+
+func (i int32Key[T]) WithName(name string) KeyCodec[T] {
+	return NamedKeyCodec[T]{KeyCodec: i, Name: name}
 }

@@ -58,7 +58,12 @@ func (e enumValue) String() string {
 func (e *enumValue) Set(s string) error {
 	valDesc, ok := e.valMap[s]
 	if !ok {
-		return fmt.Errorf("%s is not a valid value for enum %s", s, e.enum.FullName())
+		var validValues []string
+		for k := range e.valMap {
+			validValues = append(validValues, k)
+		}
+
+		return fmt.Errorf("%s is not a valid value for enum %s. Valid values are: %s", s, e.enum.FullName(), strings.Join(validValues, ", "))
 	}
 	e.value = valDesc.Number()
 	return nil

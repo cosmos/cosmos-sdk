@@ -36,9 +36,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* [#21790](https://github.com/cosmos/cosmos-sdk/pull/21790) Add `add-batch-upgrade` command.
+* [#21972](https://github.com/cosmos/cosmos-sdk/pull/21972) Add `prepare-upgrade` command
+
 ### Improvements
 
+* [#21891](https://github.com/cosmos/cosmos-sdk/pull/21891) create `current` symlink as relative
 * [#21462](https://github.com/cosmos/cosmos-sdk/pull/21462) Pass `stdin` to binary.
+
+### Features
+
+* [#21932](https://github.com/cosmos/cosmos-sdk/pull/21932) Add `cosmovisor show-upgrade-info` command to display the upgrade-info.json into stdout.
 
 ## v1.6.0 - 2024-08-12
 
@@ -46,10 +56,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Bump `cosmossdk.io/x/upgrade` to v0.1.4 (including go-getter vulnerability fix)
 * [#19995](https://github.com/cosmos/cosmos-sdk/pull/19995):
-  * `init command` writes the configuration to the config file only at the default path `DAEMON_HOME/cosmovisor/config.toml`.
-  * Provide `--cosmovisor-config` flag with value as args to provide the path to the configuration file in the `run` command. `run --cosmovisor-config <path> (other cmds with flags) ...`.
-  * Add `--cosmovisor-config` flag to provide `config.toml` path to the configuration file in root command used by `add-upgrade` and `config` subcommands.
-  * `config command` now displays the configuration from the config file if it is provided. If the config file is not provided, it will display the configuration from the environment variables.
+    * `init command` writes the configuration to the config file only at the default path `DAEMON_HOME/cosmovisor/config.toml`.
+    * Provide `--cosmovisor-config` flag with value as args to provide the path to the configuration file in the `run` command. `run --cosmovisor-config <path> (other cmds with flags) ...`.
+    * Add `--cosmovisor-config` flag to provide `config.toml` path to the configuration file in root command used by `add-upgrade` and `config` subcommands.
+    * `config command` now displays the configuration from the config file if it is provided. If the config file is not provided, it will display the configuration from the environment variables.
 
 ## Bug Fixes
 

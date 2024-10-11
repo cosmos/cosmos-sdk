@@ -88,13 +88,11 @@ func TestKeeper(t *testing.T) {
 
 	// Set params
 	for i, kv := range kvs {
-		kv := kv
 		require.NotPanics(t, func() { space.Set(ctx, []byte(kv.key), kv.param) }, "space.Set panics, tc #%d", i)
 	}
 
 	// Test space.Get
 	for i, kv := range kvs {
-		i, kv := i, kv
 		var param int64
 		require.NotPanics(t, func() { space.Get(ctx, []byte(kv.key), &param) }, "space.Get panics, tc #%d", i)
 		require.Equal(t, kv.param, param, "stored param not equal, tc #%d", i)
@@ -121,20 +119,17 @@ func TestKeeper(t *testing.T) {
 
 	// Test invalid space.Get
 	for i, kv := range kvs {
-		kv := kv
 		var param bool
 		require.Panics(t, func() { space.Get(ctx, []byte(kv.key), &param) }, "invalid space.Get not panics, tc #%d", i)
 	}
 
 	// Test invalid space.Set
 	for i, kv := range kvs {
-		kv := kv
 		require.Panics(t, func() { space.Set(ctx, []byte(kv.key), true) }, "invalid space.Set not panics, tc #%d", i)
 	}
 
 	// Test GetSubspace
 	for i, kv := range kvs {
-		i, kv := i, kv
 		var gparam, param int64
 		gspace, ok := keeper.GetSubspace("test")
 		require.True(t, ok, "cannot retrieve subspace, tc #%d", i)
@@ -219,7 +214,6 @@ func TestSubspace(t *testing.T) {
 
 	// Test space.Set, space.Modified
 	for i, kv := range kvs {
-		i, kv := i, kv
 		require.False(t, space.Modified(ctx, []byte(kv.key)), "space.Modified returns true before setting, tc #%d", i)
 		require.NotPanics(t, func() { space.Set(ctx, []byte(kv.key), kv.param) }, "space.Set panics, tc #%d", i)
 		require.True(t, space.Modified(ctx, []byte(kv.key)), "space.Modified returns false after setting, tc #%d", i)
@@ -227,7 +221,6 @@ func TestSubspace(t *testing.T) {
 
 	// Test space.Get, space.GetIfExists
 	for i, kv := range kvs {
-		i, kv := i, kv
 		require.NotPanics(t, func() { space.GetIfExists(ctx, []byte("invalid"), kv.ptr) }, "space.GetIfExists panics when no value exists, tc #%d", i)
 		require.Equal(t, kv.zero, indirect(kv.ptr), "space.GetIfExists unmarshalls when no value exists, tc #%d", i)
 		require.Panics(t, func() { space.Get(ctx, []byte("invalid"), kv.ptr) }, "invalid space.Get not panics when no value exists, tc #%d", i)

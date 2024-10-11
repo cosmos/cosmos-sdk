@@ -9,14 +9,14 @@ import (
 // objectIndexer is a helper struct that generates SQL for a given object type.
 type objectIndexer struct {
 	moduleName  string
-	typ         schema.ObjectType
+	typ         schema.StateObjectType
 	valueFields map[string]schema.Field
 	allFields   map[string]schema.Field
 	options     options
 }
 
 // newObjectIndexer creates a new objectIndexer for the given object type.
-func newObjectIndexer(moduleName string, typ schema.ObjectType, options options) *objectIndexer {
+func newObjectIndexer(moduleName string, typ schema.StateObjectType, options options) *objectIndexer {
 	allFields := make(map[string]schema.Field)
 	valueFields := make(map[string]schema.Field)
 

@@ -14,7 +14,7 @@ import (
 )
 
 func TestStatusCommand(t *testing.T) {
-	t.Skip() // https://github.com/cosmos/cosmos-sdk/issues/17446
+	t.Skip() // Rewrite as system test
 
 	cfg, err := network.DefaultConfigWithAppConfig(depinject.Configs() /* TODO, test skipped anyway */)
 	require.NoError(t, err)

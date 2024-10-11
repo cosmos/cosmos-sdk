@@ -2,6 +2,9 @@ package cometbft
 
 import (
 	cmtcfg "github.com/cometbft/cometbft/config"
+
+	"cosmossdk.io/schema/indexer"
+	"cosmossdk.io/server/v2/cometbft/mempool"
 )
 
 // Config is the configuration for the CometBFT application
@@ -20,6 +23,11 @@ func DefaultAppTomlConfig() *AppTomlConfig {
 		Transport:       "socket",
 		Trace:           false,
 		Standalone:      false,
+		Mempool:         mempool.DefaultConfig(),
+		Indexer: indexer.IndexingConfig{
+			Target:            make(map[string]indexer.Config),
+			ChannelBufferSize: 1024,
+		},
 	}
 }
 
@@ -32,6 +40,10 @@ type AppTomlConfig struct {
 	Transport       string   `mapstructure:"transport" toml:"transport" comment:"transport defines the CometBFT RPC server transport protocol: socket, grpc"`
 	Trace           bool     `mapstructure:"trace" toml:"trace" comment:"trace enables the CometBFT RPC server to output trace information about its internal operations."`
 	Standalone      bool     `mapstructure:"standalone" toml:"standalone" comment:"standalone starts the application without the CometBFT node. The node should be started separately."`
+
+	// Sub configs
+	Mempool mempool.Config         `mapstructure:"mempool" toml:"mempool" comment:"mempool defines the configuration for the SDK built-in app-side mempool implementations."`
+	Indexer indexer.IndexingConfig `mapstructure:"indexer" toml:"indexer" comment:"indexer defines the configuration for the SDK built-in indexer implementation."`
 }
 
 // CfgOption is a function that allows to overwrite the default server configuration.

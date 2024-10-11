@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/schema"
 )
 
 // Triple defines a multipart key composed of three keys.
@@ -64,14 +65,27 @@ func TripleKeyCodec[K1, K2, K3 any](keyCodec1 codec.KeyCodec[K1], keyCodec2 code
 	}
 }
 
+func NamedTripleKeyCodec[K1, K2, K3 any](key1Name string, keyCodec1 codec.KeyCodec[K1], key2Name string, keyCodec2 codec.KeyCodec[K2], key3Name string, keyCodec3 codec.KeyCodec[K3]) codec.KeyCodec[Triple[K1, K2, K3]] {
+	return tripleKeyCodec[K1, K2, K3]{
+		key1Name:  key1Name,
+		key2Name:  key2Name,
+		key3Name:  key3Name,
+		keyCodec1: keyCodec1,
+		keyCodec2: keyCodec2,
+		keyCodec3: keyCodec3,
+	}
+}
+
 type tripleKeyCodec[K1, K2, K3 any] struct {
-	keyCodec1 codec.KeyCodec[K1]
-	keyCodec2 codec.KeyCodec[K2]
-	keyCodec3 codec.KeyCodec[K3]
+	key1Name, key2Name, key3Name string
+	keyCodec1                    codec.KeyCodec[K1]
+	keyCodec2                    codec.KeyCodec[K2]
+	keyCodec3                    codec.KeyCodec[K3]
 }
 
 type jsonTripleKey [3]json.RawMessage
 
+// EncodeJSON convert triple keys to json
 func (t tripleKeyCodec[K1, K2, K3]) EncodeJSON(value Triple[K1, K2, K3]) ([]byte, error) {
 	json1, err := t.keyCodec1.EncodeJSON(*value.k1)
 	if err != nil {
@@ -91,6 +105,7 @@ func (t tripleKeyCodec[K1, K2, K3]) EncodeJSON(value Triple[K1, K2, K3]) ([]byte
 	return json.Marshal(jsonTripleKey{json1, json2, json3})
 }
 
+// DecodeJSON convert json to triple keys
 func (t tripleKeyCodec[K1, K2, K3]) DecodeJSON(b []byte) (Triple[K1, K2, K3], error) {
 	var jsonKey jsonTripleKey
 	err := json.Unmarshal(b, &jsonKey)
@@ -116,6 +131,7 @@ func (t tripleKeyCodec[K1, K2, K3]) DecodeJSON(b []byte) (Triple[K1, K2, K3], er
 	return Join3(key1, key2, key3), nil
 }
 
+// Stringify convert triple keys to string
 func (t tripleKeyCodec[K1, K2, K3]) Stringify(key Triple[K1, K2, K3]) string {
 	b := new(strings.Builder)
 	b.WriteByte('(')
@@ -271,6 +287,31 @@ func (t tripleKeyCodec[K1, K2, K3]) SizeNonTerminal(key Triple[K1, K2, K3]) int 
 		size += t.keyCodec3.SizeNonTerminal(*key.k3)
 	}
 	return size
+}
+
+func (t tripleKeyCodec[K1, K2, K3]) Name() string {
+	return fmt.Sprintf("%s,%s,%s", t.key1Name, t.key2Name, t.key3Name)
+}
+
+func (t tripleKeyCodec[K1, K2, K3]) SchemaCodec() (codec.SchemaCodec[Triple[K1, K2, K3]], error) {
+	field1, err := getNamedKeyField(t.keyCodec1, t.key1Name)
+	if err != nil {
+		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, fmt.Errorf("error getting key1 field: %w", err)
+	}
+
+	field2, err := getNamedKeyField(t.keyCodec2, t.key2Name)
+	if err != nil {
+		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, fmt.Errorf("error getting key2 field: %w", err)
+	}
+
+	field3, err := getNamedKeyField(t.keyCodec3, t.key3Name)
+	if err != nil {
+		return codec.SchemaCodec[Triple[K1, K2, K3]]{}, fmt.Errorf("error getting key3 field: %w", err)
+	}
+
+	return codec.SchemaCodec[Triple[K1, K2, K3]]{
+		Fields: []schema.Field{field1, field2, field3},
+	}, nil
 }
 
 // NewPrefixUntilTripleRange defines a collection query which ranges until the provided Pair prefix.

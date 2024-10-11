@@ -16,8 +16,9 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/registry"
-	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
@@ -25,6 +26,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
+	"cosmossdk.io/store/v2/root"
 )
 
 var (
@@ -39,19 +41,19 @@ type appModule[T transaction.Tx] struct {
 func (m appModule[T]) IsOnePerModuleType() {}
 func (m appModule[T]) IsAppModule()        {}
 
-func (m appModule[T]) RegisterServices(registar grpc.ServiceRegistrar) error {
+func (m appModule[T]) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	autoCliQueryService, err := services.NewAutoCLIQueryService(m.app.moduleManager.modules)
 	if err != nil {
 		return err
 	}
 
-	autocliv1.RegisterQueryServer(registar, autoCliQueryService)
+	autocliv1.RegisterQueryServer(registrar, autoCliQueryService)
 
 	reflectionSvc, err := services.NewReflectionService()
 	if err != nil {
 		return err
 	}
-	reflectionv1.RegisterReflectionServiceServer(registar, reflectionSvc)
+	reflectionv1.RegisterReflectionServiceServer(registrar, reflectionSvc)
 
 	return nil
 }
@@ -94,9 +96,9 @@ func init() {
 	appconfig.Register(&runtimev2.Module{},
 		appconfig.Provide(
 			ProvideAppBuilder[transaction.Tx],
-			ProvideEnvironment[transaction.Tx],
 			ProvideModuleManager[transaction.Tx],
-			ProvideCometService,
+			ProvideEnvironment,
+			ProvideKVService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -105,6 +107,7 @@ func init() {
 func ProvideAppBuilder[T transaction.Tx](
 	interfaceRegistrar registry.InterfaceRegistrar,
 	amino registry.AminoRegistrar,
+	storeBuilder root.Builder,
 ) (
 	*AppBuilder[T],
 	*stf.MsgRouterBuilder,
@@ -124,15 +127,14 @@ func ProvideAppBuilder[T transaction.Tx](
 
 	msgRouterBuilder := stf.NewMsgRouterBuilder()
 	app := &App[T]{
-		storeKeys:               nil,
-		interfaceRegistrar:      interfaceRegistrar,
-		amino:                   amino,
-		msgRouterBuilder:        msgRouterBuilder,
-		queryRouterBuilder:      stf.NewMsgRouterBuilder(), // TODO dedicated query router
-		GRPCMethodsToMessageMap: map[string]func() proto.Message{},
-		storeLoader:             DefaultStoreLoader,
+		interfaceRegistrar: interfaceRegistrar,
+		amino:              amino,
+		msgRouterBuilder:   msgRouterBuilder,
+		queryRouterBuilder: stf.NewMsgRouterBuilder(), // TODO dedicated query router
+		QueryHandlers:      map[string]appmodulev2.Handler{},
+		storeLoader:        DefaultStoreLoader,
 	}
-	appBuilder := &AppBuilder[T]{app: app}
+	appBuilder := &AppBuilder[T]{app: app, storeBuilder: storeBuilder}
 
 	return appBuilder, msgRouterBuilder, appModule[T]{app}, protoFiles, protoTypes
 }
@@ -146,7 +148,7 @@ type AppInputs struct {
 	InterfaceRegistrar registry.InterfaceRegistrar
 	LegacyAmino        registry.AminoRegistrar
 	Logger             log.Logger
-	DynamicConfig      server.DynamicConfig `optional:"true"` // can be nil in client wiring
+	StoreBuilder       root.Builder
 }
 
 func SetupAppBuilder(inputs AppInputs) {
@@ -156,10 +158,8 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager = inputs.ModuleManager
 	app.moduleManager.RegisterInterfaces(inputs.InterfaceRegistrar)
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
-
-	if inputs.DynamicConfig != nil {
-		inputs.AppBuilder.config = inputs.DynamicConfig
-	}
+	// STF requires some state to run
+	inputs.StoreBuilder.RegisterKey("stf")
 }
 
 func ProvideModuleManager[T transaction.Tx](
@@ -170,58 +170,26 @@ func ProvideModuleManager[T transaction.Tx](
 	return NewModuleManager[T](logger, config, modules)
 }
 
-// ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
-func ProvideEnvironment[T transaction.Tx](
-	logger log.Logger,
+func ProvideKVService(
 	config *runtimev2.Module,
 	key depinject.ModuleKey,
-	appBuilder *AppBuilder[T],
-) (
-	appmodulev2.Environment,
-	store.KVStoreService,
-	store.MemoryStoreService,
-) {
-	var (
-		kvService    store.KVStoreService     = failingStoreService{}
-		memKvService store.MemoryStoreService = failingStoreService{}
-	)
-
+	kvFactory store.KVStoreServiceFactory,
+	storeBuilder root.Builder,
+) (store.KVStoreService, store.MemoryStoreService) {
 	// skips modules that have no store
-	if !slices.Contains(config.SkipStoreKeys, key.Name()) {
-		var kvStoreKey string
-		storeKeyOverride := storeKeyOverride(config, key.Name())
-		if storeKeyOverride != nil {
-			kvStoreKey = storeKeyOverride.KvStoreKey
-		} else {
-			kvStoreKey = key.Name()
-		}
-
-		registerStoreKey(appBuilder, kvStoreKey)
-		kvService = stf.NewKVStoreService([]byte(kvStoreKey))
-
-		memStoreKey := fmt.Sprintf("memory:%s", key.Name())
-		registerStoreKey(appBuilder, memStoreKey)
-		memKvService = stf.NewMemoryStoreService([]byte(memStoreKey))
+	if slices.Contains(config.SkipStoreKeys, key.Name()) {
+		return &failingStoreService{}, &failingStoreService{}
+	}
+	var kvStoreKey string
+	override := storeKeyOverride(config, key.Name())
+	if override != nil {
+		kvStoreKey = override.KvStoreKey
+	} else {
+		kvStoreKey = key.Name()
 	}
 
-	env := appmodulev2.Environment{
-		Logger:             logger,
-		BranchService:      stf.BranchService{},
-		EventService:       stf.NewEventService(),
-		GasService:         stf.NewGasMeterService(),
-		HeaderService:      stf.HeaderService{},
-		QueryRouterService: stf.NewQueryRouterService(),
-		MsgRouterService:   stf.NewMsgRouterService([]byte(key.Name())),
-		TransactionService: services.NewContextAwareTransactionService(),
-		KVStoreService:     kvService,
-		MemStoreService:    memKvService,
-	}
-
-	return env, kvService, memKvService
-}
-
-func registerStoreKey[T transaction.Tx](wrapper *AppBuilder[T], key string) {
-	wrapper.app.storeKeys = append(wrapper.app.storeKeys, key)
+	storeBuilder.RegisterKey(kvStoreKey)
+	return kvFactory([]byte(kvStoreKey)), stf.NewMemoryStoreService([]byte(fmt.Sprintf("memory:%s", kvStoreKey)))
 }
 
 func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.StoreKeyConfig {
@@ -230,10 +198,60 @@ func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.St
 			return cfg
 		}
 	}
-
 	return nil
 }
 
-func ProvideCometService() comet.Service {
-	return &services.ContextAwareCometInfoService{}
+// ProvideEnvironment provides the environment for keeper modules, while maintaining backward compatibility and provide services directly as well.
+func ProvideEnvironment(
+	logger log.Logger,
+	key depinject.ModuleKey,
+	kvService store.KVStoreService,
+	memKvService store.MemoryStoreService,
+	headerService header.Service,
+	eventService event.Service,
+) appmodulev2.Environment {
+	return appmodulev2.Environment{
+		Logger:             logger,
+		BranchService:      stf.BranchService{},
+		EventService:       eventService,
+		GasService:         stf.NewGasMeterService(),
+		HeaderService:      headerService,
+		QueryRouterService: stf.NewQueryRouterService(),
+		MsgRouterService:   stf.NewMsgRouterService([]byte(key.Name())),
+		TransactionService: services.NewContextAwareTransactionService(),
+		KVStoreService:     kvService,
+		MemStoreService:    memKvService,
+	}
+}
+
+// DefaultServiceBindings provides default services for the following service interfaces:
+// - store.KVStoreServiceFactory
+// - header.Service
+// - comet.Service
+// - event.Service
+// - store/v2/root.Builder
+//
+// They are all required.  For most use cases these default services bindings should be sufficient.
+// Power users (or tests) may wish to provide their own services bindings, in which case they must
+// supply implementations for each of the above interfaces.
+func DefaultServiceBindings() depinject.Config {
+	var (
+		kvServiceFactory store.KVStoreServiceFactory = func(actor []byte) store.KVStoreService {
+			return services.NewGenesisKVService(
+				actor,
+				stf.NewKVStoreService(actor),
+			)
+		}
+		cometService  comet.Service = &services.ContextAwareCometInfoService{}
+		headerService               = services.NewGenesisHeaderService(stf.HeaderService{})
+		eventService                = services.NewGenesisEventService(stf.NewEventService())
+		storeBuilder                = root.NewBuilder()
+	)
+	return depinject.Supply(
+		kvServiceFactory,
+		headerService,
+		cometService,
+		eventService,
+		storeBuilder,
+	)
 }

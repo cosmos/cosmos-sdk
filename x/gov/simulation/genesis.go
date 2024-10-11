@@ -1,8 +1,6 @@
 package simulation
 
 import (
-	"encoding/json"
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -198,10 +196,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 		),
 	)
 
-	bz, err := json.MarshalIndent(&govGenesis, "", " ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Selected randomly generated governance parameters:\n%s\n", bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(govGenesis)
 }

@@ -79,10 +79,5 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 // RegisterStoreDecoder doesn't register any type.
 func (AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {}
 
-// WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
-	return nil
-}
-
 // ConsensusVersion implements HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }

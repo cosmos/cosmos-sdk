@@ -119,7 +119,7 @@ func (a *Simulator) BlockDataGenN(minUpdatesPerBlock, maxUpdatesPerBlock int) *r
 	})
 }
 
-func (a *Simulator) formatUpdateKey(moduleName string, update schema.ObjectUpdate) string {
+func (a *Simulator) formatUpdateKey(moduleName string, update schema.StateObjectUpdate) string {
 	mod, err := a.state.GetModule(moduleName)
 	if err != nil {
 		panic(err)

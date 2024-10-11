@@ -81,7 +81,6 @@ func TestGrant(t *testing.T) {
 	}
 
 	for name, tc := range cases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			granterStr, err := addressCodec.BytesToString(tc.granter)
 			require.NoError(t, err)

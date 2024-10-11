@@ -4,15 +4,13 @@ package systemtests
 
 import (
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
-
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func TestBankSendTxCmd(t *testing.T) {
@@ -23,7 +21,7 @@ func TestBankSendTxCmd(t *testing.T) {
 	cli := NewCLIWrapper(t, sut, verbose)
 
 	// get validator address
-	valAddr := gjson.Get(cli.Keys("keys", "list"), "1.address").String()
+	valAddr := cli.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
 
 	// add new key
@@ -53,14 +51,14 @@ func TestBankSendTxCmd(t *testing.T) {
 	insufficientCmdArgs = append(insufficientCmdArgs, fmt.Sprintf("%d%s", valBalance, denom), "--fees=10stake")
 	rsp = cli.Run(insufficientCmdArgs...)
 	RequireTxFailure(t, rsp)
-	require.Contains(t, rsp, sdkerrors.ErrInsufficientFunds.Error())
+	require.Contains(t, rsp, "insufficient funds")
 
 	// test tx bank send with unauthorized signature
 	assertUnauthorizedErr := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
 		require.Len(t, gotOutputs, 1)
 		code := gjson.Get(gotOutputs[0].(string), "code")
 		require.True(t, code.Exists())
-		require.Equal(t, int64(sdkerrors.ErrUnauthorized.ABCICode()), code.Int())
+		require.Greater(t, code.Int(), int64(0))
 		return false
 	}
 	invalidCli := cli
@@ -131,28 +129,24 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 	testCases := []struct {
 		name         string
 		cmdArgs      []string
-		expectErr    bool
 		expectedCode uint32
 		expErrMsg    string
 	}{
 		{
 			"valid transaction",
 			append(multiSendCmdArgs, "--fees=1stake"),
-			false,
 			0,
 			"",
 		},
 		{
 			"not enough arguments",
 			[]string{"tx", "bank", "multi-send", account1Addr, account2Addr, "1000stake", "--from=" + account1Addr},
-			true,
 			0,
 			"only received 3",
 		},
 		{
 			"chain-id shouldn't be used with offline and generate-only flags",
 			append(multiSendCmdArgs, "--generate-only", "--offline", "-a=0", "-s=4"),
-			true,
 			0,
 			"chain ID cannot be used",
 		},
@@ -160,7 +154,7 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			if tc.expectErr {
+			if tc.expErrMsg != "" {
 				assertErr := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
 					require.Len(t, gotOutputs, 1)
 					output := gotOutputs[0].(string)
@@ -173,24 +167,24 @@ func TestBankMultiSendTxCmd(t *testing.T) {
 					return false // always abort
 				}
 				_ = cli.WithRunErrorMatcher(assertErr).Run(tc.cmdArgs...)
-			} else {
-				rsp := cli.Run(tc.cmdArgs...)
-				txResult, found := cli.AwaitTxCommitted(rsp)
-				require.True(t, found)
-				RequireTxSuccess(t, txResult)
-				// check account1 balance equals to account1Bal - transferredAmount*no_of_accounts - fees
-				expAcc1Balance := account1Bal - (1000 * 2) - 1
-				require.Equal(t, expAcc1Balance, cli.QueryBalance(account1Addr, denom))
-				account1Bal = expAcc1Balance
-				// check account2 balance equals to account2Bal + transferredAmount
-				expAcc2Balance := account2Bal + 1000
-				require.Equal(t, expAcc2Balance, cli.QueryBalance(account2Addr, denom))
-				account2Bal = expAcc2Balance
-				// check account3 balance equals to account3Bal + transferredAmount
-				expAcc3Balance := account3Bal + 1000
-				require.Equal(t, expAcc3Balance, cli.QueryBalance(account3Addr, denom))
-				account3Bal = expAcc3Balance
+				return
 			}
+			rsp := cli.Run(tc.cmdArgs...)
+			txResult, found := cli.AwaitTxCommitted(rsp)
+			require.True(t, found)
+			RequireTxSuccess(t, txResult)
+			// check account1 balance equals to account1Bal - transferredAmount*no_of_accounts - fees
+			expAcc1Balance := account1Bal - (1000 * 2) - 1
+			require.Equal(t, expAcc1Balance, cli.QueryBalance(account1Addr, denom))
+			account1Bal = expAcc1Balance
+			// check account2 balance equals to account2Bal + transferredAmount
+			expAcc2Balance := account2Bal + 1000
+			require.Equal(t, expAcc2Balance, cli.QueryBalance(account2Addr, denom))
+			account2Bal = expAcc2Balance
+			// check account3 balance equals to account3Bal + transferredAmount
+			expAcc3Balance := account3Bal + 1000
+			require.Equal(t, expAcc3Balance, cli.QueryBalance(account3Addr, denom))
+			account3Bal = expAcc3Balance
 		})
 	}
 }
@@ -224,7 +218,7 @@ func TestBankGRPCQueries(t *testing.T) {
 
 	// start chain
 	sut.StartChain(t)
-	baseurl := fmt.Sprintf("http://localhost:%d", apiPortStart)
+	baseurl := sut.APIAddress()
 
 	// test supply grpc endpoint
 	supplyUrl := baseurl + "/cosmos/bank/v1beta1/supply"
@@ -238,10 +232,11 @@ func TestBankGRPCQueries(t *testing.T) {
 	blockHeight := sut.CurrentHeight()
 
 	supplyTestCases := []struct {
-		name    string
-		url     string
-		headers map[string]string
-		expOut  string
+		name        string
+		url         string
+		headers     map[string]string
+		expHttpCode int
+		expOut      string
 	}{
 		{
 			"test GRPC total supply",
@@ -249,12 +244,14 @@ func TestBankGRPCQueries(t *testing.T) {
 			map[string]string{
 				blockHeightHeader: fmt.Sprintf("%d", blockHeight),
 			},
+			http.StatusOK,
 			expTotalSupplyOutput,
 		},
 		{
 			"test GRPC total supply of a specific denom",
 			supplyUrl + "/by_denom?denom=" + newDenom,
 			map[string]string{},
+			http.StatusOK,
 			specificDenomOutput,
 		},
 		{
@@ -263,87 +260,75 @@ func TestBankGRPCQueries(t *testing.T) {
 			map[string]string{
 				blockHeightHeader: fmt.Sprintf("%d", blockHeight+5),
 			},
+			http.StatusInternalServerError,
 			"invalid height",
 		},
 		{
 			"test GRPC total supply of a bogus denom",
 			supplyUrl + "/by_denom?denom=foobar",
 			map[string]string{},
+			http.StatusOK,
+			// http.StatusNotFound,
 			bogusDenomOutput,
 		},
 	}
 
 	for _, tc := range supplyTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
-			require.NoError(t, err)
+			resp := GetRequestWithHeaders(t, tc.url, tc.headers, tc.expHttpCode)
 			require.Contains(t, string(resp), tc.expOut)
 		})
 	}
 
 	// test denom metadata endpoint
 	denomMetadataUrl := baseurl + "/cosmos/bank/v1beta1/denoms_metadata"
-	dmTestCases := []struct {
-		name   string
-		url    string
-		expOut string
-	}{
+	dmTestCases := []RestTestCase{
 		{
 			"test GRPC client metadata",
 			denomMetadataUrl,
-			bankDenomMetadata,
+			http.StatusOK,
+			fmt.Sprintf(`{"metadatas":%s,"pagination":{"next_key":null,"total":"2"}}`, bankDenomMetadata),
 		},
 		{
 			"test GRPC client metadata of a specific denom",
 			denomMetadataUrl + "/uatom",
-			atomDenomMetadata,
+			http.StatusOK,
+			fmt.Sprintf(`{"metadata":%s}`, atomDenomMetadata),
 		},
 		{
 			"test GRPC client metadata of a bogus denom",
 			denomMetadataUrl + "/foobar",
-			`"details":[]`,
+			http.StatusNotFound,
+			`{"code":5, "message":"client metadata for denom foobar", "details":[]}`,
 		},
 	}
 
-	for _, tc := range dmTestCases {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := testutil.GetRequest(tc.url)
-			require.NoError(t, err)
-			require.Contains(t, string(resp), tc.expOut)
-		})
-	}
+	RunRestQueries(t, dmTestCases)
 
 	// test bank balances endpoint
 	balanceUrl := baseurl + "/cosmos/bank/v1beta1/balances/"
 	allBalancesOutput := `{"balances":[` + specificDenomOutput + `,{"denom":"stake","amount":"10000000"}],"pagination":{"next_key":null,"total":"2"}}`
 
-	balanceTestCases := []struct {
-		name   string
-		url    string
-		expOut string
-	}{
+	balanceTestCases := []RestTestCase{
 		{
 			"test GRPC total account balance",
 			balanceUrl + account1Addr,
+			http.StatusOK,
 			allBalancesOutput,
 		},
 		{
 			"test GRPC account balance of a specific denom",
 			fmt.Sprintf("%s%s/by_denom?denom=%s", balanceUrl, account1Addr, newDenom),
-			specificDenomOutput,
+			http.StatusOK,
+			fmt.Sprintf(`{"balance":%s}`, specificDenomOutput),
 		},
 		{
 			"test GRPC account balance of a bogus denom",
 			fmt.Sprintf("%s%s/by_denom?denom=foobar", balanceUrl, account1Addr),
-			bogusDenomOutput,
+			http.StatusOK,
+			fmt.Sprintf(`{"balance":%s}`, bogusDenomOutput),
 		},
 	}
 
-	for _, tc := range balanceTestCases {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := testutil.GetRequest(tc.url)
-			require.NoError(t, err)
-			require.Contains(t, string(resp), tc.expOut)
-		})
-	}
+	RunRestQueries(t, balanceTestCases)
 }

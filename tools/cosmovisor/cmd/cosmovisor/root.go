@@ -14,11 +14,14 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	rootCmd.AddCommand(
-		NewIntCmd(),
+		NewInitCmd(),
 		runCmd,
 		configCmd,
 		NewVersionCmd(),
 		NewAddUpgradeCmd(),
+		NewShowUpgradeInfoCmd(),
+		NewBatchAddUpgradeCmd(),
+		NewPrepareUpgradeCmd(),
 	)
 
 	rootCmd.PersistentFlags().StringP(cosmovisor.FlagCosmovisorConfig, "c", "", "path to cosmovisor config file")

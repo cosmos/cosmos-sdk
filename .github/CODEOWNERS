@@ -29,6 +29,7 @@
 /server/v2/stf/ @testinginprod @kocubinski @cosmos/sdk-core-dev
 /server/v2/appmanager/ @testinginprod @facundomedica @cosmos/sdk-core-dev
 /server/v2/cometbft/ @facundomedica @sontrinh16 @cosmos/sdk-core-dev
+/simsx @alpe @facundomedica @kocubinski @cosmos/sdk-core-dev
 /simapp/ @facundomedica @julienrbrt @cosmos/sdk-core-dev
 /simapp/v2/ @kocubinski @julienrbrt @cosmos/sdk-core-dev
 /store/ @cool-develope @kocubinski @cosmos/sdk-core-dev
@@ -37,11 +38,13 @@
 /tools/hubl @julienrbrt @JulianToledano @cosmos/sdk-core-dev
 /tools/cosmovisor @julienrbrt @facundomedica @cosmos/sdk-core-dev
 /tools/confix @julienrbrt @akhilkumarpilli @cosmos/sdk-core-dev
+/tests/integration/aminojson @kocubinski @cosmos/sdk-core-dev
 
 # x modules
 
 /x/accounts/ @testinginprod @sontrinh16 @cosmos/sdk-core-dev
 /x/auth/ @facundomedica @testinginprod @aaronc @cosmos/sdk-core-dev
+/x/auth/tx/config @julienrbrt @akhilkumarpilli @kocubinski @cosmos/sdk-core-dev
 /x/authz/ @akhilkumarpilli @raynaudoe @cosmos/sdk-core-dev
 /x/bank/ @julienrbrt @sontrinh16 @cosmos/sdk-core-dev
 /x/bank/v2 @julienrbrt @hieuvubk @akhilkumarpilli @cosmos/sdk-core-dev
@@ -63,6 +66,7 @@
 /x/staking/ @facundomedica @testinginprod @JulianToledano @ziscky @cosmos/sdk-core-dev
 /x/tx/ @kocubinski @testinginprod @aaronc @cosmos/sdk-core-dev
 /x/upgrade/ @facundomedica @cool-develope @akhilkumarpilli @lucaslopezf @cosmos/sdk-core-dev
+/x/validate @julienrbrt @akhilkumarpilli @kocubinski @cosmos/sdk-core-dev
 
 # go mods
 

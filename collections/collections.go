@@ -104,7 +104,7 @@ type Collection interface {
 // decoders and encoders to and from schema values and raw kv-store bytes.
 type collectionSchemaCodec struct {
 	coll         Collection
-	objectType   schema.ObjectType
+	objectType   schema.StateObjectType
 	keyDecoder   func([]byte) (any, error)
 	valueDecoder func([]byte) (any, error)
 }

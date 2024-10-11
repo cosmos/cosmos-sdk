@@ -19,6 +19,7 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -160,11 +161,21 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[group.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
-// WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		am.registry,
-		simState.AppParams, simState.Cdc, simState.TxConfig,
-		am.accKeeper, am.bankKeeper, am.keeper, am.cdc,
-	)
+func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
+	s := simulation.NewSharedState()
+	// note: using old keys for backwards compatibility
+	reg.Add(weights.Get("msg_create_group", 100), simulation.MsgCreateGroupFactory())
+	reg.Add(weights.Get("msg_update_group_admin", 5), simulation.MsgUpdateGroupAdminFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_update_group_metadata", 5), simulation.MsgUpdateGroupMetadataFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_update_group_members", 5), simulation.MsgUpdateGroupMembersFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_create_group_account", 50), simulation.MsgCreateGroupPolicyFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_create_group_with_policy", 50), simulation.MsgCreateGroupWithPolicyFactory())
+	reg.Add(weights.Get("msg_update_group_account_admin", 5), simulation.MsgUpdateGroupPolicyAdminFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_update_group_account_decision_policy", 5), simulation.MsgUpdateGroupPolicyDecisionPolicyFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_update_group_account_metadata", 5), simulation.MsgUpdateGroupPolicyMetadataFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_submit_proposal", 2*90), simulation.MsgSubmitProposalFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_withdraw_proposal", 20), simulation.MsgWithdrawProposalFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_vote", 90), simulation.MsgVoteFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_exec", 90), simulation.MsgExecFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_leave_group", 5), simulation.MsgLeaveGroupFactory(am.keeper, s))
 }

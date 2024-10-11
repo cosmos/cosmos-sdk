@@ -81,6 +81,6 @@ func TypedEventToEvent(tev transaction.Msg) (event.Event, error) {
 
 	return event.Event{
 		Type:       evtType,
-		Attributes: attrs,
+		Attributes: func() ([]event.Attribute, error) { return attrs, nil },
 	}, nil
 }

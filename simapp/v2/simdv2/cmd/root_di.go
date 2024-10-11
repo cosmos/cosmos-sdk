@@ -20,7 +20,6 @@ import (
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -37,18 +36,8 @@ func NewRootCmd[T transaction.Tx]() *cobra.Command {
 	if err := depinject.Inject(
 		depinject.Configs(
 			simapp.AppConfig(),
+			depinject.Provide(ProvideClientContext),
 			depinject.Supply(log.NewNopLogger()),
-			depinject.Provide(
-				codec.ProvideInterfaceRegistry,
-				codec.ProvideAddressCodec,
-				codec.ProvideProtoCodec,
-				codec.ProvideLegacyAmino,
-				ProvideClientContext,
-			),
-			depinject.Invoke(
-				std.RegisterInterfaces,
-				std.RegisterLegacyAminoCodec,
-			),
 		),
 		&autoCliOpts,
 		&moduleManager,

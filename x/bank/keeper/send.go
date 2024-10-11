@@ -143,19 +143,20 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
-	inAddress, err := k.ak.AddressCodec().StringToBytes(input.Address)
+	inAddress, err := k.addrCdc.StringToBytes(input.Address)
 	if err != nil {
 		return err
 	}
 
-	err = k.subUnlockedCoins(ctx, inAddress, input.Coins)
-	if err != nil {
-		return err
+	// ensure all coins can be sent
+	type toSend struct {
+		AddressStr string
+		Address    []byte
+		Coins      sdk.Coins
 	}
-
-	var outAddress sdk.AccAddress
+	sending := make([]toSend, 0)
 	for _, out := range outputs {
-		outAddress, err = k.ak.AddressCodec().StringToBytes(out.Address)
+		outAddress, err := k.addrCdc.StringToBytes(out.Address)
 		if err != nil {
 			return err
 		}
@@ -165,13 +166,25 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			return err
 		}
 
-		if err := k.addCoins(ctx, outAddress, out.Coins); err != nil {
+		sending = append(sending, toSend{
+			Address:    outAddress,
+			AddressStr: out.Address,
+			Coins:      out.Coins,
+		})
+	}
+
+	if err := k.subUnlockedCoins(ctx, inAddress, input.Coins); err != nil {
+		return err
+	}
+
+	for _, out := range sending {
+		if err := k.addCoins(ctx, out.Address, out.Coins); err != nil {
 			return err
 		}
 
 		if err := k.EventService.EventManager(ctx).EmitKV(
 			types.EventTypeTransfer,
-			event.NewAttribute(types.AttributeKeyRecipient, out.Address),
+			event.NewAttribute(types.AttributeKeyRecipient, out.AddressStr),
 			event.NewAttribute(types.AttributeKeySender, input.Address),
 			event.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
 		); err != nil {
@@ -205,11 +218,11 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		return err
 	}
 
-	fromAddrString, err := k.ak.AddressCodec().BytesToString(fromAddr)
+	fromAddrString, err := k.addrCdc.BytesToString(fromAddr)
 	if err != nil {
 		return err
 	}
-	toAddrString, err := k.ak.AddressCodec().BytesToString(toAddr)
+	toAddrString, err := k.addrCdc.BytesToString(toAddr)
 	if err != nil {
 		return err
 	}
@@ -262,7 +275,7 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 		}
 	}
 
-	addrStr, err := k.ak.AddressCodec().BytesToString(addr)
+	addrStr, err := k.addrCdc.BytesToString(addr)
 	if err != nil {
 		return err
 	}
@@ -290,7 +303,7 @@ func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt s
 		}
 	}
 
-	addrStr, err := k.ak.AddressCodec().BytesToString(addr)
+	addrStr, err := k.addrCdc.BytesToString(addr)
 	if err != nil {
 		return err
 	}
@@ -346,7 +359,7 @@ func (k BaseSendKeeper) IsSendEnabledCoin(ctx context.Context, coin sdk.Coin) bo
 // BlockedAddr checks if a given address is restricted from
 // receiving funds.
 func (k BaseSendKeeper) BlockedAddr(addr sdk.AccAddress) bool {
-	addrStr, err := k.ak.AddressCodec().BytesToString(addr)
+	addrStr, err := k.addrCdc.BytesToString(addr)
 	if err != nil {
 		panic(err)
 	}

@@ -27,7 +27,6 @@ func TestDecJSONTestcases(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc[0], func(t *testing.T) {
 			r, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("SDKDEC"))
 			require.NoError(t, err)

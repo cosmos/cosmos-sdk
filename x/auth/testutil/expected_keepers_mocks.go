@@ -134,6 +134,21 @@ func (mr *MockAccountsModKeeperMockRecorder) IsAccountsModuleAccount(ctx, accoun
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAccountsModuleAccount", reflect.TypeOf((*MockAccountsModKeeper)(nil).IsAccountsModuleAccount), ctx, accountAddr)
 }
 
+// MigrateLegacyAccount mocks base method.
+func (m *MockAccountsModKeeper) MigrateLegacyAccount(ctx context.Context, addr []byte, accNum uint64, accType string, msg transaction.Msg) (transaction.Msg, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MigrateLegacyAccount", ctx, addr, accNum, accType, msg)
+	ret0, _ := ret[0].(transaction.Msg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MigrateLegacyAccount indicates an expected call of MigrateLegacyAccount.
+func (mr *MockAccountsModKeeperMockRecorder) MigrateLegacyAccount(ctx, addr, accNum, accType, msg interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrateLegacyAccount", reflect.TypeOf((*MockAccountsModKeeper)(nil).MigrateLegacyAccount), ctx, addr, accNum, accType, msg)
+}
+
 // NextAccountNumber mocks base method.
 func (m *MockAccountsModKeeper) NextAccountNumber(ctx context.Context) (uint64, error) {
 	m.ctrl.T.Helper()
@@ -147,6 +162,21 @@ func (m *MockAccountsModKeeper) NextAccountNumber(ctx context.Context) (uint64, 
 func (mr *MockAccountsModKeeperMockRecorder) NextAccountNumber(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextAccountNumber", reflect.TypeOf((*MockAccountsModKeeper)(nil).NextAccountNumber), ctx)
+}
+
+// Query mocks base method.
+func (m *MockAccountsModKeeper) Query(ctx context.Context, accountAddr []byte, queryRequest transaction.Msg) (transaction.Msg, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Query", ctx, accountAddr, queryRequest)
+	ret0, _ := ret[0].(transaction.Msg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Query indicates an expected call of Query.
+func (mr *MockAccountsModKeeperMockRecorder) Query(ctx, accountAddr, queryRequest interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Query", reflect.TypeOf((*MockAccountsModKeeper)(nil).Query), ctx, accountAddr, queryRequest)
 }
 
 // SendModuleMessage mocks base method.

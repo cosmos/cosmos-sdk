@@ -13,18 +13,18 @@ type ModuleCodec struct {
 	// Schema is the schema for the module. It is required.
 	Schema ModuleSchema
 
-	// KVDecoder is a function that decodes a key-value pair into an ObjectUpdate.
+	// KVDecoder is a function that decodes a key-value pair into an StateObjectUpdate.
 	// If it is nil, the module doesn't support state decoding directly.
 	KVDecoder KVDecoder
 }
 
-// KVDecoder is a function that decodes a key-value pair into one or more ObjectUpdate's.
+// KVDecoder is a function that decodes a key-value pair into one or more StateObjectUpdate's.
 // If the KV-pair doesn't represent object updates, the function should return nil as the first
 // and no error. The error result  should only be non-nil when the decoder expected
 // to parse a valid update and was unable to. In the case of an error, the decoder may return
 // a non-nil value for the first return value, which can indicate which parts of the update
 // were decodable to aid debugging.
-type KVDecoder = func(KVPairUpdate) ([]ObjectUpdate, error)
+type KVDecoder = func(KVPairUpdate) ([]StateObjectUpdate, error)
 
 // KVPairUpdate represents a key-value pair set or delete.
 type KVPairUpdate = struct {

@@ -193,8 +193,6 @@ func TestGetPaginatedVotes(t *testing.T) {
 			},
 		},
 	} {
-		tc := tc
-
 		t.Run(tc.description, func(t *testing.T) {
 			marshaled := make([][]byte, len(tc.msgs))
 			clientCtx := client.Context{}.
@@ -298,8 +296,6 @@ func TestGetSingleVote(t *testing.T) {
 			},
 		},
 	} {
-		tc := tc
-
 		t.Run(tc.description, func(t *testing.T) {
 			marshaled := make([][]byte, len(tc.msgs))
 			clientCtx := client.Context{}.

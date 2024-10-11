@@ -142,7 +142,6 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 		}},
 	}
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(fmt.Sprintf("Format %v", tc.format), func(t *testing.T) {
 			ch := make(chan io.ReadCloser)
 			go func() {
@@ -177,7 +176,6 @@ func TestMultistoreSnapshot_Errors(t *testing.T) {
 		"unknown height": {9, nil},
 	}
 	for name, tc := range testcases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			err := store.Snapshot(tc.height, nil)
 			require.Error(t, err)

@@ -39,7 +39,7 @@ func TestNetGenesisState(t *testing.T) {
 }
 
 func TestValidateGenesisMultipleMessages(t *testing.T) {
-	desc := stakingtypes.NewDescription("testname", "", "", "", "")
+	desc := stakingtypes.NewDescription("testname", "", "", "", "", stakingtypes.Metadata{})
 	comm := stakingtypes.CommissionRates{}
 	valAc := codectestutil.CodecOptions{}.GetValidatorCodec()
 
@@ -66,7 +66,7 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 }
 
 func TestValidateGenesisBadMessage(t *testing.T) {
-	desc := stakingtypes.NewDescription("testname", "", "", "", "")
+	desc := stakingtypes.NewDescription("testname", "", "", "", "", stakingtypes.Metadata{})
 	pk1Addr, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(pk1.Address())
 	require.NoError(t, err)
 	msg1 := stakingtypes.NewMsgEditValidator(pk1Addr, desc, nil, nil)

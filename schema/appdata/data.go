@@ -131,7 +131,7 @@ type ObjectUpdateData struct {
 	ModuleName string
 
 	// Updates are the object updates.
-	Updates []schema.ObjectUpdate
+	Updates []schema.StateObjectUpdate
 }
 
 // CommitData represents commit data. It is empty for now, but fields could be added later.

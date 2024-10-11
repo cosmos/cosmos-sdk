@@ -20,6 +20,7 @@ var AppConfig = configurator.NewAppConfig(
 	configurator.VestingModule(),
 	configurator.StakingModule(),
 	configurator.TxModule(),
+	configurator.ValidateModule(),
 	configurator.ConsensusModule(),
 	configurator.GenutilModule(),
 )

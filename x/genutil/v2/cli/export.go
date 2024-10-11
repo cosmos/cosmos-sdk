@@ -76,6 +76,7 @@ func ExportCmd(appExporter v2.AppExporter) *cobra.Command {
 
 			appGenesis.AppState = exported.AppState
 			appGenesis.InitialHeight = exported.Height
+			appGenesis.Consensus.Validators = exported.Validators
 
 			out, err := json.Marshal(appGenesis)
 			if err != nil {

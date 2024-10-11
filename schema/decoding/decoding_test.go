@@ -29,7 +29,7 @@ func TestMiddleware(t *testing.T) {
 
 	tl.oneMod.SetValue("abc")
 
-	expectedBank := []schema.ObjectUpdate{
+	expectedBank := []schema.StateObjectUpdate{
 		{
 			TypeName: "supply",
 			Key:      []interface{}{"foo"},
@@ -56,7 +56,7 @@ func TestMiddleware(t *testing.T) {
 		t.Fatalf("expected %v, got %v", expectedBank, tl.bankUpdates)
 	}
 
-	expectedOne := []schema.ObjectUpdate{
+	expectedOne := []schema.StateObjectUpdate{
 		{TypeName: "item", Value: "abc"},
 	}
 
@@ -84,7 +84,7 @@ func TestMiddleware_filtered(t *testing.T) {
 		t.Fatalf("expected no bank updates")
 	}
 
-	expectedOne := []schema.ObjectUpdate{
+	expectedOne := []schema.StateObjectUpdate{
 		{TypeName: "item", Value: "abc"},
 	}
 
@@ -108,7 +108,7 @@ func TestSync(t *testing.T) {
 		t.Fatal("unexpected error", err)
 	}
 
-	expected := []schema.ObjectUpdate{
+	expected := []schema.StateObjectUpdate{
 		{
 			TypeName: "balances",
 			Key:      []interface{}{"alice", "foo"},
@@ -130,7 +130,7 @@ func TestSync(t *testing.T) {
 		t.Fatalf("expected %v, got %v", expected, tl.bankUpdates)
 	}
 
-	expectedOne := []schema.ObjectUpdate{
+	expectedOne := []schema.StateObjectUpdate{
 		{TypeName: "item", Value: "def"},
 	}
 
@@ -157,7 +157,7 @@ func TestSync_filtered(t *testing.T) {
 		t.Fatalf("expected no bank updates")
 	}
 
-	expectedOne := []schema.ObjectUpdate{
+	expectedOne := []schema.StateObjectUpdate{
 		{TypeName: "item", Value: "def"},
 	}
 
@@ -168,8 +168,8 @@ func TestSync_filtered(t *testing.T) {
 
 type testFixture struct {
 	appdata.Listener
-	bankUpdates     []schema.ObjectUpdate
-	oneValueUpdates []schema.ObjectUpdate
+	bankUpdates     []schema.StateObjectUpdate
+	oneValueUpdates []schema.StateObjectUpdate
 	resolver        DecoderResolver
 	multiStore      *testMultiStore
 	bankMod         *exampleBankModule
@@ -371,7 +371,7 @@ func (e exampleBankModule) subBalance(acct, denom string, amount uint64) error {
 
 func init() {
 	var err error
-	exampleBankSchema, err = schema.CompileModuleSchema(schema.ObjectType{
+	exampleBankSchema, err = schema.CompileModuleSchema(schema.StateObjectType{
 		Name: "balances",
 		KeyFields: []schema.Field{
 			{
@@ -400,7 +400,7 @@ var exampleBankSchema schema.ModuleSchema
 func (e exampleBankModule) ModuleCodec() (schema.ModuleCodec, error) {
 	return schema.ModuleCodec{
 		Schema: exampleBankSchema,
-		KVDecoder: func(update schema.KVPairUpdate) ([]schema.ObjectUpdate, error) {
+		KVDecoder: func(update schema.KVPairUpdate) ([]schema.StateObjectUpdate, error) {
 			key := string(update.Key)
 			value, err := strconv.ParseUint(string(update.Value), 10, 64)
 			if err != nil {
@@ -408,14 +408,14 @@ func (e exampleBankModule) ModuleCodec() (schema.ModuleCodec, error) {
 			}
 			if strings.HasPrefix(key, "balance/") {
 				parts := strings.Split(key, "/")
-				return []schema.ObjectUpdate{{
+				return []schema.StateObjectUpdate{{
 					TypeName: "balances",
 					Key:      []interface{}{parts[1], parts[2]},
 					Value:    value,
 				}}, nil
 			} else if strings.HasPrefix(key, "supply/") {
 				parts := strings.Split(key, "/")
-				return []schema.ObjectUpdate{{
+				return []schema.StateObjectUpdate{{
 					TypeName: "supply",
 					Key:      []interface{}{parts[1]},
 					Value:    value,
@@ -435,7 +435,7 @@ type oneValueModule struct {
 
 func init() {
 	var err error
-	oneValueModSchema, err = schema.CompileModuleSchema(schema.ObjectType{
+	oneValueModSchema, err = schema.CompileModuleSchema(schema.StateObjectType{
 		Name: "item",
 		ValueFields: []schema.Field{
 			{Name: "value", Kind: schema.StringKind},
@@ -451,11 +451,11 @@ var oneValueModSchema schema.ModuleSchema
 func (i oneValueModule) ModuleCodec() (schema.ModuleCodec, error) {
 	return schema.ModuleCodec{
 		Schema: oneValueModSchema,
-		KVDecoder: func(update schema.KVPairUpdate) ([]schema.ObjectUpdate, error) {
+		KVDecoder: func(update schema.KVPairUpdate) ([]schema.StateObjectUpdate, error) {
 			if string(update.Key) != "key" {
 				return nil, fmt.Errorf("unexpected key: %v", update.Key)
 			}
-			return []schema.ObjectUpdate{
+			return []schema.StateObjectUpdate{
 				{TypeName: "item", Value: string(update.Value)},
 			}, nil
 		},

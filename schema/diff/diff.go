@@ -4,14 +4,14 @@ import "cosmossdk.io/schema"
 
 // ModuleSchemaDiff represents the difference between two module schemas.
 type ModuleSchemaDiff struct {
-	// AddedObjectTypes is a list of object types that were added.
-	AddedObjectTypes []schema.ObjectType
+	// AddedStateObjectTypes is a list of object types that were added.
+	AddedStateObjectTypes []schema.StateObjectType
 
-	// ChangedObjectTypes is a list of object types that were changed.
-	ChangedObjectTypes []ObjectTypeDiff
+	// ChangedStateObjectTypes is a list of object types that were changed.
+	ChangedStateObjectTypes []StateObjectTypeDiff
 
-	// RemovedObjectTypes is a list of object types that were removed.
-	RemovedObjectTypes []schema.ObjectType
+	// RemovedStateObjectTypes is a list of object types that were removed.
+	RemovedStateObjectTypes []schema.StateObjectType
 
 	// AddedEnumTypes is a list of enum types that were added.
 	AddedEnumTypes []schema.EnumType
@@ -41,23 +41,23 @@ type ModuleSchemaDiff struct {
 func CompareModuleSchemas(oldSchema, newSchema schema.ModuleSchema) ModuleSchemaDiff {
 	diff := ModuleSchemaDiff{}
 
-	oldSchema.ObjectTypes(func(oldObj schema.ObjectType) bool {
-		newObj, found := newSchema.LookupObjectType(oldObj.Name)
+	oldSchema.StateObjectTypes(func(oldObj schema.StateObjectType) bool {
+		newObj, found := newSchema.LookupStateObjectType(oldObj.Name)
 		if !found {
-			diff.RemovedObjectTypes = append(diff.RemovedObjectTypes, oldObj)
+			diff.RemovedStateObjectTypes = append(diff.RemovedStateObjectTypes, oldObj)
 			return true
 		}
 		objDiff := compareObjectType(oldObj, newObj)
 		if !objDiff.Empty() {
-			diff.ChangedObjectTypes = append(diff.ChangedObjectTypes, objDiff)
+			diff.ChangedStateObjectTypes = append(diff.ChangedStateObjectTypes, objDiff)
 		}
 		return true
 	})
 
-	newSchema.ObjectTypes(func(newObj schema.ObjectType) bool {
-		_, found := oldSchema.LookupObjectType(newObj.TypeName())
+	newSchema.StateObjectTypes(func(newObj schema.StateObjectType) bool {
+		_, found := oldSchema.LookupStateObjectType(newObj.TypeName())
 		if !found {
-			diff.AddedObjectTypes = append(diff.AddedObjectTypes, newObj)
+			diff.AddedStateObjectTypes = append(diff.AddedStateObjectTypes, newObj)
 		}
 		return true
 	})
@@ -87,9 +87,9 @@ func CompareModuleSchemas(oldSchema, newSchema schema.ModuleSchema) ModuleSchema
 }
 
 func (m ModuleSchemaDiff) Empty() bool {
-	return len(m.AddedObjectTypes) == 0 &&
-		len(m.ChangedObjectTypes) == 0 &&
-		len(m.RemovedObjectTypes) == 0 &&
+	return len(m.AddedStateObjectTypes) == 0 &&
+		len(m.ChangedStateObjectTypes) == 0 &&
+		len(m.RemovedStateObjectTypes) == 0 &&
 		len(m.AddedEnumTypes) == 0 &&
 		len(m.ChangedEnumTypes) == 0 &&
 		len(m.RemovedEnumTypes) == 0
@@ -102,11 +102,11 @@ func (m ModuleSchemaDiff) Empty() bool {
 func (m ModuleSchemaDiff) HasCompatibleChanges() bool {
 	// object and enum types can be added but not removed
 	// changed object and enum types must have compatible changes
-	if len(m.RemovedObjectTypes) != 0 || len(m.RemovedEnumTypes) != 0 {
+	if len(m.RemovedStateObjectTypes) != 0 || len(m.RemovedEnumTypes) != 0 {
 		return false
 	}
 
-	for _, objectType := range m.ChangedObjectTypes {
+	for _, objectType := range m.ChangedStateObjectTypes {
 		if !objectType.HasCompatibleChanges() {
 			return false
 		}

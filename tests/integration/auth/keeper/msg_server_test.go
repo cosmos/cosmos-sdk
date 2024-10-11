@@ -9,45 +9,17 @@ import (
 	"gotest.tools/v3/assert"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/accounts"
-	baseaccount "cosmossdk.io/x/accounts/defaults/base"
-	"cosmossdk.io/x/bank"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
-	minttypes "cosmossdk.io/x/mint/types"
 	"cosmossdk.io/x/tx/signing"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
-
-type fixture struct {
-	app *integration.App
-
-	cdc codec.Codec
-	ctx sdk.Context
-
-	authKeeper     authkeeper.AccountKeeper
-	accountsKeeper accounts.Keeper
-	bankKeeper     bankkeeper.Keeper
-}
 
 var _ signing.SignModeHandler = directHandler{}
 
@@ -61,94 +33,9 @@ func (s directHandler) GetSignBytes(_ context.Context, _ signing.SignerData, _ s
 	panic("not implemented")
 }
 
-func initFixture(t *testing.T) *fixture {
-	t.Helper()
-	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, accounts.StoreKey,
-	)
-	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, bank.AppModule{}, accounts.AppModule{})
-	cdc := encodingCfg.Codec
-
-	logger := log.NewTestLogger(t)
-	cms := integration.CreateMultiStore(keys, logger)
-
-	newCtx := sdk.NewContext(cms, true, logger)
-
-	router := baseapp.NewMsgServiceRouter()
-	queryRouter := baseapp.NewGRPCQueryRouter()
-
-	handler := directHandler{}
-	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler), baseaccount.WithSecp256K1PubKey())
-	accountsKeeper, err := accounts.NewKeeper(
-		cdc,
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(router)),
-		addresscodec.NewBech32Codec("cosmos"),
-		cdc.InterfaceRegistry(),
-		account,
-	)
-	assert.NilError(t, err)
-
-	authority := authtypes.NewModuleAddress("gov")
-
-	authKeeper := authkeeper.NewAccountKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
-		cdc,
-		authtypes.ProtoBaseAccount,
-		accountsKeeper,
-		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
-		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
-		sdk.Bech32MainPrefix,
-		authority.String(),
-	)
-
-	blockedAddresses := map[string]bool{
-		authKeeper.GetAuthority(): false,
-	}
-	bankKeeper := bankkeeper.NewBaseKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
-		cdc,
-		authKeeper,
-		blockedAddresses,
-		authority.String(),
-	)
-
-	params := banktypes.DefaultParams()
-	assert.NilError(t, bankKeeper.SetParams(newCtx, params))
-
-	accountsModule := accounts.NewAppModule(cdc, accountsKeeper)
-	authModule := auth.NewAppModule(cdc, authKeeper, accountsKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(cdc, bankKeeper, authKeeper)
-
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
-		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
-		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
-		map[string]appmodule.AppModule{
-			accounts.ModuleName:  accountsModule,
-			authtypes.ModuleName: authModule,
-			banktypes.ModuleName: bankModule,
-		}, router, queryRouter)
-
-	authtypes.RegisterInterfaces(cdc.InterfaceRegistry())
-	banktypes.RegisterInterfaces(cdc.InterfaceRegistry())
-
-	authtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), authkeeper.NewMsgServerImpl(authKeeper))
-	authtypes.RegisterQueryServer(integrationApp.QueryHelper(), authkeeper.NewQueryServer(authKeeper))
-
-	banktypes.RegisterMsgServer(router, bankkeeper.NewMsgServerImpl(bankKeeper))
-
-	return &fixture{
-		app:            integrationApp,
-		cdc:            cdc,
-		ctx:            newCtx,
-		accountsKeeper: accountsKeeper,
-		authKeeper:     authKeeper,
-		bankKeeper:     bankKeeper,
-	}
-}
-
 func TestAsyncExec(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initFixture(t, nil)
 
 	addrs := simtestutil.CreateIncrementalAccounts(2)
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10)))
@@ -250,7 +137,6 @@ func TestAsyncExec(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := f.app.RunMsg(
 				tc.req,

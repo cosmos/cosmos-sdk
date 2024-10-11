@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections/codec"
+	"cosmossdk.io/schema"
 )
 
 // Quad defines a multipart key composed of four keys.
@@ -79,15 +80,34 @@ func QuadKeyCodec[K1, K2, K3, K4 any](keyCodec1 codec.KeyCodec[K1], keyCodec2 co
 	}
 }
 
+// NamedQuadKeyCodec instantiates a new KeyCodec instance that can encode the Quad, given
+// the KeyCodecs of the four parts of the key, in order.
+// The provided names are used to identify the parts of the key in the schema for indexing.
+func NamedQuadKeyCodec[K1, K2, K3, K4 any](key1Name string, keyCodec1 codec.KeyCodec[K1], key2Name string, keyCodec2 codec.KeyCodec[K2], key3Name string, keyCodec3 codec.KeyCodec[K3], key4Name string, keyCodec4 codec.KeyCodec[K4]) codec.KeyCodec[Quad[K1, K2, K3, K4]] {
+	return quadKeyCodec[K1, K2, K3, K4]{
+		name1:     key1Name,
+		keyCodec1: keyCodec1,
+		name2:     key2Name,
+		keyCodec2: keyCodec2,
+		name3:     key3Name,
+		keyCodec3: keyCodec3,
+		name4:     key4Name,
+		keyCodec4: keyCodec4,
+	}
+}
+
 type quadKeyCodec[K1, K2, K3, K4 any] struct {
-	keyCodec1 codec.KeyCodec[K1]
-	keyCodec2 codec.KeyCodec[K2]
-	keyCodec3 codec.KeyCodec[K3]
-	keyCodec4 codec.KeyCodec[K4]
+	name1, name2, name3, name4 string
+	keyCodec1                  codec.KeyCodec[K1]
+	keyCodec2                  codec.KeyCodec[K2]
+	keyCodec3                  codec.KeyCodec[K3]
+	keyCodec4                  codec.KeyCodec[K4]
 }
 
 type jsonQuadKey [4]json.RawMessage
 
+
+// EncodeJSON encodes Quads to json
 func (t quadKeyCodec[K1, K2, K3, K4]) EncodeJSON(value Quad[K1, K2, K3, K4]) ([]byte, error) {
 	json1, err := t.keyCodec1.EncodeJSON(*value.k1)
 	if err != nil {
@@ -112,6 +132,7 @@ func (t quadKeyCodec[K1, K2, K3, K4]) EncodeJSON(value Quad[K1, K2, K3, K4]) ([]
 	return json.Marshal(jsonQuadKey{json1, json2, json3, json4})
 }
 
+// DecodeJSON decodes json to Quads
 func (t quadKeyCodec[K1, K2, K3, K4]) DecodeJSON(b []byte) (Quad[K1, K2, K3, K4], error) {
 	var jsonKey jsonQuadKey
 	err := json.Unmarshal(b, &jsonKey)
@@ -142,6 +163,7 @@ func (t quadKeyCodec[K1, K2, K3, K4]) DecodeJSON(b []byte) (Quad[K1, K2, K3, K4]
 	return Join4(key1, key2, key3, key4), nil
 }
 
+// Stringify converts Quads to string
 func (t quadKeyCodec[K1, K2, K3, K4]) Stringify(key Quad[K1, K2, K3, K4]) string {
 	b := new(strings.Builder)
 	b.WriteByte('(')
@@ -188,6 +210,7 @@ func (t quadKeyCodec[K1, K2, K3, K4]) KeyType() string {
 	return fmt.Sprintf("Quad[%s,%s,%s,%s]", t.keyCodec1.KeyType(), t.keyCodec2.KeyType(), t.keyCodec3.KeyType(), t.keyCodec4.KeyType())
 }
 
+
 func (t quadKeyCodec[K1, K2, K3, K4]) Encode(buffer []byte, key Quad[K1, K2, K3, K4]) (int, error) {
 	writtenTotal := 0
 	if key.k1 != nil {
@@ -220,6 +243,7 @@ func (t quadKeyCodec[K1, K2, K3, K4]) Encode(buffer []byte, key Quad[K1, K2, K3,
 	}
 	return writtenTotal, nil
 }
+
 
 func (t quadKeyCodec[K1, K2, K3, K4]) Decode(buffer []byte) (int, Quad[K1, K2, K3, K4], error) {
 	readTotal := 0
@@ -336,6 +360,32 @@ func (t quadKeyCodec[K1, K2, K3, K4]) SizeNonTerminal(key Quad[K1, K2, K3, K4]) 
 		size += t.keyCodec4.SizeNonTerminal(*key.k4)
 	}
 	return size
+}
+
+func (t quadKeyCodec[K1, K2, K3, K4]) SchemaCodec() (codec.SchemaCodec[Quad[K1, K2, K3, K4]], error) {
+	field1, err := getNamedKeyField(t.keyCodec1, t.name1)
+	if err != nil {
+		return codec.SchemaCodec[Quad[K1, K2, K3, K4]]{}, fmt.Errorf("error getting key1 field: %w", err)
+	}
+
+	field2, err := getNamedKeyField(t.keyCodec2, t.name2)
+	if err != nil {
+		return codec.SchemaCodec[Quad[K1, K2, K3, K4]]{}, fmt.Errorf("error getting key2 field: %w", err)
+	}
+
+	field3, err := getNamedKeyField(t.keyCodec3, t.name3)
+	if err != nil {
+		return codec.SchemaCodec[Quad[K1, K2, K3, K4]]{}, fmt.Errorf("error getting key3 field: %w", err)
+	}
+
+	field4, err := getNamedKeyField(t.keyCodec4, t.name4)
+	if err != nil {
+		return codec.SchemaCodec[Quad[K1, K2, K3, K4]]{}, fmt.Errorf("error getting key4 field: %w", err)
+	}
+
+	return codec.SchemaCodec[Quad[K1, K2, K3, K4]]{
+		Fields: []schema.Field{field1, field2, field3, field4},
+	}, nil
 }
 
 // NewPrefixUntilQuadRange defines a collection query which ranges until the provided Quad prefix.

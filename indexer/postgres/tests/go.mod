@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	cosmossdk.io/indexer/postgres v0.0.0-00010101000000-000000000000
-	cosmossdk.io/schema v0.1.1
+	cosmossdk.io/schema v0.3.0
 	cosmossdk.io/schema/testing v0.0.0
 	github.com/fergusstrange/embedded-postgres v1.29.0
 	github.com/hashicorp/consul/sdk v0.16.1
@@ -26,10 +26,10 @@ require (
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/tidwall/btree v1.7.0 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
-	golang.org/x/crypto v0.27.0 // indirect
+	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
-	golang.org/x/text v0.18.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 )

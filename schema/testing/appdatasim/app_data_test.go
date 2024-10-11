@@ -24,7 +24,7 @@ func TestAppSimulator_mirror(t *testing.T) {
 	})
 }
 
-func testAppSimulatorMirror(t *testing.T, retainDeletes bool) { // nolint: thelper // this isn't a test helper function
+func testAppSimulatorMirror(t *testing.T, retainDeletes bool) { //nolint: thelper // this isn't a test helper function
 	stateSimOpts := statesim.Options{CanRetainDeletions: retainDeletes}
 	mirror, err := NewSimulator(Options{
 		StateSimOptions: stateSimOpts,

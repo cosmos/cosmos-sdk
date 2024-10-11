@@ -307,6 +307,15 @@ func (m AppOptionsMap) Get(key string) interface{} {
 	return v
 }
 
+func (m AppOptionsMap) GetString(key string) string {
+	v, ok := m[key]
+	if !ok {
+		return ""
+	}
+
+	return v.(string)
+}
+
 func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {
 	return AppOptionsMap{
 		flags.FlagHome: homePath,

@@ -75,7 +75,7 @@ func TestStrategies(t *testing.T) {
 	}
 
 	for name, tc := range testcases {
-		tc := tc // Local copy to avoid shadowing.
+		// Local copy to avoid shadowing.
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

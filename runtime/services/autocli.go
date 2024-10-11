@@ -105,7 +105,7 @@ type autocliConfigurator struct {
 	err           error
 }
 
-var _ module.Configurator = &autocliConfigurator{} // nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
+var _ module.Configurator = &autocliConfigurator{} //nolint:staticcheck // SA1019: Configurator is deprecated but still used in runtime v1.
 
 func (a *autocliConfigurator) MsgServer() gogogrpc.Server { return &a.msgServer }
 

@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/core/store"
@@ -69,6 +70,11 @@ func DefaultStoreLoader(store Store) error {
 // UpgradeStoreLoader upgrades the store if the upgrade height matches the current version, it is used as a replacement
 // for the DefaultStoreLoader when there are store upgrades
 func UpgradeStoreLoader(upgradeHeight int64, storeUpgrades *store.StoreUpgrades) StoreLoader {
+	// sanity checks on store upgrades
+	if err := checkStoreUpgrade(storeUpgrades); err != nil {
+		panic(err)
+	}
+
 	return func(store Store) error {
 		latestVersion, err := store.GetLatestVersion()
 		if err != nil {
@@ -87,4 +93,41 @@ func UpgradeStoreLoader(upgradeHeight int64, storeUpgrades *store.StoreUpgrades)
 
 		return DefaultStoreLoader(store)
 	}
+}
+
+// checkStoreUpgrade performs sanity checks on the store upgrades
+func checkStoreUpgrade(storeUpgrades *store.StoreUpgrades) error {
+	if storeUpgrades == nil {
+		return errors.New("store upgrades cannot be nil")
+	}
+
+	// check for duplicates
+	addedFilter := make(map[string]struct{})
+	deletedFilter := make(map[string]struct{})
+
+	for _, key := range storeUpgrades.Added {
+		if _, ok := addedFilter[key]; ok {
+			return fmt.Errorf("store upgrade has duplicate key %s in added", key)
+		}
+		addedFilter[key] = struct{}{}
+	}
+	for _, key := range storeUpgrades.Deleted {
+		if _, ok := deletedFilter[key]; ok {
+			return fmt.Errorf("store upgrade has duplicate key %s in deleted", key)
+		}
+		deletedFilter[key] = struct{}{}
+	}
+
+	for _, key := range storeUpgrades.Added {
+		if _, ok := deletedFilter[key]; ok {
+			return fmt.Errorf("store upgrade has key %s in both added and deleted", key)
+		}
+	}
+	for _, key := range storeUpgrades.Deleted {
+		if _, ok := addedFilter[key]; ok {
+			return fmt.Errorf("store upgrade has key %s in both added and deleted", key)
+		}
+	}
+
+	return nil
 }

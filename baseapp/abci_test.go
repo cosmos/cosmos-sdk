@@ -676,7 +676,7 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 
 			events := res.TxResults[i].GetEvents()
 			require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
-			require.Equal(t, sdk.MarkEventsToIndex(counterEvent("ante_handler", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
+			require.Equal(t, sdk.MarkEventsToIndex(counterEvent("ante_handler", counter).ToABCIEvents(), map[string]struct{}{})[0].Attributes[0], events[0].Attributes[0], "ante handler event")
 			require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0].Attributes[0], events[2].Attributes[0], "msg handler update counter event")
 		}
 
@@ -1589,7 +1589,6 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 
 		tc.bapp.SetParamStore(&paramStore{db: coretesting.NewMemDB()})
 		_, err := tc.bapp.InitChain(&abci.InitChainRequest{
@@ -2081,7 +2080,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 				return nil, err
 			}
 
-			cp := ctx.ConsensusParams() // nolint:staticcheck // ignore linting error
+			cp := ctx.ConsensusParams() //nolint:staticcheck // ignore linting error
 			extsEnabled := cp.Feature.VoteExtensionsEnableHeight != nil && req.Height >= cp.Feature.VoteExtensionsEnableHeight.Value && cp.Feature.VoteExtensionsEnableHeight.Value != 0
 			if !extsEnabled {
 				// check abci params

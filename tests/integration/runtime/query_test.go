@@ -46,6 +46,7 @@ func initFixture(t assert.TestingT) *fixture {
 				configurator.AccountsModule(),
 				configurator.AuthModule(),
 				configurator.TxModule(),
+				configurator.ValidateModule(),
 				configurator.ConsensusModule(),
 				configurator.BankModule(),
 				configurator.StakingModule(),

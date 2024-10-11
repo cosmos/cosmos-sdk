@@ -15,8 +15,9 @@ import (
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/api/telemetry"
 	"cosmossdk.io/server/v2/cometbft"
-	"cosmossdk.io/server/v2/store"
+	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 
@@ -74,9 +75,14 @@ func initRootCmd[T transaction.Tx](
 		newApp,
 		logger,
 		initServerConfig(),
-		cometbft.New(&genericTxDecoder[T]{txConfig}, cometbft.DefaultServerOptions[T]()),
+		cometbft.New(
+			&genericTxDecoder[T]{txConfig},
+			initCometOptions[T](),
+			initCometConfig(),
+		),
 		grpc.New[T](),
-		store.New[T](newApp),
+		serverstore.New[T](),
+		telemetry.New[T](),
 	); err != nil {
 		panic(err)
 	}

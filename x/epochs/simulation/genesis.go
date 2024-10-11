@@ -1,8 +1,6 @@
 package simulation
 
 import (
-	"encoding/json"
-	"fmt"
 	"math/rand"
 	"strconv"
 	"time"
@@ -37,10 +35,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 		Epochs: epochs,
 	}
 
-	bz, err := json.MarshalIndent(&epochsGenesis, "", " ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Selected randomly generated epochs parameters:\n%s\n", bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&epochsGenesis)
 }

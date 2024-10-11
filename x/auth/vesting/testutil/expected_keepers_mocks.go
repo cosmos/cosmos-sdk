@@ -8,7 +8,6 @@ import (
 	context "context"
 	reflect "reflect"
 
-	transaction "cosmossdk.io/core/transaction"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -81,85 +80,4 @@ func (m *MockBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr types.A
 func (mr *MockBankKeeperMockRecorder) SendCoins(ctx, fromAddr, toAddr, amt interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoins", reflect.TypeOf((*MockBankKeeper)(nil).SendCoins), ctx, fromAddr, toAddr, amt)
-}
-
-// MockAccountsModKeeper is a mock of AccountsModKeeper interface.
-type MockAccountsModKeeper struct {
-	ctrl     *gomock.Controller
-	recorder *MockAccountsModKeeperMockRecorder
-}
-
-// MockAccountsModKeeperMockRecorder is the mock recorder for MockAccountsModKeeper.
-type MockAccountsModKeeperMockRecorder struct {
-	mock *MockAccountsModKeeper
-}
-
-// NewMockAccountsModKeeper creates a new mock instance.
-func NewMockAccountsModKeeper(ctrl *gomock.Controller) *MockAccountsModKeeper {
-	mock := &MockAccountsModKeeper{ctrl: ctrl}
-	mock.recorder = &MockAccountsModKeeperMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockAccountsModKeeper) EXPECT() *MockAccountsModKeeperMockRecorder {
-	return m.recorder
-}
-
-// InitAccountNumberSeqUnsafe mocks base method.
-func (m *MockAccountsModKeeper) InitAccountNumberSeqUnsafe(ctx context.Context, currentAccNum uint64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitAccountNumberSeqUnsafe", ctx, currentAccNum)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// InitAccountNumberSeqUnsafe indicates an expected call of InitAccountNumberSeqUnsafe.
-func (mr *MockAccountsModKeeperMockRecorder) InitAccountNumberSeqUnsafe(ctx, currentAccNum interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitAccountNumberSeqUnsafe", reflect.TypeOf((*MockAccountsModKeeper)(nil).InitAccountNumberSeqUnsafe), ctx, currentAccNum)
-}
-
-// IsAccountsModuleAccount mocks base method.
-func (m *MockAccountsModKeeper) IsAccountsModuleAccount(ctx context.Context, accountAddr []byte) bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsAccountsModuleAccount", ctx, accountAddr)
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// IsAccountsModuleAccount indicates an expected call of IsAccountsModuleAccount.
-func (mr *MockAccountsModKeeperMockRecorder) IsAccountsModuleAccount(ctx, accountAddr interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAccountsModuleAccount", reflect.TypeOf((*MockAccountsModKeeper)(nil).IsAccountsModuleAccount), ctx, accountAddr)
-}
-
-// NextAccountNumber mocks base method.
-func (m *MockAccountsModKeeper) NextAccountNumber(ctx context.Context) (uint64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NextAccountNumber", ctx)
-	ret0, _ := ret[0].(uint64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// NextAccountNumber indicates an expected call of NextAccountNumber.
-func (mr *MockAccountsModKeeperMockRecorder) NextAccountNumber(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextAccountNumber", reflect.TypeOf((*MockAccountsModKeeper)(nil).NextAccountNumber), ctx)
-}
-
-// SendModuleMessage mocks base method.
-func (m *MockAccountsModKeeper) SendModuleMessage(ctx context.Context, sender []byte, msg transaction.Msg) (transaction.Msg, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendModuleMessage", ctx, sender, msg)
-	ret0, _ := ret[0].(transaction.Msg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SendModuleMessage indicates an expected call of SendModuleMessage.
-func (mr *MockAccountsModKeeperMockRecorder) SendModuleMessage(ctx, sender, msg interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendModuleMessage", reflect.TypeOf((*MockAccountsModKeeper)(nil).SendModuleMessage), ctx, sender, msg)
 }

@@ -100,15 +100,15 @@ type objectView struct {
 	conn dbConn
 }
 
-func (tm *objectView) ObjectType() schema.ObjectType {
+func (tm *objectView) ObjectType() schema.StateObjectType {
 	return tm.typ
 }
 
-func (tm *objectView) GetObject(key interface{}) (update schema.ObjectUpdate, found bool, err error) {
+func (tm *objectView) GetObject(key interface{}) (update schema.StateObjectUpdate, found bool, err error) {
 	return tm.get(tm.ctx, tm.conn, key)
 }
 
-func (tm *objectView) AllState(f func(schema.ObjectUpdate, error) bool) {
+func (tm *objectView) AllState(f func(schema.StateObjectUpdate, error) bool) {
 	buf := new(strings.Builder)
 	err := tm.selectAllSql(buf)
 	if err != nil {

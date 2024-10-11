@@ -62,7 +62,7 @@ func TestValidateGenesis(t *testing.T) {
 			}(),
 			"section is missing in the app_state",
 			module.NewManagerFromMap(map[string]appmodulev2.AppModule{
-				"custommod": staking.NewAppModule(cdc, nil, nil, nil),
+				"custommod": staking.NewAppModule(cdc, nil),
 			}),
 		},
 		{
@@ -85,8 +85,6 @@ func TestValidateGenesis(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			genesisFile := testutil.WriteToNewTempFile(t, tc.genesis)
 			_, err := clitestutil.ExecTestCLICmd(client.Context{}, cli.ValidateGenesisCmd(tc.genMM), []string{genesisFile.Name()})

@@ -16,7 +16,7 @@ func ModuleSchemaGen() *rapid.Generator[schema.ModuleSchema] {
 			t.Fatal(err)
 		}
 
-		objectTypes := distinctTypes(ObjectTypeGen(tempSchema)).Draw(t, "objectTypes")
+		objectTypes := distinctTypes(StateObjectTypeGen(tempSchema)).Draw(t, "objectTypes")
 		allTypes := append(enumTypes, objectTypes...)
 
 		modSchema, err := schema.CompileModuleSchema(allTypes...)

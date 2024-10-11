@@ -11,8 +11,6 @@ import (
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
@@ -22,9 +20,10 @@ import (
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/schema/indexer"
 	serverv2 "cosmossdk.io/server/v2"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
-	"cosmossdk.io/server/v2/cometbft/types"
+	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/store/v2/snapshots"
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -49,7 +48,11 @@ type CometBFTServer[T transaction.Tx] struct {
 	cfgOptions    []CfgOption
 }
 
-func New[T transaction.Tx](txCodec transaction.Codec[T], serverOptions ServerOptions[T], cfgOptions ...CfgOption) *CometBFTServer[T] {
+func New[T transaction.Tx](
+	txCodec transaction.Codec[T],
+	serverOptions ServerOptions[T],
+	cfgOptions ...CfgOption,
+) *CometBFTServer[T] {
 	return &CometBFTServer[T]{
 		initTxCodec:   txCodec,
 		serverOptions: serverOptions,
@@ -99,35 +102,48 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	}
 
 	s.logger = logger.With(log.ModuleKey, s.Name())
-	store := appI.GetStore().(types.Store)
+	rs := appI.GetStore()
 	consensus := NewConsensus(
 		s.logger,
 		appI.Name(),
-		appI.GetConsensusAuthority(),
 		appI.GetAppManager(),
-		s.serverOptions.Mempool,
+		s.serverOptions.Mempool(cfg),
 		indexEvents,
-		appI.GetGPRCMethodsToMessageMap(),
-		store,
+		appI.GetQueryHandlers(),
+		rs,
 		s.config,
 		s.initTxCodec,
 		chainID,
 	)
 	consensus.prepareProposalHandler = s.serverOptions.PrepareProposalHandler
 	consensus.processProposalHandler = s.serverOptions.ProcessProposalHandler
+	consensus.checkTxHandler = s.serverOptions.CheckTxHandler
 	consensus.verifyVoteExt = s.serverOptions.VerifyVoteExtensionHandler
 	consensus.extendVote = s.serverOptions.ExtendVoteHandler
 	consensus.addrPeerFilter = s.serverOptions.AddrPeerFilter
 	consensus.idPeerFilter = s.serverOptions.IdPeerFilter
 
-	ss := store.GetStateStorage().(snapshots.StorageSnapshotter)
-	sc := store.GetStateCommitment().(snapshots.CommitSnapshotter)
+	ss := rs.GetStateStorage().(snapshots.StorageSnapshotter)
+	sc := rs.GetStateCommitment().(snapshots.CommitSnapshotter)
 
 	snapshotStore, err := GetSnapshotStore(s.config.ConfigTomlConfig.RootDir)
 	if err != nil {
 		return err
 	}
-	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.serverOptions.SnapshotOptions, sc, ss, nil, s.logger)
+	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.serverOptions.SnapshotOptions(cfg), sc, ss, nil, s.logger)
+
+	// initialize the indexer
+	if indexerCfg := s.config.AppTomlConfig.Indexer; len(indexerCfg.Target) > 0 {
+		listener, err := indexer.StartIndexing(indexer.IndexingOptions{
+			Config:   indexerCfg,
+			Resolver: appI.GetSchemaDecoderResolver(),
+			Logger:   s.logger.With(log.ModuleKey, "indexer"),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to start indexing: %w", err)
+		}
+		consensus.listener = &listener.Listener
+	}
 
 	s.Consensus = consensus
 
@@ -159,9 +175,7 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 	pv, err := pvm.LoadOrGenFilePV(
 		s.config.ConfigTomlConfig.PrivValidatorKeyFile(),
 		s.config.ConfigTomlConfig.PrivValidatorStateFile(),
-		func() (cmtcrypto.PrivKey, error) {
-			return cmted25519.GenPrivKey(), nil
-		},
+		s.serverOptions.KeygenF,
 	)
 	if err != nil {
 		return err
@@ -240,6 +254,7 @@ func (s *CometBFTServer[T]) StartCmdFlags() *pflag.FlagSet {
 	flags.Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")
 	flags.Bool(FlagTrace, false, "Provide full stack traces for errors in ABCI Log")
 	flags.Bool(Standalone, false, "Run app without CometBFT")
+	flags.Int(FlagMempoolMaxTxs, mempool.DefaultMaxTx, "Sets MaxTx value for the app-side mempool")
 
 	// add comet flags, we use an empty command to avoid duplicating CometBFT's AddNodeFlags.
 	// we can then merge the flag sets.
@@ -274,7 +289,7 @@ func (s *CometBFTServer[T]) CLICommands() serverv2.CLIConfig {
 
 // Config returns the (app.toml) server configuration.
 func (s *CometBFTServer[T]) Config() any {
-	if s.config.AppTomlConfig == nil || s.config.AppTomlConfig == (&AppTomlConfig{}) {
+	if s.config.AppTomlConfig == nil || s.config.AppTomlConfig.Address == "" {
 		cfg := &Config{AppTomlConfig: DefaultAppTomlConfig()}
 		// overwrite the default config with the provided options
 		for _, opt := range s.cfgOptions {

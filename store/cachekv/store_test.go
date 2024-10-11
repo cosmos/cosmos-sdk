@@ -475,6 +475,10 @@ func doOp(t *testing.T, st types.CacheKVStore, truth corestore.KVStoreWithBatch,
 		err := truth.Set(keyFmt(k), valFmt(k))
 		require.NoError(t, err)
 	case opSetRange:
+		if len(args) < 2 {
+			panic("expected 2 args")
+		}
+
 		start := args[0]
 		end := args[1]
 		setRange(t, st, truth, start, end)
@@ -484,6 +488,10 @@ func doOp(t *testing.T, st types.CacheKVStore, truth corestore.KVStoreWithBatch,
 		err := truth.Delete(keyFmt(k))
 		require.NoError(t, err)
 	case opDelRange:
+		if len(args) < 2 {
+			panic("expected 2 args")
+		}
+
 		start := args[0]
 		end := args[1]
 		deleteRange(t, st, truth, start, end)

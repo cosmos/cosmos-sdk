@@ -298,7 +298,7 @@ func assertDest(dest ModelSlicePtr, destRef, tmpSlice *reflect.Value) (reflect.T
 
 	protoMarshaler := reflect.TypeOf((*proto.Message)(nil)).Elem()
 	if !elemType.Implements(protoMarshaler) &&
-		!reflect.PtrTo(elemType).Implements(protoMarshaler) {
+		!reflect.PointerTo(elemType).Implements(protoMarshaler) {
 		return nil, errorsmod.Wrapf(grouperrors.ErrORMInvalidArgument, "unsupported type :%s", elemType)
 	}
 

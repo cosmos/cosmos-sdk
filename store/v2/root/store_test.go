@@ -456,7 +456,6 @@ func (s *RootStoreTestSuite) TestPrune() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 
 		s.newStoreWithPruneConfig(&tc.po)
 

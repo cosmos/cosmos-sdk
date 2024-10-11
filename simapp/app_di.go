@@ -15,21 +15,15 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
-	authzkeeper "cosmossdk.io/x/authz/keeper"
+	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
+	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
+	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
-	bankv2keeper "cosmossdk.io/x/bank/v2/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	consensuskeeper "cosmossdk.io/x/consensus/keeper"
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
-	epochskeeper "cosmossdk.io/x/epochs/keeper"
-	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	govkeeper "cosmossdk.io/x/gov/keeper"
-	groupkeeper "cosmossdk.io/x/group/keeper"
-	mintkeeper "cosmossdk.io/x/mint/keeper"
-	nftkeeper "cosmossdk.io/x/nft/keeper"
 	_ "cosmossdk.io/x/protocolpool"
-	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	slashingkeeper "cosmossdk.io/x/slashing/keeper"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
@@ -71,26 +65,18 @@ type SimApp struct {
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
 
-	// keepers
+	// required keepers during wiring
+	// others keepers are all in the app
 	AccountsKeeper        accounts.Keeper
 	AuthKeeper            authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
-	BankV2Keeper          *bankv2keeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
-	MintKeeper            mintkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
-	GovKeeper             *govkeeper.Keeper
 	UpgradeKeeper         *upgradekeeper.Keeper
-	AuthzKeeper           authzkeeper.Keeper
-	EvidenceKeeper        evidencekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
-	GroupKeeper           groupkeeper.Keeper
-	NFTKeeper             nftkeeper.Keeper
 	ConsensusParamsKeeper consensuskeeper.Keeper
 	CircuitBreakerKeeper  circuitkeeper.Keeper
-	PoolKeeper            poolkeeper.Keeper
-	EpochsKeeper          *epochskeeper.Keeper
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -172,6 +158,27 @@ func NewSimApp(
 				// For providing a custom inflation function for x/mint add here your
 				// custom function that implements the minttypes.MintFn interface.
 			),
+			depinject.Provide(
+				// inject desired account types:
+				multisigdepinject.ProvideAccount,
+				basedepinject.ProvideAccount,
+				lockupdepinject.ProvideAllLockupAccounts,
+
+				// provide base account options
+				basedepinject.ProvideSecp256K1PubKey,
+				// if you want to provide a custom public key you
+				// can do it from here.
+				// Example:
+				// 		basedepinject.ProvideCustomPubkey[Ed25519PublicKey]()
+				//
+				// You can also provide a custom public key with a custom validation function:
+				//
+				// 		basedepinject.ProvideCustomPubKeyAndValidationFunc(func(pub Ed25519PublicKey) error {
+				//			if len(pub.Key) != 64 {
+				//				return fmt.Errorf("invalid pub key size")
+				//			}
+				// 		})
+			),
 		)
 	)
 
@@ -186,22 +193,13 @@ func NewSimApp(
 		&app.AuthKeeper,
 		&app.AccountsKeeper,
 		&app.BankKeeper,
-		&app.BankV2Keeper,
 		&app.StakingKeeper,
 		&app.SlashingKeeper,
-		&app.MintKeeper,
 		&app.DistrKeeper,
-		&app.GovKeeper,
 		&app.UpgradeKeeper,
-		&app.AuthzKeeper,
-		&app.EvidenceKeeper,
 		&app.FeeGrantKeeper,
-		&app.GroupKeeper,
-		&app.NFTKeeper,
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
-		&app.PoolKeeper,
-		&app.EpochsKeeper,
 	); err != nil {
 		panic(err)
 	}

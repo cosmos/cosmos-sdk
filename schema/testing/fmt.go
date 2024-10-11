@@ -11,7 +11,7 @@ import (
 // ObjectKeyString formats the object key as a string deterministically for storage in a map.
 // The key must be valid for the object type and the object type must be valid.
 // No validation is performed here.
-func ObjectKeyString(objectType schema.ObjectType, key any) string {
+func ObjectKeyString(objectType schema.StateObjectType, key any) string {
 	keyFields := objectType.KeyFields
 	n := len(keyFields)
 	switch n {
@@ -38,7 +38,7 @@ func fmtValue(kind schema.Kind, value any) string {
 	switch kind {
 	case schema.BytesKind, schema.AddressKind:
 		return fmt.Sprintf("0x%x", value)
-	case schema.DecimalStringKind, schema.IntegerStringKind:
+	case schema.DecimalKind, schema.IntegerKind:
 		// we need to normalize decimal & integer strings to remove leading & trailing zeros
 		d, _, err := apd.NewFromString(value.(string))
 		if err != nil {

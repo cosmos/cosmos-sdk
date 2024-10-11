@@ -268,8 +268,11 @@ func (enc Encoder) marshal(value protoreflect.Value, fd protoreflect.FieldDescri
 }
 
 type nameAndIndex struct {
-	i    int
-	name string
+	i              int
+	name           string
+	oneof          protoreflect.OneofDescriptor
+	oneofFieldName string
+	oneofTypeName  string
 }
 
 func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
@@ -300,14 +303,37 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 	indices := make([]*nameAndIndex, 0, fields.Len())
 	for i := 0; i < fields.Len(); i++ {
 		f := fields.Get(i)
-		name := getAminoFieldName(f)
-		indices = append(indices, &nameAndIndex{i: i, name: name})
+		entry := &nameAndIndex{
+			i:     i,
+			name:  getAminoFieldName(f),
+			oneof: f.ContainingOneof(),
+		}
+
+		if entry.oneof != nil {
+			var err error
+			entry.oneofFieldName, entry.oneofTypeName, err = getOneOfNames(f)
+			if err != nil {
+				return err
+			}
+		}
+
+		indices = append(indices, entry)
 	}
 
 	if shouldSortFields := !enc.doNotSortFields; shouldSortFields {
 		sort.Slice(indices, func(i, j int) bool {
 			ni, nj := indices[i], indices[j]
-			return ni.name < nj.name
+			niName, njName := ni.name, nj.name
+
+			if indices[i].oneof != nil {
+				niName = indices[i].oneofFieldName
+			}
+
+			if indices[j].oneof != nil {
+				njName = indices[j].oneofFieldName
+			}
+
+			return niName < njName
 		})
 	}
 
@@ -316,22 +342,17 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		name := ni.name
 		f := fields.Get(i)
 		v := msg.Get(f)
-		oneof := f.ContainingOneof()
-		isOneOf := oneof != nil
-		oneofFieldName, oneofTypeName, err := getOneOfNames(f)
-		if err != nil && isOneOf {
-			return err
-		}
+		isOneOf := ni.oneof != nil
 		writeNil := false
 
 		if !msg.Has(f) {
 			// msg.WhichOneof(oneof) == nil: no field of the oneof has been set
 			// !emptyOneOfWritten: we haven't written a null for this oneof yet (only write one null per empty oneof)
 			switch {
-			case isOneOf && msg.WhichOneof(oneof) == nil && !emptyOneOfWritten[oneofFieldName]:
-				name = oneofFieldName
+			case isOneOf && msg.WhichOneof(ni.oneof) == nil && !emptyOneOfWritten[ni.oneofFieldName]:
+				name = ni.oneofFieldName
 				writeNil = true
-				emptyOneOfWritten[oneofFieldName] = true
+				emptyOneOfWritten[ni.oneofFieldName] = true
 			case omitEmpty(f):
 				continue
 			case f.Kind() == protoreflect.MessageKind &&
@@ -349,7 +370,7 @@ func (enc Encoder) marshalMessage(msg protoreflect.Message, writer io.Writer) er
 		}
 
 		if isOneOf && !writeNil {
-			_, err = fmt.Fprintf(writer, `"%s":{"type":"%s","value":{`, oneofFieldName, oneofTypeName)
+			_, err = fmt.Fprintf(writer, `"%s":{"type":"%s","value":{`, ni.oneofFieldName, ni.oneofTypeName)
 			if err != nil {
 				return err
 			}

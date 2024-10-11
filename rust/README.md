@@ -164,7 +164,7 @@ pub struct SetValueEvent {
 }
 ```
 
-## Calling other accounts
+### Calling other accounts
 
 Any account may call any other account or module in the app by calling the client structs
 that are generated for handlers and `#[handler_api]` traits.

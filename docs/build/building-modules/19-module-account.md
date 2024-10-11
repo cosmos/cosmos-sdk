@@ -6,7 +6,7 @@ sidebar_position: 1
 
 ## Address Generation
 
-Module accounts addresses are generated deterministically from the module name, as defined in ADR-028: 
+Module account addresses are generated deterministically from the module name as defined in [ADR-028](https://docs.cosmos.network/v0.52/build/architecture/adr-028-public-key-addresses#module-account-addresses)
 
 Definition of account permissions is done during the app initialization
 

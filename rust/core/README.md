@@ -1,4 +1,5 @@
-**WARNING: This is an API preview! Most code won't work or even type check properly!**
+**WARNING: This is an API preview! Expect major bugs, glaring omissions, and breaking changes!**
+
 This crate defines types and macros for constructing easy to use account and module implementations.
 It integrates with the encoding layer but does not specify a state management framework.
 

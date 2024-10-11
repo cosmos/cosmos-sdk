@@ -1,4 +1,4 @@
-//! **WARNING: This is an API preview! Most code won't work or even type check properly!**
+//! **WARNING: This is an API preview! Expect major bugs, glaring omissions, and breaking changes!**
 //! This is a macro utility crate for ixc_core.
 
 use proc_macro::{TokenStream};

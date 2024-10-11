@@ -1,4 +1,4 @@
-**WARNING: This is an API preview! Most code won't work or even type check properly!**
+**WARNING: This is an API preview! Expect major bugs, glaring omissions, and breaking changes!**
 
 This crate defines the encoding traits and schemas for the Interchain SDK which can be used in message
 parameter and return types, serializable structs and enums, and objects in storage.

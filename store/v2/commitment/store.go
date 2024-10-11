@@ -38,6 +38,7 @@ type MountTreeFn func(storeKey string) (Tree, error)
 // and trees.
 type CommitStore struct {
 	logger     corelog.Logger
+	db         corestore.KVStoreWithBatch // holds the db instance for closing it
 	metadata   *MetadataStore
 	multiTrees map[string]Tree
 	// oldTrees is a map of store keys to old trees that have been deleted or renamed.
@@ -49,6 +50,7 @@ type CommitStore struct {
 func NewCommitStore(trees, oldTrees map[string]Tree, db corestore.KVStoreWithBatch, logger corelog.Logger) (*CommitStore, error) {
 	return &CommitStore{
 		logger:     logger,
+		db:         db,
 		multiTrees: trees,
 		oldTrees:   oldTrees,
 		metadata:   NewMetadataStore(db),
@@ -499,5 +501,6 @@ func (c *CommitStore) Close() error {
 		}
 	}
 
-	return nil
+	// close the db
+	return c.db.Close()
 }

@@ -1,0 +1,21 @@
+name: "Test Suite"
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches:
+      - main
+      - release/**
+      - rust-core
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: cargo test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - run: cargo test --all-features --workspace
+        working-directory: rust

@@ -6,7 +6,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-ixc_message_api = { path = "../../message_api" }
+ixc_message_api = { path = "../../message_api", version = "0.0.3" }
 
 [lints]
 workspace = true

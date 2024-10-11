@@ -12,10 +12,9 @@ ixc = { path = "..", version = "0.0.3" }
 ixc_core = { path = "../core", version = "0.0.3" }
 ixc_core_macros = {path = "../core_macros", version = "0.0.3" }
 ixc_message_api = { path = "../message_api", version = "0.0.3" }
-ixc_vm_api = { path = "../vm/api" }
-#ixc_hypervisor = { path = "../vm/hypervisor" }
-ixc_schema = { path = "../schema" }
-ixc_schema_macros = { path = "../schema_macros" }
+ixc_vm_api = { path = "../vm/api", version = "0.0.1" }
+ixc_schema = { path = "../schema", version = "0.0.3" }
+ixc_schema_macros = { path = "../schema_macros", version = "0.0.3" }
 imbl = "3.0.0"
 arc-swap = "1.7.1"
 thiserror = "1.0.64"

@@ -8,11 +8,11 @@ license.workspace = true
 
 [dependencies]
 ixc_core = { path = "../core", version = "0.0.3" }
-ixc_core_macros = { path = "../core_macros" }
+ixc_core_macros = { path = "../core_macros", version = "0.0.3" }
 ixc_schema = { path = "../schema", version = "0.0.3" }
-ixc_message_api = { path = "../message_api" }
+ixc_message_api = { path = "../message_api", version = "0.0.3" }
 bump-scope = "0.9.2"
-simple_time = { path = "../util/simple_time", version = "0.0.2" }
+simple_time = { path = "../util/simple_time", version = "0.0.1" }
 num_enum = "0.7.3"
 thiserror = "1.0.63"
 

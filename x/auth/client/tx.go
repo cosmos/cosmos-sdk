@@ -155,7 +155,7 @@ func ReadTxsFromInput(txCfg client.TxConfig, filenames ...string) (scanner *Batc
 				return nil, fmt.Errorf("couldn't read %s: %w", f, err)
 			}
 
-			if _, err := buf.WriteString(string(bytes) + "\n"); err != nil { // scanner expects newline delimited txs
+			if _, err := buf.WriteString(strings.ReplaceAll(string(bytes), "\n", "") + "\n"); err != nil { // scanner expects ONE newline per tx
 				return nil, fmt.Errorf("couldn't write to merged file: %w", err)
 			}
 		}

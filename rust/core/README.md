@@ -12,6 +12,6 @@ which were passed around everywhere. This made it difficult to understand what w
 actually being passed around and what was being used.
 
 [`Context`] here is defined to have the following purposes:
-* wrap some basic information about the current call, but not the full message header
+* wrap [`ixc_message_api::header::ContextInfo`] which includes the current account, calling account, and gas limit
 * hold a handle to [`ixc_schema`]'s bump allocator
 * hold a handle to the function used to send messages

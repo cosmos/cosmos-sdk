@@ -40,14 +40,14 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-ixc_core = { path = "core", version = "0.0.2" }
-ixc_schema = { path = "schema", version = "0.0.2", features = ["use_ixc_macro_path"] }
-ixc_message_api = { path = "message_api", version = "0.0.2" }
-state_objects = { path = "state_objects", version = "0.0.2" }
+ixc_core = { path = "core", version = "0.0.3" }
+ixc_schema = { path = "schema", version = "0.0.3", features = ["use_ixc_macro_path"] }
+ixc_message_api = { path = "message_api", version = "0.0.3" }
+state_objects = { path = "state_objects", version = "0.0.3" }
 simple_time = { path = "util/simple_time", version = "0.0.1" }
-ixc_core_macros = { path = "core_macros", version = "0.0.2"}
-ixc_schema_macros = { path = "schema_macros", version = "0.0.2", features = ["use_ixc_macro_path"] }
-state_objects_macros = { path = "state_objects_macros", version = "0.0.2" }
+ixc_core_macros = { path = "core_macros", version = "0.0.3"}
+ixc_schema_macros = { path = "schema_macros", version = "0.0.3", features = ["use_ixc_macro_path"] }
+state_objects_macros = { path = "state_objects_macros", version = "0.0.3" }
 constcat = "0.5.1"
 array-concat = "0.5.3"
 

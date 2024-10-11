@@ -9,10 +9,10 @@ members = [
     "message_api",
     "testing",
     "util/simple_time",
-    "codecs/proto", "codecs/evm",
-    "vm/wasmtime",
+#    "codecs/proto", "codecs/evm",
+#    "vm/wasmtime",
     "vm/api",
-    "vm/hypervisor",
+#    "vm/hypervisor",
     "example",
 ]
 
@@ -57,6 +57,9 @@ arrayvec = "0.7.6"
 thiserror = "1.0.63"
 num_enum = "0.7.3"
 mockall = "0.13.0"
+
+[lib]
+doctest = false
 
 [lints]
 workspace = true

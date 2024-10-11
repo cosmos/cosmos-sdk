@@ -52,7 +52,7 @@ mod tests {
         app.register_handler::<SimpleAsset>().unwrap();
         let mut alice = app.new_client_context().unwrap();
         let mut bob = app.new_client_context().unwrap();
-        let asset_client = create_account(&mut alice, SimpleAssetInit{ initial_balance: 100 }).unwrap();
+        let asset_client = create_account::<SimpleAsset>(&mut alice, SimpleAssetInit{ initial_balance: 100 }).unwrap();
         let alice_balance = asset_client.get_balance(&alice, alice.account_id()).unwrap();
         assert_eq!(alice_balance, 100);
         asset_client.send(&mut alice, 50, bob.account_id()).unwrap();

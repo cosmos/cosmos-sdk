@@ -26,6 +26,7 @@ use ixc_core::result::ClientResult;
 
 #[doc(hidden)]
 pub use ixc_core::account_api::create_account;
+use crate::default_account::{DefaultAccount, DefaultAccountCreate};
 
 /// Defines a test harness for running tests against account and module implementations.
 pub struct TestApp {
@@ -63,7 +64,7 @@ impl TestApp {
     /// Creates a new random client account that can be used in calls.
     pub fn new_client_account(&self) -> ClientResult<AccountID> {
         let mut ctx = self.client_context_for(ROOT_ACCOUNT);
-        let client = create_account(&mut ctx, default_account::DefaultAccountCreate{})?;
+        let client = create_account::<DefaultAccount>(&mut ctx, DefaultAccountCreate{})?;
         Ok(client.account_id())
     }
 

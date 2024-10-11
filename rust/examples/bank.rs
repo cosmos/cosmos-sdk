@@ -173,7 +173,7 @@ mod tests {
 
         // create a new client context for the root account and initialize bank
         let mut root = app.client_context_for(ROOT_ACCOUNT);
-        let bank_client = create_account(&mut root, BankCreate {}).unwrap();
+        let bank_client = create_account::<Bank>(&mut root, BankCreate {}).unwrap();
 
         // register a mock global send hook to test that it is called
         let mut mock_global_send_hook = MockSendHook::new();

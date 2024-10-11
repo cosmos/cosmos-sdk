@@ -48,7 +48,7 @@ mod tests {
         let mut app = TestApp::default();
         app.register_handler::<Counter>().unwrap();
         let mut alice_ctx = app.new_client_context().unwrap();
-        let counter_client = create_account(&mut alice_ctx, CounterCreate{}).unwrap();
+        let counter_client = create_account::<Counter>(&mut alice_ctx, CounterCreate{}).unwrap();
         let cur = counter_client.get(&alice_ctx).unwrap();
         assert_eq!(cur, 0);
         let cur = counter_client.inc(&mut alice_ctx).unwrap();

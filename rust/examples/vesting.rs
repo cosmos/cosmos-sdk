@@ -168,7 +168,7 @@ mod tests {
         // initialize the vesting account
         let beneficiary = app.new_client_account().unwrap();
         let unlock_time = Time::default().add(Duration::DAY * 5);
-        let vesting_acct = create_account(&mut root, FixedVestingCreate {
+        let vesting_acct = create_account::<FixedVesting>(&mut root, FixedVestingCreate {
             beneficiary,
             unlock_time,
         }).unwrap();

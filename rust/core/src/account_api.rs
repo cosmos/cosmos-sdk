@@ -9,12 +9,12 @@ use ixc_schema::codec::Codec;
 use crate::result::ClientResult;
 
 /// Creates a new account for the specified handler.
-pub fn create_account<'a, I: InitMessage<'a>>(ctx: &mut Context, init: I) -> ClientResult<<<I as InitMessage<'a>>::Handler as Service>::Client> {
-    let cdc = I::Codec::default();
+pub fn create_account<'a, H: Handler>(ctx: &mut Context, init: H::Init<'a>) -> ClientResult<<H as Service>::Client> {
+    let cdc = <<H as Handler>::Init<'_> as InitMessage<'_>>::Codec::default();
     let init_bz = cdc.encode_value(&init, ctx.memory_manager())?;
 
-    let account_id = do_create_account(ctx, I::Handler::NAME, &init_bz)?;
-    Ok(<<I::Handler as Service>::Client as Client>::new(account_id))
+    let account_id = do_create_account(ctx, <H as Handler>::NAME, &init_bz)?;
+    Ok(<H as Service>::new_client(account_id))
 }
 
 /// Creates a new account for the named handler with opaque initialization data.

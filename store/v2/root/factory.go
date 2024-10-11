@@ -177,5 +177,5 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	}
 
 	pm := pruning.NewManager(sc, ss, storeOpts.SCPruningOption, storeOpts.SSPruningOption)
-	return New(opts.Logger, ss, sc, pm, nil, nil)
+	return New(opts.SCRawDB, opts.Logger, ss, sc, pm, nil, nil)
 }

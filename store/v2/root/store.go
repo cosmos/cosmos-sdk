@@ -33,6 +33,9 @@ type Store struct {
 	logger         corelog.Logger
 	initialVersion uint64
 
+	// holds the db instance for closing it
+	db corestore.KVStoreWithBatch
+
 	// stateStorage reflects the state storage backend
 	stateStorage store.VersionedDatabase
 
@@ -68,6 +71,7 @@ type Store struct {
 //
 // NOTE: The migration manager is optional and can be nil if no migration is required.
 func New(
+	db corestore.KVStoreWithBatch,
 	logger corelog.Logger,
 	ss store.VersionedDatabase,
 	sc store.Committer,
@@ -76,6 +80,7 @@ func New(
 	m metrics.StoreMetrics,
 ) (store.RootStore, error) {
 	return &Store{
+		db:               db,
 		logger:           logger,
 		initialVersion:   1,
 		stateStorage:     ss,
@@ -92,6 +97,7 @@ func New(
 func (s *Store) Close() (err error) {
 	err = errors.Join(err, s.stateStorage.Close())
 	err = errors.Join(err, s.stateCommitment.Close())
+	err = errors.Join(err, s.db.Close())
 
 	s.stateStorage = nil
 	s.stateCommitment = nil

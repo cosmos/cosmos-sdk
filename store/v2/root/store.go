@@ -34,7 +34,7 @@ type Store struct {
 	initialVersion uint64
 
 	// stateStorage reflects the state storage backend
-	stateStorage store.VersionedDatabase
+	stateStorage store.VersionedWriter
 
 	// stateCommitment reflects the state commitment (SC) backend
 	stateCommitment store.Committer
@@ -69,7 +69,7 @@ type Store struct {
 // NOTE: The migration manager is optional and can be nil if no migration is required.
 func New(
 	logger corelog.Logger,
-	ss store.VersionedDatabase,
+	ss store.VersionedWriter,
 	sc store.Committer,
 	pm *pruning.Manager,
 	mm *migration.Manager,
@@ -120,19 +120,17 @@ func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
 	return v, NewReaderMap(v, s), nil
 }
 
+// StateAt checks if the requested version is present in the state storage and the commitment store.
 func (s *Store) StateAt(v uint64) (corestore.ReaderMap, error) {
-	// TODO(bez): We may want to avoid relying on the SC metadata here. Instead,
-	// we should add a VersionExists() method to the VersionedDatabase interface.
-	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/issues/19091
-	if cInfo, err := s.stateCommitment.GetCommitInfo(v); err != nil || cInfo == nil {
-		return nil, fmt.Errorf("failed to get commit info for version %d: %w", v, err)
+	// check if version is present in state storage
+	if _, err := s.stateStorage.VersionExists(v); err != nil {
+		return nil, err
 	}
 
 	return NewReaderMap(v, s), nil
 }
 
-func (s *Store) GetStateStorage() store.VersionedDatabase {
+func (s *Store) GetStateStorage() store.VersionedWriter {
 	return s.stateStorage
 }
 

@@ -123,6 +123,22 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	return latestHeight, nil
 }
 
+func (db *Database) VersionExists(v uint64) (bool, error) {
+	stmt, err := db.storage.Prepare("SELECT COUNT(*) FROM state_storage WHERE store_key != ? AND version = ? AND tombstone = 0")
+	if err != nil {
+		return false, fmt.Errorf("failed to prepare SQL statement: %w", err)
+	}
+
+	defer stmt.Close()
+
+	var count uint64
+	if err := stmt.QueryRow(reservedStoreKey, v).Scan(&count); err != nil {
+		return false, fmt.Errorf("failed to query row: %w", err)
+	}
+
+	return count > 0, nil
+}
+
 func (db *Database) SetLatestVersion(version uint64) error {
 	_, err := db.storage.Exec(reservedUpsertStmt, reservedStoreKey, keyLatestHeight, version, 0, version)
 	if err != nil {

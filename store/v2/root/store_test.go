@@ -90,7 +90,7 @@ func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption
 	s.rootStore = rs
 }
 
-func (s *RootStoreTestSuite) newStoreWithBackendMount(ss store.VersionedDatabase, sc store.Committer, pm *pruning.Manager) {
+func (s *RootStoreTestSuite) newStoreWithBackendMount(ss store.VersionedWriter, sc store.Committer, pm *pruning.Manager) {
 	noopLog := coretesting.NewNopLogger()
 
 	rs, err := New(noopLog, ss, sc, pm, nil, nil)

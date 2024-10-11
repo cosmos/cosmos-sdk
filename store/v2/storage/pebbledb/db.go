@@ -137,6 +137,15 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	return binary.LittleEndian.Uint64(bz), closer.Close()
 }
 
+func (db *Database) VersionExists(version uint64) (bool, error) {
+	_, err := db.GetLatestVersion()
+	if err != nil {
+		return false, err
+	}
+
+	return version >= db.earliestVersion, nil
+}
+
 func (db *Database) setPruneHeight(pruneVersion uint64) error {
 	db.earliestVersion = pruneVersion + 1
 

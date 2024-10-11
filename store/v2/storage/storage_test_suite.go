@@ -882,7 +882,7 @@ func (s *StorageTestSuite) TestRemovingOldStoreKey() {
 
 func dbApplyChangeset(
 	t *testing.T,
-	db store.VersionedDatabase,
+	db store.VersionedWriter,
 	version uint64,
 	storeKey string,
 	keys, vals [][]byte,

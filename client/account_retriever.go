@@ -2,7 +2,6 @@ package client
 
 import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -18,7 +17,7 @@ type mockAccount struct {
 	addr []byte
 }
 
-func (m mockAccount) GetAddress() types.AccAddress {
+func (m mockAccount) GetAddress() sdk.AccAddress {
 	return m.addr
 }
 

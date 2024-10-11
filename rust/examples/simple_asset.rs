@@ -53,12 +53,12 @@ mod tests {
         let mut alice = app.new_client_context().unwrap();
         let mut bob = app.new_client_context().unwrap();
         let asset_client = create_account::<SimpleAsset>(&mut alice, SimpleAssetInit{ initial_balance: 100 }).unwrap();
-        let alice_balance = asset_client.get_balance(&alice, alice.account_id()).unwrap();
+        let alice_balance = asset_client.get_balance(&alice, alice.self_account_id()).unwrap();
         assert_eq!(alice_balance, 100);
-        asset_client.send(&mut alice, 50, bob.account_id()).unwrap();
-        let alice_balance = asset_client.get_balance(&alice, alice.account_id()).unwrap();
+        asset_client.send(&mut alice, 50, bob.self_account_id()).unwrap();
+        let alice_balance = asset_client.get_balance(&alice, alice.self_account_id()).unwrap();
         assert_eq!(alice_balance, 50);
-        let bob_balance = asset_client.get_balance(&bob, bob.account_id()).unwrap();
+        let bob_balance = asset_client.get_balance(&bob, bob.self_account_id()).unwrap();
     }
 }
 

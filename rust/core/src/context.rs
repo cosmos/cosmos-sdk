@@ -26,7 +26,7 @@ impl<'a> Context<'a> {
 
     /// This is the address of the account that is getting called.
     /// In a receiving account, this is the account's own address.
-    pub fn account_id(&self) -> AccountID {
+    pub fn self_account_id(&self) -> AccountID {
         self.context_info.account
     }
 

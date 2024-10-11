@@ -186,7 +186,7 @@ mod tests {
 
         // alice gets to manage the "foo" denom and mints herself 1000 foo coins
         let mut alice = app.new_client_context().unwrap();
-        let alice_id = alice.account_id();
+        let alice_id = alice.self_account_id();
         bank_client.create_denom(&mut root, "foo", alice_id).unwrap();
         bank_client.mint(&mut alice, alice_id, "foo", 1000).unwrap();
 
@@ -197,12 +197,12 @@ mod tests {
 
         // alice sends 100 foo coins to bob
         let mut bob = app.new_client_context().unwrap();
-        bank_client.send(&mut alice, bob.account_id(), &[Coin { denom: "foo", amount: 100 }]).unwrap();
+        bank_client.send(&mut alice, bob.self_account_id(), &[Coin { denom: "foo", amount: 100 }]).unwrap();
 
         // ensure alice has 900 foo coins and bob has 100 foo coins
-        let alice_balance = bank_client.get_balance(&alice, alice.account_id(), "foo").unwrap();
+        let alice_balance = bank_client.get_balance(&alice, alice.self_account_id(), "foo").unwrap();
         assert_eq!(alice_balance, 900);
-        let bob_balance = bank_client.get_balance(&bob, bob.account_id(), "foo").unwrap();
+        let bob_balance = bank_client.get_balance(&bob, bob.self_account_id(), "foo").unwrap();
         assert_eq!(bob_balance, 100);
 
         // look inside bank to check the balance of alice directly as well as the supply of foo

@@ -176,7 +176,7 @@ where
 // this is to make macros work with a single import of the ixc crate
 fn mk_ixc_schema_path() -> TokenStream2 {
     #[cfg(feature = "use_ixc_macro_path")]
-    quote!{::ixc}
+    quote!{::ixc::schema}
     #[cfg(not(feature = "use_ixc_macro_path"))]
     quote!{::ixc_schema}
 }

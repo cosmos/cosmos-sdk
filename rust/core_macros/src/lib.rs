@@ -53,7 +53,7 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
     push_item(items, quote! {
         impl <'a> ::ixc::core::handler::InitMessage<'a> for #on_create_msg #create_msg_lifetime {
             type Handler = #handler;
-            type Codec = ::ixc::binary::NativeBinaryCodec;
+            type Codec = ::ixc::schema::binary::NativeBinaryCodec;
         }
     })?;
 
@@ -427,7 +427,7 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                     const SELECTOR: ::ixc::message_api::header::MessageSelector = #selector;
                     type Response<'b> = <#return_type as ::ixc::core::message::ExtractResponseTypes>::Response;
                     type Error = <#return_type as ::ixc::core::message::ExtractResponseTypes>::Error;
-                    type Codec = ::ixc::binary::NativeBinaryCodec;
+                    type Codec = ::ixc::schema::binary::NativeBinaryCodec;
                 }
             })?;
         ensure!(context_name.is_some(), "no context parameter found");
@@ -438,7 +438,7 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                             let cdc = < #msg_struct_name as ::ixc::core::message::Message<'_> >::Codec::default();
                             let in1 = packet.header().in_pointer1.get(packet);
                             let mut ctx = ::ixc::core::Context::new(packet.header().context_info, cb);
-                            let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager())?;
+                            let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc::schema::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager())?;
                             // NOTE: transmuting here is probably safe because there's nothing really to mutate, but ideally we should find
                             // a better way
                             let res = h.#fn_name(::core::mem::transmute(&ctx), #(#fn_ctr_args)*);
@@ -465,7 +465,7 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                     let cdc = < #msg_struct_name #opt_underscore_lifetime as::ixc::core::handler::InitMessage<'_> >::Codec::default();
                     let in1 = packet.header().in_pointer1.get(packet);
                     let mut ctx =::ixc::core::Context::new(packet.header().context_info, cb);
-                    let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc::codec::decode_value::< #msg_struct_name > ( & cdc, in1, ctx.memory_manager())?;
+                    let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc::schema::codec::decode_value::< #msg_struct_name > ( & cdc, in1, ctx.memory_manager())?;
                     // NOTE: transmuting here is probably safe because there's nothing really to mutate, but ideally we should find
                     // a better way
                     let res = h.#fn_name(::core::mem::transmute(&ctx), #(#fn_ctr_args)*);

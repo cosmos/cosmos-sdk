@@ -14,7 +14,7 @@ pub use state_objects::{Map, Item, Accumulator, AccumulatorMap};
 #[doc(inline)]
 pub use simple_time::{Time, Duration};
 
-pub use ixc_schema::*;
+pub use ixc_schema as schema;
 pub use ixc_message_api as message_api;
 pub use ixc_core as core;
 

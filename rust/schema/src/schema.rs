@@ -60,3 +60,10 @@ pub struct Schema<'a> {
 // pub trait HasSchema {
 //     const SCHEMA: Schema<'static>;
 // }
+
+
+// WARNING: this is a terrible hack to make macros work
+// either with ixc_schema or just ixc with the use_ixc_macro_path feature,
+// hopefully some day we find a better solution!
+#[cfg(feature = "use_ixc_macro_path")]
+pub(crate) use crate::*;

@@ -49,3 +49,16 @@ It's worth noting that options 1-5 vs any kind of first-class notion of modules 
 that the real "bank" is the caller of the hook because I know its account ID.
 
 ## Handler IDs
+
+The basic model we are working with is that there is a root mapping of `account ID -> handler ID`
+where handler ID is a pointer to the actual code to run the account in some virtual machine.
+
+A few issues to consider:
+* handler IDs should be part of consensus, but different nodes may actually use slightly different
+implementations of the same handler or VM.
+For instance, it shouldn't be an error to run a functionally identical handler written in Rust or Go,
+built into the binary or dynamically linked, as long as there is otherwise consensus that it is the same.
+It should also be possible to use different Wasm or EVM implementations.
+* it should be possible to create an account with a handler defined in the same compilation unit as our currently executing code just be referring to its Rust or Go type rather than some string
+
+## Encoding

@@ -56,25 +56,22 @@ type CLIConfig struct {
 }
 
 const (
-	serverName = "server"
+	serverName = "serverv2"
 )
 
 var _ ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
 
 // Server is the top-level server component which contains all other server components.
 type Server[T transaction.Tx] struct {
-	logger     log.Logger
 	components []ServerComponent[T]
 	config     ServerConfig
 }
 
 func NewServer[T transaction.Tx](
-	logger log.Logger,
 	config ServerConfig,
 	components ...ServerComponent[T],
 ) *Server[T] {
 	return &Server[T]{
-		logger:     logger,
 		config:     config,
 		components: components,
 	}
@@ -86,7 +83,8 @@ func (s *Server[T]) Name() string {
 
 // Start starts all components concurrently.
 func (s *Server[T]) Start(ctx context.Context) error {
-	s.logger.Info("starting servers...")
+	logger := GetLoggerFromContext(ctx)
+	logger.With(log.ModuleKey, s.Name()).Info("starting servers...")
 
 	g, ctx := errgroup.WithContext(ctx)
 	for _, mod := range s.components {
@@ -106,7 +104,8 @@ func (s *Server[T]) Start(ctx context.Context) error {
 
 // Stop stops all components concurrently.
 func (s *Server[T]) Stop(ctx context.Context) error {
-	s.logger.Info("stopping servers...")
+	logger := GetLoggerFromContext(ctx)
+	logger.With(log.ModuleKey, s.Name()).Info("stopping servers...")
 
 	g, ctx := errgroup.WithContext(ctx)
 	for _, mod := range s.components {

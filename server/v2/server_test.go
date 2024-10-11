@@ -76,7 +76,6 @@ func TestServer(t *testing.T) {
 	mockServer := &mockServer{name: "mock-server-1", ch: make(chan string, 100)}
 
 	server := serverv2.NewServer(
-		logger,
 		serverv2.DefaultServerConfig(),
 		grpcServer,
 		storeServer,

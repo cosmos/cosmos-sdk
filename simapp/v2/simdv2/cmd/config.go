@@ -79,7 +79,7 @@ func initCometConfig() cometbft.CfgOption {
 	cfg := cmtcfg.DefaultConfig()
 
 	// display only warn logs by default except for p2p and state
-	cfg.LogLevel = "*:warn,p2p:info,state:info"
+	cfg.LogLevel = "*:warn,serverv2:info,p2p:info,state:info"
 	// increase block timeout
 	cfg.Consensus.TimeoutCommit = 5 * time.Second
 	// overwrite default pprof listen address

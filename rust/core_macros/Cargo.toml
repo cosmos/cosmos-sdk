@@ -23,4 +23,3 @@ blake2 = "0.10.6"
 
 [features]
 default = []
-use_ixc_macro_path = []

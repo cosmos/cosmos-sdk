@@ -9,11 +9,6 @@ publish = false
 
 [dependencies]
 ixc = { path = ".." }
-# TODO: we want to be able to remove these transitive dependencies and just depend on ixc, but these
-# are needed for macros, for now
-ixc_core = { path = "../core" }
-ixc_message_api = { path = "../message_api" }
-ixc_schema_macros = { path = "../schema_macros" }
 
 [dev-dependencies]
 ixc_testing = { path = "../testing" }

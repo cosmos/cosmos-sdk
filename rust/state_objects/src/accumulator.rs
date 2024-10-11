@@ -9,7 +9,7 @@ use ixc_message_api::code::ErrorCode;
 use ixc_schema::state_object::ObjectKey;
 use crate::{Item, Map};
 
-/// A 128-bit signed integer accumulator.
+/// A 128-bit unsigned integer accumulator.
 pub struct Accumulator {
     item: Item<u128>,
 }

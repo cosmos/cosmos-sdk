@@ -25,7 +25,7 @@ pub struct MessageHeader {
     /// The gas consumed.
     pub gas_consumed: u64, // 8 bytes
 
-    reserved: [u8; 32],
+    reserved: [u8; 24],
 }
 
 /// Info about the current calling context.

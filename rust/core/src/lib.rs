@@ -43,7 +43,7 @@ macro_rules! error {
 #[macro_export]
 macro_rules! bail {
     ($($arg:tt)*) => {
-        return core::result::Result::Err($crate::fmt_error!($($arg)*));
+        return core::result::Result::Err($crate::error!($($arg)*));
     };
 }
 
@@ -52,7 +52,7 @@ macro_rules! bail {
 macro_rules! ensure {
     ($cond:expr, $($arg:tt)*) => {
         if !$cond {
-            return core::result::Result::Err($crate::fmt_error!($($arg)*));
+            return core::result::Result::Err($crate::error!($($arg)*));
         }
     };
 }

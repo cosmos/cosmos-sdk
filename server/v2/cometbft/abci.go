@@ -43,6 +43,7 @@ type Consensus[T transaction.Tx] struct {
 	logger           log.Logger
 	appName, version string
 	app              *appmanager.AppManager[T]
+	appCloser        func() error
 	txCodec          transaction.Codec[T]
 	store            types.Store
 	streaming        streaming.Manager
@@ -77,6 +78,7 @@ func NewConsensus[T transaction.Tx](
 	logger log.Logger,
 	appName string,
 	app *appmanager.AppManager[T],
+	appCloser func() error,
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
 	queryHandlersMap map[string]appmodulev2.Handler,
@@ -89,6 +91,7 @@ func NewConsensus[T transaction.Tx](
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
 		app:                    app,
+		appCloser:              appCloser,
 		cfg:                    cfg,
 		store:                  store,
 		logger:                 logger,

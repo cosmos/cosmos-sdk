@@ -3,6 +3,7 @@ name = "ixc_core"
 edition = "2021"
 description = "Interchain SDK Core"
 version = "0.0.2"
+readme = "README.md"
 repository.workspace = true
 license.workspace = true
 

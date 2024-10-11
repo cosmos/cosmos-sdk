@@ -9,7 +9,7 @@ This framework works with regular rust `#[test]` functions. To write tests, foll
 1. Add a `use ixc::testing::*` statement (optional, but recommended)
 2. Define a `TestApp`
 3. Register the handler types we want to test
-4. Create account instances for real or mock handlers
+4. Create account instances for real or mao
 5. Perform actions on the accounts and assert the results
 
 Let's define a simple counter with one method `inc` which increments the counter and returns
@@ -71,3 +71,13 @@ mod tests {
     }
 }
 ```
+
+## Using Mocks
+
+Mock handlers created by frameworks such as [mockall](https://docs.rs/mockall)
+can be used to test the behavior of a handler in isolation.
+The [`MockHandler`] type can be used to register boxed mock instances
+of one or more [`ixc::handler_api`] traits.
+And the [`TestApp::add_mock`] method can be used to add a mock handler to the test app.
+
+See the `examples/` directory in the [`ixc`] crate for more examples on usage.

@@ -221,11 +221,11 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 	toDistribute := map[string]sdk.Coins{}
 	poolFunds := sdk.NewCoins()
 	amountToDistribute := sdk.NewCoins() // amount assigned to distributions
-	totalDistribution := sdk.NewCoins()  // total amount distributed to the pool, to then calculate the remaining pool funds
+	allDistributions := sdk.NewCoins()   // total amount distributed to the pool, to then calculate the remaining pool funds
 
 	if err = k.Distributions.Walk(ctx, nil, func(key time.Time, amount types.DistributionAmount) (stop bool, err error) {
 		percentageToDistribute := math.LegacyZeroDec()
-		totalDistribution = totalDistribution.Add(amount.Amount...)
+		allDistributions = allDistributions.Add(amount.Amount...)
 
 		for _, f := range funds {
 			if f.Expiry != nil && f.Expiry.Before(key) {
@@ -272,7 +272,7 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 		}
 	}
 
-	poolFunds = totalDistribution.Sub(amountToDistribute...)
+	poolFunds = allDistributions.Sub(amountToDistribute...)
 	if !poolFunds.IsZero() {
 		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, poolFunds); err != nil {
 			return err

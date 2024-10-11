@@ -1,4 +1,4 @@
-//! **WARNING: This is an API preview! Most code won't work or even type check properly!**
+//! **WARNING: This is an API preview! Expect major bugs, glaring omissions, and breaking changes!**
 //!
 //! Virtual Machine API
 use ixc_message_api::code::ErrorCode;

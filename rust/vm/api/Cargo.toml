@@ -2,6 +2,7 @@
 name = "ixc_vm_api"
 version = "0.0.1"
 edition = "2021"
+description = "Interchain SDK VM API"
 repository.workspace = true
 license.workspace = true
 

@@ -33,6 +33,15 @@ func SetGovVotingPeriod(t *testing.T, period time.Duration) GenesisMutator {
 	}
 }
 
+func SetGovExpeditedVotingPeriod(t *testing.T, period time.Duration) GenesisMutator {
+	t.Helper()
+	return func(genesis []byte) []byte {
+		state, err := sjson.SetRawBytes(genesis, "app_state.gov.params.expedited_voting_period", []byte(fmt.Sprintf("%q", period.String())))
+		require.NoError(t, err)
+		return state
+	}
+}
+
 // GetGenesisBalance return the balance amount for an address from the given genesis json
 func GetGenesisBalance(rawGenesis []byte, addr string) sdk.Coins {
 	var r []sdk.Coin

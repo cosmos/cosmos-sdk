@@ -230,15 +230,17 @@ func (m *MM[T]) ExportGenesisForModules(
 		channels[moduleName] = make(chan genesisResult)
 		go func(moduleI ModuleI, ch chan genesisResult) {
 			genesisCtx := services.NewGenesisContext(stateFactory())
-			_, _ = genesisCtx.Run(ctx, func(ctx context.Context) error {
+			err := genesisCtx.Read(ctx, func(ctx context.Context) error {
 				jm, err := moduleI.ExportGenesis(ctx)
 				if err != nil {
-					ch <- genesisResult{nil, err}
 					return err
 				}
 				ch <- genesisResult{jm, nil}
 				return nil
 			})
+			if err != nil {
+				ch <- genesisResult{nil, err}
+			}
 		}(moduleI, channels[moduleName])
 	}
 
@@ -783,7 +785,9 @@ func messagePassingInterceptor(msg transaction.Msg) grpc.UnaryServerInterceptor 
 }
 
 // requestFullNameFromMethodDesc returns the fully-qualified name of the request message and response of the provided service's method.
-func requestFullNameFromMethodDesc(sd *grpc.ServiceDesc, method grpc.MethodDesc) (protoreflect.FullName, protoreflect.FullName, error) {
+func requestFullNameFromMethodDesc(sd *grpc.ServiceDesc, method grpc.MethodDesc) (
+	protoreflect.FullName, protoreflect.FullName, error,
+) {
 	methodFullName := protoreflect.FullName(fmt.Sprintf("%s.%s", sd.ServiceName, method.MethodName))
 	desc, err := gogoproto.HybridResolver.FindDescriptorByName(methodFullName)
 	if err != nil {

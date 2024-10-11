@@ -15,13 +15,15 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
+	"cosmossdk.io/store/v2/root"
 )
 
 // AppBuilder is a type that is injected into a container by the runtime/v2 module
 // (as *AppBuilder) which can be used to create an app which is compatible with
 // the existing app.go initialization conventions.
 type AppBuilder[T transaction.Tx] struct {
-	app *App[T]
+	app          *App[T]
+	storeBuilder root.Builder
 
 	// the following fields are used to overwrite the default
 	branch      func(state store.ReaderMap) store.WriterMap
@@ -62,14 +64,6 @@ func (a *AppBuilder[T]) RegisterModules(modules map[string]appmodulev2.AppModule
 	return nil
 }
 
-// RegisterStores registers the provided store keys.
-// This method should only be used for registering extra stores
-// which is necessary for modules that not registered using the app config.
-// To be used in combination of RegisterModules.
-func (a *AppBuilder[T]) RegisterStores(keys ...string) {
-	a.app.storeKeys = append(a.app.storeKeys, keys...)
-}
-
 // Build builds an *App instance.
 func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	for _, opt := range opts {
@@ -93,8 +87,9 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 		}
 	}
 
+	a.app.db = a.storeBuilder.Get()
 	if a.app.db == nil {
-		return nil, fmt.Errorf("app.db is not set, it is required to build the app")
+		return nil, fmt.Errorf("storeBuilder did not return a db")
 	}
 
 	if err := a.app.moduleManager.RegisterServices(a.app); err != nil {
@@ -149,7 +144,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 				return nil, errors.New("cannot init genesis on non-zero state")
 			}
 			genesisCtx := services.NewGenesisContext(a.branch(zeroState))
-			genesisState, err := genesisCtx.Run(ctx, func(ctx context.Context) error {
+			genesisState, err := genesisCtx.Mutate(ctx, func(ctx context.Context) error {
 				err = a.app.moduleManager.InitGenesisJSON(ctx, genesisJSON, txHandler)
 				if err != nil {
 					return fmt.Errorf("failed to init genesis: %w", err)
@@ -205,7 +200,11 @@ func AppBuilderWithBranch[T transaction.Tx](branch func(state store.ReaderMap) s
 
 // AppBuilderWithTxValidator sets the tx validator for the app.
 // It overrides all default tx validators defined by modules.
-func AppBuilderWithTxValidator[T transaction.Tx](txValidators func(ctx context.Context, tx T) error) AppBuilderOption[T] {
+func AppBuilderWithTxValidator[T transaction.Tx](
+	txValidators func(
+		ctx context.Context, tx T,
+	) error,
+) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.txValidator = txValidators
 	}
@@ -213,7 +212,11 @@ func AppBuilderWithTxValidator[T transaction.Tx](txValidators func(ctx context.C
 
 // AppBuilderWithPostTxExec sets logic that will be executed after each transaction.
 // When not provided, a no-op function will be used.
-func AppBuilderWithPostTxExec[T transaction.Tx](postTxExec func(ctx context.Context, tx T, success bool) error) AppBuilderOption[T] {
+func AppBuilderWithPostTxExec[T transaction.Tx](
+	postTxExec func(
+		ctx context.Context, tx T, success bool,
+	) error,
+) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.postTxExec = postTxExec
 	}

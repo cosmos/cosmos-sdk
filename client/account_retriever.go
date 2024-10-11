@@ -2,6 +2,7 @@ package client
 
 import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,6 +12,26 @@ type Account interface {
 	GetPubKey() cryptotypes.PubKey // can return nil.
 	GetAccountNumber() uint64
 	GetSequence() uint64
+}
+
+type mockAccount struct {
+	addr []byte
+}
+
+func (m mockAccount) GetAddress() types.AccAddress {
+	return m.addr
+}
+
+func (m mockAccount) GetPubKey() cryptotypes.PubKey {
+	return nil
+}
+
+func (m mockAccount) GetAccountNumber() uint64 {
+	return 0
+}
+
+func (m mockAccount) GetSequence() uint64 {
+	return 0
 }
 
 // AccountRetriever defines the interfaces required by transactions to
@@ -32,8 +53,8 @@ type MockAccountRetriever struct {
 	ReturnAccNum, ReturnAccSeq uint64
 }
 
-func (mar MockAccountRetriever) GetAccount(_ Context, _ sdk.AccAddress) (Account, error) {
-	return nil, nil
+func (mar MockAccountRetriever) GetAccount(_ Context, address sdk.AccAddress) (Account, error) {
+	return mockAccount{addr: address}, nil
 }
 
 func (mar MockAccountRetriever) GetAccountWithHeight(_ Context, _ sdk.AccAddress) (Account, int64, error) {

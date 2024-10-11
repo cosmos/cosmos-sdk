@@ -1,7 +1,7 @@
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 
 #[doc(inline)]
-pub use ixc_core::{Context, Result, EventBus, Service, create_account, ensure, bail, fmt_error};
+pub use ixc_core::{Context, Result, EventBus, Service, create_account, ensure, bail, error};
 #[doc(inline)]
 pub use ixc_core::resource::Resources;
 

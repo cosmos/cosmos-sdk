@@ -52,7 +52,6 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
 
     push_item(items, quote! {
         impl <'a> ::ixc::core::handler::InitMessage<'a> for #on_create_msg #create_msg_lifetime {
-            type Handler = #handler;
             type Codec = ::ixc::schema::binary::NativeBinaryCodec;
         }
     })?;
@@ -335,6 +334,11 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
     let mut context_name: Option<Ident> = None;
     for field in &signature.inputs {
         match field {
+            syn::FnArg::Receiver(r) => {
+                if r.mutability.is_some() {
+                    bail!("error with fn {}: &self receiver on published fn's must be immutable", fn_name);
+                }
+            },
             syn::FnArg::Typed(pat_type) => {
                 match pat_type.pat.as_ref() {
                     syn::Pat::Ident(ident) => {

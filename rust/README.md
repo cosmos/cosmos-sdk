@@ -105,23 +105,23 @@ impl MyHandler {
 
 #[handler_api]
 pub trait GetMyValue {
-    fn get_my_value(&self, ctx: &Context) -> Response<u64>;
+    fn get_my_value(&self, ctx: &Context) -> Result<u64>;
 }
 
 #[publish]
 impl GetMyValue for MyHandler {
-    fn get_my_value(&self, ctx: &Context) -> Response<u64> {
+    fn get_my_value(&self, ctx: &Context) -> Result<u64> {
         Ok(self.my_map.get(ctx, &ctx.caller())?)
     }
 }
 ```
 ### Define an `on_create` method
 
-One function in the handler struct can be defined as the "on create" method
+One function in the handler struct must be defined as the "on create" method
 by attaching the `#[on_create]` attribute to it.
 This function will get called when the account is created and appropriate
 arguments must be provided to it by the caller creating this account.
-This method should return a [`Response<()>`].
+This method should return a [`Result<()>`].
 
 Here's an example:
 ```rust
@@ -336,7 +336,7 @@ Such structs can also be placed inside other structs and stored for later execut
 
 [//]: # (trait ParallelSafeSend {)
 
-[//]: # (    fn send<'key, 'value>&#40;&self, ctx: &mut Context<'key>, to: &'key Address, denom: &'key str, amount: &'value u128&#41; -> Response<&#40;&#41;>;)
+[//]: # (    fn send<'key, 'value>&#40;&self, ctx: &mut Context<'key>, to: &'key Address, denom: &'key str, amount: &'value u128&#41; -> Result<&#40;&#41;>;)
 
 [//]: # (})
 

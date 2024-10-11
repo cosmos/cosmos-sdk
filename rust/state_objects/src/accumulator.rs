@@ -1,7 +1,7 @@
 //! A u128 accumulator map.
 use std::borrow::Borrow;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
-use ixc_core::{fmt_error, Context, Result};
+use ixc_core::{error, Context, Result};
 use ixc_core::error::{convert_client_error, convert_error_code, ClientError};
 use ixc_core::resource::{InitializationError, StateObjectResource};
 use ixc_core::result::ClientResult;

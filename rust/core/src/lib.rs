@@ -22,9 +22,9 @@ pub use account_api::create_account;
 
 pub use result::{Result};
 
-/// Format an error message.
+/// Create an error.
 #[macro_export]
-macro_rules! fmt_error {
+macro_rules! error {
     ($code:path) => {
         $crate::error::HandlerError::new_from_code($code)
     };

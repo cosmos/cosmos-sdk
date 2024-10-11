@@ -135,7 +135,7 @@ pub mod bank {
 
         fn mint<'a>(&self, ctx: &mut Context, to: AccountID, denom: &'a str, amount: u128, mut evt: EventBus<EventMint<'a>>) -> Result<()> {
             let admin = self.denom_admins.get(ctx, denom)?
-                .ok_or(fmt_error!("denom not defined"))?;
+                .ok_or(error!("denom not defined"))?;
             ensure!(admin == ctx.caller(), "not authorized");
             self.supply.add(ctx, denom, amount)?;
             self.balances.add(ctx, (to, denom), amount)?;

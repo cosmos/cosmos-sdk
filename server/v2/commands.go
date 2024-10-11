@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/transaction"
@@ -19,10 +20,7 @@ import (
 // Execute executes the root command of an application.
 // It handles adding core CLI flags, specifically the logging flags.
 func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
-	rootCmd.PersistentFlags().String(FlagLogLevel, "info", "The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:<level>,<key>:<level>')")
-	rootCmd.PersistentFlags().String(FlagLogFormat, "plain", "The logging format (json|plain)")
-	rootCmd.PersistentFlags().Bool(FlagLogNoColor, false, "Disable colored logs")
-	rootCmd.PersistentFlags().StringP(FlagHome, "", defaultHome, "directory for config and data")
+	SetPersistentFlags(rootCmd.PersistentFlags(), defaultHome)
 
 	// update the global viper with the root command's configuration
 	viper.SetEnvPrefix(envPrefix)
@@ -30,6 +28,13 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 	viper.AutomaticEnv()
 
 	return rootCmd.Execute()
+}
+
+func SetPersistentFlags(pflags *pflag.FlagSet, defaultHome string) {
+	pflags.String(FlagLogLevel, "info", "The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:<level>,<key>:<level>')")
+	pflags.String(FlagLogFormat, "plain", "The logging format (json|plain)")
+	pflags.Bool(FlagLogNoColor, false, "Disable colored logs")
+	pflags.StringP(FlagHome, "", defaultHome, "directory for config and data")
 }
 
 // AddCommands add the server commands to the root command

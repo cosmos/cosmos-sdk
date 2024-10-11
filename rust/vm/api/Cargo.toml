@@ -1,13 +1,13 @@
 [package]
 name = "ixc_vm_api"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 description = "Interchain SDK VM API"
 repository.workspace = true
 license.workspace = true
 
 [dependencies]
-ixc_message_api = { path = "../../message_api", version = "0.0.3" }
+ixc_message_api = { path = "../../message_api", version = "0.0.4" }
 
 [lints]
 workspace = true

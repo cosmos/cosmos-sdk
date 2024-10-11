@@ -3,17 +3,17 @@ name = "ixc_testing"
 edition = "2021"
 description = "Interchain SDK Testing"
 readme = "README.md"
-version = "0.0.4"
+version = "0.0.5"
 repository.workspace = true
 license.workspace = true
 
 [dependencies]
-ixc = { path = "..", version = "0.0.4" }
-ixc_core = { path = "../core", version = "0.0.3" }
-ixc_core_macros = {path = "../core_macros", version = "0.0.3" }
-ixc_message_api = { path = "../message_api", version = "0.0.3" }
-ixc_vm_api = { path = "../vm/api", version = "0.0.1" }
-ixc_schema = { path = "../schema", version = "0.0.3" }
+ixc = { path = "..", version = "0.0.5" }
+ixc_core = { path = "../core", version = "0.0.4" }
+ixc_core_macros = {path = "../core_macros", version = "0.0.4" }
+ixc_message_api = { path = "../message_api", version = "0.0.4" }
+ixc_vm_api = { path = "../vm/api", version = "0.0.2" }
+ixc_schema = { path = "../schema", version = "0.0.4" }
 ixc_schema_macros = { path = "../schema_macros", version = "0.0.3" }
 imbl = "3.0.0"
 arc-swap = "1.7.1"

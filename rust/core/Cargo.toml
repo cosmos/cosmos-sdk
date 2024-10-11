@@ -2,7 +2,7 @@
 name = "ixc_core"
 edition = "2021"
 description = "Interchain SDK Core"
-version = "0.0.3"
+version = "0.0.4"
 readme = "README.md"
 repository.workspace = true
 license.workspace = true
@@ -11,9 +11,9 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-ixc_message_api = { path = "../message_api", version = "0.0.3" }
-ixc_schema = { path = "../schema", version = "0.0.3" }
-ixc_core_macros = { path = "../core_macros", version = "0.0.3" }
+ixc_message_api = { path = "../message_api", version = "0.0.4" }
+ixc_schema = { path = "../schema", version = "0.0.4" }
+ixc_core_macros = { path = "../core_macros", version = "0.0.4" }
 allocator-api2 = "0.2.18"
 constcat = "0.5.1"
 

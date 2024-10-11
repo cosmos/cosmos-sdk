@@ -475,6 +475,8 @@ func TestAuxSigner(t *testing.T) {
 				output := gotOutputs[0].(string)
 				if tc.expErrMsg != "" {
 					require.Contains(t, output, tc.expErrMsg)
+				} else {
+					require.Len(t, gjson.Get(output, "body.messages").Array(), 1)
 				}
 				return false
 			}

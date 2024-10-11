@@ -1,8 +1,6 @@
 package systemtests
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -243,24 +241,8 @@ func (c CLIWrapper) runWithInput(args []string, input io.Reader) (output string,
 		cmd.Stdin = input
 		return cmd.CombinedOutput()
 	}()
-	gotOut = filterProtoNoise(gotOut)
 	ok = c.assertErrorFn(c.t, gotErr, string(gotOut))
 	return strings.TrimSpace(string(gotOut)), ok
-}
-
-func filterProtoNoise(in []byte) []byte {
-	// temporary hack to get rid of all the noise on the stderr
-	var out bytes.Buffer
-	scanner := bufio.NewScanner(bytes.NewReader(in))
-	for scanner.Scan() {
-		if !strings.Contains(scanner.Text(), " proto: duplicate proto type registered") {
-			_, _ = out.Write(scanner.Bytes())
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		panic(err)
-	}
-	return out.Bytes()
 }
 
 func (c CLIWrapper) withQueryFlags(args ...string) []string {

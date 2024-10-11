@@ -120,7 +120,7 @@ func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
 	return v, NewReaderMap(v, s), nil
 }
 
-// StateAt checks if the requested version is present in the state storage and the commitment store.
+// StateAt checks if the requested version is present in the state storage.
 func (s *Store) StateAt(v uint64) (corestore.ReaderMap, error) {
 	// check if version is present in state storage
 	if _, err := s.stateStorage.VersionExists(v); err != nil {

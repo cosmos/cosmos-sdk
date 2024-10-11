@@ -138,7 +138,6 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (server.TxResult, cor
 func (a AppManager[T]) Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error) {
 	// if version is provided attempt to do a height query.
 	if version != 0 {
-		// TODO: if proof is set to true we will be checking ss for the version and not sc
 		queryState, err := a.db.StateAt(version)
 		if err != nil {
 			return nil, err

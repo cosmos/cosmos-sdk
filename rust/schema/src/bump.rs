@@ -50,7 +50,7 @@ unsafe impl Allocator for Bump {
                         // return the allocated slice
                         Ok(NonNull::slice_from_raw_parts(pos, layout.size()))
                     } else {
-                        self.alloc_chunk(footer.as_ref().layout.size(), layout)
+                        self.alloc_chunk(footer.as_ref().layout.size() * 2, layout)
                     }
                 }
             }

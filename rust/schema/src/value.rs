@@ -11,7 +11,7 @@ use crate::mem::MemoryManager;
 use crate::types::*;
 
 /// Any type used directly as a message function argument or struct field must implement this trait.
-/// Unlike [`ObjectFieldValue`] it takes a lifetime parameter so value may already be borrowed where it is
+/// Unlike [`ObjectFieldValue`](crate::state_object::ObjectFieldValue) it takes a lifetime parameter so value may already be borrowed where it is
 /// declared.
 pub trait SchemaValue<'a>
 where

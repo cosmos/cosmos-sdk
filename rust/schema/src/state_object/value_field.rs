@@ -56,7 +56,7 @@ impl ObjectFieldValue for bool {
     type In<'a> = bool;
     type Out<'a> = bool;
 }
-/// This type is used to represent a borrowed &str in a state object.
+/// This type is used to represent a borrowed `&str` in a state object.
 pub struct Str;
 impl ObjectFieldValue for Str {
     type In<'a> = &'a str;
@@ -67,7 +67,10 @@ impl ObjectFieldValue for alloc::string::String {
     type In<'a> = &'a str;
     type Out<'a> = alloc::string::String;
 }
-impl ObjectFieldValue for [u8] {
+
+/// This type is used to represent a borrowed `&[u8]` in a state object.
+pub struct Bytes;
+impl ObjectFieldValue for Bytes {
     type In<'a> = &'a [u8];
     type Out<'a> = &'a [u8];
 }

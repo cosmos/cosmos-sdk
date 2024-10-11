@@ -23,6 +23,10 @@ rust-version = "1.81.0"
 [workspace.lints.rust]
 missing_docs = "deny"
 
+[workspace.lints.rustdoc]
+broken_intra_doc_links = "deny"
+private_intra_doc_links = "deny"
+
 [package]
 name = "ixc"
 edition = "2021"

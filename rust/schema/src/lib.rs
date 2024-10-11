@@ -32,4 +32,4 @@ mod message;
 mod json;
 
 pub use value::SchemaValue;
-pub use state_object::Str;
+pub use state_object::{Str, Bytes};

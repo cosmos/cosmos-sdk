@@ -2,7 +2,7 @@ use crate::buffer::{Reader, ReverseSliceWriter, Writer};
 use crate::decoder::DecodeError;
 use crate::encoder::EncodeError;
 use crate::mem::MemoryManager;
-use crate::state_object::value_field::ObjectFieldValue;
+use crate::state_object::value_field::{Bytes, ObjectFieldValue};
 use crate::Str;
 
 /// This trait is implemented for types that can be used as key fields in state objects.
@@ -260,7 +260,7 @@ impl KeyFieldValue for Str {
     fn out_size_terminal<'a>(key: &Self::In<'a>) -> usize { key.len() }
 }
 
-impl KeyFieldValue for [u8] {
+impl KeyFieldValue for Bytes {
     fn encode<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError> {
         writer.write(key)?;
         // write length

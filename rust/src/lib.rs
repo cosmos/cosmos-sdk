@@ -1,14 +1,14 @@
 #![doc = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/README.md"))]
 
 #[doc(inline)]
-pub use ixc_core::{Context, Result, EventBus, ensure, bail, fmt_error};
+pub use ixc_core::{Context, Result, EventBus, Service, create_account, ensure, bail, fmt_error};
 #[doc(inline)]
 pub use ixc_core::resource::Resources;
 
 #[doc(inline)]
 pub use ixc_message_api::AccountID;
 #[doc(inline)]
-pub use ixc_schema::{Str};
+pub use ixc_schema::{Str, Bytes};
 #[doc(inline)]
 pub use state_objects::{Map, Item, Accumulator, AccumulatorMap};
 #[doc(inline)]

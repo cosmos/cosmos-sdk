@@ -4,9 +4,6 @@
 #[cfg(feature = "std")]
 extern crate alloc;
 
-// this is to allow this crate to use its own macros
-extern crate self as ixc_core;
-
 mod context;
 mod events;
 pub mod message;
@@ -20,6 +17,8 @@ pub mod result;
 
 pub use context::Context;
 pub use events::EventBus;
+pub use handler::Service;
+pub use account_api::create_account;
 
 pub use result::{Result};
 

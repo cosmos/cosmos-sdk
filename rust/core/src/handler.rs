@@ -25,7 +25,8 @@ pub trait InitMessage<'a>: SchemaValue<'a> + StructSchema
     type Codec: Codec + Default;
 }
 
-/// Something that implements a service and thus has an associated client type.
+/// A type that represents some sort of handler service and thus has an associated client type.
+/// This is used to create clients for the service.
 pub trait Service {
     /// The client type associated with the service.
     type Client: Client;

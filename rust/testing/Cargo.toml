@@ -3,15 +3,15 @@ name = "ixc_testing"
 edition = "2021"
 description = "Interchain SDK Testing"
 readme = "README.md"
-version = "0.0.2"
+version = "0.0.3"
 repository.workspace = true
 license.workspace = true
 
 [dependencies]
-ixc = { path = "..", version = "0.0.2" }
-ixc_core = { path = "../core", version = "0.0.2" }
-ixc_core_macros = {path = "../core_macros", version = "0.0.2"}
-ixc_message_api = { path = "../message_api", version = "0.0.2" }
+ixc = { path = "..", version = "0.0.3" }
+ixc_core = { path = "../core", version = "0.0.3" }
+ixc_core_macros = {path = "../core_macros", version = "0.0.3" }
+ixc_message_api = { path = "../message_api", version = "0.0.3" }
 ixc_vm_api = { path = "../vm/api" }
 #ixc_hypervisor = { path = "../vm/hypervisor" }
 ixc_schema = { path = "../schema" }

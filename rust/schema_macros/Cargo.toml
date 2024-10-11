@@ -2,7 +2,7 @@
 name = "ixc_schema_macros"
 edition = "2021"
 description = "Interchain SDK Schema Macros"
-version = "0.0.2"
+version = "0.0.3"
 repository.workspace = true
 license.workspace = true
 

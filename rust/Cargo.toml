@@ -9,8 +9,11 @@ members = [
     "message_api",
     "testing",
     "util/simple_time",
-    "codecs/proto", "codecs/evm",
-    "vm/wasmtime", "vm/api", "vm/hypervisor", "example",
+#    "codecs/proto", "codecs/evm",
+#    "vm/wasmtime",
+    "vm/api",
+#    "vm/hypervisor",
+#    "example",
 ]
 
 [workspace.package]
@@ -32,7 +35,7 @@ name = "ixc"
 edition = "2021"
 description = "Interchain SDK"
 readme = "README.md"
-version = "0.0.2"
+version = "0.0.3"
 repository.workspace = true
 license.workspace = true
 

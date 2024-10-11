@@ -52,7 +52,7 @@ constcat = "0.5.1"
 array-concat = "0.5.3"
 
 [dev-dependencies]
-ixc_testing = { path = "testing", version = "0.0.2" }
+ixc_testing = { path = "testing", version = "0.0.3" }
 arrayvec = "0.7.6"
 thiserror = "1.0.63"
 num_enum = "0.7.3"

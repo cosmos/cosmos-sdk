@@ -2,7 +2,6 @@ package aminojson
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"testing"
@@ -573,21 +572,4 @@ func postFixPulsarMessage(msg proto.Message) {
 			m.Permissions = nil
 		}
 	}
-}
-
-// sortJson sorts the JSON bytes by way of the side effect of unmarshalling and remarshalling the JSON
-// using encoding/json.  This hacky way of sorting JSON fields was used by the legacy amino JSON encoding in
-// x/auth/migrations/legacytx.StdSignBytes.  It is used here ensure the x/tx JSON encoding is equivalent to
-// the legacy amino JSON encoding.
-func sortJson(bz []byte) ([]byte, error) {
-	var c any
-	err := json.Unmarshal(bz, &c)
-	if err != nil {
-		return nil, err
-	}
-	js, err := json.Marshal(c)
-	if err != nil {
-		return nil, err
-	}
-	return js, nil
 }

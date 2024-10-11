@@ -1,12 +1,8 @@
 package aminojson
 
 import (
-<<<<<<< HEAD
 	"context"
-=======
-	"bytes"
 	"encoding/json"
->>>>>>> 60cbe2db2 (fix(x/tx): sort with oneof field name in amino-json (#21782))
 	"fmt"
 	"reflect"
 	"testing"

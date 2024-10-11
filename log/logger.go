@@ -6,22 +6,21 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/pkg/errors"
+	"github.com/bytedance/sonic"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/pkgerrors"
 )
 
 func init() {
 	zerolog.InterfaceMarshalFunc = func(i any) ([]byte, error) {
 		switch v := i.(type) {
 		case json.Marshaler:
-			return json.Marshal(i)
+			return sonic.Marshal(i)
 		case encoding.TextMarshaler:
-			return json.Marshal(i)
+			return sonic.Marshal(i)
 		case fmt.Stringer:
-			return json.Marshal(v.String())
+			return sonic.Marshal(v.String())
 		default:
-			return json.Marshal(i)
+			return sonic.Marshal(i)
 		}
 	}
 }
@@ -112,13 +111,6 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 	}
 
 	logger := zerolog.New(output)
-	if logCfg.StackTrace {
-		zerolog.ErrorStackMarshaler = func(err error) interface{} {
-			return pkgerrors.MarshalStack(errors.WithStack(err))
-		}
-
-		logger = logger.With().Stack().Logger()
-	}
 
 	if logCfg.TimeFormat != "" {
 		logger = logger.With().Timestamp().Logger()

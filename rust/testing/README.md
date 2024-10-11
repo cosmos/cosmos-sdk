@@ -1,10 +1,13 @@
-**WARNING: This is an API preview! Most code won't work or even type check properly!**
+**WARNING: This is an API preview! Expect major bugs, glaring omissions, and breaking changes!**
 
-This crate provides a testing framework for Interchain SDK applications.
+This crate provides a testing framework for Interchain SDK applications
+using the [`ixc`] crate.
+See that crate for more information on getting started.
 
 ## Getting Started
 
-This framework works with regular rust `#[test]` functions. To write tests, follow the following steps
+This framework allows you to write tests for [`ixc`] handlers
+using regular rust `#[test]` functions following these basic steps:
 
 1. Add a `use ixc::testing::*` statement (optional, but recommended)
 2. Define a `TestApp`

@@ -20,7 +20,6 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/store"
 	storev2 "cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/root"
 )
 
 type mockInterfaceRegistry struct{}
@@ -50,17 +49,9 @@ func (*mockApp[T]) InterfaceRegistry() coreserver.InterfaceRegistry {
 	return &mockInterfaceRegistry{}
 }
 
-var _ root.Builder = &mockStoreBuilder{}
-
-type mockStoreBuilder struct{}
-
-func (m mockStoreBuilder) Build(logger log.Logger, config *root.Config) (storev2.RootStore, error) {
-	return nil, nil
+func (*mockApp[T]) GetStore() storev2.RootStore {
+	return nil
 }
-
-func (m mockStoreBuilder) RegisterKey(string) {}
-
-func (m mockStoreBuilder) Get() storev2.RootStore { return nil }
 
 func TestServer(t *testing.T) {
 	currentDir, err := os.Getwd()
@@ -78,7 +69,7 @@ func TestServer(t *testing.T) {
 	err = grpcServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
 	require.NoError(t, err)
 
-	storeServer := store.New[transaction.Tx](&mockStoreBuilder{})
+	storeServer := store.New[transaction.Tx]()
 	err = storeServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
 	require.NoError(t, err)
 

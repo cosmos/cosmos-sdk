@@ -51,11 +51,11 @@ type IndexingOptions struct {
 // IndexingConfig is the configuration of the indexer manager and contains the configuration for each indexer target.
 type IndexingConfig struct {
 	// Target is a map of named indexer targets to their configuration.
-	Target map[string]Config
+	Target map[string]Config `mapstructure:"target" toml:"target" json:"target" comment:"Target is a map of named indexer targets to their configuration."`
 
 	// ChannelBufferSize is the buffer size of the channels used for buffering data sent to indexer go routines.
 	// It defaults to 1024.
-	ChannelBufferSize *int `json:"channel_buffer_size,omitempty"`
+	ChannelBufferSize int `mapstructure:"channel_buffer_size" toml:"channel_buffer_size" json:"channel_buffer_size,omitempty" comment:"Buffer size of the channels used for buffering data sent to indexer go routines."`
 }
 
 // IndexingTarget returns the indexing target listener and associated data.
@@ -142,8 +142,8 @@ func StartIndexing(opts IndexingOptions) (IndexingTarget, error) {
 	}
 
 	bufSize := 1024
-	if cfg.ChannelBufferSize != nil {
-		bufSize = *cfg.ChannelBufferSize
+	if cfg.ChannelBufferSize != 0 {
+		bufSize = cfg.ChannelBufferSize
 	}
 	asyncOpts := appdata.AsyncListenerOptions{
 		Context:       ctx,

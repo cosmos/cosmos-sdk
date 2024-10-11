@@ -8,9 +8,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/server/v2/store"
-	"cosmossdk.io/store/v2/root"
-
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
@@ -23,6 +20,7 @@ import (
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/schema/indexer"
 	serverv2 "cosmossdk.io/server/v2"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/mempool"
@@ -45,7 +43,6 @@ type CometBFTServer[T transaction.Tx] struct {
 
 	initTxCodec   transaction.Codec[T]
 	logger        log.Logger
-	storeBuilder  root.Builder
 	serverOptions ServerOptions[T]
 	config        Config
 	cfgOptions    []CfgOption
@@ -53,13 +50,11 @@ type CometBFTServer[T transaction.Tx] struct {
 
 func New[T transaction.Tx](
 	txCodec transaction.Codec[T],
-	storeBuilder root.Builder,
 	serverOptions ServerOptions[T],
 	cfgOptions ...CfgOption,
 ) *CometBFTServer[T] {
 	return &CometBFTServer[T]{
 		initTxCodec:   txCodec,
-		storeBuilder:  storeBuilder,
 		serverOptions: serverOptions,
 		cfgOptions:    cfgOptions,
 	}
@@ -106,16 +101,8 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		indexEvents[e] = struct{}{}
 	}
 
-	storeCfg, err := store.UnmarshalConfig(cfg)
-	if err != nil {
-		return err
-	}
-	rs, err := s.storeBuilder.Build(logger, storeCfg)
-	if err != nil {
-		return err
-	}
-
 	s.logger = logger.With(log.ModuleKey, s.Name())
+	rs := appI.GetStore()
 	consensus := NewConsensus(
 		s.logger,
 		appI.Name(),
@@ -144,6 +131,19 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		return err
 	}
 	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.serverOptions.SnapshotOptions(cfg), sc, ss, nil, s.logger)
+
+	// initialize the indexer
+	if indexerCfg := s.config.AppTomlConfig.Indexer; len(indexerCfg.Target) > 0 {
+		listener, err := indexer.StartIndexing(indexer.IndexingOptions{
+			Config:   indexerCfg,
+			Resolver: appI.GetSchemaDecoderResolver(),
+			Logger:   s.logger.With(log.ModuleKey, "indexer"),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to start indexing: %w", err)
+		}
+		consensus.listener = &listener.Listener
+	}
 
 	s.Consensus = consensus
 

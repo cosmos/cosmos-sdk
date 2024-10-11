@@ -2,6 +2,7 @@ package aminojson
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	stdmath "math"
 	"testing"
@@ -316,9 +317,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 				},
 				AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			},
-			// to be fixed in https://github.com/cosmos/cosmos-sdk/pull/21782
-			// TODO remove once merged
-			fails: true,
 		},
 		"vesting/base_account_empty": {
 			gogo: &vestingtypes.BaseVestingAccount{BaseAccount: &authtypes.BaseAccount{}},
@@ -455,4 +453,21 @@ func postFixPulsarMessage(msg proto.Message) {
 			m.Permissions = nil
 		}
 	}
+}
+
+// sortJson sorts the JSON bytes by way of the side effect of unmarshalling and remarshalling the JSON
+// using encoding/json.  This hacky way of sorting JSON fields was used by the legacy amino JSON encoding in
+// x/auth/migrations/legacytx.StdSignBytes.  It is used here ensure the x/tx JSON encoding is equivalent to
+// the legacy amino JSON encoding.
+func sortJson(bz []byte) ([]byte, error) {
+	var c any
+	err := json.Unmarshal(bz, &c)
+	if err != nil {
+		return nil, err
+	}
+	js, err := json.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
+	return js, nil
 }

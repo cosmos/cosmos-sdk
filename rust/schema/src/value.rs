@@ -2,7 +2,7 @@
 
 use ixc_message_api::handler::Allocator;
 use ixc_message_api::packet::MessagePacket;
-use ixc_schema::buffer::WriterFactory;
+use crate::buffer::WriterFactory;
 use crate::codec::{decode_value, Codec, ValueDecodeVisitor};
 use crate::decoder::{DecodeError, Decoder};
 use crate::encoder::{EncodeError, Encoder};

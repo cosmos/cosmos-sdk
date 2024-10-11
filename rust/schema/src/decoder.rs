@@ -4,11 +4,10 @@ use core::error::Error;
 use core::fmt::{Display, Formatter};
 use ixc_message_api::AccountID;
 use ixc_message_api::code::{ErrorCode, SystemCode};
-use ixc_schema::codec::ValueDecodeVisitor;
-use crate::encoder::EncodeError;
+use crate::codec::ValueDecodeVisitor;
 use crate::list::ListDecodeVisitor;
 use crate::mem::MemoryManager;
-use crate::r#enum::EnumType;
+use crate::enums::EnumType;
 use crate::structs::{StructDecodeVisitor, StructType};
 use crate::value::SchemaValue;
 

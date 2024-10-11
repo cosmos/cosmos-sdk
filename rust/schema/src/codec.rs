@@ -1,6 +1,6 @@
 //! The codec trait.
 
-use ixc_schema::decoder::Decoder;
+use crate::decoder::Decoder;
 use crate::buffer::{Writer, WriterFactory};
 use crate::decoder::DecodeError;
 use crate::encoder::{EncodeError, Encoder};

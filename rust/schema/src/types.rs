@@ -8,7 +8,7 @@
 //! parameters.
 
 use ixc_message_api::AccountID;
-use ixc_schema::r#enum::EnumSchema;
+use crate::enums::EnumSchema;
 use crate::field::Field;
 use crate::kind::Kind;
 use crate::schema::SchemaType;

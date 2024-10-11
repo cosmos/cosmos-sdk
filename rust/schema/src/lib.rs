@@ -5,12 +5,15 @@
 extern crate alloc;
 
 // this is to allow this crate to use its own macros
+#[cfg(not(feature = "use_ixc_macro_path"))]
 extern crate self as ixc_schema;
+#[cfg(feature = "use_ixc_macro_path")]
+extern crate self as ixc;
 
 pub mod value;
 pub mod types;
 pub mod structs;
-mod r#enum;
+mod enums;
 mod oneof;
 pub mod state_object;
 pub mod codec;

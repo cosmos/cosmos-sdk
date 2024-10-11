@@ -6,7 +6,7 @@ use crate::value::SchemaValue;
 use crate::buffer::{Writer, WriterFactory};
 use crate::codec::ValueEncodeVisitor;
 use crate::list::ListEncodeVisitor;
-use crate::r#enum::EnumType;
+use crate::enums::EnumType;
 use crate::state_object::ObjectValue;
 
 pub fn encode_value<'a>(value: &dyn ValueEncodeVisitor, writer_factory: &'a dyn WriterFactory) -> Result<&'a [u8], EncodeError> {

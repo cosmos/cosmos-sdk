@@ -20,6 +20,7 @@ struct HandlerArgs(syn::Ident);
 #[manyhow]
 #[proc_macro_attribute]
 pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenStream2> {
+    let ixc_schema_path = mk_ixc_schema_path();
     let HandlerArgs(handler) = deluxe::parse2(attr)?;
     let items = &mut item.content.as_mut().unwrap().1;
 
@@ -50,10 +51,12 @@ pub fn handler(attr: TokenStream2, mut item: ItemMod) -> manyhow::Result<TokenSt
         }
     })?;
 
+    let ixc_schema_path = mk_ixc_schema_path();
+
     push_item(items, quote! {
         impl <'a> ::ixc_core::handler::InitMessage<'a> for #on_create_msg #create_msg_lifetime {
             type Handler = #handler;
-            type Codec = ::ixc_schema::binary::NativeBinaryCodec;
+            type Codec = #ixc_schema_path::binary::NativeBinaryCodec;
         }
     })?;
 
@@ -321,6 +324,7 @@ impl APIBuilder {
 }
 
 fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_target: &PublishFn, builder: &mut APIBuilder) -> manyhow::Result<()> {
+    let ixc_schema_path = mk_ixc_schema_path();
     let signature = &publish_target.signature;
     let fn_name = &signature.ident;
     let ident_camel = fn_name.to_string().to_upper_camel_case();
@@ -406,8 +410,10 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
     } else {
         quote! {}
     };
+
+    let ixc_schema_macros_path = mk_ixc_schema_macros_path();
     push_item(&mut builder.items, quote! {
-            #[derive(::ixc_schema_macros::SchemaValue)]
+            #[derive(#ixc_schema_macros_path::SchemaValue)]
             #[sealed]
             pub struct #msg_struct_name #opt_lifetime {
                 #(#msg_fields)*
@@ -426,7 +432,7 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                     const SELECTOR: ::ixc_message_api::header::MessageSelector = #selector;
                     type Response<'b> = <#return_type as ::ixc_core::message::ExtractResponseTypes>::Response;
                     type Error = <#return_type as ::ixc_core::message::ExtractResponseTypes>::Error;
-                    type Codec = ::ixc_schema::binary::NativeBinaryCodec;
+                    type Codec = #ixc_schema_path::binary::NativeBinaryCodec;
                 }
             })?;
         ensure!(context_name.is_some(), "no context parameter found");
@@ -437,10 +443,10 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                             let cdc = < #msg_struct_name as ::ixc_core::message::Message<'_> >::Codec::default();
                             let in1 = packet.header().in_pointer1.get(packet);
                             let mut ctx = ::ixc_core::Context::new(packet.header().context_info, cb);
-                            let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc_schema::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager())?;
+                            let #msg_struct_name { #(#msg_deconstruct)* } = #ixc_schema_path::codec::decode_value::< #msg_struct_name >(&cdc, in1, ctx.memory_manager())?;
                             // NOTE: transmuting here is probably safe because there's nothing really to mutate, but ideally we should find
                             // a better way
-                            let res = h.#fn_name(core::mem::transmute(&ctx), #(#fn_ctr_args)*);
+                            let res = h.#fn_name(::core::mem::transmute(&ctx), #(#fn_ctr_args)*);
                             ::ixc_core::low_level::encode_response::< #msg_struct_name >(&cdc, res, a, packet)
                         }
                     }),
@@ -464,10 +470,10 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                     let cdc = < #msg_struct_name #opt_underscore_lifetime as::ixc_core::handler::InitMessage<'_> >::Codec::default();
                     let in1 = packet.header().in_pointer1.get(packet);
                     let mut ctx =::ixc_core::Context::new(packet.header().context_info, cb);
-                    let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc_schema::codec::decode_value::< #msg_struct_name > ( & cdc, in1, ctx.memory_manager())?;
+                    let #msg_struct_name { #(#msg_deconstruct)* } = #ixc_schema_path::codec::decode_value::< #msg_struct_name > ( & cdc, in1, ctx.memory_manager())?;
                     // NOTE: transmuting here is probably safe because there's nothing really to mutate, but ideally we should find
                     // a better way
-                    let res = h.#fn_name(core::mem::transmute(&ctx), #(#fn_ctr_args)*);
+                    let res = h.#fn_name(::core::mem::transmute(&ctx), #(#fn_ctr_args)*);
                     ::ixc_core::low_level::encode_default_response(res, a, packet)
                 }
             }),}
@@ -570,3 +576,37 @@ fn message_selector_from_str(msg: &str) -> TokenStream2 {
     };
     expanded.into()
 }
+
+// this is to make macros work with a single import of the ixc crate
+fn mk_ixc_schema_path() -> TokenStream2 {
+    #[cfg(feature = "use_ixc_macro_path")]
+    quote!{::ixc}
+    #[cfg(not(feature = "use_ixc_macro_path"))]
+    quote!{::ixc_schema}
+}
+
+// this is to make macros work with a single import of the ixc crate
+fn mk_ixc_schema_macros_path() -> TokenStream2 {
+    #[cfg(feature = "use_ixc_macro_path")]
+    quote!{::ixc}
+    #[cfg(not(feature = "use_ixc_macro_path"))]
+    quote!{::ixc_schema_macros}
+}
+
+// this is to make macros work with a single import of the ixc crate
+fn mk_ixc_core_path() -> TokenStream2 {
+    #[cfg(feature = "use_ixc_macro_path")]
+    quote!{::ixc::core}
+    #[cfg(not(feature = "use_ixc_macro_path"))]
+    quote!{::ixc_core}
+}
+
+// this is to make macros work with a single import of the ixc crate
+fn mk_ixc_message_api_path() -> TokenStream2 {
+    #[cfg(feature = "use_ixc_macro_path")]
+    quote!{::ixc::message_api}
+    #[cfg(not(feature = "use_ixc_macro_path"))]
+    quote!{::ixc_message_api
+    }
+}
+

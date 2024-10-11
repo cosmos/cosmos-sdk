@@ -14,26 +14,24 @@ pub use state_objects::{Map, Item, Accumulator, AccumulatorMap};
 #[doc(inline)]
 pub use simple_time::{Time, Duration};
 
-#[cfg(feature = "core_macros")]
+pub use ixc_schema::*;
+pub use ixc_message_api as message_api;
+pub use ixc_core as core;
+
 #[allow(unused_imports)]
 #[macro_use]
 extern crate ixc_core_macros;
-#[cfg(feature = "core_macros")]
 #[doc(inline)]
 pub use ixc_core_macros::{handler, on_create, publish, handler_api, Resources};
 
-#[cfg(feature = "schema_macros")]
 #[allow(unused_imports)]
 #[macro_use]
 extern crate ixc_schema_macros;
-#[cfg(feature = "schema_macros")]
 #[doc(inline)]
 pub use ixc_schema_macros::*;
 
-#[cfg(feature = "state_objects_macros")]
 #[allow(unused_imports)]
 #[macro_use]
 extern crate state_objects_macros;
-#[cfg(feature = "state_objects_macros")]
 #[doc(inline)]
 pub use state_objects_macros::*;

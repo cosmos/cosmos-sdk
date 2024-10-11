@@ -2,14 +2,12 @@
 
 use core::error::Error;
 use crate::structs::{StructEncodeVisitor, StructType};
-use crate::value::{SchemaValue};
 use core::fmt::Display;
 use ixc_message_api::AccountID;
 use ixc_message_api::code::{ErrorCode, SystemCode};
-use ixc_schema::codec::ValueEncodeVisitor;
-use crate::decoder::DecodeError;
+use crate::codec::ValueEncodeVisitor;
 use crate::list::ListEncodeVisitor;
-use crate::r#enum::EnumType;
+use crate::enums::EnumType;
 
 /// The trait that encoders must implement.
 pub trait Encoder {

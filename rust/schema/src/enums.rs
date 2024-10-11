@@ -1,5 +1,5 @@
-use ixc_schema::decoder::Decoder;
 use ixc_schema_macros::SchemaValue;
+use crate::decoder::Decoder;
 use crate::decoder::DecodeError;
 use crate::encoder::{EncodeError, Encoder};
 use crate::kind::Kind;

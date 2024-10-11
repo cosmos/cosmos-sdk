@@ -1,6 +1,6 @@
 //! Defines a codec for the native binary format.
 
-use ixc_schema::binary::decoder::decode_value;
+use crate::binary::decoder::decode_value;
 use crate::binary::encoder::encode_value;
 use crate::buffer::WriterFactory;
 use crate::codec::{Codec, ValueDecodeVisitor, ValueEncodeVisitor};

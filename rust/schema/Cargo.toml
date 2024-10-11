@@ -26,3 +26,4 @@ proptest-derive = "0.5.0"
 default = ["std"]
 std = []
 bumpalo = ["dep:bumpalo"]
+use_ixc_macro_path = []

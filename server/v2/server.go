@@ -56,7 +56,7 @@ type CLIConfig struct {
 }
 
 const (
-	serverName = "serverv2"
+	serverName = "server"
 )
 
 var _ ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)

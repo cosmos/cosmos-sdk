@@ -65,6 +65,10 @@ func TestServer(t *testing.T) {
 	cfg := v.AllSettings()
 
 	logger := log.NewLogger(os.Stdout)
+
+	ctx, err := serverv2.SetServerContext(context.Background(), v, logger)
+	require.NoError(t, err)
+
 	grpcServer := grpc.New[transaction.Tx]()
 	err = grpcServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
 	require.NoError(t, err)
@@ -96,7 +100,7 @@ func TestServer(t *testing.T) {
 	require.Equal(t, v.GetString(grpcServer.Name()+".address"), grpc.DefaultConfig().Address)
 
 	// start empty
-	ctx, cancelFn := context.WithCancel(context.TODO())
+	ctx, cancelFn := context.WithCancel(ctx)
 	go func() {
 		// wait 5sec and cancel context
 		<-time.After(5 * time.Second)

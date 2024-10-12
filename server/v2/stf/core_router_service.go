@@ -31,7 +31,7 @@ func (m msgRouterService) CanInvoke(ctx context.Context, typeURL string) error {
 	return exCtx.msgRouter.CanInvoke(ctx, typeURL)
 }
 
-// Invoke execute a message and returns a response.
+// Invoke executes a query and returns a response.
 func (m msgRouterService) Invoke(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
 	exCtx, err := getExecutionCtxFromContext(ctx)
 	if err != nil {
@@ -60,7 +60,7 @@ func (m queryRouterService) CanInvoke(ctx context.Context, typeURL string) error
 	return exCtx.queryRouter.CanInvoke(ctx, typeURL)
 }
 
-// Invoke execute a message and returns a response.
+// Invoke executes a query and returns a response.
 func (m queryRouterService) Invoke(
 	ctx context.Context,
 	req transaction.Msg,

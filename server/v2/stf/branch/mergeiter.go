@@ -210,7 +210,7 @@ func (iter *mergedIterator) skipUntilExistsOrInvalid() bool {
 			return true
 
 		case 0: // parent == cache.
-			// Skip over if cache item is a delete.
+			// Skip over if cache item is a deleted.
 			valueC := iter.cache.Value()
 			if valueC == nil {
 				iter.parent.Next()
@@ -218,17 +218,17 @@ func (iter *mergedIterator) skipUntilExistsOrInvalid() bool {
 
 				continue
 			}
-			// Cache is not a delete.
+			// Cache is not a deleted.
 
 			return true // cache exists.
 		case 1: // cache < parent
-			// Skip over if cache item is a delete.
+			// Skip over if cache item is a deleted.
 			valueC := iter.cache.Value()
 			if valueC == nil {
 				iter.skipCacheDeletes(keyP)
 				continue
 			}
-			// Cache is not a delete.
+			// Cache is not a deleted.
 			return true // cache exists.
 		}
 	}

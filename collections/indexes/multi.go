@@ -2,9 +2,9 @@ package indexes
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
-	"fmt"
-	"reflect"
+	"unsafe"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/codec"
@@ -125,31 +125,32 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) MatchExact(ctx context.Context,
 
 // RefKeys returns a list of all the MultiIterator's reference keys (may contain duplicates).
 // Enable the "unique" argument to get a unique list of reference keys (the reference key must be comparable)
+// WARNING: The use of RefKeys() can be very expensive in terms of Gas. Please make sure you iterate over a relatively
+// small set of reference keys.
 func (m *Multi[ReferenceKey, PrimaryKey, Value]) RefKeys(ctx context.Context, unique bool) ([]ReferenceKey, error) {
-	// sanity check - enabled unique with non-comparable ReferenceKey type
-	if unique && !reflect.ValueOf((*ReferenceKey)(nil)).Comparable() {
-		return nil, fmt.Errorf("cannot retrieve unique reference keys since type is not comparable: %T", reflect.TypeOf((*ReferenceKey)(nil)))
-	}
-
-	iter, err := m.refKeys.Iterate(ctx, nil)
+	iter, err := m.refKeys.IterateRaw(ctx, nil, nil, collections.OrderAscending)
 	if err != nil {
 		return nil, err
 	}
 
 	keys := []ReferenceKey{}
-	visited := map[interface{}]struct{}{}
+	visited := map[[32]byte]struct{}{}
 	for ; iter.Valid(); iter.Next() {
 		key, err := iter.Key()
 		if err != nil {
 			return nil, err
 		}
-		refKey := key.K1()
 
 		if unique {
-			if _, ok := visited[refKey]; ok {
+			// compare the byte representation of ref keys
+			refKey := key.K1()
+			unsafeRefKey := *(*[]byte)(unsafe.Pointer(&refKey))
+
+			// use SHA256 hash as map keys
+			if _, ok := visited[sha256.Sum256(unsafeRefKey)]; ok {
 				continue
 			}
-			visited[refKey] = struct{}{}
+			visited[sha256.Sum256(unsafeRefKey)] = struct{}{}
 		}
 		keys = append(keys, key.K1())
 	}

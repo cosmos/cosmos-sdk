@@ -351,7 +351,7 @@ func NewPrefixUntilTripleRangeReversed[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, 
 	}
 }
 
-// NewPrefixedTripleRange provides a Range for all keys prefixed with the given
+// NewPrefixedTripleRangeReversed provides a Range for all keys prefixed with the given
 // first part of the Triple key in reverse order.
 func NewPrefixedTripleRangeReversed[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
 	key := TriplePrefix[K1, K2, K3](k1)
@@ -362,7 +362,7 @@ func NewPrefixedTripleRangeReversed[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2,
 	}
 }
 
-// NewSuperPrefixedTripleRange provides a Range for all keys prefixed with the given
+// NewSuperPrefixedTripleRangeReversed provides a Range for all keys prefixed with the given
 // first and second parts of the Triple key in reverse order.
 func NewSuperPrefixedTripleRangeReversed[K1, K2, K3 any](k1 K1, k2 K2) Ranger[Triple[K1, K2, K3]] {
 	key := TripleSuperPrefix[K1, K2, K3](k1, k2)

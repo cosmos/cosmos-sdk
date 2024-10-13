@@ -5,18 +5,20 @@ package systemtests
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 
 	"fmt"
 
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 var bankMsgSendEventAction = "message.action='/cosmos.bank.v1beta1.MsgSend'"
@@ -124,8 +126,68 @@ func TestSimulateTx_GRPC(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestSimulateTx_GRPCGateway(t *testing.T) {
+	sut.ResetChain(t)
 
+	cli := NewCLIWrapper(t, sut, verbose)
+	// get validator address
+	valAddr := cli.GetKeyAddr("node0")
+	require.NotEmpty(t, valAddr)
+
+	// add new key
+	receiverAddr := cli.AddKey("account1")
+	denom := "stake"
+	var transferAmount int64 = 1000
+
+	sut.StartChain(t)
+
+	// qc := tx.NewServiceClient(sut.RPCClient(t))
+	baseURL := sut.APIAddress()
+
+	// create unsign tx
+	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
+	txFile := StoreTempFile(t, []byte(res))
+
+	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", valAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet/node0/simd")
+	signedTxFile := StoreTempFile(t, []byte(res))
+
+	res = cli.RunCommandWithArgs("tx", "encode", signedTxFile.Name())
+	txBz, err := base64.StdEncoding.DecodeString(res)
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name      string
+		req       *tx.SimulateRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.SimulateRequest{}, true, "empty txBytes is not allowed"},
+		{"valid request with tx_bytes", &tx.SimulateRequest{TxBytes: txBz}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reqBz, err := json.Marshal(tc.req)
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/simulate", baseURL), "application/json", reqBz)
+			require.NoError(t, err)
+			if tc.expErr {
+				require.Contains(t, string(res), tc.expErrMsg)
+			} else {
+				require.NoError(t, err)
+				msgResponses := gjson.Get(string(res), "result.msg_responses").Array()
+				require.Equal(t, len(msgResponses), 1)
+
+				events := gjson.Get(string(res), "result.events").Array()
+				require.Equal(t, len(events), 10)
+
+				gasUsed := gjson.Get(string(res), "gas_info.gas_used").Int()
+				require.True(t, gasUsed > 0)
+			}
+		})
+	}
 }
 
 func TestGetTxEvents_GRPC(t *testing.T) {
@@ -244,8 +306,105 @@ func TestGetTxEvents_GRPC(t *testing.T) {
 			}
 		})
 	}
-	
 
+}
+
+func TestGetTxEvents_GRPCGateway(t *testing.T) {
+	sut.ResetChain(t)
+
+	cli := NewCLIWrapper(t, sut, verbose)
+	// get validator address
+	valAddr := cli.GetKeyAddr("node0")
+	require.NotEmpty(t, valAddr)
+
+	// add new key
+	receiverAddr := cli.AddKey("account1")
+	denom := "stake"
+	var transferAmount int64 = 1000
+
+	sut.StartChain(t)
+
+	// qc := tx.NewServiceClient(sut.RPCClient(t))
+	baseURL := sut.APIAddress()
+	rsp := cli.Run("tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--note=foobar", "--fees=1stake")
+	txResult, found := cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
+
+	rsp = cli.Run("tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=1stake")
+	txResult, found = cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
+
+	testCases := []struct {
+		name      string
+		url       string
+		expErr    bool
+		expErrMsg string
+		expLen    int
+	}{
+		{
+			"empty params",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", baseURL),
+			true,
+			"query cannot be empty", 0,
+		},
+		{
+			"without pagination",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", baseURL, bankMsgSendEventAction),
+			false,
+			"", 2,
+		},
+		{
+			"with pagination",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&page=%d&limit=%d", baseURL, bankMsgSendEventAction, 1, 1),
+			false,
+			"", 1,
+		},
+		{
+			"valid request: order by asc",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_ASC", baseURL, bankMsgSendEventAction, "message.module='bank'"),
+			false,
+			"", 2,
+		},
+		{
+			"valid request: order by desc",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_DESC", baseURL, bankMsgSendEventAction, "message.module='bank'"),
+			false,
+			"", 2,
+		},
+		{
+			"invalid request: invalid order by",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=invalid_order", baseURL, bankMsgSendEventAction, "message.module='bank'"),
+			true,
+			"is not a valid tx.OrderBy", 0,
+		},
+		{
+			"expect pass with multiple-events",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s", baseURL, bankMsgSendEventAction, "message.module='bank'"),
+			false,
+			"", 2,
+		},
+		{
+			"expect pass with escape event",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", baseURL, "message.action%3D'/cosmos.bank.v1beta1.MsgSend'"),
+			false,
+			"", 2,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := testutil.GetRequest(tc.url)
+			require.NoError(t, err)
+			if tc.expErr {
+				require.Contains(t, string(res), tc.expErrMsg)
+			} else {
+				require.NoError(t, err)
+				txs := gjson.Get(string(res), "txs").Array()
+				require.Equal(t, len(txs), tc.expLen)
+			}
+		})
+	}
 
 }
 
@@ -298,6 +457,71 @@ func TestGetTx_GRPC(t *testing.T) {
 	}
 }
 
+func TestGetTx_GRPCGateway(t *testing.T) {
+	sut.ResetChain(t)
+
+	cli := NewCLIWrapper(t, sut, verbose)
+	// get validator address
+	valAddr := cli.GetKeyAddr("node0")
+	require.NotEmpty(t, valAddr)
+
+	// add new key
+	receiverAddr := cli.AddKey("account1")
+	denom := "stake"
+	var transferAmount int64 = 1000
+
+	sut.StartChain(t)
+
+	baseURL := sut.APIAddress()
+
+	rsp := cli.Run("tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=1stake", "--note=foobar")
+	txResult, found := cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
+	txHash := gjson.Get(txResult, "txhash").String()
+
+	testCases := []struct {
+		name      string
+		url       string
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			"empty params",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/", baseURL),
+			true, "tx hash cannot be empty",
+		},
+		{
+			"dummy hash",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", baseURL, "deadbeef"),
+			true, "tx not found",
+		},
+		{
+			"good hash",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", baseURL, txHash),
+			false, "",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := testutil.GetRequest(tc.url)
+			require.NoError(t, err)
+			if tc.expErr {
+				require.Contains(t, string(res), tc.expErrMsg)
+			} else {
+				timestamp := gjson.Get(string(res), "tx_response.timestamp").String()
+				require.NotEmpty(t, timestamp)
+
+				height := gjson.Get(string(res), "tx_response.height").Int()
+				require.NotZero(t, height)
+
+				rawLog := gjson.Get(string(res), "tx_response.raw_log").String()
+				require.Empty(t, rawLog)
+			}
+		})
+	}
+}
+
 func TestGetBlockWithTxs_GRPC(t *testing.T) {
 	sut.ResetChain(t)
 
@@ -338,7 +562,7 @@ func TestGetBlockWithTxs_GRPC(t *testing.T) {
 		{"block with 0 tx", &tx.GetBlockWithTxsRequest{Height: height - 1, Pagination: &query.PageRequest{Offset: 0, Limit: 100}}, false, "", 0},
 	}
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t * testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			// Query the tx via gRPC.
 			grpcRes, err := qc.GetBlockWithTxs(context.Background(), tc.req)
 			if tc.expErr {
@@ -353,6 +577,68 @@ func TestGetBlockWithTxs_GRPC(t *testing.T) {
 				if tc.req.Pagination != nil {
 					require.LessOrEqual(t, len(grpcRes.Txs), int(tc.req.Pagination.Limit))
 				}
+			}
+		})
+	}
+}
+
+func TestGetBlockWithTxs_GRPCGateway(t *testing.T) {
+	sut.ResetChain(t)
+
+	cli := NewCLIWrapper(t, sut, verbose)
+	// get validator address
+	valAddr := cli.GetKeyAddr("node0")
+	require.NotEmpty(t, valAddr)
+
+	// add new key
+	receiverAddr := cli.AddKey("account1")
+	denom := "stake"
+	var transferAmount int64 = 1000
+
+	sut.StartChain(t)
+
+	baseUrl := sut.APIAddress()
+
+	rsp := cli.Run("tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=1stake", "--note=foobar")
+	txResult, found := cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
+	height := gjson.Get(txResult, "height").Int()
+
+	testCases := []struct {
+		name      string
+		url       string
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			"empty params",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/0", baseUrl),
+			true, "height must not be less than 1 or greater than the current height",
+		},
+		{
+			"bad height",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/%d", baseUrl, 9999999),
+			true, "height must not be less than 1 or greater than the current height",
+		},
+		{
+			"good request",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/block/%d", baseUrl, height),
+			false, "",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := testutil.GetRequest(tc.url)
+			require.NoError(t, err)
+			if tc.expErr {
+				require.Contains(t, string(res), tc.expErrMsg)
+			} else {
+				memo := gjson.Get(string(res), "txs.0.body.memo").String()
+				require.Equal(t, memo, "foobar")
+
+				respHeight := gjson.Get(string(res), "block.header.height").Int()
+				require.Equal(t, respHeight, height)
 			}
 		})
 	}
@@ -374,7 +660,7 @@ func TestTxEncode_GRPC(t *testing.T) {
 		Body: &tx.TxBody{
 			Messages: []*codectypes.Any{},
 		},
-		AuthInfo: &tx.AuthInfo{},
+		AuthInfo:   &tx.AuthInfo{},
 		Signatures: [][]byte{},
 	}
 
@@ -398,6 +684,49 @@ func TestTxEncode_GRPC(t *testing.T) {
 				require.Empty(t, res)
 			} else {
 				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestTxEncode_GRPCGateway(t *testing.T) {
+	sut.ResetChain(t)
+
+	cli := NewCLIWrapper(t, sut, verbose)
+	// get validator address
+	valAddr := cli.GetKeyAddr("node0")
+	require.NotEmpty(t, valAddr)
+
+	sut.StartChain(t)
+
+	baseUrl := sut.APIAddress()
+
+	protoTx := &tx.Tx{
+		Body: &tx.TxBody{
+			Messages: []*codectypes.Any{},
+		},
+		AuthInfo:   &tx.AuthInfo{},
+		Signatures: [][]byte{},
+	}
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxEncodeRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.TxEncodeRequest{}, true, "invalid empty tx"},
+		{"valid tx request", &tx.TxEncodeRequest{Tx: protoTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reqBz, err := json.Marshal(tc.req)
+
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/encode", baseUrl), "application/json", reqBz)
+			require.NoError(t, err)
+			if tc.expErr {
+				require.Contains(t, string(res), tc.expErrMsg)
 			}
 		})
 	}
@@ -430,6 +759,7 @@ func TestTxDecode_GRPC(t *testing.T) {
 
 	res = cli.RunCommandWithArgs("tx", "encode", signedTxFile.Name())
 	txBz, err := base64.StdEncoding.DecodeString(res)
+	require.NoError(t, err)
 	invalidTxBytes := append(txBz, byte(0o00))
 
 	testCases := []struct {
@@ -454,6 +784,64 @@ func TestTxDecode_GRPC(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.NotEmpty(t, res.GetTx())
+			}
+		})
+	}
+}
+
+func TestTxDecode_GRPCGateway(t *testing.T) {
+	sut.ResetChain(t)
+
+	cli := NewCLIWrapper(t, sut, verbose)
+	// get validator address
+	valAddr := cli.GetKeyAddr("node0")
+	require.NotEmpty(t, valAddr)
+
+	// add new key
+	receiverAddr := cli.AddKey("account1")
+	denom := "stake"
+	var transferAmount int64 = 1000
+
+	sut.StartChain(t)
+
+	basrUrl := sut.APIAddress()
+
+	// create unsign tx
+	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
+	txFile := StoreTempFile(t, []byte(res))
+
+	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", valAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet/node0/simd")
+	signedTxFile := StoreTempFile(t, []byte(res))
+
+	res = cli.RunCommandWithArgs("tx", "encode", signedTxFile.Name())
+	txBz, err := base64.StdEncoding.DecodeString(res)
+	require.NoError(t, err)
+	invalidTxBytes := append(txBz, byte(0o00))
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxDecodeRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.TxDecodeRequest{}, true, "invalid empty tx bytes"},
+		{"invalid tx bytes", &tx.TxDecodeRequest{TxBytes: invalidTxBytes}, true, "tx parse error"},
+		{"valid request with tx_bytes", &tx.TxDecodeRequest{TxBytes: txBz}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reqBz, err := json.Marshal(tc.req)
+			require.NoError(t, err)
+
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/decode", basrUrl), "application/json", reqBz)
+			require.NoError(t, err)
+			if tc.expErr {
+				require.Contains(t, string(res), tc.expErrMsg)
+			} else {
+				signatures := gjson.Get(string(res), "tx.signatures").Array()
+				require.Equal(t, len(signatures), 1)
 			}
 		})
 	}
@@ -505,9 +893,8 @@ func TestSimMultiSigTx(t *testing.T) {
 
 	res = cli.Run("tx", "broadcast", txSignedFile.Name())
 	RequireTxSuccess(t, res)
-	
-	multiSigBalance = cli.QueryBalance(multiSigAddr, denom)
-	require.Equal(t, multiSigBalance, transferAmount - newTransferAmount - 10)
 
-	
+	multiSigBalance = cli.QueryBalance(multiSigAddr, denom)
+	require.Equal(t, multiSigBalance, transferAmount-newTransferAmount-10)
+
 }

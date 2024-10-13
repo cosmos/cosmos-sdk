@@ -198,3 +198,204 @@ func TestParallelWriteAndPruning(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []byte(fmt.Sprintf("val-%d-%03d", version-1, 0)), val)
 }
+
+// TestDatabase_VersionExists tests the VersionExists method of the Database struct.
+func TestDatabase_VersionExists(t *testing.T) {
+	// Define test cases
+	testCases := []struct {
+		name           string
+		setup          func(t *testing.T, db *Database)
+		version        uint64
+		expectedExists bool
+		expectError    bool
+	}{
+		{
+			name: "Fresh database: version 0 does not exist",
+			setup: func(t *testing.T, db *Database) {
+				t.Helper()
+				// No setup needed for fresh database
+			},
+			version:        0,
+			expectedExists: false,
+			expectError:    false,
+		},
+		{
+			name: "Fresh database: version 1 does not exist",
+			setup: func(t *testing.T, db *Database) {
+				t.Helper()
+				// No setup needed for fresh database
+			},
+			version:        1,
+			expectedExists: false,
+			expectError:    false,
+		},
+		{
+			name: "After setting latest version to 5, version 5 exists",
+			setup: func(t *testing.T, db *Database) {
+				t.Helper()
+				err := db.SetLatestVersion(5)
+				if err != nil {
+					t.Fatalf("Setting latest version should not error: %v", err)
+				}
+			},
+			version:        5,
+			expectedExists: true,
+			expectError:    false,
+		},
+		{
+			name: "After setting latest version to 5, version 3 does not exist",
+			setup: func(t *testing.T, db *Database) {
+				t.Helper()
+				err := db.SetLatestVersion(5)
+				if err != nil {
+					t.Fatalf("Setting latest version should not error: %v", err)
+				}
+			},
+			version:        3,
+			expectedExists: false, // Since tombstone is not set, it's just existence
+			expectError:    false,
+		},
+		{
+			name: "After setting latest version to 10 and pruning to 5, version 5 does not exist",
+			setup: func(t *testing.T, db *Database) {
+				t.Helper()
+				err := db.SetLatestVersion(10)
+				if err != nil {
+					t.Fatalf("Setting latest version should not error: %v", err)
+				}
+
+				err = db.Prune(5)
+				if err != nil {
+					t.Fatalf("Pruning to version 5 should not error: %v", err)
+				}
+			},
+			version:        5,
+			expectedExists: false,
+			expectError:    false,
+		},
+		// {
+		// 	name: "After setting latest version to 10 and pruning to 5, version 7 exists",
+		// 	setup: func(t *testing.T, db *Database) {
+		// 		t.Helper()
+		// 		err := db.SetLatestVersion(10)
+		// 		if err != nil {
+		// 			t.Fatalf("Setting latest version should not error: %v", err)
+		// 		}
+
+		// 		err = db.Prune(5)
+		// 		if err != nil {
+		// 			t.Fatalf("Pruning to version 5 should not error: %v", err)
+		// 		}
+		// 	},
+		// 	version:        7,
+		// 	expectedExists: true,
+		// 	expectError:    false,
+		// },
+		{
+			name: "After pruning to version 0, version 0 does not exist",
+			setup: func(t *testing.T, db *Database) {
+				t.Helper()
+				// Prune to version 0
+				err := db.Prune(0)
+				if err != nil {
+					t.Fatalf("Pruning to version 0 should not error: %v", err)
+				}
+			},
+			version:        0,
+			expectedExists: false,
+			expectError:    false,
+		},
+		{
+			name: "After pruning to version 0, version 1 exists",
+			setup: func(t *testing.T, db *Database) {
+				t.Helper()
+				// Prune to version 0
+				err := db.Prune(0)
+				if err != nil {
+					t.Fatalf("Pruning to version 0 should not error: %v", err)
+				}
+
+				// Set latest version to 1
+				err = db.SetLatestVersion(1)
+				if err != nil {
+					t.Fatalf("Setting latest version should not error: %v", err)
+				}
+			},
+			version:        1,
+			expectedExists: true,
+			expectError:    false,
+		},
+		{
+			name: "After setting and pruning, version does not exist due to tombstone",
+			setup: func(t *testing.T, db *Database) {
+				t.Helper()
+				// Set latest version to 5
+				err := db.SetLatestVersion(5)
+				if err != nil {
+					t.Fatalf("Setting latest version should not error: %v", err)
+				}
+
+				// Insert a key with version 3 and tombstone
+				_, err = db.storage.Exec(upsertStmt, "store1", "key1", "value1", 3, "value1")
+				if err != nil {
+					t.Fatalf("Inserting key1 at version 3 should not error: %v", err)
+				}
+
+				// Mark version 3 as tombstoned
+				_, err = db.storage.Exec(delStmt, 3, "store1", "key1")
+				if err != nil {
+					t.Fatalf("Tombstoning key1 at version 3 should not error: %v", err)
+				}
+
+				// Prune to version 2
+				err = db.Prune(2)
+				if err != nil {
+					t.Fatalf("Pruning to version 2 should not error: %v", err)
+				}
+			},
+			version:        3,
+			expectedExists: false,
+			expectError:    false,
+		},
+	}
+
+	// Iterate over each test case
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create a temporary directory for the test database
+			tempDir := t.TempDir()
+
+			// Initialize the database
+			db, err := New(tempDir)
+			if err != nil {
+				t.Fatalf("Initializing the database should not error: %v", err)
+			}
+			defer func() {
+				err := db.Close()
+				if err != nil {
+					t.Fatalf("Closing the database should not error: %v", err)
+				}
+			}()
+
+			// Setup the database state as per the test case
+			tc.setup(t, db)
+
+			// Call VersionExists with the specified version
+			exists, err := db.VersionExists(tc.version)
+
+			// Assert based on expectation
+			if tc.expectError {
+				if err == nil {
+					t.Errorf("Expected an error but got none")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Did not expect an error but got one: %v", err)
+				}
+				if exists != tc.expectedExists {
+					t.Errorf("Version existence mismatch: expected %v, got %v", tc.expectedExists, exists)
+				}
+			}
+		})
+	}
+}

@@ -6,3 +6,12 @@ type DynamicConfig interface {
 	Get(string) any
 	GetString(string) string
 }
+
+type ConfigMap map[string]any
+
+type ModuleConfigMap struct {
+	Module string
+	Config ConfigMap
+}
+
+func (ModuleConfigMap) IsManyPerContainerType() {}

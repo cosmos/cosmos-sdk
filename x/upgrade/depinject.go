@@ -26,15 +26,26 @@ func (am AppModule) IsOnePerModuleType() {}
 
 func init() {
 	appconfig.RegisterModule(&modulev1.Module{},
-		appconfig.Provide(ProvideModule),
+		appconfig.Provide(ProvideModule, ProvideConfig),
 		appconfig.Invoke(PopulateVersionMap),
 	)
+}
+
+func ProvideConfig(key depinject.OwnModuleKey) coreserver.ModuleConfigMap {
+	return coreserver.ModuleConfigMap{
+		Module: depinject.ModuleKey(key).Name(),
+		Config: coreserver.ConfigMap{
+			server.FlagUnsafeSkipUpgrades: []int{},
+			flags.FlagHome:                "",
+		},
+	}
 }
 
 type ModuleInputs struct {
 	depinject.In
 
 	Config             *modulev1.Module
+	ConfigMap          coreserver.ConfigMap
 	Environment        appmodule.Environment
 	Cdc                codec.Codec
 	AddressCodec       address.Codec

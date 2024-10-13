@@ -25,8 +25,17 @@ const flagMinGasPricesV2 = "server.minimum-gas-prices"
 
 func init() {
 	appconfig.RegisterModule(&modulev1.Module{},
-		appconfig.Provide(ProvideModule),
+		appconfig.Provide(ProvideModule, ProvideConfig),
 	)
+}
+
+func ProvideConfig(key depinject.OwnModuleKey) server.ModuleConfigMap {
+	return server.ModuleConfigMap{
+		Module: depinject.ModuleKey(key).Name(),
+		Config: server.ConfigMap{
+			flagMinGasPricesV2: "",
+		},
+	}
 }
 
 type ModuleInputs struct {
@@ -36,6 +45,7 @@ type ModuleInputs struct {
 	Environment   appmodulev2.Environment
 	TxConfig      client.TxConfig
 	DynamicConfig server.DynamicConfig `optional:"true"`
+	ConfigMap     server.ConfigMap
 
 	AccountKeeper            ante.AccountKeeper
 	BankKeeper               authtypes.BankKeeper

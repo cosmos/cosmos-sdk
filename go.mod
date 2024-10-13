@@ -188,6 +188,7 @@ replace (
 	cosmossdk.io/x/bank => ./x/bank
 	cosmossdk.io/x/staking => ./x/staking
 	cosmossdk.io/x/tx => ./x/tx
+	cosmossdk.io/core => ./core
 )
 
 // Below are the long-lived replace of the Cosmos SDK

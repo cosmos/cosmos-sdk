@@ -207,4 +207,5 @@ replace (
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/staking => ../staking
 	cosmossdk.io/x/tx => ../tx
+	cosmossdk.io/core => ../../core
 )

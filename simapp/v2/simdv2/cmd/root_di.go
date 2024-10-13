@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"cosmossdk.io/core/server"
 	serverv2 "cosmossdk.io/server/v2"
 	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"os"
+	"strings"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli"
@@ -42,6 +44,74 @@ https://github.com/cosmos/cosmos-sdk/blob/6708818470826923b96ff7fb6ef55729d8c426
 
 */
 
+type ModuleConfigMaps map[string]server.ConfigMap
+type FlagParser func() error
+
+func ProvideModuleConfigMap(
+	moduleConfigs []server.ModuleConfigMap,
+	flags *pflag.FlagSet,
+	parseFlags FlagParser,
+) (ModuleConfigMaps, error) {
+	var err error
+	globalConfig := make(ModuleConfigMaps)
+	for _, moduleConfig := range moduleConfigs {
+		cfg := moduleConfig.Config
+		name := moduleConfig.Module
+		globalConfig[name] = make(server.ConfigMap)
+		for flag, defaultValue := range cfg {
+			globalConfig[name][flag] = defaultValue
+			switch defaultValue.(type) {
+			case string:
+				_, maybeNotFound := flags.GetString(flag)
+				if maybeNotFound != nil && strings.Contains(maybeNotFound.Error(),
+					"flag accessed but not defined") {
+					flags.String(flag, defaultValue.(string), "")
+				} else {
+					// slightly skip the flag if it's already defined
+					continue
+				}
+			case []int:
+				flags.IntSlice(flag, defaultValue.([]int), "")
+			case int:
+				flags.Int(flag, defaultValue.(int), "")
+			default:
+				return nil, fmt.Errorf("unsupported type %T for flag %s", defaultValue, flag)
+			}
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	if err = parseFlags(); err != nil {
+		return nil, err
+	}
+	for _, cfg := range globalConfig {
+		for flag, defaulValue := range cfg {
+			switch defaulValue.(type) {
+			case string:
+				cfg[flag], err = flags.GetString(flag)
+			case []int:
+				cfg[flag], err = flags.GetIntSlice(flag)
+			case int:
+				cfg[flag], err = flags.GetInt(flag)
+			default:
+				return nil, fmt.Errorf("unsupported type %T for flag %s", defaulValue, flag)
+			}
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	return globalConfig, nil
+}
+
+func ProvideModuleScopedConfigMap(
+	key depinject.ModuleKey,
+	moduleConfigs ModuleConfigMaps,
+) server.ConfigMap {
+	return moduleConfigs[key.Name()]
+}
+
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
 func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 	var (
@@ -61,12 +131,23 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 	if err != nil {
 		return nil, err
 	}
+	flagParser := FlagParser(func() error {
+		return bootstrapCmd.ParseFlags(args)
+	})
 
 	if err = depinject.Inject(
 		depinject.Configs(
 			simapp.AppConfig(),
-			depinject.Provide(ProvideClientContext),
-			depinject.Supply(log.NewNopLogger()),
+			depinject.Provide(
+				ProvideClientContext,
+				ProvideModuleConfigMap,
+				ProvideModuleScopedConfigMap,
+			),
+			depinject.Supply(
+				log.NewNopLogger(),
+				flagParser,
+				bootstrapCmd.Flags(),
+			),
 		),
 		&autoCliOpts,
 		&moduleManager,
@@ -111,7 +192,7 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 		panic(err)
 	}
 
-	return rootCmd
+	return rootCmd, nil
 }
 
 func ProvideClientContext(

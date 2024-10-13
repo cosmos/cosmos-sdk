@@ -59,7 +59,7 @@ func init() {
 // AppConfig returns the default app config.
 func AppConfig() depinject.Config {
 	return depinject.Configs(
-		appConfig, // Alternatively use appconfig.LoadYAML(AppConfigYAML)
+		ModuleConfig, // Alternatively use appconfig.LoadYAML(AppConfigYAML)
 		runtime.DefaultServiceBindings(),
 		depinject.Provide(
 			codec.ProvideInterfaceRegistry,

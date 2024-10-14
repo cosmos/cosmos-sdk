@@ -38,13 +38,19 @@ func (s *Server[T]) Name() string {
 func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
 	s.logger = logger.With(log.ModuleKey, s.Name())
 
-	s.config = s.Config().(*Config)
+	serverCfg := s.Config().(*Config)
+	if len(cfg) > 0 {
+		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
+			return fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+	}
 
 	var appManager *appmanager.AppManager[T]
 	appManager = appI.GetAppManager()
 
 	s.router = http.NewServeMux()
 	s.router.Handle("/", NewDefaultHandler(appManager))
+	s.config = serverCfg
 
 	return nil
 }

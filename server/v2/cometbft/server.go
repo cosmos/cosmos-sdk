@@ -107,6 +107,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		s.logger,
 		appI.Name(),
 		appI.GetAppManager(),
+		appI.Close,
 		s.serverOptions.Mempool(cfg),
 		indexEvents,
 		appI.GetQueryHandlers(),

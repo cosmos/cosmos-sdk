@@ -105,7 +105,7 @@ func NewConsensus[T transaction.Tx](
 		indexedEvents:          indexedEvents,
 		initialHeight:          0,
 		queryHandlersMap:       queryHandlersMap,
-		getProtoRegistry:       sync.OnceValues(func() (*protoregistry.Files, error) { return gogoproto.MergedRegistry() }),
+		getProtoRegistry:       sync.OnceValues(gogoproto.MergedRegistry),
 	}
 }
 

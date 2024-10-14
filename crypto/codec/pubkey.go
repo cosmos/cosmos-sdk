@@ -11,6 +11,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// PubKeyToProto converts a JSON public key (in `cryptokeys.JSONPubkey` format) to its corresponding protobuf public key type.
+//
+// Parameters:
+// - pk: A `cryptokeys.JSONPubkey` containing the public key and its type.
+//
+// Returns:
+// - cryptotypes.PubKey: The protobuf public key corresponding to the provided JSON public key.
+// - error: An error if the key type is invalid or unsupported.
 func PubKeyToProto(pk cryptokeys.JSONPubkey) (cryptotypes.PubKey, error) {
 	switch pk.KeyType {
 	case ed25519.PubKeyName:
@@ -30,6 +38,14 @@ func PubKeyToProto(pk cryptokeys.JSONPubkey) (cryptotypes.PubKey, error) {
 	}
 }
 
+// PubKeyFromProto converts a protobuf public key (in `cryptotypes.PubKey` format) to a JSON public key format (`cryptokeys.JSONPubkey`).
+//
+// Parameters:
+// - pk: A `cryptotypes.PubKey` which is the protobuf representation of a public key.
+//
+// Returns:
+// - cryptokeys.JSONPubkey: The JSON-formatted public key corresponding to the provided protobuf public key.
+// - error: An error if the key type is invalid or unsupported.
 func PubKeyFromProto(pk cryptotypes.PubKey) (cryptokeys.JSONPubkey, error) {
 	switch pk := pk.(type) {
 	case *ed25519.PubKey:

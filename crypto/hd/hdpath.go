@@ -234,7 +234,7 @@ func derivePrivateKey(privKeyBytes, chainCode [32]byte, index uint32, harden boo
 		// pubkey := secp256k1.PrivKeySecp256k1(privKeyBytes).PubKey()
 		// public := pubkey.(secp256k1.PubKeySecp256k1)
 		// data = public[:]
-		
+
 	}
 
 	data = append(data, uint32ToBytes(index)...)

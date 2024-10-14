@@ -114,5 +114,6 @@ issues:
     * or for golang, some version or hash derived from https://pkg.go.dev/runtime/debug#BuildInfo
 * the above would apply for native handlers whether or not they are loaded dynamically or compiled into the binary and would use whatever is the canonical source code for the handler
 * when we need to use some other source code for the native handler (such as an alternative Rust version of a Go handler), there should be some "replace" directive mechanism in the native VM to redirect the handler ID to a different implementation
+* for native or Wasm handlers, the `handler_id` is the fully qualified Go or Rust package path + type name
 
 ## Encoding

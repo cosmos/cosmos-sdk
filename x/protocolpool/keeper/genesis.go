@@ -12,6 +12,12 @@ import (
 
 func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error {
 	currentTime := k.HeaderService.HeaderInfo(ctx).Time
+
+	err := k.Params.Set(ctx, *data.Params)
+	if err != nil {
+		return fmt.Errorf("failed to set params: %w", err)
+	}
+
 	for _, cf := range data.ContinuousFund {
 		// ignore expired ContinuousFunds
 		if cf.Expiry != nil && cf.Expiry.Before(currentTime) {
@@ -128,6 +134,13 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 	if err != nil {
 		return nil, err
 	}
+
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	genState.Params = &params
 
 	return genState, nil
 }

@@ -228,7 +228,6 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 
 	// next we iterate over the distributions, calculate each recipient's share and the remaining pool funds
 	toDistribute := map[string]sdk.Coins{}
-	poolFunds := sdk.NewCoins()
 	amountToDistribute := sdk.NewCoins() // amount assigned to distributions
 	allDistributions := sdk.NewCoins()   // total amount distributed to the pool, to then calculate the remaining pool funds
 
@@ -281,7 +280,7 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 		}
 	}
 
-	poolFunds = allDistributions.Sub(amountToDistribute...)
+	poolFunds := allDistributions.Sub(amountToDistribute...)
 	if !poolFunds.IsZero() {
 		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, poolFunds); err != nil {
 			return err

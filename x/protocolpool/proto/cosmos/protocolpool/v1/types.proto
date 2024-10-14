@@ -52,3 +52,10 @@ message DistributionAmount {
     (amino.encoding)         = "legacy_coins"
   ];
 }
+
+// Params defines the parameters for the protocolpool module.
+message Params {
+  // enabled_distribution_denoms lists the denoms that are allowed to be distributed.
+  // This is to avoid spending time distributing undesired tokens to continuous funds and budgets.
+  repeated string enabled_distribution_denoms = 1;
+}

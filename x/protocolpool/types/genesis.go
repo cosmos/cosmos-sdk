@@ -16,6 +16,7 @@ func NewGenesisState(cf []*ContinuousFund, budget []*Budget) *GenesisState {
 		Budget:         budget,
 		LastBalance:    DistributionAmount{Amount: sdk.NewCoins()},
 		Distributions:  []*Distribution{},
+		Params:         &Params{},
 	}
 }
 
@@ -23,6 +24,9 @@ func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
 		ContinuousFund: []*ContinuousFund{},
 		Budget:         []*Budget{},
+		Params: &Params{
+			EnabledDistributionDenoms: []string{"stake"},
+		},
 	}
 }
 

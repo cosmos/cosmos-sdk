@@ -23,6 +23,8 @@ message GenesisState {
   // funds and budgets. It contains time in order to distribute to non-expired
   // funds only.
   repeated Distribution distributions = 4;
+
+  Params params = 5;
 }
 
 message Distribution {

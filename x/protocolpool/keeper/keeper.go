@@ -36,6 +36,7 @@ type Keeper struct {
 	RecipientFundDistribution collections.Map[sdk.AccAddress, types.DistributionAmount]
 	Distributions             collections.Map[time.Time, types.DistributionAmount] // key: time.Time, denom | value: amounts
 	LastBalance               collections.Item[types.DistributionAmount]
+	Params                    collections.Item[types.Params]
 }
 
 const (
@@ -70,6 +71,7 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 		RecipientFundDistribution: collections.NewMap(sb, types.RecipientFundDistributionKey, "recipient_fund_distribution", sdk.AccAddressKey, codec.CollValue[types.DistributionAmount](cdc)),
 		Distributions:             collections.NewMap(sb, types.DistributionsKey, "distributions", sdk.TimeKey, codec.CollValue[types.DistributionAmount](cdc)),
 		LastBalance:               collections.NewItem(sb, types.LastBalanceKey, "last_balance", codec.CollValue[types.DistributionAmount](cdc)),
+		Params:                    collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 
 	schema, err := sb.Build()

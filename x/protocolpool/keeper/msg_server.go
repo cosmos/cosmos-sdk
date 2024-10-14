@@ -225,6 +225,18 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 	}, nil
 }
 
+func (k MsgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if err := k.validateAuthority(msg.GetAuthority()); err != nil {
+		return nil, err
+	}
+
+	if err := k.Params.Set(ctx, msg.Params); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateParamsResponse{}, nil
+}
+
 func (k *Keeper) validateAuthority(authority string) error {
 	if _, err := k.authKeeper.AddressCodec().StringToBytes(authority); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)

@@ -1039,3 +1039,15 @@ func (suite *KeeperTestSuite) TestCommunityPoolSpend() {
 	})
 	suite.Require().NoError(err)
 }
+
+func (suite *KeeperTestSuite) TestUpdateParams() {
+	_, err := suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{
+		Authority: suite.poolKeeper.GetAuthority(),
+		Params:    types.Params{EnabledDistributionDenoms: []string{"stake"}},
+	})
+	suite.Require().NoError(err)
+
+	params, err := suite.poolKeeper.Params.Get(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Len(params.EnabledDistributionDenoms, 1)
+}

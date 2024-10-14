@@ -31,4 +31,5 @@ var (
 	RecipientFundDistributionKey = collections.NewPrefix(5)
 	DistributionsKey             = collections.NewPrefix(6)
 	LastBalanceKey               = collections.NewPrefix(7)
+	ParamsKey                    = collections.NewPrefix(8)
 )

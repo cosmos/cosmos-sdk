@@ -21,6 +21,14 @@ standalone = false
 # max-txs defines the maximum number of transactions that can be in the mempool. A value of 0 indicates an unbounded mempool, a negative value disables the app-side mempool.
 max-txs = -1
 
+# indexer defines the configuration for the SDK built-in indexer implementation.
+[comet.indexer]
+# Buffer size of the channels used for buffering data sent to indexer go routines.
+channel_buffer_size = 1024
+
+# Target is a map of named indexer targets to their configuration.
+[comet.indexer.target]
+
 [grpc]
 # Enable defines if the gRPC server should be enabled.
 enable = true
@@ -42,7 +50,7 @@ minimum-gas-prices = '0stake'
 app-db-backend = 'goleveldb'
 
 [store.options]
-# SState storage database type. Currently we support: "sqlite", "pebble" and "rocksdb"
+# State storage database type. Currently we support: "sqlite", "pebble" and "rocksdb"
 ss-type = 'sqlite'
 # State commitment database type. Currently we support: "iavl" and "iavl-v2"
 sc-type = 'iavl'
@@ -71,7 +79,7 @@ skip-fast-storage-upgrade = true
 # Enable enables the application telemetry functionality. When enabled, an in-memory sink is also enabled by default. Operators may also enabled other sinks such as Prometheus.
 enable = true
 # Address defines the metrics server address to bind to.
-address = 'localhost:1338'
+address = 'localhost:1318'
 # Prefixed with keys to separate services.
 service-name = ''
 # Enable prefixing gauge values with hostname.

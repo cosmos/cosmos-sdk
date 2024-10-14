@@ -20,6 +20,7 @@ func NewRootCmd() *cobra.Command {
 		NewVersionCmd(),
 		NewAddUpgradeCmd(),
 		NewShowUpgradeInfoCmd(),
+		NewBatchAddUpgradeCmd(),
 		NewPrepareUpgradeCmd(),
 	)
 

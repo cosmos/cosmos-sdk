@@ -134,16 +134,6 @@ func (s *SystemUnderTest) SetupChain() {
 	if err != nil {
 		panic(fmt.Sprintf("failed to set block max gas: %s", err))
 	}
-	// Short period for gov
-	genesisBz, err = sjson.SetRawBytes(genesisBz, "app_state.gov.params.voting_period", []byte(fmt.Sprintf(`"%s"`, "8s")))
-	if err != nil {
-		panic(fmt.Sprintf("failed to set regular voting period: %s", err))
-	}
-	// update expedited voting period to avoid validation error
-	genesisBz, err = sjson.SetRawBytes(genesisBz, "app_state.gov.params.expedited_voting_period", []byte(fmt.Sprintf(`"%s"`, "7s")))
-	if err != nil {
-		panic(fmt.Sprintf("failed to set expedited voting period: %s", err))
-	}
 	s.withEachNodeHome(func(i int, home string) {
 		if err := saveGenesis(home, genesisBz); err != nil {
 			panic(err)

@@ -29,12 +29,7 @@ message UnbondingEntry {
   google.protobuf.Timestamp end_time = 1
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
   // unbond amount
-  repeated cosmos.base.v1beta1.Coin amount = 2 [
-    (gogoproto.nullable)     = false,
-    (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "legacy_coins",
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // validator address
   string validator_address = 3 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }

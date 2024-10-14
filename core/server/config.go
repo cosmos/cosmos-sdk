@@ -9,6 +9,10 @@ type DynamicConfig interface {
 
 type ConfigMap map[string]any
 
+func (c ConfigMap) Get(s string) any {
+	return c[s]
+}
+
 type ModuleConfigMap struct {
 	Module string
 	Config ConfigMap

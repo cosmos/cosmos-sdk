@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/client/v2/offchain"
 	corectx "cosmossdk.io/core/context"
+	coreserver "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
@@ -40,11 +41,18 @@ func newApp[T transaction.Tx](logger log.Logger, viper *viper.Viper) serverv2.Ap
 	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper))
 }
 
+type configWriter interface {
+	WriteConfig(filename string) error
+}
+
 func initRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
+	logger log.Logger,
+	globalServerCfg coreserver.ConfigMap,
 	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
-) {
+	app serverv2.AppI[T],
+) (configWriter, error) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
@@ -54,11 +62,6 @@ func initRootCmd[T transaction.Tx](
 		confixcmd.ConfigCommand(),
 		NewTestnetCmd(moduleManager),
 	)
-
-	logger, err := serverv2.NewLogger(viper.New(), rootCmd.OutOrStdout())
-	if err != nil {
-		panic(fmt.Sprintf("failed to create logger: %v", err))
-	}
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
@@ -70,11 +73,11 @@ func initRootCmd[T transaction.Tx](
 	)
 
 	// wire server commands
-	if err = serverv2.AddCommands(
+	return serverv2.AddCommands(
 		rootCmd,
-		newApp,
+		app,
 		logger,
-		initServerConfig(),
+		globalServerCfg,
 		cometbft.New(
 			&genericTxDecoder[T]{txConfig},
 			initCometOptions[T](),
@@ -83,9 +86,7 @@ func initRootCmd[T transaction.Tx](
 		grpc.New[T](),
 		serverstore.New[T](),
 		telemetry.New[T](),
-	); err != nil {
-		panic(err)
-	}
+	)
 }
 
 // genesisCommand builds genesis-related `simd genesis` command.
@@ -93,8 +94,12 @@ func genesisCommand[T transaction.Tx](
 	moduleManager *runtimev2.MM[T],
 	cmds ...*cobra.Command,
 ) *cobra.Command {
+	var genTxValidator func([]transaction.Msg) error
+	if moduleManager != nil {
+		genTxValidator = moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule).GenTxValidator()
+	}
 	cmd := v2.Commands(
-		moduleManager.Modules()[genutiltypes.ModuleName].(genutil.AppModule),
+		genTxValidator,
 		moduleManager,
 		appExport[T],
 	)

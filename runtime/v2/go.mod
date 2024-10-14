@@ -9,6 +9,7 @@ replace (
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
 	cosmossdk.io/store/v2 => ../../store/v2
 	cosmossdk.io/x/tx => ../../x/tx
+	cosmossdk.io/core => ../../core
 )
 
 require (

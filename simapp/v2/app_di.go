@@ -2,6 +2,7 @@ package simapp
 
 import (
 	_ "embed"
+	"fmt"
 
 	"github.com/spf13/viper"
 
@@ -66,12 +67,74 @@ func AppConfig() depinject.Config {
 			codec.ProvideAddressCodec,
 			codec.ProvideProtoCodec,
 			codec.ProvideLegacyAmino,
+			ProvideModuleScopedConfigMap,
+			SanelyProvideModuleConfigMap,
+			ProvideRootStoreConfig,
 		),
 		depinject.Invoke(
 			std.RegisterInterfaces,
 			std.RegisterLegacyAminoCodec,
 		),
 	)
+}
+
+func NewSimAppWithConfig[T transaction.Tx](
+	config depinject.Config,
+	outputs ...any,
+) (*SimApp[T], error) {
+	var (
+		app          = &SimApp[T]{}
+		appBuilder   *runtime.AppBuilder[T]
+		storeBuilder root.Builder
+		logger       log.Logger
+
+		// merge the AppConfig and other configuration in one config
+		appConfig = depinject.Configs(
+			AppConfig(),
+			config,
+			depinject.Provide(
+				multisigdepinject.ProvideAccount,
+				basedepinject.ProvideAccount,
+				lockupdepinject.ProvideAllLockupAccounts,
+				basedepinject.ProvideSecp256K1PubKey,
+			),
+		)
+	)
+
+	outputs = append(outputs,
+		&logger,
+		&storeBuilder,
+		&appBuilder,
+		&app.appCodec,
+		&app.legacyAmino,
+		&app.txConfig,
+		&app.interfaceRegistry,
+		&app.UpgradeKeeper,
+		&app.StakingKeeper)
+
+	if err := depinject.Inject(appConfig, outputs...); err != nil {
+		return nil, err
+	}
+
+	app.store = storeBuilder.Get()
+	if app.store == nil {
+		return nil, fmt.Errorf("store builder not return a db")
+	}
+	var err error
+	app.App, err = appBuilder.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	/****  Module Options ****/
+
+	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
+	app.RegisterUpgradeHandlers()
+
+	if err = app.LoadLatest(); err != nil {
+		return nil, err
+	}
+	return app, nil
 }
 
 // NewSimApp returns a reference to an initialized SimApp.
@@ -90,7 +153,6 @@ func NewSimApp[T transaction.Tx](
 			AppConfig(),
 			depinject.Supply(
 				logger,
-				viper,
 
 				// ADVANCED CONFIGURATION
 
@@ -200,6 +262,10 @@ func NewSimApp[T transaction.Tx](
 	return app
 }
 
+func (app *SimApp[T]) Build() error {
+	return nil
+}
+
 // AppCodec returns SimApp's app codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
@@ -220,4 +286,42 @@ func (app *SimApp[T]) TxConfig() client.TxConfig {
 
 func (app *SimApp[T]) GetStore() store.RootStore {
 	return app.store
+}
+
+type GlobalConfig server.ConfigMap
+type ModuleConfigMaps map[string]server.ConfigMap
+
+// TODO combine below 2 functions
+// - linear search for module name in provider is OK
+// - move elsewhere, server/v2 or runtime/v2 ?
+
+func SanelyProvideModuleConfigMap(
+	moduleConfigs []server.ModuleConfigMap,
+	globalConfig GlobalConfig,
+) ModuleConfigMaps {
+	moduleConfigMaps := make(ModuleConfigMaps)
+	for _, moduleConfig := range moduleConfigs {
+		cfg := moduleConfig.Config
+		name := moduleConfig.Module
+		moduleConfigMaps[name] = make(server.ConfigMap)
+		for flag, df := range cfg {
+			if val, ok := globalConfig[flag]; ok {
+				moduleConfigMaps[name][flag] = val
+			} else {
+				moduleConfigMaps[name][flag] = df
+			}
+		}
+	}
+	return moduleConfigMaps
+}
+
+func ProvideModuleScopedConfigMap(
+	key depinject.ModuleKey,
+	moduleConfigs ModuleConfigMaps,
+) server.ConfigMap {
+	return moduleConfigs[key.Name()]
+}
+
+func ProvideRootStoreConfig(config GlobalConfig) (*root.Config, error) {
+	return serverstore.UnmarshalConfig(config)
 }

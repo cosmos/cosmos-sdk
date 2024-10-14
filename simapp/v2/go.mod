@@ -250,6 +250,7 @@ require (
 replace (
 	cosmossdk.io/client/v2 => ../../client/v2
 	cosmossdk.io/collections => ../../collections
+	cosmossdk.io/core => ../../core
 	cosmossdk.io/tools/confix => ../../tools/confix
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../../x/accounts/defaults/base
@@ -273,7 +274,6 @@ replace (
 	cosmossdk.io/x/staking => ../../x/staking
 	cosmossdk.io/x/tx => ../../x/tx
 	cosmossdk.io/x/upgrade => ../../x/upgrade
-	cosmossdk.io/core => ../../core
 )
 
 // Below are the long-lived replace of the SimApp

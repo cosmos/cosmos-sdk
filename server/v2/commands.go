@@ -11,24 +11,11 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 )
-
-// Execute executes the root command of an application.
-// It handles adding core CLI flags, specifically the logging flags.
-func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
-	SetPersistentFlags(rootCmd.PersistentFlags(), defaultHome)
-
-	// update the global viper with the root command's configuration
-	viper.SetEnvPrefix(envPrefix)
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
-	viper.AutomaticEnv()
-
-	return rootCmd.Execute()
-}
 
 func SetPersistentFlags(pflags *pflag.FlagSet, defaultHome string) {
 	pflags.String(FlagLogLevel, "info", "The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:<level>,<key>:<level>')")
@@ -37,41 +24,40 @@ func SetPersistentFlags(pflags *pflag.FlagSet, defaultHome string) {
 	pflags.StringP(FlagHome, "", defaultHome, "directory for config and data")
 }
 
+// Allow the chain developer to overwrite the server default app toml config.
+func initServerConfig() ServerConfig {
+	serverCfg := DefaultServerConfig()
+	// The server's default minimum gas price is set to "0stake" inside
+	// app.toml. However, the chain developer can set a default app.toml value for their
+	// validators here. Please update value based on chain denom.
+	//
+	// In summary:
+	// - if you set serverCfg.MinGasPrices value, validators CAN tweak their
+	//   own app.toml to override, or use this default value.
+	//
+	// In simapp, we set the min gas prices to 0.
+	serverCfg.MinGasPrices = "0stake"
+
+	return serverCfg
+}
+
 // AddCommands add the server commands to the root command
 // It configures the config handling and the logger handling
 func AddCommands[T transaction.Tx](
 	rootCmd *cobra.Command,
-	newApp AppCreator[T],
+	app AppI[T],
 	logger log.Logger,
-	globalServerCfg ServerConfig,
+	globalServerCfg server.ConfigMap,
 	components ...ServerComponent[T],
-) error {
+) (interface{ WriteConfig(string) error }, error) {
 	if len(components) == 0 {
-		return errors.New("no components provided")
+		return nil, errors.New("no components provided")
 	}
 
-	server := NewServer(logger, globalServerCfg, components...)
-	originalPersistentPreRunE := rootCmd.PersistentPreRunE
-	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		// set the default command outputs
-		cmd.SetOut(cmd.OutOrStdout())
-		cmd.SetErr(cmd.ErrOrStderr())
-
-		if err := configHandle(server, cmd); err != nil {
-			return err
-		}
-
-		// call the original PersistentPreRun(E) if it exists
-		if rootCmd.PersistentPreRun != nil {
-			rootCmd.PersistentPreRun(cmd, args)
-			return nil
-		}
-
-		return originalPersistentPreRunE(cmd, args)
-	}
-
+	server := NewServer(logger, initServerConfig(), components...)
 	cmds := server.CLICommands()
-	startCmd := createStartCommand(server, newApp)
+	startCmd := createStartCommand(server, app)
+	// TODO necessary? won't the parent context be inherited?
 	startCmd.SetContext(rootCmd.Context())
 	cmds.Commands = append(cmds.Commands, startCmd)
 	rootCmd.AddCommand(cmds.Commands...)
@@ -97,19 +83,20 @@ func AddCommands[T transaction.Tx](
 		}
 	}
 
-	return nil
+	return server, nil
 }
 
 // createStartCommand creates the start command for the application.
 func createStartCommand[T transaction.Tx](
 	server *Server[T],
-	newApp AppCreator[T],
+	app AppI[T],
 ) *cobra.Command {
 	flags := server.StartFlags()
 
 	cmd := &cobra.Command{
-		Use:   "start",
-		Short: "Run the application",
+		Use:         "start",
+		Short:       "Run the application",
+		Annotations: map[string]string{"needs-app": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			v := GetViperFromCmd(cmd)
 			l := GetLoggerFromCmd(cmd)
@@ -117,7 +104,7 @@ func createStartCommand[T transaction.Tx](
 				return err
 			}
 
-			if err := server.Init(newApp(l, v), v.AllSettings(), l); err != nil {
+			if err := server.Init(app, v.AllSettings(), l); err != nil {
 				return err
 			}
 

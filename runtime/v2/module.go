@@ -142,6 +142,7 @@ func ProvideAppBuilder[T transaction.Tx](
 type AppInputs struct {
 	depinject.In
 
+	StoreConfig        *root.Config
 	Config             *runtimev2.Module
 	AppBuilder         *AppBuilder[transaction.Tx]
 	ModuleManager      *MM[transaction.Tx]
@@ -151,7 +152,7 @@ type AppInputs struct {
 	StoreBuilder       root.Builder
 }
 
-func SetupAppBuilder(inputs AppInputs) {
+func SetupAppBuilder(inputs AppInputs) error {
 	app := inputs.AppBuilder.app
 	app.config = inputs.Config
 	app.logger = inputs.Logger
@@ -160,6 +161,8 @@ func SetupAppBuilder(inputs AppInputs) {
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 	// STF requires some state to run
 	inputs.StoreBuilder.RegisterKey("stf")
+	_, err := inputs.StoreBuilder.Build(inputs.Logger, inputs.StoreConfig)
+	return err
 }
 
 func ProvideModuleManager[T transaction.Tx](

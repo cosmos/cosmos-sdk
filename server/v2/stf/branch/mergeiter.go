@@ -218,7 +218,7 @@ func (iter *mergedIterator) skipUntilExistsOrInvalid() bool {
 
 				continue
 			}
-			// Cache is not a deleted.
+			// Cache is not a delete.
 
 			return true // cache exists.
 		case 1: // cache < parent
@@ -228,7 +228,7 @@ func (iter *mergedIterator) skipUntilExistsOrInvalid() bool {
 				iter.skipCacheDeletes(keyP)
 				continue
 			}
-			// Cache is not a deleted.
+			// Cache is not a delete.
 			return true // cache exists.
 		}
 	}

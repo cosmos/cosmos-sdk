@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
 )
 
 // Execute executes the root command of an application.
@@ -37,7 +36,6 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 func AddCommands[T transaction.Tx](
 	rootCmd *cobra.Command,
 	newApp AppCreator[T],
-	logger log.Logger,
 	globalServerCfg ServerConfig,
 	components ...ServerComponent[T],
 ) error {
@@ -45,7 +43,7 @@ func AddCommands[T transaction.Tx](
 		return errors.New("no components provided")
 	}
 
-	server := NewServer(logger, globalServerCfg, components...)
+	server := NewServer(globalServerCfg, components...)
 	originalPersistentPreRunE := rootCmd.PersistentPreRunE
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		// set the default command outputs
@@ -170,12 +168,12 @@ func configHandle[T transaction.Tx](s *Server[T], cmd *cobra.Command) error {
 		return err
 	}
 
-	log, err := NewLogger(v, cmd.OutOrStdout())
+	logger, err := NewLogger(v, cmd.OutOrStdout())
 	if err != nil {
 		return err
 	}
 
-	return SetCmdServerContext(cmd, v, log)
+	return SetCmdServerContext(cmd, v, logger)
 }
 
 // findSubCommand finds a sub-command of the provided command whose Use

@@ -8,8 +8,12 @@ Now we are assigning integer account IDs and considering addresses as a pointer
 to an account ID which exists at the transaction level.
 There could be multiple addresses pointing to the same account ID.
 
-**Outstanding Issues**
+**Design Questions**
 * What is the correct size for account IDs? Is 64 bits enough or should we use 128 bits? Ideally, we want to be able to assign account IDs concurrently without needing to lock around an incremental account ID sequence. This will require a different assignment mechanism, possibly we can take 32-bits of the transaction hash and then have a 32-bit sequence number scoped to the 32-bit transaction hash.
+* Is it okay for IDs of deleted accounts to be reused?
+It would probably be safer to make sure that IDs don't get reused, but this affects our assignment algorithm if we do it concurrently.
+We also don't want to need to maintain a list of deleted accounts just for this purpose.
+This likely means that we need to include something like the block number in the account ID to prevent reuse.
 
 ## Message Selectors & Type IDs
 
@@ -25,6 +29,17 @@ similar to the original amino encoding (which used 4 or 7 bytes for type IDs).
 64-bits is probably sufficient for uniqueness, although there could theoretically be collisions if we had to resolve such IDs globally rather than scoped to a specific module. This could maybe, someday be an issue if we have first-class modules.
 However, the current implementation doesn't have first-class modules, and we may try to avoid them, so this isn't currently an issue.
 
+**Design Questions**
+* How much does the hypervisor layer actually need to be aware of message selectors? Or should this simply be part of the opaque message packet?
+* Do we need to encode the volatility of a call in the message selector in such a way that the hypervisor can enforce it? Probably yes, because otherwise it would be valid for one handler to call a "readonly" handler that _actually_ modifies state. Encoding the expected volatility in the message packet makes this a runtime error rather than allowing state to be modified unexpectedly.
+* What about protected routes?
+For instance the `on_create` method of a handler should only be called by the hypervisor account.
+Message pre- and post-handlers are a similar case.
+Callback hooks should only be called by the handler expected to call them. Is this something that the hypervisor should enforce through some list of allowed message selectors for an account? Or should handlers be 100% responsible for dealing with this by checking the caller ID?
+Likely there will always be cases where handlers
+need to check the caller for some hook-like things so we should make sure there is good first-class support 
+for checking callers. But for routes that really only the hypervisor should call (`on_create`, `on_upgrade`, pre- and post-handlers), it would be more ideal to have some way to enforce this at the hypervisor level, maybe through some protected route flag in the message selector.
+
 ## Resolving Accounts IDs
 
 Let's define a first-class module as a handler which:
@@ -37,8 +52,8 @@ handlers is a separate, but related question.)
 
 To resolve account IDs, here are some options:
 1. **Hard Code Reserved Range:** hard code account IDs for module-like things in some "reserved" ID range (ex. 1-65535) - this has the downside that it wouldn't be portable between chains
-2. **Build-time Config Files:** use config files to map account aliases (ex. "bank") to account IDs - this could be portable if we find a way to configure this with different IDs at build time without needing to fork the code
-3. **Runtime Config Files:** bind account aliases using a config map at runtime. This would require bundling a config descriptor with the compiled code rather than building it into the binary
+2. **Build-time Config:** use config files to map account aliases (ex. "bank") to account IDs - this could be portable if we find a way to configure this with different IDs at build time without needing to fork the code
+3. **Runtime Config:** bind account aliases using a config map at runtime. This would require bundling a config descriptor with the compiled code rather than building it into the binary
 4. **Runtime Module Name Resolver:** bind account aliases at runtime using some on-chain list of module names. This has the downside of binding specific APIs to specific module names.
 5. **Runtime Message/Service Name Resolver:** bind account aliases at runtime using some on-chain list of service or message names (ex. "cosmos.bank.v1" or "cosmos.bank.v1.MsgSend"). This is almost the way we do it in the current SDK except we'd be resolving a default account ID rather than not knowing the account ID at all.
 6. **First-class Module Messages:** meaning we don't need to know any account number, we just need to know the message name, and it will get routed to resolved account. This is different from 5 in that we don't resolve the account ID at all.
@@ -47,6 +62,12 @@ It's worth noting that options 1-5 vs any kind of first-class notion of modules 
 * message selectors do not need to be globally unique, just unique to an account. This could be used in a rare cases to disambiguate a collision
 * the resolved account ID can be used to authenticate hook callbacks. i.e. if I want to implement a bank `OnReceive` hook, I can authenticate
 that the real "bank" is the caller of the hook because I know its account ID.
+
+Thinking most generally, there will probably always be a case for 2) **Build-time Config** because
+some developers will always want to build handlers related to other existing accounts whether or not
+those are considered "first-class" modules or not.
+So the simplest starting point is probably to support **Build-time Config** first, which
+requires no changes at the hypervisor layer, and see how far that gets us.
 
 ## Handler IDs
 
@@ -84,5 +105,14 @@ we could make the implementation independent of the language and the compilation
 issues:
 * it's harder to refer to a handler in the same compilation unit
 * people will probably update binaries without updating the handler ID, so we may need a separate "native" migration path
+
+**Proposed approach:**
+* handler IDs follow the format: `<vm>:<package_id>:<handler_id>`
+* for true VM handlers, `package_id` is the hash of the code
+* for native handlers, `package_id` is either:
+    * the git hash of the repository at build time (this can be injected with a Rust macro) + the hash of any build-time config data,
+    * or for golang, some version or hash derived from https://pkg.go.dev/runtime/debug#BuildInfo
+* the above would apply for native handlers whether or not they are loaded dynamically or compiled into the binary and would use whatever is the canonical source code for the handler
+* when we need to use some other source code for the native handler (such as an alternative Rust version of a Go handler), there should be some "replace" directive mechanism in the native VM to redirect the handler ID to a different implementation
 
 ## Encoding

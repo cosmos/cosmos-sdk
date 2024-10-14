@@ -13,44 +13,62 @@ import (
 	"cosmossdk.io/log"
 )
 
-// SetCmdServerContext sets a command's Context value to the provided argument.
-// If the context has not been set, set the given context as the default.
-func SetCmdServerContext(cmd *cobra.Command, viper *viper.Viper, logger log.Logger) error {
-	var cmdCtx context.Context
-	if cmd.Context() == nil {
-		cmdCtx = context.Background()
-	} else {
-		cmdCtx = cmd.Context()
+// SetServerContext sets the logger and viper in the context.
+// The server manager expects the logger and viper to be set in the context.
+func SetServerContext(ctx context.Context, viper *viper.Viper, logger log.Logger) (context.Context, error) {
+	if ctx == nil {
+		ctx = context.Background()
 	}
 
-	cmdCtx = context.WithValue(cmdCtx, corectx.LoggerContextKey, logger)
-	cmdCtx = context.WithValue(cmdCtx, corectx.ViperContextKey, viper)
-	cmd.SetContext(cmdCtx)
+	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
+	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
+	return ctx, nil
+}
 
+// SetCmdServerContext sets a command's Context value to the provided argument.
+// The server manager expects the logger and viper to be set in the context.
+// If the context has not been set, set the given context as the default.
+func SetCmdServerContext(cmd *cobra.Command, viper *viper.Viper, logger log.Logger) error {
+	ctx, err := SetServerContext(cmd.Context(), viper, logger)
+	if err != nil {
+		return err
+	}
+	cmd.SetContext(ctx)
 	return nil
 }
 
-func GetViperFromCmd(cmd *cobra.Command) *viper.Viper {
-	value := cmd.Context().Value(corectx.ViperContextKey)
+// GetViperFromContext returns the viper instance from the context.
+func GetViperFromContext(ctx context.Context) *viper.Viper {
+	value := ctx.Value(corectx.ViperContextKey)
 	v, ok := value.(*viper.Viper)
 	if !ok {
-		panic(fmt.Sprintf("incorrect viper type %T: expected *viper.Viper. Have you forgot to set the viper in the command context?", value))
+		panic(fmt.Sprintf("incorrect viper type %T: expected *viper.Viper. Have you forgot to set the viper in the context?", value))
 	}
 	return v
 }
 
-func GetLoggerFromCmd(cmd *cobra.Command) log.Logger {
-	v := cmd.Context().Value(corectx.LoggerContextKey)
+// GetViperFromCmd returns the viper instance from the command context.
+func GetViperFromCmd(cmd *cobra.Command) *viper.Viper {
+	return GetViperFromContext(cmd.Context())
+}
+
+// GetLoggerFromContext returns the logger instance from the context.
+func GetLoggerFromContext(ctx context.Context) log.Logger {
+	v := ctx.Value(corectx.LoggerContextKey)
 	logger, ok := v.(log.Logger)
 	if !ok {
-		panic(fmt.Sprintf("incorrect logger type %T: expected log.Logger. Have you forgot to set the logger in the command context?", v))
+		panic(fmt.Sprintf("incorrect logger type %T: expected log.Logger. Have you forgot to set the logger in the context?", v))
 	}
 
 	return logger
 }
 
+// GetLoggerFromCmd returns the logger instance from the command context.
+func GetLoggerFromCmd(cmd *cobra.Command) log.Logger {
+	return GetLoggerFromContext(cmd.Context())
+}
+
 // ExternalIP https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go
-// TODO there must be a better way to get external IP
 func ExternalIP() (string, error) {
 	ifaces, err := net.Interfaces()
 	if err != nil {

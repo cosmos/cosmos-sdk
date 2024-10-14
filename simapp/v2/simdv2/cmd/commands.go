@@ -55,11 +55,6 @@ func initRootCmd[T transaction.Tx](
 		NewTestnetCmd(moduleManager),
 	)
 
-	logger, err := serverv2.NewLogger(viper.New(), rootCmd.OutOrStdout())
-	if err != nil {
-		panic(fmt.Sprintf("failed to create logger: %v", err))
-	}
-
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
 		genesisCommand(moduleManager),
@@ -70,10 +65,9 @@ func initRootCmd[T transaction.Tx](
 	)
 
 	// wire server commands
-	if err = serverv2.AddCommands(
+	if err := serverv2.AddCommands(
 		rootCmd,
 		newApp,
-		logger,
 		initServerConfig(),
 		cometbft.New(
 			&genericTxDecoder[T]{txConfig},

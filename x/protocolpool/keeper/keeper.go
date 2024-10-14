@@ -144,15 +144,22 @@ func (k Keeper) SetToDistribute(ctx context.Context) error {
 	if moduleAccount == nil {
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", types.ProtocolPoolDistrAccount)
 	}
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		return err
+	}
 
-	currentBalance := k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress())
+	// only take into account the balances of denoms whitelisted in EnabledDistributionDenoms
+	currentBalance := sdk.NewCoins()
+	for _, denom := range params.EnabledDistributionDenoms {
+		bal := k.bankKeeper.GetBalance(ctx, moduleAccount.GetAddress(), denom)
+		currentBalance = currentBalance.Add(bal)
+	}
 
 	// if the balance is zero, return early
 	if currentBalance.IsZero() {
 		return nil
 	}
-
-	// if the balance does not have any of the allowed denoms, return early // TODO
 
 	lastBalance, err := k.LastBalance.Get(ctx)
 	if err != nil {

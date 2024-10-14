@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"text/template"
 
@@ -75,9 +76,14 @@ func writeConfigFile(configFilePath string, config interface{}) error {
 
 // getClientConfig reads values from client.toml file and unmarshalls them into ClientConfig
 func getClientConfig(configPath string, v *viper.Viper) (*Config, error) {
+	const (
+		confName = "client"
+		confType = "toml"
+	)
 	v.AddConfigPath(configPath)
 	v.SetConfigName("client")
 	v.SetConfigType("toml")
+	v.SetConfigFile(fmt.Sprintf("%s/%s.%s", configPath, confName, confType))
 
 	if err := v.ReadInConfig(); err != nil {
 		return nil, err

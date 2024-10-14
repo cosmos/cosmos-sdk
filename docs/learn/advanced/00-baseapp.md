@@ -237,7 +237,7 @@ The consensus engine handles two main tasks:
 
 It is **not** the role of the consensus engine to define the state or the validity of transactions. Generally, transactions are handled by the consensus engine in the form of `[]bytes`, and relayed to the application via the ABCI to be decoded and processed. At keys moments in the networking and consensus processes (e.g. beginning of a block, commit of a block, reception of an unconfirmed transaction, ...), the consensus engine emits ABCI messages for the state-machine to act on.
 
-Developers building on top of the Cosmos SDK don't need implement the ABCI themselves, as `BaseApp` comes with a built-in implementation of the interface. Let us go through the main ABCI messages that `BaseApp` implements:
+Developers building on top of the Cosmos SDK don't need to implement the ABCI themselves, as `BaseApp` comes with a built-in implementation of the interface. Let us go through the main ABCI messages that `BaseApp` implements:
 
 * [`Prepare Proposal`](#prepare-proposal)
 * [`Process Proposal`](#process-proposal)

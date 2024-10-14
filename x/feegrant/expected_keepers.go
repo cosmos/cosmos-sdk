@@ -22,4 +22,10 @@ type AccountsKeeper interface {
 		execRequest transaction.Msg,
 		funds sdk.Coins,
 	) (transaction.Msg, error)
+
+	Query(
+		ctx context.Context,
+		accountAddr []byte,
+		queryRequest transaction.Msg,
+	) (transaction.Msg, error)
 }

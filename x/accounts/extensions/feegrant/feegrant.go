@@ -43,9 +43,10 @@ func NewAccountExtension(d Dependencies, reg implementation.ProtoMsgHandlerRegis
 		feeAllowance:      collections.NewMap(d.SchemaBuilder, PrefixGrants, "fee_allowance", sdk.AccAddressKey, codec.CollValue[v1.Grant](d.LegacyStateCodec)),
 		feeAllowanceQueue: collections.NewMap(d.SchemaBuilder, PrefixGrantsExpiry, "fee_allowance_expiry", collections.PairKeyCodec(sdk.TimeKey, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), collections.BoolValue),
 	}
-	implementation.RegisterExecuteHandler(reg, f.Init)
-	implementation.RegisterExecuteHandler(reg, f.GrantAllowance)
-	implementation.RegisterExecuteHandler(reg, f.UseGrantedFees)
+	implementation.RegisterHandler(reg, f.Init)
+	implementation.RegisterHandler(reg, f.GrantAllowance)
+	implementation.RegisterHandler(reg, f.UseGrantedFees)
+	implementation.RegisterHandler(reg, f.QueryAllowance)
 	return f, nil
 }
 
@@ -250,4 +251,18 @@ func (f Feegrant) revokeAllowance(ctx context.Context, granter, grantee sdk.AccA
 		event.NewAttribute(xfeegrant.AttributeKeyGranter, granterStr),
 		event.NewAttribute(xfeegrant.AttributeKeyGrantee, granteeStr),
 	)
+}
+
+func (f Feegrant) QueryAllowance(ctx context.Context, msg *v1.QueryAllowanceRequest) (*v1.QueryAllowanceResponse, error) {
+	grantee, err := f.addressCodec.StringToBytes(msg.Grantee)
+	if err != nil {
+		return nil, err
+	}
+	allowance, err := f.feeAllowance.Get(ctx, grantee)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.QueryAllowanceResponse{
+		Allowance: allowance.GetAllowance(),
+	}, nil
 }

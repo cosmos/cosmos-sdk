@@ -107,7 +107,10 @@ func newImplementation(
 	if err != nil {
 		return Implementation{}, err
 	}
-
+	queryHandler, err = ext.ExtendHandlers(executeHandler) // todo: does it make sense to split between query and command handlers?
+	if err != nil {
+		return Implementation{}, err
+	}
 	// build schema
 	schema, err := schemaBuilder.Build()
 	if err != nil {

@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -92,12 +94,21 @@ func (k Keeper) revokeAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 // If there is none, it returns nil, collections.ErrNotFound.
 // Returns an error on parsing issues
 func (k Keeper) GetAllowance(ctx context.Context, granter, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error) {
-	grant, err := k.FeeAllowance.Get(ctx, collections.Join(grantee, granter))
+	granteeAddrStr, err := k.addrCdc.BytesToString(grantee)
+	if err != nil {
+		return nil, fmt.Errorf("bech32 encoding of grantee: %w", err)
+	}
+
+	resp, err := k.accountKeeper.Query(ctx, granter, &v1.QueryAllowanceRequest{Grantee: granteeAddrStr})
 	if err != nil {
 		return nil, err
 	}
+	typedResp, ok := resp.(*v1.QueryAllowanceResponse)
+	if !ok {
+		return nil, errors.New("invalid response type")
+	}
 
-	return grant.GetGrant()
+	return typedResp.GetAllowance().GetCachedValue().(feegrant.FeeAllowanceI), nil
 }
 
 // IterateAllFeeAllowances iterates over all the grants in the store.

@@ -35,6 +35,21 @@ func RegisterExecuteHandler[
 	Req any, ProtoReq ProtoMsgG[Req], Resp any, ProtoResp ProtoMsgG[Resp],
 ](router ProtoMsgHandlerRegistry, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
 ) {
+	RegisterHandler(router, handler)
+}
+
+// RegisterQueryHandler registers a query handler for a smart account that uses protobuf.
+func RegisterQueryHandler[
+	Req any, ProtoReq ProtoMsgG[Req], Resp any, ProtoResp ProtoMsgG[Resp],
+](router *QueryBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
+) {
+	RegisterHandler(router.er, handler)
+}
+
+func RegisterHandler[
+	Req any, ProtoReq ProtoMsgG[Req], Resp any, ProtoResp ProtoMsgG[Resp],
+](router ProtoMsgHandlerRegistry, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
+) {
 	reqName := MessageName(ProtoReq(new(Req)))
 	fn := func(ctx context.Context, executeRequest transaction.Msg) (executeResponse transaction.Msg, err error) {
 		concrete, ok := executeRequest.(ProtoReq)
@@ -48,14 +63,6 @@ func RegisterExecuteHandler[
 		ResponseSchema: *NewProtoMessageSchema[Resp, ProtoResp](),
 	}
 	router.RegisterHandler(reqName, fn, schema)
-}
-
-// RegisterQueryHandler registers a query handler for a smart account that uses protobuf.
-func RegisterQueryHandler[
-	Req any, ProtoReq ProtoMsgG[Req], Resp any, ProtoResp ProtoMsgG[Resp],
-](router *QueryBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
-) {
-	RegisterExecuteHandler(router.er, handler)
 }
 
 func NewProtoMessageSchema[T any, PT ProtoMsgG[T]]() *MessageSchema {

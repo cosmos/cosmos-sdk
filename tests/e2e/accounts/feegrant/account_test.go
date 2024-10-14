@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -97,15 +98,20 @@ func TestCreateAndUseGrantWithBaseAccount(t *testing.T) {
 				SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("stake", 1000)),
 				Expiration: &expireTime,
 			}
+			// when
 			err = s.FeeGrantKeeper.GrantAllowance(ctx, granterAddr, granteeAddr, allowance)
 			require.NoError(t, err)
-			// when
-			// allowed grantee
+			// then
+			gotAllowance, err := s.FeeGrantKeeper.GetAllowance(ctx, granterAddr, granteeAddr)
+			require.NoError(t, err)
+			assert.NotNil(t, gotAllowance)
+			// and when allowance used
+			// by allowed grantee
 			anyAllowedMsgType := bank.NewMsgSend(granteeAddrStr, anyAddrStr, sdk.NewCoins(sdk.NewInt64Coin("stake", 1)))
 			payload := must(feegrantv1.NewMsgUseGrantedFees(granteeAddrStr, anyAllowedMsgType))
 			_, err = s.AccountsKeeper.Execute(ctx, granterAddr, granteeAddr, payload, nil)
 			require.NoError(t, err)
-			// unknown grantee
+			// by unknown grantee
 			payload = must(feegrantv1.NewMsgUseGrantedFees(anyAddrStr, anyAllowedMsgType))
 			_, err = s.AccountsKeeper.Execute(ctx, granterAddr, anyAddr, payload, nil)
 			require.Error(t, err)

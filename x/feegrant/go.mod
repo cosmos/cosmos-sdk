@@ -39,6 +39,7 @@ require (
 	cosmossdk.io/log v1.4.1 // indirect
 	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
 	cosmossdk.io/x/accounts v0.0.0-20241010130133-db6a8352c333 // indirect
+	cosmossdk.io/x/accounts/extensions/feegrant v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190 // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/tx v0.13.3 // indirect
@@ -183,6 +184,7 @@ replace (
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/accounts => ../accounts
+	cosmossdk.io/x/accounts/extensions/feegrant => ../accounts/extensions/feegrant
 	cosmossdk.io/x/bank => ../bank
 	cosmossdk.io/x/gov => ../gov
 	cosmossdk.io/x/staking => ../staking

@@ -47,6 +47,7 @@ func NewKeeper(
 	env appmodule.Environment,
 	addressCodec address.Codec,
 	ir InterfaceRegistry,
+	exts []accountstd.AccountExtensionCreatorFunc,
 	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
@@ -67,11 +68,12 @@ func NewKeeper(
 		return Keeper{}, err
 	}
 	keeper.Schema = schema
-	keeper.accounts, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, env, accounts)
+	var extensions *implementation.ExtensionExecuteAdapter
+	keeper.accounts, extensions, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, env, accounts, exts)
 	if err != nil {
 		return Keeper{}, err
 	}
-	registerToInterfaceRegistry(ir, keeper.accounts)
+	registerToInterfaceRegistry(ir, keeper.accounts, extensions)
 	return keeper, nil
 }
 
@@ -439,7 +441,7 @@ var msgInterfaceType = (*msgInterface)(nil)
 // registerToInterfaceRegistry registers all the interfaces of the accounts to the
 // global interface registry. This is required for the SDK to correctly decode
 // the google.Protobuf.Any used in x/accounts.
-func registerToInterfaceRegistry(ir InterfaceRegistry, accMap map[string]implementation.Implementation) {
+func registerToInterfaceRegistry(ir InterfaceRegistry, accMap map[string]implementation.Implementation, extensions *implementation.ExtensionExecuteAdapter) {
 	ir.RegisterInterface(msgInterfaceName, msgInterfaceType)
 
 	for _, acc := range accMap {
@@ -453,5 +455,8 @@ func registerToInterfaceRegistry(ir InterfaceRegistry, accMap map[string]impleme
 		for _, query := range acc.QueryHandlersSchema {
 			ir.RegisterImplementations(msgInterfaceType, query.RequestSchema.New(), query.ResponseSchema.New())
 		}
+	}
+	for h := range extensions.HandlerSchemas() {
+		ir.RegisterImplementations(msgInterfaceType, h.RequestSchema.New(), h.ResponseSchema.New())
 	}
 }

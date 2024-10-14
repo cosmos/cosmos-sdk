@@ -61,6 +61,16 @@ type ExecuteBuilder struct {
 	err error
 }
 
+func (r *ExecuteBuilder) RegisterHandler(reqName string, fn ProtoMsgHandler, schema HandlerSchema) {
+	// check if not registered already
+	if _, ok := r.handlers[reqName]; ok {
+		r.err = fmt.Errorf("handler already registered for message %s", reqName)
+		return
+	}
+	r.handlers[reqName] = fn
+	r.handlersSchema[reqName] = schema
+}
+
 func (r *ExecuteBuilder) makeHandler() (func(ctx context.Context, executeRequest transaction.Msg) (executeResponse transaction.Msg, err error), error) {
 	// if no handler is registered it's fine, it means the account will not be accepting execution or query messages.
 	if len(r.handlers) == 0 {

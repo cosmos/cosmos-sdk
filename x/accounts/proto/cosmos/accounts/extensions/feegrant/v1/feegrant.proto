@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package cosmos.accounts.defaults.feegrant.v1;
+package cosmos.accounts.extensions.feegrant.v1;
 
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "cosmossdk.io/x/accounts/defaults/feegrant/v1";
+option go_package = "cosmossdk.io/x/accounts/extensions/feegrant/v1";
 
 // Grant is stored in the KVStore to record a grant with full context
 message Grant {

@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/transaction"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	codec "github.com/cosmos/cosmos-sdk/codec"
 )
 
 // Dependencies are passed to the constructor of a smart account.
@@ -28,6 +28,8 @@ type Dependencies struct {
 // AccountCreatorFunc is a function that creates an account.
 type AccountCreatorFunc = func(deps Dependencies) (string, Account, error)
 
+type AccountExtensionCreatorFunc = func(deps Dependencies, reg ProtoMsgHandlerRegistry) (string, AccountExtension, error)
+
 // MakeAccountsMap creates a map of account names to account implementations
 // from a list of account creator functions.
 func MakeAccountsMap(
@@ -35,35 +37,49 @@ func MakeAccountsMap(
 	addressCodec address.Codec,
 	env appmodule.Environment,
 	accounts []AccountCreatorFunc,
-) (map[string]Implementation, error) {
-	accountsMap := make(map[string]Implementation, len(accounts))
-	for _, makeAccount := range accounts {
+	extensions []AccountExtensionCreatorFunc,
+) (map[string]Implementation, *ExtensionExecuteAdapter, error) {
+	newDeps := func() Dependencies {
 		stateSchemaBuilder := collections.NewSchemaBuilderFromAccessor(openKVStore)
-		deps := Dependencies{
+		return Dependencies{
 			SchemaBuilder:    stateSchemaBuilder,
 			AddressCodec:     addressCodec,
 			Environment:      env,
 			LegacyStateCodec: cdc,
 		}
+	}
+	ext := NewExtensionExecuteAdapter()
+	for _, e := range extensions {
+		if err := ext.RegisterExtension(newDeps(), e); err != nil {
+			return nil, nil, err
+		}
+	}
+	accountsMap := make(map[string]Implementation, len(accounts))
+	for _, makeAccount := range accounts {
+		deps := newDeps()
 		name, accountInterface, err := makeAccount(deps)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create account %s: %w", name, err)
+			return nil, nil, fmt.Errorf("failed to create account %s: %w", name, err)
 		}
 		if _, ok := accountsMap[name]; ok {
-			return nil, fmt.Errorf("account %s is already registered", name)
+			return nil, nil, fmt.Errorf("account %s is already registered", name)
 		}
-		impl, err := newImplementation(stateSchemaBuilder, accountInterface)
+		impl, err := newImplementation(deps.SchemaBuilder, accountInterface, ext)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create implementation for account %s: %w", name, err)
+			return nil, nil, fmt.Errorf("failed to create implementation for account %s: %w", name, err)
 		}
 		accountsMap[name] = impl
 	}
 
-	return accountsMap, nil
+	return accountsMap, ext, nil
 }
 
 // newImplementation creates a new Implementation instance given an Account implementer.
-func newImplementation(schemaBuilder *collections.SchemaBuilder, account Account) (Implementation, error) {
+func newImplementation(
+	schemaBuilder *collections.SchemaBuilder,
+	account Account,
+	ext *ExtensionExecuteAdapter,
+) (Implementation, error) {
 	// make init handler
 	ir := NewInitBuilder()
 	account.RegisterInitHandler(ir)
@@ -76,6 +92,10 @@ func newImplementation(schemaBuilder *collections.SchemaBuilder, account Account
 	er := NewExecuteBuilder()
 	account.RegisterExecuteHandlers(er)
 	executeHandler, err := er.makeHandler()
+	if err != nil {
+		return Implementation{}, err
+	}
+	executeHandler, err = ext.ExtendHandlers(executeHandler)
 	if err != nil {
 		return Implementation{}, err
 	}

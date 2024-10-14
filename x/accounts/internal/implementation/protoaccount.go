@@ -33,27 +33,21 @@ func RegisterInitHandler[
 // RegisterExecuteHandler registers an execution handler for a smart account that uses protobuf.
 func RegisterExecuteHandler[
 	Req any, ProtoReq ProtoMsgG[Req], Resp any, ProtoResp ProtoMsgG[Resp],
-](router *ExecuteBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
+](router ProtoMsgHandlerRegistry, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
 ) {
 	reqName := MessageName(ProtoReq(new(Req)))
-	// check if not registered already
-	if _, ok := router.handlers[reqName]; ok {
-		router.err = fmt.Errorf("handler already registered for message %s", reqName)
-		return
-	}
-
-	router.handlers[reqName] = func(ctx context.Context, executeRequest transaction.Msg) (executeResponse transaction.Msg, err error) {
+	fn := func(ctx context.Context, executeRequest transaction.Msg) (executeResponse transaction.Msg, err error) {
 		concrete, ok := executeRequest.(ProtoReq)
 		if !ok {
 			return nil, fmt.Errorf("%w: wanted %s, got %T", errInvalidMessage, reqName, executeRequest)
 		}
 		return handler(ctx, concrete)
 	}
-
-	router.handlersSchema[reqName] = HandlerSchema{
+	schema := HandlerSchema{
 		RequestSchema:  *NewProtoMessageSchema[Req, ProtoReq](),
 		ResponseSchema: *NewProtoMessageSchema[Resp, ProtoResp](),
 	}
+	router.RegisterHandler(reqName, fn, schema)
 }
 
 // RegisterQueryHandler registers a query handler for a smart account that uses protobuf.

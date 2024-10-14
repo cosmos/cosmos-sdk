@@ -1,4 +1,4 @@
-module cosmossdk.io/x/accounts/defaults/feegrant
+module cosmossdk.io/x/accounts/extensions/feegrant
 
 go 1.23.1
 
@@ -108,17 +108,17 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk => ../../../../.
+replace github.com/cosmos/cosmos-sdk => ./../../../..
 
 replace (
-	cosmossdk.io/api => ../../../../api
-	cosmossdk.io/collections => ../../../../collections // TODO tag new collections ASAP
-	cosmossdk.io/store => ../../../../store
-	cosmossdk.io/x/accounts => ../../.
-	cosmossdk.io/x/bank => ../../../bank
-	cosmossdk.io/x/distribution => ../../../distribution
-	cosmossdk.io/x/gov => ../../../gov
-	cosmossdk.io/x/staking => ../../../staking
-	cosmossdk.io/x/tx => ../../../tx
+	cosmossdk.io/api => ./../../../../api
+	cosmossdk.io/collections => ./../../../../collections // TODO tag new collections ASAP
+	cosmossdk.io/store => ./../../../../store
+	cosmossdk.io/x/accounts => ./../..
+	cosmossdk.io/x/bank => ./../../../bank
+	cosmossdk.io/x/distribution => ./../../../distribution
+	cosmossdk.io/x/gov => ./../../../gov
+	cosmossdk.io/x/staking => ./../../../staking
+	cosmossdk.io/x/tx => ./../../../tx
 
 )

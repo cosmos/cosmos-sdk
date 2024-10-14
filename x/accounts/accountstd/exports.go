@@ -34,6 +34,9 @@ type InitBuilder = implementation.InitBuilder
 // AccountCreatorFunc is the exported type of AccountCreatorFunc.
 type AccountCreatorFunc = implementation.AccountCreatorFunc
 
+// AccountExtensionCreatorFunc is the exported type of AccountExtensionCreatorFunc
+type AccountExtensionCreatorFunc = implementation.AccountExtensionCreatorFunc
+
 func DIAccount[A Interface](name string, constructor func(deps Dependencies) (A, error)) DepinjectAccount {
 	return DepinjectAccount{MakeAccount: AddAccount(name, constructor)}
 }
@@ -44,12 +47,28 @@ type DepinjectAccount struct {
 
 func (DepinjectAccount) IsManyPerContainerType() {}
 
+type DepinjectAccountExtension struct {
+	MakeAccountExtension AccountExtensionCreatorFunc
+}
+
+func (DepinjectAccountExtension) IsManyPerContainerType() {}
+
+func DIAccountExtension[A implementation.AccountExtension](name string, constructor func(deps Dependencies, reg implementation.ProtoMsgHandlerRegistry) (A, error)) DepinjectAccountExtension {
+	return DepinjectAccountExtension{MakeAccountExtension: func(deps implementation.Dependencies, reg implementation.ProtoMsgHandlerRegistry) (string, implementation.AccountExtension, error) {
+		a, err := constructor(deps, reg)
+		return name, a, err
+	}}
+}
+
 // Dependencies is the exported type of Dependencies.
 type Dependencies = implementation.Dependencies
 
+// ProtoMsgHandler is an abstract method definition to be used in contract or extensions that runs a protobuf message and returns a protobuf response
+type ProtoMsgHandler[Req any, ProtoReq implementation.ProtoMsgG[Req], Resp any, ProtoResp implementation.ProtoMsgG[Resp]] func(ctx context.Context, req ProtoReq) (ProtoResp, error)
+
 func RegisterExecuteHandler[
 	Req any, ProtoReq implementation.ProtoMsgG[Req], Resp any, ProtoResp implementation.ProtoMsgG[Resp],
-](router *ExecuteBuilder, handler func(ctx context.Context, req ProtoReq) (ProtoResp, error),
+](router *ExecuteBuilder, handler ProtoMsgHandler[Req, ProtoReq, Resp, ProtoResp],
 ) {
 	implementation.RegisterExecuteHandler(router, handler)
 }

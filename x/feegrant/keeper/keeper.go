@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
-	v1 "cosmossdk.io/x/accounts/defaults/feegrant/v1"
+	v1 "cosmossdk.io/x/accounts/extensions/feegrant/v1"
 	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/codec"

@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/accounts/accountstd"
-	"cosmossdk.io/x/accounts/defaults/feegrant/v1"
+	"cosmossdk.io/x/accounts/extensions/feegrant/v1"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	xfeegrant "cosmossdk.io/x/feegrant"
 
@@ -27,9 +27,6 @@ var (
 	PrefixGrants       = collections.NewPrefix(100)
 	PrefixGrantsExpiry = collections.NewPrefix(101)
 )
-var (
-	_ accountstd.Interface = (*Feegrant)(nil)
-)
 
 type Feegrant struct {
 	env          appmodule.Environment
@@ -39,22 +36,16 @@ type Feegrant struct {
 	feeAllowanceQueue collections.Map[collections.Pair[time.Time, sdk.AccAddress], bool]
 }
 
-// RegisterInitHandler implements implementation.Account.
-func (f Feegrant) RegisterInitHandler(builder *implementation.InitBuilder) {
-	accountstd.RegisterInitHandler(builder, f.Init)
-}
-
-func (f Feegrant) RegisterQueryHandlers(builder *implementation.QueryBuilder) {
-}
-
-func NewAccount(d Dependencies) (*Feegrant, error) {
+func NewAccountExtension(d Dependencies, reg implementation.ProtoMsgHandlerRegistry) (*Feegrant, error) {
 	f := &Feegrant{
 		env:               d.Environment,
 		addressCodec:      d.AddressCodec,
 		feeAllowance:      collections.NewMap(d.SchemaBuilder, PrefixGrants, "fee_allowance", sdk.AccAddressKey, codec.CollValue[v1.Grant](d.LegacyStateCodec)),
 		feeAllowanceQueue: collections.NewMap(d.SchemaBuilder, PrefixGrantsExpiry, "fee_allowance_expiry", collections.PairKeyCodec(sdk.TimeKey, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), collections.BoolValue),
 	}
-
+	implementation.RegisterExecuteHandler(reg, f.Init)
+	implementation.RegisterExecuteHandler(reg, f.GrantAllowance)
+	implementation.RegisterExecuteHandler(reg, f.UseGrantedFees)
 	return f, nil
 }
 
@@ -259,10 +250,4 @@ func (f Feegrant) revokeAllowance(ctx context.Context, granter, grantee sdk.AccA
 		event.NewAttribute(xfeegrant.AttributeKeyGranter, granterStr),
 		event.NewAttribute(xfeegrant.AttributeKeyGrantee, granteeStr),
 	)
-}
-
-func (f *Feegrant) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
-	accountstd.RegisterExecuteHandler(builder, f.Init)
-	accountstd.RegisterExecuteHandler(builder, f.GrantAllowance)
-	accountstd.RegisterExecuteHandler(builder, f.UseGrantedFees)
 }

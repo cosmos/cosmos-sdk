@@ -22,7 +22,7 @@ require (
 	cosmossdk.io/x/distribution v0.0.0-20230925135524-a1bc045b3190
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337
 	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
-	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/feegrant v0.0.0-20241010102526-3a03804c148d
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
 	cosmossdk.io/x/group v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/mint v0.0.0-00010101000000-000000000000
@@ -46,6 +46,7 @@ require (
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts/extensions/feegrant v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -255,6 +256,7 @@ replace (
 	cosmossdk.io/x/accounts/defaults/base => ../../x/accounts/defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ../../x/accounts/defaults/lockup
 	cosmossdk.io/x/accounts/defaults/multisig => ../../x/accounts/defaults/multisig
+	cosmossdk.io/x/accounts/extensions/feegrant => ../../x/accounts/extensions/feegrant
 	cosmossdk.io/x/authz => ../../x/authz
 	cosmossdk.io/x/bank => ../../x/bank
 	cosmossdk.io/x/circuit => ../../x/circuit

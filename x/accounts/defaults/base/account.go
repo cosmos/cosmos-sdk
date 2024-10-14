@@ -16,7 +16,6 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/x/accounts/accountstd"
 	v1 "cosmossdk.io/x/accounts/defaults/base/v1"
-	"cosmossdk.io/x/accounts/defaults/feegrant"
 	aa_interface_v1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	accountsv1 "cosmossdk.io/x/accounts/v1"
 	"cosmossdk.io/x/tx/signing"
@@ -38,9 +37,7 @@ func (Option) IsManyPerContainerType() {}
 
 func NewAccount(name string, handlerMap *signing.HandlerMap, options ...Option) accountstd.AccountCreatorFunc {
 	return func(deps accountstd.Dependencies) (string, accountstd.Interface, error) {
-		account, _ := feegrant.NewAccount(deps)
 		acc := Account{
-			Feegrant:         account, // todo: check if this inheritance does work...
 			PubKey:           collections.NewItem(deps.SchemaBuilder, PubKeyPrefix, "pub_key_bytes", collections.BytesValue),
 			PubKeyType:       collections.NewItem(deps.SchemaBuilder, PubKeyTypePrefix, "pub_key_type", collections.StringValue),
 			Sequence:         collections.NewSequence(deps.SchemaBuilder, SequencePrefix, "sequence"),
@@ -61,7 +58,6 @@ func NewAccount(name string, handlerMap *signing.HandlerMap, options ...Option) 
 
 // Account implements a base account.
 type Account struct {
-	*feegrant.Feegrant
 	PubKey     collections.Item[[]byte]
 	PubKeyType collections.Item[string]
 
@@ -331,12 +327,10 @@ func (a Account) RegisterInitHandler(builder *accountstd.InitBuilder) {
 func (a Account) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, a.SwapPubKey)
 	accountstd.RegisterExecuteHandler(builder, a.Authenticate) // account abstraction
-	a.Feegrant.RegisterExecuteHandlers(builder)
 }
 
 func (a Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, a.QuerySequence)
 	accountstd.RegisterQueryHandler(builder, a.QueryPubKey)
 	accountstd.RegisterQueryHandler(builder, a.AuthRetroCompatibility)
-	a.Feegrant.RegisterQueryHandlers(builder)
 }

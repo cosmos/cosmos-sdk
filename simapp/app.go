@@ -27,7 +27,6 @@ import (
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/accounts/accountstd"
 	baseaccount "cosmossdk.io/x/accounts/defaults/base"
-	afeegrant "cosmossdk.io/x/accounts/defaults/feegrant"
 	lockup "cosmossdk.io/x/accounts/defaults/lockup"
 	"cosmossdk.io/x/accounts/defaults/multisig"
 	"cosmossdk.io/x/accounts/testing/account_abstraction"
@@ -318,7 +317,6 @@ func NewSimApp(
 		accountstd.AddAccount(lockup.DELAYED_LOCKING_ACCOUNT, lockup.NewDelayedLockingAccount),
 		accountstd.AddAccount(lockup.PERMANENT_LOCKING_ACCOUNT, lockup.NewPermanentLockingAccount),
 		accountstd.AddAccount("multisig", multisig.NewAccount),
-		accountstd.AddAccount("feegrant", afeegrant.NewAccount),
 		// PRODUCTION: add
 		baseaccount.NewAccount("base", txConfig.SignModeHandler(), baseaccount.WithSecp256K1PubKey()),
 	)

@@ -15,3 +15,7 @@ type Account interface {
 	// might also decide to not register any query handler.
 	RegisterQueryHandlers(builder *QueryBuilder)
 }
+
+// AccountExtension is an abstract account extension.
+// Currently only used as a marker interface but may become useful in the future to configure extensions while running.
+type AccountExtension = interface{}

@@ -35,7 +35,7 @@ require (
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
 	cosmossdk.io/x/accounts v0.0.0-20241010130133-db6a8352c333
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/accounts/defaults/feegrant v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts/extensions/feegrant v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
@@ -243,6 +243,7 @@ replace (
 	cosmossdk.io/x/accounts/defaults/base => ../x/accounts/defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup
 	cosmossdk.io/x/accounts/defaults/multisig => ../x/accounts/defaults/multisig
+	cosmossdk.io/x/accounts/extensions/feegrant => ../x/accounts/extensions/feegrant
 	cosmossdk.io/x/authz => ../x/authz
 	cosmossdk.io/x/bank => ../x/bank
 	cosmossdk.io/x/circuit => ../x/circuit
@@ -267,7 +268,7 @@ replace (
 replace (
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
-	cosmossdk.io/x/accounts/defaults/feegrant => ../x/accounts/defaults/feegrant
+	cosmossdk.io/x/accounts/defaults/feegrant => ./../x/accounts/extensions/feegrant
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

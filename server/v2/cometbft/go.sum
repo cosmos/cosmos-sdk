@@ -32,8 +32,8 @@ cosmossdk.io/server/v2/stf v0.0.0-20241008175849-325728a9fd6c h1:thOij3diZWxwfKa
 cosmossdk.io/server/v2/stf v0.0.0-20241008175849-325728a9fd6c/go.mod h1:MjuTMonZ319tZQX6CV2O5E/+F85KrkNUj5U5ObrrkWs=
 cosmossdk.io/store v1.0.0-rc.0.0.20241009154331-597e0fac1173 h1:MlvTcx2h4zmZZtIDg35B6bovbb5iUAExPmvaPE1Zci4=
 cosmossdk.io/store v1.0.0-rc.0.0.20241009154331-597e0fac1173/go.mod h1:lrhcXu/hRXrLJP4L8syVbs68GJU1WSRBFO3mmjn5oGc=
-cosmossdk.io/store/v2 v2.0.0-20241008175849-325728a9fd6c h1:aSeV6l+fkf9qe/tEODBn5uOO1CK5ouSJ2Bbxg+5XlPA=
-cosmossdk.io/store/v2 v2.0.0-20241008175849-325728a9fd6c/go.mod h1:0vAEKMFFcv3GXLzyVtISL3S/+THN0zydwztuRafgf90=
+cosmossdk.io/store/v2 v2.0.0-20241014060734-0b43fcc2164c h1:X/vNG/8Vn4Du7tMDwrMi0gz5K1yPpYz9QRe0VxbGCzw=
+cosmossdk.io/store/v2 v2.0.0-20241014060734-0b43fcc2164c/go.mod h1:0vAEKMFFcv3GXLzyVtISL3S/+THN0zydwztuRafgf90=
 cosmossdk.io/x/tx v0.13.4-0.20241003111526-30003f667944 h1:HLWNcAuIe0/5m4EyPWC+bLkJrxpN5xKpzQGeqLmdF5Y=
 cosmossdk.io/x/tx v0.13.4-0.20241003111526-30003f667944/go.mod h1:PpXcKmCpvC3vmWE8ha8MwAxsFT7sOG4t57Octwnm8k0=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=

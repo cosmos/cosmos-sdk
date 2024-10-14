@@ -81,8 +81,8 @@ func getClientConfig(configPath string, v *viper.Viper) (*Config, error) {
 		confType = "toml"
 	)
 	v.AddConfigPath(configPath)
-	v.SetConfigName("client")
-	v.SetConfigType("toml")
+	v.SetConfigName(confName)
+	v.SetConfigType(confType)
 	v.SetConfigFile(fmt.Sprintf("%s/%s.%s", configPath, confName, confType))
 
 	if err := v.ReadInConfig(); err != nil {

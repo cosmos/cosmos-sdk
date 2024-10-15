@@ -3,6 +3,7 @@ package cosmos.bank.v2;
 
 import "gogoproto/gogo.proto";
 import "cosmos/bank/v2/bank.proto";
+import "cosmos/bank/v2/authorityMetadata.proto";
 import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
@@ -28,6 +29,8 @@ message GenesisState {
 
   // denom_metadata defines the metadata of the different coins.
   repeated Metadata denom_metadata = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  repeated GenesisDenom factory_denoms = 5 [(gogoproto.nullable) = false];
 }
 
 // Balance defines an account address and balance pair used in the bank module's
@@ -46,4 +49,14 @@ message Balance {
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true
   ];
+}
+
+// GenesisDenom defines a tokenfactory denom that is defined within genesis
+// state. The structure contains DenomAuthorityMetadata which defines the
+// denom's admin.
+message GenesisDenom {
+  option (gogoproto.equal) = true;
+
+  string                 denom              = 1;
+  DenomAuthorityMetadata authority_metadata = 2 [(gogoproto.nullable) = false];
 }

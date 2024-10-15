@@ -22,12 +22,14 @@ import (
 type Keeper struct {
 	appmodulev2.Environment
 
-	authority    []byte
-	addressCodec address.Codec
-	schema       collections.Schema
-	params       collections.Item[types.Params]
-	balances     *collections.IndexedMap[collections.Pair[[]byte, string], math.Int, BalancesIndexes]
-	supply       collections.Map[string, math.Int]
+	authority           []byte
+	addressCodec        address.Codec
+	schema              collections.Schema
+	params              collections.Item[types.Params]
+	balances            *collections.IndexedMap[collections.Pair[[]byte, string], math.Int, BalancesIndexes]
+	supply              collections.Map[string, math.Int]
+	denomMetadata       collections.Map[string, types.Metadata]
+	denomAuthority      collections.Map[string, types.DenomAuthorityMetadata]
 
 	sendRestriction *sendRestriction
 }
@@ -42,6 +44,8 @@ func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Env
 		params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		balances:        collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.PairKeyCodec(collections.BytesKey, collections.StringKey), sdk.IntValue, newBalancesIndexes(sb)),
 		supply:          collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
+		denomMetadata:   collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),
+		denomAuthority:  collections.NewMap(sb, types.DenomAuthorityPrefix, "denom_authority", collections.StringKey, codec.CollValue[types.DenomAuthorityMetadata](cdc)),
 		sendRestriction: newSendRestriction(),
 	}
 
@@ -138,6 +142,12 @@ func (k Keeper) GetSupply(ctx context.Context, denom string) sdk.Coin {
 	return sdk.NewCoin(denom, amt)
 }
 
+// HasSupply checks if the supply coin exists in store.
+func (k Keeper) HasSupply(ctx context.Context, denom string) bool {
+	has, err := k.supply.Has(ctx, denom)
+	return has && err == nil
+}
+
 // GetBalance returns the balance of a specific denomination for a given account
 // by address.
 func (k Keeper) GetBalance(ctx context.Context, addr []byte, denom string) sdk.Coin {
@@ -146,6 +156,47 @@ func (k Keeper) GetBalance(ctx context.Context, addr []byte, denom string) sdk.C
 		return sdk.NewCoin(denom, math.ZeroInt())
 	}
 	return sdk.NewCoin(denom, amt)
+}
+
+// GetDenomMetaData retrieves the denomination metadata. returns the metadata and true if the denom exists,
+// false otherwise.
+func (k Keeper) GetDenomMetaData(ctx context.Context, denom string) (types.Metadata, bool) {
+	m, err := k.denomMetadata.Get(ctx, denom)
+	return m, err == nil
+}
+
+// HasDenomMetaData checks if the denomination metadata exists in store.
+func (k Keeper) HasDenomMetaData(ctx context.Context, denom string) bool {
+	has, err := k.denomMetadata.Has(ctx, denom)
+	return has && err == nil
+}
+
+// GetAllDenomMetaData retrieves all denominations metadata
+func (k Keeper) GetAllDenomMetaData(ctx context.Context) []types.Metadata {
+	denomMetaData := make([]types.Metadata, 0)
+	k.IterateAllDenomMetaData(ctx, func(metadata types.Metadata) bool {
+		denomMetaData = append(denomMetaData, metadata)
+		return false
+	})
+
+	return denomMetaData
+}
+
+// IterateAllDenomMetaData iterates over all the denominations metadata and
+// provides the metadata to a callback. If true is returned from the
+// callback, iteration is halted.
+func (k Keeper) IterateAllDenomMetaData(ctx context.Context, cb func(types.Metadata) bool) {
+	err := k.denomMetadata.Walk(ctx, nil, func(_ string, metadata types.Metadata) (stop bool, err error) {
+		return cb(metadata), nil
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
+// SetDenomMetaData sets the denominations metadata
+func (k Keeper) SetDenomMetaData(ctx context.Context, denomMetaData types.Metadata) error {
+	return k.denomMetadata.Set(ctx, denomMetaData.Base, denomMetaData)
 }
 
 // subUnlockedCoins removes the unlocked amt coins of the given account.

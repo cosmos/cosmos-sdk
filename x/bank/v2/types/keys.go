@@ -31,4 +31,8 @@ var (
 	DenomAddressPrefix = collections.NewPrefix(4)
 
 	SupplyKey = collections.NewPrefix(5)
+
+	DenomMetadataPrefix = collections.NewPrefix(6)
+
+	DenomAuthorityPrefix = collections.NewPrefix(7)
 )

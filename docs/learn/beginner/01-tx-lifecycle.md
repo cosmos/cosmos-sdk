@@ -33,7 +33,7 @@ Additionally, there are several [flags](../advanced/07-cli.md) users can use to 
 * `--gas-adjustment` (optional) can be used to scale `gas` up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
 * `--gas-prices` specifies how much the user is willing to pay per unit of gas, which can be one or multiple denominations of tokens. For example, `--gas-prices=0.025uatom, 0.025upho` means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
 * `--fees` specifies how much in fees the user is willing to pay in total.
-* `--timeout-height` specifies a block timeout height to prevent the tx from being committed past a certain height.
+* `--timeout-timestamp` specifies a block timeout timestamp to prevent the tx from being committed past a certain time.
 
 The ultimate value of the fees paid is equal to the gas multiplied by the gas prices. In other words, `fees = ceil(gas * gasPrices)`. Thus, since fees can be calculated using gas prices and vice versa, the users specify only one of the two.
 
@@ -49,7 +49,7 @@ appd tx send <recipientAddress> 1000uatom --from <senderAddress> --gas auto --ga
 
 ### Other Transaction Creation Methods
 
-The command-line is an easy way to interact with an application, but `Tx` can also be created using a [gRPC or REST interface](../advanced/06-grpc_rest.md) or some other entry point defined by the application developer. From the user's perspective, the interaction depends on the web interface or wallet they are using (e.g. creating `Tx` using [Keplr](https://www.keplr.app/) and signing it with a Ledger Nano S).
+The command-line is an easy way to interact with an application, but `Tx` can also be created using a [gRPC or REST interface](../advanced/06-grpc_rest.md) or some other entry point defined by the application developer. From the user's perspective, the interaction depends on the web interface or wallet they are using (e.g. creating `Tx` using [Keplr](https://www.keplr.app/) and signing it with any [Ledger device](https://www.ledger.com/)).
 
 ## Transaction Broadcasting
 
@@ -108,7 +108,7 @@ Let's say there is a transaction that involves transferring tokens. The message 
 
 ### Validation
 
-Preliminary checks are performed. These include signature verification to ensure the transaction hasn't been tampered with and checking if the transaction meets the minimum fee requirements, which is handled by the `AnteHandler`. The `Antehandler` is invoked during the `runTx` method in `BaseApp`.
+Preliminary checks are performed. These include signature verification to ensure the transaction hasn't been tampered with and checking if the transaction meets the minimum fee requirements, which is handled by the `AnteHandler`. The `AnteHandler` is invoked during the `runTx` method in `BaseApp`.
 
 #### Types of Transaction Checks
 
@@ -133,11 +133,11 @@ Full-nodes use these checks during the validation process to quickly reject inva
 #### ValidateBasic (deprecated)
 
 * Messages ([`sdk.Msg`](../advanced/01-transactions.md#messages)) are extracted from transactions (`Tx`). The `ValidateBasic` method of the `sdk.Msg` interface implemented by the module developer is run for each transaction.
-* To discard obviously invalid messages, the `BaseApp` type calls the `ValidateBasic` method very early in the processing of the message in the [`CheckTx`](../advanced/00-baseapp.md#checktx) and [`DeliverTx`](../advanced/00-baseapp.md#delivertx) transactions.
+* To discard obviously invalid messages, the `BaseApp` type calls the `ValidateBasic` method very early in the processing of the message in the [`CheckTx`](../advanced/00-baseapp.md#checktx) and `DeliverTx` transactions.
 `ValidateBasic` can include only **stateless** checks (the checks that do not require access to the state). 
 
 :::warning
-The `ValidateBasic` method on messages has been deprecated in favor of validating messages directly in their respective [`Msg` services](../../build/building-modules/03-msg-services.md#Validation).
+The `ValidateBasic` method on messages has been deprecated in favor of validating messages directly in their respective [`Msg` services](../../build/building-modules/03-msg-services.md#validation).
 
 Read [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) for more details.
 :::
@@ -162,9 +162,9 @@ After the transaction has been appropriately routed to the correct module by the
 
 For messages that adhere to older standards or specific formats, a routing function retrieves the route name from the message, identifying the corresponding module. The message is then processed by the designated handler within that module, ensuring accurate and consistent application of the transaction's logic.
 
-4. During the execution, the module's handler will modify the state as required by the business logic. This could involve writing to the module's portion of the state store.
+1. During the execution, the module's handler will modify the state as required by the business logic. This could involve writing to the module's portion of the state store.
 
-5. Modules can emit events and log information during execution, which are used for monitoring and querying transaction outcomes.
+2. Modules can emit events and log information during execution, which are used for monitoring and querying transaction outcomes.
 
 During the module execution phase, each message that has been routed to the appropriate module is processed according to the module-specific business logic. For example, the `handleMsgSend` function in the bank module processes `MsgSend` messages by checking balances, transferring tokens, and emitting events:
 

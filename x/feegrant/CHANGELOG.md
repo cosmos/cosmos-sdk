@@ -31,6 +31,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#21651](https://github.com/cosmos/cosmos-sdk/pull/21651) NewKeeper receives an address.Codec instead of an x/auth keeper.
 * [#21377](https://github.com/cosmos/cosmos-sdk/pull/21377) Simulation API breaking changes:
   * `SimulateMsgGrantAllowance` and `SimulateMsgRevokeAllowance` no longer require a `ProtoCodec` parameter.
   * `WeightedOperations` functions no longer require `ProtoCodec`, `JSONCodec`, or `address.Codec` parameters.

@@ -48,6 +48,7 @@ type Consensus[T transaction.Tx] struct {
 	logger           log.Logger
 	appName, version string
 	app              *appmanager.AppManager[T]
+	appCloser        func() error
 	txCodec          transaction.Codec[T]
 	store            types.Store
 	streaming        streaming.Manager
@@ -82,6 +83,7 @@ func NewConsensus[T transaction.Tx](
 	logger log.Logger,
 	appName string,
 	app *appmanager.AppManager[T],
+	appCloser func() error,
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
 	queryHandlersMap map[string]appmodulev2.Handler,
@@ -94,6 +96,7 @@ func NewConsensus[T transaction.Tx](
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
 		app:                    app,
+		appCloser:              appCloser,
 		cfg:                    cfg,
 		store:                  store,
 		logger:                 logger,
@@ -110,18 +113,13 @@ func NewConsensus[T transaction.Tx](
 		indexedEvents:          indexedEvents,
 		initialHeight:          0,
 		queryHandlersMap:       queryHandlersMap,
-		getProtoRegistry:       sync.OnceValues(func() (*protoregistry.Files, error) { return gogoproto.MergedRegistry() }),
+		getProtoRegistry:       sync.OnceValues(gogoproto.MergedRegistry),
 	}
 }
 
 // SetStreamingManager sets the streaming manager for the consensus module.
 func (c *Consensus[T]) SetStreamingManager(sm streaming.Manager) {
 	c.streaming = sm
-}
-
-// SetListener sets the listener for the consensus module.
-func (c *Consensus[T]) SetListener(l *appdata.Listener) {
-	c.listener = l
 }
 
 // RegisterSnapshotExtensions registers the given extensions with the consensus module's snapshot manager.

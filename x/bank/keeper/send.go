@@ -143,7 +143,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		return err
 	}
 
-	inAddress, err := k.ak.AddressCodec().StringToBytes(input.Address)
+	inAddress, err := k.addrCdc.StringToBytes(input.Address)
 	if err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 	}
 	sending := make([]toSend, 0)
 	for _, out := range outputs {
-		outAddress, err := k.ak.AddressCodec().StringToBytes(out.Address)
+		outAddress, err := k.addrCdc.StringToBytes(out.Address)
 		if err != nil {
 			return err
 		}
@@ -218,11 +218,11 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		return err
 	}
 
-	fromAddrString, err := k.ak.AddressCodec().BytesToString(fromAddr)
+	fromAddrString, err := k.addrCdc.BytesToString(fromAddr)
 	if err != nil {
 		return err
 	}
-	toAddrString, err := k.ak.AddressCodec().BytesToString(toAddr)
+	toAddrString, err := k.addrCdc.BytesToString(toAddr)
 	if err != nil {
 		return err
 	}
@@ -275,7 +275,7 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 		}
 	}
 
-	addrStr, err := k.ak.AddressCodec().BytesToString(addr)
+	addrStr, err := k.addrCdc.BytesToString(addr)
 	if err != nil {
 		return err
 	}
@@ -303,7 +303,7 @@ func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt s
 		}
 	}
 
-	addrStr, err := k.ak.AddressCodec().BytesToString(addr)
+	addrStr, err := k.addrCdc.BytesToString(addr)
 	if err != nil {
 		return err
 	}
@@ -359,7 +359,7 @@ func (k BaseSendKeeper) IsSendEnabledCoin(ctx context.Context, coin sdk.Coin) bo
 // BlockedAddr checks if a given address is restricted from
 // receiving funds.
 func (k BaseSendKeeper) BlockedAddr(addr sdk.AccAddress) bool {
-	addrStr, err := k.ak.AddressCodec().BytesToString(addr)
+	addrStr, err := k.addrCdc.BytesToString(addr)
 	if err != nil {
 		panic(err)
 	}

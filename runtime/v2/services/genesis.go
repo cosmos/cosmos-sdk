@@ -2,10 +2,13 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
 )
 
 var (
@@ -105,6 +108,18 @@ func (g *GenesisKVStoreService) OpenKVStore(ctx context.Context) store.KVStore {
 	return readonlyKVStore{state}
 }
 
+type readonlyKVStore struct {
+	store.Reader
+}
+
+func (r readonlyKVStore) Set(key, value []byte) error {
+	return errors.New("tried to call Set on a readonly store")
+}
+
+func (r readonlyKVStore) Delete(key []byte) error {
+	return errors.New("tried to call Delete on a readonly store")
+}
+
 // GenesisHeaderService is a header.Service implementation that is used during
 // genesis initialization.  It wraps an inner execution context header.Service.
 type GenesisHeaderService struct {
@@ -123,20 +138,46 @@ func (g *GenesisHeaderService) HeaderInfo(ctx context.Context) header.Info {
 
 // NewGenesisHeaderService creates a new GenesisHeaderService.
 // - executionService is the header.Service to use when the genesis context is not active.
-func NewGenesisHeaderService(executionService header.Service) *GenesisHeaderService {
+func NewGenesisHeaderService(executionService header.Service) header.Service {
 	return &GenesisHeaderService{
 		executionService: executionService,
 	}
 }
 
-type readonlyKVStore struct {
-	store.Reader
+// GenesisEventService is an event.Service implementation that is used during
+// genesis initialization.  It wraps an inner execution context event.Service.
+// During genesis initialization, it returns a blackHoleEventManager into which
+// events enter and disappear completely.
+type GenesisEventService struct {
+	executionService event.Service
 }
 
-func (r readonlyKVStore) Set(key, value []byte) error {
-	panic("tried to call Set on a readonly store")
+// NewGenesisEventService creates a new GenesisEventService.
+// - executionService is the event.Service to use when the genesis context is not active.
+func NewGenesisEventService(executionService event.Service) event.Service {
+	return &GenesisEventService{
+		executionService: executionService,
+	}
 }
 
-func (r readonlyKVStore) Delete(key []byte) error {
-	panic("tried to call Delete on a readonly store")
+func (g *GenesisEventService) EventManager(ctx context.Context) event.Manager {
+	v := ctx.Value(genesisContextKey)
+	if v == nil {
+		return g.executionService.EventManager(ctx)
+	}
+	return &blackHoleEventManager{}
+}
+
+var _ event.Manager = (*blackHoleEventManager)(nil)
+
+// blackHoleEventManager is an event.Manager that does nothing.
+// It is used during genesis initialization, genesis events are not emitted.
+type blackHoleEventManager struct{}
+
+func (b *blackHoleEventManager) Emit(_ transaction.Msg) error {
+	return nil
+}
+
+func (b *blackHoleEventManager) EmitKV(_ string, _ ...event.Attribute) error {
+	return nil
 }

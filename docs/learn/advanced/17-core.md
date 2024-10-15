@@ -30,7 +30,7 @@ interface to execute arbitrary code in a branched store.  This is useful for exe
 that needs to make changes to the store, but may need to be rolled back if an error occurs.
 Below is a contrived example based on the `x/epoch` module's BeginBlocker logic.
 
-```go reference
+```go
 func (k Keeper) BeginBlocker(ctx context.Context) error {
 	err := k.EpochInfo.Walk(
         // ...

@@ -80,7 +80,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		panic(err)
 	}
 
-	feegrantGenesis := feegrant.NewGenesisState(feegrants)
+	feegrantGenesis := feegrant.NewGenesisState(feegrants, nil)
 	bz, err := simState.Cdc.MarshalJSON(feegrantGenesis)
 	if err != nil {
 		panic(err)

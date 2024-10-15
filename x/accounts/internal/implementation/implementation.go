@@ -38,7 +38,7 @@ func MakeAccountsMap(
 	env appmodule.Environment,
 	accounts []AccountCreatorFunc,
 	extensions []AccountExtensionCreatorFunc,
-) (map[string]Implementation, *ExtensionExecuteAdapter, error) {
+) (map[string]Implementation, *ExtensionHandlers, error) {
 	newDeps := func() Dependencies {
 		stateSchemaBuilder := collections.NewSchemaBuilderFromAccessor(openKVStore)
 		return Dependencies{
@@ -48,7 +48,7 @@ func MakeAccountsMap(
 			LegacyStateCodec: cdc,
 		}
 	}
-	ext := NewExtensionExecuteAdapter()
+	ext := NewExtensionHandlers()
 	for _, e := range extensions {
 		if err := ext.RegisterExtension(newDeps(), e); err != nil {
 			return nil, nil, err
@@ -78,7 +78,7 @@ func MakeAccountsMap(
 func newImplementation(
 	schemaBuilder *collections.SchemaBuilder,
 	account Account,
-	ext *ExtensionExecuteAdapter,
+	ext *ExtensionHandlers,
 ) (Implementation, error) {
 	// make init handler
 	ir := NewInitBuilder()

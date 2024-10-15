@@ -28,4 +28,6 @@ type AccountsKeeper interface {
 		accountAddr []byte,
 		queryRequest transaction.Msg,
 	) (transaction.Msg, error)
+
+	HasAccount(ctx context.Context, accountAddr []byte) (bool, error)
 }

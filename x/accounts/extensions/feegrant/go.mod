@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v1.0.0-alpha.4
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
+	cosmossdk.io/x/accounts v0.0.0-20241010130133-db6a8352c333
 	cosmossdk.io/x/feegrant v0.0.0-20241010102526-3a03804c148d
 	github.com/cosmos/cosmos-sdk v0.53.0
 )
@@ -117,6 +117,7 @@ replace (
 	cosmossdk.io/x/accounts => ./../..
 	cosmossdk.io/x/bank => ./../../../bank
 	cosmossdk.io/x/distribution => ./../../../distribution
+	cosmossdk.io/x/feegrant => ./../../../feegrant
 	cosmossdk.io/x/gov => ./../../../gov
 	cosmossdk.io/x/staking => ./../../../staking
 	cosmossdk.io/x/tx => ./../../../tx

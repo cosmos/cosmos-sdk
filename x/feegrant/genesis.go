@@ -7,7 +7,7 @@ import (
 var _ gogoprotoany.UnpackInterfacesMessage = GenesisState{}
 
 // NewGenesisState creates new GenesisState object
-func NewGenesisState(entries []Grant) *GenesisState {
+func NewGenesisState(entries []Grant, migratedAccs []string) *GenesisState {
 	return &GenesisState{
 		Allowances: entries,
 	}

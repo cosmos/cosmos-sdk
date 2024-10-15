@@ -2,10 +2,11 @@ package feegrant
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/address"
+	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
@@ -14,7 +15,6 @@ import (
 	"cosmossdk.io/x/accounts/extensions/feegrant/v1"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	xfeegrant "cosmossdk.io/x/feegrant"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -28,9 +28,11 @@ var (
 	PrefixGrantsExpiry = collections.NewPrefix(101)
 )
 
+var _ implementation.MigrateableLegacyDataExtension = &Feegrant{}
+
 type Feegrant struct {
 	env          appmodule.Environment
-	addressCodec address.Codec
+	addressCodec addresscodec.Codec
 	feeAllowance collections.Map[sdk.AccAddress, v1.Grant]
 	// FeeAllowanceQueue key: expiration time+grantee | value: bool
 	feeAllowanceQueue collections.Map[collections.Pair[time.Time, sdk.AccAddress], bool]
@@ -55,6 +57,9 @@ func (f Feegrant) Init(ctx context.Context, msg *v1.MsgInit) (*v1.MsgInitRespons
 }
 
 func (f *Feegrant) GrantAllowance(ctx context.Context, msg *v1.MsgGrantAllowance) (*v1.MsgGrantAllowanceResponse, error) {
+	if !accountstd.SenderIsSelf(ctx) {
+		return nil, errors.New("unauthorized sender")
+	}
 	grantee, err := f.addressCodec.StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, err
@@ -63,58 +68,64 @@ func (f *Feegrant) GrantAllowance(ctx context.Context, msg *v1.MsgGrantAllowance
 	if f, _ := f.GetAllowance(ctx, grantee); f != nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
 	}
+	granterStr, err := f.addressCodec.BytesToString(accountstd.Whoami(ctx))
+	if err != nil {
+		return nil, err
+	}
 
 	allowance, err := msg.GetFeeAllowanceI()
 	if err != nil {
 		return nil, err
 	}
-	exp, err := allowance.ExpiresAt()
-	if err != nil {
+
+	if err := f.storeGrant(ctx, grantee, allowance); err != nil {
 		return nil, err
 	}
 
-	// expiration shouldn't be in the past.
+	granteeStr := msg.Grantee
+	return &v1.MsgGrantAllowanceResponse{}, f.env.EventService.EventManager(ctx).EmitKV(
+		xfeegrant.EventTypeSetFeeGrant,
+		event.NewAttribute(xfeegrant.AttributeKeyGranter, granterStr),
+		event.NewAttribute(xfeegrant.AttributeKeyGrantee, granteeStr),
+	)
+}
 
+func (f *Feegrant) storeGrant(ctx context.Context, grantee []byte, allowance xfeegrant.FeeAllowanceI) error {
+	exp, err := allowance.ExpiresAt()
+	if err != nil {
+		return err
+	}
+
+	// expiration shouldn't be in the past.
 	now := f.env.HeaderService.HeaderInfo(ctx).Time
 	if exp != nil && exp.Before(now) {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
 	}
 
 	// if expiry is not nil, add the new key to pruning queue.
 	if exp != nil {
 		err = f.feeAllowanceQueue.Set(ctx, collections.Join(*exp, sdk.AccAddress(grantee)), true)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
-	granter := accountstd.Whoami(ctx)
-	granterStr, err := f.addressCodec.BytesToString(granter)
-	if err != nil {
-		return nil, err
-	}
-	granteeStr := msg.Grantee
 
 	// if block time is not zero, update the period reset
 	// if it is zero, it could be genesis initialization, so we don't need to update the period reset
 	if !now.IsZero() {
 		if err = allowance.UpdatePeriodReset(now); err != nil {
-			return nil, err
+			return err
 		}
 	}
 
 	grant, err := v1.NewGrant(allowance)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if err := f.feeAllowance.Set(ctx, grantee, *grant); err != nil {
-		return nil, err
+		return err
 	}
-
-	return &v1.MsgGrantAllowanceResponse{}, f.env.EventService.EventManager(ctx).EmitKV(
-		xfeegrant.EventTypeSetFeeGrant,
-		event.NewAttribute(xfeegrant.AttributeKeyGranter, granterStr),
-		event.NewAttribute(xfeegrant.AttributeKeyGrantee, granteeStr),
-	)
+	return nil
 }
 
 func (f Feegrant) GetAllowance(ctx context.Context, grantee sdk.AccAddress) (xfeegrant.FeeAllowanceI, error) {
@@ -127,6 +138,11 @@ func (f Feegrant) GetAllowance(ctx context.Context, grantee sdk.AccAddress) (xfe
 }
 
 func (f Feegrant) UseGrantedFees(ctx context.Context, msg *v1.MsgUseGrantedFees) (*v1.MsgUseGrantedFeesResponse, error) {
+	// todo: who should be authorized? x/feegrant module? or make this a setup param?
+	//if !accountstd.SenderIsAccountsModule(ctx) {
+	//	return nil, errors.New("unauthorized: only accounts module is allowed to call this")
+	//}
+
 	msgs, err := msg.GetMessages()
 	if err != nil {
 		return nil, err
@@ -135,14 +151,14 @@ func (f Feegrant) UseGrantedFees(ctx context.Context, msg *v1.MsgUseGrantedFees)
 	if err != nil {
 		return nil, err
 	}
-	err = f.DoUseGrantedFees(ctx, grantee, msg.GetFees(), msgs)
+	err = f.doUseGrantedFees(ctx, grantee, msg.GetFees(), msgs)
 	if err != nil {
 		return nil, err
 	}
 	return &v1.MsgUseGrantedFeesResponse{}, nil
 }
 
-func (f Feegrant) DoUseGrantedFees(ctx context.Context, grantee sdk.AccAddress, fees sdk.Coins, msgs []sdk.Msg) error {
+func (f Feegrant) doUseGrantedFees(ctx context.Context, grantee sdk.AccAddress, fees sdk.Coins, msgs []sdk.Msg) error {
 	grant, err := f.GetAllowance(ctx, grantee)
 	if err != nil {
 		return err
@@ -265,4 +281,43 @@ func (f Feegrant) QueryAllowance(ctx context.Context, msg *v1.QueryAllowanceRequ
 	return &v1.QueryAllowanceResponse{
 		Allowance: allowance.GetAllowance(),
 	}, nil
+}
+
+// MigrateFromLegacy migrate data for the account from x/feegrant module
+func (f *Feegrant) MigrateFromLegacy(ctx context.Context) error {
+	if !accountstd.SenderIsAccountsModule(ctx) { // not really needed but better safe than sorry
+		return errors.New("unauthorized: only accounts module is allowed to call this")
+	}
+	granter, err := f.addressCodec.BytesToString(accountstd.Whoami(ctx))
+	if err != nil {
+		return err
+	}
+
+	sender, err := f.addressCodec.BytesToString(accountstd.Sender(ctx))
+	if err != nil {
+		return err
+	}
+	_ = sender
+	resp, err := accountstd.ExecModule[*xfeegrant.MsgMigrateAllowancesResponse](ctx, &xfeegrant.MsgMigrateAllowances{
+		Granter: granter,
+	})
+	if err != nil {
+		return err
+	}
+	for _, g := range resp.Grants {
+		grantee, err := f.addressCodec.StringToBytes(g.Grantee)
+		if err != nil {
+			return err
+		}
+		allowance, err := g.GetGrant()
+		if err != nil {
+			return err
+		}
+
+		if err := f.storeGrant(ctx, grantee, allowance); err != nil {
+			return err
+		}
+	}
+	// todo: any events to emit?
+	return nil
 }

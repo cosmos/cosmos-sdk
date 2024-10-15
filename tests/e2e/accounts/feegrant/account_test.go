@@ -59,9 +59,8 @@ func TestCreateAndUseGrantWithBaseAccount(t *testing.T) {
 				require.NoError(t, err)
 
 				_, err = s.AuthKeeper.AccountsModKeeper.MigrateLegacyAccount(ctx, myGranterAddr, granterAccount.GetSequence(), "base",
-					&basev1.MsgInit{
-						PubKey: pk, InitSequence: 1,
-					})
+					&basev1.MsgInit{PubKey: pk, InitSequence: granterAccount.GetSequence()},
+				)
 				require.NoError(t, err)
 				return myGranterAddr
 			},

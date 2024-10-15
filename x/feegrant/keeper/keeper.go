@@ -6,6 +6,11 @@ import (
 	"fmt"
 	"time"
 
+	corecontext "cosmossdk.io/core/context"
+	errorsmod "cosmossdk.io/errors"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -68,6 +73,13 @@ func NewKeeper(
 
 // GrantAllowance creates a new grant
 func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
+	migrated, err := k.isXAccount(ctx, granter)
+	if err != nil {
+		return err
+	}
+	if !migrated {
+		return k.grantAllowance(ctx, granter, grantee, feeAllowance)
+	}
 	granteeAddrStr, err := k.addrCdc.BytesToString(grantee)
 	if err != nil {
 		return err
@@ -78,22 +90,157 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 	}
 	_, err = k.accountKeeper.Execute(ctx, granter, granter, exec, nil)
 	return err
+}
 
+func (k Keeper) grantAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
+	// Checking for duplicate entry
+	if f, _ := k.GetAllowance(ctx, granter, grantee); f != nil {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
+	}
+
+	exp, err := feeAllowance.ExpiresAt()
+	if err != nil {
+		return err
+	}
+
+	// expiration shouldn't be in the past.
+
+	now := k.HeaderService.HeaderInfo(ctx).Time
+	if exp != nil && exp.Before(now) {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
+	}
+
+	// if expiry is not nil, add the new key to pruning queue.
+	if exp != nil {
+		err = k.FeeAllowanceQueue.Set(ctx, collections.Join3(*exp, grantee, granter), true)
+		if err != nil {
+			return err
+		}
+	}
+
+	granterStr, err := k.addrCdc.BytesToString(granter)
+	if err != nil {
+		return err
+	}
+	granteeStr, err := k.addrCdc.BytesToString(grantee)
+	if err != nil {
+		return err
+	}
+
+	// if block time is not zero, update the period reset
+	// if it is zero, it could be genesis initialization, so we don't need to update the period reset
+	if !now.IsZero() {
+		err = feeAllowance.UpdatePeriodReset(now)
+		if err != nil {
+			return err
+		}
+	}
+
+	grant, err := feegrant.NewGrant(granterStr, granteeStr, feeAllowance)
+	if err != nil {
+		return err
+	}
+
+	if err := k.FeeAllowance.Set(ctx, collections.Join(grantee, granter), grant); err != nil {
+		return err
+	}
+
+	return k.EventService.EventManager(ctx).EmitKV(
+		feegrant.EventTypeSetFeeGrant,
+		event.NewAttribute(feegrant.AttributeKeyGranter, grant.Granter),
+		event.NewAttribute(feegrant.AttributeKeyGrantee, grant.Grantee),
+	)
 }
 
 // UpdateAllowance updates the existing grant.
 func (k Keeper) UpdateAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
-	panic("not supported")
+	migrated, err := k.isXAccount(ctx, granter)
+	if err != nil {
+		return err
+	}
+	if migrated {
+		panic("not supported for xaccounts, yet")
+	}
+	_, err = k.GetAllowance(ctx, granter, grantee)
+	if err != nil {
+		return err
+	}
+
+	granterStr, err := k.addrCdc.BytesToString(granter)
+	if err != nil {
+		return err
+	}
+	granteeStr, err := k.addrCdc.BytesToString(grantee)
+	if err != nil {
+		return err
+	}
+
+	grant, err := feegrant.NewGrant(granterStr, granteeStr, feeAllowance)
+	if err != nil {
+		return err
+	}
+
+	if err := k.FeeAllowance.Set(ctx, collections.Join(grantee, granter), grant); err != nil {
+		return err
+	}
+
+	return k.EventService.EventManager(ctx).EmitKV(
+		feegrant.EventTypeUpdateFeeGrant,
+		event.NewAttribute(feegrant.AttributeKeyGranter, grant.Granter),
+		event.NewAttribute(feegrant.AttributeKeyGrantee, grant.Grantee),
+	)
 }
 
+// revokeAllowance removes an existing grant
 func (k Keeper) revokeAllowance(ctx context.Context, granter, grantee sdk.AccAddress) error {
-	panic("not supported")
+	grant, err := k.GetAllowance(ctx, granter, grantee)
+	if err != nil {
+		return err
+	}
+
+	if err := k.FeeAllowance.Remove(ctx, collections.Join(grantee, granter)); err != nil {
+		return err
+	}
+
+	exp, err := grant.ExpiresAt()
+	if err != nil {
+		return err
+	}
+
+	if exp != nil {
+		if err := k.FeeAllowanceQueue.Remove(ctx, collections.Join3(*exp, grantee, granter)); err != nil {
+			return err
+		}
+	}
+
+	granterStr, err := k.addrCdc.BytesToString(granter)
+	if err != nil {
+		return err
+	}
+	granteeStr, err := k.addrCdc.BytesToString(grantee)
+	if err != nil {
+		return err
+	}
+
+	return k.EventService.EventManager(ctx).EmitKV(
+		feegrant.EventTypeRevokeFeeGrant,
+		event.NewAttribute(feegrant.AttributeKeyGranter, granterStr),
+		event.NewAttribute(feegrant.AttributeKeyGrantee, granteeStr),
+	)
 }
 
 // GetAllowance returns the allowance between the granter and grantee.
 // If there is none, it returns nil, collections.ErrNotFound.
 // Returns an error on parsing issues
 func (k Keeper) GetAllowance(ctx context.Context, granter, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error) {
+	migrated, err := k.isXAccount(ctx, granter)
+	if err != nil {
+		return nil, err
+	}
+	if !migrated {
+		return k.getAllowance(ctx, granter, grantee)
+	}
+
 	granteeAddrStr, err := k.addrCdc.BytesToString(grantee)
 	if err != nil {
 		return nil, fmt.Errorf("bech32 encoding of grantee: %w", err)
@@ -111,6 +258,15 @@ func (k Keeper) GetAllowance(ctx context.Context, granter, grantee sdk.AccAddres
 	return typedResp.GetAllowance().GetCachedValue().(feegrant.FeeAllowanceI), nil
 }
 
+func (k Keeper) getAllowance(ctx context.Context, granter, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error) {
+	grant, err := k.FeeAllowance.Get(ctx, collections.Join(grantee, granter))
+	if err != nil {
+		return nil, err
+	}
+
+	return grant.GetGrant()
+}
+
 // IterateAllFeeAllowances iterates over all the grants in the store.
 // Callback to get all data, returns true to stop, false to keep reading
 // Calling this without pagination is very expensive and only designed for export genesis
@@ -122,6 +278,13 @@ func (k Keeper) IterateAllFeeAllowances(ctx context.Context, cb func(grant feegr
 
 // UseGrantedFees will try to pay the given fee from the granter's account as requested by the grantee
 func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error {
+	migrated, err := k.isXAccount(ctx, granter)
+	if err != nil {
+		return err
+	}
+	if !migrated {
+		return k.useGrantedFees(ctx, granter, grantee, fee, msgs)
+	}
 	granteeAddrStr, err := k.addrCdc.BytesToString(grantee)
 	if err != nil {
 		return err
@@ -132,6 +295,39 @@ func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddr
 	}
 	_, err = k.accountKeeper.Execute(ctx, granter, grantee, exec, nil)
 	return err
+}
+
+func (k Keeper) useGrantedFees(ctx context.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error {
+	grant, err := k.GetAllowance(ctx, granter, grantee)
+	if err != nil {
+		return err
+	}
+
+	granterStr, err := k.addrCdc.BytesToString(granter)
+	if err != nil {
+		return err
+	}
+	granteeStr, err := k.addrCdc.BytesToString(grantee)
+	if err != nil {
+		return err
+	}
+
+	remove, err := grant.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, k.Environment), fee, msgs)
+	if remove && err == nil {
+		// Ignoring the `revokeFeeAllowance` error, because the user has enough grants to perform this transaction.
+		_ = k.revokeAllowance(ctx, granter, grantee)
+
+		return k.emitUseGrantEvent(ctx, granterStr, granteeStr)
+	}
+	if err != nil {
+		return err
+	}
+	if err := k.emitUseGrantEvent(ctx, granterStr, granteeStr); err != nil {
+		return err
+	}
+
+	// if fee allowance is accepted, store the updated state of the allowance
+	return k.UpdateAllowance(ctx, granter, grantee, grant)
 }
 
 func (k *Keeper) emitUseGrantEvent(ctx context.Context, granter, grantee string) error {
@@ -170,15 +366,17 @@ func (k Keeper) InitGenesis(ctx context.Context, data *feegrant.GenesisState) er
 // ExportGenesis will dump the contents of the keeper into a serializable GenesisState.
 func (k Keeper) ExportGenesis(ctx context.Context) (*feegrant.GenesisState, error) {
 	var grants []feegrant.Grant
-
 	err := k.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
 		grants = append(grants, grant)
 		return false
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	return &feegrant.GenesisState{
 		Allowances: grants,
-	}, err
+	}, nil
 }
 
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
@@ -216,4 +414,42 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int) error {
 	}
 
 	return nil
+}
+
+// MigrateAllowances migrates fee allowances for a given granter, returning all grants or an error if migration fails.
+// This clears the allowances of the granter so It does not hurt, when called twice.
+func (k Keeper) MigrateAllowances(ctx context.Context, granter sdk.AccAddress) ([]*feegrant.Grant, error) {
+	granterStr, err := k.addrCdc.BytesToString(granter)
+	if err != nil {
+		return nil, err
+	}
+
+	var grants []*feegrant.Grant
+	err = k.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool { // todo: this is an expensive operation
+		if grant.Granter == granterStr {
+			grants = append(grants, &grant)
+		}
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, grant := range grants {
+		err = k.revokeAllowance(ctx, granter, must(k.addrCdc.StringToBytes(grant.Grantee)))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return grants, nil
+}
+
+func (k Keeper) isXAccount(ctx context.Context, granter sdk.AccAddress) (bool, error) {
+	return k.accountKeeper.HasAccount(ctx, granter)
+}
+
+func must[T any](r T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return r
 }

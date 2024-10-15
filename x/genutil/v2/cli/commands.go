@@ -19,13 +19,18 @@ type genesisMM interface {
 	ValidateGenesis(genesisData map[string]json.RawMessage) error
 }
 
+type exportableApp interface {
+	ExportAppStateAndValidators([]string) (v2.ExportedApp, error)
+	LoadHeight(uint64) error
+}
+
 // Commands adds core sdk's sub-commands into genesis command.
 func Commands(
 	genTxValidator func([]transaction.Msg) error,
 	genMM genesisMM,
-	appExport v2.AppExporter,
+	exportable exportableApp,
 ) *cobra.Command {
-	return CommandsWithCustomMigrationMap(genTxValidator, genMM, appExport, cli.MigrationMap)
+	return CommandsWithCustomMigrationMap(genTxValidator, genMM, exportable, cli.MigrationMap)
 }
 
 // CommandsWithCustomMigrationMap adds core sdk's sub-commands into genesis command with custom migration map.
@@ -33,7 +38,7 @@ func Commands(
 func CommandsWithCustomMigrationMap(
 	genTxValidator func([]transaction.Msg) error,
 	genMM genesisMM,
-	appExport v2.AppExporter,
+	exportable exportableApp,
 	migrationMap genutiltypes.MigrationMap,
 ) *cobra.Command {
 	cmd := &cobra.Command{
@@ -49,7 +54,7 @@ func CommandsWithCustomMigrationMap(
 		cli.CollectGenTxsCmd(genTxValidator),
 		cli.ValidateGenesisCmd(genMM),
 		cli.AddGenesisAccountCmd(),
-		ExportCmd(appExport),
+		ExportCmd(exportable),
 	)
 
 	return cmd

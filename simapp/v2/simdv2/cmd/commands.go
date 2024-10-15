@@ -1,15 +1,12 @@
 package cmd
 
 import (
-	"context"
 	"errors"
-	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/offchain"
-	corectx "cosmossdk.io/core/context"
 	coreserver "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -26,13 +23,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	genutilv2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2/cli"
 )
 
@@ -51,7 +46,7 @@ func initRootCmd[T transaction.Tx](
 	globalAppConfig coreserver.ConfigMap,
 	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
-	app serverv2.AppI[T],
+	app *simapp.SimApp[T],
 ) (configWriter, error) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
@@ -65,7 +60,7 @@ func initRootCmd[T transaction.Tx](
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
-		genesisCommand(moduleManager),
+		genesisCommand(moduleManager, app),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
@@ -92,7 +87,7 @@ func initRootCmd[T transaction.Tx](
 // genesisCommand builds genesis-related `simd genesis` command.
 func genesisCommand[T transaction.Tx](
 	moduleManager *runtimev2.MM[T],
-	cmds ...*cobra.Command,
+	app *simapp.SimApp[T],
 ) *cobra.Command {
 	var genTxValidator func([]transaction.Msg) error
 	if moduleManager != nil {
@@ -101,12 +96,9 @@ func genesisCommand[T transaction.Tx](
 	cmd := v2.Commands(
 		genTxValidator,
 		moduleManager,
-		appExport[T],
+		app,
 	)
 
-	for _, subCmd := range cmds {
-		cmd.AddCommand(subCmd)
-	}
 	return cmd
 }
 
@@ -151,43 +143,6 @@ func txCommand() *cobra.Command {
 	)
 
 	return cmd
-}
-
-// appExport creates a new simapp (optionally at a given height) and exports state.
-func appExport[T transaction.Tx](
-	ctx context.Context,
-	height int64,
-	jailAllowedAddrs []string,
-) (genutilv2.ExportedApp, error) {
-	value := ctx.Value(corectx.ViperContextKey)
-	viper, ok := value.(*viper.Viper)
-	if !ok {
-		return genutilv2.ExportedApp{},
-			fmt.Errorf("incorrect viper type %T: expected *viper.Viper in context", value)
-	}
-	value = ctx.Value(corectx.LoggerContextKey)
-	logger, ok := value.(log.Logger)
-	if !ok {
-		return genutilv2.ExportedApp{},
-			fmt.Errorf("incorrect logger type %T: expected log.Logger in context", value)
-	}
-
-	// overwrite the FlagInvCheckPeriod
-	viper.Set(server.FlagInvCheckPeriod, 1)
-	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
-
-	var simApp *simapp.SimApp[T]
-	if height != -1 {
-		simApp = simapp.NewSimApp[T](logger, viper)
-
-		if err := simApp.LoadHeight(uint64(height)); err != nil {
-			return genutilv2.ExportedApp{}, err
-		}
-	} else {
-		simApp = simapp.NewSimApp[T](logger, viper)
-	}
-
-	return simApp.ExportAppStateAndValidators(jailAllowedAddrs)
 }
 
 var _ transaction.Codec[transaction.Tx] = &genericTxDecoder[transaction.Tx]{}

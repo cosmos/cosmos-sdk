@@ -155,6 +155,9 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 		return rootCmd, nil
 	}
 	if err = cmd.ParseFlags(args); err != nil {
+		if err.Error() == "pflag: help requested" {
+			return cmd, nil
+		}
 		return nil, err
 	}
 	home, err := cmd.Flags().GetString(serverv2.FlagHome)
@@ -186,7 +189,7 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 	}
 	globalConfig := vipr.AllSettings()
 
-	var app serverv2.AppI[T]
+	var app *simapp.SimApp[T]
 	if needsApp(cmd) {
 		app, err = simapp.NewSimAppWithConfig[T](
 			depinject.Configs(
@@ -206,7 +209,7 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 				),
 				depinject.Supply(
 					logger,
-					globalConfig,
+					simapp.GlobalConfig(globalConfig),
 				),
 			),
 			&autoCliOpts,

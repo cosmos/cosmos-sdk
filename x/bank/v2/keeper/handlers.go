@@ -65,6 +65,7 @@ func (h handlers) MsgCreateDenom(goCtx context.Context, msg *types.MsgCreateDeno
 	}, nil
 }
 
+// TODO: should be gov?
 func (h handlers) MsgChangeAdmin(goCtx context.Context, msg *types.MsgChangeAdmin) (*types.MsgChangeAdminResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

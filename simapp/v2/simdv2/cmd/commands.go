@@ -48,7 +48,7 @@ type configWriter interface {
 func initRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
 	logger log.Logger,
-	globalServerCfg coreserver.ConfigMap,
+	globalAppConfig coreserver.ConfigMap,
 	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
 	app serverv2.AppI[T],
@@ -77,7 +77,7 @@ func initRootCmd[T transaction.Tx](
 		rootCmd,
 		app,
 		logger,
-		globalServerCfg,
+		globalAppConfig,
 		cometbft.New(
 			&genericTxDecoder[T]{txConfig},
 			initCometOptions[T](),

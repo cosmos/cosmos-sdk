@@ -56,7 +56,7 @@ func AddCommands[T transaction.Tx](
 
 	server := NewServer(logger, initServerConfig(), components...)
 	cmds := server.CLICommands()
-	startCmd := createStartCommand(server, app)
+	startCmd := createStartCommand(server, app, globalServerCfg, logger)
 	// TODO necessary? won't the parent context be inherited?
 	startCmd.SetContext(rootCmd.Context())
 	cmds.Commands = append(cmds.Commands, startCmd)
@@ -90,6 +90,8 @@ func AddCommands[T transaction.Tx](
 func createStartCommand[T transaction.Tx](
 	server *Server[T],
 	app AppI[T],
+	config server.ConfigMap,
+	logger log.Logger,
 ) *cobra.Command {
 	flags := server.StartFlags()
 
@@ -98,16 +100,10 @@ func createStartCommand[T transaction.Tx](
 		Short:       "Run the application",
 		Annotations: map[string]string{"needs-app": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			v := GetViperFromCmd(cmd)
-			l := GetLoggerFromCmd(cmd)
-			if err := v.BindPFlags(cmd.Flags()); err != nil {
+			err := server.Init(app, config, logger)
+			if err != nil {
 				return err
 			}
-
-			if err := server.Init(app, v.AllSettings(), l); err != nil {
-				return err
-			}
-
 			ctx, cancelFn := context.WithCancel(cmd.Context())
 			go func() {
 				sigCh := make(chan os.Signal, 1)

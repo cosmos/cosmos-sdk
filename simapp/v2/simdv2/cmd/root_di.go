@@ -163,7 +163,6 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 	}
 
 	configDir := filepath.Join(home, "config")
-
 	// we need to check app.toml as the config folder can already exist for the client.toml
 	if _, err := os.Stat(filepath.Join(configDir, "app.toml")); os.IsNotExist(err) {
 		if err = srv.WriteConfig(configDir); err != nil {
@@ -244,6 +243,9 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 			return nil
 		},
 	}
+	// TODO push down to server subcommands only
+	// but also audit the usage of logger and viper in fetching from context, probably no
+	// longer needed.
 	serverv2.SetPersistentFlags(rootCmd.PersistentFlags(), defaultHomeDir)
 	err = serverv2.SetCmdServerContext(rootCmd, vipr, logger)
 	if err != nil {

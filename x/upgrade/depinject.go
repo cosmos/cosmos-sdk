@@ -51,8 +51,6 @@ type ModuleInputs struct {
 	AddressCodec       address.Codec
 	AppVersionModifier coreserver.VersionModifier
 	ConsensusKeeper    types.ConsensusKeeper
-
-	DynamicConfig coreserver.DynamicConfig `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -68,14 +66,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		skipUpgradeHeights = make(map[int64]bool)
 	)
 
-	if in.DynamicConfig != nil {
-		skipUpgrades := cast.ToIntSlice(in.DynamicConfig.Get(server.FlagUnsafeSkipUpgrades))
-		for _, h := range skipUpgrades {
-			skipUpgradeHeights[int64(h)] = true
-		}
-
-		homePath = in.DynamicConfig.GetString(flags.FlagHome)
+	skipUpgrades := cast.ToIntSlice(in.ConfigMap[server.FlagUnsafeSkipUpgrades])
+	for _, h := range skipUpgrades {
+		skipUpgradeHeights[int64(h)] = true
 	}
+	homePath = cast.ToString(in.ConfigMap[flags.FlagHome])
 
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(types.GovModuleName)

@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/spf13/cast"
 )
 
 // flagMinGasPricesV2 is the flag name for the minimum gas prices in the main server v2 component.
@@ -41,11 +42,10 @@ func ProvideConfig(key depinject.OwnModuleKey) server.ModuleConfigMap {
 type ModuleInputs struct {
 	depinject.In
 
-	ModuleConfig  *modulev1.Module
-	Environment   appmodulev2.Environment
-	TxConfig      client.TxConfig
-	DynamicConfig server.DynamicConfig `optional:"true"`
-	ConfigMap     server.ConfigMap
+	ModuleConfig *modulev1.Module
+	Environment  appmodulev2.Environment
+	TxConfig     client.TxConfig
+	ConfigMap    server.ConfigMap
 
 	AccountKeeper            ante.AccountKeeper
 	BankKeeper               authtypes.BankKeeper
@@ -79,16 +79,14 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		unorderedTxValidator *ante.UnorderedTxDecorator
 	)
 
-	if in.DynamicConfig != nil {
-		minGasPricesStr := in.DynamicConfig.GetString(flagMinGasPricesV2)
-		minGasPrices, err = sdk.ParseDecCoins(minGasPricesStr)
-		if err != nil {
-			panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
-		}
-
-		feeTxValidator = ante.NewDeductFeeDecorator(in.AccountKeeper, in.BankKeeper, in.FeeGrantKeeper, in.TxFeeChecker)
-		feeTxValidator.SetMinGasPrices(minGasPrices) // set min gas price in deduct fee decorator
+	minGasPricesStr := cast.ToString(in.ConfigMap[flagMinGasPricesV2])
+	minGasPrices, err = sdk.ParseDecCoins(minGasPricesStr)
+	if err != nil {
+		panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
 	}
+
+	feeTxValidator = ante.NewDeductFeeDecorator(in.AccountKeeper, in.BankKeeper, in.FeeGrantKeeper, in.TxFeeChecker)
+	feeTxValidator.SetMinGasPrices(minGasPrices) // set min gas price in deduct fee decorator
 
 	if in.UnorderedTxManager != nil {
 		unorderedTxValidator = ante.NewUnorderedTxDecorator(unorderedtx.DefaultMaxTimeoutDuration, in.UnorderedTxManager, in.Environment, ante.DefaultSha256Cost)

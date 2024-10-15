@@ -137,7 +137,7 @@ func (db *Database) VersionExists(version uint64) (bool, error) {
 		return false, err
 	}
 
-	return latestVersion >= version && version >= db.earliestVersion, nil
+	return latestVersion >= version && version >= db.tsLow, nil
 }
 
 func (db *Database) Has(storeKey []byte, version uint64, key []byte) (bool, error) {

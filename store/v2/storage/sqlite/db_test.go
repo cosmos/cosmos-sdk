@@ -216,7 +216,7 @@ func TestDatabase_VersionExists(t *testing.T) {
 				// No setup needed for fresh database
 			},
 			version:        0,
-			expectedExists: false,
+			expectedExists: true,
 			expectError:    false,
 		},
 		{

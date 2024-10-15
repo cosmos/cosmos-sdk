@@ -103,7 +103,11 @@ func (db *Database) NewBatch(version uint64) (store.Batch, error) {
 }
 
 func (db *Database) GetLatestVersion() (uint64, error) {
-	stmt, err := db.storage.Prepare("SELECT value FROM state_storage WHERE store_key = ? AND key = ?")
+	stmt, err := db.storage.Prepare(`
+	SELECT value
+	FROM state_storage 
+	WHERE store_key = ? AND key = ?
+	`)
 	if err != nil {
 		return 0, fmt.Errorf("failed to prepare SQL statement: %w", err)
 	}
@@ -127,7 +131,7 @@ func (db *Database) VersionExists(v uint64) (bool, error) {
 	stmt, err := db.storage.Prepare(`
 		SELECT COUNT(*)
 		FROM state_storage
-		WHERE store_key != ? AND version = ? AND tombstone = 0
+		WHERE store_key != ? AND version = ?
 	`)
 	if err != nil {
 		return false, fmt.Errorf("failed to prepare SQL statement: %w", err)
@@ -135,12 +139,17 @@ func (db *Database) VersionExists(v uint64) (bool, error) {
 
 	defer stmt.Close()
 
-	var count uint64
-	if err := stmt.QueryRow(reservedStoreKey, v).Scan(&count); err != nil {
+	var latestHeight uint64
+	if err := stmt.QueryRow(reservedStoreKey, keyLatestHeight).Scan(&latestHeight); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// in case of a fresh database
+			return false, nil
+		}
+
 		return false, fmt.Errorf("failed to query row: %w", err)
 	}
 
-	return count > 0, nil
+	return latestHeight >= v && db.earliestVersion <= v, nil
 }
 
 func (db *Database) SetLatestVersion(version uint64) error {

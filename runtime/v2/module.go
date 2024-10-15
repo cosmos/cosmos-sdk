@@ -108,6 +108,7 @@ func ProvideAppBuilder[T transaction.Tx](
 	interfaceRegistrar registry.InterfaceRegistrar,
 	amino registry.AminoRegistrar,
 	storeBuilder root.Builder,
+	storeConfig *root.Config,
 ) (
 	*AppBuilder[T],
 	*stf.MsgRouterBuilder,
@@ -134,7 +135,7 @@ func ProvideAppBuilder[T transaction.Tx](
 		QueryHandlers:      map[string]appmodulev2.Handler{},
 		storeLoader:        DefaultStoreLoader,
 	}
-	appBuilder := &AppBuilder[T]{app: app, storeBuilder: storeBuilder}
+	appBuilder := &AppBuilder[T]{app: app, storeBuilder: storeBuilder, storeConfig: storeConfig}
 
 	return appBuilder, msgRouterBuilder, appModule[T]{app}, protoFiles, protoTypes
 }
@@ -152,7 +153,7 @@ type AppInputs struct {
 	StoreBuilder       root.Builder
 }
 
-func SetupAppBuilder(inputs AppInputs) error {
+func SetupAppBuilder(inputs AppInputs) {
 	app := inputs.AppBuilder.app
 	app.config = inputs.Config
 	app.logger = inputs.Logger
@@ -161,8 +162,6 @@ func SetupAppBuilder(inputs AppInputs) error {
 	app.moduleManager.RegisterLegacyAminoCodec(inputs.LegacyAmino)
 	// STF requires some state to run
 	inputs.StoreBuilder.RegisterKey("stf")
-	_, err := inputs.StoreBuilder.Build(inputs.Logger, inputs.StoreConfig)
-	return err
 }
 
 func ProvideModuleManager[T transaction.Tx](

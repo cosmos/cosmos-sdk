@@ -24,6 +24,7 @@ import (
 type AppBuilder[T transaction.Tx] struct {
 	app          *App[T]
 	storeBuilder root.Builder
+	storeConfig  *root.Config
 
 	// the following fields are used to overwrite the default
 	branch      func(state store.ReaderMap) store.WriterMap
@@ -87,12 +88,13 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 		}
 	}
 
-	a.app.db = a.storeBuilder.Get()
-	if a.app.db == nil {
-		return nil, fmt.Errorf("storeBuilder did not return a db")
+	var err error
+	a.app.db, err = a.storeBuilder.Build(a.app.logger, a.storeConfig)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := a.app.moduleManager.RegisterServices(a.app); err != nil {
+	if err = a.app.moduleManager.RegisterServices(a.app); err != nil {
 		return nil, err
 	}
 

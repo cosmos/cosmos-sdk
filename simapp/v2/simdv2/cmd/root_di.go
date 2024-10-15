@@ -183,10 +183,6 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = serverv2.SetCmdServerContext(cmd, vipr, logger)
-	if err != nil {
-		return nil, err
-	}
 	globalConfig := vipr.AllSettings()
 
 	var app *simapp.SimApp[T]

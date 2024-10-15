@@ -100,6 +100,13 @@ func createStartCommand[T transaction.Tx](
 		Short:       "Run the application",
 		Annotations: map[string]string{"needs-app": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// TODO: Init is no longer needed as a distinct life cycle phase due to
+			// eager config parsing. Therefore, consider one of:
+			// 1) pull .Init() up closer to ServerComponent constructor call
+			// 2) remove .Init() as a separate phase, move work (and dependencies)
+			// into the constructor directly.
+			//
+			// Note that (2) could mean the removal of AppI
 			err := server.Init(app, config, logger)
 			if err != nil {
 				return err

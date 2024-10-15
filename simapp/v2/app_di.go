@@ -116,14 +116,15 @@ func NewSimAppWithConfig[T transaction.Tx](
 		return nil, err
 	}
 
-	app.store = storeBuilder.Get()
-	if app.store == nil {
-		return nil, fmt.Errorf("store builder not return a db")
-	}
 	var err error
 	app.App, err = appBuilder.Build()
 	if err != nil {
 		return nil, err
+	}
+
+	app.store = storeBuilder.Get()
+	if app.store == nil {
+		return nil, fmt.Errorf("store builder not return a db")
 	}
 
 	/****  Module Options ****/

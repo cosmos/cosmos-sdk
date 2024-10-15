@@ -236,3 +236,195 @@ func (suite *KeeperTestSuite) TestSendCoins_WithRestriction() {
 	acc1BarBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[1], barDenom)
 	require.Equal(acc1BarBalance.Amount, math.ZeroInt())
 }
+
+func (suite *KeeperTestSuite) TestCreateNewDenom() {
+	ctx := suite.ctx
+	require := suite.Require()
+	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
+
+	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], balances))
+
+	newDenom, err := suite.bankKeeper.CreateDenom(suite.ctx, accAddrs[0].String(), "sub")
+	fmt.Println("newDenom", newDenom, err)
+
+	acc0FooBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[0], fooDenom)
+	fmt.Println("newBal", acc0FooBalance)
+	
+}
+
+func (s *KeeperTestSuite) TestCreateDenom() {
+	require := s.Require()
+
+	var (
+		primaryDenom            = "foo"
+		secondaryDenom          = "bar"
+		defaultDenomCreationFee = banktypes.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, math.NewInt(50_000_000)))}
+		twoDenomCreationFee     = banktypes.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, math.NewInt(50_000_000)), sdk.NewCoin(secondaryDenom, math.NewInt(50_000_000)))}
+		nilCreationFee          = banktypes.Params{DenomCreationFee: nil}
+		largeCreationFee        = banktypes.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, math.NewInt(5_000_000_000)))}
+	)
+
+	for _, tc := range []struct {
+		desc             string
+		denomCreationFee banktypes.Params
+		setup            func()
+		subdenom         string
+		valid            bool
+	}{
+		{
+			desc:             "subdenom too long",
+			denomCreationFee: defaultDenomCreationFee,
+			subdenom:         "assadsadsadasdasdsadsadsadsadsadsadsklkadaskkkdasdasedskhanhassyeunganassfnlksdflksafjlkasd",
+			valid:            false,
+		},
+		{
+			desc:             "subdenom and creator pair already exists",
+			denomCreationFee: defaultDenomCreationFee,
+			setup: func() {
+				_, err := s.bankKeeper.CreateDenom(s.ctx, accAddrs[0].String(), "bitcoin")
+				s.Require().NoError(err)
+			},
+			subdenom: "bitcoin",
+			valid:    false,
+		},
+		{
+			desc:             "success case: defaultDenomCreationFee",
+			denomCreationFee: defaultDenomCreationFee,
+			subdenom:         "evmos",
+			valid:            true,
+		},
+		{
+			desc:             "success case: twoDenomCreationFee",
+			denomCreationFee: twoDenomCreationFee,
+			subdenom:         "catcoin",
+			valid:            true,
+		},
+		{
+			desc:             "success case: nilCreationFee",
+			denomCreationFee: nilCreationFee,
+			subdenom:         "czcoin",
+			valid:            true,
+		},
+		{
+			desc:             "account doesn't have enough to pay for denom creation fee",
+			denomCreationFee: largeCreationFee,
+			subdenom:         "tooexpensive",
+			valid:            false,
+		},
+		{
+			desc:             "subdenom having invalid characters",
+			denomCreationFee: defaultDenomCreationFee,
+			subdenom:         "bit/***///&&&/coin",
+			valid:            false,
+		},
+	} {
+		s.SetupTest()
+		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			if tc.setup != nil {
+				tc.setup()
+			}
+			require.NoError(banktestutil.FundAccount(s.ctx, s.bankKeeper, accAddrs[0], twoDenomCreationFee.DenomCreationFee))
+			s.bankKeeper.SetParams(s.ctx, tc.denomCreationFee)
+			denomCreationFee := s.bankKeeper.GetParams(s.ctx).DenomCreationFee
+			s.Require().Equal(tc.denomCreationFee.DenomCreationFee, denomCreationFee)
+
+			// note balance, create a tokenfactory denom, then note balance again
+			preCreateBalance := s.bankKeeper.GetAllBalances(s.ctx, accAddrs[0])
+			newDenom, err := s.bankKeeper.CreateDenom(s.ctx, accAddrs[0].String(), tc.subdenom)
+			postCreateBalance := s.bankKeeper.GetAllBalances(s.ctx, accAddrs[0])
+			if tc.valid {
+				s.Require().NoError(err)
+				s.Require().True(preCreateBalance.Sub(postCreateBalance...).Equal(denomCreationFee))
+
+				// Make sure that the admin is set correctly
+				authority, err := s.bankKeeper.GetAuthorityMetadata(s.ctx, newDenom)
+
+				s.Require().NoError(err)
+				s.Require().Equal(accAddrs[0].String(), authority.Admin)
+
+				// Make sure that the denom metadata is initialized correctly
+				metadata, found := s.bankKeeper.GetDenomMetaData(s.ctx, newDenom)
+				s.Require().True(found)
+				s.Require().Equal(banktypes.Metadata{
+					DenomUnits: []*banktypes.DenomUnit{{
+						Denom:    newDenom,
+						Exponent: 0,
+					}},
+					Base:    newDenom,
+					Display: newDenom,
+					Name:    newDenom,
+					Symbol:  newDenom,
+				}, metadata)
+			} else {
+				s.Require().Error(err)
+				// Ensure we don't charge if we expect an error
+				s.Require().True(preCreateBalance.Equal(postCreateBalance))
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestCreateDenom_GasConsume() {
+	// It's hard to estimate exactly how much gas will be consumed when creating a
+	// denom, because besides consuming the gas specified by the params, the keeper
+	// also does a bunch of other things that consume gas.
+	//
+	// Rather, we test whether the gas consumed is within a range. Specifically,
+	// the range [gasConsume, gasConsume + offset]. If the actual gas consumption
+	// falls within the range for all test cases, we consider the test passed.
+	//
+	// In experience, the total amount of gas consumed should consume be ~30k more
+	// than the set amount.
+	const offset = 50000
+
+	for _, tc := range []struct {
+		desc       string
+		gasConsume uint64
+	}{
+		{
+			desc:       "gas consume zero",
+			gasConsume: 0,
+		},
+		{
+			desc:       "gas consume 1,000,000",
+			gasConsume: 1_000_000,
+		},
+		{
+			desc:       "gas consume 10,000,000",
+			gasConsume: 10_000_000,
+		},
+		{
+			desc:       "gas consume 25,000,000",
+			gasConsume: 25_000_000,
+		},
+		{
+			desc:       "gas consume 50,000,000",
+			gasConsume: 50_000_000,
+		},
+		{
+			desc:       "gas consume 200,000,000",
+			gasConsume: 200_000_000,
+		},
+	} {
+		s.SetupTest()
+		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			// set params with the gas consume amount
+			s.bankKeeper.SetParams(s.ctx, banktypes.NewParams(nil, tc.gasConsume))
+
+			// amount of gas consumed prior to the denom creation
+			gasConsumedBefore := s.bankKeeper.Environment.GasService.GasMeter(s.ctx).Consumed()
+
+			// create a denom
+			_, err := s.bankKeeper.CreateDenom(s.ctx, accAddrs[0].String(), "test")
+			s.Require().NoError(err)
+
+			// amount of gas consumed after the denom creation
+			gasConsumedAfter := s.bankKeeper.Environment.GasService.GasMeter(s.ctx).Consumed()
+
+			// the amount of gas consumed must be within the range
+			gasConsumed := gasConsumedAfter - gasConsumedBefore
+			s.Require().Greater(gasConsumed, tc.gasConsume)
+			s.Require().Less(gasConsumed, tc.gasConsume+offset)
+		})
+	}
+}

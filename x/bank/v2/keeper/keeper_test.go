@@ -249,7 +249,7 @@ func (suite *KeeperTestSuite) TestCreateNewDenom() {
 
 	acc0FooBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[0], fooDenom)
 	fmt.Println("newBal", acc0FooBalance)
-	
+
 }
 
 func (s *KeeperTestSuite) TestCreateDenom() {
@@ -324,7 +324,7 @@ func (s *KeeperTestSuite) TestCreateDenom() {
 				tc.setup()
 			}
 			require.NoError(banktestutil.FundAccount(s.ctx, s.bankKeeper, accAddrs[0], twoDenomCreationFee.DenomCreationFee))
-			s.bankKeeper.SetParams(s.ctx, tc.denomCreationFee)
+			require.NoError(s.bankKeeper.SetParams(s.ctx, tc.denomCreationFee))
 			denomCreationFee := s.bankKeeper.GetParams(s.ctx).DenomCreationFee
 			s.Require().Equal(tc.denomCreationFee.DenomCreationFee, denomCreationFee)
 
@@ -409,7 +409,7 @@ func (s *KeeperTestSuite) TestCreateDenom_GasConsume() {
 		s.SetupTest()
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			// set params with the gas consume amount
-			s.bankKeeper.SetParams(s.ctx, banktypes.NewParams(nil, tc.gasConsume))
+			s.Require().NoError(s.bankKeeper.SetParams(s.ctx, banktypes.NewParams(nil, tc.gasConsume)))
 
 			// amount of gas consumed prior to the denom creation
 			gasConsumedBefore := s.bankKeeper.Environment.GasService.GasMeter(s.ctx).Consumed()

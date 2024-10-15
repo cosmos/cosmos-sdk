@@ -293,6 +293,12 @@ func (bva *BaseLockup) SendCoins(
 		return nil, err
 	}
 
+	// tracking all matured unbonding entries before check sendable tokens
+	err = bva.TrackUnbondingEntries(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	err = bva.checkTokensSendable(ctx, fromAddress, msg.Amount, lockedCoins)
 	if err != nil {
 		return nil, err
@@ -337,6 +343,12 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 
 	hs := bva.headerService.HeaderInfo(ctx)
 	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, uniqueDenoms...)
+	if err != nil {
+		return nil, err
+	}
+
+	// tracking all matured unbonding entries
+	err = bva.TrackUnbondingEntries(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -443,19 +455,6 @@ func getStakingDenom(ctx context.Context) (string, error) {
 	}
 
 	return resp.Params.BondDenom, nil
-}
-
-func getUnbonding(ctx context.Context, delAddr, valAddr string) (*stakingtypes.UnbondingDelegation, error) {
-	// Query account balance for the sent denom
-	resp, err := accountstd.QueryModule[*stakingtypes.QueryUnbondingDelegationResponse](ctx, &stakingtypes.QueryUnbondingDelegationRequest{
-		DelegatorAddr: delAddr,
-		ValidatorAddr: valAddr,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Unbond, nil
 }
 
 // TrackDelegation tracks a delegation amount for any given lockup account type

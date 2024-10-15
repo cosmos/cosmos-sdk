@@ -1,7 +1,65 @@
 syntax = "proto3";
 package cosmos.bank.v2;
 
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
 option go_package = "cosmossdk.io/x/bank/v2/types";
 
 // Params defines the parameters for the bank/v2 module.
-message Params {}
+message Params {
+  // DenomCreationFee defines the fee to be charged on the creation of a new
+  // denom. The fee is drawn from the MsgCreateDenom's sender account, and
+  // transferred to the community pool.
+  repeated cosmos.base.v1beta1.Coin denom_creation_fee = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"denom_creation_fee\"",
+    (gogoproto.nullable)     = false
+  ];
+
+  // DenomCreationGasConsume defines the gas cost for creating a new denom.
+  // This is intended as a spam deterrence mechanism.
+  //
+  // See: https://github.com/CosmWasm/token-factory/issues/11
+  uint64 denom_creation_gas_consume = 2
+      [(gogoproto.moretags) = "yaml:\"denom_creation_gas_consume\"", (gogoproto.nullable) = true];
+}
+
+// DenomUnit represents a struct that describes a given
+// denomination unit of the basic token.
+message DenomUnit {
+  // denom represents the string name of the given denom unit (e.g uatom).
+  string denom = 1;
+  // exponent represents power of 10 exponent that one must
+  // raise the base_denom to in order to equal the given DenomUnit's denom
+  // 1 denom = 10^exponent base_denom
+  // (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom' with
+  // exponent = 6, thus: 1 atom = 10^6 uatom).
+  uint32 exponent = 2;
+  // aliases is a list of string aliases for the given denom
+  repeated string aliases = 3;
+}
+
+// Metadata represents a struct that describes
+// a basic token.
+message Metadata {
+  string description = 1;
+  // denom_units represents the list of DenomUnit's for a given coin
+  repeated DenomUnit denom_units = 2;
+  // base represents the base denom (should be the DenomUnit with exponent = 0).
+  string base = 3;
+  // display indicates the suggested denom that should be
+  // displayed in clients.
+  string display = 4;
+  // name defines the name of the token (eg: Cosmos Atom)
+  string name = 5 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.43"];
+  // symbol is the token symbol usually shown on exchanges (eg: ATOM). This can
+  // be the same as the display.
+  string symbol = 6 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.43"];
+  // URI to a document (on or off-chain) that contains additional information. Optional.
+  string uri = 7 [(gogoproto.customname) = "URI", (cosmos_proto.field_added_in) = "cosmos-sdk 0.46"];
+  // URIHash is a sha256 hash of a document pointed by URI. It's used to verify that
+  // the document didn't change. Optional.
+  string uri_hash = 8 [(gogoproto.customname) = "URIHash", (cosmos_proto.field_added_in) = "cosmos-sdk 0.46"];
+}

@@ -25,6 +25,9 @@ message GenesisState {
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true
   ];
+
+  // denom_metadata defines the metadata of the different coins.
+  repeated Metadata denom_metadata = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // Balance defines an account address and balance pair used in the bank module's

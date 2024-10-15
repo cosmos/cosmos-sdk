@@ -34,7 +34,7 @@ type Keeper struct {
 	sendRestriction *sendRestriction
 }
 
-func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec) *Keeper {
+func  NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	k := &Keeper{
@@ -156,6 +156,29 @@ func (k Keeper) GetBalance(ctx context.Context, addr []byte, denom string) sdk.C
 		return sdk.NewCoin(denom, math.ZeroInt())
 	}
 	return sdk.NewCoin(denom, amt)
+}
+
+// GetAllBalances returns all the account balances for the given account address.
+func (k Keeper) GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
+	balances := sdk.NewCoins()
+	k.IterateAccountBalances(ctx, addr, func(balance sdk.Coin) bool {
+		balances = balances.Add(balance)
+		return false
+	})
+
+	return balances.Sort()
+}
+
+// IterateAccountBalances iterates over the balances of a single account and
+// provides the token balance to a callback. If true is returned from the
+// callback, iteration is halted.
+func (k Keeper) IterateAccountBalances(ctx context.Context, addr sdk.AccAddress, cb func(sdk.Coin) bool) {
+	err := k.balances.Walk(ctx, collections.NewPrefixedPairRange[[]byte, string](addr), func(key collections.Pair[[]byte, string], value math.Int) (stop bool, err error) {
+		return cb(sdk.NewCoin(key.K2(), value)), nil
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 // GetDenomMetaData retrieves the denomination metadata. returns the metadata and true if the denom exists,

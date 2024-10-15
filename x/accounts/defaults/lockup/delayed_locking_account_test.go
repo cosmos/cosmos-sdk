@@ -101,44 +101,26 @@ func TestDelayedAccountUndelegate(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	delLocking, err = acc.DelegatedLocking.Get(ctx, "test")
+	ubdSeq, err := acc.UnbondingSequence.Peek(sdkCtx)
 	require.NoError(t, err)
-	require.True(t, delLocking.Equal(math.ZeroInt()))
+	// sequence should be the previous one
+	ubdEntry, err := acc.UnbondEntries.Get(sdkCtx, ubdSeq-1)
+	require.NoError(t, err)
+	require.True(t, ubdEntry.Amount.Amount.Equal(math.NewInt(1)))
+	require.True(t, ubdEntry.ValidatorAddress == "val_address")
 
-	endTime, err := acc.EndTime.Get(sdkCtx)
+	// manually update entry end time since msgUndelegateResponse are mocks
+	// so no actual end time can be set
+	ubdEntry.EndTime = time.Now()
+	err = acc.UnbondEntries.Set(sdkCtx, ubdSeq-1, ubdEntry)
 	require.NoError(t, err)
 
-	// Update context time to unlocked all the original locking amount
-	sdkCtx = sdkCtx.WithHeaderInfo(header.Info{
-		Time: endTime.Add(time.Second),
-	})
-
-	_, err = acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
-		Sender:           "owner",
-		ValidatorAddress: "val_address",
-		Amount:           sdk.NewCoin("test", math.NewInt(6)),
-	})
+	err = acc.TrackUnbondingEntries(sdkCtx)
 	require.NoError(t, err)
 
 	delLocking, err = acc.DelegatedLocking.Get(ctx, "test")
 	require.NoError(t, err)
 	require.True(t, delLocking.Equal(math.ZeroInt()))
-
-	delFree, err := acc.DelegatedFree.Get(ctx, "test")
-	require.NoError(t, err)
-	require.True(t, delFree.Equal(math.NewInt(6)))
-
-	// Undelegate
-	_, err = acc.Undelegate(sdkCtx, &lockuptypes.MsgUndelegate{
-		Sender:           "owner",
-		ValidatorAddress: "val_address",
-		Amount:           sdk.NewCoin("test", math.NewInt(4)),
-	})
-	require.NoError(t, err)
-
-	delFree, err = acc.DelegatedFree.Get(ctx, "test")
-	require.NoError(t, err)
-	require.True(t, delFree.Equal(math.NewInt(2)))
 }
 
 func TestDelayedAccountSendCoins(t *testing.T) {

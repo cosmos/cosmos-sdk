@@ -135,48 +135,26 @@ func TestPeriodicAccountUndelegate(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	ubdSeq, err := acc.UnbondingSequence.Peek(sdkCtx)
+	require.NoError(t, err)
+	// sequence should be the previous one
+	ubdEntry, err := acc.UnbondEntries.Get(sdkCtx, ubdSeq-1)
+	require.NoError(t, err)
+	require.True(t, ubdEntry.Amount.Amount.Equal(math.NewInt(1)))
+	require.True(t, ubdEntry.ValidatorAddress == "val_address")
+
+	// manually update entry end time since msgUndelegateResponse are mocks
+	// so no actual end time can be set
+	ubdEntry.EndTime = time.Now()
+	err = acc.UnbondEntries.Set(sdkCtx, ubdSeq-1, ubdEntry)
+	require.NoError(t, err)
+
+	err = acc.TrackUnbondingEntries(sdkCtx)
+	require.NoError(t, err)
+
 	delLocking, err = acc.DelegatedLocking.Get(ctx, "test")
 	require.NoError(t, err)
 	require.True(t, delLocking.Equal(math.ZeroInt()))
-
-	startTime, err := acc.StartTime.Get(sdkCtx)
-	require.NoError(t, err)
-
-	// Update context time to unlocked first period token
-	sdkCtx = sdkCtx.WithHeaderInfo(header.Info{
-		Time: startTime.Add(time.Minute * 1),
-	})
-
-	_, err = acc.Delegate(sdkCtx, &lockuptypes.MsgDelegate{
-		Sender:           "owner",
-		ValidatorAddress: "val_address",
-		Amount:           sdk.NewCoin("test", math.NewInt(6)),
-	})
-	require.NoError(t, err)
-
-	delLocking, err = acc.DelegatedLocking.Get(ctx, "test")
-	require.NoError(t, err)
-	require.True(t, delLocking.Equal(math.NewInt(5)))
-
-	delFree, err := acc.DelegatedFree.Get(ctx, "test")
-	require.NoError(t, err)
-	require.True(t, delFree.Equal(math.NewInt(1)))
-
-	// Undelegate
-	_, err = acc.Undelegate(sdkCtx, &lockuptypes.MsgUndelegate{
-		Sender:           "owner",
-		ValidatorAddress: "val_address",
-		Amount:           sdk.NewCoin("test", math.NewInt(4)),
-	})
-	require.NoError(t, err)
-
-	delLocking, err = acc.DelegatedLocking.Get(ctx, "test")
-	require.NoError(t, err)
-	require.True(t, delLocking.Equal(math.NewInt(2)))
-
-	delFree, err = acc.DelegatedFree.Get(ctx, "test")
-	require.NoError(t, err)
-	require.True(t, delFree.Equal(math.ZeroInt()))
 }
 
 func TestPeriodicAccountSendCoins(t *testing.T) {

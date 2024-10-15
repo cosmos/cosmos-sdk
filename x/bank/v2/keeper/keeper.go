@@ -22,19 +22,19 @@ import (
 type Keeper struct {
 	appmodulev2.Environment
 
-	authority           []byte
-	addressCodec        address.Codec
-	schema              collections.Schema
-	params              collections.Item[types.Params]
-	balances            *collections.IndexedMap[collections.Pair[[]byte, string], math.Int, BalancesIndexes]
-	supply              collections.Map[string, math.Int]
-	denomMetadata       collections.Map[string, types.Metadata]
-	denomAuthority      collections.Map[string, types.DenomAuthorityMetadata]
+	authority      []byte
+	addressCodec   address.Codec
+	schema         collections.Schema
+	params         collections.Item[types.Params]
+	balances       *collections.IndexedMap[collections.Pair[[]byte, string], math.Int, BalancesIndexes]
+	supply         collections.Map[string, math.Int]
+	denomMetadata  collections.Map[string, types.Metadata]
+	denomAuthority collections.Map[string, types.DenomAuthorityMetadata]
 
 	sendRestriction *sendRestriction
 }
 
-func  NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec) *Keeper {
+func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	k := &Keeper{

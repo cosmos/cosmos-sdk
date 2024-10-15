@@ -41,7 +41,10 @@ func (k Keeper) createDenomAfterValidation(ctx context.Context, creatorAddr stri
 			Display: denom,
 		}
 
-		k.SetDenomMetaData(ctx, denomMetaData)
+		err := k.SetDenomMetaData(ctx, denomMetaData)
+		if err != nil {
+			return err
+		}
 	}
 
 	authorityMetadata := types.DenomAuthorityMetadata{
@@ -89,7 +92,7 @@ func (k Keeper) chargeForCreateDenom(ctx context.Context, creatorAddr string) (e
 		}
 
 		communityPoolAddr := address.Module("protocolpool")
-		
+
 		if err := k.SendCoins(ctx, accAddr, communityPoolAddr, params.DenomCreationFee); err != nil {
 			return err
 		}

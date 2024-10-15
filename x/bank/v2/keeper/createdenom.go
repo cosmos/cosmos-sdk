@@ -5,12 +5,13 @@ import (
 	"fmt"
 
 	"cosmossdk.io/x/bank/v2/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount
-func (k Keeper) CreateDenom(ctx context.Context, creatorAddr string, subdenom string) (newTokenDenom string, err error) {
+func (k Keeper) CreateDenom(ctx context.Context, creatorAddr, subdenom string) (newTokenDenom string, err error) {
 	denom, err := k.validateCreateDenom(ctx, creatorAddr, subdenom)
 	if err != nil {
 		return "", err
@@ -27,7 +28,7 @@ func (k Keeper) CreateDenom(ctx context.Context, creatorAddr string, subdenom st
 
 // Runs CreateDenom logic after the charge and all denom validation has been handled.
 // Made into a second function for genesis initialization.
-func (k Keeper) createDenomAfterValidation(ctx context.Context, creatorAddr string, denom string) (err error) {
+func (k Keeper) createDenomAfterValidation(ctx context.Context, creatorAddr, denom string) (err error) {
 	_, exists := k.GetDenomMetaData(ctx, denom)
 	if !exists {
 		denomMetaData := types.Metadata{
@@ -60,7 +61,7 @@ func (k Keeper) createDenomAfterValidation(ctx context.Context, creatorAddr stri
 	return nil
 }
 
-func (k Keeper) validateCreateDenom(ctx context.Context, creatorAddr string, subdenom string) (newTokenDenom string, err error) {
+func (k Keeper) validateCreateDenom(ctx context.Context, creatorAddr, subdenom string) (newTokenDenom string, err error) {
 	// Temporary check until IBC bug is sorted out
 	if k.HasSupply(ctx, subdenom) {
 		return "", fmt.Errorf("temporary error until IBC bug is sorted out, " +

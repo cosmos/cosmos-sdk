@@ -237,21 +237,6 @@ func (suite *KeeperTestSuite) TestSendCoins_WithRestriction() {
 	require.Equal(acc1BarBalance.Amount, math.ZeroInt())
 }
 
-func (suite *KeeperTestSuite) TestCreateNewDenom() {
-	ctx := suite.ctx
-	require := suite.Require()
-	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
-
-	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], balances))
-
-	newDenom, err := suite.bankKeeper.CreateDenom(suite.ctx, accAddrs[0].String(), "sub")
-	fmt.Println("newDenom", newDenom, err)
-
-	acc0FooBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[0], fooDenom)
-	fmt.Println("newBal", acc0FooBalance)
-
-}
-
 func (s *KeeperTestSuite) TestCreateDenom() {
 	require := s.Require()
 

@@ -22,7 +22,7 @@ func (k Keeper) setAuthorityMetadata(ctx context.Context, denom string, metadata
 	return k.denomAuthority.Set(ctx, denom, metadata)
 }
 
-func (k Keeper) setAdmin(ctx context.Context, denom string, admin string) error {
+func (k Keeper) setAdmin(ctx context.Context, denom, admin string) error {
 	metadata, err := k.GetAuthorityMetadata(ctx, denom)
 	if err != nil {
 		return err

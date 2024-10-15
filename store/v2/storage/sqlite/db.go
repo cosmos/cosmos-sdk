@@ -128,28 +128,12 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 }
 
 func (db *Database) VersionExists(v uint64) (bool, error) {
-	stmt, err := db.storage.Prepare(`
-		SELECT COUNT(*)
-		FROM state_storage
-		WHERE store_key != ? AND version = ?
-	`)
+	latestVersion, err := db.GetLatestVersion()
 	if err != nil {
-		return false, fmt.Errorf("failed to prepare SQL statement: %w", err)
+		return false, err
 	}
 
-	defer stmt.Close()
-
-	var latestHeight uint64
-	if err := stmt.QueryRow(reservedStoreKey, keyLatestHeight).Scan(&latestHeight); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// in case of a fresh database
-			return false, nil
-		}
-
-		return false, fmt.Errorf("failed to query row: %w", err)
-	}
-
-	return latestHeight >= v && db.earliestVersion <= v, nil
+	return latestVersion >= v && v >= db.earliestVersion, nil
 }
 
 func (db *Database) SetLatestVersion(version uint64) error {

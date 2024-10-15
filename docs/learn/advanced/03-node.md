@@ -24,7 +24,7 @@ In general, developers will implement the `main.go` function with the following 
 * Then, the `config` is retrieved and config parameters are set. This mainly involves setting the Bech32 prefixes for [addresses](../beginner/03-accounts.md#addresses).
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/config.go#L14-L29
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/types/config.go#L20-L29
 ```
 
 * Using [cobra](https://github.com/spf13/cobra), the root command of the full-node client is created. After that, all the custom commands of the application are added using the `AddCommand()` method of `rootCmd`.
@@ -32,13 +32,13 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/config.go#L14-L2
 * Prepare and execute the `executor`.
   
 ```go reference
-https://github.com/cometbft/cometbft/blob/v0.37.0/libs/cli/setup.go#L74-L78
+https://github.com/cometbft/cometbft/blob/v1.0.0-rc1/libs/cli/setup.go#L74-L78
 ```
 
 See an example of `main` function from the `simapp` application, the Cosmos SDK's application for demo purposes:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/main.go
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/simapp/simd/main.go
 ```
 
 ## `start` command
@@ -60,25 +60,25 @@ The flow of the `start` command is pretty straightforward. First, it retrieves t
 With the `db`, the `start` command creates a new instance of the application using an `appCreator` function:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/server/start.go#L220
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/server/start.go#L201
 ```
 
 Note that an `appCreator` is a function that fulfills the `AppCreator` signature:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/server/types/app.go#L68
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/server/types/app.go#L69-L71
 ```
 
 In practice, the [constructor of the application](../beginner/00-app-anatomy.md#constructor-function) is passed as the `appCreator`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v2.go#L294-L308
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/server/util.go#L334-L360
 ```
 
 Then, the instance of `app` is used to instantiate a new CometBFT node:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/server/start.go#L341-L378
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/server/start.go#L367-L410
 ```
 
 The CometBFT node can be created with `app` because the latter satisfies the [`abci.Application` interface](https://pkg.go.dev/github.com/cometbft/cometbft/api/cometbft/abci/v1#Application) (given that `app` extends [`baseapp`](./00-baseapp.md)). As part of the `node.New` method, CometBFT makes sure that the height of the application (i.e. number of blocks since genesis) is equal to the height of the CometBFT node. The difference between these two heights should always be negative or null. If it is strictly negative, `node.New` will replay blocks until the height of the application reaches the height of the CometBFT node. Finally, if the height of the application is `0`, the CometBFT node will call [`InitChain`](./00-baseapp.md#initchain) on the application to initialize the state from the genesis file.
@@ -86,7 +86,7 @@ The CometBFT node can be created with `app` because the latter satisfies the [`a
 Once the CometBFT node is instantiated and in sync with the application, the node can be started:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/server/start.go#L350-L352
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/server/start.go#L383-L384
 ```
 
 Upon starting, the node will bootstrap its RPC and P2P server and start dialing peers. During handshake with its peers, if the node realizes they are ahead, it will query all the blocks sequentially in order to catch up. Then, it will wait for new block proposals and block signatures from validators in order to make progress.

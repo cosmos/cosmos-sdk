@@ -20,7 +20,7 @@ The `context` is a data structure intended to be passed from function to functio
 The Cosmos SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://pkg.go.dev/context) as its base, and has many additional types within its definition that are specific to the Cosmos SDK. The `Context` is integral to transaction processing in that it allows modules to easily access their respective [store](./04-store.md#base-layer-kvstores) in the [`multistore`](./04-store.md#multistore) and retrieve transactional context such as the block header and gas meter.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/context.go#L41-L67
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/types/context.go#L40-L64
 ```
 
 * **Base Context:** The base type is a Go [Context](https://pkg.go.dev/context), which is explained further in the [Go Context Package](#go-context-package) section below.
@@ -32,7 +32,8 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/context.go#L41-L
 * **Logger:** A `logger` from the CometBFT libraries. Learn more about logs [here](https://docs.cometbft.com/v1.0/references/config/config.toml#log_level). Modules call this method to create their own unique module-specific logger.
 * **VoteInfo:** A list of the ABCI type [`VoteInfo`](https://docs.cometbft.com/v1.0/spec/abci/abci++_methods#voteinfo), which includes the name of a validator and a boolean indicating whether they have signed the block.
 * **Gas Meters:** Specifically, a [`gasMeter`](../beginner/04-gas-fees.md#main-gas-meter) for the transaction currently being processed using the context and a [`blockGasMeter`](../beginner/04-gas-fees.md#block-gas-meter) for the entire block it belongs to. Users specify how much in fees they wish to pay for the execution of their transaction; these gas meters keep track of how much [gas](../beginner/04-gas-fees.md) has been used in the transaction or block so far. If the gas meter runs out, execution halts.
-* **CheckTx Mode:** A boolean value indicating whether a transaction should be processed in `CheckTx` or `DeliverTx` mode.
+* **CheckTx Mode:** A boolean value indicating whether a transaction should be processed in `CheckTx` or `DeliverTx` mode. It is deprecated and replaced by `execMode`.
+* **execMode**: defines the execution mode of the transaction.
 * **Min Gas Price:** The minimum [gas](../beginner/04-gas-fees.md) price a node is willing to take in order to include a transaction in its block. This price is a local value configured by each node individually, and should therefore **not be used in any functions used in sequences leading to state-transitions**.
 * **Consensus Params:** The ABCI type [Consensus Parameters](https://docs.cometbft.com/v1.0/spec/abci/abci++_app_requirements#consensus-parameters), which specify certain limits for the blockchain, such as maximum gas for a block.
 * **Event Manager:** The event manager allows any caller with access to a `Context` to emit [`Events`](./08-events.md). Modules may define module specific

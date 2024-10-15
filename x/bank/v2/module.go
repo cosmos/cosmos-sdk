@@ -98,6 +98,8 @@ func (am AppModule) RegisterMsgHandlers(router appmodulev2.MsgRouter) {
 	appmodulev2.RegisterMsgHandler(router, handlers.MsgUpdateParams)
 	appmodulev2.RegisterMsgHandler(router, handlers.MsgSend)
 	appmodulev2.RegisterMsgHandler(router, handlers.MsgMint)
+	appmodulev2.RegisterMsgHandler(router, handlers.MsgCreateDenom)
+	appmodulev2.RegisterMsgHandler(router, handlers.MsgChangeAdmin)
 }
 
 // RegisterQueryHandlers registers the query handlers for the bank module.

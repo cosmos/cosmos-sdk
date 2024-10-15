@@ -52,6 +52,39 @@ func (h handlers) MsgUpdateParams(ctx context.Context, msg *types.MsgUpdateParam
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
+func (h handlers) MsgCreateDenom(goCtx context.Context, msg *types.MsgCreateDenom) (*types.MsgCreateDenomResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	denom, err := h.Keeper.CreateDenom(ctx, msg.Sender, msg.Subdenom)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCreateDenomResponse{
+		NewTokenDenom: denom,
+	}, nil
+}
+
+func (h handlers) MsgChangeAdmin(goCtx context.Context, msg *types.MsgChangeAdmin) (*types.MsgChangeAdminResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	authorityMetadata, err := h.Keeper.GetAuthorityMetadata(ctx, msg.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.Sender != authorityMetadata.GetAdmin() {
+		return nil, types.ErrUnauthorized
+	}
+
+	err = h.Keeper.setAdmin(ctx, msg.Denom, msg.NewAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgChangeAdminResponse{}, nil
+}
+
 func (h handlers) MsgSend(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
 	var (
 		from, to []byte

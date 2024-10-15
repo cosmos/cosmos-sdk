@@ -7,7 +7,9 @@ import (
 	"io"
 
 	"github.com/bytedance/sonic"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/pkgerrors"
 )
 
 func init() {
@@ -111,6 +113,14 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 	}
 
 	logger := zerolog.New(output)
+
+	if logCfg.StackTrace {
+		zerolog.ErrorStackMarshaler = func(err error) interface{} {
+			return pkgerrors.MarshalStack(errors.WithStack(err))
+		}
+
+		logger = logger.With().Stack().Logger()
+	}
 
 	if logCfg.TimeFormat != "" {
 		logger = logger.With().Timestamp().Logger()

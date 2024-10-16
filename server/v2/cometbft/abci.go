@@ -108,7 +108,7 @@ func NewConsensus[T transaction.Tx](
 		indexedEvents:          indexedEvents,
 		initialHeight:          0,
 		queryHandlersMap:       queryHandlersMap,
-		getProtoRegistry:       sync.OnceValues(func() (*protoregistry.Files, error) { return gogoproto.MergedRegistry() }),
+		getProtoRegistry:       sync.OnceValues(gogoproto.MergedRegistry),
 	}
 }
 
@@ -242,7 +242,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 }
 
 func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryRequest) (resp *abciproto.QueryResponse, isGRPC bool, err error) {
-	// if this fails  then we cannot serve queries anymore
+	// if this fails then we cannot serve queries anymore
 	registry, err := c.getProtoRegistry()
 	if err != nil {
 		return nil, false, err

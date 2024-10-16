@@ -60,7 +60,7 @@ func (m queryRouterService) CanInvoke(ctx context.Context, typeURL string) error
 	return exCtx.queryRouter.CanInvoke(ctx, typeURL)
 }
 
-// InvokeUntyped execute a message and returns a response.
+// Invoke execute a message and returns a response.
 func (m queryRouterService) Invoke(
 	ctx context.Context,
 	req transaction.Msg,

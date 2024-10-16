@@ -23,7 +23,7 @@ func DefaultGasMeter(gasLimit uint64) coregas.Meter {
 	return NewMeter(gasLimit)
 }
 
-// DefaultGasConfig returns the default gas config.
+// DefaultConfig returns the default gas config.
 // Unless overridden, the default gas costs are:
 var DefaultConfig = coregas.GasConfig{
 	HasCost:          1000,

@@ -13,6 +13,7 @@ type ErrMultipleImplicitInterfaceBindings struct {
 	Matches   []reflect.Type
 }
 
+// newErrMultipleImplicitInterfaceBindings creates a new ErrMultipleImplicitInterfaceBindings error.
 func newErrMultipleImplicitInterfaceBindings(i reflect.Type, matches map[reflect.Type]reflect.Type) ErrMultipleImplicitInterfaceBindings {
 	var ms []reflect.Type
 	for k := range matches {
@@ -21,6 +22,7 @@ func newErrMultipleImplicitInterfaceBindings(i reflect.Type, matches map[reflect
 	return ErrMultipleImplicitInterfaceBindings{Interface: i, Matches: ms}
 }
 
+// Error returns the error message for ErrMultipleImplicitInterfaceBindings.
 func (err ErrMultipleImplicitInterfaceBindings) Error() string {
 	matchesStr := ""
 	for _, m := range err.Matches {
@@ -37,6 +39,7 @@ type ErrNoTypeForExplicitBindingFound struct {
 	ModuleName     string
 }
 
+// newErrNoTypeForExplicitBindingFound creates a new ErrNoTypeForExplicitBindingFound error.
 func newErrNoTypeForExplicitBindingFound(p interfaceBinding) ErrNoTypeForExplicitBindingFound {
 	var moduleName string
 	if p.moduleKey != nil {
@@ -50,6 +53,7 @@ func newErrNoTypeForExplicitBindingFound(p interfaceBinding) ErrNoTypeForExplici
 	}
 }
 
+// Error returns the error message for ErrNoTypeForExplicitBindingFound.
 func (err ErrNoTypeForExplicitBindingFound) Error() string {
 	if err.ModuleName != "" {
 		return fmt.Sprintf("No type for explicit binding found.  Given the explicit interface binding %s in module %s, a provider of type %s was not found.",
@@ -60,6 +64,7 @@ func (err ErrNoTypeForExplicitBindingFound) Error() string {
 		err.Interface, err.Implementation)
 }
 
+// duplicateDefinitionError returns an error indicating that a type has been provided multiple times.
 func duplicateDefinitionError(typ reflect.Type, duplicateLoc Location, existingLoc string) error {
 	return fmt.Errorf("duplicate provision of type %v by %s\n\talready provided by %s",
 		typ, duplicateLoc, existingLoc)

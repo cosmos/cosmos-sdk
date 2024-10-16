@@ -130,6 +130,7 @@ func Cost(hashedPassword []byte) (uint32, error) {
 	return p.cost, nil
 }
 
+// newFromPassword creates a new hashed structure from the given password and salt.
 func newFromPassword(salt, password []byte, cost uint32) (*hashed, error) {
 	if cost < MinCost {
 		cost = DefaultCost
@@ -153,6 +154,7 @@ func newFromPassword(salt, password []byte, cost uint32) (*hashed, error) {
 	return p, err
 }
 
+// newFromHash creates a new hashed structure from the given hashed password.
 func newFromHash(hashedSecret []byte) (*hashed, error) {
 	if len(hashedSecret) < minHashSize {
 		return nil, ErrHashTooShort
@@ -181,6 +183,7 @@ func newFromHash(hashedSecret []byte) (*hashed, error) {
 	return p, nil
 }
 
+// bcrypt generates a hash using the Blowfish algorithm with the given password, cost, and salt.
 func bcrypt(password []byte, cost uint32, salt []byte) ([]byte, error) {
 	cipherData := make([]byte, len(magicCipherData))
 	copy(cipherData, magicCipherData)
@@ -202,6 +205,7 @@ func bcrypt(password []byte, cost uint32, salt []byte) ([]byte, error) {
 	return hsh, nil
 }
 
+// expensiveBlowfishSetup sets up the Blowfish cipher with the given password, cost, and salt.
 func expensiveBlowfishSetup(key []byte, cost uint32, salt []byte) (*blowfish.Cipher, error) {
 	csalt, err := base64Decode(salt)
 	if err != nil {
@@ -228,6 +232,7 @@ func expensiveBlowfishSetup(key []byte, cost uint32, salt []byte) (*blowfish.Cip
 	return c, nil
 }
 
+// Hash returns the encoded bcrypt hash.
 func (p *hashed) Hash() []byte {
 	arr := make([]byte, 60)
 	arr[0] = '$'
@@ -250,6 +255,7 @@ func (p *hashed) Hash() []byte {
 	return arr[:n]
 }
 
+// decodeVersion decodes the version information from the hashed password.
 func (p *hashed) decodeVersion(sbytes []byte) (int, error) {
 	if sbytes[0] != '$' {
 		return -1, InvalidHashPrefixError(sbytes[0])
@@ -280,10 +286,12 @@ func (p *hashed) decodeCost(sbytes []byte) (int, error) {
 	return 3, nil
 }
 
+// String returns a string representation of the hashed structure.
 func (p *hashed) String() string {
 	return fmt.Sprintf("&{hash: %#v, salt: %#v, cost: %d, major: %c, minor: %c}", string(p.hash), p.salt, p.cost, p.major, p.minor)
 }
 
+// checkCost checks if the given cost is within the allowed range.
 func checkCost(cost uint32) error {
 	if cost < MinCost || cost > MaxCost {
 		return InvalidCostError(cost)

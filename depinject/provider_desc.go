@@ -38,6 +38,7 @@ type providerOutput struct {
 	Type reflect.Type
 }
 
+// extractProviderDescriptor extracts a provider descriptor from a given provider function.
 func extractProviderDescriptor(provider interface{}) (providerDescriptor, error) {
 	rctr, err := doExtractProviderDescriptor(provider)
 	if err != nil {
@@ -46,6 +47,8 @@ func extractProviderDescriptor(provider interface{}) (providerDescriptor, error)
 	return postProcessProvider(rctr)
 }
 
+// extractInvokerDescriptor extracts an invoker descriptor from a given provider function.
+// It marks all inputs as optional.
 func extractInvokerDescriptor(provider interface{}) (providerDescriptor, error) {
 	rctr, err := doExtractProviderDescriptor(provider)
 	if err != nil {
@@ -61,6 +64,7 @@ func extractInvokerDescriptor(provider interface{}) (providerDescriptor, error) 
 	return postProcessProvider(rctr)
 }
 
+// doExtractProviderDescriptor performs the core extraction logic for provider descriptors.
 func doExtractProviderDescriptor(ctr interface{}) (providerDescriptor, error) {
 	val := reflect.ValueOf(ctr)
 	typ := val.Type()
@@ -136,6 +140,7 @@ func doExtractProviderDescriptor(ctr interface{}) (providerDescriptor, error) {
 
 var errType = reflect.TypeOf((*error)(nil)).Elem()
 
+// postProcessProvider performs additional processing on the provider descriptor.
 func postProcessProvider(descriptor providerDescriptor) (providerDescriptor, error) {
 	descriptor, err := expandStructArgsProvider(descriptor)
 	if err != nil {
@@ -145,6 +150,7 @@ func postProcessProvider(descriptor providerDescriptor) (providerDescriptor, err
 	return descriptor, err
 }
 
+// checkInputAndOutputTypes checks if the input and output types are exported.
 func checkInputAndOutputTypes(descriptor providerDescriptor) error {
 	for _, input := range descriptor.Inputs {
 		err := isExportedType(input.Type)

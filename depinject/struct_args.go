@@ -35,6 +35,8 @@ type isOut interface{ isOut() }
 
 var isOutType = reflect.TypeOf((*isOut)(nil)).Elem()
 
+// expandStructArgsProvider expands the inputs and outputs of a provider descriptor
+// if they are structs that implement the In or Out interfaces.
 func expandStructArgsProvider(provider providerDescriptor) (providerDescriptor, error) {
 	var structArgsInInput bool
 	var newIn []providerInput
@@ -65,6 +67,8 @@ func expandStructArgsProvider(provider providerDescriptor) (providerDescriptor, 
 	return provider, nil
 }
 
+// expandStructArgsFn returns a new function that handles struct arguments
+// for both inputs and outputs of the provider.
 func expandStructArgsFn(provider providerDescriptor) func(inputs []reflect.Value) ([]reflect.Value, error) {
 	fn := provider.Fn
 	inParams := provider.Inputs
@@ -104,6 +108,7 @@ func expandStructArgsFn(provider providerDescriptor) func(inputs []reflect.Value
 	}
 }
 
+// structArgsInTypes extracts the input types from a struct that implements the In interface.
 func structArgsInTypes(typ reflect.Type) ([]providerInput, error) {
 	n := typ.NumField()
 	var res []providerInput
@@ -131,6 +136,7 @@ func structArgsInTypes(typ reflect.Type) ([]providerInput, error) {
 	return res, nil
 }
 
+// expandStructArgsOutTypes expands the output types from a struct that implements the Out interface.
 func expandStructArgsOutTypes(outputs []providerOutput) ([]providerOutput, bool) {
 	foundStructArgs := false
 	var newOut []providerOutput
@@ -145,6 +151,7 @@ func expandStructArgsOutTypes(outputs []providerOutput) ([]providerOutput, bool)
 	return newOut, foundStructArgs
 }
 
+// structArgsOutTypes extracts the output types from a struct that implements the Out interface.
 func structArgsOutTypes(typ reflect.Type) []providerOutput {
 	n := typ.NumField()
 	var res []providerOutput
@@ -161,6 +168,7 @@ func structArgsOutTypes(typ reflect.Type) []providerOutput {
 	return res
 }
 
+// buildIn constructs a struct from the given reflect.Values for inputs.
 func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int, error) {
 	numFields := typ.NumField()
 	j := 0
@@ -183,6 +191,7 @@ func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int, erro
 	return res.Elem(), j, nil
 }
 
+// extractFromOut extracts the fields from a struct that implements the Out interface.
 func extractFromOut(typ reflect.Type, value reflect.Value) []reflect.Value {
 	numFields := typ.NumField()
 	var res []reflect.Value

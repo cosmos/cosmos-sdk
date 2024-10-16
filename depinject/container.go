@@ -43,6 +43,7 @@ type interfaceBinding struct {
 	resolver      resolver
 }
 
+// newContainer creates a new dependency injection container.
 func newContainer(cfg *debugConfig) *container {
 	return &container{
 		debugConfig:       cfg,
@@ -54,6 +55,7 @@ func newContainer(cfg *debugConfig) *container {
 	}
 }
 
+// call invokes a provider function and resolves its dependencies.
 func (c *container) call(provider *providerDescriptor, moduleKey *moduleKey) ([]reflect.Value, error) {
 	loc := provider.Location
 	graphNode := c.locationGraphNode(loc, moduleKey)
@@ -93,6 +95,7 @@ func (c *container) call(provider *providerDescriptor, moduleKey *moduleKey) ([]
 	return out, nil
 }
 
+// getResolver retrieves a resolver for the given type.
 func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
 	pr, err := c.getExplicitResolver(typ, key)
 	if err != nil {
@@ -171,6 +174,7 @@ func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, err
 	return res, nil
 }
 
+// getExplicitResolver retrieves an explicitly bound resolver.
 func (c *container) getExplicitResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
 	var pref interfaceBinding
 	var found bool
@@ -204,6 +208,7 @@ func (c *container) getExplicitResolver(typ reflect.Type, key *moduleKey) (resol
 
 var stringType = reflect.TypeOf("")
 
+// addNode adds a provider to the container and registers resolvers for its outputs.
 func (c *container) addNode(provider *providerDescriptor, key *moduleKey) (interface{}, error) {
 	providerGraphNode := c.locationGraphNode(provider.Location, key)
 	hasModuleKeyParam := false
@@ -334,6 +339,7 @@ func (c *container) addNode(provider *providerDescriptor, key *moduleKey) (inter
 	return node, nil
 }
 
+// supply registers a value directly in the container.
 func (c *container) supply(value reflect.Value, location Location) error {
 	typ := value.Type()
 	locGrapNode := c.locationGraphNode(location, nil)
@@ -355,6 +361,7 @@ func (c *container) supply(value reflect.Value, location Location) error {
 	return nil
 }
 
+// addInvoker registers an invoker function in the container.
 func (c *container) addInvoker(provider *providerDescriptor, key *moduleKey) error {
 	// make sure there are no outputs
 	if len(provider.Outputs) > 0 {
@@ -369,6 +376,9 @@ func (c *container) addInvoker(provider *providerDescriptor, key *moduleKey) err
 	return nil
 }
 
+// resolve resolves a dependency for a given provider input.
+// It checks if the type is a module key or an optional dependency,
+// and then tries to resolve it using the registered resolvers.
 func (c *container) resolve(in providerInput, moduleKey *moduleKey, caller Location) (reflect.Value, error) {
 	c.resolveStack = append(c.resolveStack, resolveFrame{loc: caller, typ: in.Type})
 
@@ -421,6 +431,8 @@ func (c *container) resolve(in providerInput, moduleKey *moduleKey, caller Locat
 	return res, nil
 }
 
+// build constructs the dependency injection container by resolving and setting the provided outputs.
+// It also calls all registered invokers after the container is built.
 func (c *container) build(loc Location, outputs ...interface{}) error {
 	var providerIn []providerInput
 	for _, output := range outputs {
@@ -494,7 +506,8 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 	return nil
 }
 
-func (c container) formatResolveStack() string {
+// formatResolveStack formats the current resolve stack into a human-readable string.
+func (c *container) formatResolveStack() string {
 	buf := &bytes.Buffer{}
 	_, _ = fmt.Fprintf(buf, "\twhile resolving:\n")
 	n := len(c.resolveStack)
@@ -505,6 +518,7 @@ func (c container) formatResolveStack() string {
 	return buf.String()
 }
 
+// fullyQualifiedTypeName returns the fully qualified name of a type, including the package path.
 func fullyQualifiedTypeName(typ reflect.Type) string {
 	pkgType := typ
 	if typ.Kind() == reflect.Pointer || typ.Kind() == reflect.Slice || typ.Kind() == reflect.Map || typ.Kind() == reflect.Array {

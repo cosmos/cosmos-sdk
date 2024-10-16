@@ -37,6 +37,7 @@ func (stringKey[T]) Size(key T) int {
 	return len(key)
 }
 
+// EncodeNonTerminal writes the string key to the provided buffer in non-terminal encoding format.
 func (stringKey[T]) EncodeNonTerminal(buffer []byte, key T) (int, error) {
 	for i := range key {
 		c := key[i]
@@ -49,6 +50,7 @@ func (stringKey[T]) EncodeNonTerminal(buffer []byte, key T) (int, error) {
 	return len(key) + 1, nil
 }
 
+// DecodeNonTerminal reads a string key from the provided buffer in non-terminal encoding format.
 func (stringKey[T]) DecodeNonTerminal(buffer []byte) (int, T, error) {
 	i := bytes.IndexByte(buffer, StringDelimiter)
 	if i == -1 {

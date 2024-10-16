@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -45,8 +46,9 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	BankKeeper keeper.BaseKeeper
-	Module     appmodule.AppModule
+	BankKeeper     keeper.BaseKeeper
+	Module         appmodule.AppModule
+	ModuleAccounts []runtime.ModuleAccount
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -93,7 +95,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
 
-	return ModuleOutputs{BankKeeper: bankKeeper, Module: m}
+	return ModuleOutputs{BankKeeper: bankKeeper, Module: m, ModuleAccounts: []runtime.ModuleAccount{types.ModuleName, "blahhh"}}
 }
 
 func InvokeSetSendRestrictions(

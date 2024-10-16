@@ -14,6 +14,7 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
@@ -161,6 +162,18 @@ type AppInputs struct {
 	AppOptions        servertypes.AppOptions `optional:"true"` // can be nil in client wiring
 }
 
+func SetupModuleAccountsService(
+	accounts []ModuleAccount,
+	service moduleaccounts.Service,
+) error {
+	for _, acc := range accounts {
+		if err := service.Register(string(acc)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func SetupAppBuilder(inputs AppInputs) {
 	app := inputs.AppBuilder.app
 	app.baseAppOptions = inputs.BaseAppOptions
@@ -254,6 +267,7 @@ func ProvideEnvironment(
 	app *AppBuilder,
 	msgServiceRouter *baseapp.MsgServiceRouter,
 	queryServiceRouter *baseapp.GRPCQueryRouter,
+	moduleAccount []ModuleAccount,
 ) (store.KVStoreService, store.MemoryStoreService, appmodule.Environment) {
 	var (
 		kvService    store.KVStoreService     = failingStoreService{}
@@ -268,6 +282,8 @@ func ProvideEnvironment(
 		memStoreKey := ProvideMemoryStoreKey(config, key, app)
 		memKvService = memStoreService{key: memStoreKey}
 	}
+
+	fmt.Println("ProvideEnvironment", moduleAccount)
 
 	return kvService, memKvService, NewEnvironment(
 		kvService,

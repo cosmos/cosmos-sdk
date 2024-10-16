@@ -43,7 +43,7 @@ type Store interface {
 	Query(storeKey []byte, version uint64, key []byte, prove bool) (storev2.QueryResult, error)
 
 	// GetStateStorage returns the SS backend.
-	GetStateStorage() storev2.VersionedDatabase
+	GetStateStorage() storev2.VersionedWriter
 
 	// GetStateCommitment returns the SC backend.
 	GetStateCommitment() storev2.Committer

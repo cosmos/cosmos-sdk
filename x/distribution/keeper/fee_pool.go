@@ -32,3 +32,24 @@ func (k Keeper) DistributeFromFeePool(ctx context.Context, amount sdk.Coins, rec
 
 	return k.FeePool.Set(ctx, feePool)
 }
+
+func (k Keeper) GetFeePool(ctx context.Context) (feePool types.FeePool) {
+	store := k.storeService.OpenKVStore(ctx)
+	b, err := store.Get(types.FeePoolKey)
+	if b == nil {
+		panic("Stored fee pool should not have been nil")
+	}
+	if err != nil {
+		panic(err)
+	}
+	k.cdc.MustUnmarshal(b, &feePool)
+
+	return
+}
+
+// set the global fee pool distribution info
+func (k Keeper) SetFeePool(ctx context.Context, feePool types.FeePool) {
+	store := k.storeService.OpenKVStore(ctx)
+	b := k.cdc.MustMarshal(&feePool)
+	store.Set(types.FeePoolKey, b)
+}

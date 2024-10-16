@@ -343,4 +343,5 @@ func (pva PeriodicLockingAccount) RegisterExecuteHandlers(builder *accountstd.Ex
 func (pva PeriodicLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, pva.QueryLockupAccountInfo)
 	accountstd.RegisterQueryHandler(builder, pva.QueryLockingPeriods)
+	accountstd.RegisterQueryHandler(builder, pva.QueryUnbondingEntries)
 }

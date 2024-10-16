@@ -25,11 +25,13 @@ message Period {
 
 // UnbondingEntry defines an entry tracking the lockup account unbonding operation.
 message UnbondingEntry {
+  // entry id
+  uint64 id = 1;
   // end time of entry
-  google.protobuf.Timestamp end_time = 1
+  google.protobuf.Timestamp end_time = 2
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
   // unbond amount
-  cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // validator address
-  string validator_address = 3 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  string validator_address = 4 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }

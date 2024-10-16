@@ -43,6 +43,15 @@ message QueryLockupAccountInfoResponse {
   string owner = 8;
 }
 
+// QueryUnbondingEntriesRequest is used to query the lockup account unbonding entries.
+message QueryUnbondingEntriesRequest {}
+
+// QueryUnbondingEntriesResponse returns the lockup account unbonding entries.
+message QueryUnbondingEntriesResponse {
+  // UnbondingEntry defines the list of unbonding entries.
+  repeated UnbondingEntry unbonding_entries = 1;
+}
+
 // QueryLockingPeriodsRequest is used to query the periodic lockup account locking periods.
 message QueryLockingPeriodsRequest {}
 

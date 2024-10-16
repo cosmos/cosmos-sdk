@@ -109,13 +109,10 @@ func TestDelayedAccountUndelegate(t *testing.T) {
 	require.True(t, ubdEntry.Amount.Amount.Equal(math.NewInt(1)))
 	require.True(t, ubdEntry.ValidatorAddress == "val_address")
 
-	// manually update entry end time since msgUndelegateResponse are mocks
-	// so no actual end time can be set
-	ubdEntry.EndTime = time.Now()
-	err = acc.UnbondEntries.Set(sdkCtx, ubdSeq-1, ubdEntry)
-	require.NoError(t, err)
-
-	err = acc.TrackUnbondingEntries(sdkCtx)
+	_, err = acc.TrackUndelegationEntry(sdkCtx, &lockuptypes.MsgTrackUndelegation{
+		Sender: "owner",
+		Id:     ubdSeq - 1,
+	})
 	require.NoError(t, err)
 
 	delLocking, err = acc.DelegatedLocking.Get(ctx, "test")

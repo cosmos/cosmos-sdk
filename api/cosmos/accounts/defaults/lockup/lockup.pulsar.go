@@ -593,6 +593,7 @@ func (x *fastReflection_Period) ProtoMethods() *protoiface.Methods {
 
 var (
 	md_UnbondingEntry                   protoreflect.MessageDescriptor
+	fd_UnbondingEntry_id                protoreflect.FieldDescriptor
 	fd_UnbondingEntry_end_time          protoreflect.FieldDescriptor
 	fd_UnbondingEntry_amount            protoreflect.FieldDescriptor
 	fd_UnbondingEntry_validator_address protoreflect.FieldDescriptor
@@ -601,6 +602,7 @@ var (
 func init() {
 	file_cosmos_accounts_defaults_lockup_lockup_proto_init()
 	md_UnbondingEntry = File_cosmos_accounts_defaults_lockup_lockup_proto.Messages().ByName("UnbondingEntry")
+	fd_UnbondingEntry_id = md_UnbondingEntry.Fields().ByName("id")
 	fd_UnbondingEntry_end_time = md_UnbondingEntry.Fields().ByName("end_time")
 	fd_UnbondingEntry_amount = md_UnbondingEntry.Fields().ByName("amount")
 	fd_UnbondingEntry_validator_address = md_UnbondingEntry.Fields().ByName("validator_address")
@@ -671,6 +673,12 @@ func (x *fastReflection_UnbondingEntry) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_UnbondingEntry) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Id != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Id)
+		if !f(fd_UnbondingEntry_id, value) {
+			return
+		}
+	}
 	if x.EndTime != nil {
 		value := protoreflect.ValueOfMessage(x.EndTime.ProtoReflect())
 		if !f(fd_UnbondingEntry_end_time, value) {
@@ -704,6 +712,8 @@ func (x *fastReflection_UnbondingEntry) Range(f func(protoreflect.FieldDescripto
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_UnbondingEntry) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
+	case "cosmos.accounts.defaults.lockup.UnbondingEntry.id":
+		return x.Id != uint64(0)
 	case "cosmos.accounts.defaults.lockup.UnbondingEntry.end_time":
 		return x.EndTime != nil
 	case "cosmos.accounts.defaults.lockup.UnbondingEntry.amount":
@@ -726,6 +736,8 @@ func (x *fastReflection_UnbondingEntry) Has(fd protoreflect.FieldDescriptor) boo
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_UnbondingEntry) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
+	case "cosmos.accounts.defaults.lockup.UnbondingEntry.id":
+		x.Id = uint64(0)
 	case "cosmos.accounts.defaults.lockup.UnbondingEntry.end_time":
 		x.EndTime = nil
 	case "cosmos.accounts.defaults.lockup.UnbondingEntry.amount":
@@ -748,6 +760,9 @@ func (x *fastReflection_UnbondingEntry) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_UnbondingEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
+	case "cosmos.accounts.defaults.lockup.UnbondingEntry.id":
+		value := x.Id
+		return protoreflect.ValueOfUint64(value)
 	case "cosmos.accounts.defaults.lockup.UnbondingEntry.end_time":
 		value := x.EndTime
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
@@ -777,6 +792,8 @@ func (x *fastReflection_UnbondingEntry) Get(descriptor protoreflect.FieldDescrip
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_UnbondingEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
+	case "cosmos.accounts.defaults.lockup.UnbondingEntry.id":
+		x.Id = value.Uint()
 	case "cosmos.accounts.defaults.lockup.UnbondingEntry.end_time":
 		x.EndTime = value.Message().Interface().(*timestamppb.Timestamp)
 	case "cosmos.accounts.defaults.lockup.UnbondingEntry.amount":
@@ -813,6 +830,8 @@ func (x *fastReflection_UnbondingEntry) Mutable(fd protoreflect.FieldDescriptor)
 			x.Amount = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
+	case "cosmos.accounts.defaults.lockup.UnbondingEntry.id":
+		panic(fmt.Errorf("field id of message cosmos.accounts.defaults.lockup.UnbondingEntry is not mutable"))
 	case "cosmos.accounts.defaults.lockup.UnbondingEntry.validator_address":
 		panic(fmt.Errorf("field validator_address of message cosmos.accounts.defaults.lockup.UnbondingEntry is not mutable"))
 	default:
@@ -828,6 +847,8 @@ func (x *fastReflection_UnbondingEntry) Mutable(fd protoreflect.FieldDescriptor)
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_UnbondingEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "cosmos.accounts.defaults.lockup.UnbondingEntry.id":
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.accounts.defaults.lockup.UnbondingEntry.end_time":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
@@ -905,6 +926,9 @@ func (x *fastReflection_UnbondingEntry) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
+		if x.Id != 0 {
+			n += 1 + runtime.Sov(uint64(x.Id))
+		}
 		if x.EndTime != nil {
 			l = options.Size(x.EndTime)
 			n += 1 + l + runtime.Sov(uint64(l))
@@ -951,7 +975,7 @@ func (x *fastReflection_UnbondingEntry) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], x.ValidatorAddress)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ValidatorAddress)))
 			i--
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x22
 		}
 		if x.Amount != nil {
 			encoded, err := options.Marshal(x.Amount)
@@ -965,7 +989,7 @@ func (x *fastReflection_UnbondingEntry) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
-			dAtA[i] = 0x12
+			dAtA[i] = 0x1a
 		}
 		if x.EndTime != nil {
 			encoded, err := options.Marshal(x.EndTime)
@@ -979,7 +1003,12 @@ func (x *fastReflection_UnbondingEntry) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
-			dAtA[i] = 0xa
+			dAtA[i] = 0x12
+		}
+		if x.Id != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Id))
+			i--
+			dAtA[i] = 0x8
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -1031,6 +1060,25 @@ func (x *fastReflection_UnbondingEntry) ProtoMethods() *protoiface.Methods {
 			}
 			switch fieldNum {
 			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				}
+				x.Id = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Id |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field EndTime", wireType)
 				}
@@ -1066,7 +1114,7 @@ func (x *fastReflection_UnbondingEntry) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 2:
+			case 3:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
 				}
@@ -1102,7 +1150,7 @@ func (x *fastReflection_UnbondingEntry) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 3:
+			case 4:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
 				}
@@ -1233,12 +1281,14 @@ type UnbondingEntry struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// entry id
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	// end time of entry
-	EndTime *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	EndTime *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
 	// unbond amount
-	Amount *v1beta1.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
+	Amount *v1beta1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 	// validator address
-	ValidatorAddress string `protobuf:"bytes,3,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
+	ValidatorAddress string `protobuf:"bytes,4,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
 }
 
 func (x *UnbondingEntry) Reset() {
@@ -1259,6 +1309,13 @@ func (*UnbondingEntry) ProtoMessage() {}
 // Deprecated: Use UnbondingEntry.ProtoReflect.Descriptor instead.
 func (*UnbondingEntry) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_defaults_lockup_lockup_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *UnbondingEntry) GetId() uint64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
 }
 
 func (x *UnbondingEntry) GetEndTime() *timestamppb.Timestamp {
@@ -1312,18 +1369,19 @@ var file_cosmos_accounts_defaults_lockup_lockup_proto_rawDesc = []byte{
 	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73,
 	0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x9a, 0xe7,
 	0xb0, 0x2a, 0x0c, 0x6c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x5f, 0x63, 0x6f, 0x69, 0x6e, 0x73, 0xa8,
-	0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xe4, 0x01, 0x0a,
+	0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xf4, 0x01, 0x0a,
 	0x0e, 0x55, 0x6e, 0x62, 0x6f, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12,
-	0x44, 0x0a, 0x08, 0x65, 0x6e, 0x64, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12,
+	0x44, 0x0a, 0x08, 0x65, 0x6e, 0x64, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28,
 	0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x0d, 0xc8,
 	0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x07, 0x65, 0x6e,
 	0x64, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x3c, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
 	0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e,
 	0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x61, 0x6d, 0x6f,
 	0x75, 0x6e, 0x74, 0x12, 0x4e, 0x0a, 0x11, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x21,
+	0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x42, 0x21,
 	0xd2, 0xb4, 0x2d, 0x1d, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64,
 	0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
 	0x67, 0x52, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72,

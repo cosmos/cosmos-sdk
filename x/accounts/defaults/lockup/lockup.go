@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"maps"
 	"slices"
 	"time"
@@ -221,6 +222,7 @@ func (bva *BaseLockup) Undelegate(
 	}
 
 	err = bva.UnbondEntries.Set(ctx, ubdSeq, lockuptypes.UnbondingEntry{
+		Id:               ubdSeq,
 		EndTime:          msgUndelegateResp.CompletionTime,
 		Amount:           msgUndelegateResp.Amount,
 		ValidatorAddress: msg.ValidatorAddress,
@@ -232,29 +234,37 @@ func (bva *BaseLockup) Undelegate(
 	return &lockuptypes.MsgExecuteMessagesResponse{Responses: resp}, nil
 }
 
-// loops through all unbonding entries and tracks all matured entries
-func (bva *BaseLockup) TrackUnbondingEntries(ctx context.Context) error {
+func (bva *BaseLockup) TrackUndelegationEntry(
+	ctx context.Context, msg *lockuptypes.MsgTrackUndelegation,
+) (
+	*lockuptypes.MsgExecuteMessagesResponse, error,
+) {
+	err := bva.checkSender(ctx, msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+	entry, err := bva.UnbondEntries.Get(ctx, msg.Id)
+	if err != nil {
+		return nil, err
+	}
+
 	hs := bva.headerService.HeaderInfo(ctx)
-	err := bva.UnbondEntries.Walk(ctx, nil, func(key uint64, value lockuptypes.UnbondingEntry) (stop bool, err error) {
-		if value.EndTime.Before(hs.Time) {
-			return false, nil
-		}
+	if entry.EndTime.After(hs.Time) {
+		return nil, fmt.Errorf("unbonding not matured yet, expecting end time at: %s", entry.EndTime.String())
+	}
 
-		err = bva.TrackUndelegation(ctx, sdk.NewCoins(value.Amount))
-		if err != nil {
-			return true, err
-		}
+	err = bva.TrackUndelegation(ctx, sdk.NewCoins(entry.Amount))
+	if err != nil {
+		return nil, err
+	}
 
-		// remove entry
-		err = bva.UnbondEntries.Remove(ctx, key)
-		if err != nil {
-			return true, err
-		}
+	// remove entry
+	err = bva.UnbondEntries.Remove(ctx, msg.Id)
+	if err != nil {
+		return nil, err
+	}
 
-		return false, nil
-	})
-
-	return err
+	return &lockuptypes.MsgExecuteMessagesResponse{}, nil
 }
 
 func (bva *BaseLockup) WithdrawReward(
@@ -310,12 +320,6 @@ func (bva *BaseLockup) SendCoins(
 		return nil, err
 	}
 
-	// tracking all matured unbonding entries before check sendable tokens
-	err = bva.TrackUnbondingEntries(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	err = bva.checkTokensSendable(ctx, fromAddress, msg.Amount, lockedCoins)
 	if err != nil {
 		return nil, err
@@ -360,12 +364,6 @@ func (bva *BaseLockup) WithdrawUnlockedCoins(
 
 	hs := bva.headerService.HeaderInfo(ctx)
 	lockedCoins, err := getLockedCoinsFunc(ctx, hs.Time, uniqueDenoms...)
-	if err != nil {
-		return nil, err
-	}
-
-	// tracking all matured unbonding entries
-	err = bva.TrackUnbondingEntries(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -730,7 +728,25 @@ func (bva BaseLockup) QueryLockupAccountBaseInfo(ctx context.Context, _ *lockupt
 	}, nil
 }
 
+func (bva BaseLockup) QueryUnbondingEntries(ctx context.Context, _ *lockuptypes.QueryUnbondingEntriesRequest) (
+	*lockuptypes.QueryUnbondingEntriesResponse, error,
+) {
+	entries := []*lockuptypes.UnbondingEntry{}
+	err := bva.UnbondEntries.Walk(ctx, nil, func(key uint64, value lockuptypes.UnbondingEntry) (stop bool, err error) {
+		entries = append(entries, &value)
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &lockuptypes.QueryUnbondingEntriesResponse{
+		UnbondingEntries: entries,
+	}, nil
+}
+
 func (bva BaseLockup) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, bva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, bva.WithdrawReward)
+	accountstd.RegisterExecuteHandler(builder, bva.TrackUndelegationEntry)
 }

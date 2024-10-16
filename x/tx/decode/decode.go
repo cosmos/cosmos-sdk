@@ -13,7 +13,6 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/tx/signing"
 )
@@ -32,8 +31,11 @@ type DecodedTx struct {
 	cachedBytes  []byte
 	cachedHashed bool
 }
-
-var _ transaction.Tx = &DecodedTx{}
+type Msg = interface {
+	Reset()
+	String() string
+	ProtoMessage()
+}
 
 type gogoProtoCodec interface {
 	Unmarshal([]byte, gogoproto.Message) error
@@ -192,7 +194,7 @@ func (dtx *DecodedTx) GetGasLimit() (uint64, error) {
 	return dtx.Tx.AuthInfo.Fee.GasLimit, nil
 }
 
-func (dtx *DecodedTx) GetMessages() ([]transaction.Msg, error) {
+func (dtx *DecodedTx) GetMessages() ([]Msg, error) {
 	if dtx == nil || dtx.Messages == nil {
 		return nil, errors.New("messages not available or are nil")
 	}

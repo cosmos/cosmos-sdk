@@ -36,6 +36,10 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	panic("rocksdb requires a build flag")
 }
 
+func (db *Database) VersionExists(version uint64) (bool, error) {
+	panic("rocksdb requires a build flag")
+}
+
 func (db *Database) Has(storeKey []byte, version uint64, key []byte) (bool, error) {
 	panic("rocksdb requires a build flag")
 }

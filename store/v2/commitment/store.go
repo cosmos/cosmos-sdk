@@ -275,6 +275,7 @@ func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]p
 	return []proof.CommitmentOp{commitOp, *storeCommitmentOp}, nil
 }
 
+// Get implements store.VersionedReader.
 func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
 	tree, ok := c.multiTrees[conv.UnsafeBytesToStr(storeKey)]
 	if !ok {

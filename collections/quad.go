@@ -106,7 +106,6 @@ type quadKeyCodec[K1, K2, K3, K4 any] struct {
 
 type jsonQuadKey [4]json.RawMessage
 
-
 // EncodeJSON encodes Quads to json
 func (t quadKeyCodec[K1, K2, K3, K4]) EncodeJSON(value Quad[K1, K2, K3, K4]) ([]byte, error) {
 	json1, err := t.keyCodec1.EncodeJSON(*value.k1)
@@ -210,7 +209,6 @@ func (t quadKeyCodec[K1, K2, K3, K4]) KeyType() string {
 	return fmt.Sprintf("Quad[%s,%s,%s,%s]", t.keyCodec1.KeyType(), t.keyCodec2.KeyType(), t.keyCodec3.KeyType(), t.keyCodec4.KeyType())
 }
 
-
 func (t quadKeyCodec[K1, K2, K3, K4]) Encode(buffer []byte, key Quad[K1, K2, K3, K4]) (int, error) {
 	writtenTotal := 0
 	if key.k1 != nil {
@@ -243,8 +241,6 @@ func (t quadKeyCodec[K1, K2, K3, K4]) Encode(buffer []byte, key Quad[K1, K2, K3,
 	}
 	return writtenTotal, nil
 }
-
-
 func (t quadKeyCodec[K1, K2, K3, K4]) Decode(buffer []byte) (int, Quad[K1, K2, K3, K4], error) {
 	readTotal := 0
 	read, key1, err := t.keyCodec1.DecodeNonTerminal(buffer)

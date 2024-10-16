@@ -66,9 +66,9 @@ func (s *Server[T]) Start(ctx context.Context) error {
 		Handler: s.router,
 	}
 
-	s.logger.Info("Starting HTTP server", "address", s.config.Address)
+	s.logger.Info("starting HTTP server", "address", s.config.Address)
 	if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		s.logger.Error("Failed to start HTTP server", "error", err)
+		s.logger.Error("failed to start HTTP server", "error", err)
 		return err
 	}
 
@@ -80,7 +80,7 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 		return nil
 	}
 
-	s.logger.Info("Stopping HTTP server")
+	s.logger.Info("stopping HTTP server")
 
 	return s.httpServer.Shutdown(ctx)
 }

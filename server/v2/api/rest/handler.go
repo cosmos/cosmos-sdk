@@ -8,10 +8,11 @@ import (
 	"reflect"
 	"strings"
 
-	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/server/v2/appmanager"
 	"github.com/cosmos/gogoproto/jsonpb"
 	gogoproto "github.com/cosmos/gogoproto/proto"
+
+	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/server/v2/appmanager"
 )
 
 const (

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"cosmossdk.io/math"
@@ -30,8 +29,8 @@ func (k Keeper) GetWithdrawAddrEnabled(ctx context.Context) (enabled bool, err e
 }
 
 // GetParams returns the total set of distribution parameters.
-func (k Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
-	store := k.storeService.OpenKVStore(clientCtx)
+func (k Keeper) GetParams(ctx context.Context) (params types.Params) {
+	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.ParamsKey)
 	// Should return error or params?
 	if err != nil {
@@ -46,7 +45,7 @@ func (k Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
 }
 
 // SetParams sets the distribution parameters to the param space.
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
+func (k Keeper) SetParams(ctx context.Context, params types.Params) error {
 	if err := params.ValidateBasic(); err != nil {
 		return err
 	}

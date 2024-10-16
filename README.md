@@ -1,3 +1,9 @@
+# Warning!  Achtung!  
+
+This branch of the cosmos-sdk contains contributons authored by North Korean state actors, and should not be used.
+
+
+
 <div align="center">
   <h1> Cosmos SDK </h1>
 </div>

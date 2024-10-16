@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -20,4 +19,9 @@ func (k Keeper) GetValidatorOutstandingRewardsCoins(ctx context.Context, val sdk
 // GetDistributionAccount returns the distribution ModuleAccount
 func (k Keeper) GetDistributionAccount(ctx context.Context) sdk.ModuleAccountI {
 	return k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
+}
+
+// get the community coins
+func (k Keeper) GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins {
+	return k.GetFeePool(ctx).CommunityPool
 }

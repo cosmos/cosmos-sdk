@@ -30,7 +30,7 @@ type autoCLIKeyring interface {
 	KeyInfo(name string) (string, string, uint, error)
 }
 
-// NewAutoCLIKeyring wraps the SDK keyring and make it compatible with the AutoCLI keyring interfaces.
+// NewAutoCLIKeyring wraps the SDK keyring and makes it compatible with the AutoCLI keyring interfaces.
 func NewAutoCLIKeyring(kr Keyring, ac address.Codec) (autoCLIKeyring, error) {
 	return &autoCLIKeyringAdapter{kr, ac}, nil
 }
@@ -40,6 +40,7 @@ type autoCLIKeyringAdapter struct {
 	ac address.Codec
 }
 
+// List returns the names of all keys stored in the keyring.
 func (a *autoCLIKeyringAdapter) List() ([]string, error) {
 	list, err := a.Keyring.List()
 	if err != nil {
@@ -69,6 +70,7 @@ func (a *autoCLIKeyringAdapter) LookupAddressByKeyName(name string) ([]byte, err
 	return addr, nil
 }
 
+// GetPubKey returns the public key of the key with the given name.
 func (a *autoCLIKeyringAdapter) GetPubKey(name string) (cryptotypes.PubKey, error) {
 	record, err := a.Keyring.Key(name)
 	if err != nil {
@@ -78,6 +80,7 @@ func (a *autoCLIKeyringAdapter) GetPubKey(name string) (cryptotypes.PubKey, erro
 	return record.GetPubKey()
 }
 
+// Sign signs the given bytes with the key with the given name.
 func (a *autoCLIKeyringAdapter) Sign(name string, msg []byte, signMode signingv1beta1.SignMode) ([]byte, error) {
 	record, err := a.Keyring.Key(name)
 	if err != nil {
@@ -93,6 +96,7 @@ func (a *autoCLIKeyringAdapter) Sign(name string, msg []byte, signMode signingv1
 	return signBytes, err
 }
 
+// KeyType returns the type of the key with the given name.
 func (a *autoCLIKeyringAdapter) KeyType(name string) (uint, error) {
 	record, err := a.Keyring.Key(name)
 	if err != nil {
@@ -102,6 +106,7 @@ func (a *autoCLIKeyringAdapter) KeyType(name string) (uint, error) {
 	return uint(record.GetType()), nil
 }
 
+// KeyInfo returns key name, key address, and key type given a key name or address.
 func (a *autoCLIKeyringAdapter) KeyInfo(nameOrAddr string) (string, string, uint, error) {
 	addr, err := a.ac.StringToBytes(nameOrAddr)
 	if err != nil {

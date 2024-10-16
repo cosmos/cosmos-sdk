@@ -107,7 +107,7 @@ func (k Keeper) AddCollectedFees(ctx context.Context, fees sdk.Coins) error {
 }
 
 // GetMinter returns the minter.
-func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
+func (k Keeper) GetMinter(ctx context.Context) (minter types.Minter) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.MinterKey)
 	if err != nil {
@@ -123,14 +123,14 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 }
 
 // SetMinter sets the minter.
-func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
+func (k Keeper) SetMinter(ctx context.Context, minter types.Minter) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz := k.cdc.MustMarshal(&minter)
 	store.Set(types.MinterKey, bz)
 }
 
 // SetParams sets the x/mint module parameters.
-func (k Keeper) SetParams(ctx sdk.Context, p types.Params) error {
+func (k Keeper) SetParams(ctx context.Context, p types.Params) error {
 	if err := p.Validate(); err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func (k Keeper) SetParams(ctx sdk.Context, p types.Params) error {
 }
 
 // GetParams returns the current x/mint module parameters.
-func (k Keeper) GetParams(ctx sdk.Context) (p types.Params) {
+func (k Keeper) GetParams(ctx context.Context) (p types.Params) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.ParamsKey)
 	if err != nil {

@@ -37,6 +37,8 @@ type (
 	Option func(Broadcaster)
 )
 
+var _ factory = broadcasterFactory{}
+
 // broadcasterFactory is a factory for creating Broadcaster instances.
 type broadcasterFactory struct{}
 

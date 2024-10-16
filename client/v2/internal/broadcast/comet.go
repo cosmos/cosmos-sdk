@@ -18,6 +18,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+var _ Broadcaster = CometBftBroadcaster{}
+
 // CometBftBroadcaster implements the Broadcaster interface for CometBFT consensus engine.
 type CometBftBroadcaster struct {
 	rpcClient serverrpc.CometRPC

@@ -22,6 +22,6 @@ func (k Keeper) GetDistributionAccount(ctx context.Context) sdk.ModuleAccountI {
 }
 
 // get the community coins
-func (k Keeper) GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins {
+func (k Keeper) GetFeePoolCommunityCoins(ctx context.Context) sdk.DecCoins {
 	return k.GetFeePool(ctx).CommunityPool
 }

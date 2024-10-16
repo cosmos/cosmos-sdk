@@ -144,7 +144,7 @@ func createStartCommand[T transaction.Tx](
 }
 
 // wrapCPUProfile starts CPU profiling, if enabled, and executes the provided
-// callbackFn in a separate goroutine, then will wait for that callback to return.
+// callbackFn, then waits for it to return.
 func wrapCPUProfile(logger log.Logger, v *viper.Viper, callbackFn func() error) error {
 	cpuProfileFile := v.GetString(FlagCPUProfiling)
 	if len(cpuProfileFile) == 0 {
@@ -159,6 +159,7 @@ func wrapCPUProfile(logger log.Logger, v *viper.Viper, callbackFn func() error) 
 
 	logger.Info("starting CPU profiler", "profile", cpuProfileFile)
 	if err := pprof.StartCPUProfile(f); err != nil {
+		_ = f.Close()
 		return err
 	}
 

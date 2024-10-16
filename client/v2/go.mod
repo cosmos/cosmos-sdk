@@ -6,6 +6,8 @@ require (
 	cosmossdk.io/api v0.7.6
 	cosmossdk.io/core v1.0.0-alpha.4
 	cosmossdk.io/depinject v1.0.0
+	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
+	cosmossdk.io/server/v2/cometbft v0.0.0-20241015140036-ee3d320eaa55
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
 	cosmossdk.io/x/tx v0.13.3
@@ -13,6 +15,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
+	go.uber.org/mock v0.4.0
 	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.35.1
 	gotest.tools/v3 v3.5.1
@@ -27,7 +30,7 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/log v1.4.1 // indirect
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
+	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
 	cosmossdk.io/x/staking v0.0.0-00010101000000-000000000000 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -47,7 +50,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.2 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f // indirect
+	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
 	github.com/cometbft/cometbft-db v0.15.0 // indirect
 	github.com/cometbft/cometbft/api v1.0.0-rc.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
@@ -175,8 +178,12 @@ replace github.com/cosmos/cosmos-sdk => ./../../
 // TODO remove post spinning out all modules
 replace (
 	cosmossdk.io/api => ./../../api
+	cosmossdk.io/server/v2 => ./../../server/v2
+	cosmossdk.io/server/v2/cometbft => ./../../server/v2/cometbft
 	cosmossdk.io/store => ./../../store
+	cosmossdk.io/store/v2 => ./../../store/v2
 	cosmossdk.io/x/bank => ./../../x/bank
+	cosmossdk.io/x/consensus => ./../../x/consensus
 	cosmossdk.io/x/gov => ./../../x/gov
 	cosmossdk.io/x/staking => ./../../x/staking
 	cosmossdk.io/x/tx => ./../../x/tx

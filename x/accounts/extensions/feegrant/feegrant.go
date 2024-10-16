@@ -1,6 +1,7 @@
 package feegrant
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"time"
@@ -138,16 +139,19 @@ func (f Feegrant) GetAllowance(ctx context.Context, grantee sdk.AccAddress) (xfe
 }
 
 func (f Feegrant) UseGrantedFees(ctx context.Context, msg *v1.MsgUseGrantedFees) (*v1.MsgUseGrantedFeesResponse, error) {
+	grantee, err := f.addressCodec.StringToBytes(msg.Grantee)
+	if err != nil {
+		return nil, err
+	}
+	if !bytes.Equal(accountstd.Sender(ctx), grantee) {
+		return nil, errors.New("unauthorized")
+	}
 	// todo: who should be authorized? x/feegrant module? or make this a setup param?
 	//if !accountstd.SenderIsAccountsModule(ctx) {
 	//	return nil, errors.New("unauthorized: only accounts module is allowed to call this")
 	//}
 
 	msgs, err := msg.GetMessages()
-	if err != nil {
-		return nil, err
-	}
-	grantee, err := f.addressCodec.StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +193,7 @@ func (f Feegrant) doUseGrantedFees(ctx context.Context, grantee sdk.AccAddress, 
 	}
 
 	// if fee allowance is accepted, store the updated state of the allowance
-	return f.UpdateAllowance(ctx, granter, grantee, grant)
+	return f.updateAllowance(ctx, granter, grantee, grant)
 }
 
 func (f Feegrant) emitUseGrantEvent(ctx context.Context, granter, grantee string) error {
@@ -200,7 +204,7 @@ func (f Feegrant) emitUseGrantEvent(ctx context.Context, granter, grantee string
 	)
 }
 
-func (f Feegrant) UpdateAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance xfeegrant.FeeAllowanceI) error {
+func (f Feegrant) updateAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance xfeegrant.FeeAllowanceI) error {
 	_, err := f.GetAllowance(ctx, grantee)
 	if err != nil {
 		return err

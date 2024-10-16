@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Cosmos Blockchain Simulator
 
-The Cosmos SDK offers a full fledged simulation framework to fuzz test every
+The Cosmos SDK offers a full fledged simulation framework to [fuzz test](https://en.wikipedia.org/wiki/Fuzzing) every
 message defined by a module.
 
 On the Cosmos SDK, this functionality is provided by [`SimApp`](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_v2.go), which is a `Baseapp` application that is used for running the [`simulation`](https://github.com/cosmos/cosmos-sdk/blob/23cf89cce1882ba9c8280e64735ae200504bfdce/simsx/README.md#L1) package. This package defines all the simulation logic as well as the operations for randomized parameters like accounts, balances etc.
@@ -17,16 +17,15 @@ Its main difference with integration testing is that the simulator app allows yo
 
 ## Simulation commands
 
-The simulation app has different commands, each of which tests a different
+The simulation test setup has different scenarios, each of which tests a different
 failure type:
 
 * `AppImportExport`: The simulator exports the initial app state and then it creates a new app with the exported `genesis.json` as an input, checking for inconsistencies between the stores.
 * `AppSimulationAfterImport`: Queues two simulations together. The first one provides the app state (_i.e_ genesis) to the second. Useful to test software upgrades or hard-forks from a live chain.
-* `AppStateDeterminism`: Checks that all the nodes return the same values, in the same order.
+* `AppStateDeterminism`: Runs a few seeds many times to test that the apphash is deterministic across the runs.
 * `BenchmarkInvariants`: Analysis of the performance of running all modules' invariants (_i.e_ sequentially runs a [benchmark](https://pkg.go.dev/testing/#hdr-Benchmarks) test). An invariant checks for differences between the values that are on the store and the passive tracker. Eg: total coins held by accounts vs total supply tracker.
 * `FullAppSimulation`: General simulation mode. Runs the chain and the specified operations for a given number of blocks. Tests that there're no `panics` on the simulation. It does also run invariant checks on every `Period` but they are not benchmarked.
 * `FuzzFullAppSimulation`: Runs general simulation mode with the [go fuzzer](https://go.dev/doc/security/fuzz/) to find panics.
-* `AppStateDeterminism`: Runs a few seeds many times to test that the apphash is deterministic across the runs. 
 
 Each simulation must receive a set of inputs (_i.e_ flags) such as the number of
 blocks that the simulation is run, seed, block size, etc.
@@ -66,13 +65,10 @@ Here are some suggestions when encountering a simulation failure:
   involved.
 * Reduce the simulation `-Period`. This will run the invariants checks more
   frequently.
-* Print all the failed invariants at once with `-PrintAllInvariants`.
 * Try using another `-Seed`. If it can reproduce the same error and if it fails
   sooner, you will spend less time running the simulations.
 * Reduce the `-NumBlocks` . How's the app state at the height previous to the
   failure?
-* Run invariants on every operation with `-SimulateEveryOperation`. _Note_: this
-  will slow down your simulation **a lot**.
 * Try adding logs to operations that are not logged. You will have to define a
   [Logger](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/staking/keeper/keeper.go#L65-L68) on your `Keeper`.
 

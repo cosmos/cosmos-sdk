@@ -10,7 +10,7 @@ Proposed
 
 ## Context
 
-Telemetry is paramount into debugging and understanding what the application is doing and how it is
+Telemetry is paramount in debugging and understanding what the application is doing and how it is
 performing. We aim to expose metrics from modules and other core parts of the Cosmos SDK.
 
 In addition, we should aim to support multiple configurable sinks that an operator may choose from.
@@ -148,7 +148,7 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 
 ### Positive
 
-* Exposure into the performance and behavior of an application
+* Exposure to the performance and behavior of an application
 
 ### Negative
 

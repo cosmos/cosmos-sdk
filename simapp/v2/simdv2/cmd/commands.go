@@ -15,9 +15,10 @@ import (
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/api/rest"
 	"cosmossdk.io/server/v2/api/telemetry"
 	"cosmossdk.io/server/v2/cometbft"
-	"cosmossdk.io/server/v2/store"
+	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 
@@ -55,11 +56,6 @@ func initRootCmd[T transaction.Tx](
 		NewTestnetCmd(moduleManager),
 	)
 
-	logger, err := serverv2.NewLogger(viper.New(), rootCmd.OutOrStdout())
-	if err != nil {
-		panic(fmt.Sprintf("failed to create logger: %v", err))
-	}
-
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
 		genesisCommand(moduleManager),
@@ -70,10 +66,9 @@ func initRootCmd[T transaction.Tx](
 	)
 
 	// wire server commands
-	if err = serverv2.AddCommands(
+	if err := serverv2.AddCommands(
 		rootCmd,
 		newApp,
-		logger,
 		initServerConfig(),
 		cometbft.New(
 			&genericTxDecoder[T]{txConfig},
@@ -81,8 +76,9 @@ func initRootCmd[T transaction.Tx](
 			initCometConfig(),
 		),
 		grpc.New[T](),
-		store.New[T](newApp),
+		serverstore.New[T](),
 		telemetry.New[T](),
+		rest.New[T](),
 	); err != nil {
 		panic(err)
 	}

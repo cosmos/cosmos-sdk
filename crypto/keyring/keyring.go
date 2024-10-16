@@ -376,6 +376,17 @@ func (ks keystore) ImportPubKey(uid, armor string) error {
 	return nil
 }
 
+// Sign signs a message using the private key associated with the provided UID.
+//
+// Parameters:
+// - uid: The unique identifier of the account/key to use for signing.
+// - msg: The message or data to be signed.
+// - signMode: The signing mode that specifies how the message should be signed.
+//
+// Returns:
+// - []byte: The generated signature.
+// - types.PubKey: The public key corresponding to the private key used for signing.
+// - error: Any error encountered during the signing process.
 func (ks keystore) Sign(uid string, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error) {
 	k, err := ks.Key(uid)
 	if err != nil {
@@ -536,6 +547,19 @@ func (ks keystore) List() ([]*Record, error) {
 	return ks.MigrateAll()
 }
 
+// NewMnemonic generates a new mnemonic and derives a new account from it.
+//
+// Parameters:
+// - uid: A unique identifier for the account.
+// - language: The language for the mnemonic (only English is supported).
+// - hdPath: The hierarchical deterministic (HD) path for key derivation.
+// - bip39Passphrase: The passphrase used in conjunction with the mnemonic for BIP-39.
+// - algo: The signature algorithm used for signing keys.
+//
+// Returns:
+// - *Record: A new key record that contains the private and public key information.
+// - string: The generated mnemonic phrase.
+// - error: Any error encountered during the process.
 func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (*Record, string, error) {
 	if language != English {
 		return nil, "", ErrUnsupportedLanguage
@@ -707,6 +731,15 @@ func newFileBackendKeyringConfig(name, dir string, buf io.Reader) keyring.Config
 	}
 }
 
+// newRealPrompt creates a password prompt function to retrieve or create a passphrase
+// for the keyring system.
+//
+// Parameters:
+// - dir: The directory where the keyhash file is stored.
+// - buf: An io.Reader input, typically used for reading user input (e.g., the passphrase).
+//
+// Returns:
+// - A function that accepts a prompt string and returns the passphrase or an error.
 func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 	return func(prompt string) (string, error) {
 		keyhashStored := false
@@ -896,6 +929,7 @@ func (ks keystore) writeMultisigKey(name string, pk types.PubKey) (*Record, erro
 	return k, ks.writeRecord(k)
 }
 
+// MigrateAll migrates all legacy key information stored in the keystore to the new Record format.
 func (ks keystore) MigrateAll() ([]*Record, error) {
 	keys, err := ks.db.Keys()
 	if err != nil {
@@ -1008,6 +1042,16 @@ func (ks keystore) SetItem(item keyring.Item) error {
 	return ks.db.Set(item)
 }
 
+// convertFromLegacyInfo converts a legacy account info (LegacyInfo) into a new Record format.
+// It handles different types of legacy info and creates the corresponding Record based on the type.
+//
+// Parameters:
+// - info: The legacy account information (LegacyInfo) that needs to be converted.
+//   It provides the name, public key, and other data depending on the type of account.
+
+// Returns:
+// - *Record: A pointer to the newly created Record that corresponds to the legacy account info.
+// - error: An error if the conversion fails due to invalid info or an unsupported account type.
 func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 	if info == nil {
 		return nil, errorsmod.Wrap(ErrLegacyToRecord, "info is nil")

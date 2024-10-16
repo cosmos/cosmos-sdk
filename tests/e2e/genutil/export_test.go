@@ -31,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	gentestutil "github.com/cosmos/cosmos-sdk/testutil/x/genutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -184,7 +185,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 		ChainID:  "theChainId",
 		AppState: stateBytes,
 		Consensus: &genutiltypes.ConsensusGenesis{
-			Validators: nil,
+			Validators: []sdk.GenesisValidator{},
 		},
 	}
 

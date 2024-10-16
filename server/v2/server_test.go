@@ -19,6 +19,7 @@ import (
 	grpc "cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/store"
+	storev2 "cosmossdk.io/store/v2"
 )
 
 type mockInterfaceRegistry struct{}
@@ -48,6 +49,10 @@ func (*mockApp[T]) InterfaceRegistry() coreserver.InterfaceRegistry {
 	return &mockInterfaceRegistry{}
 }
 
+func (*mockApp[T]) GetStore() storev2.RootStore {
+	return nil
+}
+
 func TestServer(t *testing.T) {
 	currentDir, err := os.Getwd()
 	require.NoError(t, err)
@@ -60,18 +65,21 @@ func TestServer(t *testing.T) {
 	cfg := v.AllSettings()
 
 	logger := log.NewLogger(os.Stdout)
+
+	ctx, err := serverv2.SetServerContext(context.Background(), v, logger)
+	require.NoError(t, err)
+
 	grpcServer := grpc.New[transaction.Tx]()
 	err = grpcServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
 	require.NoError(t, err)
 
-	storeServer := store.New[transaction.Tx](nil /* nil appCreator as not using CLI commands */)
+	storeServer := store.New[transaction.Tx]()
 	err = storeServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
 	require.NoError(t, err)
 
 	mockServer := &mockServer{name: "mock-server-1", ch: make(chan string, 100)}
 
 	server := serverv2.NewServer(
-		logger,
 		serverv2.DefaultServerConfig(),
 		grpcServer,
 		storeServer,
@@ -92,7 +100,7 @@ func TestServer(t *testing.T) {
 	require.Equal(t, v.GetString(grpcServer.Name()+".address"), grpc.DefaultConfig().Address)
 
 	// start empty
-	ctx, cancelFn := context.WithCancel(context.TODO())
+	ctx, cancelFn := context.WithCancel(ctx)
 	go func() {
 		// wait 5sec and cancel context
 		<-time.After(5 * time.Second)

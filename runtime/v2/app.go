@@ -2,14 +2,13 @@ package runtime
 
 import (
 	"encoding/json"
-	"errors"
-	"slices"
 
 	runtimev2 "cosmossdk.io/api/cosmos/app/runtime/v2"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/schema/decoding"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 )
@@ -36,8 +35,6 @@ type App[T transaction.Tx] struct {
 	logger log.Logger
 	config *runtimev2.Module
 
-	// modules configuration
-	storeKeys          []string
 	interfaceRegistrar registry.InterfaceRegistrar
 	amino              registry.AminoRegistrar
 	moduleManager      *MM[T]
@@ -93,31 +90,19 @@ func (a *App[T]) Close() error {
 	return nil
 }
 
-// GetStoreKeys returns all the app store keys.
-func (a *App[T]) GetStoreKeys() []string {
-	return a.storeKeys
-}
-
-// UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.
-// NOTE: This should only be used in testing.
-func (a *App[T]) UnsafeFindStoreKey(storeKey string) (string, error) {
-	i := slices.IndexFunc(a.storeKeys, func(s string) bool { return s == storeKey })
-	if i == -1 {
-		return "", errors.New("store key not found")
-	}
-
-	return a.storeKeys[i], nil
-}
-
-// GetStore returns the app store.
-func (a *App[T]) GetStore() Store {
-	return a.db
-}
-
 func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
 	return a.AppManager
 }
 
 func (a *App[T]) GetQueryHandlers() map[string]appmodulev2.Handler {
 	return a.QueryHandlers
+}
+
+// GetSchemaDecoderResolver returns the module schema resolver.
+func (a *App[T]) GetSchemaDecoderResolver() decoding.DecoderResolver {
+	moduleSet := map[string]any{}
+	for moduleName, module := range a.moduleManager.Modules() {
+		moduleSet[moduleName] = module
+	}
+	return decoding.ModuleSetDecoderResolver(moduleSet)
 }

@@ -105,3 +105,55 @@ func (k Keeper) MintCoins(ctx context.Context, newCoins sdk.Coins) error {
 func (k Keeper) AddCollectedFees(ctx context.Context, fees sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
 }
+
+// GetMinter returns the minter.
+func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := store.Get(types.MinterKey)
+	if err != nil {
+		panic(err)
+	}
+
+	if bz == nil {
+		panic("stored minter should not have been nil")
+	}
+
+	k.cdc.MustUnmarshal(bz, &minter)
+	return
+}
+
+// SetMinter sets the minter.
+func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
+	store := k.storeService.OpenKVStore(ctx)
+	bz := k.cdc.MustMarshal(&minter)
+	store.Set(types.MinterKey, bz)
+}
+
+// SetParams sets the x/mint module parameters.
+func (k Keeper) SetParams(ctx sdk.Context, p types.Params) error {
+	if err := p.Validate(); err != nil {
+		return err
+	}
+
+	store := k.storeService.OpenKVStore(ctx)
+	bz := k.cdc.MustMarshal(&p)
+	store.Set(types.ParamsKey, bz)
+
+	return nil
+}
+
+// GetParams returns the current x/mint module parameters.
+func (k Keeper) GetParams(ctx sdk.Context) (p types.Params) {
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := store.Get(types.ParamsKey)
+	if err != nil {
+		// TODO(boodyvo): should we return error or panic here or just return param?
+		return p
+	}
+	if bz == nil {
+		return p
+	}
+
+	k.cdc.MustUnmarshal(bz, &p)
+	return p
+}

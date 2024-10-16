@@ -6,7 +6,7 @@ sidebar_position: 1
 
 ## Address Generation
 
-Module accounts addresses are generated deterministically from the module name, as defined in ADR-028: 
+Module accounts addresses are generated deterministically from the module name, as defined in [ADR-028](../../architecture/adr-028-public-key-addresses.md) 
 
 Definition of account permissions is done during the app initialization
 

@@ -11,6 +11,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
+// TestSimulationReporterToLegacy tests the conversion of SimulationReporter to the legacy OperationMsg format.
 func TestSimulationReporterToLegacy(t *testing.T) {
 	myErr := errors.New("my-error")
 	myMsg := testdata.NewTestMsg([]byte{1})
@@ -52,7 +53,7 @@ func TestSimulationReporterToLegacy(t *testing.T) {
 			expOp:  simtypes.NewOperationMsgBasic("TestMsg", "/testpb.TestMsg", "testing1, testing2", false),
 			expErr: myErr,
 		},
-		"skipped ": {
+		"skipped": {
 			setup: func() SimulationReporter {
 				r := NewBasicSimulationReporter().WithScope(myMsg)
 				r.Skip("testing")
@@ -70,6 +71,7 @@ func TestSimulationReporterToLegacy(t *testing.T) {
 	}
 }
 
+// TestSimulationReporterTransitions tests the state transitions of the SimulationReporter.
 func TestSimulationReporterTransitions(t *testing.T) {
 	specs := map[string]struct {
 		setup     func(r SimulationReporter)
@@ -133,7 +135,9 @@ func TestSimulationReporterTransitions(t *testing.T) {
 	}
 }
 
+// TestSkipHook tests the skip hook functionality of the SimulationReporter.
 func TestSkipHook(t *testing.T) {
+	// Helper function to create a skip hook and track if it has been called
 	myHook := func() (SkipHookFn, *bool) {
 		var hookCalled bool
 		return func(args ...any) {
@@ -145,7 +149,7 @@ func TestSkipHook(t *testing.T) {
 	r.Skip("testing")
 	require.True(t, *myHookCalled)
 
-	// and with nested reporter
+	// Test with a nested reporter
 	fn, myHookCalled = myHook()
 	r = NewBasicSimulationReporter(fn)
 	fn2, myOtherHookCalled := myHook()
@@ -155,6 +159,7 @@ func TestSkipHook(t *testing.T) {
 	assert.True(t, *myOtherHookCalled)
 }
 
+// TestReporterSummary tests the summary generation of the SimulationReporter.
 func TestReporterSummary(t *testing.T) {
 	specs := map[string]struct {
 		do         func(t *testing.T, r SimulationReporter)

@@ -118,18 +118,22 @@ func (x *BasicSimulationReporter) WithScope(msg sdk.Msg, optionalSkipHook ...Ski
 	return r
 }
 
+// Skip marks the current operation as skipped with the provided comment.
 func (x *BasicSimulationReporter) Skip(comment string) {
 	x.toStatus(skipped, comment)
 }
 
+// Skipf marks the current operation as skipped with a formatted comment.
 func (x *BasicSimulationReporter) Skipf(comment string, args ...any) {
 	x.Skip(fmt.Sprintf(comment, args...))
 }
 
+// IsSkipped returns true if the operation has been skipped or completed.
 func (x *BasicSimulationReporter) IsSkipped() bool {
 	return ReporterStatus(x.status.Load()) > undefined
 }
 
+// ToLegacyOperationMsg converts the current state of the reporter to a legacy OperationMsg.
 func (x *BasicSimulationReporter) ToLegacyOperationMsg() simtypes.OperationMsg {
 	switch ReporterStatus(x.status.Load()) {
 	case skipped:
@@ -149,6 +153,7 @@ func (x *BasicSimulationReporter) ToLegacyOperationMsg() simtypes.OperationMsg {
 	}
 }
 
+// Fail marks the current operation as failed with the provided error and comments.
 func (x *BasicSimulationReporter) Fail(err error, comments ...string) {
 	if !x.toStatus(completed, comments...) {
 		return
@@ -158,6 +163,7 @@ func (x *BasicSimulationReporter) Fail(err error, comments ...string) {
 	x.error = err
 }
 
+// Success marks the current operation as successful with the provided message and comments.
 func (x *BasicSimulationReporter) Success(msg sdk.Msg, comments ...string) {
 	if !x.toStatus(completed, comments...) {
 		return
@@ -167,6 +173,7 @@ func (x *BasicSimulationReporter) Success(msg sdk.Msg, comments ...string) {
 	}
 }
 
+// Close finalizes the reporter and returns any captured error.
 func (x *BasicSimulationReporter) Close() error {
 	x.completedCallback(x)
 	x.cMX.RLock()
@@ -174,6 +181,7 @@ func (x *BasicSimulationReporter) Close() error {
 	return x.error
 }
 
+// toStatus updates the status of the reporter and handles callbacks if the status changes to skipped.
 func (x *BasicSimulationReporter) toStatus(next ReporterStatus, comments ...string) bool {
 	oldStatus := ReporterStatus(x.status.Load())
 	if oldStatus > next {
@@ -196,26 +204,31 @@ func (x *BasicSimulationReporter) toStatus(next ReporterStatus, comments ...stri
 	return true
 }
 
+// Comment returns the concatenated comments associated with the reporter.
 func (x *BasicSimulationReporter) Comment() string {
 	x.cMX.RLock()
 	defer x.cMX.RUnlock()
 	return strings.Join(x.comments, ", ")
 }
 
+// Summary returns the execution summary of the reporter.
 func (x *BasicSimulationReporter) Summary() *ExecutionSummary {
 	return x.summary
 }
 
+// ExecutionSummary holds the summary of execution results.
 type ExecutionSummary struct {
 	mx          sync.RWMutex
 	counts      map[string]int            // module to count
 	skipReasons map[string]map[string]int // msg type to reason->count
 }
 
+// NewExecutionSummary creates a new ExecutionSummary instance.
 func NewExecutionSummary() *ExecutionSummary {
 	return &ExecutionSummary{counts: make(map[string]int), skipReasons: make(map[string]map[string]int)}
 }
 
+// Add adds a new entry to the execution summary with the given module, URL, status, and comment.
 func (s *ExecutionSummary) Add(module, url string, status ReporterStatus, comment string) {
 	s.mx.Lock()
 	defer s.mx.Unlock()
@@ -232,6 +245,7 @@ func (s *ExecutionSummary) Add(module, url string, status ReporterStatus, commen
 	r[comment] += 1
 }
 
+// String returns a string representation of the execution summary.
 func (s *ExecutionSummary) String() string {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
@@ -251,6 +265,7 @@ func (s *ExecutionSummary) String() string {
 	return sb.String()
 }
 
+// sum calculates the sum of a slice of integers.
 func sum(values []int) int {
 	var r int
 	for _, v := range values {

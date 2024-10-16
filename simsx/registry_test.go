@@ -17,6 +17,8 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
+// TestSimsMsgRegistryAdapter tests the SimsMsgRegistryAdapter's ability to manage message factories,
+// including their creation, future operations registration, and error handling.
 func TestSimsMsgRegistryAdapter(t *testing.T) {
 	senderAcc := SimAccountFixture()
 	accs := []simtypes.Account{senderAcc.Account}
@@ -115,6 +117,7 @@ func TestSimsMsgRegistryAdapter(t *testing.T) {
 	}
 }
 
+// TestUniqueTypeRegistry checks the UniqueTypeRegistry's functionality in managing unique message factories.
 func TestUniqueTypeRegistry(t *testing.T) {
 	exampleFactory := SimMsgFactoryFn[*testdata.TestMsg](func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg *testdata.TestMsg) {
 		return []SimAccount{}, nil
@@ -155,6 +158,7 @@ func TestUniqueTypeRegistry(t *testing.T) {
 	}
 }
 
+// TestWeightedFactories verifies the management of weighted message factories.
 func TestWeightedFactories(t *testing.T) {
 	r := NewWeightedFactoryMethods()
 	f1 := func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
@@ -172,6 +176,7 @@ func TestWeightedFactories(t *testing.T) {
 	assert.Equal(t, uint32(2), r[1].Weight)
 }
 
+// TestAppendIterators ensures that iterators can be combined correctly.
 func TestAppendIterators(t *testing.T) {
 	r1 := NewWeightedFactoryMethods()
 	r1.Add(2, func(ctx context.Context, testData *ChainDataSource, reporter SimulationReporter) (signer []SimAccount, msg sdk.Msg) {
@@ -195,6 +200,7 @@ func TestAppendIterators(t *testing.T) {
 	assert.Equal(t, []uint32{2, 2, 3, 1}, gotWeights)
 }
 
+// readAll reads all elements from an iterator into a slice.
 func readAll(iterator WeightedProposalMsgIter) []WeightedFactoryMethod {
 	var ret []WeightedFactoryMethod
 	for w, f := range iterator {

@@ -4,17 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/cometbft/cometbft/mempool"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	cmttypes "github.com/cometbft/cometbft/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"strings"
 
 	apiacbci "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	serverrpc "cosmossdk.io/server/v2/cometbft/client/rpc"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // CometBftBroadcaster implements the Broadcaster interface for CometBFT consensus engine.
@@ -83,7 +84,8 @@ func (c CometBftBroadcaster) Broadcast(ctx context.Context, txBytes []byte) ([]b
 
 // broadcast sends a transaction to the CometBFT network using the provided function.
 func (c CometBftBroadcaster) broadcast(ctx context.Context, txbytes []byte,
-	fn func(ctx context.Context, tx cmttypes.Tx) (*coretypes.ResultBroadcastTx, error)) (*apiacbci.TxResponse, error) {
+	fn func(ctx context.Context, tx cmttypes.Tx) (*coretypes.ResultBroadcastTx, error),
+) (*apiacbci.TxResponse, error) {
 	bResult, err := fn(ctx, txbytes)
 	if errRes := checkCometError(err, txbytes); err != nil {
 		return errRes, nil

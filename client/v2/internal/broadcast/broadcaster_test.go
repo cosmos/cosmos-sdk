@@ -8,6 +8,8 @@ import (
 )
 
 func Test_newBroadcaster(t *testing.T) {
+	var f factory
+	f = broadcasterFactory{}
 	tests := []struct {
 		name      string
 		consensus string
@@ -26,7 +28,7 @@ func Test_newBroadcaster(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := broadcasterFactory{}.create(context.Background(), tt.consensus, "localhost:26657", tt.opts...)
+			got, err := f.create(context.Background(), tt.consensus, "localhost:26657", tt.opts...)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {

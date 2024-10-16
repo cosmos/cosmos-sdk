@@ -2,16 +2,15 @@ package broadcast
 
 import (
 	"context"
-	apiacbci "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	"errors"
-	"github.com/cometbft/cometbft/mempool"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	"github.com/cometbft/cometbft/types"
 	"testing"
 
+	"github.com/cometbft/cometbft/mempool"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
+	apiacbci "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	mockrpc "cosmossdk.io/client/v2/internal/broadcast/testutil"
 
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -91,10 +90,6 @@ func TestCometBftBroadcaster_Broadcast(t *testing.T) {
 }
 
 func Test_checkCometError(t *testing.T) {
-	type args struct {
-		err error
-		tx  types.Tx
-	}
 	tests := []struct {
 		name string
 		err  error
@@ -116,7 +111,7 @@ func Test_checkCometError(t *testing.T) {
 		},
 		{
 			name: "error in cache",
-			err:  mempool.ErrTxTooLarge{10, 11},
+			err:  mempool.ErrTxTooLarge{},
 			want: &apiacbci.TxResponse{
 				Code: 21,
 			},

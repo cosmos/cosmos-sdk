@@ -1,3 +1,13 @@
+# Warning!  Achtung!  
+
+This branch of the cosmos-sdk contains contributons authored by North Korean state actors, and should not be used.
+
+For reference on the activities of the North Korean state, pelase see:
+
+* https://rekt.news/leaderboard/
+
+
+
 <!--
 parent:
   order: false

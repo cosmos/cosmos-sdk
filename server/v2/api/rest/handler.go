@@ -92,7 +92,7 @@ func (h *DefaultHandler[T]) createMessage(r *http.Request) (gogoproto.Message, e
 	limitedReader := io.LimitReader(r.Body, MaxBodySize)
 	err := jsonpb.Unmarshal(limitedReader, msg)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing body: %v", err)
+		return nil, fmt.Errorf("error parsing body: %w", err)
 	}
 
 	return msg, nil

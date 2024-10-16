@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/appmanager"
 )
 
 const (
@@ -45,11 +44,8 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.L
 		}
 	}
 
-	var appManager *appmanager.AppManager[T]
-	appManager = appI.GetAppManager()
-
 	s.router = http.NewServeMux()
-	s.router.Handle("/", NewDefaultHandler(appManager))
+	s.router.Handle("/", NewDefaultHandler(appI.GetAppManager()))
 	s.config = serverCfg
 
 	return nil

@@ -75,6 +75,7 @@ graph TD
         E[Vote Extensions]
         F[Prepare & Process Proposal]
         Consensus
+        API[API]
     end
 Server <--> B["STF(State Transition Function)"]
 B <--> C[Bank]

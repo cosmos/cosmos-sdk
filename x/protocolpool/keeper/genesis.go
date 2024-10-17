@@ -2,11 +2,9 @@ package keeper
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
-	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +12,12 @@ import (
 
 func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error {
 	currentTime := k.HeaderService.HeaderInfo(ctx).Time
+
+	err := k.Params.Set(ctx, *data.Params)
+	if err != nil {
+		return fmt.Errorf("failed to set params: %w", err)
+	}
+
 	for _, cf := range data.ContinuousFund {
 		// ignore expired ContinuousFunds
 		if cf.Expiry != nil && cf.Expiry.Before(currentTime) {
@@ -56,19 +60,19 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 		return fmt.Errorf("failed to set last balance: %w", err)
 	}
 
-	totalToBeDistributed := math.ZeroInt()
+	totalToBeDistributed := sdk.NewCoins()
 	for _, distribution := range data.Distributions {
-		totalToBeDistributed = totalToBeDistributed.Add(distribution.Amount)
+		totalToBeDistributed = totalToBeDistributed.Add(distribution.Amount.Amount...)
 		if err := k.Distributions.Set(ctx, *distribution.Time, distribution.Amount); err != nil {
 			return fmt.Errorf("failed to set distribution: %w", err)
 		}
 	}
 
 	// sanity check to avoid trying to distribute more than what is available
-	if data.LastBalance.LT(totalToBeDistributed) {
-		return errors.New("total to be distributed is greater than the last balance")
-	}
 
+	if totalToBeDistributed.IsAnyGT(data.LastBalance.Amount) || !totalToBeDistributed.DenomsSubsetOf(data.LastBalance.Amount) {
+		return fmt.Errorf("total to be distributed is greater than the last balance: %s > %s", totalToBeDistributed, data.LastBalance.Amount)
+	}
 	return nil
 }
 
@@ -112,12 +116,14 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 
 	genState := types.NewGenesisState(cf, budget)
 
-	genState.LastBalance, err = k.LastBalance.Get(ctx)
+	lastBalance, err := k.LastBalance.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.Distributions.Walk(ctx, nil, func(key time.Time, value math.Int) (stop bool, err error) {
+	genState.LastBalance = lastBalance
+
+	err = k.Distributions.Walk(ctx, nil, func(key time.Time, value types.DistributionAmount) (stop bool, err error) {
 		genState.Distributions = append(genState.Distributions, &types.Distribution{
 			Time:   &key,
 			Amount: value,
@@ -128,6 +134,13 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 	if err != nil {
 		return nil, err
 	}
+
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	genState.Params = &params
 
 	return genState, nil
 }

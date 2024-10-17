@@ -64,7 +64,7 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.L
 		grpc.MaxSendMsgSize(serverCfg.MaxSendMsgSize),
 		grpc.MaxRecvMsgSize(serverCfg.MaxRecvMsgSize),
 		grpc.UnknownServiceHandler(
-			makeUnknownServiceHandler(methodsMap, appI.AppManager()),
+			makeUnknownServiceHandler(methodsMap, appI),
 		),
 	)
 

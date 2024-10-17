@@ -110,7 +110,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	}
 	a.app.stf = stf
 
-	appManager, err := appmanager.New[T](
+	a.app.AppManager = appmanager.New[T](
 		appmanager.Config{
 			ValidateTxGasLimit: a.app.config.GasConfig.ValidateTxGasLimit,
 			QueryGasLimit:      a.app.config.GasConfig.QueryGasLimit,
@@ -121,10 +121,6 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 		a.initGenesis,
 		a.exportGenesis,
 	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create AppManager: %w", err)
-	}
-	a.app.AppManager = appManager
 
 	return a.app, nil
 }

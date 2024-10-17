@@ -23,7 +23,7 @@ import (
 // done declaratively with an app config and the rest of it is done the old way.
 // See simapp/app_v2.go for an example of this setup.
 type App[T transaction.Tx] struct {
-	*appmanager.AppManager[T]
+	appmanager.AppManager[T]
 
 	// app configuration
 	logger log.Logger

@@ -672,7 +672,7 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 	sc := cometmock.NewMockCommiter(log.NewNopLogger(), string(actorName), "stf")
 	mockStore := cometmock.NewMockStore(ss, sc)
 
-	am, err := appmanager.New(appmanager.Config{
+	am := appmanager.New(appmanager.Config{
 		ValidateTxGasLimit: gasLimit,
 		QueryGasLimit:      gasLimit,
 		SimulationGasLimit: gasLimit},
@@ -685,7 +685,6 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		},
 		nil,
 	)
-	require.NoError(t, err)
 
 	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", am, func() error { return nil }, mempool, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
 }

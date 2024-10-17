@@ -15,9 +15,10 @@ import (
 type AppCreator[T transaction.Tx] func(log.Logger, *viper.Viper) AppI[T]
 
 type AppI[T transaction.Tx] interface {
+	appmanager.AppManager[T]
+
 	Name() string
 	InterfaceRegistry() server.InterfaceRegistry
-	AppManager() *appmanager.AppManager[T]
 	QueryHandlers() map[string]appmodulev2.Handler
 	Store() store.RootStore
 	SchemaDecoderResolver() decoding.DecoderResolver

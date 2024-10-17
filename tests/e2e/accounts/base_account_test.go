@@ -8,6 +8,7 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/simapp"
 	baseaccountv1 "cosmossdk.io/x/accounts/defaults/base/v1"
@@ -18,7 +19,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestBaseAccount(t *testing.T) {

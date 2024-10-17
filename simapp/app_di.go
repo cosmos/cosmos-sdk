@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
+	feegrantdepinject "cosmossdk.io/x/accounts/defaults/feegrant/depinject"
 	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
 	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
@@ -163,6 +164,7 @@ func NewSimApp(
 				multisigdepinject.ProvideAccount,
 				basedepinject.ProvideAccount,
 				lockupdepinject.ProvideAllLockupAccounts,
+				feegrantdepinject.ProvideAccount,
 
 				// provide base account options
 				basedepinject.ProvideSecp256K1PubKey,

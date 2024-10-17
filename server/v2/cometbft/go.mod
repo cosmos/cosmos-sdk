@@ -24,7 +24,7 @@ require (
 	cosmossdk.io/server/v2 v2.0.0-20241014060734-0b43fcc2164c // main
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241008175849-325728a9fd6c // main
 	cosmossdk.io/server/v2/stf v0.0.0-20241008175849-325728a9fd6c // main
-	cosmossdk.io/store/v2 v2.0.0-20241014060734-0b43fcc2164c // main
+	cosmossdk.io/store/v2 v2.0.0-20241017091405-f01baf302e2b // main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
@@ -139,7 +139,7 @@ require (
 	github.com/petermattis/goid v0.0.0-20240813172612-4fcff4a6cae7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_golang v1.20.4 // indirect
+	github.com/prometheus/client_golang v1.20.5 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.60.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect

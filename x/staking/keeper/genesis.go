@@ -20,6 +20,7 @@ import (
 func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res []abci.ValidatorUpdate) {
 	bondedTokens := math.ZeroInt()
 	notBondedTokens := math.ZeroInt()
+	fmt.Println("InitGenesis")
 
 	// We need to pretend to be "n blocks before genesis", where "n" is the
 	// validator update delay, so that e.g. slashing periods are correctly
@@ -39,6 +40,8 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 	}
 
 	for _, validator := range data.Validators {
+		fmt.Println("InitGenesis validator: ", validator.String())
+		fmt.Println("InitGenesis validator: ", validator.GetOperator())
 		if err := k.SetValidator(ctx, validator); err != nil {
 			panic(err)
 		}
@@ -83,6 +86,8 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 	}
 
 	for _, delegation := range data.Delegations {
+		fmt.Println("InitGenesis delegation: ", delegation.String())
+		fmt.Println("InitGenesis delegation: ", delegation.DelegatorAddress)
 		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
 		if err != nil {
 			panic(fmt.Errorf("invalid delegator address: %s", err))

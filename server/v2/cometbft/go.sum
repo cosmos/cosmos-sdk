@@ -32,8 +32,8 @@ cosmossdk.io/server/v2/stf v0.0.0-20241008175849-325728a9fd6c h1:thOij3diZWxwfKa
 cosmossdk.io/server/v2/stf v0.0.0-20241008175849-325728a9fd6c/go.mod h1:MjuTMonZ319tZQX6CV2O5E/+F85KrkNUj5U5ObrrkWs=
 cosmossdk.io/store v1.0.0-rc.0.0.20241009154331-597e0fac1173 h1:MlvTcx2h4zmZZtIDg35B6bovbb5iUAExPmvaPE1Zci4=
 cosmossdk.io/store v1.0.0-rc.0.0.20241009154331-597e0fac1173/go.mod h1:lrhcXu/hRXrLJP4L8syVbs68GJU1WSRBFO3mmjn5oGc=
-cosmossdk.io/store/v2 v2.0.0-20241014060734-0b43fcc2164c h1:X/vNG/8Vn4Du7tMDwrMi0gz5K1yPpYz9QRe0VxbGCzw=
-cosmossdk.io/store/v2 v2.0.0-20241014060734-0b43fcc2164c/go.mod h1:0vAEKMFFcv3GXLzyVtISL3S/+THN0zydwztuRafgf90=
+cosmossdk.io/store/v2 v2.0.0-20241017091405-f01baf302e2b h1:epPBD1ebUwat6Ruw40rsEU4N9CHJ2ZN0ev8EGoNYBvE=
+cosmossdk.io/store/v2 v2.0.0-20241017091405-f01baf302e2b/go.mod h1:BVn9FGr34kAIQKkrhA0aeFDVYdVEKw2FmSD+3FrayUE=
 cosmossdk.io/x/tx v0.13.4-0.20241003111526-30003f667944 h1:HLWNcAuIe0/5m4EyPWC+bLkJrxpN5xKpzQGeqLmdF5Y=
 cosmossdk.io/x/tx v0.13.4-0.20241003111526-30003f667944/go.mod h1:PpXcKmCpvC3vmWE8ha8MwAxsFT7sOG4t57Octwnm8k0=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
@@ -423,8 +423,8 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v1.0.0/go.mod h1:db9x61etRT2tGnBNRi70OPL5FsnadC4Ky3P0J6CfImo=
 github.com/prometheus/client_golang v1.4.0/go.mod h1:e9GMxYsXl05ICDXkRhurwBS4Q3OK1iX/F2sw+iXX5zU=
-github.com/prometheus/client_golang v1.20.4 h1:Tgh3Yr67PaOv/uTqloMsCEdeuFTatm5zIq5+qNN23vI=
-github.com/prometheus/client_golang v1.20.4/go.mod h1:PIEt8X02hGcP8JWbeHyeZ53Y/jReSnHgO035n//V5WE=
+github.com/prometheus/client_golang v1.20.5 h1:cxppBPuYhUnsO6yo/aoRol4L7q7UFfdm+bR9r+8l63Y=
+github.com/prometheus/client_golang v1.20.5/go.mod h1:PIEt8X02hGcP8JWbeHyeZ53Y/jReSnHgO035n//V5WE=
 github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910/go.mod h1:MbSGuTsp3dbXC40dX6PRTWyKYBIrTGTE9sqQNg2J8bo=
 github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=
 github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=

@@ -75,7 +75,7 @@ func newKeeper(t *testing.T, accounts ...implementation.AccountCreatorFunc) (Kee
 	ss := coretesting.KVStoreService(ctx, "test")
 	env := runtime.NewEnvironment(ss, coretesting.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter))
 	env.EventService = eventService{}
-	m, err := NewKeeper(codec.NewProtoCodec(ir), env, addressCodec, ir, accounts...)
+	m, err := NewKeeper(codec.NewProtoCodec(ir), env, addressCodec, ir, nil, accounts...)
 	require.NoError(t, err)
 	return m, ctx
 }

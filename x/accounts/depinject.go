@@ -32,7 +32,8 @@ type ModuleInputs struct {
 	AddressCodec address.Codec
 	Registry     cdctypes.InterfaceRegistry
 
-	Accounts []accountstd.DepinjectAccount // at least one account must be provided
+	AccountExtensions []accountstd.DepinjectAccountExtension
+	Accounts          []accountstd.DepinjectAccount // at least one account must be provided
 }
 
 type ModuleOutputs struct {
@@ -47,9 +48,14 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	for i, acc := range in.Accounts {
 		accCreators[i] = acc.MakeAccount
 	}
+	extCreators := make([]accountstd.AccountExtensionCreatorFunc, len(in.AccountExtensions))
+	for i, acc := range in.AccountExtensions {
+		extCreators[i] = acc.MakeAccountExtension
+	}
 
 	accountsKeeper, err := NewKeeper(
 		in.Cdc, in.Environment, in.AddressCodec, in.Registry,
+		extCreators,
 		accCreators...,
 	)
 	if err != nil {

@@ -14,6 +14,7 @@ import (
 
 var (
 	_ commitment.Tree      = (*IavlTree)(nil)
+	_ commitment.Reader    = (*IavlTree)(nil)
 	_ store.PausablePruner = (*IavlTree)(nil)
 )
 
@@ -76,6 +77,7 @@ func (t *IavlTree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof,
 	return immutableTree.GetProof(key)
 }
 
+// Get implements the Reader interface.
 func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
 	immutableTree, err := t.tree.GetImmutable(int64(version))
 	if err != nil {
@@ -83,6 +85,16 @@ func (t *IavlTree) Get(version uint64, key []byte) ([]byte, error) {
 	}
 
 	return immutableTree.Get(key)
+}
+
+// Iterator implements the Reader interface.
+func (t *IavlTree) Iterator(version uint64, start, end []byte, ascending bool) (corestore.Iterator, error) {
+	immutableTree, err := t.tree.GetImmutable(int64(version))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get immutable tree at version %d: %w", version, err)
+	}
+
+	return immutableTree.Iterator(start, end, ascending)
 }
 
 // GetLatestVersion returns the latest version of the tree.

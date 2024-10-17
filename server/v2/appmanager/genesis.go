@@ -9,9 +9,6 @@ import (
 )
 
 type (
-	// ExportGenesis is a function type that represents the export of the genesis state.
-	ExportGenesis func(ctx context.Context, version uint64) ([]byte, error)
-
 	// InitGenesis is a function that will run at application genesis, it will be called with
 	// the following arguments:
 	// - ctx: the context of the genesis operation
@@ -25,4 +22,7 @@ type (
 		src io.Reader,
 		txHandler func(json.RawMessage) error,
 	) (store.WriterMap, error)
+
+	// ExportGenesis is a function type that represents the export of the genesis state.
+	ExportGenesis func(ctx context.Context, version uint64) ([]byte, error)
 )

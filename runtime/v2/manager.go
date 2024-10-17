@@ -636,7 +636,7 @@ func registerServices[T transaction.Tx](s appmodulev2.AppModule, app *App[T], re
 
 		// merge maps
 		for path, decoder := range c.queryHandlers {
-			app.QueryHandlers[path] = decoder
+			app.queryHandlers[path] = decoder
 		}
 	}
 
@@ -655,7 +655,7 @@ func registerServices[T transaction.Tx](s appmodulev2.AppModule, app *App[T], re
 		module.RegisterQueryHandlers(&wrapper)
 
 		for path, handler := range wrapper.handlers {
-			app.QueryHandlers[path] = handler
+			app.queryHandlers[path] = handler
 		}
 	}
 

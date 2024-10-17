@@ -646,7 +646,7 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		}, nil
 	})
 
-	s, err := stf.NewSTF(
+	s, err := stf.New(
 		log.NewNopLogger().With("module", "stf"),
 		msgRouterBuilder,
 		queryRouterBuilder,
@@ -672,20 +672,19 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 	sc := cometmock.NewMockCommiter(log.NewNopLogger(), string(actorName), "stf")
 	mockStore := cometmock.NewMockStore(ss, sc)
 
-	b := appmanager.Builder[mock.Tx]{
-		STF:                s,
-		DB:                 mockStore,
+	am, err := appmanager.New(appmanager.Config{
 		ValidateTxGasLimit: gasLimit,
 		QueryGasLimit:      gasLimit,
-		SimulationGasLimit: gasLimit,
-		InitGenesis: func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {
+		SimulationGasLimit: gasLimit},
+		mockStore,
+		s,
+		func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {
 			_, st, err := mockStore.StateLatest()
 			require.NoError(t, err)
 			return branch.DefaultNewWriterMap(st), nil
 		},
-	}
-
-	am, err := b.Build()
+		nil,
+	)
 	require.NoError(t, err)
 
 	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", am, func() error { return nil }, mempool, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")

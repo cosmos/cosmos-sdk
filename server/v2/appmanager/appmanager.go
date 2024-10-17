@@ -40,7 +40,7 @@ type AppManager[T transaction.Tx] struct {
 	stf StateTransitionFunction[T]
 }
 
-func NewAppManager[T transaction.Tx](
+func New[T transaction.Tx](
 	config Config,
 	db Store,
 	stf StateTransitionFunction[T],

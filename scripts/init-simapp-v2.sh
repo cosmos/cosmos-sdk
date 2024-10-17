@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
+set -o errexit
+set -o nounset
+set -x
 
-SIMD_BIN=${SIMD_BIN:=$(which simdv2 2>/dev/null)}
+ROOT=$PWD
+
+SIMD_BIN="$ROOT/build/simdv2"
+
+COSMOS_BUILD_OPTIONS=v2 make build
+# SIMD_BIN=${SIMD_BIN:=$(which simdv2 2>/dev/null)}
 
 if [ -z "$SIMD_BIN" ]; then echo "SIMD_BIN is not set. Make sure to run 'COSMOS_BUILD_OPTIONS=v2 make install' before"; exit 1; fi
 echo "using $SIMD_BIN"
@@ -9,7 +17,7 @@ if [ -d "$SIMD_HOME" ]; then rm -rv $SIMD_HOME; fi
 $SIMD_BIN config set client chain-id simapp-v2-chain
 $SIMD_BIN config set client keyring-backend test
 $SIMD_BIN config set client keyring-default-keyname alice
-$SIMD_BIN config set app rest-v2.enable true
+$SIMD_BIN config set app rest.enable true
 $SIMD_BIN keys add alice --indiscreet
 $SIMD_BIN keys add bob --indiscreet
 $SIMD_BIN init simapp-v2-node --chain-id simapp-v2-chain

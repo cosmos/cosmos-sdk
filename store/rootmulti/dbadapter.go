@@ -36,6 +36,10 @@ func (cdsa commitDBStoreAdapter) LastCommitID() types.CommitID {
 	}
 }
 
+func (cdsa commitDBStoreAdapter) LatestVersion() int64 {
+	return -1
+}
+
 func (cdsa commitDBStoreAdapter) WorkingHash() []byte {
 	return commithash
 }

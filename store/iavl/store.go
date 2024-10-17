@@ -146,6 +146,11 @@ func (st *Store) LastCommitID() types.CommitID {
 	}
 }
 
+// LatestVersion implements Committer.
+func (st *Store) LatestVersion() int64 {
+	return st.tree.Version()
+}
+
 // PausePruning implements CommitKVStore interface.
 func (st *Store) PausePruning(pause bool) {
 	if pause {

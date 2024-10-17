@@ -434,7 +434,11 @@ func (rs *Store) PopStateCache() []*types.StoreKVPair {
 
 // LatestVersion returns the latest version in the store
 func (rs *Store) LatestVersion() int64 {
-	return rs.LastCommitID().Version
+	if rs.lastCommitInfo == nil {
+		return GetLatestVersion(rs.db)
+	}
+
+	return rs.lastCommitInfo.Version
 }
 
 // LastCommitID implements Committer/CommitStore.

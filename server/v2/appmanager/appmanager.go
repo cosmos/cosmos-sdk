@@ -26,14 +26,34 @@ type Store interface {
 
 // AppManager is a coordinator for all things related to an application
 type AppManager[T transaction.Tx] struct {
+	// Gas limits for validating, querying, and simulating transactions.
 	config Config
-
-	db Store
-
-	initGenesis   InitGenesis
+	// InitGenesis is a function that initializes the application state from a genesis file.
+	// It takes a context, a source reader for the genesis file, and a transaction handler function.
+	initGenesis InitGenesis
+	// ExportGenesis is a function that exports the application state to a genesis file.
+	// It takes a context and a version number for the genesis file.
 	exportGenesis ExportGenesis
-
+	// The database for storing application data.
+	db Store
+	// The state transition function for processing transactions.
 	stf StateTransitionFunction[T]
+}
+
+func NewAppManager[T transaction.Tx](
+	config Config,
+	db Store,
+	stf StateTransitionFunction[T],
+	initGenesisImpl InitGenesis,
+	exportGenesisImpl ExportGenesis,
+) (*AppManager[T], error) {
+	appManager := &AppManager[T]{
+		config: config,
+		db:     db,
+		stf:    stf,
+	}
+
+	return appManager, nil
 }
 
 // InitGenesis initializes the genesis state of the application.

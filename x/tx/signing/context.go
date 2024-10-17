@@ -20,6 +20,7 @@ type TypeResolver interface {
 	protoregistry.ExtensionTypeResolver
 }
 
+// AddressCodec is the cosmossdk.io/core/address codec interface used by the context.
 type AddressCodec interface {
 	StringToBytes(string) ([]byte, error)
 	BytesToString([]byte) (string, error)

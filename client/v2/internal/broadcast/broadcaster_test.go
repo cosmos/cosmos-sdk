@@ -21,7 +21,7 @@ func Test_newBroadcaster(t *testing.T) {
 			opts: []Option{
 				withMode(BroadcastSync),
 			},
-			want: &CometBftBroadcaster{},
+			want: &CometBFTBroadcaster{},
 		},
 		{
 			name:      "unsupported_consensus",

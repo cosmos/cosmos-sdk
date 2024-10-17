@@ -22,7 +22,7 @@ func TestNewCometBftBroadcaster(t *testing.T) {
 	tests := []struct {
 		name    string
 		opts    []Option
-		want    *CometBftBroadcaster
+		want    *CometBFTBroadcaster
 		wantErr bool
 	}{
 		{
@@ -31,7 +31,7 @@ func TestNewCometBftBroadcaster(t *testing.T) {
 				withMode(BroadcastSync),
 				withJsonCodec(cdc),
 			},
-			want: &CometBftBroadcaster{
+			want: &CometBFTBroadcaster{
 				mode: BroadcastSync,
 				cdc:  cdc,
 			},
@@ -39,7 +39,7 @@ func TestNewCometBftBroadcaster(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewCometBftBroadcaster("localhost:26657", tt.opts...)
+			got, err := NewCometBFTBroadcaster("localhost:26657", tt.opts...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewCometBftBroadcaster() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -53,7 +53,7 @@ func TestNewCometBftBroadcaster(t *testing.T) {
 func TestCometBftBroadcaster_Broadcast(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	cometMock := mockrpc.NewMockCometRPC(ctrl)
-	c := CometBftBroadcaster{
+	c := CometBFTBroadcaster{
 		rpcClient: cometMock,
 		mode:      BroadcastSync,
 		cdc:       cdc,

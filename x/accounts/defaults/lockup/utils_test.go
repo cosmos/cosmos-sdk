@@ -77,7 +77,9 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 			case "/cosmos.staking.v1beta1.MsgDelegate":
 				return &stakingtypes.MsgDelegateResponse{}, nil
 			case "/cosmos.staking.v1beta1.MsgUndelegate":
-				return &stakingtypes.MsgUndelegate{}, nil
+				return &stakingtypes.MsgUndelegateResponse{
+					Amount: sdk.NewCoin("test", math.NewInt(1)),
+				}, nil
 			case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
 				return &distrtypes.MsgWithdrawDelegatorRewardResponse{}, nil
 			case "/cosmos.bank.v1beta1.MsgSend":

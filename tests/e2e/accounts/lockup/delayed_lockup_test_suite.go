@@ -23,6 +23,7 @@ func (s *E2ETestSuite) TestDelayedLockingAccount() {
 	ctx := sdk.NewContext(app.CommitMultiStore(), false, app.Logger()).WithHeaderInfo(header.Info{
 		Time: currentTime,
 	})
+	s.setupStakingParams(ctx, app)
 	ownerAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
 	require.NoError(t, err)
 	s.fundAccount(app, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
@@ -124,6 +125,27 @@ func (s *E2ETestSuite) TestDelayedLockingAccount() {
 		)
 		require.NoError(t, err)
 		require.Equal(t, len(ubd.Entries), 1)
+
+		// check if an entry is added
+		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, app, accountAddr)
+		entries := unbondingEntriesResponse.UnbondingEntries
+		require.True(t, entries[0].Amount.Amount.Equal(math.NewInt(100)))
+		require.True(t, entries[0].ValidatorAddress == val.OperatorAddress)
+	})
+
+	// Update context time
+	// After unbond time elapsed
+	ctx = ctx.WithHeaderInfo(header.Info{
+		Time: currentTime.Add(time.Second * 11),
+	})
+
+	t.Run("ok - execute tracking unbonding entry", func(t *testing.T) {
+		msg := &types.MsgTrackUndelegation{
+			Sender: ownerAddrStr,
+			Id:     0,
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NoError(t, err)
 
 		// check if tracking is updated accordingly
 		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)

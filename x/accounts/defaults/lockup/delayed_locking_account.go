@@ -149,4 +149,5 @@ func (dva DelayedLockingAccount) RegisterExecuteHandlers(builder *accountstd.Exe
 
 func (dva DelayedLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, dva.QueryVestingAccountInfo)
+	accountstd.RegisterQueryHandler(builder, dva.QueryUnbondingEntries)
 }

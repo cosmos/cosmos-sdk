@@ -8,7 +8,7 @@ sidebar_position: 1
 This document describes how to configure and use the keyring and its various backends for an [**application**](../../learn/beginner/00-app-anatomy.md).
 :::
 
-The keyring holds the private/public keypairs used to interact with a node. For instance, a validator key needs to be set up before running the blockchain node, so that blocks can be correctly signed. The private key can be stored in different locations, called "backends", such as a file or the operating system's own key storage.
+The keyring holds the private/public key pairs used to interact with a node. For instance, a validator key needs to be set up before running the blockchain node, so that blocks can be correctly signed. The private key can be stored in different locations, called "backends", such as a file or the operating system's own key storage.
 
 ## Available backends for the keyring
 

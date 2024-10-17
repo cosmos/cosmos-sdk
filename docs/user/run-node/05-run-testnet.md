@@ -34,7 +34,7 @@ The default output directory is a relative `.testnets` directory. Let's take a l
 
 ### gentxs
 
-The `gentxs` directory includes a genesis transaction for each validator node. Each file includes a JSON encoded genesis transaction used to register a validator node at the time of genesis. The genesis transactions are added to the `genesis.json` file within each node directory during the initilization process.
+The `gentxs` directory includes a genesis transaction for each validator node. Each file includes a JSON encoded genesis transaction used to register a validator node at the time of genesis. The genesis transactions are added to the `genesis.json` file within each node directory during the initialization process.
 
 ### nodes
 

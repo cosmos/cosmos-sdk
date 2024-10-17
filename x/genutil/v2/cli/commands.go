@@ -45,6 +45,8 @@ func CommandsWithCustomMigrationMap(
 		cli.CollectGenTxsCmd(genutilModule.GenTxValidator()),
 		cli.ValidateGenesisCmd(genMM),
 		cli.AddGenesisAccountCmd(),
+		cli.AddBulkGenesisAccountCmd(),
+		cli.GenerateSendTransactions(),
 		ExportCmd(appExport),
 	)
 

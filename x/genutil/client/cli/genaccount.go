@@ -7,9 +7,14 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/rand"
+
+	bank "cosmossdk.io/api/cosmos/bank/v1beta1"
+	base "cosmossdk.io/api/cosmos/base/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -174,5 +179,97 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 	cmd.Flags().Bool(flagAppendMode, false, "append the coins to an account already in the genesis.json file")
 	flags.AddQueryFlagsToCmd(cmd)
 
+	return cmd
+}
+
+func GenerateSendTransactions() *cobra.Command {
+	var (
+		seed  uint64
+		numTx uint64
+	)
+	cmd := &cobra.Command{
+		Use:   "generate-send-txs",
+		Short: "Generate genesis transactions for sending coins to genesis accounts",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			addressCodec := clientCtx.TxConfig.SigningContext().AddressCodec()
+			kr, err := keyring.New(
+				sdk.KeyringServiceName(),
+				keyring.BackendTest,
+				clientCtx.HomeDir,
+				os.Stdin,
+				clientCtx.Codec,
+			)
+			if err != nil {
+				return err
+			}
+
+			records, err := kr.List()
+			if err != nil {
+				return err
+			}
+
+			sequences := make(map[string]uint64)
+
+			rnd := rand.New(rand.NewSource(seed))
+			for i := 0; i < int(numTx); i++ {
+				n := rnd.Intn(len(records))
+				if records[n].Name == "alice" {
+					i--
+					continue
+				}
+				addr, err := records[n].GetAddress()
+				if err != nil {
+					return err
+				}
+				from, err := addressCodec.BytesToString(addr)
+				if err != nil {
+					return err
+				}
+				toBytes := make([]byte, 32)
+				_, err = rnd.Read(toBytes)
+				if err != nil {
+					return err
+				}
+				to, err := addressCodec.BytesToString(toBytes)
+				if err != nil {
+					return err
+				}
+				sendMsg := &bank.MsgSend{
+					FromAddress: from,
+					ToAddress:   to,
+					Amount: []*base.Coin{
+						{Denom: "stake", Amount: "10"},
+					},
+				}
+				txf, err := clienttx.NewFactoryCLI(clientCtx, cmd.Flags())
+				if err != nil {
+					return err
+				}
+				txf = txf.WithSequence(sequences[from])
+				sequences[from]++
+				tx, err := txf.BuildUnsignedTx(sendMsg)
+				if err != nil {
+					return err
+				}
+
+				err = clienttx.Sign(clientCtx, txf, records[n].Name, tx, false)
+				if err != nil {
+					return err
+				}
+				enc := clientCtx.TxConfig.TxJSONEncoder()
+
+				jsonBz, err := enc(tx.GetTx())
+				if err != nil {
+					return err
+				}
+				fmt.Println(string(jsonBz))
+			}
+
+			return nil
+		},
+	}
+	cmd.Flags().Uint64Var(&seed, "seed", 0, "seed for generation")
+	cmd.Flags().Uint64Var(&numTx, "num-txs", 10_000, "the number of txs to generate")
 	return cmd
 }

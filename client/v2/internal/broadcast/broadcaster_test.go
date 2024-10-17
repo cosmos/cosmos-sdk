@@ -23,6 +23,11 @@ func Test_newBroadcaster(t *testing.T) {
 			},
 			want: &CometBftBroadcaster{},
 		},
+		{
+			name:      "unsupported_consensus",
+			consensus: "unsupported",
+			wantErr:   true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

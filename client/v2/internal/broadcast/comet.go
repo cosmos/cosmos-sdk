@@ -7,29 +7,56 @@ import (
 	"strings"
 
 	"github.com/cometbft/cometbft/mempool"
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	apiacbci "cosmossdk.io/api/cosmos/base/abci/v1beta1"
-	serverrpc "cosmossdk.io/server/v2/cometbft/client/rpc"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ Broadcaster = CometBftBroadcaster{}
+// CometRPC defines the interface of a CometBFT RPC client needed for
+// queries and transaction handling.
+type CometRPC interface {
+	rpcclient.ABCIClient
+
+	Validators(ctx context.Context, height *int64, page, perPage *int) (*coretypes.ResultValidators, error)
+	Status(context.Context) (*coretypes.ResultStatus, error)
+	Block(ctx context.Context, height *int64) (*coretypes.ResultBlock, error)
+	BlockByHash(ctx context.Context, hash []byte) (*coretypes.ResultBlock, error)
+	BlockResults(ctx context.Context, height *int64) (*coretypes.ResultBlockResults, error)
+	BlockchainInfo(ctx context.Context, minHeight, maxHeight int64) (*coretypes.ResultBlockchainInfo, error)
+	Commit(ctx context.Context, height *int64) (*coretypes.ResultCommit, error)
+	Tx(ctx context.Context, hash []byte, prove bool) (*coretypes.ResultTx, error)
+	TxSearch(
+		ctx context.Context,
+		query string,
+		prove bool,
+		page, perPage *int,
+		orderBy string,
+	) (*coretypes.ResultTxSearch, error)
+	BlockSearch(
+		ctx context.Context,
+		query string,
+		page, perPage *int,
+		orderBy string,
+	) (*coretypes.ResultBlockSearch, error)
+}
+
+var _ Broadcaster = CometBFTBroadcaster{}
 
 // CometBftBroadcaster implements the Broadcaster interface for CometBFT consensus engine.
-type CometBftBroadcaster struct {
-	rpcClient serverrpc.CometRPC
+type CometBFTBroadcaster struct {
+	rpcClient CometRPC
 	mode      string
 	cdc       codec.JSONCodec
 }
 
 func withMode(mode string) func(broadcaster Broadcaster) {
 	return func(b Broadcaster) {
-		cbc, ok := b.(*CometBftBroadcaster)
+		cbc, ok := b.(*CometBFTBroadcaster)
 		if !ok {
 			return
 		}
@@ -39,7 +66,7 @@ func withMode(mode string) func(broadcaster Broadcaster) {
 
 func withJsonCodec(codec codec.JSONCodec) func(broadcaster Broadcaster) {
 	return func(b Broadcaster) {
-		cbc, ok := b.(*CometBftBroadcaster)
+		cbc, ok := b.(*CometBFTBroadcaster)
 		if !ok {
 			return
 		}
@@ -47,14 +74,14 @@ func withJsonCodec(codec codec.JSONCodec) func(broadcaster Broadcaster) {
 	}
 }
 
-// NewCometBftBroadcaster creates a new CometBftBroadcaster.
-func NewCometBftBroadcaster(rpcURL string, opts ...Option) (*CometBftBroadcaster, error) {
+// NewCometBFTBroadcaster creates a new CometBftBroadcaster.
+func NewCometBFTBroadcaster(rpcURL string, opts ...Option) (*CometBFTBroadcaster, error) {
 	rpcClient, err := rpchttp.New(rpcURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create CometBft RPC client: %w", err)
 	}
 
-	bc := &CometBftBroadcaster{}
+	bc := &CometBFTBroadcaster{}
 	for _, opt := range opts {
 		opt(bc)
 	}
@@ -65,7 +92,7 @@ func NewCometBftBroadcaster(rpcURL string, opts ...Option) (*CometBftBroadcaster
 
 // Broadcast sends a transaction to the network and returns the result.
 // returns a byte slice containing the JSON-encoded result and an error if the broadcast failed.
-func (c CometBftBroadcaster) Broadcast(ctx context.Context, txBytes []byte) ([]byte, error) {
+func (c CometBFTBroadcaster) Broadcast(ctx context.Context, txBytes []byte) ([]byte, error) {
 	var fn func(ctx context.Context, tx cmttypes.Tx) (*coretypes.ResultBroadcastTx, error)
 	switch c.mode {
 	case BroadcastSync:
@@ -85,7 +112,7 @@ func (c CometBftBroadcaster) Broadcast(ctx context.Context, txBytes []byte) ([]b
 }
 
 // broadcast sends a transaction to the CometBFT network using the provided function.
-func (c CometBftBroadcaster) broadcast(ctx context.Context, txbytes []byte,
+func (c CometBFTBroadcaster) broadcast(ctx context.Context, txbytes []byte,
 	fn func(ctx context.Context, tx cmttypes.Tx) (*coretypes.ResultBroadcastTx, error),
 ) (*apiacbci.TxResponse, error) {
 	bResult, err := fn(ctx, txbytes)

@@ -14,7 +14,7 @@ const (
 	BroadcastAsync = "async"
 
 	// cometBftConsensus is the identifier for the CometBFT consensus engine.
-	cometBftConsensus = "comet"
+	cometBFTConsensus = "comet"
 )
 
 type (
@@ -29,7 +29,7 @@ type (
 
 	// factory defines a generic interface for creating a Broadcaster.
 	factory interface {
-		// Create creates a new Broadcaster instance of type T.
+		// create creates a new Broadcaster instance based on the consensus type.
 		create(ctx context.Context, consensus, url string, opts ...Option) (Broadcaster, error)
 	}
 
@@ -45,8 +45,8 @@ type broadcasterFactory struct{}
 // create creates a new Broadcaster based on the given consensus type.
 func (f broadcasterFactory) create(_ context.Context, consensus, url string, opts ...Option) (Broadcaster, error) {
 	switch consensus {
-	case cometBftConsensus:
-		return NewCometBftBroadcaster(url, opts...)
+	case cometBFTConsensus:
+		return NewCometBFTBroadcaster(url, opts...)
 	default:
 		return nil, fmt.Errorf("invalid consensus type: %s", consensus)
 	}

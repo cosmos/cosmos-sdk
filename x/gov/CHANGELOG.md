@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#19167](https://github.com/cosmos/cosmos-sdk/pull/19167) Add `YesQuorum` parameter specifying a minimum of yes vote in the total proposal voting power for the proposal to pass.
 * [#18445](https://github.com/cosmos/cosmos-sdk/pull/18445) Extend gov config.
 * [#18532](https://github.com/cosmos/cosmos-sdk/pull/18532) Repurpose `govcliutils.NormalizeProposalType` to work for gov v1 proposal types.
+* [#20219](https://github.com/cosmos/cosmos-sdk/issues/20219#event-14494455201) Mark more queries with module_query_safe.
 
 ### State Machine Breaking
 

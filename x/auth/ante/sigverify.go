@@ -360,7 +360,7 @@ func (svd SigVerificationDecorator) verifySig(ctx context.Context, tx sdk.Tx, ac
 		Address:       acc.GetAddress().String(),
 		ChainID:       chainID,
 		AccountNumber: accNum,
-		Sequence:      acc.GetSequence(),
+		Sequence:      sig.Sequence,
 		PubKey: &anypb.Any{
 			TypeUrl: anyPk.TypeUrl,
 			Value:   anyPk.Value,

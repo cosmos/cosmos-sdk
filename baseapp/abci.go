@@ -99,8 +99,12 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		return &abci.ResponseInitChain{}, nil
 	}
 
+	fmt.Println("going to set context")
+
 	// add block gas meter for any genesis transactions (allow infinite gas)
 	app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockGasMeter(storetypes.NewInfiniteGasMeter()))
+
+	fmt.Println("going to call initChainer")
 
 	res, err := app.initChainer(app.finalizeBlockState.Context(), req)
 	if err != nil {
@@ -108,6 +112,7 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 	}
 
 	if len(req.Validators) > 0 {
+		fmt.Println("going to validate genesis validators")
 		if len(req.Validators) != len(res.Validators) {
 			return nil, fmt.Errorf(
 				"len(RequestInitChain.Validators) != len(GenesisValidators) (%d != %d)",
@@ -124,6 +129,8 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 			}
 		}
 	}
+
+	fmt.Println("going to set validators")
 
 	// NOTE: We don't commit, but FinalizeBlock for block InitialHeight starts from
 	// this FinalizeBlockState.

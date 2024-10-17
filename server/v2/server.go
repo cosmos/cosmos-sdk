@@ -181,6 +181,8 @@ func (s *Server[T]) Configs() map[string]any {
 func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 	flags := pflag.NewFlagSet(s.Name(), pflag.ExitOnError)
 	flags.String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
+	flags.String(FlagCPUProfiling, "", "Enable CPU profiling and write to the specified file")
+
 	return flags
 }
 

@@ -37,7 +37,8 @@ func TestMintQueries(t *testing.T) {
 	blockHeightHeader := "x-cosmos-block-height"
 	queryAtHeight := "1"
 
-	// TODO: check why difference in values basequeryAtH on height between v1 and v2
+	// TODO: check why difference in values when querying with height between v1 and v2
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/22302
 	if isV2() {
 		queryAtHeight = "2"
 	}

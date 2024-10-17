@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	ServerName = "rest-v2"
+	ServerName = "rest"
 )
 
 type Server[T transaction.Tx] struct {

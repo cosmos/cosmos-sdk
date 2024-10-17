@@ -48,7 +48,7 @@ type CometRPC interface {
 
 var _ Broadcaster = CometBFTBroadcaster{}
 
-// CometBftBroadcaster implements the Broadcaster interface for CometBFT consensus engine.
+// CometBFTBroadcaster implements the Broadcaster interface for CometBFT consensus engine.
 type CometBFTBroadcaster struct {
 	rpcClient CometRPC
 	mode      string
@@ -89,6 +89,10 @@ func NewCometBFTBroadcaster(rpcURL string, opts ...Option) (*CometBFTBroadcaster
 
 	bc.rpcClient = *rpcClient
 	return bc, nil
+}
+
+func (c CometBFTBroadcaster) Consensus() string {
+	return cometBFTConsensus
 }
 
 // Broadcast sends a transaction to the network and returns the result.

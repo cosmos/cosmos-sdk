@@ -71,7 +71,7 @@ Core dependencies not mentioned here as compatible across all maintained SDK ver
 
 | Cosmos SDK | cosmossdk.io/core | cosmossdk.io/api | cosmossdk.io/x/tx |
 | ---------- | ----------------- | ---------------- | ----------------- |
-| 0.52.z     | 1.y.z             | 0.8.z            | 0.14.z            |
+| 0.52.z     | 1.y.z             | 0.8.z            | 1.y.z             |
 | 0.50.z     | 0.11.z            | 0.7.z            | 0.13.z            |
 | 0.47.z     | 0.5.z             | 0.3.z            | N/A               |
 

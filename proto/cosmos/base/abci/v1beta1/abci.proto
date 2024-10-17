@@ -105,6 +105,9 @@ message Result {
 
   // msg_responses contains the Msg handler responses type packed in Anys.
   repeated google.protobuf.Any msg_responses = 4 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.46"];
+
+  // lane is the lane in the comet mempool the transaction should be broadcast in
+  uint32 lane = 5;
 }
 
 // SimulationResponse defines the response generated when a transaction is

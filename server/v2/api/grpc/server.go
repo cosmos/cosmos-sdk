@@ -85,7 +85,7 @@ func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 }
 
 func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier interface {
-	Query(ctx context.Context, version uint64, msg gogoproto.Message) (gogoproto.Message, error)
+	Query(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error)
 },
 ) grpc.StreamHandler {
 	getRegistry := sync.OnceValues(gogoproto.MergedRegistry)

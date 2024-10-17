@@ -675,7 +675,8 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 	am := appmanager.New(appmanager.Config{
 		ValidateTxGasLimit: gasLimit,
 		QueryGasLimit:      gasLimit,
-		SimulationGasLimit: gasLimit},
+		SimulationGasLimit: gasLimit,
+	},
 		mockStore,
 		s,
 		func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {

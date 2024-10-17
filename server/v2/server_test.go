@@ -18,6 +18,7 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/store"
+	storev2 "cosmossdk.io/store/v2"
 )
 
 type mockInterfaceRegistry struct{}
@@ -38,8 +39,13 @@ type mockApp[T transaction.Tx] struct {
 func (*mockApp[T]) QueryHandlers() map[string]appmodulev2.Handler {
 	return map[string]appmodulev2.Handler{}
 }
+
 func (*mockApp[T]) InterfaceRegistry() coreserver.InterfaceRegistry {
 	return &mockInterfaceRegistry{}
+}
+
+func (*mockApp[T]) Store() storev2.RootStore {
+	return nil
 }
 
 func TestServer(t *testing.T) {

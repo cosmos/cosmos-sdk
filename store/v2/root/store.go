@@ -118,6 +118,11 @@ func (s *Store) SetInitialVersion(v uint64) error {
 	return s.stateCommitment.SetInitialVersion(v)
 }
 
+// getVersionedReader returns a VersionedReader based on the given version. If the
+// version exists in the state storage, it returns the state storage.
+// If not, it checks if the state commitment implements the VersionedReader interface
+// and the version exists in the state commitment, since the state storage will be
+// synced during migration.
 func (s *Store) getVersionedReader(version uint64) (store.VersionedReader, error) {
 	isExist, err := s.stateStorage.VersionExists(version)
 	if err != nil {

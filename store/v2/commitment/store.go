@@ -317,7 +317,7 @@ func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, 
 // Has implements store.VersionedReader.
 func (c *CommitStore) Has(storeKey []byte, version uint64, key []byte) (bool, error) {
 	val, err := c.Get(storeKey, version, key)
-	return len(val) > 0, err
+	return val != nil, err
 }
 
 // Iterator implements store.VersionedReader.

@@ -1,0 +1,16 @@
+[package]
+name = "simple_time"
+edition = "2021"
+description = "A simple time i128 nano-second precision time library"
+version = "0.0.2"
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true
+
+[features]
+default = ["std"]
+std = []

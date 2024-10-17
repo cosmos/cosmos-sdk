@@ -88,3 +88,7 @@ Makefile @auricom @julienrbrt @tac0turtle
 /docs/sidebars.js @julienrbrt @tac0turtle
 /docs/pre.sh @julienrbrt @tac0turtle
 /docs/post.sh @julienrbrt @tac0turtle
+
+# rust
+
+rust/ @aaronc

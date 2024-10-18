@@ -104,3 +104,14 @@ type ValidatorUpdate struct {
 type HasRegisterInterfaces interface {
 	RegisterInterfaces(registry.InterfaceRegistrar)
 }
+
+// ModuleAccount defines a module account info get from the module.
+type ModuleAccount struct {
+	Name    string
+	Address []byte
+}
+
+// HasModuleAccounts is implemented by a module which has module accounts.
+type HasModuleAccounts interface {
+	GetModuleAccounts() []ModuleAccount
+}

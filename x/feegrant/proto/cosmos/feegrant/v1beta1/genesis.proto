@@ -3,6 +3,7 @@ syntax = "proto3";
 package cosmos.feegrant.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 import "cosmos/feegrant/v1beta1/feegrant.proto";
 import "amino/amino.proto";
 

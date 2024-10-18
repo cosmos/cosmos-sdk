@@ -47,6 +47,7 @@ func NewKeeper(
 	env appmodule.Environment,
 	addressCodec address.Codec,
 	ir InterfaceRegistry,
+	exts []accountstd.AccountExtensionCreatorFunc,
 	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
@@ -67,11 +68,13 @@ func NewKeeper(
 		return Keeper{}, err
 	}
 	keeper.Schema = schema
-	keeper.accounts, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, env, accounts)
+	var ext *implementation.ExtensionHandlers
+	keeper.accounts, ext, err = implementation.MakeAccountsMap(cdc, keeper.addressCodec, env, accounts, exts)
 	if err != nil {
 		return Keeper{}, err
 	}
-	registerToInterfaceRegistry(ir, keeper.accounts)
+	keeper.accountExtensions = ext
+	registerToInterfaceRegistry(ir, keeper.accounts, ext)
 	return keeper, nil
 }
 
@@ -82,7 +85,8 @@ type Keeper struct {
 	codec            codec.Codec
 	makeSendCoinsMsg coinsTransferMsgFunc
 
-	accounts map[string]implementation.Implementation
+	accounts          map[string]implementation.Implementation
+	accountExtensions *implementation.ExtensionHandlers
 
 	// Schema is the schema for the module.
 	Schema collections.Schema
@@ -226,7 +230,22 @@ func (k Keeper) MigrateLegacyAccount(
 	accType string, // The account type to migrate to
 	msg transaction.Msg, // The init msg of the account type we're migrating to
 ) (transaction.Msg, error) {
-	return k.init(ctx, accType, addr, accNum, addr, msg, nil)
+	rsp, err := k.init(ctx, accType, addr, accNum, addr, msg, nil)
+	if err != nil {
+		return rsp, err
+	}
+	// call extensions to migrate their state
+	ctx = k.makeAccountContext(ctx, accNum, addr, ModuleAccountAddress, nil, false)
+	if err := k.accountExtensions.MigrateLegacyState(ctx); err != nil {
+		return nil, err
+	}
+
+	return rsp, err
+}
+
+// HasAccount returns true when account exists
+func (k Keeper) HasAccount(ctx context.Context, accountAddr []byte) (bool, error) {
+	return k.AccountsByType.Has(ctx, accountAddr)
 }
 
 // Execute executes a state transition on the given account.
@@ -306,7 +325,13 @@ func (k Keeper) makeAddress(accNum uint64) ([]byte, error) {
 }
 
 // makeAccountContext makes a new context for the given account.
-func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, accountAddr, sender []byte, funds sdk.Coins, isQuery bool) context.Context {
+func (k Keeper) makeAccountContext(
+	ctx context.Context,
+	accountNumber uint64,
+	accountAddr, sender []byte,
+	funds sdk.Coins,
+	isQuery bool,
+) context.Context {
 	// if it's not a query we create a context that allows to do anything.
 	if !isQuery {
 		return implementation.MakeAccountContext(
@@ -439,7 +464,7 @@ var msgInterfaceType = (*msgInterface)(nil)
 // registerToInterfaceRegistry registers all the interfaces of the accounts to the
 // global interface registry. This is required for the SDK to correctly decode
 // the google.Protobuf.Any used in x/accounts.
-func registerToInterfaceRegistry(ir InterfaceRegistry, accMap map[string]implementation.Implementation) {
+func registerToInterfaceRegistry(ir InterfaceRegistry, accMap map[string]implementation.Implementation, extensions *implementation.ExtensionHandlers) {
 	ir.RegisterInterface(msgInterfaceName, msgInterfaceType)
 
 	for _, acc := range accMap {
@@ -453,5 +478,8 @@ func registerToInterfaceRegistry(ir InterfaceRegistry, accMap map[string]impleme
 		for _, query := range acc.QueryHandlersSchema {
 			ir.RegisterImplementations(msgInterfaceType, query.RequestSchema.New(), query.ResponseSchema.New())
 		}
+	}
+	for h := range extensions.HandlerSchemas() {
+		ir.RegisterImplementations(msgInterfaceType, h.RequestSchema.New(), h.ResponseSchema.New())
 	}
 }

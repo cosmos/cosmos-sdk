@@ -2,7 +2,10 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/types/address"
 
 	"cosmossdk.io/core/event"
 	errorsmod "cosmossdk.io/errors"
@@ -13,13 +16,19 @@ import (
 
 type msgServer struct {
 	Keeper
+	migrationAuthorizationAddr string
 }
 
 // NewMsgServerImpl returns an implementation of the feegrant MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(k Keeper) feegrant.MsgServer {
+	authAddr, err := k.addrCdc.BytesToString(address.Module("accounts"))
+	if err != nil {
+		panic(fmt.Errorf("error converting module address to string: %w", err))
+	}
 	return &msgServer{
-		Keeper: k,
+		Keeper:                     k,
+		migrationAuthorizationAddr: authAddr,
 	}
 }
 
@@ -102,4 +111,24 @@ func (k msgServer) PruneAllowances(ctx context.Context, req *feegrant.MsgPruneAl
 	}
 
 	return &feegrant.MsgPruneAllowancesResponse{}, nil
+}
+
+func (k msgServer) MigrateAllowances(ctx context.Context, msg *feegrant.MsgMigrateAllowances) (*feegrant.MsgMigrateAllowancesResponse, error) {
+	// todo: how cna we ensure that this msg is not called from external?
+	// xaccounts can only send msgs with their addr as sender
+	//if msg.Sender != k.migrationAuthorizationAddr {
+	//	return nil, sdkerrors.ErrUnauthorized.Wrap("only the xaccounts module can migrate allowances")
+	//}
+	granter, err := k.addrCdc.StringToBytes(msg.Granter)
+	if err != nil {
+		return nil, err
+	}
+
+	grants, err := k.Keeper.MigrateAllowances(ctx, granter)
+	if err != nil {
+		return nil, err
+	}
+	return &feegrant.MsgMigrateAllowancesResponse{
+		Grants: grants,
+	}, nil
 }

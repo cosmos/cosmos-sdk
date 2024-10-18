@@ -20,12 +20,12 @@ const (
 	MaxBodySize     = 1 << 20 // 1 MB
 )
 
-func NewDefaultHandler[T transaction.Tx](appManager *appmanager.AppManager[T]) http.Handler {
+func NewDefaultHandler[T transaction.Tx](appManager appmanager.AppManager[T]) http.Handler {
 	return &DefaultHandler[T]{appManager: appManager}
 }
 
 type DefaultHandler[T transaction.Tx] struct {
-	appManager *appmanager.AppManager[T]
+	appManager appmanager.AppManager[T]
 }
 
 func (h *DefaultHandler[T]) ServeHTTP(w http.ResponseWriter, r *http.Request) {

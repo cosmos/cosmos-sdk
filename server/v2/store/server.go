@@ -32,7 +32,7 @@ func New[T transaction.Tx]() *Server[T] {
 }
 
 func (s *Server[T]) Init(app serverv2.AppI[T], v map[string]any, _ log.Logger) (err error) {
-	s.backend = app.GetStore()
+	s.backend = app.Store()
 	s.config, err = UnmarshalConfig(v)
 	return err
 }

@@ -80,6 +80,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		bankKeeper,
 		stakingKeeper,
 		authority,
+		nil,
 	)
 	s.ctx = ctx
 	s.poolKeeper = poolKeeper

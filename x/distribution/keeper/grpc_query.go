@@ -373,12 +373,6 @@ func (k Querier) DelegatorWithdrawAddress(ctx context.Context, req *types.QueryD
 // This method uses deprecated query request. Use CommunityPool from x/protocolpool module instead.
 // CommunityPool queries the community pool coins
 func (k Querier) CommunityPool(ctx context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
-	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolModuleName)
-	if moduleAccount == nil {
-		return nil, status.Error(codes.Internal, "protocolpool module account does not exist")
-	}
-
-	balances := k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress())
-
+	balances := k.bankKeeper.GetAllBalances(ctx, k.moduleAccountsService.Address(types.ProtocolPoolModuleName))
 	return &types.QueryCommunityPoolResponse{Pool: sdk.NewDecCoinsFromCoins(balances...)}, nil
 }

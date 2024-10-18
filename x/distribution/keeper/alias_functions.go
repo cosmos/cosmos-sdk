@@ -22,5 +22,9 @@ func (k Keeper) GetValidatorOutstandingRewardsCoins(ctx context.Context, val sdk
 
 // GetDistributionAccount returns the distribution ModuleAccount
 func (k Keeper) GetDistributionAccount(ctx context.Context) sdk.ModuleAccountI {
-	return k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
+	acc, err := k.moduleAccountsService.Account(ctx, types.ModuleName)
+	if err != nil {
+		panic(err)
+	}
+	return acc
 }

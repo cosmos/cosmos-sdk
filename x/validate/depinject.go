@@ -5,6 +5,7 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/validate/module/v1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
@@ -32,10 +33,11 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	ModuleConfig  *modulev1.Module
-	Environment   appmodulev2.Environment
-	TxConfig      client.TxConfig
-	DynamicConfig server.DynamicConfig `optional:"true"`
+	ModuleConfig          *modulev1.Module
+	Environment           appmodulev2.Environment
+	TxConfig              client.TxConfig
+	ModuleAccountsService moduleaccounts.Service
+	DynamicConfig         server.DynamicConfig `optional:"true"`
 
 	AccountKeeper            ante.AccountKeeper
 	BankKeeper               authtypes.BankKeeper
@@ -76,7 +78,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 			panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
 		}
 
-		feeTxValidator = ante.NewDeductFeeDecorator(in.AccountKeeper, in.BankKeeper, in.FeeGrantKeeper, in.TxFeeChecker)
+		feeTxValidator = ante.NewDeductFeeDecorator(in.AccountKeeper, in.BankKeeper, in.FeeGrantKeeper, in.TxFeeChecker, in.ModuleAccountsService)
 		feeTxValidator.SetMinGasPrices(minGasPrices) // set min gas price in deduct fee decorator
 	}
 

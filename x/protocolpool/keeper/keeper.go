@@ -9,7 +9,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
-	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/protocolpool/types"
 
@@ -22,9 +22,10 @@ import (
 type Keeper struct {
 	appmodule.Environment
 
-	authKeeper    types.AccountKeeper
-	bankKeeper    types.BankKeeper
-	stakingKeeper types.StakingKeeper
+	authKeeper            types.AccountKeeper
+	bankKeeper            types.BankKeeper
+	stakingKeeper         types.StakingKeeper
+	moduleAccountsService moduleaccounts.Service
 
 	cdc codec.BinaryCodec
 
@@ -44,20 +45,27 @@ const (
 	errModuleAccountNotSet = "%s module account has not been set"
 )
 
-func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, authority string,
+func NewKeeper(
+	cdc codec.BinaryCodec,
+	env appmodule.Environment,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	sk types.StakingKeeper,
+	authority string,
+	moduleAccountsService moduleaccounts.Service,
 ) Keeper {
 	// ensure pool module account is set
-	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
-		panic(fmt.Sprintf(errModuleAccountNotSet, types.ModuleName))
-	}
-	// ensure stream account is set
-	if addr := ak.GetModuleAddress(types.StreamAccount); addr == nil {
-		panic(fmt.Sprintf(errModuleAccountNotSet, types.StreamAccount))
-	}
-	// ensure protocol pool distribution account is set
-	if addr := ak.GetModuleAddress(types.ProtocolPoolDistrAccount); addr == nil {
-		panic(fmt.Sprintf(errModuleAccountNotSet, types.ProtocolPoolDistrAccount))
-	}
+	// if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
+	// 	panic(fmt.Sprintf(errModuleAccountNotSet, types.ModuleName))
+	// }
+	// // ensure stream account is set
+	// if addr := ak.GetModuleAddress(types.StreamAccount); addr == nil {
+	// 	panic(fmt.Sprintf(errModuleAccountNotSet, types.StreamAccount))
+	// }
+	// // ensure protocol pool distribution account is set
+	// if addr := ak.GetModuleAddress(types.ProtocolPoolDistrAccount); addr == nil {
+	// 	panic(fmt.Sprintf(errModuleAccountNotSet, types.ProtocolPoolDistrAccount))
+	// }
 
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
@@ -66,6 +74,7 @@ func NewKeeper(cdc codec.BinaryCodec, env appmodule.Environment, ak types.Accoun
 		authKeeper:                ak,
 		bankKeeper:                bk,
 		stakingKeeper:             sk,
+		moduleAccountsService:     moduleAccountsService,
 		cdc:                       cdc,
 		authority:                 authority,
 		BudgetProposal:            collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.Budget](cdc)),
@@ -108,11 +117,12 @@ func (k Keeper) DistributeFromStreamFunds(ctx context.Context, amount sdk.Coins,
 
 // GetCommunityPool gets the community pool balance.
 func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
-	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
-	if moduleAccount == nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", types.ModuleName)
+	macc, err := k.moduleAccountsService.Account(ctx, types.ModuleName)
+	if err != nil {
+		return nil, err
 	}
-	return k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress()), nil
+
+	return k.bankKeeper.GetAllBalances(ctx, macc.GetAddress()), nil
 }
 
 func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient []byte) (sdk.Coin, error) {
@@ -148,9 +158,9 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient []byte) (s
 // SetToDistribute sets the amount to be distributed among recipients.
 func (k Keeper) SetToDistribute(ctx context.Context) error {
 	// Get current balance of the intermediary module account
-	moduleAccount := k.authKeeper.GetModuleAccount(ctx, types.ProtocolPoolDistrAccount)
-	if moduleAccount == nil {
-		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", types.ProtocolPoolDistrAccount)
+	macc, err := k.moduleAccountsService.Account(ctx, types.ProtocolPoolDistrAccount)
+	if err != nil {
+		return err
 	}
 
 	denom, err := k.stakingKeeper.BondDenom(ctx)
@@ -158,7 +168,7 @@ func (k Keeper) SetToDistribute(ctx context.Context) error {
 		return err
 	}
 
-	currentBalance := k.bankKeeper.GetAllBalances(ctx, moduleAccount.GetAddress())
+	currentBalance := k.bankKeeper.GetAllBalances(ctx, macc.GetAddress())
 	distributionBalance := currentBalance.AmountOf(denom)
 
 	// if the balance is zero, return early

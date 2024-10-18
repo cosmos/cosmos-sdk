@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
@@ -11,6 +10,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/moduleaccounts"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/distribution/types"
 
@@ -23,7 +23,8 @@ import (
 type Keeper struct {
 	appmodule.Environment
 
-	cometService comet.Service
+	cometService          comet.Service
+	moduleAccountsService moduleaccounts.Service
 
 	cdc           codec.BinaryCodec
 	addrCdc       address.Codec
@@ -66,26 +67,29 @@ func NewKeeper(
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
 	cometService comet.Service,
+	moduleAccountsService moduleaccounts.Service,
 	feeCollectorName, authority string,
 ) Keeper {
 	// ensure distribution module account is set
-	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
-	}
+	// TODO: @facu - this is not doable now I think
+	// if addr := moduleAccountsService.Address(types.ModuleName); addr == nil {
+	// 	panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	// }
 
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := Keeper{
-		Environment:      env,
-		cometService:     cometService,
-		cdc:              cdc,
-		addrCdc:          ak.AddressCodec(),
-		authKeeper:       ak,
-		bankKeeper:       bk,
-		stakingKeeper:    sk,
-		feeCollectorName: feeCollectorName,
-		authority:        authority,
-		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		FeePool:          collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
+		Environment:           env,
+		cometService:          cometService,
+		moduleAccountsService: moduleAccountsService,
+		cdc:                   cdc,
+		addrCdc:               ak.AddressCodec(),
+		authKeeper:            ak,
+		bankKeeper:            bk,
+		stakingKeeper:         sk,
+		feeCollectorName:      feeCollectorName,
+		authority:             authority,
+		Params:                collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		FeePool:               collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
 		DelegatorsWithdrawAddress: collections.NewMap(
 			sb,
 			types.DelegatorWithdrawAddrPrefix,

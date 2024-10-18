@@ -9,13 +9,13 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -35,10 +35,11 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	Cdc          codec.Codec
-	Environment  appmodule.Environment
-	AddressCodec address.Codec
+	Config                *modulev1.Module
+	Cdc                   codec.Codec
+	Environment           appmodule.Environment
+	AddressCodec          address.Codec
+	ModuleAccountsService moduleaccounts.Service
 
 	AccountKeeper types.AccountKeeper
 }
@@ -46,9 +47,8 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	BankKeeper     keeper.BaseKeeper
-	Module         appmodule.AppModule
-	ModuleAccounts []runtime.ModuleAccount
+	BankKeeper keeper.BaseKeeper
+	Module     appmodule.AppModule
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -66,8 +66,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 			blockedAddresses[addrStr] = true
 		}
 	} else {
-		for _, permission := range in.AccountKeeper.GetModulePermissions() {
-			addrStr, err := in.AddressCodec.BytesToString(permission.GetAddress())
+		for _, addr := range in.ModuleAccountsService.AllAccounts() {
+			addrStr, err := in.AddressCodec.BytesToString(addr)
 			if err != nil {
 				panic(err)
 			}
@@ -92,10 +92,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		blockedAddresses,
 		authStr,
+		in.ModuleAccountsService,
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
 
-	return ModuleOutputs{BankKeeper: bankKeeper, Module: m, ModuleAccounts: []runtime.ModuleAccount{types.ModuleName, "blahhh"}}
+	return ModuleOutputs{BankKeeper: bankKeeper, Module: m}
 }
 
 func InvokeSetSendRestrictions(

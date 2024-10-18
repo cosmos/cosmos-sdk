@@ -22,9 +22,9 @@ func NewKeeper(env appmodule.Environment,
 	cdc codec.BinaryCodec, ak nft.AccountKeeper, bk nft.BankKeeper,
 ) Keeper {
 	// ensure nft module account is set
-	if addr := ak.GetModuleAddress(nft.ModuleName); addr == nil {
-		panic("the nft module account has not been set")
-	}
+	// if addr := ak.GetModuleAddress(nft.ModuleName); addr == nil {
+	// 	panic("the nft module account has not been set")
+	// }
 
 	return Keeper{
 		Environment: env,

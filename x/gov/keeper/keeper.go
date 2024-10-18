@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
@@ -31,6 +32,8 @@ type Keeper struct {
 
 	// The codec for binary encoding/decoding.
 	cdc codec.Codec
+
+	moduleAccountsService moduleaccounts.Service
 
 	// Legacy Proposal router
 	legacyRouter v1beta1.Router
@@ -82,12 +85,12 @@ func (k Keeper) GetAuthority() string {
 func NewKeeper(
 	cdc codec.Codec, env appmodule.Environment, authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper, sk types.StakingKeeper, pk types.PoolKeeper,
-	config Config, authority string,
+	config Config, authority string, moduleAccountsService moduleaccounts.Service,
 ) *Keeper {
 	// ensure governance module account is set
-	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
-	}
+	// if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
+	// 	panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	// }
 
 	if _, err := authKeeper.AddressCodec().StringToBytes(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
@@ -119,6 +122,7 @@ func NewKeeper(
 		sk:                     sk,
 		poolKeeper:             pk,
 		cdc:                    cdc,
+		moduleAccountsService:  moduleAccountsService,
 		config:                 config,
 		authority:              authority,
 		Constitution:           collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
@@ -177,12 +181,16 @@ func (k Keeper) LegacyRouter() v1beta1.Router {
 
 // GetGovernanceAccount returns the governance ModuleAccount
 func (k Keeper) GetGovernanceAccount(ctx context.Context) sdk.ModuleAccountI {
-	return k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
+	acc, err := k.moduleAccountsService.Account(ctx, types.ModuleName)
+	if err != nil {
+		panic(err)
+	}
+	return acc
 }
 
 // ModuleAccountAddress returns gov module account address
 func (k Keeper) ModuleAccountAddress() sdk.AccAddress {
-	return k.authKeeper.GetModuleAddress(types.ModuleName)
+	return k.moduleAccountsService.Address(types.ModuleName)
 }
 
 // validateProposalLengths checks message metadata, summary and title

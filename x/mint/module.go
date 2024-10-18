@@ -38,9 +38,8 @@ var (
 
 // AppModule implements an application module for the mint module.
 type AppModule struct {
-	cdc        codec.Codec
-	keeper     *keeper.Keeper
-	authKeeper types.AccountKeeper
+	cdc    codec.Codec
+	keeper *keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object.
@@ -48,12 +47,10 @@ type AppModule struct {
 func NewAppModule(
 	cdc codec.Codec,
 	keeper *keeper.Keeper,
-	ak types.AccountKeeper,
 ) AppModule {
 	return AppModule{
-		cdc:        cdc,
-		keeper:     keeper,
-		authKeeper: ak,
+		cdc:    cdc,
+		keeper: keeper,
 	}
 }
 
@@ -128,7 +125,7 @@ func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error
 		return err
 	}
 
-	return am.keeper.InitGenesis(ctx, am.authKeeper, &genesisState)
+	return am.keeper.InitGenesis(ctx, &genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the mint

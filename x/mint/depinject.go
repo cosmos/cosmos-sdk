@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	epochstypes "cosmossdk.io/x/epochs/types"
@@ -12,6 +14,7 @@ import (
 	"cosmossdk.io/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -30,20 +33,22 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config      *modulev1.Module
-	Environment appmodule.Environment
-	Cdc         codec.Codec
+	Config                *modulev1.Module
+	Environment           appmodule.Environment
+	Cdc                   codec.Codec
+	ModuleAccountsService moduleaccounts.Service
+	AddressCdc            address.Codec
 
-	AccountKeeper types.AccountKeeper
-	BankKeeper    types.BankKeeper
+	BankKeeper types.BankKeeper
 }
 
 type ModuleOutputs struct {
 	depinject.Out
 
-	MintKeeper *keeper.Keeper
-	Module     appmodule.AppModule
-	EpochHooks epochstypes.EpochHooksWrapper
+	MintKeeper     *keeper.Keeper
+	Module         appmodule.AppModule
+	EpochHooks     epochstypes.EpochHooksWrapper
+	ModuleAccounts []runtime.ModuleAccount
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -58,7 +63,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	as, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
+	as, err := in.AddressCdc.BytesToString(authority)
 	if err != nil {
 		panic(err)
 	}
@@ -66,15 +71,20 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Environment,
-		in.AccountKeeper,
 		in.BankKeeper,
 		feeCollectorName,
 		as,
+		in.ModuleAccountsService,
 	)
 
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper)
+	m := NewAppModule(in.Cdc, k)
 
-	return ModuleOutputs{MintKeeper: k, Module: m, EpochHooks: epochstypes.EpochHooksWrapper{EpochHooks: m}}
+	return ModuleOutputs{
+		MintKeeper:     k,
+		Module:         m,
+		EpochHooks:     epochstypes.EpochHooksWrapper{EpochHooks: m},
+		ModuleAccounts: []runtime.ModuleAccount{types.ModuleName},
+	}
 }
 
 func InvokeSetMintFn(mintKeeper *keeper.Keeper, mintFn types.MintFn, stakingKeeper types.StakingKeeper) error {

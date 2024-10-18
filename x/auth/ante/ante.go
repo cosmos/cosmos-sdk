@@ -3,6 +3,7 @@ package ante
 import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/moduleaccounts"
 	errorsmod "cosmossdk.io/errors"
 	txsigning "cosmossdk.io/x/tx/signing"
 
@@ -26,6 +27,7 @@ type HandlerOptions struct {
 	SigGasConsumer           func(meter gas.Meter, sig signing.SignatureV2, params types.Params) error
 	TxFeeChecker             TxFeeChecker
 	UnorderedTxManager       *unorderedtx.Manager
+	ModuleAccountsService    moduleaccounts.Service
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -51,7 +53,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		NewTxTimeoutHeightDecorator(options.Environment),
 		NewValidateMemoDecorator(options.AccountKeeper),
 		NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+		NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker, options.ModuleAccountsService),
 		NewValidateSigCountDecorator(options.AccountKeeper),
 		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler, options.SigGasConsumer, options.AccountAbstractionKeeper),
 	}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 
@@ -23,20 +24,22 @@ type TxFeeChecker func(ctx context.Context, tx transaction.Tx) (sdk.Coins, int64
 // Call next AnteHandler if fees are successfully deducted.
 // CONTRACT: The Tx must implement the FeeTx interface to use DeductFeeDecorator.
 type DeductFeeDecorator struct {
-	accountKeeper  AccountKeeper
-	bankKeeper     types.BankKeeper
-	feegrantKeeper FeegrantKeeper
-	txFeeChecker   TxFeeChecker
-	minGasPrices   sdk.DecCoins
+	accountKeeper         AccountKeeper
+	bankKeeper            types.BankKeeper
+	feegrantKeeper        FeegrantKeeper
+	txFeeChecker          TxFeeChecker
+	minGasPrices          sdk.DecCoins
+	moduleAccountsService moduleaccounts.Service
 }
 
-func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper, tfc TxFeeChecker) *DeductFeeDecorator {
+func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper, tfc TxFeeChecker, moduleAccountsService moduleaccounts.Service) *DeductFeeDecorator {
 	dfd := &DeductFeeDecorator{
-		accountKeeper:  ak,
-		bankKeeper:     bk,
-		feegrantKeeper: fk,
-		txFeeChecker:   tfc,
-		minGasPrices:   sdk.NewDecCoins(),
+		accountKeeper:         ak,
+		bankKeeper:            bk,
+		feegrantKeeper:        fk,
+		txFeeChecker:          tfc,
+		minGasPrices:          sdk.NewDecCoins(),
+		moduleAccountsService: moduleAccountsService,
 	}
 
 	if tfc == nil {
@@ -99,7 +102,7 @@ func (dfd *DeductFeeDecorator) ValidateTx(ctx context.Context, tx transaction.Tx
 }
 
 func (dfd *DeductFeeDecorator) checkDeductFee(ctx context.Context, feeTx sdk.FeeTx, fee sdk.Coins) error {
-	addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName)
+	addr := dfd.moduleAccountsService.Address(types.FeeCollectorName)
 	if len(addr) == 0 {
 		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}

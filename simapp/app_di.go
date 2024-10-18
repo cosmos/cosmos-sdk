@@ -10,6 +10,7 @@ import (
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/core/registry"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
@@ -77,6 +78,8 @@ type SimApp struct {
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensuskeeper.Keeper
 	CircuitBreakerKeeper  circuitkeeper.Keeper
+
+	ModuleAccountsService moduleaccounts.Service
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -200,6 +203,7 @@ func NewSimApp(
 		&app.FeeGrantKeeper,
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
+		&app.ModuleAccountsService,
 	); err != nil {
 		panic(err)
 	}
@@ -294,14 +298,15 @@ func (app *SimApp) setCustomAnteHandler() {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
 			ante.HandlerOptions{
-				AccountKeeper:      app.AuthKeeper,
-				BankKeeper:         app.BankKeeper,
-				ConsensusKeeper:    app.ConsensusParamsKeeper,
-				SignModeHandler:    app.txConfig.SignModeHandler(),
-				FeegrantKeeper:     app.FeeGrantKeeper,
-				SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
-				UnorderedTxManager: app.UnorderedTxManager,
-				Environment:        app.AuthKeeper.Environment,
+				AccountKeeper:         app.AuthKeeper,
+				BankKeeper:            app.BankKeeper,
+				ConsensusKeeper:       app.ConsensusParamsKeeper,
+				SignModeHandler:       app.txConfig.SignModeHandler(),
+				FeegrantKeeper:        app.FeeGrantKeeper,
+				SigGasConsumer:        ante.DefaultSigVerificationGasConsumer,
+				UnorderedTxManager:    app.UnorderedTxManager,
+				Environment:           app.AuthKeeper.Environment,
+				ModuleAccountsService: app.ModuleAccountsService,
 			},
 			&app.CircuitBreakerKeeper,
 		},
@@ -363,14 +368,14 @@ func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICon
 // GetMaccPerms returns a copy of the module account permissions
 //
 // NOTE: This is solely to be used for testing purposes.
-func GetMaccPerms() map[string][]string {
-	dup := make(map[string][]string)
-	for _, perms := range moduleAccPerms {
-		dup[perms.Account] = perms.Permissions
-	}
+// func GetMaccPerms() map[string][]string {
+// dup := make(map[string][]string)
+// for _, perms := range moduleAccPerms {
+// 	dup[perms.Account] = perms.Permissions
+// }
 
-	return dup
-}
+// return dup
+// }
 
 // BlockedAddresses returns all the app's blocked account addresses.
 // This function takes an address.Codec parameter to maintain compatibility
@@ -383,9 +388,10 @@ func BlockedAddresses(_ address.Codec) (map[string]bool, error) {
 			result[addr] = true
 		}
 	} else {
-		for addr := range GetMaccPerms() {
-			result[addr] = true
-		}
+		// TODO: replace with service! @facu
+		// for addr := range GetMaccPerms() {
+		// 	result[addr] = true
+		// }
 	}
 
 	return result, nil

@@ -104,8 +104,10 @@ func init() {
 			ProvideTransientStoreService,
 			ProvideModuleManager,
 			ProvideCometService,
+			ProvideModuleAccountsService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
+		appconfig.Invoke(SetupModuleAccountsService),
 	)
 }
 
@@ -160,6 +162,10 @@ type AppInputs struct {
 	InterfaceRegistry codectypes.InterfaceRegistry
 	LegacyAmino       registry.AminoRegistrar
 	AppOptions        servertypes.AppOptions `optional:"true"` // can be nil in client wiring
+}
+
+func ProvideModuleAccountsService(ak AccountGetter) moduleaccounts.Service {
+	return &ModuleAccountsService{accounts: map[string][]byte{}, ak: ak}
 }
 
 func SetupModuleAccountsService(
@@ -267,7 +273,6 @@ func ProvideEnvironment(
 	app *AppBuilder,
 	msgServiceRouter *baseapp.MsgServiceRouter,
 	queryServiceRouter *baseapp.GRPCQueryRouter,
-	moduleAccount []ModuleAccount,
 ) (store.KVStoreService, store.MemoryStoreService, appmodule.Environment) {
 	var (
 		kvService    store.KVStoreService     = failingStoreService{}
@@ -282,8 +287,6 @@ func ProvideEnvironment(
 		memStoreKey := ProvideMemoryStoreKey(config, key, app)
 		memKvService = memStoreService{key: memStoreKey}
 	}
-
-	fmt.Println("ProvideEnvironment", moduleAccount)
 
 	return kvService, memKvService, NewEnvironment(
 		kvService,

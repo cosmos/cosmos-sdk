@@ -3,6 +3,7 @@ package protocolpool
 import (
 	modulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/protocolpool/keeper"
@@ -10,6 +11,7 @@ import (
 	"cosmossdk.io/x/protocolpool/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -31,9 +33,10 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config      *modulev1.Module
-	Codec       codec.Codec
-	Environment appmodule.Environment
+	Config                *modulev1.Module
+	Codec                 codec.Codec
+	Environment           appmodule.Environment
+	ModuleAccountsService moduleaccounts.Service
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -43,8 +46,9 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	Keeper keeper.Keeper
-	Module appmodule.AppModule
+	Keeper         keeper.Keeper
+	Module         appmodule.AppModule
+	ModuleAccounts []runtime.ModuleAccount
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -59,12 +63,25 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		panic(err)
 	}
 
-	k := keeper.NewKeeper(in.Codec, in.Environment, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, authorityAddr)
+	k := keeper.NewKeeper(
+		in.Codec,
+		in.Environment,
+		in.AccountKeeper,
+		in.BankKeeper,
+		in.StakingKeeper,
+		authorityAddr,
+		in.ModuleAccountsService,
+	)
 	m := NewAppModule(in.Codec, k, in.AccountKeeper, in.BankKeeper)
 
 	return ModuleOutputs{
 		Keeper: k,
 		Module: m,
+		ModuleAccounts: []runtime.ModuleAccount{
+			types.ModuleName,
+			types.ProtocolPoolDistrAccount,
+			types.StreamAccount,
+		},
 	}
 }
 

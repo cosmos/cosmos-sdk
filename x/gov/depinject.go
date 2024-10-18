@@ -8,14 +8,17 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	govclient "cosmossdk.io/x/gov/client"
 	"cosmossdk.io/x/gov/keeper"
+	"cosmossdk.io/x/gov/types"
 	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -38,6 +41,7 @@ type ModuleInputs struct {
 	Cdc                   codec.Codec
 	Environment           appmodule.Environment
 	ModuleKey             depinject.OwnModuleKey
+	ModuleAccountsService moduleaccounts.Service
 	LegacyProposalHandler []govclient.ProposalHandler `optional:"true"`
 
 	AccountKeeper govtypes.AccountKeeper
@@ -49,9 +53,10 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	Module       appmodule.AppModule
-	Keeper       *keeper.Keeper
-	HandlerRoute v1beta1.HandlerRoute
+	Module         appmodule.AppModule
+	Keeper         *keeper.Keeper
+	HandlerRoute   v1beta1.HandlerRoute
+	ModuleAccounts []runtime.ModuleAccount
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -88,11 +93,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.PoolKeeper,
 		defaultConfig,
 		authorityAddr,
+		in.ModuleAccountsService,
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.PoolKeeper, in.LegacyProposalHandler...)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}
 
-	return ModuleOutputs{Module: m, Keeper: k, HandlerRoute: hr}
+	return ModuleOutputs{Module: m, Keeper: k, HandlerRoute: hr, ModuleAccounts: []runtime.ModuleAccount{types.ModuleName}}
 }
 
 func InvokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {

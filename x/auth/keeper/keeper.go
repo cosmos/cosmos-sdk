@@ -251,6 +251,25 @@ func (ak AccountKeeper) GetModuleAddressAndPermissions(moduleName string) (addr 
 	return permAddr.GetAddress(), permAddr.GetPermissions()
 }
 
+// GetOrSetModuleAccount hopefully temporary until I can figure out a better way to handle this @facu
+func (ak AccountKeeper) GetOrSetModuleAccount(ctx context.Context, moduleName string, addr []byte) sdk.ModuleAccountI {
+	acc := ak.GetAccount(ctx, addr)
+	if acc != nil {
+		macc, ok := acc.(sdk.ModuleAccountI)
+		if !ok {
+			panic("account is not a module account")
+		}
+		return macc
+	}
+
+	// create a new module account
+	macc := types.NewEmptyModuleAccount(moduleName)
+	maccI := (ak.NewAccount(ctx, macc)).(sdk.ModuleAccountI) // set the account number
+	ak.SetModuleAccount(ctx, maccI)
+
+	return maccI
+}
+
 // GetModuleAccountAndPermissions gets the module account from the auth account store and its
 // registered permissions
 func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx context.Context, moduleName string) (sdk.ModuleAccountI, []string) {

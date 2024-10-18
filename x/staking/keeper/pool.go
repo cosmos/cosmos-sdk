@@ -11,12 +11,20 @@ import (
 
 // GetBondedPool returns the bonded tokens pool's module account
 func (k Keeper) GetBondedPool(ctx context.Context) (bondedPool sdk.ModuleAccountI) {
-	return k.authKeeper.GetModuleAccount(ctx, types.BondedPoolName)
+	acc, err := k.moduleAccountsService.Account(ctx, types.BondedPoolName)
+	if err != nil {
+		panic(err)
+	}
+	return acc
 }
 
 // GetNotBondedPool returns the not bonded tokens pool's module account
 func (k Keeper) GetNotBondedPool(ctx context.Context) (notBondedPool sdk.ModuleAccountI) {
-	return k.authKeeper.GetModuleAccount(ctx, types.NotBondedPoolName)
+	acc, err := k.moduleAccountsService.Account(ctx, types.NotBondedPoolName)
+	if err != nil {
+		panic(err)
+	}
+	return acc
 }
 
 // bondedTokensToNotBonded transfers coins from the bonded to the not bonded pool within staking
@@ -55,7 +63,7 @@ func (k Keeper) burnBondedTokens(ctx context.Context, amt math.Int) error {
 
 	coins := sdk.NewCoins(sdk.NewCoin(bondDenom, amt))
 
-	return k.bankKeeper.BurnCoins(ctx, k.authKeeper.GetModuleAddress(types.BondedPoolName), coins)
+	return k.bankKeeper.BurnCoins(ctx, k.moduleAccountsService.Address(types.BondedPoolName), coins)
 }
 
 // burnNotBondedTokens burns coins from the not bonded pool module account
@@ -72,7 +80,7 @@ func (k Keeper) burnNotBondedTokens(ctx context.Context, amt math.Int) error {
 
 	coins := sdk.NewCoins(sdk.NewCoin(bondDenom, amt))
 
-	return k.bankKeeper.BurnCoins(ctx, k.authKeeper.GetModuleAddress(types.NotBondedPoolName), coins)
+	return k.bankKeeper.BurnCoins(ctx, k.moduleAccountsService.Address(types.NotBondedPoolName), coins)
 }
 
 // TotalBondedTokens total staking tokens supply which is bonded

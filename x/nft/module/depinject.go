@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 )
 
 var _ depinject.OnePerModuleType = AppModule{}
@@ -37,13 +38,14 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	NFTKeeper keeper.Keeper
-	Module    appmodule.AppModule
+	NFTKeeper      keeper.Keeper
+	Module         appmodule.AppModule
+	ModuleAccounts []runtime.ModuleAccount
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(in.Environment, in.Cdc, in.AccountKeeper, in.BankKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 
-	return ModuleOutputs{NFTKeeper: k, Module: m}
+	return ModuleOutputs{NFTKeeper: k, Module: m, ModuleAccounts: []runtime.ModuleAccount{nft.ModuleName}}
 }

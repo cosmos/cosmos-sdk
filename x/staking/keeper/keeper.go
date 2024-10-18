@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -12,6 +11,7 @@ import (
 	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
@@ -63,6 +63,7 @@ type Keeper struct {
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
 	cometInfoService      comet.Service
+	moduleAccountsService moduleaccounts.Service
 
 	Schema collections.Schema
 
@@ -125,16 +126,17 @@ func NewKeeper(
 	validatorAddressCodec addresscodec.Codec,
 	consensusAddressCodec addresscodec.Codec,
 	cometInfoService comet.Service,
+	moduleAccountsService moduleaccounts.Service,
 ) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	// ensure bonded and not bonded module accounts are set
-	if addr := ak.GetModuleAddress(types.BondedPoolName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
-	}
+	// if addr := moduleAccountsService.Address(types.BondedPoolName); addr == nil {
+	// 	panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
+	// }
 
-	if addr := ak.GetModuleAddress(types.NotBondedPoolName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
-	}
+	// if addr := moduleAccountsService.Address(types.NotBondedPoolName); addr == nil {
+	// 	panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
+	// }
 
 	// ensure that authority is a valid AccAddress
 	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
@@ -156,6 +158,7 @@ func NewKeeper(
 		validatorAddressCodec: validatorAddressCodec,
 		consensusAddressCodec: consensusAddressCodec,
 		cometInfoService:      cometInfoService,
+		moduleAccountsService: moduleAccountsService,
 		LastTotalPower:        collections.NewItem(sb, types.LastTotalPowerKey, "last_total_power", sdk.IntValue),
 		Delegations: collections.NewMap(
 			sb, types.DelegationKey, "delegations",

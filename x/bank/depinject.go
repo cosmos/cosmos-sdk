@@ -9,6 +9,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/bank/keeper"
@@ -34,10 +35,11 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	Cdc          codec.Codec
-	Environment  appmodule.Environment
-	AddressCodec address.Codec
+	Config                *modulev1.Module
+	Cdc                   codec.Codec
+	Environment           appmodule.Environment
+	AddressCodec          address.Codec
+	ModuleAccountsService moduleaccounts.Service
 
 	AccountKeeper types.AccountKeeper
 }
@@ -64,8 +66,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 			blockedAddresses[addrStr] = true
 		}
 	} else {
-		for _, permission := range in.AccountKeeper.GetModulePermissions() {
-			addrStr, err := in.AddressCodec.BytesToString(permission.GetAddress())
+		for _, addr := range in.ModuleAccountsService.AllAccounts() {
+			addrStr, err := in.AddressCodec.BytesToString(addr)
 			if err != nil {
 				panic(err)
 			}
@@ -90,6 +92,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		blockedAddresses,
 		authStr,
+		in.ModuleAccountsService,
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper)
 

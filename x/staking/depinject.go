@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/staking/keeper"
@@ -17,6 +18,7 @@ import (
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -48,14 +50,16 @@ type ModuleInputs struct {
 	Cdc                   codec.Codec
 	Environment           appmodule.Environment
 	CometInfoService      comet.Service
+	ModuleAccountsService moduleaccounts.Service
 }
 
 // Dependency Injection Outputs
 type ModuleOutputs struct {
 	depinject.Out
 
-	StakingKeeper *keeper.Keeper
-	Module        appmodule.AppModule
+	StakingKeeper  *keeper.Keeper
+	Module         appmodule.AppModule
+	ModuleAccounts []runtime.ModuleAccount
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -80,9 +84,14 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.ValidatorAddressCodec,
 		in.ConsensusAddressCodec,
 		in.CometInfoService,
+		in.ModuleAccountsService,
 	)
 	m := NewAppModule(in.Cdc, k)
-	return ModuleOutputs{StakingKeeper: k, Module: m}
+	return ModuleOutputs{
+		StakingKeeper:  k,
+		Module:         m,
+		ModuleAccounts: []runtime.ModuleAccount{types.BondedPoolName, types.NotBondedPoolName},
+	}
 }
 
 func InvokeSetStakingHooks(

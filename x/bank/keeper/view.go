@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/moduleaccounts"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/bank/types"
@@ -58,9 +59,10 @@ func (b BalancesIndexes) IndexesList() []collections.Index[collections.Pair[sdk.
 type BaseViewKeeper struct {
 	appmodule.Environment
 
-	cdc     codec.BinaryCodec
-	ak      types.AccountKeeper
-	addrCdc address.Codec
+	cdc                   codec.BinaryCodec
+	ak                    types.AccountKeeper
+	addrCdc               address.Codec
+	moduleAccountsService moduleaccounts.Service
 
 	Schema        collections.Schema
 	Supply        collections.Map[string, math.Int]
@@ -71,18 +73,19 @@ type BaseViewKeeper struct {
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak types.AccountKeeper) BaseViewKeeper {
+func NewBaseViewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak types.AccountKeeper, moduleAccountsService moduleaccounts.Service) BaseViewKeeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := BaseViewKeeper{
-		Environment:   env,
-		cdc:           cdc,
-		ak:            ak,
-		addrCdc:       ak.AddressCodec(),
-		Supply:        collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
-		DenomMetadata: collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),
-		SendEnabled:   collections.NewMap(sb, types.SendEnabledPrefix, "send_enabled", collections.StringKey, codec.BoolValue), // NOTE: we use a bool value which uses protobuf to retain state backwards compat
-		Balances:      collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), types.BalanceValueCodec, newBalancesIndexes(sb)),
-		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		Environment:           env,
+		cdc:                   cdc,
+		ak:                    ak,
+		moduleAccountsService: moduleAccountsService,
+		addrCdc:               ak.AddressCodec(),
+		Supply:                collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
+		DenomMetadata:         collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),
+		SendEnabled:           collections.NewMap(sb, types.SendEnabledPrefix, "send_enabled", collections.StringKey, codec.BoolValue), // NOTE: we use a bool value which uses protobuf to retain state backwards compat
+		Balances:              collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), types.BalanceValueCodec, newBalancesIndexes(sb)),
+		Params:                collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
 
 	schema, err := sb.Build()

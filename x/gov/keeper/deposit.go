@@ -46,7 +46,7 @@ func (k Keeper) DeleteAndBurnDeposits(ctx context.Context, proposalID uint64) er
 		return err
 	}
 
-	return k.bankKeeper.BurnCoins(ctx, k.authKeeper.GetModuleAddress(types.ModuleName), coinsToBurn)
+	return k.bankKeeper.BurnCoins(ctx, k.moduleAccountsService.Address(types.ModuleName), coinsToBurn)
 }
 
 // RefundAndDeleteDeposits refunds and deletes all the deposits on a specific proposal.
@@ -253,14 +253,14 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 	// burn the cancellation fee or send the cancellation charges to destination address.
 	if !cancellationCharges.IsZero() {
 		// get the pool module account address
-		poolAddress, err := k.authKeeper.AddressCodec().BytesToString(k.authKeeper.GetModuleAddress(pooltypes.ModuleName))
+		poolAddress, err := k.authKeeper.AddressCodec().BytesToString(k.moduleAccountsService.Address(pooltypes.ModuleName))
 		if err != nil {
 			return err
 		}
 		switch {
 		case destAddress == "":
 			// burn the cancellation charges from deposits
-			err := k.bankKeeper.BurnCoins(ctx, k.authKeeper.GetModuleAddress(types.ModuleName), cancellationCharges)
+			err := k.bankKeeper.BurnCoins(ctx, k.moduleAccountsService.Address(types.ModuleName), cancellationCharges)
 			if err != nil {
 				return err
 			}

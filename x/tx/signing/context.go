@@ -13,12 +13,17 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
-	"cosmossdk.io/core/address"
 )
 
 type TypeResolver interface {
 	protoregistry.MessageTypeResolver
 	protoregistry.ExtensionTypeResolver
+}
+
+// AddressCodec is the cosmossdk.io/core/address codec interface used by the context.
+type AddressCodec interface {
+	StringToBytes(string) ([]byte, error)
+	BytesToString([]byte) (string, error)
 }
 
 // Context is a context for retrieving the list of signers from a
@@ -28,8 +33,8 @@ type TypeResolver interface {
 type Context struct {
 	fileResolver          ProtoFileResolver
 	typeResolver          protoregistry.MessageTypeResolver
-	addressCodec          address.Codec
-	validatorAddressCodec address.Codec
+	addressCodec          AddressCodec
+	validatorAddressCodec AddressCodec
 	getSignersFuncs       sync.Map
 	customGetSignerFuncs  map[protoreflect.FullName]GetSignersFunc
 	maxRecursionDepth     int
@@ -45,10 +50,10 @@ type Options struct {
 	TypeResolver TypeResolver
 
 	// AddressCodec is the codec for converting addresses between strings and bytes.
-	AddressCodec address.Codec
+	AddressCodec AddressCodec
 
 	// ValidatorAddressCodec is the codec for converting validator addresses between strings and bytes.
-	ValidatorAddressCodec address.Codec
+	ValidatorAddressCodec AddressCodec
 
 	// CustomGetSigners is a map of message types to custom GetSignersFuncs.
 	CustomGetSigners map[protoreflect.FullName]GetSignersFunc
@@ -323,7 +328,7 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 	}, nil
 }
 
-func (c *Context) getAddressCodec(field protoreflect.FieldDescriptor) address.Codec {
+func (c *Context) getAddressCodec(field protoreflect.FieldDescriptor) AddressCodec {
 	scalarOpt := proto.GetExtension(field.Options(), cosmos_proto.E_Scalar)
 	addrCdc := c.addressCodec
 	if scalarOpt != nil {
@@ -367,12 +372,12 @@ func (c *Context) GetSigners(msg proto.Message) ([][]byte, error) {
 }
 
 // AddressCodec returns the address codec used by the context.
-func (c *Context) AddressCodec() address.Codec {
+func (c *Context) AddressCodec() AddressCodec {
 	return c.addressCodec
 }
 
 // ValidatorAddressCodec returns the validator address codec used by the context.
-func (c *Context) ValidatorAddressCodec() address.Codec {
+func (c *Context) ValidatorAddressCodec() AddressCodec {
 	return c.validatorAddressCodec
 }
 

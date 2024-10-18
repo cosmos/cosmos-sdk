@@ -3,6 +3,7 @@
 ## Changelog
 
 * 2024-08-09: Reworked initial draft (previous work was in https://github.com/cosmos/cosmos-sdk/pull/15410)
+* 2024-09-04: Added message packet, error handling and gas specifications
 
 ## Background
 
@@ -156,13 +157,24 @@ It only exposes the following methods to the hypervisor:
 - `create(account address, state config)`: creates a new account state with the specified address and **state config**.
 - `migrate(account address, new state config)`: migrates the account state with the specified address to a new state config
 - `destroy(account address)`: destroys the account state with the specified address
+- `begin_tx(state_token, account address)`: creates a nested transaction within the specified state token for the specified account address
+- `commit_tx(state token)`: commits any state changes in the current nested transaction of the specified state token
+- `rollback_tx(state token)`: discards any state changes in the current nested transaction of the specified state token
+- `discard_cleanup(state token)`: cleans up and discards the current state token
+
+It is expected that _only_ the hypervisor can call the above methods.
 
 **State config** are optional bytes that each account handler's metadata can define which get passed to the **state handler** when an account is created.
 These bytes can be used by the **state handler** to determine what type of state and commitment store the **account** needs.
 
-A **state token** is an opaque array of 32-bytes that is passed in each message request.
-The hypervisor has no knowledge of what this token represents or how it is created,
-but it is expected that modules that mange state do understand this token and use it to manage all state changes
+`begin_tx`, `commit_tx`, `rollback_tx` and `discard_cleanup` are used internally by the hypervisor for error handling. See the error handling section for more details on their usage.
+
+A **state token** is an array of 32-bytes that is passed in each message request.
+It is opaque to the hypervisor except that the first bit of the first byte (the high bit)
+indicates the volatility of the state token.
+If the high bit is set then the state token is **volatile**, and if it is unset, it is **readonly**.
+Otherwise, the hypervisor has no knowledge of what this token represents or how it is created.
+It is expected that modules that manage state do understand this token and use it to manage all state changes
 in consistent transactions.
 All side effects regarding state, events, etc. are expected to coordinate around the usage of this token.
 It is possible that state modules expose methods for creating new **state tokens**
@@ -170,7 +182,7 @@ for nesting transactions.
 
 **Volatility** describes a message handler's behavior with respect to state and side effects.
 It is an enum value that can have one of the following values:
-* `volatile`: the handler can have side effects and send `volatile`, `radonly` or `pure` messages to other accounts. Such handlers are expected to both read and write state.
+* `volatile`: the handler can have side effects and send `volatile`, `readonly` or `pure` messages to other accounts. Such handlers are expected to both read and write state.
 * `readonly`: the handler cannot cause effects side effects and can only send `readonly` or `pure` messages to other accounts. Such handlers are expected to only read state.
 * `pure`: the handler cannot cause any side effects and can only call other pure handlers. Such handlers are expected to neither read nor write state.
 
@@ -178,6 +190,10 @@ The hypervisor will enforce **volatility** rules when routing messages to accoun
 Caller addresses are always passed to `volatile` methods,
 they are not required when calling `readonly` methods but will be passed when available,
 and they are not passed at all to `pure` methods.
+Volatile handlers can only be called with volatile state tokens.
+Readonly handlers cannot call volatile handlers even if they receive a volatile state token,
+except in the case that they acquire a new volatile state token.
+This can be used for simulations.
 
 ### Management of Account Lifecycle with the Hypervisor
 
@@ -232,15 +248,142 @@ account for a given message request.
 To facilitate efficient cross-language and cross-VM message passing, the precise layout of **message packets** is important
 as it reduces the need for serialization and deserialization in the core hypervisor and virtual machine layers.
 
-We start by defining a **message packet** as a 64kb (65,536 bytes) array which is aligned to a 64kb boundary.
-For most message handlers, this single packet should be large enough to contain a full **message request**,
-including all **message data** as well as message return data.
-In cases where the packet size is too small, additional buffers can be referenced from within the **message packet**.
+Message packets have a minimum size of 512 bytes to accommodate the 512-byte header specified below.
+Larger packets may be allocated depending on message handler needs.
+Generally, each message handler specification should describe the precise utilization of the message packet
+for that handler.
 
-More details on the specific layout of **message packets** will be specified in a future update to this RFC
-or a separate RFC.
-For now, we specify that within a 64kb **message packet**,
-at least 56kb will be available for **message data** and message responses.
+#### Message Packet Header
+
+**Message packets** always start with the 512-byte header with the following layout.
+- **message name**: a 128-byte array with the first byte indicating the length of the message name
+- **self-address**: a 64-byte array with the first byte indicating the length of the address
+- **caller-address**: a 64-byte array with the first byte indicating the length of the address
+- **context token**: a 32-byte array
+- **state token**: a 32-byte array
+- **message name hash**: the first 8-bytes of the SHA256 hash of the message name, which can be used for simplified routing
+- **gas limit**: an unsigned 64-bit integer
+- **gas consumed**: an unsigned 64-bit integer
+- **input data pointer 1**: 16 bytes, see below for the **data pointer** spec
+- **input data pointer 2**: 16 bytes
+- **output data pointer 1**: 16 bytes
+- **output data pointer 2**: 16 bytes
+- remaining bytes: reserved for future use, should be zeroed when a packet is initialized
+
+#### Data Pointer
+
+A **data pointer** is specified as follows:
+- **native pointer**: 8-bytes, a pointer to a separate buffer in the native environment or zero
+- **length**: unsigned 32-bit integer
+- **capacity or offset**: unsigned 32-bit integer
+
+In a **data pointer**, if **native pointer** is zero, then **capacity or offset** points to an offset within the
+**message packet** to the start of the data.
+Any such offset must occur after the 512-byte **message packet** header.
+If **native pointer** is non-zero, then **capacity or offset** is the capacity of the allocated buffer in bytes,
+which should be used when freeing the buffer.
+The **length** value indicates the length of the data in bytes that needs to be copied from source to target
+when data is passed from one environment to another.
+
+When passing a packet from one environment to another, a VM should follow these steps:
+1. allocate the packet in the new environment
+2. copy all 512-bytes of the **message packet** header from the source packet to the target packet
+3. if input data pointers point to additional buffers, then allocate these buffers in the new environment
+and update the **data pointers** in the target packet to point to the new buffers
+4. (optional) output data pointers may point to pre-allocated buffers or regions, but should generally have zero-length, if needed, do special handling of these
+5. after execution, copy and allocate output buffers as needed,
+and update the **output data pointers** in the source packet to point to the appropriate memory regions
+
+### Error Codes & Handling
+
+All invoke and handler methods return a 32-bit unsigned integer error code.
+If the error code is zero, then the operation was successful.
+
+#### System-Level Error Codes
+The following non-zero error codes are defined at the system level:
+* 1: out of gas
+* 2: fatal execution error (when an unexpected, likely non-deterministic fatal error occurs)
+* 3: account not found
+* 4: message handler not found
+* 5: invalid state access (when volatility rules are violated)
+* 6: unauthorized caller address (when the caller address impersonation is not authorized)
+* 7: invalid handler (when hypervisor or vm-level rules are violated by the handler implementation)
+* 8: unknown handler error (when handler execution failed for an unknown, but likely deterministic reason)
+
+Error codes through 255 are reserved for system-level errors and should only be returned by the hypervisor or 
+a virtual machine implementation.
+
+#### Handler-level Error Codes
+
+Any error code above 255 is interpreted as an error returned by a handler itself and is to be interpreted by the caller
+based on the message handler's specification.
+
+It is an error for a handler implementation to return a system-level error code, and if such a code is received it
+will be translated to error code 7 (invalid handler).
+If a handler implementation wants to simply propagate a system-level error code that it receives,
+it should wrap it with a different error code.
+Developer SDKs should handle this wrapping automatically.
+
+#### Error Data
+
+If additional data is included in the error,
+it is generally expected that this would be referenced by **output data pointer 1**,
+although message handlers are free to use **output data pointer 2** if necessary as well.
+System-level errors, if they do include additional data, will encode it as a string in **output data pointer 1**
+and will limit such messages to a maximum of 255 bytes.
+
+#### State Transactions and Errors
+
+Whenever a volatile message handler returns an error, no side effects can occur.
+If any side effects were applied to state before the error occurred, these must be rolled back.
+The hypervisor manages this using the `begin_tx`, `commit_tx`, and `rollback_tx` on the **state handler**.
+
+Before any call to a method,
+the hypervisor will call `begin_tx` with the state token passed in the message request
+and the authenticated caller address tracked by the hypervisor.
+If the method returns the core `0` for success, then the hypervisor will call `commit_tx` with the state token.
+If the method returns an error code, then the hypervisor will call `rollback_tx` with the state token
+and return the error to the caller.
+The state handler should use the account address passed in `begin_tx` to identify the state
+location that is being modified, rather than the caller address because the
+caller address can be impersonated with authorization middleware.
+
+This ensures state consistency in the presence of errors.
+
+#### Unwinding Errors and Discarding State Tokens
+
+Error codes 1 (out of gas) and 2 (fatal execution error) are considered unwinding errors.
+If one of these errors is returned, the hypervisor will halt execution of the calling message handler
+and unwind the call stack up to the last recoverable message handler if there is one.
+When unwinding, the hypervisor will call the `discard_cleanup` method of the **state handler**
+with each _new_ state token that was introduced in the unwound call stack.
+This ensures that if message handlers used new state tokens to create nested transactions,
+these transactions are properly cleaned up.
+Any state token that was used in the call stack before the unwinding target will not be cleaned up.
+
+For out-of-gas errors (code 1), the hypervisor will unwind up to the caller that set the gas limit.
+For fatal execution errors (code 2), the hypervisor will unwind up to the external caller that called the hypervisor, likely
+resulting in process termination.
+A fatal execution error should only be returned when it is expected that the error is non-deterministic and unrecoverable.
+An example of such an error would be running out of disk space or losing network connectivity.
+If there is an execution error that is likely to be deterministic, such as Wasm code failing to execute, then
+the virtual machine should return error code 8 (unknown handler error), which is not an unwinding error.
+
+### Gas
+
+Gas is a measure of computational resources consumed by a message handler.
+Whenever a gas limit is imposed, if at any point that gas limit is exceeded,
+execution will halt and an out-of-gas error will be returned to the last handler
+executing without a gas limit.
+If at the execution root (made via a call external to the hypervisor), the gas limit is
+set to zero, then execution of that handler is unmetered and essentially infinite.
+Such unmetered handlers may set any gas limit they wish for nested calls.
+Once there is a gas limit, gas consumed is a monotonically increasing value that can't be bypassed
+and is unaffected by any nesting of state tokens.
+When making calls when there is a gas limit set, a caller can either choose to inherit the existing
+gas limit or set a more restrictive gas limit.
+Any gas that a handler marks as consumed in a message packet should be added to any gas that a
+virtual machine has metered for that handler when returning consumed gas to the hypervisor.
 
 ## Abandoned Ideas (Optional)
 

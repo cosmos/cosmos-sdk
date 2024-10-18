@@ -94,7 +94,7 @@ func TestDecode(t *testing.T) {
 					Fee: &txv1beta1.Fee{
 						Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
 						GasLimit: 100,
-						Payer:    "payer",
+						Payer:    "",
 						Granter:  "",
 					},
 				},

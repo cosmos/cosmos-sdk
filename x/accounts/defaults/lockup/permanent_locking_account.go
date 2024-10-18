@@ -103,8 +103,10 @@ func (plva PermanentLockingAccount) RegisterExecuteHandlers(builder *accountstd.
 	accountstd.RegisterExecuteHandler(builder, plva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, plva.SendCoins)
 	accountstd.RegisterExecuteHandler(builder, plva.WithdrawReward)
+	accountstd.RegisterExecuteHandler(builder, plva.TrackUndelegationEntry)
 }
 
 func (plva PermanentLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, plva.QueryLockupAccountInfo)
+	accountstd.RegisterQueryHandler(builder, plva.QueryUnbondingEntries)
 }

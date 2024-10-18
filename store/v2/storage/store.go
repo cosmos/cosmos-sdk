@@ -16,13 +16,13 @@ const (
 )
 
 var (
-	_ store.VersionedDatabase      = (*StorageStore)(nil)
+	_ store.VersionedWriter        = (*StorageStore)(nil)
 	_ snapshots.StorageSnapshotter = (*StorageStore)(nil)
 	_ store.Pruner                 = (*StorageStore)(nil)
 	_ store.UpgradableDatabase     = (*StorageStore)(nil)
 )
 
-// StorageStore is a wrapper around the store.VersionedDatabase interface.
+// StorageStore is a wrapper around the store.VersionedWriter interface.
 type StorageStore struct {
 	logger log.Logger
 	db     Database
@@ -82,6 +82,11 @@ func (ss *StorageStore) GetLatestVersion() (uint64, error) {
 // SetLatestVersion sets the latest version of the store.
 func (ss *StorageStore) SetLatestVersion(version uint64) error {
 	return ss.db.SetLatestVersion(version)
+}
+
+// VersionExists returns true if the given version exists in the store.
+func (ss *StorageStore) VersionExists(version uint64) (bool, error) {
+	return ss.db.VersionExists(version)
 }
 
 // Iterator returns an iterator over the specified domain and prefix.

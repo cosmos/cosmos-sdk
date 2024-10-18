@@ -700,10 +700,12 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	var events []abci.Event
 
 	if err := app.checkHalt(req.Height, req.Time); err != nil {
+		fmt.Println("err 1: ", err)
 		return nil, err
 	}
 
 	if err := app.validateFinalizeBlockHeight(req); err != nil {
+		fmt.Println("err 2: ", err)
 		return nil, err
 	}
 
@@ -762,6 +764,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 	preblockEvents, err := app.preBlock(req)
 	if err != nil {
+		fmt.Println("err 3: ", err)
 		return nil, err
 	}
 
@@ -769,6 +772,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 	beginBlock, err := app.beginBlock(req)
 	if err != nil {
+		fmt.Println("err 4: ", err)
 		return nil, err
 	}
 
@@ -828,6 +832,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 	endBlock, err := app.endBlock(app.finalizeBlockState.Context())
 	if err != nil {
+		fmt.Println("err 5: ", err)
 		return nil, err
 	}
 
@@ -864,6 +869,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	defer func() {
 		// call the streaming service hooks with the FinalizeBlock messages
 		for _, streamingListener := range app.streamingManager.ABCIListeners {
+			fmt.Println("streamingListener", streamingListener)
 			if err := streamingListener.ListenFinalizeBlock(app.finalizeBlockState.Context(), *req, *res); err != nil {
 				app.logger.Error("ListenFinalizeBlock listening hook failed", "height", req.Height, "err", err)
 			}
@@ -882,6 +888,8 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 				res.AppHash = app.workingHash()
 			}
 
+			fmt.Println("FinalizeBlock res inside if", err)
+
 			return res, err
 		}
 
@@ -892,6 +900,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
 	res, err = app.internalFinalizeBlock(context.Background(), req)
+	fmt.Println("FinalizeBlock res", err)
 	if res != nil {
 		res.AppHash = app.workingHash()
 	}

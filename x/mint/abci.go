@@ -2,6 +2,7 @@ package mint
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,11 +16,13 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper, ic types.InflationCalcul
 
 	// fetch stored minter & params
 	minter, err := k.Minter.Get(ctx)
+	fmt.Println("minter", minter, err)
 	if err != nil {
 		return err
 	}
 
 	params, err := k.Params.Get(ctx)
+	fmt.Println("params", params, err)
 	if err != nil {
 		return err
 	}

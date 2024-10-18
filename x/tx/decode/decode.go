@@ -168,7 +168,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 	}
 
 	// If a fee payer is specified in the AuthInfo, it must be added to the list of signers
-	if authInfo.Fee.Payer != "" {
+	if authInfo.Fee != nil && authInfo.Fee.Payer != "" {
 		feeAddr, err := d.signingCtx.AddressCodec().StringToBytes(authInfo.Fee.Payer)
 		if err != nil {
 			return nil, errorsmod.Wrap(ErrTxDecode, err.Error())

@@ -479,7 +479,6 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 // module must return a non-empty validator set update to correctly initialize
 // the chain.
 func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) (*abci.ResponseInitChain, error) {
-	fmt.Println("Initializing blockchain state from genesis.json")
 	var validatorUpdates []abci.ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
 	for _, moduleName := range m.OrderInitGenesis {
@@ -497,19 +496,15 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 				return &abci.ResponseInitChain{}, err
 			}
 
-			fmt.Println("Initializing module with app.HasGenesis", moduleName)
-
 			err = module.InitGenesis(ctx, source)
 			if err != nil {
 				return &abci.ResponseInitChain{}, err
 			}
 		} else if module, ok := mod.(HasGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
-			fmt.Println("Initializing module with HasGenesis", moduleName)
 			module.InitGenesis(ctx, cdc, genesisData[moduleName])
 		} else if module, ok := mod.(HasABCIGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
-			fmt.Println("Initializing module with HasABCIGenesis", moduleName)
 			moduleValUpdates := module.InitGenesis(ctx, cdc, genesisData[moduleName])
 
 			// use these validator updates if provided, the module manager assumes

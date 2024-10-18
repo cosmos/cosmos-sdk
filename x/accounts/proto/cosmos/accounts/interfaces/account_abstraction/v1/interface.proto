@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package cosmos.accounts.interfaces.account_abstraction.v1;
 
+import "google/protobuf/any.proto";
 import "cosmos/tx/v1beta1/tx.proto";
 
 option go_package = "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1";
@@ -36,4 +37,29 @@ message QueryAuthenticationMethods {}
 message QueryAuthenticationMethodsResponse {
   // authentication_methods are the authentication methods that the account supports.
   repeated string authentication_methods = 1;
+}
+
+// TxExtension is the extension option that AA's add to txs when they're bundled.
+message TxExtension {
+  // authentication_gas_limit expresses the gas limit to be used for the authentication part of the
+  // bundled tx.
+  uint64 authentication_gas_limit = 1;
+  // bundler_payment_messages expresses a list of messages that the account
+  // executes to pay the bundler for submitting the bundled tx.
+  // It can be empty if the bundler does not need any form of payment,
+  // the handshake for submitting the UserOperation might have happened off-chain.
+  // Bundlers and accounts are free to use any form of payment, in fact the payment can
+  // either be empty or be expressed as:
+  // - NFT payment
+  // - IBC Token payment.
+  // - Payment through delegations.
+  repeated google.protobuf.Any bundler_payment_messages = 2;
+  // bundler_payment_gas_limit defines the gas limit to be used for the bundler payment.
+  // This ensures that, since the bundler executes a list of bundled tx and there needs to
+  // be minimal trust between bundler and the tx sender, the sender cannot consume
+  // the whole bundle gas.
+  uint64 bundler_payment_gas_limit = 3;
+  // execution_gas_limit defines the gas limit to be used for the execution of the UserOperation's
+  // execution messages.
+  uint64 execution_gas_limit = 4;
 }

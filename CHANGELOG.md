@@ -52,6 +52,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 * (sims) [#21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims test when running dry on validators
 * (cli) [#21919](https://github.com/cosmos/cosmos-sdk/pull/21919) Query address-by-acc-num by account_id instead of id.
+* (client) [#22261](https://github.com/cosmos/cosmos-sdk/pull/22261) Explicitly set the client configuration file.
 
 ### API Breaking Changes
 

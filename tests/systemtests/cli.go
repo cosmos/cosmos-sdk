@@ -241,6 +241,15 @@ func (c CLIWrapper) runWithInput(args []string, input io.Reader) (output string,
 		cmd.Stdin = input
 		return cmd.CombinedOutput()
 	}()
+
+	if c.Debug {
+		if gotErr != nil {
+			c.t.Logf("+++ ERROR output: %s - %s", gotOut, gotErr)
+		} else {
+			c.t.Logf("+++ output: %s", gotOut)
+		}
+	}
+
 	ok = c.assertErrorFn(c.t, gotErr, string(gotOut))
 	return strings.TrimSpace(string(gotOut)), ok
 }

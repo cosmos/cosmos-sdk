@@ -29,10 +29,6 @@ type VersionedReader interface {
 
 	Iterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error)
 	ReverseIterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error)
-
-	// Close releases associated resources. It should NOT be idempotent. It must
-	// only be called once and any call after may panic.
-	io.Closer
 }
 
 // UpgradableDatabase defines an API for a versioned database that allows pruning

@@ -14,6 +14,11 @@ import (
 func BeginBlocker(ctx context.Context, k keeper.Keeper, ic types.InflationCalculationFn) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
 
+	fmt.Println("keeper.Params", k.Params)
+	fmt.Println("keeper minter from ctx", k.GetMinter(ctx))
+	fmt.Println("keeper minter from ctx", k.GetParams(ctx))
+	fmt.Println("keeper authority", k.GetAuthority())
+
 	// fetch stored minter & params
 	minter, err := k.Minter.Get(ctx)
 	fmt.Println("minter", minter, err)

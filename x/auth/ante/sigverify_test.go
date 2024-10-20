@@ -231,7 +231,7 @@ func TestSigVerification(t *testing.T) {
 				if tc.recheck {
 					ctx = ctx.WithExecMode(sdk.ExecModeReCheck)
 				} else {
-					ctx = ctx.WithExecMode(sdk.ExecModeCheck)
+					ctx = ctx.WithExecMode(sdk.ExecModeFinalize)
 				}
 
 				suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder() // Create new txBuilder for each test

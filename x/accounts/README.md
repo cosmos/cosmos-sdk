@@ -54,7 +54,7 @@ Creating an account begins with defining its init message. This message is proce
 * The `instantiate` method in a CosmWasm contract
 * The `constructor` in an EVM contract
 
-For an account to be a valid `x/account` implementer, it must define both:
+For an account to be a valid `x/accounts` implementer, it must define both:
 
 1. An `Init` method
 2. An init message

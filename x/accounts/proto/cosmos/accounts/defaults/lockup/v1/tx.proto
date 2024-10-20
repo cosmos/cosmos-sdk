@@ -1,9 +1,9 @@
 syntax = "proto3";
-package cosmos.accounts.defaults.lockup;
+package cosmos.accounts.defaults.lockup.v1;
 
 import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos/accounts/defaults/lockup/lockup.proto";
+import "cosmos/accounts/defaults/lockup/v1/lockup.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";

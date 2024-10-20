@@ -1,7 +1,7 @@
 syntax = "proto3";
-package cosmos.accounts.defaults.lockup;
+package cosmos.accounts.defaults.lockup.v1;
 
-import "cosmos/accounts/defaults/lockup/lockup.proto";
+import "cosmos/accounts/defaults/lockup/v1/lockup.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";

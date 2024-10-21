@@ -1,4 +1,4 @@
-//go:build !system_test
+//go:build system_test
 
 package systemtests
 
@@ -27,7 +27,11 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-var bankMsgSendEventAction = "message.action='/cosmos.bank.v1beta1.MsgSend'"
+var (
+	bankMsgSendEventAction       = "message.action='/cosmos.bank.v1beta1.MsgSend'"
+	denom                        = "stake"
+	transferAmount         int64 = 1000
+)
 
 func TestQueryBySig(t *testing.T) {
 	sut.ResetChain(t)
@@ -39,8 +43,6 @@ func TestQueryBySig(t *testing.T) {
 
 	// add new key
 	receiverAddr := cli.AddKey("account1")
-	denom := "stake"
-	var transferAmount int64 = 1000
 
 	sut.StartChain(t)
 
@@ -80,8 +82,6 @@ func TestSimulateTx_GRPC(t *testing.T) {
 
 	// add new key
 	receiverAddr := cli.AddKey("account1")
-	denom := "stake"
-	var transferAmount int64 = 1000
 
 	sut.StartChain(t)
 
@@ -144,8 +144,6 @@ func TestSimulateTx_GRPCGateway(t *testing.T) {
 
 	// add new key
 	receiverAddr := cli.AddKey("account1")
-	denom := "stake"
-	var transferAmount int64 = 1000
 
 	sut.StartChain(t)
 
@@ -208,8 +206,6 @@ func TestGetTxEvents_GRPC(t *testing.T) {
 
 	// add new key
 	receiverAddr := cli.AddKey("account1")
-	denom := "stake"
-	var transferAmount int64 = 1000
 
 	sut.StartChain(t)
 
@@ -326,8 +322,6 @@ func TestGetTxEvents_GRPCGateway(t *testing.T) {
 
 	// add new key
 	receiverAddr := cli.AddKey("account1")
-	denom := "stake"
-	var transferAmount int64 = 1000
 
 	sut.StartChain(t)
 
@@ -424,8 +418,6 @@ func TestGetTx_GRPC(t *testing.T) {
 
 	// add new key
 	receiverAddr := cli.AddKey("account1")
-	denom := "stake"
-	var transferAmount int64 = 1000
 
 	sut.StartChain(t)
 
@@ -473,8 +465,6 @@ func TestGetTx_GRPCGateway(t *testing.T) {
 
 	// add new key
 	receiverAddr := cli.AddKey("account1")
-	denom := "stake"
-	var transferAmount int64 = 1000
 
 	sut.StartChain(t)
 
@@ -538,8 +528,6 @@ func TestGetBlockWithTxs_GRPC(t *testing.T) {
 
 	// add new key
 	receiverAddr := cli.AddKey("account1")
-	denom := "stake"
-	var transferAmount int64 = 1000
 
 	sut.StartChain(t)
 
@@ -598,8 +586,6 @@ func TestGetBlockWithTxs_GRPCGateway(t *testing.T) {
 
 	// add new key
 	receiverAddr := cli.AddKey("account1")
-	denom := "stake"
-	var transferAmount int64 = 1000
 
 	sut.StartChain(t)
 
@@ -749,8 +735,6 @@ func TestTxDecode_GRPC(t *testing.T) {
 
 	// add new key
 	receiverAddr := cli.AddKey("account1")
-	denom := "stake"
-	var transferAmount int64 = 1000
 
 	sut.StartChain(t)
 
@@ -806,8 +790,6 @@ func TestTxDecode_GRPCGateway(t *testing.T) {
 
 	// add new key
 	receiverAddr := cli.AddKey("account1")
-	denom := "stake"
-	var transferAmount int64 = 1000
 
 	sut.StartChain(t)
 
@@ -1049,8 +1031,6 @@ func TestSimMultiSigTx(t *testing.T) {
 	// add new key
 	_ = cli.AddKey("account1")
 	_ = cli.AddKey("account2")
-	denom := "stake"
-	var transferAmount int64 = 1000
 
 	sut.StartChain(t)
 

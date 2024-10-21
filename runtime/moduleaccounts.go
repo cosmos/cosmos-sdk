@@ -62,16 +62,6 @@ func (m *ModuleAccountsService) Register(moduleName string) error {
 	return nil
 }
 
-// func (m *ModuleAccountsService) Account(ctx context.Context, name string) (sdk.ModuleAccountI, error) {
-// 	addr := m.accounts[name]
-// 	if addr == nil {
-// 		return nil, errors.Errorf("module account %s not registered", name)
-// 	}
-
-// 	acc := m.ak.GetOrSetModuleAccount(ctx, name, addr)
-// 	return acc, nil
-// }
-
 // Address implements moduleaccounts.Service.
 func (m *ModuleAccountsService) Address(name string) []byte {
 	return m.accounts[name]

@@ -3,8 +3,8 @@ package mint_test
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"

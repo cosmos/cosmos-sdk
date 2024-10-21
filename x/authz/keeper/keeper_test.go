@@ -6,8 +6,8 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoprotoany "github.com/cosmos/gogoproto/types/any"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"

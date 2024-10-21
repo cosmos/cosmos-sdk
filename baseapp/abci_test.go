@@ -23,8 +23,13 @@ import (
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
+<<<<<<< HEAD
 	"github.com/golang/mock/gomock"
+=======
+	any "github.com/cosmos/gogoproto/types/any"
+>>>>>>> fc91e7635 (build(all): migrate to `go.uber.org/mock` (#22315))
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	coretesting "cosmossdk.io/core/testing"
 	errorsmod "cosmossdk.io/errors"

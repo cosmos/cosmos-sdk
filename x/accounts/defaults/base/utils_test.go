@@ -66,8 +66,7 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 	)
 }
 
-type transactionService struct {
-}
+type transactionService struct{}
 
 func (t transactionService) ExecMode(ctx context.Context) transaction.ExecMode {
 	return transaction.ExecModeFinalize

@@ -15,7 +15,7 @@ require (
 	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
 	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
-	cosmossdk.io/x/tx v0.13.5
+	cosmossdk.io/x/tx v1.0.0-alpha.1
 	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

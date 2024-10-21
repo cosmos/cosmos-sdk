@@ -2,19 +2,49 @@ package codec
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
 
+	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
-	"cosmossdk.io/collections/protocodec"
+	corecodec "cosmossdk.io/core/codec"
 )
 
-type (
-	BoolValue = protocodec.BoolValue
-)
+// BoolValue implements a ValueCodec that saves the bool value
+// as if it was a prototypes.BoolValue. Required for backwards
+// compatibility of state.
+var BoolValue collcodec.ValueCodec[bool] = boolValue{}
+
+type boolValue struct{}
+
+func (boolValue) Encode(value bool) ([]byte, error) {
+	return (&gogotypes.BoolValue{Value: value}).Marshal()
+}
+
+func (boolValue) Decode(b []byte) (bool, error) {
+	v := new(gogotypes.BoolValue)
+	err := v.Unmarshal(b)
+	return v.Value, err
+}
+
+func (boolValue) EncodeJSON(value bool) ([]byte, error) {
+	return collections.BoolValue.EncodeJSON(value)
+}
+
+func (boolValue) DecodeJSON(b []byte) (bool, error) {
+	return collections.BoolValue.DecodeJSON(b)
+}
+
+func (boolValue) Stringify(value bool) string {
+	return collections.BoolValue.Stringify(value)
+}
+
+func (boolValue) ValueType() string {
+	return "protobuf/bool"
+}
 
 type protoMessage[T any] interface {
 	*T
@@ -27,11 +57,11 @@ func CollValue[T any, PT protoMessage[T]](cdc interface {
 	Unmarshal([]byte, proto.Message) error
 },
 ) collcodec.ValueCodec[T] {
-	return &collValue[T, PT]{cdc.(Codec), proto.MessageName(PT(new(T)))}
+	return &collValue[T, PT]{cdc.(corecodec.Codec), proto.MessageName(PT(new(T)))}
 }
 
 type collValue[T any, PT protoMessage[T]] struct {
-	cdc         Codec
+	cdc         corecodec.Codec
 	messageName string
 }
 
@@ -104,48 +134,4 @@ func (c collValue2[T, PT]) Stringify(value PT) string {
 
 func (c collValue2[T, PT]) ValueType() string {
 	return "google.golang.org/protobuf/" + c.messageName
-}
-
-// CollInterfaceValue instantiates a new collections.ValueCodec for a generic
-// interface value. The codec must be able to marshal and unmarshal the
-// interface.
-func CollInterfaceValue[T proto.Message](codec BinaryCodec) collcodec.ValueCodec[T] {
-	var x T // assertion
-	if reflect.TypeOf(&x).Elem().Kind() != reflect.Interface {
-		panic("CollInterfaceValue can only be used with interface types")
-	}
-	return collInterfaceValue[T]{codec.(Codec)}
-}
-
-type collInterfaceValue[T proto.Message] struct {
-	codec Codec
-}
-
-func (c collInterfaceValue[T]) Encode(value T) ([]byte, error) {
-	return c.codec.MarshalInterface(value)
-}
-
-func (c collInterfaceValue[T]) Decode(b []byte) (T, error) {
-	var value T
-	err := c.codec.UnmarshalInterface(b, &value)
-	return value, err
-}
-
-func (c collInterfaceValue[T]) EncodeJSON(value T) ([]byte, error) {
-	return c.codec.MarshalInterfaceJSON(value)
-}
-
-func (c collInterfaceValue[T]) DecodeJSON(b []byte) (T, error) {
-	var value T
-	err := c.codec.UnmarshalInterfaceJSON(b, &value)
-	return value, err
-}
-
-func (c collInterfaceValue[T]) Stringify(value T) string {
-	return value.String()
-}
-
-func (c collInterfaceValue[T]) ValueType() string {
-	var t T
-	return fmt.Sprintf("%T", t)
 }

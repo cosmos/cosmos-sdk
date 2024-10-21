@@ -28,7 +28,6 @@ type Keeper struct {
 
 	cdc           codec.BinaryCodec
 	addrCdc       address.Codec
-	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 
@@ -63,10 +62,10 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	env appmodule.Environment,
-	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
 	cometService comet.Service,
+	addressCdc address.Codec,
 	moduleAccountsService moduleaccounts.Service,
 	feeCollectorName, authority string,
 ) Keeper {
@@ -82,8 +81,7 @@ func NewKeeper(
 		cometService:          cometService,
 		moduleAccountsService: moduleAccountsService,
 		cdc:                   cdc,
-		addrCdc:               ak.AddressCodec(),
-		authKeeper:            ak,
+		addrCdc:               addressCdc,
 		bankKeeper:            bk,
 		stakingKeeper:         sk,
 		feeCollectorName:      feeCollectorName,

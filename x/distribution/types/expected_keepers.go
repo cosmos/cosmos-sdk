@@ -9,13 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// AccountKeeper defines the expected account keeper used for simulations (noalias)
-type AccountKeeper interface {
-	AddressCodec() address.Codec
-	GetModuleAddress(name string) sdk.AccAddress
-	GetModuleAccount(ctx context.Context, name string) sdk.ModuleAccountI
-}
-
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error

@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/x/distribution"
 	"cosmossdk.io/x/distribution/keeper"
 	distrtestutil "cosmossdk.io/x/distribution/testutil"
+	"cosmossdk.io/x/distribution/types"
 	disttypes "cosmossdk.io/x/distribution/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
@@ -50,26 +51,25 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
-	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	valCodec := address.NewBech32Codec("cosmosvaloper")
-
-	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
-	accountKeeper.EXPECT().AddressCodec().Return(cdcOpts.GetAddressCodec())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
 
 	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 
+	modaccs := runtime.NewModuleAccountsService(runtime.NewModuleAccount("distribution"), runtime.NewModuleAccount("fee_collector"), runtime.NewModuleAccount(types.ProtocolPoolModuleName))
+
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		env,
-		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		cdcOpts.GetAddressCodec(),
+		modaccs,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -116,15 +116,11 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
-	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 
-	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
-	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
-	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
-	accountKeeper.EXPECT().AddressCodec().Return(cdcOpts.GetAddressCodec())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+	modaccs := runtime.NewModuleAccountsService(runtime.NewModuleAccount("distribution"), runtime.NewModuleAccount("fee_collector"), runtime.NewModuleAccount(types.ProtocolPoolModuleName))
 
 	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
@@ -132,10 +128,11 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		env,
-		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		cdcOpts.GetAddressCodec(),
+		modaccs,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -196,7 +193,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	// allocate tokens as if both had voted and second was proposer
 	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)))
-	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), feeCollectorAcc.GetAddress()).Return(fees)
+	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), modaccs.Address("fee_collector")).Return(fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "fee_collector", disttypes.ModuleName, fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, disttypes.ProtocolPoolDistrAccount, sdk.Coins{{Denom: sdk.DefaultBondDenom, Amount: math.NewInt(2)}}) // 2 community pool coins
 
@@ -255,15 +252,11 @@ func TestAllocateTokensTruncation(t *testing.T) {
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
-	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 
-	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
-	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
-	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
-	accountKeeper.EXPECT().AddressCodec().Return(cdcOpts.GetAddressCodec())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+	modaccs := runtime.NewModuleAccountsService(runtime.NewModuleAccount("distribution"), runtime.NewModuleAccount("fee_collector"), runtime.NewModuleAccount(types.ProtocolPoolModuleName))
 
 	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
@@ -271,10 +264,11 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		env,
-		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		cdcOpts.GetAddressCodec(),
+		modaccs,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -348,7 +342,8 @@ func TestAllocateTokensTruncation(t *testing.T) {
 
 	// allocate tokens as if both had voted and second was proposer
 	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(634195840)))
-	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), feeCollectorAcc.GetAddress()).Return(fees)
+
+	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), modaccs.Address("fee_collector")).Return(fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "fee_collector", disttypes.ModuleName, fees)
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), disttypes.ModuleName, disttypes.ProtocolPoolDistrAccount, gomock.Any()) // something is sent to community pool
 
@@ -389,15 +384,13 @@ func TestAllocateTokensToValidatorWithoutCommission(t *testing.T) {
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
-	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+	modaccs := runtime.NewModuleAccountsService(runtime.NewModuleAccount("distribution"), runtime.NewModuleAccount("fee_collector"), runtime.NewModuleAccount(types.ProtocolPoolModuleName))
 
 	valCodec := address.NewBech32Codec("cosmosvaloper")
 	addrCdc := address.NewBech32Codec("cosmos")
 
-	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
-	accountKeeper.EXPECT().AddressCodec().Return(addrCdc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
 
 	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
@@ -406,10 +399,11 @@ func TestAllocateTokensToValidatorWithoutCommission(t *testing.T) {
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		env,
-		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		addrCdc,
+		modaccs,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -458,26 +452,22 @@ func TestAllocateTokensWithZeroTokens(t *testing.T) {
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
-	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
-
+	modaccs := runtime.NewModuleAccountsService(runtime.NewModuleAccount("distribution"), runtime.NewModuleAccount("fee_collector"), runtime.NewModuleAccount(types.ProtocolPoolModuleName))
 	valCodec := address.NewBech32Codec("cosmosvaloper")
-
-	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
-	accountKeeper.EXPECT().AddressCodec().Return(cdcOpts.GetAddressCodec())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
-
 	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
 
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		env,
-		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		cdcOpts.GetAddressCodec(),
+		modaccs,
 		"fee_collector",
 		authorityAddr,
 	)

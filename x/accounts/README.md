@@ -315,9 +315,9 @@ accountsKeeper, err := accounts.NewKeeper(
 
 Choose the method that best fits your application structure.
 
-### The accountsstd Package
+### The accountstd Package
 
-The `accountsstd` package provides utility functions for use within account init, execution, or query handlers. Key functions include:
+The `accountstd` package provides utility functions for use within account init, execution, or query handlers. Key functions include:
 
 1. `Whoami()`: Retrieves the address of the current account.
 2. `Sender()`: Gets the address of the transaction sender (not available in queries).

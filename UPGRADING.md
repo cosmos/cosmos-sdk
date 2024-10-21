@@ -85,6 +85,22 @@ Additionally, a simplification of the start command leads to the following chang
 
 #### Server (`app.go`)
 
+##### TX Decoder
+
+In order to support x/accounts properly we need to init a `TxDecoder`:
+
+```diff
+import (
++ 	txdecode "cosmossdk.io/x/tx/decode"
+)
++	txDecoder, err := txdecode.NewDecoder(txdecode.Options{
++		SigningContext: signingCtx,
++		ProtoCodec:     appCodec,
++	})
++	if err != nil {
++		panic(err)
++	}
+```
 ##### Module Manager
 
 The basic module manager has been deleted. It was not necessary anymore and was simplified to use the `module.Manager` directly.

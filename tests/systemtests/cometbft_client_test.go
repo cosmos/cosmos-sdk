@@ -5,6 +5,7 @@ package systemtests
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"testing"
 	"time"
@@ -103,7 +104,7 @@ func TestQueryLatestValidatorSet(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, len(res.Validators), 2)
 
-	restRes := GetRequest(t, mustV(url.JoinPath(baseurl, "/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=0&pagination.limit=2")))
+	restRes := GetRequest(t, fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=%d&pagination.limit=%d", baseurl, 0, 2))
 	assert.Equal(t, len(gjson.GetBytes(restRes, "validators").Array()), 2)
 }
 
@@ -161,13 +162,15 @@ func TestLatestValidatorSet_GRPCGateway(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			rsp := GetRequest(t, mustV(url.JoinPath(baseurl, tc.url)))
 			if tc.expErr {
+				rsp := GetRequestWithHeaders(t, baseurl+tc.url, nil, http.StatusBadRequest)
 				errMsg := gjson.GetBytes(rsp, "message").String()
 				assert.Contains(t, errMsg, tc.expErrMsg)
-			} else {
-				assert.Equal(t, len(vals), int(gjson.GetBytes(rsp, "pagination.total").Int()))
+				return
 			}
+			rsp := GetRequest(t, baseurl+tc.url)
+			assert.Equal(t, len(vals), int(gjson.GetBytes(rsp, "pagination.total").Int()))
+
 		})
 	}
 }
@@ -214,19 +217,20 @@ func TestValidatorSetByHeight_GRPCGateway(t *testing.T) {
 
 	block := sut.AwaitNextBlock(t, time.Second*3)
 	testCases := []struct {
-		name      string
-		url       string
-		expErr    bool
-		expErrMsg string
+		name        string
+		url         string
+		expErr      bool
+		expErrMsg   string
+		expHttpCode int
 	}{
-		{"invalid height", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", baseurl, -1), true, "height must be greater than 0"},
-		{"no pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", baseurl, block), false, ""},
-		{"pagination invalid fields", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.offset=-1&pagination.limit=-2", baseurl, block), true, "strconv.ParseUint"},
-		{"with pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.limit=2", baseurl, 1), false, ""},
+		{"invalid height", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", baseurl, -1), true, "height must be greater than 0", http.StatusInternalServerError},
+		{"no pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", baseurl, block), false, "", http.StatusOK},
+		{"pagination invalid fields", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.offset=-1&pagination.limit=-2", baseurl, block), true, "strconv.ParseUint", http.StatusBadRequest},
+		{"with pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.limit=2", baseurl, 1), false, "", http.StatusOK},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			rsp := GetRequest(t, tc.url)
+			rsp := GetRequestWithHeaders(t, tc.url, nil, tc.expHttpCode)
 			if tc.expErr {
 				errMsg := gjson.GetBytes(rsp, "message").String()
 				assert.Contains(t, errMsg, tc.expErrMsg)
@@ -240,6 +244,7 @@ func TestValidatorSetByHeight_GRPCGateway(t *testing.T) {
 func TestABCIQuery(t *testing.T) {
 	sut.ResetChain(t)
 	sut.StartChain(t)
+	sut.AwaitNBlocks(t, 3)
 
 	qc := cmtservice.NewServiceClient(sut.RPCClient(t))
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
@@ -312,7 +317,7 @@ func TestABCIQuery(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, res)
-				assert.Equal(t, res.Code, tc.expectedCode)
+				assert.Equal(t, tc.expectedCode, res.Code)
 			}
 
 			if tc.validQuery {

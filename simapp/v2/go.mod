@@ -10,8 +10,8 @@ require (
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/runtime/v2 v2.0.0-20241017091405-f01baf302e2b // main
-	cosmossdk.io/server/v2 v2.0.0-20241014060734-0b43fcc2164c // main
+	cosmossdk.io/runtime/v2 v2.0.0-20241021134528-681366e3469c // main
+	cosmossdk.io/server/v2 v2.0.0-20241021134528-681366e3469c // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-20241017091405-f01baf302e2b // main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
@@ -62,8 +62,8 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-20241008175849-325728a9fd6c // indirect; main
-	cosmossdk.io/server/v2/stf v0.0.0-20241008175849-325728a9fd6c // indirect; main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20241021134528-681366e3469c // indirect; main
+	cosmossdk.io/server/v2/stf v0.0.0-20241021134528-681366e3469c // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main
 	cosmossdk.io/x/tx v0.13.4-0.20241003111526-30003f667944 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect

@@ -101,15 +101,15 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	}
 
 	s.logger = logger.With(log.ModuleKey, s.Name())
-	rs := appI.GetStore()
+	rs := appI.Store()
 	consensus := NewConsensus(
 		s.logger,
 		appI.Name(),
-		appI.GetAppManager(),
+		appI,
 		appI.Close,
 		s.serverOptions.Mempool(cfg),
 		indexEvents,
-		appI.GetQueryHandlers(),
+		appI.QueryHandlers(),
 		rs,
 		s.config,
 		s.initTxCodec,
@@ -131,7 +131,6 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		return err
 	}
 	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.serverOptions.SnapshotOptions(cfg), sc, ss, nil, s.logger)
-
 	s.Consensus = consensus
 
 	return nil

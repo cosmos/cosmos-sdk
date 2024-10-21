@@ -241,6 +241,7 @@ func (t quadKeyCodec[K1, K2, K3, K4]) Encode(buffer []byte, key Quad[K1, K2, K3,
 	}
 	return writtenTotal, nil
 }
+
 func (t quadKeyCodec[K1, K2, K3, K4]) Decode(buffer []byte) (int, Quad[K1, K2, K3, K4], error) {
 	readTotal := 0
 	read, key1, err := t.keyCodec1.DecodeNonTerminal(buffer)

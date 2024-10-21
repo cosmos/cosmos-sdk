@@ -15,8 +15,9 @@ import (
 	"cosmossdk.io/x/nft/module"
 	nfttestutil "cosmossdk.io/x/nft/testutil"
 
+	"cosmossdk.io/core/address"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec/address"
+	addresscdc "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -40,12 +41,12 @@ const (
 type TestSuite struct {
 	suite.Suite
 
-	ctx           sdk.Context
-	addrs         []sdk.AccAddress
-	encodedAddrs  []string
-	queryClient   nft.QueryClient
-	nftKeeper     keeper.Keeper
-	accountKeeper *nfttestutil.MockAccountKeeper
+	ctx          sdk.Context
+	addrs        []sdk.AccAddress
+	encodedAddrs []string
+	queryClient  nft.QueryClient
+	nftKeeper    keeper.Keeper
+	addressCdc   address.Codec
 
 	encCfg moduletestutil.TestEncodingConfig
 }
@@ -61,21 +62,17 @@ func (s *TestSuite) SetupTest() {
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
-	accountKeeper := nfttestutil.NewMockAccountKeeper(ctrl)
 	bankKeeper := nfttestutil.NewMockBankKeeper(ctrl)
-	accountKeeper.EXPECT().GetModuleAddress("nft").Return(s.addrs[0]).AnyTimes()
-	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+	s.addressCdc = addresscdc.NewBech32Codec("cosmos")
 
 	for _, addr := range s.addrs {
-		st, err := accountKeeper.AddressCodec().BytesToString(addr.Bytes())
+		st, err := s.addressCdc.BytesToString(addr.Bytes())
 		s.Require().NoError(err)
 		s.encodedAddrs = append(s.encodedAddrs, st)
 	}
 
-	s.accountKeeper = accountKeeper
-
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
-	nftKeeper := keeper.NewKeeper(env, s.encCfg.Codec, accountKeeper, bankKeeper)
+	nftKeeper := keeper.NewKeeper(env, s.encCfg.Codec, bankKeeper, s.addressCdc)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.encCfg.InterfaceRegistry)
 	nft.RegisterQueryServer(queryHelper, nftKeeper)
 

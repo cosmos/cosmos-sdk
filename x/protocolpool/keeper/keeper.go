@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/math"
@@ -22,12 +23,12 @@ import (
 type Keeper struct {
 	appmodule.Environment
 
-	authKeeper            types.AccountKeeper
 	bankKeeper            types.BankKeeper
 	stakingKeeper         types.StakingKeeper
 	moduleAccountsService moduleaccounts.Service
 
-	cdc codec.BinaryCodec
+	cdc        codec.BinaryCodec
+	addressCdc address.Codec
 
 	authority string
 
@@ -48,12 +49,13 @@ const (
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	env appmodule.Environment,
-	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
 	authority string,
+	addressCdc address.Codec,
 	moduleAccountsService moduleaccounts.Service,
 ) Keeper {
+	// TODO: @facu
 	// ensure pool module account is set
 	// if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 	// 	panic(fmt.Sprintf(errModuleAccountNotSet, types.ModuleName))
@@ -71,11 +73,11 @@ func NewKeeper(
 
 	keeper := Keeper{
 		Environment:               env,
-		authKeeper:                ak,
 		bankKeeper:                bk,
 		stakingKeeper:             sk,
 		moduleAccountsService:     moduleAccountsService,
 		cdc:                       cdc,
+		addressCdc:                addressCdc,
 		authority:                 authority,
 		BudgetProposal:            collections.NewMap(sb, types.BudgetKey, "budget", sdk.AccAddressKey, codec.CollValue[types.Budget](cdc)),
 		ContinuousFund:            collections.NewMap(sb, types.ContinuousFundKey, "continuous_fund", sdk.AccAddressKey, codec.CollValue[types.ContinuousFund](cdc)),
@@ -305,7 +307,7 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 
 	for _, recipient := range recipients {
 		// Set funds to be claimed
-		bzAddr, err := k.authKeeper.AddressCodec().StringToBytes(recipient)
+		bzAddr, err := k.addressCdc.StringToBytes(recipient)
 		if err != nil {
 			return err
 		}
@@ -336,7 +338,7 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 }
 
 func (k Keeper) claimFunds(ctx context.Context, recipientAddr string) (amount sdk.Coin, err error) {
-	recipient, err := k.authKeeper.AddressCodec().StringToBytes(recipientAddr)
+	recipient, err := k.addressCdc.StringToBytes(recipientAddr)
 	if err != nil {
 		return sdk.Coin{}, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
 	}
@@ -357,7 +359,7 @@ func (k Keeper) claimFunds(ctx context.Context, recipientAddr string) (amount sd
 }
 
 func (k Keeper) getClaimableFunds(ctx context.Context, recipientAddr string) (amount sdk.Coin, err error) {
-	recipient, err := k.authKeeper.AddressCodec().StringToBytes(recipientAddr)
+	recipient, err := k.addressCdc.StringToBytes(recipientAddr)
 	if err != nil {
 		return sdk.Coin{}, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
 	}

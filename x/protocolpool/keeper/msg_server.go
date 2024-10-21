@@ -39,7 +39,7 @@ func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgSubmi
 		return nil, err
 	}
 
-	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
+	recipient, err := k.Keeper.addressCdc.StringToBytes(msg.RecipientAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (k MsgServer) SubmitBudgetProposal(ctx context.Context, msg *types.MsgSubmi
 }
 
 func (k MsgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundCommunityPool) (*types.MsgFundCommunityPoolResponse, error) {
-	depositor, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
+	depositor, err := k.addressCdc.StringToBytes(msg.Depositor)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
 	}
@@ -85,7 +85,7 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 		return nil, err
 	}
 
-	recipient, err := k.authKeeper.AddressCodec().StringToBytes(msg.Recipient)
+	recipient, err := k.addressCdc.StringToBytes(msg.Recipient)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		return nil, err
 	}
 
-	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.Recipient)
+	recipient, err := k.Keeper.addressCdc.StringToBytes(msg.Recipient)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 }
 
 func (k MsgServer) WithdrawContinuousFund(ctx context.Context, msg *types.MsgWithdrawContinuousFund) (*types.MsgWithdrawContinuousFundResponse, error) {
-	recipient, err := k.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
+	recipient, err := k.addressCdc.StringToBytes(msg.RecipientAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid recipient address: %s", err)
 	}
@@ -190,7 +190,7 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 		return nil, err
 	}
 
-	recipient, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(msg.RecipientAddress)
+	recipient, err := k.Keeper.addressCdc.StringToBytes(msg.RecipientAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +226,7 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 }
 
 func (k *Keeper) validateAuthority(authority string) error {
-	if _, err := k.authKeeper.AddressCodec().StringToBytes(authority); err != nil {
+	if _, err := k.addressCdc.StringToBytes(authority); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
 	}
 

@@ -39,7 +39,7 @@ func (k Querier) UnclaimedBudget(ctx context.Context, req *types.QueryUnclaimedB
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	address, err := k.Keeper.authKeeper.AddressCodec().StringToBytes(req.Address)
+	address, err := k.Keeper.addressCdc.StringToBytes(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid recipient address: %s", err.Error())
 	}

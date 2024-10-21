@@ -7,6 +7,7 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/errors"
@@ -35,22 +36,22 @@ const ConsensusVersion = 1
 
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
-	cdc      codec.Codec
-	registry cdctypes.InterfaceRegistry
+	cdc        codec.Codec
+	registry   cdctypes.InterfaceRegistry
+	addressCdc address.Codec
 
-	keeper        keeper.Keeper
-	accountKeeper nft.AccountKeeper
-	bankKeeper    nft.BankKeeper
+	keeper     keeper.Keeper
+	bankKeeper nft.BankKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak nft.AccountKeeper, bk nft.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, bk nft.BankKeeper, registry cdctypes.InterfaceRegistry, addressCdc address.Codec) AppModule {
 	return AppModule{
-		cdc:           cdc,
-		keeper:        keeper,
-		accountKeeper: ak,
-		bankKeeper:    bk,
-		registry:      registry,
+		cdc:        cdc,
+		registry:   registry,
+		addressCdc: addressCdc,
+		keeper:     keeper,
+		bankKeeper: bk,
 	}
 }
 
@@ -95,7 +96,7 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 		return errors.Wrapf(err, "failed to unmarshal %s genesis state", nft.ModuleName)
 	}
 
-	return nft.ValidateGenesis(data, am.accountKeeper.AddressCodec())
+	return nft.ValidateGenesis(data, am.addressCdc)
 }
 
 // InitGenesis performs genesis initialization for the nft module.
@@ -123,7 +124,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // GenerateGenesisState creates a randomized GenState of the nft module.
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState, am.accountKeeper.AddressCodec())
+	simulation.RandomizedGenState(simState, am.addressCdc)
 }
 
 // RegisterStoreDecoder registers a decoder for nft module's types

@@ -6,7 +6,6 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/gogoproto/grpc"
 
 	"cosmossdk.io/core/server"
@@ -18,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type (
@@ -76,7 +76,7 @@ type (
 		// AppState is the application state as JSON.
 		AppState json.RawMessage
 		// Validators is the exported validator set.
-		Validators []cmttypes.GenesisValidator
+		Validators []sdk.GenesisValidator
 		// Height is the app's latest block height.
 		Height int64
 		// ConsensusParams are the exported consensus params for ABCI.

@@ -61,18 +61,67 @@ func TestDecode(t *testing.T) {
 	gogoproto.RegisterType(&testpb.A{}, string((&testpb.A{}).ProtoReflect().Descriptor().FullName()))
 
 	testCases := []struct {
-		name  string
-		msg   proto.Message
-		error string
+		name       string
+		msg        proto.Message
+		authInfo   *txv1beta1.AuthInfo
+		error      string
+		numSigners int
 	}{
 		{
 			name: "happy path",
 			msg:  &bankv1beta1.MsgSend{},
+			authInfo: &txv1beta1.AuthInfo{
+				SignerInfos: signerInfo,
+				Fee: &txv1beta1.Fee{
+					Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
+					GasLimit: 100,
+					Payer:    "",
+					Granter:  "",
+				},
+			},
+			numSigners: 1,
 		},
 		{
-			name:  "empty signer option",
-			msg:   &testpb.A{},
+			name: "empty signer option",
+			msg:  &testpb.A{},
+			authInfo: &txv1beta1.AuthInfo{
+				SignerInfos: signerInfo,
+				Fee: &txv1beta1.Fee{
+					Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
+					GasLimit: 100,
+					Payer:    "",
+					Granter:  "",
+				},
+			},
 			error: "no cosmos.msg.v1.signer option found for message A; use DefineCustomGetSigners to specify a custom getter: tx parse error",
+		},
+		{
+			name: "invalid feePayer",
+			msg:  &bankv1beta1.MsgSend{},
+			authInfo: &txv1beta1.AuthInfo{
+				SignerInfos: signerInfo,
+				Fee: &txv1beta1.Fee{
+					Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
+					GasLimit: 100,
+					Payer:    "payer",
+					Granter:  "",
+				},
+			},
+			error: `encoding/hex: invalid byte: U+0070 'p': tx parse error`,
+		},
+		{
+			name: "valid feePayer",
+			msg:  &bankv1beta1.MsgSend{},
+			authInfo: &txv1beta1.AuthInfo{
+				SignerInfos: signerInfo,
+				Fee: &txv1beta1.Fee{
+					Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
+					GasLimit: 100,
+					Payer:    "636f736d6f733168363935356b3836397a72306770383975717034337a373263393033666d35647a366b75306c", // hexadecimal to work with dummyAddressCodec
+					Granter:  "",
+				},
+			},
+			numSigners: 2,
 		},
 	}
 
@@ -89,15 +138,7 @@ func TestDecode(t *testing.T) {
 					Memo:          "memo",
 					TimeoutHeight: 0,
 				},
-				AuthInfo: &txv1beta1.AuthInfo{
-					SignerInfos: signerInfo,
-					Fee: &txv1beta1.Fee{
-						Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
-						GasLimit: 100,
-						Payer:    "",
-						Granter:  "",
-					},
-				},
+				AuthInfo:   tc.authInfo,
 				Signatures: nil,
 			}
 			txBytes, err := proto.Marshal(tx)
@@ -109,6 +150,7 @@ func TestDecode(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
+			require.Equal(t, len(decodeTx.Signers), tc.numSigners)
 
 			require.Equal(t,
 				fmt.Sprintf("/%s", tc.msg.ProtoReflect().Descriptor().FullName()),

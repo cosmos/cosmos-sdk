@@ -89,9 +89,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	)
 	m := NewAppModule(in.Cdc, k)
 	return ModuleOutputs{
-		StakingKeeper:  k,
-		Module:         m,
-		ModuleAccounts: []runtime.ModuleAccount{types.BondedPoolName, types.NotBondedPoolName},
+		StakingKeeper: k,
+		Module:        m,
+		ModuleAccounts: []runtime.ModuleAccount{
+			runtime.NewModuleAccount(types.BondedPoolName, "burner", "staking"),
+			runtime.NewModuleAccount(types.NotBondedPoolName, "burner", "staking"),
+		},
 	}
 }
 

@@ -47,5 +47,5 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(in.Environment, in.Cdc, in.AccountKeeper, in.BankKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 
-	return ModuleOutputs{NFTKeeper: k, Module: m, ModuleAccounts: []runtime.ModuleAccount{nft.ModuleName}}
+	return ModuleOutputs{NFTKeeper: k, Module: m, ModuleAccounts: []runtime.ModuleAccount{runtime.NewModuleAccount(nft.ModuleName)}}
 }

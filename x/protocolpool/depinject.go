@@ -78,9 +78,9 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		Keeper: k,
 		Module: m,
 		ModuleAccounts: []runtime.ModuleAccount{
-			types.ModuleName,
-			types.ProtocolPoolDistrAccount,
-			types.StreamAccount,
+			runtime.NewModuleAccount(types.ModuleName),
+			runtime.NewModuleAccount(types.ProtocolPoolDistrAccount),
+			runtime.NewModuleAccount(types.StreamAccount),
 		},
 	}
 }

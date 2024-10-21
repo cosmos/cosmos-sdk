@@ -164,8 +164,8 @@ type AppInputs struct {
 	AppOptions        servertypes.AppOptions `optional:"true"` // can be nil in client wiring
 }
 
-func ProvideModuleAccountsService(ak AccountGetter) moduleaccounts.Service {
-	return &ModuleAccountsService{accounts: map[string][]byte{}, ak: ak}
+func ProvideModuleAccountsService() moduleaccounts.Service {
+	return NewModuleAccountsService()
 }
 
 func SetupModuleAccountsService(
@@ -173,7 +173,7 @@ func SetupModuleAccountsService(
 	service moduleaccounts.Service,
 ) error {
 	for _, acc := range accounts {
-		if err := service.Register(string(acc)); err != nil {
+		if err := service.Register(acc.Name, acc.Permissions); err != nil {
 			return err
 		}
 	}

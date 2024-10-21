@@ -83,7 +83,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		MintKeeper:     k,
 		Module:         m,
 		EpochHooks:     epochstypes.EpochHooksWrapper{EpochHooks: m},
-		ModuleAccounts: []runtime.ModuleAccount{types.ModuleName},
+		ModuleAccounts: []runtime.ModuleAccount{runtime.NewModuleAccount(types.ModuleName, "minter")},
 	}
 }
 

@@ -78,5 +78,5 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewAccountKeeper(in.Environment, in.Cdc, in.AccountI, in.AccountsModKeeper, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, auth)
 	m := NewAppModule(in.Cdc, k, in.AccountsModKeeper, in.RandomGenesisAccountsFn, in.ExtensionOptionChecker)
 
-	return ModuleOutputs{AccountKeeper: k, Module: m, ModuleAccounts: []runtime.ModuleAccount{types.FeeCollectorName}}
+	return ModuleOutputs{AccountKeeper: k, Module: m, ModuleAccounts: []runtime.ModuleAccount{runtime.NewModuleAccount(types.FeeCollectorName)}}
 }

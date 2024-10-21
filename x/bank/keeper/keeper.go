@@ -88,7 +88,7 @@ func NewBaseKeeper(
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
-	moduleAccountsService moduleaccounts.Service,
+	moduleAccountsService moduleaccounts.ServiceWithPerms,
 ) BaseKeeper {
 	addrCdc := ak.AddressCodec()
 	if _, err := addrCdc.StringToBytes(authority); err != nil {
@@ -301,6 +301,11 @@ func (k BaseKeeper) DelegateCoinsFromAccountToModule(
 	ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins,
 ) error {
 	recipientAddr := k.moduleAccountsService.Address(recipientModule)
+
+	if !k.moduleAccountsService.HasPermission(recipientModule, "staking") {
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to receive delegated coins", recipientModule)
+	}
+
 	return k.DelegateCoins(ctx, senderAddr, recipientAddr, amt)
 }
 
@@ -311,6 +316,11 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 	ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
 	senderAddr := k.moduleAccountsService.Address(senderModule)
+
+	if !k.moduleAccountsService.HasPermission(senderModule, "staking") {
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to undelegate coins", senderModule)
+	}
+
 	return k.UndelegateCoins(ctx, senderAddr, recipientAddr, amt)
 }
 
@@ -324,6 +334,10 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 	}
 
 	moduleAddr := k.moduleAccountsService.Address(moduleName)
+
+	if !k.moduleAccountsService.HasPermission(moduleName, "mint") {
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName)
+	}
 
 	if !amounts.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amounts.String())
@@ -363,12 +377,13 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %x does not exist", address)
 	}
 
-	// TODO: @facu @frojdi, perms?
-	// if macc, ok := acc.(sdk.ModuleAccountI); ok {
-	// 	if !macc.HasPermission(authtypes.Burner) {
-	// 		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account %x does not have permissions to burn tokens", address)
-	// 	}
-	// }
+	moduleName := k.moduleAccountsService.IsModuleAccount(address)
+	if moduleName != "" {
+		if !k.moduleAccountsService.HasPermission(moduleName, "burn") {
+			return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account %x does not have permissions to burn tokens", address)
+		}
+	}
+
 	if !amounts.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amounts.String())
 	}

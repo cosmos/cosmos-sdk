@@ -76,7 +76,7 @@ func NewBaseSendKeeper(
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
-	moduleAccountsService moduleaccounts.Service,
+	moduleAccountsService moduleaccounts.ServiceWithPerms,
 ) BaseSendKeeper {
 	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
 		panic(fmt.Errorf("invalid bank authority address: %w", err))

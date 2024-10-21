@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 	govclient "cosmossdk.io/x/gov/client"
 	"cosmossdk.io/x/gov/keeper"
-	"cosmossdk.io/x/gov/types"
 	govtypes "cosmossdk.io/x/gov/types"
 	"cosmossdk.io/x/gov/types/v1beta1"
 
@@ -99,7 +98,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	m := NewAppModule(in.Cdc, k, in.AddressCodec, in.BankKeeper, in.PoolKeeper, in.ModuleAccountsService, in.LegacyProposalHandler...)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}
 
-	return ModuleOutputs{Module: m, Keeper: k, HandlerRoute: hr, ModuleAccounts: []runtime.ModuleAccount{types.ModuleName}}
+	return ModuleOutputs{Module: m, Keeper: k, HandlerRoute: hr, ModuleAccounts: []runtime.ModuleAccount{runtime.NewModuleAccount(govtypes.ModuleName, "burner")}}
 }
 
 func InvokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {

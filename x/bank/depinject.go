@@ -39,7 +39,7 @@ type ModuleInputs struct {
 	Cdc                   codec.Codec
 	Environment           appmodule.Environment
 	AddressCodec          address.Codec
-	ModuleAccountsService moduleaccounts.Service
+	ModuleAccountsService moduleaccounts.ServiceWithPerms
 
 	AccountKeeper types.AccountKeeper
 }
@@ -66,13 +66,14 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 			blockedAddresses[addrStr] = true
 		}
 	} else {
-		for _, addr := range in.ModuleAccountsService.AllAccounts() {
-			addrStr, err := in.AddressCodec.BytesToString(addr)
-			if err != nil {
-				panic(err)
-			}
-			blockedAddresses[addrStr] = true
-		}
+		// TODO: solve later @facu
+		// for _, addr := range in.ModuleAccountsService.AllAccounts() {
+		// 	addrStr, err := in.AddressCodec.BytesToString(addr)
+		// 	if err != nil {
+		// 		panic(err)
+		// 	}
+		// 	blockedAddresses[addrStr] = true
+		// }
 	}
 
 	// default to governance authority if not provided

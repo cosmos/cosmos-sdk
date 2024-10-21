@@ -62,7 +62,7 @@ type BaseViewKeeper struct {
 	cdc                   codec.BinaryCodec
 	ak                    types.AccountKeeper
 	addrCdc               address.Codec
-	moduleAccountsService moduleaccounts.Service
+	moduleAccountsService moduleaccounts.ServiceWithPerms
 
 	Schema        collections.Schema
 	Supply        collections.Map[string, math.Int]
@@ -73,7 +73,7 @@ type BaseViewKeeper struct {
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak types.AccountKeeper, moduleAccountsService moduleaccounts.Service) BaseViewKeeper {
+func NewBaseViewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, ak types.AccountKeeper, moduleAccountsService moduleaccounts.ServiceWithPerms) BaseViewKeeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := BaseViewKeeper{
 		Environment:           env,

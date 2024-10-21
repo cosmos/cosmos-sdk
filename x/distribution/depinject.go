@@ -85,6 +85,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		DistrKeeper:    k,
 		Module:         m,
 		Hooks:          staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
-		ModuleAccounts: []runtime.ModuleAccount{types.ModuleName},
+		ModuleAccounts: []runtime.ModuleAccount{runtime.NewModuleAccount(types.ModuleName)},
 	}
 }

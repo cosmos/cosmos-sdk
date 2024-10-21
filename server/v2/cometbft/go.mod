@@ -21,18 +21,10 @@ require (
 	cosmossdk.io/core v1.0.0-alpha.4
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.4.1
-<<<<<<< HEAD
 	cosmossdk.io/server/v2 v2.0.0-20241021134528-681366e3469c // main
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241021134528-681366e3469c // main
 	cosmossdk.io/server/v2/stf v0.0.0-20241021134528-681366e3469c // main
 	cosmossdk.io/store/v2 v2.0.0-20241017091405-f01baf302e2b // main
-=======
-	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac
-	cosmossdk.io/server/v2 v2.0.0-00010101000000-000000000000
-	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d
-	cosmossdk.io/server/v2/stf v0.0.0-20240708142107-25e99c54bac1
-	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
->>>>>>> e84c0eb86 (feat(server/v2): init the indexer in server/v2 (#22218))
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
 	github.com/cometbft/cometbft/api v1.0.0-rc.1

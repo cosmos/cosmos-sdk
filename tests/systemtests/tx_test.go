@@ -1,4 +1,4 @@
-//go:build system_test
+//go:build !system_test
 
 package systemtests
 
@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"os"
 
 	"fmt"
 
@@ -16,9 +17,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var bankMsgSendEventAction = "message.action='/cosmos.bank.v1beta1.MsgSend'"
@@ -171,6 +177,8 @@ func TestSimulateTx_GRPCGateway(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			reqBz, err := json.Marshal(tc.req)
+			require.NoError(t, err)
+
 			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/simulate", baseURL), "application/json", reqBz)
 			require.NoError(t, err)
 			if tc.expErr {
@@ -306,7 +314,6 @@ func TestGetTxEvents_GRPC(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestGetTxEvents_GRPCGateway(t *testing.T) {
@@ -405,7 +412,6 @@ func TestGetTxEvents_GRPCGateway(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestGetTx_GRPC(t *testing.T) {
@@ -722,6 +728,7 @@ func TestTxEncode_GRPCGateway(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			reqBz, err := json.Marshal(tc.req)
+			require.NoError(t, err)
 
 			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/encode", baseUrl), "application/json", reqBz)
 			require.NoError(t, err)
@@ -847,6 +854,190 @@ func TestTxDecode_GRPCGateway(t *testing.T) {
 	}
 }
 
+func TestTxEncodeAmino_GRPC(t *testing.T) {
+	sut.ResetChain(t)
+	sut.StartChain(t)
+
+	legacyAmino := codec.NewLegacyAmino()
+	std.RegisterLegacyAminoCodec(legacyAmino)
+	legacytx.RegisterLegacyAminoCodec(legacyAmino)
+	legacy.RegisterAminoMsg(legacyAmino, &banktypes.MsgSend{}, "cosmos-sdk/MsgSend")
+
+	qc := tx.NewServiceClient(sut.RPCClient(t))
+	txJSONBytes, stdTx := readTestAminoTxJSON(t, legacyAmino)
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxEncodeAminoRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.TxEncodeAminoRequest{}, true, "invalid empty tx json"},
+		{"invalid request", &tx.TxEncodeAminoRequest{AminoJson: "invalid tx json"}, true, "invalid request"},
+		{"valid request with amino-json", &tx.TxEncodeAminoRequest{AminoJson: string(txJSONBytes)}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := qc.TxEncodeAmino(context.Background(), tc.req)
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expErrMsg)
+				require.Empty(t, res)
+			} else {
+				require.NoError(t, err)
+				require.NotEmpty(t, res.GetAminoBinary())
+
+				var decodedTx legacytx.StdTx
+				err = legacyAmino.Unmarshal(res.AminoBinary, &decodedTx)
+				require.NoError(t, err)
+				require.Equal(t, decodedTx.GetMsgs(), stdTx.GetMsgs())
+			}
+		})
+	}
+}
+
+func TestTxEncodeAmino_GRPCGateway(t *testing.T) {
+	sut.ResetChain(t)
+	sut.StartChain(t)
+
+	legacyAmino := codec.NewLegacyAmino()
+	std.RegisterLegacyAminoCodec(legacyAmino)
+	legacytx.RegisterLegacyAminoCodec(legacyAmino)
+	legacy.RegisterAminoMsg(legacyAmino, &banktypes.MsgSend{}, "cosmos-sdk/MsgSend")
+
+	baseUrl := sut.APIAddress()
+	txJSONBytes, stdTx := readTestAminoTxJSON(t, legacyAmino)
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxEncodeAminoRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.TxEncodeAminoRequest{}, true, "invalid empty tx json"},
+		{"invalid request", &tx.TxEncodeAminoRequest{AminoJson: "invalid tx json"}, true, "cannot parse disfix JSON wrapper"},
+		{"valid request with amino-json", &tx.TxEncodeAminoRequest{AminoJson: string(txJSONBytes)}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reqBz, err := json.Marshal(tc.req)
+			require.NoError(t, err)
+
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/encode/amino", baseUrl), "application/json", reqBz)
+			require.NoError(t, err)
+			if tc.expErr {
+				require.Contains(t, string(res), tc.expErrMsg)
+			} else {
+				var result tx.TxEncodeAminoResponse
+				err := json.Unmarshal(res, &result)
+				require.NoError(t, err)
+
+				var decodedTx legacytx.StdTx
+				err = legacyAmino.Unmarshal(result.AminoBinary, &decodedTx)
+				require.NoError(t, err)
+				require.Equal(t, decodedTx.GetMsgs(), stdTx.GetMsgs())
+			}
+		})
+	}
+}
+
+func TestTxDecodeAmino_GRPC(t *testing.T) {
+	sut.ResetChain(t)
+	sut.StartChain(t)
+
+	legacyAmino := codec.NewLegacyAmino()
+	std.RegisterLegacyAminoCodec(legacyAmino)
+	legacytx.RegisterLegacyAminoCodec(legacyAmino)
+	legacy.RegisterAminoMsg(legacyAmino, &banktypes.MsgSend{}, "cosmos-sdk/MsgSend")
+
+	qc := tx.NewServiceClient(sut.RPCClient(t))
+	encodedTx, stdTx := readTestAminoTxBinary(t, legacyAmino)
+
+	invalidTxBytes := append(encodedTx, byte(0o00))
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxDecodeAminoRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.TxDecodeAminoRequest{}, true, "invalid empty tx bytes"},
+		{"invalid tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: invalidTxBytes}, true, "invalid request"},
+		{"valid request with tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: encodedTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := qc.TxDecodeAmino(context.Background(), tc.req)
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expErrMsg)
+				require.Empty(t, res)
+			} else {
+				require.NoError(t, err)
+				require.NotEmpty(t, res.GetAminoJson())
+
+				var decodedTx legacytx.StdTx
+				err = legacyAmino.UnmarshalJSON([]byte(res.GetAminoJson()), &decodedTx)
+				require.NoError(t, err)
+				require.Equal(t, stdTx.GetMsgs(), decodedTx.GetMsgs())
+			}
+		})
+	}
+}
+
+func TestTxDecodeAmino_GRPCGateway(t *testing.T) {
+	sut.ResetChain(t)
+	sut.StartChain(t)
+
+	legacyAmino := codec.NewLegacyAmino()
+	std.RegisterLegacyAminoCodec(legacyAmino)
+	legacytx.RegisterLegacyAminoCodec(legacyAmino)
+	legacy.RegisterAminoMsg(legacyAmino, &banktypes.MsgSend{}, "cosmos-sdk/MsgSend")
+
+	baseUrl := sut.APIAddress()
+	encodedTx, stdTx := readTestAminoTxBinary(t, legacyAmino)
+
+	invalidTxBytes := append(encodedTx, byte(0o00))
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxDecodeAminoRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.TxDecodeAminoRequest{}, true, "invalid empty tx bytes"},
+		{"invalid tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: invalidTxBytes}, true, "unmarshal to legacytx.StdTx failed"},
+		{"valid request with tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: encodedTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reqBz, err := json.Marshal(tc.req)
+			require.NoError(t, err)
+
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/decode/amino", baseUrl), "application/json", reqBz)
+			require.NoError(t, err)
+			if tc.expErr {
+				require.Contains(t, string(res), tc.expErrMsg)
+			} else {
+				var result tx.TxDecodeAminoResponse
+				err := json.Unmarshal(res, &result)
+				require.NoError(t, err)
+
+				var decodedTx legacytx.StdTx
+				err = legacyAmino.UnmarshalJSON([]byte(result.AminoJson), &decodedTx)
+				require.NoError(t, err)
+				require.Equal(t, stdTx.GetMsgs(), decodedTx.GetMsgs())
+			}
+		})
+	}
+}
+
 func TestSimMultiSigTx(t *testing.T) {
 	sut.ResetChain(t)
 
@@ -864,7 +1055,7 @@ func TestSimMultiSigTx(t *testing.T) {
 	sut.StartChain(t)
 
 	multiSigName := "multisig"
-	res := cli.RunCommandWithArgs("keys", "add", multiSigName, "--multisig=account1,account2", "--multisig-threshold=2", "--keyring-backend=test", "--home=./testnet")
+	cli.RunCommandWithArgs("keys", "add", multiSigName, "--multisig=account1,account2", "--multisig-threshold=2", "--keyring-backend=test", "--home=./testnet")
 	multiSigAddr := cli.GetKeyAddr(multiSigName)
 
 	// Send from validator to multisig addr
@@ -880,7 +1071,7 @@ func TestSimMultiSigTx(t *testing.T) {
 	// create unsign tx
 	var newTransferAmount int64 = 100
 	bankSendCmdArgs := []string{"tx", "bank", "send", multiSigAddr, valAddr, fmt.Sprintf("%d%s", newTransferAmount, denom), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
-	res = cli.RunCommandWithArgs(bankSendCmdArgs...)
+	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
 	txFile := StoreTempFile(t, []byte(res))
 
 	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", "account1"), fmt.Sprintf("--multisig=%s", multiSigAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet")
@@ -896,5 +1087,22 @@ func TestSimMultiSigTx(t *testing.T) {
 
 	multiSigBalance = cli.QueryBalance(multiSigAddr, denom)
 	require.Equal(t, multiSigBalance, transferAmount-newTransferAmount-10)
+}
 
+func readTestAminoTxJSON(t *testing.T, aminoCodec *codec.LegacyAmino) ([]byte, *legacytx.StdTx) {
+	txJSONBytes, err := os.ReadFile("testdata/tx_amino1.json")
+	require.NoError(t, err)
+	var stdTx legacytx.StdTx
+	err = aminoCodec.UnmarshalJSON(txJSONBytes, &stdTx)
+	require.NoError(t, err)
+	return txJSONBytes, &stdTx
+}
+
+func readTestAminoTxBinary(t *testing.T, aminoCodec *codec.LegacyAmino) ([]byte, *legacytx.StdTx) {
+	txJSONBytes, err := os.ReadFile("testdata/tx_amino1.bin")
+	require.NoError(t, err)
+	var stdTx legacytx.StdTx
+	err = aminoCodec.Unmarshal(txJSONBytes, &stdTx)
+	require.NoError(t, err)
+	return txJSONBytes, &stdTx
 }

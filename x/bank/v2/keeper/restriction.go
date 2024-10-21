@@ -46,17 +46,17 @@ func (r *sendRestriction) apply(ctx context.Context, fromAddr, toAddr []byte, am
 	return r.fn(ctx, fromAddr, toAddr, amt)
 }
 
-// AppendSendRestriction adds the provided SendRestrictionFn to run after previously provided restrictions.
+// AppendGlobalSendRestriction adds the provided SendRestrictionFn to run after previously provided global restrictions.
 func (k Keeper) AppendGlobalSendRestriction(restriction types.SendRestrictionFn) {
 	k.sendRestriction.append(restriction)
 }
 
-// PrependSendRestriction adds the provided SendRestrictionFn to run before previously provided restrictions.
+// PrependGlobalSendRestriction adds the provided SendRestrictionFn to run before previously provided global restrictions.
 func (k Keeper) PrependGlobalSendRestriction(restriction types.SendRestrictionFn) {
 	k.sendRestriction.prepend(restriction)
 }
 
-// ClearSendRestriction removes the send restriction (if there is one).
+// ClearGlobalSendRestriction removes the global send restriction (if there is one).
 func (k Keeper) ClearGlobalSendRestriction() {
 	k.sendRestriction.clear()
 }

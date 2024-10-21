@@ -5,13 +5,18 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"strings"
+	"sync"
 	"sync/atomic"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/collections"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
@@ -20,6 +25,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors/v2"
 	"cosmossdk.io/log"
+	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/client/grpc/cmtservice"
 	"cosmossdk.io/server/v2/cometbft/handlers"
@@ -37,9 +43,11 @@ type Consensus[T transaction.Tx] struct {
 	logger           log.Logger
 	appName, version string
 	app              *appmanager.AppManager[T]
+	appCloser        func() error
 	txCodec          transaction.Codec[T]
 	store            types.Store
 	streaming        streaming.Manager
+	listener         *appdata.Listener
 	snapshotManager  *snapshots.Manager
 	mempool          mempool.Mempool[T]
 
@@ -57,20 +65,23 @@ type Consensus[T transaction.Tx] struct {
 	processProposalHandler handlers.ProcessHandler[T]
 	verifyVoteExt          handlers.VerifyVoteExtensionhandler
 	extendVote             handlers.ExtendVoteHandler
+	checkTxHandler         handlers.CheckTxHandler[T]
 
 	addrPeerFilter types.PeerFilter // filter peers by address and port
 	idPeerFilter   types.PeerFilter // filter peers by node ID
 
-	grpcMethodsMap map[string]func() transaction.Msg // maps gRPC method to message creator func
+	queryHandlersMap map[string]appmodulev2.Handler
+	getProtoRegistry func() (*protoregistry.Files, error)
 }
 
 func NewConsensus[T transaction.Tx](
 	logger log.Logger,
 	appName string,
 	app *appmanager.AppManager[T],
+	appCloser func() error,
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
-	gRPCMethodsMap map[string]func() transaction.Msg,
+	queryHandlersMap map[string]appmodulev2.Handler,
 	store types.Store,
 	cfg Config,
 	txCodec transaction.Codec[T],
@@ -79,8 +90,8 @@ func NewConsensus[T transaction.Tx](
 	return &Consensus[T]{
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
-		grpcMethodsMap:         gRPCMethodsMap,
 		app:                    app,
+		appCloser:              appCloser,
 		cfg:                    cfg,
 		store:                  store,
 		logger:                 logger,
@@ -96,6 +107,8 @@ func NewConsensus[T transaction.Tx](
 		chainID:                chainId,
 		indexedEvents:          indexedEvents,
 		initialHeight:          0,
+		queryHandlersMap:       queryHandlersMap,
+		getProtoRegistry:       sync.OnceValues(gogoproto.MergedRegistry),
 	}
 }
 
@@ -122,31 +135,35 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		return nil, err
 	}
 
-	resp, err := c.app.ValidateTx(ctx, decodedTx)
-	// we do not want to return a cometbft error, but a check tx response with the error
-	if err != nil && !errors.Is(err, resp.Error) {
-		return nil, err
+	if c.checkTxHandler == nil {
+		resp, err := c.app.ValidateTx(ctx, decodedTx)
+		// we do not want to return a cometbft error, but a check tx response with the error
+		if err != nil && !errors.Is(err, resp.Error) {
+			return nil, err
+		}
+
+		events, err := intoABCIEvents(resp.Events, c.indexedEvents)
+		if err != nil {
+			return nil, err
+		}
+
+		cometResp := &abciproto.CheckTxResponse{
+			Code:      0,
+			GasWanted: uint64ToInt64(resp.GasWanted),
+			GasUsed:   uint64ToInt64(resp.GasUsed),
+			Events:    events,
+		}
+		if resp.Error != nil {
+			space, code, log := errorsmod.ABCIInfo(resp.Error, c.cfg.AppTomlConfig.Trace)
+			cometResp.Code = code
+			cometResp.Codespace = space
+			cometResp.Log = log
+		}
+
+		return cometResp, nil
 	}
 
-	events, err := intoABCIEvents(resp.Events, c.indexedEvents)
-	if err != nil {
-		return nil, err
-	}
-
-	cometResp := &abciproto.CheckTxResponse{
-		Code:      0,
-		GasWanted: uint64ToInt64(resp.GasWanted),
-		GasUsed:   uint64ToInt64(resp.GasUsed),
-		Events:    events,
-	}
-	if resp.Error != nil {
-		space, code, log := errorsmod.ABCIInfo(resp.Error, c.cfg.AppTomlConfig.Trace)
-		cometResp.Code = code
-		cometResp.Codespace = space
-		cometResp.Log = log
-	}
-
-	return cometResp, nil
+	return c.checkTxHandler(c.app.ValidateTx)
 }
 
 // Info implements types.Application.
@@ -191,23 +208,9 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 // Query implements types.Application.
 // It is called by cometbft to query application state.
 func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (resp *abciproto.QueryResponse, err error) {
-	// check if it's a gRPC method
-	makeGRPCRequest, isGRPC := c.grpcMethodsMap[req.Path]
+	resp, isGRPC, err := c.maybeRunGRPCQuery(ctx, req)
 	if isGRPC {
-		protoRequest := makeGRPCRequest()
-		err = gogoproto.Unmarshal(req.Data, protoRequest) // TODO: use codec
-		if err != nil {
-			return nil, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
-		}
-		res, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
-		if err != nil {
-			resp := QueryResult(err, c.cfg.AppTomlConfig.Trace)
-			resp.Height = req.Height
-			return resp, err
-
-		}
-
-		return queryResponse(res, req.Height)
+		return resp, err
 	}
 
 	// this error most probably means that we can't handle it with a proto message, so
@@ -236,6 +239,50 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 	}
 
 	return resp, nil
+}
+
+func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryRequest) (resp *abciproto.QueryResponse, isGRPC bool, err error) {
+	// if this fails then we cannot serve queries anymore
+	registry, err := c.getProtoRegistry()
+	if err != nil {
+		return nil, false, err
+	}
+
+	path := strings.TrimPrefix(req.Path, "/")
+	pathFullName := protoreflect.FullName(strings.ReplaceAll(path, "/", "."))
+
+	// in order to check if it's a gRPC query we ensure that there's a descriptor
+	// for the path, if such descriptor exists, and it is a method descriptor
+	// then we assume this is a gRPC query.
+	desc, err := registry.FindDescriptorByName(pathFullName)
+	if err != nil {
+		return nil, false, err
+	}
+
+	md, isGRPC := desc.(protoreflect.MethodDescriptor)
+	if !isGRPC {
+		return nil, false, nil
+	}
+
+	handler, found := c.queryHandlersMap[string(md.Input().FullName())]
+	if !found {
+		return nil, true, fmt.Errorf("no query handler found for %s", req.Path)
+	}
+	protoRequest := handler.MakeMsg()
+	err = gogoproto.Unmarshal(req.Data, protoRequest) // TODO: use codec
+	if err != nil {
+		return nil, true, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
+	}
+	res, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
+	if err != nil {
+		resp := QueryResult(err, c.cfg.AppTomlConfig.Trace)
+		resp.Height = req.Height
+		return resp, true, err
+
+	}
+
+	resp, err = queryResponse(res, req.Height)
+	return resp, isGRPC, err
 }
 
 // InitChain implements types.Application.

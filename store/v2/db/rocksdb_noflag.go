@@ -4,8 +4,8 @@
 package db
 
 import (
+	coreserver "cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/store/v2"
 )
 
 var _ corestore.KVStoreWithBatch = (*RocksDB)(nil)
@@ -19,7 +19,7 @@ func NewRocksDB(name, dataDir string) (*RocksDB, error) {
 	panic("rocksdb must be built with -tags rocksdb")
 }
 
-func NewRocksDBWithOpts(dataDir string, opts store.DBOptions) (*RocksDB, error) {
+func NewRocksDBWithOpts(dataDir string, opts coreserver.DynamicConfig) (*RocksDB, error) {
 	panic("rocksdb must be built with -tags rocksdb")
 }
 

@@ -38,10 +38,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [#21790](https://github.com/cosmos/cosmos-sdk/pull/21790) Add `add-batch-upgrade` command.
 * [#21972](https://github.com/cosmos/cosmos-sdk/pull/21972) Add `prepare-upgrade` command
 
 ### Improvements
 
+* [#21891](https://github.com/cosmos/cosmos-sdk/pull/21891) create `current` symlink as relative
 * [#21462](https://github.com/cosmos/cosmos-sdk/pull/21462) Pass `stdin` to binary.
 
 ### Features

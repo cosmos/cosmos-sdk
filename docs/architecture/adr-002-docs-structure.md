@@ -40,7 +40,7 @@ docs/
 The files in each sub-folders do not matter and will likely change. What matters is the sectioning:
 
 * `README`: Landing page of the docs.
-* `intro`: Introductory material. Goal is to have a short explainer of the Cosmos SDK and then channel people to the resource they need. The [Cosmos SDK tutorial](https://github.com/cosmos/sdk-application-tutorial/) will be highlighted, as well as the `godocs`.
+* `intro`: Introductory material. Goal is to have a short explainer of the Cosmos SDK and then channel people to the resources they need. The [Cosmos SDK tutorial](https://github.com/cosmos/sdk-application-tutorial/) will be highlighted, as well as the `godocs`.
 * `concepts`: Contains high-level explanations of the abstractions of the Cosmos SDK. It does not contain specific code implementation and does not need to be updated often. **It is not an API specification of the interfaces**. API spec is the `godoc`.
 * `clients`: Contains specs and info about the various Cosmos SDK clients.
 * `spec`: Contains specs of modules, and others.
@@ -69,7 +69,7 @@ Accepted
 * The `/docs` folder now only contains Cosmos SDK and gaia related material. Later, it will only contain Cosmos SDK related material.
 * Developers only have to update `/docs` folder when they open a PR (and not `/examples` for example).
 * Easier for developers to find what they need to update in the docs thanks to reworked architecture.
-* Cleaner vuepress build for website docs.
+* Cleaner `vuepress` build for website docs.
 * Will help build an executable doc (cf https://github.com/cosmos/cosmos-sdk/issues/2611)
 
 ### Neutral

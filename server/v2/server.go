@@ -61,19 +61,17 @@ const (
 
 var _ ServerComponent[transaction.Tx] = (*Server[transaction.Tx])(nil)
 
+// Server is the top-level server component which contains all other server components.
 type Server[T transaction.Tx] struct {
-	logger     log.Logger
 	components []ServerComponent[T]
 	config     ServerConfig
 }
 
 func NewServer[T transaction.Tx](
-	logger log.Logger,
 	config ServerConfig,
 	components ...ServerComponent[T],
 ) *Server[T] {
 	return &Server[T]{
-		logger:     logger,
 		config:     config,
 		components: components,
 	}
@@ -85,7 +83,8 @@ func (s *Server[T]) Name() string {
 
 // Start starts all components concurrently.
 func (s *Server[T]) Start(ctx context.Context) error {
-	s.logger.Info("starting servers...")
+	logger := GetLoggerFromContext(ctx)
+	logger.With(log.ModuleKey, s.Name()).Info("starting servers...")
 
 	g, ctx := errgroup.WithContext(ctx)
 	for _, mod := range s.components {
@@ -105,7 +104,8 @@ func (s *Server[T]) Start(ctx context.Context) error {
 
 // Stop stops all components concurrently.
 func (s *Server[T]) Stop(ctx context.Context) error {
-	s.logger.Info("stopping servers...")
+	logger := GetLoggerFromContext(ctx)
+	logger.With(log.ModuleKey, s.Name()).Info("stopping servers...")
 
 	g, ctx := errgroup.WithContext(ctx)
 	for _, mod := range s.components {
@@ -181,6 +181,8 @@ func (s *Server[T]) Configs() map[string]any {
 func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 	flags := pflag.NewFlagSet(s.Name(), pflag.ExitOnError)
 	flags.String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
+	flags.String(FlagCPUProfiling, "", "Enable CPU profiling and write to the specified file")
+
 	return flags
 }
 

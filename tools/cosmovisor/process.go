@@ -1,6 +1,7 @@
 package cosmovisor
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,16 +10,23 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/otiai10/copy"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+
+	cmtservice "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 )
 
 type Launcher struct {
@@ -34,6 +42,144 @@ func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 	}
 
 	return Launcher{logger: logger, cfg: cfg, fw: fw}, nil
+}
+
+// loadBatchUpgradeFile loads the batch upgrade file into memory, sorted by
+// their upgrade heights
+func loadBatchUpgradeFile(cfg *Config) ([]upgradetypes.Plan, error) {
+	var uInfos []upgradetypes.Plan
+	upgradeInfoFile, err := os.ReadFile(cfg.UpgradeInfoBatchFilePath())
+	if os.IsNotExist(err) {
+		return uInfos, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("error while reading %s: %w", cfg.UpgradeInfoBatchFilePath(), err)
+	}
+
+	if err = json.Unmarshal(upgradeInfoFile, &uInfos); err != nil {
+		return nil, err
+	}
+	sort.Slice(uInfos, func(i, j int) bool {
+		return uInfos[i].Height < uInfos[j].Height
+	})
+	return uInfos, nil
+}
+
+// BatchUpgradeWatcher starts a watcher loop that swaps upgrade manifests at the correct
+// height, given the batch upgrade file. It watches the current state of the chain
+// via the websocket API.
+func BatchUpgradeWatcher(ctx context.Context, cfg *Config, logger log.Logger) {
+	// load batch file in memory
+	uInfos, err := loadBatchUpgradeFile(cfg)
+	if err != nil {
+		logger.Warn("failed to load batch upgrade file", "error", err)
+		uInfos = []upgradetypes.Plan{}
+	}
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		logger.Warn("failed to init watcher", "error", err)
+		return
+	}
+	defer watcher.Close()
+	err = watcher.Add(filepath.Dir(cfg.UpgradeInfoBatchFilePath()))
+	if err != nil {
+		logger.Warn("watcher failed to add upgrade directory", "error", err)
+		return
+	}
+
+	var conn *grpc.ClientConn
+	var grpcErr error
+
+	defer func() {
+		if conn != nil {
+			if err := conn.Close(); err != nil {
+				logger.Warn("couldn't stop gRPC client", "error", err)
+			}
+		}
+	}()
+
+	// Wait for the chain process to be ready
+pollLoop:
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			conn, grpcErr = grpc.NewClient(cfg.GRPCAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			if grpcErr == nil {
+				break pollLoop
+			}
+			time.Sleep(time.Second)
+		}
+	}
+
+	client := cmtservice.NewServiceClient(conn)
+
+	var prevUpgradeHeight int64 = -1
+
+	logger.Info("starting the batch watcher loop")
+	for {
+		select {
+		case event := <-watcher.Events:
+			if event.Op&(fsnotify.Write|fsnotify.Create) != 0 {
+				uInfos, err = loadBatchUpgradeFile(cfg)
+				if err != nil {
+					logger.Warn("failed to load batch upgrade file", "error", err)
+					continue
+				}
+			}
+		case <-ctx.Done():
+			return
+		default:
+			if len(uInfos) == 0 {
+				// prevent spending extra CPU cycles
+				time.Sleep(time.Second)
+				continue
+			}
+			resp, err := client.GetLatestBlock(ctx, &cmtservice.GetLatestBlockRequest{})
+			if err != nil {
+				logger.Warn("error getting latest block", "error", err)
+				time.Sleep(time.Second)
+				continue
+			}
+
+			h := resp.SdkBlock.Header.Height
+			upcomingUpgrade := uInfos[0].Height
+			// replace upgrade-info and upgrade-info batch file
+			if h > prevUpgradeHeight && h < upcomingUpgrade {
+				jsonBytes, err := json.Marshal(uInfos[0])
+				if err != nil {
+					logger.Warn("error marshaling JSON for upgrade-info.json", "error", err, "upgrade", uInfos[0])
+					continue
+				}
+				if err := os.WriteFile(cfg.UpgradeInfoFilePath(), jsonBytes, 0o600); err != nil {
+					logger.Warn("error writing upgrade-info.json", "error", err)
+					continue
+				}
+				uInfos = uInfos[1:]
+
+				jsonBytes, err = json.Marshal(uInfos)
+				if err != nil {
+					logger.Warn("error marshaling JSON for upgrade-info.json.batch", "error", err, "upgrades", uInfos)
+					continue
+				}
+				if err := os.WriteFile(cfg.UpgradeInfoBatchFilePath(), jsonBytes, 0o600); err != nil {
+					logger.Warn("error writing upgrade-info.json.batch", "error", err)
+					// remove the upgrade-info.json.batch file to avoid non-deterministic behavior
+					err := os.Remove(cfg.UpgradeInfoBatchFilePath())
+					if err != nil && !os.IsNotExist(err) {
+						logger.Warn("error removing upgrade-info.json.batch", "error", err)
+						return
+					}
+					continue
+				}
+				prevUpgradeHeight = upcomingUpgrade
+			}
+
+			// Add a small delay to avoid hammering the gRPC endpoint
+			time.Sleep(time.Second)
+		}
+	}
 }
 
 // Run launches the app in a subprocess and returns when the subprocess (app)
@@ -58,10 +204,20 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 		return false, fmt.Errorf("launching process %s %s failed: %w", bin, strings.Join(args, " "), err)
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		BatchUpgradeWatcher(ctx, l.cfg, l.logger)
+	}()
+
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGTERM)
 	go func() {
 		sig := <-sigs
+		cancel()
+		wg.Wait()
 		if err := cmd.Process.Signal(sig); err != nil {
 			l.logger.Error("terminated", "error", err, "bin", bin)
 			os.Exit(1)
@@ -93,6 +249,9 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 
 		return true, nil
 	}
+
+	cancel()
+	wg.Wait()
 
 	return false, nil
 }

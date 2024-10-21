@@ -2,19 +2,24 @@ package keeper
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
+
+	corecontext "cosmossdk.io/core/context"
+	errorsmod "cosmossdk.io/errors"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
-	errorsmod "cosmossdk.io/errors"
+	v1 "cosmossdk.io/x/accounts/extensions/feegrant/v1"
 	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
@@ -30,18 +35,25 @@ type Keeper struct {
 	FeeAllowance collections.Map[collections.Pair[sdk.AccAddress, sdk.AccAddress], feegrant.Grant]
 	// FeeAllowanceQueue key: expiration time+grantee+granter | value: bool
 	FeeAllowanceQueue collections.Map[collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], bool]
+	accountKeeper     feegrant.AccountsKeeper
 }
 
 var _ ante.FeegrantKeeper = &Keeper{}
 
 // NewKeeper creates a feegrant Keeper
-func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, addrCdc address.Codec) Keeper {
+func NewKeeper(
+	env appmodule.Environment,
+	cdc codec.BinaryCodec,
+	addrCdc address.Codec,
+	accountKeeper feegrant.AccountsKeeper,
+) Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	return Keeper{
-		Environment: env,
-		cdc:         cdc,
-		addrCdc:     addrCdc,
+		Environment:   env,
+		accountKeeper: accountKeeper,
+		cdc:           cdc,
+		addrCdc:       addrCdc,
 		FeeAllowance: collections.NewMap(
 			sb,
 			feegrant.FeeAllowanceKeyPrefix,
@@ -61,6 +73,26 @@ func NewKeeper(env appmodule.Environment, cdc codec.BinaryCodec, addrCdc address
 
 // GrantAllowance creates a new grant
 func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
+	migrated, err := k.isXAccount(ctx, granter)
+	if err != nil {
+		return err
+	}
+	if !migrated {
+		return k.grantAllowance(ctx, granter, grantee, feeAllowance)
+	}
+	granteeAddrStr, err := k.addrCdc.BytesToString(grantee)
+	if err != nil {
+		return err
+	}
+	exec, err := v1.NewMsgGrantAllowance(feeAllowance, granteeAddrStr)
+	if err != nil {
+		return err
+	}
+	_, err = k.accountKeeper.Execute(ctx, granter, granter, exec, nil)
+	return err
+}
+
+func (k Keeper) grantAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
 	// Checking for duplicate entry
 	if f, _ := k.GetAllowance(ctx, granter, grantee); f != nil {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
@@ -122,7 +154,14 @@ func (k Keeper) GrantAllowance(ctx context.Context, granter, grantee sdk.AccAddr
 
 // UpdateAllowance updates the existing grant.
 func (k Keeper) UpdateAllowance(ctx context.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
-	_, err := k.GetAllowance(ctx, granter, grantee)
+	migrated, err := k.isXAccount(ctx, granter)
+	if err != nil {
+		return err
+	}
+	if migrated {
+		panic("not supported for xaccounts, yet")
+	}
+	_, err = k.GetAllowance(ctx, granter, grantee)
 	if err != nil {
 		return err
 	}
@@ -194,6 +233,32 @@ func (k Keeper) revokeAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 // If there is none, it returns nil, collections.ErrNotFound.
 // Returns an error on parsing issues
 func (k Keeper) GetAllowance(ctx context.Context, granter, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error) {
+	migrated, err := k.isXAccount(ctx, granter)
+	if err != nil {
+		return nil, err
+	}
+	if !migrated {
+		return k.getAllowance(ctx, granter, grantee)
+	}
+
+	granteeAddrStr, err := k.addrCdc.BytesToString(grantee)
+	if err != nil {
+		return nil, fmt.Errorf("bech32 encoding of grantee: %w", err)
+	}
+
+	resp, err := k.accountKeeper.Query(ctx, granter, &v1.QueryAllowanceRequest{Grantee: granteeAddrStr})
+	if err != nil {
+		return nil, err
+	}
+	typedResp, ok := resp.(*v1.QueryAllowanceResponse)
+	if !ok {
+		return nil, errors.New("invalid response type")
+	}
+
+	return typedResp.GetAllowance().GetCachedValue().(feegrant.FeeAllowanceI), nil
+}
+
+func (k Keeper) getAllowance(ctx context.Context, granter, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error) {
 	grant, err := k.FeeAllowance.Get(ctx, collections.Join(grantee, granter))
 	if err != nil {
 		return nil, err
@@ -213,6 +278,26 @@ func (k Keeper) IterateAllFeeAllowances(ctx context.Context, cb func(grant feegr
 
 // UseGrantedFees will try to pay the given fee from the granter's account as requested by the grantee
 func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error {
+	migrated, err := k.isXAccount(ctx, granter)
+	if err != nil {
+		return err
+	}
+	if !migrated {
+		return k.useGrantedFees(ctx, granter, grantee, fee, msgs)
+	}
+	granteeAddrStr, err := k.addrCdc.BytesToString(grantee)
+	if err != nil {
+		return err
+	}
+	exec, err := v1.NewMsgUseGrantedFees(granteeAddrStr, msgs...)
+	if err != nil {
+		return err
+	}
+	_, err = k.accountKeeper.Execute(ctx, granter, grantee, exec, nil)
+	return err
+}
+
+func (k Keeper) useGrantedFees(ctx context.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error {
 	grant, err := k.GetAllowance(ctx, granter, grantee)
 	if err != nil {
 		return err
@@ -281,15 +366,17 @@ func (k Keeper) InitGenesis(ctx context.Context, data *feegrant.GenesisState) er
 // ExportGenesis will dump the contents of the keeper into a serializable GenesisState.
 func (k Keeper) ExportGenesis(ctx context.Context) (*feegrant.GenesisState, error) {
 	var grants []feegrant.Grant
-
 	err := k.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {
 		grants = append(grants, grant)
 		return false
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	return &feegrant.GenesisState{
 		Allowances: grants,
-	}, err
+	}, nil
 }
 
 // RemoveExpiredAllowances iterates grantsByExpiryQueue and deletes the expired grants.
@@ -327,4 +414,42 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int) error {
 	}
 
 	return nil
+}
+
+// MigrateAllowances migrates fee allowances for a given granter, returning all grants or an error if migration fails.
+// This clears the allowances of the granter so It does not hurt, when called twice.
+func (k Keeper) MigrateAllowances(ctx context.Context, granter sdk.AccAddress) ([]*feegrant.Grant, error) {
+	granterStr, err := k.addrCdc.BytesToString(granter)
+	if err != nil {
+		return nil, err
+	}
+
+	var grants []*feegrant.Grant
+	err = k.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool { // todo: this is an expensive operation
+		if grant.Granter == granterStr {
+			grants = append(grants, &grant)
+		}
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, grant := range grants {
+		err = k.revokeAllowance(ctx, granter, must(k.addrCdc.StringToBytes(grant.Grantee)))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return grants, nil
+}
+
+func (k Keeper) isXAccount(ctx context.Context, granter sdk.AccAddress) (bool, error) {
+	return k.accountKeeper.HasAccount(ctx, granter)
+}
+
+func must[T any](r T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return r
 }

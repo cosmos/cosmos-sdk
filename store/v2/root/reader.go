@@ -25,8 +25,8 @@ func NewReaderMap(v uint64, vr store.VersionedReader) *ReaderMap {
 	}
 }
 
-func (roa *ReaderMap) GetReader(actor []byte) (corestore.Reader, error) {
-	return NewReader(roa.version, roa.vReader, actor), nil
+func (rm *ReaderMap) GetReader(actor []byte) (corestore.Reader, error) {
+	return NewReader(rm.version, rm.vReader, actor), nil
 }
 
 // Reader represents a read-only adapter for accessing data from the root store.

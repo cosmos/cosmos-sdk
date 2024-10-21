@@ -292,7 +292,7 @@ func (c *CommitStore) getReader(storeKey string) (Reader, error) {
 
 	reader, ok := tree.(Reader)
 	if !ok {
-		return nil, errors.New("tree does not implement Reader")
+		return nil, fmt.Errorf("tree for store %s does not implement Reader", storeKey)
 	}
 
 	return reader, nil

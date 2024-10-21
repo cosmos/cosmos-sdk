@@ -2,14 +2,15 @@ package accounts
 
 import (
 	"context"
-	basev1 "cosmossdk.io/api/cosmos/accounts/defaults/base/v1"
-	coretransaction "cosmossdk.io/core/transaction"
 	"encoding/json"
+
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	basev1 "cosmossdk.io/api/cosmos/accounts/defaults/base/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/registry"
+	coretransaction "cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/accounts/cli"
 	v1 "cosmossdk.io/x/accounts/v1"
 

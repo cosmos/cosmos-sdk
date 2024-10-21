@@ -89,23 +89,6 @@ func (pva PeriodicLockingAccount) Init(ctx context.Context, msg *lockuptypes.Msg
 		}
 	}
 
-	bondDenom, err := getStakingDenom(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// Set initial value for all locked token
-	err = pva.DelegatedFree.Set(ctx, bondDenom, math.ZeroInt())
-	if err != nil {
-		return nil, err
-	}
-
-	// Set initial value for all locked token
-	err = pva.DelegatedLocking.Set(ctx, bondDenom, math.ZeroInt())
-	if err != nil {
-		return nil, err
-	}
-
 	err = pva.StartTime.Set(ctx, msg.StartTime)
 	if err != nil {
 		return nil, err

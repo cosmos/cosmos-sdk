@@ -52,8 +52,8 @@ func newBaseLockup(d accountstd.Dependencies) *BaseLockup {
 	BaseLockup := &BaseLockup{
 		Owner:            collections.NewItem(d.SchemaBuilder, OwnerPrefix, "owner", collections.BytesValue),
 		OriginalLocking:  collections.NewMap(d.SchemaBuilder, OriginalLockingPrefix, "original_locking", collections.StringKey, sdk.IntValue),
-		DelegatedFree:    collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.IntValue),
-		DelegatedLocking: collections.NewMap(d.SchemaBuilder, DelegatedLockingPrefix, "delegated_locking", collections.StringKey, sdk.IntValue),
+		DelegatedFree:    collections.NewMap(d.SchemaBuilder, DelegatedFreePrefix, "delegated_free", collections.StringKey, sdk.LegacyDecValue),
+		DelegatedLocking: collections.NewMap(d.SchemaBuilder, DelegatedLockingPrefix, "delegated_locking", collections.StringKey, sdk.LegacyDecValue),
 		WithdrawedCoins:  collections.NewMap(d.SchemaBuilder, WithdrawedCoinsPrefix, "withdrawed_coins", collections.StringKey, sdk.IntValue),
 		addressCodec:     d.AddressCodec,
 		headerService:    d.Environment.HeaderService,
@@ -67,8 +67,8 @@ type BaseLockup struct {
 	// Owner is the address of the account owner.
 	Owner            collections.Item[[]byte]
 	OriginalLocking  collections.Map[string, math.Int]
-	DelegatedFree    collections.Map[string, math.Int]
-	DelegatedLocking collections.Map[string, math.Int]
+	DelegatedFree    collections.Map[string, math.LegacyDec]
+	DelegatedLocking collections.Map[string, math.LegacyDec]
 	WithdrawedCoins  collections.Map[string, math.Int]
 	addressCodec     address.Codec
 	headerService    header.Service
@@ -102,23 +102,6 @@ func (bva *BaseLockup) Init(ctx context.Context, msg *lockuptypes.MsgInitLockupA
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	bondDenom, err := getStakingDenom(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// Set initial value for all locked token
-	err = bva.DelegatedFree.Set(ctx, bondDenom, math.ZeroInt())
-	if err != nil {
-		return nil, err
-	}
-
-	// Set initial value for all locked token
-	err = bva.DelegatedLocking.Set(ctx, bondDenom, math.ZeroInt())
-	if err != nil {
-		return nil, err
 	}
 
 	err = bva.EndTime.Set(ctx, msg.EndTime)
@@ -160,6 +143,7 @@ func (bva *BaseLockup) Delegate(
 		sdk.Coins{*balance},
 		lockedCoins,
 		sdk.Coins{msg.Amount},
+		msg.ValidatorAddress,
 	)
 	if err != nil {
 		return nil, err
@@ -193,7 +177,7 @@ func (bva *BaseLockup) Undelegate(
 		return nil, err
 	}
 
-	err = bva.TrackUndelegation(ctx, sdk.Coins{msg.Amount})
+	err = bva.TrackUndelegation(ctx, sdk.Coins{msg.Amount}, msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -416,6 +400,18 @@ func getStakingDenom(ctx context.Context) (string, error) {
 	return resp.Params.BondDenom, nil
 }
 
+func getValidator(ctx context.Context, valAddr string) (*stakingtypes.Validator, error) {
+	// Query account balance for the sent denom
+	resp, err := accountstd.QueryModule[*stakingtypes.QueryValidatorResponse](ctx, &stakingtypes.QueryValidatorRequest{
+		ValidatorAddr: valAddr,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Validator, nil
+}
+
 // TrackDelegation tracks a delegation amount for any given lockup account type
 // given the amount of coins currently being locked and the current account balance
 // of the delegation denominations.
@@ -423,9 +419,14 @@ func getStakingDenom(ctx context.Context) (string, error) {
 // CONTRACT: The account's coins, delegation coins, locked coins, and delegated
 // locking coins must be sorted.
 func (bva *BaseLockup) TrackDelegation(
-	ctx context.Context, balance, lockedCoins, amount sdk.Coins,
+	ctx context.Context, balance, lockedCoins, amount sdk.Coins, valAddr string,
 ) error {
 	bondDenom, err := getStakingDenom(ctx)
+	if err != nil {
+		return err
+	}
+
+	validator, err := getValidator(ctx, valAddr)
 	if err != nil {
 		return err
 	}
@@ -440,12 +441,26 @@ func (bva *BaseLockup) TrackDelegation(
 	}
 
 	lockedAmt := lockedCoins.AmountOf(bondDenom)
-	delLockingAmt, err := bva.DelegatedLocking.Get(ctx, bondDenom)
+	var delLockingAmt math.Int
+	delLockingShare := math.LegacyZeroDec()
+	delFreeShare := math.LegacyZeroDec()
+	err = bva.DelegatedLocking.Walk(ctx, nil, func(key string, value math.LegacyDec) (stop bool, err error) {
+		validator, err := getValidator(ctx, key)
+		if err != nil {
+			return true, err
+		}
+		token := validator.TokensFromShares(value)
+		delLockingAmt = delLockingAmt.Add(token.TruncateInt())
+		if key == valAddr {
+			delLockingShare = delLockingShare.Add(token)
+		}
+		return false, nil
+	})
 	if err != nil {
 		return err
 	}
-	delFreeAmt, err := bva.DelegatedFree.Get(ctx, bondDenom)
-	if err != nil {
+	delFreeShare, err = bva.DelegatedFree.Get(ctx, valAddr)
+	if err != nil && !errorsmod.IsOf(err, collections.ErrNotFound) {
 		return err
 	}
 
@@ -455,21 +470,23 @@ func (bva *BaseLockup) TrackDelegation(
 	x := math.MinInt(math.MaxInt(lockedAmt.Sub(delLockingAmt), math.ZeroInt()), delAmt)
 	y := delAmt.Sub(x)
 
-	delLockingCoin := sdk.NewCoin(bondDenom, delLockingAmt)
-	delFreeCoin := sdk.NewCoin(bondDenom, delFreeAmt)
 	if !x.IsZero() {
-		xCoin := sdk.NewCoin(bondDenom, x)
-		newDelLocking := delLockingCoin.Add(xCoin)
-		err = bva.DelegatedLocking.Set(ctx, bondDenom, newDelLocking.Amount)
+		xShare, err := validator.SharesFromTokens(x)
+		if err != nil {
+			return err
+		}
+		err = bva.DelegatedLocking.Set(ctx, valAddr, delLockingShare.Add(xShare))
 		if err != nil {
 			return err
 		}
 	}
 
 	if !y.IsZero() {
-		yCoin := sdk.NewCoin(bondDenom, y)
-		newDelFree := delFreeCoin.Add(yCoin)
-		err = bva.DelegatedFree.Set(ctx, bondDenom, newDelFree.Amount)
+		yShare, err := validator.SharesFromTokens(y)
+		if err != nil {
+			return err
+		}
+		err = bva.DelegatedFree.Set(ctx, valAddr, delFreeShare.Add(yShare))
 		if err != nil {
 			return err
 		}
@@ -488,8 +505,12 @@ func (bva *BaseLockup) TrackDelegation(
 // the undelegated tokens are non-integral.
 //
 // CONTRACT: The account's coins and undelegation coins must be sorted.
-func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) error {
+func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins, valAddr string) error {
 	bondDenom, err := getStakingDenom(ctx)
+	if err != nil {
+		return err
+	}
+	validator, err := getValidator(ctx, valAddr)
 	if err != nil {
 		return err
 	}
@@ -498,11 +519,38 @@ func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) 
 	if delAmt.IsZero() {
 		return sdkerrors.ErrInvalidCoins.Wrap("undelegation attempt with zero coins for staking denom")
 	}
-	delFreeAmt, err := bva.DelegatedFree.Get(ctx, bondDenom)
+
+	var delLockingAmt, delFreeAmt math.Int
+	delLockingShare := math.LegacyZeroDec()
+	delFreeShare := math.LegacyZeroDec()
+	err = bva.DelegatedLocking.Walk(ctx, nil, func(key string, value math.LegacyDec) (stop bool, err error) {
+		validator, err := getValidator(ctx, key)
+		if err != nil {
+			return true, err
+		}
+		token := validator.TokensFromShares(value)
+		delLockingAmt = delLockingAmt.Add(token.TruncateInt())
+		if key == valAddr {
+			delLockingShare = delLockingShare.Add(token)
+		}
+		return false, nil
+	})
 	if err != nil {
 		return err
 	}
-	delLockingAmt, err := bva.DelegatedLocking.Get(ctx, bondDenom)
+
+	err = bva.DelegatedFree.Walk(ctx, nil, func(key string, value math.LegacyDec) (stop bool, err error) {
+		validator, err := getValidator(ctx, key)
+		if err != nil {
+			return true, err
+		}
+		token := validator.TokensFromShares(value)
+		delFreeAmt = delFreeAmt.Add(token.TruncateInt())
+		if key == valAddr {
+			delFreeShare = delFreeShare.Add(token)
+		}
+		return false, nil
+	})
 	if err != nil {
 		return err
 	}
@@ -513,21 +561,23 @@ func (bva *BaseLockup) TrackUndelegation(ctx context.Context, amount sdk.Coins) 
 	x := math.MinInt(delFreeAmt, delAmt)
 	y := math.MinInt(delLockingAmt, delAmt.Sub(x))
 
-	delLockingCoin := sdk.NewCoin(bondDenom, delLockingAmt)
-	delFreeCoin := sdk.NewCoin(bondDenom, delFreeAmt)
 	if !x.IsZero() {
-		xCoin := sdk.NewCoin(bondDenom, x)
-		newDelFree := delFreeCoin.Sub(xCoin)
-		err = bva.DelegatedFree.Set(ctx, bondDenom, newDelFree.Amount)
+		xShare, err := validator.SharesFromTokens(x)
+		if err != nil {
+			return err
+		}
+		err = bva.DelegatedFree.Set(ctx, valAddr, delFreeShare.Sub(xShare))
 		if err != nil {
 			return err
 		}
 	}
 
 	if !y.IsZero() {
-		yCoin := sdk.NewCoin(bondDenom, y)
-		newDelLocking := delLockingCoin.Sub(yCoin)
-		err = bva.DelegatedLocking.Set(ctx, bondDenom, newDelLocking.Amount)
+		yShare, err := validator.SharesFromTokens(y)
+		if err != nil {
+			return err
+		}
+		err = bva.DelegatedLocking.Set(ctx, valAddr, delLockingShare.Sub(yShare))
 		if err != nil {
 			return err
 		}
@@ -607,12 +657,21 @@ func (bva BaseLockup) GetNotBondedLockedCoin(ctx context.Context, lockedCoin sdk
 		return lockedCoin, nil
 	}
 
-	delegatedLockingAmt, err := bva.DelegatedLocking.Get(ctx, denom)
+	var delLockingAmt math.Int
+	err = bva.DelegatedLocking.Walk(ctx, nil, func(key string, value math.LegacyDec) (stop bool, err error) {
+		validator, err := getValidator(ctx, key)
+		if err != nil {
+			return true, err
+		}
+		token := validator.TokensFromShares(value)
+		delLockingAmt = delLockingAmt.Add(token.TruncateInt())
+		return false, nil
+	})
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 
-	x := math.MinInt(lockedCoin.Amount, delegatedLockingAmt)
+	x := math.MinInt(lockedCoin.Amount, delLockingAmt)
 	lockedAmt := lockedCoin.Amount.Sub(x)
 
 	return sdk.NewCoin(denom, lockedAmt), nil
@@ -651,17 +710,35 @@ func (bva BaseLockup) QueryLockupAccountBaseInfo(ctx context.Context, _ *lockupt
 		return nil, err
 	}
 
-	delegatedLockingAmt, err := bva.DelegatedLocking.Get(ctx, bondDenom)
+	var delLockingAmt, delFreeAmt math.Int
+	err = bva.DelegatedLocking.Walk(ctx, nil, func(key string, value math.LegacyDec) (stop bool, err error) {
+		validator, err := getValidator(ctx, key)
+		if err != nil {
+			return true, err
+		}
+		token := validator.TokensFromShares(value)
+		delLockingAmt = delLockingAmt.Add(token.TruncateInt())
+		return false, nil
+	})
 	if err != nil {
 		return nil, err
 	}
-	delegatedLocking := sdk.NewCoins(sdk.NewCoin(bondDenom, delegatedLockingAmt))
 
-	delegatedFreeAmt, err := bva.DelegatedFree.Get(ctx, bondDenom)
+	err = bva.DelegatedFree.Walk(ctx, nil, func(key string, value math.LegacyDec) (stop bool, err error) {
+		validator, err := getValidator(ctx, key)
+		if err != nil {
+			return true, err
+		}
+		token := validator.TokensFromShares(value)
+		delFreeAmt = delFreeAmt.Add(token.TruncateInt())
+		return false, nil
+	})
 	if err != nil {
 		return nil, err
 	}
-	delegatedFree := sdk.NewCoins(sdk.NewCoin(bondDenom, delegatedFreeAmt))
+
+	delegatedLocking := sdk.NewCoins(sdk.NewCoin(bondDenom, delLockingAmt))
+	delegatedFree := sdk.NewCoins(sdk.NewCoin(bondDenom, delFreeAmt))
 
 	return &lockuptypes.QueryLockupAccountInfoResponse{
 		Owner:            ownerAddress,

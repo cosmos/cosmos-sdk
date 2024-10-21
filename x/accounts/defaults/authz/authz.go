@@ -19,6 +19,10 @@ import (
 )
 
 var (
+	AUTHZ_ACCOUNT = "authz_account"
+)
+
+var (
 	GranteePrefix = collections.NewPrefix(0)
 	GranterPrefix = collections.NewPrefix(1)
 )
@@ -31,7 +35,7 @@ type Account struct {
 }
 
 // NewAccount creates a new Account object.
-func NewAccount(d accountstd.Dependencies) *Account {
+func NewAccount(d accountstd.Dependencies) (*Account, error) {
 	account := &Account{
 		Granter:       collections.NewItem(d.SchemaBuilder, GranterPrefix, "granter", collections.BytesValue),
 		Grantees:      collections.NewMap(d.SchemaBuilder, GranteePrefix, "grantees", collections.PairKeyCodec(collections.BytesKey, collections.StringKey), codec.CollValue[types.Grant](d.LegacyStateCodec)),
@@ -39,7 +43,7 @@ func NewAccount(d accountstd.Dependencies) *Account {
 		headerService: d.Environment.HeaderService,
 	}
 
-	return account
+	return account, nil
 }
 
 func (a *Account) Init(ctx context.Context, msg *types.MsgInitAuthzAccount) (

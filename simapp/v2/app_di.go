@@ -218,8 +218,8 @@ func (app *SimApp[T]) TxConfig() client.TxConfig {
 	return app.txConfig
 }
 
-// GetStore returns the root store.
-func (app *SimApp[T]) GetStore() store.RootStore {
+// Store returns the root store.
+func (app *SimApp[T]) Store() store.RootStore {
 	return app.store
 }
 

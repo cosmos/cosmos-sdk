@@ -29,7 +29,7 @@ func (app *SimApp[T]) ExportAppStateAndValidators(
 		return exportedApp, err
 	}
 
-	readerMap, err := app.GetStore().StateAt(latestHeight)
+	readerMap, err := app.Store().StateAt(latestHeight)
 	if err != nil {
 		return exportedApp, err
 	}

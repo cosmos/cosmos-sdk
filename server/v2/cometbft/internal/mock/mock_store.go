@@ -16,11 +16,11 @@ import (
 )
 
 type MockStore struct {
-	Storage   storev2.VersionedDatabase
+	Storage   storev2.VersionedWriter
 	Committer storev2.Committer
 }
 
-func NewMockStorage(logger log.Logger, dir string) storev2.VersionedDatabase {
+func NewMockStorage(logger log.Logger, dir string) storev2.VersionedWriter {
 	storageDB, _ := sqlite.New(dir)
 	ss := storage.NewStorageStore(storageDB, logger)
 	return ss
@@ -36,7 +36,7 @@ func NewMockCommiter(logger log.Logger, actors ...string) storev2.Committer {
 	return sc
 }
 
-func NewMockStore(ss storev2.VersionedDatabase, sc storev2.Committer) *MockStore {
+func NewMockStore(ss storev2.VersionedWriter, sc storev2.Committer) *MockStore {
 	return &MockStore{Storage: ss, Committer: sc}
 }
 
@@ -83,7 +83,7 @@ func (s *MockStore) StateAt(version uint64) (corestore.ReaderMap, error) {
 	return NewMockReaderMap(version, s), nil
 }
 
-func (s *MockStore) GetStateStorage() storev2.VersionedDatabase {
+func (s *MockStore) GetStateStorage() storev2.VersionedWriter {
 	return s.Storage
 }
 

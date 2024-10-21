@@ -41,6 +41,12 @@ max-recv-msg-size = 10485760
 # The default value is math.MaxInt32.
 max-send-msg-size = 2147483647
 
+[rest]
+# Enable defines if the REST server should be enabled.
+enable = true
+# Address defines the REST server address to bind to.
+address = 'localhost:8080'
+
 [server]
 # minimum-gas-prices defines the price which a validator is willing to accept for processing a transaction. A transaction's fees must meet the minimum of any denomination specified in this config (e.g. 0.25token1;0.0001token2).
 minimum-gas-prices = '0stake'
@@ -50,7 +56,7 @@ minimum-gas-prices = '0stake'
 app-db-backend = 'goleveldb'
 
 [store.options]
-# SState storage database type. Currently we support: "sqlite", "pebble" and "rocksdb"
+# State storage database type. Currently we support: "sqlite", "pebble" and "rocksdb"
 ss-type = 'sqlite'
 # State commitment database type. Currently we support: "iavl" and "iavl-v2"
 sc-type = 'iavl'

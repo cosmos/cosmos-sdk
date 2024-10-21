@@ -21,4 +21,5 @@ type AppI[T transaction.Tx] interface {
 	GetQueryHandlers() map[string]appmodulev2.Handler
 	GetStore() store.RootStore
 	GetSchemaDecoderResolver() decoding.DecoderResolver
+	Close() error
 }

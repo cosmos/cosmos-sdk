@@ -67,13 +67,6 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 	sendAmount := transferAmount + newAmount
 	fees := feeAmount * 2
 
-	// TODO: remove below block code once v2 supports multi messages
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/22215
-	if isV2() {
-		sendAmount = transferAmount
-		fees = feeAmount
-	}
-
 	testSignTxBroadcast(t, cli, signBatchCmd, "sign-batch tx", val1Addr, val2Addr, sendAmount, fees)
 }
 
@@ -303,13 +296,6 @@ func TestAuthMultisigTxCmds(t *testing.T) {
 	// transferred amount will be twice
 	sendAmount := transferAmount * 2
 	fees := feeAmount * 2
-
-	// TODO: remove below block code once v2 supports multi messages
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/22215
-	if isV2() {
-		sendAmount = transferAmount
-		fees = feeAmount
-	}
 
 	testMultisigTxBroadcast(t, cli, multiSigTxInput{
 		"multisign-batch",

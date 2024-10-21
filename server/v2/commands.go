@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime/pprof"
 	"strings"
 	"syscall"
 
@@ -37,7 +38,6 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 func AddCommands[T transaction.Tx](
 	rootCmd *cobra.Command,
 	newApp AppCreator[T],
-	logger log.Logger,
 	globalServerCfg ServerConfig,
 	components ...ServerComponent[T],
 ) error {
@@ -45,7 +45,7 @@ func AddCommands[T transaction.Tx](
 		return errors.New("no components provided")
 	}
 
-	server := NewServer(logger, globalServerCfg, components...)
+	server := NewServer(globalServerCfg, components...)
 	originalPersistentPreRunE := rootCmd.PersistentPreRunE
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		// set the default command outputs
@@ -129,11 +129,9 @@ func createStartCommand[T transaction.Tx](
 				}
 			}()
 
-			if err := server.Start(ctx); err != nil {
-				return err
-			}
-
-			return nil
+			return wrapCPUProfile(l, v, func() error {
+				return server.Start(ctx)
+			})
 		},
 	}
 
@@ -143,6 +141,37 @@ func createStartCommand[T transaction.Tx](
 	}
 
 	return cmd
+}
+
+// wrapCPUProfile starts CPU profiling, if enabled, and executes the provided
+// callbackFn, then waits for it to return.
+func wrapCPUProfile(logger log.Logger, v *viper.Viper, callbackFn func() error) error {
+	cpuProfileFile := v.GetString(FlagCPUProfiling)
+	if len(cpuProfileFile) == 0 {
+		// if cpu profiling is not enabled, just run the callback
+		return callbackFn()
+	}
+
+	f, err := os.Create(cpuProfileFile)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("starting CPU profiler", "profile", cpuProfileFile)
+	if err := pprof.StartCPUProfile(f); err != nil {
+		_ = f.Close()
+		return err
+	}
+
+	defer func() {
+		logger.Info("stopping CPU profiler", "profile", cpuProfileFile)
+		pprof.StopCPUProfile()
+		if err := f.Close(); err != nil {
+			logger.Info("failed to close cpu-profile file", "profile", cpuProfileFile, "err", err.Error())
+		}
+	}()
+
+	return callbackFn()
 }
 
 // configHandle writes the default config to the home directory if it does not exist and sets the server context
@@ -170,12 +199,12 @@ func configHandle[T transaction.Tx](s *Server[T], cmd *cobra.Command) error {
 		return err
 	}
 
-	log, err := NewLogger(v, cmd.OutOrStdout())
+	logger, err := NewLogger(v, cmd.OutOrStdout())
 	if err != nil {
 		return err
 	}
 
-	return SetCmdServerContext(cmd, v, log)
+	return SetCmdServerContext(cmd, v, logger)
 }
 
 // findSubCommand finds a sub-command of the provided command whose Use

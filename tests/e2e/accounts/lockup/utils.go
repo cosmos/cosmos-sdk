@@ -8,7 +8,7 @@ import (
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/simapp"
-	"cosmossdk.io/x/accounts/defaults/lockup/types"
+	types "cosmossdk.io/x/accounts/defaults/lockup/v1"
 	"cosmossdk.io/x/bank/testutil"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

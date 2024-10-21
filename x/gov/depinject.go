@@ -7,7 +7,9 @@ import (
 	"strings"
 
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	govclient "cosmossdk.io/x/gov/client"
@@ -16,6 +18,7 @@ import (
 	"cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -38,9 +41,10 @@ type ModuleInputs struct {
 	Cdc                   codec.Codec
 	Environment           appmodule.Environment
 	ModuleKey             depinject.OwnModuleKey
+	ModuleAccountsService moduleaccounts.Service
+	AddressCodec          address.Codec
 	LegacyProposalHandler []govclient.ProposalHandler `optional:"true"`
 
-	AccountKeeper govtypes.AccountKeeper
 	BankKeeper    govtypes.BankKeeper
 	StakingKeeper govtypes.StakingKeeper
 	PoolKeeper    govtypes.PoolKeeper
@@ -49,9 +53,10 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	Module       appmodule.AppModule
-	Keeper       *keeper.Keeper
-	HandlerRoute v1beta1.HandlerRoute
+	Module         appmodule.AppModule
+	Keeper         *keeper.Keeper
+	HandlerRoute   v1beta1.HandlerRoute
+	ModuleAccounts []runtime.ModuleAccount
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -74,7 +79,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
-	authorityAddr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
+	authorityAddr, err := in.AddressCodec.BytesToString(authority)
 	if err != nil {
 		panic(err)
 	}
@@ -82,17 +87,18 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Environment,
-		in.AccountKeeper,
+		in.AddressCodec,
 		in.BankKeeper,
 		in.StakingKeeper,
 		in.PoolKeeper,
 		defaultConfig,
 		authorityAddr,
+		in.ModuleAccountsService,
 	)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.PoolKeeper, in.LegacyProposalHandler...)
+	m := NewAppModule(in.Cdc, k, in.AddressCodec, in.BankKeeper, in.PoolKeeper, in.ModuleAccountsService, in.LegacyProposalHandler...)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}
 
-	return ModuleOutputs{Module: m, Keeper: k, HandlerRoute: hr}
+	return ModuleOutputs{Module: m, Keeper: k, HandlerRoute: hr, ModuleAccounts: []runtime.ModuleAccount{runtime.NewModuleAccount(govtypes.ModuleName, "burner")}}
 }
 
 func InvokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {

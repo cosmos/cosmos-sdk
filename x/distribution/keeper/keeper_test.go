@@ -29,7 +29,6 @@ import (
 type dep struct {
 	bankKeeper    *distrtestutil.MockBankKeeper
 	stakingKeeper *distrtestutil.MockStakingKeeper
-	accountKeeper *distrtestutil.MockAccountKeeper
 }
 
 func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, dep) {
@@ -45,10 +44,6 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 
 	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
-	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
-
-	accountKeeper.EXPECT().AddressCodec().Return(cdcOpts.GetAddressCodec()).AnyTimes()
-	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
@@ -57,6 +52,7 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 	bankKeeper.EXPECT().BlockedAddr(distrAcc.GetAddress()).Return(true).AnyTimes()
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
+	modaccs := runtime.NewModuleAccountsService(runtime.NewModuleAccount("distribution"), runtime.NewModuleAccount("fee_collector"), runtime.NewModuleAccount(types.ProtocolPoolModuleName))
 
 	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
@@ -64,10 +60,11 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		env,
-		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
 		testCometService,
+		cdcOpts.GetAddressCodec(),
+		modaccs,
 		"fee_collector",
 		authorityAddr,
 	)
@@ -75,7 +72,7 @@ func initFixture(t *testing.T) (sdk.Context, []sdk.AccAddress, keeper.Keeper, de
 	params := types.DefaultParams()
 	require.NoError(t, distrKeeper.Params.Set(ctx, params))
 
-	return ctx, addrs, distrKeeper, dep{bankKeeper, stakingKeeper, accountKeeper}
+	return ctx, addrs, distrKeeper, dep{bankKeeper, stakingKeeper}
 }
 
 func TestSetWithdrawAddr(t *testing.T) {

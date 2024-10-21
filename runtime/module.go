@@ -14,6 +14,7 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
@@ -103,8 +104,10 @@ func init() {
 			ProvideTransientStoreService,
 			ProvideModuleManager,
 			ProvideCometService,
+			ProvideModuleAccountsService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
+		appconfig.Invoke(SetupModuleAccountsService),
 	)
 }
 
@@ -159,6 +162,22 @@ type AppInputs struct {
 	InterfaceRegistry codectypes.InterfaceRegistry
 	LegacyAmino       registry.AminoRegistrar
 	AppOptions        servertypes.AppOptions `optional:"true"` // can be nil in client wiring
+}
+
+func ProvideModuleAccountsService() moduleaccounts.Service {
+	return NewModuleAccountsService()
+}
+
+func SetupModuleAccountsService(
+	accounts []ModuleAccount,
+	service moduleaccounts.Service,
+) error {
+	for _, acc := range accounts {
+		if err := service.Register(acc.Name, acc.Permissions); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func SetupAppBuilder(inputs AppInputs) {

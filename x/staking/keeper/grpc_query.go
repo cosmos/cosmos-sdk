@@ -249,7 +249,7 @@ func (k Querier) Delegation(ctx context.Context, req *types.QueryDelegationReque
 		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
 
-	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
+	delAddr, err := k.addressCodec.StringToBytes(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +291,7 @@ func (k Querier) UnbondingDelegation(ctx context.Context, req *types.QueryUnbond
 		return nil, status.Errorf(codes.InvalidArgument, "validator address cannot be empty")
 	}
 
-	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
+	delAddr, err := k.addressCodec.StringToBytes(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -322,7 +322,7 @@ func (k Querier) DelegatorDelegations(ctx context.Context, req *types.QueryDeleg
 		return nil, status.Error(codes.InvalidArgument, "delegator address cannot be empty")
 	}
 
-	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
+	delAddr, err := k.addressCodec.StringToBytes(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -357,7 +357,7 @@ func (k Querier) DelegatorValidator(ctx context.Context, req *types.QueryDelegat
 		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
 
-	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
+	delAddr, err := k.addressCodec.StringToBytes(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -386,7 +386,7 @@ func (k Querier) DelegatorUnbondingDelegations(ctx context.Context, req *types.Q
 	}
 	var unbondingDelegations types.UnbondingDelegations
 
-	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
+	delAddr, err := k.addressCodec.StringToBytes(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -460,7 +460,7 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 	}
 	var validators types.Validators
 
-	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
+	delAddr, err := k.addressCodec.StringToBytes(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -493,12 +493,12 @@ func (k Querier) Pool(ctx context.Context, _ *types.QueryPoolRequest) (*types.Qu
 	if err != nil {
 		return nil, err
 	}
-	bondedPool := k.GetBondedPool(ctx)
-	notBondedPool := k.GetNotBondedPool(ctx)
+	bondedPool := k.moduleAccountsService.Address(types.BondedPoolName)
+	notBondedPool := k.moduleAccountsService.Address(types.NotBondedPoolName)
 
 	pool := types.NewPool(
-		k.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount,
-		k.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount,
+		k.bankKeeper.GetBalance(ctx, notBondedPool, bondDenom).Amount,
+		k.bankKeeper.GetBalance(ctx, bondedPool, bondDenom).Amount,
 	)
 
 	return &types.QueryPoolResponse{Pool: pool}, nil
@@ -514,7 +514,7 @@ func (k Querier) Params(ctx context.Context, _ *types.QueryParamsRequest) (*type
 }
 
 func queryRedelegation(ctx context.Context, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, err error) {
-	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
+	delAddr, err := k.addressCodec.StringToBytes(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -558,7 +558,7 @@ func queryRedelegationsFromSrcValidator(ctx context.Context, k Querier, req *typ
 }
 
 func queryAllRedelegations(ctx context.Context, store storetypes.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
-	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
+	delAddr, err := k.addressCodec.StringToBytes(req.DelegatorAddr)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -586,7 +586,7 @@ func delegationToDelegationResponse(ctx context.Context, k *Keeper, del types.De
 		return types.DelegationResponse{}, err
 	}
 
-	_, err = k.authKeeper.AddressCodec().StringToBytes(del.DelegatorAddress)
+	_, err = k.addressCodec.StringToBytes(del.DelegatorAddress)
 	if err != nil {
 		return types.DelegationResponse{}, err
 	}
@@ -632,7 +632,7 @@ func redelegationsToRedelegationResponses(ctx context.Context, k *Keeper, redels
 			return nil, err
 		}
 
-		_, err = k.authKeeper.AddressCodec().StringToBytes(redel.DelegatorAddress)
+		_, err = k.addressCodec.StringToBytes(redel.DelegatorAddress)
 		if err != nil {
 			return nil, err
 		}

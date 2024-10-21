@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/gov/keeper"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
@@ -13,7 +14,7 @@ import (
 )
 
 // InitGenesis - store genesis parameters
-func InitGenesis(ctx context.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, data *v1.GenesisState) error {
+func InitGenesis(ctx context.Context, addressCdc address.Codec, bk types.BankKeeper, k *keeper.Keeper, data *v1.GenesisState) error {
 	err := k.ProposalID.Set(ctx, data.StartingProposalId)
 	if err != nil {
 		return err
@@ -29,12 +30,6 @@ func InitGenesis(ctx context.Context, ak types.AccountKeeper, bk types.BankKeepe
 		return err
 	}
 
-	// check if the deposits pool account exists
-	moduleAcc := k.GetGovernanceAccount(ctx)
-	if moduleAcc == nil {
-		return fmt.Errorf("%s module account has not been set", types.ModuleName)
-	}
-
 	var totalDeposits sdk.Coins
 	for _, deposit := range data.Deposits {
 		err := k.SetDeposit(ctx, *deposit)
@@ -45,7 +40,7 @@ func InitGenesis(ctx context.Context, ak types.AccountKeeper, bk types.BankKeepe
 	}
 
 	for _, vote := range data.Votes {
-		addr, err := ak.AddressCodec().StringToBytes(vote.Voter)
+		addr, err := addressCdc.StringToBytes(vote.Voter)
 		if err != nil {
 			return err
 		}
@@ -74,10 +69,7 @@ func InitGenesis(ctx context.Context, ak types.AccountKeeper, bk types.BankKeepe
 	}
 
 	// if account has zero balance it probably means it's not set, so we set it
-	balance := bk.GetAllBalances(ctx, moduleAcc.GetAddress())
-	if balance.IsZero() {
-		ak.SetModuleAccount(ctx, moduleAcc)
-	}
+	balance := bk.GetAllBalances(ctx, k.ModuleAccountAddress())
 
 	// check if total deposits equals balance, if it doesn't return an error
 	if !balance.Equal(totalDeposits) {

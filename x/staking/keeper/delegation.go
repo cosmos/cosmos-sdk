@@ -80,7 +80,7 @@ func (k Keeper) GetDelegatorDelegations(ctx context.Context, delegator sdk.AccAd
 
 // SetDelegation sets a delegation.
 func (k Keeper) SetDelegation(ctx context.Context, delegation types.Delegation) error {
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
+	delegatorAddress, err := k.addressCodec.StringToBytes(delegation.DelegatorAddress)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (k Keeper) SetDelegation(ctx context.Context, delegation types.Delegation) 
 
 // RemoveDelegation removes a delegation
 func (k Keeper) RemoveDelegation(ctx context.Context, delegation types.Delegation) error {
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
+	delegatorAddress, err := k.addressCodec.StringToBytes(delegation.DelegatorAddress)
 	if err != nil {
 		return err
 	}
@@ -270,7 +270,7 @@ func (k Keeper) HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorA
 
 // SetUnbondingDelegation sets the unbonding delegation and associated index.
 func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingDelegation) error {
-	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
+	delAddr, err := k.addressCodec.StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
 		return err
 	}
@@ -288,7 +288,7 @@ func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingD
 
 // RemoveUnbondingDelegation removes the unbonding delegation object and associated index.
 func (k Keeper) RemoveUnbondingDelegation(ctx context.Context, ubd types.UnbondingDelegation) error {
-	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
+	delAddr, err := k.addressCodec.StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
 		return err
 	}
@@ -320,7 +320,7 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	if err == nil {
 		isNewUbdEntry = ubd.AddEntry(creationHeight, minTime, balance, id)
 	} else if errors.Is(err, types.ErrNoUnbondingDelegation) {
-		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance, id, k.validatorAddressCodec, k.authKeeper.AddressCodec())
+		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance, id, k.validatorAddressCodec, k.addressCodec)
 	} else {
 		return ubd, err
 	}
@@ -495,7 +495,7 @@ func (k Keeper) HasMaxRedelegationEntries(ctx context.Context, delegatorAddr sdk
 
 // SetRedelegation sets a redelegation and associated index.
 func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) error {
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(red.DelegatorAddress)
+	delegatorAddress, err := k.addressCodec.StringToBytes(red.DelegatorAddress)
 	if err != nil {
 		return err
 	}
@@ -538,7 +538,7 @@ func (k Keeper) SetRedelegationEntry(ctx context.Context,
 		red.AddEntry(creationHeight, minTime, balance, sharesDst, id)
 	} else if errors.Is(err, collections.ErrNotFound) {
 		red = types.NewRedelegation(delegatorAddr, validatorSrcAddr,
-			validatorDstAddr, creationHeight, minTime, balance, sharesDst, id, k.validatorAddressCodec, k.authKeeper.AddressCodec())
+			validatorDstAddr, creationHeight, minTime, balance, sharesDst, id, k.validatorAddressCodec, k.addressCodec)
 	} else {
 		return types.Redelegation{}, err
 	}
@@ -581,7 +581,7 @@ func (k Keeper) IterateRedelegations(ctx context.Context, fn func(index int64, r
 
 // RemoveRedelegation removes a redelegation object and associated index.
 func (k Keeper) RemoveRedelegation(ctx context.Context, red types.Redelegation) error {
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(red.DelegatorAddress)
+	delegatorAddress, err := k.addressCodec.StringToBytes(red.DelegatorAddress)
 	if err != nil {
 		return err
 	}
@@ -699,7 +699,7 @@ func (k Keeper) Delegate(
 		err = k.Hooks().BeforeDelegationSharesModified(ctx, delAddr, valbz)
 	} else if errors.Is(err, collections.ErrNotFound) {
 		// not found
-		delAddrStr, err1 := k.authKeeper.AddressCodec().BytesToString(delAddr)
+		delAddrStr, err1 := k.addressCodec.BytesToString(delAddr)
 		if err1 != nil {
 			return math.LegacyDec{}, err1
 		}
@@ -816,7 +816,7 @@ func (k Keeper) Unbond(
 	// subtract shares from delegation
 	delegation.Shares = delegation.Shares.Sub(shares)
 
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
+	delegatorAddress, err := k.addressCodec.StringToBytes(delegation.DelegatorAddress)
 	if err != nil {
 		return amount, err
 	}
@@ -988,7 +988,7 @@ func (k Keeper) CompleteUnbonding(ctx context.Context, delAddr sdk.AccAddress, v
 	headerInfo := k.HeaderService.HeaderInfo(ctx)
 	ctxTime := headerInfo.Time
 
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
+	delegatorAddress, err := k.addressCodec.StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}

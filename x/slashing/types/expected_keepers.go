@@ -11,12 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// AccountKeeper expected account keeper
-type AccountKeeper interface {
-	AddressCodec() address.Codec
-	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
-}
-
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
 	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins

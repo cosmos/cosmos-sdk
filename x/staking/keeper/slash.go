@@ -308,7 +308,7 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 		return math.ZeroInt(), fmt.Errorf("SlashRedelegation: could not parse validator destination address: %w", err)
 	}
 
-	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(redelegation.DelegatorAddress)
+	delegatorAddress, err := k.addressCodec.StringToBytes(redelegation.DelegatorAddress)
 	if err != nil {
 		return math.ZeroInt(), fmt.Errorf("SlashRedelegation: could not parse delegator address: %w", err)
 	}

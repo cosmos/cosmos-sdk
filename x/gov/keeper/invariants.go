@@ -29,8 +29,8 @@ func ModuleAccountInvariant(keeper *Keeper, bk types.BankKeeper) sdk.Invariant {
 			panic(err)
 		}
 
-		macc := keeper.GetGovernanceAccount(ctx)
-		balances := bk.GetAllBalances(ctx, macc.GetAddress())
+		govAddr := keeper.moduleAccountsService.Address(types.ModuleName)
+		balances := bk.GetAllBalances(ctx, govAddr)
 
 		// Require that the deposit balances are <= than the x/gov module's total
 		// balances. We use the <= operator since external funds can be sent to x/gov

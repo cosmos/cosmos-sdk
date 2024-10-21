@@ -14,7 +14,6 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func (s *KeeperTestSuite) applyValidatorSetUpdates(ctx sdk.Context, keeper *stakingkeeper.Keeper, expectedUpdatesLen int) []appmodule.ValidatorUpdate {
@@ -490,15 +489,13 @@ func (s *KeeperTestSuite) TestUnbondingValidator() {
 }
 
 func (s *KeeperTestSuite) TestValidatorConsPubKeyUpdate() {
-	ctx, keeper, msgServer, bk, ak := s.ctx, s.stakingKeeper, s.msgServer, s.bankKeeper, s.accountKeeper
+	ctx, keeper, msgServer, bk := s.ctx, s.stakingKeeper, s.msgServer, s.bankKeeper
 	require := s.Require()
 
 	powers := []int64{10, 20}
 	var validators [2]stakingtypes.Validator
 
-	bonedPool := authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName)
-	ak.EXPECT().GetModuleAccount(gomock.Any(), stakingtypes.BondedPoolName).Return(bonedPool).AnyTimes()
-	bk.EXPECT().GetBalance(gomock.Any(), bonedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
+	bk.EXPECT().GetBalance(gomock.Any(), s.moduleAccountsService.Address(stakingtypes.BondedPoolName), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
 
 	for i, power := range powers {
 		valAddr := sdk.ValAddress(PKs[i].Address().Bytes())

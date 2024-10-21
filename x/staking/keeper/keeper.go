@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -12,6 +11,7 @@ import (
 	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/staking/types"
 
@@ -55,14 +55,15 @@ type Keeper struct {
 	appmodule.Environment
 
 	cdc                   codec.BinaryCodec
-	authKeeper            types.AccountKeeper
 	bankKeeper            types.BankKeeper
 	consensusKeeper       types.ConsensusKeeper
 	hooks                 types.StakingHooks
 	authority             string
+	addressCodec          addresscodec.Codec
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
 	cometInfoService      comet.Service
+	moduleAccountsService moduleaccounts.Service
 
 	Schema collections.Schema
 
@@ -118,26 +119,19 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	env appmodule.Environment,
-	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	ck types.ConsensusKeeper,
 	authority string,
+	addressCodec addresscodec.Codec,
 	validatorAddressCodec addresscodec.Codec,
 	consensusAddressCodec addresscodec.Codec,
 	cometInfoService comet.Service,
+	moduleAccountsService moduleaccounts.Service,
 ) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
-	// ensure bonded and not bonded module accounts are set
-	if addr := ak.GetModuleAddress(types.BondedPoolName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
-	}
-
-	if addr := ak.GetModuleAddress(types.NotBondedPoolName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
-	}
 
 	// ensure that authority is a valid AccAddress
-	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
+	if _, err := addressCodec.StringToBytes(authority); err != nil {
 		panic("authority is not a valid acc address")
 	}
 
@@ -148,14 +142,15 @@ func NewKeeper(
 	k := &Keeper{
 		Environment:           env,
 		cdc:                   cdc,
-		authKeeper:            ak,
 		bankKeeper:            bk,
 		consensusKeeper:       ck,
 		hooks:                 nil,
 		authority:             authority,
+		addressCodec:          addressCodec,
 		validatorAddressCodec: validatorAddressCodec,
 		consensusAddressCodec: consensusAddressCodec,
 		cometInfoService:      cometInfoService,
+		moduleAccountsService: moduleAccountsService,
 		LastTotalPower:        collections.NewItem(sb, types.LastTotalPowerKey, "last_total_power", sdk.IntValue),
 		Delegations: collections.NewMap(
 			sb, types.DelegationKey, "delegations",

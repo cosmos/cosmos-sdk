@@ -19,17 +19,19 @@ type Keeper struct {
 
 // NewKeeper creates a new nft Keeper instance
 func NewKeeper(env appmodule.Environment,
-	cdc codec.BinaryCodec, ak nft.AccountKeeper, bk nft.BankKeeper,
+	cdc codec.BinaryCodec, bk nft.BankKeeper,
+	addressCodec address.Codec,
 ) Keeper {
+	// TODO: @facu check this
 	// ensure nft module account is set
-	if addr := ak.GetModuleAddress(nft.ModuleName); addr == nil {
-		panic("the nft module account has not been set")
-	}
+	// if addr := ak.GetModuleAddress(nft.ModuleName); addr == nil {
+	// 	panic("the nft module account has not been set")
+	// }
 
 	return Keeper{
 		Environment: env,
 		cdc:         cdc,
 		bk:          bk,
-		ac:          ak.AddressCodec(),
+		ac:          addressCodec,
 	}
 }

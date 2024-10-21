@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/moduleaccounts"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -18,9 +19,10 @@ import (
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	"cosmossdk.io/core/address"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/address"
+	addresscdc "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -29,27 +31,25 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	addresstypes "github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
-	bondedAcc    = authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName)
-	notBondedAcc = authtypes.NewEmptyModuleAccount(stakingtypes.NotBondedPoolName)
-	PKs          = simtestutil.CreateTestPubKeys(500)
+	PKs = simtestutil.CreateTestPubKeys(500)
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	ctx           sdk.Context
-	baseApp       *baseapp.BaseApp
-	stakingKeeper *stakingkeeper.Keeper
-	bankKeeper    *stakingtestutil.MockBankKeeper
-	accountKeeper *stakingtestutil.MockAccountKeeper
-	queryClient   stakingtypes.QueryClient
-	msgServer     stakingtypes.MsgServer
-	key           *storetypes.KVStoreKey
-	cdc           codec.Codec
+	ctx                   sdk.Context
+	baseApp               *baseapp.BaseApp
+	stakingKeeper         *stakingkeeper.Keeper
+	bankKeeper            *stakingtestutil.MockBankKeeper
+	addressCdc            address.Codec
+	moduleAccountsService moduleaccounts.Service
+	queryClient           stakingtypes.QueryClient
+	msgServer             stakingtypes.MsgServer
+	key                   *storetypes.KVStoreKey
+	cdc                   codec.Codec
 }
 
 func (s *KeeperTestSuite) SetupTest() {
@@ -62,6 +62,8 @@ func (s *KeeperTestSuite) SetupTest() {
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	s.cdc = encCfg.Codec
+	s.addressCdc = addresscdc.NewBech32Codec("cosmos")
+	s.moduleAccountsService = runtime.NewModuleAccountsService(stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, stakingtypes.GovModuleName)
 
 	s.baseApp = baseapp.NewBaseApp(
 		"staking",
@@ -73,10 +75,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 
 	ctrl := gomock.NewController(s.T())
-	accountKeeper := stakingtestutil.NewMockAccountKeeper(ctrl)
-	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.BondedPoolName).Return(bondedAcc.GetAddress())
-	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.NotBondedPoolName).Return(notBondedAcc.GetAddress())
-	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	// create consensus keeper
 	ck := stakingtestutil.NewMockConsensusKeeper(ctrl)
@@ -85,25 +83,27 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
 	env := runtime.NewEnvironment(storeService, coretesting.NewNopLogger(), runtime.EnvWithMsgRouterService(s.baseApp.MsgServiceRouter()))
-	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(stakingtypes.GovModuleName))
+
+	authority, err := s.addressCdc.BytesToString(s.moduleAccountsService.Address(stakingtypes.GovModuleName))
 	s.Require().NoError(err)
+
 	keeper := stakingkeeper.NewKeeper(
 		encCfg.Codec,
 		env,
-		accountKeeper,
 		bankKeeper,
 		ck,
 		authority,
-		address.NewBech32Codec("cosmosvaloper"),
-		address.NewBech32Codec("cosmosvalcons"),
+		s.addressCdc,
+		addresscdc.NewBech32Codec("cosmosvaloper"),
+		addresscdc.NewBech32Codec("cosmosvalcons"),
 		runtime.NewContextAwareCometInfoService(),
+		s.moduleAccountsService,
 	)
 	require.NoError(keeper.Params.Set(ctx, stakingtypes.DefaultParams()))
 
 	s.ctx = ctx
 	s.stakingKeeper = keeper
 	s.bankKeeper = bankKeeper
-	s.accountKeeper = accountKeeper
 
 	stakingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: keeper})
@@ -112,7 +112,7 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) addressToString(addr []byte) string {
-	r, err := s.accountKeeper.AddressCodec().BytesToString(addr)
+	r, err := s.addressCdc.BytesToString(addr)
 	s.Require().NoError(err)
 	return r
 }

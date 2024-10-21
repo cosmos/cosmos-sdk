@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/staking/keeper"
@@ -17,6 +18,7 @@ import (
 	"cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/simsx"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -40,32 +42,35 @@ type ModuleInputs struct {
 	depinject.In
 
 	Config                *modulev1.Module
+	AddressCodec          address.Codec
 	ValidatorAddressCodec address.ValidatorAddressCodec
 	ConsensusAddressCodec address.ConsensusAddressCodec
-	AccountKeeper         types.AccountKeeper
 	BankKeeper            types.BankKeeper
 	ConsensusKeeper       types.ConsensusKeeper
 	Cdc                   codec.Codec
 	Environment           appmodule.Environment
 	CometInfoService      comet.Service
+	ModuleAccountsService moduleaccounts.Service
 }
 
 // Dependency Injection Outputs
 type ModuleOutputs struct {
 	depinject.Out
 
-	StakingKeeper *keeper.Keeper
-	Module        appmodule.AppModule
+	StakingKeeper  *keeper.Keeper
+	Module         appmodule.AppModule
+	ModuleAccounts []runtime.ModuleAccount
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// default to governance authority if not provided
+	// TODO: @facu - we need to figure out if we can get this somewhere else, maybe just use the module name
 	authority := authtypes.NewModuleAddress(types.GovModuleName)
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	as, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
+	as, err := in.AddressCodec.BytesToString(authority)
 	if err != nil {
 		panic(err)
 	}
@@ -73,16 +78,24 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Environment,
-		in.AccountKeeper,
 		in.BankKeeper,
 		in.ConsensusKeeper,
 		as,
+		in.AddressCodec,
 		in.ValidatorAddressCodec,
 		in.ConsensusAddressCodec,
 		in.CometInfoService,
+		in.ModuleAccountsService,
 	)
 	m := NewAppModule(in.Cdc, k)
-	return ModuleOutputs{StakingKeeper: k, Module: m}
+	return ModuleOutputs{
+		StakingKeeper: k,
+		Module:        m,
+		ModuleAccounts: []runtime.ModuleAccount{
+			runtime.NewModuleAccount(types.BondedPoolName, "burner", "staking"),
+			runtime.NewModuleAccount(types.NotBondedPoolName, "burner", "staking"),
+		},
+	}
 }
 
 func InvokeSetStakingHooks(

@@ -2,8 +2,10 @@ package distribution
 
 import (
 	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/distribution/keeper"
@@ -11,6 +13,7 @@ import (
 	staking "cosmossdk.io/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -28,12 +31,13 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	Environment  appmodule.Environment
-	Cdc          codec.Codec
-	CometService comet.Service
+	Config                *modulev1.Module
+	Environment           appmodule.Environment
+	Cdc                   codec.Codec
+	CometService          comet.Service
+	ModuleAccountsService moduleaccounts.Service
+	AddressCdc            address.Codec
 
-	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
 	StakingKeeper types.StakingKeeper
 }
@@ -41,9 +45,10 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	DistrKeeper keeper.Keeper
-	Module      appmodule.AppModule
-	Hooks       staking.StakingHooksWrapper
+	DistrKeeper    keeper.Keeper
+	Module         appmodule.AppModule
+	Hooks          staking.StakingHooksWrapper
+	ModuleAccounts []runtime.ModuleAccount
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -58,7 +63,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	authorityAddr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
+	authorityAddr, err := in.AddressCdc.BytesToString(authority)
 	if err != nil {
 		panic(err)
 	}
@@ -66,10 +71,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Environment,
-		in.AccountKeeper,
 		in.BankKeeper,
 		in.StakingKeeper,
 		in.CometService,
+		in.AddressCdc,
+		in.ModuleAccountsService,
 		feeCollectorName,
 		authorityAddr,
 	)
@@ -77,8 +83,9 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	m := NewAppModule(in.Cdc, k, in.StakingKeeper)
 
 	return ModuleOutputs{
-		DistrKeeper: k,
-		Module:      m,
-		Hooks:       staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
+		DistrKeeper:    k,
+		Module:         m,
+		Hooks:          staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
+		ModuleAccounts: []runtime.ModuleAccount{runtime.NewModuleAccount(types.ModuleName)},
 	}
 }

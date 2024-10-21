@@ -31,11 +31,6 @@ type SlashingKeeper interface {
 	JailUntil(context.Context, sdk.ConsAddress, time.Time) error
 }
 
-// AccountKeeper define the account keeper interface contracted needed by the evidence module
-type AccountKeeper interface {
-	SetAccount(ctx context.Context, acc sdk.AccountI)
-}
-
 type ConsensusKeeper interface {
 	EvidenceParams(context.Context) (maxAge int64, maxAgeDuration time.Duration, maxBytes uint64, err error)
 }

@@ -212,42 +212,6 @@ func (mr *MockSlashingKeeperMockRecorder) Tombstone(arg0, arg1 any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Tombstone", reflect.TypeOf((*MockSlashingKeeper)(nil).Tombstone), arg0, arg1)
 }
 
-// MockAccountKeeper is a mock of AccountKeeper interface.
-type MockAccountKeeper struct {
-	ctrl     *gomock.Controller
-	recorder *MockAccountKeeperMockRecorder
-	isgomock struct{}
-}
-
-// MockAccountKeeperMockRecorder is the mock recorder for MockAccountKeeper.
-type MockAccountKeeperMockRecorder struct {
-	mock *MockAccountKeeper
-}
-
-// NewMockAccountKeeper creates a new mock instance.
-func NewMockAccountKeeper(ctrl *gomock.Controller) *MockAccountKeeper {
-	mock := &MockAccountKeeper{ctrl: ctrl}
-	mock.recorder = &MockAccountKeeperMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
-	return m.recorder
-}
-
-// SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types0.AccountI) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetAccount", ctx, acc)
-}
-
-// SetAccount indicates an expected call of SetAccount.
-func (mr *MockAccountKeeperMockRecorder) SetAccount(ctx, acc any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetAccount), ctx, acc)
-}
-
 // MockConsensusKeeper is a mock of ConsensusKeeper interface.
 type MockConsensusKeeper struct {
 	ctrl     *gomock.Controller

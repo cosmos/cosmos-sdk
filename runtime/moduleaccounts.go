@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"bytes"
 	"context"
 
 	"cosmossdk.io/core/moduleaccounts"
@@ -9,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var _ moduleaccounts.Service = (*ModuleAccountsService)(nil)
+var _ moduleaccounts.ServiceWithPerms = (*ModuleAccountsService)(nil)
 
 type addrWithPerms struct {
 	addr  []byte
@@ -19,6 +20,26 @@ type addrWithPerms struct {
 type ModuleAccountsService struct {
 	accounts map[string]addrWithPerms
 	ak       AccountGetter
+}
+
+// HasPermission implements moduleaccounts.ServiceWithPerms.
+func (m *ModuleAccountsService) HasPermission(name string, perm string) bool {
+	for _, v := range m.accounts[name].perms {
+		if v == perm {
+			return true
+		}
+	}
+	return false
+}
+
+// IsModuleAccount implements moduleaccounts.ServiceWithPerms.
+func (m *ModuleAccountsService) IsModuleAccount(addr []byte) string {
+	for name, v := range m.accounts {
+		if bytes.Equal(addr, v.addr) {
+			return name
+		}
+	}
+	return ""
 }
 
 func NewModuleAccountsService(moduleAccounts ...ModuleAccount) *ModuleAccountsService {

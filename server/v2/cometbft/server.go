@@ -101,15 +101,15 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	}
 
 	s.logger = logger.With(log.ModuleKey, s.Name())
-	rs := appI.GetStore()
+	rs := appI.Store()
 	consensus := NewConsensus(
 		s.logger,
 		appI.Name(),
-		appI.GetAppManager(),
+		appI,
 		appI.Close,
 		s.serverOptions.Mempool(cfg),
 		indexEvents,
-		appI.GetQueryHandlers(),
+		appI.QueryHandlers(),
 		rs,
 		s.config,
 		s.initTxCodec,
@@ -132,6 +132,22 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	}
 	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.serverOptions.SnapshotOptions(cfg), sc, ss, nil, s.logger)
 
+<<<<<<< HEAD
+=======
+	// initialize the indexer
+	if indexerCfg := s.config.AppTomlConfig.Indexer; len(indexerCfg.Target) > 0 {
+		listener, err := indexer.StartIndexing(indexer.IndexingOptions{
+			Config:   indexerCfg,
+			Resolver: appI.SchemaDecoderResolver(),
+			Logger:   s.logger.With(log.ModuleKey, "indexer"),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to start indexing: %w", err)
+		}
+		consensus.listener = &listener.Listener
+	}
+
+>>>>>>> 681366e34 (refactor(runtime/v2): simplify app manager (#22300))
 	s.Consensus = consensus
 
 	return nil

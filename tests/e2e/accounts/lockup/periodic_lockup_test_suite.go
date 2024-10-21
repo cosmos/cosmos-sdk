@@ -23,6 +23,7 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 	ctx := sdk.NewContext(app.CommitMultiStore(), false, app.Logger()).WithHeaderInfo(header.Info{
 		Time: currentTime,
 	})
+	s.setupStakingParams(ctx, app)
 	ownerAddrStr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
 	require.NoError(t, err)
 	s.fundAccount(app, ctx, accOwner, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
@@ -185,16 +186,31 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 		require.NoError(t, err)
 		require.Equal(t, len(ubd.Entries), 1)
 
-		// check if tracking is updated accordingly
-		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
-		delLocking := lockupAccountInfoResponse.DelegatedLocking
-		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
+		// check if an entry is added
+		unbondingEntriesResponse := s.queryUnbondingEntries(ctx, app, accountAddr)
+		entries := unbondingEntriesResponse.UnbondingEntries
+		require.True(t, entries[0].Amount.Amount.Equal(math.NewInt(100)))
+		require.True(t, entries[0].ValidatorAddress == val.OperatorAddress)
 	})
 
 	// Update context time
 	// After third period 1500stake should be unlock
 	ctx = ctx.WithHeaderInfo(header.Info{
 		Time: currentTime.Add(time.Minute * 3),
+	})
+
+	t.Run("ok - execute tracking unbonding entry", func(t *testing.T) {
+		msg := &types.MsgTrackUndelegation{
+			Sender: ownerAddrStr,
+			Id:     0,
+		}
+		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
+		require.NoError(t, err)
+
+		// check if tracking is updated accordingly
+		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
+		delLocking := lockupAccountInfoResponse.DelegatedLocking
+		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
 	})
 
 	t.Run("ok - execute delegate message", func(t *testing.T) {

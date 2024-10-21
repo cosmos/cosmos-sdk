@@ -5,16 +5,46 @@ import (
 	"reflect"
 
 	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
 
+	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
-	"cosmossdk.io/collections/protocodec"
 )
 
-type (
-	BoolValue = protocodec.BoolValue
-)
+// BoolValue implements a ValueCodec that saves the bool value
+// as if it was a prototypes.BoolValue. Required for backwards
+// compatibility of state.
+var BoolValue collcodec.ValueCodec[bool] = boolValue{}
+
+type boolValue struct{}
+
+func (boolValue) Encode(value bool) ([]byte, error) {
+	return (&gogotypes.BoolValue{Value: value}).Marshal()
+}
+
+func (boolValue) Decode(b []byte) (bool, error) {
+	v := new(gogotypes.BoolValue)
+	err := v.Unmarshal(b)
+	return v.Value, err
+}
+
+func (boolValue) EncodeJSON(value bool) ([]byte, error) {
+	return collections.BoolValue.EncodeJSON(value)
+}
+
+func (boolValue) DecodeJSON(b []byte) (bool, error) {
+	return collections.BoolValue.DecodeJSON(b)
+}
+
+func (boolValue) Stringify(value bool) string {
+	return collections.BoolValue.Stringify(value)
+}
+
+func (boolValue) ValueType() string {
+	return "protobuf/bool"
+}
 
 type protoMessage[T any] interface {
 	*T

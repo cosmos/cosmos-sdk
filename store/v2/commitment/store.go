@@ -26,8 +26,9 @@ var (
 	_ snapshots.CommitSnapshotter = (*CommitStore)(nil)
 	_ store.PausablePruner        = (*CommitStore)(nil)
 
-	// NOTE: CommitStore implements store.VersionedReader, but it is not used in the
-	// store v2. It is only used during the migration process.
+	// NOTE: It is not recommended to use the CommitStore as a reader. This is only used
+	// during the migration process. Generally, the SC layer does not provide a reader
+	// in the store/v2.
 	_ store.VersionedReader = (*CommitStore)(nil)
 )
 
@@ -279,6 +280,10 @@ func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]p
 	return []proof.CommitmentOp{commitOp, *storeCommitmentOp}, nil
 }
 
+// getReader returns a reader for the given store key. It will return an error if the
+// store key does not exist or the tree does not implement the Reader interface.
+// WARNING: This function is only used during the migration process. The SC layer
+// generally does not provide a reader for the CommitStore.
 func (c *CommitStore) getReader(storeKey string) (Reader, error) {
 	tree, ok := c.multiTrees[storeKey]
 	if !ok {

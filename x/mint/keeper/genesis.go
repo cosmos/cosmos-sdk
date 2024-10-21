@@ -12,12 +12,7 @@ func (keeper Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) 
 		return err
 	}
 
-	if err := keeper.Params.Set(ctx, data.Params); err != nil {
-		return err
-	}
-
-	_, err := keeper.moduleAccountsService.Account(ctx, types.ModuleName)
-	return err
+	return keeper.Params.Set(ctx, data.Params)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.

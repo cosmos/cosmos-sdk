@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/depinject"
@@ -42,9 +43,9 @@ type ModuleInputs struct {
 	Environment           appmodule.Environment
 	ModuleKey             depinject.OwnModuleKey
 	ModuleAccountsService moduleaccounts.Service
+	AddressCodec          address.Codec
 	LegacyProposalHandler []govclient.ProposalHandler `optional:"true"`
 
-	AccountKeeper govtypes.AccountKeeper
 	BankKeeper    govtypes.BankKeeper
 	StakingKeeper govtypes.StakingKeeper
 	PoolKeeper    govtypes.PoolKeeper
@@ -79,7 +80,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
-	authorityAddr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
+	authorityAddr, err := in.AddressCodec.BytesToString(authority)
 	if err != nil {
 		panic(err)
 	}
@@ -87,7 +88,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.Environment,
-		in.AccountKeeper,
+		in.AddressCodec,
 		in.BankKeeper,
 		in.StakingKeeper,
 		in.PoolKeeper,
@@ -95,7 +96,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authorityAddr,
 		in.ModuleAccountsService,
 	)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.PoolKeeper, in.LegacyProposalHandler...)
+	m := NewAppModule(in.Cdc, k, in.AddressCodec, in.BankKeeper, in.PoolKeeper, in.ModuleAccountsService, in.LegacyProposalHandler...)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}
 
 	return ModuleOutputs{Module: m, Keeper: k, HandlerRoute: hr, ModuleAccounts: []runtime.ModuleAccount{types.ModuleName}}

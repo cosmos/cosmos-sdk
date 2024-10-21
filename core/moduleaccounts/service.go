@@ -8,10 +8,10 @@ import (
 
 type Service interface {
 	Register(string) error
-	Address(name string) []byte
-	Account(ctx context.Context, name string) (sdk.ModuleAccountI, error)
+	Address(name string) []byte // TODO: should we return an empty byte slice if it wasn't registered or should we just register it?
 	AllAccounts() map[string][]byte
 
+	// TODO: @facu, remove these two methods
 	GetModuleAddress(moduleName string) sdk.AccAddress                // TODO: @facu tmp, so I don't have to modify a bunch of things in sims right now
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI // TODO: same as above
 }

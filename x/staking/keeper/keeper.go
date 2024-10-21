@@ -55,11 +55,11 @@ type Keeper struct {
 	appmodule.Environment
 
 	cdc                   codec.BinaryCodec
-	authKeeper            types.AccountKeeper
 	bankKeeper            types.BankKeeper
 	consensusKeeper       types.ConsensusKeeper
 	hooks                 types.StakingHooks
 	authority             string
+	addressCodec          addresscodec.Codec
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
 	cometInfoService      comet.Service
@@ -119,27 +119,19 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	env appmodule.Environment,
-	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	ck types.ConsensusKeeper,
 	authority string,
+	addressCodec addresscodec.Codec,
 	validatorAddressCodec addresscodec.Codec,
 	consensusAddressCodec addresscodec.Codec,
 	cometInfoService comet.Service,
 	moduleAccountsService moduleaccounts.Service,
 ) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
-	// ensure bonded and not bonded module accounts are set
-	// if addr := moduleAccountsService.Address(types.BondedPoolName); addr == nil {
-	// 	panic(fmt.Sprintf("%s module account has not been set", types.BondedPoolName))
-	// }
-
-	// if addr := moduleAccountsService.Address(types.NotBondedPoolName); addr == nil {
-	// 	panic(fmt.Sprintf("%s module account has not been set", types.NotBondedPoolName))
-	// }
 
 	// ensure that authority is a valid AccAddress
-	if _, err := ak.AddressCodec().StringToBytes(authority); err != nil {
+	if _, err := addressCodec.StringToBytes(authority); err != nil {
 		panic("authority is not a valid acc address")
 	}
 
@@ -150,11 +142,11 @@ func NewKeeper(
 	k := &Keeper{
 		Environment:           env,
 		cdc:                   cdc,
-		authKeeper:            ak,
 		bankKeeper:            bk,
 		consensusKeeper:       ck,
 		hooks:                 nil,
 		authority:             authority,
+		addressCodec:          addressCodec,
 		validatorAddressCodec: validatorAddressCodec,
 		consensusAddressCodec: consensusAddressCodec,
 		cometInfoService:      cometInfoService,

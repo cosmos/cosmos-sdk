@@ -86,7 +86,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]ap
 	}
 
 	for _, delegation := range data.Delegations {
-		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
+		delegatorAddress, err := k.addressCodec.StringToBytes(delegation.DelegatorAddress)
 		if err != nil {
 			return nil, fmt.Errorf("invalid delegator address: %w", err)
 		}
@@ -144,32 +144,24 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) ([]ap
 	notBondedCoins := sdk.NewCoins(sdk.NewCoin(data.Params.BondDenom, notBondedTokens))
 
 	// check if the unbonded and bonded pools accounts exists
-	bondedPool := k.GetBondedPool(ctx)
+	bondedPool := k.moduleAccountsService.Address(types.BondedPoolName)
 	if bondedPool == nil {
 		return nil, fmt.Errorf("%s module account has not been set", types.BondedPoolName)
 	}
 
-	// TODO: remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
-
-	bondedBalance := k.bankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	if bondedBalance.IsZero() {
-		k.authKeeper.SetModuleAccount(ctx, bondedPool)
-	}
+	bondedBalance := k.bankKeeper.GetAllBalances(ctx, bondedPool)
 
 	// if balance is different from bonded coins error because genesis is most likely malformed
 	if !bondedBalance.Equal(bondedCoins) {
 		return nil, fmt.Errorf("bonded pool balance is different from bonded coins: %s <-> %s", bondedBalance, bondedCoins)
 	}
 
-	notBondedPool := k.GetNotBondedPool(ctx)
+	notBondedPool := k.moduleAccountsService.Address(types.NotBondedPoolName)
 	if notBondedPool == nil {
 		return nil, fmt.Errorf("%s module account has not been set", types.NotBondedPoolName)
 	}
 
-	notBondedBalance := k.bankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	if notBondedBalance.IsZero() {
-		k.authKeeper.SetModuleAccount(ctx, notBondedPool)
-	}
+	notBondedBalance := k.bankKeeper.GetAllBalances(ctx, notBondedPool)
 
 	// If balance is different from non bonded coins error because genesis is most
 	// likely malformed.

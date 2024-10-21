@@ -12,7 +12,6 @@ import (
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	"cosmossdk.io/x/staking/types"
 
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -20,7 +19,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -30,7 +28,6 @@ var (
 )
 
 func (s *KeeperTestSuite) execExpectCalls() {
-	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 	s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), Addr, types.NotBondedPoolName, gomock.Any()).AnyTimes()
 }
 
@@ -915,7 +912,7 @@ func (s *KeeperTestSuite) TestMsgUndelegate() {
 }
 
 func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
-	ctx, keeper, msgServer, ak := s.ctx, s.stakingKeeper, s.msgServer, s.accountKeeper
+	ctx, keeper, msgServer := s.ctx, s.stakingKeeper, s.msgServer
 	require := s.Require()
 
 	pk := ed25519.GenPrivKey().PubKey()
@@ -939,7 +936,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 	require.NoError(err)
 	require.Equal(del, resDel)
 
-	ubd := types.NewUnbondingDelegation(Addr, ValAddr, 10, ctx.HeaderInfo().Time.Add(time.Minute*10), shares.RoundInt(), 0, keeper.ValidatorAddressCodec(), ak.AddressCodec())
+	ubd := types.NewUnbondingDelegation(Addr, ValAddr, 10, ctx.HeaderInfo().Time.Add(time.Minute*10), shares.RoundInt(), 0, keeper.ValidatorAddressCodec(), s.addressCdc)
 	require.NoError(keeper.SetUnbondingDelegation(ctx, ubd))
 	resUnbond, err := keeper.GetUnbondingDelegation(ctx, Addr, ValAddr)
 	require.NoError(err)
@@ -1244,7 +1241,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 }
 
 func (s *KeeperTestSuite) TestConsKeyRotn() {
-	stakingKeeper, ctx, accountKeeper, bankKeeper := s.stakingKeeper, s.ctx, s.accountKeeper, s.bankKeeper
+	stakingKeeper, ctx, bankKeeper := s.stakingKeeper, s.ctx, s.bankKeeper
 
 	msgServer := stakingkeeper.NewMsgServerImpl(stakingKeeper)
 	s.setValidators(6)
@@ -1259,9 +1256,7 @@ func (s *KeeperTestSuite) TestConsKeyRotn() {
 	validator0PubKey, ok := validators[0].ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
 	s.Require().True(ok)
 
-	bondedPool := authtypes.NewEmptyModuleAccount(types.BondedPoolName)
-	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.BondedPoolName).Return(bondedPool).AnyTimes()
-	bankKeeper.EXPECT().GetBalance(gomock.Any(), bondedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
+	bankKeeper.EXPECT().GetBalance(gomock.Any(), s.moduleAccountsService.Address(types.BondedPoolName), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
 
 	invalidPK, _ := secp256r1.GenPrivKey()
 	invalidPubkey := invalidPK.PubKey()

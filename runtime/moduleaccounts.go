@@ -16,6 +16,23 @@ type ModuleAccountsService struct {
 	ak       AccountGetter
 }
 
+func NewModuleAccountsService(moduleAccounts ...string) *ModuleAccountsService {
+	svc := &ModuleAccountsService{
+		accounts: make(map[string][]byte),
+	}
+
+	for _, acc := range moduleAccounts {
+		// error if there are dups
+		if _, ok := svc.accounts[acc]; ok {
+			panic(errors.Errorf("module account %s already registered", acc))
+		}
+
+		svc.accounts[acc] = address.Module(acc)
+	}
+
+	return svc
+}
+
 // AllAccounts implements moduleaccounts.Service.
 func (m *ModuleAccountsService) AllAccounts() map[string][]byte {
 	return m.accounts
@@ -32,7 +49,6 @@ func (m *ModuleAccountsService) GetModuleAddress(moduleName string) sdk.AccAddre
 }
 
 type AccountGetter interface {
-	GetOrSetModuleAccount(ctx context.Context, moduleName string, addr []byte) sdk.ModuleAccountI
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 }
 
@@ -46,15 +62,15 @@ func (m *ModuleAccountsService) Register(moduleName string) error {
 	return nil
 }
 
-func (m *ModuleAccountsService) Account(ctx context.Context, name string) (sdk.ModuleAccountI, error) {
-	addr := m.accounts[name]
-	if addr == nil {
-		return nil, errors.Errorf("module account %s not registered", name)
-	}
+// func (m *ModuleAccountsService) Account(ctx context.Context, name string) (sdk.ModuleAccountI, error) {
+// 	addr := m.accounts[name]
+// 	if addr == nil {
+// 		return nil, errors.Errorf("module account %s not registered", name)
+// 	}
 
-	acc := m.ak.GetOrSetModuleAccount(ctx, name, addr)
-	return acc, nil
-}
+// 	acc := m.ak.GetOrSetModuleAccount(ctx, name, addr)
+// 	return acc, nil
+// }
 
 // Address implements moduleaccounts.Service.
 func (m *ModuleAccountsService) Address(name string) []byte {

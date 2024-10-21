@@ -9,104 +9,12 @@ import (
 	reflect "reflect"
 
 	stakingv1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
-	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
 	types "cosmossdk.io/x/staking/types"
 	types0 "github.com/cosmos/cosmos-sdk/crypto/types"
 	types1 "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
 )
-
-// MockAccountKeeper is a mock of AccountKeeper interface.
-type MockAccountKeeper struct {
-	ctrl     *gomock.Controller
-	recorder *MockAccountKeeperMockRecorder
-}
-
-// MockAccountKeeperMockRecorder is the mock recorder for MockAccountKeeper.
-type MockAccountKeeperMockRecorder struct {
-	mock *MockAccountKeeper
-}
-
-// NewMockAccountKeeper creates a new mock instance.
-func NewMockAccountKeeper(ctrl *gomock.Controller) *MockAccountKeeper {
-	mock := &MockAccountKeeper{ctrl: ctrl}
-	mock.recorder = &MockAccountKeeperMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
-	return m.recorder
-}
-
-// AddressCodec mocks base method.
-func (m *MockAccountKeeper) AddressCodec() address.Codec {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddressCodec")
-	ret0, _ := ret[0].(address.Codec)
-	return ret0
-}
-
-// AddressCodec indicates an expected call of AddressCodec.
-func (mr *MockAccountKeeperMockRecorder) AddressCodec() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddressCodec", reflect.TypeOf((*MockAccountKeeper)(nil).AddressCodec))
-}
-
-// GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types1.AccAddress) types1.AccountI {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
-	ret0, _ := ret[0].(types1.AccountI)
-	return ret0
-}
-
-// GetAccount indicates an expected call of GetAccount.
-func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetAccount), ctx, addr)
-}
-
-// GetModuleAccount mocks base method.
-func (m *MockAccountKeeper) GetModuleAccount(ctx context.Context, moduleName string) types1.ModuleAccountI {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetModuleAccount", ctx, moduleName)
-	ret0, _ := ret[0].(types1.ModuleAccountI)
-	return ret0
-}
-
-// GetModuleAccount indicates an expected call of GetModuleAccount.
-func (mr *MockAccountKeeperMockRecorder) GetModuleAccount(ctx, moduleName interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetModuleAccount), ctx, moduleName)
-}
-
-// GetModuleAddress mocks base method.
-func (m *MockAccountKeeper) GetModuleAddress(name string) types1.AccAddress {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetModuleAddress", name)
-	ret0, _ := ret[0].(types1.AccAddress)
-	return ret0
-}
-
-// GetModuleAddress indicates an expected call of GetModuleAddress.
-func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAddress", reflect.TypeOf((*MockAccountKeeper)(nil).GetModuleAddress), name)
-}
-
-// SetModuleAccount mocks base method.
-func (m *MockAccountKeeper) SetModuleAccount(arg0 context.Context, arg1 types1.ModuleAccountI) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetModuleAccount", arg0, arg1)
-}
-
-// SetModuleAccount indicates an expected call of SetModuleAccount.
-func (mr *MockAccountKeeperMockRecorder) SetModuleAccount(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetModuleAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetModuleAccount), arg0, arg1)
-}
 
 // MockBankKeeper is a mock of BankKeeper interface.
 type MockBankKeeper struct {

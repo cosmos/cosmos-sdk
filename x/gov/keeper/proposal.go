@@ -27,7 +27,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		return v1.Proposal{}, err
 	}
 
-	proposerAddr, err := k.authKeeper.AddressCodec().BytesToString(proposer)
+	proposerAddr, err := k.addressCdc.BytesToString(proposer)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
@@ -99,8 +99,9 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 		}
 
 		// assert that the governance module account is the only signer of the messages
-		if !bytes.Equal(signers[0], k.GetGovernanceAccount(ctx).GetAddress()) {
-			addr, err := k.authKeeper.AddressCodec().BytesToString(signers[0])
+		govAddr := k.moduleAccountsService.Address(types.ModuleName)
+		if !bytes.Equal(signers[0], govAddr) {
+			addr, err := k.addressCdc.BytesToString(signers[0])
 			if err != nil {
 				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidSigner, err.Error())
 			}

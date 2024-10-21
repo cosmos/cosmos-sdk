@@ -9,24 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// GetBondedPool returns the bonded tokens pool's module account
-func (k Keeper) GetBondedPool(ctx context.Context) (bondedPool sdk.ModuleAccountI) {
-	acc, err := k.moduleAccountsService.Account(ctx, types.BondedPoolName)
-	if err != nil {
-		panic(err)
-	}
-	return acc
-}
-
-// GetNotBondedPool returns the not bonded tokens pool's module account
-func (k Keeper) GetNotBondedPool(ctx context.Context) (notBondedPool sdk.ModuleAccountI) {
-	acc, err := k.moduleAccountsService.Account(ctx, types.NotBondedPoolName)
-	if err != nil {
-		panic(err)
-	}
-	return acc
-}
-
 // bondedTokensToNotBonded transfers coins from the bonded to the not bonded pool within staking
 func (k Keeper) bondedTokensToNotBonded(ctx context.Context, tokens math.Int) error {
 	bondDenom, err := k.BondDenom(ctx)
@@ -85,12 +67,12 @@ func (k Keeper) burnNotBondedTokens(ctx context.Context, amt math.Int) error {
 
 // TotalBondedTokens total staking tokens supply which is bonded
 func (k Keeper) TotalBondedTokens(ctx context.Context) (math.Int, error) {
-	bondedPool := k.GetBondedPool(ctx)
+	bondedPool := k.moduleAccountsService.Address(types.BondedPoolName)
 	bondDenom, err := k.BondDenom(ctx)
 	if err != nil {
 		return math.ZeroInt(), err
 	}
-	return k.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount, nil
+	return k.bankKeeper.GetBalance(ctx, bondedPool, bondDenom).Amount, nil
 }
 
 // StakingTokenSupply staking tokens from the total supply

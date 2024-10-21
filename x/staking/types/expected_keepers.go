@@ -4,25 +4,11 @@ import (
 	"context"
 
 	st "cosmossdk.io/api/cosmos/staking/v1beta1"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// AccountKeeper defines the expected account keeper (noalias)
-type AccountKeeper interface {
-	AddressCodec() address.Codec
-
-	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI // only used for simulation
-
-	GetModuleAddress(name string) sdk.AccAddress
-	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
-
-	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
-	SetModuleAccount(context.Context, sdk.ModuleAccountI)
-}
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {

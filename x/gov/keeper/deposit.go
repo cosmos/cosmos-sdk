@@ -19,7 +19,7 @@ import (
 
 // SetDeposit sets a Deposit to the gov store
 func (k Keeper) SetDeposit(ctx context.Context, deposit v1.Deposit) error {
-	depositor, err := k.authKeeper.AddressCodec().StringToBytes(deposit.Depositor)
+	depositor, err := k.addressCdc.StringToBytes(deposit.Depositor)
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 		activatedVotingPeriod = true
 	}
 
-	addr, err := k.authKeeper.AddressCodec().BytesToString(depositorAddr)
+	addr, err := k.addressCdc.BytesToString(depositorAddr)
 	if err != nil {
 		return false, err
 	}
@@ -212,7 +212,7 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 	}
 
 	for _, deposit := range deposits {
-		depositorAddress, err := k.authKeeper.AddressCodec().StringToBytes(deposit.Depositor)
+		depositorAddress, err := k.addressCdc.StringToBytes(deposit.Depositor)
 		if err != nil {
 			return err
 		}
@@ -253,7 +253,7 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 	// burn the cancellation fee or send the cancellation charges to destination address.
 	if !cancellationCharges.IsZero() {
 		// get the pool module account address
-		poolAddress, err := k.authKeeper.AddressCodec().BytesToString(k.moduleAccountsService.Address(pooltypes.ModuleName))
+		poolAddress, err := k.addressCdc.BytesToString(k.moduleAccountsService.Address(pooltypes.ModuleName))
 		if err != nil {
 			return err
 		}
@@ -270,7 +270,7 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 				return err
 			}
 		default:
-			destAccAddress, err := k.authKeeper.AddressCodec().StringToBytes(destAddress)
+			destAccAddress, err := k.addressCdc.StringToBytes(destAddress)
 			if err != nil {
 				return err
 			}

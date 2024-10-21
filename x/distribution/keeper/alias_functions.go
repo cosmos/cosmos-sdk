@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/x/distribution/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -18,13 +17,4 @@ func (k Keeper) GetValidatorOutstandingRewardsCoins(ctx context.Context, val sdk
 	}
 
 	return rewards.Rewards, nil
-}
-
-// GetDistributionAccount returns the distribution ModuleAccount
-func (k Keeper) GetDistributionAccount(ctx context.Context) sdk.ModuleAccountI {
-	acc, err := k.moduleAccountsService.Account(ctx, types.ModuleName)
-	if err != nil {
-		panic(err)
-	}
-	return acc
 }

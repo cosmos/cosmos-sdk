@@ -109,7 +109,8 @@ func MsgSubmitLegacyProposalFactory(k *keeper.Keeper, contentSimFn simtypes.Cont
 			reporter.Skip("content is nil")
 			return nil, nil
 		}
-		govacc := must(testData.AddressCodec().BytesToString(k.GetGovernanceAccount(ctx).GetAddress()))
+
+		govacc := must(testData.AddressCodec().BytesToString(k.ModuleAccountAddress()))
 		contentMsg := must(v1.NewLegacyContent(content, govacc))
 		return submitProposalWithVotesScheduled(ctx, k, testData, reporter, fOpsReg, contentMsg)
 	})

@@ -32,7 +32,7 @@ var _ v1.MsgServer = msgServer{}
 
 // SubmitProposal implements the MsgServer.SubmitProposal method.
 func (k msgServer) SubmitProposal(ctx context.Context, msg *v1.MsgSubmitProposal) (*v1.MsgSubmitProposalResponse, error) {
-	proposer, err := k.authKeeper.AddressCodec().StringToBytes(msg.GetProposer())
+	proposer, err := k.addressCdc.StringToBytes(msg.GetProposer())
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
 	}
@@ -164,7 +164,7 @@ func (k msgServer) SubmitMultipleChoiceProposal(ctx context.Context, msg *v1.Msg
 
 // CancelProposal implements the MsgServer.CancelProposal method.
 func (k msgServer) CancelProposal(ctx context.Context, msg *v1.MsgCancelProposal) (*v1.MsgCancelProposalResponse, error) {
-	_, err := k.authKeeper.AddressCodec().StringToBytes(msg.Proposer)
+	_, err := k.addressCdc.StringToBytes(msg.Proposer)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
 	}
@@ -190,7 +190,8 @@ func (k msgServer) CancelProposal(ctx context.Context, msg *v1.MsgCancelProposal
 
 // ExecLegacyContent implements the MsgServer.ExecLegacyContent method.
 func (k msgServer) ExecLegacyContent(ctx context.Context, msg *v1.MsgExecLegacyContent) (*v1.MsgExecLegacyContentResponse, error) {
-	govAcct, err := k.authKeeper.AddressCodec().BytesToString(k.GetGovernanceAccount(ctx).GetAddress())
+	govAddr := k.moduleAccountsService.Address(govtypes.ModuleName)
+	govAcct, err := k.addressCdc.BytesToString(govAddr)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid governance account address: %s", err)
 	}
@@ -221,7 +222,7 @@ func (k msgServer) ExecLegacyContent(ctx context.Context, msg *v1.MsgExecLegacyC
 
 // Vote implements the MsgServer.Vote method.
 func (k msgServer) Vote(ctx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResponse, error) {
-	accAddr, err := k.authKeeper.AddressCodec().StringToBytes(msg.Voter)
+	accAddr, err := k.addressCdc.StringToBytes(msg.Voter)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", err)
 	}
@@ -239,7 +240,7 @@ func (k msgServer) Vote(ctx context.Context, msg *v1.MsgVote) (*v1.MsgVoteRespon
 
 // VoteWeighted implements the MsgServer.VoteWeighted method.
 func (k msgServer) VoteWeighted(ctx context.Context, msg *v1.MsgVoteWeighted) (*v1.MsgVoteWeightedResponse, error) {
-	accAddr, accErr := k.authKeeper.AddressCodec().StringToBytes(msg.Voter)
+	accAddr, accErr := k.addressCdc.StringToBytes(msg.Voter)
 	if accErr != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid voter address: %s", accErr)
 	}
@@ -283,7 +284,7 @@ func (k msgServer) VoteWeighted(ctx context.Context, msg *v1.MsgVoteWeighted) (*
 
 // Deposit implements the MsgServer.Deposit method.
 func (k msgServer) Deposit(ctx context.Context, msg *v1.MsgDeposit) (*v1.MsgDepositResponse, error) {
-	accAddr, err := k.authKeeper.AddressCodec().StringToBytes(msg.Depositor)
+	accAddr, err := k.addressCdc.StringToBytes(msg.Depositor)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)
 	}
@@ -315,7 +316,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *v1.MsgUpdateParams) (*
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
 	}
 
-	if err := msg.Params.ValidateBasic(k.authKeeper.AddressCodec()); err != nil {
+	if err := msg.Params.ValidateBasic(k.addressCdc); err != nil {
 		return nil, err
 	}
 

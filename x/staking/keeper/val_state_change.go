@@ -56,7 +56,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]appmodule.Validato
 		if err != nil {
 			return nil, err
 		}
-		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(dvPair.DelegatorAddress)
+		delegatorAddress, err := k.addressCodec.StringToBytes(dvPair.DelegatorAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -91,7 +91,7 @@ func (k Keeper) BlockValidatorUpdates(ctx context.Context) ([]appmodule.Validato
 		if err != nil {
 			return nil, err
 		}
-		delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(dvvTriplet.DelegatorAddress)
+		delegatorAddress, err := k.addressCodec.StringToBytes(dvvTriplet.DelegatorAddress)
 		if err != nil {
 			return nil, err
 		}

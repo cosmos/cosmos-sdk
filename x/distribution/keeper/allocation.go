@@ -19,12 +19,8 @@ func (k Keeper) AllocateTokens(ctx context.Context, totalPreviousPower int64, bo
 	// fetch and clear the collected fees for distribution, since this is
 	// called in BeginBlock, collected fees will be from the previous block
 	// (and distributed to the previous proposer)
-	feeCollector, err := k.moduleAccountsService.Account(ctx, k.feeCollectorName)
-	if err != nil {
-		return err
-	}
-
-	feesCollectedInt := k.bankKeeper.GetAllBalances(ctx, feeCollector.GetAddress())
+	feeCollector := k.moduleAccountsService.Address(k.feeCollectorName)
+	feesCollectedInt := k.bankKeeper.GetAllBalances(ctx, feeCollector)
 	// return early if no fees to distribute
 	if feesCollectedInt.Empty() {
 		return nil

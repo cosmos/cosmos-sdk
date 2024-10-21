@@ -117,12 +117,7 @@ func (k Keeper) DistributeFromStreamFunds(ctx context.Context, amount sdk.Coins,
 
 // GetCommunityPool gets the community pool balance.
 func (k Keeper) GetCommunityPool(ctx context.Context) (sdk.Coins, error) {
-	macc, err := k.moduleAccountsService.Account(ctx, types.ModuleName)
-	if err != nil {
-		return nil, err
-	}
-
-	return k.bankKeeper.GetAllBalances(ctx, macc.GetAddress()), nil
+	return k.bankKeeper.GetAllBalances(ctx, k.moduleAccountsService.Address(types.ModuleName)), nil
 }
 
 func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient []byte) (sdk.Coin, error) {
@@ -158,17 +153,14 @@ func (k Keeper) withdrawRecipientFunds(ctx context.Context, recipient []byte) (s
 // SetToDistribute sets the amount to be distributed among recipients.
 func (k Keeper) SetToDistribute(ctx context.Context) error {
 	// Get current balance of the intermediary module account
-	macc, err := k.moduleAccountsService.Account(ctx, types.ProtocolPoolDistrAccount)
-	if err != nil {
-		return err
-	}
+	poolDistrAddr := k.moduleAccountsService.Address(types.ProtocolPoolDistrAccount)
 
 	denom, err := k.stakingKeeper.BondDenom(ctx)
 	if err != nil {
 		return err
 	}
 
-	currentBalance := k.bankKeeper.GetAllBalances(ctx, macc.GetAddress())
+	currentBalance := k.bankKeeper.GetAllBalances(ctx, poolDistrAddr)
 	distributionBalance := currentBalance.AmountOf(denom)
 
 	// if the balance is zero, return early

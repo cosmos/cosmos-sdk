@@ -13,7 +13,6 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
@@ -29,7 +28,7 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.NotBondedPoolName, types.BondedPoolName, gomock.Any())
 	_ = stakingkeeper.TestingUpdateValidator(stakingKeeper, ctx, val, true)
-	val0AccAddr, err := s.accountKeeper.AddressCodec().BytesToString(addrVals[0])
+	val0AccAddr, err := s.addressCdc.BytesToString(addrVals[0])
 	s.Require().NoError(err)
 	selfDelegation := types.NewDelegation(val0AccAddr, s.valAddressToString(addrVals[0]), issuedShares)
 
@@ -95,7 +94,7 @@ func (s *KeeperTestSuite) TestConsPubKeyRotationHistory() {
 }
 
 func (s *KeeperTestSuite) TestValidatorIdentifier() {
-	stakingKeeper, ctx, accountKeeper, bankKeeper := s.stakingKeeper, s.ctx, s.accountKeeper, s.bankKeeper
+	stakingKeeper, ctx, bankKeeper := s.stakingKeeper, s.ctx, s.bankKeeper
 
 	msgServer := stakingkeeper.NewMsgServerImpl(stakingKeeper)
 	s.setValidators(6)
@@ -110,9 +109,7 @@ func (s *KeeperTestSuite) TestValidatorIdentifier() {
 	s.Require().NoError(err)
 	s.Require().Nil(oldPk)
 
-	bondedPool := authtypes.NewEmptyModuleAccount(types.BondedPoolName)
-	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.BondedPoolName).Return(bondedPool).AnyTimes()
-	bankKeeper.EXPECT().GetBalance(gomock.Any(), bondedPool.GetAddress(), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
+	bankKeeper.EXPECT().GetBalance(gomock.Any(), s.moduleAccountsService.Address(types.BondedPoolName), sdk.DefaultBondDenom).Return(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000)).AnyTimes()
 
 	val, err := stakingKeeper.ValidatorAddressCodec().StringToBytes(validators[3].GetOperator())
 	s.Require().NoError(err)
@@ -168,7 +165,7 @@ func (s *KeeperTestSuite) setValidators(n int) {
 
 		s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.NotBondedPoolName, types.BondedPoolName, gomock.Any())
 		_ = stakingkeeper.TestingUpdateValidator(stakingKeeper, ctx, val, true)
-		accAddr, err := s.accountKeeper.AddressCodec().BytesToString(addrVals[i])
+		accAddr, err := s.addressCdc.BytesToString(addrVals[i])
 		s.Require().NoError(err)
 		selfDelegation := types.NewDelegation(accAddr, addr, issuedShares)
 		err = stakingKeeper.SetDelegation(ctx, selfDelegation)

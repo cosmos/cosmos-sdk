@@ -271,18 +271,18 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 func (k BaseKeeper) SendCoinsFromModuleToModule(
 	ctx context.Context, senderModule, recipientModule string, amt sdk.Coins,
 ) error {
-	// TODO: @facu @frojdi we might not need to get the account, as with just the address should be enough
-	senderAcc, err := k.moduleAccountsService.Account(ctx, senderModule)
-	if err != nil {
-		return err
+	senderAddr := k.moduleAccountsService.Address(senderModule)
+	recipientAddr := k.moduleAccountsService.Address(recipientModule)
+
+	if senderAddr == nil {
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule)
 	}
 
-	recipientAcc, err := k.moduleAccountsService.Account(ctx, recipientModule)
-	if err != nil {
-		return err
+	if recipientAddr == nil {
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", recipientModule)
 	}
 
-	return k.SendCoins(ctx, senderAcc.GetAddress(), recipientAcc.GetAddress(), amt)
+	return k.SendCoins(ctx, senderAddr, recipientAddr, amt)
 }
 
 // SendCoinsFromAccountToModule transfers coins from an AccAddress to a ModuleAccount.
@@ -290,12 +290,8 @@ func (k BaseKeeper) SendCoinsFromModuleToModule(
 func (k BaseKeeper) SendCoinsFromAccountToModule(
 	ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins,
 ) error {
-	recipientAcc, err := k.moduleAccountsService.Account(ctx, recipientModule)
-	if err != nil {
-		return err
-	}
-
-	return k.SendCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
+	recipientAddr := k.moduleAccountsService.Address(recipientModule)
+	return k.SendCoins(ctx, senderAddr, recipientAddr, amt)
 }
 
 // DelegateCoinsFromAccountToModule delegates coins and transfers them from a
@@ -304,17 +300,8 @@ func (k BaseKeeper) SendCoinsFromAccountToModule(
 func (k BaseKeeper) DelegateCoinsFromAccountToModule(
 	ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins,
 ) error {
-	recipientAcc, err := k.moduleAccountsService.Account(ctx, recipientModule)
-	if err != nil {
-		return err
-	}
-
-	// TODO: @facu - check if we have to do anything else here, maybe ask @frojdi
-	// if !recipientAcc.HasPermission(authtypes.Staking) {
-	// 	return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to receive delegated coins", recipientModule)
-	// }
-
-	return k.DelegateCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
+	recipientAddr := k.moduleAccountsService.Address(recipientModule)
+	return k.DelegateCoins(ctx, senderAddr, recipientAddr, amt)
 }
 
 // UndelegateCoinsFromModuleToAccount undelegates the unbonding coins and transfers
@@ -323,17 +310,8 @@ func (k BaseKeeper) DelegateCoinsFromAccountToModule(
 func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 	ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
-	acc, err := k.moduleAccountsService.Account(ctx, senderModule)
-	if err != nil {
-		return err
-	}
-
-	// TODO: @facu - check if we have to do anything else here, maybe ask @frojdi
-	// if !acc.HasPermission(authtypes.Staking) {
-	// 	return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to undelegate coins", senderModule)
-	// }
-
-	return k.UndelegateCoins(ctx, acc.GetAddress(), recipientAddr, amt)
+	senderAddr := k.moduleAccountsService.Address(senderModule)
+	return k.UndelegateCoins(ctx, senderAddr, recipientAddr, amt)
 }
 
 // MintCoins creates new coins from thin air and adds it to the module account.
@@ -345,20 +323,13 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 		return err
 	}
 
-	acc, err := k.moduleAccountsService.Account(ctx, moduleName)
-	if err != nil {
-		return err
-	}
-
-	// if !acc.HasPermission(authtypes.Minter) {
-	// 	return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName)
-	// }
+	moduleAddr := k.moduleAccountsService.Address(moduleName)
 
 	if !amounts.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amounts.String())
 	}
 
-	err = k.addCoins(ctx, acc.GetAddress(), amounts)
+	err = k.addCoins(ctx, moduleAddr, amounts)
 	if err != nil {
 		return err
 	}
@@ -371,7 +342,7 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 
 	k.Logger.Debug("minted coins from module account", "amount", amounts.String(), "from", moduleName)
 
-	addrStr, err := k.addrCdc.BytesToString(acc.GetAddress())
+	addrStr, err := k.addrCdc.BytesToString(moduleAddr)
 	if err != nil {
 		return err
 	}

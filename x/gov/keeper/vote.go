@@ -73,7 +73,7 @@ func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.Ac
 		}
 	}
 
-	voterStrAddr, err := k.authKeeper.AddressCodec().BytesToString(voterAddr)
+	voterStrAddr, err := k.addressCdc.BytesToString(voterAddr)
 	if err != nil {
 		return err
 	}

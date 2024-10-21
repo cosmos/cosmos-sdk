@@ -1,10 +1,7 @@
 package systemtests
 
 import (
-	"bytes"
 	"fmt"
-	"io"
-	"os"
 	"testing"
 	"time"
 
@@ -55,16 +52,4 @@ func GetGenesisBalance(rawGenesis []byte, addr string) sdk.Coins {
 		}
 	}
 	return r
-}
-
-// StoreTempFile creates a temporary file in the test's temporary directory with the provided content.
-// It returns a pointer to the created file. Errors during the process are handled with test assertions.
-func StoreTempFile(t *testing.T, content []byte) *os.File {
-	t.Helper()
-	out, err := os.CreateTemp(t.TempDir(), "")
-	require.NoError(t, err)
-	_, err = io.Copy(out, bytes.NewReader(content))
-	require.NoError(t, err)
-	require.NoError(t, out.Close())
-	return out
 }

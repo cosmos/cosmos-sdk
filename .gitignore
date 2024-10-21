@@ -50,7 +50,9 @@ vagrant
 *.ipr
 *.iws
 .dir-locals.el
-.vscode
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
 
 # Depinject & Graphviz
 dependency-graph.png

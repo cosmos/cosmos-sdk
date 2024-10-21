@@ -1,0 +1,15 @@
+[package]
+name = "ixc_message_api"
+edition = "2021"
+description = "Interchain SDK Message API"
+version = "0.0.4"
+repository.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+allocator-api2 = "0.2.18"
+num_enum = "0.7.3"
+thiserror = "1.0.64"

@@ -9,7 +9,10 @@ func prefix(f string) string {
 	return fmt.Sprintf("%s.%s", serverName, f)
 }
 
-var FlagMinGasPrices = prefix("minimum-gas-prices")
+var (
+	FlagMinGasPrices = prefix("minimum-gas-prices")
+	FlagCPUProfiling = prefix("cpu-profile")
+)
 
 const (
 	// FlagHome specifies the home directory flag.

@@ -1030,9 +1030,10 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.G
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, reflectMsgs []protoreflect.Message, mode execMode) (*sdk.Result, error) {
 	events := sdk.EmptyEvents()
 	msgResponses := make([]*codectypes.Any, 0, len(msgs))
-
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
+		start := telemetry.Now()
+
 		if mode != execModeFinalize && mode != execModeSimulate {
 			break
 		}
@@ -1076,6 +1077,8 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, reflectMsgs []proto
 			}
 			msgResponses = append(msgResponses, msgResponse)
 		}
+
+		telemetry.MeasureSince(start, "tx", "msg", "processing_time", sdk.MsgTypeURL(msg))
 	}
 
 	data, err := makeABCIData(msgResponses)

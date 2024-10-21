@@ -4,8 +4,8 @@ go 1.23
 
 require (
 	cosmossdk.io/api v0.7.6
-	cosmossdk.io/core v1.0.0-alpha.3
-	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
+	cosmossdk.io/core v1.0.0-alpha.4
+	cosmossdk.io/core/testing v0.0.0-20241021095809-fc91e7635451
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33

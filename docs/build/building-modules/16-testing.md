@@ -22,7 +22,7 @@ The SDK uses `mockgen` to generate mocks for keepers:
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/scripts/mockgen.sh#L3-L6
 ```
 
-You can read more about mockgen [here](https://github.com/golang/mock).
+You can read more about mockgen [here](https://go.uber.org/mock).
 
 ### Example
 

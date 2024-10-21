@@ -728,8 +728,11 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	// nil, it means we are replaying this block and we need to set the state here
 	// given that during block replay ProcessProposal is not executed by CometBFT.
 	if app.finalizeBlockState == nil {
+		fmt.Println("internalFinalizeBlock: setting finalizeBlockState")
 		app.setState(execModeFinalize, header)
 	}
+
+	fmt.Println("internalFinalizeBlock: finializing block update context")
 
 	// Context is now updated with Header information.
 	app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().
@@ -769,12 +772,17 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	}
 
 	events = append(events, preblockEvents...)
+	fmt.Println("events", events)
+
+	fmt.Println("internalFinalizeBlock: beginBlock goign to run")
 
 	beginBlock, err := app.beginBlock(req)
 	if err != nil {
 		fmt.Println("err 4: ", err)
 		return nil, err
 	}
+
+	fmt.Println("internalFinalizeBlock: beginBlock done")
 
 	// First check for an abort signal after beginBlock, as it's the first place
 	// we spend any significant amount of time.
@@ -869,7 +877,6 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	defer func() {
 		// call the streaming service hooks with the FinalizeBlock messages
 		for _, streamingListener := range app.streamingManager.ABCIListeners {
-			fmt.Println("streamingListener", streamingListener)
 			if err := streamingListener.ListenFinalizeBlock(app.finalizeBlockState.Context(), *req, *res); err != nil {
 				app.logger.Error("ListenFinalizeBlock listening hook failed", "height", req.Height, "err", err)
 			}
@@ -935,6 +942,7 @@ func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 // height.
 func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	header := app.finalizeBlockState.Context().BlockHeader()
+	fmt.Println("header from commit", header)
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
 	if app.precommiter != nil {

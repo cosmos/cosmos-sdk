@@ -733,9 +733,7 @@ func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, er
 	)
 
 	if app.beginBlocker != nil {
-		fmt.Println("beginBlocker is present", app.name)
 		resp, err = app.beginBlocker(app.finalizeBlockState.Context())
-		fmt.Println("beginBlocker is present with response", resp, err)
 		if err != nil {
 			return resp, err
 		}

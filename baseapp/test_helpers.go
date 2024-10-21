@@ -5,6 +5,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -57,6 +58,11 @@ func (app *BaseApp) NewContextLegacy(isCheckTx bool, header cmtproto.Header) sdk
 		return sdk.NewContext(app.checkState.ms, header, true, app.logger).
 			WithMinGasPrices(app.minGasPrices)
 	}
+
+	fmt.Println("NewContextLegacy call without isCheckTx")
+	fmt.Println(app != nil)
+	fmt.Println(app.finalizeBlockState != nil)
+	fmt.Println(app.finalizeBlockState.ms != nil)
 
 	return sdk.NewContext(app.finalizeBlockState.ms, header, false, app.logger)
 }

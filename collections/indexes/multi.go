@@ -2,9 +2,7 @@ package indexes
 
 import (
 	"context"
-	"crypto/sha256"
 	"errors"
-	"unsafe"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/codec"
@@ -134,25 +132,32 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) RefKeys(ctx context.Context, un
 	}
 
 	keys := []ReferenceKey{}
-	visited := map[[32]byte]struct{}{}
+	visited := map[string]struct{}{}
 	for ; iter.Valid(); iter.Next() {
 		key, err := iter.Key()
 		if err != nil {
 			return nil, err
 		}
+		refKey := key.K1()
 
 		if unique {
-			// compare the byte representation of ref keys
-			refKey := key.K1()
-			unsafeRefKey := *(*[]byte)(unsafe.Pointer(&refKey))
+			// encode the ref key using its codec. casting to pairKeyCodec must
+			// work since by definition the Multi key codec is a pair key codec
+			// of [ReferenceKey, PrimaryKey]
+			refKeyCodec := m.refKeys.KeyCodec().(pairKeyCodec[ReferenceKey, PrimaryKey]).KeyCodec1()
+			buf := make([]byte, refKeyCodec.Size(refKey))
+			_, err := refKeyCodec.Encode(buf, refKey)
+			if err != nil {
+				return nil, err
+			}
 
-			// use SHA256 hash as map keys
-			if _, ok := visited[sha256.Sum256(unsafeRefKey)]; ok {
+			// check if visited
+			if _, ok := visited[string(buf)]; ok {
 				continue
 			}
-			visited[sha256.Sum256(unsafeRefKey)] = struct{}{}
+			visited[string(buf)] = struct{}{}
 		}
-		keys = append(keys, key.K1())
+		keys = append(keys, refKey)
 	}
 
 	return keys, nil

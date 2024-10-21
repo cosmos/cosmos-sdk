@@ -1,0 +1,84 @@
+syntax = "proto3";
+package cosmos.accounts.defaults.authz;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos/accounts/defaults/authz/authz.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "cosmossdk.io/x/accounts/defaults/authz/types";
+
+// MsgInitAuthzAccount defines a message that enables creating an authz
+// account.
+message MsgInitAuthzAccount {
+  option (amino.name)      = "cosmos-sdk/MsgInitAuthzAccount";
+  option (gogoproto.equal) = true;
+
+  // owner of the vesting account
+  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgInitAuthzAccountResponse defines the Msg/InitAuthzAccount response type.
+message MsgInitAuthzAccountResponse {}
+
+// MsgGrant defines a message that grants another account with a specific grant.
+message MsgGrant {
+  option (amino.name)           = "cosmos-sdk/MsgGrant";
+  option (cosmos.msg.v1.signer) = "granter";
+
+  // granter address
+  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // grantee address
+  string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // grant detail
+  Grant grant = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// MsgGrantResponse defines the Msg/Grant response type.
+message MsgGrantResponse {}
+
+// MsgExec defines a message that invoke authz account to execute messages.
+message MsgExec {
+  option (amino.name)           = "cosmos-sdk/MsgExec";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  // sender address
+  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // executed messages
+  repeated google.protobuf.Any msgs = 2 [(cosmos_proto.accepts_interface) = "cosmos.base.v1beta1.Msg"];
+}
+
+// MsgExecResponse defines the Msg/Exec response type.
+message MsgExecResponse {
+  repeated google.protobuf.Any responds = 1;
+}
+
+// MsgRevoke defines a message that revoke authz account grant.
+message MsgRevoke {
+  option (amino.name)           = "cosmos-sdk/MsgRevoke";
+  option (cosmos.msg.v1.signer) = "granter";
+
+  // granter address
+  string granter      = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string grantee      = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string msg_type_url = 3;
+}
+
+// MsgRevokeResponse defines the Msg/Revoke response type.
+message MsgRevokeResponse {}
+
+// MsgRevokeAll defines a message that revoke all authz account grants.
+message MsgRevokeAll {
+  option (amino.name)           = "cosmos-sdk/MsgRevokeAll";
+  option (cosmos.msg.v1.signer) = "granter";
+
+  // granter address
+  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // grantee address, if not provided then revoke all account grants
+  string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgRevokeAllResponse defines the Msg/RevokeAll response type.
+message MsgRevokeAllResponse {}

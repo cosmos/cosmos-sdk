@@ -1,0 +1,15 @@
+syntax = "proto3";
+package cosmos.accounts.defaults.authz;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "cosmossdk.io/x/accounts/defaults/authz/types";
+
+// Grant defines a authorization grant for grantee
+message Grant {
+  google.protobuf.Any authorization = 1;
+  // time when the grant will expired
+  google.protobuf.Timestamp expiration = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
+}

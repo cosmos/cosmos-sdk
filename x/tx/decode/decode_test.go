@@ -123,6 +123,22 @@ func TestDecode(t *testing.T) {
 			},
 			numSigners: 2,
 		},
+		{
+			name: "same msg signer and feePayer",
+			msg: &bankv1beta1.MsgSend{
+				FromAddress: "636f736d6f733168363935356b3836397a72306770383975717034337a373263393033666d35647a366b75306c",
+			},
+			authInfo: &txv1beta1.AuthInfo{
+				SignerInfos: signerInfo,
+				Fee: &txv1beta1.Fee{
+					Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
+					GasLimit: 100,
+					Payer:    "636f736d6f733168363935356b3836397a72306770383975717034337a373263393033666d35647a366b75306c",
+					Granter:  "",
+				},
+			},
+			numSigners: 1,
+		},
 	}
 
 	for _, tc := range testCases {

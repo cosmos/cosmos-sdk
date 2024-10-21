@@ -7,8 +7,10 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	basev1 "cosmossdk.io/api/cosmos/accounts/defaults/base/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/registry"
+	coretransaction "cosmossdk.io/core/transaction"
 	"cosmossdk.io/x/accounts/cli"
 	v1 "cosmossdk.io/x/accounts/v1"
 
@@ -42,21 +44,29 @@ type AppModule struct {
 	k   Keeper
 }
 
-func (m AppModule) IsAppModule() {}
+func (AppModule) IsAppModule() {}
 
 // Name returns the module's name.
 // Deprecated: kept for legacy reasons.
-func (AppModule) Name() string { return ModuleName }
+func (am AppModule) Name() string { return ModuleName }
 
-func (m AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	registrar.RegisterImplementations((*coretransaction.Msg)(nil),
+		&basev1.MsgInit{},
+		&basev1.MsgSwapPubKey{},
+		&basev1.MsgSwapPubKeyResponse{},
+		&basev1.QuerySequence{},
+		&basev1.QuerySequenceResponse{},
+	)
+
 	msgservice.RegisterMsgServiceDesc(registrar, v1.MsgServiceDesc())
 }
 
 // App module services
 
-func (m AppModule) RegisterServices(registar grpc.ServiceRegistrar) error {
-	v1.RegisterQueryServer(registar, NewQueryServer(m.k))
-	v1.RegisterMsgServer(registar, NewMsgServer(m.k))
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	v1.RegisterQueryServer(registrar, NewQueryServer(am.k))
+	v1.RegisterMsgServer(registrar, NewMsgServer(am.k))
 
 	return nil
 }

@@ -331,6 +331,23 @@ func (c CLIWrapper) GetKeyAddrPrefix(name, prefix string) string {
 	return addr
 }
 
+// GetPubKeyByCustomField returns pubkey in base64 by custom field
+func (c CLIWrapper) GetPubKeyByCustomField(addr, field string) string {
+	keysListOutput := c.Keys("keys", "list")
+	keysList := gjson.Parse(keysListOutput)
+
+	var pubKeyValue string
+	keysList.ForEach(func(_, value gjson.Result) bool {
+		if value.Get(field).String() == addr {
+			pubKeyJSON := gjson.Parse(value.Get("pubkey").String())
+			pubKeyValue = pubKeyJSON.Get("key").String()
+			return false
+		}
+		return true
+	})
+	return pubKeyValue
+}
+
 const defaultSrcAddr = "node0"
 
 // FundAddress sends the token amount to the destination address

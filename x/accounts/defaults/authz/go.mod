@@ -114,6 +114,7 @@ replace (
 	cosmossdk.io/collections => ../../../../collections // TODO tag new collections ASAP
 	cosmossdk.io/store => ../../../../store
 	cosmossdk.io/x/accounts => ../../.
+	cosmossdk.io/x/authz => ../../../authz
 	cosmossdk.io/x/bank => ../../../bank
 	cosmossdk.io/x/distribution => ../../../distribution
 	cosmossdk.io/x/staking => ../../../staking

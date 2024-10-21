@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/math"
 	lockupaccount "cosmossdk.io/x/accounts/defaults/lockup"
-	"cosmossdk.io/x/accounts/defaults/lockup/types"
+	types "cosmossdk.io/x/accounts/defaults/lockup/v1"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"

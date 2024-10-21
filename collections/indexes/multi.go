@@ -121,6 +121,48 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) MatchExact(ctx context.Context,
 	return m.Iterate(ctx, collections.NewPrefixedPairRange[ReferenceKey, PrimaryKey](refKey))
 }
 
+// RefKeys returns a list of all the MultiIterator's reference keys (may contain duplicates).
+// Enable the "unique" argument to get a unique list of reference keys (the reference key must be comparable)
+// WARNING: The use of RefKeys() can be very expensive in terms of Gas. Please make sure you iterate over a relatively
+// small set of reference keys.
+func (m *Multi[ReferenceKey, PrimaryKey, Value]) RefKeys(ctx context.Context, unique bool) ([]ReferenceKey, error) {
+	iter, err := m.refKeys.IterateRaw(ctx, nil, nil, collections.OrderAscending)
+	if err != nil {
+		return nil, err
+	}
+
+	keys := []ReferenceKey{}
+	visited := map[string]struct{}{}
+	for ; iter.Valid(); iter.Next() {
+		key, err := iter.Key()
+		if err != nil {
+			return nil, err
+		}
+		refKey := key.K1()
+
+		if unique {
+			// encode the ref key using its codec. casting to pairKeyCodec must
+			// work since by definition the Multi key codec is a pair key codec
+			// of [ReferenceKey, PrimaryKey]
+			refKeyCodec := m.refKeys.KeyCodec().(pairKeyCodec[ReferenceKey, PrimaryKey]).KeyCodec1()
+			buf := make([]byte, refKeyCodec.Size(refKey))
+			_, err := refKeyCodec.Encode(buf, refKey)
+			if err != nil {
+				return nil, err
+			}
+
+			// check if visited
+			if _, ok := visited[string(buf)]; ok {
+				continue
+			}
+			visited[string(buf)] = struct{}{}
+		}
+		keys = append(keys, refKey)
+	}
+
+	return keys, nil
+}
+
 func (m *Multi[K1, K2, Value]) KeyCodec() codec.KeyCodec[collections.Pair[K1, K2]] {
 	return m.refKeys.KeyCodec()
 }

@@ -5,6 +5,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
 	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/types/any"
 )
 
 type MyServer struct {
@@ -32,8 +33,8 @@ func (m MyServer) Query(ctx context.Context, request *QueryRequest) (*QueryRespo
 		return nil, err
 	}
 
-	anyResp := &Any{
-		TypeUrl: proto.MessageName(queryResp),
+	anyResp := &gogoproto.Any{
+		TypeUrl: "/" + proto.MessageName(queryResp),
 		Value:   respBytes,
 	}
 

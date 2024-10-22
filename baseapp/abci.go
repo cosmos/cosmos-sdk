@@ -910,6 +910,8 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 		// Wait for the OE to finish, regardless of whether it was aborted or not
 		res, err = app.optimisticExec.WaitResult()
 
+		app.optimisticExec.Reset()
+
 		// only return if we are not aborting
 		if !aborted {
 			if res != nil {
@@ -921,7 +923,6 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 
 		// if it was aborted, we need to reset the state
 		app.finalizeBlockState = nil
-		app.optimisticExec.Reset()
 	}
 
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)

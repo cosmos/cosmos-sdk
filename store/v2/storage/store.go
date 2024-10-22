@@ -22,7 +22,7 @@ var (
 	_ store.UpgradableDatabase     = (*StorageStore)(nil)
 )
 
-// StorageStore is a wrapper around the store.VersionedDatabase interface.
+// StorageStore is a wrapper around the store.VersionedWriter interface.
 type StorageStore struct {
 	logger log.Logger
 	db     Database

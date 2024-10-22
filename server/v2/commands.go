@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime/pprof"
 	"strings"
 	"syscall"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/log"
 )
 
 // Execute executes the root command of an application.
@@ -127,11 +129,9 @@ func createStartCommand[T transaction.Tx](
 				}
 			}()
 
-			if err := server.Start(ctx); err != nil {
-				return err
-			}
-
-			return nil
+			return wrapCPUProfile(l, v, func() error {
+				return server.Start(ctx)
+			})
 		},
 	}
 
@@ -141,6 +141,37 @@ func createStartCommand[T transaction.Tx](
 	}
 
 	return cmd
+}
+
+// wrapCPUProfile starts CPU profiling, if enabled, and executes the provided
+// callbackFn, then waits for it to return.
+func wrapCPUProfile(logger log.Logger, v *viper.Viper, callbackFn func() error) error {
+	cpuProfileFile := v.GetString(FlagCPUProfiling)
+	if len(cpuProfileFile) == 0 {
+		// if cpu profiling is not enabled, just run the callback
+		return callbackFn()
+	}
+
+	f, err := os.Create(cpuProfileFile)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("starting CPU profiler", "profile", cpuProfileFile)
+	if err := pprof.StartCPUProfile(f); err != nil {
+		_ = f.Close()
+		return err
+	}
+
+	defer func() {
+		logger.Info("stopping CPU profiler", "profile", cpuProfileFile)
+		pprof.StopCPUProfile()
+		if err := f.Close(); err != nil {
+			logger.Info("failed to close cpu-profile file", "profile", cpuProfileFile, "err", err.Error())
+		}
+	}()
+
+	return callbackFn()
 }
 
 // configHandle writes the default config to the home directory if it does not exist and sets the server context

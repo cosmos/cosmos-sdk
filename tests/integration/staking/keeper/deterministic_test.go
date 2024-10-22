@@ -95,6 +95,13 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 	}
 
+	maccs := runtime.NewModuleAccountsService(
+		runtime.NewModuleAccount(minttypes.ModuleName, authtypes.Minter),
+		runtime.NewModuleAccount(stakingtypes.ModuleName, authtypes.Minter),
+		runtime.NewModuleAccount(stakingtypes.BondedPoolName, authtypes.Burner, authtypes.Staking),
+		runtime.NewModuleAccount(stakingtypes.NotBondedPoolName, authtypes.Burner, authtypes.Staking),
+	)
+
 	// gomock initializations
 	ctrl := gomock.NewController(t)
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
@@ -125,13 +132,14 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
+		maccs,
 	)
 
 	assert.NilError(t, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
 
 	consensusParamsKeeper := consensusparamkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger()), authtypes.NewModuleAddress("gov").String())
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, consensusParamsKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), bankKeeper, consensusParamsKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32MainPrefix), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService(), maccs)
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
@@ -164,12 +172,8 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	startTokens := stakingKeeper.TokensFromConsensusPower(ctx, 10)
 	bondDenom, err := stakingKeeper.BondDenom(ctx)
 	assert.NilError(t, err)
-	notBondedPool := stakingKeeper.GetNotBondedPool(ctx)
-	assert.NilError(t, banktestutil.FundModuleAccount(ctx, bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
-	accountKeeper.SetModuleAccount(ctx, notBondedPool)
-	bondedPool := stakingKeeper.GetBondedPool(ctx)
-	assert.NilError(t, banktestutil.FundModuleAccount(ctx, bankKeeper, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
-	accountKeeper.SetModuleAccount(ctx, bondedPool)
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, bankKeeper, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	assert.NilError(t, banktestutil.FundModuleAccount(ctx, bankKeeper, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
 
 	qr := integrationApp.QueryHelper()
 	queryClient := stakingtypes.NewQueryClient(qr)
@@ -812,7 +816,7 @@ func TestGRPCPool(t *testing.T) {
 
 	f = initDeterministicFixture(t) // reset
 	getStaticValidator(t, f)
-	testdata.DeterministicIterations(t, f.ctx, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6287, false)
+	testdata.DeterministicIterations(t, f.ctx, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 3399, false)
 }
 
 func TestGRPCRedelegations(t *testing.T) {

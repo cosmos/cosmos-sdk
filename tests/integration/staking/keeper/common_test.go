@@ -9,6 +9,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -49,6 +50,7 @@ type fixture struct {
 	sdkCtx sdk.Context
 	cdc    codec.Codec
 	keys   map[string]*storetypes.KVStoreKey
+	maccs  moduleaccounts.Service
 
 	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
@@ -136,6 +138,14 @@ func initFixture(tb testing.TB) *fixture {
 		types.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 	}
 
+	maccs := runtime.NewModuleAccountsService(
+		runtime.NewModuleAccount(pooltypes.ModuleName),
+		runtime.NewModuleAccount(minttypes.ModuleName, authtypes.Minter),
+		runtime.NewModuleAccount(types.ModuleName, authtypes.Minter),
+		runtime.NewModuleAccount(types.BondedPoolName, authtypes.Burner, authtypes.Staking),
+		runtime.NewModuleAccount(types.NotBondedPoolName, authtypes.Burner, authtypes.Staking),
+	)
+
 	// gomock initializations
 	ctrl := gomock.NewController(tb)
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
@@ -160,13 +170,25 @@ func initFixture(tb testing.TB) *fixture {
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
+		maccs,
 	)
 
 	assert.NilError(tb, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
 
 	consensusParamsKeeper := consensusparamkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensustypes.StoreKey]), log.NewNopLogger()), authtypes.NewModuleAddress("gov").String())
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[types.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter)), accountKeeper, bankKeeper, consensusParamsKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
+	stakingKeeper := stakingkeeper.NewKeeper(
+		cdc,
+		runtime.NewEnvironment(runtime.NewKVStoreService(keys[types.StoreKey]),
+			log.NewNopLogger(),
+			runtime.EnvWithQueryRouterService(queryRouter),
+			runtime.EnvWithMsgRouterService(msgRouter)),
+		bankKeeper, consensusParamsKeeper, authority.String(),
+		addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr),
+		addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
+		addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
+		runtime.NewContextAwareCometInfoService(), maccs,
+	)
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
@@ -206,6 +228,7 @@ func initFixture(tb testing.TB) *fixture {
 		sdkCtx:        sdkCtx,
 		cdc:           cdc,
 		keys:          keys,
+		maccs:         maccs,
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
 		stakingKeeper: stakingKeeper,

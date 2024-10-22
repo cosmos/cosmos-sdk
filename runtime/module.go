@@ -164,8 +164,9 @@ type AppInputs struct {
 	AppOptions        servertypes.AppOptions `optional:"true"` // can be nil in client wiring
 }
 
-func ProvideModuleAccountsService() moduleaccounts.Service {
-	return NewModuleAccountsService()
+func ProvideModuleAccountsService() (moduleaccounts.Service, moduleaccounts.ServiceWithPerms) {
+	svc := NewModuleAccountsService()
+	return svc, svc
 }
 
 func SetupModuleAccountsService(

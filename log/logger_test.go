@@ -7,26 +7,9 @@ import (
 	"testing"
 
 	"github.com/rs/zerolog"
-	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/log"
 )
-
-func TestLoggerOptionStackTrace(t *testing.T) {
-	buf := new(bytes.Buffer)
-	logger := log.NewLogger(buf, log.TraceOption(true), log.ColorOption(false))
-	logger.Error("this log should be displayed", "error", inner())
-	if strings.Count(buf.String(), "logger_test.go") != 1 {
-		t.Fatalf("stack trace not found, got: %s", buf.String())
-	}
-	buf.Reset()
-
-	logger = log.NewLogger(buf, log.TraceOption(false), log.ColorOption(false))
-	logger.Error("this log should be displayed", "error", inner())
-	if strings.Count(buf.String(), "logger_test.go") > 0 {
-		t.Fatalf("stack trace found, got: %s", buf.String())
-	}
-}
 
 func inner() error {
 	return errors.New("seems we have an error here")
@@ -46,11 +29,33 @@ func TestLoggerOptionHooks(t *testing.T) {
 	)
 	logger := log.NewLogger(buf, log.HooksOption(mockHook1, mockHook2), log.ColorOption(false))
 	logger.Info("hello world")
-	assert.Assert(t, strings.Contains(buf.String(), "mock_message1=true"))
-	assert.Assert(t, strings.Contains(buf.String(), "mock_message2=true"))
+	if !strings.Contains(buf.String(), "mock_message1=true") {
+		t.Fatalf("expected mock_message1=true, got: %s", buf.String())
+	}
+	if !strings.Contains(buf.String(), "mock_message2=true") {
+		t.Fatalf("expected mock_message2=true, got: %s", buf.String())
+	}
 
 	buf.Reset()
 	logger = log.NewLogger(buf, log.HooksOption(), log.ColorOption(false))
 	logger.Info("hello world")
-	assert.Assert(t, strings.Contains(buf.String(), "hello world"))
+	if !strings.Contains(buf.String(), "hello world") {
+		t.Fatalf("expected hello world, got: %s", buf.String())
+	}
+}
+
+func TestLoggerOptionStackTrace(t *testing.T) {
+	buf := new(bytes.Buffer)
+	logger := log.NewLogger(buf, log.TraceOption(true), log.ColorOption(false))
+	logger.Error("this log should be displayed", "error", inner())
+	if strings.Count(buf.String(), "logger_test.go") != 1 {
+		t.Fatalf("stack trace not found, got: %s", buf.String())
+	}
+	buf.Reset()
+
+	logger = log.NewLogger(buf, log.TraceOption(false), log.ColorOption(false))
+	logger.Error("this log should be displayed", "error", inner())
+	if strings.Count(buf.String(), "logger_test.go") > 0 {
+		t.Fatalf("stack trace found, got: %s", buf.String())
+	}
 }

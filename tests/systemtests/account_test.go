@@ -109,7 +109,7 @@ func TestAccountsMigration(t *testing.T) {
 
 	// 3. Now the account should be existed, query the account Sequence
 	rsp = cli.CustomQuery("q", "accounts", "query", legacyAddress, "cosmos.accounts.defaults.base.v1.QuerySequence", "{}")
-	sequence := gjson.Get(rsp, "sequence").Exists()
+	sequence := gjson.Get(rsp, "response.sequence").Exists()
 	require.True(t, sequence, "Sequence field should exist")
 
 	// 4. Execute a transaction using the bank module

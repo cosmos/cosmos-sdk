@@ -377,7 +377,7 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 
 	// signal to the pruning manager that a new version is about to be committed
 	// this may be required if the SS and SC backends implementation have the
-	// background pruning process which must be paused during the commit
+	// background pruning process (iavl v1 for example) which must be paused during the commit
 	if err := s.pruningManager.SignalCommit(true, version); err != nil {
 		s.logger.Error("failed to signal commit to pruning manager", "err", err)
 	}

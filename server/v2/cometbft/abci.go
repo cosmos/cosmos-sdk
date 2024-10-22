@@ -318,7 +318,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	bz := sha256.Sum256([]byte{})
 
 	br := &server.BlockRequest[T]{
-		Height:    uint64(req.InitialHeight - 1),
+		Height:    uint64(req.InitialHeight),
 		Time:      req.Time,
 		Hash:      bz[:],
 		AppHash:   ci.Hash,
@@ -326,7 +326,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		IsGenesis: true,
 	}
 
-	blockresponse, genesisState, err := c.app.InitGenesis(
+	blockResponse, genesisState, err := c.app.InitGenesis(
 		ctx,
 		br,
 		req.AppStateBytes,
@@ -335,14 +335,14 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		return nil, fmt.Errorf("genesis state init failure: %w", err)
 	}
 
-	for _, txRes := range blockresponse.TxResults {
+	for _, txRes := range blockResponse.TxResults {
 		if err := txRes.Error; err != nil {
-			space, code, log := errorsmod.ABCIInfo(err, c.cfg.AppTomlConfig.Trace)
-			c.logger.Warn("genesis tx failed", "codespace", space, "code", code, "log", log)
+			space, code, txLog := errorsmod.ABCIInfo(err, c.cfg.AppTomlConfig.Trace)
+			c.logger.Warn("genesis tx failed", "codespace", space, "code", code, "log", txLog)
 		}
 	}
 
-	validatorUpdates := intoABCIValidatorUpdates(blockresponse.ValidatorUpdates)
+	validatorUpdates := intoABCIValidatorUpdates(blockResponse.ValidatorUpdates)
 
 	// set the initial version of the store
 	if err := c.store.SetInitialVersion(uint64(req.InitialHeight)); err != nil {
@@ -356,7 +356,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	cs := &store.Changeset{
 		Changes: stateChanges,
 	}
-	stateRoot, err := c.store.WorkingHash(cs)
+	stateRoot, err := c.store.Commit(cs)
 	if err != nil {
 		return nil, fmt.Errorf("unable to write the changeset: %w", err)
 	}

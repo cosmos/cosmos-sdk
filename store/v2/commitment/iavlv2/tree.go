@@ -1,11 +1,13 @@
 package iavlv2
 
 import (
-	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/commitment"
 	"fmt"
+
 	"github.com/cosmos/iavl/v2"
 	ics23 "github.com/cosmos/ics23/go"
+
+	"cosmossdk.io/store/v2"
+	"cosmossdk.io/store/v2/commitment"
 )
 
 var (
@@ -14,7 +16,8 @@ var (
 )
 
 type Tree struct {
-	tree *iavl.Tree
+	tree    *iavl.Tree
+	saveErr error
 }
 
 func NewTree(treeOptions iavl.TreeOptions, dbOptions iavl.SqliteDbOptions, pool *iavl.NodePool) (*Tree, error) {
@@ -45,7 +48,10 @@ func (t Tree) Hash() []byte {
 }
 
 func (t Tree) WorkingHash() []byte {
-	return t.tree.Hash()
+	// iavl v2 and store/v2 have different working hash semantics so we must commit here
+	var hash []byte
+	hash, _, t.saveErr = t.tree.SaveVersion()
+	return hash
 }
 
 func (t Tree) LoadVersion(version uint64) error {
@@ -53,12 +59,11 @@ func (t Tree) LoadVersion(version uint64) error {
 	if version == 0 {
 		return nil
 	}
-	return t.tree.LoadVersion(int64(version + 1))
+	return t.tree.LoadVersion(int64(version))
 }
 
 func (t Tree) Commit() ([]byte, uint64, error) {
-	h, v, err := t.tree.SaveVersion()
-	return h, uint64(v), err
+	return t.tree.Hash(), uint64(t.tree.Version()), t.saveErr
 }
 
 func (t Tree) SetInitialVersion(version uint64) error {

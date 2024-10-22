@@ -152,7 +152,9 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, storeOpts.IavlConfig), nil
 			case SCTypeIavlV2:
 				treeOpts := libiavlv2.DefaultTreeOptions()
-				treeOpts.StateStorage = false
+				treeOpts.StateStorage = true
+				treeOpts.EvictionDepth = 20
+				treeOpts.HeightFilter = 0
 				dbOptions := libiavlv2.SqliteDbOptions{
 					Path: fmt.Sprintf("%s/data/sc/iavl-v2/%s", opts.RootDir, key),
 				}

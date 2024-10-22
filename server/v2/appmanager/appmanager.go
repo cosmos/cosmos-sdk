@@ -67,7 +67,7 @@ func (a AppManager[T]) InitGenesis(
 		return blockResponse, nil, fmt.Errorf("failed to deliver block %d: %w", blockRequest.Height, err)
 	}
 
-	// after executing block 0, we extract the changes and apply them to the genesis state.
+	// after executing the genesis block, we extract the changes and apply them to the genesis state.
 	stateChanges, err := blockZeroState.GetStateChanges()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get block zero state changes: %w", err)

@@ -1,4 +1,4 @@
-package broadcast
+package comet
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/client/v2/broadcast/types"
 	"github.com/cometbft/cometbft/mempool"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
@@ -16,6 +17,18 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
+
+const (
+	// BroadcastSync defines a tx broadcasting mode where the client waits for
+	// a CheckTx execution response only.
+	BroadcastSync = "sync"
+	// BroadcastAsync defines a tx broadcasting mode where the client returns
+	// immediately.
+	BroadcastAsync = "async"
+
+	// cometBftConsensus is the identifier for the CometBFT consensus engine.
+	cometBFTConsensus = "comet"
 )
 
 // CometRPC defines the interface of a CometBFT RPC client needed for
@@ -46,7 +59,7 @@ type CometRPC interface {
 	) (*coretypes.ResultBlockSearch, error)
 }
 
-var _ Broadcaster = CometBFTBroadcaster{}
+var _ types.Broadcaster = CometBFTBroadcaster{}
 
 // CometBFTBroadcaster implements the Broadcaster interface for CometBFT consensus engine.
 type CometBFTBroadcaster struct {
@@ -55,8 +68,8 @@ type CometBFTBroadcaster struct {
 	cdc       codec.JSONCodec
 }
 
-func withMode(mode string) func(broadcaster Broadcaster) {
-	return func(b Broadcaster) {
+func WithMode(mode string) func(broadcaster types.Broadcaster) {
+	return func(b types.Broadcaster) {
 		cbc, ok := b.(*CometBFTBroadcaster)
 		if !ok {
 			return
@@ -65,8 +78,8 @@ func withMode(mode string) func(broadcaster Broadcaster) {
 	}
 }
 
-func withJsonCodec(codec codec.JSONCodec) func(broadcaster Broadcaster) {
-	return func(b Broadcaster) {
+func WithJsonCodec(codec codec.JSONCodec) func(broadcaster types.Broadcaster) {
+	return func(b types.Broadcaster) {
 		cbc, ok := b.(*CometBFTBroadcaster)
 		if !ok {
 			return
@@ -76,7 +89,7 @@ func withJsonCodec(codec codec.JSONCodec) func(broadcaster Broadcaster) {
 }
 
 // NewCometBFTBroadcaster creates a new CometBftBroadcaster.
-func NewCometBFTBroadcaster(rpcURL string, opts ...Option) (*CometBFTBroadcaster, error) {
+func NewCometBFTBroadcaster(rpcURL string, opts ...types.Option) (*CometBFTBroadcaster, error) {
 	rpcClient, err := rpchttp.New(rpcURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create CometBft RPC client: %w", err)

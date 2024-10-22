@@ -5,6 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/client/v2/broadcast/types"
+	"cosmossdk.io/client/v2/internal/comet"
 )
 
 type testBFT struct{}
@@ -22,17 +25,17 @@ func Test_newBroadcaster(t *testing.T) {
 	tests := []struct {
 		name      string
 		consensus string
-		opts      []Option
-		want      Broadcaster
+		opts      []types.Option
+		want      types.Broadcaster
 		wantErr   bool
 	}{
 		{
 			name:      "comet",
 			consensus: "comet",
-			opts: []Option{
-				withMode(BroadcastSync),
+			opts: []types.Option{
+				comet.WithMode(comet.BroadcastSync),
 			},
-			want: &CometBFTBroadcaster{},
+			want: &comet.CometBFTBroadcaster{},
 		},
 		{
 			name:      "unsupported_consensus",
@@ -58,12 +61,12 @@ func TestFactory_Register(t *testing.T) {
 	tests := []struct {
 		name      string
 		consensus string
-		creator   NewBroadcasterFn
+		creator   types.NewBroadcasterFn
 	}{
 		{
 			name:      "register new broadcaster",
 			consensus: "testBFT",
-			creator: func(url string, opts ...Option) (Broadcaster, error) {
+			creator: func(url string, opts ...types.Option) (types.Broadcaster, error) {
 				return testBFT{}, nil
 			},
 		},

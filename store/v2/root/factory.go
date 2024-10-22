@@ -13,7 +13,9 @@ import (
 	"cosmossdk.io/store/v2/commitment/mem"
 	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/internal"
+	"cosmossdk.io/store/v2/migration"
 	"cosmossdk.io/store/v2/pruning"
+	"cosmossdk.io/store/v2/snapshots"
 	"cosmossdk.io/store/v2/storage"
 	"cosmossdk.io/store/v2/storage/pebbledb"
 	"cosmossdk.io/store/v2/storage/rocksdb"
@@ -139,11 +141,11 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		return nil, err
 	}
 
-	newTreeFn := func(key string) (commitment.Tree, error) {
+	newTreeFn := func(key string, scType SCType) (commitment.Tree, error) {
 		if internal.IsMemoryStoreKey(key) {
 			return mem.New(), nil
 		} else {
-			switch storeOpts.SCType {
+			switch scType {
 			case SCTypeIavl:
 				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, storeOpts.IavlConfig), nil
 			case SCTypeIavlV2:
@@ -154,9 +156,23 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		}
 	}
 
+	// check if we need to migrate the store
+	isMigrating := false
+	scType := storeOpts.SCType
+	ssLatestVersion, err := ss.GetLatestVersion()
+	if err != nil {
+		return nil, err
+	}
+	if ssLatestVersion != latestVersion {
+		isMigrating = true // need to migrate
+		if scType != SCTypeIavl {
+			scType = SCTypeIavl // only support iavl v1 for migration
+		}
+	}
+
 	trees := make(map[string]commitment.Tree, len(opts.StoreKeys))
 	for _, key := range opts.StoreKeys {
-		tree, err := newTreeFn(key)
+		tree, err := newTreeFn(key, scType)
 		if err != nil {
 			return nil, err
 		}
@@ -164,7 +180,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	}
 	oldTrees := make(map[string]commitment.Tree, len(opts.StoreKeys))
 	for _, key := range removedStoreKeys {
-		tree, err := newTreeFn(string(key))
+		tree, err := newTreeFn(string(key), scType)
 		if err != nil {
 			return nil, err
 		}
@@ -176,6 +192,31 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		return nil, err
 	}
 
+	var mm *migration.Manager
+	if isMigrating {
+		snapshotDB, err := snapshots.NewStore(fmt.Sprintf("%s/data/snapshots/store.db", opts.RootDir))
+		if err != nil {
+			return nil, err
+		}
+		snapshotMgr := snapshots.NewManager(snapshotDB, snapshots.SnapshotOptions{}, sc, nil, nil, opts.Logger)
+		var newSC *commitment.CommitStore
+		if scType != storeOpts.SCType {
+			newTrees := make(map[string]commitment.Tree, len(opts.StoreKeys))
+			for _, key := range opts.StoreKeys {
+				tree, err := newTreeFn(key, storeOpts.SCType)
+				if err != nil {
+					return nil, err
+				}
+				newTrees[key] = tree
+			}
+			newSC, err = commitment.NewCommitStore(newTrees, nil, opts.SCRawDB, opts.Logger)
+			if err != nil {
+				return nil, err
+			}
+			mm = migration.NewManager(opts.SCRawDB, snapshotMgr, ss, newSC, opts.Logger)
+		}
+	}
+
 	pm := pruning.NewManager(sc, ss, storeOpts.SCPruningOption, storeOpts.SSPruningOption)
-	return New(opts.SCRawDB, opts.Logger, ss, sc, pm, nil, nil)
+	return New(opts.SCRawDB, opts.Logger, ss, sc, pm, mm, nil)
 }

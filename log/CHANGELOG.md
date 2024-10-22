@@ -22,6 +22,10 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
+### Improvements
+
+* [#22233](https://github.com/cosmos/cosmos-sdk/pull/22233) Use sonic json library for faster json handling
+
 ## [v1.4.1](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.4.1) - 2024-08-16
 
 * [#21326](https://github.com/cosmos/cosmos-sdk/pull/21326) Avoid context key collision.

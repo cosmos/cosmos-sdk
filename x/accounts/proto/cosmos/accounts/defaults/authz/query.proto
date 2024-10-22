@@ -1,0 +1,36 @@
+syntax = "proto3";
+package cosmos.accounts.defaults.authz;
+
+import "cosmos_proto/cosmos.proto";
+import "cosmos/accounts/defaults/authz/authz.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+option go_package = "cosmossdk.io/x/accounts/defaults/authz/types";
+
+// QueryGrantsRequest defines request to query all grants of an account
+message QueryGrantsRequest {
+  // pagination defines an pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryGrantsResponse defines the response for the QueryGrantsRequest
+message QueryGrantsResponse {
+  repeated Grant grants = 1;
+  // pagination defines an pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryGranteeGrantsRequest defines request to query grantee's grants
+message QueryGranteeGrantsRequest {
+  // grantee address
+  string grantee = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // pagination defines an pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryGranteeGrantsResponse defines the response for the QueryGranteeGrantsRequest
+message QueryGranteeGrantsResponse {
+  repeated Grant grants = 1;
+  // pagination defines an pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

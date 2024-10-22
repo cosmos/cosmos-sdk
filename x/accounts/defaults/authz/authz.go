@@ -11,11 +11,14 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/defaults/authz/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 var (
@@ -256,6 +259,50 @@ func (a *Account) RevokeAll(ctx context.Context, msg *types.MsgRevokeAll) (*type
 	return &types.MsgRevokeAllResponse{}, err
 }
 
+func (a Account) QueryAllGrants(ctx context.Context, req *types.QueryGrantsRequest) (*types.QueryGrantsResponse, error) {
+	grants, pageResp, err := query.CollectionPaginate(
+		ctx,
+		a.Grantees,
+		req.Pagination,
+		func(key collections.Pair[[]byte, string], value types.Grant) (*types.Grant, error) {
+			return &value, nil
+		},
+	)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
+	}
+
+	return &types.QueryGrantsResponse{
+		Grants:     grants,
+		Pagination: pageResp,
+	}, nil
+}
+
+func (a Account) QueryGranteeGrants(ctx context.Context, req *types.QueryGranteeGrantsRequest) (*types.QueryGranteeGrantsResponse, error) {
+	granteeAddr, err := a.addressCodec.StringToBytes(req.Grantee)
+	if err != nil {
+		return nil, err
+	}
+
+	grants, pageResp, err := query.CollectionPaginate(
+		ctx,
+		a.Grantees,
+		req.Pagination,
+		func(key collections.Pair[[]byte, string], value types.Grant) (*types.Grant, error) {
+			return &value, nil
+		},
+		query.WithCollectionPaginationPairPrefix[[]byte, string](granteeAddr),
+	)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
+	}
+
+	return &types.QueryGranteeGrantsResponse{
+		Grants:     grants,
+		Pagination: pageResp,
+	}, nil
+}
+
 func validateMsgs(msgs []sdk.Msg) error {
 	for i, msg := range msgs {
 		m, ok := msg.(sdk.HasValidateBasic)
@@ -283,4 +330,6 @@ func (a Account) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 }
 
 func (a Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
+	accountstd.RegisterQueryHandler(builder, a.QueryAllGrants)
+	accountstd.RegisterQueryHandler(builder, a.QueryGranteeGrants)
 }

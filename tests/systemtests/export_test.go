@@ -13,9 +13,6 @@ import (
 )
 
 func TestExportCmd(t *testing.T) {
-	// scenario: test bank send command
-	// given a running chain
-
 	sut.ResetChain(t)
 	cli := NewCLIWrapper(t, sut, verbose)
 	exportFile := "foobar.json"
@@ -37,8 +34,6 @@ func TestExportCmd(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		
-		// fmt.Println(tc.name, res)
 		if tc.expErr {
 			assertOutput := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
 				require.Contains(t, gotOutputs[0], tc.errMsg)

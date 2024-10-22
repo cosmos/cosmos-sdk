@@ -1,8 +1,9 @@
 package sqlite
 
 import (
-	"database/sql"
 	"fmt"
+
+	"github.com/bvinc/go-sqlite-lite/sqlite3"
 
 	"cosmossdk.io/store/v2"
 )
@@ -23,24 +24,22 @@ type batchOp struct {
 }
 
 type Batch struct {
-	db      *sql.DB
-	tx      *sql.Tx
+	db      *sqlite3.Conn
 	ops     []batchOp
 	size    int
-	version uint64
+	version int64
 }
 
-func NewBatch(db *sql.DB, version uint64) (*Batch, error) {
-	tx, err := db.Begin()
+func NewBatch(db *sqlite3.Conn, version uint64) (*Batch, error) {
+	err := db.Begin()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create SQL transaction: %w", err)
 	}
 
 	return &Batch{
 		db:      db,
-		tx:      tx,
 		ops:     make([]batchOp, 0),
-		version: version,
+		version: int64(version),
 	}, nil
 }
 
@@ -53,12 +52,11 @@ func (b *Batch) Reset() error {
 	b.ops = make([]batchOp, 0)
 	b.size = 0
 
-	tx, err := b.db.Begin()
+	err := b.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	b.tx = tx
 	return nil
 }
 
@@ -75,7 +73,7 @@ func (b *Batch) Delete(storeKey, key []byte) error {
 }
 
 func (b *Batch) Write() error {
-	_, err := b.tx.Exec(reservedUpsertStmt, reservedStoreKey, keyLatestHeight, b.version, 0, b.version)
+	err := b.db.Exec(reservedUpsertStmt, reservedStoreKey, keyLatestHeight, b.version, 0, b.version)
 	if err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
@@ -83,20 +81,20 @@ func (b *Batch) Write() error {
 	for _, op := range b.ops {
 		switch op.action {
 		case batchActionSet:
-			_, err := b.tx.Exec(upsertStmt, op.storeKey, op.key, op.value, b.version, op.value)
+			err := b.db.Exec(upsertStmt, op.storeKey, op.key, op.value, b.version, op.value)
 			if err != nil {
 				return fmt.Errorf("failed to exec SQL statement: %w", err)
 			}
 
 		case batchActionDel:
-			_, err := b.tx.Exec(delStmt, b.version, op.storeKey, op.key, b.version)
+			err := b.db.Exec(delStmt, b.version, op.storeKey, op.key, b.version)
 			if err != nil {
 				return fmt.Errorf("failed to exec SQL statement: %w", err)
 			}
 		}
 	}
 
-	if err := b.tx.Commit(); err != nil {
+	if err := b.db.Commit(); err != nil {
 		return fmt.Errorf("failed to write SQL transaction: %w", err)
 	}
 

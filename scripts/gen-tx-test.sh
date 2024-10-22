@@ -11,6 +11,7 @@ init_config() {
     $SIMD_BIN config set client chain-id simapp-v2-chain
     $SIMD_BIN config set client keyring-backend test
     $SIMD_BIN config set client keyring-default-keyname alice
+    sed -i '' "s/sc-type = 'iavl'/sc-type = 'iavl-v2'/" $SIMD_HOME/config/app.toml
 }
 
 gen_alias() {
@@ -61,7 +62,6 @@ case $1 in
     all)
         init_config
         gen_alias
-        $SIMD_BIN genesis generate-send-txs > $SIMD_HOME/load-txs.json
         add_genesis_accounts
         $SIMD_BIN genesis gentx alice 1000000stake --chain-id simapp-v2-chain
         $SIMD_BIN genesis collect-gentxs

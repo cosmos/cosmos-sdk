@@ -214,11 +214,12 @@ func GenerateSendTransactions() *cobra.Command {
 			rnd := rand.New(rand.NewSource(seed))
 			for i := 0; i < int(numTx); i++ {
 				n := rnd.Intn(len(records))
-				if records[n].Name == "alice" {
+				record := records[n]
+				if record.Name == "alice" {
 					i--
 					continue
 				}
-				addr, err := records[n].GetAddress()
+				addr, err := record.GetAddress()
 				if err != nil {
 					return err
 				}
@@ -246,14 +247,21 @@ func GenerateSendTransactions() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				txf = txf.WithSequence(sequences[from])
+				accNum, _, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, addr)
+				if err != nil {
+					return err
+				}
+				txf = txf.
+					WithSequence(sequences[from]).
+					WithAccountNumber(accNum).
+					WithChainID(clientCtx.ChainID)
 				sequences[from]++
 				tx, err := txf.BuildUnsignedTx(sendMsg)
 				if err != nil {
 					return err
 				}
 
-				err = clienttx.Sign(clientCtx, txf, records[n].Name, tx, false)
+				err = clienttx.Sign(clientCtx, txf, record.Name, tx, false)
 				if err != nil {
 					return err
 				}

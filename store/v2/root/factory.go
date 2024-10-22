@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/commitment"
 	"cosmossdk.io/store/v2/commitment/iavl"
+	"cosmossdk.io/store/v2/commitment/iavlv2"
 	"cosmossdk.io/store/v2/commitment/mem"
 	"cosmossdk.io/store/v2/db"
 	"cosmossdk.io/store/v2/internal"
@@ -18,6 +19,8 @@ import (
 	"cosmossdk.io/store/v2/storage/pebbledb"
 	"cosmossdk.io/store/v2/storage/rocksdb"
 	"cosmossdk.io/store/v2/storage/sqlite"
+
+	libiavlv2 "github.com/cosmos/iavl/v2"
 )
 
 type (
@@ -139,6 +142,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		return nil, err
 	}
 
+	nodePool := libiavlv2.NewNodePool()
 	newTreeFn := func(key string) (commitment.Tree, error) {
 		if internal.IsMemoryStoreKey(key) {
 			return mem.New(), nil
@@ -147,7 +151,12 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 			case SCTypeIavl:
 				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, storeOpts.IavlConfig), nil
 			case SCTypeIavlV2:
-				return nil, errors.New("iavl v2 not supported")
+				treeOpts := libiavlv2.DefaultTreeOptions()
+				treeOpts.StateStorage = false
+				dbOptions := libiavlv2.SqliteDbOptions{
+					Path: fmt.Sprintf("%s/data/sc/iavl-v2/%s", opts.RootDir, key),
+				}
+				return iavlv2.NewTree(treeOpts, dbOptions, nodePool)
 			default:
 				return nil, errors.New("unsupported commitment store type")
 			}

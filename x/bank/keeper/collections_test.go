@@ -43,12 +43,15 @@ func TestBankStateCompatibility(t *testing.T) {
 	authority, err := ac.BytesToString(authtypes.NewModuleAddress(banktypes.GovModuleName))
 	require.NoError(t, err)
 
+	modaccs := runtime.NewModuleAccountsService(testModuleAccounts...)
+
 	k := keeper.NewBaseKeeper(
 		env,
 		encCfg.Codec,
 		authKeeper,
 		map[string]bool{addr: true},
 		authority,
+		modaccs,
 	)
 
 	// test we can decode balances without problems

@@ -121,11 +121,6 @@ func (k BaseKeeper) WithMintCoinsRestriction(check types.MintingRestrictionFn) B
 // address to a ModuleAccount address. If any of the delegation amounts are negative,
 // an error is returned.
 func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error {
-	moduleAcc := k.ak.GetAccount(ctx, moduleAccAddr)
-	if moduleAcc == nil {
-		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccAddr)
-	}
-
 	if !amt.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
@@ -172,11 +167,6 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 // address to the delegator address. If any of the undelegation amounts are
 // negative, an error is returned.
 func (k BaseKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error {
-	moduleAcc := k.ak.GetAccount(ctx, moduleAccAddr)
-	if moduleAcc == nil {
-		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleAccAddr)
-	}
-
 	if !amt.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
@@ -334,8 +324,11 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 	}
 
 	moduleAddr := k.moduleAccountsService.Address(moduleName)
+	if moduleAddr == nil {
+		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName)
+	}
 
-	if !k.moduleAccountsService.HasPermission(moduleName, "mint") {
+	if !k.moduleAccountsService.HasPermission(moduleName, "minter") {
 		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName)
 	}
 
@@ -372,14 +365,9 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 // BurnCoins burns coins deletes coins from the balance of an account.
 // An error is returned if the module account does not exist or is unauthorized.
 func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.Coins) error {
-	acc := k.ak.GetAccount(ctx, address)
-	if acc == nil {
-		return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %x does not exist", address)
-	}
-
 	moduleName := k.moduleAccountsService.IsModuleAccount(address)
 	if moduleName != "" {
-		if !k.moduleAccountsService.HasPermission(moduleName, "burn") {
+		if !k.moduleAccountsService.HasPermission(moduleName, "burner") {
 			return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account %x does not have permissions to burn tokens", address)
 		}
 	}
@@ -388,7 +376,7 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amounts.String())
 	}
 
-	err := k.subUnlockedCoins(ctx, acc.GetAddress(), amounts)
+	err := k.subUnlockedCoins(ctx, address, amounts)
 	if err != nil {
 		return err
 	}
@@ -399,7 +387,7 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.C
 		k.setSupply(ctx, supply)
 	}
 
-	addrStr, err := k.addrCdc.BytesToString(acc.GetAddress())
+	addrStr, err := k.addrCdc.BytesToString(address)
 	if err != nil {
 		return err
 	}

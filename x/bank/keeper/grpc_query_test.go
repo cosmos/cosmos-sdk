@@ -296,7 +296,6 @@ func (suite *KeeperTestSuite) TestQueryTotalSupply() {
 	genesisSupply := res.Supply
 	testCoins := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
 
-	suite.mockMintCoins(mintAcc)
 	suite.Require().NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, testCoins))
 
 	res, err = queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
@@ -315,7 +314,6 @@ func (suite *KeeperTestSuite) TestQueryTotalSupplyOf() {
 	test2Supply := sdk.NewInt64Coin("test2", 700000000)
 	expectedTotalSupply := sdk.NewCoins(test1Supply, test2Supply)
 
-	suite.mockMintCoins(mintAcc)
 	suite.Require().NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, expectedTotalSupply))
 
 	_, err := queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{})
@@ -695,7 +693,6 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 
 	keeper := suite.bankKeeper
 
-	suite.mockMintCoins(mintAcc)
 	suite.Require().NoError(keeper.MintCoins(ctx, types.MintModuleName, initCoins))
 
 	for i := 0; i < 10; i++ {
@@ -916,11 +913,9 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwnersByQuery() {
 
 	keeper := suite.bankKeeper
 
-	suite.mockMintCoins(mintAcc)
 	suite.Require().NoError(keeper.MintCoins(ctx, types.MintModuleName, initCoins))
 	denom := "ibc/123123213123"
 	newCoins := sdk.NewCoins(sdk.NewCoin(denom, initTokens))
-	suite.mockMintCoins(mintAcc)
 	suite.Require().NoError(keeper.MintCoins(ctx, types.MintModuleName, newCoins))
 
 	for i := 0; i < 10; i++ {

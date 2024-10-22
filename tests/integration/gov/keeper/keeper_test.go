@@ -79,6 +79,16 @@ func initFixture(tb testing.TB) *fixture {
 		types.ModuleName:                   {authtypes.Burner},
 	}
 
+	maccs := runtime.NewModuleAccountsService(
+		runtime.NewModuleAccount(pooltypes.ModuleName),
+		runtime.NewModuleAccount(pooltypes.StreamAccount),
+		runtime.NewModuleAccount(pooltypes.ProtocolPoolDistrAccount),
+		runtime.NewModuleAccount(minttypes.ModuleName, authtypes.Minter),
+		runtime.NewModuleAccount(stakingtypes.BondedPoolName, authtypes.Burner, authtypes.Staking),
+		runtime.NewModuleAccount(stakingtypes.NotBondedPoolName, authtypes.Burner, authtypes.Staking),
+		runtime.NewModuleAccount(types.ModuleName, authtypes.Burner),
+	)
+
 	// gomock initializations
 	ctrl := gomock.NewController(tb)
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
@@ -109,6 +119,7 @@ func initFixture(tb testing.TB) *fixture {
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
+		maccs,
 	)
 
 	assert.NilError(tb, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
@@ -117,9 +128,9 @@ func initFixture(tb testing.TB) *fixture {
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	consensusParamsKeeper := consensusparamkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(router)), authtypes.NewModuleAddress("gov").String())
 
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, consensusParamsKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
+	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), bankKeeper, consensusParamsKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService(), maccs)
 
-	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[pooltypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, stakingKeeper, authority.String())
+	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[pooltypes.StoreKey]), log.NewNopLogger()), bankKeeper, stakingKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr), maccs)
 
 	// set default staking params
 	err := stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams())
@@ -133,12 +144,13 @@ func initFixture(tb testing.TB) *fixture {
 	govKeeper := keeper.NewKeeper(
 		cdc,
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[types.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(router)),
-		accountKeeper,
+		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		bankKeeper,
 		stakingKeeper,
 		poolKeeper,
 		keeper.DefaultConfig(),
 		authority.String(),
+		maccs,
 	)
 	assert.NilError(tb, govKeeper.ProposalID.Set(newCtx, 1))
 	govRouter := v1beta1.NewRouter()
@@ -150,7 +162,7 @@ func initFixture(tb testing.TB) *fixture {
 	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper)
-	govModule := gov.NewAppModule(cdc, govKeeper, accountKeeper, bankKeeper, poolKeeper)
+	govModule := gov.NewAppModule(cdc, govKeeper, addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr), bankKeeper, poolKeeper, maccs)
 	consensusModule := consensus.NewAppModule(cdc, consensusParamsKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,

@@ -83,6 +83,10 @@ func TestFundsMigration(t *testing.T) {
 		pooltypes.ModuleName: nil,
 		disttypes.ModuleName: {authtypes.Minter},
 	}
+	maccs := runtime.NewModuleAccountsService(
+		runtime.NewModuleAccount(pooltypes.ModuleName),
+		runtime.NewModuleAccount(disttypes.ModuleName, authtypes.Minter),
+	)
 
 	authority, err := addressCodec.BytesToString(authtypes.NewModuleAddress("gov"))
 	require.NoError(t, err)
@@ -118,16 +122,18 @@ func TestFundsMigration(t *testing.T) {
 		accountKeeper,
 		map[string]bool{},
 		authority,
+		maccs,
 	)
 
 	// create distribution keeper
 	distrKeeper := keeper.NewKeeper(
 		encCfg.Codec,
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[disttypes.StoreKey]), log.NewNopLogger()),
-		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
 		&emptyCometService{},
+		addressCodec,
+		maccs,
 		disttypes.ModuleName,
 		authority,
 	)
@@ -140,18 +146,13 @@ func TestFundsMigration(t *testing.T) {
 	err = distrKeeper.FeePool.Set(ctx, feepool)
 	require.NoError(t, err)
 
-	distrAcc := authtypes.NewEmptyModuleAccount(disttypes.ModuleName)
-
 	// mint coins in distribution module account
 	distrModBal := sdk.NewCoins(sdk.NewInt64Coin("test", 10000000))
-	err = bankKeeper.MintCoins(ctx, distrAcc.GetName(), distrModBal)
+	err = bankKeeper.MintCoins(ctx, disttypes.ModuleName, distrModBal)
 	require.NoError(t, err)
 
-	// Set pool module account
-	poolAcc := authtypes.NewEmptyModuleAccount(pooltypes.ModuleName)
-
 	// migrate feepool funds from distribution module account to pool module account
-	_, err = v4.MigrateFunds(ctx, bankKeeper, feepool, distrAcc, poolAcc)
+	_, err = v4.MigrateFunds(ctx, bankKeeper, feepool, maccs, disttypes.ModuleName, pooltypes.ModuleName)
 	require.NoError(t, err)
 
 	// set distribution feepool as empty (since migration)
@@ -159,10 +160,10 @@ func TestFundsMigration(t *testing.T) {
 	require.NoError(t, err)
 
 	// check pool module account balance equals pool amount
-	poolMAccBal := bankKeeper.GetAllBalances(ctx, poolAcc.GetAddress())
+	poolMAccBal := bankKeeper.GetAllBalances(ctx, maccs.Address(pooltypes.ModuleName))
 	require.Equal(t, poolMAccBal, sdk.Coins{poolAmount})
 
-	distrAccBal := bankKeeper.GetAllBalances(ctx, distrAcc.GetAddress())
+	distrAccBal := bankKeeper.GetAllBalances(ctx, maccs.Address(disttypes.ModuleName))
 	// check distribution module account balance is not same after migration
 	require.NotEqual(t, distrModBal, distrAccBal)
 	// check distribution module account balance is same as (current distrAccBal+poolAmount)

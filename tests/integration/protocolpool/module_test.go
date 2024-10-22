@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
-	"cosmossdk.io/x/mint/types"
 	protocolpoolkeeper "cosmossdk.io/x/protocolpool/keeper"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
@@ -20,7 +19,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // TestWithdrawAnytime tests if withdrawing funds many times vs withdrawing funds once
@@ -39,8 +37,6 @@ func TestWithdrawAnytime(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := app.BaseApp.NewContext(false).WithBlockHeight(1).WithHeaderInfo(header.Info{Height: 1})
-	acc := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
-	require.NotNil(t, acc)
 
 	testAddrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 5, math.NewInt(1))
 	testAddr0Str, err := accountKeeper.AddressCodec().BytesToString(testAddrs[0])
@@ -100,8 +96,6 @@ func TestExpireInTheMiddle(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := app.BaseApp.NewContext(false).WithBlockHeight(1).WithHeaderInfo(header.Info{Height: 1})
-	acc := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
-	require.NotNil(t, acc)
 
 	testAddrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 5, math.NewInt(1))
 	testAddr0Str, err := accountKeeper.AddressCodec().BytesToString(testAddrs[0])

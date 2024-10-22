@@ -106,12 +106,16 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	blockedAddresses := map[string]bool{
 		accountKeeper.GetAuthority(): false,
 	}
+	maccs := runtime.NewModuleAccountsService(
+		runtime.NewModuleAccount(minttypes.ModuleName, authtypes.Minter),
+	)
 	bankKeeper := keeper.NewBaseKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		cdc,
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),
+		maccs,
 	)
 
 	assert.NilError(t, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))

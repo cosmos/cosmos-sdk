@@ -100,6 +100,14 @@ func NewCometBFTBroadcaster(rpcURL string, opts ...broadcasttypes.Option) (*Come
 		opt(bc)
 	}
 
+	if bc.cdc == nil {
+		return nil, fmt.Errorf("missing codec, make sure to initialize with 'WithJsonCodec' option")
+	}
+
+	if bc.mode == "" {
+		bc.mode = BroadcastSync
+	}
+
 	bc.rpcClient = *rpcClient
 	return bc, nil
 }
@@ -111,6 +119,10 @@ func (c CometBFTBroadcaster) Consensus() string {
 // Broadcast sends a transaction to the network and returns the result.
 // returns a byte slice containing the JSON-encoded result and an error if the broadcast failed.
 func (c CometBFTBroadcaster) Broadcast(ctx context.Context, txBytes []byte) ([]byte, error) {
+	if c.cdc == nil {
+		return []byte{}, fmt.Errorf("JSON codec is not initialized")
+	}
+
 	var fn func(ctx context.Context, tx cmttypes.Tx) (*coretypes.ResultBroadcastTx, error)
 	switch c.mode {
 	case BroadcastSync:

@@ -8,6 +8,8 @@ import (
 
 	"cosmossdk.io/client/v2/broadcast/types"
 	"cosmossdk.io/client/v2/internal/comet"
+
+	"github.com/cosmos/cosmos-sdk/codec/testutil"
 )
 
 type testBFT struct{}
@@ -33,7 +35,7 @@ func Test_newBroadcaster(t *testing.T) {
 			name:      "comet",
 			consensus: "comet",
 			opts: []types.Option{
-				comet.WithMode(comet.BroadcastSync),
+				comet.WithJsonCodec(testutil.CodecOptions{}.NewCodec()),
 			},
 			want: &comet.CometBFTBroadcaster{},
 		},

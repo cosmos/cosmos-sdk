@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/client/v2/internal/comet"
 )
 
-var _ types.BroadcasterFactory = Factory{}
+var _ types.BroadcasterFactory = &Factory{}
 
 // Factory is a factory for creating Broadcaster instances.
 type Factory struct {
@@ -16,7 +16,7 @@ type Factory struct {
 }
 
 // Create creates a new Broadcaster based on the given consensus type.
-func (f Factory) Create(_ context.Context, consensus, url string, opts ...types.Option) (types.Broadcaster, error) {
+func (f *Factory) Create(_ context.Context, consensus, url string, opts ...types.Option) (types.Broadcaster, error) {
 	creator, ok := f.engines[consensus]
 	if !ok {
 		return nil, fmt.Errorf("invalid consensus type: %s", consensus)
@@ -25,7 +25,7 @@ func (f Factory) Create(_ context.Context, consensus, url string, opts ...types.
 }
 
 // Register adds a new BroadcasterCreator for a given consensus type to the factory.
-func (f Factory) Register(consensus string, creator types.NewBroadcasterFn) {
+func (f *Factory) Register(consensus string, creator types.NewBroadcasterFn) {
 	f.engines[consensus] = creator
 }
 

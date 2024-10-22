@@ -37,16 +37,28 @@ func TestNewCometBftBroadcaster(t *testing.T) {
 				cdc:  cdc,
 			},
 		},
+		{
+			name: "missing codec",
+			opts: []broadcasttypes.Option{
+				WithMode(BroadcastSync),
+			},
+			want: &CometBFTBroadcaster{
+				mode: BroadcastSync,
+				cdc:  cdc,
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := NewCometBFTBroadcaster("localhost:26657", tt.opts...)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NewCometBftBroadcaster() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if tt.wantErr {
+				require.Error(t, err)
+				require.Nil(t, got)
+			} else {
+				require.Equal(t, got.mode, tt.want.mode)
+				require.Equal(t, got.cdc, tt.want.cdc)
 			}
-			require.Equal(t, got.mode, tt.want.mode)
-			require.Equal(t, got.cdc, tt.want.cdc)
 		})
 	}
 }

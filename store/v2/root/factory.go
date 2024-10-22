@@ -213,8 +213,8 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 			if err != nil {
 				return nil, err
 			}
-			mm = migration.NewManager(opts.SCRawDB, snapshotMgr, ss, newSC, opts.Logger)
 		}
+		mm = migration.NewManager(opts.SCRawDB, snapshotMgr, ss, newSC, opts.Logger)
 	}
 
 	pm := pruning.NewManager(sc, ss, storeOpts.SCPruningOption, storeOpts.SSPruningOption)

@@ -57,18 +57,12 @@ func TestAccountsMigration(t *testing.T) {
 	sut.ResetChain(t)
 	cli := NewCLIWrapper(t, sut, verbose)
 
-	// Create legacy-account with some tokens
-	legacyName := "legacy-account"
-	legacyAddress := cli.AddKey(legacyName)
-	require.NotEmpty(t, legacyAddress)
-
+	legacyAddress := cli.GetKeyAddr(defaultSrcAddr)
 	// Create a receiver account
 	receiverName := "receiver-account"
 	receiverAddress := cli.AddKey(receiverName)
 	require.NotEmpty(t, receiverAddress)
-
 	sut.ModifyGenesisCLI(t,
-		[]string{"genesis", "add-genesis-account", legacyAddress, "20000000stake"},
 		[]string{"genesis", "add-genesis-account", receiverAddress, "1000000stake"},
 	)
 
@@ -117,7 +111,7 @@ func TestAccountsMigration(t *testing.T) {
 	// Check initial balances
 	legacyBalance := cli.QueryBalance(legacyAddress, "stake")
 	receiverBalance := cli.QueryBalance(receiverAddress, "stake")
-	require.Equal(t, int64(19999999), legacyBalance) // 20000000 - 1 (fee for migration)
+	require.Equal(t, int64(399999999), legacyBalance) // 20000000 - 1 (fee for migration)
 	require.Equal(t, int64(1000000), receiverBalance)
 
 	transferAmount := "1000000"
@@ -133,8 +127,8 @@ func TestAccountsMigration(t *testing.T) {
 	newLegacyBalance := cli.QueryBalance(legacyAddress, "stake")
 	newReceiverBalance := cli.QueryBalance(receiverAddress, "stake")
 
-	expectedLegacyBalance := int64(19999999 - 1000000 - 1) // Initial balance - transferred amount - fee
-	expectedReceiverBalance := int64(1000000 + 1000000)    // Initial balance + transferred amount
+	expectedLegacyBalance := legacyBalance - 1000000 - 1 // Initial balance - transferred amount - fee
+	expectedReceiverBalance := receiverBalance + 1000000 // Initial balance + transferred amount
 
 	require.Equal(t, expectedLegacyBalance, newLegacyBalance, "Legacy account balance is incorrect after transfer")
 	require.Equal(t, expectedReceiverBalance, newReceiverBalance, "Receiver account balance is incorrect after transfer")

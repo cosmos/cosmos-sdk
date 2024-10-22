@@ -11,7 +11,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	apiacbci "cosmossdk.io/api/cosmos/base/abci/v1beta1"
-	"cosmossdk.io/client/v2/broadcast/types"
+	broadcasttypes "cosmossdk.io/client/v2/broadcast/types"
 	mockrpc "cosmossdk.io/client/v2/internal/comet/testutil"
 
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -22,13 +22,13 @@ var cdc = testutil.CodecOptions{}.NewCodec()
 func TestNewCometBftBroadcaster(t *testing.T) {
 	tests := []struct {
 		name    string
-		opts    []types.Option
+		opts    []broadcasttypes.Option
 		want    *CometBFTBroadcaster
 		wantErr bool
 	}{
 		{
 			name: "constructor",
-			opts: []types.Option{
+			opts: []broadcasttypes.Option{
 				WithMode(BroadcastSync),
 				WithJsonCodec(cdc),
 			},

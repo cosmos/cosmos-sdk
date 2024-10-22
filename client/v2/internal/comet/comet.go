@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"cosmossdk.io/client/v2/broadcast/types"
 	"github.com/cometbft/cometbft/mempool"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
@@ -14,6 +13,7 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	apiacbci "cosmossdk.io/api/cosmos/base/abci/v1beta1"
+	broadcasttypes "cosmossdk.io/client/v2/broadcast/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -59,7 +59,7 @@ type CometRPC interface {
 	) (*coretypes.ResultBlockSearch, error)
 }
 
-var _ types.Broadcaster = CometBFTBroadcaster{}
+var _ broadcasttypes.Broadcaster = CometBFTBroadcaster{}
 
 // CometBFTBroadcaster implements the Broadcaster interface for CometBFT consensus engine.
 type CometBFTBroadcaster struct {
@@ -68,8 +68,8 @@ type CometBFTBroadcaster struct {
 	cdc       codec.JSONCodec
 }
 
-func WithMode(mode string) func(broadcaster types.Broadcaster) {
-	return func(b types.Broadcaster) {
+func WithMode(mode string) func(broadcaster broadcasttypes.Broadcaster) {
+	return func(b broadcasttypes.Broadcaster) {
 		cbc, ok := b.(*CometBFTBroadcaster)
 		if !ok {
 			return
@@ -78,8 +78,8 @@ func WithMode(mode string) func(broadcaster types.Broadcaster) {
 	}
 }
 
-func WithJsonCodec(codec codec.JSONCodec) func(broadcaster types.Broadcaster) {
-	return func(b types.Broadcaster) {
+func WithJsonCodec(codec codec.JSONCodec) func(broadcaster broadcasttypes.Broadcaster) {
+	return func(b broadcasttypes.Broadcaster) {
 		cbc, ok := b.(*CometBFTBroadcaster)
 		if !ok {
 			return
@@ -89,7 +89,7 @@ func WithJsonCodec(codec codec.JSONCodec) func(broadcaster types.Broadcaster) {
 }
 
 // NewCometBFTBroadcaster creates a new CometBftBroadcaster.
-func NewCometBFTBroadcaster(rpcURL string, opts ...types.Option) (*CometBFTBroadcaster, error) {
+func NewCometBFTBroadcaster(rpcURL string, opts ...broadcasttypes.Option) (*CometBFTBroadcaster, error) {
 	rpcClient, err := rpchttp.New(rpcURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create CometBft RPC client: %w", err)

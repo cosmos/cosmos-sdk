@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/gov v0.0.0-20231113122742-912390d5fc4a
-	cosmossdk.io/x/tx v0.13.4-0.20241003111526-30003f667944 // main
+	cosmossdk.io/x/tx v1.0.0-alpha.1 // main
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/spf13/cobra v1.8.1

@@ -133,3 +133,82 @@ func TestIavlTree(t *testing.T) {
 	// close the db
 	require.NoError(t, tree.Close())
 }
+
+func TestIavlTreeIterator(t *testing.T) {
+	// generate a new tree
+	tree := generateTree()
+	require.NotNil(t, tree)
+
+	// write a batch of version 1
+	require.NoError(t, tree.Set([]byte("key1"), []byte("value1")))
+	require.NoError(t, tree.Set([]byte("key2"), []byte("value2")))
+	require.NoError(t, tree.Set([]byte("key3"), []byte("value3")))
+
+	// commit the batch
+	_, _, err := tree.Commit()
+	require.NoError(t, err)
+
+	// write a batch of version 2
+	require.NoError(t, tree.Set([]byte("key4"), []byte("value4")))
+	require.NoError(t, tree.Set([]byte("key5"), []byte("value5")))
+	require.NoError(t, tree.Set([]byte("key6"), []byte("value6")))
+	require.NoError(t, tree.Remove([]byte("key1"))) // delete key1
+	_, _, err = tree.Commit()
+	require.NoError(t, err)
+
+	// write a batch of version 3
+	require.NoError(t, tree.Set([]byte("key7"), []byte("value7")))
+	require.NoError(t, tree.Set([]byte("key8"), []byte("value8")))
+	_, _, err = tree.Commit()
+	require.NoError(t, err)
+
+	// iterate over all keys
+	iter, err := tree.Iterator(3, nil, nil, true)
+	require.NoError(t, err)
+	// expect all keys to be iterated over
+	expectedKeys := []string{"key2", "key3", "key4", "key5", "key6", "key7", "key8"}
+	count := 0
+	for i := 0; iter.Valid(); i++ {
+		require.Equal(t, expectedKeys[i], string(iter.Key()))
+		iter.Next()
+		count++
+	}
+	require.Equal(t, len(expectedKeys), count)
+	require.NoError(t, iter.Close())
+
+	// iterate over all keys in reverse
+	iter, err = tree.Iterator(3, nil, nil, false)
+	require.NoError(t, err)
+	expectedKeys = []string{"key8", "key7", "key6", "key5", "key4", "key3", "key2"}
+	for i := 0; iter.Valid(); i++ {
+		require.Equal(t, expectedKeys[i], string(iter.Key()))
+		iter.Next()
+	}
+	require.NoError(t, iter.Close())
+
+	// iterate over keys with version 1
+	iter, err = tree.Iterator(1, nil, nil, true)
+	require.NoError(t, err)
+	expectedKeys = []string{"key1", "key2", "key3"}
+	count = 0
+	for i := 0; iter.Valid(); i++ {
+		require.Equal(t, expectedKeys[i], string(iter.Key()))
+		iter.Next()
+		count++
+	}
+	require.Equal(t, len(expectedKeys), count)
+	require.NoError(t, iter.Close())
+
+	// iterate over keys with version 2
+	iter, err = tree.Iterator(2, nil, nil, false)
+	require.NoError(t, err)
+	expectedKeys = []string{"key6", "key5", "key4", "key3", "key2"}
+	count = 0
+	for i := 0; iter.Valid(); i++ {
+		require.Equal(t, expectedKeys[i], string(iter.Key()))
+		iter.Next()
+		count++
+	}
+	require.Equal(t, len(expectedKeys), count)
+	require.NoError(t, iter.Close())
+}

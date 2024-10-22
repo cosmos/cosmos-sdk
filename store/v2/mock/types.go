@@ -10,9 +10,9 @@ type StateCommitter interface {
 	store.UpgradeableStore
 }
 
-// StateStorage is a mock of store.VersionedDatabase
+// StateStorage is a mock of store.VersionedWriter
 type StateStorage interface {
-	store.VersionedDatabase
+	store.VersionedWriter
 	store.UpgradableDatabase
 	store.Pruner
 	store.PausablePruner

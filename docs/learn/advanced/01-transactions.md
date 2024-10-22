@@ -25,13 +25,18 @@ When users want to interact with an application and make state changes (e.g. sen
 Transaction objects are Cosmos SDK types that implement the `Tx` interface
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/tx_msg.go#L51-L56
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/types/tx_msg.go#L53-L66
 ```
 
 It contains the following methods:
 
 * **GetMsgs:** unwraps the transaction and returns a list of contained `sdk.Msg`s - one transaction may have one or multiple messages, which are defined by module developers.
-* **ValidateBasic:** lightweight, [_stateless_](../beginner/01-tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./00-baseapp.md#checktx) and [`DeliverTx`](./00-baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth) module's `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed the user's maximum. When [`runTx`](./00-baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
+* **ValidateBasic:** lightweight, [_stateless_](../beginner/01-tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./00-baseapp.md#checktx) and [`RunTx`](./00-baseapp.md#runtx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth) module's `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed the user's maximum. When [`runTx`](./00-baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
+* **Hash()**: returns the unique identifier for the Tx.
+* **GetMessages:** returns the list of `sdk.Msg`s contained in the transaction.
+* **GetSenders:** returns the addresses of the signers who signed the transaction.
+* **GetGasLimit:** returns the gas limit for the transaction. Returns `math.MaxUint64` for transactions with unlimited gas.
+* **Bytes:** returns the encoded bytes of the transaction. This is typically cached after the first decoding of the transaction.
 
 :::note
 This function is different from the deprecated `sdk.Msg` [`ValidateBasic`](../beginner/01-tx-lifecycle.md#ValidateBasic) methods, which was performing basic validity checks on messages only.
@@ -48,13 +53,13 @@ Every message in a transaction must be signed by the addresses specified by its 
 The most used implementation of the `Tx` interface is the Protobuf `Tx` message, which is used in `SIGN_MODE_DIRECT`:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/v1beta1/tx.proto#L13-L26
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/proto/cosmos/tx/v1beta1/tx.proto#L15-L28
 ```
 
 Because Protobuf serialization is not deterministic, the Cosmos SDK uses an additional `TxRaw` type to denote the pinned bytes over which a transaction is signed. Any user can generate a valid `body` and `auth_info` for a transaction, and serialize these two messages using Protobuf. `TxRaw` then pins the user's exact binary representation of `body` and `auth_info`, called respectively `body_bytes` and `auth_info_bytes`. The document that is signed by all signers of the transaction is `SignDoc` (deterministically serialized using [ADR-027](../../architecture/adr-027-deterministic-protobuf-serialization.md)):
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/v1beta1/tx.proto#L48-L65
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/proto/cosmos/tx/v1beta1/tx.proto#L50-L67
 ```
 
 Once signed by all signers, the `body_bytes`, `auth_info_bytes` and `signatures` are gathered into `TxRaw`, whose serialized bytes are broadcasted over the network.
@@ -64,13 +69,13 @@ Once signed by all signers, the `body_bytes`, `auth_info_bytes` and `signatures`
 The legacy implementation of the `Tx` interface is the `StdTx` struct from `x/auth`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/migrations/legacytx/stdtx.go#L83-L90
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/x/auth/migrations/legacytx/stdtx.go#L81-L91
 ```
 
 The document signed by all signers is `StdSignDoc`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/migrations/legacytx/stdsign.go#L31-L45
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/x/auth/migrations/legacytx/stdsign.go#L32-L45
 ```
 
 which is encoded into bytes using Amino JSON. Once all signatures are gathered into `StdTx`, `StdTx` is serialized using Amino JSON, and these bytes are broadcasted over the network.
@@ -85,7 +90,7 @@ The Cosmos SDK also provides a couple of other sign modes for particular use cas
 need to sign over the fees:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/v1beta1/tx.proto#L67-L98
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/proto/cosmos/tx/v1beta1/tx.proto#L69-L93
 ```
 
 The use case is a multi-signer transaction, where one of the signers is appointed to gather all signatures, broadcast the signature and pay for fees, and the others only care about the transaction body. This generally allows for a better multi-signing UX. If Alice, Bob and Charlie are part of a 3-signer transaction, then Alice and Bob can both use `SIGN_MODE_DIRECT_AUX` to sign over the `TxBody` and their own signer info (no need an additional step to gather other signers' ones, like in `SIGN_MODE_DIRECT`), without specifying a fee in their SignDoc. Charlie can then gather both signatures from Alice and Bob, and
@@ -104,7 +109,7 @@ If you wish to learn more, please refer to [ADR-050](../../architecture/adr-050-
 
 #### Custom Sign modes
 
-There is the opportunity to add your own custom sign mode to the Cosmos-SDK.  While we can not accept the implementation of the sign mode to the repository, we can accept a pull request to add the custom signmode to the SignMode enum located [here](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/signing/v1beta1/signing.proto#L17)
+There is the opportunity to add your own custom sign mode to the Cosmos-SDK.  While we can not accept the implementation of the sign mode to the repository, we can accept a pull request to add the custom signmode to the SignMode enum located [here](https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/proto/cosmos/tx/signing/v1beta1/signing.proto#L9-L17)
 
 ## Transaction Process
 
@@ -136,7 +141,7 @@ While messages contain the information for state transition logic, a transaction
 The `TxBuilder` interface contains data closely related with the generation of transactions, which an end-user can freely set to generate the desired transaction:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/tx_config.go#L40-L53
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/client/tx_config.go#L39-L57
 ```
 
 * `Msg`s, the array of [messages](#messages) included in the transaction.
@@ -148,13 +153,13 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/tx_config.go#L4
 
 As there are currently two sign modes for signing transactions, there are also two implementations of `TxBuilder`:
 
-* [wrapper](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/tx/builder.go#L26-L43) for creating transactions for `SIGN_MODE_DIRECT`,
-* [StdTxBuilder](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/migrations/legacytx/stdtx_builder.go#L14-L17) for `SIGN_MODE_LEGACY_AMINO_JSON`.
+* [builder](https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/x/auth/tx/builder.go#L79-L98) for creating transactions for `SIGN_MODE_DIRECT`,
+* [StdTxBuilder](https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/x/auth/migrations/legacytx/stdtx_builder.go#L11-L17) for `SIGN_MODE_LEGACY_AMINO_JSON`.
 
 However, the two implementations of `TxBuilder` should be hidden away from end-users, as they should prefer using the overarching `TxConfig` interface:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/tx_config.go#L24-L34
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/client/tx_config.go#L27-L37
 ```
 
 `TxConfig` is an app-wide configuration for managing transactions. Most importantly, it holds the information about whether to sign each transaction with `SIGN_MODE_DIRECT` or `SIGN_MODE_LEGACY_AMINO_JSON`. By calling `txBuilder := txConfig.NewTxBuilder()`, a new `TxBuilder` will be created with the appropriate sign mode.
@@ -187,8 +192,7 @@ simd tx send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake
 
 [gRPC](https://grpc.io) is the main component for the Cosmos SDK's RPC layer. Its principal usage is in the context of modules' [`Query` services](../../build/building-modules/04-query-services.md). However, the Cosmos SDK also exposes a few other module-agnostic gRPC services, one of them being the `Tx` service:
 
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/v1beta1/service.proto
-
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/proto/cosmos/tx/v1beta1/service.proto
 
 The `Tx` service exposes a handful of utility functions, such as simulating a transaction or querying a transaction, and also one method to broadcast transactions.
 

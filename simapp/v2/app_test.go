@@ -19,7 +19,6 @@ import (
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	serverv2 "cosmossdk.io/server/v2"
-	comettypes "cosmossdk.io/server/v2/cometbft/types"
 	serverv2store "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2/db"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -73,7 +72,7 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	genesisBytes, err := json.Marshal(genesis)
 	require.NoError(t, err)
 
-	st := app.GetStore().(comettypes.Store)
+	st := app.Store()
 	ci, err := st.LastCommitID()
 	require.NoError(t, err)
 
@@ -109,7 +108,7 @@ func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Contex
 
 	bz := sha256.Sum256([]byte{})
 
-	st := app.GetStore().(comettypes.Store)
+	st := app.Store()
 	ci, err := st.LastCommitID()
 	require.NoError(t, err)
 

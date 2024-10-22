@@ -15,7 +15,7 @@ Fully deterministic structure serialization, which works across many languages a
 is needed when signing messages. We need to be sure that whenever we serialize
 a data structure, no matter in which supported language, the raw bytes
 will stay the same.
-[Protobuf](https://developers.google.com/protocol-buffers/docs/proto3)
+[Protobuf](https://protobuf.dev/programming-guides/proto3/)
 serialization is not bijective (i.e. there exist a practically unlimited number of
 valid binary representations for a given protobuf document)<sup>1</sup>.
 
@@ -55,7 +55,7 @@ reject documents containing maps as invalid input.
 ### Background - Protobuf3 Encoding
 
 Most numeric types in protobuf3 are encoded as
-[varints](https://developers.google.com/protocol-buffers/docs/encoding#varints).
+[varints](https://protobuf.dev/programming-guides/encoding/#varints).
 Varints are at most 10 bytes, and since each varint byte has 7 bits of data,
 varints are a representation of `uint70` (70-bit unsigned integer). When
 encoding, numeric values are casted from their base type to `uint70`, and when
@@ -74,15 +74,15 @@ encoding malleability.
 ### Serialization rules
 
 The serialization is based on the
-[protobuf3 encoding](https://developers.google.com/protocol-buffers/docs/encoding)
+[protobuf3 encoding](https://protobuf.dev/programming-guides/encoding/)
 with the following additions:
 
 1. Fields must be serialized only once in ascending order
 2. Extra fields or any extra data must not be added
-3. [Default values](https://developers.google.com/protocol-buffers/docs/proto3#default)
+3. [Default values](https://protobuf.dev/programming-guides/proto3/#default)
    must be omitted
 4. `repeated` fields of scalar numeric types must use
-   [packed encoding](https://developers.google.com/protocol-buffers/docs/encoding#packed)
+   [packed encoding](https://protobuf.dev/programming-guides/encoding/#packed)
 5. Varint encoding must not be longer than needed:
     * No trailing zero bytes (in little endian, i.e. no leading zeroes in big
       endian). Per rule 3 above, the default value of `0` must be omitted, so
@@ -288,27 +288,27 @@ the need of implementing a custom serializer that adheres to this standard (and 
   implementation detail and the details of any particular implementation may
   change in the future. Therefore, protocol buffer parsers must be able to parse
   fields in any order._ from
-  https://developers.google.com/protocol-buffers/docs/encoding#order
-* <sup>2</sup> https://developers.google.com/protocol-buffers/docs/encoding#signed_integers
+  https://protobuf.dev/programming-guides/encoding/#order
+* <sup>2</sup> https://protobuf.dev/programming-guides/encoding/#signed_integers
 * <sup>3</sup> _Note that for scalar message fields, once a message is parsed
   there's no way of telling whether a field was explicitly set to the default
   value (for example whether a boolean was set to false) or just not set at all:
   you should bear this in mind when defining your message types. For example,
   don't have a boolean that switches on some behavior when set to false if you
   don't want that behavior to also happen by default._ from
-  https://developers.google.com/protocol-buffers/docs/proto3#default
+  https://protobuf.dev/programming-guides/proto3/#default
 * <sup>4</sup> _When a message is parsed, if the encoded message does not
   contain a particular singular element, the corresponding field in the parsed
   object is set to the default value for that field._ from
-  https://developers.google.com/protocol-buffers/docs/proto3#default
+  https://protobuf.dev/programming-guides/proto3/#default
 * <sup>5</sup> _Also note that if a scalar message field is set to its default,
   the value will not be serialized on the wire._ from
-  https://developers.google.com/protocol-buffers/docs/proto3#default
+  https://protobuf.dev/programming-guides/proto3/#default
 * <sup>6</sup> _For enums, the default value is the first defined enum value,
   which must be 0._ from
-  https://developers.google.com/protocol-buffers/docs/proto3#default
+  https://protobuf.dev/programming-guides/proto3/#default
 * <sup>7</sup> _For message fields, the field is not set. Its exact value is
   language-dependent._ from
-  https://developers.google.com/protocol-buffers/docs/proto3#default
+  https://protobuf.dev/programming-guides/proto3/#default
 * Encoding rules and parts of the reasoning taken from
   [canonical-proto3 Aaron Craelius](https://github.com/regen-network/canonical-proto3)

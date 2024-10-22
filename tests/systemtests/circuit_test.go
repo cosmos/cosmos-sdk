@@ -1,7 +1,11 @@
+//go:build system_test
+
 package systemtests
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -9,7 +13,9 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-func TestCircuitCmds(t *testing.T) {
+var someMsgs = []string{"/cosmos.bank.v1beta1.MsgSend", "/cosmos.bank.v1beta1.MsgMultiSend"}
+
+func TestCircuitCommands(t *testing.T) {
 	// scenario: test circuit commands
 	// given a running chain
 
@@ -41,9 +47,6 @@ func TestCircuitCmds(t *testing.T) {
 	someMsgsAcc := cli.AddKey("someMsgsAcc")
 	require.NotEmpty(t, someMsgsAcc)
 
-	accountAddr := cli.AddKey("account")
-	require.NotEmpty(t, accountAddr)
-
 	// fund tokens to new created addresses
 	var amount int64 = 100000
 	denom := "stake"
@@ -54,10 +57,6 @@ func TestCircuitCmds(t *testing.T) {
 	rsp = cli.FundAddress(someMsgsAcc, fmt.Sprintf("%d%s", amount, denom))
 	RequireTxSuccess(t, rsp)
 	require.Equal(t, amount, cli.QueryBalance(someMsgsAcc, denom))
-
-	rsp = cli.FundAddress(accountAddr, fmt.Sprintf("%d%s", amount, denom))
-	RequireTxSuccess(t, rsp)
-	require.Equal(t, amount, cli.QueryBalance(accountAddr, denom))
 
 	// query gov module account address
 	rsp = cli.CustomQuery("q", "auth", "module-account", "gov")
@@ -101,28 +100,28 @@ func TestCircuitCmds(t *testing.T) {
 		name          string
 		address       string
 		level         int
-		limtTypeURLS  string
+		limtTypeURLS  []string
 		expPermission string
 	}{
 		{
 			"set new super admin",
 			superAdmin2,
 			3,
-			"",
+			[]string{},
 			"LEVEL_SUPER_ADMIN",
 		},
 		{
 			"set all msgs level to address",
 			allMsgsAcc,
 			2,
-			"",
+			[]string{},
 			"LEVEL_ALL_MSGS",
 		},
 		{
 			"set some msgs level to address",
 			someMsgsAcc,
 			1,
-			"/cosmos.bank.v1beta1.MsgSend, /cosmos.bank.v1beta1.MsgMultiSend",
+			someMsgs,
 			"LEVEL_SOME_MSGS",
 		},
 	}
@@ -130,8 +129,8 @@ func TestCircuitCmds(t *testing.T) {
 	for _, tc := range authorizeTestCases {
 		t.Run(tc.name, func(t *testing.T) {
 			permissionJSON := fmt.Sprintf(`{"level":%d,"limit_type_urls":[]}`, tc.level)
-			if tc.limtTypeURLS != "" {
-				permissionJSON = fmt.Sprintf(`{"level":%d,"limit_type_urls":["%s"]}`, tc.level, tc.limtTypeURLS)
+			if len(tc.limtTypeURLS) != 0 {
+				permissionJSON = fmt.Sprintf(`{"level":%d,"limit_type_urls":["%s"]}`, tc.level, strings.Join(tc.limtTypeURLS[:], `","`))
 			}
 			rsp = cli.RunAndWait("tx", "circuit", "authorize", tc.address, permissionJSON, "--from="+superAdmin)
 			RequireTxSuccess(t, rsp)
@@ -139,8 +138,105 @@ func TestCircuitCmds(t *testing.T) {
 			// query account permissions
 			rsp = cli.CustomQuery("q", "circuit", "account", tc.address)
 			require.Equal(t, tc.expPermission, gjson.Get(rsp, "permission.level").String())
-			if tc.limtTypeURLS != "" {
-				require.Equal(t, tc.limtTypeURLS, gjson.Get(rsp, "permission.limit_type_urls.0").String())
+			if len(tc.limtTypeURLS) != 0 {
+				listStr := gjson.Get(rsp, "permission.limit_type_urls").String()
+
+				// convert string to array
+				var msgsList []string
+				require.NoError(t, json.Unmarshal([]byte(listStr), &msgsList))
+
+				require.EqualValues(t, tc.limtTypeURLS, msgsList)
+			}
+		})
+	}
+
+	// test disable tx command
+	testCircuitTxCommand(t, cli, "disable", superAdmin, superAdmin2, allMsgsAcc, someMsgsAcc)
+
+	// test reset tx command
+	testCircuitTxCommand(t, cli, "reset", superAdmin, superAdmin2, allMsgsAcc, someMsgsAcc)
+}
+
+func testCircuitTxCommand(t *testing.T, cli *CLIWrapper, txType, superAdmin, superAdmin2, allMsgsAcc, someMsgsAcc string) {
+	t.Helper()
+
+	disableTestCases := []struct {
+		name        string
+		fromAddr    string
+		disableMsgs []string
+		executeTxs  [][]string
+	}{
+		{
+			txType + " msgs with super admin",
+			superAdmin,
+			[]string{"/cosmos.gov.v1.MsgVote"},
+			[][]string{
+				{
+					"tx", "gov", "vote", "3", "yes", "--from=" + superAdmin,
+				},
+			},
+		},
+		{
+			txType + " msgs with all msgs level address",
+			allMsgsAcc,
+			[]string{"/cosmos.gov.v1.MsgDeposit"},
+			[][]string{
+				{
+					"tx", "gov", "deposit", "3", "1000stake", "--from=" + allMsgsAcc,
+				},
+			},
+		},
+		{
+			txType + " msgs with some msgs level address",
+			someMsgsAcc,
+			someMsgs,
+			[][]string{
+				{
+					"tx", "bank", "send", superAdmin, someMsgsAcc, "10000stake",
+				},
+				{
+					"tx", "bank", "multi-send", superAdmin, someMsgsAcc, superAdmin2, "10000stake", "--from=" + superAdmin,
+				},
+			},
+		},
+	}
+
+	for _, tc := range disableTestCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := []string{"tx", "circuit", txType, "--from=" + tc.fromAddr}
+			cmd = append(cmd, tc.disableMsgs...)
+			rsp := cli.RunAndWait(cmd...)
+			RequireTxSuccess(t, rsp)
+
+			// execute given type transaction
+			rsp = cli.CustomQuery("q", "circuit", "disabled-list")
+			var list []string
+			if rsp != "{}" {
+				listStr := gjson.Get(rsp, "disabled_list").String()
+
+				// convert string to array
+				require.NoError(t, json.Unmarshal([]byte(listStr), &list))
+			}
+			for _, msg := range tc.disableMsgs {
+				if txType == "disable" {
+					require.Contains(t, list, msg)
+				} else {
+					require.NotContains(t, list, msg)
+				}
+			}
+
+			// test given msg transaction to confirm
+			for _, tx := range tc.executeTxs {
+				tx = append(tx, "--fees=2stake")
+				rsp = cli.RunCommandWithArgs(cli.withTXFlags(tx...)...)
+				if txType == "disable" {
+					RequireTxFailure(t, rsp)
+					require.Contains(t, gjson.Get(rsp, "raw_log").String(), "tx type not allowed")
+				} else {
+					RequireTxSuccess(t, rsp)
+				}
+				// wait for sometime to avoid sequence error
+				time.Sleep(time.Second * 2)
 			}
 		})
 	}

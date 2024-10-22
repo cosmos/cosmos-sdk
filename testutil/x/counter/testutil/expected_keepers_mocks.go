@@ -10,7 +10,7 @@ import (
 	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	types "github.com/cosmos/cosmos-sdk/types"
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockAccountKeeper is a mock of AccountKeeper interface.

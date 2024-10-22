@@ -118,27 +118,51 @@ func (s *Store) SetInitialVersion(v uint64) error {
 	return s.stateCommitment.SetInitialVersion(v)
 }
 
+// getVersionedReader returns a VersionedReader based on the given version. If the
+// version exists in the state storage, it returns the state storage.
+// If not, it checks if the state commitment implements the VersionedReader interface
+// and the version exists in the state commitment, since the state storage will be
+// synced during migration.
+func (s *Store) getVersionedReader(version uint64) (store.VersionedReader, error) {
+	isExist, err := s.stateStorage.VersionExists(version)
+	if err != nil {
+		return nil, err
+	}
+	if isExist {
+		return s.stateStorage, nil
+	}
+
+	if vReader, ok := s.stateCommitment.(store.VersionedReader); ok {
+		isExist, err := vReader.VersionExists(version)
+		if err != nil {
+			return nil, err
+		}
+		if isExist {
+			return vReader, nil
+		}
+	}
+
+	return nil, fmt.Errorf("version %d does not exist", version)
+}
+
 func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
 	v, err := s.GetLatestVersion()
 	if err != nil {
 		return 0, nil, err
 	}
 
-	return v, NewReaderMap(v, s), nil
+	vReader, err := s.getVersionedReader(v)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return v, NewReaderMap(v, vReader), nil
 }
 
-// StateAt checks if the requested version is present in ss.
+// StateAt returns a read-only view of the state at a given version.
 func (s *Store) StateAt(v uint64) (corestore.ReaderMap, error) {
-	// check if version is present in state storage
-	isExist, err := s.stateStorage.VersionExists(v)
-	if err != nil {
-		return nil, err
-	}
-	if !isExist {
-		return nil, fmt.Errorf("version %d does not exist", v)
-	}
-
-	return NewReaderMap(v, s), nil
+	vReader, err := s.getVersionedReader(v)
+	return NewReaderMap(v, vReader), err
 }
 
 func (s *Store) GetStateStorage() store.VersionedWriter {

@@ -23,6 +23,7 @@ import (
 
 var (
 	AUTHZ_ACCOUNT = "authz_account"
+	purge_limit   = 75
 )
 
 var (
@@ -259,6 +260,26 @@ func (a *Account) RevokeAll(ctx context.Context, msg *types.MsgRevokeAll) (*type
 	return &types.MsgRevokeAllResponse{}, err
 }
 
+func (a *Account) PurgeExpiredGrants(ctx context.Context, msg *types.MsgPurgeExpiredGrants) (*types.MsgPurgeExpiredGrantsResponse, error) {
+	currentTime := a.headerService.HeaderInfo(ctx).Time
+	count := 0
+	err := a.Grantees.Walk(ctx, nil, func(key collections.Pair[[]byte, string], value types.Grant) (stop bool, err error) {
+		if value.Expiration.Before(currentTime) {
+			err = a.Grantees.Remove(ctx, key)
+			if err != nil {
+				return true, fmt.Errorf("faild to remove key %v: %w", key, err)
+			}
+		}
+		count++
+		if count == purge_limit {
+			return true, nil
+		}
+
+		return false, nil
+	})
+	return &types.MsgPurgeExpiredGrantsResponse{}, err
+}
+
 func (a Account) QueryAllGrants(ctx context.Context, req *types.QueryGrantsRequest) (*types.QueryGrantsResponse, error) {
 	grants, pageResp, err := query.CollectionPaginate(
 		ctx,
@@ -327,6 +348,7 @@ func (a Account) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, a.Exec)
 	accountstd.RegisterExecuteHandler(builder, a.Revoke)
 	accountstd.RegisterExecuteHandler(builder, a.RevokeAll)
+	accountstd.RegisterExecuteHandler(builder, a.PurgeExpiredGrants)
 }
 
 func (a Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

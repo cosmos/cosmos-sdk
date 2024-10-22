@@ -82,3 +82,15 @@ message MsgRevokeAll {
 
 // MsgRevokeAllResponse defines the Msg/RevokeAll response type.
 message MsgRevokeAllResponse {}
+
+// MsgPurgeExpiredGrants defines a message that purged all expired grants.
+message MsgPurgeExpiredGrants {
+  option (amino.name)           = "cosmos-sdk/MsgPurgeExpiredGrants";
+  option (cosmos.msg.v1.signer) = "granter";
+
+  // granter address
+  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgPurgeExpiredGrantsResponse defines the Msg/PurgeExpiredGrants response type.
+message MsgPurgeExpiredGrantsResponse {}

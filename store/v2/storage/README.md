@@ -2,7 +2,7 @@
 
 The `storage` package contains the state storage (SS) implementation. Specifically,
 it contains RocksDB, PebbleDB, and SQLite (Btree) backend implementations of the
-`VersionedDatabase` interface.
+`VersionedWriter` interface.
 
 The goal of SS is to provide a modular storage backend, i.e. multiple implementations,
 to facilitate storing versioned raw key/value pairs in a fast embedded database,
@@ -26,7 +26,7 @@ latest and historical versions efficiently.
 ### RocksDB
 
 The RocksDB implementation is a CGO-based SS implementation. It fully supports
-the `VersionedDatabase` API and is arguably the most efficient implementation. It
+the `VersionedWriter` API and is arguably the most efficient implementation. It
 also supports versioning out-of-the-box using User-defined Timestamps in
 ColumnFamilies (CF). However, it requires the CGO dependency which can complicate
 an app’s build process.
@@ -42,7 +42,7 @@ and does not require CGO.
 ### SQLite (Btree)
 
 The SQLite implementation is another CGO-based SS implementation. It fully supports
-the `VersionedDatabase` API. The implementation is relatively straightforward and
+the `VersionedWriter` API. The implementation is relatively straightforward and
 easy to understand as it’s entirely SQL-based. However, benchmarks show that this
 options is least performant, even for reads. This SS backend has a lot of promise,
 but needs more benchmarking and potential SQL optimizations, like dedicated tables
@@ -92,7 +92,7 @@ batch object which is committed to the underlying SS engine.
 
 An SS backend is meant to be used within a broader store implementation, as it
 only stores data for direct and historical query purposes. We define a `Database`
-interface in the `storage` package which is mean to be represent a `VersionedDatabase`
+interface in the `storage` package which is mean to be represent a `VersionedWriter`
 with only the necessary methods. The `StorageStore` interface is meant to wrap or
 accept this `Database` type, e.g. RocksDB.
 

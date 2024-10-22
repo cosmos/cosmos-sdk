@@ -5,7 +5,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	any "github.com/cosmos/gogoproto/types/any"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

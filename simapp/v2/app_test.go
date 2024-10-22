@@ -72,7 +72,7 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	genesisBytes, err := json.Marshal(genesis)
 	require.NoError(t, err)
 
-	st := app.GetStore()
+	st := app.Store()
 	ci, err := st.LastCommitID()
 	require.NoError(t, err)
 
@@ -108,7 +108,7 @@ func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Contex
 
 	bz := sha256.Sum256([]byte{})
 
-	st := app.GetStore()
+	st := app.Store()
 	ci, err := st.LastCommitID()
 	require.NoError(t, err)
 

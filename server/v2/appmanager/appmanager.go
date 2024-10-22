@@ -12,6 +12,45 @@ import (
 	"cosmossdk.io/core/transaction"
 )
 
+// AppManager is a coordinator for all things related to an application
+// It is responsible for interacting with stf and store.
+// Runtime/v2 is an extension of this interface.
+type AppManager[T transaction.Tx] interface {
+	// InitGenesis initializes the genesis state of the application.
+	InitGenesis(
+		ctx context.Context,
+		blockRequest *server.BlockRequest[T],
+		initGenesisJSON []byte,
+		txDecoder transaction.Codec[T],
+	) (*server.BlockResponse, corestore.WriterMap, error)
+
+	// ExportGenesis exports the genesis state of the application.
+	ExportGenesis(ctx context.Context, version uint64) ([]byte, error)
+
+	// DeliverBlock executes a block of transactions.
+	DeliverBlock(
+		ctx context.Context,
+		block *server.BlockRequest[T],
+	) (*server.BlockResponse, corestore.WriterMap, error)
+
+	// ValidateTx will validate the tx against the latest storage state. This means that
+	// only the stateful validation will be run, not the execution portion of the tx.
+	// If full execution is needed, Simulate must be used.
+	ValidateTx(ctx context.Context, tx T) (server.TxResult, error)
+
+	// Simulate runs validation and execution flow of a Tx.
+	Simulate(ctx context.Context, tx T) (server.TxResult, corestore.WriterMap, error)
+
+	// Query queries the application at the provided version.
+	// CONTRACT: Version must always be provided, if 0, get latest
+	Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error)
+
+	// QueryWithState executes a query with the provided state. This allows to process a query
+	// independently of the db state. For example, it can be used to process a query with temporary
+	// and uncommitted state
+	QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Msg) (transaction.Msg, error)
+}
+
 // Store defines the underlying storage behavior needed by AppManager.
 type Store interface {
 	// StateLatest returns a readonly view over the latest
@@ -24,20 +63,40 @@ type Store interface {
 	StateAt(version uint64) (corestore.ReaderMap, error)
 }
 
-// AppManager is a coordinator for all things related to an application
-type AppManager[T transaction.Tx] struct {
+// appManager is a coordinator for all things related to an application
+type appManager[T transaction.Tx] struct {
+	// Gas limits for validating, querying, and simulating transactions.
 	config Config
-
-	db Store
-
-	initGenesis   InitGenesis
+	// InitGenesis is a function that initializes the application state from a genesis file.
+	// It takes a context, a source reader for the genesis file, and a transaction handler function.
+	initGenesis InitGenesis
+	// ExportGenesis is a function that exports the application state to a genesis file.
+	// It takes a context and a version number for the genesis file.
 	exportGenesis ExportGenesis
-
+	// The database for storing application data.
+	db Store
+	// The state transition function for processing transactions.
 	stf StateTransitionFunction[T]
 }
 
+func New[T transaction.Tx](
+	config Config,
+	db Store,
+	stf StateTransitionFunction[T],
+	initGenesisImpl InitGenesis,
+	exportGenesisImpl ExportGenesis,
+) AppManager[T] {
+	return &appManager[T]{
+		config:        config,
+		db:            db,
+		stf:           stf,
+		initGenesis:   initGenesisImpl,
+		exportGenesis: exportGenesisImpl,
+	}
+}
+
 // InitGenesis initializes the genesis state of the application.
-func (a AppManager[T]) InitGenesis(
+func (a appManager[T]) InitGenesis(
 	ctx context.Context,
 	blockRequest *server.BlockRequest[T],
 	initGenesisJSON []byte,
@@ -82,7 +141,7 @@ func (a AppManager[T]) InitGenesis(
 }
 
 // ExportGenesis exports the genesis state of the application.
-func (a AppManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byte, error) {
+func (a appManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byte, error) {
 	if a.exportGenesis == nil {
 		return nil, errors.New("export genesis function not set")
 	}
@@ -90,7 +149,8 @@ func (a AppManager[T]) ExportGenesis(ctx context.Context, version uint64) ([]byt
 	return a.exportGenesis(ctx, version)
 }
 
-func (a AppManager[T]) DeliverBlock(
+// DeliverBlock executes a block of transactions.
+func (a appManager[T]) DeliverBlock(
 	ctx context.Context,
 	block *server.BlockRequest[T],
 ) (*server.BlockResponse, corestore.WriterMap, error) {
@@ -114,7 +174,7 @@ func (a AppManager[T]) DeliverBlock(
 // ValidateTx will validate the tx against the latest storage state. This means that
 // only the stateful validation will be run, not the execution portion of the tx.
 // If full execution is needed, Simulate must be used.
-func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (server.TxResult, error) {
+func (a appManager[T]) ValidateTx(ctx context.Context, tx T) (server.TxResult, error) {
 	_, latestState, err := a.db.StateLatest()
 	if err != nil {
 		return server.TxResult{}, err
@@ -124,7 +184,7 @@ func (a AppManager[T]) ValidateTx(ctx context.Context, tx T) (server.TxResult, e
 }
 
 // Simulate runs validation and execution flow of a Tx.
-func (a AppManager[T]) Simulate(ctx context.Context, tx T) (server.TxResult, corestore.WriterMap, error) {
+func (a appManager[T]) Simulate(ctx context.Context, tx T) (server.TxResult, corestore.WriterMap, error) {
 	_, state, err := a.db.StateLatest()
 	if err != nil {
 		return server.TxResult{}, nil, err
@@ -135,7 +195,7 @@ func (a AppManager[T]) Simulate(ctx context.Context, tx T) (server.TxResult, cor
 
 // Query queries the application at the provided version.
 // CONTRACT: Version must always be provided, if 0, get latest
-func (a AppManager[T]) Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error) {
+func (a appManager[T]) Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error) {
 	// if version is provided attempt to do a height query.
 	if version != 0 {
 		queryState, err := a.db.StateAt(version)
@@ -156,6 +216,6 @@ func (a AppManager[T]) Query(ctx context.Context, version uint64, request transa
 // QueryWithState executes a query with the provided state. This allows to process a query
 // independently of the db state. For example, it can be used to process a query with temporary
 // and uncommitted state
-func (a AppManager[T]) QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Msg) (transaction.Msg, error) {
+func (a appManager[T]) QueryWithState(ctx context.Context, state corestore.ReaderMap, request transaction.Msg) (transaction.Msg, error) {
 	return a.stf.Query(ctx, state, a.config.QueryGasLimit, request)
 }

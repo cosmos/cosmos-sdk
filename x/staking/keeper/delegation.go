@@ -922,7 +922,10 @@ func (k Keeper) Delegate(
 			return math.LegacyDec{}, err
 		}
 
+		fmt.Println("bondDenom", bondDenom)
+
 		coins := sdk.NewCoins(sdk.NewCoin(bondDenom, bondAmt))
+		fmt.Println("coins", coins)
 		if err := k.bankKeeper.DelegateCoinsFromAccountToModule(ctx, delAddr, sendName, coins); err != nil {
 			return math.LegacyDec{}, err
 		}
@@ -950,6 +953,7 @@ func (k Keeper) Delegate(
 		}
 	}
 
+	fmt.Println("bondAmt", bondAmt)
 	_, newShares, err = k.AddValidatorTokensAndShares(ctx, validator, bondAmt)
 	if err != nil {
 		return newShares, err

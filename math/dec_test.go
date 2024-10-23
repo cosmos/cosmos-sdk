@@ -27,19 +27,19 @@ func TestNewDecFromString(t *testing.T) {
 		},
 		"valid decimal with decimal places": {
 			src: "1.234",
-			exp: NewDecWithPrec(1234, -3),
+			exp: NewDecWithExp(1234, -3),
 		},
 		"valid negative decimal": {
 			src: "-1.234",
-			exp: NewDecWithPrec(-1234, -3),
+			exp: NewDecWithExp(-1234, -3),
 		},
 		"min decimal": {
 			src: "-" + strings.Repeat("9", 34),
-			exp: must(NewDecWithPrec(-1, 34).Add(NewDecFromInt64(1))),
+			exp: must(NewDecWithExp(-1, 34).Add(NewDecFromInt64(1))),
 		},
 		"max decimal": {
 			src: strings.Repeat("9", 34),
-			exp: must(NewDecWithPrec(1, 34).Sub(NewDecFromInt64(1))),
+			exp: must(NewDecWithExp(1, 34).Sub(NewDecFromInt64(1))),
 		},
 		"too big": {
 			src:    strings.Repeat("9", 100_0000),
@@ -51,35 +51,37 @@ func TestNewDecFromString(t *testing.T) {
 		},
 		"valid decimal with leading zero": {
 			src: "01234",
-			exp: NewDecWithPrec(1234, 0),
+			exp: NewDecWithExp(1234, 0),
 		},
 		"valid decimal without leading zero": {
 			src: ".1234",
-			exp: NewDecWithPrec(1234, -4),
+			exp: NewDecWithExp(1234, -4),
 		},
 
 		"valid decimal without trailing digits": {
 			src: "123.",
-			exp: NewDecWithPrec(123, 0),
+			exp: NewDecWithExp(123, 0),
 		},
 
 		"valid negative decimal without leading zero": {
 			src: "-.1234",
-			exp: NewDecWithPrec(-1234, -4),
+			exp: NewDecWithExp(-1234, -4),
 		},
-
 		"valid negative decimal without trailing digits": {
 			src: "-123.",
-			exp: NewDecWithPrec(-123, 0),
+			exp: NewDecWithExp(-123, 0),
 		},
-
 		"decimal with scientific notation": {
 			src: "1.23e4",
-			exp: NewDecWithPrec(123, 2),
+			exp: NewDecWithExp(123, 2),
+		},
+		"decimal with upper case scientific notation": {
+			src: "1.23E+4",
+			exp: NewDecWithExp(123, 2),
 		},
 		"negative decimal with scientific notation": {
 			src: "-1.23e4",
-			exp: NewDecWithPrec(-123, 2),
+			exp: NewDecWithExp(-123, 2),
 		},
 		"empty string": {
 			src:    "",
@@ -189,62 +191,62 @@ func TestAdd(t *testing.T) {
 			exp: NewDecFromInt64(-246),
 		},
 		"1.234 + 1.234 = 2.468": {
-			x:   NewDecWithPrec(1234, -3),
-			y:   NewDecWithPrec(1234, -3),
-			exp: NewDecWithPrec(2468, -3),
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1234, -3),
+			exp: NewDecWithExp(2468, -3),
 		},
 		"1.234 + 123 = 124.234": {
-			x:   NewDecWithPrec(1234, -3),
+			x:   NewDecWithExp(1234, -3),
 			y:   NewDecFromInt64(123),
-			exp: NewDecWithPrec(124234, -3),
+			exp: NewDecWithExp(124234, -3),
 		},
 		"1.234 + -123 = -121.766": {
-			x:   NewDecWithPrec(1234, -3),
+			x:   NewDecWithExp(1234, -3),
 			y:   NewDecFromInt64(-123),
 			exp: must(NewDecFromString("-121.766")),
 		},
 		"1.234 + -1.234 = 0": {
-			x:   NewDecWithPrec(1234, -3),
-			y:   NewDecWithPrec(-1234, -3),
-			exp: NewDecWithPrec(0, -3),
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(-1234, -3),
+			exp: NewDecWithExp(0, -3),
 		},
 		"-1.234 + -1.234 = -2.468": {
-			x:   NewDecWithPrec(-1234, -3),
-			y:   NewDecWithPrec(-1234, -3),
-			exp: NewDecWithPrec(-2468, -3),
+			x:   NewDecWithExp(-1234, -3),
+			y:   NewDecWithExp(-1234, -3),
+			exp: NewDecWithExp(-2468, -3),
 		},
 		"1e100000 + 9e900000 -> Err": {
-			x:      NewDecWithPrec(1, 100_000),
-			y:      NewDecWithPrec(9, 900_000),
+			x:      NewDecWithExp(1, 100_000),
+			y:      NewDecWithExp(9, 900_000),
 			expErr: ErrInvalidDec,
 		},
 		"1e100000 + -9e900000 -> Err": {
-			x:      NewDecWithPrec(1, 100_000),
-			y:      NewDecWithPrec(9, 900_000),
+			x:      NewDecWithExp(1, 100_000),
+			y:      NewDecWithExp(9, 900_000),
 			expErr: ErrInvalidDec,
 		},
 		"1e100000 + 1e^-1 -> err": {
-			x:      NewDecWithPrec(1, 100_000),
-			y:      NewDecWithPrec(1, -1),
+			x:      NewDecWithExp(1, 100_000),
+			y:      NewDecWithExp(1, -1),
 			expErr: ErrInvalidDec,
 		},
 		"1e100000 + -1e^-1 -> err": {
-			x:      NewDecWithPrec(1, 100_000),
-			y:      NewDecWithPrec(-1, -1),
+			x:      NewDecWithExp(1, 100_000),
+			y:      NewDecWithExp(-1, -1),
 			expErr: ErrInvalidDec,
 		},
 		"1e100000 + 1 -> 100..1": {
-			x:   NewDecWithPrec(1, 100_000),
+			x:   NewDecWithExp(1, 100_000),
 			y:   NewDecFromInt64(1),
-			exp: must(NewDecWithPrec(1, 100_000).Add(NewDecFromInt64(1))),
+			exp: must(NewDecWithExp(1, 100_000).Add(NewDecFromInt64(1))),
 		},
 		"1e100001 + 0 -> err": {
-			x:      NewDecWithPrec(1, 100_001),
+			x:      NewDecWithExp(1, 100_001),
 			y:      NewDecFromInt64(0),
 			expErr: ErrInvalidDec,
 		},
 		"-1e100001 + 0 -> err": {
-			x:      NewDecWithPrec(1, 100_001),
+			x:      NewDecWithExp(1, -100_001),
 			y:      NewDecFromInt64(0),
 			expErr: ErrInvalidDec,
 		},
@@ -300,87 +302,87 @@ func TestSub(t *testing.T) {
 			exp: NewDecFromInt64(0),
 		},
 		"1.234 - 1.234 = 0.000": {
-			x:   NewDecWithPrec(1234, -3),
-			y:   NewDecWithPrec(1234, -3),
-			exp: NewDecWithPrec(0, -3),
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1234, -3),
+			exp: NewDecWithExp(0, -3),
 		},
 		"1.234 - 123 = -121.766": {
-			x:   NewDecWithPrec(1234, -3),
+			x:   NewDecWithExp(1234, -3),
 			y:   NewDecFromInt64(123),
-			exp: NewDecWithPrec(-121766, -3),
+			exp: NewDecWithExp(-121766, -3),
 		},
 		"1.234 - -123 = 124.234": {
-			x:   NewDecWithPrec(1234, -3),
+			x:   NewDecWithExp(1234, -3),
 			y:   NewDecFromInt64(-123),
-			exp: NewDecWithPrec(124234, -3),
+			exp: NewDecWithExp(124234, -3),
 		},
 		"1.234 - -1.234 = 2.468": {
-			x:   NewDecWithPrec(1234, -3),
-			y:   NewDecWithPrec(-1234, -3),
-			exp: NewDecWithPrec(2468, -3),
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(-1234, -3),
+			exp: NewDecWithExp(2468, -3),
 		},
 		"-1.234 - -1.234 = 2.468": {
-			x:   NewDecWithPrec(-1234, -3),
-			y:   NewDecWithPrec(-1234, -3),
-			exp: NewDecWithPrec(0, -3),
+			x:   NewDecWithExp(-1234, -3),
+			y:   NewDecWithExp(-1234, -3),
+			exp: NewDecWithExp(0, -3),
 		},
 		"1 - 0.999 = 0.001 - rounding after comma": {
 			x:   NewDecFromInt64(1),
-			y:   NewDecWithPrec(999, -3),
-			exp: NewDecWithPrec(1, -3),
+			y:   NewDecWithExp(999, -3),
+			exp: NewDecWithExp(1, -3),
 		},
 		"1e100000 - 1^-1 -> Err": {
-			x:      NewDecWithPrec(1, 100_000),
-			y:      NewDecWithPrec(1, -1),
+			x:      NewDecWithExp(1, 100_000),
+			y:      NewDecWithExp(1, -1),
 			expErr: ErrInvalidDec,
 		},
 		"1e100000 - 1^1-> Err": {
-			x:      NewDecWithPrec(1, 100_000),
-			y:      NewDecWithPrec(1, -1),
+			x:      NewDecWithExp(1, 100_000),
+			y:      NewDecWithExp(1, -1),
 			expErr: ErrInvalidDec,
 		},
 		"upper exp limit exceeded": {
-			x:      NewDecWithPrec(1, 100_001),
-			y:      NewDecWithPrec(1, 100_001),
+			x:      NewDecWithExp(1, 100_001),
+			y:      NewDecWithExp(1, 100_001),
 			expErr: ErrInvalidDec,
 		},
 		"lower exp limit exceeded": {
-			x:      NewDecWithPrec(1, -100_001),
-			y:      NewDecWithPrec(1, -100_001),
+			x:      NewDecWithExp(1, -100_001),
+			y:      NewDecWithExp(1, -100_001),
 			expErr: ErrInvalidDec,
 		},
 		"1e100000 - 1 = 999..9": {
-			x:   NewDecWithPrec(1, 100_000),
+			x:   NewDecWithExp(1, 100_000),
 			y:   NewDecFromInt64(1),
 			exp: must(NewDecFromString(strings.Repeat("9", 100_000))),
 		},
 		"1e100000 - 0 = 1e100000": {
-			x:   NewDecWithPrec(1, 100_000),
+			x:   NewDecWithExp(1, 100_000),
 			y:   NewDecFromInt64(0),
 			exp: must(NewDecFromString("1e100000")),
 		},
 		"1e100001 - 0 -> err": {
-			x:      NewDecWithPrec(1, 100_001),
+			x:      NewDecWithExp(1, 100_001),
 			y:      NewDecFromInt64(0),
 			expErr: ErrInvalidDec,
 		},
 		"1e100000 - -1 -> 100..1": {
-			x:      NewDecWithPrec(1, 100_000),
+			x:      NewDecWithExp(1, 100_000),
 			y:      must(NewDecFromString("-9e100000")),
 			expErr: ErrInvalidDec,
 		},
 		"1e-100000 - 0 = 1e-100000": {
-			x:   NewDecWithPrec(1, -100_000),
+			x:   NewDecWithExp(1, -100_000),
 			y:   NewDecFromInt64(0),
 			exp: must(NewDecFromString("1e-100000")),
 		},
 		"1e-100001 - 0 -> err": {
-			x:      NewDecWithPrec(1, -100_001),
+			x:      NewDecWithExp(1, -100_001),
 			y:      NewDecFromInt64(0),
 			expErr: ErrInvalidDec,
 		},
 		"1e-100000 - -1 -> 0.000..01": {
-			x:   NewDecWithPrec(1, -100_000),
+			x:   NewDecWithExp(1, -100_000),
 			y:   NewDecFromInt64(-1),
 			exp: must(NewDecFromString("1." + strings.Repeat("0", 99999) + "1")),
 		},
@@ -442,28 +444,28 @@ func TestQuo(t *testing.T) {
 			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
 		},
 		"1.234 / 1.234 = 1": {
-			x:   NewDecWithPrec(1234, -3),
-			y:   NewDecWithPrec(1234, -3),
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1234, -3),
 			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
 		},
 		"-1.234 / 1234 = -1": {
-			x:   NewDecWithPrec(-1234, -3),
-			y:   NewDecWithPrec(1234, -3),
+			x:   NewDecWithExp(-1234, -3),
+			y:   NewDecWithExp(1234, -3),
 			exp: must(NewDecFromString("-1.000000000000000000000000000000000")),
 		},
 		"1.234 / -123 = 1.0100": {
-			x:   NewDecWithPrec(1234, -3),
+			x:   NewDecWithExp(1234, -3),
 			y:   NewDecFromInt64(-123),
 			exp: must(NewDecFromString("-0.01003252032520325203252032520325203")),
 		},
 		"1.234 / -1.234 = -1": {
-			x:   NewDecWithPrec(1234, -3),
-			y:   NewDecWithPrec(-1234, -3),
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(-1234, -3),
 			exp: must(NewDecFromString("-1.000000000000000000000000000000000")),
 		},
 		"-1.234 / -1.234 = 1": {
-			x:   NewDecWithPrec(-1234, -3),
-			y:   NewDecWithPrec(-1234, -3),
+			x:   NewDecWithExp(-1234, -3),
+			y:   NewDecWithExp(-1234, -3),
 			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
 		},
 		"3 / -9 = -0.3333...3 - round down": {
@@ -497,73 +499,73 @@ func TestQuo(t *testing.T) {
 			exp: must(NewDecFromString("0.8888888888888888888888888888888889")),
 		},
 		"9e-34 / 10 = 9e-35 - no rounding": {
-			x:   NewDecWithPrec(9, -34),
+			x:   NewDecWithExp(9, -34),
 			y:   NewDecFromInt64(10),
 			exp: must(NewDecFromString("9e-35")),
 		},
 		"9e-35 / 10 = 9e-36 - no rounding": {
-			x:   NewDecWithPrec(9, -35),
+			x:   NewDecWithExp(9, -35),
 			y:   NewDecFromInt64(10),
 			exp: must(NewDecFromString("9e-36")),
 		},
 		"high precision - min/0.1": {
-			x:   NewDecWithPrec(1, -100_000),
-			y:   NewDecWithPrec(1, -1),
-			exp: NewDecWithPrec(1, -99_999),
+			x:   NewDecWithExp(1, -100_000),
+			y:   NewDecWithExp(1, -1),
+			exp: NewDecWithExp(1, -99_999),
 		},
 		"high precision - min/1": {
-			x:   NewDecWithPrec(1, -100_000),
-			y:   NewDecWithPrec(1, 0),
-			exp: NewDecWithPrec(1, -100_000),
+			x:   NewDecWithExp(1, -100_000),
+			y:   NewDecWithExp(1, 0),
+			exp: NewDecWithExp(1, -100_000),
 		},
 		"high precision - min/10": {
-			x:      NewDecWithPrec(1, -100_000),
-			y:      NewDecWithPrec(1, 1),
+			x:      NewDecWithExp(1, -100_000),
+			y:      NewDecWithExp(1, 1),
 			expErr: ErrInvalidDec,
 		},
 		"high precision - <_min/0.1": {
-			x:   NewDecWithPrec(1, -100_001),
-			y:   NewDecWithPrec(1, -1),
-			exp: NewDecWithPrec(1, -100_000),
+			x:   NewDecWithExp(1, -100_001),
+			y:   NewDecWithExp(1, -1),
+			exp: NewDecWithExp(1, -100_000),
 		},
 		"high precision - <_min/1": {
-			x:      NewDecWithPrec(1, -100_001),
-			y:      NewDecWithPrec(1, 0),
+			x:      NewDecWithExp(1, -100_001),
+			y:      NewDecWithExp(1, 0),
 			expErr: ErrInvalidDec,
 		},
 		"high precision - <_min/10": {
-			x:      NewDecWithPrec(1, -100_001),
-			y:      NewDecWithPrec(1, 1),
+			x:      NewDecWithExp(1, -100_001),
+			y:      NewDecWithExp(1, 1),
 			expErr: ErrInvalidDec,
 		},
 		"high precision - min/-0.1": {
-			x:   NewDecWithPrec(1, -100_000),
-			y:   NewDecWithPrec(-1, -1),
-			exp: NewDecWithPrec(-1, -99_999),
+			x:   NewDecWithExp(1, -100_000),
+			y:   NewDecWithExp(-1, -1),
+			exp: NewDecWithExp(-1, -99_999),
 		},
 		"high precision - min/-1": {
-			x:   NewDecWithPrec(1, -100_000),
-			y:   NewDecWithPrec(-1, 0),
-			exp: NewDecWithPrec(-1, -100_000),
+			x:   NewDecWithExp(1, -100_000),
+			y:   NewDecWithExp(-1, 0),
+			exp: NewDecWithExp(-1, -100_000),
 		},
 		"high precision - min/-10": {
-			x:      NewDecWithPrec(1, -100_000),
-			y:      NewDecWithPrec(-1, 1),
+			x:      NewDecWithExp(1, -100_000),
+			y:      NewDecWithExp(-1, 1),
 			expErr: ErrInvalidDec,
 		},
 		"high precision - <_min/-0.1": {
-			x:   NewDecWithPrec(1, -100_001),
-			y:   NewDecWithPrec(-1, -1),
-			exp: NewDecWithPrec(-1, -100_000),
+			x:   NewDecWithExp(1, -100_001),
+			y:   NewDecWithExp(-1, -1),
+			exp: NewDecWithExp(-1, -100_000),
 		},
 		"high precision - <_min/-1": {
-			x:      NewDecWithPrec(1, -100_001),
-			y:      NewDecWithPrec(-1, 0),
+			x:      NewDecWithExp(1, -100_001),
+			y:      NewDecWithExp(-1, 0),
 			expErr: ErrInvalidDec,
 		},
 		"high precision - <_min/-10": {
-			x:      NewDecWithPrec(1, -100_001),
-			y:      NewDecWithPrec(-1, 1),
+			x:      NewDecWithExp(1, -100_001),
+			y:      NewDecWithExp(-1, 1),
 			expErr: ErrInvalidDec,
 		},
 	}
@@ -638,28 +640,28 @@ func TestQuoExact(t *testing.T) {
 			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
 		},
 		"1.234 / 1.234 = 1": {
-			x:   NewDecWithPrec(1234, -3),
-			y:   NewDecWithPrec(1234, -3),
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1234, -3),
 			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
 		},
 		"-1.234 / 1.234 = -1": {
-			x:   NewDecWithPrec(-1234, -3),
-			y:   NewDecWithPrec(1234, -3),
+			x:   NewDecWithExp(-1234, -3),
+			y:   NewDecWithExp(1234, -3),
 			exp: must(NewDecFromString("-1.000000000000000000000000000000000")),
 		},
 		"1.234 / -123 -> Err": {
-			x:      NewDecWithPrec(1234, -3),
+			x:      NewDecWithExp(1234, -3),
 			y:      NewDecFromInt64(-123),
 			expErr: ErrUnexpectedRounding,
 		},
 		"1.234 / -1.234 = -1": {
-			x:   NewDecWithPrec(1234, -3),
-			y:   NewDecWithPrec(-1234, -3),
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(-1234, -3),
 			exp: must(NewDecFromString("-1.000000000000000000000000000000000")),
 		},
 		"-1.234 / -1.234 = 1": {
-			x:   NewDecWithPrec(-1234, -3),
-			y:   NewDecWithPrec(-1234, -3),
+			x:   NewDecWithExp(-1234, -3),
+			y:   NewDecWithExp(-1234, -3),
 			exp: must(NewDecFromString("1.000000000000000000000000000000000")),
 		},
 		"3 / -9 -> Err": {
@@ -693,73 +695,73 @@ func TestQuoExact(t *testing.T) {
 			expErr: ErrUnexpectedRounding,
 		},
 		"9e-34 / 10 = 9e-35 - no rounding": {
-			x:   NewDecWithPrec(9, -34),
+			x:   NewDecWithExp(9, -34),
 			y:   NewDecFromInt64(10),
 			exp: must(NewDecFromString("0.00000000000000000000000000000000009000000000000000000000000000000000")),
 		},
 		"9e-35 / 10 = 9e-36 - no rounding": {
-			x:   NewDecWithPrec(9, -35),
+			x:   NewDecWithExp(9, -35),
 			y:   NewDecFromInt64(10),
 			exp: must(NewDecFromString("9e-36")),
 		},
 		"high precision - min/0.1": {
-			x:   NewDecWithPrec(1, -100_000),
-			y:   NewDecWithPrec(1, -1),
-			exp: NewDecWithPrec(1, -99_999),
+			x:   NewDecWithExp(1, -100_000),
+			y:   NewDecWithExp(1, -1),
+			exp: NewDecWithExp(1, -99_999),
 		},
 		"high precision - min/1": {
-			x:   NewDecWithPrec(1, -100_000),
-			y:   NewDecWithPrec(1, 0),
-			exp: NewDecWithPrec(1, -100_000),
+			x:   NewDecWithExp(1, -100_000),
+			y:   NewDecWithExp(1, 0),
+			exp: NewDecWithExp(1, -100_000),
 		},
 		"high precision - min/10": {
-			x:      NewDecWithPrec(1, -100_000),
-			y:      NewDecWithPrec(1, 1),
+			x:      NewDecWithExp(1, -100_000),
+			y:      NewDecWithExp(1, 1),
 			expErr: ErrInvalidDec,
 		},
 		"high precision - <_min/0.1": {
-			x:   NewDecWithPrec(1, -100_001),
-			y:   NewDecWithPrec(1, -1),
-			exp: NewDecWithPrec(1, -100_000),
+			x:   NewDecWithExp(1, -100_001),
+			y:   NewDecWithExp(1, -1),
+			exp: NewDecWithExp(1, -100_000),
 		},
 		"high precision - <_min/1": {
-			x:      NewDecWithPrec(1, -100_001),
-			y:      NewDecWithPrec(1, 0),
+			x:      NewDecWithExp(1, -100_001),
+			y:      NewDecWithExp(1, 0),
 			expErr: ErrInvalidDec,
 		},
 		"high precision - <_min/10 -> Err": {
-			x:      NewDecWithPrec(1, -100_001),
-			y:      NewDecWithPrec(1, 1),
+			x:      NewDecWithExp(1, -100_001),
+			y:      NewDecWithExp(1, 1),
 			expErr: ErrInvalidDec,
 		},
 		"high precision - min/-0.1": {
-			x:   NewDecWithPrec(1, -100_000),
-			y:   NewDecWithPrec(-1, -1),
-			exp: NewDecWithPrec(-1, -99_999),
+			x:   NewDecWithExp(1, -100_000),
+			y:   NewDecWithExp(-1, -1),
+			exp: NewDecWithExp(-1, -99_999),
 		},
 		"high precision - min/-1": {
-			x:   NewDecWithPrec(1, -100_000),
-			y:   NewDecWithPrec(-1, 0),
-			exp: NewDecWithPrec(-1, -100_000),
+			x:   NewDecWithExp(1, -100_000),
+			y:   NewDecWithExp(-1, 0),
+			exp: NewDecWithExp(-1, -100_000),
 		},
 		"high precision - min/-10 -> Err": {
-			x:      NewDecWithPrec(1, -100_000),
-			y:      NewDecWithPrec(-1, 1),
+			x:      NewDecWithExp(1, -100_000),
+			y:      NewDecWithExp(-1, 1),
 			expErr: ErrInvalidDec,
 		},
 		"high precision - <_min/-0.1": {
-			x:   NewDecWithPrec(1, -100_001),
-			y:   NewDecWithPrec(-1, -1),
-			exp: NewDecWithPrec(-1, -100_000),
+			x:   NewDecWithExp(1, -100_001),
+			y:   NewDecWithExp(-1, -1),
+			exp: NewDecWithExp(-1, -100_000),
 		},
 		"high precision - <_min/-1": {
-			x:      NewDecWithPrec(1, -100_001),
-			y:      NewDecWithPrec(-1, 0),
+			x:      NewDecWithExp(1, -100_001),
+			y:      NewDecWithExp(-1, 0),
 			expErr: ErrInvalidDec,
 		},
 		"high precision - <_min/-10": {
-			x:      NewDecWithPrec(1, -100_001),
-			y:      NewDecWithPrec(-1, 1),
+			x:      NewDecWithExp(1, -100_001),
+			y:      NewDecWithExp(-1, 1),
 			expErr: ErrInvalidDec,
 		},
 	}
@@ -821,23 +823,23 @@ func TestQuoInteger(t *testing.T) {
 			exp: NewDecFromInt64(1),
 		},
 		"1.234 / 1.234": {
-			x:   NewDecWithPrec(1234, -3),
-			y:   NewDecWithPrec(1234, -3),
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1234, -3),
 			exp: NewDecFromInt64(1),
 		},
 		"-1.234 / 1234 = -121.766": {
-			x:   NewDecWithPrec(-1234, -3),
-			y:   NewDecWithPrec(1234, -3),
+			x:   NewDecWithExp(-1234, -3),
+			y:   NewDecWithExp(1234, -3),
 			exp: NewDecFromInt64(-1),
 		},
 		"1.234 / -1.234 = 2.468": {
-			x:   NewDecWithPrec(1234, -3),
-			y:   NewDecWithPrec(-1234, -3),
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(-1234, -3),
 			exp: NewDecFromInt64(-1),
 		},
 		"-1.234 / -1.234 = 1": {
-			x:   NewDecWithPrec(-1234, -3),
-			y:   NewDecWithPrec(-1234, -3),
+			x:   NewDecWithExp(-1234, -3),
+			y:   NewDecWithExp(-1234, -3),
 			exp: NewDecFromInt64(1),
 		},
 		"3 / -9 = 0": {
@@ -851,28 +853,28 @@ func TestQuoInteger(t *testing.T) {
 			exp: must(NewDecFromString("0")),
 		},
 		"high precision - min/0.1": {
-			x:   NewDecWithPrec(1, -100_000),
-			y:   NewDecWithPrec(1, -1),
+			x:   NewDecWithExp(1, -100_000),
+			y:   NewDecWithExp(1, -1),
 			exp: NewDecFromInt64(0),
 		},
 		"high precision - <_min/-1 -> Err": {
-			x:      NewDecWithPrec(1, -100_001),
-			y:      NewDecWithPrec(-1, 0),
+			x:      NewDecWithExp(1, -100_001),
+			y:      NewDecWithExp(-1, 0),
 			expErr: ErrInvalidDec,
 		},
 		"high precision - <_min/-10 -> Err": {
-			x:      NewDecWithPrec(1, -100_001),
-			y:      NewDecWithPrec(-1, 1),
+			x:      NewDecWithExp(1, -100_001),
+			y:      NewDecWithExp(-1, 1),
 			expErr: ErrInvalidDec,
 		},
 		"1e000 / 1 -> Err": {
-			x:      NewDecWithPrec(1, 100_000),
+			x:      NewDecWithExp(1, 100_000),
 			y:      NewDecFromInt64(1),
 			expErr: ErrInvalidDec,
 		},
 		"1e100000 - 1^1 -> Err": {
-			x:      NewDecWithPrec(1, 100_000),
-			y:      NewDecWithPrec(1, -1),
+			x:      NewDecWithExp(1, 100_000),
+			y:      NewDecWithExp(1, -1),
 			expErr: ErrInvalidDec,
 		},
 	}
@@ -918,19 +920,19 @@ func TestModulo(t *testing.T) {
 			exp: NewDecFromInt64(-3),
 		},
 		"1.234 / 1 = 0.234": {
-			x:   NewDecWithPrec(1234, -3),
+			x:   NewDecWithExp(1234, -3),
 			y:   NewDecFromInt64(1),
-			exp: NewDecWithPrec(234, -3),
+			exp: NewDecWithExp(234, -3),
 		},
 		"1.234 / 0.1 = 0.034": {
-			x:   NewDecWithPrec(1234, -3),
-			y:   NewDecWithPrec(1, -1),
-			exp: NewDecWithPrec(34, -3),
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1, -1),
+			exp: NewDecWithExp(34, -3),
 		},
 		"1.234 / 1.1 = 0.134": {
-			x:   NewDecWithPrec(1234, -3),
-			y:   NewDecWithPrec(11, -1),
-			exp: NewDecWithPrec(134, -3),
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(11, -1),
+			exp: NewDecWithExp(134, -3),
 		},
 		"10 / 0 -> Err": {
 			x:      NewDecFromInt64(10),
@@ -938,14 +940,14 @@ func TestModulo(t *testing.T) {
 			expErr: ErrInvalidDec,
 		},
 		"-1e0000 / 9e0000 = 1e0000": {
-			x:   NewDecWithPrec(-1, 100_000),
-			y:   NewDecWithPrec(9, 100_000),
-			exp: NewDecWithPrec(-1, 100_000),
+			x:   NewDecWithExp(-1, 100_000),
+			y:   NewDecWithExp(9, 100_000),
+			exp: NewDecWithExp(-1, 100_000),
 		},
 		"1e0000 / 9e0000 = 1e0000": {
-			x:   NewDecWithPrec(1, 100_000),
-			y:   NewDecWithPrec(9, 100_000),
-			exp: NewDecWithPrec(1, 100_000),
+			x:   NewDecWithExp(1, 100_000),
+			y:   NewDecWithExp(9, 100_000),
+			exp: NewDecWithExp(1, 100_000),
 		},
 	}
 	for name, spec := range specs {
@@ -972,19 +974,19 @@ func TestNumDecimalPlaces(t *testing.T) {
 			exp: 0,
 		},
 		"one decimal place": {
-			src: NewDecWithPrec(1234, -1),
+			src: NewDecWithExp(1234, -1),
 			exp: 1,
 		},
 		"two decimal places": {
-			src: NewDecWithPrec(12345, -2),
+			src: NewDecWithExp(12345, -2),
 			exp: 2,
 		},
 		"three decimal places": {
-			src: NewDecWithPrec(123456, -3),
+			src: NewDecWithExp(123456, -3),
 			exp: 3,
 		},
 		"trailing zeros": {
-			src: NewDecWithPrec(123400, -4),
+			src: NewDecWithExp(123400, -4),
 			exp: 4,
 		},
 		"zero value": {
@@ -992,7 +994,7 @@ func TestNumDecimalPlaces(t *testing.T) {
 			exp: 0,
 		},
 		"negative value": {
-			src: NewDecWithPrec(-12345, -3),
+			src: NewDecWithExp(-12345, -3),
 			exp: 3,
 		},
 	}
@@ -1041,18 +1043,18 @@ func TestCmp(t *testing.T) {
 			exp: 0,
 		},
 		"1.234 == 1.234": {
-			x:   NewDecWithPrec(1234, -3),
-			y:   NewDecWithPrec(1234, -3),
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1234, -3),
 			exp: 0,
 		},
 		"1.234 > 1.233": {
-			x:   NewDecWithPrec(1234, -3),
-			y:   NewDecWithPrec(1233, -3),
+			x:   NewDecWithExp(1234, -3),
+			y:   NewDecWithExp(1233, -3),
 			exp: 1,
 		},
 		"1.233 < 1.234": {
-			x:   NewDecWithPrec(1233, -3),
-			y:   NewDecWithPrec(1234, -3),
+			x:   NewDecWithExp(1233, -3),
+			y:   NewDecWithExp(1234, -3),
 			exp: -1,
 		},
 	}
@@ -1142,34 +1144,39 @@ func TestMulExact(t *testing.T) {
 			exp: NewDecFromInt64(0),
 		},
 		"1.1 * 1.1 = 1.21": {
-			x:   NewDecWithPrec(11, -1),
-			y:   NewDecWithPrec(11, -1),
-			exp: NewDecWithPrec(121, -2),
+			x:   NewDecWithExp(11, -1),
+			y:   NewDecWithExp(11, -1),
+			exp: NewDecWithExp(121, -2),
 		},
 		"1.000 * 1.000 = 1.000000": {
-			x:   NewDecWithPrec(1000, -3),
-			y:   NewDecWithPrec(1000, -3),
+			x:   NewDecWithExp(1000, -3),
+			y:   NewDecWithExp(1000, -3),
 			exp: must(NewDecFromString("1.000000")),
 		},
 		"0.0000001 * 0.0000001 = 0": {
-			x:   NewDecWithPrec(0o0000001, -7),
-			y:   NewDecWithPrec(0o0000001, -7),
-			exp: NewDecWithPrec(1, -14),
+			x:   NewDecWithExp(0o0000001, -7),
+			y:   NewDecWithExp(0o0000001, -7),
+			exp: NewDecWithExp(1, -14),
 		},
-		"1.000000000000000000000000000000000000123456789 * 0.000001 = 0.000000000100000000000000000000000000000123456789": {
-			x:      must(NewDecFromString("1.0000000000000000000000000000000000000123456789")),
-			y:      NewDecWithPrec(1, -6),
+		"0.12345678901234567890123456789012345 * 1": {
+			x:      must(NewDecFromString("0.12345678901234567890123456789012345")),
+			y:      NewDecWithExp(1, 0),
+			expErr: ErrUnexpectedRounding,
+		},
+		"0.12345678901234567890123456789012345 * 0": {
+			x:   must(NewDecFromString("0.12345678901234567890123456789012345")),
+			y:   NewDecFromInt64(0),
+			exp: NewDecFromInt64(0),
+		},
+		"0.12345678901234567890123456789012345 * 0.1": {
+			x:      must(NewDecFromString("0.12345678901234567890123456789012345")),
+			y:      NewDecWithExp(1, -1),
 			expErr: ErrUnexpectedRounding,
 		},
 		"1000001 * 1.000001 = 1000002.000001": {
 			x:   NewDecFromInt64(1000001),
-			y:   NewDecWithPrec(1000001, -6),
+			y:   NewDecWithExp(1000001, -6),
 			exp: must(NewDecFromString("1000002.000001")),
-		},
-		"1000000000000000000000000000000000000123456789 * 100000000000 ": {
-			x:      must(NewDecFromString("1000000000000000000000000000000000000123456789")),
-			y:      NewDecWithPrec(1, 6),
-			expErr: ErrUnexpectedRounding,
 		},
 		"1000001 * 1000000 = 1000001000000 ": {
 			x:   NewDecFromInt64(1000001),
@@ -1177,38 +1184,38 @@ func TestMulExact(t *testing.T) {
 			exp: NewDecFromInt64(1000001000000),
 		},
 		"1e0000 * 1e0000 -> Err": {
-			x:      NewDecWithPrec(1, 100_000),
-			y:      NewDecWithPrec(1, 100_000),
+			x:      NewDecWithExp(1, 100_000),
+			y:      NewDecWithExp(1, 100_000),
 			expErr: ErrInvalidDec,
 		},
 		"1e0000 * 1 = 1e0000": {
-			x:   NewDecWithPrec(1, 100_000),
-			y:   NewDecWithPrec(1, 0),
-			exp: NewDecWithPrec(1, 100_000),
+			x:   NewDecWithExp(1, 100_000),
+			y:   NewDecWithExp(1, 0),
+			exp: NewDecWithExp(1, 100_000),
 		},
 		"1e100000 * 9 = 9e100000": {
-			x:   NewDecWithPrec(1, 100_000),
+			x:   NewDecWithExp(1, 100_000),
 			y:   NewDecFromInt64(9),
-			exp: NewDecWithPrec(9, 100_000),
+			exp: NewDecWithExp(9, 100_000),
 		},
 		"1e100000 * 10 = err": {
-			x:      NewDecWithPrec(1, 100_000),
-			y:      NewDecWithPrec(1, 1),
+			x:      NewDecWithExp(1, 100_000),
+			y:      NewDecWithExp(1, 1),
 			expErr: ErrInvalidDec,
 		},
 		"1e0000 * -1 = -1e0000": {
-			x:   NewDecWithPrec(1, 100_000),
-			y:   NewDecWithPrec(-1, 0),
-			exp: NewDecWithPrec(-1, 100_000),
+			x:   NewDecWithExp(1, 100_000),
+			y:   NewDecWithExp(-1, 0),
+			exp: NewDecWithExp(-1, 100_000),
 		},
 		"1e100000 * -9 = 9e100000": {
-			x:   NewDecWithPrec(1, 100_000),
+			x:   NewDecWithExp(1, 100_000),
 			y:   NewDecFromInt64(-9),
-			exp: NewDecWithPrec(-9, 100_000),
+			exp: NewDecWithExp(-9, 100_000),
 		},
 		"1e100000 * -10 = err": {
-			x:      NewDecWithPrec(1, 100_000),
-			y:      NewDecWithPrec(-1, 1),
+			x:      NewDecWithExp(1, 100_000),
+			y:      NewDecWithExp(-1, 1),
 			expErr: ErrInvalidDec,
 		},
 	}
@@ -1216,11 +1223,11 @@ func TestMulExact(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, gotErr := spec.x.MulExact(spec.y)
 			if spec.expErr != nil {
-				require.ErrorIs(t, gotErr, spec.expErr)
+				require.ErrorIs(t, gotErr, spec.expErr, gotErr)
 				return
 			}
 			require.NoError(t, gotErr)
-			assert.Equal(t, spec.exp, got)
+			assert.True(t, spec.exp.Equal(got), "exp: %s, got: %s", spec.exp.Text('E'), got.Text('E'))
 		})
 	}
 }
@@ -1358,15 +1365,15 @@ func TestMarshal(t *testing.T) {
 			exp: "1E+6",
 		},
 		"1e100000": {
-			x:   NewDecWithPrec(1, 100_000),
+			x:   NewDecWithExp(1, 100_000),
 			exp: "1E+100000",
 		},
 		"1.1e100000": {
-			x:   NewDecWithPrec(11, 100_000),
+			x:   NewDecWithExp(11, 100_000),
 			exp: "1.1E+100001",
 		},
 		"1.e100000": {
-			x:   NewDecWithPrec(1, 100_000),
+			x:   NewDecWithExp(1, 100_000),
 			exp: "1E+100000",
 		},
 	}
@@ -1415,7 +1422,7 @@ func TestUnMarshal(t *testing.T) {
 		},
 		"Decimal value": {
 			x:   "1.3000",
-			exp: NewDecWithPrec(13, -1),
+			exp: NewDecWithExp(13, -1),
 		},
 		"Positive value": {
 			x:   "1E+1",
@@ -1427,7 +1434,7 @@ func TestUnMarshal(t *testing.T) {
 		},
 		"Min Exponent": {
 			x:   "1E-100000",
-			exp: NewDecWithPrec(1, -100_000),
+			exp: NewDecWithExp(1, -100_000),
 		},
 		"Below Min Exponent": {
 			x:      "1.1E-100001",
@@ -1435,7 +1442,7 @@ func TestUnMarshal(t *testing.T) {
 		},
 		"1E100000": {
 			x:   "1E+100000",
-			exp: NewDecWithPrec(1, 100_000),
+			exp: NewDecWithExp(1, 100_000),
 		},
 		"Above Max Exponent": {
 			x:      "1.1E+100001",
@@ -1443,11 +1450,11 @@ func TestUnMarshal(t *testing.T) {
 		},
 		"-1E100000": {
 			x:   "-1e100000",
-			exp: NewDecWithPrec(-1, 100_000),
+			exp: NewDecWithExp(-1, 100_000),
 		},
 		"9E100000": {
 			x:   "9e100000",
-			exp: NewDecWithPrec(9, 100_000),
+			exp: NewDecWithExp(9, 100_000),
 		},
 		"NaN": {
 			x:      "NaN",

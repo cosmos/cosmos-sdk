@@ -77,7 +77,7 @@ func TestDecWithRapid(t *testing.T) {
 	minusFivePointZero, err := NewDecFromString("-5.0")
 	require.NoError(t, err)
 
-	twoThousand := NewDecWithPrec(2, 3)
+	twoThousand := NewDecWithExp(2, 3)
 	require.True(t, twoThousand.Equal(NewDecFromInt64(2000)))
 
 	res, err := two.Add(zero)
@@ -422,7 +422,7 @@ func testMulQuoExact(t *rapid.T) {
 	decPrec := func(d Dec) bool { return d.NumDecimalPlaces() <= b }
 	a := genDec.Filter(decPrec).Draw(t, "a")
 
-	c := NewDecWithPrec(1, int32(b))
+	c := NewDecWithExp(1, int32(b))
 
 	d, err := a.MulExact(c)
 	require.NoError(t, err)
@@ -440,7 +440,7 @@ func testQuoMulExact(t *rapid.T) {
 	aDec, err := NewDecFromString(fmt.Sprintf("%d", a))
 	require.NoError(t, err)
 	b := rapid.Uint32Range(0, 32).Draw(t, "b")
-	c := NewDecWithPrec(1, int32(b))
+	c := NewDecWithExp(1, int32(b))
 
 	require.NoError(t, err)
 

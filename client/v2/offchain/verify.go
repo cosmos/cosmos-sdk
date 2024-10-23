@@ -3,11 +3,12 @@ package offchain
 import (
 	"bytes"
 	"context"
-	clitx "cosmossdk.io/client/v2/tx"
 	"errors"
 	"fmt"
+
 	"google.golang.org/protobuf/types/known/anypb"
 
+	clitx "cosmossdk.io/client/v2/tx"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,7 +22,7 @@ func Verify(ctx client.Context, digest []byte, fileFormat string) error {
 		AddressCodec:          ctx.AddressCodec,
 		Cdc:                   ctx.Codec,
 		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
-		EnablesSignModes:      ctx.TxConfig.SignModeHandler().SupportedModes(),
+		EnablesSignModes:      enabledSignModes,
 	})
 	if err != nil {
 		return err

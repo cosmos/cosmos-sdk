@@ -54,8 +54,9 @@ func SignFile() *cobra.Command {
 			encoding, _ := cmd.Flags().GetString(flagEncoding)
 			outputFormat, _ := cmd.Flags().GetString(v2flags.FlagOutput)
 			outputFile, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
+			signMode, _ := cmd.Flags().GetString(flags.FlagSignMode)
 
-			signedTx, err := Sign(clientCtx, bz, args[0], encoding, outputFormat)
+			signedTx, err := Sign(clientCtx, bz, args[0], encoding, signMode, outputFormat)
 			if err != nil {
 				return err
 			}
@@ -78,6 +79,7 @@ func SignFile() *cobra.Command {
 	cmd.Flags().Bool(flagNotEmitUnpopulated, false, "Don't show unpopulated fields in the tx")
 	cmd.Flags().String(flagEncoding, "no-encoding", "Choose an encoding method for the file content to be added as msg data (no-encoding|base64|hex)")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
+	cmd.PersistentFlags().String(flags.FlagSignMode, "direct", "Choose sign mode (direct|amino-json)")
 	return cmd
 }
 

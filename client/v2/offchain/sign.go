@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/version"
-	tx "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 )
 
 const (
@@ -22,12 +21,15 @@ const (
 	ExpectedAccountNumber = 0
 	// ExpectedSequence defines the sequence number an off-chain message must have
 	ExpectedSequence = 0
-
-	signMode = apisigning.SignMode_SIGN_MODE_TEXTUAL
 )
 
+var enabledSignModes = []apisigning.SignMode{
+	apisigning.SignMode_SIGN_MODE_DIRECT,
+	apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+}
+
 // Sign signs given bytes using the specified encoder and SignMode.
-func Sign(ctx client.Context, rawBytes []byte, fromName, encoding, output string) (string, error) {
+func Sign(ctx client.Context, rawBytes []byte, fromName, encoding, signMode, output string) (string, error) {
 	digest, err := encodeDigest(encoding, rawBytes)
 	if err != nil {
 		return "", err
@@ -39,11 +41,10 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, encoding, output string
 	}
 
 	txConfig, err := clitx.NewTxConfig(clitx.ConfigOptions{
-		AddressCodec:               ctx.AddressCodec,
-		Cdc:                        ctx.Codec,
-		ValidatorAddressCodec:      ctx.ValidatorAddressCodec,
-		EnablesSignModes:           []apisigning.SignMode{signMode},
-		TextualCoinMetadataQueryFn: tx.NewGRPCCoinMetadataQueryFn(ctx),
+		AddressCodec:          ctx.AddressCodec,
+		Cdc:                   ctx.Codec,
+		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
+		EnablesSignModes:      enabledSignModes,
 	})
 	if err != nil {
 		return "", err
@@ -51,9 +52,13 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, encoding, output string
 
 	accRetriever := account.NewAccountRetriever(ctx.AddressCodec, ctx, ctx.InterfaceRegistry)
 
+	sm, err := getSignMode(signMode)
+	if err != nil {
+		return "", err
+	}
 	params := clitx.TxParameters{
 		ChainID:  ExpectedChainID,
-		SignMode: signMode,
+		SignMode: sm,
 		AccountConfig: clitx.AccountConfig{
 			AccountNumber: ExpectedAccountNumber,
 			Sequence:      ExpectedSequence,
@@ -104,4 +109,16 @@ func encode(output string, tx clitx.Tx, config clitx.TxConfig) ([]byte, error) {
 	default:
 		return nil, fmt.Errorf("unsupported output type: %s", output)
 	}
+}
+
+// getSignMode returns the corresponding apisigning.SignMode based on the provided mode string.
+func getSignMode(mode string) (apisigning.SignMode, error) {
+	switch mode {
+	case "direct":
+		return apisigning.SignMode_SIGN_MODE_DIRECT, nil
+	case "amino-json":
+		return apisigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, nil
+	}
+
+	return apisigning.SignMode_SIGN_MODE_UNSPECIFIED, fmt.Errorf("unsupported sign mode: %s", mode)
 }

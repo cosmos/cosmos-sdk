@@ -104,8 +104,10 @@ func (k BaseViewKeeper) Logger() log.Logger {
 
 // GetAllBalances returns all the account balances for the given account address.
 func (k BaseViewKeeper) GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
+	fmt.Println("GetAllBalances", addr)
 	balances := sdk.NewCoins()
 	k.IterateAccountBalances(ctx, addr, func(balance sdk.Coin) bool {
+		fmt.Println("GetAllBalances inside", balance)
 		balances = balances.Add(balance)
 		return false
 	})
@@ -153,7 +155,9 @@ func (k BaseViewKeeper) GetBalance(ctx context.Context, addr sdk.AccAddress, den
 // provides the token balance to a callback. If true is returned from the
 // callback, iteration is halted.
 func (k BaseViewKeeper) IterateAccountBalances(ctx context.Context, addr sdk.AccAddress, cb func(sdk.Coin) bool) {
+	fmt.Println("IterateAccountBalances", addr)
 	err := k.Balances.Walk(ctx, collections.NewPrefixedPairRange[sdk.AccAddress, string](addr), func(key collections.Pair[sdk.AccAddress, string], value math.Int) (stop bool, err error) {
+		fmt.Println("IterateAccountBalances inside", key, value)
 		return cb(sdk.NewCoin(key.K2(), value)), nil
 	})
 	if err != nil {

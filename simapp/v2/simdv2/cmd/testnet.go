@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"bufio"
+	"cosmossdk.io/server/v2/cometbft"
+	"cosmossdk.io/server/v2/store"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -333,26 +335,14 @@ func initTestnetFiles[T transaction.Tx](
 		serverCfg := serverv2.DefaultServerConfig()
 		serverCfg.MinGasPrices = args.minGasPrices
 
-		// Write server config
-		// TODO FIX ME
-		fmt.Println(grpcConfig)
-		//cometServer, err := cometbft.New[T](
-		//	&genericTxDecoder[T]{clientCtx.TxConfig},
-		//	cometbft.ServerOptions[T]{},
-		//	cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig),
-		//)
-		//storeServer := store.New[T]()
-		//grpcServer := grpc.New[T](grpc.OverwriteDefaultConfig(grpcConfig))
-		//server := serverv2.NewServer[T](
-		//	serverCfg,
-		//	&cometbft.CometBFTServer[T]{},
-		//	&grpc.Server[T]{},
-		//	&store.Server[T]{},
-		//)
-		//err = server.WriteConfig(filepath.Join(nodeDir, "config"))
-		//if err != nil {
-		//	return err
-		//}
+		cometServer := (&cometbft.CometBFTServer[T]{}).WithConfigOptions(cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig))
+		storeServer := &store.Server[T]{}
+		grpcServer := (&grpc.Server[T]{}).WithConfigOptions(grpc.OverwriteDefaultConfig(grpcConfig))
+		server := serverv2.NewServer[T](serverCfg, cometServer, storeServer, grpcServer)
+		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := initGenFiles(clientCtx, mm, args.chainID, genAccounts, genBalances, genFiles, args.numValidators); err != nil {

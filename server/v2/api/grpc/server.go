@@ -81,6 +81,11 @@ func New[T transaction.Tx](
 	return srv, nil
 }
 
+func (s *Server[T]) WithConfigOptions(opts ...CfgOption) *Server[T] {
+	s.cfgOptions = append(s.cfgOptions, opts...)
+	return s
+}
+
 // Init returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server.
 func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
@@ -196,7 +201,7 @@ func (s *Server[T]) Config() any {
 	return s.config
 }
 
-func (s *Server[T]) Start(ctx context.Context) error {
+func (s *Server[T]) Start(context.Context) error {
 	if !s.config.Enable {
 		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil

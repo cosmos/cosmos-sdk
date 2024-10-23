@@ -163,6 +163,11 @@ func New[T transaction.Tx](
 	return srv, nil
 }
 
+func (s *CometBFTServer[T]) WithConfigOptions(opts ...CfgOption) *CometBFTServer[T] {
+	s.cfgOptions = append(s.cfgOptions, opts...)
+	return s
+}
+
 func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
 	return nil
 }

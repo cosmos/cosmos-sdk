@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/api/rest"
 	"cosmossdk.io/server/v2/api/telemetry"
-	"cosmossdk.io/server/v2/cometbft"
 	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
@@ -43,8 +42,8 @@ func newApp[T transaction.Tx](logger log.Logger, viper *viper.Viper) serverv2.Ap
 
 func initRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
-	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
+	consensusComponent serverv2.ServerComponent[T],
 ) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
@@ -70,11 +69,7 @@ func initRootCmd[T transaction.Tx](
 		rootCmd,
 		newApp,
 		initServerConfig(),
-		cometbft.New(
-			&genericTxDecoder[T]{txConfig},
-			initCometOptions[T](),
-			initCometConfig(),
-		),
+		consensusComponent,
 		grpc.New[T](),
 		serverstore.New[T](),
 		telemetry.New[T](),

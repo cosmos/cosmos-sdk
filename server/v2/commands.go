@@ -120,9 +120,15 @@ func createStartCommand[T transaction.Tx](
 			go func() {
 				sigCh := make(chan os.Signal, 1)
 				signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-				sig := <-sigCh
-				cancelFn()
-				cmd.Printf("caught %s signal\n", sig.String())
+				select {
+				case sig := <-sigCh:
+					cancelFn()
+					cmd.Printf("caught %s signal\n", sig.String())
+				case <-ctx.Done():
+					// If the root context is cancelled (which is likely to happen in tests involving cobra commands),
+					// don't block waiting for the OS signal before stopping the server.
+					cancelFn()
+				}
 
 				if err := server.Stop(ctx); err != nil {
 					cmd.PrintErrln("failed to stop servers:", err)

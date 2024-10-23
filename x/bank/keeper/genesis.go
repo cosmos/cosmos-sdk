@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"runtime/debug"
 
 	"cosmossdk.io/collections"
 
@@ -13,6 +14,7 @@ import (
 
 // InitGenesis initializes the bank module's state from a given genesis state.
 func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisState) {
+	debug.PrintStack()
 	if err := k.SetParams(ctx, genState.Params); err != nil {
 		panic(err)
 	}
@@ -26,20 +28,25 @@ func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisStat
 
 	for _, balance := range genState.Balances {
 		addr := balance.GetAddress()
+		fmt.Println("InitGenesis bank addr", addr)
 		bz, err := k.ak.AddressCodec().StringToBytes(addr)
 		if err != nil {
 			panic(err)
 		}
 
 		for _, coin := range balance.Coins {
+			fmt.Println("InitGenesis bank coin", coin)
 			err := k.Balances.Set(ctx, collections.Join(sdk.AccAddress(bz), coin.Denom), coin.Amount)
 			if err != nil {
 				panic(err)
 			}
 		}
 
+		fmt.Println("InitGenesis bank balance.Coins", balance.Coins)
+
 		totalSupplyMap.Add(balance.Coins...)
 	}
+	fmt.Println("InitGenesis bank totalSupplyMap", totalSupplyMap)
 	totalSupply := totalSupplyMap.ToCoins()
 
 	if !genState.Supply.Empty() && !genState.Supply.Equal(totalSupply) {
@@ -47,6 +54,7 @@ func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisStat
 	}
 
 	for _, supply := range totalSupply {
+		fmt.Println("InitGenesis bank supply", supply)
 		k.setSupply(ctx, supply)
 	}
 

@@ -70,12 +70,10 @@ func TestServer(t *testing.T) {
 
 	storeServer, err := store.New[transaction.Tx](app.Store(), cfg)
 	require.NoError(t, err)
-	err = storeServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
-	require.NoError(t, err)
 
 	mockServer := &mockServer{name: "mock-server-1", ch: make(chan string, 100)}
 
-	server := serverv2.NewServer(
+	server := serverv2.NewServer[transaction.Tx](
 		serverv2.DefaultServerConfig(),
 		grpcServer,
 		storeServer,

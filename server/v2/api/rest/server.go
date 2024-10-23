@@ -56,11 +56,6 @@ func (s *Server[T]) Name() string {
 	return ServerName
 }
 
-func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
-
-	return nil
-}
-
 func (s *Server[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
 		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))

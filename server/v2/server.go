@@ -22,7 +22,6 @@ type ServerComponent[T transaction.Tx] interface {
 
 	Start(context.Context) error
 	Stop(context.Context) error
-	Init(AppI[T], map[string]any, log.Logger) error
 }
 
 // HasStartFlags is a server module that has start flags.
@@ -184,30 +183,6 @@ func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 	flags.String(FlagCPUProfiling, "", "Enable CPU profiling and write to the specified file")
 
 	return flags
-}
-
-// Init initializes all server components with the provided application, configuration, and logger.
-// It returns an error if any component fails to initialize.
-func (s *Server[T]) Init(appI AppI[T], cfg map[string]any, logger log.Logger) error {
-	serverCfg := s.config
-	if len(cfg) > 0 {
-		if err := UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
-		}
-	}
-
-	var components []ServerComponent[T]
-	for _, mod := range s.components {
-		if err := mod.Init(appI, cfg, logger); err != nil {
-			return err
-		}
-
-		components = append(components, mod)
-	}
-
-	s.config = serverCfg
-	s.components = components
-	return nil
 }
 
 // WriteConfig writes the config to the given path.

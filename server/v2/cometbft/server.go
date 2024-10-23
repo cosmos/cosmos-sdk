@@ -2,11 +2,6 @@ package cometbft
 
 import (
 	"context"
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/server"
-	"cosmossdk.io/schema/decoding"
-	"cosmossdk.io/server/v2/appmanager"
-	"cosmossdk.io/server/v2/cometbft/types"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -23,12 +18,17 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/schema/decoding"
 	"cosmossdk.io/schema/indexer"
 	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/appmanager"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/mempool"
+	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -166,10 +166,6 @@ func New[T transaction.Tx](
 func (s *CometBFTServer[T]) WithConfigOptions(opts ...CfgOption) *CometBFTServer[T] {
 	s.cfgOptions = append(s.cfgOptions, opts...)
 	return s
-}
-
-func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
-	return nil
 }
 
 func (s *CometBFTServer[T]) Name() string {

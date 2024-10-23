@@ -80,22 +80,6 @@ func (s *Server[T]) Config() any {
 	return s.config
 }
 
-func (s *Server[T]) Init(appI serverv2.AppI[transaction.Tx], cfg map[string]any, logger log.Logger) error {
-	serverCfg := s.Config().(*Config)
-	if len(cfg) > 0 {
-		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
-		}
-	}
-
-	// TODO: register the gRPC-Gateway routes
-
-	s.logger = logger.With(log.ModuleKey, s.Name())
-	s.config = serverCfg
-
-	return nil
-}
-
 func (s *Server[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
 		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))

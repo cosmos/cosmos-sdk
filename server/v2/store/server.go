@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/transaction"
-	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	storev2 "cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/root"
@@ -37,10 +36,6 @@ func New[T transaction.Tx](store storev2.Backend, cfg server.ConfigMap) (*Server
 		backend: store,
 		config:  config,
 	}, nil
-}
-
-func (s *Server[T]) Init(app serverv2.AppI[T], v map[string]any, _ log.Logger) (err error) {
-	return nil
 }
 
 func (s *Server[T]) Name() string {

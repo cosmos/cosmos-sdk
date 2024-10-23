@@ -86,13 +86,6 @@ func (s *Server[T]) WithConfigOptions(opts ...CfgOption) *Server[T] {
 	return s
 }
 
-// Init returns a correctly configured and initialized gRPC server.
-// Note, the caller is responsible for starting the server.
-func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
-
-	return nil
-}
-
 func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 	flags := pflag.NewFlagSet(s.Name(), pflag.ExitOnError)
 	flags.String(FlagAddress, "localhost:9090", "Listen address")

@@ -1,12 +1,17 @@
 package math
 
 import (
+	"bytes"
+	"encoding/binary"
+	"encoding/json"
 	"math/big"
 
 	"github.com/cockroachdb/apd/v3"
 
 	"cosmossdk.io/errors"
 )
+
+var _ customProtobufType = &Dec{}
 
 // Dec is a wrapper struct around apd.Decimal that does no mutation of apd.Decimal's when performing
 // arithmetic, instead creating a new apd.Decimal for every operation ensuring usage is safe.
@@ -30,7 +35,7 @@ const mathCodespace = "math"
 var (
 	ErrInvalidDec         = errors.Register(mathCodespace, 1, "invalid decimal")
 	ErrUnexpectedRounding = errors.Register(mathCodespace, 2, "unexpected rounding")
-	ErrNonIntegeral       = errors.Register(mathCodespace, 3, "value is non-integral")
+	ErrNonIntegral        = errors.Register(mathCodespace, 3, "value is non-integral")
 )
 
 // In cosmos-sdk#7773, decimal128 (with 34 digits of precision) was suggested for performing
@@ -291,7 +296,7 @@ func (x Dec) BigInt() (*big.Int, error) {
 	z := &big.Int{}
 	z, ok := z.SetString(y.String(), 10)
 	if !ok {
-		return nil, ErrNonIntegeral
+		return nil, ErrNonIntegral
 	}
 	return z, nil
 }
@@ -393,36 +398,88 @@ func (x Dec) Reduce() (Dec, int) {
 	return y, n
 }
 
-// Marshal serializes the decimal value into a byte slice in text format.
-// This method represents the decimal in a portable and compact scientific notation.
+// Marshal serializes the decimal value into a byte slice in binary format.
 //
-// For example, the following transformations are made:
-//   - 0 -> 0E+0
-//   - 123 -> 1.23E+3
-//   - -0.001 -> -1E-3
+// The binary format specification is as follows:
 //
-// The output is always in scientific notation ensuring consistency.
+// 1. The first byte indicates the sign of the decimal value.
+//   - The byte value '-' (0x2D) represents a negative value.
+//   - The byte value '+' (0x2B) represents a positive value.
 //
-// Returns:
-//   - A byte slice of the decimal in text format.
-//   - An error if the decimal cannot be reduced or marshaled properly.
+//  2. The next 4 bytes represent the exponent of the decimal value in big-endian format,
+//     serialized as an unsigned 32-bit integer.
+//
+// 3. The remaining bytes represent the absolute value of the coefficient in big-endian format.
+//
+// An error is returned if the serialization process fails. However, in the provided code,
+// the error is always `nil`.
 func (x Dec) Marshal() ([]byte, error) {
-	d, _ := x.Reduce()
-	return []byte(d.dec.Text('E')), nil
+	src, _ := x.Reduce()
+	var buf bytes.Buffer
+	if src.dec.Negative {
+		buf.WriteByte('-')
+	} else {
+		buf.WriteByte('+')
+	}
+	expBz := binary.BigEndian.AppendUint32([]byte{}, uint32(src.dec.Exponent))
+	buf.Write(expBz)
+	buf.Write(src.dec.Coeff.Bytes())
+	return buf.Bytes(), nil
 }
 
-// Unmarshal parses a byte slice containing a text-formatted decimal and stores the result in the receiver.
+// Unmarshal parses a byte slice containing a binary decimal and stores the result in the receiver.
 // It returns an error if the byte slice does not represent a valid decimal.
+// See Marshal for details on the encoding format.
 func (x *Dec) Unmarshal(data []byte) error {
-	result, err := NewDecFromString(string(data))
-	if err != nil {
-		return ErrInvalidDec.Wrap(err.Error())
+	if len(data) < 5 {
+		return ErrInvalidDec.Wrap("insufficient byte length")
 	}
-
-	if result.dec.Form != apd.Finite {
+	coeffNeg := data[0] == '-'
+	exp := binary.BigEndian.Uint32(data[1:5])
+	coeff := new(apd.BigInt).SetBytes(data[5:])
+	apdDec := apd.NewWithBigInt(coeff, int32(exp))
+	if coeffNeg {
+		apdDec = apdDec.Neg(apdDec)
+	}
+	if apdDec.Form != apd.Finite {
 		return ErrInvalidDec.Wrap("unknown decimal form")
 	}
+	x.dec = *apdDec
+	return nil
+}
 
-	x.dec = result.dec
+// MarshalTo encodes the receiver into the provided byte slice and returns the number of bytes written and any error encountered.
+func (x Dec) MarshalTo(data []byte) (n int, err error) {
+	bz, err := x.Marshal()
+	if err != nil {
+		return 0, err
+	}
+
+	return copy(data, bz), nil
+}
+
+// Size returns the number of bytes required to encode the Dec value, which is useful for determining storage requirements.
+func (x Dec) Size() int {
+	bz, _ := x.Marshal()
+	return len(bz)
+}
+
+// MarshalJSON serializes the Dec struct into a JSON-encoded byte slice using scientific notation.
+func (x Dec) MarshalJSON() ([]byte, error) {
+	return json.Marshal(x.dec.Text('E'))
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface for the Dec type, converting JSON strings to Dec objects.
+func (x *Dec) UnmarshalJSON(data []byte) error {
+	var text string
+	err := json.Unmarshal(data, &text)
+	if err != nil {
+		return err
+	}
+	val, err := NewDecFromString(text)
+	if err != nil {
+		return err
+	}
+	*x = val
 	return nil
 }

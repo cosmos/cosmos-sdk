@@ -1242,7 +1242,7 @@ func TestToBigInt(t *testing.T) {
 		{i1, i1, nil},
 		{"1000000000000000000000000000000000000123456789.00000000", i1, nil},
 		{"123.456e6", "123456000", nil},
-		{"12345.6", "", ErrNonIntegeral},
+		{"12345.6", "", ErrNonIntegral},
 	}
 	for idx, tc := range tcs {
 		a, err := NewDecFromString(tc.intStr)
@@ -1295,7 +1295,7 @@ func must[T any](r T, err error) T {
 	return r
 }
 
-func TestMarshal(t *testing.T) {
+func TestMarshalUnmarshal(t *testing.T) {
 	specs := map[string]struct {
 		x   Dec
 		exp string
@@ -1324,15 +1324,19 @@ func TestMarshal(t *testing.T) {
 			x:   NewDecFromInt64(10),
 			exp: "1E+1",
 		},
-		"negative value": {
+		"negative 10": {
 			x:   NewDecFromInt64(-10),
 			exp: "-1E+1",
 		},
-		"max decimal": {
+		"9 with trailing zeros": {
 			x:   must(NewDecFromString("9." + strings.Repeat("0", 34))),
 			exp: "9E+0",
 		},
-		"min decimal": {
+		"negative 1 with negative exponent zeros": {
+			x:   must(NewDecFromString("-1.000001")),
+			exp: "-1.000001E+0",
+		},
+		"negative 1 with trailing zeros": {
 			x:   must(NewDecFromString("-1." + strings.Repeat("0", 34))),
 			exp: "-1E+0",
 		},
@@ -1381,112 +1385,9 @@ func TestMarshal(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			marshaled, err := spec.x.Marshal()
 			require.NoError(t, err)
-			assert.Equal(t, spec.exp, string(marshaled))
-		})
-	}
-}
-
-func TestUnMarshal(t *testing.T) {
-	specs := map[string]struct {
-		x      string
-		exp    Dec
-		expErr error
-	}{
-		"Leading zeros": {
-			x:   "000123456",
-			exp: NewDecFromInt64(123456),
-		},
-		"Trailing zeros": {
-			x:   "1.00000",
-			exp: NewDecFromInt64(1),
-		},
-		"Small e": {
-			x:   "1.23456e+8",
-			exp: NewDecFromInt64(123456000),
-		},
-		"xxx": {
-			x:   "1.23E+2",
-			exp: NewDecFromInt64(123),
-		},
-		"Zero value": {
-			x:   "0",
-			exp: NewDecFromInt64(0),
-		},
-		"-0": {
-			x:   "-0",
-			exp: NewDecFromInt64(0),
-		},
-		"0E+0": {
-			x:   "0E+0",
-			exp: NewDecFromInt64(0),
-		},
-		"Decimal value": {
-			x:   "1.3000",
-			exp: NewDecWithExp(13, -1),
-		},
-		"Positive value": {
-			x:   "1E+1",
-			exp: NewDecFromInt64(10),
-		},
-		"negative value": {
-			x:   "-1E+1",
-			exp: NewDecFromInt64(-10),
-		},
-		"Min Exponent": {
-			x:   "1E-100000",
-			exp: NewDecWithExp(1, -100_000),
-		},
-		"Below Min Exponent": {
-			x:      "1.1E-100001",
-			expErr: ErrInvalidDec,
-		},
-		"1E100000": {
-			x:   "1E+100000",
-			exp: NewDecWithExp(1, 100_000),
-		},
-		"Above Max Exponent": {
-			x:      "1.1E+100001",
-			expErr: ErrInvalidDec,
-		},
-		"-1E100000": {
-			x:   "-1e100000",
-			exp: NewDecWithExp(-1, 100_000),
-		},
-		"9E100000": {
-			x:   "9e100000",
-			exp: NewDecWithExp(9, 100_000),
-		},
-		"NaN": {
-			x:      "NaN",
-			expErr: ErrInvalidDec,
-		},
-		"currency string": {
-			x:      "1foo",
-			expErr: ErrInvalidDec,
-		},
-		".": {
-			x:      ".",
-			expErr: ErrInvalidDec,
-		},
-		"0.": {
-			x:   "0.",
-			exp: NewDecFromInt64(0),
-		},
-		".0": {
-			x:   ".0",
-			exp: NewDecFromInt64(0),
-		},
-	}
-	for name, spec := range specs {
-		t.Run(name, func(t *testing.T) {
-			var unmarshaled Dec
-			err := unmarshaled.Unmarshal([]byte(spec.x))
-			if spec.expErr != nil {
-				require.ErrorIs(t, err, spec.expErr)
-				return
-			}
-			require.NoError(t, err)
-			assert.True(t, spec.exp.Equal(unmarshaled))
+			unmarshalled := new(Dec)
+			require.NoError(t, unmarshalled.Unmarshal(marshaled))
+			assert.Equal(t, spec.exp, unmarshalled.dec.Text('E'))
 		})
 	}
 }

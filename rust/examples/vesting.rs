@@ -54,7 +54,7 @@ mod vesting {
 
     #[handler_api]
     pub trait VestingAPI {
-        fn unlock<'a>(&self, ctx: &'a mut Context, eb: &mut EventBus<UnlockEvent>) -> Result<(), UnlockError>;
+        fn unlock(&self, ctx: &mut Context, eb: &mut EventBus<UnlockEvent>) -> Result<(), UnlockError>;
     }
 
     #[derive(SchemaValue, Clone, PartialEq, Debug)]
@@ -72,7 +72,7 @@ mod vesting {
 
     #[handler_api]
     pub trait ReceiveHook {
-        fn on_receive<'a>(&self, ctx: &mut Context<'a>, from: AccountID, amount: &[Coin]) -> Result<()>;
+        fn on_receive(&self, ctx: &mut Context, from: AccountID, amount: &[Coin]) -> Result<()>;
     }
 
     #[handler_api]
@@ -83,7 +83,7 @@ mod vesting {
 
     #[publish]
     impl ReceiveHook for FixedVesting {
-        fn on_receive<'a>(&self, ctx: &mut Context<'a>, from: AccountID, amount: &[Coin]) -> Result<()> {
+        fn on_receive(&self, ctx: &mut Context, from: AccountID, amount: &[Coin]) -> Result<()> {
             if ctx.caller() != self.bank_client.account_id() {
                 bail!("only the bank can send funds to this account");
             }

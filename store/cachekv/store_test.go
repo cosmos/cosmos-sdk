@@ -448,7 +448,7 @@ func TestIteratorDeadlock(t *testing.T) {
 	defer it2.Close()
 }
 
-// -------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------
 // do some random ops
 
 const (
@@ -527,7 +527,7 @@ func doRandomOp(t *testing.T, st types.CacheKVStore, truth corestore.KVStoreWith
 	}
 }
 
-// -------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------
 
 // iterate over whole domain
 func assertIterateDomain(t *testing.T, st types.KVStore, expectedN int) {
@@ -602,7 +602,7 @@ func checkIterators(t *testing.T, itr, itr2 types.Iterator) {
 	require.False(t, itr2.Valid())
 }
 
-// --------------------------------------------------------
+//--------------------------------------------------------
 
 func setRange(t *testing.T, st types.KVStore, mem corestore.KVStoreWithBatch, start, end int) {
 	t.Helper()
@@ -622,7 +622,7 @@ func deleteRange(t *testing.T, st types.KVStore, mem corestore.KVStoreWithBatch,
 	}
 }
 
-// --------------------------------------------------------
+//--------------------------------------------------------
 
 type keyRange struct {
 	start int
@@ -672,7 +672,7 @@ func (krc *keyRangeCounter) key() int {
 	return thisKeyRange.start + krc.idx
 }
 
-// --------------------------------------------------------
+//--------------------------------------------------------
 
 func bz(s string) []byte { return []byte(s) }
 

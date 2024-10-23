@@ -16,7 +16,7 @@ type (
 	}
 
 	// NewBroadcasterFn is a function type for creating Broadcaster instances.
-	NewBroadcasterFn func(url string, opts ...Option) (Broadcaster, error)
+	NewBroadcasterFn func(ctx context.Context, url string, opts ...Option) (Broadcaster, error)
 
 	// BroadcasterFactory defines an interface for creating and registering Broadcasters.
 	BroadcasterFactory interface {

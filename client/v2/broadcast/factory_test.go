@@ -68,7 +68,7 @@ func TestFactory_Register(t *testing.T) {
 		{
 			name:      "register new broadcaster",
 			consensus: "testBFT",
-			creator: func(url string, opts ...types.Option) (types.Broadcaster, error) {
+			creator: func(_ context.Context, _ string, _ ...types.Option) (types.Broadcaster, error) {
 				return testBFT{}, nil
 			},
 		},

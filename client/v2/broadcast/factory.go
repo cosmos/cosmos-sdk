@@ -16,12 +16,12 @@ type Factory struct {
 }
 
 // Create creates a new Broadcaster based on the given consensus type.
-func (f *Factory) Create(_ context.Context, consensus, url string, opts ...types.Option) (types.Broadcaster, error) {
+func (f *Factory) Create(ctx context.Context, consensus, url string, opts ...types.Option) (types.Broadcaster, error) {
 	creator, ok := f.engines[consensus]
 	if !ok {
 		return nil, fmt.Errorf("invalid consensus type: %s", consensus)
 	}
-	return creator(url, opts...)
+	return creator(ctx, url, opts...)
 }
 
 // Register adds a new BroadcasterCreator for a given consensus type to the factory.
@@ -33,7 +33,7 @@ func (f *Factory) Register(consensus string, creator types.NewBroadcasterFn) {
 func NewFactory() Factory {
 	return Factory{
 		engines: map[string]types.NewBroadcasterFn{
-			"comet": func(url string, opts ...types.Option) (types.Broadcaster, error) {
+			"comet": func(_ context.Context, url string, opts ...types.Option) (types.Broadcaster, error) {
 				return comet.NewCometBFTBroadcaster(url, opts...)
 			},
 		},

@@ -92,7 +92,7 @@ func TestSimulateTx_GRPC(t *testing.T) {
 	qc := tx.NewServiceClient(sut.RPCClient(t))
 
 	// create unsign tx
-	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), fmt.Sprintf("--chain-id=%s", sut.chainID), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
 	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
 	txFile := StoreTempFile(t, []byte(res))
 
@@ -155,7 +155,7 @@ func TestSimulateTx_GRPCGateway(t *testing.T) {
 	baseURL := sut.APIAddress()
 
 	// create unsign tx
-	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), fmt.Sprintf("--chain-id=%s", sut.chainID), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
 	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
 	txFile := StoreTempFile(t, []byte(res))
 
@@ -745,7 +745,7 @@ func TestTxDecode_GRPC(t *testing.T) {
 	qc := tx.NewServiceClient(sut.RPCClient(t))
 
 	// create unsign tx
-	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), fmt.Sprintf("--chain-id=%s", sut.chainID), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
 	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
 	txFile := StoreTempFile(t, []byte(res))
 
@@ -800,7 +800,7 @@ func TestTxDecode_GRPCGateway(t *testing.T) {
 	basrUrl := sut.APIAddress()
 
 	// create unsign tx
-	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), fmt.Sprintf("--chain-id=%s", sut.chainID), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
 	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
 	txFile := StoreTempFile(t, []byte(res))
 
@@ -1054,7 +1054,7 @@ func TestSimMultiSigTx(t *testing.T) {
 	// Send from multisig to validator
 	// create unsign tx
 	var newTransferAmount int64 = 100
-	bankSendCmdArgs := []string{"tx", "bank", "send", multiSigAddr, valAddr, fmt.Sprintf("%d%s", newTransferAmount, denom), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", multiSigAddr, valAddr, fmt.Sprintf("%d%s", newTransferAmount, denom), fmt.Sprintf("--chain-id=%s", sut.chainID), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
 	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
 	txFile := StoreTempFile(t, []byte(res))
 

@@ -58,6 +58,7 @@ func TestQueryBySig(t *testing.T) {
 	signedTxFile := StoreTempFile(t, []byte(res))
 
 	res = cli.Run("tx", "broadcast", signedTxFile.Name())
+	fmt.Println("resss", res)
 	RequireTxSuccess(t, res)
 
 	sigFormatted := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, sig)
@@ -67,6 +68,7 @@ func TestQueryBySig(t *testing.T) {
 		Page:    0,
 		Limit:   10,
 	})
+	fmt.Println("resppp", resp)
 	require.NoError(t, err)
 	require.Len(t, resp.Txs, 1)
 	require.Len(t, resp.Txs[0].Signatures, 1)

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime/debug"
 	"time"
 
 	corestore "cosmossdk.io/core/store"
@@ -124,6 +125,7 @@ func (k Keeper) GetDelegatorDelegations(ctx context.Context, delegator sdk.AccAd
 
 // SetDelegation sets a delegation.
 func (k Keeper) SetDelegation(ctx context.Context, delegation types.Delegation) error {
+	fmt.Println("SetDelegation", delegation)
 	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
 	if err != nil {
 		return err
@@ -378,6 +380,8 @@ func (k Keeper) HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorA
 
 // SetUnbondingDelegation sets the unbonding delegation and associated index.
 func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingDelegation) error {
+	fmt.Println("SetUnbondingDelegation", ubd)
+	debug.Stack()
 	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
 		return err
@@ -425,6 +429,8 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance math.Int,
 ) (types.UnbondingDelegation, error) {
+	fmt.Println("SetUnbondingDelegationEntry", delegatorAddr, validatorAddr, creationHeight, minTime, balance)
+	debug.Stack()
 	id, err := k.IncrementUnbondingID(ctx)
 	if err != nil {
 		return types.UnbondingDelegation{}, err

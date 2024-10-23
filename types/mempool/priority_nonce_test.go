@@ -588,6 +588,7 @@ func validateOrder(mtxs []sdk.Tx) error {
 			}
 		}
 	}
+	_ = iterations
 	// fmt.Printf("validation in iterations: %d\n", iterations)
 	return nil
 }

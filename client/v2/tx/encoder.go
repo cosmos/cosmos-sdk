@@ -2,6 +2,7 @@ package tx
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/encoding/prototext"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
@@ -21,6 +22,11 @@ var (
 		Indent:         "",
 		UseProtoNames:  true,
 		UseEnumNumbers: false,
+	}
+
+	// textMarshalOptions
+	textMarshalOptions = prototext.MarshalOptions{
+		Indent: "",
 	}
 )
 
@@ -98,6 +104,39 @@ func encodeJsonTx(tx Tx) ([]byte, error) {
 		return nil, fmt.Errorf("unexpected tx type: %T", tx)
 	}
 	return jsonMarshalOptions.Marshal(wTx.Tx)
+}
+
+func encodeTextTx(tx Tx) ([]byte, error) {
+	wTx, ok := tx.(*wrappedTx)
+	if !ok {
+		return nil, fmt.Errorf("unexpected tx type: %T", tx)
+	}
+	return textMarshalOptions.Marshal(wTx.Tx)
+}
+
+// decodeJsonTx decodes transaction bytes into an apitx.Tx structure using JSON format.
+func decodeTextTx(cdc codec.BinaryCodec, decoder Decoder) txDecoder {
+	return func(txBytes []byte) (Tx, error) {
+		jsonTx := new(txv1beta1.Tx)
+		err := prototext.UnmarshalOptions{
+			AllowPartial:   false,
+			DiscardUnknown: false,
+		}.Unmarshal(txBytes, jsonTx)
+		if err != nil {
+			return nil, err
+		}
+
+		pTxBytes, err := protoTxBytes(jsonTx)
+		if err != nil {
+			return nil, err
+		}
+
+		decodedTx, err := decoder.Decode(pTxBytes)
+		if err != nil {
+			return nil, err
+		}
+		return newWrapperTx(cdc, decodedTx), nil
+	}
 }
 
 func protoTxBytes(tx *txv1beta1.Tx) ([]byte, error) {

@@ -51,6 +51,10 @@ type TxEncodingConfig interface {
 	TxJSONEncoder() txEncoder
 	// TxJSONDecoder returns a decoder for JSON transaction decoding.
 	TxJSONDecoder() txDecoder
+
+	TxTextEncoder() txEncoder
+	// TxJSONDecoder returns a decoder for JSON transaction decoding.
+	TxTextDecoder() txDecoder
 	// Decoder returns the Decoder interface for decoding transaction bytes into a DecodedTx.
 	Decoder() Decoder
 }
@@ -166,6 +170,16 @@ func (t defaultEncodingConfig) TxJSONEncoder() txEncoder {
 // TxJSONDecoder returns the default JSON transaction decoder.
 func (t defaultEncodingConfig) TxJSONDecoder() txDecoder {
 	return decodeJsonTx(t.cdc, t.decoder)
+}
+
+// TxTextEncoder returns the default text transaction encoder.
+func (t defaultEncodingConfig) TxTextEncoder() txEncoder {
+	return encodeTextTx
+}
+
+// TxTextDecoder returns the default text transaction decoder.
+func (t defaultEncodingConfig) TxTextDecoder() txDecoder {
+	return decodeTextTx(t.cdc, t.decoder)
 }
 
 // Decoder returns the Decoder instance associated with this encoding configuration.

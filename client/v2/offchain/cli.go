@@ -51,13 +51,11 @@ func SignFile() *cobra.Command {
 				return err
 			}
 
-			notEmitUnpopulated, _ := cmd.Flags().GetBool(flagNotEmitUnpopulated)
-			indent, _ := cmd.Flags().GetString(flagIndent)
 			encoding, _ := cmd.Flags().GetString(flagEncoding)
 			outputFormat, _ := cmd.Flags().GetString(v2flags.FlagOutput)
 			outputFile, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 
-			signedTx, err := Sign(clientCtx, bz, args[0], indent, encoding, outputFormat, !notEmitUnpopulated)
+			signedTx, err := Sign(clientCtx, bz, args[0], encoding, outputFormat)
 			if err != nil {
 				return err
 			}
@@ -86,17 +84,17 @@ func SignFile() *cobra.Command {
 // VerifyFile verifies given file with given key.
 func VerifyFile() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "verify-file <keyName> <fileName>",
+		Use:   "verify-file <signedFileName>",
 		Short: "Verify a file.",
 		Long:  "Verify a previously signed file with the given key.",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			bz, err := os.ReadFile(args[1])
+			bz, err := os.ReadFile(args[0])
 			if err != nil {
 				return err
 			}

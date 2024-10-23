@@ -449,8 +449,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			},
 			accSeqs: []uint64{1}, // wrong signer, so this sequence doesn't actually get used.
 			expInError: []string{
-				"cannot be claimed by public key with address",
-				govAddr,
+				"signer can't be a module account: gov",
 			},
 		},
 		{

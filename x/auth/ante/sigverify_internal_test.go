@@ -35,7 +35,7 @@ func (*mockTransactionService) ExecMode(ctx context.Context) transaction.ExecMod
 }
 
 func TestSigVerify_setPubKey(t *testing.T) {
-	svd := ante.NewSigVerificationDecorator(&mockAccount{}, nil, nil, nil)
+	svd := ante.NewSigVerificationDecorator(&mockAccount{}, nil, nil, nil, nil)
 
 	alicePk := secp256k1.GenPrivKey().PubKey()
 	bobPk := secp256k1.GenPrivKey().PubKey()

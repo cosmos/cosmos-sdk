@@ -62,6 +62,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.TxConfig.SignModeHandler(),
 		ante.DefaultSigVerificationGasConsumer,
 		in.AccountAbstractionKeeper, // can be nil
+		in.ModuleAccountsService,
 	)
 
 	var (

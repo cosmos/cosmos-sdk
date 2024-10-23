@@ -195,7 +195,7 @@ func TestSigVerification(t *testing.T) {
 	)
 	require.NoError(t, err)
 	noOpGasConsume := func(_ gas.Meter, _ signing.SignatureV2, _ types.Params) error { return nil }
-	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), noOpGasConsume, nil)
+	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), noOpGasConsume, nil, nil)
 	antehandler := sdk.ChainAnteDecorators(svd)
 	defaultSignMode, err := authsign.APISignModeToInternal(anteTxConfig.SignModeHandler().DefaultMode())
 	require.NoError(t, err)
@@ -335,7 +335,7 @@ func runSigDecorators(t *testing.T, params types.Params, privs ...cryptotypes.Pr
 	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler(), ante.DefaultSigVerificationGasConsumer, nil)
+	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler(), ante.DefaultSigVerificationGasConsumer, nil, nil)
 	antehandler := sdk.ChainAnteDecorators(svd)
 
 	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(tx)
@@ -396,7 +396,7 @@ func TestAnteHandlerChecks(t *testing.T) {
 		accs[i] = acc
 	}
 
-	sigVerificationDecorator := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), ante.DefaultSigVerificationGasConsumer, nil)
+	sigVerificationDecorator := ante.NewSigVerificationDecorator(suite.accountKeeper, anteTxConfig.SignModeHandler(), ante.DefaultSigVerificationGasConsumer, nil, nil)
 
 	anteHandler := sdk.ChainAnteDecorators(sigVerificationDecorator)
 

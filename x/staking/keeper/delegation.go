@@ -1108,12 +1108,16 @@ func (k Keeper) getBeginInfo(
 func (k Keeper) Undelegate(
 	ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount math.LegacyDec,
 ) (time.Time, math.Int, error) {
+	fmt.Println("Undelegate called")
 	validator, err := k.GetValidator(ctx, valAddr)
+	fmt.Println("Undelegate: validator", validator)
+	fmt.Println("Undelegate: validator err", err)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}
 
 	hasMaxEntries, err := k.HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr)
+	fmt.Println("Undelegate: max entries", hasMaxEntries, err)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}
@@ -1123,31 +1127,38 @@ func (k Keeper) Undelegate(
 	}
 
 	returnAmount, err := k.Unbond(ctx, delAddr, valAddr, sharesAmount)
+	fmt.Println("Undelegate: return amount", returnAmount)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}
 
 	// transfer the validator tokens to the not bonded pool
 	if validator.IsBonded() {
+		fmt.Println("Undelegate: bonded")
 		err = k.bondedTokensToNotBonded(ctx, returnAmount)
+		fmt.Println("Undelegate: bondedTokensToNotBonded", err)
 		if err != nil {
 			return time.Time{}, math.Int{}, err
 		}
 	}
 
 	unbondingTime, err := k.UnbondingTime(ctx)
+	fmt.Println("Undelegate: unbondingTime", unbondingTime, err)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	completionTime := sdkCtx.BlockHeader().Time.Add(unbondingTime)
+	fmt.Println("Undelegate: completionTime", completionTime)
 	ubd, err := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, sdkCtx.BlockHeight(), completionTime, returnAmount)
+	fmt.Println("Undelegate: SetUnbondingDelegationEntry", ubd, err)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}
 
 	err = k.InsertUBDQueue(ctx, ubd, completionTime)
+	fmt.Println("Undelegate: InsertUBDQueue", err)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}

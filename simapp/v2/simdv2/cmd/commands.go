@@ -36,7 +36,7 @@ import (
 )
 
 func newApp[T transaction.Tx](logger log.Logger, viper *viper.Viper) serverv2.AppI[T] {
-	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
+	viper.SetDefault(serverv2.FlagHome, simapp.DefaultNodeHome)
 	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper))
 }
 
@@ -163,7 +163,7 @@ func appExport[T transaction.Tx](
 
 	// overwrite the FlagInvCheckPeriod
 	viper.Set(server.FlagInvCheckPeriod, 1)
-	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
+	viper.SetDefault(serverv2.FlagHome, simapp.DefaultNodeHome)
 
 	var simApp *simapp.SimApp[T]
 	if height != -1 {

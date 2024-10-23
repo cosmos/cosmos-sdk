@@ -1,4 +1,5 @@
-module cosmossdk.io/x/upgrade
+//module cosmossdk.io/x/upgrade
+module github.com/cosmos/cosmos-sdk/x/upgrade
 
 go 1.21
 

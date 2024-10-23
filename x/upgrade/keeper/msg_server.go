@@ -26,6 +26,28 @@ var (
 	_, _ sdk.Msg         = &types.MsgSoftwareUpgrade{}, &types.MsgCancelUpgrade{}
 )
 
+// case *types.SoftwareUpgradeProposal:
+//			return handleSoftwareUpgradeProposal(ctx, k, c)
+//
+//		case *types.CancelSoftwareUpgradeProposal:
+//			return handleCancelSoftwareUpgradeProposal(ctx, k, c)
+//
+//		default:
+//			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized software upgrade proposal content type: %T", c)
+//		}
+//	}
+//}
+//
+////nolint:staticcheck // we are intentionally using a deprecated proposal here.
+//func handleSoftwareUpgradeProposal(ctx sdk.Context, k *keeper.Keeper, p *types.SoftwareUpgradeProposal) error {
+//	return k.ScheduleUpgrade(ctx, p.Plan)
+//}
+//
+////nolint:staticcheck // we are intentionally using a deprecated proposal here.
+//func handleCancelSoftwareUpgradeProposal(ctx sdk.Context, k *keeper.Keeper, _ *types.CancelSoftwareUpgradeProposal) error {
+//	return k.ClearUpgradePlan(ctx)
+//}
+
 // SoftwareUpgrade implements the Msg/SoftwareUpgrade Msg service.
 func (k msgServer) SoftwareUpgrade(goCtx context.Context, msg *types.MsgSoftwareUpgrade) (*types.MsgSoftwareUpgradeResponse, error) {
 	if k.authority != msg.Authority {

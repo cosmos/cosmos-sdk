@@ -53,6 +53,8 @@ func (rtr *router) AddRoute(path string, h Handler) Router {
 		panic(fmt.Sprintf("route %s has already been initialized", path))
 	}
 
+	fmt.Println("AddRoute", path, h)
+
 	rtr.routes[path] = h
 	return rtr
 }

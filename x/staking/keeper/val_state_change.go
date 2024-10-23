@@ -334,6 +334,7 @@ func (k Keeper) unjailValidator(ctx context.Context, validator types.Validator) 
 
 // perform all the store operations for when a validator status becomes bonded
 func (k Keeper) bondValidator(ctx context.Context, validator types.Validator) (types.Validator, error) {
+	fmt.Println("bondValidator")
 	// delete the validator by power index, as the key will change
 	if err := k.DeleteValidatorByPowerIndex(ctx, validator); err != nil {
 		return validator, err
@@ -365,6 +366,8 @@ func (k Keeper) bondValidator(ctx context.Context, validator types.Validator) (t
 	if err != nil {
 		return validator, err
 	}
+
+	fmt.Println("calling hooks after validator bonded from bondValidator")
 
 	if err := k.Hooks().AfterValidatorBonded(ctx, consAddr, str); err != nil {
 		return validator, err

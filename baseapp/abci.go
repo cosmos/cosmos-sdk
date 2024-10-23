@@ -99,12 +99,8 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		return &abci.ResponseInitChain{}, nil
 	}
 
-	fmt.Println("going to set context")
-
 	// add block gas meter for any genesis transactions (allow infinite gas)
 	app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockGasMeter(storetypes.NewInfiniteGasMeter()))
-
-	fmt.Println("going to call initChainer")
 
 	res, err := app.initChainer(app.finalizeBlockState.Context(), req)
 	if err != nil {
@@ -112,7 +108,6 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 	}
 
 	if len(req.Validators) > 0 {
-		fmt.Println("going to validate genesis validators")
 		if len(req.Validators) != len(res.Validators) {
 			return nil, fmt.Errorf(
 				"len(RequestInitChain.Validators) != len(GenesisValidators) (%d != %d)",
@@ -129,8 +124,6 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 			}
 		}
 	}
-
-	fmt.Println("going to set validators")
 
 	// NOTE: We don't commit, but FinalizeBlock for block InitialHeight starts from
 	// this FinalizeBlockState.
@@ -700,12 +693,10 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	var events []abci.Event
 
 	if err := app.checkHalt(req.Height, req.Time); err != nil {
-		fmt.Println("err 1: ", err)
 		return nil, err
 	}
 
 	if err := app.validateFinalizeBlockHeight(req); err != nil {
-		fmt.Println("err 2: ", err)
 		return nil, err
 	}
 
@@ -728,11 +719,8 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	// nil, it means we are replaying this block and we need to set the state here
 	// given that during block replay ProcessProposal is not executed by CometBFT.
 	if app.finalizeBlockState == nil {
-		fmt.Println("internalFinalizeBlock: setting finalizeBlockState")
 		app.setState(execModeFinalize, header)
 	}
-
-	fmt.Println("internalFinalizeBlock: finializing block update context")
 
 	// Context is now updated with Header information.
 	app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().
@@ -767,22 +755,17 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 	preblockEvents, err := app.preBlock(req)
 	if err != nil {
-		fmt.Println("err 3: ", err)
 		return nil, err
 	}
 
 	events = append(events, preblockEvents...)
-	fmt.Println("events", events)
 
-	fmt.Println("internalFinalizeBlock: beginBlock goign to run")
+	fmt.Println("internalFinalizeBlock before begin block")
 
 	beginBlock, err := app.beginBlock(req)
 	if err != nil {
-		fmt.Println("err 4: ", err)
 		return nil, err
 	}
-
-	fmt.Println("internalFinalizeBlock: beginBlock done")
 
 	// First check for an abort signal after beginBlock, as it's the first place
 	// we spend any significant amount of time.
@@ -838,9 +821,10 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 		app.finalizeBlockState.ms = app.finalizeBlockState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
 	}
 
+	fmt.Println("internalFinalizeBlock before end block")
+
 	endBlock, err := app.endBlock(app.finalizeBlockState.Context())
 	if err != nil {
-		fmt.Println("err 5: ", err)
 		return nil, err
 	}
 
@@ -895,8 +879,6 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 				res.AppHash = app.workingHash()
 			}
 
-			fmt.Println("FinalizeBlock res inside if", err)
-
 			return res, err
 		}
 
@@ -907,7 +889,6 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
 	res, err = app.internalFinalizeBlock(context.Background(), req)
-	fmt.Println("FinalizeBlock res", err)
 	if res != nil {
 		res.AppHash = app.workingHash()
 	}
@@ -942,7 +923,6 @@ func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 // height.
 func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	header := app.finalizeBlockState.Context().BlockHeader()
-	fmt.Println("header from commit", header)
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
 	if app.precommiter != nil {

@@ -12,10 +12,6 @@ import (
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/api/grpc"
-	"cosmossdk.io/server/v2/api/telemetry"
-	"cosmossdk.io/server/v2/cometbft"
-	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 
@@ -67,21 +63,23 @@ func initRootCmd[T transaction.Tx](
 		offchain.OffChain(),
 	)
 
-	// wire server commands
-	return serverv2.AddCommands(
-		rootCmd,
-		app,
-		logger,
-		globalAppConfig,
-		cometbft.New(
-			&genericTxDecoder[T]{txConfig},
-			initCometOptions[T](),
-			initCometConfig(),
-		),
-		grpc.New[T](),
-		serverstore.New[T](),
-		telemetry.New[T](),
-	)
+	//// wire server commands
+	//return serverv2.AddCommands(
+	//	rootCmd,
+	//	app,
+	//	logger,
+	//	globalAppConfig,
+	//	cometbft.New(
+	//		&genericTxDecoder[T]{txConfig},
+	//		initCometOptions[T](),
+	//		initCometConfig(),
+	//	),
+	//	grpc.New[T](),
+	//	serverstore.New[T](),
+	//	telemetry.New[T](),
+	//)
+
+	return nil, nil
 }
 
 // genesisCommand builds genesis-related `simd genesis` command.

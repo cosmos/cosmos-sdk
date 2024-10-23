@@ -13,6 +13,7 @@ replace (
 	cosmossdk.io/x/consensus => ../../../x/consensus
 	cosmossdk.io/x/staking => ../../../x/staking
 	cosmossdk.io/x/tx => ../../../x/tx
+	cosmossdk.io/core => ../../../core
 	github.com/cosmos/cosmos-sdk => ../../../
 )
 

@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"cosmossdk.io/server/v2/api/telemetry"
+	"cosmossdk.io/server/v2/cometbft"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -196,6 +198,23 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 		if err != nil {
 			return nil, err
 		}
+		// create server components
+		cometBftServer, err := cometbft.New(
+			logger,
+			// TODO use depinject outputs not app
+			app.Name(),
+			app.GetStore(),
+			app.GetAppManager(),
+			app.GetQueryHandlers(),
+			&genericTxDecoder{clientCtx.TxConfig},
+			globalConfig,
+			initCometOptions[T](),
+			initCometConfig(),
+		)
+		telemetryServer, err := telemetry.New[transaction.Tx](globalConfig, logger)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		if err = depinject.Inject(
 			depinject.Configs(
@@ -250,6 +269,7 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	srv, err = initRootCmd[T](rootCmd, logger, globalConfig, clientCtx.TxConfig, moduleManager, app)
 	if err != nil {
 		return nil, err

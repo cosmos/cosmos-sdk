@@ -2,6 +2,10 @@ package cometbft
 
 import (
 	"context"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/server"
+	"cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/cometbft/types"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -48,34 +52,38 @@ type CometBFTServer[T transaction.Tx] struct {
 }
 
 func New[T transaction.Tx](
+	logger log.Logger,
+	appName string,
+	store types.Store,
+	appManager *appmanager.AppManager[T],
+	queryHandlers map[string]appmodulev2.Handler,
 	txCodec transaction.Codec[T],
+	cfg server.ConfigMap,
 	serverOptions ServerOptions[T],
 	cfgOptions ...CfgOption,
-) *CometBFTServer[T] {
-	return &CometBFTServer[T]{
+) (*CometBFTServer[T], error) {
+	srv := &CometBFTServer[T]{
 		initTxCodec:   txCodec,
 		serverOptions: serverOptions,
 		cfgOptions:    cfgOptions,
 	}
-}
 
-func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
 	home, _ := cfg[serverv2.FlagHome].(string)
 
 	// get configs (app.toml + config.toml) from viper
-	appTomlConfig := s.Config().(*AppTomlConfig)
+	appTomlConfig := srv.Config().(*AppTomlConfig)
 	configTomlConfig := cmtcfg.DefaultConfig().SetRoot(home)
 	if len(cfg) > 0 {
-		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &appTomlConfig); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
+		if err := serverv2.UnmarshalSubConfig(cfg, srv.Name(), &appTomlConfig); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 
 		if err := serverv2.UnmarshalSubConfig(cfg, "", &configTomlConfig); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
 
-	s.config = Config{
+	srv.config = Config{
 		ConfigTomlConfig: configTomlConfig,
 		AppTomlConfig:    appTomlConfig,
 	}
@@ -95,44 +103,48 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		}
 	}
 
-	indexEvents := make(map[string]struct{}, len(s.config.AppTomlConfig.IndexEvents))
-	for _, e := range s.config.AppTomlConfig.IndexEvents {
+	indexEvents := make(map[string]struct{}, len(srv.config.AppTomlConfig.IndexEvents))
+	for _, e := range srv.config.AppTomlConfig.IndexEvents {
 		indexEvents[e] = struct{}{}
 	}
 
-	s.logger = logger.With(log.ModuleKey, s.Name())
-	rs := appI.GetStore()
+	srv.logger = logger.With(log.ModuleKey, srv.Name())
 	consensus := NewConsensus(
-		s.logger,
-		appI.Name(),
-		appI.GetAppManager(),
-		s.serverOptions.Mempool(cfg),
+		logger,
+		appName,
+		appManager,
+		srv.serverOptions.Mempool(cfg),
 		indexEvents,
-		appI.GetQueryHandlers(),
-		rs,
-		s.config,
-		s.initTxCodec,
+		queryHandlers,
+		store,
+		srv.config,
+		srv.initTxCodec,
 		chainID,
 	)
-	consensus.prepareProposalHandler = s.serverOptions.PrepareProposalHandler
-	consensus.processProposalHandler = s.serverOptions.ProcessProposalHandler
-	consensus.checkTxHandler = s.serverOptions.CheckTxHandler
-	consensus.verifyVoteExt = s.serverOptions.VerifyVoteExtensionHandler
-	consensus.extendVote = s.serverOptions.ExtendVoteHandler
-	consensus.addrPeerFilter = s.serverOptions.AddrPeerFilter
-	consensus.idPeerFilter = s.serverOptions.IdPeerFilter
+	consensus.prepareProposalHandler = srv.serverOptions.PrepareProposalHandler
+	consensus.processProposalHandler = srv.serverOptions.ProcessProposalHandler
+	consensus.checkTxHandler = srv.serverOptions.CheckTxHandler
+	consensus.verifyVoteExt = srv.serverOptions.VerifyVoteExtensionHandler
+	consensus.extendVote = srv.serverOptions.ExtendVoteHandler
+	consensus.addrPeerFilter = srv.serverOptions.AddrPeerFilter
+	consensus.idPeerFilter = srv.serverOptions.IdPeerFilter
 
-	ss := rs.GetStateStorage().(snapshots.StorageSnapshotter)
-	sc := rs.GetStateCommitment().(snapshots.CommitSnapshotter)
+	ss := store.GetStateStorage().(snapshots.StorageSnapshotter)
+	sc := store.GetStateCommitment().(snapshots.CommitSnapshotter)
 
-	snapshotStore, err := GetSnapshotStore(s.config.ConfigTomlConfig.RootDir)
+	snapshotStore, err := GetSnapshotStore(srv.config.ConfigTomlConfig.RootDir)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.serverOptions.SnapshotOptions(cfg), sc, ss, nil, s.logger)
+	consensus.snapshotManager = snapshots.NewManager(
+		snapshotStore, srv.serverOptions.SnapshotOptions(cfg), sc, ss, nil, logger)
 
-	s.Consensus = consensus
+	srv.Consensus = consensus
 
+	return srv, nil
+}
+
+func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
 	return nil
 }
 

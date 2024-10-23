@@ -28,7 +28,7 @@ const (
 const mathCodespace = "math"
 
 var (
-	ErrInvalidDec         = errors.Register(mathCodespace, 1, "invalid decimal string")
+	ErrInvalidDec         = errors.Register(mathCodespace, 1, "invalid decimal")
 	ErrUnexpectedRounding = errors.Register(mathCodespace, 2, "unexpected rounding")
 	ErrNonIntegeral       = errors.Register(mathCodespace, 3, "value is non-integral")
 )
@@ -50,14 +50,14 @@ var dec128Context = apd.Context{
 // Examples:
 // - "123" -> Dec{123}
 // - "-123.456" -> Dec{-123.456}
-// - "1.23e4" -> Dec{12300}
+// - "1.23E4" -> Dec{12300}
 // - "NaN" or "Infinity" -> ErrInvalidDec
 //
 // The internal representation is an arbitrary-precision decimal: Negative × Coeff × 10*Exponent
 // The maximum exponent is 100_000 and must not be exceeded. Following values would be invalid:
-// 1e100001 -> ErrInvalidDec
-// -1e100001 -> ErrInvalidDec
-// 1e-100001 -> ErrInvalidDec
+// 1E100001 -> ErrInvalidDec
+// -1E100001 -> ErrInvalidDec
+// 1E-100001 -> ErrInvalidDec
 //
 // This function is essential for converting textual data into Dec types for numerical operations.
 func NewDecFromString(s string) (Dec, error) {
@@ -91,12 +91,12 @@ func NewDecFromInt64(x int64) Dec {
 	return res
 }
 
-// NewDecWithPrec creates a Dec from a coefficient and exponent, calculated as coeff * 10^exp.
+// NewDecWithExp creates a Dec from a coefficient and exponent, calculated as coeff * 10^exp.
 // Useful for precise decimal representations.
 //
 // Example:
-// - NewDecWithPrec(123, -2) -> Dec representing 1.23.
-func NewDecWithPrec(coeff int64, exp int32) Dec {
+// - NewDecWithExp(123, -2) -> Dec representing 1.23.
+func NewDecWithExp(coeff int64, exp int32) Dec {
 	var res Dec
 	res.dec.SetFinite(coeff, exp)
 	return res
@@ -178,27 +178,6 @@ func (x Dec) Quo(y Dec) (Dec, error) {
 	return z, errors.Wrap(err, "decimal quotient error")
 }
 
-// MulExact multiplies two Dec values x and y without rounding, using decimal128 precision.
-// It returns an error if rounding is necessary to fit the result within the 34-digit limit.
-//
-// Example:
-// - MulExact(Dec{1.234}, Dec{2.345}) -> Dec{2.893}, or ErrUnexpectedRounding if precision exceeded.
-//
-// Note:
-// - This function does not alter the original Dec values.
-func (x Dec) MulExact(y Dec) (Dec, error) {
-	var z Dec
-	condition, err := dec128Context.Mul(&z.dec, &x.dec, &y.dec)
-	if err != nil {
-		return z, ErrInvalidDec
-	}
-	if condition.Rounded() {
-		return z, ErrUnexpectedRounding
-	}
-
-	return z, nil
-}
-
 // QuoExact performs division like Quo and additionally checks for rounding. It returns ErrUnexpectedRounding if
 // any rounding occurred during the division. If the division is exact, it returns the result without error.
 //
@@ -253,23 +232,50 @@ func (x Dec) QuoInteger(y Dec) (Dec, error) {
 	return z, nil
 }
 
-// Modulo computes the remainder of division of x by y using decimal128 precision.
-// It returns an error if y is zero or if any other error occurs during the computation.
-func (x Dec) Modulo(y Dec) (Dec, error) {
-	var z Dec
-	_, err := dec128Context.Rem(&z.dec, &x.dec, &y.dec)
-	if err != nil {
-		return z, ErrInvalidDec
-	}
-	return z, errors.Wrap(err, "decimal remainder error")
-}
-
 // Mul returns a new Dec with value `x*y` (formatted as decimal128, with 34 digit precision) without
 // mutating any argument and error if there is an overflow.
 func (x Dec) Mul(y Dec) (Dec, error) {
 	var z Dec
-	_, err := dec128Context.Mul(&z.dec, &x.dec, &y.dec)
-	return z, errors.Wrap(err, "decimal multiplication error")
+	if _, err := dec128Context.Mul(&z.dec, &x.dec, &y.dec); err != nil {
+		return z, ErrInvalidDec.Wrap(err.Error())
+	}
+	return z, nil
+}
+
+// MulExact multiplies two Dec values x and y without rounding, using decimal128 precision.
+// It returns an error if rounding is necessary to fit the result within the 34-digit limit.
+//
+// Example:
+// - MulExact(Dec{1.234}, Dec{2.345}) -> Dec{2.893}, or ErrUnexpectedRounding if precision exceeded.
+//
+// Note:
+// - This function does not alter the original Dec values.
+func (x Dec) MulExact(y Dec) (Dec, error) {
+	var z Dec
+	condition, err := dec128Context.Mul(&z.dec, &x.dec, &y.dec)
+	if err != nil {
+		return z, ErrInvalidDec.Wrap(err.Error())
+	}
+	if condition.Rounded() {
+		return z, ErrUnexpectedRounding
+	}
+
+	return z, nil
+}
+
+// Modulo computes the remainder of division of x by y using decimal128 precision.
+// It returns an error if y is zero or if any other error occurs during the computation.
+//
+// Example:
+//   - 7 mod 3 = 1
+//   - 6 mod 3 = 0
+func (x Dec) Modulo(y Dec) (Dec, error) {
+	var z Dec
+	_, err := dec128Context.Rem(&z.dec, &x.dec, &y.dec)
+	if err != nil {
+		return z, ErrInvalidDec.Wrap(err.Error())
+	}
+	return z, errors.Wrap(err, "decimal remainder error")
 }
 
 // Int64 converts x to an int64 or returns an error if x cannot
@@ -312,8 +318,27 @@ func (x Dec) SdkIntTrim() Int {
 	return NewIntFromBigInt(r.MathBigInt())
 }
 
+// String formatted in decimal notation: '-ddddd.dddd', no exponent
 func (x Dec) String() string {
 	return x.dec.Text('f')
+}
+
+// Text converts the floating-point number x to a string according
+// to the given format. The format is one of:
+//
+//	'e'	-d.dddde±dd, decimal exponent, exponent digits
+//	'E'	-d.ddddE±dd, decimal exponent, exponent digits
+//	'f'	-ddddd.dddd, no exponent
+//	'g'	like 'e' for large exponents, like 'f' otherwise
+//	'G'	like 'E' for large exponents, like 'f' otherwise
+//
+// If format is a different character, Text returns a "%" followed by the
+// unrecognized.Format character. The 'f' format has the possibility of
+// displaying precision that is not present in the Decimal when it appends
+// zeros (the 'g' format avoids the use of 'f' in this case). All other
+// formats always show the exact precision of the Decimal.
+func (x Dec) Text(format byte) string {
+	return x.dec.Text(format)
 }
 
 // Cmp compares x and y and returns:
@@ -368,14 +393,36 @@ func (x Dec) Reduce() (Dec, int) {
 	return y, n
 }
 
-// Marshal serializes the decimal value into a byte slice in a text format.
-// This method ensures the decimal is represented in a portable and human-readable form.
-func (d Dec) Marshal() ([]byte, error) {
-	return d.dec.MarshalText()
+// Marshal serializes the decimal value into a byte slice in text format.
+// This method represents the decimal in a portable and compact scientific notation.
+//
+// For example, the following transformations are made:
+//   - 0 -> 0E+0
+//   - 123 -> 1.23E+3
+//   - -0.001 -> -1E-3
+//
+// The output is always in scientific notation ensuring consistency.
+//
+// Returns:
+//   - A byte slice of the decimal in text format.
+//   - An error if the decimal cannot be reduced or marshaled properly.
+func (x Dec) Marshal() ([]byte, error) {
+	d, _ := x.Reduce()
+	return []byte(d.dec.Text('E')), nil
 }
 
 // Unmarshal parses a byte slice containing a text-formatted decimal and stores the result in the receiver.
 // It returns an error if the byte slice does not represent a valid decimal.
-func (d *Dec) Unmarshal(data []byte) error {
-	return d.dec.UnmarshalText(data)
+func (x *Dec) Unmarshal(data []byte) error {
+	result, err := NewDecFromString(string(data))
+	if err != nil {
+		return ErrInvalidDec.Wrap(err.Error())
+	}
+
+	if result.dec.Form != apd.Finite {
+		return ErrInvalidDec.Wrap("unknown decimal form")
+	}
+
+	x.dec = result.dec
+	return nil
 }

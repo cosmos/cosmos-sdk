@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,10 +17,6 @@ func TestDecWithRapid(t *testing.T) {
 
 	// Properties about *FromString functions
 	t.Run("TestInvalidNewDecFromString", rapid.MakeCheck(testInvalidNewDecFromString))
-	t.Run("TestInvalidNewNonNegativeDecFromString", rapid.MakeCheck(testInvalidNewNonNegativeDecFromString))
-	t.Run("TestInvalidNewNonNegativeFixedDecFromString", rapid.MakeCheck(testInvalidNewNonNegativeFixedDecFromString))
-	t.Run("TestInvalidNewPositiveDecFromString", rapid.MakeCheck(testInvalidNewPositiveDecFromString))
-	t.Run("TestInvalidNewPositiveFixedDecFromString", rapid.MakeCheck(testInvalidNewPositiveFixedDecFromString))
 
 	// Properties about addition
 	t.Run("TestAddLeftIdentity", rapid.MakeCheck(testAddLeftIdentity))
@@ -82,7 +77,7 @@ func TestDecWithRapid(t *testing.T) {
 	minusFivePointZero, err := NewDecFromString("-5.0")
 	require.NoError(t, err)
 
-	twoThousand := NewDecWithPrec(2, 3)
+	twoThousand := NewDecWithExp(2, 3)
 	require.True(t, twoThousand.Equal(NewDecFromInt64(2000)))
 
 	res, err := two.Add(zero)
@@ -187,58 +182,6 @@ func testDecInt64(t *rapid.T) {
 // Property: invalid_number_string(s) => NewDecFromString(s) == err
 func testInvalidNewDecFromString(t *rapid.T) {
 	s := rapid.StringMatching("[[:alpha:]]+").Draw(t, "s")
-	_, err := NewDecFromString(s)
-	require.Error(t, err)
-}
-
-// Property: invalid_number_string(s) || IsNegative(s)
-// => NewNonNegativeDecFromString(s) == err
-func testInvalidNewNonNegativeDecFromString(t *rapid.T) {
-	s := rapid.OneOf(
-		rapid.StringMatching("[[:alpha:]]+"),
-		rapid.StringMatching(`^-\d*\.?\d+$`).Filter(
-			func(s string) bool { return !strings.HasPrefix(s, "-0") && !strings.HasPrefix(s, "-.0") },
-		),
-	).Draw(t, "s")
-	_, err := NewDecFromString(s)
-	require.Error(t, err)
-}
-
-// Property: invalid_number_string(s) || IsNegative(s) || NumDecimals(s) > n
-// => NewNonNegativeFixedDecFromString(s, n) == err
-func testInvalidNewNonNegativeFixedDecFromString(t *rapid.T) {
-	n := rapid.Uint32Range(0, 999).Draw(t, "n")
-	s := rapid.OneOf(
-		rapid.StringMatching("[[:alpha:]]+"),
-		rapid.StringMatching(`^-\d*\.?\d+$`).Filter(
-			func(s string) bool { return !strings.HasPrefix(s, "-0") && !strings.HasPrefix(s, "-.0") },
-		),
-		rapid.StringMatching(fmt.Sprintf(`\d*\.\d{%d,}`, n+1)),
-	).Draw(t, "s")
-	_, err := NewDecFromString(s)
-	require.Error(t, err)
-}
-
-// Property: invalid_number_string(s) || IsNegative(s) || IsZero(s)
-// => NewPositiveDecFromString(s) == err
-func testInvalidNewPositiveDecFromString(t *rapid.T) {
-	s := rapid.OneOf(
-		rapid.StringMatching("[[:alpha:]]+"),
-		rapid.StringMatching(`^-\d*\.?\d+|0$`),
-	).Draw(t, "s")
-	_, err := NewDecFromString(s)
-	require.Error(t, err)
-}
-
-// Property: invalid_number_string(s) || IsNegative(s) || IsZero(s) || NumDecimals(s) > n
-// => NewPositiveFixedDecFromString(s) == err
-func testInvalidNewPositiveFixedDecFromString(t *rapid.T) {
-	n := rapid.Uint32Range(0, 999).Draw(t, "n")
-	s := rapid.OneOf(
-		rapid.StringMatching("[[:alpha:]]+"),
-		rapid.StringMatching(`^-\d*\.?\d+|0$`),
-		rapid.StringMatching(fmt.Sprintf(`\d*\.\d{%d,}`, n+1)),
-	).Draw(t, "s")
 	_, err := NewDecFromString(s)
 	require.Error(t, err)
 }
@@ -479,7 +422,7 @@ func testMulQuoExact(t *rapid.T) {
 	decPrec := func(d Dec) bool { return d.NumDecimalPlaces() <= b }
 	a := genDec.Filter(decPrec).Draw(t, "a")
 
-	c := NewDecWithPrec(1, int32(b))
+	c := NewDecWithExp(1, int32(b))
 
 	d, err := a.MulExact(c)
 	require.NoError(t, err)
@@ -497,7 +440,7 @@ func testQuoMulExact(t *rapid.T) {
 	aDec, err := NewDecFromString(fmt.Sprintf("%d", a))
 	require.NoError(t, err)
 	b := rapid.Uint32Range(0, 32).Draw(t, "b")
-	c := NewDecWithPrec(1, int32(b))
+	c := NewDecWithExp(1, int32(b))
 
 	require.NoError(t, err)
 

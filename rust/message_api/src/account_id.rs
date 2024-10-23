@@ -7,14 +7,15 @@
 /// The account ID zero is reserved for the "null account" meaning
 /// that the account is not valid or does not exist.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-pub struct AccountID(u64);
+#[repr(transparent)]
+pub struct AccountID(u128);
 
 impl AccountID {
     /// The empty account ID.
     pub const EMPTY: AccountID = AccountID(0);
 
     /// Creates a new account ID from the given integer.
-    pub const fn new(id: u64) -> Self {
+    pub const fn new(id: u128) -> Self {
         AccountID(id)
     }
 
@@ -26,14 +27,14 @@ impl AccountID {
     }
 }
 
-impl Into<u64> for AccountID {
-    fn into(self) -> u64 {
+impl Into<u128> for AccountID {
+    fn into(self) -> u128 {
         self.0
     }
 }
 
-impl From<u64> for AccountID {
-    fn from(value: u64) -> Self {
+impl From<u128> for AccountID {
+    fn from(value: u128) -> Self {
         AccountID(value)
     }
 }

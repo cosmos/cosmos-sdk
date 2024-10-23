@@ -213,16 +213,16 @@ impl KeyFieldValue for simple_time::Duration {
 
 impl KeyFieldValue for ixc_message_api::AccountID {
     fn encode<'a>(key: &Self::In<'a>, writer: &mut ReverseSliceWriter) -> Result<(), EncodeError> {
-        let id: u64 = (*key).into();
+        let id: u128 = (*key).into();
         writer.write(&id.to_be_bytes())
     }
 
-    fn decode<'a>(reader: &mut &'a [u8], memory_manager: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
+    fn decode<'a>(reader: &mut &'a [u8], _memory_manager: &'a MemoryManager) -> Result<Self::Out<'a>, DecodeError> {
         let bz = reader.read_bytes(8)?;
-        Ok(ixc_message_api::AccountID::new(u64::from_be_bytes(bz.try_into().unwrap())))
+        Ok(ixc_message_api::AccountID::new(u128::from_be_bytes(bz.try_into().unwrap())))
     }
 
-    fn out_size<'a>(key: &Self::In<'a>) -> usize { 8 }
+    fn out_size<'a>(_key: &Self::In<'a>) -> usize { 16 }
 }
 
 impl KeyFieldValue for Str {

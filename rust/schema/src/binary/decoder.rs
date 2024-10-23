@@ -86,7 +86,7 @@ impl<'a> crate::decoder::Decoder<'a> for Decoder<'a> {
     }
 
     fn decode_account_id(&mut self) -> Result<AccountID, DecodeError> {
-        let id = self.decode_u64()?;
+        let id = self.decode_u128()?;
         Ok(AccountID::new(id))
     }
 

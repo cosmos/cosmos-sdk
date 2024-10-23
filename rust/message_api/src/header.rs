@@ -11,7 +11,7 @@ pub const MESSAGE_HEADER_SIZE: usize = size_of::<MessageHeader>();
 #[repr(C)]
 pub struct MessageHeader {
     /// The context info.
-    pub context_info: ContextInfo, // 32 bytes
+    pub context_info: ContextInfo, // 48 bytes
     /// The message selector.
     pub message_selector: MessageSelector, // 8 bytes
     /// Input data pointer 1.
@@ -22,10 +22,8 @@ pub struct MessageHeader {
     pub out_pointer1: DataPointer, // 16 bytes
     /// Output data pointer 2.
     pub out_pointer2: DataPointer, // 16 bytes
-    /// The gas consumed.
-    pub gas_consumed: u64, // 8 bytes
 
-    reserved: [u8; 24],
+    reserved: [u8; 8],
 }
 
 /// Info about the current calling context.
@@ -33,11 +31,13 @@ pub struct MessageHeader {
 #[derive(Clone, Copy)]
 pub struct ContextInfo {
     /// The target account of the message.
-    pub account: AccountID, // 8 bytes
+    pub account: AccountID, // 16 bytes
     /// The account sending the message.
-    pub caller: AccountID, // 8 bytes
+    pub caller: AccountID, // 16 bytes
     /// The gas limit.
     pub gas_limit: u64, // 8 bytes
+    /// The gas consumed.
+    pub gas_consumed: u64, // 8 bytes
 }
 
 /// A message selector code.
@@ -49,6 +49,7 @@ mod tests {
 
     #[test]
     fn test_message_header_size() {
+        assert_eq!(size_of::<ContextInfo>(), 48);
         assert_eq!(MESSAGE_HEADER_SIZE, 128);
     }
 }

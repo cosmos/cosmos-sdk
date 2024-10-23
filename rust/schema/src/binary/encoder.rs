@@ -63,7 +63,7 @@ impl<'a, W: Writer> crate::encoder::Encoder for Encoder<'a, W> {
     }
 
     fn encode_account_id(&mut self, x: AccountID) -> Result<(), EncodeError> {
-        self.encode_u64(x.into())
+        self.encode_u128(x.into())
     }
 
     fn encode_bool(&mut self, x: bool) -> Result<(), EncodeError> {
@@ -165,7 +165,7 @@ impl crate::encoder::Encoder for EncodeSizer {
     }
 
     fn encode_account_id(&mut self, x: AccountID) -> Result<(), EncodeError> {
-        self.size += 8;
+        self.size += 16;
         Ok(())
     }
 
@@ -364,7 +364,7 @@ impl<'a> crate::encoder::Encoder for InnerEncodeSizer<'a> {
     }
 
     fn encode_account_id(&mut self, x: AccountID) -> Result<(), EncodeError> {
-        self.outer.size += 8;
+        self.outer.size += 16;
         Ok(())
     }
 

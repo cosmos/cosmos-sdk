@@ -5,7 +5,10 @@ use crate::handler::{Service, Handler, InitMessage, Client};
 use crate::low_level::create_packet;
 use ixc_core_macros::message_selector;
 use ixc_message_api::AccountID;
+use ixc_message_api::code::{ErrorCode, SystemCode};
+use ixc_message_api::code::SystemCode::EncodingError;
 use ixc_schema::codec::Codec;
+use crate::error::ClientError;
 use crate::result::ClientResult;
 
 /// Creates a new account for the specified handler.
@@ -32,9 +35,12 @@ fn do_create_account<'a>(ctx: &Context, name: &str, init: &[u8]) -> ClientResult
 
         ctx.host_backend().invoke(&mut packet, ctx.memory_manager())?;
 
-        let new_account_id = packet.header().in_pointer1.get_u64();
+        let res = packet.header().in_pointer1.get(&packet);
+        if res.len() != size_of::<u128>() {
+            return Err(ClientError::new(ErrorCode::SystemCode(EncodingError), "invalid account ID".into()));
+        }
 
-        Ok(AccountID::new(new_account_id))
+        Ok(AccountID::new(u128::from_le_bytes(res.try_into().unwrap())))
     }
 }
 

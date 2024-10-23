@@ -541,7 +541,7 @@ struct State {
 
 #[derive(deluxe::ExtractAttributes, Debug)]
 #[deluxe(attributes(client))]
-struct Client(u64);
+struct Client(u128);
 
 // /// This attribute bundles account and module handlers into a package root which can be
 // /// loaded into an application.

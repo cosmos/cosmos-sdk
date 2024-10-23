@@ -49,7 +49,7 @@ func TestQueryBySig(t *testing.T) {
 	qc := tx.NewServiceClient(sut.RPCClient(t))
 
 	// create unsign tx
-	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
+	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=10stake", fmt.Sprintf("--chain-id=%s", sut.chainID), "--sign-mode=direct", "--generate-only"}
 	unsignedTx := cli.RunCommandWithArgs(bankSendCmdArgs...)
 	fmt.Println("unsignedTx", unsignedTx)
 	txFile := StoreTempFile(t, []byte(unsignedTx))

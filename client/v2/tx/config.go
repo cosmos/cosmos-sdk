@@ -51,9 +51,9 @@ type TxEncodingConfig interface {
 	TxJSONEncoder() txEncoder
 	// TxJSONDecoder returns a decoder for JSON transaction decoding.
 	TxJSONDecoder() txDecoder
-
+	// TxTextEncoder returns an encoder for text transaction encoding.
 	TxTextEncoder() txEncoder
-	// TxJSONDecoder returns a decoder for JSON transaction decoding.
+	// TxTextDecoder returns a decoder for text transaction decoding.
 	TxTextDecoder() txDecoder
 	// Decoder returns the Decoder interface for decoding transaction bytes into a DecodedTx.
 	Decoder() Decoder

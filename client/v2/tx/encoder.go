@@ -2,9 +2,9 @@ package tx
 
 import (
 	"fmt"
-	"google.golang.org/protobuf/encoding/prototext"
 
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/encoding/prototext"
 	protov2 "google.golang.org/protobuf/proto"
 
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"

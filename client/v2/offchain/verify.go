@@ -38,7 +38,6 @@ func Verify(ctx client.Context, digest []byte, fileFormat string) error {
 
 // verify verifies given Tx.
 func verify(ctx client.Context, dTx clitx.Tx) error {
-
 	signModeHandler := ctx.TxConfig.SignModeHandler()
 
 	signers, err := dTx.GetSigners()

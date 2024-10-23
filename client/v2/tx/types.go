@@ -142,7 +142,7 @@ type Tx interface {
 	GetPubKeys() ([]cryptotypes.PubKey, error)
 	// GetSignatures fetches the signatures attached to the transaction.
 	GetSignatures() ([]Signature, error)
-
+	// GetSigningTxData returns the signing.TxData for the transaction.
 	GetSigningTxData() (signing.TxData, error)
 }
 

@@ -57,14 +57,14 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.L
 			return fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
-	methodsMap := appI.GetQueryHandlers()
+	methodsMap := appI.QueryHandlers()
 
 	grpcSrv := grpc.NewServer(
 		grpc.ForceServerCodec(newProtoCodec(appI.InterfaceRegistry()).GRPCCodec()),
 		grpc.MaxSendMsgSize(serverCfg.MaxSendMsgSize),
 		grpc.MaxRecvMsgSize(serverCfg.MaxRecvMsgSize),
 		grpc.UnknownServiceHandler(
-			makeUnknownServiceHandler(methodsMap, appI.GetAppManager()),
+			makeUnknownServiceHandler(methodsMap, appI),
 		),
 	)
 
@@ -85,7 +85,7 @@ func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 }
 
 func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier interface {
-	Query(ctx context.Context, version uint64, msg gogoproto.Message) (gogoproto.Message, error)
+	Query(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error)
 },
 ) grpc.StreamHandler {
 	getRegistry := sync.OnceValues(gogoproto.MergedRegistry)

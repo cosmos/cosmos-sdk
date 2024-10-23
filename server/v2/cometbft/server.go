@@ -4,6 +4,7 @@ import (
 	"context"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/server"
+	"cosmossdk.io/schema/decoding"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/types"
 	"crypto/sha256"
@@ -56,8 +57,9 @@ func New[T transaction.Tx](
 	logger log.Logger,
 	appName string,
 	store types.Store,
-	appManager *appmanager.AppManager[T],
+	appManager appmanager.AppManager[T],
 	queryHandlers map[string]appmodulev2.Handler,
+	decoderResolver decoding.DecoderResolver,
 	txCodec transaction.Codec[T],
 	cfg server.ConfigMap,
 	serverOptions ServerOptions[T],
@@ -144,22 +146,22 @@ func New[T transaction.Tx](
 	srv.Consensus = consensus
 
 	// initialize the indexer
-	if indexerCfg := s.config.AppTomlConfig.Indexer; len(indexerCfg.Target) > 0 {
+	if indexerCfg := srv.config.AppTomlConfig.Indexer; len(indexerCfg.Target) > 0 {
 		listener, err := indexer.StartIndexing(indexer.IndexingOptions{
 			Config:   indexerCfg,
-			Resolver: appI.SchemaDecoderResolver(),
-			Logger:   s.logger.With(log.ModuleKey, "indexer"),
+			Resolver: decoderResolver,
+			Logger:   logger.With(log.ModuleKey, "indexer"),
 		})
 		if err != nil {
-			return fmt.Errorf("failed to start indexing: %w", err)
+			return nil, fmt.Errorf("failed to start indexing: %w", err)
 		}
 		consensus.listener = &listener.Listener
 	}
 
-	s.Consensus = consensus
+	srv.Consensus = consensus
 
 	return srv, nil
-	}
+}
 
 func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
 	return nil

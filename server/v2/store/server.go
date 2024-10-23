@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"cosmossdk.io/core/server"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -27,14 +28,19 @@ type Server[T transaction.Tx] struct {
 	backend storev2.Backend
 }
 
-func New[T transaction.Tx]() *Server[T] {
-	return &Server[T]{}
+func New[T transaction.Tx](store storev2.Backend, cfg server.ConfigMap) (*Server[T], error) {
+	config, err := UnmarshalConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return &Server[T]{
+		backend: store,
+		config:  config,
+	}, nil
 }
 
 func (s *Server[T]) Init(app serverv2.AppI[T], v map[string]any, _ log.Logger) (err error) {
-	s.backend = app.Store()
-	s.config, err = UnmarshalConfig(v)
-	return err
+	return nil
 }
 
 func (s *Server[T]) Name() string {
@@ -58,7 +64,7 @@ func (s *Server[T]) CLICommands() serverv2.CLIConfig {
 			s.ListSnapshotsCmd(),
 			s.DumpArchiveCmd(),
 			s.LoadArchiveCmd(),
-			s.RestoreSnapshotCmd(s.backend),
+			s.RestoreSnapshotCmd(),
 		},
 	}
 }

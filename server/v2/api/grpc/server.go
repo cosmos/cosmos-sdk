@@ -12,7 +12,6 @@ import (
 	"strings"
 	"sync"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -21,10 +20,13 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
+
+	gogoproto "github.com/cosmos/gogoproto/proto"
 )
 
 const (
@@ -42,38 +44,46 @@ type Server[T transaction.Tx] struct {
 }
 
 // New creates a new grpc server.
-func New[T transaction.Tx](cfgOptions ...CfgOption) *Server[T] {
-	return &Server[T]{
+func New[T transaction.Tx](
+	logger log.Logger,
+	interfaceRegistry server.InterfaceRegistry,
+	queryHandlers map[string]appmodulev2.Handler,
+	queryable interface {
+		Query(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error)
+	},
+	cfg server.ConfigMap,
+	cfgOptions ...CfgOption,
+) (*Server[T], error) {
+	srv := &Server[T]{
 		cfgOptions: cfgOptions,
 	}
+	serverCfg := srv.Config().(*Config)
+	if len(cfg) > 0 {
+		if err := serverv2.UnmarshalSubConfig(cfg, srv.Name(), &serverCfg); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+	}
+
+	grpcSrv := grpc.NewServer(
+		grpc.ForceServerCodec(newProtoCodec(interfaceRegistry).GRPCCodec()),
+		grpc.MaxSendMsgSize(serverCfg.MaxSendMsgSize),
+		grpc.MaxRecvMsgSize(serverCfg.MaxRecvMsgSize),
+		grpc.UnknownServiceHandler(makeUnknownServiceHandler(queryHandlers, queryable)),
+	)
+
+	// Reflection allows external clients to see what services and methods the gRPC server exposes.
+	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(queryHandlers)), logger.With("sub-module", "grpc-reflection"))
+
+	srv.grpcSrv = grpcSrv
+	srv.config = serverCfg
+	srv.logger = logger.With(log.ModuleKey, srv.Name())
+
+	return srv, nil
 }
 
 // Init returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server.
 func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
-	serverCfg := s.Config().(*Config)
-	if len(cfg) > 0 {
-		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
-		}
-	}
-	methodsMap := appI.QueryHandlers()
-
-	grpcSrv := grpc.NewServer(
-		grpc.ForceServerCodec(newProtoCodec(appI.InterfaceRegistry()).GRPCCodec()),
-		grpc.MaxSendMsgSize(serverCfg.MaxSendMsgSize),
-		grpc.MaxRecvMsgSize(serverCfg.MaxRecvMsgSize),
-		grpc.UnknownServiceHandler(
-			makeUnknownServiceHandler(methodsMap, appI),
-		),
-	)
-
-	// Reflection allows external clients to see what services and methods the gRPC server exposes.
-	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(methodsMap)), logger.With("sub-module", "grpc-reflection"))
-
-	s.grpcSrv = grpcSrv
-	s.config = serverCfg
-	s.logger = logger.With(log.ModuleKey, s.Name())
 
 	return nil
 }

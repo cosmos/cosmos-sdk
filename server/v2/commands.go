@@ -3,7 +3,6 @@ package serverv2
 import (
 	"context"
 	"errors"
-	"github.com/spf13/viper"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -47,7 +46,6 @@ func initServerConfig() ServerConfig {
 // It configures the config handling and the logger handling
 func AddCommands[T transaction.Tx](
 	rootCmd *cobra.Command,
-	app AppI[T],
 	logger log.Logger,
 	globalServerCfg server.ConfigMap,
 	components ...ServerComponent[T],
@@ -55,10 +53,9 @@ func AddCommands[T transaction.Tx](
 	if len(components) == 0 {
 		return nil, errors.New("no components provided")
 	}
-
-	server := NewServer(logger, initServerConfig(), components...)
-	cmds := server.CLICommands()
-	startCmd := createStartCommand(server, app, globalServerCfg, logger)
+	srv := NewServer(initServerConfig(), components...)
+	cmds := srv.CLICommands()
+	startCmd := createStartCommand(srv, globalServerCfg, logger)
 	// TODO necessary? won't the parent context be inherited?
 	startCmd.SetContext(rootCmd.Context())
 	cmds.Commands = append(cmds.Commands, startCmd)
@@ -85,13 +82,12 @@ func AddCommands[T transaction.Tx](
 		}
 	}
 
-	return server, nil
+	return srv, nil
 }
 
 // createStartCommand creates the start command for the application.
 func createStartCommand[T transaction.Tx](
 	server *Server[T],
-	app AppI[T],
 	config server.ConfigMap,
 	logger log.Logger,
 ) *cobra.Command {
@@ -102,17 +98,6 @@ func createStartCommand[T transaction.Tx](
 		Short:       "Run the application",
 		Annotations: map[string]string{"needs-app": "true"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO: Init is no longer needed as a distinct life cycle phase due to
-			// eager config parsing. Therefore, consider one of:
-			// 1) pull .Init() up closer to ServerComponent constructor call
-			// 2) remove .Init() as a separate phase, move work (and dependencies)
-			// into the constructor directly.
-			//
-			// Note that (2) could mean the removal of AppI
-			err := server.Init(app, config, logger)
-			if err != nil {
-				return err
-			}
 			ctx, cancelFn := context.WithCancel(cmd.Context())
 			go func() {
 				sigCh := make(chan os.Signal, 1)
@@ -126,7 +111,7 @@ func createStartCommand[T transaction.Tx](
 				}
 			}()
 
-			return wrapCPUProfile(l, v, func() error {
+			return wrapCPUProfile(logger, config, func() error {
 				return server.Start(ctx)
 			})
 		},
@@ -142,14 +127,14 @@ func createStartCommand[T transaction.Tx](
 
 // wrapCPUProfile starts CPU profiling, if enabled, and executes the provided
 // callbackFn, then waits for it to return.
-func wrapCPUProfile(logger log.Logger, v *viper.Viper, callbackFn func() error) error {
-	cpuProfileFile := v.GetString(FlagCPUProfiling)
-	if len(cpuProfileFile) == 0 {
+func wrapCPUProfile(logger log.Logger, cfg server.ConfigMap, callbackFn func() error) error {
+	cpuProfileFile, ok := cfg[FlagCPUProfiling]
+	if !ok {
 		// if cpu profiling is not enabled, just run the callback
 		return callbackFn()
 	}
 
-	f, err := os.Create(cpuProfileFile)
+	f, err := os.Create(cpuProfileFile.(string))
 	if err != nil {
 		return err
 	}

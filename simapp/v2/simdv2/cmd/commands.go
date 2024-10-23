@@ -1,6 +1,11 @@
 package cmd
 
 import (
+	"cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/api/rest"
+	"cosmossdk.io/server/v2/api/telemetry"
+	"cosmossdk.io/server/v2/cometbft"
+	serverstore "cosmossdk.io/server/v2/store"
 	"errors"
 
 	"github.com/spf13/cobra"
@@ -42,7 +47,7 @@ func initRootCmd[T transaction.Tx](
 	globalAppConfig coreserver.ConfigMap,
 	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
-	app *simapp.SimApp[T],
+	simApp *simapp.SimApp[T],
 ) (configWriter, error) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
@@ -56,32 +61,72 @@ func initRootCmd[T transaction.Tx](
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
-		genesisCommand(moduleManager, app),
+		genesisCommand(moduleManager, simApp),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
 		offchain.OffChain(),
 	)
 
-	// wire server commands
-	//if _, err := serverv2.AddCommands(
-	//	rootCmd,
-	//	newApp,
-	//	initServerConfig(),
-	//	cometbft.New(
-	//		&genericTxDecoder[T]{txConfig},
-	//		initCometOptions[T](),
-	//		initCometConfig(),
-	//	),
-	//	grpc.New[T](),
-	//	serverstore.New[T](),
-	//	telemetry.New[T](),
-	//	rest.New[T](),
-	//); err != nil {
-	//	panic(err)
-	//}
+	// build CLI skeleton for initial config parsing or a client application invocation
+	if simApp == nil {
+		return serverv2.AddCommands[T](
+			rootCmd,
+			logger,
+			globalAppConfig,
+			&cometbft.CometBFTServer[T]{},
+			&grpc.Server[T]{},
+			&serverstore.Server[T]{},
+			&telemetry.Server[T]{},
+			&rest.Server[T]{},
+		)
+	}
+	// build full app!
+	cometBftServer, err := cometbft.New(
+		logger,
+		// TODO use depinject outputs not app
+		simApp.Name(),
+		simApp.Store(),
+		simApp.App.AppManager,
+		simApp.App.QueryHandlers(),
+		simApp.App.SchemaDecoderResolver(),
+		&genericTxDecoder[T]{txConfig},
+		globalAppConfig,
+		initCometOptions[T](),
+		initCometConfig(),
+	)
+	if err != nil {
+		return nil, err
+	}
+	telemetryServer, err := telemetry.New[T](globalAppConfig, logger)
+	if err != nil {
+		return nil, err
+	}
+	grpcServer, err := grpc.New[T](logger, simApp.InterfaceRegistry(), simApp.QueryHandlers(), simApp, globalAppConfig)
+	if err != nil {
+		return nil, err
+	}
+	// store "server" (big quotes).
+	storeServer, err := serverstore.New[T](simApp.Store(), globalAppConfig)
+	if err != nil {
+		return nil, err
+	}
+	restServer, err := rest.New[T](simApp.App.AppManager, logger, globalAppConfig)
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	// wire server commands
+	return serverv2.AddCommands[T](
+		rootCmd,
+		logger,
+		globalAppConfig,
+		cometBftServer,
+		grpcServer,
+		storeServer,
+		telemetryServer,
+		restServer,
+	)
 }
 
 // genesisCommand builds genesis-related `simd genesis` command.

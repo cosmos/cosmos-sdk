@@ -2,6 +2,8 @@ package rest
 
 import (
 	"context"
+	"cosmossdk.io/core/server"
+	"cosmossdk.io/server/v2/appmanager"
 	"errors"
 	"fmt"
 	"net/http"
@@ -24,10 +26,29 @@ type Server[T transaction.Tx] struct {
 	cfgOptions []CfgOption
 }
 
-func New[T transaction.Tx](cfgOptions ...CfgOption) *Server[T] {
-	return &Server[T]{
+func New[T transaction.Tx](
+	appManager appmanager.AppManager[T],
+	logger log.Logger,
+	cfg server.ConfigMap,
+	cfgOptions ...CfgOption,
+) (*Server[T], error) {
+	srv := &Server[T]{
 		cfgOptions: cfgOptions,
+		logger:     logger.With(log.ModuleKey, ServerName),
+		router:     http.NewServeMux(),
 	}
+
+	srv.router.Handle("/", NewDefaultHandler(appManager))
+
+	serverCfg := srv.Config().(*Config)
+	if len(cfg) > 0 {
+		if err := serverv2.UnmarshalSubConfig(cfg, srv.Name(), &serverCfg); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+	}
+	srv.config = serverCfg
+
+	return srv, nil
 }
 
 func (s *Server[T]) Name() string {
@@ -35,18 +56,6 @@ func (s *Server[T]) Name() string {
 }
 
 func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
-	s.logger = logger.With(log.ModuleKey, s.Name())
-
-	serverCfg := s.Config().(*Config)
-	if len(cfg) > 0 {
-		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
-		}
-	}
-
-	s.router = http.NewServeMux()
-	s.router.Handle("/", NewDefaultHandler(appI))
-	s.config = serverCfg
 
 	return nil
 }

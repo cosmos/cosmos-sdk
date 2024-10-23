@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"cosmossdk.io/server/v2/api/telemetry"
-	"cosmossdk.io/server/v2/cometbft"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,7 +11,6 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/client/v2/autocli"
@@ -58,70 +54,6 @@ Server components receive fully parse CLI flags since the Start invocation happe
 type ModuleConfigMaps map[string]server.ConfigMap
 type FlagParser func() error
 type GlobalConfig server.ConfigMap
-
-func ProvideModuleConfigMap(
-	moduleConfigs []server.ModuleConfigMap,
-	flags *pflag.FlagSet,
-	parseFlags FlagParser,
-) (ModuleConfigMaps, error) {
-	var err error
-	const bootstrapFlags = "__bootstrap"
-	globalConfig := make(ModuleConfigMaps)
-	globalConfig[bootstrapFlags] = make(server.ConfigMap)
-	for _, moduleConfig := range moduleConfigs {
-		cfg := moduleConfig.Config
-		name := moduleConfig.Module
-		globalConfig[name] = make(server.ConfigMap)
-		for flag, defaultValue := range cfg {
-			globalConfig[name][flag] = defaultValue
-			switch v := defaultValue.(type) {
-			case string:
-				_, maybeNotFound := flags.GetString(flag)
-				if maybeNotFound != nil && strings.Contains(maybeNotFound.Error(),
-					"flag accessed but not defined") {
-					flags.String(flag, v, "")
-				} else {
-					// silently skip the flag if it's already defined
-					continue
-				}
-			case []int:
-				flags.IntSlice(flag, v, "")
-			case int:
-				flags.Int(flag, v, "")
-			default:
-				return nil, fmt.Errorf("unsupported type %T for flag %s", defaultValue, flag)
-			}
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-	if err = parseFlags(); err != nil {
-		return nil, err
-	}
-	for _, cfg := range globalConfig {
-		for flag, defaulValue := range cfg {
-			var val any
-			switch defaulValue.(type) {
-			case string:
-				val, err = flags.GetString(flag)
-			case []int:
-				val, err = flags.GetIntSlice(flag)
-			case int:
-				val, err = flags.GetInt(flag)
-			default:
-				return nil, fmt.Errorf("unsupported type %T for flag %s", defaulValue, flag)
-			}
-			if err != nil {
-				return nil, err
-			}
-			cfg[flag] = val
-			// also collect all flags into bootstrap config
-			globalConfig[bootstrapFlags][flag] = val
-		}
-	}
-	return globalConfig, nil
-}
 
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
 func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
@@ -168,7 +100,7 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 	}
 
 	configDir := filepath.Join(home, "config")
-	// we need to check app.toml as the config folder can already exist for the client.toml
+	// create app.toml if it does not already exist
 	if _, err := os.Stat(filepath.Join(configDir, "app.toml")); os.IsNotExist(err) {
 		if err = srv.WriteConfig(configDir); err != nil {
 			return nil, err
@@ -187,31 +119,14 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 	}
 	globalConfig := vipr.AllSettings()
 
-	var app *simapp.SimApp[T]
+	var simApp *simapp.SimApp[T]
 	if needsApp(cmd) {
-		app, err = simapp.NewSimAppWithConfig[T](
+		simApp, err = simapp.NewSimAppWithConfig[T](
 			depinject.Configs(
 				depinject.Supply(logger, simapp.GlobalConfig(globalConfig)),
 				depinject.Provide(ProvideClientContext),
 			),
 			&autoCliOpts, &moduleManager, &clientCtx)
-		if err != nil {
-			return nil, err
-		}
-		// create server components
-		cometBftServer, err := cometbft.New(
-			logger,
-			// TODO use depinject outputs not app
-			app.Name(),
-			app.Store(),
-			&app.App.AppManager,
-			app.App.QueryHandlers(),
-			&genericTxDecoder{clientCtx.TxConfig},
-			globalConfig,
-			initCometOptions[T](),
-			initCometConfig(),
-		)
-		telemetryServer, err := telemetry.New[transaction.Tx](globalConfig, logger)
 		if err != nil {
 			return nil, err
 		}
@@ -241,6 +156,10 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 		Short:         "simulation app",
 		SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// set the default command outputs
+			cmd.SetOut(cmd.OutOrStdout())
+			cmd.SetErr(cmd.ErrOrStderr())
+
 			clientCtx = clientCtx.WithCmdContext(cmd.Context())
 			clientCtx, err = client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
 			if err != nil {
@@ -270,7 +189,7 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 		return nil, err
 	}
 
-	srv, err = initRootCmd[T](rootCmd, logger, globalConfig, clientCtx.TxConfig, moduleManager, app)
+	srv, err = initRootCmd[T](rootCmd, logger, globalConfig, clientCtx.TxConfig, moduleManager, simApp)
 	if err != nil {
 		return nil, err
 	}

@@ -70,6 +70,13 @@ func AppConfig() depinject.Config {
 			ProvideModuleScopedConfigMap,
 			SanelyProvideModuleConfigMap,
 			ProvideRootStoreConfig,
+			// inject desired account types:
+			multisigdepinject.ProvideAccount,
+			basedepinject.ProvideAccount,
+			lockupdepinject.ProvideAllLockupAccounts,
+
+			// provide base account options
+			basedepinject.ProvideSecp256K1PubKey,
 		),
 		depinject.Invoke(
 			std.RegisterInterfaces,
@@ -92,12 +99,6 @@ func NewSimAppWithConfig[T transaction.Tx](
 		appConfig = depinject.Configs(
 			AppConfig(),
 			config,
-			depinject.Provide(
-				multisigdepinject.ProvideAccount,
-				basedepinject.ProvideAccount,
-				lockupdepinject.ProvideAllLockupAccounts,
-				basedepinject.ProvideSecp256K1PubKey,
-			),
 		)
 	)
 

@@ -20,8 +20,6 @@ import (
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
-	"cosmossdk.io/server/v2/cometbft"
-	"cosmossdk.io/server/v2/store"
 	banktypes "cosmossdk.io/x/bank/types"
 	bankv2types "cosmossdk.io/x/bank/v2/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -336,18 +334,25 @@ func initTestnetFiles[T transaction.Tx](
 		serverCfg.MinGasPrices = args.minGasPrices
 
 		// Write server config
-		cometServer := cometbft.New[T](
-			&genericTxDecoder[T]{clientCtx.TxConfig},
-			cometbft.ServerOptions[T]{},
-			cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig),
-		)
-		storeServer := store.New[T]()
-		grpcServer := grpc.New[T](grpc.OverwriteDefaultConfig(grpcConfig))
-		server := serverv2.NewServer[T](serverCfg, cometServer, grpcServer, storeServer)
-		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
-		if err != nil {
-			return err
-		}
+		// TODO FIX ME
+		fmt.Println(grpcConfig)
+		//cometServer, err := cometbft.New[T](
+		//	&genericTxDecoder[T]{clientCtx.TxConfig},
+		//	cometbft.ServerOptions[T]{},
+		//	cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig),
+		//)
+		//storeServer := store.New[T]()
+		//grpcServer := grpc.New[T](grpc.OverwriteDefaultConfig(grpcConfig))
+		//server := serverv2.NewServer[T](
+		//	serverCfg,
+		//	&cometbft.CometBFTServer[T]{},
+		//	&grpc.Server[T]{},
+		//	&store.Server[T]{},
+		//)
+		//err = server.WriteConfig(filepath.Join(nodeDir, "config"))
+		//if err != nil {
+		//	return err
+		//}
 	}
 
 	if err := initGenFiles(clientCtx, mm, args.chainID, genAccounts, genBalances, genFiles, args.numValidators); err != nil {
@@ -363,6 +368,7 @@ func initTestnetFiles[T transaction.Tx](
 		return err
 	}
 
+	// TODO: sus, why not just use --home flag in the first place?
 	// Update viper root since root dir become rootdir/node/simd
 	serverv2.GetViperFromCmd(cmd).Set(flags.FlagHome, nodeConfig.RootDir)
 

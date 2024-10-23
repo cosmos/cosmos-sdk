@@ -59,19 +59,31 @@ func TestQueryServer(t *testing.T) {
 		require.Equal(t, "test", typ.AccountType)
 	})
 
-	t.Run("schema caching", func(t *testing.T) {
-		// Request schema once
-		schemaReq := &v1.SchemaRequest{AccountType: "test"}
-		schemaResp1, err := qs.Schema(ctx, schemaReq)
+	emptyMsgName := implementation.MessageName(&types.Empty{})
+	t.Run("schema", func(t *testing.T) {
+		schemaReq := &v1.SchemaRequest{Address: initResp.AccountAddress}
+		schemaResp, err := qs.Schema(ctx, schemaReq)
 		require.NoError(t, err)
-		require.NotNil(t, schemaResp1)
+		require.NotNil(t, schemaResp)
 
-		// Request schema again
-		schemaResp2, err := qs.Schema(ctx, schemaReq)
+		require.Equal(t, schemaResp.InitSchema.Request, emptyMsgName)
+		require.Equal(t, schemaResp.InitSchema.Response, emptyMsgName)
+
+		// check handlers
+		require.Len(t, schemaResp.ExecuteHandlers, 4)
+		require.Equal(t, schemaResp.ExecuteHandlers[0].Request, emptyMsgName)
+		require.Equal(t, schemaResp.ExecuteHandlers[0].Response, emptyMsgName)
+
+		require.Len(t, schemaResp.QueryHandlers, 4)
+		require.Equal(t, schemaResp.QueryHandlers[1].Request, emptyMsgName)
+		require.Equal(t, schemaResp.QueryHandlers[1].Response, emptyMsgName)
+	})
+
+	t.Run("init schema", func(t *testing.T) {
+		r, err := qs.InitSchema(ctx, &v1.InitSchemaRequest{AccountType: "test"})
 		require.NoError(t, err)
-		require.NotNil(t, schemaResp2)
-
-		// Check if both responses are the same (cached)
-		require.Equal(t, schemaResp1, schemaResp2)
+		require.NotNil(t, r.InitSchema)
+		require.Equal(t, r.InitSchema.Request, emptyMsgName)
+		require.Equal(t, r.InitSchema.Response, emptyMsgName)
 	})
 }

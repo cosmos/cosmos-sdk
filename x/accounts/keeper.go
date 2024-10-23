@@ -8,8 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -37,10 +35,7 @@ var (
 	AccountByNumber = collections.NewPrefix(2)
 )
 
-type InterfaceRegistry interface {
-	RegisterInterface(name string, iface any, impls ...gogoproto.Message)
-	RegisterImplementations(iface any, impls ...gogoproto.Message)
-}
+type InterfaceRegistry = implementation.InterfaceRegistry
 
 func NewKeeper(
 	cdc codec.Codec,
@@ -71,7 +66,6 @@ func NewKeeper(
 	if err != nil {
 		return Keeper{}, err
 	}
-	registerToInterfaceRegistry(ir, keeper.accounts)
 	return keeper, nil
 }
 
@@ -427,31 +421,4 @@ func (k Keeper) maybeSendFunds(ctx context.Context, from, to []byte, amt sdk.Coi
 	}
 
 	return nil
-}
-
-const msgInterfaceName = "cosmos.accounts.v1.MsgInterface"
-
-// creates a new interface type which is an alias of the proto message interface to avoid conflicts with sdk.Msg
-type msgInterface transaction.Msg
-
-var msgInterfaceType = (*msgInterface)(nil)
-
-// registerToInterfaceRegistry registers all the interfaces of the accounts to the
-// global interface registry. This is required for the SDK to correctly decode
-// the google.Protobuf.Any used in x/accounts.
-func registerToInterfaceRegistry(ir InterfaceRegistry, accMap map[string]implementation.Implementation) {
-	ir.RegisterInterface(msgInterfaceName, msgInterfaceType)
-
-	for _, acc := range accMap {
-		// register init
-		ir.RegisterImplementations(msgInterfaceType, acc.InitHandlerSchema.RequestSchema.New(), acc.InitHandlerSchema.ResponseSchema.New())
-		// register exec
-		for _, exec := range acc.ExecuteHandlersSchema {
-			ir.RegisterImplementations(msgInterfaceType, exec.RequestSchema.New(), exec.ResponseSchema.New())
-		}
-		// register query
-		for _, query := range acc.QueryHandlersSchema {
-			ir.RegisterImplementations(msgInterfaceType, query.RequestSchema.New(), query.ResponseSchema.New())
-		}
-	}
 }

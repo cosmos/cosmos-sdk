@@ -3,6 +3,8 @@ package accounts
 import (
 	"context"
 	"fmt"
+	"slices"
+	"strings"
 
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
@@ -13,17 +15,13 @@ var _ v1.QueryServer = &queryServer{}
 // NewQueryServer initializes a new instance of QueryServer.
 // It precalculates and stores schemas for efficient schema retrieval.
 func NewQueryServer(k Keeper) v1.QueryServer {
-	// Pre-calculate schemas for efficient retrieval.
-	schemas := v1.MakeAccountsSchemas(k.accounts)
 	return &queryServer{
-		k:       k,
-		schemas: schemas, // Store precalculated schemas.
+		k: k,
 	}
 }
 
 type queryServer struct {
-	k       Keeper
-	schemas map[string]*v1.SchemaResponse // Stores precalculated schemas.
+	k Keeper
 }
 
 func (q *queryServer) AccountQuery(ctx context.Context, request *v1.AccountQueryRequest) (*v1.AccountQueryResponse, error) {
@@ -55,16 +53,81 @@ func (q *queryServer) AccountQuery(ctx context.Context, request *v1.AccountQuery
 	}, nil
 }
 
-// Schema retrieves the schema for a given account type.
+// Schema retrieves the schema for a given account.
 // It checks the precalculated schemas and returns an error if the schema is not found.
-func (q *queryServer) Schema(_ context.Context, request *v1.SchemaRequest) (*v1.SchemaResponse, error) {
-	// Fetch schema from precalculated schemas.
-	schema, ok := q.schemas[request.AccountType]
-	if !ok {
-		return nil, fmt.Errorf("%w: %s", errAccountTypeNotFound, request.AccountType)
+func (q *queryServer) Schema(ctx context.Context, request *v1.SchemaRequest) (*v1.SchemaResponse, error) {
+	// get account
+	addr, err := q.k.addressCodec.StringToBytes(request.Address)
+	if err != nil {
+		return nil, err
 	}
 
-	return schema, nil
+	impl, err := q.k.getImplementation(ctx, addr)
+	if err != nil {
+		return nil, err
+	}
+	return makeAccountSchema(ctx, impl)
+}
+
+func (q *queryServer) InitSchema(ctx context.Context, request *v1.InitSchemaRequest) (*v1.InitSchemaResponse, error) {
+	accTypes, exists := q.k.accounts[request.AccountType]
+	if !exists {
+		return nil, fmt.Errorf("account type %s not found", request.AccountType)
+	}
+
+	initSchema, err := accTypes.GetInitHandlerSchema(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.InitSchemaResponse{
+		InitSchema: &v1.Handler{
+			Request:  initSchema.RequestSchema.Name,
+			Response: initSchema.ResponseSchema.Name,
+		},
+	}, nil
+}
+
+func makeAccountSchema(
+	ctx context.Context,
+	impl implementation.Implementation,
+) (*v1.SchemaResponse, error) {
+	initSchema, err := impl.GetInitHandlerSchema(ctx)
+	if err != nil {
+		return nil, err
+	}
+	executeHandlers, err := impl.GetExecuteHandlersSchema(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	queryHandlers, err := impl.GetQueryHandlersSchema(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &v1.SchemaResponse{
+		InitSchema: &v1.Handler{
+			Request:  initSchema.RequestSchema.Name,
+			Response: initSchema.ResponseSchema.Name,
+		},
+		ExecuteHandlers: makeHandlersSchema(executeHandlers),
+		QueryHandlers:   makeHandlersSchema(queryHandlers),
+	}, nil
+}
+
+func makeHandlersSchema(handlers map[string]implementation.HandlerSchema) []*v1.Handler {
+	schemas := make([]*v1.Handler, 0, len(handlers))
+	for name, handler := range handlers {
+		schemas = append(schemas, &v1.Handler{
+			Request:  name,
+			Response: handler.ResponseSchema.Name,
+		})
+	}
+	slices.SortFunc(schemas, func(a, b *v1.Handler) int {
+		return strings.Compare(a.Request, b.Request)
+	})
+	return schemas
 }
 
 func (q *queryServer) AccountType(ctx context.Context, request *v1.AccountTypeRequest) (*v1.AccountTypeResponse, error) {

@@ -58,7 +58,7 @@ func GetTxInitCmd() *cobra.Command {
 			// to know which message to use, we need to know the account type
 			// init message schema.
 			accClient := v1.NewQueryClient(clientCtx)
-			schema, err := accClient.Schema(cmd.Context(), &v1.SchemaRequest{
+			schema, err := accClient.InitSchema(cmd.Context(), &v1.InitSchemaRequest{
 				AccountType: args[0],
 			})
 			if err != nil {
@@ -166,19 +166,13 @@ func GetQueryAccountCmd() *cobra.Command {
 
 func getSchemaForAccount(clientCtx client.Context, addr string) (*v1.SchemaResponse, error) {
 	queryClient := v1.NewQueryClient(clientCtx)
-	accType, err := queryClient.AccountType(clientCtx.CmdContext, &v1.AccountTypeRequest{
-		Address: addr,
-	})
-	if err != nil {
-		return nil, err
-	}
 	return queryClient.Schema(clientCtx.CmdContext, &v1.SchemaRequest{
-		AccountType: accType.AccountType,
+		Address: addr,
 	})
 }
 
-func handlerMsgBytes(handlersSchema []*v1.SchemaResponse_Handler, msgTypeURL, msgString string) (*codectypes.Any, error) {
-	var msgSchema *v1.SchemaResponse_Handler
+func handlerMsgBytes(handlersSchema []*v1.Handler, msgTypeURL, msgString string) (*codectypes.Any, error) {
+	var msgSchema *v1.Handler
 	for _, handler := range handlersSchema {
 		if handler.Request == msgTypeURL {
 			msgSchema = handler

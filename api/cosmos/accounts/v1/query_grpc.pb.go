@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	Query_AccountQuery_FullMethodName  = "/cosmos.accounts.v1.Query/AccountQuery"
 	Query_Schema_FullMethodName        = "/cosmos.accounts.v1.Query/Schema"
+	Query_InitSchema_FullMethodName    = "/cosmos.accounts.v1.Query/InitSchema"
 	Query_AccountType_FullMethodName   = "/cosmos.accounts.v1.Query/AccountType"
 	Query_AccountNumber_FullMethodName = "/cosmos.accounts.v1.Query/AccountNumber"
 )
@@ -35,6 +36,8 @@ type QueryClient interface {
 	AccountQuery(ctx context.Context, in *AccountQueryRequest, opts ...grpc.CallOption) (*AccountQueryResponse, error)
 	// Schema returns an x/account schema. Unstable.
 	Schema(ctx context.Context, in *SchemaRequest, opts ...grpc.CallOption) (*SchemaResponse, error)
+	// InitSchema returns an account's types init schema. Unstable.
+	InitSchema(ctx context.Context, in *InitSchemaRequest, opts ...grpc.CallOption) (*InitSchemaResponse, error)
 	// AccountType returns the account type for an address.
 	AccountType(ctx context.Context, in *AccountTypeRequest, opts ...grpc.CallOption) (*AccountTypeResponse, error)
 	// AccountNumber returns the account number given the account address.
@@ -63,6 +66,16 @@ func (c *queryClient) Schema(ctx context.Context, in *SchemaRequest, opts ...grp
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SchemaResponse)
 	err := c.cc.Invoke(ctx, Query_Schema_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) InitSchema(ctx context.Context, in *InitSchemaRequest, opts ...grpc.CallOption) (*InitSchemaResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(InitSchemaResponse)
+	err := c.cc.Invoke(ctx, Query_InitSchema_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -99,6 +112,8 @@ type QueryServer interface {
 	AccountQuery(context.Context, *AccountQueryRequest) (*AccountQueryResponse, error)
 	// Schema returns an x/account schema. Unstable.
 	Schema(context.Context, *SchemaRequest) (*SchemaResponse, error)
+	// InitSchema returns an account's types init schema. Unstable.
+	InitSchema(context.Context, *InitSchemaRequest) (*InitSchemaResponse, error)
 	// AccountType returns the account type for an address.
 	AccountType(context.Context, *AccountTypeRequest) (*AccountTypeResponse, error)
 	// AccountNumber returns the account number given the account address.
@@ -118,6 +133,9 @@ func (UnimplementedQueryServer) AccountQuery(context.Context, *AccountQueryReque
 }
 func (UnimplementedQueryServer) Schema(context.Context, *SchemaRequest) (*SchemaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Schema not implemented")
+}
+func (UnimplementedQueryServer) InitSchema(context.Context, *InitSchemaRequest) (*InitSchemaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InitSchema not implemented")
 }
 func (UnimplementedQueryServer) AccountType(context.Context, *AccountTypeRequest) (*AccountTypeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AccountType not implemented")
@@ -182,6 +200,24 @@ func _Query_Schema_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_InitSchema_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InitSchemaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).InitSchema(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_InitSchema_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).InitSchema(ctx, req.(*InitSchemaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_AccountType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AccountTypeRequest)
 	if err := dec(in); err != nil {
@@ -232,6 +268,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Schema",
 			Handler:    _Query_Schema_Handler,
+		},
+		{
+			MethodName: "InitSchema",
+			Handler:    _Query_InitSchema_Handler,
 		},
 		{
 			MethodName: "AccountType",

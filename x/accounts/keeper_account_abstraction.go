@@ -35,7 +35,7 @@ func (k Keeper) IsAbstractedAccount(ctx context.Context, addr []byte) (bool, err
 	if !ok {
 		return false, fmt.Errorf("%w: %s", errAccountTypeNotFound, accType)
 	}
-	return impl.HasExec(&aa_interface_v1.MsgAuthenticate{}), nil
+	return impl.HasExec(ctx, &aa_interface_v1.MsgAuthenticate{}), nil
 }
 
 func (k Keeper) AuthenticateAccount(ctx context.Context, signer []byte, bundler string, rawTx *tx.TxRaw, protoTx *tx.Tx, signIndex uint32) error {

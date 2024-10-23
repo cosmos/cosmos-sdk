@@ -3,6 +3,8 @@ package validate
 import (
 	"fmt"
 
+	"github.com/spf13/cast"
+
 	modulev1 "cosmossdk.io/api/cosmos/validate/module/v1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/server"
@@ -18,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante/unorderedtx"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/spf13/cast"
 )
 
 // flagMinGasPricesV2 is the flag name for the minimum gas prices in the main server v2 component.

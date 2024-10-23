@@ -99,6 +99,61 @@ func NewSimAppWithConfig[T transaction.Tx](
 		appConfig = depinject.Configs(
 			AppConfig(),
 			config,
+			depinject.Supply(
+			// ADVANCED CONFIGURATION
+
+			//
+			// AUTH
+			//
+			// For providing a custom function required in auth to generate custom account types
+			// add it below. By default the auth module uses simulation.RandomGenesisAccounts.
+			//
+			// authtypes.RandomGenesisAccountsFn(simulation.RandomGenesisAccounts),
+			//
+			// For providing a custom a base account type add it below.
+			// By default the auth module uses authtypes.ProtoBaseAccount().
+			//
+			// func() sdk.AccountI { return authtypes.ProtoBaseAccount() },
+			//
+			// For providing a different address codec, add it below.
+			// By default the auth module uses a Bech32 address codec,
+			// with the prefix defined in the auth module configuration.
+			//
+			// func() address.Codec { return <- custom address codec type -> }
+
+			//
+			// STAKING
+			//
+			// For provinding a different validator and consensus address codec, add it below.
+			// By default the staking module uses the bech32 prefix provided in the auth config,
+			// and appends "valoper" and "valcons" for validator and consensus addresses respectively.
+			// When providing a custom address codec in auth, custom address codecs must be provided here as well.
+			//
+			// func() runtime.ValidatorAddressCodec { return <- custom validator address codec type -> }
+			// func() runtime.ConsensusAddressCodec { return <- custom consensus address codec type -> }
+
+			//
+			// MINT
+			//
+
+			// For providing a custom inflation function for x/mint add here your
+			// custom function that implements the minttypes.InflationCalculationFn
+			// interface.
+			),
+			depinject.Provide(
+			// if you want to provide a custom public key you
+			// can do it from here.
+			// Example:
+			// 		basedepinject.ProvideCustomPubkey[Ed25519PublicKey]()
+			//
+			// You can also provide a custom public key with a custom validation function:
+			//
+			// 		basedepinject.ProvideCustomPubKeyAndValidationFunc(func(pub Ed25519PublicKey) error {
+			//			if len(pub.Key) != 64 {
+			//				return fmt.Errorf("invalid pub key size")
+			//			}
+			// 		})
+			),
 		)
 	)
 
@@ -144,121 +199,10 @@ func NewSimApp[T transaction.Tx](
 	logger log.Logger,
 	viper *viper.Viper,
 ) *SimApp[T] {
-	var (
-		app          = &SimApp[T]{}
-		appBuilder   *runtime.AppBuilder[T]
-		err          error
-		storeBuilder root.Builder
-
-		// merge the AppConfig and other configuration in one config
-		appConfig = depinject.Configs(
-			AppConfig(),
-			depinject.Supply(
-				logger,
-
-				// ADVANCED CONFIGURATION
-
-				//
-				// AUTH
-				//
-				// For providing a custom function required in auth to generate custom account types
-				// add it below. By default the auth module uses simulation.RandomGenesisAccounts.
-				//
-				// authtypes.RandomGenesisAccountsFn(simulation.RandomGenesisAccounts),
-				//
-				// For providing a custom a base account type add it below.
-				// By default the auth module uses authtypes.ProtoBaseAccount().
-				//
-				// func() sdk.AccountI { return authtypes.ProtoBaseAccount() },
-				//
-				// For providing a different address codec, add it below.
-				// By default the auth module uses a Bech32 address codec,
-				// with the prefix defined in the auth module configuration.
-				//
-				// func() address.Codec { return <- custom address codec type -> }
-
-				//
-				// STAKING
-				//
-				// For provinding a different validator and consensus address codec, add it below.
-				// By default the staking module uses the bech32 prefix provided in the auth config,
-				// and appends "valoper" and "valcons" for validator and consensus addresses respectively.
-				// When providing a custom address codec in auth, custom address codecs must be provided here as well.
-				//
-				// func() runtime.ValidatorAddressCodec { return <- custom validator address codec type -> }
-				// func() runtime.ConsensusAddressCodec { return <- custom consensus address codec type -> }
-
-				//
-				// MINT
-				//
-
-				// For providing a custom inflation function for x/mint add here your
-				// custom function that implements the minttypes.InflationCalculationFn
-				// interface.
-			),
-			depinject.Provide(
-				// inject desired account types:
-				multisigdepinject.ProvideAccount,
-				basedepinject.ProvideAccount,
-				lockupdepinject.ProvideAllLockupAccounts,
-
-				// provide base account options
-				basedepinject.ProvideSecp256K1PubKey,
-				// if you want to provide a custom public key you
-				// can do it from here.
-				// Example:
-				// 		basedepinject.ProvideCustomPubkey[Ed25519PublicKey]()
-				//
-				// You can also provide a custom public key with a custom validation function:
-				//
-				// 		basedepinject.ProvideCustomPubKeyAndValidationFunc(func(pub Ed25519PublicKey) error {
-				//			if len(pub.Key) != 64 {
-				//				return fmt.Errorf("invalid pub key size")
-				//			}
-				// 		})
-			),
-		)
+	app, err := NewSimAppWithConfig[T](depinject.Configs(
+		depinject.Supply(logger, GlobalConfig(viper.AllSettings()))),
 	)
-
-	if err := depinject.Inject(appConfig,
-		&storeBuilder,
-		&appBuilder,
-		&app.appCodec,
-		&app.legacyAmino,
-		&app.txConfig,
-		&app.interfaceRegistry,
-		&app.UpgradeKeeper,
-		&app.StakingKeeper,
-	); err != nil {
-		panic(err)
-	}
-
-	// store/v2 follows a slightly more eager config life cycle than server components
-	storeConfig, err := serverstore.UnmarshalConfig(viper.AllSettings())
 	if err != nil {
-		panic(err)
-	}
-
-	app.store, err = storeBuilder.Build(logger, storeConfig)
-	if err != nil {
-		panic(err)
-	}
-
-	app.App, err = appBuilder.Build()
-	if err != nil {
-		panic(err)
-	}
-
-	/****  Module Options ****/
-
-	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
-	app.RegisterUpgradeHandlers()
-
-	// TODO (here or in runtime/v2)
-	// wire simulation manager
-	// wire unordered tx manager
-
-	if err := app.LoadLatest(); err != nil {
 		panic(err)
 	}
 	return app
@@ -301,6 +245,7 @@ func (app *SimApp[T]) Close() error {
 }
 
 type GlobalConfig server.ConfigMap
+
 type ModuleConfigMaps map[string]server.ConfigMap
 
 // TODO combine below 2 functions

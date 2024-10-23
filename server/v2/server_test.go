@@ -63,12 +63,13 @@ func TestServer(t *testing.T) {
 
 	ctx, err := serverv2.SetServerContext(context.Background(), v, logger)
 	require.NoError(t, err)
+	app := &mockApp[transaction.Tx]{}
 
-	grpcServer := grpc.New[transaction.Tx]()
-	err = grpcServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
+	grpcServer, err := grpc.New[transaction.Tx](logger, app.InterfaceRegistry(), app.QueryHandlers(), app, cfg)
 	require.NoError(t, err)
 
-	storeServer := store.New[transaction.Tx]()
+	storeServer, err := store.New[transaction.Tx](app.Store(), cfg)
+	require.NoError(t, err)
 	err = storeServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
 	require.NoError(t, err)
 

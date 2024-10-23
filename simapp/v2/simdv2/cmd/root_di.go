@@ -5,25 +5,24 @@ import (
 	"path/filepath"
 	"strings"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	"cosmossdk.io/core/server"
-	"cosmossdk.io/log"
-	serverv2 "cosmossdk.io/server/v2"
-	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli"
 	clientv2helpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
+	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/simapp/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -31,32 +30,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-/*
-logger cannot be injected until command line arguments are parsed but injection is needed before
- command line args are parsed due to closing over DI outputs.
-
-Q: Where is logger needed in injection?
-A: ProvideEnvironment and ProvideModuleManager need it.  They are receiving a noop logger in the initial injection
-and a parsed and configured one in the second.
-
-!! Return a bootstrap command first with Persistent flags, then parse them. This configures the logger and the home directory.
-this can also be folded in and nuked:
-https://github.com/cosmos/cosmos-sdk/blob/6708818470826923b96ff7fb6ef55729d8c4269e/client/v2/helpers/home.go#L17
-
-DI happens before commands are even created and therefore before full CLI flags binding
-In the DI phase only flags mentioned in server.ModuleConfigMap will be available from CLI
-In the DI phase viper config is fully available, but not overrides from CLI flags
-Server components are invoked on start.
-Server components receive fully parse CLI flags since the Start invocation happens in command.RunE
-
-*/
-
-type ModuleConfigMaps map[string]server.ConfigMap
-type FlagParser func() error
-type GlobalConfig server.ConfigMap
-
 // NewRootCmd creates a new root command for simd. It is called once in the main function.
-func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
+func NewRootCmd[T transaction.Tx](args ...string) (*cobra.Command, error) {
 	var (
 		autoCliOpts   autocli.AppOptions
 		moduleManager *runtime.MM[T]
@@ -189,7 +164,7 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 		return nil, err
 	}
 
-	srv, err = initRootCmd[T](rootCmd, logger, globalConfig, clientCtx.TxConfig, moduleManager, simApp)
+	_, err = initRootCmd[T](rootCmd, logger, globalConfig, clientCtx.TxConfig, moduleManager, simApp)
 	if err != nil {
 		return nil, err
 	}

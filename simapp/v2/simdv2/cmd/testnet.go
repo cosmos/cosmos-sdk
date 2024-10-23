@@ -358,8 +358,6 @@ func initTestnetFiles[T transaction.Tx](
 		return err
 	}
 
-	// TODO: sus, why not just use --home flag in the first place?
-	// Update viper root since root dir become rootdir/node/simd
 	serverv2.GetViperFromCmd(cmd).Set(flags.FlagHome, nodeConfig.RootDir)
 
 	cmd.PrintErrf("Successfully initialized %d node directories\n", args.numValidators)

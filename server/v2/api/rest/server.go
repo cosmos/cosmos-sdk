@@ -2,11 +2,12 @@ package rest
 
 import (
 	"context"
-	"cosmossdk.io/core/server"
-	"cosmossdk.io/server/v2/appmanager"
 	"errors"
 	"fmt"
 	"net/http"
+
+	"cosmossdk.io/core/server"
+	"cosmossdk.io/server/v2/appmanager"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -88,6 +89,11 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	s.logger.Info("stopping HTTP server")
 
 	return s.httpServer.Shutdown(ctx)
+}
+
+func (s *Server[T]) WithConfigOptions(opts ...CfgOption) *Server[T] {
+	s.cfgOptions = append(s.cfgOptions, opts...)
+	return s
 }
 
 func (s *Server[T]) Config() any {

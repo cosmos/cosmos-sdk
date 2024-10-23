@@ -8,9 +8,6 @@ import (
 	serverstore "cosmossdk.io/server/v2/store"
 	"errors"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
 	"cosmossdk.io/client/v2/offchain"
 	coreserver "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
@@ -19,6 +16,7 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
@@ -31,11 +29,6 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2/cli"
 )
-
-func newApp[T transaction.Tx](logger log.Logger, viper *viper.Viper) serverv2.AppI[T] {
-	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
-	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper))
-}
 
 type configWriter interface {
 	WriteConfig(filename string) error

@@ -50,14 +50,16 @@ func TestQueryBySig(t *testing.T) {
 
 	// create unsign tx
 	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=10stake", "--sign-mode=direct", "--generate-only"}
-	res := cli.RunCommandWithArgs(bankSendCmdArgs...)
-	txFile := StoreTempFile(t, []byte(res))
+	unsignedTx := cli.RunCommandWithArgs(bankSendCmdArgs...)
+	fmt.Println("unsignedTx", unsignedTx)
+	txFile := StoreTempFile(t, []byte(unsignedTx))
 
-	res = cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", valAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet/node0/simd")
-	sig := gjson.Get(res, "signatures.0").String()
-	signedTxFile := StoreTempFile(t, []byte(res))
+	signedTx := cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", valAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet/node0/simd")
+	fmt.Println("signedTx", signedTx)
+	sig := gjson.Get(signedTx, "signatures.0").String()
+	signedTxFile := StoreTempFile(t, []byte(signedTx))
 
-	res = cli.Run("tx", "broadcast", signedTxFile.Name())
+	res := cli.Run("tx", "broadcast", signedTxFile.Name())
 	fmt.Println("resss", res)
 	RequireTxSuccess(t, res)
 

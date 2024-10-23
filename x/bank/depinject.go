@@ -104,6 +104,8 @@ func InvokeSetSendRestrictions(
 	config *modulev1.Module,
 	keeper keeper.BaseKeeper,
 	restrictions map[string]types.SendRestrictionFn,
+	moduleAccountsService moduleaccounts.ServiceWithPerms,
+	addrCdc address.Codec,
 ) error {
 	if config == nil {
 		return nil
@@ -131,6 +133,16 @@ func InvokeSetSendRestrictions(
 		}
 
 		keeper.AppendSendRestriction(restriction)
+	}
+
+	// @facu fix this
+	blockedAddresses := make(map[string]bool)
+	for _, addr := range moduleAccountsService.AllAccounts() {
+		addrStr, err := addrCdc.BytesToString(addr)
+		if err != nil {
+			panic(err)
+		}
+		blockedAddresses[addrStr] = true
 	}
 
 	return nil

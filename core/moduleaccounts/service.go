@@ -19,6 +19,7 @@ type Service interface {
 type ServiceWithPerms interface {
 	Service
 
+	AllAccounts() map[string][]byte
 	HasPermission(name string, perm string) bool
 	IsModuleAccount(addr []byte) string // Needed in burn coins
 }

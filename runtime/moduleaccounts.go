@@ -64,8 +64,11 @@ func NewModuleAccountsService(moduleAccounts ...ModuleAccount) *ModuleAccountsSe
 
 // AllAccounts implements moduleaccounts.Service.
 func (m *ModuleAccountsService) AllAccounts() map[string][]byte {
-	// return m.accounts
-	return map[string][]byte{}
+	accs := map[string][]byte{}
+	for k, v := range m.accounts {
+		accs[k] = v.addr
+	}
+	return accs
 }
 
 // GetAccount implements moduleaccounts.Service.

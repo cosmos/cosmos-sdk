@@ -206,10 +206,6 @@ func NewSimAppWithInputs[T transaction.Tx](
 	return app
 }
 
-func (app *SimApp[T]) Build() error {
-	return nil
-}
-
 // AppCodec returns SimApp's app codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable

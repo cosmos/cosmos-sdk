@@ -10,6 +10,7 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
+	_ "cosmossdk.io/api/cosmos/accounts/defaults/base/v1" // import for side-effects
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"

@@ -42,21 +42,21 @@ type AppModule struct {
 	k   Keeper
 }
 
-func (m AppModule) IsAppModule() {}
+func (AppModule) IsAppModule() {}
 
 // Name returns the module's name.
 // Deprecated: kept for legacy reasons.
-func (AppModule) Name() string { return ModuleName }
+func (am AppModule) Name() string { return ModuleName }
 
-func (m AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+func (AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	msgservice.RegisterMsgServiceDesc(registrar, v1.MsgServiceDesc())
 }
 
 // App module services
 
-func (m AppModule) RegisterServices(registar grpc.ServiceRegistrar) error {
-	v1.RegisterQueryServer(registar, NewQueryServer(m.k))
-	v1.RegisterMsgServer(registar, NewMsgServer(m.k))
+func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	v1.RegisterQueryServer(registrar, NewQueryServer(am.k))
+	v1.RegisterMsgServer(registrar, NewMsgServer(am.k))
 
 	return nil
 }

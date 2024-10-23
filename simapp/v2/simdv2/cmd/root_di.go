@@ -96,9 +96,9 @@ func NewRootCmd[T transaction.Tx](args ...string) (*cobra.Command, error) {
 
 	var simApp *simapp.SimApp[T]
 	if needsApp(cmd) {
-		simApp, err = simapp.NewSimAppWithConfig[T](
+		simApp, err = simapp.NewSimApp[T](
 			depinject.Configs(
-				depinject.Supply(logger, simapp.GlobalConfig(globalConfig)),
+				depinject.Supply(logger, runtime.GlobalConfig(globalConfig)),
 				depinject.Provide(ProvideClientContext),
 			),
 			&autoCliOpts, &moduleManager, &clientCtx)
@@ -114,7 +114,7 @@ func NewRootCmd[T transaction.Tx](args ...string) (*cobra.Command, error) {
 				),
 				depinject.Supply(
 					logger,
-					simapp.GlobalConfig(globalConfig),
+					runtime.GlobalConfig(globalConfig),
 				),
 			),
 			&autoCliOpts,

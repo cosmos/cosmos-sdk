@@ -31,6 +31,8 @@ func init() {
 	)
 }
 
+// ProvideConfig specifies the configuration key for the minimum gas prices.
+// During dependency injection, a configuration map is provided with the key set.
 func ProvideConfig(key depinject.OwnModuleKey) server.ModuleConfigMap {
 	return server.ModuleConfigMap{
 		Module: depinject.ModuleKey(key).Name(),

@@ -99,6 +99,8 @@ func init() {
 			ProvideModuleManager[transaction.Tx],
 			ProvideEnvironment,
 			ProvideKVService,
+			ProvideModuleConfigMaps,
+			ProvideModuleScopedConfigMap,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)

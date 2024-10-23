@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	serverstore "cosmossdk.io/server/v2/store"
 	_ "embed"
 	"fmt"
 
@@ -13,7 +14,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
-	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/root"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
@@ -67,8 +67,6 @@ func AppConfig() depinject.Config {
 			codec.ProvideAddressCodec,
 			codec.ProvideProtoCodec,
 			codec.ProvideLegacyAmino,
-			ProvideModuleScopedConfigMap,
-			SanelyProvideModuleConfigMap,
 			ProvideRootStoreConfig,
 			// inject desired account types:
 			multisigdepinject.ProvideAccount,
@@ -85,7 +83,7 @@ func AppConfig() depinject.Config {
 	)
 }
 
-func NewSimAppWithConfig[T transaction.Tx](
+func NewSimApp[T transaction.Tx](
 	config depinject.Config,
 	outputs ...any,
 ) (*SimApp[T], error) {
@@ -194,13 +192,13 @@ func NewSimAppWithConfig[T transaction.Tx](
 	return app, nil
 }
 
-// NewSimApp returns a reference to an initialized SimApp.
-func NewSimApp[T transaction.Tx](
+// NewSimAppWithInputs returns a reference to an initialized SimApp.
+func NewSimAppWithInputs[T transaction.Tx](
 	logger log.Logger,
 	viper *viper.Viper,
 ) *SimApp[T] {
-	app, err := NewSimAppWithConfig[T](depinject.Configs(
-		depinject.Supply(logger, GlobalConfig(viper.AllSettings()))),
+	app, err := NewSimApp[T](depinject.Configs(
+		depinject.Supply(logger, runtime.GlobalConfig(viper.AllSettings()))),
 	)
 	if err != nil {
 		panic(err)
@@ -244,41 +242,6 @@ func (app *SimApp[T]) Close() error {
 	return app.App.Close()
 }
 
-type GlobalConfig server.ConfigMap
-
-type ModuleConfigMaps map[string]server.ConfigMap
-
-// TODO combine below 2 functions
-// - linear search for module name in provider is OK
-// - move elsewhere, server/v2 or runtime/v2 ?
-
-func SanelyProvideModuleConfigMap(
-	moduleConfigs []server.ModuleConfigMap,
-	globalConfig GlobalConfig,
-) ModuleConfigMaps {
-	moduleConfigMaps := make(ModuleConfigMaps)
-	for _, moduleConfig := range moduleConfigs {
-		cfg := moduleConfig.Config
-		name := moduleConfig.Module
-		moduleConfigMaps[name] = make(server.ConfigMap)
-		for flag, df := range cfg {
-			if val, ok := globalConfig[flag]; ok {
-				moduleConfigMaps[name][flag] = val
-			} else {
-				moduleConfigMaps[name][flag] = df
-			}
-		}
-	}
-	return moduleConfigMaps
-}
-
-func ProvideModuleScopedConfigMap(
-	key depinject.ModuleKey,
-	moduleConfigs ModuleConfigMaps,
-) server.ConfigMap {
-	return moduleConfigs[key.Name()]
-}
-
-func ProvideRootStoreConfig(config GlobalConfig) (*root.Config, error) {
+func ProvideRootStoreConfig(config runtime.GlobalConfig) (*root.Config, error) {
 	return serverstore.UnmarshalConfig(config)
 }

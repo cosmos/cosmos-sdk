@@ -7,12 +7,17 @@ type DynamicConfig interface {
 	GetString(string) string
 }
 
+// ConfigMap is a recursive map of configuration values.
 type ConfigMap map[string]any
 
+// TODO delete?
 func (c ConfigMap) Get(s string) any {
 	return c[s]
 }
 
+// ModuleConfigMap is used to specify module configuration.
+// Keys (and there default values and types) should be set in Config
+// and returned by module specific provider function.
 type ModuleConfigMap struct {
 	Module string
 	Config ConfigMap

@@ -39,7 +39,7 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	vp.Set(serverv2store.FlagAppDBBackend, string(db.DBTypeGoLevelDB))
 	vp.Set(serverv2.FlagHome, t.TempDir())
 
-	app := NewSimApp[transaction.Tx](logger, vp)
+	app := NewSimAppWithInputs[transaction.Tx](logger, vp)
 	genesis := app.ModuleManager().DefaultGenesis()
 
 	privVal := mock.NewPV()

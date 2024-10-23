@@ -5,7 +5,6 @@ import (
 	"errors"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"runtime/pprof"
 	"strings"
 	"syscall"
@@ -25,37 +24,21 @@ func SetPersistentFlags(pflags *pflag.FlagSet, defaultHome string) {
 	pflags.StringP(FlagHome, "", defaultHome, "directory for config and data")
 }
 
-// Allow the chain developer to overwrite the server default app toml config.
-func initServerConfig() ServerConfig {
-	serverCfg := DefaultServerConfig()
-	// The server's default minimum gas price is set to "0stake" inside
-	// app.toml. However, the chain developer can set a default app.toml value for their
-	// validators here. Please update value based on chain denom.
-	//
-	// In summary:
-	// - if you set serverCfg.MinGasPrices value, validators CAN tweak their
-	//   own app.toml to override, or use this default value.
-	//
-	// In simapp, we set the min gas prices to 0.
-	serverCfg.MinGasPrices = "0stake"
-
-	return serverCfg
-}
-
 // AddCommands add the server commands to the root command
 // It configures the config handling and the logger handling
 func AddCommands[T transaction.Tx](
 	rootCmd *cobra.Command,
 	logger log.Logger,
-	globalServerCfg server.ConfigMap,
+	globalAppConfig server.ConfigMap,
+	globalServerConfig ServerConfig,
 	components ...ServerComponent[T],
 ) (interface{ WriteConfig(string) error }, error) {
 	if len(components) == 0 {
 		return nil, errors.New("no components provided")
 	}
-	srv := NewServer(initServerConfig(), components...)
+	srv := NewServer(globalServerConfig, components...)
 	cmds := srv.CLICommands()
-	startCmd := createStartCommand(srv, globalServerCfg, logger)
+	startCmd := createStartCommand(srv, globalAppConfig, logger)
 	// TODO necessary? won't the parent context be inherited?
 	startCmd.SetContext(rootCmd.Context())
 	cmds.Commands = append(cmds.Commands, startCmd)
@@ -160,39 +143,6 @@ func wrapCPUProfile(logger log.Logger, cfg server.ConfigMap, callbackFn func() e
 	}()
 
 	return callbackFn()
-}
-
-// configHandle writes the default config to the home directory if it does not exist and sets the server context
-func configHandle[T transaction.Tx](s *Server[T], cmd *cobra.Command) error {
-	home, err := cmd.Flags().GetString(FlagHome)
-	if err != nil {
-		return err
-	}
-
-	configDir := filepath.Join(home, "config")
-
-	// we need to check app.toml as the config folder can already exist for the client.toml
-	if _, err := os.Stat(filepath.Join(configDir, "app.toml")); os.IsNotExist(err) {
-		if err = s.WriteConfig(configDir); err != nil {
-			return err
-		}
-	}
-
-	v, err := ReadConfig(configDir)
-	if err != nil {
-		return err
-	}
-
-	if err := v.BindPFlags(cmd.Flags()); err != nil {
-		return err
-	}
-
-	logger, err := NewLogger(v, cmd.OutOrStdout())
-	if err != nil {
-		return err
-	}
-
-	return SetCmdServerContext(cmd, v, logger)
 }
 
 // findSubCommand finds a sub-command of the provided command whose Use

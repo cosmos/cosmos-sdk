@@ -1,9 +1,10 @@
 package runtime
 
 import (
+	"strings"
+
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/depinject"
-	"strings"
 )
 
 // GlobalConfig is a recursive configuration map containing configuration

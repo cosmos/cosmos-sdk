@@ -96,6 +96,9 @@ func (s *Server[T]) RestoreSnapshotCmd() *cobra.Command {
 			logger := log.NewLogger(cmd.OutOrStdout())
 
 			rootStore, _, err := createRootStore(v, logger)
+			if err != nil {
+				return err
+			}
 			sm, err := createSnapshotsManager(cmd, v, logger, rootStore)
 			if err != nil {
 				return err

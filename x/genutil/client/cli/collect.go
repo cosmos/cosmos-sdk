@@ -1,12 +1,12 @@
 package cli
 
 import (
-	"cosmossdk.io/core/transaction"
 	"encoding/json"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"

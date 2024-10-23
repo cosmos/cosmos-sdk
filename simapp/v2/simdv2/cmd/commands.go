@@ -1,12 +1,9 @@
 package cmd
 
 import (
-	"cosmossdk.io/server/v2/api/grpc"
-	"cosmossdk.io/server/v2/api/rest"
-	"cosmossdk.io/server/v2/api/telemetry"
-	"cosmossdk.io/server/v2/cometbft"
-	serverstore "cosmossdk.io/server/v2/store"
 	"errors"
+
+	"github.com/spf13/cobra"
 
 	"cosmossdk.io/client/v2/offchain"
 	coreserver "cosmossdk.io/core/server"
@@ -14,9 +11,13 @@ import (
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/api/rest"
+	"cosmossdk.io/server/v2/api/telemetry"
+	"cosmossdk.io/server/v2/cometbft"
+	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
-	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
@@ -35,7 +36,7 @@ type configWriter interface {
 }
 
 // commandDependencies is a struct that contains all the dependencies needed to initialize the root command.
-// an alternative design could fetch these even later from the command context.
+// an alternative design could fetch these even later from the command context
 type commandDependencies[T transaction.Tx] struct {
 	globalAppConfig coreserver.ConfigMap
 	txConfig        client.TxConfig
@@ -73,6 +74,7 @@ func initRootCmd[T transaction.Tx](
 			rootCmd,
 			logger,
 			deps.globalAppConfig,
+			initServerConfig(),
 			&cometbft.CometBFTServer[T]{},
 			&grpc.Server[T]{},
 			&serverstore.Server[T]{},
@@ -121,6 +123,7 @@ func initRootCmd[T transaction.Tx](
 		rootCmd,
 		logger,
 		deps.globalAppConfig,
+		initServerConfig(),
 		cometBftServer,
 		grpcServer,
 		storeServer,

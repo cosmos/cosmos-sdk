@@ -7,11 +7,10 @@ import (
 	"net/http"
 
 	"cosmossdk.io/core/server"
-	"cosmossdk.io/server/v2/appmanager"
-
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/appmanager"
 )
 
 const (

@@ -2,11 +2,11 @@ package store
 
 import (
 	"context"
-	"cosmossdk.io/core/server"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
 	storev2 "cosmossdk.io/store/v2"

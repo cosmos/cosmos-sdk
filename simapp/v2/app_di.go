@@ -1,7 +1,6 @@
 package simapp
 
 import (
-	serverstore "cosmossdk.io/server/v2/store"
 	_ "embed"
 	"fmt"
 
@@ -14,6 +13,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
+	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/root"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"

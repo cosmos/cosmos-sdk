@@ -2,12 +2,12 @@ package telemetry
 
 import (
 	"context"
-	"cosmossdk.io/core/server"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"

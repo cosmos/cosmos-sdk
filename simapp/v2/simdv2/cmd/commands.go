@@ -34,27 +34,33 @@ type configWriter interface {
 	WriteConfig(filename string) error
 }
 
+// commandDependencies is a struct that contains all the dependencies needed to initialize the root command.
+// an alternative design could fetch these even later from the command context.
+type commandDependencies[T transaction.Tx] struct {
+	globalAppConfig coreserver.ConfigMap
+	txConfig        client.TxConfig
+	moduleManager   *runtimev2.MM[T]
+	simApp          *simapp.SimApp[T]
+}
+
 func initRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
 	logger log.Logger,
-	globalAppConfig coreserver.ConfigMap,
-	txConfig client.TxConfig,
-	moduleManager *runtimev2.MM[T],
-	simApp *simapp.SimApp[T],
+	deps commandDependencies[T],
 ) (configWriter, error) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(moduleManager),
+		genutilcli.InitCmd(deps.moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		NewTestnetCmd(moduleManager),
+		NewTestnetCmd(deps.moduleManager),
 	)
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
-		genesisCommand(moduleManager, simApp),
+		genesisCommand(deps.moduleManager, deps.simApp),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
@@ -62,11 +68,11 @@ func initRootCmd[T transaction.Tx](
 	)
 
 	// build CLI skeleton for initial config parsing or a client application invocation
-	if simApp == nil {
+	if deps.simApp == nil {
 		return serverv2.AddCommands[T](
 			rootCmd,
 			logger,
-			globalAppConfig,
+			deps.globalAppConfig,
 			&cometbft.CometBFTServer[T]{},
 			&grpc.Server[T]{},
 			&serverstore.Server[T]{},
@@ -74,6 +80,7 @@ func initRootCmd[T transaction.Tx](
 			&rest.Server[T]{},
 		)
 	}
+	simApp := deps.simApp
 	// build full app!
 	cometBftServer, err := cometbft.New(
 		logger,
@@ -83,28 +90,28 @@ func initRootCmd[T transaction.Tx](
 		simApp.App.AppManager,
 		simApp.App.QueryHandlers(),
 		simApp.App.SchemaDecoderResolver(),
-		&genericTxDecoder[T]{txConfig},
-		globalAppConfig,
+		&genericTxDecoder[T]{deps.txConfig},
+		deps.globalAppConfig,
 		initCometOptions[T](),
 		initCometConfig(),
 	)
 	if err != nil {
 		return nil, err
 	}
-	telemetryServer, err := telemetry.New[T](globalAppConfig, logger)
+	telemetryServer, err := telemetry.New[T](deps.globalAppConfig, logger)
 	if err != nil {
 		return nil, err
 	}
-	grpcServer, err := grpc.New[T](logger, simApp.InterfaceRegistry(), simApp.QueryHandlers(), simApp, globalAppConfig)
+	grpcServer, err := grpc.New[T](logger, simApp.InterfaceRegistry(), simApp.QueryHandlers(), simApp, deps.globalAppConfig)
 	if err != nil {
 		return nil, err
 	}
 	// store "server" (big quotes).
-	storeServer, err := serverstore.New[T](simApp.Store(), globalAppConfig)
+	storeServer, err := serverstore.New[T](simApp.Store(), deps.globalAppConfig)
 	if err != nil {
 		return nil, err
 	}
-	restServer, err := rest.New[T](simApp.App.AppManager, logger, globalAppConfig)
+	restServer, err := rest.New[T](simApp.App.AppManager, logger, deps.globalAppConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +120,7 @@ func initRootCmd[T transaction.Tx](
 	return serverv2.AddCommands[T](
 		rootCmd,
 		logger,
-		globalAppConfig,
+		deps.globalAppConfig,
 		cometBftServer,
 		grpcServer,
 		storeServer,

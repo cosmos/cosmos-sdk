@@ -55,7 +55,7 @@ func NewRootCmd[T transaction.Tx](args ...string) (*cobra.Command, error) {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	viper.AutomaticEnv()
 
-	srv, err := initRootCmd[T](rootCmd, log.NewNopLogger(), nil, nil, nil, nil)
+	srv, err := initRootCmd[T](rootCmd, log.NewNopLogger(), commandDependencies[T]{})
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +164,13 @@ func NewRootCmd[T transaction.Tx](args ...string) (*cobra.Command, error) {
 		return nil, err
 	}
 
-	_, err = initRootCmd[T](rootCmd, logger, globalConfig, clientCtx.TxConfig, moduleManager, simApp)
+	commandDeps := commandDependencies[T]{
+		globalAppConfig: globalConfig,
+		txConfig:        clientCtx.TxConfig,
+		moduleManager:   moduleManager,
+		simApp:          simApp,
+	}
+	_, err = initRootCmd[T](rootCmd, logger, commandDeps)
 	if err != nil {
 		return nil, err
 	}

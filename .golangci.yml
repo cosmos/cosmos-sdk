@@ -119,3 +119,5 @@ linters-settings:
       - regexpMust
       - appendAssign
       - ifElseChain
+  unused:
+    local-variables-are-used: false

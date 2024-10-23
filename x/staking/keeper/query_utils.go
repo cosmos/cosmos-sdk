@@ -65,12 +65,9 @@ func (k Keeper) GetDelegatorValidator(
 func (k Keeper) GetAllDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress) ([]types.Delegation, error) {
 	delegations := make([]types.Delegation, 0)
 
-	var i int64
 	rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](delegator)
 	err := k.Delegations.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], del types.Delegation) (stop bool, err error) {
 		delegations = append(delegations, del)
-		i++
-
 		return false, nil
 	})
 	if err != nil {

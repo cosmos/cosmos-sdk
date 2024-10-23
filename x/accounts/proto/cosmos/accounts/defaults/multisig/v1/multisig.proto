@@ -9,8 +9,10 @@ option go_package = "cosmossdk.io/x/accounts/defaults/multisig/v1";
 
 // MsgInit is used to initialize a multisig account.
 message MsgInit {
+  // members are the members of the multisig account.
   repeated Member members = 1;
-  Config          config  = 2;
+  // config is the configuration of the multisig account.
+  Config config = 2;
 }
 
 // MsgInitResponse is the response returned after account initialization.
@@ -68,8 +70,10 @@ message Member {
 
 // Config defines the configuration of the multisig account.
 message Config {
+  // threshold is the minimum weight required for a proposal to pass.
   int64 threshold = 1;
 
+  // quorum is the minimum number of members that need to vote for a proposal to pass.
   int64 quorum = 2;
 
   // voting_period is the duration in seconds for the voting period.
@@ -84,13 +88,19 @@ message Config {
 
 // Proposal defines the structure of a proposal.
 message Proposal {
-  string   title                        = 1;
-  string   summary                      = 2;
+  // title is the title of the proposal.
+  string title = 1;
+
+  // summary is the summary of the proposal.
+  string summary = 2;
+
+  // messages are the messages that will be executed
   repeated google.protobuf.Any messages = 3;
 
   // voting_period_end will be set by the account when the proposal is created.
   int64 voting_period_end = 4;
 
+  // status is the current status of the proposal.
   ProposalStatus status = 5;
 }
 
@@ -108,8 +118,10 @@ message QueryConfig {}
 
 // QueryConfigResponse returns the config of the account.
 message QueryConfigResponse {
+  // members are the current members of the account.
   repeated Member members = 1;
 
+  // config is the current config of the account.
   Config config = 2;
 }
 

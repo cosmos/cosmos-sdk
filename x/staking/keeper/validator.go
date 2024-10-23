@@ -129,15 +129,12 @@ func (k Keeper) SetNewValidatorByPowerIndex(ctx context.Context, validator types
 func (k Keeper) AddValidatorTokensAndShares(ctx context.Context, validator types.Validator,
 	tokensToAdd math.Int,
 ) (valOut types.Validator, addedShares math.LegacyDec, err error) {
-	fmt.Println("AddValidatorTokensAndShares")
 	err = k.DeleteValidatorByPowerIndex(ctx, validator)
 	if err != nil {
 		return valOut, addedShares, err
 	}
 
-	fmt.Println("AddValidatorTokensAndShares tokensToAdd", validator, tokensToAdd)
 	validator, addedShares = validator.AddTokensFromDel(tokensToAdd)
-	fmt.Println("AddValidatorTokensAndShares addedShares", addedShares)
 	err = k.SetValidator(ctx, validator)
 	if err != nil {
 		return validator, addedShares, err

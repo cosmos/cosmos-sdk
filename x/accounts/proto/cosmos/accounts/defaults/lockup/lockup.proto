@@ -25,7 +25,7 @@ message Period {
 
 // UnbondingEntry defines an entry tracking the lockup account unbonding operation.
 message UnbondingEntry {
-  // entry id
+  // ID of entry
   uint64 id = 1;
   // end time of entry
   google.protobuf.Timestamp end_time = 2

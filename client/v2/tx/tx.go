@@ -2,6 +2,7 @@ package tx
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -10,7 +11,10 @@ import (
 	"github.com/spf13/pflag"
 
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/client/v2/broadcast"
+	broadcasttypes "cosmossdk.io/client/v2/broadcast/types"
 	"cosmossdk.io/client/v2/internal/account"
+	"cosmossdk.io/client/v2/internal/comet"
 	"cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -40,7 +44,19 @@ func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs .
 		return dryRun(txf, msgs...)
 	}
 
-	return BroadcastTx(ctx, txf, msgs...)
+	broadcaster, err := getBroadcaster(ctx, flagSet)
+	if err != nil {
+		return err
+	}
+
+	return BroadcastTx(ctx, txf, broadcaster, msgs...)
+}
+
+func getBroadcaster(ctx client.Context, flagSet *pflag.FlagSet) (broadcasttypes.Broadcaster, error) {
+	url, _ := flagSet.GetString("node")
+	mode, _ := flagSet.GetString("broadcast-mode")
+	f := broadcast.NewFactory()
+	return f.Create(context.Background(), "comet", url, comet.WithMode(mode), comet.WithJsonCodec(ctx.Codec))
 }
 
 // newFactory creates a new transaction Factory based on the provided context and flag set.
@@ -129,7 +145,7 @@ func SimulateTx(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
-func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg) error {
+func BroadcastTx(clientCtx client.Context, txf Factory, broadcaster broadcasttypes.Broadcaster, msgs ...transaction.Msg) error {
 	if txf.simulateAndExecute() {
 		err := txf.calculateGas(msgs...)
 		if err != nil {
@@ -183,13 +199,12 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg)
 		return err
 	}
 
-	// broadcast to a CometBFT node
-	res, err := clientCtx.BroadcastTx(txBytes)
+	res, err := broadcaster.Broadcast(context.Background(), txBytes)
 	if err != nil {
 		return err
 	}
 
-	return clientCtx.PrintProto(res)
+	return clientCtx.PrintString(string(res))
 }
 
 // countDirectSigners counts the number of DIRECT signers in a signature data.

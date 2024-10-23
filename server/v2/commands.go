@@ -125,7 +125,7 @@ func createStartCommand[T transaction.Tx](
 					cancelFn()
 					cmd.Printf("caught %s signal\n", sig.String())
 				case <-ctx.Done():
-					// If the root context is cancelled (which is likely to happen in tests involving cobra commands),
+					// If the root context is canceled (which is likely to happen in tests involving cobra commands),
 					// don't block waiting for the OS signal before stopping the server.
 					cancelFn()
 				}

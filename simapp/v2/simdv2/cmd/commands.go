@@ -70,12 +70,14 @@ func initRootCmd[T transaction.Tx](
 
 	// build CLI skeleton for initial config parsing or a client application invocation
 	if deps.simApp == nil {
+		comet := &cometbft.CometBFTServer[T]{}
+		comet = comet.WithConfigOptions(initCometConfig())
 		return serverv2.AddCommands[T](
 			rootCmd,
 			logger,
 			deps.globalAppConfig,
 			initServerConfig(),
-			&cometbft.CometBFTServer[T]{},
+			comet,
 			&grpc.Server[T]{},
 			&serverstore.Server[T]{},
 			&telemetry.Server[T]{},
@@ -95,7 +97,6 @@ func initRootCmd[T transaction.Tx](
 		&genericTxDecoder[T]{deps.txConfig},
 		deps.globalAppConfig,
 		initCometOptions[T](),
-		initCometConfig(),
 	)
 	if err != nil {
 		return nil, err

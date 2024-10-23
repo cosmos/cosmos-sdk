@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/log/slog"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSlog(t *testing.T) {
@@ -26,37 +25,53 @@ func TestSlog(t *testing.T) {
 	var line logLine
 
 	logger.Debug("Message one", "num", 1)
-	require.NoError(t, json.Unmarshal(buf.Bytes(), &line))
-	require.Equal(t, logLine{
+	if err := json.Unmarshal(buf.Bytes(), &line); err != nil {
+		t.Fatal(err)
+	}
+	if want := (logLine{
 		Level: stdslog.LevelDebug.String(),
 		Msg:   "Message one",
 		Num:   1,
-	}, line)
+	}); want != line {
+		t.Fatalf("unexpected log record: want %v, got %v", want, line)
+	}
 
 	buf.Reset()
 	logger.Info("Message two", "num", 2)
-	require.NoError(t, json.Unmarshal(buf.Bytes(), &line))
-	require.Equal(t, logLine{
+	if err := json.Unmarshal(buf.Bytes(), &line); err != nil {
+		t.Fatal(err)
+	}
+	if want := (logLine{
 		Level: stdslog.LevelInfo.String(),
 		Msg:   "Message two",
 		Num:   2,
-	}, line)
+	}); want != line {
+		t.Fatalf("unexpected log record: want %v, got %v", want, line)
+	}
 
 	buf.Reset()
 	logger.Warn("Message three", "num", 3)
-	require.NoError(t, json.Unmarshal(buf.Bytes(), &line))
-	require.Equal(t, logLine{
+	if err := json.Unmarshal(buf.Bytes(), &line); err != nil {
+		t.Fatal(err)
+	}
+	if want := (logLine{
 		Level: stdslog.LevelWarn.String(),
 		Msg:   "Message three",
 		Num:   3,
-	}, line)
+	}); want != line {
+		t.Fatalf("unexpected log record: want %v, got %v", want, line)
+	}
 
 	buf.Reset()
 	logger.Error("Message four", "num", 4)
-	require.NoError(t, json.Unmarshal(buf.Bytes(), &line))
-	require.Equal(t, logLine{
+	if err := json.Unmarshal(buf.Bytes(), &line); err != nil {
+		t.Fatal(err)
+	}
+	if want := (logLine{
 		Level: stdslog.LevelError.String(),
 		Msg:   "Message four",
 		Num:   4,
-	}, line)
+	}); want != line {
+		t.Fatalf("unexpected log record: want %v, got %v", want, line)
+	}
 }

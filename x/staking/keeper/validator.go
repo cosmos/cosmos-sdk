@@ -135,7 +135,7 @@ func (k Keeper) AddValidatorTokensAndShares(ctx context.Context, validator types
 		return valOut, addedShares, err
 	}
 
-	fmt.Println("AddValidatorTokensAndShares tokensToAdd", tokensToAdd)
+	fmt.Println("AddValidatorTokensAndShares tokensToAdd", validator, tokensToAdd)
 	validator, addedShares = validator.AddTokensFromDel(tokensToAdd)
 	fmt.Println("AddValidatorTokensAndShares addedShares", addedShares)
 	err = k.SetValidator(ctx, validator)

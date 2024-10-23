@@ -3,11 +3,13 @@ package authz
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/defaults/authz/types"
@@ -82,22 +84,29 @@ func (a *Account) Grant(ctx context.Context, msg *types.MsgGrant) (
 			"invalid granter address")
 	}
 
+	currentTime := a.headerService.HeaderInfo(ctx).Time
+	if currentTime.After(*msg.Grant.Expiration) {
+		return nil, types.ErrInvalidExpirationTime
+	}
+
 	granteeAddr, err := a.addressCodec.StringToBytes(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	authorization := msg.Grant.GetAuthorization()
-	if authorization == nil {
+	authorizationAny := msg.Grant.GetAuthorization()
+	if authorizationAny == nil {
 		return nil, errorsmod.Wrapf(types.ErrInvalidAuthorization, "authorization cannot be nil")
 	}
 
-	authz, ok := authorization.GetCachedValue().(types.Authorization)
+	authorization, ok := authorizationAny.GetCachedValue().(types.Authorization)
 	if !ok {
 		return nil, errorsmod.Wrapf(types.ErrInvalidAuthorization, "authorization not impelementing interface")
 	}
 
-	err = a.Grantees.Set(ctx, collections.Join(granteeAddr, authz.MsgTypeURL()), msg.Grant)
+	msgTypeUrl := authorization.MsgTypeURL()
+
+	err = a.Grantees.Set(ctx, collections.Join(granteeAddr, msgTypeUrl), msg.Grant)
 	if err != nil {
 		return nil, err
 	}
@@ -135,11 +144,15 @@ func (a *Account) Exec(ctx context.Context, msg *types.MsgExec) (
 	// accountstd.ExecModuleAnys
 	if !bytes.Equal(granter, senderAddr) {
 		for _, msgany := range msg.Msgs {
-			msgTypeUrl := sdk.MsgTypeURL(msg)
+			sdkMsg, ok := msgany.GetCachedValue().(transaction.Msg)
+			if !ok {
+				return nil, errors.New("failed to extract transaction message, got %v")
+			}
+			msgTypeUrl := sdk.MsgTypeURL(sdkMsg)
 			grant, err := a.Grantees.Get(ctx, collections.Join(senderAddr, msgTypeUrl))
 			if err != nil {
 				return nil, errorsmod.Wrapf(types.ErrInvalidAuthorization,
-					"failed to get grant with given granter: %s, grantee: %s & msgType: %s ", sdk.AccAddress(granter), msg.Sender, sdk.MsgTypeURL(msg))
+					"failed to get grant with given granter: %s, grantee: %s & msgType: %s ", granter, msg.Sender, msgTypeUrl)
 			}
 
 			if grant.Expiration != nil && grant.Expiration.Before(currentTime) {

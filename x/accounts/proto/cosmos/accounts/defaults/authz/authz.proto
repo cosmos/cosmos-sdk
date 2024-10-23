@@ -13,3 +13,5 @@ message Grant {
   // time when the grant will expired
   google.protobuf.Timestamp expiration = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = true];
 }
+
+message GenericAuthoriztion {}

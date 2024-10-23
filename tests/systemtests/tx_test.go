@@ -51,16 +51,13 @@ func TestQueryBySig(t *testing.T) {
 	// create unsign tx
 	bankSendCmdArgs := []string{"tx", "bank", "send", valAddr, receiverAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--fees=10stake", fmt.Sprintf("--chain-id=%s", sut.chainID), "--sign-mode=direct", "--generate-only"}
 	unsignedTx := cli.RunCommandWithArgs(bankSendCmdArgs...)
-	fmt.Println("unsignedTx", unsignedTx)
 	txFile := StoreTempFile(t, []byte(unsignedTx))
 
 	signedTx := cli.RunCommandWithArgs("tx", "sign", txFile.Name(), fmt.Sprintf("--from=%s", valAddr), fmt.Sprintf("--chain-id=%s", sut.chainID), "--keyring-backend=test", "--home=./testnet/node0/simd")
-	fmt.Println("signedTx", signedTx)
 	sig := gjson.Get(signedTx, "signatures.0").String()
 	signedTxFile := StoreTempFile(t, []byte(signedTx))
 
 	res := cli.Run("tx", "broadcast", signedTxFile.Name())
-	fmt.Println("resss", res)
 	RequireTxSuccess(t, res)
 
 	sigFormatted := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, sig)
@@ -70,7 +67,6 @@ func TestQueryBySig(t *testing.T) {
 		Page:    0,
 		Limit:   10,
 	})
-	fmt.Println("resppp", resp)
 	require.NoError(t, err)
 	require.Len(t, resp.Txs, 1)
 	require.Len(t, resp.Txs[0].Signatures, 1)

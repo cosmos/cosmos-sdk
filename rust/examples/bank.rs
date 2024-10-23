@@ -181,7 +181,7 @@ mod tests {
         mock_global_send_hook.expect_on_send().times(1).returning(|_, _, _, _, _| Ok(()));
         let mut mock = MockHandler::new();
         mock.add_handler::<dyn SendHook>(Box::new(mock_global_send_hook));
-        let mock_id = app.add_mock(&mut root, mock).unwrap();
+        let mock_id = app.add_mock(mock).unwrap();
         bank_client.set_global_send_hook(&mut root, mock_id).unwrap();
 
         // alice gets to manage the "foo" denom and mints herself 1000 foo coins

@@ -6,6 +6,7 @@ mod hypervisor;
 
 use std::any::Any;
 use std::cell::{Cell, RefCell};
+use std::collections::{BTreeMap, HashMap};
 use allocator_api2::alloc::Allocator;
 use ixc::SchemaValue;
 use ixc_message_api::{AccountID};
@@ -56,11 +57,22 @@ impl Default for TestApp {
 
 impl TestApp {
     /// Registers a handler with the test harness so that accounts backed by this handler can be created.
-    pub fn register_handler<H: Handler>(&mut self) -> core::result::Result<(), InitializationError> {
+    pub fn register_handler<H: Handler>(&self) -> core::result::Result<(), InitializationError> {
         let scope = ResourceScope::default();
         unsafe { self.native_vm.register_handler(H::NAME, Box::new(H::new(&scope)?)); }
         Ok(())
     }
+
+    /// Registers a handler with the test harness so that accounts backed by this handler can be created.
+    /// This version of the function also registers the handler's client bindings.
+    pub fn register_handler_with_bindings<H: Handler>(&self, client_bindings: &[(&'static str, AccountID)]) -> core::result::Result<(), InitializationError> {
+        let mut scope = ResourceScope::default();
+        let binding_map = BTreeMap::<&str, AccountID>::from_iter(client_bindings.iter().cloned());
+        scope.account_resolver = Some(&binding_map);
+        unsafe { self.native_vm.register_handler(H::NAME, Box::new(H::new(&scope)?)); }
+        Ok(())
+    }
+
     /// Creates a new random client account that can be used in calls.
     pub fn new_client_account(&self) -> ClientResult<AccountID> {
         let mut ctx = self.client_context_for(ROOT_ACCOUNT);
@@ -82,18 +94,20 @@ impl TestApp {
                 account: account_id,
                 caller: account_id,
                 gas_limit: 0,
+                gas_consumed: 0,
             }, self);
             ctx
         }
     }
 
     /// Adds a mock account handler to the test harness, instantiates it as an account and returns the account ID.
-    pub fn add_mock(&self, ctx: &mut Context, mock: MockHandler) -> ClientResult<AccountID> {
+    pub fn add_mock(&self, mock: MockHandler) -> ClientResult<AccountID> {
+        let mut root = self.client_context_for(ROOT_ACCOUNT);
         let mock_id = self.mock_id.get();
         self.mock_id.set(mock_id + 1);
         let handler_id = format!("mock{}", mock_id);
         self.native_vm.register_handler(&handler_id, std::boxed::Box::new(mock));
-        create_account_raw(ctx, &handler_id, &[])
+        create_account_raw(&mut root, &handler_id, &[])
     }
 
     /// Executes a function in the context of a handler.

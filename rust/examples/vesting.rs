@@ -130,6 +130,7 @@ mod vesting {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
     use std::ops::{AddAssign, SubAssign};
     use std::sync::{Arc, RwLock};
     use ixc_core::account_api::ROOT_ACCOUNT;
@@ -143,10 +144,9 @@ mod tests {
     #[test]
     fn test_unlock() {
         let mut app = TestApp::default();
-        app.register_handler::<FixedVesting>().unwrap();
         let mut root = app.client_context_for(ROOT_ACCOUNT);
 
-        // initialize block info
+        // initialize bank mock
         let mut bank_mock = MockBankAPI::new();
         // expect send to be called once with the correct coins
         let coins = vec![Coin { denom: "foo".to_string(), amount: 1000 }];
@@ -155,15 +155,20 @@ mod tests {
             assert_eq!(coins, expected_coins);
             Ok(())
         });
-        let bank_id = app.add_mock(&mut root, MockHandler::of::<dyn BankAPI>(Box::new(bank_mock))).unwrap();
+        let bank_id = app.add_mock(MockHandler::of::<dyn BankAPI>(Box::new(bank_mock))).unwrap();
         let mut bank_ctx = app.client_context_for(bank_id);
 
-        // initialize block info
+        // initialize block info mock
         let mut block_mock = MockBlockInfoAPI::new();
         let cur_time = Arc::new(RwLock::new(Time::default()));
         let cur_time_copy = cur_time.clone();
         block_mock.expect_get_block_time().returning(move |_| Ok(cur_time_copy.read().unwrap().clone()));
-        let block_id = app.add_mock(&mut root, MockHandler::of::<dyn BlockInfoAPI>(Box::new(block_mock))).unwrap();
+        let block_info_id = app.add_mock(MockHandler::of::<dyn BlockInfoAPI>(Box::new(block_mock))).unwrap();
+
+        // register vesting account handler
+        app.register_handler_with_bindings::<FixedVesting>(
+            &[("bank", bank_id), ("block_info", block_info_id)]
+        ).unwrap();
 
         // initialize the vesting account
         let beneficiary = app.new_client_account().unwrap();

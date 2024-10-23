@@ -94,6 +94,15 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 		"random":                 {"random"},
 	}
 
+	maccs := runtime.NewModuleAccountsService(
+		runtime.NewModuleAccount(types.FeeCollectorName),
+		runtime.NewModuleAccount("mint", "minter"),
+		runtime.NewModuleAccount("bonded_tokens_pool", "burner", "staking"),
+		runtime.NewModuleAccount("not_bonded_tokens_pool", "burner", "staking"),
+		runtime.NewModuleAccount("multiPerm", "burner", "minter", "staking"),
+		runtime.NewModuleAccount("random", "random"),
+	)
+
 	msgRouter := baseapp.NewMsgServiceRouter()
 	grpcQueryRouter := baseapp.NewGRPCQueryRouter()
 	grpcQueryRouter.SetInterfaceRegistry(suite.encCfg.InterfaceRegistry)
@@ -120,13 +129,14 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
-			AccountKeeper:   suite.accountKeeper,
-			BankKeeper:      suite.bankKeeper,
-			ConsensusKeeper: suite.consensusKeeper,
-			FeegrantKeeper:  suite.feeGrantKeeper,
-			SignModeHandler: suite.encCfg.TxConfig.SignModeHandler(),
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			Environment:     suite.env,
+			AccountKeeper:         suite.accountKeeper,
+			BankKeeper:            suite.bankKeeper,
+			ConsensusKeeper:       suite.consensusKeeper,
+			FeegrantKeeper:        suite.feeGrantKeeper,
+			SignModeHandler:       suite.encCfg.TxConfig.SignModeHandler(),
+			SigGasConsumer:        ante.DefaultSigVerificationGasConsumer,
+			Environment:           suite.env,
+			ModuleAccountsService: maccs,
 		},
 	)
 

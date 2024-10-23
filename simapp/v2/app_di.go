@@ -285,8 +285,18 @@ func (app *SimApp[T]) TxConfig() client.TxConfig {
 	return app.txConfig
 }
 
-func (app *SimApp[T]) GetStore() store.RootStore {
+// Store returns the root store.
+func (app *SimApp[T]) Store() store.RootStore {
 	return app.store
+}
+
+// Close overwrites the base Close method to close the stores.
+func (app *SimApp[T]) Close() error {
+	if err := app.store.Close(); err != nil {
+		return err
+	}
+
+	return app.App.Close()
 }
 
 type GlobalConfig server.ConfigMap

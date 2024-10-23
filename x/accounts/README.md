@@ -34,8 +34,8 @@ It's crucial to understand that an account's state is isolated. This means:
 
 For example, consider two accounts of type Counter:
 
-- One located at address "cosmos123"
-- Another at address "cosmos456"
+* One located at address "cosmos123"
+* Another at address "cosmos456"
 
 These accounts do not share the same collections.Item instance. Instead, each maintains its own separate state.
 
@@ -51,10 +51,10 @@ type Account struct {
 
 Creating an account begins with defining its init message. This message is processed when an account is created, similar to:
 
-- The `instantiate` method in a CosmWasm contract
-- The `constructor` in an EVM contract
+* The `instantiate` method in a CosmWasm contract
+* The `constructor` in an EVM contract
 
-For an account to be a valid `x/account` implementer, it must define both:
+For an account to be a valid `x/accounts` implementer, it must define both:
 
 1. An `Init` method
 2. An init message
@@ -106,8 +106,8 @@ func (a Account) RegisterInitHandler(builder *accountstd.InitBuilder) {
 
 Execute handlers are methods that an account can execute, defined as messages. These executions can be triggered:
 
-- During block execution (not queries) through transactions
-- During begin or end block
+* During block execution (not queries) through transactions
+* During begin or end block
 
 To define an execute handler, we start by creating its proto message:
 
@@ -176,8 +176,8 @@ value and returning the new value in the response.
 
 Query Handlers are read-only methods implemented by an account to expose information about itself. This information can be accessed by:
 
-- External clients (e.g., CLI, wallets)
-- Other modules and accounts within the system
+* External clients (e.g., CLI, wallets)
+* Other modules and accounts within the system
 
 Query handlers can be invoked:
 
@@ -315,9 +315,9 @@ accountsKeeper, err := accounts.NewKeeper(
 
 Choose the method that best fits your application structure.
 
-### The accountsstd Package
+### The accountstd Package
 
-The `accountsstd` package provides utility functions for use within account init, execution, or query handlers. Key functions include:
+The `accountstd` package provides utility functions for use within account init, execution, or query handlers. Key functions include:
 
 1. `Whoami()`: Retrieves the address of the current account.
 2. `Sender()`: Gets the address of the transaction sender (not available in queries).
@@ -340,9 +340,9 @@ This flexibility enables defining interfaces as common sets of messages and/or q
 
 Example: Transaction Authentication
 
-- We define a `MsgAuthenticate` message.
-- Any account capable of handling `MsgAuthenticate` is considered to implement the `Authentication` interface.
-- This approach allows for standardized interaction patterns across different account types.
+* We define a `MsgAuthenticate` message.
+* Any account capable of handling `MsgAuthenticate` is considered to implement the `Authentication` interface.
+* This approach allows for standardized interaction patterns across different account types.
 
 (Note: More details on the `Authentication` interface will be provided later.)
 
@@ -360,7 +360,9 @@ To implement the `Authentication` interface in x/accounts, an account must expos
 
 The key message type for authentication is `MsgAuthenticate`, which is defined in the module's protocol buffer files:
 
-[interfaces/account_abstraction/v1/interface.proto](./proto/cosmos/accounts/interfaces/account_abstraction/v1/interface.proto)
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/main/x/accounts/proto/cosmos/accounts/interfaces/account_abstraction/v1/interface.proto#L9-L24
+```
 
 ### Authentication Mechanism
 
@@ -431,7 +433,7 @@ func (a Account) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 
 1. **Sender Verification**: Always verify that the sender is the x/accounts module. This prevents unauthorized accounts from triggering authentication.
 2. **Authentication Safety**: Ensure your authentication mechanism is secure:
-   - Prevent replay attacks by making it impossible to reuse the same action with the same signature.
+   * Prevent replay attacks by making it impossible to reuse the same action with the same signature.
 
 ##### Implementation example
 
@@ -491,8 +493,8 @@ func (a Account) AuthRetroCompatibility(ctx context.Context, _ *authtypes.QueryL
 
 ### Usage Notes
 
-- Implement this handler only for account types you want to expose via x/auth gRPC methods.
-- The `info` field in the response can be nil if your account doesn't fit the `BaseAccount` structure.
+* Implement this handler only for account types you want to expose via x/auth gRPC methods.
+* The `info` field in the response can be nil if your account doesn't fit the `BaseAccount` structure.
 
 ## Genesis
 
@@ -502,7 +504,7 @@ In order to create accounts at genesis, the `x/accounts` module allows developer
 a list of genesis `MsgInit` messages that will be executed in the `x/accounts` genesis flow.
 
 The init messages are generated offline. You can also use the following CLI command to generate the
-json messages: `simd accounts tx init [account type] [msg] --from me --genesis`. This will generate
+json messages: `simd tx accounts init [account type] [msg] --from me --genesis`. This will generate
 a jsonified init message wrapped in an x/accounts `MsgInit`.
 
 This follows the same initialization flow and rules that would happen if the chain is running.

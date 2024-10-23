@@ -17,6 +17,7 @@ require (
 	cosmossdk.io/core v1.0.0-alpha.4
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
 	cosmossdk.io/log v1.4.1
+	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -29,7 +30,7 @@ require (
 	github.com/hashicorp/go-plugin v1.6.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pelletier/go-toml/v2 v2.2.2
-	github.com/prometheus/client_golang v1.20.4
+	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/common v0.60.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1
@@ -43,7 +44,6 @@ require (
 
 require (
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
-	cosmossdk.io/schema v0.3.0 // indirect
 	github.com/DataDog/datadog-go v4.8.3+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect

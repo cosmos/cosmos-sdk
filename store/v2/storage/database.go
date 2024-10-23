@@ -16,6 +16,7 @@ type Database interface {
 	Get(storeKey []byte, version uint64, key []byte) ([]byte, error)
 	GetLatestVersion() (uint64, error)
 	SetLatestVersion(version uint64) error
+	VersionExists(version uint64) (bool, error)
 
 	Iterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error)
 	ReverseIterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error)

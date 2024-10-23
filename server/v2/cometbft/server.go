@@ -24,6 +24,7 @@ import (
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/schema/indexer"
 	serverv2 "cosmossdk.io/server/v2"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/mempool"
@@ -113,6 +114,7 @@ func New[T transaction.Tx](
 		logger,
 		appName,
 		appManager,
+		nil,
 		srv.serverOptions.Mempool(cfg),
 		indexEvents,
 		queryHandlers,
@@ -141,8 +143,23 @@ func New[T transaction.Tx](
 
 	srv.Consensus = consensus
 
+	// initialize the indexer
+	if indexerCfg := s.config.AppTomlConfig.Indexer; len(indexerCfg.Target) > 0 {
+		listener, err := indexer.StartIndexing(indexer.IndexingOptions{
+			Config:   indexerCfg,
+			Resolver: appI.SchemaDecoderResolver(),
+			Logger:   s.logger.With(log.ModuleKey, "indexer"),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to start indexing: %w", err)
+		}
+		consensus.listener = &listener.Listener
+	}
+
+	s.Consensus = consensus
+
 	return srv, nil
-}
+	}
 
 func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
 	return nil

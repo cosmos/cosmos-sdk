@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/schema/decoding"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/store/v2"
 )
@@ -14,9 +15,12 @@ import (
 type AppCreator[T transaction.Tx] func(log.Logger, *viper.Viper) AppI[T]
 
 type AppI[T transaction.Tx] interface {
+	appmanager.AppManager[T]
+
 	Name() string
 	InterfaceRegistry() server.InterfaceRegistry
-	GetAppManager() *appmanager.AppManager[T]
-	GetQueryHandlers() map[string]appmodulev2.Handler
-	GetStore() store.RootStore
+	QueryHandlers() map[string]appmodulev2.Handler
+	Store() store.RootStore
+	SchemaDecoderResolver() decoding.DecoderResolver
+	Close() error
 }

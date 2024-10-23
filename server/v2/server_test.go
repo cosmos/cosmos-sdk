@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
-	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/store"
 	storev2 "cosmossdk.io/store/v2"
 )
@@ -37,19 +36,15 @@ type mockApp[T transaction.Tx] struct {
 	serverv2.AppI[T]
 }
 
-func (*mockApp[T]) GetQueryHandlers() map[string]appmodulev2.Handler {
+func (*mockApp[T]) QueryHandlers() map[string]appmodulev2.Handler {
 	return map[string]appmodulev2.Handler{}
-}
-
-func (*mockApp[T]) GetAppManager() *appmanager.AppManager[T] {
-	return nil
 }
 
 func (*mockApp[T]) InterfaceRegistry() coreserver.InterfaceRegistry {
 	return &mockInterfaceRegistry{}
 }
 
-func (*mockApp[T]) GetStore() storev2.RootStore {
+func (*mockApp[T]) Store() storev2.RootStore {
 	return nil
 }
 
@@ -65,6 +60,10 @@ func TestServer(t *testing.T) {
 	cfg := v.AllSettings()
 
 	logger := log.NewLogger(os.Stdout)
+
+	ctx, err := serverv2.SetServerContext(context.Background(), v, logger)
+	require.NoError(t, err)
+
 	grpcServer := grpc.New[transaction.Tx]()
 	err = grpcServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
 	require.NoError(t, err)
@@ -76,7 +75,6 @@ func TestServer(t *testing.T) {
 	mockServer := &mockServer{name: "mock-server-1", ch: make(chan string, 100)}
 
 	server := serverv2.NewServer(
-		logger,
 		serverv2.DefaultServerConfig(),
 		grpcServer,
 		storeServer,
@@ -97,7 +95,7 @@ func TestServer(t *testing.T) {
 	require.Equal(t, v.GetString(grpcServer.Name()+".address"), grpc.DefaultConfig().Address)
 
 	// start empty
-	ctx, cancelFn := context.WithCancel(context.TODO())
+	ctx, cancelFn := context.WithCancel(ctx)
 	go func() {
 		// wait 5sec and cancel context
 		<-time.After(5 * time.Second)

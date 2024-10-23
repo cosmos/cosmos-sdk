@@ -203,9 +203,9 @@ func NewRootCmd[T transaction.Tx](args []string) (*cobra.Command, error) {
 			logger,
 			// TODO use depinject outputs not app
 			app.Name(),
-			app.GetStore(),
-			app.GetAppManager(),
-			app.GetQueryHandlers(),
+			app.Store(),
+			&app.App.AppManager,
+			app.App.QueryHandlers(),
 			&genericTxDecoder{clientCtx.TxConfig},
 			globalConfig,
 			initCometOptions[T](),

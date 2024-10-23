@@ -63,12 +63,11 @@ func initRootCmd[T transaction.Tx](
 		offchain.OffChain(),
 	)
 
-	//// wire server commands
-	//return serverv2.AddCommands(
+	// wire server commands
+	//if _, err := serverv2.AddCommands(
 	//	rootCmd,
-	//	app,
-	//	logger,
-	//	globalAppConfig,
+	//	newApp,
+	//	initServerConfig(),
 	//	cometbft.New(
 	//		&genericTxDecoder[T]{txConfig},
 	//		initCometOptions[T](),
@@ -77,7 +76,10 @@ func initRootCmd[T transaction.Tx](
 	//	grpc.New[T](),
 	//	serverstore.New[T](),
 	//	telemetry.New[T](),
-	//)
+	//	rest.New[T](),
+	//); err != nil {
+	//	panic(err)
+	//}
 
 	return nil, nil
 }

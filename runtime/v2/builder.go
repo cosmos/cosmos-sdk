@@ -32,11 +32,6 @@ type AppBuilder[T transaction.Tx] struct {
 	postTxExec  func(ctx context.Context, tx T, success bool) error
 }
 
-// DefaultGenesis returns a default genesis from the registered AppModule's.
-func (a *AppBuilder[T]) DefaultGenesis() map[string]json.RawMessage {
-	return a.app.moduleManager.DefaultGenesis()
-}
-
 // RegisterModules registers the provided modules with the module manager.
 // This is the primary hook for integrating with modules which are not registered using the app config.
 func (a *AppBuilder[T]) RegisterModules(modules map[string]appmodulev2.AppModule) error {
@@ -100,7 +95,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 
 	endBlocker, valUpdate := a.app.moduleManager.EndBlock()
 
-	stf, err := stf.NewSTF[T](
+	stf, err := stf.New[T](
 		a.app.logger.With("module", "stf"),
 		a.app.msgRouterBuilder,
 		a.app.queryRouterBuilder,
@@ -117,77 +112,75 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	}
 	a.app.stf = stf
 
-	appManagerBuilder := appmanager.Builder[T]{
-		STF:                a.app.stf,
-		DB:                 a.app.db,
-		ValidateTxGasLimit: a.app.config.GasConfig.ValidateTxGasLimit,
-		QueryGasLimit:      a.app.config.GasConfig.QueryGasLimit,
-		SimulationGasLimit: a.app.config.GasConfig.SimulationGasLimit,
-		InitGenesis: func(
-			ctx context.Context,
-			src io.Reader,
-			txHandler func(json.RawMessage) error,
-		) (store.WriterMap, error) {
-			// this implementation assumes that the state is a JSON object
-			bz, err := io.ReadAll(src)
-			if err != nil {
-				return nil, fmt.Errorf("failed to read import state: %w", err)
-			}
-			var genesisJSON map[string]json.RawMessage
-			if err = json.Unmarshal(bz, &genesisJSON); err != nil {
-				return nil, err
-			}
-
-			v, zeroState, err := a.app.db.StateLatest()
-			if err != nil {
-				return nil, fmt.Errorf("unable to get latest state: %w", err)
-			}
-			if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
-				return nil, errors.New("cannot init genesis on non-zero state")
-			}
-			genesisCtx := services.NewGenesisContext(a.branch(zeroState))
-			genesisState, err := genesisCtx.Mutate(ctx, func(ctx context.Context) error {
-				err = a.app.moduleManager.InitGenesisJSON(ctx, genesisJSON, txHandler)
-				if err != nil {
-					return fmt.Errorf("failed to init genesis: %w", err)
-				}
-				return nil
-			})
-
-			return genesisState, err
+	a.app.AppManager = appmanager.New[T](
+		appmanager.Config{
+			ValidateTxGasLimit: a.app.config.GasConfig.ValidateTxGasLimit,
+			QueryGasLimit:      a.app.config.GasConfig.QueryGasLimit,
+			SimulationGasLimit: a.app.config.GasConfig.SimulationGasLimit,
 		},
-		ExportGenesis: func(ctx context.Context, version uint64) ([]byte, error) {
-			state, err := a.app.db.StateAt(version)
-			if err != nil {
-				return nil, fmt.Errorf("unable to get state at given version: %w", err)
-			}
-
-			genesisJson, err := a.app.moduleManager.ExportGenesisForModules(
-				ctx,
-				func() store.WriterMap {
-					return a.branch(state)
-				},
-			)
-			if err != nil {
-				return nil, fmt.Errorf("failed to export genesis: %w", err)
-			}
-
-			bz, err := json.Marshal(genesisJson)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal genesis: %w", err)
-			}
-
-			return bz, nil
-		},
-	}
-
-	appManager, err := appManagerBuilder.Build()
-	if err != nil {
-		return nil, fmt.Errorf("failed to build app manager: %w", err)
-	}
-	a.app.AppManager = appManager
+		a.app.db,
+		a.app.stf,
+		a.initGenesis,
+		a.exportGenesis,
+	)
 
 	return a.app, nil
+}
+
+// initGenesis returns the app initialization genesis for modules
+func (a *AppBuilder[T]) initGenesis(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {
+	// this implementation assumes that the state is a JSON object
+	bz, err := io.ReadAll(src)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read import state: %w", err)
+	}
+	var genesisJSON map[string]json.RawMessage
+	if err = json.Unmarshal(bz, &genesisJSON); err != nil {
+		return nil, err
+	}
+
+	v, zeroState, err := a.app.db.StateLatest()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get latest state: %w", err)
+	}
+	if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
+		return nil, errors.New("cannot init genesis on non-zero state")
+	}
+	genesisCtx := services.NewGenesisContext(a.branch(zeroState))
+	genesisState, err := genesisCtx.Mutate(ctx, func(ctx context.Context) error {
+		err = a.app.moduleManager.InitGenesisJSON(ctx, genesisJSON, txHandler)
+		if err != nil {
+			return fmt.Errorf("failed to init genesis: %w", err)
+		}
+		return nil
+	})
+
+	return genesisState, err
+}
+
+// exportGenesis returns the app export genesis logic for modules
+func (a *AppBuilder[T]) exportGenesis(ctx context.Context, version uint64) ([]byte, error) {
+	state, err := a.app.db.StateAt(version)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get state at given version: %w", err)
+	}
+
+	genesisJson, err := a.app.moduleManager.ExportGenesisForModules(
+		ctx,
+		func() store.WriterMap {
+			return a.branch(state)
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to export genesis: %w", err)
+	}
+
+	bz, err := json.Marshal(genesisJson)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal genesis: %w", err)
+	}
+
+	return bz, nil
 }
 
 // AppBuilderOption is a function that can be passed to AppBuilder.Build to customize the resulting app.

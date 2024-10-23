@@ -132,7 +132,7 @@ func ProvideAppBuilder[T transaction.Tx](
 		amino:              amino,
 		msgRouterBuilder:   msgRouterBuilder,
 		queryRouterBuilder: stf.NewMsgRouterBuilder(), // TODO dedicated query router
-		QueryHandlers:      map[string]appmodulev2.Handler{},
+		queryHandlers:      map[string]appmodulev2.Handler{},
 		storeLoader:        DefaultStoreLoader,
 	}
 	appBuilder := &AppBuilder[T]{app: app, storeBuilder: storeBuilder, storeConfig: storeConfig}

@@ -404,3 +404,18 @@ func (mr *MockStateStorageMockRecorder) SetLatestVersion(version any) *gomock.Ca
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLatestVersion", reflect.TypeOf((*MockStateStorage)(nil).SetLatestVersion), version)
 }
+
+// VersionExists mocks base method.
+func (m *MockStateStorage) VersionExists(v uint64) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VersionExists", v)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VersionExists indicates an expected call of VersionExists.
+func (mr *MockStateStorageMockRecorder) VersionExists(v any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VersionExists", reflect.TypeOf((*MockStateStorage)(nil).VersionExists), v)
+}

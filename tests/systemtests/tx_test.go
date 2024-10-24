@@ -303,8 +303,6 @@ func TestGetTxEvents_GRPC(t *testing.T) {
 				require.Equal(t, tc.expLen, len(grpcRes.Txs))
 
 				// Make sure fields are populated.
-				// ref: https://github.com/cosmos/cosmos-sdk/issues/8680
-				// ref: https://github.com/cosmos/cosmos-sdk/issues/8681
 				require.NotEmpty(t, grpcRes.TxResponses[0].Timestamp)
 				require.Empty(t, grpcRes.TxResponses[0].RawLog) // logs are empty if the transactions are successful
 			}

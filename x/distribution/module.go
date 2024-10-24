@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"runtime/debug"
-
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -58,8 +56,6 @@ func (AppModuleBasic) Name() string {
 
 // RegisterLegacyAminoCodec registers the distribution module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	fmt.Println("RegisterLegacyAminoCodec", cdc)
-	debug.PrintStack()
 	types.RegisterLegacyAminoCodec(cdc)
 }
 

@@ -1,16 +1,11 @@
 package vesting
 
 import (
-	"cosmossdk.io/depinject"
-	"encoding/json"
-	"fmt"
-	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-	"runtime/debug"
-
 	modulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
+	"encoding/json"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,6 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -44,8 +41,6 @@ func (AppModuleBasic) Name() string {
 
 // RegisterCodec registers the module's types with the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	fmt.Println("RegisterLegacyAminoCodec", cdc)
-	debug.PrintStack()
 	types.RegisterLegacyAminoCodec(cdc)
 }
 

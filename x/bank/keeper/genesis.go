@@ -2,10 +2,8 @@ package keeper
 
 import (
 	"context"
-	"fmt"
-	"runtime/debug"
-
 	"cosmossdk.io/collections"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -14,7 +12,6 @@ import (
 
 // InitGenesis initializes the bank module's state from a given genesis state.
 func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisState) {
-	debug.PrintStack()
 	if err := k.SetParams(ctx, genState.Params); err != nil {
 		panic(err)
 	}

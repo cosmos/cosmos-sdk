@@ -233,6 +233,7 @@ func (ak AccountKeeper) ValidatePermissions(macc sdk.ModuleAccountI) error {
 
 // GetModuleAddress returns an address based on the module name
 func (ak AccountKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
+	// todo: @facu make this backwards compatible
 	permAddr, ok := ak.permAddrs[moduleName]
 	if !ok {
 		return nil

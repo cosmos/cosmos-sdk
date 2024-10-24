@@ -44,7 +44,6 @@ import (
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
-	t.Skip("TODO: @facu, until i readd")
 	db := coretesting.NewMemDB()
 	logger := log.NewTestLogger(t)
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
@@ -54,14 +53,14 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	})
 
 	// BlockedAddresses returns a map of addresses in app v1 and a map of modules names in app di.
-	blockedAddrs, err := BlockedAddresses(app.interfaceRegistry.SigningContext().AddressCodec())
+	blockedAddrs, err := BlockedAddresses(app.interfaceRegistry.SigningContext().AddressCodec(), app.ModuleAccountsService)
 	require.NoError(t, err)
 	for acc := range blockedAddrs {
 		var addr sdk.AccAddress
 		if modAddr, err := app.InterfaceRegistry().SigningContext().AddressCodec().StringToBytes(acc); err == nil {
 			addr = modAddr
 		} else {
-			addr = app.AuthKeeper.GetModuleAddress(acc)
+			addr = app.ModuleAccountsService.Address(acc)
 		}
 
 		require.True(

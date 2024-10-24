@@ -368,6 +368,10 @@ func (k BaseSendKeeper) BlockedAddr(addr sdk.AccAddress) bool {
 	return k.blockedAddrs[addrStr]
 }
 
+func (k *BaseSendKeeper) SetBlockedAddresses(blockedAddrs map[string]bool) {
+	k.blockedAddrs = blockedAddrs
+}
+
 // GetBlockedAddresses returns the full list of addresses restricted from receiving funds.
 func (k BaseSendKeeper) GetBlockedAddresses() map[string]bool {
 	return k.blockedAddrs

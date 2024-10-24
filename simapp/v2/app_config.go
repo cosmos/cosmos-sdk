@@ -79,20 +79,6 @@ import (
 )
 
 var (
-	// module account permissions
-	moduleAccPerms = []*authmodulev1.ModuleAccountPermission{
-		{Account: authtypes.FeeCollectorName},
-		{Account: distrtypes.ModuleName},
-		{Account: pooltypes.ModuleName},
-		{Account: pooltypes.StreamAccount},
-		{Account: pooltypes.ProtocolPoolDistrAccount},
-		{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
-		{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
-		{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
-		{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
-		{Account: nft.ModuleName},
-	}
-
 	// blocked account addresses
 	blockAccAddrs = []string{
 		authtypes.FeeCollectorName,
@@ -204,8 +190,7 @@ var (
 			{
 				Name: authtypes.ModuleName,
 				Config: appconfig.WrapAny(&authmodulev1.Module{
-					Bech32Prefix:             "cosmos",
-					ModuleAccountPermissions: moduleAccPerms,
+					Bech32Prefix: "cosmos",
 					// By default modules authority is the governance module. This is configurable with the following:
 					// Authority: "group", // A custom module authority can be set using a module name
 					// Authority: "cosmos1cwwv22j5ca08ggdv9c2uky355k908694z577tv", // or a specific address

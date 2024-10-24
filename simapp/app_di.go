@@ -79,7 +79,7 @@ type SimApp struct {
 	ConsensusParamsKeeper consensuskeeper.Keeper
 	CircuitBreakerKeeper  circuitkeeper.Keeper
 
-	ModuleAccountsService moduleaccounts.Service
+	ModuleAccountsService moduleaccounts.ServiceWithPerms
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -365,22 +365,10 @@ func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICon
 	}
 }
 
-// GetMaccPerms returns a copy of the module account permissions
-//
-// NOTE: This is solely to be used for testing purposes.
-// func GetMaccPerms() map[string][]string {
-// dup := make(map[string][]string)
-// for _, perms := range moduleAccPerms {
-// 	dup[perms.Account] = perms.Permissions
-// }
-
-// return dup
-// }
-
 // BlockedAddresses returns all the app's blocked account addresses.
 // This function takes an address.Codec parameter to maintain compatibility
 // with the signature of the same function in appV1.
-func BlockedAddresses(_ address.Codec) (map[string]bool, error) {
+func BlockedAddresses(addrCdc address.Codec, moduleAccountService moduleaccounts.ServiceWithPerms) (map[string]bool, error) {
 	result := make(map[string]bool)
 
 	if len(blockAccAddrs) > 0 {
@@ -388,10 +376,14 @@ func BlockedAddresses(_ address.Codec) (map[string]bool, error) {
 			result[addr] = true
 		}
 	} else {
-		// TODO: replace with service! @facu
-		// for addr := range GetMaccPerms() {
-		// 	result[addr] = true
-		// }
+		for _, addr := range moduleAccountService.AllAccounts() {
+			addrStr, err := addrCdc.BytesToString(addr)
+			if err != nil {
+				return nil, err
+			}
+
+			result[addrStr] = true
+		}
 	}
 
 	return result, nil

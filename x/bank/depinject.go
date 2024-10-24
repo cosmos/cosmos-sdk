@@ -29,6 +29,7 @@ func init() {
 		&modulev1.Module{},
 		appconfig.Provide(ProvideModule),
 		appconfig.Invoke(InvokeSetSendRestrictions),
+		appconfig.Invoke(InvokeSetDefaultBlockedAddresses),
 	)
 }
 
@@ -58,6 +59,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// AccountKeeper's module account permissions as blocked.
 	blockedAddresses := make(map[string]bool)
 	if len(in.Config.BlockedModuleAccountsOverride) > 0 {
+		fmt.Println("GEGEEEE", in.Config.BlockedModuleAccountsOverride)
 		for _, moduleName := range in.Config.BlockedModuleAccountsOverride {
 			addrStr, err := in.AddressCodec.BytesToString(authtypes.NewModuleAddress(moduleName))
 			if err != nil {
@@ -65,18 +67,10 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 			}
 			blockedAddresses[addrStr] = true
 		}
-	} else {
-		// TODO: solve later @facu
-		// for _, addr := range in.ModuleAccountsService.AllAccounts() {
-		// 	addrStr, err := in.AddressCodec.BytesToString(addr)
-		// 	if err != nil {
-		// 		panic(err)
-		// 	}
-		// 	blockedAddresses[addrStr] = true
-		// }
 	}
 
 	// default to governance authority if not provided
+	// TODO: @facu use module accounts service to get the authority
 	authority := authtypes.NewModuleAddress(types.GovModuleName)
 	if in.Config.Authority != "" {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
@@ -100,12 +94,37 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	return ModuleOutputs{BankKeeper: bankKeeper, Module: m}
 }
 
+// InvokeSetDefaultBlockedAddresses only sets the blocked addresses if they are not already set.
+func InvokeSetDefaultBlockedAddresses(
+	config *modulev1.Module,
+	keeper keeper.BaseKeeper,
+	moduleAccountsService moduleaccounts.ServiceWithPerms,
+	addrCdc address.Codec,
+) error {
+	fmt.Println("ASDASD", keeper.GetBlockedAddresses())
+	if len(keeper.GetBlockedAddresses()) > 0 {
+		return nil
+	}
+
+	// @facu fix this
+	blockedAddresses := make(map[string]bool)
+	for _, addr := range moduleAccountsService.AllAccounts() {
+		addrStr, err := addrCdc.BytesToString(addr)
+		if err != nil {
+			return err
+		}
+		blockedAddresses[addrStr] = true
+	}
+
+	keeper.SetBlockedAddresses(blockedAddresses)
+
+	return nil
+}
+
 func InvokeSetSendRestrictions(
 	config *modulev1.Module,
 	keeper keeper.BaseKeeper,
 	restrictions map[string]types.SendRestrictionFn,
-	moduleAccountsService moduleaccounts.ServiceWithPerms,
-	addrCdc address.Codec,
 ) error {
 	if config == nil {
 		return nil
@@ -133,16 +152,6 @@ func InvokeSetSendRestrictions(
 		}
 
 		keeper.AppendSendRestriction(restriction)
-	}
-
-	// @facu fix this
-	blockedAddresses := make(map[string]bool)
-	for _, addr := range moduleAccountsService.AllAccounts() {
-		addrStr, err := addrCdc.BytesToString(addr)
-		if err != nil {
-			panic(err)
-		}
-		blockedAddresses[addrStr] = true
 	}
 
 	return nil

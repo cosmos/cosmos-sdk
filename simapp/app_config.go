@@ -80,18 +80,18 @@ import (
 
 var (
 	// module account permissions
-	// moduleAccPerms = []*authmodulev1.ModuleAccountPermission{
-	// 	{Account: authtypes.FeeCollectorName},
-	// 	{Account: distrtypes.ModuleName},
-	// 	{Account: pooltypes.ModuleName},
-	// 	{Account: pooltypes.StreamAccount},
-	// 	{Account: pooltypes.ProtocolPoolDistrAccount},
-	// 	{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
-	// 	{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
-	// 	{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
-	// 	{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
-	// 	{Account: nft.ModuleName},
-	// }
+	moduleAccPerms = runtime.NewModuleAccountsService(
+		runtime.NewModuleAccount(authtypes.FeeCollectorName),
+		runtime.NewModuleAccount(distrtypes.ModuleName),
+		runtime.NewModuleAccount(pooltypes.ModuleName),
+		runtime.NewModuleAccount(pooltypes.StreamAccount),
+		runtime.NewModuleAccount(pooltypes.ProtocolPoolDistrAccount),
+		runtime.NewModuleAccount(minttypes.ModuleName, authtypes.Minter),
+		runtime.NewModuleAccount(stakingtypes.BondedPoolName, authtypes.Burner, stakingtypes.ModuleName),
+		runtime.NewModuleAccount(stakingtypes.NotBondedPoolName, authtypes.Burner, stakingtypes.ModuleName),
+		runtime.NewModuleAccount(govtypes.ModuleName, authtypes.Burner),
+		runtime.NewModuleAccount(nft.ModuleName),
+	)
 
 	// blocked account addresses
 	blockAccAddrs = []string{

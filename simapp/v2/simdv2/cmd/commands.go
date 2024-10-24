@@ -34,10 +34,11 @@ import (
 // commandDependencies is a struct that contains all the dependencies needed to initialize the root command.
 // an alternative design could fetch these even later from the command context
 type commandDependencies[T transaction.Tx] struct {
-	globalAppConfig coreserver.ConfigMap
-	txConfig        client.TxConfig
-	moduleManager   *runtimev2.MM[T]
-	simApp          *simapp.SimApp[T]
+	globalAppConfig    coreserver.ConfigMap
+	txConfig           client.TxConfig
+	moduleManager      *runtimev2.MM[T]
+	simApp             *simapp.SimApp[T]
+	consensusComponent serverv2.ServerComponent[T]
 }
 
 func initRootCmd[T transaction.Tx](
@@ -63,41 +64,25 @@ func initRootCmd[T transaction.Tx](
 
 	// build CLI skeleton for initial config parsing or a client application invocation
 	if deps.simApp == nil {
-		comet := &cometbft.CometBFTServer[T]{}
-		comet = comet.WithConfigOptions(initCometConfig())
+		if deps.consensusComponent == nil {
+			comet := &cometbft.CometBFTServer[T]{}
+			deps.consensusComponent = comet.WithConfigOptions(initCometConfig())
+		}
 		return serverv2.AddCommands[T](
 			rootCmd,
 			logger,
 			deps.globalAppConfig,
 			initServerConfig(),
-			comet,
+			deps.consensusComponent,
 			&grpc.Server[T]{},
 			&serverstore.Server[T]{},
 			&telemetry.Server[T]{},
 			&rest.Server[T]{},
 		)
 	}
-	simApp := deps.simApp
+
 	// build full app!
-	cometBftServer, err := cometbft.New(
-		logger,
-		// TODO use depinject outputs not app
-		simApp.Name(),
-		simApp.Store(),
-		simApp.App.AppManager,
-		simApp.App.QueryHandlers(),
-		simApp.App.SchemaDecoderResolver(),
-		&genericTxDecoder[T]{deps.txConfig},
-		deps.globalAppConfig,
-		initCometOptions[T](),
-	)
-	if err != nil {
-		return nil, err
-	}
-	telemetryServer, err := telemetry.New[T](deps.globalAppConfig, logger)
-	if err != nil {
-		return nil, err
-	}
+	simApp := deps.simApp
 	grpcServer, err := grpc.New[T](logger, simApp.InterfaceRegistry(), simApp.QueryHandlers(), simApp, deps.globalAppConfig)
 	if err != nil {
 		return nil, err
@@ -112,13 +97,35 @@ func initRootCmd[T transaction.Tx](
 		return nil, err
 	}
 
+	// consensus component
+	if deps.consensusComponent == nil {
+		deps.consensusComponent, err = cometbft.New(
+			logger,
+			simApp.Name(),
+			simApp.Store(),
+			simApp.App.AppManager,
+			simApp.App.QueryHandlers(),
+			simApp.App.SchemaDecoderResolver(),
+			&genericTxDecoder[T]{deps.txConfig},
+			deps.globalAppConfig,
+			initCometOptions[T](),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+	telemetryServer, err := telemetry.New[T](deps.globalAppConfig, logger)
+	if err != nil {
+		return nil, err
+	}
+
 	// wire server commands
 	return serverv2.AddCommands[T](
 		rootCmd,
 		logger,
 		deps.globalAppConfig,
 		initServerConfig(),
-		cometBftServer,
+		deps.consensusComponent,
 		grpcServer,
 		storeComponent,
 		telemetryServer,

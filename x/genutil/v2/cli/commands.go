@@ -19,7 +19,7 @@ type genesisMM interface {
 	ValidateGenesis(genesisData map[string]json.RawMessage) error
 }
 
-type exportableApp interface {
+type ExportableApp interface {
 	ExportAppStateAndValidators([]string) (v2.ExportedApp, error)
 	LoadHeight(uint64) error
 }
@@ -28,7 +28,7 @@ type exportableApp interface {
 func Commands(
 	genTxValidator func([]transaction.Msg) error,
 	genMM genesisMM,
-	exportable exportableApp,
+	exportable ExportableApp,
 ) *cobra.Command {
 	return CommandsWithCustomMigrationMap(genTxValidator, genMM, exportable, cli.MigrationMap)
 }
@@ -38,7 +38,7 @@ func Commands(
 func CommandsWithCustomMigrationMap(
 	genTxValidator func([]transaction.Msg) error,
 	genMM genesisMM,
-	exportable exportableApp,
+	exportable ExportableApp,
 	migrationMap genutiltypes.MigrationMap,
 ) *cobra.Command {
 	cmd := &cobra.Command{

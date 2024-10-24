@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"cosmossdk.io/core/server"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -10,6 +9,7 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -117,7 +117,7 @@ func (DefaultCommandFixture[T]) RootCommand(
 		moduleManager:   moduleManager,
 		simApp:          simApp,
 	}
-	_, err = initRootCmd[T](rootCommand, logger, commandDeps)
+	_, err = initRootCmd(rootCommand, logger, commandDeps)
 	if err != nil {
 		return nil, err
 	}

@@ -21,7 +21,7 @@ const (
 )
 
 // ExportCmd dumps app state to JSON.
-func ExportCmd(app exportableApp) *cobra.Command {
+func ExportCmd(app ExportableApp) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "export",
 		Short:       "Export state to JSON",

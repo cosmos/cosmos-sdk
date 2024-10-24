@@ -1,2 +1,2 @@
 codegen:
-	@(cd internal; buf generate)
+	@(cd internal; buf generate --template buf.gen.pulsar.yaml)

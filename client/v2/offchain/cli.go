@@ -13,10 +13,8 @@ import (
 )
 
 const (
-	flagNotEmitUnpopulated = "notEmitUnpopulated"
-	flagIndent             = "indent"
-	flagEncoding           = "encoding"
-	flagFileFormat         = "file-format"
+	flagEncoding   = "encoding"
+	flagFileFormat = "file-format"
 )
 
 // OffChain off-chain utilities.
@@ -51,13 +49,12 @@ func SignFile() *cobra.Command {
 				return err
 			}
 
-			notEmitUnpopulated, _ := cmd.Flags().GetBool(flagNotEmitUnpopulated)
-			indent, _ := cmd.Flags().GetString(flagIndent)
 			encoding, _ := cmd.Flags().GetString(flagEncoding)
 			outputFormat, _ := cmd.Flags().GetString(v2flags.FlagOutput)
 			outputFile, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
+			signMode, _ := cmd.Flags().GetString(flags.FlagSignMode)
 
-			signedTx, err := Sign(clientCtx, bz, args[0], indent, encoding, outputFormat, !notEmitUnpopulated)
+			signedTx, err := Sign(clientCtx, bz, args[0], encoding, signMode, outputFormat)
 			if err != nil {
 				return err
 			}
@@ -75,28 +72,27 @@ func SignFile() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagIndent, "  ", "Choose an indent for the tx")
 	cmd.Flags().String(v2flags.FlagOutput, "json", "Choose an output format for the tx (json|text")
-	cmd.Flags().Bool(flagNotEmitUnpopulated, false, "Don't show unpopulated fields in the tx")
 	cmd.Flags().String(flagEncoding, "no-encoding", "Choose an encoding method for the file content to be added as msg data (no-encoding|base64|hex)")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
+	cmd.PersistentFlags().String(flags.FlagSignMode, "direct", "Choose sign mode (direct|amino-json)")
 	return cmd
 }
 
 // VerifyFile verifies given file with given key.
 func VerifyFile() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "verify-file <keyName> <fileName>",
+		Use:   "verify-file <signedFileName>",
 		Short: "Verify a file.",
 		Long:  "Verify a previously signed file with the given key.",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			bz, err := os.ReadFile(args[1])
+			bz, err := os.ReadFile(args[0])
 			if err != nil {
 				return err
 			}

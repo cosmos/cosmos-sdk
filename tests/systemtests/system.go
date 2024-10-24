@@ -35,6 +35,8 @@ var (
 
 	// ExecBinaryUnversionedRegExp regular expression to extract the unversioned binary name
 	ExecBinaryUnversionedRegExp = regexp.MustCompile(`^(\w+)-?.*$`)
+
+	MaxGas = 10_000_000
 )
 
 type TestnetInitializer interface {
@@ -130,7 +132,7 @@ func (s *SystemUnderTest) SetupChain() {
 		panic(fmt.Sprintf("failed to load genesis: %s", err))
 	}
 
-	genesisBz, err = sjson.SetRawBytes(genesisBz, "consensus.params.block.max_gas", []byte(fmt.Sprintf(`"%d"`, 10_000_000)))
+	genesisBz, err = sjson.SetRawBytes(genesisBz, "consensus.params.block.max_gas", []byte(fmt.Sprintf(`"%d"`, MaxGas)))
 	if err != nil {
 		panic(fmt.Sprintf("failed to set block max gas: %s", err))
 	}

@@ -22,7 +22,7 @@ require (
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.8.1 // indirect
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/mock v0.5.0
 	google.golang.org/grpc v1.67.1

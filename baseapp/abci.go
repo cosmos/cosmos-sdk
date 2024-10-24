@@ -760,7 +760,8 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 	events = append(events, preblockEvents...)
 
-	fmt.Println("internalFinalizeBlock before begin block")
+	fmt.Println("internalFinalizeBlock before begin block", req.Time)
+	fmt.Println("internalFinalizeBlock before begin block", req.Height)
 
 	beginBlock, err := app.beginBlock(req)
 	if err != nil {

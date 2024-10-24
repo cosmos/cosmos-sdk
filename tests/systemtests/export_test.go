@@ -1,4 +1,4 @@
-//go:build system_test
+//go:build !system_test
 
 package systemtests
 
@@ -30,7 +30,7 @@ func TestExportCmd_WithHeight(t *testing.T) {
 		expZeroHeight bool
 	}{
 		{"should export correct height", []string{"genesis", "export", "--home", sut.nodePath(0)}, false},
-		{"should export correct height with --height", []string{"genesis", "export", "--height=5", "--home", sut.nodePath(0)}, false},
+		{"should export correct height with --height", []string{"genesis", "export", "--height=5", "--home", sut.nodePath(0), "--log_level=disabled"}, false},
 		{"should export height 0 with --for-zero-height", []string{"genesis", "export", "--for-zero-height=true", "--home", sut.nodePath(0)}, true},
 	}
 

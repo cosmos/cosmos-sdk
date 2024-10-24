@@ -61,83 +61,41 @@ func TestDecode(t *testing.T) {
 	gogoproto.RegisterType(&testpb.A{}, string((&testpb.A{}).ProtoReflect().Descriptor().FullName()))
 
 	testCases := []struct {
-		name       string
-		msg        proto.Message
-		authInfo   *txv1beta1.AuthInfo
-		error      string
-		numSigners int
+		name            string
+		msg             proto.Message
+		feePayer        string
+		error           string
+		expectedSigners int
 	}{
 		{
-			name: "happy path",
-			msg:  &bankv1beta1.MsgSend{},
-			authInfo: &txv1beta1.AuthInfo{
-				SignerInfos: signerInfo,
-				Fee: &txv1beta1.Fee{
-					Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
-					GasLimit: 100,
-					Payer:    "",
-					Granter:  "",
-				},
-			},
-			numSigners: 1,
+			name:            "happy path",
+			msg:             &bankv1beta1.MsgSend{},
+			expectedSigners: 1,
 		},
 		{
-			name: "empty signer option",
-			msg:  &testpb.A{},
-			authInfo: &txv1beta1.AuthInfo{
-				SignerInfos: signerInfo,
-				Fee: &txv1beta1.Fee{
-					Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
-					GasLimit: 100,
-					Payer:    "",
-					Granter:  "",
-				},
-			},
+			name:  "empty signer option",
+			msg:   &testpb.A{},
 			error: "no cosmos.msg.v1.signer option found for message A; use DefineCustomGetSigners to specify a custom getter: tx parse error",
 		},
 		{
-			name: "invalid feePayer",
-			msg:  &bankv1beta1.MsgSend{},
-			authInfo: &txv1beta1.AuthInfo{
-				SignerInfos: signerInfo,
-				Fee: &txv1beta1.Fee{
-					Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
-					GasLimit: 100,
-					Payer:    "payer",
-					Granter:  "",
-				},
-			},
-			error: `encoding/hex: invalid byte: U+0070 'p': tx parse error`,
+			name:     "invalid feePayer",
+			msg:      &bankv1beta1.MsgSend{},
+			feePayer: "payer",
+			error:    `encoding/hex: invalid byte: U+0070 'p': tx parse error`,
 		},
 		{
-			name: "valid feePayer",
-			msg:  &bankv1beta1.MsgSend{},
-			authInfo: &txv1beta1.AuthInfo{
-				SignerInfos: signerInfo,
-				Fee: &txv1beta1.Fee{
-					Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
-					GasLimit: 100,
-					Payer:    "636f736d6f733168363935356b3836397a72306770383975717034337a373263393033666d35647a366b75306c", // hexadecimal to work with dummyAddressCodec
-					Granter:  "",
-				},
-			},
-			numSigners: 2,
+			name:            "valid feePayer",
+			msg:             &bankv1beta1.MsgSend{},
+			feePayer:        "636f736d6f733168363935356b3836397a72306770383975717034337a373263393033666d35647a366b75306c", // hexadecimal to work with dummyAddressCodec
+			expectedSigners: 2,
 		},
 		{
 			name: "same msg signer and feePayer",
 			msg: &bankv1beta1.MsgSend{
 				FromAddress: "636f736d6f733168363935356b3836397a72306770383975717034337a373263393033666d35647a366b75306c",
 			},
-			authInfo: &txv1beta1.AuthInfo{
-				SignerInfos: signerInfo,
-				Fee: &txv1beta1.Fee{
-					Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
-					GasLimit: 100,
-					Payer:    "636f736d6f733168363935356b3836397a72306770383975717034337a373263393033666d35647a366b75306c",
-					Granter:  "",
-				},
-			},
-			numSigners: 1,
+			feePayer:        "636f736d6f733168363935356b3836397a72306770383975717034337a373263393033666d35647a366b75306c",
+			expectedSigners: 1,
 		},
 	}
 
@@ -154,7 +112,15 @@ func TestDecode(t *testing.T) {
 					Memo:          "memo",
 					TimeoutHeight: 0,
 				},
-				AuthInfo:   tc.authInfo,
+				AuthInfo: &txv1beta1.AuthInfo{
+					SignerInfos: signerInfo,
+					Fee: &txv1beta1.Fee{
+						Amount:   []*basev1beta1.Coin{{Amount: "100", Denom: "denom"}},
+						GasLimit: 100,
+						Payer:    tc.feePayer,
+						Granter:  "",
+					},
+				},
 				Signatures: nil,
 			}
 			txBytes, err := proto.Marshal(tx)
@@ -166,7 +132,7 @@ func TestDecode(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			require.Equal(t, len(decodeTx.Signers), tc.numSigners)
+			require.Equal(t, len(decodeTx.Signers), tc.expectedSigners)
 
 			require.Equal(t,
 				fmt.Sprintf("/%s", tc.msg.ProtoReflect().Descriptor().FullName()),

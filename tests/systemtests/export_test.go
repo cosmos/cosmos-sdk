@@ -58,6 +58,11 @@ func TestExportCmd_WithFileFlag(t *testing.T) {
 
 	sut.StartChain(t)
 
+	// Wait 10s for producing blocks
+	time.Sleep(10 * time.Second)
+
+	sut.StopChain()
+
 	testCases := []struct {
 		name   string
 		args   []string

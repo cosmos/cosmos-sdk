@@ -35,6 +35,8 @@ const (
 	SCTypeIavlV2 SCType = "iavl-v2"
 )
 
+const storePrefixTpl = "s/k:%s/" // s/k:<storeKey>
+
 // Options are the options for creating a root store.
 type Options struct {
 	SSType          SSType               `mapstructure:"ss-type" toml:"ss-type" comment:"State storage database type. Currently we support: \"sqlite\", \"pebble\" and \"rocksdb\""`
@@ -147,7 +149,7 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		} else {
 			switch scType {
 			case SCTypeIavl:
-				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(key)), opts.Logger, storeOpts.IavlConfig), nil
+				return iavl.NewIavlTree(db.NewPrefixDB(opts.SCRawDB, []byte(fmt.Sprintf(storePrefixTpl, key))), opts.Logger, storeOpts.IavlConfig), nil
 			case SCTypeIavlV2:
 				return nil, errors.New("iavl v2 not supported")
 			default:

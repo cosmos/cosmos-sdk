@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	cosmossdk.io/core v1.0.0-alpha.4
-	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
+	cosmossdk.io/core/testing v0.0.0-20241021095809-fc91e7635451
 	cosmossdk.io/schema v0.3.0
 	github.com/stretchr/testify v1.9.0
 	github.com/tidwall/btree v1.7.0

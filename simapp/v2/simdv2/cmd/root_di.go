@@ -1,16 +1,13 @@
 package cmd
 
 import (
+	"cosmossdk.io/core/server"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli"
-	clientv2helpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
@@ -30,75 +27,41 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func NewRootCmd[T transaction.Tx](
+func NewRootCmd(
+	commandFixture serverv2.CommandFixture,
 	args ...string,
+) (*cobra.Command, error) {
+	builder, err := serverv2.NewRootCmdBuilder(commandFixture, "simdv2", ".simappv2")
+	if err != nil {
+		return nil, err
+	}
+	return builder.Build(args)
+}
+
+type DefaultCommandFixture[T transaction.Tx] struct{}
+
+func (DefaultCommandFixture[T]) Bootstrap(cmd *cobra.Command) (serverv2.WritesConfig, error) {
+	return initRootCmd(cmd, log.NewNopLogger(), commandDependencies[T]{})
+}
+
+func (DefaultCommandFixture[T]) RootCommand(
+	rootCommand *cobra.Command,
+	subCommand *cobra.Command,
+	logger log.Logger,
+	configMap server.ConfigMap,
 ) (*cobra.Command, error) {
 	var (
 		autoCliOpts   autocli.AppOptions
 		moduleManager *runtime.MM[T]
 		clientCtx     client.Context
+		simApp        *simapp.SimApp[T]
+		err           error
 	)
-	defaultHomeDir, err := clientv2helpers.DefaultHomeDir(".simappv2", clientv2helpers.EnvPrefix)
-	if err != nil {
-		return nil, err
-	}
-
-	// initial bootstrap root command for config parsing
-	rootCmd := &cobra.Command{
-		Use:           "simdv2",
-		Short:         "simulation app",
-		SilenceErrors: true,
-	}
-	serverv2.SetPersistentFlags(rootCmd.PersistentFlags(), defaultHomeDir)
-	// update the global viper with the root command's configuration
-	viper.SetEnvPrefix(clientv2helpers.EnvPrefix)
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
-	viper.AutomaticEnv()
-
-	srv, err := initRootCmd[T](rootCmd, log.NewNopLogger(), commandDependencies[T]{})
-	if err != nil {
-		return nil, err
-	}
-	cmd, _, err := rootCmd.Traverse(args)
-	if cmd == nil || err != nil {
-		return rootCmd, nil
-	}
-	if err = cmd.ParseFlags(args); err != nil {
-		if err.Error() == "pflag: help requested" {
-			return cmd, nil
-		}
-		return nil, err
-	}
-	home, err := cmd.Flags().GetString(serverv2.FlagHome)
-	if err != nil {
-		return nil, err
-	}
-
-	configDir := filepath.Join(home, "config")
-	// create app.toml if it does not already exist
-	if _, err := os.Stat(filepath.Join(configDir, "app.toml")); os.IsNotExist(err) {
-		if err = srv.WriteConfig(configDir); err != nil {
-			return nil, err
-		}
-	}
-	vipr, err := serverv2.ReadConfig(configDir)
-	if err != nil {
-		return nil, err
-	}
-	if err := vipr.BindPFlags(cmd.Flags()); err != nil {
-		return nil, err
-	}
-	logger, err := serverv2.NewLogger(vipr, cmd.OutOrStdout())
-	if err != nil {
-		return nil, err
-	}
-	globalConfig := vipr.AllSettings()
-
-	var simApp *simapp.SimApp[T]
-	if needsApp(cmd) {
+	if needsApp(subCommand) {
+		// server construction
 		simApp, err = simapp.NewSimApp[T](
 			depinject.Configs(
-				depinject.Supply(logger, runtime.GlobalConfig(globalConfig)),
+				depinject.Supply(logger, runtime.GlobalConfig(configMap)),
 				depinject.Provide(ProvideClientContext),
 			),
 			&autoCliOpts, &moduleManager, &clientCtx)
@@ -106,82 +69,66 @@ func NewRootCmd[T transaction.Tx](
 			return nil, err
 		}
 	} else {
+		// client construction
 		if err = depinject.Inject(
 			depinject.Configs(
 				simapp.AppConfig(),
-				depinject.Provide(
-					ProvideClientContext,
-				),
+				depinject.Provide(ProvideClientContext),
 				depinject.Supply(
 					logger,
-					runtime.GlobalConfig(globalConfig),
+					runtime.GlobalConfig(configMap),
 				),
 			),
-			&autoCliOpts,
-			&moduleManager,
-			&clientCtx,
+			&autoCliOpts, &moduleManager, &clientCtx,
 		); err != nil {
 			return nil, err
 		}
 	}
 
-	// final root command
-	rootCmd = &cobra.Command{
-		Use:           "simdv2",
-		Short:         "simulation app",
-		SilenceErrors: true,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			// set the default command outputs
-			cmd.SetOut(cmd.OutOrStdout())
-			cmd.SetErr(cmd.ErrOrStderr())
+	rootCommand.Short = "simulation app"
+	rootCommand.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// set the default command outputs
+		cmd.SetOut(cmd.OutOrStdout())
+		cmd.SetErr(cmd.ErrOrStderr())
 
-			clientCtx = clientCtx.WithCmdContext(cmd.Context())
-			clientCtx, err = client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
-			if err != nil {
-				return err
-			}
+		clientCtx = clientCtx.WithCmdContext(cmd.Context())
+		clientCtx, err = client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
+		if err != nil {
+			return err
+		}
 
-			customClientTemplate, customClientConfig := initClientConfig()
-			clientCtx, err = config.CreateClientConfig(
-				clientCtx, customClientTemplate, customClientConfig)
-			if err != nil {
-				return err
-			}
+		customClientTemplate, customClientConfig := initClientConfig()
+		clientCtx, err = config.CreateClientConfig(
+			clientCtx, customClientTemplate, customClientConfig)
+		if err != nil {
+			return err
+		}
 
-			if err = client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
-				return err
-			}
+		if err = client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
+			return err
+		}
 
-			return nil
-		},
-	}
-	// TODO push down to server subcommands only
-	// but also audit the usage of logger and viper in fetching from context, probably no
-	// longer needed.
-	serverv2.SetPersistentFlags(rootCmd.PersistentFlags(), defaultHomeDir)
-	err = serverv2.SetCmdServerContext(rootCmd, vipr, logger)
-	if err != nil {
-		return nil, err
+		return nil
 	}
 
 	commandDeps := commandDependencies[T]{
-		globalAppConfig: globalConfig,
+		globalAppConfig: configMap,
 		txConfig:        clientCtx.TxConfig,
 		moduleManager:   moduleManager,
 		simApp:          simApp,
 	}
-	_, err = initRootCmd[T](rootCmd, logger, commandDeps)
+	_, err = initRootCmd[T](rootCommand, logger, commandDeps)
 	if err != nil {
 		return nil, err
 	}
 	nodeCmds := nodeservice.NewNodeCommands()
 	autoCliOpts.ModuleOptions = make(map[string]*autocliv1.ModuleOptions)
 	autoCliOpts.ModuleOptions[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()
-	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
+	if err := autoCliOpts.EnhanceRootCommand(rootCommand); err != nil {
 		return nil, err
 	}
 
-	return rootCmd, nil
+	return rootCommand, nil
 }
 
 func ProvideClientContext(
@@ -194,7 +141,6 @@ func ProvideClientContext(
 	consensusAddressCodec address.ConsensusAddressCodec,
 ) client.Context {
 	var err error
-
 	amino, ok := legacyAmino.(*codec.LegacyAmino)
 	if !ok {
 		panic("registry.AminoRegistrar must be an *codec.LegacyAmino instance for legacy ClientContext")

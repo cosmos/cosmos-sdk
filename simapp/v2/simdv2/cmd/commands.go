@@ -31,10 +31,6 @@ import (
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2/cli"
 )
 
-type configWriter interface {
-	WriteConfig(filename string) error
-}
-
 // commandDependencies is a struct that contains all the dependencies needed to initialize the root command.
 // an alternative design could fetch these even later from the command context
 type commandDependencies[T transaction.Tx] struct {
@@ -48,7 +44,7 @@ func initRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
 	logger log.Logger,
 	deps commandDependencies[T],
-) (configWriter, error) {
+) (serverv2.WritesConfig, error) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
@@ -57,10 +53,7 @@ func initRootCmd[T transaction.Tx](
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
 		NewTestnetCmd(deps.moduleManager),
-	)
-
-	// add keybase, auxiliary RPC, query, genesis, and tx child commands
-	rootCmd.AddCommand(
+		// add keybase, auxiliary RPC, query, genesis, and tx child commands
 		genesisCommand(deps.moduleManager, deps.simApp),
 		queryCommand(),
 		txCommand(),

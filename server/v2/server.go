@@ -37,6 +37,11 @@ type HasConfig interface {
 	Config() any
 }
 
+// WritesConfig is a server module that can write its config to a file.
+type WritesConfig interface {
+	WriteConfig(path string) error
+}
+
 // HasCLICommands is a server module that has CLI commands.
 type HasCLICommands interface {
 	CLICommands() CLIConfig

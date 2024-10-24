@@ -12,22 +12,17 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "cosmossdk.io/x/accounts/defaults/lockup/v1";
 
-//-------------------------------------- INIT --------------------------------------
-
-// MsgInitLockupAccount defines a message that enables creating a lockup
-// account.
+// MsgInitLockupAccount defines a message that enables creating a lockup account.
 message MsgInitLockupAccount {
-  option (amino.name) = "cosmos-sdk/MsgInitLockupAccount";
-
+  option (amino.name)      = "cosmos-sdk/MsgInitLockupAccount";
   option (gogoproto.equal) = true;
 
   // owner of the vesting account
   string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-
-  // end of lockup
+  // end_time is end of lockup
   google.protobuf.Timestamp end_time = 2
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
-  // start of lockup
+  // start_time is start of lockup
   google.protobuf.Timestamp start_time = 3
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
 }
@@ -38,8 +33,7 @@ message MsgInitLockupAccountResponse {}
 // MsgInitPeriodicLockingAccount defines a message that enables creating a periodic locking
 // account.
 message MsgInitPeriodicLockingAccount {
-  option (amino.name) = "cosmos-sdk/MsgInitPeriodLockupAccount";
-
+  option (amino.name)      = "cosmos-sdk/MsgInitPeriodLockupAccount";
   option (gogoproto.equal) = false;
 
   // owner of the lockup account
@@ -56,8 +50,7 @@ message MsgInitPeriodicLockingAccountResponse {}
 
 // MsgDelegate defines a message that enable lockup account to execute delegate message
 message MsgDelegate {
-  option (cosmos.msg.v1.signer) = "sender";
-
+  option (cosmos.msg.v1.signer)      = "sender";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -69,8 +62,7 @@ message MsgDelegate {
 
 // MsgUndelegate defines a message that enable lockup account to execute undelegate message
 message MsgUndelegate {
-  option (cosmos.msg.v1.signer) = "sender";
-
+  option (cosmos.msg.v1.signer)      = "sender";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -81,8 +73,7 @@ message MsgUndelegate {
 
 // MsgWithdrawReward defines a message that enable lockup account to execute withdraw reward message
 message MsgWithdrawReward {
-  option (cosmos.msg.v1.signer) = "sender";
-
+  option (cosmos.msg.v1.signer)      = "sender";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -92,8 +83,7 @@ message MsgWithdrawReward {
 
 // MsgSend defines a message that enable lockup account to execute send message
 message MsgSend {
-  option (cosmos.msg.v1.signer) = "sender";
-
+  option (cosmos.msg.v1.signer)      = "sender";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -115,8 +105,7 @@ message MsgExecuteMessagesResponse {
 // MsgWithdraw defines a message that the owner of the lockup can perform to withdraw unlocked token to an account of
 // choice
 message MsgWithdraw {
-  option (cosmos.msg.v1.signer) = "withdrawer";
-
+  option (cosmos.msg.v1.signer)      = "withdrawer";
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 

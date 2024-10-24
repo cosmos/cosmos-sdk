@@ -98,8 +98,10 @@ func (VoteOption) EnumDescriptor() ([]byte, []int) {
 
 // MsgInit is used to initialize a multisig account.
 type MsgInit struct {
+	// members are the members of the multisig account.
 	Members []*Member `protobuf:"bytes,1,rep,name=members,proto3" json:"members,omitempty"`
-	Config  *Config   `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
+	// config is the configuration of the multisig account.
+	Config *Config `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
 }
 
 func (m *MsgInit) Reset()         { *m = MsgInit{} }
@@ -603,8 +605,10 @@ func (m *Member) GetWeight() uint64 {
 
 // Config defines the configuration of the multisig account.
 type Config struct {
+	// threshold is the minimum weight required for a proposal to pass.
 	Threshold int64 `protobuf:"varint,1,opt,name=threshold,proto3" json:"threshold,omitempty"`
-	Quorum    int64 `protobuf:"varint,2,opt,name=quorum,proto3" json:"quorum,omitempty"`
+	// quorum is the minimum number of members that need to vote for a proposal to pass.
+	Quorum int64 `protobuf:"varint,2,opt,name=quorum,proto3" json:"quorum,omitempty"`
 	// voting_period is the duration in seconds for the voting period.
 	VotingPeriod int64 `protobuf:"varint,3,opt,name=voting_period,json=votingPeriod,proto3" json:"voting_period,omitempty"`
 	// revote defines if members can change their vote.
@@ -683,12 +687,16 @@ func (m *Config) GetEarlyExecution() bool {
 
 // Proposal defines the structure of a proposal.
 type Proposal struct {
-	Title    string     `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Summary  string     `protobuf:"bytes,2,opt,name=summary,proto3" json:"summary,omitempty"`
+	// title is the title of the proposal.
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// summary is the summary of the proposal.
+	Summary string `protobuf:"bytes,2,opt,name=summary,proto3" json:"summary,omitempty"`
+	// messages are the messages that will be executed
 	Messages []*any.Any `protobuf:"bytes,3,rep,name=messages,proto3" json:"messages,omitempty"`
 	// voting_period_end will be set by the account when the proposal is created.
-	VotingPeriodEnd int64          `protobuf:"varint,4,opt,name=voting_period_end,json=votingPeriodEnd,proto3" json:"voting_period_end,omitempty"`
-	Status          ProposalStatus `protobuf:"varint,5,opt,name=status,proto3,enum=cosmos.accounts.defaults.multisig.v1.ProposalStatus" json:"status,omitempty"`
+	VotingPeriodEnd int64 `protobuf:"varint,4,opt,name=voting_period_end,json=votingPeriodEnd,proto3" json:"voting_period_end,omitempty"`
+	// status is the current status of the proposal.
+	Status ProposalStatus `protobuf:"varint,5,opt,name=status,proto3,enum=cosmos.accounts.defaults.multisig.v1.ProposalStatus" json:"status,omitempty"`
 }
 
 func (m *Proposal) Reset()         { *m = Proposal{} }
@@ -881,8 +889,10 @@ var xxx_messageInfo_QueryConfig proto.InternalMessageInfo
 
 // QueryConfigResponse returns the config of the account.
 type QueryConfigResponse struct {
+	// members are the current members of the account.
 	Members []*Member `protobuf:"bytes,1,rep,name=members,proto3" json:"members,omitempty"`
-	Config  *Config   `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
+	// config is the current config of the account.
+	Config *Config `protobuf:"bytes,2,opt,name=config,proto3" json:"config,omitempty"`
 }
 
 func (m *QueryConfigResponse) Reset()         { *m = QueryConfigResponse{} }

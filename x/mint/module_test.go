@@ -50,19 +50,20 @@ func (s *ModuleTestSuite) SetupTest() {
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
-	accountKeeper := minttestutil.NewMockAccountKeeper(ctrl)
 	bankKeeper := minttestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := minttestutil.NewMockStakingKeeper(ctrl)
 
-	accountKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(sdk.AccAddress{})
+	maccs := runtime.NewModuleAccountsService(runtime.NewModuleAccount(
+		authtypes.FeeCollectorName,
+	))
 
 	s.mintKeeper = keeper.NewKeeper(
 		encCfg.Codec,
 		env,
-		accountKeeper,
 		bankKeeper,
 		authtypes.FeeCollectorName,
 		govModuleNameStr,
+		maccs,
 	)
 	err := s.mintKeeper.SetMintFn(keeper.DefaultMintFn(types.DefaultInflationCalculationFn, stakingKeeper, s.mintKeeper))
 	s.NoError(err)
@@ -76,7 +77,7 @@ func (s *ModuleTestSuite) SetupTest() {
 	s.NoError(s.mintKeeper.Minter.Set(s.ctx, types.DefaultInitialMinter()))
 	s.msgServer = keeper.NewMsgServerImpl(s.mintKeeper)
 
-	s.appmodule = mint.NewAppModule(encCfg.Codec, s.mintKeeper, accountKeeper)
+	s.appmodule = mint.NewAppModule(encCfg.Codec, s.mintKeeper)
 }
 
 func (s *ModuleTestSuite) TestEpochHooks() {

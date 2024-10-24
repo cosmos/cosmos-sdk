@@ -3,6 +3,7 @@ package comet
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -13,7 +14,7 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	apiacbci "cosmossdk.io/api/cosmos/base/abci/v1beta1"
-	broadcasttypes "cosmossdk.io/client/v2/broadcast/types"
+	"cosmossdk.io/client/v2/broadcast"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -59,7 +60,7 @@ type CometRPC interface {
 	) (*coretypes.ResultBlockSearch, error)
 }
 
-var _ broadcasttypes.Broadcaster = CometBFTBroadcaster{}
+var _ broadcast.Broadcaster = CometBFTBroadcaster{}
 
 // CometBFTBroadcaster implements the Broadcaster interface for CometBFT consensus engine.
 type CometBFTBroadcaster struct {
@@ -68,48 +69,26 @@ type CometBFTBroadcaster struct {
 	cdc       codec.JSONCodec
 }
 
-func WithMode(mode string) func(broadcaster broadcasttypes.Broadcaster) {
-	return func(b broadcasttypes.Broadcaster) {
-		cbc, ok := b.(*CometBFTBroadcaster)
-		if !ok {
-			return
-		}
-		cbc.mode = mode
-	}
-}
-
-func WithJsonCodec(codec codec.JSONCodec) func(broadcaster broadcasttypes.Broadcaster) {
-	return func(b broadcasttypes.Broadcaster) {
-		cbc, ok := b.(*CometBFTBroadcaster)
-		if !ok {
-			return
-		}
-		cbc.cdc = codec
-	}
-}
-
 // NewCometBFTBroadcaster creates a new CometBftBroadcaster.
-func NewCometBFTBroadcaster(rpcURL string, opts ...broadcasttypes.Option) (*CometBFTBroadcaster, error) {
+func NewCometBFTBroadcaster(rpcURL, mode string, cdc codec.JSONCodec) (*CometBFTBroadcaster, error) {
+	if cdc == nil {
+		return nil, errors.New("codec can't be nil")
+	}
+
+	if mode == "" {
+		mode = BroadcastSync
+	}
+
 	rpcClient, err := rpchttp.New(rpcURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create CometBft RPC client: %w", err)
 	}
 
-	bc := &CometBFTBroadcaster{}
-	for _, opt := range opts {
-		opt(bc)
-	}
-
-	if bc.cdc == nil {
-		return nil, fmt.Errorf("missing codec, make sure to initialize with 'WithJsonCodec' option")
-	}
-
-	if bc.mode == "" {
-		bc.mode = BroadcastSync
-	}
-
-	bc.rpcClient = *rpcClient
-	return bc, nil
+	return &CometBFTBroadcaster{
+		rpcClient: rpcClient,
+		mode:      mode,
+		cdc:       cdc,
+	}, nil
 }
 
 func (c CometBFTBroadcaster) Consensus() string {

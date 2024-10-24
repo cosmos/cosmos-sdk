@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/client/v2/broadcast/comet"
+
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/client/v2/broadcast"
-	broadcasttypes "cosmossdk.io/client/v2/broadcast/types"
 	"cosmossdk.io/client/v2/internal/account"
-	"cosmossdk.io/client/v2/internal/comet"
 	"cosmossdk.io/core/transaction"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -22,9 +22,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
-// GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
-// or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) error {
+// GenerateOrBroadcastTxCLIWithBroadcaste will either generate and print an unsigned transaction
+// or sign it and broadcast it with the specified broadcaster returning an error upon failure.
+func GenerateOrBroadcastTxCLIWithBroadcaste(ctx client.Context, flagSet *pflag.FlagSet, broadcaster broadcast.Broadcaster, msgs ...transaction.Msg) error {
 	if err := validateMessages(msgs...); err != nil {
 		return err
 	}
@@ -44,19 +44,36 @@ func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs .
 		return dryRun(txf, msgs...)
 	}
 
-	broadcaster, err := getBroadcaster(ctx, flagSet)
+	return BroadcastTx(ctx, txf, broadcaster, msgs...)
+}
+
+// GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
+// or sign it and broadcast it using defaults cometBFT broadcaster, returning an error upon failure.
+func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) error {
+	cometBroadcaster, err := getCometBroadcaster(ctx, flagSet)
 	if err != nil {
 		return err
 	}
 
-	return BroadcastTx(ctx, txf, broadcaster, msgs...)
+	return GenerateOrBroadcastTxCLIWithBroadcaste(ctx, flagSet, cometBroadcaster, msgs...)
 }
 
-func getBroadcaster(ctx client.Context, flagSet *pflag.FlagSet) (broadcasttypes.Broadcaster, error) {
+// getCometBroadcaster returns a new CometBFT broadcaster based on the provided context and flag set.
+//
+// It retrieves the node URL and broadcast mode from the flag set, and uses these along with the
+// context's codec to create and return a new CometBFT broadcaster.
+//
+// Parameters:
+//   - ctx: The client context containing the codec and other configuration.
+//   - flagSet: The flag set containing command-line flags.
+//
+// Returns:
+//   - broadcast.Broadcaster: A new CometBFT broadcaster.
+//   - error: An error if the broadcaster creation fails.
+func getCometBroadcaster(ctx client.Context, flagSet *pflag.FlagSet) (broadcast.Broadcaster, error) {
 	url, _ := flagSet.GetString("node")
 	mode, _ := flagSet.GetString("broadcast-mode")
-	f := broadcast.NewFactory()
-	return f.Create(context.Background(), "comet", url, comet.WithMode(mode), comet.WithJsonCodec(ctx.Codec))
+	return comet.NewCometBFTBroadcaster(url, mode, ctx.Codec)
 }
 
 // newFactory creates a new transaction Factory based on the provided context and flag set.
@@ -145,7 +162,7 @@ func SimulateTx(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
-func BroadcastTx(clientCtx client.Context, txf Factory, broadcaster broadcasttypes.Broadcaster, msgs ...transaction.Msg) error {
+func BroadcastTx(clientCtx client.Context, txf Factory, broadcaster broadcast.Broadcaster, msgs ...transaction.Msg) error {
 	if txf.simulateAndExecute() {
 		err := txf.calculateGas(msgs...)
 		if err != nil {

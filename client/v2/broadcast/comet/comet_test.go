@@ -2,7 +2,9 @@ package comet
 
 import (
 	"context"
+	mockrpc "cosmossdk.io/client/v2/broadcast/comet/testutil"
 	"errors"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"testing"
 
 	"github.com/cometbft/cometbft/mempool"
@@ -11,9 +13,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	apiacbci "cosmossdk.io/api/cosmos/base/abci/v1beta1"
-	broadcasttypes "cosmossdk.io/client/v2/broadcast/types"
-	mockrpc "cosmossdk.io/client/v2/internal/comet/testutil"
-
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
 )
 
@@ -22,36 +21,30 @@ var cdc = testutil.CodecOptions{}.NewCodec()
 func TestNewCometBftBroadcaster(t *testing.T) {
 	tests := []struct {
 		name    string
-		opts    []broadcasttypes.Option
+		cdc     codec.JSONCodec
+		mode    string
 		want    *CometBFTBroadcaster
 		wantErr bool
 	}{
 		{
 			name: "constructor",
-			opts: []broadcasttypes.Option{
-				WithMode(BroadcastSync),
-				WithJsonCodec(cdc),
-			},
+			mode: BroadcastSync,
+			cdc:  cdc,
 			want: &CometBFTBroadcaster{
 				mode: BroadcastSync,
 				cdc:  cdc,
 			},
 		},
 		{
-			name: "missing codec",
-			opts: []broadcasttypes.Option{
-				WithMode(BroadcastSync),
-			},
-			want: &CometBFTBroadcaster{
-				mode: BroadcastSync,
-				cdc:  cdc,
-			},
+			name:    "nil codec",
+			mode:    BroadcastSync,
+			cdc:     nil,
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewCometBFTBroadcaster("localhost:26657", tt.opts...)
+			got, err := NewCometBFTBroadcaster("localhost:26657", tt.mode, tt.cdc)
 			if tt.wantErr {
 				require.Error(t, err)
 				require.Nil(t, got)

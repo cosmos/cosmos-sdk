@@ -42,6 +42,18 @@ func (m MyServer) Query(ctx context.Context, request *QueryRequest) (*QueryRespo
 }
 
 func (m MyServer) ListQueryHandlers(ctx context.Context, request *ListQueryHandlersRequest) (*ListQueryHandlersResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	handlers := m.app.QueryHandlers()
+
+	var handlerNames []*Handler
+	for handler := range handlers {
+		msg := handlers[handler].MakeMsg()
+		resp := handlers[handler].MakeMsgResp()
+
+		handlerNames = append(handlerNames, &Handler{
+			RequestName:  proto.MessageName(msg),
+			ResponseName: proto.MessageName(resp),
+		})
+	}
+
+	return &ListQueryHandlersResponse{Handlers: handlerNames}, nil
 }

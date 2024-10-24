@@ -22,7 +22,7 @@ message QueryResponse {
 message ListQueryHandlersRequest {}
 
 message ListQueryHandlersResponse {
-  repeated string handlers = 1;
+  repeated Handler handlers = 1;
 }
 
 message Handler {

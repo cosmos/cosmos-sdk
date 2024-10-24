@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	commitInfoKeyFmt      = "c/%d" // c/<version>
-	latestVersionKey      = "c/latest"
-	removedStoreKeyPrefix = "c/removed/" // c/removed/<version>/<store-name>
+	commitInfoKeyFmt      = "s/%d" // c/<version>
+	latestVersionKey      = "s/latest"
+	removedStoreKeyPrefix = "s/removed/" // c/removed/<version>/<store-name>
 )
 
 // MetadataStore is a store for metadata related to the commitment store.

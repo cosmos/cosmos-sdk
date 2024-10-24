@@ -1,12 +1,15 @@
 package root
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2/internal/encoding"
 )
 
 func TestFactory(t *testing.T) {
@@ -26,4 +29,20 @@ func TestFactory(t *testing.T) {
 	f, err = CreateRootStore(&fop)
 	require.Error(t, err)
 	require.Nil(t, f)
+
+	require.NoError(t, setLatestVersion(fop.SCRawDB, 1))
+	fop.Options.SCType = SCTypeIavl
+	f, err = CreateRootStore(&fop)
+	require.NoError(t, err)
+	require.NotNil(t, f)
+	require.True(t, f.(*Store).isMigrating)
+}
+
+func setLatestVersion(db corestore.KVStoreWithBatch, version uint64) error {
+	var buf bytes.Buffer
+	buf.Grow(encoding.EncodeUvarintSize(version))
+	if err := encoding.EncodeUvarint(&buf, version); err != nil {
+		return err
+	}
+	return db.Set([]byte("c/latest"), buf.Bytes())
 }

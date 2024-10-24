@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/internal/implementation"
 	v1 "cosmossdk.io/x/accounts/v1"
+	txdecode "cosmossdk.io/x/tx/decode"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,14 +49,17 @@ func NewKeeper(
 	env appmodule.Environment,
 	addressCodec address.Codec,
 	ir InterfaceRegistry,
+	txDecoder *txdecode.Decoder,
 	accounts ...accountstd.AccountCreatorFunc,
 ) (Keeper, error) {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	keeper := Keeper{
 		Environment:      env,
-		codec:            cdc,
+		txDecoder:        txDecoder,
 		addressCodec:     addressCodec,
+		codec:            cdc,
 		makeSendCoinsMsg: defaultCoinsTransferMsgFunc(addressCodec),
+		accounts:         nil,
 		Schema:           collections.Schema{},
 		AccountNumber:    collections.NewSequence(sb, AccountNumberKey, "account_number"),
 		AccountsByType:   collections.NewMap(sb, AccountTypeKeyPrefix, "accounts_by_type", collections.BytesKey, collections.StringValue),
@@ -79,6 +83,7 @@ func NewKeeper(
 type Keeper struct {
 	appmodule.Environment
 
+	txDecoder        *txdecode.Decoder
 	addressCodec     address.Codec
 	codec            codec.Codec
 	makeSendCoinsMsg coinsTransferMsgFunc
@@ -99,6 +104,8 @@ type Keeper struct {
 	// Account set and get their own state but this helps providing a nice mapping
 	// between: (account number, account state key) => account state value.
 	AccountsState collections.Map[collections.Pair[uint64, []byte], []byte]
+
+	bundlingDisabled bool // if this is set then bundling of txs is disallowed.
 }
 
 // IsAccountsModuleAccount check if an address belong to a smart account.
@@ -340,7 +347,6 @@ func (k Keeper) makeAccountContext(ctx context.Context, accountNumber uint64, ac
 
 // sendAnyMessages it a helper function that executes untyped codectypes.Any messages
 // The messages must all belong to a module.
-// nolint: unused // TODO: remove nolint when we bring back bundler payments
 func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages []*implementation.Any) ([]*implementation.Any, error) {
 	anyResponses := make([]*implementation.Any, len(anyMessages))
 	for i := range anyMessages {
@@ -359,6 +365,37 @@ func (k Keeper) sendAnyMessages(ctx context.Context, sender []byte, anyMessages 
 		anyResponses[i] = anyResp
 	}
 	return anyResponses, nil
+}
+
+func (k Keeper) sendManyMessagesReturnAnys(ctx context.Context, sender []byte, msgs []transaction.Msg) ([]*implementation.Any, error) {
+	resp, err := k.sendManyMessages(ctx, sender, msgs)
+	if err != nil {
+		return nil, err
+	}
+	anys := make([]*implementation.Any, len(resp))
+	for i := range resp {
+		anypb, err := implementation.PackAny(resp[i])
+		if err != nil {
+			return nil, err
+		}
+		anys[i] = anypb
+	}
+	return anys, nil
+}
+
+// sendManyMessages is a helper function that sends many untyped messages on behalf of the sender
+// then returns the respective results. Since the function calls into SendModuleMessage
+// it is guaranteed to disallow impersonation attacks from the sender.
+func (k Keeper) sendManyMessages(ctx context.Context, sender []byte, msgs []transaction.Msg) ([]transaction.Msg, error) {
+	resps := make([]transaction.Msg, len(msgs))
+	for i, msg := range msgs {
+		resp, err := k.SendModuleMessage(ctx, sender, msg)
+		if err != nil {
+			return nil, fmt.Errorf("failed to execute message %d: %s", i, err.Error())
+		}
+		resps[i] = resp
+	}
+	return resps, nil
 }
 
 // SendModuleMessage can be used to send a message towards a module.
@@ -428,6 +465,10 @@ func (k Keeper) maybeSendFunds(ctx context.Context, from, to []byte, amt sdk.Coi
 	}
 
 	return nil
+}
+
+func (k *Keeper) DisableTxBundling() {
+	k.bundlingDisabled = true
 }
 
 const msgInterfaceName = "cosmos.accounts.v1.MsgInterface"

@@ -43,3 +43,16 @@ func TestMsgServer(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, execResp)
 }
+
+func TestMsgServer_BundlingDisabled(t *testing.T) {
+	k, ctx := newKeeper(t, accountstd.AddAccount("test", NewTestAccount))
+	k.DisableTxBundling()
+
+	s := NewMsgServer(k)
+
+	_, err := s.ExecuteBundle(ctx, &v1.MsgExecuteBundle{
+		Bundler: "someone",
+		Txs:     nil,
+	})
+	require.ErrorIs(t, err, ErrBundlingDisabled)
+}

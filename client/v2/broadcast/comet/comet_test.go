@@ -2,9 +2,7 @@ package comet
 
 import (
 	"context"
-	mockrpc "cosmossdk.io/client/v2/broadcast/comet/testutil"
 	"errors"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"testing"
 
 	"github.com/cometbft/cometbft/mempool"
@@ -13,6 +11,9 @@ import (
 	"go.uber.org/mock/gomock"
 
 	apiacbci "cosmossdk.io/api/cosmos/base/abci/v1beta1"
+	mockrpc "cosmossdk.io/client/v2/broadcast/comet/testutil"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/testutil"
 )
 

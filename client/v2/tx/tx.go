@@ -22,9 +22,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
-// GenerateOrBroadcastTxCLIWithBroadcaste will either generate and print an unsigned transaction
+// GenerateOrBroadcastTxCLIWithBroadcaster will either generate and print an unsigned transaction
 // or sign it and broadcast it with the specified broadcaster returning an error upon failure.
-func GenerateOrBroadcastTxCLIWithBroadcaste(ctx client.Context, flagSet *pflag.FlagSet, broadcaster broadcast.Broadcaster, msgs ...transaction.Msg) error {
+func GenerateOrBroadcastTxCLIWithBroadcaster(ctx client.Context, flagSet *pflag.FlagSet, broadcaster broadcast.Broadcaster, msgs ...transaction.Msg) error {
 	if err := validateMessages(msgs...); err != nil {
 		return err
 	}
@@ -55,21 +55,10 @@ func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs .
 		return err
 	}
 
-	return GenerateOrBroadcastTxCLIWithBroadcaste(ctx, flagSet, cometBroadcaster, msgs...)
+	return GenerateOrBroadcastTxCLIWithBroadcaster(ctx, flagSet, cometBroadcaster, msgs...)
 }
 
 // getCometBroadcaster returns a new CometBFT broadcaster based on the provided context and flag set.
-//
-// It retrieves the node URL and broadcast mode from the flag set, and uses these along with the
-// context's codec to create and return a new CometBFT broadcaster.
-//
-// Parameters:
-//   - ctx: The client context containing the codec and other configuration.
-//   - flagSet: The flag set containing command-line flags.
-//
-// Returns:
-//   - broadcast.Broadcaster: A new CometBFT broadcaster.
-//   - error: An error if the broadcaster creation fails.
 func getCometBroadcaster(ctx client.Context, flagSet *pflag.FlagSet) (broadcast.Broadcaster, error) {
 	url, _ := flagSet.GetString("node")
 	mode, _ := flagSet.GetString("broadcast-mode")

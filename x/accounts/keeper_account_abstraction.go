@@ -20,16 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-var (
-	ErrAASemantics = errors.New("invalid account abstraction tx semantics")
-	// ErrAuthentication is returned when the authentication fails.
-	ErrAuthentication = errors.New("authentication failed")
-	// ErrBundlerPayment is returned when the bundler payment fails.
-	ErrBundlerPayment = errors.New("bundler payment failed")
-	// ErrExecution is returned when the execution fails.
-	ErrExecution = errors.New("execution failed")
-)
-
 // IsAbstractedAccount returns if the provided address is an abstracted account or not.
 func (k Keeper) IsAbstractedAccount(ctx context.Context, addr []byte) (bool, error) {
 	accType, err := k.AccountsByType.Get(ctx, addr)

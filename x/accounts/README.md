@@ -633,6 +633,35 @@ For chains where bundling is incompatible with existing security measures or ope
 1. Locate your `app.go` file
 2. Add the following method call:
 
+**Non depinject**:
+
 ```go
-accountsKeeper.DisableBundling()
+// add keepers
+func NewApp(...) {
+    ...
+    accountsKeeper, err := accounts.NewKeeper(...)
+    if err != nil {
+        panic(err)
+    }
+    accountsKeeper.DisableTxBundling() <-- // add this line
+    app.AccountsKeeper = accountsKeeper
+	...
+}
+```
+
+**Depinject**:
+
+```go
+	var appModules map[string]appmodule.AppModule
+	if err := depinject.Inject(appConfig,
+		&appBuilder,
+		...
+		&app.AuthKeeper,
+		&app.AccountsKeeper,
+		...
+	); err != nil {
+		panic(err)
+	}
+	
+	app.AccountsKeeper.DisableBundling() // <- add this line
 ```

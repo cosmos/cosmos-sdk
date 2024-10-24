@@ -23,9 +23,9 @@ func TestExportCmd_WithHeight(t *testing.T) {
 		args          []string
 		expZeroHeight bool
 	}{
-		{"should export correct height", []string{"genesis", "export"}, false},
-		{"should export correct height with --height", []string{"genesis", "export", "--height=5"}, false},
-		{"should export height 0 with --for-zero-height", []string{"genesis", "export", "--for-zero-height=true"}, true},
+		{"should export correct height", []string{"genesis", "export", "--home", sut.nodePath(0)}, false},
+		{"should export correct height with --height", []string{"genesis", "export", "--height=5", "--home", sut.nodePath(0)}, false},
+		{"should export height 0 with --for-zero-height", []string{"genesis", "export", "--for-zero-height=true", "--home", sut.nodePath(0)}, true},
 	}
 
 	for _, tc := range testCases {
@@ -58,7 +58,7 @@ func TestExportCmd_WithFileFlag(t *testing.T) {
 		errMsg string
 	}{
 		{"invalid home dir", []string{"genesis", "export", "--home=foo"}, true, "no such file or directory"},
-		{"should export state to the specified file", []string{"genesis", "export", fmt.Sprintf("--output-document=%s", exportFile)}, false, ""},
+		{"should export state to the specified file", []string{"genesis", "export", fmt.Sprintf("--output-document=%s", exportFile), "--home", sut.nodePath(0)}, false, ""},
 	}
 
 	for _, tc := range testCases {

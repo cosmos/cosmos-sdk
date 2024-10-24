@@ -7,13 +7,12 @@ import (
 	"fmt"
 	"os"
 
-	"cosmossdk.io/client/v2/broadcast/comet"
-
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/client/v2/broadcast"
+	"cosmossdk.io/client/v2/broadcast/comet"
 	"cosmossdk.io/client/v2/internal/account"
 	"cosmossdk.io/core/transaction"
 

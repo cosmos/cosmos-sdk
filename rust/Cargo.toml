@@ -1,0 +1,71 @@
+[workspace]
+members = [
+    "core",
+    "core_macros",
+    "state_objects",
+    "state_objects_macros",
+    "schema",
+    "schema_macros",
+    "message_api",
+    "testing",
+    "util/simple_time",
+#    "codecs/proto", "codecs/evm",
+#    "vm/wasmtime",
+    "vm/api",
+#    "vm/hypervisor",
+    "example",
+]
+
+[workspace.package]
+repository = "https://github.com/cosmos/cosmos-sdk"
+license = "Apache-2.0"
+rust-version = "1.81.0"
+
+[workspace.lints]
+
+[workspace.lints.rust]
+missing_docs = "deny"
+
+[workspace.lints.rustdoc]
+broken_intra_doc_links = "deny"
+private_intra_doc_links = "deny"
+
+[package]
+name = "ixc"
+edition = "2021"
+description = "Interchain SDK"
+readme = "README.md"
+version = "0.0.5"
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+ixc_core = { path = "core", version = "0.0.4" }
+ixc_schema = { path = "schema", version = "0.0.4", features = ["use_ixc_macro_path"] }
+ixc_message_api = { path = "message_api", version = "0.0.4" }
+state_objects = { path = "state_objects", version = "0.0.4" }
+simple_time = { path = "util/simple_time", version = "0.0.2" }
+ixc_core_macros = { path = "core_macros", version = "0.0.4" }
+ixc_schema_macros = { path = "schema_macros", version = "0.0.3", features = ["use_ixc_macro_path"] }
+state_objects_macros = { path = "state_objects_macros", version = "0.0.3" }
+constcat = "0.5.1"
+array-concat = "0.5.3"
+
+[dev-dependencies]
+ixc_testing = { path = "testing" }
+arrayvec = "0.7.6"
+thiserror = "1.0.63"
+num_enum = "0.7.3"
+mockall = "0.13.0"
+
+[lib]
+doctest = false
+
+[lints]
+workspace = true
+
+[features]
+default = []
+
+[profile.release]
+lto = true

@@ -1,0 +1,17 @@
+[package]
+name = "example"
+version = "0.1.0"
+edition = "2021"
+repository.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+ixc = { path = ".." }
+
+[dev-dependencies]
+ixc_testing = { path = "../testing" }
+
+[lints]
+workspace = true

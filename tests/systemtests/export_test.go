@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,6 +18,11 @@ func TestExportCmd_WithHeight(t *testing.T) {
 	cli := NewCLIWrapper(t, sut, verbose)
 
 	sut.StartChain(t)
+
+	// Wait 10s for producing blocks
+	time.Sleep(10 * time.Second)
+
+	sut.StopChain()
 
 	testCases := []struct {
 		name          string

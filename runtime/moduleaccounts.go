@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 
+	"github.com/pkg/errors"
+
 	"cosmossdk.io/core/moduleaccounts"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/pkg/errors"
 )
 
 var _ moduleaccounts.ServiceWithPerms = (*ModuleAccountsService)(nil)
@@ -23,7 +25,7 @@ type ModuleAccountsService struct {
 }
 
 // HasPermission implements moduleaccounts.ServiceWithPerms.
-func (m *ModuleAccountsService) HasPermission(name string, perm string) bool {
+func (m *ModuleAccountsService) HasPermission(name, perm string) bool {
 	for _, v := range m.accounts[name].perms {
 		if v == perm {
 			return true

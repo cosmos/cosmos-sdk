@@ -9,6 +9,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/moduleaccounts"
 	coretesting "cosmossdk.io/core/testing"
@@ -19,7 +20,6 @@ import (
 	stakingtestutil "cosmossdk.io/x/staking/testutil"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	"cosmossdk.io/core/address"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscdc "github.com/cosmos/cosmos-sdk/codec/address"
@@ -33,9 +33,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
-var (
-	PKs = simtestutil.CreateTestPubKeys(500)
-)
+var PKs = simtestutil.CreateTestPubKeys(500)
 
 type KeeperTestSuite struct {
 	suite.Suite

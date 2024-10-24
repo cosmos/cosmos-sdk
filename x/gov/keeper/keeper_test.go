@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/moduleaccounts"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/gov/keeper"
 	govtestutil "cosmossdk.io/x/gov/testutil"
@@ -14,8 +16,6 @@ import (
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
 
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/moduleaccounts"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscdc "github.com/cosmos/cosmos-sdk/codec/address"

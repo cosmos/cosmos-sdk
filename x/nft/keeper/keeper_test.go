@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -15,7 +16,6 @@ import (
 	"cosmossdk.io/x/nft/module"
 	nfttestutil "cosmossdk.io/x/nft/testutil"
 
-	"cosmossdk.io/core/address"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscdc "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

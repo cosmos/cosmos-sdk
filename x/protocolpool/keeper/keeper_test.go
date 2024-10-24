@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/header"
 	coretesting "cosmossdk.io/core/testing"
@@ -16,7 +17,6 @@ import (
 	pooltestutil "cosmossdk.io/x/protocolpool/testutil"
 	"cosmossdk.io/x/protocolpool/types"
 
-	"cosmossdk.io/core/address"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscdc "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"

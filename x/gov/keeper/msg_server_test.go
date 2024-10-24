@@ -9,9 +9,9 @@ import (
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"

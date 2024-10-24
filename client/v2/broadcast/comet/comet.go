@@ -60,7 +60,7 @@ type CometRPC interface {
 	) (*coretypes.ResultBlockSearch, error)
 }
 
-var _ broadcast.Broadcaster = CometBFTBroadcaster{}
+var _ broadcast.Broadcaster = &CometBFTBroadcaster{}
 
 // CometBFTBroadcaster implements the Broadcaster interface for CometBFT consensus engine.
 type CometBFTBroadcaster struct {
@@ -69,7 +69,7 @@ type CometBFTBroadcaster struct {
 	cdc       codec.JSONCodec
 }
 
-// NewCometBFTBroadcaster creates a new CometBftBroadcaster.
+// NewCometBFTBroadcaster creates a new CometBFTBroadcaster.
 func NewCometBFTBroadcaster(rpcURL, mode string, cdc codec.JSONCodec) (*CometBFTBroadcaster, error) {
 	if cdc == nil {
 		return nil, errors.New("codec can't be nil")
@@ -91,28 +91,30 @@ func NewCometBFTBroadcaster(rpcURL, mode string, cdc codec.JSONCodec) (*CometBFT
 	}, nil
 }
 
-func (c CometBFTBroadcaster) Consensus() string {
+// Consensus returns the consensus engine name used by the broadcaster.
+// It always returns "comet" for CometBFTBroadcaster.
+func (c *CometBFTBroadcaster) Consensus() string {
 	return cometBFTConsensus
 }
 
 // Broadcast sends a transaction to the network and returns the result.
 // returns a byte slice containing the JSON-encoded result and an error if the broadcast failed.
-func (c CometBFTBroadcaster) Broadcast(ctx context.Context, txBytes []byte) ([]byte, error) {
+func (c *CometBFTBroadcaster) Broadcast(ctx context.Context, txBytes []byte) ([]byte, error) {
 	if c.cdc == nil {
 		return []byte{}, fmt.Errorf("JSON codec is not initialized")
 	}
 
-	var fn func(ctx context.Context, tx cmttypes.Tx) (*coretypes.ResultBroadcastTx, error)
+	var broadcastFunc func(ctx context.Context, tx cmttypes.Tx) (*coretypes.ResultBroadcastTx, error)
 	switch c.mode {
 	case BroadcastSync:
-		fn = c.rpcClient.BroadcastTxSync
+		broadcastFunc = c.rpcClient.BroadcastTxSync
 	case BroadcastAsync:
-		fn = c.rpcClient.BroadcastTxAsync
+		broadcastFunc = c.rpcClient.BroadcastTxAsync
 	default:
 		return []byte{}, fmt.Errorf("unknown broadcast mode: %s", c.mode)
 	}
 
-	res, err := c.broadcast(ctx, txBytes, fn)
+	res, err := c.broadcast(ctx, txBytes, broadcastFunc)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -121,11 +123,11 @@ func (c CometBFTBroadcaster) Broadcast(ctx context.Context, txBytes []byte) ([]b
 }
 
 // broadcast sends a transaction to the CometBFT network using the provided function.
-func (c CometBFTBroadcaster) broadcast(ctx context.Context, txbytes []byte,
+func (c *CometBFTBroadcaster) broadcast(ctx context.Context, txBytes []byte,
 	fn func(ctx context.Context, tx cmttypes.Tx) (*coretypes.ResultBroadcastTx, error),
 ) (*apiacbci.TxResponse, error) {
-	bResult, err := fn(ctx, txbytes)
-	if errRes := checkCometError(err, txbytes); err != nil {
+	bResult, err := fn(ctx, txBytes)
+	if errRes := checkCometError(err, txBytes); err != nil {
 		return errRes, nil
 	}
 

@@ -47,7 +47,7 @@ func GenerateOrBroadcastTxCLIWithBroadcaster(ctx client.Context, flagSet *pflag.
 }
 
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
-// or sign it and broadcast it using defaults cometBFT broadcaster, returning an error upon failure.
+// or sign it and broadcast it using default CometBFT broadcaster, returning an error upon failure.
 func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) error {
 	cometBroadcaster, err := getCometBroadcaster(ctx, flagSet)
 	if err != nil {

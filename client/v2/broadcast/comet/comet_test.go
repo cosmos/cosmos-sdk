@@ -66,32 +66,48 @@ func TestCometBftBroadcaster_Broadcast(t *testing.T) {
 		cdc:       cdc,
 	}
 	tests := []struct {
-		name    string
-		mode    string
-		want    []byte
-		wantErr bool
+		name      string
+		mode      string
+		setupMock func(*mockrpc.MockCometRPC)
+		wantErr   bool
 	}{
 		{
 			name: "sync",
 			mode: BroadcastSync,
+			setupMock: func(m *mockrpc.MockCometRPC) {
+				m.EXPECT().BroadcastTxSync(context.Background(), gomock.Any()).Return(&coretypes.ResultBroadcastTx{
+					Code:      0,
+					Data:      []byte{},
+					Log:       "",
+					Codespace: "",
+					Hash:      []byte("%�����\u0010\n�T�\u0017\u0016�N^H[5�\u0006}�n�w�/Vi� "),
+				}, nil)
+			},
+		},
+		{
+			name: "async",
+			mode: BroadcastAsync,
+			setupMock: func(m *mockrpc.MockCometRPC) {
+				m.EXPECT().BroadcastTxAsync(context.Background(), gomock.Any()).Return(&coretypes.ResultBroadcastTx{
+					Code:      0,
+					Data:      []byte{},
+					Log:       "",
+					Codespace: "",
+					Hash:      []byte("%�����\u0010\n�T�\u0017\u0016�N^H[5�\u0006}�n�w�/Vi� "),
+				}, nil)
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c.mode = tt.mode
-			cometMock.EXPECT().BroadcastTxSync(context.Background(), gomock.Any()).Return(&coretypes.ResultBroadcastTx{
-				Code:      0,
-				Data:      []byte{},
-				Log:       "",
-				Codespace: "",
-				Hash:      []byte("%�����\u0010\n�T�\u0017\u0016�N^H[5�\u0006}�n�w�/Vi� "),
-			}, nil)
+			tt.setupMock(cometMock)
 			got, err := c.Broadcast(context.Background(), []byte{})
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Broadcast() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NotNil(t, got)
 			}
-			require.NotNil(t, got)
 		})
 	}
 }
@@ -103,21 +119,21 @@ func Test_checkCometError(t *testing.T) {
 		want *apiacbci.TxResponse
 	}{
 		{
-			name: "error in cache",
+			name: "tx already in cache",
 			err:  errors.New("tx already exists in cache"),
 			want: &apiacbci.TxResponse{
 				Code: 19,
 			},
 		},
 		{
-			name: "error in cache",
+			name: "mempool is full",
 			err:  mempool.ErrMempoolIsFull{},
 			want: &apiacbci.TxResponse{
 				Code: 20,
 			},
 		},
 		{
-			name: "error in cache",
+			name: "tx too large",
 			err:  mempool.ErrTxTooLarge{},
 			want: &apiacbci.TxResponse{
 				Code: 21,

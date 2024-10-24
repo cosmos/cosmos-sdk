@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/moduleaccounts"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -22,7 +22,6 @@ import (
 	"cosmossdk.io/x/gov/types/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -72,28 +71,12 @@ func getTestProposal() []sdk.Msg {
 }
 
 type mocks struct {
-	acctKeeper    *govtestutil.MockAccountKeeper
 	bankKeeper    *govtestutil.MockBankKeeper
 	stakingKeeper *govtestutil.MockStakingKeeper
 	poolKeeper    *govtestutil.MockPoolKeeper
 }
 
-func mockAccountKeeperExpectations(ctx sdk.Context, m mocks) {
-	m.acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).DoAndReturn(func(name string) sdk.AccAddress {
-		if name == types.ModuleName {
-			return govAcct
-		} else if name == protocolModuleName {
-			return poolAcct
-		}
-		panic(fmt.Sprintf("unexpected module name: %s", name))
-	}).AnyTimes()
-	m.acctKeeper.EXPECT().GetModuleAddress(protocolModuleName).Return(poolAcct).AnyTimes()
-	m.acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
-	m.acctKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
-}
-
 func mockDefaultExpectations(ctx sdk.Context, m mocks) error {
-	mockAccountKeeperExpectations(ctx, m)
 	err := trackMockBalances(m.bankKeeper)
 	if err != nil {
 		return err
@@ -109,12 +92,20 @@ func mockDefaultExpectations(ctx sdk.Context, m mocks) error {
 	return nil
 }
 
+func (s *KeeperTestSuite) MockDefaultExpectations() error {
+	return mockDefaultExpectations(s.ctx, mocks{
+		bankKeeper:    s.bankKeeper,
+		stakingKeeper: s.stakingKeeper,
+	})
+}
+
 // setupGovKeeper creates a govKeeper as well as all its dependencies.
 func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 	*keeper.Keeper,
 	mocks,
 	moduletestutil.TestEncodingConfig,
 	sdk.Context,
+	moduleaccounts.Service,
 ) {
 	t.Helper()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
@@ -140,25 +131,27 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 	// gomock initializations
 	ctrl := gomock.NewController(t)
 	m := mocks{
-		acctKeeper:    govtestutil.NewMockAccountKeeper(ctrl),
 		bankKeeper:    govtestutil.NewMockBankKeeper(ctrl),
 		stakingKeeper: govtestutil.NewMockStakingKeeper(ctrl),
 		poolKeeper:    govtestutil.NewMockPoolKeeper(ctrl),
 	}
 	if len(expectations) == 0 {
-		err := mockDefaultExpectations(ctx, m)
-		require.NoError(t, err)
+		// err := mockDefaultExpectations(ctx, m)
+		// require.NoError(t, err)
 	} else {
 		for _, exp := range expectations {
 			exp(ctx, m)
 		}
 	}
 
-	govAddr, err := m.acctKeeper.AddressCodec().BytesToString(govAcct)
+	addrCdc := encCfg.TxConfig.SigningContext().AddressCodec()
+	govAddr, err := addrCdc.BytesToString(govAcct)
 	require.NoError(t, err)
 
+	maccs := runtime.NewModuleAccountsService(runtime.NewModuleAccount(types.ModuleName))
+
 	// Gov keeper initializations
-	govKeeper := keeper.NewKeeper(encCfg.Codec, environment, m.acctKeeper, m.bankKeeper, m.stakingKeeper, m.poolKeeper, keeper.DefaultConfig(), govAddr)
+	govKeeper := keeper.NewKeeper(encCfg.Codec, environment, addrCdc, m.bankKeeper, m.stakingKeeper, m.poolKeeper, keeper.DefaultConfig(), govAddr, maccs)
 	require.NoError(t, govKeeper.ProposalID.Set(ctx, 1))
 	govRouter := v1beta1.NewRouter() // Also register legacy gov handlers to test them too.
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
@@ -172,7 +165,7 @@ func setupGovKeeper(t *testing.T, expectations ...func(sdk.Context, mocks)) (
 	v1.RegisterMsgServer(baseApp.MsgServiceRouter(), keeper.NewMsgServerImpl(govKeeper))
 	banktypes.RegisterMsgServer(baseApp.MsgServiceRouter(), nil) // Nil is fine here as long as we never execute the proposal's Msgs.
 
-	return govKeeper, m, encCfg, ctx
+	return govKeeper, m, encCfg, ctx, maccs
 }
 
 // setupGovKeeperWithMaxVoteOptionsLen creates a govKeeper with a defined maxVoteOptionsLen, as well as all its dependencies.
@@ -206,28 +199,30 @@ func setupGovKeeperWithMaxVoteOptionsLen(t *testing.T, maxVoteOptionsLen uint64,
 	// gomock initializations
 	ctrl := gomock.NewController(t)
 	m := mocks{
-		acctKeeper:    govtestutil.NewMockAccountKeeper(ctrl),
 		bankKeeper:    govtestutil.NewMockBankKeeper(ctrl),
 		stakingKeeper: govtestutil.NewMockStakingKeeper(ctrl),
 		poolKeeper:    govtestutil.NewMockPoolKeeper(ctrl),
 	}
 	if len(expectations) == 0 {
-		err := mockDefaultExpectations(ctx, m)
-		require.NoError(t, err)
+		// err := mockDefaultExpectations(ctx, m)
+		// require.NoError(t, err)
 	} else {
 		for _, exp := range expectations {
 			exp(ctx, m)
 		}
 	}
 
-	govAddr, err := m.acctKeeper.AddressCodec().BytesToString(govAcct)
+	addrCdc := encCfg.TxConfig.SigningContext().AddressCodec()
+	govAddr, err := addrCdc.BytesToString(govAcct)
 	require.NoError(t, err)
+
+	maccs := runtime.NewModuleAccountsService(runtime.NewModuleAccount(types.ModuleName))
 
 	config := keeper.DefaultConfig()
 	config.MaxVoteOptionsLen = maxVoteOptionsLen
 
 	// Gov keeper initializations
-	govKeeper := keeper.NewKeeper(encCfg.Codec, environment, m.acctKeeper, m.bankKeeper, m.stakingKeeper, m.poolKeeper, config, govAddr)
+	govKeeper := keeper.NewKeeper(encCfg.Codec, environment, addrCdc, m.bankKeeper, m.stakingKeeper, m.poolKeeper, config, govAddr, maccs)
 	require.NoError(t, govKeeper.ProposalID.Set(ctx, 1))
 	govRouter := v1beta1.NewRouter() // Also register legacy gov handlers to test them too.
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)

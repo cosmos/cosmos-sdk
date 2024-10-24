@@ -95,10 +95,10 @@ type invalidProposalRoute struct{ v1beta1.TextProposal }
 func (invalidProposalRoute) ProposalRoute() string { return "nonexistingroute" }
 
 func (suite *KeeperTestSuite) TestSubmitProposal() {
-	govAcct, err := suite.acctKeeper.AddressCodec().BytesToString(suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress())
+	govAcct, err := suite.addrCdc.BytesToString(suite.maccs.Address(types.ModuleName))
 	suite.Require().NoError(err)
 	_, _, randomAddress := testdata.KeyTestPubAddr()
-	randomAddr, err := suite.acctKeeper.AddressCodec().BytesToString(randomAddress)
+	randomAddr, err := suite.addrCdc.BytesToString(randomAddress)
 	suite.Require().NoError(err)
 	tp := v1beta1.TextProposal{Title: "title", Description: "description"}
 	legacyProposal := func(content v1beta1.Content, authority string) []sdk.Msg {
@@ -177,7 +177,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 }
 
 func (suite *KeeperTestSuite) TestCancelProposal() {
-	govAcct, err := suite.acctKeeper.AddressCodec().BytesToString(suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress())
+	govAcct, err := suite.addrCdc.BytesToString(suite.maccs.Address(types.ModuleName))
 	suite.Require().NoError(err)
 	tp := v1beta1.TextProposal{Title: "title", Description: "description"}
 	prop, err := v1.NewLegacyContent(&tp, govAcct)
@@ -186,9 +186,9 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 	suite.Require().NoError(err)
 	proposalID := proposal.Id
 
-	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(suite.addrs[0])
+	addr0Str, err := suite.addrCdc.BytesToString(suite.addrs[0])
 	suite.Require().NoError(err)
-	addr1Str, err := suite.acctKeeper.AddressCodec().BytesToString(suite.addrs[1])
+	addr1Str, err := suite.addrCdc.BytesToString(suite.addrs[1])
 	suite.Require().NoError(err)
 
 	proposal2, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[1], v1.ProposalType_PROPOSAL_TYPE_EXPEDITED)

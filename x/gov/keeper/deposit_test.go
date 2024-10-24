@@ -38,8 +38,9 @@ func TestDeposits(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			govKeeper, mocks, _, ctx := setupGovKeeper(t)
-			authKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper
+			govKeeper, mocks, _, ctx, _ := setupGovKeeper(t)
+			mockDefaultExpectations(ctx, mocks)
+			bankKeeper, stakingKeeper := mocks.bankKeeper, mocks.stakingKeeper
 			err := trackMockBalances(bankKeeper)
 			require.NoError(t, err)
 			// With expedited proposals the minimum deposit is higher, so we must
@@ -51,11 +52,11 @@ func TestDeposits(t *testing.T) {
 			}
 
 			TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000*depositMultiplier))
-			authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
-			addr0Str, err := authKeeper.AddressCodec().BytesToString(TestAddrs[0])
+			addrCdc := address.NewBech32Codec("cosmos")
+			addr0Str, err := addrCdc.BytesToString(TestAddrs[0])
 			require.NoError(t, err)
-			addr1Str, err := authKeeper.AddressCodec().BytesToString(TestAddrs[1])
+			addr1Str, err := addrCdc.BytesToString(TestAddrs[1])
 			require.NoError(t, err)
 
 			tp := TestProposal
@@ -217,13 +218,13 @@ func TestDepositAmount(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			govKeeper, mocks, _, ctx := setupGovKeeper(t)
-			authKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper
+			govKeeper, mocks, _, ctx, _ := setupGovKeeper(t)
+			bankKeeper, stakingKeeper := mocks.bankKeeper, mocks.stakingKeeper
+			mockDefaultExpectations(ctx, mocks)
 			err := trackMockBalances(bankKeeper)
 			require.NoError(t, err)
 
 			testAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(1000000000000000))
-			authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 			params, _ := govKeeper.Params.Get(ctx)
 			params.MinDepositRatio = tc.minDepositRatio
@@ -336,7 +337,7 @@ func TestValidateInitialDeposit(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			govKeeper, _, _, ctx := setupGovKeeper(t)
+			govKeeper, _, _, ctx, _ := setupGovKeeper(t)
 
 			params := v1.DefaultParams()
 			if tc.expedited {
@@ -403,12 +404,13 @@ func TestChargeDeposit(t *testing.T) {
 			}
 
 			t.Run(testName(i), func(t *testing.T) {
-				govKeeper, mocks, _, ctx := setupGovKeeper(t)
-				authKeeper, bankKeeper, stakingKeeper := mocks.acctKeeper, mocks.bankKeeper, mocks.stakingKeeper
+				govKeeper, mocks, _, ctx, _ := setupGovKeeper(t)
+				mockDefaultExpectations(ctx, mocks)
+				bankKeeper, stakingKeeper := mocks.bankKeeper, mocks.stakingKeeper
 				params := v1.DefaultParams()
 				params.ProposalCancelRatio = tc.proposalCancelRatio
 				TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdkmath.NewInt(10000000000))
-				authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+				addrCdc := address.NewBech32Codec("cosmos")
 
 				switch i {
 				case 0:
@@ -416,12 +418,12 @@ func TestChargeDeposit(t *testing.T) {
 					params.ProposalCancelDest = ""
 				case 1:
 					// normal account address for proposal cancel dest address
-					addrStr, err := authKeeper.AddressCodec().BytesToString(TestAddrs[1])
+					addrStr, err := addrCdc.BytesToString(TestAddrs[1])
 					require.NoError(t, err)
 					params.ProposalCancelDest = addrStr
 				default:
 					// community address for proposal cancel dest address
-					addrStr, err := authKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(protocolModuleName))
+					addrStr, err := addrCdc.BytesToString(authtypes.NewModuleAddress(protocolModuleName))
 					require.NoError(t, err)
 					params.ProposalCancelDest = addrStr
 				}
@@ -450,7 +452,7 @@ func TestChargeDeposit(t *testing.T) {
 				// get the deposits
 				allDeposits, _ := govKeeper.GetDeposits(ctx, proposalID)
 
-				addr0Str, err := authKeeper.AddressCodec().BytesToString(TestAddrs[0])
+				addr0Str, err := addrCdc.BytesToString(TestAddrs[0])
 				require.NoError(t, err)
 
 				// charge cancellation charges for cancel proposal

@@ -63,7 +63,11 @@ func (s *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
 	s.cdc = encCfg.Codec
 	s.addressCdc = addresscdc.NewBech32Codec("cosmos")
-	s.moduleAccountsService = runtime.NewModuleAccountsService(stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, stakingtypes.GovModuleName)
+	s.moduleAccountsService = runtime.NewModuleAccountsService(
+		runtime.NewModuleAccount(stakingtypes.BondedPoolName),
+		runtime.NewModuleAccount(stakingtypes.NotBondedPoolName),
+		runtime.NewModuleAccount(stakingtypes.GovModuleName),
+	)
 
 	s.baseApp = baseapp.NewBaseApp(
 		"staking",

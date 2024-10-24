@@ -1,1 +1,0 @@
-{"type":"cosmos-sdk/StdTx","value":{"msg":[{"type":"cosmos-sdk/MsgSend","value":{"from_address":"cosmos1hzw8v2kk4csg8xr3fhy8ykyymykknm2tdgvf7k","to_address":"cosmos1hzw8v2kk4csg8xr3fhy8ykyymykknm2tdgvf7k","amount":[{"denom":"stake","amount":"10"}]}}],"fee":{"amount":[{"denom":"stake","amount":"10"}],"gas":"200000"},"signatures":[],"memo":"foobar","timeout_height":"0"}}

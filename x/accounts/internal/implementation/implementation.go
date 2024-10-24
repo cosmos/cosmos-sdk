@@ -94,50 +94,69 @@ func newImplementation(schemaBuilder *collections.SchemaBuilder, account Account
 		return Implementation{}, err
 	}
 	return Implementation{
-		Init:                  initHandler,
-		Execute:               executeHandler,
-		Query:                 queryHandler,
-		CollectionsSchema:     schema,
-		InitHandlerSchema:     ir.schema,
-		QueryHandlersSchema:   qr.er.handlersSchema,
-		ExecuteHandlersSchema: er.handlersSchema,
+		init:                  initHandler,
+		execute:               executeHandler,
+		query:                 queryHandler,
+		collectionsSchema:     schema,
+		initHandlerSchema:     ir.schema,
+		queryHandlersSchema:   qr.er.handlersSchema,
+		executeHandlersSchema: er.handlersSchema,
 	}, nil
 }
 
 // Implementation wraps an Account implementer in order to provide a concrete
 // and non-generic implementation usable by the x/accounts module.
 type Implementation struct {
-	// Init defines the initialisation handler for the smart account.
-	Init func(ctx context.Context, msg transaction.Msg) (resp transaction.Msg, err error)
+	// init defines the initialisation handler for the smart account.
+	init func(ctx context.Context, msg transaction.Msg) (resp transaction.Msg, err error)
 	// Execute defines the execution handler for the smart account.
-	Execute func(ctx context.Context, msg transaction.Msg) (resp transaction.Msg, err error)
+	execute func(ctx context.Context, msg transaction.Msg) (resp transaction.Msg, err error)
 	// Query defines the query handler for the smart account.
-	Query func(ctx context.Context, msg transaction.Msg) (resp transaction.Msg, err error)
-	// CollectionsSchema represents the state schema.
-	CollectionsSchema collections.Schema
-	// InitHandlerSchema represents the init handler schema.
-	InitHandlerSchema HandlerSchema
-	// QueryHandlersSchema is the schema of the query handlers.
-	QueryHandlersSchema map[string]HandlerSchema
-	// ExecuteHandlersSchema is the schema of the execute handlers.
-	ExecuteHandlersSchema map[string]HandlerSchema
+	query func(ctx context.Context, msg transaction.Msg) (resp transaction.Msg, err error)
+	// collectionsSchema represents the state schema.
+	collectionsSchema collections.Schema
+	// initHandlerSchema represents the init handler schema.
+	initHandlerSchema HandlerSchema
+	// queryHandlersSchema is the schema of the query handlers.
+	queryHandlersSchema map[string]HandlerSchema
+	// executeHandlersSchema is the schema of the execute handlers.
+	executeHandlersSchema map[string]HandlerSchema
+}
+
+func (i Implementation) Init(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
+	return i.init(ctx, msg)
+}
+
+func (i Implementation) Execute(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
+	return i.execute(ctx, msg)
+}
+
+func (i Implementation) Query(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
+	return i.query(ctx, msg)
 }
 
 // HasExec returns true if the account can execute the given msg.
-func (i Implementation) HasExec(m transaction.Msg) bool {
-	_, ok := i.ExecuteHandlersSchema[MessageName(m)]
+func (i Implementation) HasExec(_ context.Context, m transaction.Msg) bool {
+	_, ok := i.executeHandlersSchema[MessageName(m)]
 	return ok
 }
 
 // HasQuery returns true if the account can execute the given request.
-func (i Implementation) HasQuery(m transaction.Msg) bool {
-	_, ok := i.QueryHandlersSchema[MessageName(m)]
+func (i Implementation) HasQuery(_ context.Context, m transaction.Msg) bool {
+	_, ok := i.queryHandlersSchema[MessageName(m)]
 	return ok
 }
 
-// HasInit returns true if the account uses the provided init message.
-func (i Implementation) HasInit(m transaction.Msg) bool {
-	return i.InitHandlerSchema.RequestSchema.Name == MessageName(m)
+func (i Implementation) GetInitHandlerSchema(_ context.Context) (HandlerSchema, error) {
+	return i.initHandlerSchema, nil
+}
+
+func (i Implementation) GetQueryHandlersSchema(_ context.Context) (map[string]HandlerSchema, error) {
+	return i.queryHandlersSchema, nil
+}
+
+func (i Implementation) GetExecuteHandlersSchema(_ context.Context) (map[string]HandlerSchema, error) {
+	return i.executeHandlersSchema, nil
 }
 
 // MessageSchema defines the schema of a message.
@@ -155,4 +174,36 @@ type HandlerSchema struct {
 	RequestSchema MessageSchema
 	// ResponseSchema defines the schema of the response.
 	ResponseSchema MessageSchema
+}
+
+const msgInterfaceName = "cosmos.accounts.v1.MsgInterface"
+
+// creates a new interface type which is an alias of the proto message interface to avoid conflicts with sdk.Msg
+type msgInterface transaction.Msg
+
+var msgInterfaceType = (*msgInterface)(nil)
+
+// registerToInterfaceRegistry registers all the interfaces of the accounts to the
+// global interface registry. This is required for the SDK to correctly decode
+// the google.Protobuf.Any used in x/accounts.
+func registerToInterfaceRegistry(ir InterfaceRegistry, accMap map[string]Implementation) {
+	ir.RegisterInterface(msgInterfaceName, msgInterfaceType)
+
+	for _, acc := range accMap {
+		// register init
+		ir.RegisterImplementations(msgInterfaceType, acc.initHandlerSchema.RequestSchema.New(), acc.initHandlerSchema.ResponseSchema.New())
+		// register exec
+		for _, exec := range acc.executeHandlersSchema {
+			ir.RegisterImplementations(msgInterfaceType, exec.RequestSchema.New(), exec.ResponseSchema.New())
+		}
+		// register query
+		for _, query := range acc.queryHandlersSchema {
+			ir.RegisterImplementations(msgInterfaceType, query.RequestSchema.New(), query.ResponseSchema.New())
+		}
+	}
+}
+
+type InterfaceRegistry interface {
+	RegisterInterface(name string, iface any, impls ...gogoproto.Message)
+	RegisterImplementations(iface any, impls ...gogoproto.Message)
 }

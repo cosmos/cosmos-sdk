@@ -12,6 +12,8 @@ service Query {
   rpc AccountQuery(AccountQueryRequest) returns (AccountQueryResponse) {};
   // Schema returns an x/account schema. Unstable.
   rpc Schema(SchemaRequest) returns (SchemaResponse) {};
+  // InitSchema returns an account's types init schema. Unstable.
+  rpc InitSchema(InitSchemaRequest) returns (InitSchemaResponse) {};
   // AccountType returns the account type for an address.
   rpc AccountType(AccountTypeRequest) returns (AccountTypeResponse) {};
   // AccountNumber returns the account number given the account address.
@@ -34,27 +36,40 @@ message AccountQueryResponse {
 
 // SchemaRequest is the request type for the Query/Schema RPC method.
 message SchemaRequest {
-  // account_type defines the account type to query the schema for.
-  string account_type = 1;
+  // address defines the account to query the schema for.
+  string address = 1;
+}
+
+// Handler defines a schema descriptor for a handler.
+// Where request and response are names that can be used to lookup the
+// reflection descriptor.
+message Handler {
+  // request is the request name
+  string request = 1;
+  // response is the response name
+  string response = 2;
 }
 
 // SchemaResponse is the response type for the Query/Schema RPC method.
 message SchemaResponse {
-  // Handler defines a schema descriptor for a handler.
-  // Where request and response are names that can be used to lookup the
-  // reflection descriptor.
-  message Handler {
-    // request is the request name
-    string request = 1;
-    // response is the response name
-    string response = 2;
-  }
   // init_schema defines the schema descriptor for the Init account method.
   Handler init_schema = 1;
   // execute_handlers defines the schema descriptor for the Execute account method.
   repeated Handler execute_handlers = 2;
   // query_handlers defines the schema descriptor for the Query account method.
   repeated Handler query_handlers = 3;
+}
+
+// InitSchemaRequest is the request type for the Query/InitSchema RPC method.
+message InitSchemaRequest {
+  // account_type defines the account type to query the init schema for.
+  string account_type = 1;
+}
+
+// InitSchemaResponse is the response type for the Query/InitSchema RPC method.
+message InitSchemaResponse {
+  // init_schema defines the schema descriptor for the Init account method.
+  Handler init_schema = 1;
 }
 
 // AccountTypeRequest is the request type for the Query/AccountType RPC method.

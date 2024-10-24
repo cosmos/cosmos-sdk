@@ -58,22 +58,17 @@ func TestImplementation(t *testing.T) {
 	})
 
 	t.Run("Has* methods", func(t *testing.T) {
-		ok := impl.HasExec(&types.StringValue{})
+
+		ok := impl.HasExec(ctx, &types.StringValue{})
 		require.True(t, ok)
 
-		ok = impl.HasExec(&types.Duration{})
+		ok = impl.HasExec(ctx, &types.Duration{})
 		require.False(t, ok)
 
-		ok = impl.HasQuery(&types.StringValue{})
+		ok = impl.HasQuery(ctx, &types.StringValue{})
 		require.True(t, ok)
 
-		ok = impl.HasQuery(&types.Duration{})
-		require.False(t, ok)
-
-		ok = impl.HasInit(&types.StringValue{})
-		require.True(t, ok)
-
-		ok = impl.HasInit(&types.Duration{})
+		ok = impl.HasQuery(ctx, &types.Duration{})
 		require.False(t, ok)
 	})
 }

@@ -78,7 +78,7 @@ func (s *CLITestSuite) TestTxInitCmd() {
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&v1.SchemaResponse{
-			InitSchema: &v1.SchemaResponse_Handler{
+			InitSchema: &v1.Handler{
 				Request:  sdk.MsgTypeURL(&types.Empty{})[1:],
 				Response: sdk.MsgTypeURL(&types.Empty{})[1:],
 			},

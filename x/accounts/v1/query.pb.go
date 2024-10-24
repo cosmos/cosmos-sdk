@@ -131,8 +131,8 @@ func (m *AccountQueryResponse) GetResponse() *any.Any {
 
 // SchemaRequest is the request type for the Query/Schema RPC method.
 type SchemaRequest struct {
-	// account_type defines the account type to query the schema for.
-	AccountType string `protobuf:"bytes,1,opt,name=account_type,json=accountType,proto3" json:"account_type,omitempty"`
+	// address defines the account to query the schema for.
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
 
 func (m *SchemaRequest) Reset()         { *m = SchemaRequest{} }
@@ -168,9 +168,66 @@ func (m *SchemaRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SchemaRequest proto.InternalMessageInfo
 
-func (m *SchemaRequest) GetAccountType() string {
+func (m *SchemaRequest) GetAddress() string {
 	if m != nil {
-		return m.AccountType
+		return m.Address
+	}
+	return ""
+}
+
+// Handler defines a schema descriptor for a handler.
+// Where request and response are names that can be used to lookup the
+// reflection descriptor.
+type Handler struct {
+	// request is the request name
+	Request string `protobuf:"bytes,1,opt,name=request,proto3" json:"request,omitempty"`
+	// response is the response name
+	Response string `protobuf:"bytes,2,opt,name=response,proto3" json:"response,omitempty"`
+}
+
+func (m *Handler) Reset()         { *m = Handler{} }
+func (m *Handler) String() string { return proto.CompactTextString(m) }
+func (*Handler) ProtoMessage()    {}
+func (*Handler) Descriptor() ([]byte, []int) {
+	return fileDescriptor_16ad14c22e3080d2, []int{3}
+}
+func (m *Handler) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Handler) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Handler.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Handler) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Handler.Merge(m, src)
+}
+func (m *Handler) XXX_Size() int {
+	return m.Size()
+}
+func (m *Handler) XXX_DiscardUnknown() {
+	xxx_messageInfo_Handler.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Handler proto.InternalMessageInfo
+
+func (m *Handler) GetRequest() string {
+	if m != nil {
+		return m.Request
+	}
+	return ""
+}
+
+func (m *Handler) GetResponse() string {
+	if m != nil {
+		return m.Response
 	}
 	return ""
 }
@@ -178,18 +235,18 @@ func (m *SchemaRequest) GetAccountType() string {
 // SchemaResponse is the response type for the Query/Schema RPC method.
 type SchemaResponse struct {
 	// init_schema defines the schema descriptor for the Init account method.
-	InitSchema *SchemaResponse_Handler `protobuf:"bytes,1,opt,name=init_schema,json=initSchema,proto3" json:"init_schema,omitempty"`
+	InitSchema *Handler `protobuf:"bytes,1,opt,name=init_schema,json=initSchema,proto3" json:"init_schema,omitempty"`
 	// execute_handlers defines the schema descriptor for the Execute account method.
-	ExecuteHandlers []*SchemaResponse_Handler `protobuf:"bytes,2,rep,name=execute_handlers,json=executeHandlers,proto3" json:"execute_handlers,omitempty"`
+	ExecuteHandlers []*Handler `protobuf:"bytes,2,rep,name=execute_handlers,json=executeHandlers,proto3" json:"execute_handlers,omitempty"`
 	// query_handlers defines the schema descriptor for the Query account method.
-	QueryHandlers []*SchemaResponse_Handler `protobuf:"bytes,3,rep,name=query_handlers,json=queryHandlers,proto3" json:"query_handlers,omitempty"`
+	QueryHandlers []*Handler `protobuf:"bytes,3,rep,name=query_handlers,json=queryHandlers,proto3" json:"query_handlers,omitempty"`
 }
 
 func (m *SchemaResponse) Reset()         { *m = SchemaResponse{} }
 func (m *SchemaResponse) String() string { return proto.CompactTextString(m) }
 func (*SchemaResponse) ProtoMessage()    {}
 func (*SchemaResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_16ad14c22e3080d2, []int{3}
+	return fileDescriptor_16ad14c22e3080d2, []int{4}
 }
 func (m *SchemaResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -218,49 +275,45 @@ func (m *SchemaResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SchemaResponse proto.InternalMessageInfo
 
-func (m *SchemaResponse) GetInitSchema() *SchemaResponse_Handler {
+func (m *SchemaResponse) GetInitSchema() *Handler {
 	if m != nil {
 		return m.InitSchema
 	}
 	return nil
 }
 
-func (m *SchemaResponse) GetExecuteHandlers() []*SchemaResponse_Handler {
+func (m *SchemaResponse) GetExecuteHandlers() []*Handler {
 	if m != nil {
 		return m.ExecuteHandlers
 	}
 	return nil
 }
 
-func (m *SchemaResponse) GetQueryHandlers() []*SchemaResponse_Handler {
+func (m *SchemaResponse) GetQueryHandlers() []*Handler {
 	if m != nil {
 		return m.QueryHandlers
 	}
 	return nil
 }
 
-// Handler defines a schema descriptor for a handler.
-// Where request and response are names that can be used to lookup the
-// reflection descriptor.
-type SchemaResponse_Handler struct {
-	// request is the request name
-	Request string `protobuf:"bytes,1,opt,name=request,proto3" json:"request,omitempty"`
-	// response is the response name
-	Response string `protobuf:"bytes,2,opt,name=response,proto3" json:"response,omitempty"`
+// InitSchemaRequest is the request type for the Query/InitSchema RPC method.
+type InitSchemaRequest struct {
+	// account_type defines the account type to query the init schema for.
+	AccountType string `protobuf:"bytes,1,opt,name=account_type,json=accountType,proto3" json:"account_type,omitempty"`
 }
 
-func (m *SchemaResponse_Handler) Reset()         { *m = SchemaResponse_Handler{} }
-func (m *SchemaResponse_Handler) String() string { return proto.CompactTextString(m) }
-func (*SchemaResponse_Handler) ProtoMessage()    {}
-func (*SchemaResponse_Handler) Descriptor() ([]byte, []int) {
-	return fileDescriptor_16ad14c22e3080d2, []int{3, 0}
+func (m *InitSchemaRequest) Reset()         { *m = InitSchemaRequest{} }
+func (m *InitSchemaRequest) String() string { return proto.CompactTextString(m) }
+func (*InitSchemaRequest) ProtoMessage()    {}
+func (*InitSchemaRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_16ad14c22e3080d2, []int{5}
 }
-func (m *SchemaResponse_Handler) XXX_Unmarshal(b []byte) error {
+func (m *InitSchemaRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *SchemaResponse_Handler) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *InitSchemaRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_SchemaResponse_Handler.Marshal(b, m, deterministic)
+		return xxx_messageInfo_InitSchemaRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -270,30 +323,69 @@ func (m *SchemaResponse_Handler) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *SchemaResponse_Handler) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SchemaResponse_Handler.Merge(m, src)
+func (m *InitSchemaRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InitSchemaRequest.Merge(m, src)
 }
-func (m *SchemaResponse_Handler) XXX_Size() int {
+func (m *InitSchemaRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *SchemaResponse_Handler) XXX_DiscardUnknown() {
-	xxx_messageInfo_SchemaResponse_Handler.DiscardUnknown(m)
+func (m *InitSchemaRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_InitSchemaRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SchemaResponse_Handler proto.InternalMessageInfo
+var xxx_messageInfo_InitSchemaRequest proto.InternalMessageInfo
 
-func (m *SchemaResponse_Handler) GetRequest() string {
+func (m *InitSchemaRequest) GetAccountType() string {
 	if m != nil {
-		return m.Request
+		return m.AccountType
 	}
 	return ""
 }
 
-func (m *SchemaResponse_Handler) GetResponse() string {
-	if m != nil {
-		return m.Response
+// InitSchemaResponse is the response type for the Query/InitSchema RPC method.
+type InitSchemaResponse struct {
+	// init_schema defines the schema descriptor for the Init account method.
+	InitSchema *Handler `protobuf:"bytes,1,opt,name=init_schema,json=initSchema,proto3" json:"init_schema,omitempty"`
+}
+
+func (m *InitSchemaResponse) Reset()         { *m = InitSchemaResponse{} }
+func (m *InitSchemaResponse) String() string { return proto.CompactTextString(m) }
+func (*InitSchemaResponse) ProtoMessage()    {}
+func (*InitSchemaResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_16ad14c22e3080d2, []int{6}
+}
+func (m *InitSchemaResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *InitSchemaResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_InitSchemaResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
 	}
-	return ""
+}
+func (m *InitSchemaResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InitSchemaResponse.Merge(m, src)
+}
+func (m *InitSchemaResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *InitSchemaResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_InitSchemaResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_InitSchemaResponse proto.InternalMessageInfo
+
+func (m *InitSchemaResponse) GetInitSchema() *Handler {
+	if m != nil {
+		return m.InitSchema
+	}
+	return nil
 }
 
 // AccountTypeRequest is the request type for the Query/AccountType RPC method.
@@ -306,7 +398,7 @@ func (m *AccountTypeRequest) Reset()         { *m = AccountTypeRequest{} }
 func (m *AccountTypeRequest) String() string { return proto.CompactTextString(m) }
 func (*AccountTypeRequest) ProtoMessage()    {}
 func (*AccountTypeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_16ad14c22e3080d2, []int{4}
+	return fileDescriptor_16ad14c22e3080d2, []int{7}
 }
 func (m *AccountTypeRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -352,7 +444,7 @@ func (m *AccountTypeResponse) Reset()         { *m = AccountTypeResponse{} }
 func (m *AccountTypeResponse) String() string { return proto.CompactTextString(m) }
 func (*AccountTypeResponse) ProtoMessage()    {}
 func (*AccountTypeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_16ad14c22e3080d2, []int{5}
+	return fileDescriptor_16ad14c22e3080d2, []int{8}
 }
 func (m *AccountTypeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -398,7 +490,7 @@ func (m *AccountNumberRequest) Reset()         { *m = AccountNumberRequest{} }
 func (m *AccountNumberRequest) String() string { return proto.CompactTextString(m) }
 func (*AccountNumberRequest) ProtoMessage()    {}
 func (*AccountNumberRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_16ad14c22e3080d2, []int{6}
+	return fileDescriptor_16ad14c22e3080d2, []int{9}
 }
 func (m *AccountNumberRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -445,7 +537,7 @@ func (m *AccountNumberResponse) Reset()         { *m = AccountNumberResponse{} }
 func (m *AccountNumberResponse) String() string { return proto.CompactTextString(m) }
 func (*AccountNumberResponse) ProtoMessage()    {}
 func (*AccountNumberResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_16ad14c22e3080d2, []int{7}
+	return fileDescriptor_16ad14c22e3080d2, []int{10}
 }
 func (m *AccountNumberResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -485,8 +577,10 @@ func init() {
 	proto.RegisterType((*AccountQueryRequest)(nil), "cosmos.accounts.v1.AccountQueryRequest")
 	proto.RegisterType((*AccountQueryResponse)(nil), "cosmos.accounts.v1.AccountQueryResponse")
 	proto.RegisterType((*SchemaRequest)(nil), "cosmos.accounts.v1.SchemaRequest")
+	proto.RegisterType((*Handler)(nil), "cosmos.accounts.v1.Handler")
 	proto.RegisterType((*SchemaResponse)(nil), "cosmos.accounts.v1.SchemaResponse")
-	proto.RegisterType((*SchemaResponse_Handler)(nil), "cosmos.accounts.v1.SchemaResponse.Handler")
+	proto.RegisterType((*InitSchemaRequest)(nil), "cosmos.accounts.v1.InitSchemaRequest")
+	proto.RegisterType((*InitSchemaResponse)(nil), "cosmos.accounts.v1.InitSchemaResponse")
 	proto.RegisterType((*AccountTypeRequest)(nil), "cosmos.accounts.v1.AccountTypeRequest")
 	proto.RegisterType((*AccountTypeResponse)(nil), "cosmos.accounts.v1.AccountTypeResponse")
 	proto.RegisterType((*AccountNumberRequest)(nil), "cosmos.accounts.v1.AccountNumberRequest")
@@ -496,39 +590,40 @@ func init() {
 func init() { proto.RegisterFile("cosmos/accounts/v1/query.proto", fileDescriptor_16ad14c22e3080d2) }
 
 var fileDescriptor_16ad14c22e3080d2 = []byte{
-	// 497 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0xc1, 0x6e, 0xd3, 0x40,
-	0x10, 0xb5, 0x13, 0x48, 0x60, 0xd2, 0x14, 0x34, 0x94, 0xca, 0xf8, 0x60, 0xa5, 0x3e, 0xd0, 0xc0,
-	0x61, 0xdd, 0x06, 0x0e, 0xdc, 0x50, 0x38, 0x55, 0x42, 0x42, 0x8a, 0x81, 0x0b, 0x12, 0x0a, 0x8e,
-	0xb3, 0x4d, 0x23, 0x1a, 0x6f, 0xea, 0xb5, 0xab, 0xe6, 0x13, 0xb8, 0xf1, 0x59, 0x3d, 0xf6, 0xc8,
-	0x11, 0x25, 0x3f, 0x82, 0xba, 0x3b, 0x9b, 0x38, 0x50, 0xe2, 0xf6, 0xe6, 0xd9, 0x79, 0xf3, 0xde,
-	0xfa, 0xbd, 0xb1, 0xc1, 0x8b, 0x85, 0x9c, 0x08, 0x19, 0x44, 0x71, 0x2c, 0xf2, 0x24, 0x93, 0xc1,
-	0xf9, 0x61, 0x70, 0x96, 0xf3, 0x74, 0xc6, 0xa6, 0xa9, 0xc8, 0x04, 0xa2, 0xee, 0x33, 0xd3, 0x67,
-	0xe7, 0x87, 0xee, 0xb3, 0x91, 0x10, 0xa3, 0x53, 0x1e, 0x28, 0xc4, 0x20, 0x3f, 0x0e, 0xa2, 0x84,
-	0xe0, 0xfe, 0x57, 0x78, 0xd2, 0xd5, 0xc8, 0xde, 0x35, 0x49, 0xc8, 0xcf, 0x72, 0x2e, 0x33, 0xdc,
-	0x85, 0x5a, 0x16, 0xa5, 0x23, 0x9e, 0x39, 0x76, 0xcb, 0x6e, 0x3f, 0x0c, 0xa9, 0x42, 0x06, 0xf5,
-	0x54, 0x43, 0x9c, 0x4a, 0xcb, 0x6e, 0x37, 0x3a, 0x3b, 0x4c, 0x73, 0x33, 0xc3, 0xcd, 0xba, 0xc9,
-	0x2c, 0x34, 0x20, 0xff, 0x08, 0x76, 0xd6, 0xe9, 0xe5, 0x54, 0x24, 0x92, 0xe3, 0x01, 0x3c, 0x48,
-	0xe9, 0x59, 0x29, 0xfc, 0x8f, 0x68, 0x89, 0xf2, 0x3b, 0xd0, 0xfc, 0x18, 0x9f, 0xf0, 0x49, 0x64,
-	0xae, 0xb8, 0x07, 0x5b, 0xf4, 0x8e, 0xfd, 0x6c, 0x36, 0xe5, 0x74, 0xd1, 0x06, 0x9d, 0x7d, 0x9a,
-	0x4d, 0xb9, 0x7f, 0x59, 0x81, 0x6d, 0x33, 0x44, 0xc2, 0xef, 0xa1, 0x31, 0x4e, 0xc6, 0x59, 0x5f,
-	0xaa, 0x63, 0xd2, 0x7e, 0xc9, 0xfe, 0x35, 0x8d, 0xad, 0x0f, 0xb2, 0xa3, 0x28, 0x19, 0x9e, 0xf2,
-	0x34, 0x84, 0xeb, 0x71, 0xdd, 0xc3, 0xcf, 0xf0, 0x98, 0x5f, 0xf0, 0x38, 0xcf, 0x78, 0xff, 0x44,
-	0xb7, 0xa5, 0x53, 0x69, 0x55, 0xef, 0xc8, 0xf8, 0x88, 0x38, 0xa8, 0x96, 0xd8, 0x83, 0x6d, 0x95,
-	0xe8, 0x8a, 0xb4, 0x7a, 0x67, 0xd2, 0xa6, 0x62, 0x30, 0x94, 0xee, 0x5b, 0xa8, 0xd3, 0x33, 0x3a,
-	0xab, 0x08, 0xb5, 0x65, 0xa6, 0x44, 0xb7, 0x10, 0x4a, 0x45, 0xb5, 0x56, 0xf6, 0x33, 0xc0, 0xee,
-	0xca, 0x59, 0x93, 0x81, 0x03, 0xf5, 0x68, 0x38, 0x4c, 0xb9, 0x94, 0x86, 0x8b, 0x4a, 0xff, 0xcd,
-	0x72, 0xaf, 0x34, 0x9e, 0xec, 0xbf, 0x45, 0x68, 0x07, 0xcb, 0x95, 0xf9, 0x90, 0x4f, 0x06, 0x3c,
-	0x2d, 0xd7, 0x0a, 0xe0, 0xe9, 0x5f, 0x13, 0xa4, 0xb6, 0x0b, 0xb5, 0x44, 0x9d, 0xa8, 0x89, 0x7b,
-	0x21, 0x55, 0x9d, 0x1f, 0x55, 0xb8, 0xaf, 0xf6, 0x11, 0x63, 0xd8, 0x2a, 0xee, 0x27, 0xee, 0xdf,
-	0x64, 0xf1, 0x0d, 0x1f, 0x88, 0xdb, 0x2e, 0x07, 0x92, 0x73, 0x16, 0xf6, 0xa0, 0x46, 0x0b, 0xb3,
-	0xb7, 0x29, 0x41, 0x4d, 0xec, 0x97, 0x87, 0xec, 0x5b, 0xf8, 0x0d, 0x1a, 0x05, 0x7b, 0xf1, 0xf9,
-	0x86, 0xdb, 0x14, 0xf2, 0x72, 0xf7, 0x4b, 0x71, 0x4b, 0x85, 0x63, 0x68, 0xae, 0x99, 0x8a, 0x9b,
-	0xde, 0x78, 0x2d, 0x29, 0xf7, 0xc5, 0x2d, 0x90, 0x46, 0xe7, 0xdd, 0xeb, 0xcb, 0xb9, 0x67, 0x5f,
-	0xcd, 0x3d, 0xfb, 0xf7, 0xdc, 0xb3, 0x7f, 0x2e, 0x3c, 0xeb, 0x6a, 0xe1, 0x59, 0xbf, 0x16, 0x9e,
-	0xf5, 0xc5, 0xd5, 0x2c, 0x72, 0xf8, 0x9d, 0x8d, 0x45, 0x70, 0x51, 0xfc, 0xe3, 0x0d, 0x6a, 0xea,
-	0x2f, 0xf1, 0xea, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xea, 0x75, 0x93, 0xfa, 0x0e, 0x05, 0x00,
-	0x00,
+	// 528 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xc1, 0x6e, 0xd3, 0x40,
+	0x10, 0x8d, 0x13, 0x48, 0x60, 0xd2, 0x14, 0x18, 0x4a, 0x15, 0x8c, 0x64, 0xa5, 0x96, 0x68, 0xd3,
+	0xcb, 0xba, 0x2d, 0x08, 0x71, 0x40, 0x42, 0xe9, 0x01, 0x95, 0x0b, 0x52, 0x0d, 0x27, 0xa4, 0x2a,
+	0x38, 0xce, 0x36, 0x8d, 0x68, 0xbc, 0xa9, 0xd7, 0xae, 0x9a, 0xbf, 0xe0, 0xb3, 0x38, 0xf6, 0x88,
+	0x38, 0xa1, 0xe4, 0xc2, 0x67, 0xa0, 0xac, 0x67, 0x1d, 0x87, 0x9a, 0xb8, 0x07, 0x6e, 0x99, 0xdd,
+	0x37, 0xef, 0xbd, 0xcc, 0x3c, 0x2f, 0x58, 0xbe, 0x90, 0x23, 0x21, 0x1d, 0xcf, 0xf7, 0x45, 0x1c,
+	0x44, 0xd2, 0xb9, 0xdc, 0x77, 0x2e, 0x62, 0x1e, 0x4e, 0xd8, 0x38, 0x14, 0x91, 0x40, 0x4c, 0xee,
+	0x99, 0xbe, 0x67, 0x97, 0xfb, 0xe6, 0xd3, 0x81, 0x10, 0x83, 0x73, 0xee, 0x28, 0x44, 0x2f, 0x3e,
+	0x75, 0xbc, 0x80, 0xe0, 0xf6, 0x09, 0x3c, 0xee, 0x24, 0xc8, 0xe3, 0x39, 0x89, 0xcb, 0x2f, 0x62,
+	0x2e, 0x23, 0xdc, 0x84, 0x6a, 0xe4, 0x85, 0x03, 0x1e, 0x35, 0x8d, 0x96, 0xd1, 0xbe, 0xef, 0x52,
+	0x85, 0x0c, 0x6a, 0x61, 0x02, 0x69, 0x96, 0x5b, 0x46, 0xbb, 0x7e, 0xb0, 0xc1, 0x12, 0x6e, 0xa6,
+	0xb9, 0x59, 0x27, 0x98, 0xb8, 0x1a, 0x64, 0x1f, 0xc1, 0xc6, 0x32, 0xbd, 0x1c, 0x8b, 0x40, 0x72,
+	0xdc, 0x83, 0x7b, 0x21, 0xfd, 0x56, 0x0a, 0xff, 0x22, 0x4a, 0x51, 0xf6, 0x2e, 0x34, 0x3e, 0xfa,
+	0x67, 0x7c, 0xe4, 0x69, 0x8b, 0x4d, 0xa8, 0x79, 0xfd, 0x7e, 0xc8, 0xa5, 0x24, 0x8f, 0xba, 0xb4,
+	0xdf, 0x42, 0xed, 0xc8, 0x0b, 0xfa, 0xe7, 0x3c, 0x9c, 0x83, 0xb4, 0x5f, 0x02, 0x51, 0x89, 0x66,
+	0xc6, 0x41, 0x59, 0x5d, 0x2d, 0xb4, 0x7e, 0x1a, 0xb0, 0xae, 0xc5, 0xc8, 0xf0, 0x1b, 0xa8, 0x0f,
+	0x83, 0x61, 0xd4, 0x95, 0xea, 0x98, 0x3c, 0x3f, 0x63, 0x37, 0x87, 0xcd, 0x48, 0xda, 0x85, 0x39,
+	0x3e, 0x61, 0xc1, 0x77, 0xf0, 0x90, 0x5f, 0x71, 0x3f, 0x8e, 0x78, 0xf7, 0x2c, 0xb9, 0x96, 0xcd,
+	0x72, 0xab, 0x52, 0x44, 0xf1, 0x80, 0x9a, 0xa8, 0x96, 0x78, 0x08, 0xeb, 0x6a, 0xd7, 0x0b, 0x96,
+	0x4a, 0x31, 0x4b, 0x43, 0xb5, 0x68, 0x0e, 0xfb, 0x15, 0x3c, 0x7a, 0x9f, 0x3a, 0xd3, 0xc3, 0xdc,
+	0x82, 0x35, 0x6a, 0xed, 0x46, 0x93, 0x31, 0xa7, 0x61, 0xd5, 0xe9, 0xec, 0xd3, 0x64, 0xcc, 0x6d,
+	0x17, 0x30, 0xdb, 0xf7, 0x3f, 0xe6, 0x62, 0x33, 0xc0, 0xce, 0x42, 0xa2, 0x78, 0xb3, 0xaf, 0xd3,
+	0xb4, 0x26, 0x78, 0x32, 0x71, 0x0b, 0xf7, 0x7b, 0x69, 0x10, 0x3f, 0xc4, 0xa3, 0x1e, 0x0f, 0x8b,
+	0xb5, 0x1c, 0x78, 0xf2, 0x57, 0x07, 0xa9, 0x6d, 0x42, 0x35, 0x50, 0x27, 0xaa, 0xe3, 0x8e, 0x4b,
+	0xd5, 0xc1, 0xef, 0x0a, 0xdc, 0x55, 0x29, 0x47, 0x1f, 0xd6, 0xb2, 0xa9, 0xc7, 0x9d, 0xbc, 0x79,
+	0xe4, 0x7c, 0x76, 0x66, 0xbb, 0x18, 0x48, 0x11, 0x2d, 0xe1, 0x31, 0x54, 0x29, 0x5d, 0x5b, 0x79,
+	0x5d, 0x4b, 0xfb, 0x35, 0xed, 0x55, 0x90, 0x94, 0xf2, 0x04, 0x60, 0xb1, 0x62, 0x7c, 0x9e, 0xd7,
+	0x73, 0x23, 0x3a, 0xe6, 0x76, 0x11, 0x2c, 0xa5, 0xff, 0x02, 0xf5, 0xcc, 0xf6, 0x70, 0x7b, 0xc5,
+	0x9f, 0xcd, 0xc4, 0xc1, 0xdc, 0x29, 0xc4, 0xa5, 0x0a, 0xa7, 0xd0, 0x58, 0xda, 0x19, 0xae, 0x1a,
+	0xe8, 0x52, 0x10, 0xcc, 0xdd, 0x5b, 0x20, 0xb5, 0xce, 0xe1, 0xcb, 0xef, 0x53, 0xcb, 0xb8, 0x9e,
+	0x5a, 0xc6, 0xaf, 0xa9, 0x65, 0x7c, 0x9b, 0x59, 0xa5, 0xeb, 0x99, 0x55, 0xfa, 0x31, 0xb3, 0x4a,
+	0x9f, 0xcd, 0x84, 0x45, 0xf6, 0xbf, 0xb2, 0xa1, 0x70, 0xae, 0xb2, 0xcf, 0x74, 0xaf, 0xaa, 0x9e,
+	0xb6, 0x17, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0xd6, 0xa0, 0x05, 0xca, 0xc3, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -547,6 +642,8 @@ type QueryClient interface {
 	AccountQuery(ctx context.Context, in *AccountQueryRequest, opts ...grpc.CallOption) (*AccountQueryResponse, error)
 	// Schema returns an x/account schema. Unstable.
 	Schema(ctx context.Context, in *SchemaRequest, opts ...grpc.CallOption) (*SchemaResponse, error)
+	// InitSchema returns an account's types init schema. Unstable.
+	InitSchema(ctx context.Context, in *InitSchemaRequest, opts ...grpc.CallOption) (*InitSchemaResponse, error)
 	// AccountType returns the account type for an address.
 	AccountType(ctx context.Context, in *AccountTypeRequest, opts ...grpc.CallOption) (*AccountTypeResponse, error)
 	// AccountNumber returns the account number given the account address.
@@ -579,6 +676,15 @@ func (c *queryClient) Schema(ctx context.Context, in *SchemaRequest, opts ...grp
 	return out, nil
 }
 
+func (c *queryClient) InitSchema(ctx context.Context, in *InitSchemaRequest, opts ...grpc.CallOption) (*InitSchemaResponse, error) {
+	out := new(InitSchemaResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.accounts.v1.Query/InitSchema", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) AccountType(ctx context.Context, in *AccountTypeRequest, opts ...grpc.CallOption) (*AccountTypeResponse, error) {
 	out := new(AccountTypeResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.accounts.v1.Query/AccountType", in, out, opts...)
@@ -603,6 +709,8 @@ type QueryServer interface {
 	AccountQuery(context.Context, *AccountQueryRequest) (*AccountQueryResponse, error)
 	// Schema returns an x/account schema. Unstable.
 	Schema(context.Context, *SchemaRequest) (*SchemaResponse, error)
+	// InitSchema returns an account's types init schema. Unstable.
+	InitSchema(context.Context, *InitSchemaRequest) (*InitSchemaResponse, error)
 	// AccountType returns the account type for an address.
 	AccountType(context.Context, *AccountTypeRequest) (*AccountTypeResponse, error)
 	// AccountNumber returns the account number given the account address.
@@ -618,6 +726,9 @@ func (*UnimplementedQueryServer) AccountQuery(ctx context.Context, req *AccountQ
 }
 func (*UnimplementedQueryServer) Schema(ctx context.Context, req *SchemaRequest) (*SchemaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Schema not implemented")
+}
+func (*UnimplementedQueryServer) InitSchema(ctx context.Context, req *InitSchemaRequest) (*InitSchemaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InitSchema not implemented")
 }
 func (*UnimplementedQueryServer) AccountType(ctx context.Context, req *AccountTypeRequest) (*AccountTypeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AccountType not implemented")
@@ -662,6 +773,24 @@ func _Query_Schema_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Schema(ctx, req.(*SchemaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_InitSchema_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InitSchemaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).InitSchema(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.accounts.v1.Query/InitSchema",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).InitSchema(ctx, req.(*InitSchemaRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -714,6 +843,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Schema",
 			Handler:    _Query_Schema_Handler,
+		},
+		{
+			MethodName: "InitSchema",
+			Handler:    _Query_InitSchema_Handler,
 		},
 		{
 			MethodName: "AccountType",
@@ -825,10 +958,47 @@ func (m *SchemaRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.AccountType) > 0 {
-		i -= len(m.AccountType)
-		copy(dAtA[i:], m.AccountType)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.AccountType)))
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Handler) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Handler) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Handler) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		i -= len(m.Response)
+		copy(dAtA[i:], m.Response)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Response)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Request) > 0 {
+		i -= len(m.Request)
+		copy(dAtA[i:], m.Request)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Request)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -898,7 +1068,7 @@ func (m *SchemaResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *SchemaResponse_Handler) Marshal() (dAtA []byte, err error) {
+func (m *InitSchemaRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -908,27 +1078,55 @@ func (m *SchemaResponse_Handler) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SchemaResponse_Handler) MarshalTo(dAtA []byte) (int, error) {
+func (m *InitSchemaRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *SchemaResponse_Handler) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *InitSchemaRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Response) > 0 {
-		i -= len(m.Response)
-		copy(dAtA[i:], m.Response)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Response)))
+	if len(m.AccountType) > 0 {
+		i -= len(m.AccountType)
+		copy(dAtA[i:], m.AccountType)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.AccountType)))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0xa
 	}
-	if len(m.Request) > 0 {
-		i -= len(m.Request)
-		copy(dAtA[i:], m.Request)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Request)))
+	return len(dAtA) - i, nil
+}
+
+func (m *InitSchemaResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *InitSchemaResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *InitSchemaResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.InitSchema != nil {
+		{
+			size, err := m.InitSchema.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1100,7 +1298,24 @@ func (m *SchemaRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.AccountType)
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *Handler) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Request)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.Response)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
@@ -1132,18 +1347,27 @@ func (m *SchemaResponse) Size() (n int) {
 	return n
 }
 
-func (m *SchemaResponse_Handler) Size() (n int) {
+func (m *InitSchemaRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = len(m.Request)
+	l = len(m.AccountType)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
-	l = len(m.Response)
-	if l > 0 {
+	return n
+}
+
+func (m *InitSchemaResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.InitSchema != nil {
+		l = m.InitSchema.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -1441,7 +1665,7 @@ func (m *SchemaRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AccountType", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1469,7 +1693,7 @@ func (m *SchemaRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AccountType = string(dAtA[iNdEx:postIndex])
+			m.Address = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1492,161 +1716,7 @@ func (m *SchemaRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SchemaResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: SchemaResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SchemaResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InitSchema", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.InitSchema == nil {
-				m.InitSchema = &SchemaResponse_Handler{}
-			}
-			if err := m.InitSchema.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ExecuteHandlers", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ExecuteHandlers = append(m.ExecuteHandlers, &SchemaResponse_Handler{})
-			if err := m.ExecuteHandlers[len(m.ExecuteHandlers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field QueryHandlers", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.QueryHandlers = append(m.QueryHandlers, &SchemaResponse_Handler{})
-			if err := m.QueryHandlers[len(m.QueryHandlers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *SchemaResponse_Handler) Unmarshal(dAtA []byte) error {
+func (m *Handler) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1738,6 +1808,328 @@ func (m *SchemaResponse_Handler) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Response = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SchemaResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SchemaResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SchemaResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InitSchema", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.InitSchema == nil {
+				m.InitSchema = &Handler{}
+			}
+			if err := m.InitSchema.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExecuteHandlers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ExecuteHandlers = append(m.ExecuteHandlers, &Handler{})
+			if err := m.ExecuteHandlers[len(m.ExecuteHandlers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QueryHandlers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.QueryHandlers = append(m.QueryHandlers, &Handler{})
+			if err := m.QueryHandlers[len(m.QueryHandlers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *InitSchemaRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: InitSchemaRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: InitSchemaRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccountType", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AccountType = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *InitSchemaResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: InitSchemaResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: InitSchemaResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InitSchema", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.InitSchema == nil {
+				m.InitSchema = &Handler{}
+			}
+			if err := m.InitSchema.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

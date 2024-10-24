@@ -20,14 +20,6 @@ type ProtoMsgG[T any] interface {
 
 type Any = codectypes.Any
 
-func FindMessageByName(name string) (transaction.Msg, error) {
-	typ := proto.MessageType(name)
-	if typ == nil {
-		return nil, fmt.Errorf("no message type found for %s", name)
-	}
-	return reflect.New(typ.Elem()).Interface().(transaction.Msg), nil
-}
-
 func MessageName(msg transaction.Msg) string {
 	return proto.MessageName(msg)
 }

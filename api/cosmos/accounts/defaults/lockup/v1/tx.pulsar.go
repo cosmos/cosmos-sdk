@@ -5851,8 +5851,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// MsgInitLockupAccount defines a message that enables creating a lockup
-// account.
+// MsgInitLockupAccount defines a message that enables creating a lockup account.
 type MsgInitLockupAccount struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5860,9 +5859,9 @@ type MsgInitLockupAccount struct {
 
 	// owner of the vesting account
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	// end of lockup
+	// end_time is end of lockup
 	EndTime *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
-	// start of lockup
+	// start_time is start of lockup
 	StartTime *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
 }
 

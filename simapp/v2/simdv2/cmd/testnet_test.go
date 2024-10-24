@@ -16,7 +16,7 @@ import (
 )
 
 func TestInitTestFilesCmd(t *testing.T) {
-	rootCmd := cmd.NewRootCmd[transaction.Tx]()
+	rootCmd := cmd.NewCometBFTRootCmd[transaction.Tx]()
 	rootCmd.SetArgs([]string{
 		"testnet", // Test the testnet init-files command
 		"init-files",

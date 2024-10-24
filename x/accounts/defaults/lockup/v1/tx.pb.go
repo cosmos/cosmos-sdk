@@ -33,14 +33,13 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgInitLockupAccount defines a message that enables creating a lockup
-// account.
+// MsgInitLockupAccount defines a message that enables creating a lockup account.
 type MsgInitLockupAccount struct {
 	// owner of the vesting account
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	// end of lockup
+	// end_time is end of lockup
 	EndTime time.Time `protobuf:"bytes,2,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time"`
-	// start of lockup
+	// start_time is start of lockup
 	StartTime time.Time `protobuf:"bytes,3,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time"`
 }
 

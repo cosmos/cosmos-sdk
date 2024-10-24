@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"runtime/debug"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -57,6 +58,8 @@ func (AppModuleBasic) Name() string {
 
 // RegisterLegacyAminoCodec registers the distribution module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	fmt.Println("RegisterLegacyAminoCodec", cdc)
+	debug.PrintStack()
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
@@ -85,6 +88,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux
 
 // GetTxCmd returns the root tx command for the distribution module.
 func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
+	fmt.Println("GetTxCmd distribution", ab.cdc)
 	return cli.NewTxCmd(ab.cdc.InterfaceRegistry().SigningContext().ValidatorAddressCodec(), ab.cdc.InterfaceRegistry().SigningContext().AddressCodec())
 }
 
@@ -111,6 +115,7 @@ func NewAppModule(
 	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, ss exported.Subspace,
 ) AppModule {
+	fmt.Println("NewAppModule distribution", cdc)
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: accountKeeper.AddressCodec()},
 		keeper:         keeper,

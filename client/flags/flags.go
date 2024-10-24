@@ -2,6 +2,7 @@ package flags
 
 import (
 	"fmt"
+	"runtime/debug"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -116,6 +117,8 @@ func AddQueryFlagsToCmd(cmd *cobra.Command) {
 
 // AddTxFlagsToCmd adds common flags to a module tx command.
 func AddTxFlagsToCmd(cmd *cobra.Command) {
+	fmt.Println("AddTxFlagsToCmd")
+	debug.PrintStack()
 	f := cmd.Flags()
 	f.StringP(FlagOutput, "o", OutputFormatJSON, "Output format (text|json)")
 	if cmd.Flag(FlagFrom) == nil { // avoid flag redefinition when it's already been added by AutoCLI

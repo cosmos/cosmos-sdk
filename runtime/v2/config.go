@@ -15,10 +15,6 @@ type GlobalConfig server.ConfigMap
 // ModuleConfigMaps is a map module scoped ConfigMaps
 type ModuleConfigMaps map[string]server.ConfigMap
 
-// TODO combine below 2 functions
-// - linear search for module name in provider is OK
-// - move elsewhere, server/v2 or runtime/v2 ?
-
 // ProvideModuleConfigMaps returns a map of module name to module config map.
 // The module config map is a map of flag to value.
 func ProvideModuleConfigMaps(

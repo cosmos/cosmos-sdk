@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/api/rest"
 	"cosmossdk.io/server/v2/api/telemetry"
+	"cosmossdk.io/server/v2/cometbft"
 	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
@@ -108,8 +109,8 @@ func initRootCmd[T transaction.Tx](
 	if err != nil {
 		return nil, err
 	}
-	// store "server" (big quotes).
-	storeServer, err := serverstore.New[T](simApp.Store(), deps.globalAppConfig)
+	// store component (not a server)
+	storeComponent, err := serverstore.New[T](simApp.Store(), deps.globalAppConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +127,7 @@ func initRootCmd[T transaction.Tx](
 		initServerConfig(),
 		cometBftServer,
 		grpcServer,
-		storeServer,
+		storeComponent,
 		telemetryServer,
 		restServer,
 	)

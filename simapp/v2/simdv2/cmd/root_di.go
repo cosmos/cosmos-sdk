@@ -18,7 +18,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/simapp/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -31,32 +30,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// NewCometBFTRootCmd creates a new root command for simd,
-// using the CometBFT server component for consensus.
-// It is called once in the main function.
-func NewCometBFTRootCmd[T transaction.Tx]() *cobra.Command {
-	return NewRootCmdWithConsensusComponent(func(cc client.Context) serverv2.ServerComponent[T] {
-		return cometbft.New[T](
-			&genericTxDecoder[T]{cc.TxConfig},
-			initCometOptions[T](),
-			initCometConfig(),
-		)
-	})
-}
-
-// NewRootCmdWithConsensusComponent returns a new root command,
-// using the provided callback to instantiate the server component for the consensus layer.
-// Callers who want to use CometBFT should call [NewCometBFTRootCmd] directly.
-func NewRootCmdWithConsensusComponent[T transaction.Tx](
-	makeConsensusComponent func(cc client.Context) serverv2.ServerComponent[T],
-) *cobra.Command {
+func NewRootCmd[T transaction.Tx](
+	args ...string,
+) (*cobra.Command, error) {
 	var (
 		autoCliOpts   autocli.AppOptions
 		moduleManager *runtime.MM[T]
 		clientCtx     client.Context
 	)
-	// parse config
-	defaultHomeDir, err := clientv2helpers.DefaultHomeDir(".simappv2")
+	defaultHomeDir, err := clientv2helpers.DefaultHomeDir(".simappv2", clientv2helpers.EnvPrefix)
 	if err != nil {
 		return nil, err
 	}

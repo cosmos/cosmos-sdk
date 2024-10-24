@@ -20,8 +20,10 @@ func main() {
 		}
 		os.Exit(1)
 	}
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(rootCmd.OutOrStderr(), err)
+	if err = rootCmd.Execute(); err != nil {
+		if _, pErr := fmt.Fprintln(rootCmd.OutOrStderr(), err); pErr != nil {
+			panic(errors.Join(err, pErr))
+		}
 		os.Exit(1)
 	}
 }

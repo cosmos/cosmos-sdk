@@ -44,6 +44,28 @@ func (k *Keeper) InitGenesis(ctx context.Context, state *types.GenesisState) err
 		k.setSupply(ctx, supply)
 	}
 
+	for _, meta := range state.DenomMetadata {
+		err := k.SetDenomMetaData(ctx, meta)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, genDenom := range state.GetFactoryDenoms() {
+		creator, _, err := types.DeconstructDenom(genDenom.GetDenom())
+		if err != nil {
+			return err
+		}
+		err = k.createDenomAfterValidation(ctx, creator, genDenom.GetDenom())
+		if err != nil {
+			return err
+		}
+		err = k.setAuthorityMetadata(ctx, genDenom.GetDenom(), genDenom.GetAuthorityMetadata())
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

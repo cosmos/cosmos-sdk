@@ -436,7 +436,7 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, moduleName string, amounts sd
 
 // setSupply sets the supply for the given coin
 func (k BaseKeeper) setSupply(ctx context.Context, coin sdk.Coin) {
-	fmt.Println("setSupply", coin)
+	//fmt.Println("setSupply", coin)
 	//debug.PrintStack()
 	// Bank invariants and IBC requires to remove zero coins.
 	if coin.IsZero() {

@@ -69,15 +69,18 @@ func (k Keeper) GetAllDelegations(ctx context.Context) (delegations []types.Dele
 func (k Keeper) GetValidatorDelegations(ctx context.Context, valAddr sdk.ValAddress) (delegations []types.Delegation, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	prefix := types.GetDelegationsByValPrefixKey(valAddr)
+	fmt.Println("GetValidatorDelegations prefix", string(prefix))
 	iterator, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
 		return delegations, err
 	}
 	defer iterator.Close()
+	fmt.Println("GetValidatorDelegations", valAddr)
 
 	for ; iterator.Valid(); iterator.Next() {
 		var delegation types.Delegation
 		valAddr, delAddr, err := types.ParseDelegationsByValKey(iterator.Key())
+		fmt.Println("GetValidatorDelegations internal", valAddr, delAddr, err)
 		if err != nil {
 			return delegations, err
 		}
@@ -93,6 +96,9 @@ func (k Keeper) GetValidatorDelegations(ctx context.Context, valAddr sdk.ValAddr
 
 		delegations = append(delegations, delegation)
 	}
+	fmt.Println("iterator valid", iterator.Valid())
+
+	fmt.Println("GetValidatorDelegations finish", delegations)
 
 	return delegations, nil
 }

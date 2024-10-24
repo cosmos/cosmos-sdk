@@ -79,7 +79,6 @@ type KeeperTestSuite struct {
 	consAddressCodec coreaddress.ConsensusAddressCodec
 
 	evidenceKeeper keeper.Keeper
-	accountKeeper  *evidencetestutil.MockAccountKeeper
 	slashingKeeper *evidencetestutil.MockSlashingKeeper
 	stakingKeeper  *evidencetestutil.MockStakingKeeper
 	queryClient    types.QueryClient
@@ -101,7 +100,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	stakingKeeper := evidencetestutil.NewMockStakingKeeper(ctrl)
 	slashingKeeper := evidencetestutil.NewMockSlashingKeeper(ctrl)
-	accountKeeper := evidencetestutil.NewMockAccountKeeper(ctrl)
 	ck := evidencetestutil.NewMockConsensusKeeper(ctrl)
 
 	evidenceKeeper := keeper.NewKeeper(
@@ -123,8 +121,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, evidence.AppModule{})
-
-	suite.accountKeeper = accountKeeper
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(evidenceKeeper))

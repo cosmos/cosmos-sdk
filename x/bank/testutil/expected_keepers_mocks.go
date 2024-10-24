@@ -15,7 +15,6 @@ import (
 
 	address "cosmossdk.io/core/address"
 	types "github.com/cosmos/cosmos-sdk/types"
-	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -69,48 +68,6 @@ func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddres
 func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetAccount), ctx, addr)
-}
-
-// GetModuleAccount mocks base method.
-func (m *MockAccountKeeper) GetModuleAccount(ctx context.Context, moduleName string) types.ModuleAccountI {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetModuleAccount", ctx, moduleName)
-	ret0, _ := ret[0].(types.ModuleAccountI)
-	return ret0
-}
-
-// GetModuleAccount indicates an expected call of GetModuleAccount.
-func (mr *MockAccountKeeperMockRecorder) GetModuleAccount(ctx, moduleName any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetModuleAccount), ctx, moduleName)
-}
-
-// GetModuleAddress mocks base method.
-func (m *MockAccountKeeper) GetModuleAddress(moduleName string) types.AccAddress {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetModuleAddress", moduleName)
-	ret0, _ := ret[0].(types.AccAddress)
-	return ret0
-}
-
-// GetModuleAddress indicates an expected call of GetModuleAddress.
-func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(moduleName any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAddress", reflect.TypeOf((*MockAccountKeeper)(nil).GetModuleAddress), moduleName)
-}
-
-// GetModulePermissions mocks base method.
-func (m *MockAccountKeeper) GetModulePermissions() map[string]types0.PermissionsForAddress {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetModulePermissions")
-	ret0, _ := ret[0].(map[string]types0.PermissionsForAddress)
-	return ret0
-}
-
-// GetModulePermissions indicates an expected call of GetModulePermissions.
-func (mr *MockAccountKeeperMockRecorder) GetModulePermissions() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModulePermissions", reflect.TypeOf((*MockAccountKeeper)(nil).GetModulePermissions))
 }
 
 // HasAccount mocks base method.

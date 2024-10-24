@@ -702,10 +702,9 @@ func TestGRPCQueryPoolParameters(t *testing.T) {
 	// Query pool
 	res, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{})
 	assert.NilError(t, err)
-	bondedPool := f.stakingKeeper.GetBondedPool(ctx)
-	notBondedPool := f.stakingKeeper.GetNotBondedPool(ctx)
-	assert.DeepEqual(t, f.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount, res.Pool.NotBondedTokens)
-	assert.DeepEqual(t, f.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount, res.Pool.BondedTokens)
+
+	assert.DeepEqual(t, f.bankKeeper.GetBalance(ctx, f.maccs.Address(types.NotBondedPoolName), bondDenom).Amount, res.Pool.NotBondedTokens)
+	assert.DeepEqual(t, f.bankKeeper.GetBalance(ctx, f.maccs.Address(types.BondedPoolName), bondDenom).Amount, res.Pool.BondedTokens)
 
 	// Query Params
 	resp, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})

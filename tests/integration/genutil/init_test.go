@@ -38,7 +38,7 @@ import (
 
 var testMbm = module.NewManager(
 	staking.NewAppModule(makeCodec(), nil),
-	genutil.NewAppModule(makeCodec(), nil, nil, nil, nil, nil),
+	genutil.NewAppModule(makeCodec(), nil, nil, nil, nil),
 )
 
 func TestInitCmd(t *testing.T) {

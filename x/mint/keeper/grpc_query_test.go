@@ -40,18 +40,16 @@ func (suite *MintTestSuite) SetupTest() {
 
 	// gomock initializations
 	ctrl := gomock.NewController(suite.T())
-	accountKeeper := minttestutil.NewMockAccountKeeper(ctrl)
 	bankKeeper := minttestutil.NewMockBankKeeper(ctrl)
-
-	accountKeeper.EXPECT().GetModuleAddress("mint").Return(sdk.AccAddress{})
+	maccs := runtime.NewModuleAccountsService(runtime.NewModuleAccount(types.ModuleName))
 
 	suite.mintKeeper = keeper.NewKeeper(
 		encCfg.Codec,
 		env,
-		accountKeeper,
 		bankKeeper,
 		authtypes.FeeCollectorName,
 		govModuleNameStr,
+		maccs,
 	)
 
 	err := suite.mintKeeper.Params.Set(suite.ctx, types.DefaultParams())

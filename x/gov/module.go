@@ -9,7 +9,9 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/core/registry"
 	govclient "cosmossdk.io/x/gov/client"
 	"cosmossdk.io/x/gov/client/cli"
@@ -47,25 +49,29 @@ type AppModule struct {
 	cdc                    codec.Codec
 	legacyProposalHandlers []govclient.ProposalHandler
 
-	keeper        *keeper.Keeper
-	accountKeeper govtypes.AccountKeeper
-	bankKeeper    govtypes.BankKeeper
-	poolKeeper    govtypes.PoolKeeper
+	keeper     *keeper.Keeper
+	bankKeeper govtypes.BankKeeper
+	poolKeeper govtypes.PoolKeeper
+
+	moduleAccountsService moduleaccounts.Service
+	addressCdc            address.Codec
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec, keeper *keeper.Keeper,
-	ak govtypes.AccountKeeper, bk govtypes.BankKeeper,
-	pk govtypes.PoolKeeper, legacyProposalHandlers ...govclient.ProposalHandler,
+	addressCdc address.Codec, bk govtypes.BankKeeper,
+	pk govtypes.PoolKeeper, moduleAccountService moduleaccounts.Service,
+	legacyProposalHandlers ...govclient.ProposalHandler,
 ) AppModule {
 	return AppModule{
 		cdc:                    cdc,
 		legacyProposalHandlers: legacyProposalHandlers,
 		keeper:                 keeper,
-		accountKeeper:          ak,
 		bankKeeper:             bk,
 		poolKeeper:             pk,
+		moduleAccountsService:  moduleAccountService,
+		addressCdc:             addressCdc,
 	}
 }
 
@@ -123,7 +129,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 	msgServer := keeper.NewMsgServerImpl(am.keeper)
-	addr, err := am.accountKeeper.AddressCodec().BytesToString(am.accountKeeper.GetModuleAddress(govtypes.ModuleName))
+	addr, err := am.addressCdc.BytesToString(am.moduleAccountsService.Address(govtypes.ModuleName))
 	if err != nil {
 		return err
 	}
@@ -174,7 +180,7 @@ func (am AppModule) ValidateGenesis(bz json.RawMessage) error {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", govtypes.ModuleName, err)
 	}
 
-	return v1.ValidateGenesis(am.accountKeeper.AddressCodec(), &data)
+	return v1.ValidateGenesis(am.addressCdc, &data)
 }
 
 // InitGenesis performs genesis initialization for the gov module.
@@ -183,7 +189,7 @@ func (am AppModule) InitGenesis(ctx context.Context, data json.RawMessage) error
 	if err := am.cdc.UnmarshalJSON(data, &genesisState); err != nil {
 		return err
 	}
-	return InitGenesis(ctx, am.accountKeeper, am.bankKeeper, am.keeper, &genesisState)
+	return InitGenesis(ctx, am.addressCdc, am.bankKeeper, am.keeper, &genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the gov module.

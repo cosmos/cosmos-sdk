@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -20,8 +21,11 @@ import (
 func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
 	s := SetupTestSuite(t, true)
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
+	maccs := runtime.NewModuleAccountsService(
+		runtime.NewModuleAccount(authtypes.FeeCollectorName),
+	)
 
-	mfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, s.feeGrantKeeper, nil)
+	mfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, s.feeGrantKeeper, nil, maccs)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -58,8 +62,10 @@ func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
 func TestEnsureMempoolFees(t *testing.T) {
 	s := SetupTestSuite(t, true) // setup
 	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
-
-	mfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, s.feeGrantKeeper, nil)
+	maccs := runtime.NewModuleAccountsService(
+		runtime.NewModuleAccount(authtypes.FeeCollectorName),
+	)
+	mfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, s.feeGrantKeeper, nil, maccs)
 	antehandler := sdk.ChainAnteDecorators(mfd)
 
 	// keys and addresses
@@ -129,7 +135,11 @@ func TestDeductFees(t *testing.T) {
 	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
-	dfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil)
+	maccs := runtime.NewModuleAccountsService(
+		runtime.NewModuleAccount(authtypes.FeeCollectorName),
+	)
+
+	dfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil, maccs)
 	antehandler := sdk.ChainAnteDecorators(dfd)
 	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(sdkerrors.ErrInsufficientFunds)
 

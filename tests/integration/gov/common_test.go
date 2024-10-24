@@ -18,10 +18,12 @@ import (
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
+	_ "cosmossdk.io/x/mint"
 	_ "cosmossdk.io/x/protocolpool"
 	_ "cosmossdk.io/x/staking"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
+	addresscdc "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -111,6 +113,7 @@ func createTestSuite(t *testing.T) suite {
 				configurator.StakingModule(),
 				configurator.BankModule(),
 				configurator.GovModule(),
+				configurator.MintModule(),
 				configurator.ConsensusModule(),
 				configurator.ProtocolPoolModule(),
 			),
@@ -120,6 +123,8 @@ func createTestSuite(t *testing.T) suite {
 		&res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper,
 	)
 	require.NoError(t, err)
+
+	res.AddressCodec = addresscdc.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	res.app = app
 	return res

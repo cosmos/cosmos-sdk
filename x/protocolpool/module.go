@@ -33,21 +33,18 @@ var (
 
 // AppModule implements an application module for the pool module
 type AppModule struct {
-	cdc           codec.Codec
-	keeper        keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
+	cdc        codec.Codec
+	keeper     keeper.Keeper
+	bankKeeper types.BankKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
-	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, bankKeeper types.BankKeeper,
 ) AppModule {
 	return AppModule{
-		cdc:           cdc,
-		keeper:        keeper,
-		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
+		cdc:        cdc,
+		keeper:     keeper,
+		bankKeeper: bankKeeper,
 	}
 }
 

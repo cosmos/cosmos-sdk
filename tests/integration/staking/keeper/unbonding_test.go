@@ -55,10 +55,8 @@ func SetupUnbondingTests(t *testing.T, f *fixture, hookCalled *bool, ubdeID *uin
 
 	bondDenom, err := f.stakingKeeper.BondDenom(f.sdkCtx)
 	assert.NilError(t, err)
-	notBondedPool := f.stakingKeeper.GetNotBondedPool(f.sdkCtx)
 
-	assert.NilError(t, banktestutil.FundModuleAccount(f.sdkCtx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
-	f.accountKeeper.SetModuleAccount(f.sdkCtx, notBondedPool)
+	assert.NilError(t, banktestutil.FundModuleAccount(f.sdkCtx, f.bankKeeper, types.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
 
 	// Create a validator
 	validator1 := testutil.NewValidator(t, addrVals[0], PKs[0])
@@ -87,9 +85,7 @@ func SetupUnbondingTests(t *testing.T, f *fixture, hookCalled *bool, ubdeID *uin
 
 func doUnbondingDelegation(
 	t *testing.T,
-	stakingKeeper *stakingkeeper.Keeper,
-	bankKeeper types.BankKeeper,
-	ctx sdk.Context,
+	f *fixture,
 	bondDenom string,
 	addrDels []sdk.AccAddress,
 	addrVals []sdk.ValAddress,
@@ -98,24 +94,24 @@ func doUnbondingDelegation(
 	t.Helper()
 	// UNDELEGATE
 	// Save original bonded and unbonded amounts
-	bondedAmt1 := bankKeeper.GetBalance(ctx, stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-	notBondedAmt1 := bankKeeper.GetBalance(ctx, stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+	bondedAmt1 := f.bankKeeper.GetBalance(f.sdkCtx, f.maccs.Address(types.BondedPoolName), bondDenom).Amount
+	notBondedAmt1 := f.bankKeeper.GetBalance(f.sdkCtx, f.maccs.Address(types.NotBondedPoolName), bondDenom).Amount
 
 	var err error
 	undelegateAmount := math.LegacyNewDec(1)
-	completionTime, undelegatedAmount, err := stakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], undelegateAmount)
+	completionTime, undelegatedAmount, err := f.stakingKeeper.Undelegate(f.sdkCtx, addrDels[0], addrVals[0], undelegateAmount)
 	assert.NilError(t, err)
 	assert.Assert(t, undelegateAmount.Equal(math.LegacyNewDecFromInt(undelegatedAmount)))
 	// check that the unbonding actually happened
-	bondedAmt2 := bankKeeper.GetBalance(ctx, stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
-	notBondedAmt2 := bankKeeper.GetBalance(ctx, stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
+	bondedAmt2 := f.bankKeeper.GetBalance(f.sdkCtx, f.maccs.Address(types.BondedPoolName), bondDenom).Amount
+	notBondedAmt2 := f.bankKeeper.GetBalance(f.sdkCtx, f.maccs.Address(types.NotBondedPoolName), bondDenom).Amount
 	// Bonded amount is less
 	assert.Assert(math.IntEq(t, bondedAmt1.SubRaw(1), bondedAmt2))
 	// Unbonded amount is more
 	assert.Assert(math.IntEq(t, notBondedAmt1.AddRaw(1), notBondedAmt2))
 
 	// Check that the unbonding happened- we look up the entry and see that it has the correct number of shares
-	unbondingDelegations, err := stakingKeeper.GetUnbondingDelegationsFromValidator(ctx, addrVals[0])
+	unbondingDelegations, err := f.stakingKeeper.GetUnbondingDelegationsFromValidator(f.sdkCtx, addrVals[0])
 	assert.NilError(t, err)
 	assert.DeepEqual(t, math.NewInt(1), unbondingDelegations[0].Entries[0].Balance)
 
@@ -388,14 +384,14 @@ func TestUnbondingDelegationOnHold1(t *testing.T) {
 		acc := f.accountKeeper.NewAccountWithAddress(f.sdkCtx, addr)
 		f.accountKeeper.SetAccount(f.sdkCtx, acc)
 	}
-	completionTime, bondedAmt1, notBondedAmt1 := doUnbondingDelegation(t, f.stakingKeeper, f.bankKeeper, f.sdkCtx, bondDenom, addrDels, addrVals, &hookCalled)
+	completionTime, bondedAmt1, notBondedAmt1 := doUnbondingDelegation(t, f, bondDenom, addrDels, addrVals, &hookCalled)
 
 	// CONSUMER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	err := f.stakingKeeper.UnbondingCanComplete(f.sdkCtx, ubdeID)
 	assert.NilError(t, err)
 
-	bondedAmt3 := f.bankKeeper.GetBalance(f.sdkCtx, f.stakingKeeper.GetBondedPool(f.sdkCtx).GetAddress(), bondDenom).Amount
-	notBondedAmt3 := f.bankKeeper.GetBalance(f.sdkCtx, f.stakingKeeper.GetNotBondedPool(f.sdkCtx).GetAddress(), bondDenom).Amount
+	bondedAmt3 := f.bankKeeper.GetBalance(f.sdkCtx, f.maccs.Address(types.BondedPoolName), bondDenom).Amount
+	notBondedAmt3 := f.bankKeeper.GetBalance(f.sdkCtx, f.maccs.Address(types.NotBondedPoolName), bondDenom).Amount
 
 	// Bonded and unbonded amounts are the same as before because the completionTime has not yet passed and so the
 	// unbondingDelegation has not completed
@@ -408,8 +404,8 @@ func TestUnbondingDelegationOnHold1(t *testing.T) {
 	assert.NilError(t, err)
 
 	// Check that the unbonding was finally completed
-	bondedAmt5 := f.bankKeeper.GetBalance(f.sdkCtx, f.stakingKeeper.GetBondedPool(f.sdkCtx).GetAddress(), bondDenom).Amount
-	notBondedAmt5 := f.bankKeeper.GetBalance(f.sdkCtx, f.stakingKeeper.GetNotBondedPool(f.sdkCtx).GetAddress(), bondDenom).Amount
+	bondedAmt5 := f.bankKeeper.GetBalance(f.sdkCtx, f.maccs.Address(types.BondedPoolName), bondDenom).Amount
+	notBondedAmt5 := f.bankKeeper.GetBalance(f.sdkCtx, f.maccs.Address(types.NotBondedPoolName), bondDenom).Amount
 
 	assert.Assert(math.IntEq(t, bondedAmt1, bondedAmt5))
 	// Not bonded amount back to what it was originally
@@ -431,15 +427,15 @@ func TestUnbondingDelegationOnHold2(t *testing.T) {
 		acc := f.accountKeeper.NewAccountWithAddress(f.sdkCtx, addr)
 		f.accountKeeper.SetAccount(f.sdkCtx, acc)
 	}
-	completionTime, bondedAmt1, notBondedAmt1 := doUnbondingDelegation(t, f.stakingKeeper, f.bankKeeper, f.sdkCtx, bondDenom, addrDels, addrVals, &hookCalled)
+	completionTime, bondedAmt1, notBondedAmt1 := doUnbondingDelegation(t, f, bondDenom, addrDels, addrVals, &hookCalled)
 
 	// PROVIDER CHAIN'S UNBONDING PERIOD ENDS - BUT UNBONDING CANNOT COMPLETE
 	f.sdkCtx = f.sdkCtx.WithHeaderInfo(header.Info{Time: completionTime})
 	_, err := f.stakingKeeper.CompleteUnbonding(f.sdkCtx, addrDels[0], addrVals[0])
 	assert.NilError(t, err)
 
-	bondedAmt3 := f.bankKeeper.GetBalance(f.sdkCtx, f.stakingKeeper.GetBondedPool(f.sdkCtx).GetAddress(), bondDenom).Amount
-	notBondedAmt3 := f.bankKeeper.GetBalance(f.sdkCtx, f.stakingKeeper.GetNotBondedPool(f.sdkCtx).GetAddress(), bondDenom).Amount
+	bondedAmt3 := f.bankKeeper.GetBalance(f.sdkCtx, f.maccs.Address(types.BondedPoolName), bondDenom).Amount
+	notBondedAmt3 := f.bankKeeper.GetBalance(f.sdkCtx, f.maccs.Address(types.NotBondedPoolName), bondDenom).Amount
 
 	// Bonded and unbonded amounts are the same as before because the completionTime has not yet passed and so the
 	// unbondingDelegation has not completed
@@ -451,8 +447,8 @@ func TestUnbondingDelegationOnHold2(t *testing.T) {
 	assert.NilError(t, err)
 
 	// Check that the unbonding was finally completed
-	bondedAmt5 := f.bankKeeper.GetBalance(f.sdkCtx, f.stakingKeeper.GetBondedPool(f.sdkCtx).GetAddress(), bondDenom).Amount
-	notBondedAmt5 := f.bankKeeper.GetBalance(f.sdkCtx, f.stakingKeeper.GetNotBondedPool(f.sdkCtx).GetAddress(), bondDenom).Amount
+	bondedAmt5 := f.bankKeeper.GetBalance(f.sdkCtx, f.maccs.Address(types.BondedPoolName), bondDenom).Amount
+	notBondedAmt5 := f.bankKeeper.GetBalance(f.sdkCtx, f.maccs.Address(types.NotBondedPoolName), bondDenom).Amount
 
 	assert.Assert(math.IntEq(t, bondedAmt1, bondedAmt5))
 	// Not bonded amount back to what it was originally

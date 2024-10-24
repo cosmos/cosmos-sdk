@@ -51,7 +51,6 @@ type AppModule struct {
 func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
-	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
 	registry cdctypes.InterfaceRegistry,

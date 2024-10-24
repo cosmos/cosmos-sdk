@@ -8,6 +8,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -18,7 +19,9 @@ import (
 	"cosmossdk.io/x/bank/testutil"
 	"cosmossdk.io/x/bank/types"
 	_ "cosmossdk.io/x/consensus"
+	_ "cosmossdk.io/x/mint"
 
+	minttypes "cosmossdk.io/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -66,7 +69,11 @@ func (s *paginationTestSuite) SetupTest() {
 		cdc           codec.Codec
 	)
 
-	app, err := testutilsims.Setup(
+	var emptymintFn minttypes.MintFn = func(ctx gocontext.Context, env appmodule.Environment, minter *minttypes.Minter, epochId string, epochNumber int64) error {
+		return nil
+	}
+
+	app, err := testutilsims.SetupAtGenesis(
 		depinject.Configs(
 			configurator.NewAppConfig(
 				configurator.AccountsModule(),
@@ -74,8 +81,9 @@ func (s *paginationTestSuite) SetupTest() {
 				configurator.BankModule(),
 				configurator.ConsensusModule(),
 				configurator.OmitInitGenesis(),
+				configurator.MintModule(),
 			),
-			depinject.Supply(log.NewNopLogger()),
+			depinject.Supply(log.NewNopLogger(), emptymintFn),
 		),
 		&bankKeeper, &accountKeeper, &reg, &cdc)
 

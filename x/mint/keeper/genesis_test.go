@@ -31,11 +31,10 @@ var minterAcc = authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Mint
 type GenesisTestSuite struct {
 	suite.Suite
 
-	sdkCtx        sdk.Context
-	keeper        *keeper.Keeper
-	cdc           codec.BinaryCodec
-	accountKeeper types.AccountKeeper
-	key           *storetypes.KVStoreKey
+	sdkCtx sdk.Context
+	keeper *keeper.Keeper
+	cdc    codec.BinaryCodec
+	key    *storetypes.KVStoreKey
 }
 
 func TestGenesisTestSuite(t *testing.T) {
@@ -52,14 +51,9 @@ func (s *GenesisTestSuite) SetupTest() {
 	s.cdc = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	s.sdkCtx = testCtx.Ctx
 	s.key = key
-
-	accountKeeper := minttestutil.NewMockAccountKeeper(ctrl)
+	maccs := runtime.NewModuleAccountsService(runtime.NewModuleAccount(types.ModuleName))
 	bankKeeper := minttestutil.NewMockBankKeeper(ctrl)
-	s.accountKeeper = accountKeeper
-	accountKeeper.EXPECT().GetModuleAddress(minterAcc.Name).Return(minterAcc.GetAddress())
-	accountKeeper.EXPECT().GetModuleAccount(s.sdkCtx, minterAcc.Name).Return(minterAcc)
-
-	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), accountKeeper, bankKeeper, "", "")
+	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), bankKeeper, "", "", maccs)
 	err := s.keeper.SetMintFn(func(ctx context.Context, env appmodule.Environment, minter *types.Minter, epochId string, epochNumber int64) error {
 		return nil
 	})
@@ -79,7 +73,7 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 		math.ZeroInt(),
 	)
 
-	err := s.keeper.InitGenesis(s.sdkCtx, s.accountKeeper, genesisState)
+	err := s.keeper.InitGenesis(s.sdkCtx, genesisState)
 	s.NoError(err)
 
 	minter, err := s.keeper.Minter.Get(s.sdkCtx)

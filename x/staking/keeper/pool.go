@@ -9,16 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// GetBondedPool returns the bonded tokens pool's module account
-func (k Keeper) GetBondedPool(ctx context.Context) (bondedPool sdk.ModuleAccountI) {
-	return k.authKeeper.GetModuleAccount(ctx, types.BondedPoolName)
-}
-
-// GetNotBondedPool returns the not bonded tokens pool's module account
-func (k Keeper) GetNotBondedPool(ctx context.Context) (notBondedPool sdk.ModuleAccountI) {
-	return k.authKeeper.GetModuleAccount(ctx, types.NotBondedPoolName)
-}
-
 // bondedTokensToNotBonded transfers coins from the bonded to the not bonded pool within staking
 func (k Keeper) bondedTokensToNotBonded(ctx context.Context, tokens math.Int) error {
 	bondDenom, err := k.BondDenom(ctx)
@@ -55,7 +45,7 @@ func (k Keeper) burnBondedTokens(ctx context.Context, amt math.Int) error {
 
 	coins := sdk.NewCoins(sdk.NewCoin(bondDenom, amt))
 
-	return k.bankKeeper.BurnCoins(ctx, k.authKeeper.GetModuleAddress(types.BondedPoolName), coins)
+	return k.bankKeeper.BurnCoins(ctx, k.moduleAccountsService.Address(types.BondedPoolName), coins)
 }
 
 // burnNotBondedTokens burns coins from the not bonded pool module account
@@ -72,17 +62,17 @@ func (k Keeper) burnNotBondedTokens(ctx context.Context, amt math.Int) error {
 
 	coins := sdk.NewCoins(sdk.NewCoin(bondDenom, amt))
 
-	return k.bankKeeper.BurnCoins(ctx, k.authKeeper.GetModuleAddress(types.NotBondedPoolName), coins)
+	return k.bankKeeper.BurnCoins(ctx, k.moduleAccountsService.Address(types.NotBondedPoolName), coins)
 }
 
 // TotalBondedTokens total staking tokens supply which is bonded
 func (k Keeper) TotalBondedTokens(ctx context.Context) (math.Int, error) {
-	bondedPool := k.GetBondedPool(ctx)
+	bondedPool := k.moduleAccountsService.Address(types.BondedPoolName)
 	bondDenom, err := k.BondDenom(ctx)
 	if err != nil {
 		return math.ZeroInt(), err
 	}
-	return k.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount, nil
+	return k.bankKeeper.GetBalance(ctx, bondedPool, bondDenom).Amount, nil
 }
 
 // StakingTokenSupply staking tokens from the total supply

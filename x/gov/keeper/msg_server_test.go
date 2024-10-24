@@ -6,11 +6,12 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	banktypes "cosmossdk.io/x/bank/types"
+	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,10 +27,10 @@ var longAddressError = "address max length is 255"
 func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 	suite.reset()
 	addrs := suite.addrs
-	proposerAddr, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	proposerAddr, err := suite.addrCdc.BytesToString(addrs[0])
 	suite.Require().NoError(err)
 
-	govStrAcct, err := suite.acctKeeper.AddressCodec().BytesToString(suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress())
+	govStrAcct, err := suite.addrCdc.BytesToString(suite.maccs.Address(types.ModuleName))
 	suite.Require().NoError(err)
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
@@ -308,7 +309,7 @@ func (suite *KeeperTestSuite) TestMsgSubmitProposal() {
 func (suite *KeeperTestSuite) TestSubmitMultipleChoiceProposal() {
 	suite.reset()
 	addrs := suite.addrs
-	proposerAddr, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	proposerAddr, err := suite.addrCdc.BytesToString(addrs[0])
 	suite.Require().NoError(err)
 	initialDeposit := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
 
@@ -382,13 +383,13 @@ func (suite *KeeperTestSuite) TestSubmitMultipleChoiceProposal() {
 }
 
 func (suite *KeeperTestSuite) TestMsgCancelProposal() {
-	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
+	govAcct := suite.maccs.Address(types.ModuleName)
 	addrs := suite.addrs
 	proposer := addrs[0]
-	proposerAddr, err := suite.acctKeeper.AddressCodec().BytesToString(proposer)
+	proposerAddr, err := suite.addrCdc.BytesToString(proposer)
 	suite.Require().NoError(err)
 
-	govStrAcct, err := suite.acctKeeper.AddressCodec().BytesToString(govAcct)
+	govStrAcct, err := suite.addrCdc.BytesToString(govAcct)
 	suite.Require().NoError(err)
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
@@ -469,7 +470,7 @@ func (suite *KeeperTestSuite) TestMsgCancelProposal() {
 	for name, tc := range cases {
 		suite.Run(name, func() {
 			proposalID := tc.preRun()
-			depositor, err := suite.acctKeeper.AddressCodec().BytesToString(tc.depositor)
+			depositor, err := suite.addrCdc.BytesToString(tc.depositor)
 			suite.Require().NoError(err)
 			cancelProposalReq := v1.NewMsgCancelProposal(proposalID, depositor)
 			_, err = suite.msgSrvr.CancelProposal(suite.ctx, cancelProposalReq)
@@ -487,9 +488,9 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 	suite.reset()
 	addrs := suite.addrs
 	proposer := addrs[0]
-	proposerAddr, err := suite.acctKeeper.AddressCodec().BytesToString(proposer)
+	proposerAddr, err := suite.addrCdc.BytesToString(proposer)
 	suite.Require().NoError(err)
-	govStrAcct, err := suite.acctKeeper.AddressCodec().BytesToString(suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress())
+	govStrAcct, err := suite.addrCdc.BytesToString(suite.maccs.Address(types.ModuleName))
 	suite.Require().NoError(err)
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
@@ -645,7 +646,7 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 	for name, tc := range cases {
 		suite.Run(name, func() {
 			pID := tc.preRun()
-			voter, err := suite.acctKeeper.AddressCodec().BytesToString(tc.voter)
+			voter, err := suite.addrCdc.BytesToString(tc.voter)
 			if tc.expAddrErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.expAddrErrMsg)
@@ -666,12 +667,12 @@ func (suite *KeeperTestSuite) TestMsgVote() {
 
 func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 	suite.reset()
-	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
-	govStrAcct, err := suite.acctKeeper.AddressCodec().BytesToString(govAcct)
+	govAcct := suite.maccs.Address(types.ModuleName)
+	govStrAcct, err := suite.addrCdc.BytesToString(govAcct)
 	suite.Require().NoError(err)
 
 	proposer := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, suite.ctx, 1, sdkmath.NewInt(50000000))[0]
-	proposerAddr, err := suite.acctKeeper.AddressCodec().BytesToString(proposer)
+	proposerAddr, err := suite.addrCdc.BytesToString(proposer)
 	suite.Require().NoError(err)
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
@@ -941,7 +942,7 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 	for name, tc := range cases {
 		suite.Run(name, func() {
 			pID := tc.preRun()
-			voter, err := suite.acctKeeper.AddressCodec().BytesToString(tc.voter)
+			voter, err := suite.addrCdc.BytesToString(tc.voter)
 			if tc.expAddrErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.expAddrErrMsg)
@@ -962,11 +963,11 @@ func (suite *KeeperTestSuite) TestMsgVoteWeighted() {
 
 func (suite *KeeperTestSuite) TestMsgDeposit() {
 	suite.reset()
-	govStrAcct, err := suite.acctKeeper.AddressCodec().BytesToString(suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress())
+	govStrAcct, err := suite.addrCdc.BytesToString(suite.maccs.Address(types.ModuleName))
 	suite.Require().NoError(err)
 	addrs := suite.addrs
 	proposer := addrs[0]
-	proposerAddr, err := suite.acctKeeper.AddressCodec().BytesToString(proposer)
+	proposerAddr, err := suite.addrCdc.BytesToString(proposer)
 	suite.Require().NoError(err)
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
@@ -1051,7 +1052,7 @@ func (suite *KeeperTestSuite) TestMsgDeposit() {
 	for name, tc := range cases {
 		suite.Run(name, func() {
 			proposalID := tc.preRun()
-			depositor, err := suite.acctKeeper.AddressCodec().BytesToString(tc.depositor)
+			depositor, err := suite.addrCdc.BytesToString(tc.depositor)
 			suite.Require().NoError(err)
 			depositReq := v1.NewMsgDeposit(depositor, proposalID, tc.deposit)
 			_, err = suite.msgSrvr.Deposit(suite.ctx, depositReq)
@@ -1179,11 +1180,11 @@ func (suite *KeeperTestSuite) TestLegacyMsgSubmitProposal() {
 }
 
 func (suite *KeeperTestSuite) TestLegacyMsgVote() {
-	govStrAcct, err := suite.acctKeeper.AddressCodec().BytesToString(suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress())
+	govStrAcct, err := suite.addrCdc.BytesToString(suite.maccs.Address(types.ModuleName))
 	suite.Require().NoError(err)
 	addrs := suite.addrs
 	proposer := addrs[0]
-	proposerAddr, err := suite.acctKeeper.AddressCodec().BytesToString(proposer)
+	proposerAddr, err := suite.addrCdc.BytesToString(proposer)
 	suite.Require().NoError(err)
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
@@ -1305,7 +1306,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 	for name, tc := range cases {
 		suite.Run(name, func() {
 			pID := tc.preRun()
-			voter, err := suite.acctKeeper.AddressCodec().BytesToString(tc.voter)
+			voter, err := suite.addrCdc.BytesToString(tc.voter)
 			if tc.expAddrErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.expAddrErrMsg)
@@ -1326,11 +1327,11 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 
 func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 	suite.reset()
-	govStrAcct, err := suite.acctKeeper.AddressCodec().BytesToString(suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress())
+	govStrAcct, err := suite.addrCdc.BytesToString(suite.maccs.Address(types.ModuleName))
 	suite.Require().NoError(err)
 	addrs := suite.addrs
 	proposer := addrs[0]
-	proposerAddr, err := suite.acctKeeper.AddressCodec().BytesToString(proposer)
+	proposerAddr, err := suite.addrCdc.BytesToString(proposer)
 	suite.Require().NoError(err)
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
@@ -1571,7 +1572,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 	for name, tc := range cases {
 		suite.Run(name, func() {
 			pID := tc.preRun()
-			voter, err := suite.acctKeeper.AddressCodec().BytesToString(tc.voter)
+			voter, err := suite.addrCdc.BytesToString(tc.voter)
 			if tc.expAddrErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.expAddrErrMsg)
@@ -1591,11 +1592,11 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 }
 
 func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
-	govStrAcct, err := suite.acctKeeper.AddressCodec().BytesToString(suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress())
+	govStrAcct, err := suite.addrCdc.BytesToString(suite.maccs.Address(types.ModuleName))
 	suite.Require().NoError(err)
 	addrs := suite.addrs
 	proposer := addrs[0]
-	proposerAddr, err := suite.acctKeeper.AddressCodec().BytesToString(proposer)
+	proposerAddr, err := suite.addrCdc.BytesToString(proposer)
 	suite.Require().NoError(err)
 
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(100000)))
@@ -1662,7 +1663,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 	for name, tc := range cases {
 		suite.Run(name, func() {
 			proposalID := tc.preRun()
-			depositor, err := suite.acctKeeper.AddressCodec().BytesToString(tc.depositor)
+			depositor, err := suite.addrCdc.BytesToString(tc.depositor)
 			suite.Require().NoError(err)
 			depositReq := v1beta1.NewMsgDeposit(depositor, proposalID, tc.deposit)
 			_, err = suite.legacyMsgSrvr.Deposit(suite.ctx, depositReq)
@@ -2213,7 +2214,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 		suite.Run(name, func() {
 			// Setup
 			govKeeper, ctx := suite.govKeeper, suite.ctx
-			address, err := suite.acctKeeper.AddressCodec().BytesToString(simtestutil.AddTestAddrs(suite.bankKeeper, suite.stakingKeeper, ctx, 1, tc.accountBalance[0].Amount)[0])
+			address, err := suite.addrCdc.BytesToString(simtestutil.AddTestAddrs(suite.bankKeeper, suite.stakingKeeper, ctx, 1, tc.accountBalance[0].Amount)[0])
 			suite.Require().NoError(err)
 
 			params := v1.DefaultParams()
@@ -2239,7 +2240,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 }
 
 func (suite *KeeperTestSuite) TestMsgSudoExec() {
-	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(suite.addrs[0])
+	addr0Str, err := suite.addrCdc.BytesToString(suite.addrs[0])
 	suite.Require().NoError(err)
 	// setup for valid use case
 	params, _ := suite.govKeeper.Params.Get(suite.ctx)
@@ -2257,7 +2258,7 @@ func (suite *KeeperTestSuite) TestMsgSudoExec() {
 	suite.Require().NoError(err)
 
 	invalidMsg := &v1.MsgSudoExec{Authority: suite.govKeeper.GetAuthority()}
-	_, err = invalidMsg.SetSudoedMsg(&types.Any{TypeUrl: "invalid"})
+	_, err = invalidMsg.SetSudoedMsg(&cdctypes.Any{TypeUrl: "invalid"})
 	suite.Require().NoError(err)
 
 	testCases := []struct {
@@ -2282,7 +2283,7 @@ func (suite *KeeperTestSuite) TestMsgSudoExec() {
 			name: "invalid authority",
 			input: &v1.MsgSudoExec{
 				Authority: "invalid",
-				Msg:       &types.Any{},
+				Msg:       &cdctypes.Any{},
 			},
 			expErrMsg: "invalid authority",
 		},
@@ -2290,7 +2291,7 @@ func (suite *KeeperTestSuite) TestMsgSudoExec() {
 			name: "invalid msg (not proper sdk message)",
 			input: &v1.MsgSudoExec{
 				Authority: suite.govKeeper.GetAuthority(),
-				Msg:       &types.Any{TypeUrl: "invalid"},
+				Msg:       &cdctypes.Any{TypeUrl: "invalid"},
 			},
 			expErrMsg: "invalid sudo-ed message",
 		},

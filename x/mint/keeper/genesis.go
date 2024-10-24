@@ -7,18 +7,12 @@ import (
 )
 
 // InitGenesis new mint genesis
-func (keeper Keeper) InitGenesis(ctx context.Context, ak types.AccountKeeper, data *types.GenesisState) error {
+func (keeper Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error {
 	if err := keeper.Minter.Set(ctx, data.Minter); err != nil {
 		return err
 	}
 
-	if err := keeper.Params.Set(ctx, data.Params); err != nil {
-		return err
-	}
-
-	ak.GetModuleAccount(ctx, types.ModuleName)
-
-	return nil
+	return keeper.Params.Set(ctx, data.Params)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.

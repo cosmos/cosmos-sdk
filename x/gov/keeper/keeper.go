@@ -1,13 +1,14 @@
 package keeper
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
@@ -20,7 +21,6 @@ import (
 type Keeper struct {
 	appmodule.Environment
 
-	authKeeper types.AccountKeeper
 	bankKeeper types.BankKeeper
 	poolKeeper types.PoolKeeper
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
@@ -30,7 +30,10 @@ type Keeper struct {
 	hooks types.GovHooks
 
 	// The codec for binary encoding/decoding.
-	cdc codec.Codec
+	cdc        codec.Codec
+	addressCdc address.Codec
+
+	moduleAccountsService moduleaccounts.Service
 
 	// Legacy Proposal router
 	legacyRouter v1beta1.Router
@@ -80,16 +83,11 @@ func (k Keeper) GetAuthority() string {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.Codec, env appmodule.Environment, authKeeper types.AccountKeeper,
+	cdc codec.Codec, env appmodule.Environment, addressCodec address.Codec,
 	bankKeeper types.BankKeeper, sk types.StakingKeeper, pk types.PoolKeeper,
-	config Config, authority string,
+	config Config, authority string, moduleAccountsService moduleaccounts.Service,
 ) *Keeper {
-	// ensure governance module account is set
-	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
-	}
-
-	if _, err := authKeeper.AddressCodec().StringToBytes(authority); err != nil {
+	if _, err := addressCodec.StringToBytes(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
 	}
 
@@ -114,11 +112,12 @@ func NewKeeper(
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := &Keeper{
 		Environment:            env,
-		authKeeper:             authKeeper,
 		bankKeeper:             bankKeeper,
 		sk:                     sk,
 		poolKeeper:             pk,
 		cdc:                    cdc,
+		addressCdc:             addressCodec,
+		moduleAccountsService:  moduleAccountsService,
 		config:                 config,
 		authority:              authority,
 		Constitution:           collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
@@ -175,14 +174,9 @@ func (k Keeper) LegacyRouter() v1beta1.Router {
 	return k.legacyRouter
 }
 
-// GetGovernanceAccount returns the governance ModuleAccount
-func (k Keeper) GetGovernanceAccount(ctx context.Context) sdk.ModuleAccountI {
-	return k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
-}
-
 // ModuleAccountAddress returns gov module account address
 func (k Keeper) ModuleAccountAddress() sdk.AccAddress {
-	return k.authKeeper.GetModuleAddress(types.ModuleName)
+	return k.moduleAccountsService.Address(types.ModuleName)
 }
 
 // validateProposalLengths checks message metadata, summary and title

@@ -145,7 +145,6 @@ func (suite *KeeperTestSuite) TestMsgSend() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			suite.mockMintCoins(minterAcc)
 			err := suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
 			suite.Require().NoError(err)
 			if !tc.expErr {
@@ -251,7 +250,6 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			suite.mockMintCoins(minterAcc)
 			err := suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
 			suite.Require().NoError(err)
 			if !tc.expErr {
@@ -420,7 +418,6 @@ func (suite *KeeperTestSuite) TestMsgBurn() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			suite.mockMintCoins(multiPermAcc)
 			err := suite.bankKeeper.MintCoins(suite.ctx, multiPermAcc.Name, sdk.Coins{}.Add(origCoins))
 			suite.Require().NoError(err)
 			if !tc.expErr {

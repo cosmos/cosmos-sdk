@@ -19,6 +19,7 @@ import (
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -1264,7 +1265,8 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 								return errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 							}
 						},
-						Environment: suite.env,
+						Environment:           suite.env,
+						ModuleAccountsService: runtime.NewModuleAccountsService(runtime.NewModuleAccount(authtypes.FeeCollectorName)),
 					},
 				)
 				require.NoError(t, err)

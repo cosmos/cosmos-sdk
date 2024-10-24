@@ -29,13 +29,11 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 	assert.NilError(t, err)
 
 	// set the not bonded pool module account
-	notBondedPool := f.stakingKeeper.GetNotBondedPool(ctx)
 	startTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 5)
 
-	assert.NilError(t, testutil.FundModuleAccount(ctx, f.bankKeeper, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
-	f.accountKeeper.SetModuleAccount(ctx, notBondedPool)
+	assert.NilError(t, testutil.FundModuleAccount(ctx, f.bankKeeper, types.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
 
-	moduleBalance := f.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom)
+	moduleBalance := f.bankKeeper.GetBalance(ctx, f.maccs.Address(types.NotBondedPoolName), bondDenom)
 	assert.DeepEqual(t, sdk.NewInt64Coin(bondDenom, startTokens.Int64()), moduleBalance)
 
 	// accounts
@@ -169,7 +167,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
 				assert.NilError(t, err)
-				balanceForNotBondedPool := f.bankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom)
+				balanceForNotBondedPool := f.bankKeeper.GetBalance(ctx, f.maccs.Address(types.NotBondedPoolName), bondDenom)
 				assert.DeepEqual(t, balanceForNotBondedPool, moduleBalance.Sub(tc.req.Amount))
 				moduleBalance = moduleBalance.Sub(tc.req.Amount)
 			}

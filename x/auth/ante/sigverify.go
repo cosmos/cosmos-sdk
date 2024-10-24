@@ -12,6 +12,7 @@ import (
 
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	txsigning "cosmossdk.io/x/tx/signing"
@@ -69,18 +70,26 @@ type AccountAbstractionKeeper interface {
 //
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
-	ak              AccountKeeper
-	aaKeeper        AccountAbstractionKeeper
-	signModeHandler *txsigning.HandlerMap
-	sigGasConsumer  SignatureVerificationGasConsumer
+	ak                    AccountKeeper
+	aaKeeper              AccountAbstractionKeeper
+	signModeHandler       *txsigning.HandlerMap
+	sigGasConsumer        SignatureVerificationGasConsumer
+	moduleAccountsService moduleaccounts.Service
 }
 
-func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler *txsigning.HandlerMap, sigGasConsumer SignatureVerificationGasConsumer, aaKeeper AccountAbstractionKeeper) SigVerificationDecorator {
+func NewSigVerificationDecorator(
+	ak AccountKeeper,
+	signModeHandler *txsigning.HandlerMap,
+	sigGasConsumer SignatureVerificationGasConsumer,
+	aaKeeper AccountAbstractionKeeper,
+	moduleAccountsService moduleaccounts.Service,
+) SigVerificationDecorator {
 	return SigVerificationDecorator{
-		aaKeeper:        aaKeeper,
-		ak:              ak,
-		signModeHandler: signModeHandler,
-		sigGasConsumer:  sigGasConsumer,
+		aaKeeper:              aaKeeper,
+		ak:                    ak,
+		signModeHandler:       signModeHandler,
+		sigGasConsumer:        sigGasConsumer,
+		moduleAccountsService: moduleAccountsService,
 	}
 }
 
@@ -242,6 +251,11 @@ func (svd SigVerificationDecorator) authenticate(ctx context.Context, tx authsig
 	}
 
 	// not an AA, proceed with standard auth flow.
+
+	// The signer can't be a module account, as it doesn't have a pub key
+	if mod := svd.moduleAccountsService.IsModuleAccount(signer); mod != "" {
+		return sdkerrors.ErrInvalidAddress.Wrapf("signer can't be a module account: %s", mod)
+	}
 
 	// newlyCreated is a flag that indicates if the account was newly created.
 	// This is only the case when the user is sending their first tx.

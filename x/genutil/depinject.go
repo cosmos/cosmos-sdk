@@ -26,7 +26,6 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	AccountKeeper  types.AccountKeeper
 	StakingKeeper  types.StakingKeeper
 	Config         client.TxConfig
 	Cdc            codec.Codec
@@ -39,5 +38,5 @@ func ProvideModule(in ModuleInputs) appmodule.AppModule {
 		in.GenTxValidator = types.DefaultMessageValidator
 	}
 
-	return NewAppModule(in.Cdc, in.AccountKeeper, in.StakingKeeper, in.DeliverTx, in.Config, in.GenTxValidator)
+	return NewAppModule(in.Cdc, in.StakingKeeper, in.DeliverTx, in.Config, in.GenTxValidator)
 }

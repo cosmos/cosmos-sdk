@@ -16,6 +16,7 @@ import (
 	stakingtypes "cosmossdk.io/x/staking/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -372,9 +373,11 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 			_, err := suite.StakingKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
-			macc := suite.GovKeeper.GetGovernanceAccount(ctx)
-			require.NotNil(t, macc)
-			initialModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+
+			maccs := runtime.NewModuleAccountsService(
+				runtime.NewModuleAccount(types.ModuleName),
+			)
+			initialModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, maccs.Address(types.ModuleName))
 
 			proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "title", "summary", proposer, tc.proposalType)
 			require.NoError(t, err)
@@ -388,9 +391,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, res)
 
-			macc = suite.GovKeeper.GetGovernanceAccount(ctx)
-			require.NotNil(t, macc)
-			moduleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+			moduleAccCoins := suite.BankKeeper.GetAllBalances(ctx, maccs.Address(types.ModuleName))
 
 			deposits := initialModuleAccCoins.Add(proposal.TotalDeposit...).Add(proposalCoins...)
 			require.True(t, moduleAccCoins.Equal(deposits))
@@ -405,9 +406,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 			err = suite.GovKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
-			macc = suite.GovKeeper.GetGovernanceAccount(ctx)
-			require.NotNil(t, macc)
-			require.True(t, suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress()).Equal(initialModuleAccCoins))
+			require.True(t, suite.BankKeeper.GetAllBalances(ctx, maccs.Address(types.ModuleName)).Equal(initialModuleAccCoins))
 		})
 	}
 }
@@ -521,9 +520,11 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			_, err = suite.StakingKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
 
-			macc := suite.GovKeeper.GetGovernanceAccount(ctx)
-			require.NotNil(t, macc)
-			initialModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+			maccs := runtime.NewModuleAccountsService(
+				runtime.NewModuleAccount(types.ModuleName),
+			)
+
+			initialModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, maccs.Address(types.ModuleName))
 
 			submitterInitialBalance := suite.BankKeeper.GetAllBalances(ctx, addrs[0])
 			depositorInitialBalance := suite.BankKeeper.GetAllBalances(ctx, addrs[1])
@@ -576,7 +577,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 				submitterEventualBalance := suite.BankKeeper.GetAllBalances(ctx, addrs[0])
 				depositorEventualBalance := suite.BankKeeper.GetAllBalances(ctx, addrs[1])
 
-				eventualModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+				eventualModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, maccs.Address(types.ModuleName))
 
 				// Module account has refunded the deposit
 				require.Equal(t, initialModuleAccCoins, eventualModuleAccCoins)
@@ -594,9 +595,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			require.Equal(t, proposal.VotingStartTime.Add(*params.VotingPeriod), *proposal.VotingEndTime)
 
 			// We also want to make sure that the deposit is not refunded yet and is still present in the module account
-			macc = suite.GovKeeper.GetGovernanceAccount(ctx)
-			require.NotNil(t, macc)
-			intermediateModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+			intermediateModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, maccs.Address(types.ModuleName))
 			require.NotEqual(t, initialModuleAccCoins, intermediateModuleAccCoins)
 
 			// Submit proposal deposit + 1 extra top up deposit
@@ -616,9 +615,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			// Here we validate the converted regular proposal
 			err = suite.GovKeeper.EndBlocker(ctx)
 			require.NoError(t, err)
-			macc = suite.GovKeeper.GetGovernanceAccount(ctx)
-			require.NotNil(t, macc)
-			eventualModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+			eventualModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, maccs.Address(types.ModuleName))
 
 			submitterEventualBalance := suite.BankKeeper.GetAllBalances(ctx, addrs[0])
 			depositorEventualBalance := suite.BankKeeper.GetAllBalances(ctx, addrs[1])

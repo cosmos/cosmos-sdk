@@ -2,11 +2,11 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/mint/types"
 
@@ -24,7 +24,8 @@ type Keeper struct {
 	feeCollectorName string
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
-	authority string
+	authority             string
+	moduleAccountsService moduleaccounts.Service
 
 	Schema collections.Schema
 	Params collections.Item[types.Params]
@@ -39,25 +40,26 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	env appmodule.Environment,
-	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	feeCollectorName string,
 	authority string,
+	moduleAccountsService moduleaccounts.Service,
 ) *Keeper {
 	// ensure mint module account is set
-	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
-		panic(fmt.Sprintf("the x/%s module account has not been set", types.ModuleName))
-	}
+	// if addr := moduleAccountsService.Address(types.ModuleName); addr == nil {
+	// 	panic(fmt.Sprintf("the x/%s module account has not been set", types.ModuleName))
+	// }
 
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 	k := Keeper{
-		Environment:      env,
-		cdc:              cdc,
-		bankKeeper:       bk,
-		feeCollectorName: feeCollectorName,
-		authority:        authority,
-		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		Minter:           collections.NewItem(sb, types.MinterKey, "minter", codec.CollValue[types.Minter](cdc)),
+		Environment:           env,
+		cdc:                   cdc,
+		bankKeeper:            bk,
+		feeCollectorName:      feeCollectorName,
+		authority:             authority,
+		moduleAccountsService: moduleAccountsService,
+		Params:                collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		Minter:                collections.NewItem(sb, types.MinterKey, "minter", codec.CollValue[types.Minter](cdc)),
 	}
 
 	schema, err := sb.Build()

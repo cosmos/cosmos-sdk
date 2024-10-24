@@ -30,8 +30,6 @@ func (s *KeeperTestSuite) TestSharesToTokensConversion() {
 
 	addrDels, valAddrs := createValAddrs(1)
 
-	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
-
 	initialTokens := math.NewInt(1000000)
 	validator := testutil.NewValidator(s.T(), valAddrs[0], PKs[0])
 	validator, issuedShares := validator.AddTokensFromDel(initialTokens)
@@ -62,8 +60,6 @@ func (s *KeeperTestSuite) TestDelegation() {
 	require := s.Require()
 
 	addrDels, valAddrs := createValAddrs(3)
-
-	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	// construct the validators
 	amts := []math.Int{math.NewInt(9), math.NewInt(8), math.NewInt(7)}
@@ -198,7 +194,6 @@ func (s *KeeperTestSuite) TestDelegationsByValIndex() {
 	for _, addr := range addrDels {
 		s.bankKeeper.EXPECT().DelegateCoinsFromAccountToModule(gomock.Any(), addr, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	}
-	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	// construct the validators
 	amts := []math.Int{math.NewInt(9), math.NewInt(8), math.NewInt(7)}
@@ -277,8 +272,6 @@ func (s *KeeperTestSuite) TestUnbondingDelegation() {
 	require := s.Require()
 
 	delAddrs, valAddrs := createValAddrs(2)
-
-	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	ubd := stakingtypes.NewUnbondingDelegation(
 		delAddrs[0],
@@ -1214,8 +1207,6 @@ func (s *KeeperTestSuite) TestUndelegateWithDustShare() {
 	require := s.Require()
 
 	addrDels, valAddrs := createValAddrs(2)
-
-	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	// construct the validators[0] & slash 1stake
 	amt := math.NewInt(100)

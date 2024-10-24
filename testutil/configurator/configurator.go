@@ -281,12 +281,6 @@ func MintModule() ModuleOption {
 		config.ModuleConfigs[testutil.MintModuleName] = &appv1alpha1.ModuleConfig{
 			Name:   testutil.MintModuleName,
 			Config: appconfig.WrapAny(&mintmodulev1.Module{}),
-			GolangBindings: []*appv1alpha1.GolangBinding{
-				{
-					InterfaceType:  "cosmossdk.io/x/mint/types/types.StakingKeeper",
-					Implementation: "cosmossdk.io/x/staking/keeper/*keeper.Keeper",
-				},
-			},
 		}
 	}
 }

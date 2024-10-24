@@ -100,12 +100,18 @@ func initFixture(t *testing.T, extraAccs map[string]accountstd.Interface) *fixtu
 	blockedAddresses := map[string]bool{
 		authKeeper.GetAuthority(): false,
 	}
+
+	maccs := runtime.NewModuleAccountsService(
+		runtime.NewModuleAccount(minttypes.ModuleName, authtypes.Minter),
+	)
+
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		cdc,
 		authKeeper,
 		blockedAddresses,
 		authority.String(),
+		maccs,
 	)
 
 	params := banktypes.DefaultParams()

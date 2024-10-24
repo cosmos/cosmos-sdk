@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/math"
 	v3 "cosmossdk.io/x/gov/migrations/v3"
+	"cosmossdk.io/x/gov/types"
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
 
@@ -19,7 +20,8 @@ import (
 func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
-	govAcctStr, err := suite.acctKeeper.AddressCodec().BytesToString(govAcct)
+	addrCdc := address.NewBech32Codec("cosmos")
+	govAcctStr, err := addrCdc.BytesToString(govAcct)
 	suite.Require().NoError(err)
 	var (
 		req         *v1.QueryProposalRequest
@@ -103,7 +105,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryConstitution() {
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
-	govAcctStr, err := suite.acctKeeper.AddressCodec().BytesToString(govAcct)
+	govAcctStr, err := suite.addrCdc.BytesToString(govAcct)
 	suite.Require().NoError(err)
 
 	var (
@@ -194,7 +196,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
-	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	addr0Str, err := suite.addrCdc.BytesToString(addrs[0])
 	suite.Require().NoError(err)
 	testProposals := []*v1.Proposal{}
 
@@ -220,7 +222,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 			func() {
 				// create 5 test proposals
 				for i := 0; i < 5; i++ {
-					govAddress, err := suite.acctKeeper.AddressCodec().BytesToString(suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress())
+					govAddress, err := suite.addrCdc.BytesToString(suite.maccs.Address(types.ModuleName))
 					suite.Require().NoError(err)
 					testProposal := []sdk.Msg{
 						v1.NewMsgVote(govAddress, uint64(i), v1.OptionYes, ""),
@@ -411,7 +413,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposals() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
-	govAcctStr, err := suite.acctKeeper.AddressCodec().BytesToString(govAcct)
+	govAcctStr, err := suite.addrCdc.BytesToString(govAcct)
 	suite.Require().NoError(err)
 
 	var req *v1beta1.QueryProposalsRequest
@@ -458,9 +460,9 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposals() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
-	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	addr0Str, err := suite.addrCdc.BytesToString(addrs[0])
 	suite.Require().NoError(err)
-	addr1Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[1])
+	addr1Str, err := suite.addrCdc.BytesToString(addrs[1])
 	suite.Require().NoError(err)
 
 	var (
@@ -579,9 +581,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryVote() {
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
-	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	addr0Str, err := suite.addrCdc.BytesToString(addrs[0])
 	suite.Require().NoError(err)
-	addr1Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[1])
+	addr1Str, err := suite.addrCdc.BytesToString(addrs[1])
 	suite.Require().NoError(err)
 	var (
 		req      *v1beta1.QueryVoteRequest
@@ -702,9 +704,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 	ctx, queryClient := suite.ctx, suite.queryClient
 
 	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, math.NewInt(30000000))
-	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	addr0Str, err := suite.addrCdc.BytesToString(addrs[0])
 	suite.Require().NoError(err)
-	addr1Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[1])
+	addr1Str, err := suite.addrCdc.BytesToString(addrs[1])
 	suite.Require().NoError(err)
 
 	var (
@@ -812,9 +814,9 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryVotes() {
 	ctx, queryClient := suite.ctx, suite.legacyQueryClient
 
 	addrs := simtestutil.AddTestAddrsIncremental(suite.bankKeeper, suite.stakingKeeper, ctx, 2, math.NewInt(30000000))
-	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	addr0Str, err := suite.addrCdc.BytesToString(addrs[0])
 	suite.Require().NoError(err)
-	addr1Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[1])
+	addr1Str, err := suite.addrCdc.BytesToString(addrs[1])
 	suite.Require().NoError(err)
 
 	var (
@@ -1114,7 +1116,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryParams() {
 func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
-	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	addr0Str, err := suite.addrCdc.BytesToString(addrs[0])
 	suite.Require().NoError(err)
 
 	var (
@@ -1220,7 +1222,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposit() {
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
-	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	addr0Str, err := suite.addrCdc.BytesToString(addrs[0])
 	suite.Require().NoError(err)
 
 	var (
@@ -1327,9 +1329,9 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposit() {
 
 func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 	ctx, queryClient, addrs := suite.ctx, suite.queryClient, suite.addrs
-	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	addr0Str, err := suite.addrCdc.BytesToString(addrs[0])
 	suite.Require().NoError(err)
-	addr1Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[1])
+	addr1Str, err := suite.addrCdc.BytesToString(addrs[1])
 	suite.Require().NoError(err)
 
 	var (
@@ -1430,9 +1432,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
 	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
-	addr0Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[0])
+	addr0Str, err := suite.addrCdc.BytesToString(addrs[0])
 	suite.Require().NoError(err)
-	addr1Str, err := suite.acctKeeper.AddressCodec().BytesToString(addrs[1])
+	addr1Str, err := suite.addrCdc.BytesToString(addrs[1])
 	suite.Require().NoError(err)
 
 	var (

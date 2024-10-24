@@ -24,7 +24,6 @@ var (
 // AppModule implements an application module for the genutil module.
 type AppModule struct {
 	cdc              codec.Codec
-	accountKeeper    types.AccountKeeper
 	stakingKeeper    types.StakingKeeper
 	deliverTx        TxHandler // Unnecessary in server/v2 applications
 	txEncodingConfig client.TxEncodingConfig
@@ -34,7 +33,6 @@ type AppModule struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec,
-	accountKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper,
 	deliverTx TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
@@ -42,7 +40,6 @@ func NewAppModule(
 ) module.AppModule {
 	return AppModule{
 		cdc:              cdc,
-		accountKeeper:    accountKeeper,
 		stakingKeeper:    stakingKeeper,
 		deliverTx:        deliverTx,
 		txEncodingConfig: txEncodingConfig,

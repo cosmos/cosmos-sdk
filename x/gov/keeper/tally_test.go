@@ -55,6 +55,7 @@ var (
 )
 
 func TestTally_Standard(t *testing.T) {
+	addrCdc := address.NewBech32Codec("cosmos")
 	tests := []struct {
 		name          string
 		setup         func(tallyFixture)
@@ -145,7 +146,7 @@ func TestTally_Standard(t *testing.T) {
 			name: "one delegator votes: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
-				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				del0Addr, err := addrCdc.BytesToString(s.delAddrs[0])
 				require.NoError(t, err)
 				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
 				require.NoError(t, err)
@@ -174,7 +175,7 @@ func TestTally_Standard(t *testing.T) {
 			name: "one delegator votes yes, validator votes also yes: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
-				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				del0Addr, err := addrCdc.BytesToString(s.delAddrs[0])
 				require.NoError(t, err)
 				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
 				require.NoError(t, err)
@@ -204,7 +205,7 @@ func TestTally_Standard(t *testing.T) {
 			name: "one delegator votes yes, validator votes no: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
-				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				del0Addr, err := addrCdc.BytesToString(s.delAddrs[0])
 				require.NoError(t, err)
 				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
 				require.NoError(t, err)
@@ -239,7 +240,7 @@ func TestTally_Standard(t *testing.T) {
 			name: "delegator with mixed delegations: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
-				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				del0Addr, err := addrCdc.BytesToString(s.delAddrs[0])
 				require.NoError(t, err)
 				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
 				require.NoError(t, err)
@@ -458,7 +459,7 @@ func TestTally_Standard(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			govKeeper, mocks, _, ctx := setupGovKeeper(t, mockAccountKeeperExpectations)
+			govKeeper, mocks, _, ctx, _ := setupGovKeeper(t)
 			params := v1.DefaultParams()
 			// Ensure params value are different than false
 			params.BurnVoteQuorum = true
@@ -521,6 +522,7 @@ func TestTally_Standard(t *testing.T) {
 }
 
 func TestTally_Expedited(t *testing.T) {
+	addrCdc := address.NewBech32Codec("cosmos")
 	tests := []struct {
 		name          string
 		setup         func(tallyFixture)
@@ -611,7 +613,7 @@ func TestTally_Expedited(t *testing.T) {
 			name: "one delegator votes: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
-				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				del0Addr, err := addrCdc.BytesToString(s.delAddrs[0])
 				require.NoError(t, err)
 				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
 				require.NoError(t, err)
@@ -640,7 +642,7 @@ func TestTally_Expedited(t *testing.T) {
 			name: "one delegator votes yes, validator votes also yes: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
-				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				del0Addr, err := addrCdc.BytesToString(s.delAddrs[0])
 				require.NoError(t, err)
 				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
 				require.NoError(t, err)
@@ -670,7 +672,7 @@ func TestTally_Expedited(t *testing.T) {
 			name: "one delegator votes yes, validator votes no: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
-				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				del0Addr, err := addrCdc.BytesToString(s.delAddrs[0])
 				require.NoError(t, err)
 				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
 				require.NoError(t, err)
@@ -705,7 +707,7 @@ func TestTally_Expedited(t *testing.T) {
 			name: "delegator with mixed delegations: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
-				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				del0Addr, err := addrCdc.BytesToString(s.delAddrs[0])
 				require.NoError(t, err)
 				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
 				require.NoError(t, err)
@@ -928,7 +930,7 @@ func TestTally_Expedited(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			govKeeper, mocks, _, ctx := setupGovKeeper(t, mockAccountKeeperExpectations)
+			govKeeper, mocks, _, ctx, _ := setupGovKeeper(t)
 			params := v1.DefaultParams()
 			// Ensure params value are different than false
 			params.BurnVoteQuorum = true
@@ -991,6 +993,7 @@ func TestTally_Expedited(t *testing.T) {
 }
 
 func TestTally_Optimistic(t *testing.T) {
+	addrCdc := address.NewBech32Codec("cosmos")
 	tests := []struct {
 		name          string
 		setup         func(tallyFixture)
@@ -1041,7 +1044,7 @@ func TestTally_Optimistic(t *testing.T) {
 			name: "one delegator votes: threshold no not reached, prop passes",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
-				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				del0Addr, err := addrCdc.BytesToString(s.delAddrs[0])
 				require.NoError(t, err)
 				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
 				require.NoError(t, err)
@@ -1092,7 +1095,7 @@ func TestTally_Optimistic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			govKeeper, mocks, _, ctx := setupGovKeeper(t, mockAccountKeeperExpectations)
+			govKeeper, mocks, _, ctx, _ := setupGovKeeper(t)
 			params := v1.DefaultParams()
 			// Ensure params value are different than false
 			params.BurnVoteQuorum = true
@@ -1155,6 +1158,7 @@ func TestTally_Optimistic(t *testing.T) {
 }
 
 func TestTally_MultipleChoice(t *testing.T) {
+	addrCdc := address.NewBech32Codec("cosmos")
 	tests := []struct {
 		name          string
 		setup         func(tallyFixture)
@@ -1245,7 +1249,7 @@ func TestTally_MultipleChoice(t *testing.T) {
 			name: "one delegator votes: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
-				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				del0Addr, err := addrCdc.BytesToString(s.delAddrs[0])
 				require.NoError(t, err)
 				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
 				require.NoError(t, err)
@@ -1274,7 +1278,7 @@ func TestTally_MultipleChoice(t *testing.T) {
 			name: "one delegator votes yes, validator votes also yes: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
-				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				del0Addr, err := addrCdc.BytesToString(s.delAddrs[0])
 				require.NoError(t, err)
 				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
 				require.NoError(t, err)
@@ -1304,7 +1308,7 @@ func TestTally_MultipleChoice(t *testing.T) {
 			name: "one delegator votes yes, validator votes no: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
-				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				del0Addr, err := addrCdc.BytesToString(s.delAddrs[0])
 				require.NoError(t, err)
 				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
 				require.NoError(t, err)
@@ -1339,7 +1343,7 @@ func TestTally_MultipleChoice(t *testing.T) {
 			name: "delegator with mixed delegations: prop fails/burn deposit",
 			setup: func(s tallyFixture) {
 				setTotalBonded(s, 10000000)
-				del0Addr, err := s.mocks.acctKeeper.AddressCodec().BytesToString(s.delAddrs[0])
+				del0Addr, err := addrCdc.BytesToString(s.delAddrs[0])
 				require.NoError(t, err)
 				val0Addr, err := s.mocks.stakingKeeper.ValidatorAddressCodec().BytesToString(s.valAddrs[0])
 				require.NoError(t, err)
@@ -1478,7 +1482,7 @@ func TestTally_MultipleChoice(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			govKeeper, mocks, _, ctx := setupGovKeeper(t, mockAccountKeeperExpectations)
+			govKeeper, mocks, _, ctx, _ := setupGovKeeper(t)
 			params := v1.DefaultParams()
 			// Ensure params value are different than false
 			params.BurnVoteQuorum = true

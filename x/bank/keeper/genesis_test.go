@@ -26,7 +26,6 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 			panic(err1)
 		}
 		// set balances via mint and send
-		suite.mockMintCoins(mintAcc)
 		suite.
 			Require().
 			NoError(suite.bankKeeper.MintCoins(ctx, types.MintModuleName, expectedBalances[i].Coins))

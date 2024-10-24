@@ -20,6 +20,7 @@ import (
 	distrkeeper "cosmossdk.io/x/distribution/keeper"
 	_ "cosmossdk.io/x/gov"
 	govv1 "cosmossdk.io/x/gov/types/v1"
+	_ "cosmossdk.io/x/mint"
 	_ "cosmossdk.io/x/protocolpool"
 	_ "cosmossdk.io/x/staking"
 
@@ -103,6 +104,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 				configurator.GovModule(),
 				configurator.DistributionModule(),
 				configurator.ProtocolPoolModule(),
+				configurator.MintModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
@@ -447,8 +449,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 			},
 			accSeqs: []uint64{1}, // wrong signer, so this sequence doesn't actually get used.
 			expInError: []string{
-				"cannot be claimed by public key with address",
-				govAddr,
+				"signer can't be a module account: gov",
 			},
 		},
 		{

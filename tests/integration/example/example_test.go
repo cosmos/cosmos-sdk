@@ -68,14 +68,17 @@ func Example() {
 		"cosmos",
 		authority,
 	)
+	maccs := runtime.NewModuleAccountsService(
+		runtime.NewModuleAccount(minttypes.ModuleName, authtypes.Minter),
+	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
 	authModule := auth.NewAppModule(encodingCfg.Codec, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 
 	// here bankkeeper and staking keeper is nil because we are not testing them
 	// subspace is nil because we don't test params (which is legacy anyway)
-	mintKeeper := mintkeeper.NewKeeper(encodingCfg.Codec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[minttypes.StoreKey]), logger), accountKeeper, nil, authtypes.FeeCollectorName, authority)
-	mintModule := mint.NewAppModule(encodingCfg.Codec, mintKeeper, accountKeeper)
+	mintKeeper := mintkeeper.NewKeeper(encodingCfg.Codec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[minttypes.StoreKey]), logger), nil, authtypes.FeeCollectorName, authority, maccs)
+	mintModule := mint.NewAppModule(encodingCfg.Codec, mintKeeper)
 
 	// create the application and register all the modules from the previous step
 	integrationApp := integration.NewIntegrationApp(

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/header"
 	corestore "cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
@@ -45,6 +46,7 @@ type suite struct {
 	GovKeeper     *keeper.Keeper
 	StakingKeeper *stakingkeeper.Keeper
 	appBuilder    *runtime.AppBuilder
+	AddressCodec  address.Codec
 }
 
 var appConfig = configurator.NewAppConfig(
@@ -174,8 +176,11 @@ func TestImportExportQueues(t *testing.T) {
 	assert.Assert(t, proposal1.Status == v1.StatusDepositPeriod)
 	assert.Assert(t, proposal2.Status == v1.StatusVotingPeriod)
 
-	macc := s2.GovKeeper.GetGovernanceAccount(ctx2)
-	assert.DeepEqual(t, sdk.Coins(params.MinDeposit), s2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
+	maccs := runtime.NewModuleAccountsService(
+		runtime.NewModuleAccount(types.ModuleName),
+	)
+
+	assert.DeepEqual(t, sdk.Coins(params.MinDeposit), s2.BankKeeper.GetAllBalances(ctx2, maccs.Address(types.ModuleName)))
 
 	// Run the endblocker. Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
 	err = s2.GovKeeper.EndBlocker(ctx2)
@@ -211,7 +216,7 @@ func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false)
 
 	params := v1.DefaultParams()
-	err := gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, &v1.GenesisState{
+	err := gov.InitGenesis(ctx, suite.AddressCodec, suite.BankKeeper, suite.GovKeeper, &v1.GenesisState{
 		Deposits: v1.Deposits{
 			{
 				ProposalId: 1234,
@@ -227,7 +232,7 @@ func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 		Params: &params,
 	})
 	require.Error(t, err)
-	err = gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, v1.DefaultGenesisState())
+	err = gov.InitGenesis(ctx, suite.AddressCodec, suite.BankKeeper, suite.GovKeeper, v1.DefaultGenesisState())
 	require.NoError(t, err)
 	genState, err := gov.ExportGenesis(ctx, suite.GovKeeper)
 	require.NoError(t, err)

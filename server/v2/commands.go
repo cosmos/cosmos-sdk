@@ -23,12 +23,10 @@ type RootCmdBuilder struct {
 	DefaultHome string
 	EnvPrefix   string
 
-	use        string
-	fixture    CommandFixture
-	vipr       *viper.Viper
-	logger     log.Logger
-	subCommand *cobra.Command
-	config     server.ConfigMap
+	use     string
+	fixture CommandFixture
+	vipr    *viper.Viper
+	logger  log.Logger
 }
 
 type CommandFixture interface {
@@ -56,18 +54,6 @@ func NewRootCmdBuilder(
 		return nil, err
 	}
 	return f, nil
-}
-
-func (b *RootCmdBuilder) Logger() log.Logger {
-	return b.logger
-}
-
-func (b *RootCmdBuilder) SubCommand() *cobra.Command {
-	return b.subCommand
-}
-
-func (b *RootCmdBuilder) Config() server.ConfigMap {
-	return b.config
 }
 
 func (b *RootCmdBuilder) DefaultHomeDir(name string) (string, error) {
@@ -112,15 +98,15 @@ func (b *RootCmdBuilder) Command() (*cobra.Command, error) {
 func (b *RootCmdBuilder) Build(
 	args []string,
 ) (*cobra.Command, error) {
-	cmd, err := b.Command()
+	bootstrapCmd, err := b.Command()
 	if err != nil {
 		return nil, err
 	}
-	configWriter, err := b.fixture.Bootstrap(cmd)
+	configWriter, err := b.fixture.Bootstrap(bootstrapCmd)
 	if err != nil {
 		return nil, err
 	}
-	b.subCommand, _, err = cmd.Traverse(args)
+	cmd, _, err := bootstrapCmd.Traverse(args)
 	if err != nil {
 		return nil, err
 	}
@@ -153,9 +139,11 @@ func (b *RootCmdBuilder) Build(
 	if err != nil {
 		return nil, err
 	}
-	b.config = b.vipr.AllSettings()
-
-	return b.fixture.RootCommand(cmd, b.subCommand, b.logger, b.config)
+	rootCmd, err := b.Command()
+	if err != nil {
+		return nil, err
+	}
+	return b.fixture.RootCommand(rootCmd, cmd, b.logger, b.vipr.AllSettings())
 }
 
 // SetPersistentFlags sets persistent flags which should be used by all server (and client)

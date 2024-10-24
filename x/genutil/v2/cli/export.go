@@ -59,7 +59,6 @@ func ExportCmd(app ExportableApp) *cobra.Command {
 			height, _ := cmd.Flags().GetInt64(flagHeight)
 			jailAllowedAddrs, _ := cmd.Flags().GetStringSlice(flagJailAllowedAddrs)
 			outputDocument, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
-			fmt.Printf("height: %d\n", height)
 			if height != -1 {
 				if err := app.LoadHeight(uint64(height)); err != nil {
 					return err

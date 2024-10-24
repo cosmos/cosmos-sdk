@@ -14,7 +14,7 @@ func TestSlog(t *testing.T) {
 	h := stdslog.NewJSONHandler(&buf, &stdslog.HandlerOptions{
 		Level: stdslog.LevelDebug,
 	})
-	logger := slog.FromSlog(stdslog.New(h))
+	logger := slog.NewCustomLogger(stdslog.New(h))
 
 	type logLine struct {
 		Level string `json:"level"`
@@ -71,6 +71,21 @@ func TestSlog(t *testing.T) {
 		Level: stdslog.LevelError.String(),
 		Msg:   "Message four",
 		Num:   4,
+	}); want != line {
+		t.Fatalf("unexpected log record: want %v, got %v", want, line)
+	}
+
+	wLogger := logger.With("num", 5)
+	buf.Reset()
+	wLogger.Info("Using .With")
+
+	if err := json.Unmarshal(buf.Bytes(), &line); err != nil {
+		t.Fatal(err)
+	}
+	if want := (logLine{
+		Level: stdslog.LevelInfo.String(),
+		Msg:   "Using .With",
+		Num:   5,
 	}); want != line {
 		t.Fatalf("unexpected log record: want %v, got %v", want, line)
 	}

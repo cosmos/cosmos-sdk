@@ -16,8 +16,11 @@ type Logger struct {
 	log *slog.Logger
 }
 
-// FromSlog returns a Logger backed by an existing slog.Logger instance.
-func FromSlog(log *slog.Logger) Logger {
+// NewCustomLogger returns a Logger backed by an existing slog.Logger instance.
+// All logging methods are called directly on the *slog.Logger;
+// therefore it is the caller's responsibility to configure message filtering,
+// level filtering, output format, and so on.
+func NewCustomLogger(log *slog.Logger) Logger {
 	return Logger{log: log}
 }
 

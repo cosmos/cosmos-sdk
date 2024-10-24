@@ -100,7 +100,7 @@ func TestCircuitCommands(t *testing.T) {
 		name          string
 		address       string
 		level         int
-		limtTypeURLS  []string
+		limtTypeURLs  []string
 		expPermission string
 	}{
 		{
@@ -129,8 +129,8 @@ func TestCircuitCommands(t *testing.T) {
 	for _, tc := range authorizeTestCases {
 		t.Run(tc.name, func(t *testing.T) {
 			permissionJSON := fmt.Sprintf(`{"level":%d,"limit_type_urls":[]}`, tc.level)
-			if len(tc.limtTypeURLS) != 0 {
-				permissionJSON = fmt.Sprintf(`{"level":%d,"limit_type_urls":["%s"]}`, tc.level, strings.Join(tc.limtTypeURLS[:], `","`))
+			if len(tc.limtTypeURLs) != 0 {
+				permissionJSON = fmt.Sprintf(`{"level":%d,"limit_type_urls":["%s"]}`, tc.level, strings.Join(tc.limtTypeURLs[:], `","`))
 			}
 			rsp = cli.RunAndWait("tx", "circuit", "authorize", tc.address, permissionJSON, "--from="+superAdmin)
 			RequireTxSuccess(t, rsp)
@@ -138,14 +138,14 @@ func TestCircuitCommands(t *testing.T) {
 			// query account permissions
 			rsp = cli.CustomQuery("q", "circuit", "account", tc.address)
 			require.Equal(t, tc.expPermission, gjson.Get(rsp, "permission.level").String())
-			if len(tc.limtTypeURLS) != 0 {
+			if len(tc.limtTypeURLs) != 0 {
 				listStr := gjson.Get(rsp, "permission.limit_type_urls").String()
 
 				// convert string to array
 				var msgsList []string
 				require.NoError(t, json.Unmarshal([]byte(listStr), &msgsList))
 
-				require.EqualValues(t, tc.limtTypeURLS, msgsList)
+				require.EqualValues(t, tc.limtTypeURLs, msgsList)
 			}
 		})
 	}
@@ -211,11 +211,11 @@ func testCircuitTxCommand(t *testing.T, cli *CLIWrapper, txType, superAdmin, sup
 			// execute given type transaction
 			rsp = cli.CustomQuery("q", "circuit", "disabled-list")
 			var list []string
-			if rsp != "{}" {
-				listStr := gjson.Get(rsp, "disabled_list").String()
+			if gjson.Get(rsp, "disabled_list").Exists() {
+				listJSON := gjson.Get(rsp, "disabled_list").Raw
 
 				// convert string to array
-				require.NoError(t, json.Unmarshal([]byte(listStr), &list))
+				require.NoError(t, json.Unmarshal([]byte(listJSON), &list))
 			}
 			for _, msg := range tc.disableMsgs {
 				if txType == "disable" {

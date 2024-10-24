@@ -179,6 +179,15 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
+    directory: "/collections/protocodec"
+    schedule:
+      interval: weekly
+      day: friday
+      time: "02:20"
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
     directory: "x/accounts"
     schedule:
       interval: weekly

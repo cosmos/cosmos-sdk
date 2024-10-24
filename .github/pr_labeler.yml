@@ -18,6 +18,8 @@
   - store/**/*
 "C:collections":
   - collections/**/*
+"C:collections/protocodec":
+  - collections/protocodec/*
 "C:core/testing":
   - core/testing/**/*
 "C:log":

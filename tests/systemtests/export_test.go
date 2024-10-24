@@ -36,9 +36,7 @@ func TestExportCmd_WithHeight(t *testing.T) {
 
 	for _, tc := range testCases {
 		res := cli.RunCommandWithArgs(tc.args...)
-		fmt.Println(tc.name, res)
 		height := gjson.Get(res, "initial_height").Int()
-		fmt.Println("height", height)
 		if tc.expZeroHeight {
 			require.Equal(t, height, int64(0))
 		} else {

@@ -5,65 +5,67 @@ import (
 	cdbm "github.com/cosmos/cosmos-db"
 )
 
-type DBWrapper struct {
-	db tdbm.DB
+type CosmosDBWrapper struct {
+	db cdbm.DB
 }
 
-func NewCosmosDB(db tdbm.DB) cdbm.DB {
-	return &DBWrapper{db: db}
+func NewCosmosDB(db cdbm.DB) cdbm.DB {
+	return &CosmosDBWrapper{db: db}
 }
 
-func (db *DBWrapper) Get(key []byte) ([]byte, error) {
+func (db *CosmosDBWrapper) Get(key []byte) ([]byte, error) {
 	return db.db.Get(key)
 }
 
-func (db *DBWrapper) Has(key []byte) (bool, error) {
+func (db *CosmosDBWrapper) Has(key []byte) (bool, error) {
 	return db.db.Has(key)
 }
 
-func (db *DBWrapper) Set(key []byte, value []byte) error {
+func (db *CosmosDBWrapper) Set(key []byte, value []byte) error {
 	return db.db.Set(key, value)
 }
 
-func (db *DBWrapper) SetSync(key []byte, value []byte) error {
+func (db *CosmosDBWrapper) SetSync(key []byte, value []byte) error {
 	return db.db.SetSync(key, value)
 }
 
-func (db *DBWrapper) Delete(key []byte) error {
+func (db *CosmosDBWrapper) Delete(key []byte) error {
 	return db.db.Delete(key)
 }
 
-func (db *DBWrapper) DeleteSync(key []byte) error {
+func (db *CosmosDBWrapper) DeleteSync(key []byte) error {
 	return db.db.DeleteSync(key)
 }
 
-func (db *DBWrapper) Iterator(start, end []byte) (cdbm.Iterator, error) {
+func (db *CosmosDBWrapper) Iterator(start, end []byte) (cdbm.Iterator, error) {
 	it, err := db.db.Iterator(start, end)
 	return it.(cdbm.Iterator), err
 }
 
-func (db *DBWrapper) ReverseIterator(start, end []byte) (cdbm.Iterator, error) {
+func (db *CosmosDBWrapper) ReverseIterator(start, end []byte) (cdbm.Iterator, error) {
 	it, err := db.db.ReverseIterator(start, end)
 	return it.(cdbm.Iterator), err
 }
 
-func (db *DBWrapper) NewBatch() cdbm.Batch {
+func (db *CosmosDBWrapper) NewBatch() cdbm.Batch {
 	return NewCosmosBatch(db.db.NewBatch())
 }
 
-func (db *DBWrapper) NewBatchWithSize(size int) cdbm.Batch {
+// NewBatchWithSize(int) Batch
+
+func (db *CosmosDBWrapper) NewBatchWithSize(size int) cdbm.Batch {
 	return NewCosmosBatch(db.db.NewBatch())
 }
 
-func (db *DBWrapper) Print() error {
+func (db *CosmosDBWrapper) Print() error {
 	return db.db.Print()
 }
 
-func (db *DBWrapper) Stats() map[string]string {
+func (db *CosmosDBWrapper) Stats() map[string]string {
 	return db.db.Stats()
 }
 
-func (db *DBWrapper) Close() error {
+func (db *CosmosDBWrapper) Close() error {
 	return db.db.Close()
 }
 

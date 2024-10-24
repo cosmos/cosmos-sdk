@@ -79,6 +79,11 @@ func SetIAVLCacheSize(size int) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
 }
 
+// SetIAVLLazyLoading enables/disables lazy loading of the IAVL store.
+func SetIAVLLazyLoading(lazyLoading bool) func(*BaseApp) {
+	return func(bapp *BaseApp) {}
+}
+
 // SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
 func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }

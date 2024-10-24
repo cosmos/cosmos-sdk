@@ -73,6 +73,7 @@ const (
 	FlagMinRetainBlocks     = "min-retain-blocks"
 	FlagIAVLCacheSize       = "iavl-cache-size"
 	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
+	FlagIAVLLazyLoading     = "iavl-lazy-loading"
 	FlagShutdownGrace       = "shutdown-grace"
 
 	// state sync-related flags

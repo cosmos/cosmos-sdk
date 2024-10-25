@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
@@ -17,6 +18,9 @@ type MockRequestMessage struct {
 	Data string `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
 }
 
+func (m *MockRequestMessage) XXX_MessageName() string {
+	return "MockRequestMessage"
+}
 func (m *MockRequestMessage) Reset()         {}
 func (m *MockRequestMessage) String() string { return "" }
 func (m *MockRequestMessage) ProtoMessage()  {}
@@ -69,7 +73,7 @@ func TestQuery(t *testing.T) {
 				respMsg := &MockResponseMessage{Data: "response"}
 
 				handlers := map[string]appmodulev2.Handler{
-					"/test.Query": {
+					"/" + proto.MessageName(&MockRequestMessage{}): {
 						Func: func(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
 							return respMsg, nil
 						},
@@ -96,7 +100,7 @@ func TestQuery(t *testing.T) {
 			},
 			request:       createTestRequest(t),
 			expectError:   true,
-			expectedError: "handler not found for /test.Query",
+			expectedError: "rpc error: code = NotFound desc = handler not found for /MockRequestMessage",
 		},
 		{
 			name: "query error",
@@ -105,7 +109,7 @@ func TestQuery(t *testing.T) {
 				respMsg := &MockRequestMessage{Data: "response"}
 
 				handlers := map[string]appmodulev2.Handler{
-					"/test.Query": {
+					"/" + proto.MessageName(&MockRequestMessage{}): {
 						Func: func(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
 							return respMsg, nil
 						},
@@ -122,7 +126,7 @@ func TestQuery(t *testing.T) {
 			},
 			request:       createTestRequest(t),
 			expectError:   true,
-			expectedError: assert.AnError.Error(),
+			expectedError: fmt.Sprintf("rpc error: code = Internal desc = query failed: %s", assert.AnError.Error()),
 		},
 	}
 
@@ -213,7 +217,7 @@ func createTestRequest(t *testing.T) *QueryRequest {
 
 	return &QueryRequest{
 		Request: &gogoproto.Any{
-			TypeUrl: "/test.Query",
+			TypeUrl: "/" + proto.MessageName(reqMsg),
 			Value:   reqBytes,
 		},
 	}

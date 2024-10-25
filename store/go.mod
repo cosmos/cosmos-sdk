@@ -3,7 +3,7 @@ module cosmossdk.io/store
 go 1.23
 
 require (
-	cosmossdk.io/core v1.0.0-alpha.4
+	cosmossdk.io/core v1.0.0-alpha.5
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1

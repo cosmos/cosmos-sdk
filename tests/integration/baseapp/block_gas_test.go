@@ -1,6 +1,3 @@
-//go:build e2e
-// +build e2e
-
 package baseapp_test
 
 import (
@@ -26,7 +23,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	baseapputil "github.com/cosmos/cosmos-sdk/tests/e2e/baseapp"
+	baseapputil "github.com/cosmos/cosmos-sdk/tests/integration/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"

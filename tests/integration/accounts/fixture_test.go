@@ -1,22 +1,24 @@
-package keeper_test
+package accounts
 
 import (
+	"context"
 	"testing"
 
-	"gotest.tools/v3/assert"
+	gogotypes "github.com/cosmos/gogoproto/types"
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/accounts/accountstd"
-	baseaccount "cosmossdk.io/x/accounts/defaults/base"
+	account_abstractionv1 "cosmossdk.io/x/accounts/interfaces/account_abstraction/v1"
 	accountsv1 "cosmossdk.io/x/accounts/v1"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
 	minttypes "cosmossdk.io/x/mint/types"
-	"cosmossdk.io/x/tx/signing"
+	txdecode "cosmossdk.io/x/tx/decode"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -32,7 +34,31 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+var _ accountstd.Interface = (*mockAccount)(nil)
+
+type mockAccount struct {
+	authenticate func(ctx context.Context, msg *account_abstractionv1.MsgAuthenticate) (*account_abstractionv1.MsgAuthenticateResponse, error)
+}
+
+func (m mockAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
+	accountstd.RegisterInitHandler(builder, func(ctx context.Context, req *gogotypes.Empty) (*gogotypes.Empty, error) {
+		return &gogotypes.Empty{}, nil
+	})
+}
+
+func (m mockAccount) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
+	if m.authenticate == nil {
+		return
+	}
+
+	accountstd.RegisterExecuteHandler(builder, m.authenticate)
+}
+
+func (m mockAccount) RegisterQueryHandlers(_ *accountstd.QueryBuilder) {}
+
 type fixture struct {
+	t *testing.T
+
 	app *integration.App
 
 	cdc codec.Codec
@@ -41,6 +67,9 @@ type fixture struct {
 	authKeeper     authkeeper.AccountKeeper
 	accountsKeeper accounts.Keeper
 	bankKeeper     bankkeeper.Keeper
+
+	mockAccountAddress []byte
+	bundler            string
 }
 
 func (f fixture) mustAddr(address []byte) string {
@@ -48,7 +77,40 @@ func (f fixture) mustAddr(address []byte) string {
 	return s
 }
 
-func initFixture(t *testing.T, extraAccs map[string]accountstd.Interface) *fixture {
+func (f fixture) runBundle(txBytes ...[]byte) *accountsv1.MsgExecuteBundleResponse {
+	f.t.Helper()
+
+	msgSrv := accounts.NewMsgServer(f.accountsKeeper)
+
+	resp, err := msgSrv.ExecuteBundle(f.ctx, &accountsv1.MsgExecuteBundle{
+		Bundler: f.bundler,
+		Txs:     txBytes,
+	})
+	require.NoError(f.t, err)
+	return resp
+}
+
+func (f fixture) mint(address []byte, coins ...sdk.Coin) {
+	f.t.Helper()
+	for _, coin := range coins {
+		err := f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, sdk.NewCoins(coin))
+		require.NoError(f.t, err)
+		err = f.bankKeeper.SendCoinsFromModuleToAccount(f.ctx, minttypes.ModuleName, address, sdk.NewCoins(coin))
+		require.NoError(f.t, err)
+	}
+}
+
+func (f fixture) balance(recipient, denom string) sdk.Coin {
+	f.t.Helper()
+	balances, err := f.bankKeeper.Balance(f.ctx, &banktypes.QueryBalanceRequest{
+		Address: recipient,
+		Denom:   denom,
+	})
+	require.NoError(f.t, err)
+	return *balances.Balance
+}
+
+func initFixture(t *testing.T, f func(ctx context.Context, msg *account_abstractionv1.MsgAuthenticate) (*account_abstractionv1.MsgAuthenticateResponse, error)) *fixture {
 	t.Helper()
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, accounts.StoreKey,
@@ -64,25 +126,23 @@ func initFixture(t *testing.T, extraAccs map[string]accountstd.Interface) *fixtu
 	router := baseapp.NewMsgServiceRouter()
 	queryRouter := baseapp.NewGRPCQueryRouter()
 
-	handler := directHandler{}
-	account := baseaccount.NewAccount("base", signing.NewHandlerMap(handler), baseaccount.WithSecp256K1PubKey())
+	txDecoder, err := txdecode.NewDecoder(txdecode.Options{
+		SigningContext: encodingCfg.TxConfig.SigningContext(),
+		ProtoCodec:     encodingCfg.Codec,
+	})
+	require.NoError(t, err)
 
-	var accs []accountstd.AccountCreatorFunc
-	for name, acc := range extraAccs {
-		f := accountstd.AddAccount(name, func(_ accountstd.Dependencies) (accountstd.Interface, error) {
-			return acc, nil
-		})
-		accs = append(accs, f)
-	}
 	accountsKeeper, err := accounts.NewKeeper(
 		cdc,
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(router)),
 		addresscodec.NewBech32Codec("cosmos"),
 		cdc.InterfaceRegistry(),
-		nil,
-		append(accs, account)...,
+		txDecoder,
+		accountstd.AddAccount("mock", func(deps accountstd.Dependencies) (accountstd.Interface, error) {
+			return mockAccount{f}, nil
+		}),
 	)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 	accountsv1.RegisterQueryServer(queryRouter, accounts.NewQueryServer(accountsKeeper))
 
 	authority := authtypes.NewModuleAddress("gov")
@@ -101,22 +161,16 @@ func initFixture(t *testing.T, extraAccs map[string]accountstd.Interface) *fixtu
 	blockedAddresses := map[string]bool{
 		authKeeper.GetAuthority(): false,
 	}
-
-	maccs := runtime.NewModuleAccountsService(
-		runtime.NewModuleAccount(minttypes.ModuleName, authtypes.Minter),
-	)
-
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
 		cdc,
 		authKeeper,
 		blockedAddresses,
 		authority.String(),
-		maccs,
 	)
 
 	params := banktypes.DefaultParams()
-	assert.NilError(t, bankKeeper.SetParams(newCtx, params))
+	require.NoError(t, bankKeeper.SetParams(newCtx, params))
 
 	accountsModule := accounts.NewAppModule(cdc, accountsKeeper)
 	authModule := auth.NewAppModule(cdc, authKeeper, accountsKeeper, authsims.RandomGenesisAccounts, nil)
@@ -139,12 +193,21 @@ func initFixture(t *testing.T, extraAccs map[string]accountstd.Interface) *fixtu
 
 	banktypes.RegisterMsgServer(router, bankkeeper.NewMsgServerImpl(bankKeeper))
 
-	return &fixture{
-		app:            integrationApp,
-		cdc:            cdc,
-		ctx:            newCtx,
-		accountsKeeper: accountsKeeper,
-		authKeeper:     authKeeper,
-		bankKeeper:     bankKeeper,
+	// init account
+	_, addr, err := accountsKeeper.Init(newCtx, "mock", []byte("system"), &gogotypes.Empty{}, nil)
+	require.NoError(t, err)
+
+	fixture := &fixture{
+		t:                  t,
+		app:                integrationApp,
+		cdc:                cdc,
+		ctx:                newCtx,
+		authKeeper:         authKeeper,
+		accountsKeeper:     accountsKeeper,
+		bankKeeper:         bankKeeper,
+		mockAccountAddress: addr,
+		bundler:            "",
 	}
+	fixture.bundler = fixture.mustAddr([]byte("bundler"))
+	return fixture
 }

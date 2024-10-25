@@ -335,9 +335,9 @@ func initTestnetFiles[T transaction.Tx](
 		serverCfg := serverv2.DefaultServerConfig()
 		serverCfg.MinGasPrices = args.minGasPrices
 
-		cometServer := (&cometbft.CometBFTServer[T]{}).WithConfigOptions(cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig))
+		cometServer := cometbft.NewWithConfigOptions[T](cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig))
 		storeServer := &store.Server[T]{}
-		grpcServer := (&grpc.Server[T]{}).WithConfigOptions(grpc.OverwriteDefaultConfig(grpcConfig))
+		grpcServer := grpc.NewWithConfigOptions[T](grpc.OverwriteDefaultConfig(grpcConfig))
 		server := serverv2.NewServer[T](serverCfg, cometServer, storeServer, grpcServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {

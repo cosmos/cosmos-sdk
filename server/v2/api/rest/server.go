@@ -51,6 +51,15 @@ func New[T transaction.Tx](
 	return srv, nil
 }
 
+// NewWithConfigOptions creates a new REST server with the provided config options.
+// It is *not* a fully functional server (since it has been created without dependencies)
+// The returned server should only be used to get and set configuration.
+func NewWithConfigOptions[T transaction.Tx](opts ...CfgOption) *Server[T] {
+	return &Server[T]{
+		cfgOptions: opts,
+	}
+}
+
 func (s *Server[T]) Name() string {
 	return ServerName
 }
@@ -83,11 +92,6 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	s.logger.Info("stopping HTTP server")
 
 	return s.httpServer.Shutdown(ctx)
-}
-
-func (s *Server[T]) WithConfigOptions(opts ...CfgOption) *Server[T] {
-	s.cfgOptions = append(s.cfgOptions, opts...)
-	return s
 }
 
 func (s *Server[T]) Config() any {

@@ -2,6 +2,7 @@ package serverv2
 
 import (
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,7 +21,9 @@ type CommandFactory struct {
 	defaultHomeDir string
 	envPrefix      string
 	configWriter   ConfigWriter
-	logger         log.Logger
+	loggerFactory  func(server.ConfigMap, io.Writer) (log.Logger, error)
+
+	logger log.Logger
 	// TODO remove this field
 	// this viper handle is kept because certain commands in server/v2 fetch a viper instance
 	// from the command context in order to read the config.
@@ -96,11 +99,10 @@ func WithConfigWriter(configWriter ConfigWriter) CommandFactoryOption {
 	}
 }
 
-// SetLogger sets the logger for the command factory.
-// If set the logger will be set in the command context in EnhanceCommand.
-func WithLogger(logger log.Logger) CommandFactoryOption {
+// WithLoggerFactory sets the logger factory for the command factory.
+func WithLoggerFactory(loggerFactory func(server.ConfigMap, io.Writer) (log.Logger, error)) CommandFactoryOption {
 	return func(f *CommandFactory) error {
-		f.logger = logger
+		f.loggerFactory = loggerFactory
 		return nil
 	}
 }
@@ -113,7 +115,6 @@ func WithLogger(logger log.Logger) CommandFactoryOption {
 // --home: directory for config and data
 //
 // It also sets the environment variable prefix for the viper instance.
-// It sets the logger and viper in the command context (if present)
 func (f *CommandFactory) EnhanceCommand(cmd *cobra.Command) {
 	pflags := cmd.PersistentFlags()
 	pflags.String(FlagLogLevel, "info", "The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:<level>,<key>:<level>')")
@@ -123,47 +124,61 @@ func (f *CommandFactory) EnhanceCommand(cmd *cobra.Command) {
 	viper.SetEnvPrefix(f.envPrefix)
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	viper.AutomaticEnv()
-	if f.vipr != nil && f.logger != nil {
-		SetCmdServerContext(cmd, f.vipr, f.logger)
-	}
 }
 
-// ParseCommand parses args against the input rootCmd CLI skeleton then returns the target subcommand and
-// a fully realized config map.
+// EnhanceCommandContext sets the viper and logger in the command context.
+func (f *CommandFactory) EnhanceCommandContext(cmd *cobra.Command) {
+	SetCmdServerContext(cmd, f.vipr, f.logger)
+}
+
+// ParseCommand parses args against the input rootCmd CLI skeleton then returns the target subcommand,
+// a fully realized config map, and a properly configured logger.
 // If `WithConfigWriter` was set in the factory options, the config writer will be used to write the app.toml file.
-func (f *CommandFactory) ParseCommand(rootCmd *cobra.Command, args []string) (*cobra.Command, server.ConfigMap, error) {
+// Internally a viper instance is created and used to bind the flags to the config map.
+// Future invocations of EnhanceCommandContext will set the viper instance and logger in the command context.
+func (f *CommandFactory) ParseCommand(
+	rootCmd *cobra.Command,
+	args []string,
+) (*cobra.Command, server.ConfigMap, log.Logger, error) {
 	f.EnhanceCommand(rootCmd)
 	cmd, _, err := rootCmd.Traverse(args)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	if err = cmd.ParseFlags(args); err != nil {
 		// help requested, return the command early
 		if errors.Is(err, pflag.ErrHelp) {
-			return cmd, nil, nil
+			return cmd, nil, nil, nil
 		}
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	home, err := cmd.Flags().GetString(FlagHome)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	configDir := filepath.Join(home, "config")
 	if f.configWriter != nil {
 		// create app.toml if it does not already exist
 		if _, err = os.Stat(filepath.Join(configDir, "app.toml")); os.IsNotExist(err) {
 			if err = f.configWriter.WriteConfig(configDir); err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 		}
 	}
 	f.vipr, err = ReadConfig(configDir)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	if err = f.vipr.BindPFlags(cmd.Flags()); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	return cmd, f.vipr.AllSettings(), nil
+	if f.loggerFactory != nil {
+		f.logger, err = f.loggerFactory(f.vipr.AllSettings(), cmd.OutOrStdout())
+		if err != nil {
+			return nil, nil, nil, err
+		}
+	}
+
+	return cmd, f.vipr.AllSettings(), f.logger, nil
 }

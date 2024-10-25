@@ -19,24 +19,25 @@ import (
 func NewRootCmd[T transaction.Tx](
 	args ...string,
 ) (*cobra.Command, error) {
-	cmd := &cobra.Command{Use: "simdv2", SilenceErrors: true}
-	configWriter, err := initRootCmd(cmd, log.NewNopLogger(), commandDependencies[T]{})
+	rootCommand := &cobra.Command{
+		Use:           "simdv2",
+		SilenceErrors: true,
+	}
+	configWriter, err := initRootCmd(rootCommand, log.NewNopLogger(), commandDependencies[T]{})
 	if err != nil {
 		return nil, err
 	}
-	stdHomeDirOption := serverv2.WithStdDefaultHomeDir(".simappv2")
-	factory, err := serverv2.NewCommandFactory(serverv2.WithConfigWriter(configWriter), stdHomeDirOption)
+	factory, err := serverv2.NewCommandFactory(
+		serverv2.WithConfigWriter(configWriter),
+		serverv2.WithStdDefaultHomeDir(".simappv2"),
+		serverv2.WithLoggerFactory(serverv2.NewLogger),
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	// returns the target subcommand and a fully realized config map
-	subCommand, configMap, err := factory.ParseCommand(cmd, args)
-	if err != nil {
-		return nil, err
-	}
-	// create default logger
-	logger, err := serverv2.NewLogger(configMap, cmd.OutOrStdout())
+	subCommand, configMap, logger, err := factory.ParseCommand(rootCommand, args)
 	if err != nil {
 		return nil, err
 	}
@@ -75,23 +76,19 @@ func NewRootCmd[T transaction.Tx](
 		}
 	}
 
-	rootCommand := &cobra.Command{
-		Use:               "simdv2",
-		Short:             "simulation app",
-		PersistentPreRunE: rootCommandPersistentPreRun(clientCtx),
-	}
-	factory, err = serverv2.NewCommandFactory(stdHomeDirOption, serverv2.WithLogger(logger))
-	if err != nil {
-		return nil, err
-	}
-	factory.EnhanceCommand(rootCommand)
-
 	commandDeps := commandDependencies[T]{
 		globalAppConfig: configMap,
 		txConfig:        clientCtx.TxConfig,
 		moduleManager:   moduleManager,
 		simApp:          simApp,
 	}
+	rootCommand = &cobra.Command{
+		Use:               "simdv2",
+		Short:             "simulation app",
+		SilenceErrors:     true,
+		PersistentPreRunE: rootCommandPersistentPreRun(clientCtx),
+	}
+	factory.EnhanceCommandContext(rootCommand)
 	_, err = initRootCmd(rootCommand, logger, commandDeps)
 	if err != nil {
 		return nil, err

@@ -66,8 +66,7 @@ func initRootCmd[T transaction.Tx](
 	// build CLI skeleton for initial config parsing or a client application invocation
 	if deps.simApp == nil {
 		if deps.consensusComponent == nil {
-			comet := &cometbft.CometBFTServer[T]{}
-			deps.consensusComponent = comet.WithConfigOptions(initCometConfig())
+			deps.consensusComponent = cometbft.NewWithConfigOptions[T](initCometConfig())
 		}
 		return serverv2.AddCommands[T](
 			rootCmd,

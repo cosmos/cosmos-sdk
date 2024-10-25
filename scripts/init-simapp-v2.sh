@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -x
 
 SIMD_BIN=${SIMD_BIN:=$(which simdv2 2>/dev/null)}
 

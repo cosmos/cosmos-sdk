@@ -80,9 +80,13 @@ func New[T transaction.Tx](
 	return srv, nil
 }
 
-func (s *Server[T]) WithConfigOptions(opts ...CfgOption) *Server[T] {
-	s.cfgOptions = append(s.cfgOptions, opts...)
-	return s
+// NewWithConfigOptions creates a new GRPC server with the provided config options.
+// It is *not* a fully functional server (since it has been created without dependencies)
+// The returned server should only be used to get and set configuration.
+func NewWithConfigOptions[T transaction.Tx](opts ...CfgOption) *Server[T] {
+	return &Server[T]{
+		cfgOptions: opts,
+	}
 }
 
 func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {

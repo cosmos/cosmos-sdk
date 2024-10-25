@@ -85,6 +85,7 @@ func NewRootCmd[T transaction.Tx](
 		SilenceErrors:     true,
 		PersistentPreRunE: rootCommandPersistentPreRun(clientCtx),
 	}
+	factory.EnhanceCommand(rootCommand)
 	factory.EnhanceCommandContext(rootCommand)
 	_, err = initRootCmd(rootCommand, logger, commandDeps)
 	if err != nil {

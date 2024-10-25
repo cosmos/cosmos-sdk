@@ -178,7 +178,7 @@ func NewSimApp[T transaction.Tx](
 
 	app.store = storeBuilder.Get()
 	if app.store == nil {
-		return nil, fmt.Errorf("store builder not return a db")
+		return nil, fmt.Errorf("store builder did not return a db")
 	}
 
 	/****  Module Options ****/

@@ -2,13 +2,11 @@ package runtime
 
 import (
 	"bytes"
-	"context"
 
 	"github.com/pkg/errors"
 
 	"cosmossdk.io/core/moduleaccounts"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
@@ -21,7 +19,6 @@ type addrWithPerms struct {
 
 type ModuleAccountsService struct {
 	accounts map[string]addrWithPerms
-	ak       AccountGetter
 }
 
 // HasPermission implements moduleaccounts.ServiceWithPerms.
@@ -71,20 +68,6 @@ func (m *ModuleAccountsService) AllAccounts() map[string][]byte {
 		accs[k] = v.addr
 	}
 	return accs
-}
-
-// GetAccount implements moduleaccounts.Service.
-func (m *ModuleAccountsService) GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI {
-	return m.ak.GetAccount(ctx, addr)
-}
-
-// GetModuleAddress implements moduleaccounts.Service.
-func (m *ModuleAccountsService) GetModuleAddress(moduleName string) sdk.AccAddress {
-	return sdk.AccAddress(m.accounts[moduleName].addr)
-}
-
-type AccountGetter interface {
-	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 }
 
 func (m *ModuleAccountsService) Register(moduleName string, perms []string) error {

@@ -14,7 +14,7 @@ More context can found in the corresponding [ADR-022](../../architecture/adr-022
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/baseapp/recovery.go#L14-L17
-// ```
+```
 
 `recoveryObj` is a return value for `recover()` function from the `buildin` Go package.
 

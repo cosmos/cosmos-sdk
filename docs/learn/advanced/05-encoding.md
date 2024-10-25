@@ -34,7 +34,7 @@ tree.
 
 For storage encoding, module developers are encouraged to use Protobuf encoding for their types
 but may choose any encoding schema they like. The
-[collections](https://github.com/cosmos/cosmos-sdk/blob/collections/v0.4.0/collections/README.md) package automatically handles encoding and
+[collections](../../build/packages/02-collections.md) package automatically handles encoding and
 decoding of state for you.
 
 In the `codec` package, there exist two core interfaces, `BinaryCodec` and `JSONCodec`,

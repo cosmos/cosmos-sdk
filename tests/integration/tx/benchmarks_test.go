@@ -21,7 +21,7 @@ import (
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
-type E2EBenchmarkSuite struct {
+type TxBenchmarkSuite struct {
 	cfg     network.Config
 	network network.NetworkI
 
@@ -29,7 +29,7 @@ type E2EBenchmarkSuite struct {
 	queryClient tx.ServiceClient
 }
 
-// BenchmarkTx is lifted from E2ETestSuite from this package, with irrelevant state checks removed.
+// BenchmarkTx is lifted from TestSuite from this package, with irrelevant state checks removed.
 //
 // Benchmark results:
 //
@@ -41,7 +41,7 @@ type E2EBenchmarkSuite struct {
 //
 //	BenchmarkTx-8 3772 301750 ns/op
 func BenchmarkTx(b *testing.B) {
-	s := NewE2EBenchmarkSuite(b)
+	s := NewTxBenchmarkSuite(b)
 	b.Cleanup(s.Close)
 
 	val := s.network.GetValidators()[0]
@@ -82,10 +82,10 @@ func BenchmarkTx(b *testing.B) {
 	}
 }
 
-func NewE2EBenchmarkSuite(tb testing.TB) *E2EBenchmarkSuite {
+func NewTxBenchmarkSuite(tb testing.TB) *TxBenchmarkSuite {
 	tb.Helper()
 
-	s := new(E2EBenchmarkSuite)
+	s := new(TxBenchmarkSuite)
 
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
@@ -151,11 +151,11 @@ func NewE2EBenchmarkSuite(tb testing.TB) *E2EBenchmarkSuite {
 	return s
 }
 
-func (s *E2EBenchmarkSuite) Close() {
+func (s *TxBenchmarkSuite) Close() {
 	s.network.Cleanup()
 }
 
-func mkTxBuilder(tb testing.TB, s *E2EBenchmarkSuite) client.TxBuilder {
+func mkTxBuilder(tb testing.TB, s *TxBenchmarkSuite) client.TxBuilder {
 	tb.Helper()
 
 	val := s.network.GetValidators()[0]

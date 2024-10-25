@@ -16,7 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (s *E2ETestSuite) TestDelayedLockingAccount() {
+func (s *IntegrationTestSuite) TestDelayedLockingAccount() {
 	t := s.T()
 	app := setupApp(t)
 	currentTime := time.Now()

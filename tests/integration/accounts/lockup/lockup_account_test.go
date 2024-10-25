@@ -6,6 +6,6 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func TestE2ETestSuite(t *testing.T) {
-	suite.Run(t, NewE2ETestSuite())
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, NewIntegrationTestSuite())
 }

@@ -83,7 +83,7 @@ func (a *App[T]) LoadLatestHeight() (uint64, error) {
 	return a.db.GetLatestVersion()
 }
 
-// GetQueryHandlers returns the query handlers.
+// QueryHandlers returns the query handlers.
 func (a *App[T]) QueryHandlers() map[string]appmodulev2.Handler {
 	return a.queryHandlers
 }

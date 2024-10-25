@@ -26,22 +26,31 @@ func (am AppModule) IsOnePerModuleType() {}
 
 func init() {
 	appconfig.RegisterModule(&modulev1.Module{},
-		appconfig.Provide(ProvideModule),
+		appconfig.Provide(ProvideModule, ProvideConfig),
 		appconfig.Invoke(PopulateVersionMap),
 	)
+}
+
+func ProvideConfig(key depinject.OwnModuleKey) coreserver.ModuleConfigMap {
+	return coreserver.ModuleConfigMap{
+		Module: depinject.ModuleKey(key).Name(),
+		Config: coreserver.ConfigMap{
+			server.FlagUnsafeSkipUpgrades: []int{},
+			flags.FlagHome:                "",
+		},
+	}
 }
 
 type ModuleInputs struct {
 	depinject.In
 
 	Config             *modulev1.Module
+	ConfigMap          coreserver.ConfigMap
 	Environment        appmodule.Environment
 	Cdc                codec.Codec
 	AddressCodec       address.Codec
 	AppVersionModifier coreserver.VersionModifier
 	ConsensusKeeper    types.ConsensusKeeper
-
-	DynamicConfig coreserver.DynamicConfig `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -57,14 +66,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		skipUpgradeHeights = make(map[int64]bool)
 	)
 
-	if in.DynamicConfig != nil {
-		skipUpgrades := cast.ToIntSlice(in.DynamicConfig.Get(server.FlagUnsafeSkipUpgrades))
-		for _, h := range skipUpgrades {
-			skipUpgradeHeights[int64(h)] = true
-		}
-
-		homePath = in.DynamicConfig.GetString(flags.FlagHome)
+	skipUpgrades := cast.ToIntSlice(in.ConfigMap[server.FlagUnsafeSkipUpgrades])
+	for _, h := range skipUpgrades {
+		skipUpgradeHeights[int64(h)] = true
 	}
+	homePath = cast.ToString(in.ConfigMap[flags.FlagHome])
 
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(types.GovModuleName)

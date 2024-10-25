@@ -9,16 +9,13 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/cometbft"
 	"cosmossdk.io/simapp/v2"
-	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
-	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
-	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -30,88 +27,108 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// NewCometBFTRootCmd creates a new root command for simd,
-// using the CometBFT server component for consensus.
-// It is called once in the main function.
-func NewCometBFTRootCmd[T transaction.Tx]() *cobra.Command {
-	return NewRootCmdWithConsensusComponent(func(cc client.Context) serverv2.ServerComponent[T] {
-		return cometbft.New[T](
-			&genericTxDecoder[T]{cc.TxConfig},
-			initCometOptions[T](),
-			initCometConfig(),
-		)
-	})
+func NewRootCmd(
+	commandFixture serverv2.CommandFixture,
+	args ...string,
+) (*cobra.Command, error) {
+	builder, err := serverv2.NewRootCmdBuilder(commandFixture, "simdv2", ".simappv2")
+	if err != nil {
+		return nil, err
+	}
+	return builder.Build(args)
 }
 
-// NewRootCmdWithConsensusComponent returns a new root command,
-// using the provided callback to instantiate the server component for the consensus layer.
-// Callers who want to use CometBFT should call [NewCometBFTRootCmd] directly.
-func NewRootCmdWithConsensusComponent[T transaction.Tx](
-	makeConsensusComponent func(cc client.Context) serverv2.ServerComponent[T],
-) *cobra.Command {
+type DefaultCommandFixture[T transaction.Tx] struct{}
+
+func (DefaultCommandFixture[T]) Bootstrap(cmd *cobra.Command) (serverv2.WritesConfig, error) {
+	return initRootCmd(cmd, log.NewNopLogger(), commandDependencies[T]{})
+}
+
+func (DefaultCommandFixture[T]) RootCommand(
+	rootCommand *cobra.Command,
+	subCommand *cobra.Command,
+	logger log.Logger,
+	configMap server.ConfigMap,
+) (*cobra.Command, error) {
 	var (
 		autoCliOpts   autocli.AppOptions
 		moduleManager *runtime.MM[T]
 		clientCtx     client.Context
+		simApp        *simapp.SimApp[T]
+		err           error
 	)
-
-	if err := depinject.Inject(
-		depinject.Configs(
-			simapp.AppConfig(),
-			depinject.Provide(
-				ProvideClientContext,
-				// inject desired account types:
-				multisigdepinject.ProvideAccount,
-				basedepinject.ProvideAccount,
-				lockupdepinject.ProvideAllLockupAccounts,
-
-				// provide base account options
-				basedepinject.ProvideSecp256K1PubKey),
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&autoCliOpts,
-		&moduleManager,
-		&clientCtx,
-	); err != nil {
-		panic(err)
+	if needsApp(subCommand) {
+		// server construction
+		simApp, err = simapp.NewSimApp[T](
+			depinject.Configs(
+				depinject.Supply(logger, runtime.GlobalConfig(configMap)),
+				depinject.Provide(ProvideClientContext),
+			),
+			&autoCliOpts, &moduleManager, &clientCtx)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// client construction
+		if err = depinject.Inject(
+			depinject.Configs(
+				simapp.AppConfig(),
+				depinject.Provide(ProvideClientContext),
+				depinject.Supply(
+					logger,
+					runtime.GlobalConfig(configMap),
+				),
+			),
+			&autoCliOpts, &moduleManager, &clientCtx,
+		); err != nil {
+			return nil, err
+		}
 	}
 
-	rootCmd := &cobra.Command{
-		Use:           "simd",
-		Short:         "simulation app",
-		SilenceErrors: true,
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			clientCtx = clientCtx.WithCmdContext(cmd.Context())
-			clientCtx, err := client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
-			if err != nil {
-				return err
-			}
+	rootCommand.Short = "simulation app"
+	rootCommand.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// set the default command outputs
+		cmd.SetOut(cmd.OutOrStdout())
+		cmd.SetErr(cmd.ErrOrStderr())
 
-			customClientTemplate, customClientConfig := initClientConfig()
-			clientCtx, err = config.CreateClientConfig(clientCtx, customClientTemplate, customClientConfig)
-			if err != nil {
-				return err
-			}
+		clientCtx = clientCtx.WithCmdContext(cmd.Context())
+		clientCtx, err = client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
+		if err != nil {
+			return err
+		}
 
-			if err := client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
-				return err
-			}
+		customClientTemplate, customClientConfig := initClientConfig()
+		clientCtx, err = config.CreateClientConfig(
+			clientCtx, customClientTemplate, customClientConfig)
+		if err != nil {
+			return err
+		}
 
-			return nil
-		},
+		if err = client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
+			return err
+		}
+
+		return nil
 	}
 
-	consensusComponent := makeConsensusComponent(clientCtx)
-	initRootCmd(rootCmd, moduleManager, consensusComponent)
-
+	commandDeps := commandDependencies[T]{
+		globalAppConfig: configMap,
+		txConfig:        clientCtx.TxConfig,
+		moduleManager:   moduleManager,
+		simApp:          simApp,
+	}
+	_, err = initRootCmd(rootCommand, logger, commandDeps)
+	if err != nil {
+		return nil, err
+	}
 	nodeCmds := nodeservice.NewNodeCommands()
 	autoCliOpts.ModuleOptions = make(map[string]*autocliv1.ModuleOptions)
 	autoCliOpts.ModuleOptions[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()
-	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
-		panic(err)
+	if err := autoCliOpts.EnhanceRootCommand(rootCommand); err != nil {
+		return nil, err
 	}
 
-	return rootCmd
+	return rootCommand, nil
 }
 
 func ProvideClientContext(
@@ -124,7 +141,6 @@ func ProvideClientContext(
 	consensusAddressCodec address.ConsensusAddressCodec,
 ) client.Context {
 	var err error
-
 	amino, ok := legacyAmino.(*codec.LegacyAmino)
 	if !ok {
 		panic("registry.AminoRegistrar must be an *codec.LegacyAmino instance for legacy ClientContext")
@@ -158,4 +174,14 @@ func ProvideClientContext(
 	clientCtx = clientCtx.WithTxConfig(txConfig)
 
 	return clientCtx
+}
+
+func needsApp(cmd *cobra.Command) bool {
+	if cmd.Annotations["needs-app"] == "true" {
+		return true
+	}
+	if cmd.Parent() == nil {
+		return false
+	}
+	return needsApp(cmd.Parent())
 }

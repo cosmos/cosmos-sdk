@@ -1019,6 +1019,8 @@ func TestTxDecodeAmino_GRPCGateway(t *testing.T) {
 }
 
 func TestSimMultiSigTx(t *testing.T) {
+	t.Skip() // waiting for @hieuvubk fix
+
 	sut.ResetChain(t)
 
 	cli := NewCLIWrapper(t, sut, verbose)

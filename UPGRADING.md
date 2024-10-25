@@ -421,6 +421,23 @@ if err != nil {
 }
 ```
 
+##### TX Decoder
+
+In order to support x/accounts properly we need to init a `TxDecoder`, modify your `app.go`:
+
+```diff
+import (
++ 	txdecode "cosmossdk.io/x/tx/decode"
+)
++	txDecoder, err := txdecode.NewDecoder(txdecode.Options{
++		SigningContext: signingCtx,
++		ProtoCodec:     appCodec,
++	})
++	if err != nil {
++		panic(err)
++	}
+```
+
 #### `x/crisis`
 
 The `x/crisis` module was removed due to it not being supported or functional any longer. 

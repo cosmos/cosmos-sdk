@@ -18,7 +18,7 @@
       "request": "launch",
       "mode": "debug",
       "program": "${workspaceFolder}/simapp/v2/simdv2",
-      "args": ["config", "home"],
+      "args": ["start"],
       "buildFlags": ""
     },
     {

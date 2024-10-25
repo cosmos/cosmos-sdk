@@ -1,4 +1,4 @@
-package tx_test
+package benchmark_test
 
 import (
 	"context"

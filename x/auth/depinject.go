@@ -4,7 +4,6 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/moduleaccounts"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 
@@ -35,8 +34,6 @@ type ModuleInputs struct {
 	Environment       appmodule.Environment
 	Cdc               codec.Codec
 	AccountsModKeeper types.AccountsModKeeper
-
-	ModuleAccountsService moduleaccounts.ServiceWithPerms
 
 	AddressCodec            address.Codec
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`

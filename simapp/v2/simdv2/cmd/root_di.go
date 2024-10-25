@@ -36,7 +36,6 @@ func NewRootCmd[T transaction.Tx](
 		return nil, err
 	}
 
-	// returns the target subcommand and a fully realized config map
 	subCommand, configMap, logger, err := factory.ParseCommand(rootCommand, args)
 	if err != nil {
 		return nil, err

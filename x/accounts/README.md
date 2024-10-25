@@ -539,9 +539,6 @@ For example, given the following `genesis.json` file:
 }
 ```
 
-<<<<<<< HEAD
-The accounts module will run the lockup account initialization message.
-=======
 The accounts module will run the lockup account initialization message.
 
 ## Bundling
@@ -626,8 +623,8 @@ Helps in accurately estimating and controlling the resources needed for the main
 
 Bundling introduces a bypass mechanism for ante handler checks. This has significant implications for chains that rely on ante handlers for:
 
-- Message validation
-- Admission control logic
+* Message validation
+* Admission control logic
 
 If your chain heavily depends on these ante handler functionalities, enabling bundling may compromise your chain's security or operational logic.
 
@@ -670,4 +667,3 @@ func NewApp(...) {
 	
 	app.AccountsKeeper.DisableBundling() // <- add this line
 ```
->>>>>>> ec63f9489 (feat(accounts): re-introduce bundler (#21562))

@@ -11,7 +11,33 @@ require (
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/simapp v0.0.0-20230309163709-87da587416ba
+<<<<<<< HEAD
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // main
+=======
+	cosmossdk.io/store v1.1.1
+	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f // indirect
+	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/tx v1.0.0-alpha.1
+	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
+	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
+	github.com/cosmos/cosmos-proto v1.0.0-beta.5
+	// this version is not used as it is always replaced by the latest Cosmos SDK version
+	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/gogoproto v1.7.0
+	github.com/spf13/cobra v1.8.1 // indirect
+	github.com/stretchr/testify v1.9.0
+	go.uber.org/mock v0.5.0
+	google.golang.org/grpc v1.67.1
+	google.golang.org/protobuf v1.35.1
+	gotest.tools/v3 v3.5.1
+	pgregory.net/rapid v1.1.0
+)
+
+require (
+	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
+>>>>>>> aa4614e48 (test: migrate e2e/genutil to systemtest (#22325))
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5

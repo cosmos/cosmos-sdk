@@ -58,12 +58,12 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func setupStateFactory(app *SimApp) simsx.SimStateFactory {
-	blockedAddre, _ := BlockedAddresses(app.interfaceRegistry.SigningContext().AddressCodec())
+	blockedAddre, _ := BlockedAddresses(app.interfaceRegistry.SigningContext().AddressCodec(), app.ModuleAccountsService)
 	return simsx.SimStateFactory{
 		Codec:         app.AppCodec(),
 		AppStateFn:    simtestutil.AppStateFn(app.AppCodec(), app.AuthKeeper.AddressCodec(), app.StakingKeeper.ValidatorAddressCodec(), app.SimulationManager().Modules, app.DefaultGenesis()),
 		BlockedAddr:   blockedAddre,
-		AccountSource: app.ModuleAccountsService,
+		AccountSource: app.AuthKeeper,
 		BalanceSource: app.BankKeeper,
 	}
 }
@@ -143,7 +143,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 					// use accounts from initial run
 					return exported.AppState, accs, config.ChainID, genesisTimestamp
 				},
-				BlockedAddr:   must(BlockedAddresses(app.AuthKeeper.AddressCodec())),
+				BlockedAddr:   must(BlockedAddresses(app.AuthKeeper.AddressCodec(), app.ModuleAccountsService)),
 				AccountSource: app.AuthKeeper,
 				BalanceSource: app.BankKeeper,
 			}

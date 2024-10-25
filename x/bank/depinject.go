@@ -59,7 +59,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	// AccountKeeper's module account permissions as blocked.
 	blockedAddresses := make(map[string]bool)
 	if len(in.Config.BlockedModuleAccountsOverride) > 0 {
-		fmt.Println("GEGEEEE", in.Config.BlockedModuleAccountsOverride)
 		for _, moduleName := range in.Config.BlockedModuleAccountsOverride {
 			addrStr, err := in.AddressCodec.BytesToString(authtypes.NewModuleAddress(moduleName))
 			if err != nil {
@@ -101,7 +100,6 @@ func InvokeSetDefaultBlockedAddresses(
 	moduleAccountsService moduleaccounts.ServiceWithPerms,
 	addrCdc address.Codec,
 ) error {
-	fmt.Println("ASDASD", keeper.GetBlockedAddresses())
 	if len(keeper.GetBlockedAddresses()) > 0 {
 		return nil
 	}

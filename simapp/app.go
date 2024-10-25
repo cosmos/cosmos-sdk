@@ -21,6 +21,7 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	coreaddress "cosmossdk.io/core/address"
+	"cosmossdk.io/core/moduleaccounts"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -165,11 +166,12 @@ var (
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*baseapp.BaseApp
-	logger            log.Logger
-	legacyAmino       *codec.LegacyAmino
-	appCodec          codec.Codec
-	txConfig          client.TxConfig
-	interfaceRegistry types.InterfaceRegistry
+	logger                log.Logger
+	legacyAmino           *codec.LegacyAmino
+	appCodec              codec.Codec
+	txConfig              client.TxConfig
+	interfaceRegistry     types.InterfaceRegistry
+	ModuleAccountsService moduleaccounts.ServiceWithPerms
 
 	// keys to access the substores
 	keys map[string]*storetypes.KVStoreKey
@@ -306,13 +308,14 @@ func NewSimApp(
 	}
 
 	app := &SimApp{
-		BaseApp:           bApp,
-		logger:            logger,
-		legacyAmino:       legacyAmino,
-		appCodec:          appCodec,
-		txConfig:          txConfig,
-		interfaceRegistry: interfaceRegistry,
-		keys:              keys,
+		BaseApp:               bApp,
+		logger:                logger,
+		legacyAmino:           legacyAmino,
+		appCodec:              appCodec,
+		txConfig:              txConfig,
+		interfaceRegistry:     interfaceRegistry,
+		keys:                  keys,
+		ModuleAccountsService: maccs,
 	}
 	cometService := runtime.NewContextAwareCometInfoService()
 
@@ -349,7 +352,7 @@ func NewSimApp(
 
 	app.AuthKeeper = authkeeper.NewAccountKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), logger.With(log.ModuleKey, "x/auth")), appCodec, authtypes.ProtoBaseAccount, accountsKeeper, maccPerms, signingCtx.AddressCodec(), sdk.Bech32MainPrefix, govModuleAddr)
 
-	blockedAddrs, err := BlockedAddresses(signingCtx.AddressCodec())
+	blockedAddrs, err := BlockedAddresses(signingCtx.AddressCodec(), maccs)
 	if err != nil {
 		panic(err)
 	}
@@ -690,6 +693,7 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 				FeegrantKeeper:           app.FeeGrantKeeper,
 				SigGasConsumer:           ante.DefaultSigVerificationGasConsumer,
 				UnorderedTxManager:       app.UnorderedTxManager,
+				ModuleAccountsService:    maccs,
 			},
 			&app.CircuitKeeper,
 		},
@@ -884,7 +888,7 @@ func GetMaccPerms() map[string][]string {
 }
 
 // BlockedAddresses returns all the app's blocked account addresses.
-func BlockedAddresses(ac coreaddress.Codec) (map[string]bool, error) {
+func BlockedAddresses(ac coreaddress.Codec, maccs moduleaccounts.ServiceWithPerms) (map[string]bool, error) {
 	modAccAddrs := make(map[string]bool)
 	for acc := range GetMaccPerms() {
 		addr, err := ac.BytesToString(authtypes.NewModuleAddress(acc))

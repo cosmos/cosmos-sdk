@@ -1,8 +1,6 @@
 package math
 
 import (
-	"bytes"
-	"encoding/binary"
 	"encoding/json"
 	"math/big"
 
@@ -398,54 +396,12 @@ func (x Dec) Reduce() (Dec, int) {
 	return y, n
 }
 
-// Marshal serializes the decimal value into a byte slice in binary format.
-//
-// The binary format specification is as follows:
-//
-// 1. The first byte indicates the sign of the decimal value.
-//   - The byte value '-' (0x2D) represents a negative value.
-//   - The byte value '+' (0x2B) represents a positive value.
-//
-//  2. The next 4 bytes represent the exponent of the decimal value in big-endian format,
-//     serialized as an unsigned 32-bit integer.
-//
-// 3. The remaining bytes represent the absolute value of the coefficient in big-endian format.
-//
-// An error is returned if the serialization process fails. However, in the provided code,
-// the error is always `nil`.
 func (x Dec) Marshal() ([]byte, error) {
-	src, _ := x.Reduce()
-	var buf bytes.Buffer
-	if src.dec.Negative {
-		buf.WriteByte('-')
-	} else {
-		buf.WriteByte('+')
-	}
-	expBz := binary.BigEndian.AppendUint32([]byte{}, uint32(src.dec.Exponent))
-	buf.Write(expBz)
-	buf.Write(src.dec.Coeff.Bytes())
-	return buf.Bytes(), nil
+	panic("not implemented")
 }
 
-// Unmarshal parses a byte slice containing a binary decimal and stores the result in the receiver.
-// It returns an error if the byte slice does not represent a valid decimal.
-// See Marshal for details on the encoding format.
 func (x *Dec) Unmarshal(data []byte) error {
-	if len(data) < 5 {
-		return ErrInvalidDec.Wrap("insufficient byte length")
-	}
-	coeffNeg := data[0] == '-'
-	exp := binary.BigEndian.Uint32(data[1:5])
-	coeff := new(apd.BigInt).SetBytes(data[5:])
-	apdDec := apd.NewWithBigInt(coeff, int32(exp))
-	if coeffNeg {
-		apdDec = apdDec.Neg(apdDec)
-	}
-	if apdDec.Form != apd.Finite {
-		return ErrInvalidDec.Wrap("unknown decimal form")
-	}
-	x.dec = *apdDec
-	return nil
+	panic("not implemented")
 }
 
 // MarshalTo encodes the receiver into the provided byte slice and returns the number of bytes written and any error encountered.

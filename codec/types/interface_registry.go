@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"reflect"
+	"runtime/debug"
 
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
@@ -111,6 +112,8 @@ type interfaceMap = map[string]reflect.Type
 
 // NewInterfaceRegistry returns a new InterfaceRegistry
 func NewInterfaceRegistry() InterfaceRegistry {
+	fmt.Println("NewInterfaceRegistry")
+	debug.PrintStack()
 	registry, err := NewInterfaceRegistryWithOptions(InterfaceRegistryOptions{
 		ProtoFiles: proto.HybridResolver,
 		SigningOptions: signing.Options{

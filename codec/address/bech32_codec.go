@@ -2,6 +2,7 @@ package address
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"cosmossdk.io/core/address"
@@ -24,11 +25,13 @@ func NewBech32Codec(prefix string) address.Codec {
 
 // StringToBytes encodes text to bytes
 func (bc Bech32Codec) StringToBytes(text string) ([]byte, error) {
+	fmt.Println("StringToBytes for Bech32Codec", text)
 	if len(strings.TrimSpace(text)) == 0 {
 		return []byte{}, errors.New("empty address string is not allowed")
 	}
 
 	hrp, bz, err := bech32.DecodeAndConvert(text)
+	fmt.Println("StringToBytes for Bech32Codec", hrp, bz, err)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +40,9 @@ func (bc Bech32Codec) StringToBytes(text string) ([]byte, error) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "hrp does not match bech32 prefix: expected '%s' got '%s'", bc.Bech32Prefix, hrp)
 	}
 
-	if err := sdk.VerifyAddressFormat(bz); err != nil {
+	err = sdk.VerifyAddressFormat(bz)
+	fmt.Println("StringToBytes for Bech32Codec verification", err)
+	if err != nil {
 		return nil, err
 	}
 

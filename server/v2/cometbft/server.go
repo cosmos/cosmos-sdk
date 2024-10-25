@@ -158,8 +158,6 @@ func New[T transaction.Tx](
 		consensus.listener = &listener.Listener
 	}
 
-	srv.Consensus = consensus
-
 	return srv, nil
 }
 

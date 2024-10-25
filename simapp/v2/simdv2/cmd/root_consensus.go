@@ -14,17 +14,16 @@ import (
 	"cosmossdk.io/simapp/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/config"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 )
 
 // AlternateConsensusFixture is a custom implementation of the CommandFixture interface
 // which demonstrates how an app developer can customize the root command initialization.
-// In this case a different consensus assummed but not implemented.
+// In this case a different consensus is assummed but not implemented.
 type AlternateConsensusFixture[T transaction.Tx] struct{}
 
 func (AlternateConsensusFixture[T]) Bootstrap(cmd *cobra.Command) (serverv2.WritesConfig, error) {
-	// create your custom consensus component here
+	// create your custom consensus component here for config parsing and initialization
 	var consensusComponent serverv2.ServerComponent[T]
 	return initRootCmd(cmd, log.NewNopLogger(), commandDependencies[T]{
 		consensusComponent: consensusComponent,
@@ -45,7 +44,7 @@ func (AlternateConsensusFixture[T]) RootCommand(
 		err                error
 		consensusComponent serverv2.ServerComponent[T]
 	)
-	if needsApp(subCommand) {
+	if isAppRequired(subCommand) {
 		// server construction
 		simApp, err = simapp.NewSimApp[T](
 			depinject.Configs(
@@ -56,7 +55,7 @@ func (AlternateConsensusFixture[T]) RootCommand(
 		if err != nil {
 			return nil, err
 		}
-		// initialize your custom consensus component here with outputs now available from DI
+		// create your custom consensus component here with outputs now available from DI
 		consensusComponent = nil
 	} else {
 		// client construction
@@ -76,30 +75,7 @@ func (AlternateConsensusFixture[T]) RootCommand(
 	}
 
 	rootCommand.Short = "simulation app"
-	rootCommand.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		// set the default command outputs
-		cmd.SetOut(cmd.OutOrStdout())
-		cmd.SetErr(cmd.ErrOrStderr())
-
-		clientCtx = clientCtx.WithCmdContext(cmd.Context())
-		clientCtx, err = client.ReadPersistentCommandFlags(clientCtx, cmd.Flags())
-		if err != nil {
-			return err
-		}
-
-		customClientTemplate, customClientConfig := initClientConfig()
-		clientCtx, err = config.CreateClientConfig(
-			clientCtx, customClientTemplate, customClientConfig)
-		if err != nil {
-			return err
-		}
-
-		if err = client.SetCmdClientContextHandler(clientCtx, cmd); err != nil {
-			return err
-		}
-
-		return nil
-	}
+	rootCommand.PersistentPreRunE = rootCommandPersistentPreRun(clientCtx)
 
 	commandDeps := commandDependencies[T]{
 		globalAppConfig:    configMap,

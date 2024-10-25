@@ -70,8 +70,6 @@ message MsgExecuteResponse {
   google.protobuf.Any response = 1;
 }
 
-// -------- Account Abstraction ---------
-
 // MsgExecuteBundle defines the ExecuteBundle request type for the Msg/ExecuteBundle RPC method.
 message MsgExecuteBundle {
   option (cosmos.msg.v1.signer) = "bundler";
@@ -79,17 +77,35 @@ message MsgExecuteBundle {
   // to execute one or multiple UserOperations on behalf of others.
   string bundler = 1;
   // txs defines the txs to execute on behalf of other users.
-  repeated cosmos.tx.v1beta1.TxRaw txs = 2;
+  repeated bytes txs = 2;
 }
 
 // BundledTxResponse defines the response of a bundled tx.
+// If the operation fails the error field will be populated, the used gas fields will also be
+// populated depending on when the execution stopped. Bundler payment responses will be populated
+// if the execution fails.
 message BundledTxResponse {
-  google.protobuf.Any exec_responses = 1;
-  string              error          = 2;
+  // authentication_gas_used defines the gas used for the authentication part of the UserOperation.
+  uint64 authentication_gas_used = 1;
+  // bundler_payment_gas_used defines the gas used for the bundler payment part of the UserOperation.
+  uint64 bundler_payment_gas_used = 2;
+  // bundler_payment_responses defines the responses of the bundler payment messages.
+  // It can be empty if the bundler does not need any form of payment.
+  repeated google.protobuf.Any bundler_payment_responses = 3;
+  // execution_gas_used defines the gas used for the execution part of the UserOperation.
+  uint64 execution_gas_used = 4;
+  // execution_responses defines the responses of the execution messages.
+  repeated google.protobuf.Any execution_responses = 5;
+  // error defines the error that occurred during the execution of the UserOperation.
+  // If the error is not empty, the UserOperation failed.
+  // Other fields might be populated even if the error is not empty, for example
+  // if the operation fails after the authentication step, the authentication_gas_used
+  // field will be populated.
+  string error = 6;
 }
 
 // MsgExecuteBundleResponse defines the ExecuteBundle response type for the Msg/ExecuteBundle RPC method.
 message MsgExecuteBundleResponse {
-  // responses is the list of responses returned by the account implementations.
+  // responses is the list of responses from the bundle txs.
   repeated BundledTxResponse responses = 1;
 }

@@ -44,7 +44,7 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, encoding, signMode, out
 		AddressCodec:          ctx.AddressCodec,
 		Cdc:                   ctx.Codec,
 		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
-		EnablesSignModes:      enabledSignModes,
+		EnabledSignModes:      enabledSignModes,
 	})
 	if err != nil {
 		return "", err

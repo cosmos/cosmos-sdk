@@ -83,7 +83,7 @@ type ConfigOptions struct {
 	CustomGetSigner       map[protoreflect.FullName]signing.GetSignersFunc
 	MaxRecursionDepth     int
 
-	EnablesSignModes           []apitxsigning.SignMode
+	EnabledSignModes           []apitxsigning.SignMode
 	CustomSignModes            []signing.SignModeHandler
 	TextualCoinMetadataQueryFn textual.CoinMetadataQueryFn
 }
@@ -102,8 +102,8 @@ func (c *ConfigOptions) validate() error {
 	}
 
 	// set default signModes if none are provided
-	if len(c.EnablesSignModes) == 0 {
-		c.EnablesSignModes = defaultEnabledSignModes
+	if len(c.EnabledSignModes) == 0 {
+		c.EnabledSignModes = defaultEnabledSignModes
 	}
 	return nil
 }
@@ -308,10 +308,10 @@ func newSigningContext(opts ConfigOptions) (*signing.Context, error) {
 // newHandlerMap constructs a new HandlerMap based on the provided ConfigOptions and signing context.
 // It initializes handlers for each enabled and custom sign mode specified in the options.
 func newHandlerMap(opts ConfigOptions, signingCtx *signing.Context) (*signing.HandlerMap, error) {
-	lenSignModes := len(opts.EnablesSignModes)
+	lenSignModes := len(opts.EnabledSignModes)
 	handlers := make([]signing.SignModeHandler, lenSignModes+len(opts.CustomSignModes))
 
-	for i, m := range opts.EnablesSignModes {
+	for i, m := range opts.EnabledSignModes {
 		var err error
 		switch m {
 		case apitxsigning.SignMode_SIGN_MODE_DIRECT:

@@ -93,7 +93,7 @@ func Test_unmarshal(t *testing.T) {
 		AddressCodec:          address.NewBech32Codec("cosmos"),
 		Cdc:                   getCodec(),
 		ValidatorAddressCodec: address.NewBech32Codec("cosmosvaloper"),
-		EnablesSignModes:      enabledSignModes,
+		EnabledSignModes:      enabledSignModes,
 	})
 	require.NoError(t, err)
 	tests := []struct {

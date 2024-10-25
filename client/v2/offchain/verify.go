@@ -22,7 +22,7 @@ func Verify(ctx client.Context, digest []byte, fileFormat string) error {
 		AddressCodec:          ctx.AddressCodec,
 		Cdc:                   ctx.Codec,
 		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
-		EnablesSignModes:      enabledSignModes,
+		EnabledSignModes:      enabledSignModes,
 	})
 	if err != nil {
 		return err

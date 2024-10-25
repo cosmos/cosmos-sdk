@@ -43,19 +43,20 @@ func NewRootCmd[T transaction.Tx](
 	}
 
 	var (
-		autoCliOpts   autocli.AppOptions
-		moduleManager *runtime.MM[T]
-		clientCtx     client.Context
-		simApp        *simapp.SimApp[T]
-	)
-	if isAppRequired(subCommand) {
-		// server construction
-		simApp, err = simapp.NewSimApp[T](
+		autoCliOpts     autocli.AppOptions
+		moduleManager   *runtime.MM[T]
+		clientCtx       client.Context
+		simApp          *simapp.SimApp[T]
+		depinjectConfig = depinject.Configs(
 			depinject.Configs(
 				depinject.Supply(logger, runtime.GlobalConfig(configMap)),
 				depinject.Provide(ProvideClientContext),
 			),
-			&autoCliOpts, &moduleManager, &clientCtx)
+		)
+	)
+	if isAppRequired(subCommand) {
+		// server construction
+		simApp, err = simapp.NewSimApp[T](depinjectConfig, &autoCliOpts, &moduleManager, &clientCtx)
 		if err != nil {
 			return nil, err
 		}
@@ -64,11 +65,7 @@ func NewRootCmd[T transaction.Tx](
 		if err = depinject.Inject(
 			depinject.Configs(
 				simapp.AppConfig(),
-				depinject.Provide(ProvideClientContext),
-				depinject.Supply(
-					logger,
-					runtime.GlobalConfig(configMap),
-				),
+				depinjectConfig,
 			),
 			&autoCliOpts, &moduleManager, &clientCtx,
 		); err != nil {

@@ -44,5 +44,5 @@ func setLatestVersion(db corestore.KVStoreWithBatch, version uint64) error {
 	if err := encoding.EncodeUvarint(&buf, version); err != nil {
 		return err
 	}
-	return db.Set([]byte("c/latest"), buf.Bytes())
+	return db.Set([]byte("s/latest"), buf.Bytes())
 }

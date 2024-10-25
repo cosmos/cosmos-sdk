@@ -7,6 +7,7 @@ import (
 
 	errors "cosmossdk.io/errors/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
+	v1types "cosmossdk.io/store/v2/proof/v1/types"
 )
 
 // Proof operation types
@@ -227,4 +228,31 @@ func InnerHash(left, right []byte) []byte {
 	copy(data[n:], right)
 	h := sha256.Sum256(data)
 	return h[:]
+}
+
+func ConvertV1CommitInfo(value []byte) (*CommitInfo, error) {
+	v1CommitInfo := &v1types.CommitInfo{}
+	if err := v1CommitInfo.Unmarshal(value); err != nil {
+		return nil, err
+	}
+	cInfo := &CommitInfo{
+		Version:    uint64(v1CommitInfo.Version),
+		StoreInfos: make([]StoreInfo, len(v1CommitInfo.StoreInfos)),
+		Timestamp:  v1CommitInfo.Timestamp,
+	}
+	for i, v1StoreInfo := range v1CommitInfo.StoreInfos {
+		cInfo.StoreInfos[i] = StoreInfo{
+			Name: []byte(v1StoreInfo.Name),
+			CommitID: CommitID{
+				Version: uint64(v1StoreInfo.CommitId.Version),
+				Hash:    v1StoreInfo.CommitId.Hash,
+			},
+			Structure: "iavl",
+		}
+	}
+
+	var err error
+	cInfo.CommitHash, _, err = cInfo.GetStoreProof([]byte{})
+
+	return cInfo, err
 }

@@ -178,6 +178,17 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 		if err != nil {
 			return nil, err
 		}
+		if isMigrating {
+			v, err := tree.GetLatestVersion()
+			if err != nil {
+				return nil, err
+			}
+			if v == 0 && latestVersion > 0 {
+				if err := tree.SetInitialVersion(latestVersion + 1); err != nil {
+					return nil, err
+				}
+			}
+		}
 		trees[key] = tree
 	}
 	oldTrees := make(map[string]commitment.Tree, len(opts.StoreKeys))

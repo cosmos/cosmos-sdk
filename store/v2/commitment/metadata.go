@@ -69,7 +69,10 @@ func (m *MetadataStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error)
 
 	cInfo := &proof.CommitInfo{}
 	if err := cInfo.Unmarshal(value); err != nil {
-		return nil, err
+		cInfo, err = proof.ConvertV1CommitInfo(value)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return cInfo, nil

@@ -66,8 +66,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		skipUpgradeHeights = make(map[int64]bool)
 	)
 
-	skipUpgrades := cast.ToIntSlice(in.ConfigMap[server.FlagUnsafeSkipUpgrades])
-	for _, h := range skipUpgrades {
+	skipUpgrades, ok := in.ConfigMap[server.FlagUnsafeSkipUpgrades]
+	if !ok || skipUpgrades == nil {
+		skipUpgrades = []int{}
+	}
+	heights := cast.ToIntSlice(skipUpgrades) // safe to use cast here as we've handled nil case
+	for _, h := range heights {
 		skipUpgradeHeights[int64(h)] = true
 	}
 	homePath = cast.ToString(in.ConfigMap[flags.FlagHome])

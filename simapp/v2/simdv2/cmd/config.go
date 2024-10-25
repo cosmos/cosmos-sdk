@@ -120,16 +120,12 @@ func isAppRequired(cmd *cobra.Command) bool {
 	m := map[string]bool{}
 	for _, c := range appBuildingCommands {
 		slices.Reverse(c)
-		var k string
-		for _, sc := range c {
-			k += sc
-		}
-		m[k] = true
+		m[strings.Join(c, "")] = true
 	}
-	var use string
+	cmdPath := make([]string, 0, 5) // Pre-allocate with reasonable capacity
 	for {
-		use += cmd.Use
-		if _, ok := m[use]; ok {
+		cmdPath = append(cmdPath, cmd.Use)
+		if _, ok := m[strings.Join(cmdPath, "")]; ok {
 			return true
 		}
 		if cmd.Parent() == nil {

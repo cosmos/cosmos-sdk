@@ -46,7 +46,7 @@ func initRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
 	logger log.Logger,
 	deps commandDependencies[T],
-) (serverv2.WritesConfig, error) {
+) (serverv2.ConfigWriter, error) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 

@@ -5,7 +5,6 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli"
-	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -17,35 +16,36 @@ import (
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 )
 
-func NewRootCmd(
-	commandFixture serverv2.CommandFixture,
+func NewRootCmd[T transaction.Tx](
 	args ...string,
 ) (*cobra.Command, error) {
-	builder, err := serverv2.NewRootCmdBuilder(commandFixture, "simdv2", ".simappv2")
+	cmd := &cobra.Command{Use: "simdv2", SilenceErrors: true}
+	configWriter, err := initRootCmd(cmd, log.NewNopLogger(), commandDependencies[T]{})
 	if err != nil {
 		return nil, err
 	}
-	return builder.Build(args)
-}
+	stdHomeDirOption := serverv2.WithStdDefaultHomeDir(".simappv2")
+	factory, err := serverv2.NewCommandFactory(serverv2.WithConfigWriter(configWriter), stdHomeDirOption)
+	if err != nil {
+		return nil, err
+	}
 
-type DefaultCommandFixture[T transaction.Tx] struct{}
+	// returns the target subcommand and a fully realized config map
+	subCommand, configMap, err := factory.ParseCommand(cmd, args)
+	if err != nil {
+		return nil, err
+	}
+	// create default logger
+	logger, err := serverv2.NewLogger(configMap, cmd.OutOrStdout())
+	if err != nil {
+		return nil, err
+	}
 
-func (DefaultCommandFixture[T]) Bootstrap(cmd *cobra.Command) (serverv2.WritesConfig, error) {
-	return initRootCmd(cmd, log.NewNopLogger(), commandDependencies[T]{})
-}
-
-func (DefaultCommandFixture[T]) RootCommand(
-	rootCommand *cobra.Command,
-	subCommand *cobra.Command,
-	logger log.Logger,
-	configMap server.ConfigMap,
-) (*cobra.Command, error) {
 	var (
 		autoCliOpts   autocli.AppOptions
 		moduleManager *runtime.MM[T]
 		clientCtx     client.Context
 		simApp        *simapp.SimApp[T]
-		err           error
 	)
 	if isAppRequired(subCommand) {
 		// server construction
@@ -75,8 +75,16 @@ func (DefaultCommandFixture[T]) RootCommand(
 		}
 	}
 
-	rootCommand.Short = "simulation app"
-	rootCommand.PersistentPreRunE = rootCommandPersistentPreRun(clientCtx)
+	rootCommand := &cobra.Command{
+		Use:               "simdv2",
+		Short:             "simulation app",
+		PersistentPreRunE: rootCommandPersistentPreRun(clientCtx),
+	}
+	factory, err = serverv2.NewCommandFactory(stdHomeDirOption, serverv2.WithLogger(logger))
+	if err != nil {
+		return nil, err
+	}
+	factory.EnhanceCommand(rootCommand)
 
 	commandDeps := commandDependencies[T]{
 		globalAppConfig: configMap,

@@ -37,8 +37,8 @@ type HasConfig interface {
 	Config() any
 }
 
-// WritesConfig is a server module that can write its config to a file.
-type WritesConfig interface {
+// ConfigWriter is a server module that can write its config to a file.
+type ConfigWriter interface {
 	WriteConfig(path string) error
 }
 

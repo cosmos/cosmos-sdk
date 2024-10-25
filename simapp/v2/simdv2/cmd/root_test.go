@@ -19,8 +19,7 @@ func TestInitCmd(t *testing.T) {
 		"simapp-test", // Moniker
 		fmt.Sprintf("--%s=%s", cli.FlagOverwrite, "true"), // Overwrite genesis.json, in case it already exists
 	}
-	fixture := cmd.DefaultCommandFixture[transaction.Tx]{}
-	rootCmd, err := cmd.NewRootCmd(fixture, args...)
+	rootCmd, err := cmd.NewRootCmd[transaction.Tx](args...)
 	require.NoError(t, err)
 	rootCmd.SetArgs(args)
 	require.NoError(t, rootCmd.Execute())
@@ -34,8 +33,7 @@ func TestHomeFlagRegistration(t *testing.T) {
 		homeDir,
 	}
 
-	fixture := cmd.DefaultCommandFixture[transaction.Tx]{}
-	rootCmd, err := cmd.NewRootCmd(fixture, args...)
+	rootCmd, err := cmd.NewRootCmd[transaction.Tx](args...)
 	require.NoError(t, err)
 	rootCmd.SetArgs(args)
 	require.NoError(t, rootCmd.Execute())

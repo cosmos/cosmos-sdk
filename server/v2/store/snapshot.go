@@ -97,7 +97,7 @@ func (s *Server[T]) RestoreSnapshotCmd() *cobra.Command {
 
 			rootStore, _, err := createRootStore(v, logger)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to create root store: %w", err)
 			}
 			sm, err := createSnapshotsManager(cmd, v, logger, rootStore)
 			if err != nil {

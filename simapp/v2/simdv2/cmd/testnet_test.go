@@ -19,8 +19,7 @@ func TestInitTestFilesCmd(t *testing.T) {
 		"init-files",
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest), // Set keyring-backend to test
 	}
-	fixture := cmd.DefaultCommandFixture[transaction.Tx]{}
-	rootCmd, err := cmd.NewRootCmd(fixture, args...)
+	rootCmd, err := cmd.NewRootCmd[transaction.Tx](args...)
 	require.NoError(t, err)
 	rootCmd.SetArgs(args)
 	require.NoError(t, rootCmd.Execute())

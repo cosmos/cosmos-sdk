@@ -155,7 +155,7 @@ jobs:
 
   repo-analysis:
     runs-on: ubuntu-latest
-    needs: [tests, test-integration, test-e2e]
+    needs: [tests, test-integration]
     steps:
       - uses: actions/checkout@v4
       - uses: technote-space/get-diff-action@v6.1.2

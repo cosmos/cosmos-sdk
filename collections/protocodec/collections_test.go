@@ -10,12 +10,10 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"cosmossdk.io/collections/colltest"
-
 	codec "cosmossdk.io/collections/protocodec"
 )
 
 func TestCollectionsCorrectness(t *testing.T) {
-
 	t.Run("CollValueV2", func(t *testing.T) {
 		// NOTE: we cannot use colltest.TestValueCodec because protov2 has different
 		// compare semantics than protov1. We need to use protocmp.Transform() alongside

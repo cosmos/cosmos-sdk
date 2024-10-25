@@ -20,14 +20,13 @@ Events are implemented in the Cosmos SDK as an alias of the ABCI `Event` type an
 take the form of: `{eventType}.{attributeKey}={attributeValue}`.
 
 ```protobuf reference
-https://github.com/cometbft/cometbft/blob/v0.37.0/proto/tendermint/abci/types.proto#L334-L343
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/proto/cosmos/streaming/v1/grpc.proto#L49-L53
 ```
 
 An Event contains:
 
 * A `type` to categorize the Event at a high-level; for example, the Cosmos SDK uses the `"message"` type to filter Events by `Msg`s.
 * A list of `attributes` are key-value pairs that give more information about the categorized Event. For example, for the `"message"` type, we can filter Events by key-value pairs using `message.action={some_action}`, `message.module={some_module}` or `message.sender={some_sender}`.
-* A `msg_index` to identify which messages relate to the same transaction
 
 :::tip
 To parse the attribute values as strings, make sure to add `'` (single quotes) around each attribute value.
@@ -46,18 +45,18 @@ Lastly, Events are returned to the underlying consensus engine in the response o
 * [`BeginBlock`](./00-baseapp.md#beginblock)
 * [`EndBlock`](./00-baseapp.md#endblock)
 * [`CheckTx`](./00-baseapp.md#checktx)
-* [`Transaction Execution`](./00-baseapp.md#transactionexecution)
+* [`Transaction Execution`](./00-baseapp.md#transaction-execution)
 
 ### Examples
 <!-- markdown-link-check-disable -->
 The following examples show how to query Events using the Cosmos SDK.
 
-| Event                                            | Description                                                                                                                                              |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tx.height=23`                                   | Query all transactions at height 23                                                                                                                      |
-| `message.action='/cosmos.bank.v1beta1.Msg/Send'` | Query all transactions containing a x/bank `Send` [Service `Msg`](../../build/building-modules/03-msg-services.md). Note the `'`s around the value.                  |
-| `message.module='bank'`                          | Query all transactions containing messages from the x/bank module. Note the `'`s around the value.                                                       |
-| `create_validator.validator='cosmosval1...'`     | x/staking-specific Event, see [x/staking SPEC](../../build/modules/staking/README.md).                                                         |
+| Event                                            | Description                                                                                                                                         |
+| ------------------------------------------------ |-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| `tx.height=23`                                   | Query all transactions at height 23                                                                                                                 |
+| `message.action='/cosmos.bank.v1beta1.Msg/Send'` | Query all transactions containing a x/bank `Send` [Service `Msg`](../../build/building-modules/03-msg-services.md). Note the `'`s around the value. |
+| `message.module='bank'`                          | Query all transactions containing messages from the x/bank module. Note the `'`s around the value.                                                  |
+| `create_validator.validator='cosmosval1...'`     | x/staking-specific Event, see [x/staking SPEC](../../../x/staking/README.md#events).                                                                |
 <!-- markdown-link-check-enable -->
 ## EventManager
 
@@ -66,7 +65,7 @@ Internally, the `EventManager` tracks a list of Events for the entire execution 
 (i.e. transaction execution, `BeginBlock`, `EndBlock`).
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/events.go#L19-L26
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/types/events.go#L18-L25
 ```
 
 The `EventManager` comes with a set of useful methods to manage Events. The method
@@ -74,18 +73,19 @@ that is used most by module and application developers is `EmitTypedEvent` or `E
 an Event in the `EventManager`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/events.go#L53-L62
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/types/events.go#L62-L86
 ```
 
-Module developers should handle Event emission via the `EventManager#EmitTypedEvent` or `EventManager#EmitEvent` in each message
-`Handler` and in each `BeginBlock`/`EndBlock` handler. The `EventManager` is accessed via
+Module developers should handle Event emission via the `EventManager#EmitTypedEvent` or `EventManager#EmitEvent` in each
+message `Handler` and in each `BeginBlock`/`EndBlock` handler. The `EventManager` is accessed via
 the [`Context`](./02-context.md), where Event should be already registered, and emitted like this:
 
+Note: it is preferred to use `EmitTypedEvent` over `EmitEvent` as the latter has been deprecated.
 
 **Typed events:**
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/group/keeper/msg_server.go#L95-L97
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/x/group/keeper/msg_server.go#L94-L96
 ```
 
 **Legacy events:**

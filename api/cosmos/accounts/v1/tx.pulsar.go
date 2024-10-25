@@ -4,7 +4,7 @@ package accountsv1
 import (
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	_ "cosmossdk.io/api/cosmos/msg/v1"
-	v1beta11 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	_ "cosmossdk.io/api/cosmos/tx/v1beta1"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -2356,7 +2356,7 @@ func (x *fastReflection_MsgExecuteResponse) ProtoMethods() *protoiface.Methods {
 var _ protoreflect.List = (*_MsgExecuteBundle_2_list)(nil)
 
 type _MsgExecuteBundle_2_list struct {
-	list *[]*v1beta11.TxRaw
+	list *[][]byte
 }
 
 func (x *_MsgExecuteBundle_2_list) Len() int {
@@ -2367,37 +2367,32 @@ func (x *_MsgExecuteBundle_2_list) Len() int {
 }
 
 func (x *_MsgExecuteBundle_2_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+	return protoreflect.ValueOfBytes((*x.list)[i])
 }
 
 func (x *_MsgExecuteBundle_2_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta11.TxRaw)
+	valueUnwrapped := value.Bytes()
+	concreteValue := valueUnwrapped
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_MsgExecuteBundle_2_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta11.TxRaw)
+	valueUnwrapped := value.Bytes()
+	concreteValue := valueUnwrapped
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_MsgExecuteBundle_2_list) AppendMutable() protoreflect.Value {
-	v := new(v1beta11.TxRaw)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
+	panic(fmt.Errorf("AppendMutable can not be called on message MsgExecuteBundle at list field Txs as it is not of Message kind"))
 }
 
 func (x *_MsgExecuteBundle_2_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
 	*x.list = (*x.list)[:n]
 }
 
 func (x *_MsgExecuteBundle_2_list) NewElement() protoreflect.Value {
-	v := new(v1beta11.TxRaw)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
+	var v []byte
+	return protoreflect.ValueOfBytes(v)
 }
 
 func (x *_MsgExecuteBundle_2_list) IsValid() bool {
@@ -2606,7 +2601,7 @@ func (x *fastReflection_MsgExecuteBundle) Mutable(fd protoreflect.FieldDescripto
 	switch fd.FullName() {
 	case "cosmos.accounts.v1.MsgExecuteBundle.txs":
 		if x.Txs == nil {
-			x.Txs = []*v1beta11.TxRaw{}
+			x.Txs = [][]byte{}
 		}
 		value := &_MsgExecuteBundle_2_list{list: &x.Txs}
 		return protoreflect.ValueOfList(value)
@@ -2628,7 +2623,7 @@ func (x *fastReflection_MsgExecuteBundle) NewField(fd protoreflect.FieldDescript
 	case "cosmos.accounts.v1.MsgExecuteBundle.bundler":
 		return protoreflect.ValueOfString("")
 	case "cosmos.accounts.v1.MsgExecuteBundle.txs":
-		list := []*v1beta11.TxRaw{}
+		list := [][]byte{}
 		return protoreflect.ValueOfList(&_MsgExecuteBundle_2_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -2704,8 +2699,8 @@ func (x *fastReflection_MsgExecuteBundle) ProtoMethods() *protoiface.Methods {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if len(x.Txs) > 0 {
-			for _, e := range x.Txs {
-				l = options.Size(e)
+			for _, b := range x.Txs {
+				l = len(b)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
@@ -2740,16 +2735,9 @@ func (x *fastReflection_MsgExecuteBundle) ProtoMethods() *protoiface.Methods {
 		}
 		if len(x.Txs) > 0 {
 			for iNdEx := len(x.Txs) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.Txs[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i -= len(x.Txs[iNdEx])
+				copy(dAtA[i:], x.Txs[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Txs[iNdEx])))
 				i--
 				dAtA[i] = 0x12
 			}
@@ -2846,7 +2834,7 @@ func (x *fastReflection_MsgExecuteBundle) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Txs", wireType)
 				}
-				var msglen int
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -2856,25 +2844,23 @@ func (x *fastReflection_MsgExecuteBundle) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					msglen |= int(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if msglen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + msglen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Txs = append(x.Txs, &v1beta11.TxRaw{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Txs[len(x.Txs)-1]); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
+				x.Txs = append(x.Txs, make([]byte, postIndex-iNdEx))
+				copy(x.Txs[len(x.Txs)-1], dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -2911,16 +2897,126 @@ func (x *fastReflection_MsgExecuteBundle) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var _ protoreflect.List = (*_BundledTxResponse_3_list)(nil)
+
+type _BundledTxResponse_3_list struct {
+	list *[]*anypb.Any
+}
+
+func (x *_BundledTxResponse_3_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_BundledTxResponse_3_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_BundledTxResponse_3_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_BundledTxResponse_3_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_BundledTxResponse_3_list) AppendMutable() protoreflect.Value {
+	v := new(anypb.Any)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_BundledTxResponse_3_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_BundledTxResponse_3_list) NewElement() protoreflect.Value {
+	v := new(anypb.Any)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_BundledTxResponse_3_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_BundledTxResponse_5_list)(nil)
+
+type _BundledTxResponse_5_list struct {
+	list *[]*anypb.Any
+}
+
+func (x *_BundledTxResponse_5_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_BundledTxResponse_5_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_BundledTxResponse_5_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_BundledTxResponse_5_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_BundledTxResponse_5_list) AppendMutable() protoreflect.Value {
+	v := new(anypb.Any)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_BundledTxResponse_5_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_BundledTxResponse_5_list) NewElement() protoreflect.Value {
+	v := new(anypb.Any)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_BundledTxResponse_5_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_BundledTxResponse                protoreflect.MessageDescriptor
-	fd_BundledTxResponse_exec_responses protoreflect.FieldDescriptor
-	fd_BundledTxResponse_error          protoreflect.FieldDescriptor
+	md_BundledTxResponse                           protoreflect.MessageDescriptor
+	fd_BundledTxResponse_authentication_gas_used   protoreflect.FieldDescriptor
+	fd_BundledTxResponse_bundler_payment_gas_used  protoreflect.FieldDescriptor
+	fd_BundledTxResponse_bundler_payment_responses protoreflect.FieldDescriptor
+	fd_BundledTxResponse_execution_gas_used        protoreflect.FieldDescriptor
+	fd_BundledTxResponse_execution_responses       protoreflect.FieldDescriptor
+	fd_BundledTxResponse_error                     protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_accounts_v1_tx_proto_init()
 	md_BundledTxResponse = File_cosmos_accounts_v1_tx_proto.Messages().ByName("BundledTxResponse")
-	fd_BundledTxResponse_exec_responses = md_BundledTxResponse.Fields().ByName("exec_responses")
+	fd_BundledTxResponse_authentication_gas_used = md_BundledTxResponse.Fields().ByName("authentication_gas_used")
+	fd_BundledTxResponse_bundler_payment_gas_used = md_BundledTxResponse.Fields().ByName("bundler_payment_gas_used")
+	fd_BundledTxResponse_bundler_payment_responses = md_BundledTxResponse.Fields().ByName("bundler_payment_responses")
+	fd_BundledTxResponse_execution_gas_used = md_BundledTxResponse.Fields().ByName("execution_gas_used")
+	fd_BundledTxResponse_execution_responses = md_BundledTxResponse.Fields().ByName("execution_responses")
 	fd_BundledTxResponse_error = md_BundledTxResponse.Fields().ByName("error")
 }
 
@@ -2989,9 +3085,33 @@ func (x *fastReflection_BundledTxResponse) Interface() protoreflect.ProtoMessage
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_BundledTxResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.ExecResponses != nil {
-		value := protoreflect.ValueOfMessage(x.ExecResponses.ProtoReflect())
-		if !f(fd_BundledTxResponse_exec_responses, value) {
+	if x.AuthenticationGasUsed != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.AuthenticationGasUsed)
+		if !f(fd_BundledTxResponse_authentication_gas_used, value) {
+			return
+		}
+	}
+	if x.BundlerPaymentGasUsed != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.BundlerPaymentGasUsed)
+		if !f(fd_BundledTxResponse_bundler_payment_gas_used, value) {
+			return
+		}
+	}
+	if len(x.BundlerPaymentResponses) != 0 {
+		value := protoreflect.ValueOfList(&_BundledTxResponse_3_list{list: &x.BundlerPaymentResponses})
+		if !f(fd_BundledTxResponse_bundler_payment_responses, value) {
+			return
+		}
+	}
+	if x.ExecutionGasUsed != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ExecutionGasUsed)
+		if !f(fd_BundledTxResponse_execution_gas_used, value) {
+			return
+		}
+	}
+	if len(x.ExecutionResponses) != 0 {
+		value := protoreflect.ValueOfList(&_BundledTxResponse_5_list{list: &x.ExecutionResponses})
+		if !f(fd_BundledTxResponse_execution_responses, value) {
 			return
 		}
 	}
@@ -3016,8 +3136,16 @@ func (x *fastReflection_BundledTxResponse) Range(f func(protoreflect.FieldDescri
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_BundledTxResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.BundledTxResponse.exec_responses":
-		return x.ExecResponses != nil
+	case "cosmos.accounts.v1.BundledTxResponse.authentication_gas_used":
+		return x.AuthenticationGasUsed != uint64(0)
+	case "cosmos.accounts.v1.BundledTxResponse.bundler_payment_gas_used":
+		return x.BundlerPaymentGasUsed != uint64(0)
+	case "cosmos.accounts.v1.BundledTxResponse.bundler_payment_responses":
+		return len(x.BundlerPaymentResponses) != 0
+	case "cosmos.accounts.v1.BundledTxResponse.execution_gas_used":
+		return x.ExecutionGasUsed != uint64(0)
+	case "cosmos.accounts.v1.BundledTxResponse.execution_responses":
+		return len(x.ExecutionResponses) != 0
 	case "cosmos.accounts.v1.BundledTxResponse.error":
 		return x.Error != ""
 	default:
@@ -3036,8 +3164,16 @@ func (x *fastReflection_BundledTxResponse) Has(fd protoreflect.FieldDescriptor) 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BundledTxResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.BundledTxResponse.exec_responses":
-		x.ExecResponses = nil
+	case "cosmos.accounts.v1.BundledTxResponse.authentication_gas_used":
+		x.AuthenticationGasUsed = uint64(0)
+	case "cosmos.accounts.v1.BundledTxResponse.bundler_payment_gas_used":
+		x.BundlerPaymentGasUsed = uint64(0)
+	case "cosmos.accounts.v1.BundledTxResponse.bundler_payment_responses":
+		x.BundlerPaymentResponses = nil
+	case "cosmos.accounts.v1.BundledTxResponse.execution_gas_used":
+		x.ExecutionGasUsed = uint64(0)
+	case "cosmos.accounts.v1.BundledTxResponse.execution_responses":
+		x.ExecutionResponses = nil
 	case "cosmos.accounts.v1.BundledTxResponse.error":
 		x.Error = ""
 	default:
@@ -3056,9 +3192,27 @@ func (x *fastReflection_BundledTxResponse) Clear(fd protoreflect.FieldDescriptor
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_BundledTxResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.accounts.v1.BundledTxResponse.exec_responses":
-		value := x.ExecResponses
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "cosmos.accounts.v1.BundledTxResponse.authentication_gas_used":
+		value := x.AuthenticationGasUsed
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.accounts.v1.BundledTxResponse.bundler_payment_gas_used":
+		value := x.BundlerPaymentGasUsed
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.accounts.v1.BundledTxResponse.bundler_payment_responses":
+		if len(x.BundlerPaymentResponses) == 0 {
+			return protoreflect.ValueOfList(&_BundledTxResponse_3_list{})
+		}
+		listValue := &_BundledTxResponse_3_list{list: &x.BundlerPaymentResponses}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.accounts.v1.BundledTxResponse.execution_gas_used":
+		value := x.ExecutionGasUsed
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.accounts.v1.BundledTxResponse.execution_responses":
+		if len(x.ExecutionResponses) == 0 {
+			return protoreflect.ValueOfList(&_BundledTxResponse_5_list{})
+		}
+		listValue := &_BundledTxResponse_5_list{list: &x.ExecutionResponses}
+		return protoreflect.ValueOfList(listValue)
 	case "cosmos.accounts.v1.BundledTxResponse.error":
 		value := x.Error
 		return protoreflect.ValueOfString(value)
@@ -3082,8 +3236,20 @@ func (x *fastReflection_BundledTxResponse) Get(descriptor protoreflect.FieldDesc
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BundledTxResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.BundledTxResponse.exec_responses":
-		x.ExecResponses = value.Message().Interface().(*anypb.Any)
+	case "cosmos.accounts.v1.BundledTxResponse.authentication_gas_used":
+		x.AuthenticationGasUsed = value.Uint()
+	case "cosmos.accounts.v1.BundledTxResponse.bundler_payment_gas_used":
+		x.BundlerPaymentGasUsed = value.Uint()
+	case "cosmos.accounts.v1.BundledTxResponse.bundler_payment_responses":
+		lv := value.List()
+		clv := lv.(*_BundledTxResponse_3_list)
+		x.BundlerPaymentResponses = *clv.list
+	case "cosmos.accounts.v1.BundledTxResponse.execution_gas_used":
+		x.ExecutionGasUsed = value.Uint()
+	case "cosmos.accounts.v1.BundledTxResponse.execution_responses":
+		lv := value.List()
+		clv := lv.(*_BundledTxResponse_5_list)
+		x.ExecutionResponses = *clv.list
 	case "cosmos.accounts.v1.BundledTxResponse.error":
 		x.Error = value.Interface().(string)
 	default:
@@ -3106,11 +3272,24 @@ func (x *fastReflection_BundledTxResponse) Set(fd protoreflect.FieldDescriptor, 
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BundledTxResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.BundledTxResponse.exec_responses":
-		if x.ExecResponses == nil {
-			x.ExecResponses = new(anypb.Any)
+	case "cosmos.accounts.v1.BundledTxResponse.bundler_payment_responses":
+		if x.BundlerPaymentResponses == nil {
+			x.BundlerPaymentResponses = []*anypb.Any{}
 		}
-		return protoreflect.ValueOfMessage(x.ExecResponses.ProtoReflect())
+		value := &_BundledTxResponse_3_list{list: &x.BundlerPaymentResponses}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.accounts.v1.BundledTxResponse.execution_responses":
+		if x.ExecutionResponses == nil {
+			x.ExecutionResponses = []*anypb.Any{}
+		}
+		value := &_BundledTxResponse_5_list{list: &x.ExecutionResponses}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.accounts.v1.BundledTxResponse.authentication_gas_used":
+		panic(fmt.Errorf("field authentication_gas_used of message cosmos.accounts.v1.BundledTxResponse is not mutable"))
+	case "cosmos.accounts.v1.BundledTxResponse.bundler_payment_gas_used":
+		panic(fmt.Errorf("field bundler_payment_gas_used of message cosmos.accounts.v1.BundledTxResponse is not mutable"))
+	case "cosmos.accounts.v1.BundledTxResponse.execution_gas_used":
+		panic(fmt.Errorf("field execution_gas_used of message cosmos.accounts.v1.BundledTxResponse is not mutable"))
 	case "cosmos.accounts.v1.BundledTxResponse.error":
 		panic(fmt.Errorf("field error of message cosmos.accounts.v1.BundledTxResponse is not mutable"))
 	default:
@@ -3126,9 +3305,18 @@ func (x *fastReflection_BundledTxResponse) Mutable(fd protoreflect.FieldDescript
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_BundledTxResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.accounts.v1.BundledTxResponse.exec_responses":
-		m := new(anypb.Any)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "cosmos.accounts.v1.BundledTxResponse.authentication_gas_used":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.accounts.v1.BundledTxResponse.bundler_payment_gas_used":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.accounts.v1.BundledTxResponse.bundler_payment_responses":
+		list := []*anypb.Any{}
+		return protoreflect.ValueOfList(&_BundledTxResponse_3_list{list: &list})
+	case "cosmos.accounts.v1.BundledTxResponse.execution_gas_used":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.accounts.v1.BundledTxResponse.execution_responses":
+		list := []*anypb.Any{}
+		return protoreflect.ValueOfList(&_BundledTxResponse_5_list{list: &list})
 	case "cosmos.accounts.v1.BundledTxResponse.error":
 		return protoreflect.ValueOfString("")
 	default:
@@ -3200,9 +3388,26 @@ func (x *fastReflection_BundledTxResponse) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.ExecResponses != nil {
-			l = options.Size(x.ExecResponses)
-			n += 1 + l + runtime.Sov(uint64(l))
+		if x.AuthenticationGasUsed != 0 {
+			n += 1 + runtime.Sov(uint64(x.AuthenticationGasUsed))
+		}
+		if x.BundlerPaymentGasUsed != 0 {
+			n += 1 + runtime.Sov(uint64(x.BundlerPaymentGasUsed))
+		}
+		if len(x.BundlerPaymentResponses) > 0 {
+			for _, e := range x.BundlerPaymentResponses {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.ExecutionGasUsed != 0 {
+			n += 1 + runtime.Sov(uint64(x.ExecutionGasUsed))
+		}
+		if len(x.ExecutionResponses) > 0 {
+			for _, e := range x.ExecutionResponses {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
 		}
 		l = len(x.Error)
 		if l > 0 {
@@ -3242,21 +3447,54 @@ func (x *fastReflection_BundledTxResponse) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], x.Error)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Error)))
 			i--
-			dAtA[i] = 0x12
+			dAtA[i] = 0x32
 		}
-		if x.ExecResponses != nil {
-			encoded, err := options.Marshal(x.ExecResponses)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
+		if len(x.ExecutionResponses) > 0 {
+			for iNdEx := len(x.ExecutionResponses) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.ExecutionResponses[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x2a
 			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+		}
+		if x.ExecutionGasUsed != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.ExecutionGasUsed))
 			i--
-			dAtA[i] = 0xa
+			dAtA[i] = 0x20
+		}
+		if len(x.BundlerPaymentResponses) > 0 {
+			for iNdEx := len(x.BundlerPaymentResponses) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.BundlerPaymentResponses[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x1a
+			}
+		}
+		if x.BundlerPaymentGasUsed != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.BundlerPaymentGasUsed))
+			i--
+			dAtA[i] = 0x10
+		}
+		if x.AuthenticationGasUsed != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.AuthenticationGasUsed))
+			i--
+			dAtA[i] = 0x8
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -3308,8 +3546,46 @@ func (x *fastReflection_BundledTxResponse) ProtoMethods() *protoiface.Methods {
 			}
 			switch fieldNum {
 			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AuthenticationGasUsed", wireType)
+				}
+				x.AuthenticationGasUsed = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.AuthenticationGasUsed |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BundlerPaymentGasUsed", wireType)
+				}
+				x.BundlerPaymentGasUsed = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.BundlerPaymentGasUsed |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ExecResponses", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BundlerPaymentResponses", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -3336,14 +3612,65 @@ func (x *fastReflection_BundledTxResponse) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.ExecResponses == nil {
-					x.ExecResponses = &anypb.Any{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ExecResponses); err != nil {
+				x.BundlerPaymentResponses = append(x.BundlerPaymentResponses, &anypb.Any{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.BundlerPaymentResponses[len(x.BundlerPaymentResponses)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 2:
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ExecutionGasUsed", wireType)
+				}
+				x.ExecutionGasUsed = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.ExecutionGasUsed |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ExecutionResponses", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ExecutionResponses = append(x.ExecutionResponses, &anypb.Any{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ExecutionResponses[len(x.ExecutionResponses)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 6:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
 				}
@@ -4140,7 +4467,7 @@ type MsgExecuteBundle struct {
 	// to execute one or multiple UserOperations on behalf of others.
 	Bundler string `protobuf:"bytes,1,opt,name=bundler,proto3" json:"bundler,omitempty"`
 	// txs defines the txs to execute on behalf of other users.
-	Txs []*v1beta11.TxRaw `protobuf:"bytes,2,rep,name=txs,proto3" json:"txs,omitempty"`
+	Txs [][]byte `protobuf:"bytes,2,rep,name=txs,proto3" json:"txs,omitempty"`
 }
 
 func (x *MsgExecuteBundle) Reset() {
@@ -4170,7 +4497,7 @@ func (x *MsgExecuteBundle) GetBundler() string {
 	return ""
 }
 
-func (x *MsgExecuteBundle) GetTxs() []*v1beta11.TxRaw {
+func (x *MsgExecuteBundle) GetTxs() [][]byte {
 	if x != nil {
 		return x.Txs
 	}
@@ -4178,13 +4505,31 @@ func (x *MsgExecuteBundle) GetTxs() []*v1beta11.TxRaw {
 }
 
 // BundledTxResponse defines the response of a bundled tx.
+// If the operation fails the error field will be populated, the used gas fields will also be
+// populated depending on when the execution stopped. Bundler payment responses will be populated
+// if the execution fails.
 type BundledTxResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ExecResponses *anypb.Any `protobuf:"bytes,1,opt,name=exec_responses,json=execResponses,proto3" json:"exec_responses,omitempty"`
-	Error         string     `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	// authentication_gas_used defines the gas used for the authentication part of the UserOperation.
+	AuthenticationGasUsed uint64 `protobuf:"varint,1,opt,name=authentication_gas_used,json=authenticationGasUsed,proto3" json:"authentication_gas_used,omitempty"`
+	// bundler_payment_gas_used defines the gas used for the bundler payment part of the UserOperation.
+	BundlerPaymentGasUsed uint64 `protobuf:"varint,2,opt,name=bundler_payment_gas_used,json=bundlerPaymentGasUsed,proto3" json:"bundler_payment_gas_used,omitempty"`
+	// bundler_payment_responses defines the responses of the bundler payment messages.
+	// It can be empty if the bundler does not need any form of payment.
+	BundlerPaymentResponses []*anypb.Any `protobuf:"bytes,3,rep,name=bundler_payment_responses,json=bundlerPaymentResponses,proto3" json:"bundler_payment_responses,omitempty"`
+	// execution_gas_used defines the gas used for the execution part of the UserOperation.
+	ExecutionGasUsed uint64 `protobuf:"varint,4,opt,name=execution_gas_used,json=executionGasUsed,proto3" json:"execution_gas_used,omitempty"`
+	// execution_responses defines the responses of the execution messages.
+	ExecutionResponses []*anypb.Any `protobuf:"bytes,5,rep,name=execution_responses,json=executionResponses,proto3" json:"execution_responses,omitempty"`
+	// error defines the error that occurred during the execution of the UserOperation.
+	// If the error is not empty, the UserOperation failed.
+	// Other fields might be populated even if the error is not empty, for example
+	// if the operation fails after the authentication step, the authentication_gas_used
+	// field will be populated.
+	Error string `protobuf:"bytes,6,opt,name=error,proto3" json:"error,omitempty"`
 }
 
 func (x *BundledTxResponse) Reset() {
@@ -4207,9 +4552,37 @@ func (*BundledTxResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_accounts_v1_tx_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *BundledTxResponse) GetExecResponses() *anypb.Any {
+func (x *BundledTxResponse) GetAuthenticationGasUsed() uint64 {
 	if x != nil {
-		return x.ExecResponses
+		return x.AuthenticationGasUsed
+	}
+	return 0
+}
+
+func (x *BundledTxResponse) GetBundlerPaymentGasUsed() uint64 {
+	if x != nil {
+		return x.BundlerPaymentGasUsed
+	}
+	return 0
+}
+
+func (x *BundledTxResponse) GetBundlerPaymentResponses() []*anypb.Any {
+	if x != nil {
+		return x.BundlerPaymentResponses
+	}
+	return nil
+}
+
+func (x *BundledTxResponse) GetExecutionGasUsed() uint64 {
+	if x != nil {
+		return x.ExecutionGasUsed
+	}
+	return 0
+}
+
+func (x *BundledTxResponse) GetExecutionResponses() []*anypb.Any {
+	if x != nil {
+		return x.ExecutionResponses
 	}
 	return nil
 }
@@ -4227,7 +4600,7 @@ type MsgExecuteBundleResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// responses is the list of responses returned by the account implementations.
+	// responses is the list of responses from the bundle txs.
 	Responses []*BundledTxResponse `protobuf:"bytes,1,rep,name=responses,proto3" json:"responses,omitempty"`
 }
 
@@ -4312,55 +4685,69 @@ var file_cosmos_accounts_v1_tx_proto_rawDesc = []byte{
 	0x65, 0x12, 0x30, 0x0a, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18, 0x01, 0x20,
 	0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x22, 0x66, 0x0a, 0x10, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74,
+	0x6e, 0x73, 0x65, 0x22, 0x4c, 0x0a, 0x10, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74,
 	0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x62, 0x75, 0x6e, 0x64, 0x6c,
 	0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65,
-	0x72, 0x12, 0x2a, 0x0a, 0x03, 0x74, 0x78, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x18,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x74, 0x78, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x54, 0x78, 0x52, 0x61, 0x77, 0x52, 0x03, 0x74, 0x78, 0x73, 0x3a, 0x0c, 0x82,
-	0xe7, 0xb0, 0x2a, 0x07, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x22, 0x66, 0x0a, 0x11, 0x42,
-	0x75, 0x6e, 0x64, 0x6c, 0x65, 0x64, 0x54, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x3b, 0x0a, 0x0e, 0x65, 0x78, 0x65, 0x63, 0x5f, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
-	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x0d,
-	0x65, 0x78, 0x65, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x12, 0x14, 0x0a,
-	0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x65, 0x72,
-	0x72, 0x6f, 0x72, 0x22, 0x5f, 0x0a, 0x18, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74,
-	0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x43, 0x0a, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03,
-	0x28, 0x0b, 0x32, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f,
-	0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x64, 0x54,
-	0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x73, 0x32, 0x8e, 0x02, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x48, 0x0a, 0x04,
-	0x49, 0x6e, 0x69, 0x74, 0x12, 0x1b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63,
-	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69,
-	0x74, 0x1a, 0x23, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69, 0x74, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x51, 0x0a, 0x07, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74,
-	0x65, 0x12, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74,
-	0x65, 0x1a, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74,
-	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x63, 0x0a, 0x0d, 0x45, 0x78, 0x65,
-	0x63, 0x75, 0x74, 0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x12, 0x24, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e,
-	0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65,
-	0x1a, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65,
-	0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05,
-	0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xbb, 0x01, 0x0a, 0x16, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31,
-	0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f, 0x76, 0x31,
-	0x3b, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x41,
-	0x58, 0xaa, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x73, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
-	0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1e, 0x43, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31,
-	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x14, 0x43,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x3a,
-	0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x72, 0x12, 0x10, 0x0a, 0x03, 0x74, 0x78, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0c, 0x52, 0x03,
+	0x74, 0x78, 0x73, 0x3a, 0x0c, 0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65,
+	0x72, 0x22, 0xe1, 0x02, 0x0a, 0x11, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x64, 0x54, 0x78, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x36, 0x0a, 0x17, 0x61, 0x75, 0x74, 0x68, 0x65,
+	0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x67, 0x61, 0x73, 0x5f, 0x75, 0x73,
+	0x65, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x15, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e,
+	0x74, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x47, 0x61, 0x73, 0x55, 0x73, 0x65, 0x64, 0x12,
+	0x37, 0x0a, 0x18, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x5f, 0x70, 0x61, 0x79, 0x6d, 0x65,
+	0x6e, 0x74, 0x5f, 0x67, 0x61, 0x73, 0x5f, 0x75, 0x73, 0x65, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x15, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x50, 0x61, 0x79, 0x6d, 0x65, 0x6e,
+	0x74, 0x47, 0x61, 0x73, 0x55, 0x73, 0x65, 0x64, 0x12, 0x50, 0x0a, 0x19, 0x62, 0x75, 0x6e, 0x64,
+	0x6c, 0x65, 0x72, 0x5f, 0x70, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x5f, 0x72, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e,
+	0x79, 0x52, 0x17, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x50, 0x61, 0x79, 0x6d, 0x65, 0x6e,
+	0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x12, 0x2c, 0x0a, 0x12, 0x65, 0x78,
+	0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x67, 0x61, 0x73, 0x5f, 0x75, 0x73, 0x65, 0x64,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x10, 0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x69, 0x6f,
+	0x6e, 0x47, 0x61, 0x73, 0x55, 0x73, 0x65, 0x64, 0x12, 0x45, 0x0a, 0x13, 0x65, 0x78, 0x65, 0x63,
+	0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x18,
+	0x05, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x12, 0x65, 0x78, 0x65,
+	0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x12,
+	0x14, 0x0a, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
+	0x65, 0x72, 0x72, 0x6f, 0x72, 0x22, 0x5f, 0x0a, 0x18, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63,
+	0x75, 0x74, 0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x43, 0x0a, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x18, 0x01,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63,
+	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65,
+	0x64, 0x54, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x09, 0x72, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x32, 0x8e, 0x02, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x48,
+	0x0a, 0x04, 0x49, 0x6e, 0x69, 0x74, 0x12, 0x1b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x49,
+	0x6e, 0x69, 0x74, 0x1a, 0x23, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63,
+	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x49, 0x6e, 0x69, 0x74,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x51, 0x0a, 0x07, 0x45, 0x78, 0x65, 0x63,
+	0x75, 0x74, 0x65, 0x12, 0x1e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63,
+	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63,
+	0x75, 0x74, 0x65, 0x1a, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63,
+	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63,
+	0x75, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x63, 0x0a, 0x0d, 0x45,
+	0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x12, 0x24, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76,
+	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x42, 0x75, 0x6e, 0x64,
+	0x6c, 0x65, 0x1a, 0x2c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f,
+	0x75, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75,
+	0x74, 0x65, 0x42, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xbb, 0x01, 0x0a, 0x16, 0x63, 0x6f, 0x6d, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e,
+	0x76, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2f,
+	0x76, 0x31, 0x3b, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x76, 0x31, 0xa2, 0x02, 0x03,
+	0x43, 0x41, 0x58, 0xaa, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x63, 0x63,
+	0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x12, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1e,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x5c,
+	0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
+	0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x73, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -4386,7 +4773,6 @@ var file_cosmos_accounts_v1_tx_proto_goTypes = []interface{}{
 	(*MsgExecuteBundleResponse)(nil), // 6: cosmos.accounts.v1.MsgExecuteBundleResponse
 	(*anypb.Any)(nil),                // 7: google.protobuf.Any
 	(*v1beta1.Coin)(nil),             // 8: cosmos.base.v1beta1.Coin
-	(*v1beta11.TxRaw)(nil),           // 9: cosmos.tx.v1beta1.TxRaw
 }
 var file_cosmos_accounts_v1_tx_proto_depIdxs = []int32{
 	7,  // 0: cosmos.accounts.v1.MsgInit.message:type_name -> google.protobuf.Any
@@ -4395,8 +4781,8 @@ var file_cosmos_accounts_v1_tx_proto_depIdxs = []int32{
 	7,  // 3: cosmos.accounts.v1.MsgExecute.message:type_name -> google.protobuf.Any
 	8,  // 4: cosmos.accounts.v1.MsgExecute.funds:type_name -> cosmos.base.v1beta1.Coin
 	7,  // 5: cosmos.accounts.v1.MsgExecuteResponse.response:type_name -> google.protobuf.Any
-	9,  // 6: cosmos.accounts.v1.MsgExecuteBundle.txs:type_name -> cosmos.tx.v1beta1.TxRaw
-	7,  // 7: cosmos.accounts.v1.BundledTxResponse.exec_responses:type_name -> google.protobuf.Any
+	7,  // 6: cosmos.accounts.v1.BundledTxResponse.bundler_payment_responses:type_name -> google.protobuf.Any
+	7,  // 7: cosmos.accounts.v1.BundledTxResponse.execution_responses:type_name -> google.protobuf.Any
 	5,  // 8: cosmos.accounts.v1.MsgExecuteBundleResponse.responses:type_name -> cosmos.accounts.v1.BundledTxResponse
 	0,  // 9: cosmos.accounts.v1.Msg.Init:input_type -> cosmos.accounts.v1.MsgInit
 	2,  // 10: cosmos.accounts.v1.Msg.Execute:input_type -> cosmos.accounts.v1.MsgExecute

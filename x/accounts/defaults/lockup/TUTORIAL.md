@@ -1,14 +1,15 @@
 # Using lockup account on Cosmos sdk
 
-* [Setup](#setup)
-* [Init](#init)
-* [Execution](#execution)
+* [Using lockup account on Cosmos sdk](#using-lockup-account-on-cosmos-sdk)
+  * [Setup](#setup)
+  * [Init](#init)
+  * [Execution](#execution)
     * [Delegate](#delegate)
     * [Undelegate](#undelegate)
     * [Withdraw reward](#withdraw-reward)
     * [Withdraw unlocked token](#withdraw-unlocked-token)
     * [Send coins](#send-coins)
-* [Query](#query)
+  * [Query](#query)
     * [Query account info](#query-account-info)
     * [Query periodic lockup account locking periods](#query-periodic-lockup-account-locking-periods)
 
@@ -207,7 +208,7 @@ To query a lockup account state, we can use the command below:
 
 ```bash
 querycontents=$(cat query.json)
-simd tx accounts query <account_address> <query-request-type-url> $querycontents --from owner
+simd tx accounts query <account_address> <query-request-type-url> $querycontents
 ```
 
 ### Query account info

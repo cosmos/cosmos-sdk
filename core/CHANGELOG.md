@@ -39,7 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * [#22326](https://github.com/cosmos/cosmos-sdk/pull/22326) Introduce codec package in order to facilitate removal of Cosmos SDK dependency in modules. 
-
+* [*22267](https://github.com/cosmos/cosmos-sdk/pull/22267) Add `server.ConfigMap` and `server.ModuleConfigMap` to replace `server.DynamicConfig` in module configuration.
 
 ## [v1.0.0-alpha.3](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.3)
 

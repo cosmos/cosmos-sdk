@@ -51,4 +51,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
+// TODO: remove this once core is tagged.
 replace cosmossdk.io/core => ../../core

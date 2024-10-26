@@ -137,11 +137,7 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	// if we are past the minimum height and the validator has missed too many blocks, punish them
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
 		modifiedSignInfo = true
-		validator, err := k.sk.ValidatorByConsAddr(ctx, consAddr)
-		if err != nil {
-			return err
-		}
-		if validator != nil && !validator.IsJailed() {
+		if val != nil && !val.IsJailed() {
 			// Downtime confirmed: slash and jail the validator
 			// We need to retrieve the stake distribution that signed the block. To do this, we subtract ValidatorUpdateDelay from the evidence height,
 			// and subtract an additional 1 since this is the LastCommit.

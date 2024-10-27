@@ -19,7 +19,7 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
-	am "cosmossdk.io/server/v2/appmanager"
+	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/cometbft/handlers"
 	cometmock "cosmossdk.io/server/v2/cometbft/internal/mock"
 	"cosmossdk.io/server/v2/cometbft/mempool"
@@ -646,7 +646,7 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		}, nil
 	})
 
-	s, err := stf.NewSTF(
+	s, err := stf.New(
 		log.NewNopLogger().With("module", "stf"),
 		msgRouterBuilder,
 		queryRouterBuilder,
@@ -672,23 +672,22 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 	sc := cometmock.NewMockCommiter(log.NewNopLogger(), string(actorName), "stf")
 	mockStore := cometmock.NewMockStore(ss, sc)
 
-	b := am.Builder[mock.Tx]{
-		STF:                s,
-		DB:                 mockStore,
+	am := appmanager.New(appmanager.Config{
 		ValidateTxGasLimit: gasLimit,
 		QueryGasLimit:      gasLimit,
 		SimulationGasLimit: gasLimit,
-		InitGenesis: func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {
+	},
+		mockStore,
+		s,
+		func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {
 			_, st, err := mockStore.StateLatest()
 			require.NoError(t, err)
 			return branch.DefaultNewWriterMap(st), nil
 		},
-	}
+		nil,
+	)
 
-	am, err := b.Build()
-	require.NoError(t, err)
-
-	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", am, mempool, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
+	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", am, func() error { return nil }, mempool, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
 }
 
 // Check target version same with store's latest version

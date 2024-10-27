@@ -16,8 +16,7 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/api/telemetry"
-	"cosmossdk.io/server/v2/cometbft"
-	"cosmossdk.io/server/v2/store"
+	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 
@@ -36,14 +35,14 @@ import (
 )
 
 func newApp[T transaction.Tx](logger log.Logger, viper *viper.Viper) serverv2.AppI[T] {
-	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
+	viper.SetDefault(serverv2.FlagHome, simapp.DefaultNodeHome)
 	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper))
 }
 
 func initRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
-	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
+	consensusComponent serverv2.ServerComponent[T],
 ) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
@@ -55,11 +54,6 @@ func initRootCmd[T transaction.Tx](
 		NewTestnetCmd(moduleManager),
 	)
 
-	logger, err := serverv2.NewLogger(viper.New(), rootCmd.OutOrStdout())
-	if err != nil {
-		panic(fmt.Sprintf("failed to create logger: %v", err))
-	}
-
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
 		genesisCommand(moduleManager),
@@ -70,18 +64,13 @@ func initRootCmd[T transaction.Tx](
 	)
 
 	// wire server commands
-	if err = serverv2.AddCommands(
+	if err := serverv2.AddCommands(
 		rootCmd,
 		newApp,
-		logger,
 		initServerConfig(),
-		cometbft.New(
-			&genericTxDecoder[T]{txConfig},
-			initCometOptions[T](),
-			initCometConfig(),
-		),
+		consensusComponent,
 		grpc.New[T](),
-		store.New[T](newApp),
+		serverstore.New[T](),
 		telemetry.New[T](),
 	); err != nil {
 		panic(err)
@@ -169,7 +158,7 @@ func appExport[T transaction.Tx](
 
 	// overwrite the FlagInvCheckPeriod
 	viper.Set(server.FlagInvCheckPeriod, 1)
-	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
+	viper.SetDefault(serverv2.FlagHome, simapp.DefaultNodeHome)
 
 	var simApp *simapp.SimApp[T]
 	if height != -1 {

@@ -3,10 +3,10 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/errors"
-	"cosmossdk.io/x/upgrade/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type msgServer struct {
@@ -21,18 +21,16 @@ func NewMsgServerImpl(k *Keeper) types.MsgServer {
 	}
 }
 
-var (
-	_    types.MsgServer = msgServer{}
-	_, _ sdk.Msg         = &types.MsgSoftwareUpgrade{}, &types.MsgCancelUpgrade{}
-)
+var _ types.MsgServer = msgServer{}
 
 // SoftwareUpgrade implements the Msg/SoftwareUpgrade Msg service.
-func (k msgServer) SoftwareUpgrade(ctx context.Context, msg *types.MsgSoftwareUpgrade) (*types.MsgSoftwareUpgradeResponse, error) {
-	if k.authority != msg.Authority {
-		return nil, errors.Wrapf(types.ErrInvalidSigner, "expected %s got %s", k.authority, msg.Authority)
+func (k msgServer) SoftwareUpgrade(goCtx context.Context, req *types.MsgSoftwareUpgrade) (*types.MsgSoftwareUpgradeResponse, error) {
+	if k.authority != req.Authority {
+		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", k.authority, req.Authority)
 	}
 
-	err := k.ScheduleUpgrade(ctx, msg.Plan)
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	err := k.ScheduleUpgrade(ctx, req.Plan)
 	if err != nil {
 		return nil, err
 	}
@@ -41,15 +39,13 @@ func (k msgServer) SoftwareUpgrade(ctx context.Context, msg *types.MsgSoftwareUp
 }
 
 // CancelUpgrade implements the Msg/CancelUpgrade Msg service.
-func (k msgServer) CancelUpgrade(ctx context.Context, msg *types.MsgCancelUpgrade) (*types.MsgCancelUpgradeResponse, error) {
-	if k.authority != msg.Authority {
-		return nil, errors.Wrapf(types.ErrInvalidSigner, "expected %s got %s", k.authority, msg.Authority)
+func (k msgServer) CancelUpgrade(goCtx context.Context, req *types.MsgCancelUpgrade) (*types.MsgCancelUpgradeResponse, error) {
+	if k.authority != req.Authority {
+		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", k.authority, req.Authority)
 	}
 
-	err := k.ClearUpgradePlan(ctx)
-	if err != nil {
-		return nil, err
-	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	k.ClearUpgradePlan(ctx)
 
 	return &types.MsgCancelUpgradeResponse{}, nil
 }

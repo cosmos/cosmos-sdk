@@ -7,7 +7,7 @@ import (
 )
 
 func TestCommands(t *testing.T) {
-	rootCommands := Commands()
+	rootCommands := Commands("home")
 	assert.Assert(t, rootCommands != nil)
 
 	// Commands are registered

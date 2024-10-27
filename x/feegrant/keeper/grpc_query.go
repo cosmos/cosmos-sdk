@@ -7,35 +7,36 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/x/feegrant"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 var _ feegrant.QueryServer = Keeper{}
 
-// Allowance returns granted allowance to the grantee by the granter.
-func (q Keeper) Allowance(ctx context.Context, req *feegrant.QueryAllowanceRequest) (*feegrant.QueryAllowanceResponse, error) {
+// Allowance returns fee granted to the grantee by the granter.
+func (q Keeper) Allowance(c context.Context, req *feegrant.QueryAllowanceRequest) (*feegrant.QueryAllowanceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	granterAddr, err := q.authKeeper.AddressCodec().StringToBytes(req.Granter)
+	granterAddr, err := sdk.AccAddressFromBech32(req.Granter)
 	if err != nil {
 		return nil, err
 	}
 
-	granteeAddr, err := q.authKeeper.AddressCodec().StringToBytes(req.Grantee)
+	granteeAddr, err := sdk.AccAddressFromBech32(req.Grantee)
 	if err != nil {
 		return nil, err
 	}
+
+	ctx := sdk.UnwrapSDKContext(c)
 
 	feeAllowance, err := q.GetAllowance(ctx, granterAddr, granteeAddr)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	msg, ok := feeAllowance.(proto.Message)
@@ -45,13 +46,13 @@ func (q Keeper) Allowance(ctx context.Context, req *feegrant.QueryAllowanceReque
 
 	feeAllowanceAny, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	return &feegrant.QueryAllowanceResponse{
 		Allowance: &feegrant.Grant{
-			Granter:   req.Granter,
-			Grantee:   req.Grantee,
+			Granter:   granterAddr.String(),
+			Grantee:   granteeAddr.String(),
 			Allowance: feeAllowanceAny,
 		},
 	}, nil
@@ -63,21 +64,28 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	granteeAddr, err := q.authKeeper.AddressCodec().StringToBytes(req.Grantee)
+	granteeAddr, err := sdk.AccAddressFromBech32(req.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
+	ctx := sdk.UnwrapSDKContext(c)
+
 	var grants []*feegrant.Grant
 
-	_, pageRes, err := query.CollectionFilteredPaginate(c, q.FeeAllowance, req.Pagination,
-		func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (include bool, err error) {
-			grants = append(grants, &grant)
-			return true, nil
-		}, func(_ collections.Pair[sdk.AccAddress, sdk.AccAddress], value feegrant.Grant) (*feegrant.Grant, error) {
-			return &value, nil
-		}, query.WithCollectionPaginationPairPrefix[sdk.AccAddress, sdk.AccAddress](granteeAddr),
-	)
+	store := ctx.KVStore(q.storeKey)
+	grantsStore := prefix.NewStore(store, feegrant.FeeAllowancePrefixByGrantee(granteeAddr))
+
+	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key []byte, value []byte) error {
+		var grant feegrant.Grant
+
+		if err := q.cdc.Unmarshal(value, &grant); err != nil {
+			return err
+		}
+
+		grants = append(grants, &grant)
+		return nil
+	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -91,25 +99,26 @@ func (q Keeper) AllowancesByGranter(c context.Context, req *feegrant.QueryAllowa
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	granterAddr, err := q.authKeeper.AddressCodec().StringToBytes(req.Granter)
+	granterAddr, err := sdk.AccAddressFromBech32(req.Granter)
 	if err != nil {
 		return nil, err
 	}
 
-	var grants []*feegrant.Grant
-	_, pageRes, err := query.CollectionFilteredPaginate(c, q.FeeAllowance, req.Pagination,
-		func(key collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (include bool, err error) {
-			if !sdk.AccAddress(granterAddr).Equals(key.K2()) {
-				return false, nil
-			}
+	ctx := sdk.UnwrapSDKContext(c)
 
-			grants = append(grants, &grant)
-			return true, nil
-		},
-		func(_ collections.Pair[sdk.AccAddress, sdk.AccAddress], grant feegrant.Grant) (*feegrant.Grant, error) {
-			return &grant, nil
-		},
-	)
+	store := ctx.KVStore(q.storeKey)
+	prefixStore := prefix.NewStore(store, feegrant.FeeAllowanceKeyPrefix)
+	grants, pageRes, err := query.GenericFilteredPaginate(q.cdc, prefixStore, req.Pagination, func(key []byte, grant *feegrant.Grant) (*feegrant.Grant, error) {
+		// ParseAddressesFromFeeAllowanceKey expects the full key including the prefix.
+		granter, _ := feegrant.ParseAddressesFromFeeAllowanceKey(append(feegrant.FeeAllowanceKeyPrefix, key...))
+		if !granter.Equals(granterAddr) {
+			return nil, nil
+		}
+
+		return grant, nil
+	}, func() *feegrant.Grant {
+		return &feegrant.Grant{}
+	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

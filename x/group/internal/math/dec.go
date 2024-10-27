@@ -2,12 +2,12 @@
 package math
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/cockroachdb/apd/v2"
 
-	errorsmod "cosmossdk.io/errors"
-	grouperrors "cosmossdk.io/x/group/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
 // Dec is a wrapper struct around apd.Decimal that does no mutation of apd.Decimal's when performing
@@ -23,10 +23,10 @@ type Dec struct {
 func NewPositiveDecFromString(s string) (Dec, error) {
 	d, err := NewDecFromString(s)
 	if err != nil {
-		return Dec{}, grouperrors.ErrInvalidDecString.Wrap(err.Error())
+		return Dec{}, errors.ErrInvalidDecString.Wrap(err.Error())
 	}
 	if !d.IsPositive() {
-		return Dec{}, grouperrors.ErrInvalidDecString.Wrapf("expected a positive decimal, got %s", s)
+		return Dec{}, errors.ErrInvalidDecString.Wrapf("expected a positive decimal, got %s", s)
 	}
 	return d, nil
 }
@@ -34,10 +34,10 @@ func NewPositiveDecFromString(s string) (Dec, error) {
 func NewNonNegativeDecFromString(s string) (Dec, error) {
 	d, err := NewDecFromString(s)
 	if err != nil {
-		return Dec{}, grouperrors.ErrInvalidDecString.Wrap(err.Error())
+		return Dec{}, errors.ErrInvalidDecString.Wrap(err.Error())
 	}
 	if d.IsNegative() {
-		return Dec{}, grouperrors.ErrInvalidDecString.Wrapf("expected a non-negative decimal, got %s", s)
+		return Dec{}, errors.ErrInvalidDecString.Wrapf("expected a non-negative decimal, got %s", s)
 	}
 	return d, nil
 }
@@ -51,11 +51,11 @@ func (x Dec) IsPositive() bool {
 func NewDecFromString(s string) (Dec, error) {
 	d, _, err := apd.NewFromString(s)
 	if err != nil {
-		return Dec{}, grouperrors.ErrInvalidDecString.Wrap(err.Error())
+		return Dec{}, errors.ErrInvalidDecString.Wrap(err.Error())
 	}
 
 	if d.Form != apd.Finite {
-		return Dec{}, grouperrors.ErrInvalidDecString.Wrapf("expected a finite decimal, got %s", s)
+		return Dec{}, errors.ErrInvalidDecString.Wrapf("expected a finite decimal, got %s", s)
 	}
 
 	return Dec{*d}, nil
@@ -76,7 +76,7 @@ func NewDecFromInt64(x int64) Dec {
 func (x Dec) Add(y Dec) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Add(&z.dec, &x.dec, &y.dec)
-	return z, errorsmod.Wrap(err, "decimal addition error")
+	return z, sdkerrors.Wrap(err, "decimal addition error")
 }
 
 // Sub returns a new Dec with value `x-y` without mutating any argument and error if
@@ -84,7 +84,7 @@ func (x Dec) Add(y Dec) (Dec, error) {
 func (x Dec) Sub(y Dec) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Sub(&z.dec, &x.dec, &y.dec)
-	return z, errorsmod.Wrap(err, "decimal subtraction error")
+	return z, sdkerrors.Wrap(err, "decimal subtraction error")
 }
 
 func (x Dec) Int64() (int64, error) {
@@ -95,7 +95,7 @@ func (x Dec) Cmp(y Dec) int {
 	return x.dec.Cmp(&y.dec)
 }
 
-func (x Dec) Equal(y Dec) bool {
+func (x Dec) IsEqual(y Dec) bool {
 	return x.dec.Cmp(&y.dec) == 0
 }
 
@@ -104,7 +104,7 @@ func (x Dec) IsNegative() bool {
 }
 
 // Add adds x and y
-func Add(x, y Dec) (Dec, error) {
+func Add(x Dec, y Dec) (Dec, error) {
 	return x.Add(y)
 }
 
@@ -120,7 +120,7 @@ var dec128Context = apd.Context{
 func (x Dec) Quo(y Dec) (Dec, error) {
 	var z Dec
 	_, err := dec128Context.Quo(&z.dec, &x.dec, &y.dec)
-	return z, errorsmod.Wrap(err, "decimal quotient error")
+	return z, sdkerrors.Wrap(err, "decimal quotient error")
 }
 
 func (x Dec) IsZero() bool {
@@ -129,14 +129,14 @@ func (x Dec) IsZero() bool {
 
 // SubNonNegative subtracts the value of y from x and returns the result with
 // arbitrary precision. Returns an error if the result is negative.
-func SubNonNegative(x, y Dec) (Dec, error) {
+func SubNonNegative(x Dec, y Dec) (Dec, error) {
 	z, err := x.Sub(y)
 	if err != nil {
 		return Dec{}, err
 	}
 
 	if z.IsNegative() {
-		return z, errors.New("result negative during non-negative subtraction")
+		return z, fmt.Errorf("result negative during non-negative subtraction")
 	}
 
 	return z, nil

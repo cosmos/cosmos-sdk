@@ -1,13 +1,10 @@
 package query
 
 import (
-	"errors"
-
-	"github.com/cosmos/gogoproto/proto"
-
-	"cosmossdk.io/store/types"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // FilteredPaginate does pagination of all the results in the PrefixStore based on the
@@ -21,34 +18,56 @@ import (
 func FilteredPaginate(
 	prefixStore types.KVStore,
 	pageRequest *PageRequest,
-	onResult func(key, value []byte, accumulate bool) (bool, error),
+	onResult func(key []byte, value []byte, accumulate bool) (bool, error),
 ) (*PageResponse, error) {
-	pageRequest = initPageRequestDefaults(pageRequest)
-
-	if pageRequest.Offset > 0 && pageRequest.Key != nil {
-		return nil, errors.New("invalid request, either offset or key is expected, got both")
+	// if the PageRequest is nil, use default PageRequest
+	if pageRequest == nil {
+		pageRequest = &PageRequest{}
 	}
 
-	var (
-		numHits uint64
-		nextKey []byte
-		err     error
-	)
+	offset := pageRequest.Offset
+	key := pageRequest.Key
+	limit := pageRequest.Limit
+	countTotal := pageRequest.CountTotal
+	reverse := pageRequest.Reverse
 
-	iterator := getIterator(prefixStore, pageRequest.Key, pageRequest.Reverse)
-	defer iterator.Close()
+	if offset > 0 && key != nil {
+		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+	}
 
-	if len(pageRequest.Key) != 0 {
-		accumulateFn := func(_ uint64) bool { return true }
+	if limit == 0 {
+		limit = DefaultLimit
+
+		// count total results when the limit is zero/not supplied
+		countTotal = true
+	}
+
+	if len(key) != 0 {
+		iterator := getIterator(prefixStore, key, reverse)
+		defer iterator.Close()
+
+		var (
+			numHits uint64
+			nextKey []byte
+		)
+
 		for ; iterator.Valid(); iterator.Next() {
-			if numHits == pageRequest.Limit {
+			if numHits == limit {
 				nextKey = iterator.Key()
 				break
 			}
 
-			numHits, err = processResult(iterator, numHits, onResult, accumulateFn)
+			if iterator.Error() != nil {
+				return nil, iterator.Error()
+			}
+
+			hit, err := onResult(iterator.Key(), iterator.Value(), true)
 			if err != nil {
 				return nil, err
+			}
+
+			if hit {
+				numHits++
 			}
 		}
 
@@ -57,79 +76,48 @@ func FilteredPaginate(
 		}, nil
 	}
 
-	end := pageRequest.Offset + pageRequest.Limit
-	accumulateFn := func(numHits uint64) bool { return numHits >= pageRequest.Offset && numHits < end }
+	iterator := getIterator(prefixStore, nil, reverse)
+	defer iterator.Close()
+
+	end := offset + limit
+
+	var (
+		numHits uint64
+		nextKey []byte
+	)
 
 	for ; iterator.Valid(); iterator.Next() {
-		numHits, err = processResult(iterator, numHits, onResult, accumulateFn)
+		if iterator.Error() != nil {
+			return nil, iterator.Error()
+		}
+
+		accumulate := numHits >= offset && numHits < end
+		hit, err := onResult(iterator.Key(), iterator.Value(), accumulate)
 		if err != nil {
 			return nil, err
 		}
+
+		if hit {
+			numHits++
+		}
+
 		if numHits == end+1 {
 			if nextKey == nil {
 				nextKey = iterator.Key()
 			}
 
-			if !pageRequest.CountTotal {
+			if !countTotal {
 				break
 			}
 		}
 	}
 
 	res := &PageResponse{NextKey: nextKey}
-	if pageRequest.CountTotal {
+	if countTotal {
 		res.Total = numHits
 	}
 
 	return res, nil
-}
-
-func processResult(iterator types.Iterator, numHits uint64, onResult func(key, value []byte, accumulate bool) (bool, error), accumulateFn func(numHits uint64) bool) (uint64, error) {
-	if iterator.Error() != nil {
-		return numHits, iterator.Error()
-	}
-
-	accumulate := accumulateFn(numHits)
-	hit, err := onResult(iterator.Key(), iterator.Value(), accumulate)
-	if err != nil {
-		return numHits, err
-	}
-
-	if hit {
-		numHits++
-	}
-
-	return numHits, nil
-}
-
-func genericProcessResult[T, F proto.Message](iterator types.Iterator, numHits uint64, onResult func(key []byte, value T) (F, error), accumulateFn func(numHits uint64) bool,
-	constructor func() T, cdc codec.BinaryCodec, results []F,
-) ([]F, uint64, error) {
-	if iterator.Error() != nil {
-		return results, numHits, iterator.Error()
-	}
-
-	protoMsg := constructor()
-
-	err := cdc.Unmarshal(iterator.Value(), protoMsg)
-	if err != nil {
-		return results, numHits, err
-	}
-
-	val, err := onResult(iterator.Key(), protoMsg)
-	if err != nil {
-		return results, numHits, err
-	}
-
-	if proto.Size(val) != 0 {
-		// Previously this was the "accumulate" flag
-		if accumulateFn(numHits) {
-			results = append(results, val)
-		}
-		numHits++
-	}
-
-	return results, numHits, nil
 }
 
 // GenericFilteredPaginate does pagination of all the results in the PrefixStore based on the
@@ -140,40 +128,70 @@ func genericProcessResult[T, F proto.Message](iterator types.Iterator, numHits u
 // If offset is used, the pagination uses lazy filtering i.e., searches through all the records.
 // The resulting slice (of type F) can be of a different type than the one being iterated through
 // (type T), so it's possible to do any necessary transformation inside the onResult function.
-func GenericFilteredPaginate[T, F proto.Message](
+func GenericFilteredPaginate[T codec.ProtoMarshaler, F codec.ProtoMarshaler](
 	cdc codec.BinaryCodec,
 	prefixStore types.KVStore,
 	pageRequest *PageRequest,
 	onResult func(key []byte, value T) (F, error),
 	constructor func() T,
 ) ([]F, *PageResponse, error) {
-	pageRequest = initPageRequestDefaults(pageRequest)
-	results := []F{}
-
-	if pageRequest.Offset > 0 && pageRequest.Key != nil {
-		return results, nil, errors.New("invalid request, either offset or key is expected, got both")
+	// if the PageRequest is nil, use default PageRequest
+	if pageRequest == nil {
+		pageRequest = &PageRequest{}
 	}
 
-	var (
-		numHits uint64
-		nextKey []byte
-		err     error
-	)
+	offset := pageRequest.Offset
+	key := pageRequest.Key
+	limit := pageRequest.Limit
+	countTotal := pageRequest.CountTotal
+	reverse := pageRequest.Reverse
+	results := []F{}
 
-	iterator := getIterator(prefixStore, pageRequest.Key, pageRequest.Reverse)
-	defer iterator.Close()
+	if offset > 0 && key != nil {
+		return results, nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+	}
 
-	if len(pageRequest.Key) != 0 {
-		accumulateFn := func(_ uint64) bool { return true }
+	if limit == 0 {
+		limit = DefaultLimit
+
+		// count total results when the limit is zero/not supplied
+		countTotal = true
+	}
+
+	if len(key) != 0 {
+		iterator := getIterator(prefixStore, key, reverse)
+		defer iterator.Close()
+
+		var (
+			numHits uint64
+			nextKey []byte
+		)
+
 		for ; iterator.Valid(); iterator.Next() {
-			if numHits == pageRequest.Limit {
+			if numHits == limit {
 				nextKey = iterator.Key()
 				break
 			}
 
-			results, numHits, err = genericProcessResult(iterator, numHits, onResult, accumulateFn, constructor, cdc, results)
+			if iterator.Error() != nil {
+				return nil, nil, iterator.Error()
+			}
+
+			protoMsg := constructor()
+
+			err := cdc.Unmarshal(iterator.Value(), protoMsg)
 			if err != nil {
 				return nil, nil, err
+			}
+
+			val, err := onResult(iterator.Key(), protoMsg)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			if val.Size() != 0 {
+				results = append(results, val)
+				numHits++
 			}
 		}
 
@@ -182,13 +200,39 @@ func GenericFilteredPaginate[T, F proto.Message](
 		}, nil
 	}
 
-	end := pageRequest.Offset + pageRequest.Limit
-	accumulateFn := func(numHits uint64) bool { return numHits >= pageRequest.Offset && numHits < end }
+	iterator := getIterator(prefixStore, nil, reverse)
+	defer iterator.Close()
+
+	end := offset + limit
+
+	var (
+		numHits uint64
+		nextKey []byte
+	)
 
 	for ; iterator.Valid(); iterator.Next() {
-		results, numHits, err = genericProcessResult(iterator, numHits, onResult, accumulateFn, constructor, cdc, results)
+		if iterator.Error() != nil {
+			return nil, nil, iterator.Error()
+		}
+
+		protoMsg := constructor()
+
+		err := cdc.Unmarshal(iterator.Value(), protoMsg)
 		if err != nil {
 			return nil, nil, err
+		}
+
+		val, err := onResult(iterator.Key(), protoMsg)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if val.Size() != 0 {
+			// Previously this was the "accumulate" flag
+			if numHits >= offset && numHits < end {
+				results = append(results, val)
+			}
+			numHits++
 		}
 
 		if numHits == end+1 {
@@ -196,14 +240,14 @@ func GenericFilteredPaginate[T, F proto.Message](
 				nextKey = iterator.Key()
 			}
 
-			if !pageRequest.CountTotal {
+			if !countTotal {
 				break
 			}
 		}
 	}
 
 	res := &PageResponse{NextKey: nextKey}
-	if pageRequest.CountTotal {
+	if countTotal {
 		res.Total = numHits
 	}
 

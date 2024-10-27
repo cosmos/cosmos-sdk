@@ -6,9 +6,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/cosmos/go-bip39"
-
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	bip39 "github.com/cosmos/go-bip39"
 )
 
 func mnemonicToSeed(mnemonic string) []byte {
@@ -30,6 +29,6 @@ func FuzzCryptoHDDerivePrivateKeyForPath(f *testing.F) {
 		}
 		seed := mnemonicToSeed(string(mnemonic))
 		master, ch := hd.ComputeMastersFromSeed(seed)
-		_, _ = hd.DerivePrivateKeyForPath(master, ch, string(path))
+		hd.DerivePrivateKeyForPath(master, ch, string(path))
 	})
 }

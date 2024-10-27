@@ -156,7 +156,7 @@ message MsgSend {
   string class_id = 1;
   string id       = 2;
   string sender   = 3;
-  string receiver = 4;
+  string reveiver = 4;
 }
 message MsgSendResponse {}
 ```
@@ -253,7 +253,7 @@ message QuerySupplyResponse {
   uint64 amount = 1;
 }
 
-// QueryNFTsRequest is the request type for the Query/NFTs RPC method
+// QueryNFTstRequest is the request type for the Query/NFTs RPC method
 message QueryNFTsRequest {
   string                                class_id   = 1;
   string                                owner      = 2;

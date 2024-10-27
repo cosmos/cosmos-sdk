@@ -15,7 +15,7 @@ utilities.
 
 It is vital that the root command of an application uses `PersistentPreRun()` cobra command
 property for executing the command, so all child commands have access to the server and client contexts.
-These contexts are set as their default values initially and may be modified,
+These contexts are set as their default values initially and maybe modified,
 scoped to the command, in their respective `PersistentPreRun()` functions. Note that
 the `client.Context` is typically pre-populated with "default" values that may be
 useful for all commands to inherit and override if necessary.

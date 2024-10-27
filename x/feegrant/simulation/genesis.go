@@ -4,36 +4,27 @@ import (
 	"math/rand"
 	"time"
 
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/math"
-	"cosmossdk.io/x/feegrant"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 // genFeeGrants returns a slice of randomly generated allowances.
-func genFeeGrants(r *rand.Rand, accounts []simtypes.Account, addressCodec address.Codec) ([]feegrant.Grant, error) {
+func genFeeGrants(r *rand.Rand, accounts []simtypes.Account) []feegrant.Grant {
 	allowances := make([]feegrant.Grant, len(accounts)-1)
 	for i := 0; i < len(accounts)-1; i++ {
-		granter, err := addressCodec.BytesToString(accounts[i].Address)
-		if err != nil {
-			return allowances, err
-		}
-		grantee, err := addressCodec.BytesToString(accounts[i+1].Address)
-		if err != nil {
-			return allowances, err
-		}
+		granter := accounts[i].Address
+		grantee := accounts[i+1].Address
 		allowances[i] = generateRandomAllowances(granter, grantee, r)
 	}
-	return allowances, nil
+	return allowances
 }
 
-func generateRandomAllowances(granter, grantee string, r *rand.Rand) feegrant.Grant {
+func generateRandomAllowances(granter, grantee sdk.AccAddress, r *rand.Rand) feegrant.Grant {
 	allowances := make([]feegrant.Grant, 3)
-	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))
-	periodSpendLimit := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10)))
+	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
+	periodSpendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10)))
 
 	basic := feegrant.BasicAllowance{
 		SpendLimit: spendLimit,
@@ -70,15 +61,11 @@ func generateRandomAllowances(granter, grantee string, r *rand.Rand) feegrant.Gr
 // RandomizedGenState generates a random GenesisState for feegrant
 func RandomizedGenState(simState *module.SimulationState) {
 	var feegrants []feegrant.Grant
-	var err error
 
 	simState.AppParams.GetOrGenerate(
-		"feegrant", &feegrants, simState.Rand,
-		func(r *rand.Rand) { feegrants, err = genFeeGrants(r, simState.Accounts, simState.AddressCodec) },
+		simState.Cdc, "feegrant", &feegrants, simState.Rand,
+		func(r *rand.Rand) { feegrants = genFeeGrants(r, simState.Accounts) },
 	)
-	if err != nil {
-		panic(err)
-	}
 
 	feegrantGenesis := feegrant.NewGenesisState(feegrants)
 	bz, err := simState.Cdc.MarshalJSON(feegrantGenesis)

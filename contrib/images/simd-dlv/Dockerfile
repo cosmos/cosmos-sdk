@@ -1,16 +1,16 @@
-FROM golang:1.23-alpine AS build
+FROM golang:1.19-alpine AS build
 
 RUN apk add build-base git linux-headers libc-dev
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
 
 WORKDIR /work
 COPY go.mod go.sum /work/
+COPY errors/go.mod errors/go.sum /work/errors/
 COPY math/go.mod math/go.sum /work/math/
 COPY api/go.mod api/go.sum /work/api/
 COPY core/go.mod core/go.sum /work/core/
-COPY collections/go.mod collections/go.sum /work/collections/
-COPY store/go.mod store/go.sum /work/store/
-COPY x/tx/go.mod x/tx/go.sum /work/x/tx/
+COPY depinject/go.mod depinject/go.sum /work/depinject/
+COPY tools/rosetta/go.mod tools/rosetta/go.sum /work/tools/rosetta/
 RUN go mod download
 
 COPY ./ /work

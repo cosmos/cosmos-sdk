@@ -1,52 +1,44 @@
 package keeper
 
 import (
-	"context"
 	"sort"
 
-	"cosmossdk.io/x/nft"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 // InitGenesis initializes the nft module's genesis state from a given
 // genesis state.
-func (k Keeper) InitGenesis(ctx context.Context, data *nft.GenesisState) error {
+func (k Keeper) InitGenesis(ctx sdk.Context, data *nft.GenesisState) {
 	for _, class := range data.Classes {
 		if err := k.SaveClass(ctx, *class); err != nil {
-			return err
+			panic(err)
 		}
 	}
 	for _, entry := range data.Entries {
 		for _, nft := range entry.Nfts {
-			owner, err := k.ac.StringToBytes(entry.Owner)
-			if err != nil {
-				return err
-			}
+			owner := sdk.MustAccAddressFromBech32(entry.Owner)
 
 			if err := k.Mint(ctx, *nft, owner); err != nil {
-				return err
+				panic(err)
 			}
 		}
 	}
-	return nil
 }
 
 // ExportGenesis returns a GenesisState for a given context.
-func (k Keeper) ExportGenesis(ctx context.Context) (*nft.GenesisState, error) {
+func (k Keeper) ExportGenesis(ctx sdk.Context) *nft.GenesisState {
 	classes := k.GetClasses(ctx)
 	nftMap := make(map[string][]*nft.NFT)
 	for _, class := range classes {
 		nfts := k.GetNFTsOfClass(ctx, class.Id)
 		for i, n := range nfts {
 			owner := k.GetOwner(ctx, n.ClassId, n.Id)
-			ownerStr, err := k.ac.BytesToString(owner.Bytes())
-			if err != nil {
-				return nil, err
-			}
-			nftArr, ok := nftMap[ownerStr]
+			nftArr, ok := nftMap[owner.String()]
 			if !ok {
 				nftArr = make([]*nft.NFT, 0)
 			}
-			nftMap[ownerStr] = append(nftArr, &nfts[i])
+			nftMap[owner.String()] = append(nftArr, &nfts[i])
 		}
 	}
 
@@ -66,5 +58,5 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*nft.GenesisState, error) {
 	return &nft.GenesisState{
 		Classes: classes,
 		Entries: entries,
-	}, nil
+	}
 }

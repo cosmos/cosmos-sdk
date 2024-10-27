@@ -1,16 +1,7 @@
 package tx
 
 import (
-	"context"
-	"time"
-
 	"github.com/cosmos/gogoproto/proto"
-	"google.golang.org/protobuf/types/known/anypb"
-	"google.golang.org/protobuf/types/known/timestamppb"
-
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	txsigning "cosmossdk.io/x/tx/signing"
-	"cosmossdk.io/x/tx/signing/aminojson"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -18,6 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // AuxTxBuilder is a client-side builder for creating an AuxSignerData.
@@ -27,7 +19,7 @@ type AuxTxBuilder struct {
 	// - b.msgs is used for constructing the AMINO sign bz,
 	// - b.body is used for constructing the DIRECT_AUX sign bz.
 	msgs          []sdk.Msg
-	body          *txv1beta1.TxBody
+	body          *tx.TxBody
 	auxSignerData *tx.AuxSignerData
 }
 
@@ -60,25 +52,14 @@ func (b *AuxTxBuilder) SetTimeoutHeight(height uint64) {
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
-// SetTimeoutTimestamp sets a timeout timestamp in the tx.
-func (b *AuxTxBuilder) SetTimeoutTimestamp(timestamp time.Time) {
-	b.checkEmptyFields()
-
-	b.body.TimeoutTimestamp = timestamppb.New(timestamp)
-	b.auxSignerData.SignDoc.BodyBytes = nil
-}
-
 // SetMsgs sets an array of Msgs in the tx.
 func (b *AuxTxBuilder) SetMsgs(msgs ...sdk.Msg) error {
-	anys := make([]*anypb.Any, len(msgs))
+	anys := make([]*codectypes.Any, len(msgs))
 	for i, msg := range msgs {
-		legacyAny, err := codectypes.NewAnyWithValue(msg)
+		var err error
+		anys[i], err = codectypes.NewAnyWithValue(msg)
 		if err != nil {
 			return err
-		}
-		anys[i] = &anypb.Any{
-			TypeUrl: legacyAny.TypeUrl,
-			Value:   legacyAny.Value,
 		}
 	}
 
@@ -114,13 +95,14 @@ func (b *AuxTxBuilder) SetSequence(accSeq uint64) {
 
 // SetPubKey sets the aux signer's pubkey in the AuxSignerData.
 func (b *AuxTxBuilder) SetPubKey(pk cryptotypes.PubKey) error {
-	anyPk, err := codectypes.NewAnyWithValue(pk)
+	any, err := codectypes.NewAnyWithValue(pk)
 	if err != nil {
 		return err
 	}
 
 	b.checkEmptyFields()
-	b.auxSignerData.SignDoc.PublicKey = anyPk
+
+	b.auxSignerData.SignDoc.PublicKey = any
 
 	return nil
 }
@@ -131,12 +113,19 @@ func (b *AuxTxBuilder) SetSignMode(mode signing.SignMode) error {
 	switch mode {
 	case signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 	default:
-		return sdkerrors.ErrInvalidRequest.Wrapf("AuxTxBuilder can only sign with %s or %s",
-			signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		return sdkerrors.ErrInvalidRequest.Wrapf("AuxTxBuilder can only sign with %s or %s", signing.SignMode_SIGN_MODE_DIRECT_AUX, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
 	b.auxSignerData.Mode = mode
+
 	return nil
+}
+
+// SetTip sets an optional tip in the AuxSignerData.
+func (b *AuxTxBuilder) SetTip(tip *tx.Tip) {
+	b.checkEmptyFields()
+
+	b.auxSignerData.SignDoc.Tip = tip
 }
 
 // SetSignature sets the aux signer's signature in the AuxSignerData.
@@ -150,29 +139,15 @@ func (b *AuxTxBuilder) SetSignature(sig []byte) {
 func (b *AuxTxBuilder) SetExtensionOptions(extOpts ...*codectypes.Any) {
 	b.checkEmptyFields()
 
-	anyExtOpts := make([]*anypb.Any, len(extOpts))
-	for i, extOpt := range extOpts {
-		anyExtOpts[i] = &anypb.Any{
-			TypeUrl: extOpt.TypeUrl,
-			Value:   extOpt.Value,
-		}
-	}
-	b.body.ExtensionOptions = anyExtOpts
+	b.body.ExtensionOptions = extOpts
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
-// SetNonCriticalExtensionOptions sets the aux signer's non-critical extension options.
+// SetSignature sets the aux signer's signature.
 func (b *AuxTxBuilder) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	b.checkEmptyFields()
 
-	anyNonCritExtOpts := make([]*anypb.Any, len(extOpts))
-	for i, extOpt := range extOpts {
-		anyNonCritExtOpts[i] = &anypb.Any{
-			TypeUrl: extOpt.TypeUrl,
-			Value:   extOpt.Value,
-		}
-	}
-	b.body.NonCriticalExtensionOptions = anyNonCritExtOpts
+	b.body.NonCriticalExtensionOptions = extOpts
 	b.auxSignerData.SignDoc.BodyBytes = nil
 }
 
@@ -199,7 +174,8 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 	}
 
 	sd.BodyBytes = bodyBz
-	if err = sd.ValidateBasic(); err != nil {
+
+	if err := b.auxSignerData.SignDoc.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
@@ -214,45 +190,16 @@ func (b *AuxTxBuilder) GetSignBytes() ([]byte, error) {
 		}
 	case signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 		{
-			handler := aminojson.NewSignModeHandler(aminojson.SignModeHandlerOptions{
-				FileResolver: proto.HybridResolver,
-			})
-
-			auxBody := &txv1beta1.TxBody{
-				Messages:         body.Messages,
-				Memo:             body.Memo,
-				TimeoutHeight:    body.TimeoutHeight,
-				TimeoutTimestamp: body.TimeoutTimestamp,
-				// AuxTxBuilder has no concern with extension options, so we set them to nil.
-				// This preserves pre-PR#16025 behavior where extension options were ignored, this code path:
-				// https://github.com/cosmos/cosmos-sdk/blob/ac3c209326a26b46f65a6cc6f5b5ebf6beb79b38/client/tx/aux_builder.go#L193
-				// https://github.com/cosmos/cosmos-sdk/blob/ac3c209326a26b46f65a6cc6f5b5ebf6beb79b38/x/auth/migrations/legacytx/stdsign.go#L49
-				ExtensionOptions:            nil,
-				NonCriticalExtensionOptions: nil,
-			}
-
-			signBz, err = handler.GetSignBytes(
-				context.Background(),
-				txsigning.SignerData{
-					Address:       b.auxSignerData.Address,
-					ChainID:       b.auxSignerData.SignDoc.ChainId,
-					AccountNumber: b.auxSignerData.SignDoc.AccountNumber,
-					Sequence:      b.auxSignerData.SignDoc.Sequence,
-					PubKey:        nil,
-				},
-				txsigning.TxData{
-					Body: auxBody,
-					AuthInfo: &txv1beta1.AuthInfo{
-						SignerInfos: nil,
-						// Aux signer never signs over fee.
-						// For LEGACY_AMINO_JSON, we use the convention to sign
-						// over empty fees.
-						// ref: https://github.com/cosmos/cosmos-sdk/pull/10348
-						Fee: &txv1beta1.Fee{},
-					},
-				},
+			signBz = legacytx.StdSignBytes(
+				b.auxSignerData.SignDoc.ChainId, b.auxSignerData.SignDoc.AccountNumber,
+				b.auxSignerData.SignDoc.Sequence, b.body.TimeoutHeight,
+				// Aux signer never signs over fee.
+				// For LEGACY_AMINO_JSON, we use the convention to sign
+				// over empty fees.
+				// ref: https://github.com/cosmos/cosmos-sdk/pull/10348
+				legacytx.StdFee{},
+				b.msgs, b.body.Memo, b.auxSignerData.SignDoc.Tip,
 			)
-			return signBz, err
 		}
 	default:
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("got unknown sign mode %s", b.auxSignerData.Mode)
@@ -272,7 +219,7 @@ func (b *AuxTxBuilder) GetAuxSignerData() (tx.AuxSignerData, error) {
 
 func (b *AuxTxBuilder) checkEmptyFields() {
 	if b.body == nil {
-		b.body = &txv1beta1.TxBody{}
+		b.body = &tx.TxBody{}
 	}
 
 	if b.auxSignerData == nil {

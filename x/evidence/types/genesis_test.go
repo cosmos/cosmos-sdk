@@ -5,15 +5,14 @@ import (
 	"testing"
 	"time"
 
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/stretchr/testify/require"
-
-	"cosmossdk.io/x/evidence/exported"
-	"cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 func TestDefaultGenesisState(t *testing.T) {
@@ -131,7 +130,7 @@ func TestUnpackInterfaces(t *testing.T) {
 
 	testCases := []struct {
 		msg      string
-		unpacker gogoprotoany.AnyUnpacker
+		unpacker codectypes.AnyUnpacker
 		expPass  bool
 	}{
 		{
@@ -161,19 +160,23 @@ type TestEvidence struct{}
 
 var _ exported.Evidence = &TestEvidence{}
 
-func (*TestEvidence) String() string {
-	return "test-string"
-}
-
 func (*TestEvidence) Route() string {
 	return "test-route"
+}
+
+func (*TestEvidence) Type() string {
+	return "test-type"
+}
+
+func (*TestEvidence) String() string {
+	return "test-string"
 }
 
 func (*TestEvidence) ProtoMessage() {}
 func (*TestEvidence) Reset()        {}
 
-func (*TestEvidence) Hash() []byte {
-	return []byte("test-hash")
+func (*TestEvidence) Hash() tmbytes.HexBytes {
+	return tmbytes.HexBytes([]byte("test-hash"))
 }
 
 func (*TestEvidence) ValidateBasic() error {

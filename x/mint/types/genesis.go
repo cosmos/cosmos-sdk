@@ -1,10 +1,8 @@
 package types
 
 import (
-	"context"
-
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InflationCalculationFn defines the function required to calculate inflation rate during
@@ -12,15 +10,10 @@ import (
 // bondedRatio and returns the newly calculated inflation rate.
 // It can be used to specify a custom inflation calculation logic, instead of relying on the
 // default logic provided by the sdk.
-// Deprecated: use MintFn instead.
-type InflationCalculationFn func(ctx context.Context, minter Minter, params Params, bondedRatio math.LegacyDec) math.LegacyDec
-
-// MintFn defines the function that needs to be implemented in order to customize the minting process.
-type MintFn func(ctx context.Context, env appmodule.Environment, minter *Minter, epochId string, epochNumber int64) error
+type InflationCalculationFn func(ctx sdk.Context, minter Minter, params Params, bondedRatio sdk.Dec) sdk.Dec
 
 // DefaultInflationCalculationFn is the default function used to calculate inflation.
-// Deprecated: use DefaultMintFn instead.
-func DefaultInflationCalculationFn(_ context.Context, minter Minter, params Params, bondedRatio math.LegacyDec) math.LegacyDec {
+func DefaultInflationCalculationFn(_ sdk.Context, minter Minter, params Params, bondedRatio sdk.Dec) math.LegacyDec {
 	return minter.NextInflationRate(params, bondedRatio)
 }
 

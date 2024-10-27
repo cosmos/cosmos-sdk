@@ -1,37 +1,31 @@
 package snapshot
 
 import (
-	"github.com/spf13/cobra"
-
-	"cosmossdk.io/log"
-
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/spf13/cobra"
 )
 
 // ExportSnapshotCmd returns a command to take a snapshot of the application state
-func ExportSnapshotCmd[T servertypes.Application](appCreator servertypes.AppCreator[T]) *cobra.Command {
+func ExportSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export app state to snapshot store",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := client.GetConfigFromCmd(cmd)
-			viper := client.GetViperFromCmd(cmd)
+			ctx := server.GetServerContextFromCmd(cmd)
 
 			height, err := cmd.Flags().GetInt64("height")
 			if err != nil {
 				return err
 			}
 
-			home := cfg.RootDir
-			db, err := openDB(home, server.GetAppDBBackend(viper))
+			home := ctx.Config.RootDir
+			db, err := openDB(home, server.GetAppDBBackend(ctx.Viper))
 			if err != nil {
 				return err
 			}
-			logger := log.NewLogger(cmd.OutOrStdout())
-			app := appCreator(logger, db, nil, viper)
+			app := appCreator(ctx.Logger, db, nil, ctx.Viper)
 
 			if height == 0 {
 				height = app.CommitMultiStore().LastCommitID().Version

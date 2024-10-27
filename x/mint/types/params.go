@@ -6,12 +6,13 @@ import (
 	"strings"
 
 	"cosmossdk.io/math"
+	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewParams returns Params instance with the given values.
-func NewParams(mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded math.LegacyDec, blocksPerYear uint64, maxSupply math.Int) Params {
+func NewParams(mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded sdk.Dec, blocksPerYear uint64) Params {
 	return Params{
 		MintDenom:           mintDenom,
 		InflationRateChange: inflationRateChange,
@@ -19,7 +20,6 @@ func NewParams(mintDenom string, inflationRateChange, inflationMax, inflationMin
 		InflationMin:        inflationMin,
 		GoalBonded:          goalBonded,
 		BlocksPerYear:       blocksPerYear,
-		MaxSupply:           maxSupply,
 	}
 }
 
@@ -27,12 +27,11 @@ func NewParams(mintDenom string, inflationRateChange, inflationMax, inflationMin
 func DefaultParams() Params {
 	return Params{
 		MintDenom:           sdk.DefaultBondDenom,
-		InflationRateChange: math.LegacyNewDecWithPrec(13, 2),
-		InflationMax:        math.LegacyNewDecWithPrec(5, 2),
-		InflationMin:        math.LegacyNewDecWithPrec(0, 2),
-		GoalBonded:          math.LegacyNewDecWithPrec(67, 2),
-		BlocksPerYear:       uint64(60 * 60 * 8766 / 5), // assuming 5-second block times
-		MaxSupply:           math.ZeroInt(),             // assuming zero is infinite
+		InflationRateChange: sdk.NewDecWithPrec(13, 2),
+		InflationMax:        sdk.NewDecWithPrec(20, 2),
+		InflationMin:        sdk.NewDecWithPrec(7, 2),
+		GoalBonded:          sdk.NewDecWithPrec(67, 2),
+		BlocksPerYear:       uint64(60 * 60 * 8766 / 5), // assuming 5 second block times
 	}
 }
 
@@ -56,9 +55,6 @@ func (p Params) Validate() error {
 	if err := validateBlocksPerYear(p.BlocksPerYear); err != nil {
 		return err
 	}
-	if err := validateMaxSupply(p.MaxSupply); err != nil {
-		return err
-	}
 	if p.InflationMax.LT(p.InflationMin) {
 		return fmt.Errorf(
 			"max inflation (%s) must be greater than or equal to min inflation (%s)",
@@ -69,7 +65,18 @@ func (p Params) Validate() error {
 	return nil
 }
 
-func validateMintDenom(v string) error {
+// String implements the Stringer interface.
+func (p Params) String() string {
+	out, _ := yaml.Marshal(p)
+	return string(out)
+}
+
+func validateMintDenom(i interface{}) error {
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
 	if strings.TrimSpace(v) == "" {
 		return errors.New("mint denom cannot be blank")
 	}
@@ -80,7 +87,12 @@ func validateMintDenom(v string) error {
 	return nil
 }
 
-func validateInflationRateChange(v math.LegacyDec) error {
+func validateInflationRateChange(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
 	if v.IsNil() {
 		return fmt.Errorf("inflation rate change cannot be nil: %s", v)
 	}
@@ -94,7 +106,12 @@ func validateInflationRateChange(v math.LegacyDec) error {
 	return nil
 }
 
-func validateInflationMax(v math.LegacyDec) error {
+func validateInflationMax(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
 	if v.IsNil() {
 		return fmt.Errorf("max inflation cannot be nil: %s", v)
 	}
@@ -108,7 +125,12 @@ func validateInflationMax(v math.LegacyDec) error {
 	return nil
 }
 
-func validateInflationMin(v math.LegacyDec) error {
+func validateInflationMin(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
 	if v.IsNil() {
 		return fmt.Errorf("min inflation cannot be nil: %s", v)
 	}
@@ -122,7 +144,12 @@ func validateInflationMin(v math.LegacyDec) error {
 	return nil
 }
 
-func validateGoalBonded(v math.LegacyDec) error {
+func validateGoalBonded(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
 	if v.IsNil() {
 		return fmt.Errorf("goal bonded cannot be nil: %s", v)
 	}
@@ -136,17 +163,14 @@ func validateGoalBonded(v math.LegacyDec) error {
 	return nil
 }
 
-func validateBlocksPerYear(v uint64) error {
-	if v == 0 {
-		return fmt.Errorf("blocks per year must be positive: %d", v)
+func validateBlocksPerYear(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	return nil
-}
-
-func validateMaxSupply(v math.Int) error {
-	if v.IsNegative() {
-		return fmt.Errorf("max supply must be positive: %d", v)
+	if v == 0 {
+		return fmt.Errorf("blocks per year must be positive: %d", v)
 	}
 
 	return nil

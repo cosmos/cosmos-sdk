@@ -4,23 +4,18 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/staking/testutil"
-	"cosmossdk.io/x/staking/types"
-
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (s *KeeperTestSuite) TestIncrementUnbondingID() {
 	for i := 1; i < 10; i++ {
-		id, err := s.stakingKeeper.IncrementUnbondingID(s.ctx)
-		s.Require().NoError(err)
-		s.Require().Equal(uint64(i), id)
+		s.Require().Equal(uint64(i), s.stakingKeeper.IncrementUnbondingID(s.ctx))
 	}
 }
 
 func (s *KeeperTestSuite) TestUnbondingTypeAccessors() {
-	require := s.Require()
 	cases := []struct {
 		exists   bool
 		name     string
@@ -45,15 +40,15 @@ func (s *KeeperTestSuite) TestUnbondingTypeAccessors() {
 	for i, tc := range cases {
 		s.Run(tc.name, func() {
 			if tc.exists {
-				require.NoError(s.stakingKeeper.SetUnbondingType(s.ctx, uint64(i), tc.expected))
+				s.stakingKeeper.SetUnbondingType(s.ctx, uint64(i), tc.expected)
 			}
 
-			unbondingType, err := s.stakingKeeper.GetUnbondingType(s.ctx, uint64(i))
+			unbondingType, found := s.stakingKeeper.GetUnbondingType(s.ctx, uint64(i))
 			if tc.exists {
-				require.NoError(err)
-				require.Equal(tc.expected, unbondingType)
+				s.Require().True(found)
+				s.Require().Equal(tc.expected, unbondingType)
 			} else {
-				require.ErrorIs(err, types.ErrNoUnbondingType)
+				s.Require().False(found)
 			}
 		})
 	}
@@ -61,7 +56,6 @@ func (s *KeeperTestSuite) TestUnbondingTypeAccessors() {
 
 func (s *KeeperTestSuite) TestUnbondingDelegationByUnbondingIDAccessors() {
 	delAddrs, valAddrs := createValAddrs(2)
-	require := s.Require()
 
 	type exists struct {
 		setUnbondingDelegation              bool
@@ -81,9 +75,8 @@ func (s *KeeperTestSuite) TestUnbondingDelegationByUnbondingIDAccessors() {
 				valAddrs[0],
 				0,
 				time.Unix(0, 0).UTC(),
-				math.NewInt(5),
+				sdk.NewInt(5),
 				0,
-				addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"),
 			),
 		},
 		{
@@ -94,9 +87,8 @@ func (s *KeeperTestSuite) TestUnbondingDelegationByUnbondingIDAccessors() {
 				valAddrs[1],
 				0,
 				time.Unix(0, 0).UTC(),
-				math.NewInt(5),
+				sdk.NewInt(5),
 				0,
-				addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"),
 			),
 		},
 		{
@@ -107,9 +99,8 @@ func (s *KeeperTestSuite) TestUnbondingDelegationByUnbondingIDAccessors() {
 				valAddrs[0],
 				0,
 				time.Unix(0, 0).UTC(),
-				math.NewInt(5),
+				sdk.NewInt(5),
 				0,
-				addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"),
 			),
 		},
 	}
@@ -117,19 +108,19 @@ func (s *KeeperTestSuite) TestUnbondingDelegationByUnbondingIDAccessors() {
 	for i, tc := range cases {
 		s.Run(tc.name, func() {
 			if tc.exists.setUnbondingDelegation {
-				require.NoError(s.stakingKeeper.SetUnbondingDelegation(s.ctx, tc.expected))
+				s.stakingKeeper.SetUnbondingDelegation(s.ctx, tc.expected)
 			}
 
 			if tc.exists.setUnbondingDelegationByUnbondingID {
-				require.NoError(s.stakingKeeper.SetUnbondingDelegationByUnbondingID(s.ctx, tc.expected, uint64(i)))
+				s.stakingKeeper.SetUnbondingDelegationByUnbondingID(s.ctx, tc.expected, uint64(i))
 			}
 
-			ubd, err := s.stakingKeeper.GetUnbondingDelegationByUnbondingID(s.ctx, uint64(i))
+			ubd, found := s.stakingKeeper.GetUnbondingDelegationByUnbondingID(s.ctx, uint64(i))
 			if tc.exists.setUnbondingDelegation && tc.exists.setUnbondingDelegationByUnbondingID {
-				require.NoError(err)
-				require.Equal(tc.expected, ubd)
+				s.Require().True(found)
+				s.Require().Equal(tc.expected, ubd)
 			} else {
-				require.ErrorIs(err, types.ErrNoUnbondingDelegation)
+				s.Require().False(found)
 			}
 		})
 	}
@@ -137,7 +128,6 @@ func (s *KeeperTestSuite) TestUnbondingDelegationByUnbondingIDAccessors() {
 
 func (s *KeeperTestSuite) TestRedelegationByUnbondingIDAccessors() {
 	delAddrs, valAddrs := createValAddrs(2)
-	require := s.Require()
 
 	type exists struct {
 		setRedelegation              bool
@@ -158,10 +148,9 @@ func (s *KeeperTestSuite) TestRedelegationByUnbondingIDAccessors() {
 				valAddrs[1],
 				0,
 				time.Unix(5, 0).UTC(),
-				math.NewInt(10),
+				sdk.NewInt(10),
 				math.LegacyNewDec(10),
 				0,
-				addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"),
 			),
 		},
 		{
@@ -173,10 +162,9 @@ func (s *KeeperTestSuite) TestRedelegationByUnbondingIDAccessors() {
 				valAddrs[1],
 				0,
 				time.Unix(5, 0).UTC(),
-				math.NewInt(10),
+				sdk.NewInt(10),
 				math.LegacyNewDec(10),
 				0,
-				addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"),
 			),
 		},
 		{
@@ -188,10 +176,9 @@ func (s *KeeperTestSuite) TestRedelegationByUnbondingIDAccessors() {
 				valAddrs[0],
 				0,
 				time.Unix(5, 0).UTC(),
-				math.NewInt(10),
+				sdk.NewInt(10),
 				math.LegacyNewDec(10),
 				0,
-				addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"),
 			),
 		},
 	}
@@ -199,19 +186,19 @@ func (s *KeeperTestSuite) TestRedelegationByUnbondingIDAccessors() {
 	for i, tc := range cases {
 		s.Run(tc.name, func() {
 			if tc.exists.setRedelegation {
-				require.NoError(s.stakingKeeper.SetRedelegation(s.ctx, tc.expected))
+				s.stakingKeeper.SetRedelegation(s.ctx, tc.expected)
 			}
 
 			if tc.exists.setRedelegationByUnbondingID {
-				require.NoError(s.stakingKeeper.SetRedelegationByUnbondingID(s.ctx, tc.expected, uint64(i)))
+				s.stakingKeeper.SetRedelegationByUnbondingID(s.ctx, tc.expected, uint64(i))
 			}
 
-			red, err := s.stakingKeeper.GetRedelegationByUnbondingID(s.ctx, uint64(i))
+			red, found := s.stakingKeeper.GetRedelegationByUnbondingID(s.ctx, uint64(i))
 			if tc.exists.setRedelegation && tc.exists.setRedelegationByUnbondingID {
-				require.NoError(err)
-				require.Equal(tc.expected, red)
+				s.Require().True(found)
+				s.Require().Equal(tc.expected, red)
 			} else {
-				require.ErrorIs(err, types.ErrNoRedelegation)
+				s.Require().False(found)
 			}
 		})
 	}
@@ -219,7 +206,6 @@ func (s *KeeperTestSuite) TestRedelegationByUnbondingIDAccessors() {
 
 func (s *KeeperTestSuite) TestValidatorByUnbondingIDAccessors() {
 	_, valAddrs := createValAddrs(3)
-	require := s.Require()
 
 	type exists struct {
 		setValidator              bool
@@ -251,19 +237,19 @@ func (s *KeeperTestSuite) TestValidatorByUnbondingIDAccessors() {
 	for i, tc := range cases {
 		s.Run(tc.name, func() {
 			if tc.exists.setValidator {
-				require.NoError(s.stakingKeeper.SetValidator(s.ctx, tc.validator))
+				s.stakingKeeper.SetValidator(s.ctx, tc.validator)
 			}
 
 			if tc.exists.setValidatorByUnbondingID {
-				require.NoError(s.stakingKeeper.SetValidatorByUnbondingID(s.ctx, tc.validator, uint64(i)))
+				s.stakingKeeper.SetValidatorByUnbondingID(s.ctx, tc.validator, uint64(i))
 			}
 
-			val, err := s.stakingKeeper.GetValidatorByUnbondingID(s.ctx, uint64(i))
+			val, found := s.stakingKeeper.GetValidatorByUnbondingID(s.ctx, uint64(i))
 			if tc.exists.setValidator && tc.exists.setValidatorByUnbondingID {
-				require.NoError(err)
-				require.Equal(tc.validator, val)
+				s.Require().True(found)
+				s.Require().Equal(tc.validator, val)
 			} else {
-				require.ErrorIs(err, types.ErrNoValidatorFound)
+				s.Require().False(found)
 			}
 		})
 	}
@@ -271,44 +257,41 @@ func (s *KeeperTestSuite) TestValidatorByUnbondingIDAccessors() {
 
 func (s *KeeperTestSuite) TestUnbondingCanComplete() {
 	delAddrs, valAddrs := createValAddrs(3)
-	require := s.Require()
-
 	unbondingID := uint64(1)
 
 	// no unbondingID set
 	err := s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
-	require.ErrorIs(err, types.ErrNoUnbondingType)
+	s.Require().ErrorIs(err, types.ErrUnbondingNotFound)
 
 	// unbonding delegation
-	require.NoError(s.stakingKeeper.SetUnbondingType(s.ctx, unbondingID, types.UnbondingType_UnbondingDelegation))
+	s.stakingKeeper.SetUnbondingType(s.ctx, unbondingID, types.UnbondingType_UnbondingDelegation)
 	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
-	require.ErrorIs(err, types.ErrNoUnbondingDelegation)
+	s.Require().ErrorIs(err, types.ErrUnbondingNotFound)
 
 	ubd := types.NewUnbondingDelegation(
 		delAddrs[0],
 		valAddrs[0],
 		0,
 		time.Unix(0, 0).UTC(),
-		math.NewInt(5),
+		sdk.NewInt(5),
 		unbondingID,
-		addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"),
 	)
-	require.NoError(s.stakingKeeper.SetUnbondingDelegation(s.ctx, ubd))
-	require.NoError(s.stakingKeeper.SetUnbondingDelegationByUnbondingID(s.ctx, ubd, unbondingID))
+	s.stakingKeeper.SetUnbondingDelegation(s.ctx, ubd)
+	s.stakingKeeper.SetUnbondingDelegationByUnbondingID(s.ctx, ubd, unbondingID)
 	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
-	require.ErrorIs(err, types.ErrUnbondingOnHoldRefCountNegative)
+	s.Require().ErrorIs(err, types.ErrUnbondingOnHoldRefCountNegative)
 
 	err = s.stakingKeeper.PutUnbondingOnHold(s.ctx, unbondingID)
-	require.NoError(err)
-	s.bankKeeper.EXPECT().UndelegateCoinsFromModuleToAccount(s.ctx, types.NotBondedPoolName, delAddrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(5)))).Return(nil)
+	s.Require().NoError(err)
+	s.bankKeeper.EXPECT().UndelegateCoinsFromModuleToAccount(s.ctx, types.NotBondedPoolName, delAddrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5)))).Return(nil)
 	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
-	require.NoError(err)
+	s.Require().NoError(err)
 
 	// redelegation
 	unbondingID++
-	require.NoError(s.stakingKeeper.SetUnbondingType(s.ctx, unbondingID, types.UnbondingType_Redelegation))
+	s.stakingKeeper.SetUnbondingType(s.ctx, unbondingID, types.UnbondingType_Redelegation)
 	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
-	require.ErrorIs(err, types.ErrNoRedelegation)
+	s.Require().ErrorIs(err, types.ErrUnbondingNotFound)
 
 	red := types.NewRedelegation(
 		delAddrs[0],
@@ -316,31 +299,34 @@ func (s *KeeperTestSuite) TestUnbondingCanComplete() {
 		valAddrs[1],
 		0,
 		time.Unix(5, 0).UTC(),
-		math.NewInt(10),
+		sdk.NewInt(10),
 		math.LegacyNewDec(10),
 		unbondingID,
-		addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"),
 	)
-	require.NoError(s.stakingKeeper.SetRedelegation(s.ctx, red))
-	require.NoError(s.stakingKeeper.SetRedelegationByUnbondingID(s.ctx, red, unbondingID))
+	s.stakingKeeper.SetRedelegation(s.ctx, red)
+	s.stakingKeeper.SetRedelegationByUnbondingID(s.ctx, red, unbondingID)
 	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
-	require.ErrorIs(err, types.ErrUnbondingOnHoldRefCountNegative)
+	s.Require().ErrorIs(err, types.ErrUnbondingOnHoldRefCountNegative)
 
-	require.NoError(s.stakingKeeper.PutUnbondingOnHold(s.ctx, unbondingID))
-	require.NoError(s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID))
+	err = s.stakingKeeper.PutUnbondingOnHold(s.ctx, unbondingID)
+	s.Require().NoError(err)
+	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
+	s.Require().NoError(err)
 
 	// validator unbonding
 	unbondingID++
-	require.NoError(s.stakingKeeper.SetUnbondingType(s.ctx, unbondingID, types.UnbondingType_ValidatorUnbonding))
+	s.stakingKeeper.SetUnbondingType(s.ctx, unbondingID, types.UnbondingType_ValidatorUnbonding)
 	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
-	require.ErrorIs(err, types.ErrNoValidatorFound)
+	s.Require().ErrorIs(err, types.ErrUnbondingNotFound)
 
 	val := testutil.NewValidator(s.T(), valAddrs[0], PKs[0])
-	require.NoError(s.stakingKeeper.SetValidator(s.ctx, val))
-	require.NoError(s.stakingKeeper.SetValidatorByUnbondingID(s.ctx, val, unbondingID))
+	s.stakingKeeper.SetValidator(s.ctx, val)
+	s.stakingKeeper.SetValidatorByUnbondingID(s.ctx, val, unbondingID)
 	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
-	require.ErrorIs(err, types.ErrUnbondingOnHoldRefCountNegative)
+	s.Require().ErrorIs(err, types.ErrUnbondingOnHoldRefCountNegative)
 
-	require.NoError(s.stakingKeeper.PutUnbondingOnHold(s.ctx, unbondingID))
-	require.NoError(s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID))
+	err = s.stakingKeeper.PutUnbondingOnHold(s.ctx, unbondingID)
+	s.Require().NoError(err)
+	err = s.stakingKeeper.UnbondingCanComplete(s.ctx, unbondingID)
+	s.Require().NoError(err)
 }

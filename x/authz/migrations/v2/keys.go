@@ -3,8 +3,7 @@ package v2
 import (
 	"time"
 
-	"cosmossdk.io/x/authz/internal/conv"
-
+	"github.com/cosmos/cosmos-sdk/internal/conv"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -24,7 +23,7 @@ var (
 // Key format is
 //
 // - 0x02<grant_expiration_Bytes>: GrantQueueItem
-func GrantQueueKey(expiration time.Time, granter, grantee sdk.AccAddress) []byte {
+func GrantQueueKey(expiration time.Time, granter sdk.AccAddress, grantee sdk.AccAddress) []byte {
 	exp := sdk.FormatTimeBytes(expiration)
 	granter = address.MustLengthPrefix(granter)
 	grantee = address.MustLengthPrefix(grantee)
@@ -42,7 +41,7 @@ func GrantQueueKey(expiration time.Time, granter, grantee sdk.AccAddress) []byte
 // Items are stored with the following key: values
 //
 // - 0x01<granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>: Grant
-func GrantStoreKey(grantee, granter sdk.AccAddress, msgType string) []byte {
+func GrantStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
 	m := conv.UnsafeStrToBytes(msgType)
 	granter = address.MustLengthPrefix(granter)
 	grantee = address.MustLengthPrefix(grantee)

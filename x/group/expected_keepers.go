@@ -1,30 +1,24 @@
 package group
 
 import (
-	"context"
-
-	"cosmossdk.io/core/address"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type AccountKeeper interface {
-	AddressCodec() address.Codec
-
 	// NewAccount returns a new account with the next account number. Does not save the new account to the store.
-	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
+	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
 
 	// GetAccount retrieves an account from the store.
-	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI
+	GetAccount(sdk.Context, sdk.AccAddress) authtypes.AccountI
 
 	// SetAccount sets an account in the store.
-	SetAccount(context.Context, sdk.AccountI)
-
-	// RemoveAccount Remove an account in the store.
-	RemoveAccount(ctx context.Context, acc sdk.AccountI)
+	SetAccount(sdk.Context, authtypes.AccountI)
+	// RemoveAccount removes an account in the store.
+	RemoveAccount(ctx sdk.Context, acc authtypes.AccountI)
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
-	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 }

@@ -3,26 +3,26 @@ package mock
 import (
 	"io"
 
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/cometbft/cometbft-db"
 	protoio "github.com/cosmos/gogoproto/io"
 
-	"cosmossdk.io/store/metrics"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ storetypes.MultiStore = multiStore{}
+var _ sdk.MultiStore = multiStore{}
 
 type multiStore struct {
 	kv map[storetypes.StoreKey]kvStore
 }
 
-func (ms multiStore) CacheMultiStore() storetypes.CacheMultiStore {
+func (ms multiStore) CacheMultiStore() sdk.CacheMultiStore {
 	panic("not implemented")
 }
 
-func (ms multiStore) CacheMultiStoreWithVersion(_ int64) (storetypes.CacheMultiStore, error) {
+func (ms multiStore) CacheMultiStoreWithVersion(_ int64) (sdk.CacheMultiStore, error) {
 	panic("not implemented")
 }
 
@@ -30,11 +30,11 @@ func (ms multiStore) CacheWrap() storetypes.CacheWrap {
 	panic("not implemented")
 }
 
-func (ms multiStore) CacheWrapWithTrace(_ io.Writer, _ storetypes.TraceContext) storetypes.CacheWrap {
+func (ms multiStore) CacheWrapWithTrace(_ io.Writer, _ sdk.TraceContext) storetypes.CacheWrap {
 	panic("not implemented")
 }
 
-func (ms multiStore) CacheWrapWithListeners(_ storetypes.StoreKey, _ []storetypes.MemoryListener) storetypes.CacheWrap {
+func (ms multiStore) CacheWrapWithListeners(_ storetypes.StoreKey, _ []storetypes.WriteListener) storetypes.CacheWrap {
 	panic("not implemented")
 }
 
@@ -42,27 +42,19 @@ func (ms multiStore) TracingEnabled() bool {
 	panic("not implemented")
 }
 
-func (ms multiStore) SetTracingContext(tc storetypes.TraceContext) storetypes.MultiStore {
+func (ms multiStore) SetTracingContext(tc sdk.TraceContext) sdk.MultiStore {
 	panic("not implemented")
 }
 
-func (ms multiStore) SetTracer(w io.Writer) storetypes.MultiStore {
+func (ms multiStore) SetTracer(w io.Writer) sdk.MultiStore {
 	panic("not implemented")
 }
 
-func (ms multiStore) AddListeners(keys []storetypes.StoreKey) {
-	panic("not implemented")
-}
-
-func (ms multiStore) SetMetrics(metrics.StoreMetrics) {
+func (ms multiStore) AddListeners(key storetypes.StoreKey, listeners []storetypes.WriteListener) {
 	panic("not implemented")
 }
 
 func (ms multiStore) ListeningEnabled(key storetypes.StoreKey) bool {
-	panic("not implemented")
-}
-
-func (ms multiStore) PopStateCache() []*storetypes.StoreKVPair {
 	panic("not implemented")
 }
 
@@ -110,11 +102,11 @@ func (ms multiStore) LoadVersion(ver int64) error {
 	panic("not implemented")
 }
 
-func (ms multiStore) GetKVStore(key storetypes.StoreKey) storetypes.KVStore {
+func (ms multiStore) GetKVStore(key storetypes.StoreKey) sdk.KVStore {
 	return ms.kv[key]
 }
 
-func (ms multiStore) GetStore(key storetypes.StoreKey) storetypes.Store {
+func (ms multiStore) GetStore(key storetypes.StoreKey) sdk.Store {
 	panic("not implemented")
 }
 
@@ -130,7 +122,7 @@ func (ms multiStore) SetSnapshotInterval(snapshotInterval uint64) {
 	panic("not implemented")
 }
 
-func (ms multiStore) SetInterBlockCache(_ storetypes.MultiStorePersistentCache) {
+func (ms multiStore) SetInterBlockCache(_ sdk.MultiStorePersistentCache) {
 	panic("not implemented")
 }
 
@@ -139,6 +131,10 @@ func (ms multiStore) SetIAVLCacheSize(size int) {
 }
 
 func (ms multiStore) SetIAVLDisableFastNode(disable bool) {
+	panic("not implemented")
+}
+
+func (ms multiStore) SetLazyLoading(bool) {
 	panic("not implemented")
 }
 
@@ -164,11 +160,7 @@ func (ms multiStore) LatestVersion() int64 {
 	panic("not implemented")
 }
 
-func (ms multiStore) WorkingHash() []byte {
-	panic("not implemented")
-}
-
-var _ storetypes.KVStore = kvStore{}
+var _ sdk.KVStore = kvStore{}
 
 type kvStore struct {
 	store map[string][]byte
@@ -178,11 +170,11 @@ func (kv kvStore) CacheWrap() storetypes.CacheWrap {
 	panic("not implemented")
 }
 
-func (kv kvStore) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
+func (kv kvStore) CacheWrapWithTrace(w io.Writer, tc sdk.TraceContext) storetypes.CacheWrap {
 	panic("not implemented")
 }
 
-func (kv kvStore) CacheWrapWithListeners(_ storetypes.StoreKey, _ []storetypes.MemoryListener) storetypes.CacheWrap {
+func (kv kvStore) CacheWrapWithListeners(_ storetypes.StoreKey, _ []storetypes.WriteListener) storetypes.CacheWrap {
 	panic("not implemented")
 }
 
@@ -212,30 +204,30 @@ func (kv kvStore) Delete(key []byte) {
 	delete(kv.store, string(key))
 }
 
-func (kv kvStore) Prefix(prefix []byte) storetypes.KVStore {
+func (kv kvStore) Prefix(prefix []byte) sdk.KVStore {
 	panic("not implemented")
 }
 
-func (kv kvStore) Gas(meter storetypes.GasMeter, config storetypes.GasConfig) storetypes.KVStore {
+func (kv kvStore) Gas(meter sdk.GasMeter, config sdk.GasConfig) sdk.KVStore {
+	panic("not implmeneted")
+}
+
+func (kv kvStore) Iterator(start, end []byte) sdk.Iterator {
 	panic("not implemented")
 }
 
-func (kv kvStore) Iterator(start, end []byte) storetypes.Iterator {
+func (kv kvStore) ReverseIterator(start, end []byte) sdk.Iterator {
 	panic("not implemented")
 }
 
-func (kv kvStore) ReverseIterator(start, end []byte) storetypes.Iterator {
+func (kv kvStore) SubspaceIterator(prefix []byte) sdk.Iterator {
 	panic("not implemented")
 }
 
-func (kv kvStore) SubspaceIterator(prefix []byte) storetypes.Iterator {
+func (kv kvStore) ReverseSubspaceIterator(prefix []byte) sdk.Iterator {
 	panic("not implemented")
 }
 
-func (kv kvStore) ReverseSubspaceIterator(prefix []byte) storetypes.Iterator {
-	panic("not implemented")
-}
-
-func NewCommitMultiStore() storetypes.CommitMultiStore {
+func NewCommitMultiStore() sdk.CommitMultiStore {
 	return multiStore{kv: make(map[storetypes.StoreKey]kvStore)}
 }

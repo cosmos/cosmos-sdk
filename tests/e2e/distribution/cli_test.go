@@ -9,10 +9,14 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func TestWithdrawAllSuite(t *testing.T) {
-	suite.Run(t, new(WithdrawAllTestSuite))
+func TestE2ETestSuite(t *testing.T) {
+	suite.Run(t, new(E2ETestSuite))
 }
 
 func TestGRPCQueryTestSuite(t *testing.T) {
 	suite.Run(t, new(GRPCQueryTestSuite))
+}
+
+func TestWithdrawAllSuite(t *testing.T) {
+	suite.Run(t, new(WithdrawAllTestSuite))
 }

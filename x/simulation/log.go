@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"sync"
 	"time"
 )
 
-// log writer
+// log writter
 type LogWriter interface {
 	AddEntry(OperationEntry)
 	PrintLogs()
@@ -23,28 +22,19 @@ func NewLogWriter(testingmode bool) LogWriter {
 	return &StandardLogWriter{}
 }
 
-// log writer
+// log writter
 type StandardLogWriter struct {
-	Seed int64
-
 	OpEntries []OperationEntry `json:"op_entries" yaml:"op_entries"`
-	wMtx      sync.Mutex
-	written   bool
 }
 
-// add an entry to the log writer
+// add an entry to the log writter
 func (lw *StandardLogWriter) AddEntry(opEntry OperationEntry) {
 	lw.OpEntries = append(lw.OpEntries, opEntry)
 }
 
 // PrintLogs - print the logs to a simulation file
 func (lw *StandardLogWriter) PrintLogs() {
-	lw.wMtx.Lock()
-	defer lw.wMtx.Unlock()
-	if lw.written { // print once only
-		return
-	}
-	f := createLogFile(lw.Seed)
+	f := createLogFile()
 	defer f.Close()
 
 	for i := 0; i < len(lw.OpEntries); i++ {
@@ -54,16 +44,12 @@ func (lw *StandardLogWriter) PrintLogs() {
 			panic("Failed to write logs to file")
 		}
 	}
-	lw.written = true
 }
 
-func createLogFile(seed int64) *os.File {
+func createLogFile() *os.File {
 	var f *os.File
-	var prefix string
-	if seed != 0 {
-		prefix = fmt.Sprintf("seed_%10d", seed)
-	}
-	fileName := fmt.Sprintf("%s--%d.log", prefix, time.Now().UnixNano())
+
+	fileName := fmt.Sprintf("%s.log", time.Now().Format("2006-01-02_15:04:05"))
 	folderPath := path.Join(os.ExpandEnv("$HOME"), ".simapp", "simulations")
 	filePath := path.Join(folderPath, fileName)
 
@@ -81,7 +67,7 @@ func createLogFile(seed int64) *os.File {
 	return f
 }
 
-// dummy log writer
+// dummy log writter
 type DummyLogWriter struct{}
 
 // do nothing

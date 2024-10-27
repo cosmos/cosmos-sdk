@@ -6,7 +6,7 @@
 
 ## Status
 
-ACCEPTED
+PROPOSED
 
 ## Abstract
 
@@ -20,7 +20,7 @@ As both Proof of Stake and blockchain use cases have matured, this design has ag
 
 The most important deficiency of the legacy staking design is that it composes poorly with on chain protocols for trading, lending, derivatives that are referred to collectively as DeFi. The legacy staking implementation starves these applications of liquidity by increasing the risk free rate adaptively. It basically makes DeFi and staking security somewhat incompatible. 
 
-The Osmosis team has adopted the idea of Superfluid and Interfluid staking where assets that are participating in DeFi applications can also be used in proof of stake. This requires tight integration with an enshrined set of DeFi applications and thus is unsuitable for the Cosmos SDK.
+The Osmosis team has adopted the idea of Superfluid and Interfluid staking where assets that are participating in DeFi appliactions can also be used in proof of stake. This requires tight integration with an enshrined set of DeFi applications and thus is unsuitable for the Cosmos SDK.
 
 It's also important to note that Interchain Accounts are available in the default IBC implementation and can be used to [rehypothecate](https://www.investopedia.com/terms/h/hypothecation.asp#toc-what-is-rehypothecation) delegations. Thus liquid staking is already possible and these changes merely improve the UX of liquid staking. Centralized exchanges also rehypothecate staked assets, posing challenges for decentralization. This ADR takes the position that adoption of in-protocol liquid staking is the preferable outcome and provides new levers to incentivize decentralization of stake. 
 
@@ -34,7 +34,7 @@ A new governance parameter is introduced that defines the ratio of exempt to iss
 
 Min self delegation is removed from the staking system with the expectation that it will be replaced by the exempt delegations system. The exempt delegation system allows multiple accounts to demonstrate economic alignment with the validator operator as team members, partners etc. without co-mingling funds. Delegation exemption will likely be required to grow the validators' business under widespread adoption of liquid staking once governance has adjusted the exemption factor.
 
-When shares are tokenized, the underlying shares are transferred to a module account and rewards go to the module account for the TokenizedShareRecord. 
+When shares are tokenized, the underlying shares are transfered to a module account and rewards go to the module account for the TokenizedShareRecord. 
 
 There is no longer a mechanism to override the validators vote for TokenizedShares.
 

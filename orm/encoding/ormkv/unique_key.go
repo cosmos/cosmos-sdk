@@ -2,12 +2,11 @@ package ormkv
 
 import (
 	"bytes"
-	"errors"
 	"io"
 
-	"google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 
-	"cosmossdk.io/orm/types/ormerrors"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // UniqueKeyCodec is the codec for unique indexes.
@@ -88,7 +87,7 @@ func (u UniqueKeyCodec) DecodeIndexKey(k, v []byte) (indexFields, primaryKey []p
 	ks, err := u.keyCodec.DecodeKey(bytes.NewReader(k))
 
 	// got prefix key
-	if errors.Is(err, io.EOF) {
+	if err == io.EOF {
 		return ks, nil, err
 	} else if err != nil {
 		return nil, nil, err
@@ -108,12 +107,12 @@ func (u UniqueKeyCodec) DecodeIndexKey(k, v []byte) (indexFields, primaryKey []p
 	return ks, pk, nil
 }
 
-func (u UniqueKeyCodec) extractPrimaryKey(keyValues, valueValues []protoreflect.Value) []protoreflect.Value {
-	numPkFields := len(u.pkFieldOrder)
+func (cdc UniqueKeyCodec) extractPrimaryKey(keyValues, valueValues []protoreflect.Value) []protoreflect.Value {
+	numPkFields := len(cdc.pkFieldOrder)
 	pkValues := make([]protoreflect.Value, numPkFields)
 
 	for i := 0; i < numPkFields; i++ {
-		fo := u.pkFieldOrder[i]
+		fo := cdc.pkFieldOrder[i]
 		if fo.inKey {
 			pkValues[i] = keyValues[fo.i]
 		} else {
@@ -161,9 +160,11 @@ func (u UniqueKeyCodec) EncodeEntry(entry Entry) (k, v []byte, err error) {
 		if !fieldOrder.inKey {
 			// goes in values because it is not present in the index key otherwise
 			values = append(values, value)
-		} else if u.keyCodec.fieldCodecs[fieldOrder.i].Compare(value, indexEntry.IndexValues[fieldOrder.i]) != 0 {
+		} else {
 			// does not go in values, but we need to verify that the value in index values matches the primary key value
-			return nil, nil, ormerrors.BadDecodeEntry.Wrapf("value in primary key does not match corresponding value in index key")
+			if u.keyCodec.fieldCodecs[fieldOrder.i].Compare(value, indexEntry.IndexValues[fieldOrder.i]) != 0 {
+				return nil, nil, ormerrors.BadDecodeEntry.Wrapf("value in primary key does not match corresponding value in index key")
+			}
 		}
 	}
 

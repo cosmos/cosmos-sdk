@@ -1,21 +1,16 @@
 package v1
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
-	OptionEmpty = VoteOption_VOTE_OPTION_UNSPECIFIED
-	OptionOne   = VoteOption_VOTE_OPTION_ONE
-	OptionTwo   = VoteOption_VOTE_OPTION_TWO
-	OptionThree = VoteOption_VOTE_OPTION_THREE
-	OptionFour  = VoteOption_VOTE_OPTION_FOUR
-	OptionSpam  = VoteOption_VOTE_OPTION_SPAM
-
+	OptionEmpty      = VoteOption_VOTE_OPTION_UNSPECIFIED
 	OptionYes        = VoteOption_VOTE_OPTION_YES
 	OptionNo         = VoteOption_VOTE_OPTION_NO
 	OptionNoWithVeto = VoteOption_VOTE_OPTION_NO_WITH_VETO
@@ -23,8 +18,10 @@ const (
 )
 
 // NewVote creates a new Vote instance
-func NewVote(proposalID uint64, voter string, options WeightedVoteOptions, metadata string) Vote {
-	return Vote{ProposalId: proposalID, Voter: voter, Options: options, Metadata: metadata}
+//
+//nolint:interfacer
+func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOptions, metadata string) Vote {
+	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options, Metadata: metadata}
 }
 
 // Empty returns whether a vote is empty.
@@ -62,13 +59,13 @@ func (v Votes) String() string {
 	return out
 }
 
-func NewWeightedVoteOption(option VoteOption, weight math.LegacyDec) *WeightedVoteOption {
+func NewWeightedVoteOption(option VoteOption, weight sdk.Dec) *WeightedVoteOption {
 	return &WeightedVoteOption{Option: option, Weight: weight.String()}
 }
 
 // IsValid returns true if the sub vote is valid and false otherwise.
 func (w *WeightedVoteOption) IsValid() bool {
-	weight, err := math.LegacyNewDecFromStr(w.Weight)
+	weight, err := sdk.NewDecFromStr(w.Weight)
 	if err != nil {
 		return false
 	}
@@ -87,7 +84,7 @@ func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
 
 // ValidWeightedVoteOption returns true if the sub vote is valid and false otherwise.
 func ValidWeightedVoteOption(option WeightedVoteOption) bool {
-	weight, err := math.LegacyNewDecFromStr(option.Weight)
+	weight, err := sdk.NewDecFromStr(option.Weight)
 	if err != nil || !weight.IsPositive() || weight.GT(math.LegacyNewDec(1)) {
 		return false
 	}
@@ -97,9 +94,12 @@ func ValidWeightedVoteOption(option WeightedVoteOption) bool {
 // WeightedVoteOptions describes array of WeightedVoteOptions
 type WeightedVoteOptions []*WeightedVoteOption
 
-func (v WeightedVoteOptions) String() string {
-	out, _ := json.Marshal(v)
-	return string(out)
+func (v WeightedVoteOptions) String() (out string) {
+	for _, opt := range v {
+		out += opt.String() + "\n"
+	}
+
+	return strings.TrimSpace(out)
 }
 
 // VoteOptionFromString returns a VoteOption from a string. It returns an error
@@ -107,7 +107,7 @@ func (v WeightedVoteOptions) String() string {
 func VoteOptionFromString(str string) (VoteOption, error) {
 	option, ok := VoteOption_value[str]
 	if !ok {
-		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option, available options: yes,option_one/no,option_three/no_with_veto,option_four/abstain,option_two/spam", str)
+		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option, available options: yes/no/no_with_veto/abstain", str)
 	}
 	return VoteOption(option), nil
 }
@@ -125,7 +125,7 @@ func WeightedVoteOptionsFromString(str string) (WeightedVoteOptions, error) {
 		if len(fields) < 2 {
 			return options, fmt.Errorf("weight field does not exist for %s option", fields[0])
 		}
-		weight, err := math.LegacyNewDecFromStr(fields[1])
+		weight, err := sdk.NewDecFromStr(fields[1])
 		if err != nil {
 			return options, err
 		}
@@ -136,11 +136,10 @@ func WeightedVoteOptionsFromString(str string) (WeightedVoteOptions, error) {
 
 // ValidVoteOption returns true if the vote option is valid and false otherwise.
 func ValidVoteOption(option VoteOption) bool {
-	if option == OptionOne ||
-		option == OptionTwo ||
-		option == OptionThree ||
-		option == OptionFour ||
-		option == OptionSpam {
+	if option == OptionYes ||
+		option == OptionAbstain ||
+		option == OptionNo ||
+		option == OptionNoWithVeto {
 		return true
 	}
 	return false
@@ -150,8 +149,8 @@ func ValidVoteOption(option VoteOption) bool {
 func (vo VoteOption) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		_, _ = s.Write([]byte(vo.String()))
+		s.Write([]byte(vo.String()))
 	default:
-		_, _ = s.Write([]byte(fmt.Sprintf("%v", byte(vo))))
+		s.Write([]byte(fmt.Sprintf("%v", byte(vo))))
 	}
 }

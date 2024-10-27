@@ -7,7 +7,7 @@ This document is an extension to [CONTRIBUTING](./CONTRIBUTING.md) and provides 
 * Code must be well structured:
     * packages must have a limited responsibility (different concerns can go to different packages),
     * types must be easy to compose,
-    * think about maintainability and testability.
+    * think about maintainbility and testability.
 * "Depend upon abstractions, [not] concretions".
 * Try to limit the number of methods you are exposing. It's easier to expose something later than to hide it.
 * Take advantage of `internal` package concept.
@@ -18,11 +18,11 @@ This document is an extension to [CONTRIBUTING](./CONTRIBUTING.md) and provides 
 * Minimize code duplication.
 * Limit third-party dependencies.
 
-### Performance
+Performance:
 
 * Avoid unnecessary operations or memory allocations.
 
-### Security
+Security:
 
 * Pay proper attention to exploits involving:
     * gas usage
@@ -30,12 +30,6 @@ This document is an extension to [CONTRIBUTING](./CONTRIBUTING.md) and provides 
     * malleability
     * code must be always deterministic
 * Thread safety. If some functionality is not thread-safe, or uses something that is not thread-safe, then clearly indicate the risk on each level.
-
-### Documentation
-
-When writing code that is complex or relies on another piece of the code, it is advised to create a diagram or a flowchart to explain the logic. This will help other developers to understand the code and will also help you to understand the logic better.
-
-The Cosmos SDK uses [Mermaid.js](https://mermaid.js.org/), you can find the documentation on how to use it [here](https://mermaid.js.org/intro/).
 
 ## Acceptance tests
 
@@ -47,6 +41,7 @@ and API.
 
 UAT should be revisited at each stage of the product development:
 
+![acceptance-tests.png](./docs/static/img/acceptance-tests.png)
 
 ### Why Acceptance Testing
 
@@ -98,7 +93,7 @@ Make sure your code is well tested:
 * Provide unit tests for every unit of your code if possible. Unit tests are expected to comprise 70%-80% of your tests.
 * Describe the test scenarios you are implementing for integration tests.
 * Create integration tests for queries and msgs.
-* Use both test cases and property / fuzzy testing. We use the [rapid](https://github.com/flyingmutant/rapid) Go library for property-based and fuzzy testing.
+* Use both test cases and property / fuzzy testing. We use the [rapid](pgregory.net/rapid) Go library for property-based and fuzzy testing.
 * Do not decrease code test coverage. Explain in a PR if test coverage is decreased.
 
 We expect tests to use `require` or `assert` rather than `t.Skip` or `t.Fail`,
@@ -107,21 +102,21 @@ When testing a function under a variety of different inputs, we prefer to use
 [table driven tests](https://github.com/golang/go/wiki/TableDrivenTests).
 Table driven test error messages should follow the following format
 `<desc>, tc #<index>, i #<index>`.
-`<desc>` is an optional short description of what's failing, `tc` is the
+`<desc>` is an optional short description of whats failing, `tc` is the
 index within the test case table that is failing, and `i` is when there
 is a loop, exactly which iteration of the loop failed.
 The idea is you should be able to see the
 error message and figure out exactly what failed.
 Here is an example check:
 
-    ```go
-        <some table>
-        for tcIndex, tc := range cases {
-        <some code>
-            resp, err := doSomething()
-            require.NoError(err)
-            require.Equal(t, tc.expected, resp, "should correctly perform X")
-    ```
+```go
+<some table>
+for tcIndex, tc := range cases {
+  <some code>
+  resp, err := doSomething()
+  require.NoError(err)
+  require.Equal(t, tc.expected, resp, "should correctly perform X")
+```
 
 ## Quality Assurance
 

@@ -3,20 +3,15 @@ package orm
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/group/errors"
-
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestSequenceUniqueConstraint(t *testing.T) {
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	ctx := NewMockContext()
+	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 	seq := NewSequence(0x1)
 	err := seq.InitVal(store, 2)
@@ -26,9 +21,8 @@ func TestSequenceUniqueConstraint(t *testing.T) {
 }
 
 func TestSequenceIncrements(t *testing.T) {
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	ctx := NewMockContext()
+	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 	seq := NewSequence(0x1)
 	var i uint64

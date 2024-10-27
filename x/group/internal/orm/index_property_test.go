@@ -3,8 +3,9 @@ package orm
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestPrefixRangeProperty(t *testing.T) {

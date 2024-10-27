@@ -2,9 +2,7 @@ package cosmovisor
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -12,32 +10,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pelletier/go-toml/v2"
-	"github.com/spf13/viper"
-
-	"cosmossdk.io/log"
-	"cosmossdk.io/x/upgrade/plan"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
+	cverrors "cosmossdk.io/tools/cosmovisor/errors"
+	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/rs/zerolog"
 )
 
 // environment variable names
 const (
-	EnvHome                     = "DAEMON_HOME"
-	EnvName                     = "DAEMON_NAME"
-	EnvDownloadBin              = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
-	EnvDownloadMustHaveChecksum = "DAEMON_DOWNLOAD_MUST_HAVE_CHECKSUM"
-	EnvRestartUpgrade           = "DAEMON_RESTART_AFTER_UPGRADE"
-	EnvRestartDelay             = "DAEMON_RESTART_DELAY"
-	EnvShutdownGrace            = "DAEMON_SHUTDOWN_GRACE"
-	EnvSkipBackup               = "UNSAFE_SKIP_BACKUP"
-	EnvDataBackupPath           = "DAEMON_DATA_BACKUP_DIR"
-	EnvInterval                 = "DAEMON_POLL_INTERVAL"
-	EnvPreupgradeMaxRetries     = "DAEMON_PREUPGRADE_MAX_RETRIES"
-	EnvDisableLogs              = "COSMOVISOR_DISABLE_LOGS"
-	EnvColorLogs                = "COSMOVISOR_COLOR_LOGS"
-	EnvTimeFormatLogs           = "COSMOVISOR_TIMEFORMAT_LOGS"
-	EnvCustomPreupgrade         = "COSMOVISOR_CUSTOM_PREUPGRADE"
-	EnvDisableRecase            = "COSMOVISOR_DISABLE_RECASE"
+	EnvHome                 = "DAEMON_HOME"
+	EnvName                 = "DAEMON_NAME"
+	EnvDownloadBin          = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
+	EnvRestartUpgrade       = "DAEMON_RESTART_AFTER_UPGRADE"
+	EnvRestartDelay         = "DAEMON_RESTART_DELAY"
+	EnvSkipBackup           = "UNSAFE_SKIP_BACKUP"
+	EnvDataBackupPath       = "DAEMON_DATA_BACKUP_DIR"
+	EnvInterval             = "DAEMON_POLL_INTERVAL"
+	EnvPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
 )
 
 const (
@@ -45,29 +34,22 @@ const (
 	genesisDir  = "genesis"
 	upgradesDir = "upgrades"
 	currentLink = "current"
-
-	cfgFileName  = "config"
-	cfgExtension = "toml"
 )
+
+// must be the same as x/upgrade/types.UpgradeInfoFilename
+const defaultFilename = "upgrade-info.json"
 
 // Config is the information passed in to control the daemon
 type Config struct {
-	Home                     string        `toml:"daemon_home" mapstructure:"daemon_home"`
-	Name                     string        `toml:"daemon_name" mapstructure:"daemon_name"`
-	AllowDownloadBinaries    bool          `toml:"daemon_allow_download_binaries" mapstructure:"daemon_allow_download_binaries" default:"false"`
-	DownloadMustHaveChecksum bool          `toml:"daemon_download_must_have_checksum" mapstructure:"daemon_download_must_have_checksum" default:"false"`
-	RestartAfterUpgrade      bool          `toml:"daemon_restart_after_upgrade" mapstructure:"daemon_restart_after_upgrade" default:"true"`
-	RestartDelay             time.Duration `toml:"daemon_restart_delay" mapstructure:"daemon_restart_delay"`
-	ShutdownGrace            time.Duration `toml:"daemon_shutdown_grace" mapstructure:"daemon_shutdown_grace"`
-	PollInterval             time.Duration `toml:"daemon_poll_interval" mapstructure:"daemon_poll_interval" default:"300ms"`
-	UnsafeSkipBackup         bool          `toml:"unsafe_skip_backup" mapstructure:"unsafe_skip_backup" default:"false"`
-	DataBackupPath           string        `toml:"daemon_data_backup_dir" mapstructure:"daemon_data_backup_dir"`
-	PreUpgradeMaxRetries     int           `toml:"daemon_preupgrade_max_retries" mapstructure:"daemon_preupgrade_max_retries" default:"0"`
-	DisableLogs              bool          `toml:"cosmovisor_disable_logs" mapstructure:"cosmovisor_disable_logs" default:"false"`
-	ColorLogs                bool          `toml:"cosmovisor_color_logs" mapstructure:"cosmovisor_color_logs" default:"true"`
-	TimeFormatLogs           string        `toml:"cosmovisor_timeformat_logs" mapstructure:"cosmovisor_timeformat_logs" default:"kitchen"`
-	CustomPreUpgrade         string        `toml:"cosmovisor_custom_preupgrade" mapstructure:"cosmovisor_custom_preupgrade" default:""`
-	DisableRecase            bool          `toml:"cosmovisor_disable_recase" mapstructure:"cosmovisor_disable_recase" default:"false"`
+	Home                  string
+	Name                  string
+	AllowDownloadBinaries bool
+	RestartAfterUpgrade   bool
+	RestartDelay          time.Duration
+	PollInterval          time.Duration
+	UnsafeSkipBackup      bool
+	DataBackupPath        string
+	PreupgradeMaxRetries  int
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -76,11 +58,6 @@ type Config struct {
 // Root returns the root directory where all info lives
 func (cfg *Config) Root() string {
 	return filepath.Join(cfg.Home, rootName)
-}
-
-// DefaultCfgPath returns the default path to the configuration file.
-func (cfg *Config) DefaultCfgPath() string {
-	return filepath.Join(cfg.Root(), cfgFileName+"."+cfgExtension)
 }
 
 // GenesisBin is the path to the genesis binary - must be in place to start manager
@@ -106,7 +83,7 @@ func (cfg *Config) BaseUpgradeDir() string {
 
 // UpgradeInfoFilePath is the expected upgrade-info filename created by `x/upgrade/keeper`.
 func (cfg *Config) UpgradeInfoFilePath() string {
-	return filepath.Join(cfg.Home, "data", upgradetypes.UpgradeInfoFilename)
+	return filepath.Join(cfg.Home, "data", defaultFilename)
 }
 
 // SymLinkToGenesis creates a symbolic link from "./current" to the genesis directory.
@@ -156,61 +133,14 @@ func (cfg *Config) CurrentBin() (string, error) {
 	return binpath, nil
 }
 
-// GetConfigFromFile will read the configuration from the config file at the given path.
-// If the file path is not provided, it will read the configuration from the ENV variables.
-// If a file path is provided and ENV variables are set, they will override the values in the file.
-func GetConfigFromFile(filePath string) (*Config, error) {
-	if filePath == "" {
-		return GetConfigFromEnv(false)
-	}
-
-	// ensure the file exist
-	if _, err := os.Stat(filePath); err != nil {
-		return nil, fmt.Errorf("config not found: at %s : %w", filePath, err)
-	}
-
-	v := viper.New()
-	// read the configuration from the file
-	v.SetConfigFile(filePath)
-	// load the env variables
-	// if the env variable is set, it will override the value provided by the config
-	v.AutomaticEnv()
-
-	if err := v.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
-	}
-
-	cfg := &Config{}
-	if err := v.Unmarshal(cfg); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal configuration: %w", err)
-	}
-
-	var (
-		err  error
-		errs []error
-	)
-
-	if cfg.TimeFormatLogs, err = getTimeFormatOption(cfg.TimeFormatLogs); err != nil {
-		errs = append(errs, err)
-	}
-
-	errs = append(errs, cfg.validate()...)
-	if len(errs) > 0 {
-		return nil, errors.Join(errs...)
-	}
-
-	return cfg, nil
-}
-
 // GetConfigFromEnv will read the environmental variables into a config
 // and then validate it is reasonable
-func GetConfigFromEnv(skipValidate bool) (*Config, error) {
+func GetConfigFromEnv() (*Config, error) {
 	var errs []error
 	cfg := &Config{
-		Home:             os.Getenv(EnvHome),
-		Name:             os.Getenv(EnvName),
-		DataBackupPath:   os.Getenv(EnvDataBackupPath),
-		CustomPreUpgrade: os.Getenv(EnvCustomPreupgrade),
+		Home:           os.Getenv(EnvHome),
+		Name:           os.Getenv(EnvName),
+		DataBackupPath: os.Getenv(EnvDataBackupPath),
 	}
 
 	if cfg.DataBackupPath == "" {
@@ -218,28 +148,13 @@ func GetConfigFromEnv(skipValidate bool) (*Config, error) {
 	}
 
 	var err error
-	if cfg.AllowDownloadBinaries, err = BooleanOption(EnvDownloadBin, false); err != nil {
+	if cfg.AllowDownloadBinaries, err = booleanOption(EnvDownloadBin, false); err != nil {
 		errs = append(errs, err)
 	}
-	if cfg.DownloadMustHaveChecksum, err = BooleanOption(EnvDownloadMustHaveChecksum, false); err != nil {
+	if cfg.RestartAfterUpgrade, err = booleanOption(EnvRestartUpgrade, true); err != nil {
 		errs = append(errs, err)
 	}
-	if cfg.RestartAfterUpgrade, err = BooleanOption(EnvRestartUpgrade, true); err != nil {
-		errs = append(errs, err)
-	}
-	if cfg.UnsafeSkipBackup, err = BooleanOption(EnvSkipBackup, false); err != nil {
-		errs = append(errs, err)
-	}
-	if cfg.DisableLogs, err = BooleanOption(EnvDisableLogs, false); err != nil {
-		errs = append(errs, err)
-	}
-	if cfg.ColorLogs, err = BooleanOption(EnvColorLogs, true); err != nil {
-		errs = append(errs, err)
-	}
-	if cfg.TimeFormatLogs, err = TimeFormatOptionFromEnv(EnvTimeFormatLogs, time.Kitchen); err != nil {
-		errs = append(errs, err)
-	}
-	if cfg.DisableRecase, err = BooleanOption(EnvDisableRecase, false); err != nil {
+	if cfg.UnsafeSkipBackup, err = booleanOption(EnvSkipBackup, false); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -266,44 +181,17 @@ func GetConfigFromEnv(skipValidate bool) (*Config, error) {
 		}
 	}
 
-	cfg.ShutdownGrace = 0 // default value but makes it explicit
-	shutdownGrace := os.Getenv(EnvShutdownGrace)
-	if shutdownGrace != "" {
-		val, err := parseEnvDuration(shutdownGrace)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("invalid: %s: %w", EnvShutdownGrace, err))
-		} else {
-			cfg.ShutdownGrace = val
-		}
-	}
-
-	envPreUpgradeMaxRetriesVal := os.Getenv(EnvPreupgradeMaxRetries)
-	if cfg.PreUpgradeMaxRetries, err = strconv.Atoi(envPreUpgradeMaxRetriesVal); err != nil && envPreUpgradeMaxRetriesVal != "" {
+	envPreupgradeMaxRetriesVal := os.Getenv(EnvPreupgradeMaxRetries)
+	if cfg.PreupgradeMaxRetries, err = strconv.Atoi(envPreupgradeMaxRetriesVal); err != nil && envPreupgradeMaxRetriesVal != "" {
 		errs = append(errs, fmt.Errorf("%s could not be parsed to int: %w", EnvPreupgradeMaxRetries, err))
 	}
 
-	if !skipValidate {
-		errs = append(errs, cfg.validate()...)
-		if len(errs) > 0 {
-			return nil, errors.Join(errs...)
-		}
-	}
+	errs = append(errs, cfg.validate()...)
 
+	if len(errs) > 0 {
+		return nil, cverrors.FlattenErrors(errs...)
+	}
 	return cfg, nil
-}
-
-func (cfg *Config) Logger(dst io.Writer) log.Logger {
-	var logger log.Logger
-
-	if cfg.DisableLogs {
-		logger = log.NewNopLogger()
-	} else {
-		logger = log.NewLogger(dst,
-			log.ColorOption(cfg.ColorLogs),
-			log.TimeFormatOption(cfg.TimeFormatLogs)).With(log.ModuleKey, "cosmovisor")
-	}
-
-	return logger
 }
 
 func parseEnvDuration(input string) (time.Duration, error) {
@@ -313,10 +201,24 @@ func parseEnvDuration(input string) (time.Duration, error) {
 	}
 
 	if duration <= 0 {
-		return 0, errors.New("must be greater than 0")
+		return 0, fmt.Errorf("must be greater than 0")
 	}
 
 	return duration, nil
+}
+
+// LogConfigOrError logs either the config details or the error.
+func LogConfigOrError(logger *zerolog.Logger, cfg *Config, err error) {
+	if cfg == nil && err == nil {
+		return
+	}
+	logger.Info().Msg("configuration:")
+	switch {
+	case err != nil:
+		cverrors.LogErrors(logger, "configuration errors found", err)
+	case cfg != nil:
+		logger.Info().Msg(cfg.DetailString())
+	}
 }
 
 // validate returns an error if this config is invalid.
@@ -346,7 +248,7 @@ func (cfg *Config) validate() []error {
 	}
 
 	// check the DataBackupPath
-	if cfg.UnsafeSkipBackup {
+	if cfg.UnsafeSkipBackup == true {
 		return errs
 	}
 
@@ -373,7 +275,7 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 	// ensure named upgrade exists
 	bin := cfg.UpgradeBin(u.Name)
 
-	if err := plan.EnsureBinary(bin); err != nil {
+	if err := EnsureBinary(bin); err != nil {
 		return err
 	}
 
@@ -384,9 +286,7 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 
 	// remove link if it exists
 	if _, err := os.Stat(link); err == nil {
-		if err := os.Remove(link); err != nil {
-			return fmt.Errorf("failed to remove existing link: %w", err)
-		}
+		os.Remove(link)
 	}
 
 	// point to the new directory
@@ -395,7 +295,7 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 	}
 
 	cfg.currentUpgrade = u
-	f, err := os.Create(filepath.Join(upgrade, upgradetypes.UpgradeInfoFilename))
+	f, err := os.Create(filepath.Join(upgrade, upgradekeeper.UpgradeInfoFileName))
 	if err != nil {
 		return err
 	}
@@ -414,13 +314,12 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 	return err
 }
 
-// UpgradeInfo returns the current upgrade info
 func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {
 	if cfg.currentUpgrade.Name != "" {
 		return cfg.currentUpgrade, nil
 	}
 
-	filename := filepath.Join(cfg.Root(), currentLink, upgradetypes.UpgradeInfoFilename)
+	filename := filepath.Join(cfg.Root(), currentLink, upgradekeeper.UpgradeInfoFileName)
 	_, err := os.Lstat(filename)
 	var u upgradetypes.Plan
 	var bz []byte
@@ -441,8 +340,8 @@ returnError:
 	return cfg.currentUpgrade, fmt.Errorf("failed to read %q: %w", filename, err)
 }
 
-// BooleanOption checks and validate env option
-func BooleanOption(name string, defaultVal bool) (bool, error) {
+// checks and validates env option
+func booleanOption(name string, defaultVal bool) (bool, error) {
 	p := strings.ToLower(os.Getenv(name))
 	switch p {
 	case "":
@@ -455,99 +354,18 @@ func BooleanOption(name string, defaultVal bool) (bool, error) {
 	return false, fmt.Errorf("env variable %q must have a boolean value (\"true\" or \"false\"), got %q", name, p)
 }
 
-// TimeFormatOptionFromEnv checks and validates the time format option
-func TimeFormatOptionFromEnv(env, defaultVal string) (string, error) {
-	val, set := os.LookupEnv(env)
-	if !set {
-		return defaultVal, nil
-	}
-
-	return getTimeFormatOption(val)
-}
-
-func getTimeFormatOption(val string) (string, error) {
-	switch val {
-	case "layout":
-		return time.Layout, nil
-	case "ansic":
-		return time.ANSIC, nil
-	case "unixdate":
-		return time.UnixDate, nil
-	case "rubydate":
-		return time.RubyDate, nil
-	case "rfc822":
-		return time.RFC822, nil
-	case "rfc822z":
-		return time.RFC822Z, nil
-	case "rfc850":
-		return time.RFC850, nil
-	case "rfc1123":
-		return time.RFC1123, nil
-	case "rfc1123z":
-		return time.RFC1123Z, nil
-	case "rfc3339":
-		return time.RFC3339, nil
-	case "rfc3339nano":
-		return time.RFC3339Nano, nil
-	case "kitchen":
-		return time.Kitchen, nil
-	case "":
-		return "", nil
-	}
-	return "", fmt.Errorf("env variable %q must have a timeformat value (\"layout|ansic|unixdate|rubydate|rfc822|rfc822z|rfc850|rfc1123|rfc1123z|rfc3339|rfc3339nano|kitchen\"), got %q", EnvTimeFormatLogs, val)
-}
-
-// ValueToTimeFormatOption converts the time format option to the env value
-func ValueToTimeFormatOption(format string) string {
-	switch format {
-	case time.Layout:
-		return "layout"
-	case time.ANSIC:
-		return "ansic"
-	case time.UnixDate:
-		return "unixdate"
-	case time.RubyDate:
-		return "rubydate"
-	case time.RFC822:
-		return "rfc822"
-	case time.RFC822Z:
-		return "rfc822z"
-	case time.RFC850:
-		return "rfc850"
-	case time.RFC1123:
-		return "rfc1123"
-	case time.RFC1123Z:
-		return "rfc1123z"
-	case time.RFC3339:
-		return "rfc3339"
-	case time.RFC3339Nano:
-		return "rfc3339nano"
-	case time.Kitchen:
-		return "kitchen"
-	default:
-		return ""
-	}
-}
-
 // DetailString returns a multi-line string with details about this config.
 func (cfg Config) DetailString() string {
 	configEntries := []struct{ name, value string }{
 		{EnvHome, cfg.Home},
 		{EnvName, cfg.Name},
 		{EnvDownloadBin, fmt.Sprintf("%t", cfg.AllowDownloadBinaries)},
-		{EnvDownloadMustHaveChecksum, fmt.Sprintf("%t", cfg.DownloadMustHaveChecksum)},
 		{EnvRestartUpgrade, fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
-		{EnvRestartDelay, cfg.RestartDelay.String()},
-		{EnvShutdownGrace, cfg.ShutdownGrace.String()},
-		{EnvInterval, cfg.PollInterval.String()},
+		{EnvRestartDelay, fmt.Sprintf("%s", cfg.RestartDelay)},
+		{EnvInterval, fmt.Sprintf("%s", cfg.PollInterval)},
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 		{EnvDataBackupPath, cfg.DataBackupPath},
-		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreUpgradeMaxRetries)},
-		{EnvDisableLogs, fmt.Sprintf("%t", cfg.DisableLogs)},
-		{EnvColorLogs, fmt.Sprintf("%t", cfg.ColorLogs)},
-		{EnvTimeFormatLogs, cfg.TimeFormatLogs},
-		{EnvCustomPreupgrade, cfg.CustomPreUpgrade},
-		{EnvDisableRecase, fmt.Sprintf("%t", cfg.DisableRecase)},
+		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreupgradeMaxRetries)},
 	}
 
 	derivedEntries := []struct{ name, value string }{
@@ -575,49 +393,4 @@ func (cfg Config) DetailString() string {
 		fmt.Fprintf(&sb, dFmt, kv.name, kv.value)
 	}
 	return sb.String()
-}
-
-// Export exports the configuration to a file at the cosmovisor root directory.
-func (cfg Config) Export() (string, error) {
-	// always use the default path
-	path := filepath.Clean(cfg.DefaultCfgPath())
-
-	// check if config file already exists ask user if they want to overwrite it
-	if _, err := os.Stat(path); err == nil {
-		// ask user if they want to overwrite the file
-		if !askForConfirmation(fmt.Sprintf("file %s already exists, do you want to overwrite it?", path)) {
-			cfg.Logger(os.Stdout).Info("file already exists, not overriding")
-			return path, nil
-		}
-	}
-
-	// create the file
-	file, err := os.Create(filepath.Clean(path))
-	if err != nil {
-		return "", fmt.Errorf("failed to create configuration file: %w", err)
-	}
-
-	// convert the time value to its format option
-	cfg.TimeFormatLogs = ValueToTimeFormatOption(cfg.TimeFormatLogs)
-
-	defer file.Close()
-
-	// write the configuration to the file
-	err = toml.NewEncoder(file).Encode(cfg)
-	if err != nil {
-		return "", fmt.Errorf("failed to encode configuration: %w", err)
-	}
-
-	return path, nil
-}
-
-func askForConfirmation(str string) bool {
-	var response string
-	fmt.Printf("%s [y/n]: ", str)
-	_, err := fmt.Scanln(&response)
-	if err != nil {
-		return false
-	}
-
-	return strings.ToLower(response) == "y"
 }

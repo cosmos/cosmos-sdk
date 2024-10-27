@@ -3,12 +3,13 @@ package mem_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
+
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/mem"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/mem"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 func TestStore(t *testing.T) {

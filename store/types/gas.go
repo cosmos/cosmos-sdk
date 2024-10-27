@@ -163,7 +163,7 @@ func (g *infiniteGasMeter) GasConsumed() Gas {
 }
 
 // GasConsumedToLimit returns the gas consumed from the GasMeter since the gas is not confined to a limit.
-// NOTE: This behavior is only called when recovering from panic when BlockGasMeter consumes gas past the limit.
+// NOTE: This behaviour is only called when recovering from panic when BlockGasMeter consumes gas past the limit.
 func (g *infiniteGasMeter) GasConsumedToLimit() Gas {
 	return g.consumed
 }
@@ -191,7 +191,7 @@ func (g *infiniteGasMeter) ConsumeGas(amount Gas, descriptor string) {
 // RefundGas will deduct the given amount from the gas consumed. If the amount is greater than the
 // gas consumed, the function will panic.
 //
-// Use case: This functionality enables refunding gas to the transaction or block gas pools so that
+// Use case: This functionality enables refunding gas to the trasaction or block gas pools so that
 // EVM-compatible chains can fully support the go-ethereum StateDb interface.
 // See https://github.com/cosmos/cosmos-sdk/pull/9403 for reference.
 func (g *infiniteGasMeter) RefundGas(amount Gas, descriptor string) {

@@ -3,18 +3,17 @@ package utils
 import (
 	"fmt"
 
-	authtx "cosmossdk.io/x/auth/tx"
-	"cosmossdk.io/x/gov/types"
-	v1 "cosmossdk.io/x/gov/types/v1"
-	"cosmossdk.io/x/gov/types/v1beta1"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
 	defaultPage  = 1
-	defaultLimit = 30 // should be consistent with https://github.com/cometbft/cometbft/tree/v0.37.x/rpc/core#pagination
+	defaultLimit = 30 // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
 )
 
 // Proposer contains metadata of a governance proposal used for querying a
@@ -34,17 +33,10 @@ func (p Proposer) String() string {
 	return fmt.Sprintf("Proposal with ID %d was proposed by %s", p.ProposalID, p.Proposer)
 }
 
-// QueryProposalVotesParams is used to query 'custom/gov/votes'.
-type QueryProposalVotesParams struct {
-	ProposalID uint64
-	Page       int
-	Limit      int
-}
-
 // QueryVotesByTxQuery will query for votes via a direct txs tags query. It
 // will fetch and build votes directly from the returned txs and returns a JSON
-// marshaled result or any error that occurred.
-func QueryVotesByTxQuery(clientCtx client.Context, params QueryProposalVotesParams) ([]byte, error) {
+// marshalled result or any error that occurred.
+func QueryVotesByTxQuery(clientCtx client.Context, params v1.QueryProposalVotesParams) ([]byte, error) {
 	var (
 		votes      []*v1.Vote
 		nextTxPage = defaultPage
@@ -55,7 +47,7 @@ func QueryVotesByTxQuery(clientCtx client.Context, params QueryProposalVotesPara
 	for len(votes) < totalLimit {
 		// Search for both (legacy) votes and weighted votes.
 		q := fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID)
-		searchResult, err := authtx.QueryTxsByEvents(clientCtx, nextTxPage, defaultLimit, q, "")
+		searchResult, err := authtx.QueryTxsByEvents(clientCtx, []string{q}, nextTxPage, defaultLimit, "")
 		if err != nil {
 			return nil, err
 		}
@@ -112,23 +104,12 @@ func QueryVotesByTxQuery(clientCtx client.Context, params QueryProposalVotesPara
 	return bz, nil
 }
 
-// QueryVoteParams is used to query 'custom/gov/vote'
-type QueryVoteParams struct {
-	ProposalID uint64
-	Voter      sdk.AccAddress
-}
-
 // QueryVoteByTxQuery will query for a single vote via a direct txs tags query.
-func QueryVoteByTxQuery(clientCtx client.Context, params QueryVoteParams) ([]byte, error) {
-	voterAddr, err := clientCtx.AddressCodec.BytesToString(params.Voter)
-	if err != nil {
-		return nil, err
-	}
-
+func QueryVoteByTxQuery(clientCtx client.Context, params v1.QueryVoteParams) ([]byte, error) {
 	q1 := fmt.Sprintf("%s.%s='%d'", types.EventTypeProposalVote, types.AttributeKeyProposalID, params.ProposalID)
-	q2 := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, voterAddr)
+	q2 := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter.String())
 	q3 := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, params.Voter)
-	searchResult, err := authtx.QueryTxsByEvents(clientCtx, defaultPage, defaultLimit, fmt.Sprintf("%s AND (%s OR %s)", q1, q2, q3), "")
+	searchResult, err := authtx.QueryTxsByEvents(clientCtx, []string{fmt.Sprintf("%s AND (%s OR %s)", q1, q2, q3)}, defaultPage, defaultLimit, "")
 	if err != nil {
 		return nil, err
 	}
@@ -177,6 +158,29 @@ func QueryVoteByTxQuery(clientCtx client.Context, params QueryVoteParams) ([]byt
 	}
 
 	return nil, fmt.Errorf("address '%s' did not vote on proposalID %d", params.Voter, params.ProposalID)
+}
+
+// QueryProposerByTxQuery will query for a proposer of a governance proposal by ID.
+func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Proposer, error) {
+	q := fmt.Sprintf("%s.%s='%d'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, proposalID)
+	searchResult, err := authtx.QueryTxsByEvents(clientCtx, []string{q}, defaultPage, defaultLimit, "")
+	if err != nil {
+		return Proposer{}, err
+	}
+
+	for _, info := range searchResult.Txs {
+		for _, msg := range info.GetTx().GetMsgs() {
+			// there should only be a single proposal under the given conditions
+			if subMsg, ok := msg.(*v1beta1.MsgSubmitProposal); ok {
+				return NewProposer(proposalID, subMsg.Proposer), nil
+			}
+			if subMsg, ok := msg.(*v1.MsgSubmitProposal); ok {
+				return NewProposer(proposalID, subMsg.Proposer), nil
+			}
+		}
+	}
+
+	return Proposer{}, fmt.Errorf("failed to find the proposer for proposalID %d", proposalID)
 }
 
 // convertVote converts a MsgVoteWeighted into a *v1.Vote.

@@ -4,9 +4,9 @@ package testpb
 
 import (
 	context "context"
-	ormlist "cosmossdk.io/orm/model/ormlist"
-	ormtable "cosmossdk.io/orm/model/ormtable"
-	ormerrors "cosmossdk.io/orm/types/ormerrors"
+	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
+	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
 type BalanceTable interface {

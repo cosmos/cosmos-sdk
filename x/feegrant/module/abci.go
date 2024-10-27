@@ -1,12 +1,10 @@
 package module
 
 import (
-	"context"
-
-	"cosmossdk.io/x/feegrant/keeper"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 )
 
-func EndBlocker(ctx context.Context, k keeper.Keeper) error {
-	// 200 is an arbitrary value, we can change it later if needed
-	return k.RemoveExpiredAllowances(ctx, 200)
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
+	k.RemoveExpiredAllowances(ctx)
 }

@@ -4,14 +4,13 @@ import (
 	"math/rand"
 	"time"
 
-	"cosmossdk.io/core/address"
-	banktypes "cosmossdk.io/x/bank/types"
-	"cosmossdk.io/x/group"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
 const (
@@ -22,26 +21,23 @@ const (
 	GroupVote       = "group-vote"
 )
 
-func checkAccExists(acc string, g []*group.GroupMember, lastIndex int) bool {
+func checkAccExists(acc sdk.AccAddress, g []*group.GroupMember, lastIndex int) bool {
+	s := acc.String()
 	for i := 0; i < lastIndex; i++ {
-		if g[i].Member.Address == acc {
+		if g[i].Member.Address == s {
 			return true
 		}
 	}
 	return false
 }
 
-func getGroups(r *rand.Rand, accounts []simtypes.Account, addressCodec address.Codec) []*group.GroupInfo {
+func getGroups(r *rand.Rand, accounts []simtypes.Account) []*group.GroupInfo {
 	groups := make([]*group.GroupInfo, 3)
 	for i := 0; i < 3; i++ {
 		acc, _ := simtypes.RandomAcc(r, accounts)
-		accAddr, err := addressCodec.BytesToString(acc.Address)
-		if err != nil {
-			return nil
-		}
 		groups[i] = &group.GroupInfo{
 			Id:          uint64(i + 1),
-			Admin:       accAddr,
+			Admin:       acc.Address.String(),
 			Metadata:    simtypes.RandStringOfLength(r, 10),
 			Version:     1,
 			TotalWeight: "10",
@@ -50,25 +46,17 @@ func getGroups(r *rand.Rand, accounts []simtypes.Account, addressCodec address.C
 	return groups
 }
 
-func getGroupMembers(r *rand.Rand, accounts []simtypes.Account, addressCodec address.Codec) []*group.GroupMember {
+func getGroupMembers(r *rand.Rand, accounts []simtypes.Account) []*group.GroupMember {
 	groupMembers := make([]*group.GroupMember, 3)
 	for i := 0; i < 3; i++ {
 		acc, _ := simtypes.RandomAcc(r, accounts)
-		accAddr, err := addressCodec.BytesToString(acc.Address)
-		if err != nil {
-			return nil
-		}
-		for checkAccExists(accAddr, groupMembers, i) {
+		for checkAccExists(acc.Address, groupMembers, i) {
 			acc, _ = simtypes.RandomAcc(r, accounts)
-			accAddr, err = addressCodec.BytesToString(acc.Address)
-			if err != nil {
-				return nil
-			}
 		}
 		groupMembers[i] = &group.GroupMember{
 			GroupId: uint64(i + 1),
 			Member: &group.Member{
-				Address:  accAddr,
+				Address:  acc.Address.String(),
 				Weight:   "10",
 				Metadata: simtypes.RandStringOfLength(r, 10),
 			},
@@ -83,11 +71,8 @@ func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.G
 	usedAccs := make(map[string]bool)
 	for i := 0; i < 3; i++ {
 		acc, _ := simtypes.RandomAcc(r, simState.Accounts)
-		accAddr, err := simState.AddressCodec.BytesToString(acc.Address)
-		if err != nil {
-			return nil
-		}
-		if usedAccs[accAddr] {
+
+		if usedAccs[acc.Address.String()] {
 			if len(usedAccs) != len(simState.Accounts) {
 				// Go again if the account is used and there are more to take from
 				i--
@@ -95,7 +80,7 @@ func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.G
 
 			continue
 		}
-		usedAccs[accAddr] = true
+		usedAccs[acc.Address.String()] = true
 
 		any, err := codectypes.NewAnyWithValue(group.NewThresholdDecisionPolicy("10", time.Second, 0))
 		if err != nil {
@@ -103,8 +88,8 @@ func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.G
 		}
 		groupPolicies = append(groupPolicies, &group.GroupPolicyInfo{
 			GroupId:        uint64(i + 1),
-			Admin:          accAddr,
-			Address:        accAddr,
+			Admin:          acc.Address.String(),
+			Address:        acc.Address.String(),
 			Version:        1,
 			DecisionPolicy: any,
 			Metadata:       simtypes.RandStringOfLength(r, 10),
@@ -115,15 +100,7 @@ func getGroupPolicies(r *rand.Rand, simState *module.SimulationState) []*group.G
 
 func getProposals(r *rand.Rand, simState *module.SimulationState, groupPolicies []*group.GroupPolicyInfo) []*group.Proposal {
 	proposals := make([]*group.Proposal, 3)
-	addr0, err := simState.AddressCodec.BytesToString(simState.Accounts[0].Address)
-	if err != nil {
-		panic(err)
-	}
-	addr1, err := simState.AddressCodec.BytesToString(simState.Accounts[1].Address)
-	if err != nil {
-		panic(err)
-	}
-	proposers := []string{addr0, addr1}
+	proposers := []string{simState.Accounts[0].Address.String(), simState.Accounts[1].Address.String()}
 	for i := 0; i < 3; i++ {
 		idx := r.Intn(len(groupPolicies))
 		groupPolicyAddress := groupPolicies[idx].Address
@@ -150,15 +127,9 @@ func getProposals(r *rand.Rand, simState *module.SimulationState, groupPolicies 
 			SubmitTime:      submittedAt,
 			VotingPeriodEnd: timeout,
 		}
-
-		toAddr, err := simState.AddressCodec.BytesToString(to.Address)
-		if err != nil {
-			panic(err)
-		}
-
-		err = proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
+		err := proposal.SetMsgs([]sdk.Msg{&banktypes.MsgSend{
 			FromAddress: groupPolicyAddress,
-			ToAddress:   toAddr,
+			ToAddress:   to.Address.String(),
 			Amount:      sdk.NewCoins(sdk.NewInt64Coin("test", 10)),
 		}})
 		if err != nil {
@@ -175,13 +146,9 @@ func getVotes(r *rand.Rand, simState *module.SimulationState) []*group.Vote {
 	votes := make([]*group.Vote, 3)
 
 	for i := 0; i < 3; i++ {
-		voterAddr, err := simState.AddressCodec.BytesToString(simState.Accounts[i].Address)
-		if err != nil {
-			return nil
-		}
 		votes[i] = &group.Vote{
 			ProposalId: uint64(i + 1),
-			Voter:      voterAddr,
+			Voter:      simState.Accounts[i].Address.String(),
 			Option:     getVoteOption(i),
 			Metadata:   simtypes.RandStringOfLength(r, 50),
 			SubmitTime: time.Unix(0, 0),
@@ -213,23 +180,38 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	// groups
 	var groups []*group.GroupInfo
-	simState.AppParams.GetOrGenerate(GroupInfo, &groups, simState.Rand, func(r *rand.Rand) { groups = getGroups(r, simState.Accounts, simState.AddressCodec) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, GroupInfo, &groups, simState.Rand,
+		func(r *rand.Rand) { groups = getGroups(r, simState.Accounts) },
+	)
 
 	// group members
 	var members []*group.GroupMember
-	simState.AppParams.GetOrGenerate(GroupMembers, &members, simState.Rand, func(r *rand.Rand) { members = getGroupMembers(r, simState.Accounts, simState.AddressCodec) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, GroupMembers, &members, simState.Rand,
+		func(r *rand.Rand) { members = getGroupMembers(r, simState.Accounts) },
+	)
 
 	// group policies
 	var groupPolicies []*group.GroupPolicyInfo
-	simState.AppParams.GetOrGenerate(GroupPolicyInfo, &groupPolicies, simState.Rand, func(r *rand.Rand) { groupPolicies = getGroupPolicies(r, simState) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, GroupPolicyInfo, &groupPolicies, simState.Rand,
+		func(r *rand.Rand) { groupPolicies = getGroupPolicies(r, simState) },
+	)
 
 	// proposals
 	var proposals []*group.Proposal
-	simState.AppParams.GetOrGenerate(GroupProposals, &proposals, simState.Rand, func(r *rand.Rand) { proposals = getProposals(r, simState, groupPolicies) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, GroupProposals, &proposals, simState.Rand,
+		func(r *rand.Rand) { proposals = getProposals(r, simState, groupPolicies) },
+	)
 
 	// votes
 	var votes []*group.Vote
-	simState.AppParams.GetOrGenerate(GroupVote, &votes, simState.Rand, func(r *rand.Rand) { votes = getVotes(r, simState) })
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, GroupVote, &votes, simState.Rand,
+		func(r *rand.Rand) { votes = getVotes(r, simState) },
+	)
 
 	groupGenesis := group.GenesisState{
 		GroupSeq:       3,

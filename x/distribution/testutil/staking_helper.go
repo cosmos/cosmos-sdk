@@ -3,17 +3,16 @@ package testutil
 import (
 	"fmt"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/distribution/keeper"
-	stakingtypes "cosmossdk.io/x/staking/types"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func CreateValidator(pk cryptotypes.PubKey, operator string, stake math.Int) (stakingtypes.Validator, error) {
-	val, err := stakingtypes.NewValidator(operator, pk, stakingtypes.Description{Moniker: "TestValidator"})
+func CreateValidator(pk cryptotypes.PubKey, stake math.Int) (stakingtypes.Validator, error) {
+	valConsAddr := sdk.GetConsAddress(pk)
+	val, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr), pk, stakingtypes.Description{})
 	val.Tokens = stake
 	val.DelegatorShares = math.LegacyNewDecFromInt(val.Tokens)
 	return val, err
@@ -46,22 +45,16 @@ func SlashValidator(
 	consAddr sdk.ConsAddress,
 	infractionHeight int64,
 	power int64,
-	slashFactor math.LegacyDec,
+	slashFactor sdk.Dec,
 	validator *stakingtypes.Validator,
 	distrKeeper *keeper.Keeper,
-	sk *MockStakingKeeper,
 ) math.Int {
 	if slashFactor.IsNegative() {
 		panic(fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor))
 	}
 
-	valBz, err := sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
-	if err != nil {
-		panic(err)
-	}
-
 	// call the before-modification hook
-	err = distrKeeper.Hooks().BeforeValidatorModified(ctx, valBz)
+	err := distrKeeper.Hooks().BeforeValidatorModified(ctx, validator.GetOperator())
 	if err != nil {
 		panic(err)
 	}
@@ -74,25 +67,22 @@ func SlashValidator(
 		panic("we can't test any other case here")
 	}
 
-	slashAmountDec := math.LegacyNewDecFromInt(validator.Tokens).Mul(math.LegacyNewDecWithPrec(5, 1))
+	slashAmountDec := sdk.NewDecFromInt(validator.Tokens).Mul(sdk.NewDecWithPrec(5, 1))
 	slashAmount := slashAmountDec.TruncateInt()
 
 	// cannot decrease balance below zero
-	tokensToBurn := math.MinInt(slashAmount, validator.Tokens)
-	tokensToBurn = math.MaxInt(tokensToBurn, math.ZeroInt()) // defensive.
+	tokensToBurn := sdk.MinInt(slashAmount, validator.Tokens)
+	tokensToBurn = sdk.MaxInt(tokensToBurn, math.ZeroInt()) // defensive.
 
 	// we need to calculate the *effective* slash fraction for distribution
 	if validator.Tokens.IsPositive() {
-		effectiveFraction := math.LegacyNewDecFromInt(tokensToBurn).QuoRoundUp(math.LegacyNewDecFromInt(validator.Tokens))
+		effectiveFraction := sdk.NewDecFromInt(tokensToBurn).QuoRoundUp(sdk.NewDecFromInt(validator.Tokens))
 		// possible if power has changed
 		if effectiveFraction.GT(math.LegacyOneDec()) {
 			effectiveFraction = math.LegacyOneDec()
 		}
 		// call the before-slashed hook
-		err := distrKeeper.Hooks().BeforeValidatorSlashed(ctx, valBz, effectiveFraction)
-		if err != nil {
-			panic(err)
-		}
+		distrKeeper.Hooks().BeforeValidatorSlashed(ctx, validator.GetOperator(), effectiveFraction)
 	}
 	// Deduct from validator's bonded tokens and update the validator.
 	// Burn the slashed tokens from the pool account and decrease the total supply.
@@ -111,29 +101,16 @@ func Delegate(
 	validator *stakingtypes.Validator,
 	amount math.Int,
 	delegation *stakingtypes.Delegation,
-	sk *MockStakingKeeper,
-	addressCodec address.Codec,
 ) (
-	newShares math.LegacyDec,
+	newShares sdk.Dec,
 	updatedDel stakingtypes.Delegation,
 	err error,
 ) {
-	valBz, err := sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
-	if err != nil {
-		return math.LegacyZeroDec(), stakingtypes.Delegation{}, err
-	}
 	if delegation != nil {
-		err = distrKeeper.Hooks().BeforeDelegationSharesModified(ctx, delegator, valBz)
+		err = distrKeeper.Hooks().BeforeDelegationSharesModified(ctx, delegator, validator.GetOperator())
 	} else {
-		err = distrKeeper.Hooks().BeforeDelegationCreated(ctx, delegator, valBz)
-		if err != nil {
-			return math.LegacyZeroDec(), stakingtypes.Delegation{}, err
-		}
-		delAddr, err := addressCodec.BytesToString(delegator)
-		if err != nil {
-			return math.LegacyZeroDec(), stakingtypes.Delegation{}, err
-		}
-		del := stakingtypes.NewDelegation(delAddr, validator.GetOperator(), math.LegacyZeroDec())
+		err = distrKeeper.Hooks().BeforeDelegationCreated(ctx, delegator, validator.GetOperator())
+		del := stakingtypes.NewDelegation(delegator, validator.GetOperator(), math.LegacyZeroDec())
 		delegation = &del
 	}
 

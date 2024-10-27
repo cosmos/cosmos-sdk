@@ -2,27 +2,25 @@
 
 1. Copy the `adr-template.md` file. Use the following filename pattern: `adr-next_number-title.md`
 2. Create a draft Pull Request if you want to get an early feedback.
-3. Make sure the context and solution is clear and well documented.
+3. Make sure the context and a solution is clear and well documented.
 4. Add an entry to a list in the [README](./README.md) file.
 5. Create a Pull Request to propose a new ADR.
 
-## What is an ADR? 
-
-An ADR is a document to document an implementation and design that may or may not have been discussed in an RFC. While an RFC is meant to replace synchronous communication in a distributed environment, an ADR is meant to document an already made decision. An ADR won't come with much of a communication overhead because the discussion was recorded in an RFC or a synchronous discussion. If the consensus came from a synchronous discussion then a short excerpt should be added to the ADR to explain the goals. 
-
 ## ADR life cycle
 
-ADR creation is an **iterative** process. Instead of having a high amount of communication overhead, an ADR is used when there is already a decision made and implementation details need to be added. The ADR should document what the collective consensus for the specific issue is and how to solve it. 
+ADR creation is an **iterative** process. Instead of trying to solve all decisions in a single ADR pull request, we MUST firstly understand the problem and collect feedback through a GitHub Issue.
 
-1. Every ADR should start with either an RFC or discussion where consensus has been met. 
+1. Every proposal SHOULD start with a new GitHub Issue or be a result of existing Issues. The Issue should contain just a brief proposal summary.
 
-2. Once consensus is met, a GitHub Pull Request (PR) is created with a new document based on the `adr-template.md`.
+2. Once the motivation is validated, a GitHub Pull Request (PR) is created with a new document based on the `adr-template.md`.
 
-3. If a _proposed_ ADR is merged, then it should clearly document outstanding issues either in ADR document notes or in a GitHub Issue.
+3. An ADR doesn't have to arrive to `main` with an _accepted_ status in a single PR. If the motivation is clear and the solution is sound, we SHOULD be able to merge it and keep a _proposed_ status. It's preferable to have an iterative approach rather than long, not merged Pull Requests.
 
-4. The PR SHOULD always be merged. In the case of a faulty ADR, we still prefer to  merge it with a _rejected_ status. The only time the ADR SHOULD NOT be merged is if the author abandons it.
+4. If a _proposed_ ADR is merged, then it should clearly document outstanding issues either in ADR document notes or in a GitHub Issue.
 
-5. Merged ADRs SHOULD NOT be pruned.
+5. The PR SHOULD always be merged. In the case of a faulty ADR, we still prefer to  merge it with a _rejected_ status. The only time the ADR SHOULD NOT be merged is if the author abandons it.
+
+6. Merged ADRs SHOULD NOT be pruned.
 
 ### ADR status
 
@@ -49,7 +47,7 @@ DRAFT -> PROPOSED -> LAST CALL yyyy-mm-dd -> ACCEPTED | REJECTED -> SUPERSEDED b
 * `LAST CALL <date for the last call>`: [optional] clear notify that we are close to accept updates. Changing a status to `LAST CALL` means that social consensus (of Cosmos SDK maintainers) has been reached and we still want to give it a time to let the community react or analyze.
 * `ACCEPTED`: ADR which will represent a currently implemented or to be implemented architecture design.
 * `REJECTED`: ADR can go from PROPOSED or ACCEPTED to rejected if the consensus among project stakeholders will decide so.
-* `SUPERSEDED by ADR-xxx`: ADR which has been superseded by a new ADR.
+* `SUPERSEEDED by ADR-xxx`: ADR which has been superseded by a new ADR.
 * `ABANDONED`: the ADR is no longer pursued by the original authors.
 
 ## Language used in ADR

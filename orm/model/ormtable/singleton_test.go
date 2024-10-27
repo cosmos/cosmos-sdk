@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+
 	"google.golang.org/protobuf/testing/protocmp"
+
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/orm/internal/testkv"
-	"cosmossdk.io/orm/internal/testpb"
-	"cosmossdk.io/orm/model/ormtable"
+	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
+	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 )
 
 func TestSingleton(t *testing.T) {

@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/stretchr/testify/require"
-
-	"cosmossdk.io/x/gov/types/v1beta1"
 )
 
 func TestProposalStatus_Format(t *testing.T) {

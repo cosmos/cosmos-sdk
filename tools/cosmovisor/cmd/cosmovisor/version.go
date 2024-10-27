@@ -6,30 +6,32 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"cosmossdk.io/tools/cosmovisor"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
 )
 
-func NewVersionCmd() *cobra.Command {
-	versionCmd := &cobra.Command{
-		Use:          "version",
-		Short:        "Display cosmovisor and APP version.",
-		SilenceUsage: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			noAppVersion, _ := cmd.Flags().GetBool(cosmovisor.FlagCosmovisorOnly)
-			if val, err := cmd.Flags().GetString(cosmovisor.FlagOutput); val == "json" && err == nil {
-				return printVersionJSON(cmd, args, noAppVersion)
-			}
+func init() {
+	versionCmd.Flags().StringP(OutputFlag, "o", "text", "Output format (text|json)")
+	rootCmd.AddCommand(versionCmd)
+}
 
-			return printVersion(cmd, args, noAppVersion)
-		},
-	}
+// OutputFlag defines the output format flag
+var OutputFlag = "output"
 
-	versionCmd.Flags().StringP(cosmovisor.FlagOutput, "o", "text", "Output format (text|json)")
-	versionCmd.Flags().Bool(cosmovisor.FlagCosmovisorOnly, false, "Print cosmovisor version only")
+var versionCmd = &cobra.Command{
+	Use:          "version",
+	Short:        "Prints the version of Cosmovisor.",
+	SilenceUsage: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		logger := cmd.Context().Value(cosmovisor.LoggerKey).(*zerolog.Logger)
 
-	return versionCmd
+		if val, err := cmd.Flags().GetString(OutputFlag); val == "json" && err == nil {
+			return printVersionJSON(logger, args)
+		}
+
+		return printVersion(logger, args)
+	},
 }
 
 func getVersion() string {
@@ -41,28 +43,25 @@ func getVersion() string {
 	return strings.TrimSpace(version.Main.Version)
 }
 
-func printVersion(cmd *cobra.Command, args []string, noAppVersion bool) error {
-	cmd.Printf("cosmovisor version: %s\n", getVersion())
-	if noAppVersion {
-		return nil
-	}
+func printVersion(logger *zerolog.Logger, args []string) error {
+	fmt.Printf("cosmovisor version: %s\n", getVersion())
 
-	if err := run("", append([]string{"version"}, args...)); err != nil {
+	if err := Run(logger, append([]string{"version"}, args...)); err != nil {
 		return fmt.Errorf("failed to run version command: %w", err)
 	}
 
 	return nil
 }
 
-func printVersionJSON(cmd *cobra.Command, args []string, noAppVersion bool) error {
-	if noAppVersion {
-		cmd.Printf(`{"cosmovisor_version":"%s"}`+"\n", getVersion())
-		return nil
-	}
-
+func printVersionJSON(logger *zerolog.Logger, args []string) error {
 	buf := new(strings.Builder)
-	if err := run(
-		"",
+
+	// disable logger
+	l := logger.Level(zerolog.Disabled)
+	logger = &l
+
+	if err := Run(
+		logger,
 		[]string{"version", "--long", "--output", "json"},
 		StdOutRunOption(buf),
 	); err != nil {
@@ -77,9 +76,11 @@ func printVersionJSON(cmd *cobra.Command, args []string, noAppVersion bool) erro
 		AppVersion: json.RawMessage(buf.String()),
 	})
 	if err != nil {
+		l := logger.Level(zerolog.TraceLevel)
+		logger = &l
 		return fmt.Errorf("can't print version output, expected valid json from APP, got: %s - %w", buf.String(), err)
 	}
 
-	cmd.Println(string(out))
+	fmt.Println(string(out))
 	return nil
 }

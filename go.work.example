@@ -1,49 +1,17 @@
-go 1.23
+go 1.19
 
 use (
 	.
 	./api
 	./client/v2
-	./collections
 	./core
-	./core/testing
 	./depinject
 	./errors
-	./indexer/postgres
-	./log
 	./math
 	./orm
+	./tx
 	./simapp
 	./tests
-	./tests/systemtests
-	./schema
-	./server/v2/stf
-	./server/v2/appmanager
-	./store
-	./store/v2
-	./runtime/v2
+	./tools/rosetta
 	./tools/cosmovisor
-	./tools/confix
-	./tools/hubl
-	./x/accounts
-	./x/accounts/defaults/lockup
-	./x/auth
-	./x/authz
-	./x/bank
-	./x/circuit
-	./x/consensus
-	./x/distribution
-	./x/evidence
-	./x/feegrant
- 	./x/gov
-	./x/group
-	./x/mint
-	./x/nft
-	./x/params
-	./x/protocolpool
-	./x/slashing
-	./x/staking
-	./x/tx
-	./x/upgrade
-	./x/epochs
 )

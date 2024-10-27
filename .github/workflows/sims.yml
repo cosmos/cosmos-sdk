@@ -15,68 +15,71 @@ jobs:
   build:
     permissions:
       contents: read # for actions/checkout to fetch code
-    runs-on: large-sdk-runner
+    runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
         with:
-          go-version: "1.23"
+          go-version: "1.19"
           check-latest: true
       - run: make build
+      - name: Install runsim
+        run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/bin
+          key: ${{ runner.os }}-go-runsim-binary
 
   test-sim-import-export:
-    runs-on: large-sdk-runner
+    runs-on: ubuntu-latest
     needs: [build]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
         with:
-          go-version: "1.23"
+          go-version: "1.19"
           check-latest: true
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/bin
+          key: ${{ runner.os }}-go-runsim-binary
       - name: test-sim-import-export
         run: |
           make test-sim-import-export
 
   test-sim-after-import:
-    runs-on: large-sdk-runner
+    runs-on: ubuntu-latest
     needs: [build]
-    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
         with:
-          go-version: "1.23"
+          go-version: "1.19"
           check-latest: true
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/bin
+          key: ${{ runner.os }}-go-runsim-binary
       - name: test-sim-after-import
         run: |
           make test-sim-after-import
 
-  test-sim-deterministic:
-    runs-on: large-sdk-runner
-    needs: [build]
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.23"
-          check-latest: true
-      - name: test-sim-nondeterminism-streaming
-        run: |
-          make test-sim-nondeterminism-streaming
-
   test-sim-multi-seed-short:
-    runs-on: large-sdk-runner
+    runs-on: ubuntu-latest
     needs: [build]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
         with:
-          go-version: "1.23"
+          go-version: "1.19"
           check-latest: true
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/bin
+          key: ${{ runner.os }}-go-runsim-binary
       - name: test-sim-multi-seed-short
         run: |
           make test-sim-multi-seed-short
@@ -84,11 +87,11 @@ jobs:
   sims-notify-success:
     needs:
       [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
-    runs-on: large-sdk-runner
+    runs-on: ubuntu-latest
     if: ${{ success() }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
       - name: Get previous workflow status
         uses: ./.github/actions/last-workflow-status
         id: last_status
@@ -97,10 +100,10 @@ jobs:
 
       - name: Notify Slack on success
         if: ${{ steps.last_status.outputs.last_status == 'failure' }}
-        uses: rtCamp/action-slack-notify@v2.3.0
+        uses: rtCamp/action-slack-notify@v2.2.0
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_CHANNEL: sdk-sims
+          SLACK_CHANNEL: cosmos-sdk-sims
           SLACK_USERNAME: Sim Tests
           SLACK_ICON_EMOJI: ":white_check_mark:"
           SLACK_COLOR: good
@@ -112,14 +115,14 @@ jobs:
       contents: none
     needs:
       [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
-    runs-on: large-sdk-runner
+    runs-on: ubuntu-latest
     if: ${{ failure() }}
     steps:
       - name: Notify Slack on failure
-        uses: rtCamp/action-slack-notify@v2.3.0
+        uses: rtCamp/action-slack-notify@v2.2.0
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_CHANNEL: sdk-sims
+          SLACK_CHANNEL: cosmos-sdk-sims
           SLACK_USERNAME: Sim Tests
           SLACK_ICON_EMOJI: ":skull:"
           SLACK_COLOR: danger

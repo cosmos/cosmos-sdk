@@ -3,18 +3,18 @@ package proofs
 import (
 	"sort"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	"github.com/cometbft/cometbft/libs/rand"
+	tmcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"golang.org/x/exp/maps"
 
-	"cosmossdk.io/math/unsafe"
-	sdkmaps "cosmossdk.io/store/internal/maps"
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 )
 
 // SimpleResult contains a merkle.SimpleProof along with all data needed to build the confio/proof
 type SimpleResult struct {
 	Key      []byte
 	Value    []byte
-	Proof    *cmtprotocrypto.Proof
+	Proof    *tmcrypto.Proof
 	RootHash []byte
 }
 
@@ -66,7 +66,7 @@ func GetKey(allkeys []string, loc Where) string {
 		return allkeys[len(allkeys)-1]
 	}
 	// select a random index between 1 and allkeys-2
-	idx := unsafe.NewRand().Int()%(len(allkeys)-2) + 1
+	idx := rand.NewRand().Int()%(len(allkeys)-2) + 1
 	return allkeys[idx]
 }
 
@@ -94,7 +94,7 @@ func BuildMap(size int) map[string][]byte {
 	data := make(map[string][]byte)
 	// insert lots of info and store the bytes
 	for i := 0; i < size; i++ {
-		key := unsafe.Str(20)
+		key := rand.Str(20)
 		data[key] = toValue(key)
 	}
 	return data

@@ -1,93 +1,90 @@
 package keeper
 
 import (
-	"context"
 	"encoding/json"
 
-	"cosmossdk.io/errors"
-	"cosmossdk.io/x/group"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
 // InitGenesis initializes the group module's genesis state.
-func (k Keeper) InitGenesis(ctx context.Context, cdc codec.JSONCodec, data json.RawMessage) error {
+func (k Keeper) InitGenesis(ctx types.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState group.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
-	store := k.KVStoreService.OpenKVStore(ctx)
-
-	if err := k.groupTable.Import(store, genesisState.Groups, genesisState.GroupSeq); err != nil {
-		return errors.Wrap(err, "groups")
+	if err := k.groupTable.Import(ctx.KVStore(k.key), genesisState.Groups, genesisState.GroupSeq); err != nil {
+		panic(errors.Wrap(err, "groups"))
 	}
 
-	if err := k.groupMemberTable.Import(store, genesisState.GroupMembers, 0); err != nil {
-		return errors.Wrap(err, "group members")
+	if err := k.groupMemberTable.Import(ctx.KVStore(k.key), genesisState.GroupMembers, 0); err != nil {
+		panic(errors.Wrap(err, "group members"))
 	}
 
-	if err := k.groupPolicyTable.Import(store, genesisState.GroupPolicies, 0); err != nil {
-		return errors.Wrap(err, "group policies")
+	if err := k.groupPolicyTable.Import(ctx.KVStore(k.key), genesisState.GroupPolicies, 0); err != nil {
+		panic(errors.Wrap(err, "group policies"))
 	}
 
-	if err := k.groupPolicySeq.InitVal(store, genesisState.GroupPolicySeq); err != nil {
-		return errors.Wrap(err, "group policy account seq")
+	if err := k.groupPolicySeq.InitVal(ctx.KVStore(k.key), genesisState.GroupPolicySeq); err != nil {
+		panic(errors.Wrap(err, "group policy account seq"))
 	}
 
-	if err := k.proposalTable.Import(store, genesisState.Proposals, genesisState.ProposalSeq); err != nil {
-		return errors.Wrap(err, "proposals")
+	if err := k.proposalTable.Import(ctx.KVStore(k.key), genesisState.Proposals, genesisState.ProposalSeq); err != nil {
+		panic(errors.Wrap(err, "proposals"))
 	}
 
-	if err := k.voteTable.Import(store, genesisState.Votes, 0); err != nil {
-		return errors.Wrap(err, "votes")
+	if err := k.voteTable.Import(ctx.KVStore(k.key), genesisState.Votes, 0); err != nil {
+		panic(errors.Wrap(err, "votes"))
 	}
 
-	return nil
+	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the group module's exported genesis.
-func (k Keeper) ExportGenesis(ctx context.Context, _ codec.JSONCodec) (*group.GenesisState, error) {
+func (k Keeper) ExportGenesis(ctx types.Context, _ codec.JSONCodec) *group.GenesisState {
 	genesisState := group.NewGenesisState()
 
 	var groups []*group.GroupInfo
 
-	store := k.KVStoreService.OpenKVStore(ctx)
-
-	groupSeq, err := k.groupTable.Export(store, &groups)
+	groupSeq, err := k.groupTable.Export(ctx.KVStore(k.key), &groups)
 	if err != nil {
-		return nil, errors.Wrap(err, "groups")
+		panic(errors.Wrap(err, "groups"))
 	}
 	genesisState.Groups = groups
 	genesisState.GroupSeq = groupSeq
 
 	var groupMembers []*group.GroupMember
-	_, err = k.groupMemberTable.Export(store, &groupMembers)
+	_, err = k.groupMemberTable.Export(ctx.KVStore(k.key), &groupMembers)
 	if err != nil {
-		return nil, errors.Wrap(err, "group members")
+		panic(errors.Wrap(err, "group members"))
 	}
 	genesisState.GroupMembers = groupMembers
 
 	var groupPolicies []*group.GroupPolicyInfo
-	_, err = k.groupPolicyTable.Export(store, &groupPolicies)
+	_, err = k.groupPolicyTable.Export(ctx.KVStore(k.key), &groupPolicies)
 	if err != nil {
-		return nil, errors.Wrap(err, "group policies")
+		panic(errors.Wrap(err, "group policies"))
 	}
 	genesisState.GroupPolicies = groupPolicies
-	genesisState.GroupPolicySeq = k.groupPolicySeq.CurVal(store)
+	genesisState.GroupPolicySeq = k.groupPolicySeq.CurVal(ctx.KVStore(k.key))
 
 	var proposals []*group.Proposal
-	proposalSeq, err := k.proposalTable.Export(store, &proposals)
+	proposalSeq, err := k.proposalTable.Export(ctx.KVStore(k.key), &proposals)
 	if err != nil {
-		return nil, errors.Wrap(err, "proposals")
+		panic(errors.Wrap(err, "proposals"))
 	}
 	genesisState.Proposals = proposals
 	genesisState.ProposalSeq = proposalSeq
 
 	var votes []*group.Vote
-	_, err = k.voteTable.Export(store, &votes)
+	_, err = k.voteTable.Export(ctx.KVStore(k.key), &votes)
 	if err != nil {
-		return nil, errors.Wrap(err, "votes")
+		panic(errors.Wrap(err, "votes"))
 	}
 	genesisState.Votes = votes
 
-	return genesisState, nil
+	return genesisState
 }

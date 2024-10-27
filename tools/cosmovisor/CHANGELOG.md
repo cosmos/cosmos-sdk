@@ -36,48 +36,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## v1.6.0 - 2024-08-12
-
-## Improvements
-
-* Bump `cosmossdk.io/x/upgrade` to v0.1.4 (including go-getter vulnerability fix)
-* [#19995](https://github.com/cosmos/cosmos-sdk/pull/19995):
-    * `init command` writes the configuration to the config file only at the default path `DAEMON_HOME/cosmovisor/config.toml`.
-    * Provide `--cosmovisor-config` flag with value as args to provide the path to the configuration file in the `run` command. `run --cosmovisor-config <path> (other cmds with flags) ...`.
-    * Add `--cosmovisor-config` flag to provide `config.toml` path to the configuration file in root command used by `add-upgrade` and `config` subcommands.
-    * `config command` now displays the configuration from the config file if it is provided. If the config file is not provided, it will display the configuration from the environment variables.
-
-## Bug Fixes
-
-* [#20062](https://github.com/cosmos/cosmos-sdk/pull/20062) Fixed cosmovisor add-upgrade permissions
-* [#20585](https://github.com/cosmos/cosmos-sdk/pull/20585) Always parse stdout and stderr
-* [#20585](https://github.com/cosmos/cosmos-sdk/pull/20585) Pass right home to command `status`
-* [#20585](https://github.com/cosmos/cosmos-sdk/pull/20585) Fix upgrades applied automatically (check two casing of sync_info)
-
-## v1.5.0 - 2023-07-17
-
-## Features
-
-* [#16413](https://github.com/cosmos/cosmos-sdk/issues/16413) Add `cosmovisor add-upgrade` command to manually add an upgrade to cosmovisor.
-* [#16573](https://github.com/cosmos/cosmos-sdk/pull/16573) Extend `cosmovisor` configuration with new log format options.
-* [#16550](https://github.com/cosmos/cosmos-sdk/pull/16550) Add COSMOVISOR_CUSTOM_PREUPGRADE to cosmovisor to execute custom pre-upgrade scripts (separate from daemon `pre-upgrade` command).
-* [#16963](https://github.com/cosmos/cosmos-sdk/pull/16963) Add DAEMON_SHUTDOWN_GRACE to send interrupt and wait before sending kill.
-* [#15361](https://github.com/cosmos/cosmos-sdk/pull/15361) Add `cosmovisor config` command to display the configuration used by cosmovisor.
-
-## Improvements
-
-* [#16919](https://github.com/cosmos/cosmos-sdk/pull/16919) Add COSMOVISOR_DISABLE_RECASE to cosmovisor to disable automatic case change for plan name.
-* [#14881](https://github.com/cosmos/cosmos-sdk/pull/14881) Refactor Cosmovisor to use `x/upgrade` validation logic.
-* [#14881](https://github.com/cosmos/cosmos-sdk/pull/14881) Refactor Cosmovisor to depend only on the `x/upgrade` module.
-* [#15362](https://github.com/cosmos/cosmos-sdk/pull/15362) Allow disabling Cosmovisor logs.
-
-## v1.4.0 - 2022-10-23
+## v1.4.0 2022-10-23
 
 ### API Breaking Changes
 
 * [#13603](https://github.com/cosmos-sdk/pull/13603) Rename cosmovisor package to `cosmossdk.io/tools/cosmovisor`.
 
-## v1.3.0 - 2022-09-11
+## v1.3.0 2022-09-11
 
 ### Improvements
 
@@ -88,7 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#13221](https://github.com/cosmos/cosmos-sdk/pull/13221) Fix `go install`.
 
-## v1.2.0 - 2022-07-26
+## v1.2.0 2022-07-26
 
 ### Features
 
@@ -105,7 +70,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [\#12188](https://github.com/cosmos/cosmos-sdk/pull/12188) Remove the possibility to set a time with only a number. `DAEMON_POLL_INTERVAL` env variable now only supports a duration (e.g. `100ms`, `30s`, `20m`).
 
-## v1.1.0 - 2022-02-10
+## v1.1.0 2022-02-10
 
 ### Features
 
@@ -120,7 +85,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [\#10458](https://github.com/cosmos/cosmos-sdk/pull/10458) Fix version when using 'go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v1.0.0' to install cosmovisor.
 
-## v1.0.0 - 2021-09-30
+## v1.0.0 2021-09-30
 
 ### Features
 
@@ -139,7 +104,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [\#10128](https://github.com/cosmos/cosmos-sdk/pull/10128) Change default value of `DAEMON_RESTART_AFTER_UPGRADE` to `true`.
 
-## v0.1.0 - 2021-08-06
+## v0.1 2021-08-06
 
 This is the first release and we started this changelog on 2021-07-01. See the [README](https://github.com/cosmos/cosmos-sdk/blob/release/cosmovisor/v0.1.x/cosmovisor/CHANGELOG.md) file for the full list of features.
 

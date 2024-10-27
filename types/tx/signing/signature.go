@@ -3,8 +3,7 @@ package signing
 import (
 	"fmt"
 
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
-
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -72,25 +71,25 @@ func SignatureDataFromProto(descData *SignatureDescriptor_Data) SignatureData {
 		}
 	case *SignatureDescriptor_Data_Multi_:
 		multi := descData.Multi
-		data := make([]SignatureData, len(multi.Signatures))
+		datas := make([]SignatureData, len(multi.Signatures))
 
 		for j, d := range multi.Signatures {
-			data[j] = SignatureDataFromProto(d)
+			datas[j] = SignatureDataFromProto(d)
 		}
 
 		return &MultiSignatureData{
 			BitArray:   multi.Bitarray,
-			Signatures: data,
+			Signatures: datas,
 		}
 	default:
 		panic(fmt.Errorf("unexpected case %+v", descData))
 	}
 }
 
-var _, _ gogoprotoany.UnpackInterfacesMessage = &SignatureDescriptors{}, &SignatureDescriptor{}
+var _, _ codectypes.UnpackInterfacesMessage = &SignatureDescriptors{}, &SignatureDescriptor{}
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
-func (sds *SignatureDescriptors) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (sds *SignatureDescriptors) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, sig := range sds.Signatures {
 		err := sig.UnpackInterfaces(unpacker)
 		if err != nil {
@@ -102,6 +101,6 @@ func (sds *SignatureDescriptors) UnpackInterfaces(unpacker gogoprotoany.AnyUnpac
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
-func (sd *SignatureDescriptor) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (sd *SignatureDescriptor) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(sd.PublicKey, new(cryptotypes.PubKey))
 }

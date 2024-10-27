@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	"cosmossdk.io/simapp"
-	v1 "cosmossdk.io/x/gov/types/v1"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 func TestE2ETestSuite(t *testing.T) {
@@ -26,8 +26,8 @@ func TestDepositTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
 	genesisState := v1.DefaultGenesisState()
-	maxDepPeriod := time.Duration(20) * time.Second
-	votingPeriod := time.Duration(8) * time.Second
+	maxDepPeriod := time.Duration(15) * time.Second
+	votingPeriod := time.Duration(5) * time.Second
 	genesisState.Params.MaxDepositPeriod = &maxDepPeriod
 	genesisState.Params.VotingPeriod = &votingPeriod
 	bz, err := cfg.Codec.MarshalJSON(genesisState)

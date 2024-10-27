@@ -6,17 +6,17 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
-	val := s.network.GetValidators()[0]
-	baseURL := val.GetAPIAddress()
+	val := s.network.Validators[0]
+	baseURL := val.APIAddress
 
 	testCases := []struct {
 		name     string
@@ -34,8 +34,8 @@ func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 			&types.QueryTotalSupplyResponse{},
 			&types.QueryTotalSupplyResponse{
 				Supply: sdk.NewCoins(
-					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), s.cfg.AccountTokens),
-					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(math.NewInt(47))),
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
+					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
 				),
 				Pagination: &query.PageResponse{
 					Total: 2,
@@ -50,7 +50,7 @@ func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 			},
 			&types.QuerySupplyOfResponse{},
 			&types.QuerySupplyOfResponse{
-				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(math.NewInt(47))),
+				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
 			},
 		},
 		{
@@ -61,7 +61,7 @@ func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 			},
 			&types.QuerySupplyOfResponse{},
 			&types.QuerySupplyOfResponse{
-				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(math.NewInt(47))),
+				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(20))),
 			},
 		},
 		{
@@ -72,7 +72,7 @@ func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 			},
 			&types.QuerySupplyOfResponse{},
 			&types.QuerySupplyOfResponse{
-				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(math.NewInt(47))),
+				Amount: sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
 			},
 		},
 		{
@@ -94,15 +94,15 @@ func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
 
-			s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
+			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}
 }
 
 func (s *E2ETestSuite) TestDenomMetadataGRPCHandler() {
-	val := s.network.GetValidators()[0]
-	baseURL := val.GetAPIAddress()
+	val := s.network.Validators[0]
+	baseURL := val.APIAddress
 
 	testCases := []struct {
 		name     string
@@ -216,9 +216,9 @@ func (s *E2ETestSuite) TestDenomMetadataGRPCHandler() {
 			s.Require().NoError(err)
 
 			if tc.expErr {
-				s.Require().Error(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
-				s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -226,8 +226,8 @@ func (s *E2ETestSuite) TestDenomMetadataGRPCHandler() {
 }
 
 func (s *E2ETestSuite) TestBalancesGRPCHandler() {
-	val := s.network.GetValidators()[0]
-	baseURL := val.GetAPIAddress()
+	val := s.network.Validators[0]
+	baseURL := val.APIAddress
 
 	testCases := []struct {
 		name     string
@@ -237,11 +237,11 @@ func (s *E2ETestSuite) TestBalancesGRPCHandler() {
 	}{
 		{
 			"gRPC total account balance",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", baseURL, val.GetAddress().String()),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", baseURL, val.Address.String()),
 			&types.QueryAllBalancesResponse{},
 			&types.QueryAllBalancesResponse{
 				Balances: sdk.NewCoins(
-					sdk.NewCoin(fmt.Sprintf("%stoken", val.GetMoniker()), s.cfg.AccountTokens),
+					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
 					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Sub(s.cfg.BondedTokens)),
 				),
 				Pagination: &query.PageResponse{
@@ -251,7 +251,7 @@ func (s *E2ETestSuite) TestBalancesGRPCHandler() {
 		},
 		{
 			"gPRC account balance of a denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=%s", baseURL, val.GetAddress().String(), s.cfg.BondDenom),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=%s", baseURL, val.Address.String(), s.cfg.BondDenom),
 			&types.QueryBalanceResponse{},
 			&types.QueryBalanceResponse{
 				Balance: &sdk.Coin{
@@ -262,12 +262,12 @@ func (s *E2ETestSuite) TestBalancesGRPCHandler() {
 		},
 		{
 			"gPRC account balance of a bogus denom",
-			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=foobar", baseURL, val.GetAddress().String()),
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=foobar", baseURL, val.Address.String()),
 			&types.QueryBalanceResponse{},
 			&types.QueryBalanceResponse{
 				Balance: &sdk.Coin{
 					Denom:  "foobar",
-					Amount: math.NewInt(0),
+					Amount: sdk.NewInt(0),
 				},
 			},
 		},
@@ -279,7 +279,7 @@ func (s *E2ETestSuite) TestBalancesGRPCHandler() {
 			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			s.Require().NoError(val.GetClientCtx().Codec.UnmarshalJSON(resp, tc.respType))
+			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}

@@ -5,13 +5,11 @@ import (
 	"reflect"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/math"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	testdata "github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -92,13 +90,13 @@ func (s *eventsTestSuite) TestEmitTypedEvent() {
 	s.Run("deterministic key-value order", func() {
 		for i := 0; i < 10; i++ {
 			em := sdk.NewEventManager()
-			coin := sdk.NewCoin("fakedenom", math.NewInt(1999999))
+			coin := sdk.NewCoin("fakedenom", sdk.NewInt(1999999))
 			s.Require().NoError(em.EmitTypedEvent(&coin))
 			s.Require().Len(em.Events(), 1)
 			attrs := em.Events()[0].Attributes
 			s.Require().Len(attrs, 2)
-			s.Require().Equal(attrs[0].Key, "amount")
-			s.Require().Equal(attrs[1].Key, "denom")
+			s.Require().Equal(string(attrs[0].Key), "amount")
+			s.Require().Equal(string(attrs[1].Key), "denom")
 		}
 	})
 }
@@ -106,7 +104,7 @@ func (s *eventsTestSuite) TestEmitTypedEvent() {
 func (s *eventsTestSuite) TestEventManagerTypedEvents() {
 	em := sdk.NewEventManager()
 
-	coin := sdk.NewCoin("fakedenom", math.NewInt(1999999))
+	coin := sdk.NewCoin("fakedenom", sdk.NewInt(1999999))
 	cat := testdata.Cat{
 		Moniker: "Garfield",
 		Lives:   6,

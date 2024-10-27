@@ -1,14 +1,13 @@
 package maps
 
 import (
-	"crypto/sha256"
 	"encoding/binary"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	"github.com/cometbft/cometbft/crypto/merkle"
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	tmcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
-	"cosmossdk.io/store/internal/kv"
-	"cosmossdk.io/store/internal/tree"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 // merkleMap defines a merkle-ized tree from a map. Leave values are treated as
@@ -36,11 +35,11 @@ func (sm *merkleMap) set(key string, value []byte) {
 
 	// The value is hashed, so you can check for equality with a cached value (say)
 	// and make a determination to fetch or not.
-	vhash := sha256.Sum256(value)
+	vhash := tmhash.Sum(value)
 
 	sm.kvs.Pairs = append(sm.kvs.Pairs, kv.Pair{
 		Key:   byteKey,
-		Value: vhash[:],
+		Value: vhash,
 	})
 }
 
@@ -67,7 +66,7 @@ func hashKVPairs(kvs kv.Pairs) []byte {
 		kvsH[i] = KVPair(kvp).Bytes()
 	}
 
-	return tree.HashFromByteSlices(kvsH)
+	return merkle.HashFromByteSlices(kvsH)
 }
 
 // ---------------------------------------------
@@ -97,11 +96,11 @@ func (sm *simpleMap) Set(key string, value []byte) {
 	// The value is hashed, so you can
 	// check for equality with a cached value (say)
 	// and make a determination to fetch or not.
-	vhash := sha256.Sum256(value)
+	vhash := tmhash.Sum(value)
 
 	sm.Kvs.Pairs = append(sm.Kvs.Pairs, kv.Pair{
 		Key:   byteKey,
-		Value: vhash[:],
+		Value: vhash,
 	})
 }
 
@@ -120,7 +119,7 @@ func (sm *simpleMap) Sort() {
 	sm.sorted = true
 }
 
-// KVPairs returns a copy of sorted KVPairs.
+// Returns a copy of sorted KVPairs.
 // NOTE these contain the hashed key and value.
 func (sm *simpleMap) KVPairs() kv.Pairs {
 	sm.Sort()
@@ -134,7 +133,7 @@ func (sm *simpleMap) KVPairs() kv.Pairs {
 
 //----------------------------------------
 
-// KVPair is a local extension to KVPair that can be hashed.
+// A local extension to KVPair that can be hashed.
 // Key and value are length prefixed and concatenated,
 // then hashed.
 type KVPair kv.Pair
@@ -184,7 +183,7 @@ func HashFromMap(m map[string][]byte) []byte {
 // ProofsFromMap generates proofs from a map. The keys/values of the map will be used as the keys/values
 // in the underlying key-value pairs.
 // The keys are sorted before the proofs are computed.
-func ProofsFromMap(m map[string][]byte) ([]byte, map[string]*cmtprotocrypto.Proof, []string) {
+func ProofsFromMap(m map[string][]byte) ([]byte, map[string]*tmcrypto.Proof, []string) {
 	sm := newSimpleMap()
 	for k, v := range m {
 		sm.Set(k, v)
@@ -198,7 +197,7 @@ func ProofsFromMap(m map[string][]byte) ([]byte, map[string]*cmtprotocrypto.Proo
 	}
 
 	rootHash, proofList := merkle.ProofsFromByteSlices(kvsBytes)
-	proofs := make(map[string]*cmtprotocrypto.Proof)
+	proofs := make(map[string]*tmcrypto.Proof)
 	keys := make([]string, len(proofList))
 
 	for i, kvp := range kvs.Pairs {

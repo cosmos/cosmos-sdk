@@ -31,7 +31,7 @@ func TestSignAndValidateEd25519(t *testing.T) {
 
 	// ----
 	// Test cross packages verification
-	stdPrivKey := privKey.Key
+	stdPrivKey := stded25519.PrivateKey(privKey.Key)
 	stdPubKey := stdPrivKey.Public().(stded25519.PublicKey)
 
 	assert.Equal(t, stdPubKey, pubKey.(*ed25519.PubKey).Key)
@@ -189,7 +189,7 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 	// Create Tendermint keys.
 	tmPrivKey := tmed25519.GenPrivKey()
 	tmPubKey := tmPrivKey.PubKey()
-	// Create our own keys, with the same private key as CometBFT's.
+	// Create our own keys, with the same private key as Tendermint's.
 	privKey := &ed25519.PrivKey{Key: []byte(tmPrivKey)}
 	pubKey := privKey.PubKey().(*ed25519.PubKey)
 

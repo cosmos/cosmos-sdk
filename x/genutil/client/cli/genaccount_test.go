@@ -2,32 +2,30 @@ package cli_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	corectx "cosmossdk.io/core/context"
-	"cosmossdk.io/log"
-	"cosmossdk.io/x/auth"
-
 	"github.com/cosmos/cosmos-sdk/client"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 )
 
 func TestAddGenesisAccountCmd(t *testing.T) {
 	_, _, addr1 := testdata.KeyTestPubAddr()
-	ac := codectestutil.CodecOptions{}.GetAddressCodec()
-	addr1Str, err := ac.BytesToString(addr1)
-	require.NoError(t, err)
-
 	tests := []struct {
 		name        string
 		addr        string
@@ -44,21 +42,21 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 		},
 		{
 			name:        "valid address",
-			addr:        addr1Str,
+			addr:        addr1.String(),
 			denom:       "1000atom",
 			withKeyring: false,
 			expectErr:   false,
 		},
 		{
 			name:        "multiple denoms",
-			addr:        addr1Str,
+			addr:        addr1.String(),
 			denom:       "1000atom, 2000stake",
 			withKeyring: false,
 			expectErr:   false,
 		},
 		{
 			name:        "with keyring",
-			addr:        "set",
+			addr:        "ser",
 			denom:       "1000atom",
 			withKeyring: true,
 			expectErr:   false,
@@ -70,18 +68,15 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			home := t.TempDir()
 			logger := log.NewNopLogger()
-			v := viper.New()
+			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+			require.NoError(t, err)
 
-			encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{})
-			appCodec := encodingConfig.Codec
-			txConfig := encodingConfig.TxConfig
+			appCodec := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}).Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
-			err := writeAndTrackDefaultConfig(v, home)
-			require.NoError(t, err)
-			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home).
-				WithAddressCodec(ac).WithTxConfig(txConfig)
+			serverCtx := server.NewContext(viper.New(), cfg, logger)
+			clientCtx := client.Context{}.WithCodec(appCodec).WithHomeDir(home)
 
 			if tc.withKeyring {
 				path := hd.CreateHDPath(118, 0, 0).String()
@@ -94,13 +89,13 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 
 			ctx := context.Background()
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-			ctx = context.WithValue(ctx, corectx.ViperContextKey, v)
-			ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
+			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-			cmd := genutilcli.AddGenesisAccountCmd()
+			cmd := genutilcli.AddGenesisAccountCmd(home)
 			cmd.SetArgs([]string{
 				tc.addr,
 				tc.denom,
+				fmt.Sprintf("--%s=home", flags.FlagHome),
 			})
 
 			if tc.expectErr {

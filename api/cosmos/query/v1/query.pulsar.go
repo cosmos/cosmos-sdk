@@ -36,9 +36,7 @@ var file_cosmos_query_v1_query_proto_extTypes = []protoimpl.ExtensionInfo{
 var (
 	// module_query_safe is set to true when the query is safe to be called from
 	// within the state machine, for example from another module's Keeper, via
-	// a query router calls or from CosmWasm contracts.
-	// WARNING: marking a query as safe in a non consensus breaking release may cause non determinism.
-	// It is recommended to only mark a query as safe in a consensus breaking release.
+	// ADR-033 calls or from CosmWasm contracts.
 	// Concretely, it means that the query is:
 	// 1. deterministic: given a block height, returns the exact same response
 	// upon multiple calls; and doesn't introduce any state-machine-breaking

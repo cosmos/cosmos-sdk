@@ -1,14 +1,12 @@
 package keeper
 
 import (
-	"context"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/slashing/types"
+	"github.com/cometbft/cometbft/crypto"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 var _ types.StakingHooks = Hooks{}
@@ -24,89 +22,71 @@ func (k Keeper) Hooks() Hooks {
 }
 
 // AfterValidatorBonded updates the signing info start height or create a new signing info
-func (h Hooks) AfterValidatorBonded(ctx context.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
-	signingInfo, err := h.k.ValidatorSigningInfo.Get(ctx, consAddr)
-	blockHeight := h.k.HeaderService.HeaderInfo(ctx).Height
-	if err == nil {
-		signingInfo.StartHeight = blockHeight
+func (h Hooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
+	signingInfo, found := h.k.GetValidatorSigningInfo(ctx, consAddr)
+	if found {
+		signingInfo.StartHeight = ctx.BlockHeight()
 	} else {
-		consStr, err := h.k.sk.ConsensusAddressCodec().BytesToString(consAddr)
-		if err != nil {
-			return err
-		}
 		signingInfo = types.NewValidatorSigningInfo(
-			consStr,
-			blockHeight,
+			consAddr,
+			ctx.BlockHeight(),
+			0,
 			time.Unix(0, 0),
 			false,
 			0,
 		)
 	}
 
-	return h.k.ValidatorSigningInfo.Set(ctx, consAddr, signingInfo)
+	h.k.SetValidatorSigningInfo(ctx, consAddr, signingInfo)
+
+	return nil
 }
 
 // AfterValidatorRemoved deletes the address-pubkey relation when a validator is removed,
-func (h Hooks) AfterValidatorRemoved(ctx context.Context, consAddr sdk.ConsAddress, _ sdk.ValAddress) error {
-	return h.k.AddrPubkeyRelation.Remove(ctx, consAddr)
+func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, _ sdk.ValAddress) error {
+	h.k.deleteAddrPubkeyRelation(ctx, crypto.Address(consAddr))
+	return nil
 }
 
 // AfterValidatorCreated adds the address-pubkey relation when a validator is created.
-func (h Hooks) AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress) error {
-	validator, err := h.k.sk.Validator(ctx, valAddr)
-	if err != nil {
-		return err
-	}
-
+func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
+	validator := h.k.sk.Validator(ctx, valAddr)
 	consPk, err := validator.ConsPubKey()
 	if err != nil {
 		return err
 	}
 
-	return h.k.AddrPubkeyRelation.Set(ctx, consPk.Address(), consPk)
+	return h.k.AddPubkey(ctx, consPk)
 }
 
-func (h Hooks) AfterValidatorBeginUnbonding(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+func (h Hooks) AfterValidatorBeginUnbonding(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeValidatorModified(_ context.Context, _ sdk.ValAddress) error {
+func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeDelegationCreated(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+func (h Hooks) BeforeDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeDelegationSharesModified(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+func (h Hooks) BeforeDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeDelegationRemoved(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) AfterDelegationModified(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+func (h Hooks) AfterDelegationModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeValidatorSlashed(_ context.Context, _ sdk.ValAddress, _ sdkmath.LegacyDec) error {
+func (h Hooks) BeforeValidatorSlashed(_ sdk.Context, _ sdk.ValAddress, _ sdk.Dec) error {
 	return nil
 }
 
-func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error {
-	return nil
-}
-
-// AfterConsensusPubKeyUpdate triggers the functions to rotate the signing-infos also sets address pubkey relation.
-func (h Hooks) AfterConsensusPubKeyUpdate(ctx context.Context, oldPubKey, newPubKey cryptotypes.PubKey, _ sdk.Coin) error {
-	if err := h.k.performConsensusPubKeyUpdate(ctx, oldPubKey, newPubKey); err != nil {
-		return err
-	}
-
-	if err := h.k.AddrPubkeyRelation.Remove(ctx, oldPubKey.Address()); err != nil {
-		return err
-	}
-
+func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) error {
 	return nil
 }

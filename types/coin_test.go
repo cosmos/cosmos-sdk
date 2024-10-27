@@ -2,14 +2,12 @@ package types_test
 
 import (
 	"fmt"
-	"math/big"
 	"strings"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-
-	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,10 +29,10 @@ func TestCoinTestSuite(t *testing.T) {
 }
 
 func (s *coinTestSuite) SetupSuite() {
-	zero := math.NewInt(0)
+	zero := sdk.NewInt(0)
 	one := math.OneInt()
-	two := math.NewInt(2)
-	four := math.NewInt(4)
+	two := sdk.NewInt(2)
+	four := sdk.NewInt(4)
 
 	s.ca0, s.ca1, s.ca2, s.ca4 = sdk.NewCoin(testDenom1, zero), sdk.NewCoin(testDenom1, one), sdk.NewCoin(testDenom1, two), sdk.NewCoin(testDenom1, four)
 	s.cm0, s.cm1, s.cm2, s.cm4 = sdk.NewCoin(testDenom2, zero), sdk.NewCoin(testDenom2, one), sdk.NewCoin(testDenom2, two), sdk.NewCoin(testDenom2, four)
@@ -46,15 +44,15 @@ func (s *coinTestSuite) SetupSuite() {
 
 func (s *coinTestSuite) TestCoin() {
 	s.Require().Panics(func() { sdk.NewInt64Coin(testDenom1, -1) })
-	s.Require().Panics(func() { sdk.NewCoin(testDenom1, math.NewInt(-1)) })
-	s.Require().Equal(math.NewInt(10), sdk.NewInt64Coin(strings.ToUpper(testDenom1), 10).Amount)
-	s.Require().Equal(math.NewInt(10), sdk.NewCoin(strings.ToUpper(testDenom1), math.NewInt(10)).Amount)
-	s.Require().Equal(math.NewInt(5), sdk.NewInt64Coin(testDenom1, 5).Amount)
-	s.Require().Equal(math.NewInt(5), sdk.NewCoin(testDenom1, math.NewInt(5)).Amount)
+	s.Require().Panics(func() { sdk.NewCoin(testDenom1, sdk.NewInt(-1)) })
+	s.Require().Equal(sdk.NewInt(10), sdk.NewInt64Coin(strings.ToUpper(testDenom1), 10).Amount)
+	s.Require().Equal(sdk.NewInt(10), sdk.NewCoin(strings.ToUpper(testDenom1), sdk.NewInt(10)).Amount)
+	s.Require().Equal(sdk.NewInt(5), sdk.NewInt64Coin(testDenom1, 5).Amount)
+	s.Require().Equal(sdk.NewInt(5), sdk.NewCoin(testDenom1, sdk.NewInt(5)).Amount)
 }
 
 func (s *coinTestSuite) TestCoin_String() {
-	coin := sdk.NewCoin(testDenom1, math.NewInt(10))
+	coin := sdk.NewCoin(testDenom1, sdk.NewInt(10))
 	s.Require().Equal(fmt.Sprintf("10%s", testDenom1), coin.String())
 }
 
@@ -63,21 +61,27 @@ func (s *coinTestSuite) TestIsEqualCoin() {
 		inputOne sdk.Coin
 		inputTwo sdk.Coin
 		expected bool
+		panics   bool
 	}{
-		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), true},
-		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), false},
-		{sdk.NewInt64Coin("stake", 1), sdk.NewInt64Coin("stake", 10), false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), true, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), false, true},
+		{sdk.NewInt64Coin("stake", 1), sdk.NewInt64Coin("stake", 10), false, false},
 	}
 
 	for tcIndex, tc := range cases {
-		res := tc.inputOne.IsEqual(tc.inputTwo)
-		s.Require().Equal(tc.expected, res, "coin equality relation is incorrect, tc #%d", tcIndex)
+		tc := tc
+		if tc.panics {
+			s.Require().Panics(func() { tc.inputOne.IsEqual(tc.inputTwo) })
+		} else {
+			res := tc.inputOne.IsEqual(tc.inputTwo)
+			s.Require().Equal(tc.expected, res, "coin equality relation is incorrect, tc #%d", tcIndex)
+		}
 	}
 }
 
 func (s *coinTestSuite) TestCoinIsValid() {
 	loremIpsum := `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam viverra dui vel nulla aliquet, non dictum elit aliquam. Proin consequat leo in consectetur mattis. Phasellus eget odio luctus, rutrum dolor at, venenatis ante. Praesent metus erat, sodales vitae sagittis eget, commodo non ipsum. Duis eget urna quis erat mattis pulvinar. Vivamus egestas imperdiet sem, porttitor hendrerit lorem pulvinar in. Vivamus laoreet sapien eget libero euismod tristique. Suspendisse tincidunt nulla quis luctus mattis.
-	Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Sed id turpis at erat placerat fermentum id sed sapien. Fusce mattis enim id nulla viverra, eget placerat eros aliquet. Nunc fringilla urna ac condimentum ultricies. Praesent in eros ac neque fringilla sodales. Donec ut venenatis eros. Quisque iaculis lectus neque, a various sem ullamcorper nec. Cras tincidunt dignissim libero nec volutpat. Donec molestie enim sed metus venenatis, quis elementum sem various. Curabitur eu venenatis nulla.
+	Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Sed id turpis at erat placerat fermentum id sed sapien. Fusce mattis enim id nulla viverra, eget placerat eros aliquet. Nunc fringilla urna ac condimentum ultricies. Praesent in eros ac neque fringilla sodales. Donec ut venenatis eros. Quisque iaculis lectus neque, a varius sem ullamcorper nec. Cras tincidunt dignissim libero nec volutpat. Donec molestie enim sed metus venenatis, quis elementum sem varius. Curabitur eu venenatis nulla.
 	Cras sit amet ligula vel turpis placerat sollicitudin. Nunc massa odio, eleifend id lacus nec, ultricies elementum arcu. Donec imperdiet nulla lacus, a venenatis lacus fermentum nec. Proin vestibulum dolor enim, vitae posuere velit aliquet non. Suspendisse pharetra condimentum nunc tincidunt viverra. Etiam posuere, ligula ut maximus congue, mauris orci consectetur velit, vel finibus eros metus non tellus. Nullam et dictum metus. Aliquam maximus fermentum mauris elementum aliquet. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Etiam dapibus lectus sed tellus rutrum tincidunt. Nulla at dolor sem. Ut non dictum arcu, eget congue sem.`
 
 	loremIpsum = strings.ReplaceAll(loremIpsum, " ", "")
@@ -88,8 +92,8 @@ func (s *coinTestSuite) TestCoinIsValid() {
 		coin       sdk.Coin
 		expectPass bool
 	}{
-		{sdk.Coin{testDenom1, math.NewInt(-1)}, false},
-		{sdk.Coin{testDenom1, math.NewInt(0)}, true},
+		{sdk.Coin{testDenom1, sdk.NewInt(-1)}, false},
+		{sdk.Coin{testDenom1, sdk.NewInt(0)}, true},
 		{sdk.Coin{testDenom1, math.OneInt()}, true},
 		{sdk.Coin{"Atom", math.OneInt()}, true},
 		{sdk.Coin{"ATOM", math.OneInt()}, true},
@@ -108,8 +112,6 @@ func (s *coinTestSuite) TestCoinIsValid() {
 
 func (s *coinTestSuite) TestCustomValidation() {
 	newDnmRegex := `[\x{1F600}-\x{1F6FF}]`
-	reDnmString := `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
-
 	sdk.SetCoinDenomRegex(func() string {
 		return newDnmRegex
 	})
@@ -118,17 +120,17 @@ func (s *coinTestSuite) TestCustomValidation() {
 		coin       sdk.Coin
 		expectPass bool
 	}{
-		{sdk.Coin{"🙂", math.NewInt(1)}, true},
-		{sdk.Coin{"🙁", math.NewInt(1)}, true},
-		{sdk.Coin{"🌶", math.NewInt(1)}, false}, // outside the unicode range listed above
-		{sdk.Coin{"asdf", math.NewInt(1)}, false},
-		{sdk.Coin{"", math.NewInt(1)}, false},
+		{sdk.Coin{"🙂", sdk.NewInt(1)}, true},
+		{sdk.Coin{"🙁", sdk.NewInt(1)}, true},
+		{sdk.Coin{"🌶", sdk.NewInt(1)}, false}, // outside the unicode range listed above
+		{sdk.Coin{"asdf", sdk.NewInt(1)}, false},
+		{sdk.Coin{"", sdk.NewInt(1)}, false},
 	}
 
 	for i, tc := range cases {
 		s.Require().Equal(tc.expectPass, tc.coin.IsValid(), "unexpected result for IsValid, tc #%d", i)
 	}
-	sdk.SetCoinDenomRegex(func() string { return reDnmString })
+	sdk.SetCoinDenomRegex(sdk.DefaultCoinDenomRegex)
 }
 
 func (s *coinTestSuite) TestCoinsDenoms() {
@@ -137,8 +139,8 @@ func (s *coinTestSuite) TestCoinsDenoms() {
 		testOutput []string
 		expectPass bool
 	}{
-		{sdk.NewCoins(sdk.Coin{"ATOM", math.NewInt(1)}, sdk.Coin{"JUNO", math.NewInt(1)}, sdk.Coin{"OSMO", math.NewInt(1)}, sdk.Coin{"RAT", math.NewInt(1)}), []string{"ATOM", "JUNO", "OSMO", "RAT"}, true},
-		{sdk.NewCoins(sdk.Coin{"ATOM", math.NewInt(1)}, sdk.Coin{"JUNO", math.NewInt(1)}), []string{"ATOM"}, false},
+		{sdk.NewCoins(sdk.Coin{"ATOM", sdk.NewInt(1)}, sdk.Coin{"JUNO", sdk.NewInt(1)}, sdk.Coin{"OSMO", sdk.NewInt(1)}, sdk.Coin{"RAT", sdk.NewInt(1)}), []string{"ATOM", "JUNO", "OSMO", "RAT"}, true},
+		{sdk.NewCoins(sdk.Coin{"ATOM", sdk.NewInt(1)}, sdk.Coin{"JUNO", sdk.NewInt(1)}), []string{"ATOM"}, false},
 	}
 
 	for i, tc := range cases {
@@ -147,21 +149,18 @@ func (s *coinTestSuite) TestCoinsDenoms() {
 		if len(expectedOutput) == len(tc.testOutput) {
 			for k := range tc.testOutput {
 				if tc.testOutput[k] != expectedOutput[k] {
-					count++
+					count += 1
 					break
 				}
 			}
 		} else {
-			count++
+			count += 1
 		}
 		s.Require().Equal(count == 0, tc.expectPass, "unexpected result for coins.Denoms, tc #%d", i)
 	}
 }
 
 func (s *coinTestSuite) TestAddCoin() {
-	// 2**256 - 1 value to check for overflows
-	maxUint256 := math.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
-
 	cases := []struct {
 		inputOne    sdk.Coin
 		inputTwo    sdk.Coin
@@ -171,10 +170,6 @@ func (s *coinTestSuite) TestAddCoin() {
 		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 2), false},
 		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom1, 1), false},
 		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), sdk.NewInt64Coin(testDenom1, 1), true},
-
-		// addition cannot lead to a number with more than 256 bits
-		{sdk.NewCoin(testDenom1, maxUint256), sdk.NewCoin(testDenom1, math.NewInt(0)), sdk.NewCoin(testDenom1, maxUint256), false},
-		{sdk.NewCoin(testDenom1, maxUint256), sdk.NewCoin(testDenom1, math.NewInt(1)), sdk.NewInt64Coin(testDenom1, 1), true},
 	}
 
 	for tcIndex, tc := range cases {
@@ -194,8 +189,8 @@ func (s *coinTestSuite) TestAddCoinAmount() {
 		amount   math.Int
 		expected sdk.Coin
 	}{
-		{sdk.NewInt64Coin(testDenom1, 1), math.NewInt(1), sdk.NewInt64Coin(testDenom1, 2)},
-		{sdk.NewInt64Coin(testDenom1, 1), math.NewInt(0), sdk.NewInt64Coin(testDenom1, 1)},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt(1), sdk.NewInt64Coin(testDenom1, 2)},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt(0), sdk.NewInt64Coin(testDenom1, 1)},
 	}
 	for i, tc := range cases {
 		res := tc.coin.AddAmount(tc.amount)
@@ -243,11 +238,11 @@ func (s *coinTestSuite) TestSubCoinAmount() {
 		expected    sdk.Coin
 		shouldPanic bool
 	}{
-		{sdk.NewInt64Coin(testDenom1, 2), math.NewInt(1), sdk.NewInt64Coin(testDenom1, 1), false},
-		{sdk.NewInt64Coin(testDenom1, 10), math.NewInt(1), sdk.NewInt64Coin(testDenom1, 9), false},
-		{sdk.NewInt64Coin(testDenom1, 5), math.NewInt(3), sdk.NewInt64Coin(testDenom1, 2), false},
-		{sdk.NewInt64Coin(testDenom1, 5), math.NewInt(0), sdk.NewInt64Coin(testDenom1, 5), false},
-		{sdk.NewInt64Coin(testDenom1, 1), math.NewInt(5), sdk.Coin{}, true},
+		{sdk.NewInt64Coin(testDenom1, 2), sdk.NewInt(1), sdk.NewInt64Coin(testDenom1, 1), false},
+		{sdk.NewInt64Coin(testDenom1, 10), sdk.NewInt(1), sdk.NewInt64Coin(testDenom1, 9), false},
+		{sdk.NewInt64Coin(testDenom1, 5), sdk.NewInt(3), sdk.NewInt64Coin(testDenom1, 2), false},
+		{sdk.NewInt64Coin(testDenom1, 5), sdk.NewInt(0), sdk.NewInt64Coin(testDenom1, 5), false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt(5), sdk.Coin{}, true},
 	}
 
 	for i, tc := range cases {
@@ -267,9 +262,9 @@ func (s *coinTestSuite) TestMulIntCoins() {
 		expected    sdk.Coins
 		shouldPanic bool
 	}{
-		{sdk.Coins{s.ca2}, math.NewInt(0), sdk.Coins{s.ca0}, true},
-		{sdk.Coins{s.ca2}, math.NewInt(2), sdk.Coins{s.ca4}, false},
-		{sdk.Coins{s.ca1, s.cm2}, math.NewInt(2), sdk.Coins{s.ca2, s.cm4}, false},
+		{sdk.Coins{s.ca2}, sdk.NewInt(0), sdk.Coins{s.ca0}, true},
+		{sdk.Coins{s.ca2}, sdk.NewInt(2), sdk.Coins{s.ca4}, false},
+		{sdk.Coins{s.ca1, s.cm2}, sdk.NewInt(2), sdk.Coins{s.ca2, s.cm4}, false},
 	}
 
 	assert := s.Assert()
@@ -293,10 +288,10 @@ func (s *coinTestSuite) TestQuoIntCoins() {
 		isValid     bool
 		shouldPanic bool
 	}{
-		{sdk.Coins{s.ca2, s.ca1}, math.NewInt(0), sdk.Coins{s.ca0, s.ca0}, true, true},
-		{sdk.Coins{s.ca2}, math.NewInt(4), sdk.Coins{s.ca0}, false, false},
-		{sdk.Coins{s.ca2, s.cm4}, math.NewInt(2), sdk.Coins{s.ca1, s.cm2}, true, false},
-		{sdk.Coins{s.ca4}, math.NewInt(2), sdk.Coins{s.ca2}, true, false},
+		{sdk.Coins{s.ca2, s.ca1}, sdk.NewInt(0), sdk.Coins{s.ca0, s.ca0}, true, true},
+		{sdk.Coins{s.ca2}, sdk.NewInt(4), sdk.Coins{s.ca0}, false, false},
+		{sdk.Coins{s.ca2, s.cm4}, sdk.NewInt(2), sdk.Coins{s.ca1, s.cm2}, true, false},
+		{sdk.Coins{s.ca4}, sdk.NewInt(2), sdk.Coins{s.ca2}, true, false},
 	}
 
 	assert := s.Assert()
@@ -308,30 +303,6 @@ func (s *coinTestSuite) TestQuoIntCoins() {
 			res := tc.input.QuoInt(tc.divisor)
 			assert.Equal(tc.isValid, res.IsValid())
 			assert.Equal(tc.expected, res, "quotient of coins is incorrect, tc #%d", i)
-		}
-	}
-}
-
-func (s *coinTestSuite) TestIsGTCoin() {
-	cases := []struct {
-		inputOne sdk.Coin
-		inputTwo sdk.Coin
-		expected bool
-		panics   bool
-	}{
-		{sdk.NewInt64Coin(testDenom1, 2), sdk.NewInt64Coin(testDenom1, 1), true, false},
-		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), false, false},
-		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 2), false, false},
-		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), false, true},
-	}
-
-	for tcIndex, tc := range cases {
-		tc := tc
-		if tc.panics {
-			s.Require().Panics(func() { tc.inputOne.IsGT(tc.inputTwo) })
-		} else {
-			res := tc.inputOne.IsGT(tc.inputTwo)
-			s.Require().Equal(tc.expected, res, "coin GT relation is incorrect, tc #%d", tcIndex)
 		}
 	}
 }
@@ -445,10 +416,10 @@ func (s *coinTestSuite) TestFilteredZeroCoins() {
 			name: "all greater than zero",
 			input: sdk.Coins{
 				{"testa", math.OneInt()},
-				{"testb", math.NewInt(2)},
-				{"testc", math.NewInt(3)},
-				{"testd", math.NewInt(4)},
-				{"teste", math.NewInt(5)},
+				{"testb", sdk.NewInt(2)},
+				{"testc", sdk.NewInt(3)},
+				{"testd", sdk.NewInt(4)},
+				{"teste", sdk.NewInt(5)},
 			},
 			original: "1testa,2testb,3testc,4testd,5teste",
 			expected: "1testa,2testb,3testc,4testd,5teste",
@@ -457,10 +428,10 @@ func (s *coinTestSuite) TestFilteredZeroCoins() {
 			name: "zero coin in middle",
 			input: sdk.Coins{
 				{"testa", math.OneInt()},
-				{"testb", math.NewInt(2)},
-				{"testc", math.NewInt(0)},
-				{"testd", math.NewInt(4)},
-				{"teste", math.NewInt(5)},
+				{"testb", sdk.NewInt(2)},
+				{"testc", sdk.NewInt(0)},
+				{"testd", sdk.NewInt(4)},
+				{"teste", sdk.NewInt(5)},
 			},
 			original: "1testa,2testb,0testc,4testd,5teste",
 			expected: "1testa,2testb,4testd,5teste",
@@ -468,11 +439,11 @@ func (s *coinTestSuite) TestFilteredZeroCoins() {
 		{
 			name: "zero coin end (unordered)",
 			input: sdk.Coins{
-				{"teste", math.NewInt(5)},
-				{"testc", math.NewInt(3)},
+				{"teste", sdk.NewInt(5)},
+				{"testc", sdk.NewInt(3)},
 				{"testa", math.OneInt()},
-				{"testd", math.NewInt(4)},
-				{"testb", math.NewInt(0)},
+				{"testd", sdk.NewInt(4)},
+				{"testb", sdk.NewInt(0)},
 			},
 			original: "5teste,3testc,1testa,4testd,0testb",
 			expected: "1testa,3testc,4testd,5teste",
@@ -544,19 +515,25 @@ func (s *coinTestSuite) TestEqualCoins() {
 		inputOne sdk.Coins
 		inputTwo sdk.Coins
 		expected bool
+		panics   bool
 	}{
-		{sdk.Coins{}, sdk.Coins{}, true},
-		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, true},
-		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, true},
-		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom2, 0)}, false},
-		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 1)}, false},
-		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, false},
-		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, true},
+		{sdk.Coins{}, sdk.Coins{}, true, false},
+		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, true, false},
+		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, true, false},
+		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom2, 0)}, false, true},
+		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 1)}, false, false},
+		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, false, false},
+		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, true, false},
 	}
 
 	for tcnum, tc := range cases {
-		res := tc.inputOne.Equal(tc.inputTwo)
-		s.Require().Equal(tc.expected, res, "Equality is differed from exported. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
+		tc := tc
+		if tc.panics {
+			s.Require().Panics(func() { tc.inputOne.IsEqual(tc.inputTwo) })
+		} else {
+			res := tc.inputOne.IsEqual(tc.inputTwo)
+			s.Require().Equal(tc.expected, res, "Equality is differed from exported. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
+		}
 	}
 }
 
@@ -619,13 +596,13 @@ func (s *coinTestSuite) TestAddCoins() {
 // are correctly coalesced. Please see issue https://github.com/cosmos/cosmos-sdk/issues/13234
 func TestCoinsAddCoalescesDuplicateDenominations(t *testing.T) {
 	A := sdk.Coins{
-		{"den", math.NewInt(2)},
-		{"den", math.NewInt(3)},
+		{"den", sdk.NewInt(2)},
+		{"den", sdk.NewInt(3)},
 	}
 	B := sdk.Coins{
-		{"den", math.NewInt(3)},
-		{"den", math.NewInt(2)},
-		{"den", math.NewInt(1)},
+		{"den", sdk.NewInt(3)},
+		{"den", sdk.NewInt(2)},
+		{"den", sdk.NewInt(1)},
 	}
 
 	A = A.Sort()
@@ -633,27 +610,12 @@ func TestCoinsAddCoalescesDuplicateDenominations(t *testing.T) {
 	got := A.Add(B...)
 
 	want := sdk.Coins{
-		{"den", math.NewInt(11)},
+		{"den", sdk.NewInt(11)},
 	}
 
-	if !got.Equal(want) {
+	if !got.IsEqual(want) {
 		t.Fatalf("Wrong result\n\tGot:   %s\n\tWant: %s", got, want)
 	}
-}
-
-func TestCoinsAddUnorderedDenominations(t *testing.T) {
-	A := sdk.Coins{
-		{"aaa", math.NewInt(2)},
-		{"bbb", math.NewInt(3)},
-	}
-	B := sdk.Coins{
-		{"bbb", math.NewInt(3)},
-		{"aaa", math.NewInt(2)},
-	}
-
-	require.Panics(t, func() {
-		A.Add(B...)
-	})
 }
 
 func (s *coinTestSuite) TestSubCoins() {
@@ -808,7 +770,7 @@ func (s *coinTestSuite) TestCoins_Validate() {
 			"IBC denominations (ADR 001)",
 			sdk.Coins{
 				{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", math.OneInt()},
-				{"ibc/876563AAAACF739EB061C67CDB5EDF2B7C9FD4AA9D876450CC21210807C2820A", math.NewInt(2)},
+				{"ibc/876563AAAACF739EB061C67CDB5EDF2B7C9FD4AA9D876450CC21210807C2820A", sdk.NewInt(2)},
 			},
 			true,
 		},
@@ -870,7 +832,7 @@ func (s *coinTestSuite) TestCoins_Validate() {
 			"non-positive amount (1)",
 			sdk.Coins{
 				{"gas", math.OneInt()},
-				{"tree", math.NewInt(0)},
+				{"tree", sdk.NewInt(0)},
 				{"mineral", math.OneInt()},
 			},
 			false,
@@ -878,7 +840,7 @@ func (s *coinTestSuite) TestCoins_Validate() {
 		{
 			"non-positive amount (2)",
 			sdk.Coins{
-				{"gas", math.NewInt(-1)},
+				{"gas", sdk.NewInt(-1)},
 				{"tree", math.OneInt()},
 				{"mineral", math.OneInt()},
 			},
@@ -925,7 +887,7 @@ func (s *coinTestSuite) TestCoins_Validate() {
 
 func (s *coinTestSuite) TestMinMax() {
 	one := math.OneInt()
-	two := math.NewInt(2)
+	two := sdk.NewInt(2)
 
 	cases := []struct {
 		name   string
@@ -945,26 +907,19 @@ func (s *coinTestSuite) TestMinMax() {
 			sdk.Coins{{testDenom1, one}, {testDenom2, one}},
 			sdk.Coins{{testDenom1, two}, {testDenom2, two}},
 		},
-		{
-			"one-one",
-			sdk.Coins{{testDenom2, one}},
-			sdk.Coins{{testDenom1, one}},
-			sdk.Coins{},
-			sdk.Coins{{testDenom1, one}, {testDenom2, one}},
-		},
 	}
 
 	for _, tc := range cases {
 		min := tc.input1.Min(tc.input2)
 		max := tc.input1.Max(tc.input2)
-		s.Require().True(min.Equal(tc.min), tc.name)
-		s.Require().True(max.Equal(tc.max), tc.name)
+		s.Require().True(min.IsEqual(tc.min), tc.name)
+		s.Require().True(max.IsEqual(tc.max), tc.name)
 	}
 }
 
 func (s *coinTestSuite) TestCoinsGT() {
 	one := math.OneInt()
-	two := math.NewInt(2)
+	two := sdk.NewInt(2)
 
 	s.Require().False(sdk.Coins{}.IsAllGT(sdk.Coins{}))
 	s.Require().True(sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{}))
@@ -976,7 +931,7 @@ func (s *coinTestSuite) TestCoinsGT() {
 
 func (s *coinTestSuite) TestCoinsLT() {
 	one := math.OneInt()
-	two := math.NewInt(2)
+	two := sdk.NewInt(2)
 
 	s.Require().False(sdk.Coins{}.IsAllLT(sdk.Coins{}))
 	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllLT(sdk.Coins{}))
@@ -991,7 +946,7 @@ func (s *coinTestSuite) TestCoinsLT() {
 
 func (s *coinTestSuite) TestCoinsLTE() {
 	one := math.OneInt()
-	two := math.NewInt(2)
+	two := sdk.NewInt(2)
 
 	s.Require().True(sdk.Coins{}.IsAllLTE(sdk.Coins{}))
 	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAllLTE(sdk.Coins{}))
@@ -1014,22 +969,22 @@ func (s *coinTestSuite) TestParseCoins() {
 	}{
 		{"", true, nil},
 		{"0stake", true, sdk.Coins{}}, // remove zero coins
-		{"0stake,1foo,99bar", true, sdk.Coins{{"bar", math.NewInt(99)}, {"foo", one}}}, // remove zero coins
+		{"0stake,1foo,99bar", true, sdk.Coins{{"bar", sdk.NewInt(99)}, {"foo", one}}}, // remove zero coins
 		{"1foo", true, sdk.Coins{{"foo", one}}},
 		{"10btc,1atom,20btc", false, nil},
-		{"10bar", true, sdk.Coins{{"bar", math.NewInt(10)}}},
-		{"99bar,1foo", true, sdk.Coins{{"bar", math.NewInt(99)}, {"foo", one}}},
-		{"98 bar , 1 foo  ", true, sdk.Coins{{"bar", math.NewInt(98)}, {"foo", one}}},
-		{"  55\t \t bling\n", true, sdk.Coins{{"bling", math.NewInt(55)}}},
-		{"2foo, 97 bar", true, sdk.Coins{{"bar", math.NewInt(97)}, {"foo", math.NewInt(2)}}},
-		{"5 mycoin,", false, nil},                            // no empty coins in a list
-		{"2 3foo, 97 bar", false, nil},                       // 3foo is invalid coin name
-		{"11me coin, 12you coin", false, nil},                // no spaces in coin names
-		{"1.2btc", true, sdk.Coins{{"btc", math.NewInt(1)}}}, // amount can be decimal, will get truncated
-		{"5foo:bar", true, sdk.Coins{{"foo:bar", math.NewInt(5)}}},
-		{"10atom10", true, sdk.Coins{{"atom10", math.NewInt(10)}}},
-		{"200transfer/channelToA/uatom", true, sdk.Coins{{"transfer/channelToA/uatom", math.NewInt(200)}}},
-		{"50ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true, sdk.Coins{{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", math.NewInt(50)}}},
+		{"10bar", true, sdk.Coins{{"bar", sdk.NewInt(10)}}},
+		{"99bar,1foo", true, sdk.Coins{{"bar", sdk.NewInt(99)}, {"foo", one}}},
+		{"98 bar , 1 foo  ", true, sdk.Coins{{"bar", sdk.NewInt(98)}, {"foo", one}}},
+		{"  55\t \t bling\n", true, sdk.Coins{{"bling", sdk.NewInt(55)}}},
+		{"2foo, 97 bar", true, sdk.Coins{{"bar", sdk.NewInt(97)}, {"foo", sdk.NewInt(2)}}},
+		{"5 mycoin,", false, nil},                           // no empty coins in a list
+		{"2 3foo, 97 bar", false, nil},                      // 3foo is invalid coin name
+		{"11me coin, 12you coin", false, nil},               // no spaces in coin names
+		{"1.2btc", true, sdk.Coins{{"btc", sdk.NewInt(1)}}}, // amount can be decimal, will get truncated
+		{"5foo:bar", true, sdk.Coins{{"foo:bar", sdk.NewInt(5)}}},
+		{"10atom10", true, sdk.Coins{{"atom10", sdk.NewInt(10)}}},
+		{"200transfer/channelToA/uatom", true, sdk.Coins{{"transfer/channelToA/uatom", sdk.NewInt(200)}}},
+		{"50ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true, sdk.Coins{{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.NewInt(50)}}},
 		{"120000000000000000000000000000000000000000000000000000000000000000000000000000btc", false, nil},
 	}
 
@@ -1039,33 +994,6 @@ func (s *coinTestSuite) TestParseCoins() {
 			s.Require().Error(err, "%s: %#v. tc #%d", tc.input, res, tcIndex)
 		} else if s.Assert().Nil(err, "%s: %+v", tc.input, err) {
 			s.Require().Equal(tc.expected, res, "coin parsing was incorrect, tc #%d", tcIndex)
-		}
-	}
-}
-
-func (s *coinTestSuite) TestValidateDenom() {
-	cases := []struct {
-		input string
-		valid bool
-	}{
-		{"", false},
-		{"stake", true},
-		{"stake,", false},
-		{"me coin", false},
-		{"me coin much", false},
-		{"not a coin", false},
-		{"foo:bar", true}, // special characters '/' | ':' | '.' | '_' | '-' are allowed
-		{"atom10", true},  // number in denom is allowed
-		{"transfer/channelToA/uatom", true},
-		{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true},
-	}
-
-	for _, tc := range cases {
-		err := sdk.ValidateDenom(tc.input)
-		if !tc.valid {
-			s.Require().Error(err)
-		} else {
-			s.Require().NoError(err)
 		}
 	}
 }
@@ -1169,9 +1097,9 @@ func (s *coinTestSuite) TestSearch() {
 
 	s.Run("AmountOf", func() {
 		for i, tc := range amountOfCases {
-			require.Equal(math.NewInt(tc.amountOfGAS), tc.coins.AmountOf("gas"), i)
-			require.Equal(math.NewInt(tc.amountOfMINERAL), tc.coins.AmountOf("mineral"), i)
-			require.Equal(math.NewInt(tc.amountOfTREE), tc.coins.AmountOf("tree"), i)
+			require.Equal(sdk.NewInt(tc.amountOfGAS), tc.coins.AmountOf("gas"), i)
+			require.Equal(sdk.NewInt(tc.amountOfMINERAL), tc.coins.AmountOf("mineral"), i)
+			require.Equal(sdk.NewInt(tc.amountOfTREE), tc.coins.AmountOf("tree"), i)
 		}
 		require.Panics(func() { amountOfCases[0].coins.AmountOf("10Invalid") })
 	})
@@ -1203,7 +1131,7 @@ func (s *coinTestSuite) TestSearch() {
 
 func (s *coinTestSuite) TestCoinsIsAnyGTE() {
 	one := math.OneInt()
-	two := math.NewInt(2)
+	two := sdk.NewInt(2)
 
 	s.Require().False(sdk.Coins{}.IsAnyGTE(sdk.Coins{}))
 	s.Require().False(sdk.Coins{{testDenom1, one}}.IsAnyGTE(sdk.Coins{}))
@@ -1223,7 +1151,7 @@ func (s *coinTestSuite) TestCoinsIsAnyGTE() {
 
 func (s *coinTestSuite) TestCoinsIsAllGT() {
 	one := math.OneInt()
-	two := math.NewInt(2)
+	two := sdk.NewInt(2)
 
 	s.Require().False(sdk.Coins{}.IsAllGT(sdk.Coins{}))
 	s.Require().True(sdk.Coins{{testDenom1, one}}.IsAllGT(sdk.Coins{}))
@@ -1243,7 +1171,7 @@ func (s *coinTestSuite) TestCoinsIsAllGT() {
 
 func (s *coinTestSuite) TestCoinsIsAllGTE() {
 	one := math.OneInt()
-	two := math.NewInt(2)
+	two := sdk.NewInt(2)
 
 	s.Require().True(sdk.Coins{}.IsAllGTE(sdk.Coins{}))
 	s.Require().True(sdk.Coins{{testDenom1, one}}.IsAllGTE(sdk.Coins{}))
@@ -1287,7 +1215,7 @@ func (s *coinTestSuite) TestNewCoins() {
 			continue
 		}
 		got := sdk.NewCoins(tt.coins...)
-		s.Require().True(got.Equal(tt.want))
+		s.Require().True(got.IsEqual(tt.want))
 	}
 }
 
@@ -1360,38 +1288,6 @@ func (s *coinTestSuite) TestMarshalJSONCoins() {
 	}
 }
 
-func (s *coinTestSuite) TestCoinValidate() {
-	testCases := []struct {
-		name    string
-		coin    sdk.Coin
-		wantErr string
-	}{
-		{"nil coin: nil Amount", sdk.Coin{}, "invalid denom"},
-		{"non-blank coin, nil Amount", sdk.Coin{Denom: "atom"}, "amount is nil"},
-		{"valid coin", sdk.Coin{Denom: "atom", Amount: math.NewInt(100)}, ""},
-		{"negative coin", sdk.Coin{Denom: "atom", Amount: math.NewInt(-999)}, "negative coin amount"},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t := s.T()
-		t.Run(tc.name, func(t *testing.T) {
-			err := tc.coin.Validate()
-			switch {
-			case tc.wantErr == "":
-				if err != nil {
-					t.Errorf("Unexpected error: %v", err)
-				}
-				return
-			case err == nil:
-				t.Error("Expected an error")
-			case !strings.Contains(err.Error(), tc.wantErr):
-				t.Errorf("Error mismatch\n\tGot:  %q\nWant: %q", err, tc.wantErr)
-			}
-		})
-	}
-}
-
 func (s *coinTestSuite) TestCoinAminoEncoding() {
 	cdc := codec.NewLegacyAmino()
 	c := sdk.NewInt64Coin(testDenom1, 5)
@@ -1406,85 +1302,4 @@ func (s *coinTestSuite) TestCoinAminoEncoding() {
 	s.Require().NoError(err)
 	s.Require().Equal(bz1, bz3)
 	s.Require().Equal(bz2[1:], bz3)
-}
-
-func (s *coinTestSuite) TestGetDenomByIndex() {
-	twoAtom := sdk.NewInt64Coin("atom", 2)
-	threeEth := sdk.NewInt64Coin("eth", 3)
-
-	coins := sdk.Coins{twoAtom, threeEth}
-
-	actual := coins.GetDenomByIndex(0)
-	s.Require().Equal("atom", actual)
-	actual = coins.GetDenomByIndex(1)
-	s.Require().Equal("eth", actual)
-}
-
-func (s *coinTestSuite) TestIsAllPositive() {
-	negative := sdk.Coin{
-		Denom:  "atom",
-		Amount: math.NewInt(-2),
-	}
-
-	cases := map[string]struct {
-		coins    sdk.Coins
-		expected bool
-	}{
-		"Coins with zero length": {
-			coins:    sdk.Coins{},
-			expected: false,
-		},
-		"Coins with negative value": {
-			coins:    sdk.Coins{negative, sdk.NewInt64Coin("atom", 2)},
-			expected: false,
-		},
-		"Coins only with positive values": {
-			coins:    sdk.Coins{sdk.NewInt64Coin("atom", 2), sdk.NewInt64Coin("eth", 10)},
-			expected: true,
-		},
-	}
-
-	for name, tc := range cases {
-		c := tc
-		s.T().Run(name, func(t *testing.T) {
-			s.Require().Equal(c.expected, c.coins.IsAllPositive())
-		})
-	}
-}
-
-func (s *coinTestSuite) TestParseCoin() {
-	one := math.OneInt()
-
-	cases := []struct {
-		input    string
-		valid    bool     // if false, we expect an error on parse
-		expected sdk.Coin // if valid is true, make sure this is returned
-	}{
-		{"", false, sdk.Coin{}},
-		{"0stake", true, sdk.Coin{Denom: "stake", Amount: math.NewInt(0)}}, // remove zero coins
-		{"1foo", true, sdk.Coin{Denom: "foo", Amount: one}},
-		{"10btc", true, sdk.Coin{Denom: "btc", Amount: math.NewInt(10)}},
-		{"10bar", true, sdk.Coin{Denom: "bar", Amount: math.NewInt(10)}},
-		{"98 bar", true, sdk.Coin{Denom: "bar", Amount: math.NewInt(98)}},
-		{"  55\t \t bling\n", true, sdk.Coin{Denom: "bling", Amount: math.NewInt(55)}},
-		{"2foo", true, sdk.Coin{Denom: "foo", Amount: math.NewInt(2)}},
-		{"5 mycoin,", false, sdk.Coin{}},                                 // no empty coins in a list
-		{"2 3foo", false, sdk.Coin{}},                                    // 3foo is invalid coin name
-		{"11me coin", false, sdk.Coin{}},                                 // no spaces in coin names
-		{"1.2btc", true, sdk.Coin{Denom: "btc", Amount: math.NewInt(1)}}, // amount can be decimal, will get truncated
-		{"5foo:bar", true, sdk.Coin{Denom: "foo:bar", Amount: math.NewInt(5)}},
-		{"10atom10", true, sdk.Coin{Denom: "atom10", Amount: math.NewInt(10)}},
-		{"200transfer/channelToA/uatom", true, sdk.Coin{Denom: "transfer/channelToA/uatom", Amount: math.NewInt(200)}},
-		{"50ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true, sdk.Coin{Denom: "ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", Amount: math.NewInt(50)}},
-		{"120000000000000000000000000000000000000000000000000000000000000000000000000000btc", false, sdk.Coin{}},
-	}
-
-	for tcIndex, tc := range cases {
-		res, err := sdk.ParseCoinNormalized(tc.input)
-		if !tc.valid {
-			s.Require().Error(err, "%s: %#v. tc #%d", tc.input, res, tcIndex)
-		} else if s.Assert().Nil(err) {
-			s.Require().Equal(tc.expected, res, "coin parsing was incorrect, tc #%d", tcIndex)
-		}
-	}
 }

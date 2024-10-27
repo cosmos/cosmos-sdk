@@ -4,25 +4,22 @@ sidebar_position: 1
 
 # Cosmovisor
 
-`cosmovisor` is a process manager for Cosmos SDK application binaries that automates application binary switch at chain upgrades.
-It polls the `upgrade-info.json` file that is created by the x/upgrade module at upgrade height, and then can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
+`cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
-* [Cosmovisor](#cosmovisor)
-  * [Design](#design)
-  * [Contributing](#contributing)
-  * [Setup](#setup)
+* [Design](#design)
+* [Contributing](#contributing)
+* [Setup](#setup)
     * [Installation](#installation)
     * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
     * [Folder Layout](#folder-layout)
-  * [Usage](#usage)
+* [Usage](#usage)
     * [Initialization](#initialization)
     * [Detecting Upgrades](#detecting-upgrades)
-    * [Adding Upgrade Binary](#adding-upgrade-binary)
     * [Auto-Download](#auto-download)
-  * [Example: SimApp Upgrade](#example-simapp-upgrade)
+* [Example: SimApp Upgrade](#example-simapp-upgrade)
     * [Chain Setup](#chain-setup)
-      * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
-    * [Update App](#update-app)
+        * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
+        * [Update App](#update-app)
 
 ## Design
 
@@ -35,13 +32,7 @@ Cosmovisor is designed to be used as a wrapper for a `Cosmos SDK` app:
 
 *Note: If new versions of the application are not set up to run in-place store migrations, migrations will need to be run manually before restarting `cosmovisor` with the new binary. For this reason, we recommend applications adopt in-place store migrations.*
 
-:::tip
-Only the latest version of cosmovisor is actively developed/maintained.
-:::
-
-:::warning
-Versions prior to v1.0.0 have a vulnerability that could lead to a DOS. Please upgrade to the latest version.
-:::
+*Note: If validators would like to enable the auto-download option (which [we don't recommend](#auto-download)), and they are currently running an application using Cosmos SDK `v0.42`, they will need to use Cosmovisor [`v0.1`](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv0.1.0). Later versions of Cosmovisor do not support Cosmos SDK `v0.44.3` or earlier if the auto-download option is enabled.*
 
 ## Contributing
 
@@ -53,7 +44,7 @@ Release branches have the following format `release/cosmovisor/vA.B.x`, where A 
 
 ### Installation
 
-You can download Cosmovisor from the [GitHub releases](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv1.5.0).
+You can download Cosmovisor from the [GitHub releases](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv1.3.0).
 
 To install the latest version of `cosmovisor`, run the following command:
 
@@ -61,20 +52,30 @@ To install the latest version of `cosmovisor`, run the following command:
 go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@latest
 ```
 
-To install a specific version, you can specify the version:
+To install a previous version, you can specify the version. IMPORTANT: Chains that use Cosmos SDK v0.44.3 or earlier (eg v0.44.2) and want to use auto-download feature MUST use `cosmovisor v0.1.0`
 
 ```shell
-go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
+go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
 ```
 
 Run `cosmovisor version` to check the cosmovisor version.
 
-Alternatively, for building from source, simply run `make cosmovisor`. The binary will be located in `tools/cosmovisor`.
+You can also install from source by pulling the cosmos-sdk repository and switching to the correct version and building as follows:
 
-:::warning
-Installing cosmovisor using `go install` will display the correct `cosmovisor` version.
-Building from source (`make cosmovisor`) or installing `cosmovisor` by other means won't display the correct version.
-:::
+```shell
+git clone git@github.com:cosmos/cosmos-sdk
+cd cosmos-sdk
+git checkout cosmovisor/vx.x.x
+make cosmovisor
+```
+
+This will build cosmovisor in `/cosmovisor` directory. Afterwards you may want to put it into your machine's PATH like as follows:
+
+```shell
+cp cosmovisor/cosmovisor ~/go/bin/cosmovisor
+```
+
+*Note: If you are using go `v1.15` or earlier, you will need to use `go get`, and you may want to run the command outside a project directory.*
 
 ### Command Line Arguments And Environment Variables
 
@@ -83,29 +84,22 @@ The first argument passed to `cosmovisor` is the action for `cosmovisor` to take
 * `help`, `--help`, or `-h` - Output `cosmovisor` help information and check your `cosmovisor` configuration.
 * `run` - Run the configured binary using the rest of the provided arguments.
 * `version` - Output the `cosmovisor` version and also run the binary with the `version` argument.
-* `config` - Display the current `cosmovisor` configuration, that means displaying the environment variables value that `cosmovisor` is using.
-* `add-upgrade` - Add an upgrade manually to `cosmovisor`. This command allow you to easily add the binary corresponding to an upgrade in cosmovisor.
 
 All arguments passed to `cosmovisor run` will be passed to the application binary (as a subprocess). `cosmovisor` will return `/dev/stdout` and `/dev/stderr` of the subprocess as its own. For this reason, `cosmovisor run` cannot accept any command-line arguments other than those available to the application binary.
 
-`cosmovisor` reads its configuration from environment variables, or its configuration file (use `--cosmovisor-config <path>`):
+*Note: Use of `cosmovisor` without one of the action arguments is deprecated. For backwards compatibility, if the first argument is not an action argument, `run` is assumed. However, this fallback might be removed in future versions, so it is recommended that you always provide `run`.
+
+`cosmovisor` reads its configuration from environment variables:
 
 * `DAEMON_HOME` is the location where the `cosmovisor/` directory is kept that contains the genesis binary, the upgrade binaries, and any additional auxiliary files associated with each binary (e.g. `$HOME/.gaiad`, `$HOME/.regend`, `$HOME/.simd`, etc.).
 * `DAEMON_NAME` is the name of the binary itself (e.g. `gaiad`, `regend`, `simd`, etc.).
 * `DAEMON_ALLOW_DOWNLOAD_BINARIES` (*optional*), if set to `true`, will enable auto-downloading of new binaries (for security reasons, this is intended for full nodes rather than validators). By default, `cosmovisor` will not auto-download new binaries.
-* `DAEMON_DOWNLOAD_MUST_HAVE_CHECKSUM` (*optional*, default = `false`), if `true` cosmovisor will require that a checksum is provided in the upgrade plan for the binary to be downloaded. If `false`, cosmovisor will not require a checksum to be provided, but still check the checksum if one is provided.
 * `DAEMON_RESTART_AFTER_UPGRADE` (*optional*, default = `true`), if `true`, restarts the subprocess with the same command-line arguments and flags (but with the new binary) after a successful upgrade. Otherwise (`false`), `cosmovisor` stops running after an upgrade and requires the system administrator to manually restart it. Note restart is only after the upgrade and does not auto-restart the subprocess after an error occurs.
 * `DAEMON_RESTART_DELAY` (*optional*, default none), allow a node operator to define a delay between the node halt (for upgrade) and backup by the specified time. The value must be a duration (e.g. `1s`).
-* `DAEMON_SHUTDOWN_GRACE` (*optional*, default none), if set, send interrupt to binary and wait the specified time to allow for cleanup/cache flush to disk before sending the kill signal. The value must be a duration (e.g. `1s`).
 * `DAEMON_POLL_INTERVAL` (*optional*, default 300 milliseconds), is the interval length for polling the upgrade plan file. The value must be a duration (e.g. `1s`).
 * `DAEMON_DATA_BACKUP_DIR` option to set a custom backup directory. If not set, `DAEMON_HOME` is used.
 * `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `true`, upgrades directly without performing a backup. Otherwise (`false`, default) backs up the data before trying the upgrade. The default value of false is useful and recommended in case of failures and when a backup needed to rollback. We recommend using the default backup option `UNSAFE_SKIP_BACKUP=false`.
-* `DAEMON_PREUPGRADE_MAX_RETRIES` (defaults to `0`). The maximum number of times to call [`pre-upgrade`](https://docs.cosmos.network/main/build/building-apps/app-upgrade#pre-upgrade-handling) in the application after exit status of `31`. After the maximum number of retries, Cosmovisor fails the upgrade.
-* `COSMOVISOR_DISABLE_LOGS` (defaults to `false`). If set to true, this will disable Cosmovisor logs (but not the underlying process) completely. This may be useful, for example, when a Cosmovisor subcommand you are executing returns a valid JSON you are then parsing, as logs added by Cosmovisor make this output not a valid JSON.
-* `COSMOVISOR_COLOR_LOGS` (defaults to `true`). If set to true, this will colorise Cosmovisor logs (but not the underlying process).
-* `COSMOVISOR_TIMEFORMAT_LOGS` (defaults to `kitchen`). If set to a value (`layout|ansic|unixdate|rubydate|rfc822|rfc822z|rfc850|rfc1123|rfc1123z|rfc3339|rfc3339nano|kitchen`), this will add timestamp prefix to Cosmovisor logs (but not the underlying process).
-* `COSMOVISOR_CUSTOM_PREUPGRADE` (defaults to ``).  If set, this will run $DAEMON_HOME/cosmovisor/$COSMOVISOR_CUSTOM_PREUPGRADE prior to upgrade with the arguments [ upgrade.Name, upgrade.Height ].  Executes a custom script (separate and prior to the chain daemon pre-upgrade command)
-* `COSMOVISOR_DISABLE_RECASE` (defaults to `false`).  If set to true, the upgrade directory will expected to match the upgrade plan name without any case changes
+* `DAEMON_PREUPGRADE_MAX_RETRIES` (defaults to `0`). The maximum number of times to call `pre-upgrade` in the application after exit status of `31`. After the maximum number of retries, cosmovisor fails the upgrade.
 
 ### Folder Layout
 
@@ -118,19 +112,18 @@ All arguments passed to `cosmovisor run` will be passed to the application binar
 │   └── bin
 │       └── $DAEMON_NAME
 └── upgrades
-│   └── <name>
-│       ├── bin
-│       │   └── $DAEMON_NAME
-│       └── upgrade-info.json
-└── preupgrade.sh (optional)
+    └── <name>
+        ├── bin
+        │   └── $DAEMON_NAME
+        └── upgrade-info.json
 ```
 
-The `cosmovisor/` directory includes a subdirectory for each version of the application (i.e. `genesis` or `upgrades/<name>`). Within each subdirectory is the application binary (i.e. `bin/$DAEMON_NAME`) and any additional auxiliary files associated with each binary. `current` is a symbolic link to the currently active directory (i.e. `genesis` or `upgrades/<name>`). The `name` variable in `upgrades/<name>` is the lowercased URI-encoded name of the upgrade as specified in the upgrade module plan. Note that the upgrade name path are normalized to be lowercased: for instance, `MyUpgrade` is normalized to `myupgrade`, and its path is `upgrades/myupgrade`.
+The `cosmovisor/` directory incudes a subdirectory for each version of the application (i.e. `genesis` or `upgrades/<name>`). Within each subdirectory is the application binary (i.e. `bin/$DAEMON_NAME`) and any additional auxiliary files associated with each binary. `current` is a symbolic link to the currently active directory (i.e. `genesis` or `upgrades/<name>`). The `name` variable in `upgrades/<name>` is the lowercased URI-encoded name of the upgrade as specified in the upgrade module plan. Note that the upgrade name path are normalized to be lowercased: for instance, `MyUpgrade` is normalized to `myupgrade`, and its path is `upgrades/myupgrade`.
 
-Please note that `$DAEMON_HOME/cosmovisor` only stores the *application binaries*. The `cosmovisor` binary itself can be stored in any typical location (e.g. `/usr/local/bin`). The application will continue to store its data in the default data directory (e.g. `$HOME/.simapp`) or the data directory specified with the `--home` flag. `$DAEMON_HOME` is dependent of the data directory and must be set to the same directory as the data directory, you will end up with a configuration like the following:
+Please note that `$DAEMON_HOME/cosmovisor` only stores the *application binaries*. The `cosmovisor` binary itself can be stored in any typical location (e.g. `/usr/local/bin`). The application will continue to store its data in the default data directory (e.g. `$HOME/.gaiad`) or the data directory specified with the `--home` flag. `$DAEMON_HOME` is independent of the data directory and can be set to any location. If you set `$DAEMON_HOME` to the same directory as the data directory, you will end up with a configuation like the following:
 
 ```text
-.simapp
+.gaiad
 ├── config
 ├── data
 └── cosmovisor
@@ -184,18 +177,6 @@ When the upgrade mechanism is triggered, `cosmovisor` will:
 1. if `DAEMON_ALLOW_DOWNLOAD_BINARIES` is enabled, start by auto-downloading a new binary into `cosmovisor/<name>/bin` (where `<name>` is the `upgrade-info.json:name` attribute);
 2. update the `current` symbolic link to point to the new directory and save `data/upgrade-info.json` to `cosmovisor/current/upgrade-info.json`.
 
-### Adding Upgrade Binary
-
-`cosmovisor` has an `add-upgrade` command that allows to easily link a binary to an upgrade. It creates a new folder in `cosmovisor/upgrades/<name>` and copies the provided executable file to `cosmovisor/upgrades/<name>/bin/<DAEMON_NAME>`.
-
-Using the `--upgrade-height` flag allows to specify at which height the binary should be switched, without going via a gorvernance proposal.
-This enables support for an emergency coordinated upgrades where the binary must be switched at a specific height, but there is no time to go through a governance proposal.
-
-:::warning
-`--upgrade-height` creates an `upgrade-info.json` file. This means if a chain upgrade via governance proposal is executed before the specified height with `--upgrade-height`, the governance proposal will overwrite the `upgrade-info.json` plan created by `add-upgrade --upgrade-height <height>`.
-Take this into consideration when using `--upgrade-height`.
-:::
-
 ### Auto-Download
 
 Generally, `cosmovisor` requires that the system administrator place all relevant binaries on disk before the upgrade happens. However, for people who don't need such control and want an automated setup (maybe they are syncing a non-validating fullnode and want to do little maintenance), there is another option.
@@ -229,12 +210,12 @@ If `DAEMON_ALLOW_DOWNLOAD_BINARIES` is set to `true`, and no local binary can be
     When submitting this as a proposal ensure there are no spaces. An example command using `gaiad` could look like:
 
     ```shell
-    > gaiad tx upgrade software-upgrade Vega \
+    > gaiad tx gov submit-proposal software-upgrade Vega \
     --title Vega \
     --deposit 100uatom \
     --upgrade-height 7368420 \
     --upgrade-info '{"binaries":{"linux/amd64":"https://github.com/cosmos/gaia/releases/download/v6.0.0-rc1/gaiad-v6.0.0-rc1-linux-amd64","linux/arm64":"https://github.com/cosmos/gaia/releases/download/v6.0.0-rc1/gaiad-v6.0.0-rc1-linux-arm64","darwin/amd64":"https://github.com/cosmos/gaia/releases/download/v6.0.0-rc1/gaiad-v6.0.0-rc1-darwin-amd64"}}' \
-    --summary "upgrade to Vega" \
+    --description "upgrade to Vega" \
     --gas 400000 \
     --from user \
     --chain-id test \
@@ -269,17 +250,17 @@ The following instructions provide a demonstration of `cosmovisor` using the sim
 
 ### Chain Setup
 
-Let's create a new chain using the `v0.47.4` version of simapp (the Cosmos SDK demo app):
+Let's create a new chain using the `v0.44` version of simapp (the Cosmos SDK demo app):
 
 ```shell
-git checkout v0.47.4
+git checkout v0.44.6
 make build
 ```
 
 Clean `~/.simapp` (never do this in a production environment):
 
 ```shell
-./build/simd tendermint unsafe-reset-all
+./build/simd unsafe-reset-all
 ```
 
 Set up app config:
@@ -292,17 +273,28 @@ Set up app config:
 
 Initialize the node and overwrite any previous genesis file (never do this in a production environment):
 
+<!-- TODO: init does not read chain-id from config -->
+
 ```shell
 ./build/simd init test --chain-id test --overwrite
+```
+
+Set the minimum gas price to `0stake` in `~/.simapp/config/app.toml`:
+
+```shell
+minimum-gas-prices = "0stake"
 ```
 
 For the sake of this demonstration, amend `voting_period` in `genesis.json` to a reduced time of 20 seconds (`20s`):
 
 ```shell
-cat <<< $(jq '.app_state.gov.params.voting_period = "20s"' $HOME/.simapp/config/genesis.json) > $HOME/.simapp/config/genesis.json
+cat <<< $(jq '.app_state.gov.voting_params.voting_period = "20s"' $HOME/.simapp/config/genesis.json) > $HOME/.simapp/config/genesis.json
 ```
 
 Create a validator, and setup genesis transaction:
+
+<!-- TODO: add-genesis-account does not read keyring-backend from config -->
+<!-- TODO: gentx does not read chain-id from config -->
 
 ```shell
 ./build/simd keys add validator
@@ -326,29 +318,24 @@ Set the optional environment variable to trigger an automatic app restart:
 export DAEMON_RESTART_AFTER_UPGRADE=true
 ```
 
-Initialize cosmovisor with the current binary:
+Create the folder for the genesis binary and copy the `simd` binary:
 
 ```shell
-cosmovisor init ./build/simd
+mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
+cp ./build/simd $DAEMON_HOME/cosmovisor/genesis/bin
 ```
 
-Now you can run cosmovisor with simapp v0.47.4:
+Now you can run cosmovisor with simapp v0.44:
 
 ```shell
 cosmovisor run start
 ```
 
-### Update App
+#### Update App
 
-Update app to the latest version (e.g. v0.50.0).
+Update app to the latest version (e.g. v0.45).
 
-:::note
-
-Migration plans are defined using the `x/upgrade` module and described in [In-Place Store Migrations](https://github.com/cosmos/cosmos-sdk/blob/main/docs/learn/advanced/15-upgrade.md). Migrations can perform any deterministic state change.
-
-The migration plan to upgrade the simapp from v0.47 to v0.50 is defined in `simapp/upgrade.go`.
-
-:::
+Next, we can add a migration - which is defined using `x/upgrade` [upgrade plan](https://github.com/cosmos/cosmos-sdk/blob/main/docs/core/upgrade.md) (you may refer to a past version if you are using an older Cosmos SDK release). In a migration we can do any deterministic state change.
 
 Build the new version `simd` binary:
 
@@ -356,22 +343,18 @@ Build the new version `simd` binary:
 make build
 ```
 
-Add the new `simd` binary and the upgrade name:
-
-:::warning
-
-The migration name must match the one defined in the migration plan.
-
-:::
+Create the folder for the upgrade binary and copy the `simd` binary:
 
 ```shell
-cosmovisor add-upgrade v047-to-v050 ./build/simd
+mkdir -p $DAEMON_HOME/cosmovisor/upgrades/test1/bin
+cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 ```
 
 Open a new terminal window and submit an upgrade proposal along with a deposit and a vote (these commands must be run within 20 seconds of each other):
+Note, when using a `v0.46+` chain, replace `submit-proposal` by `submit-legacy-proposal`.
 
 ```shell
-./build/simd tx upgrade software-upgrade v047-to-v050 --title upgrade --summary upgrade --upgrade-height 200 --upgrade-info "{}" --no-validate --from validator --yes
+./build/simd tx gov submit-proposal software-upgrade test1 --title upgrade --description upgrade --upgrade-height 200 --from validator --yes
 ./build/simd tx gov deposit 1 10000000stake --from validator --yes
 ./build/simd tx gov vote 1 yes --from validator --yes
 ```

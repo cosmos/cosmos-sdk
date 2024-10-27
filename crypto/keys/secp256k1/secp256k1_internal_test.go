@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"testing"
 
-	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
+	btcSecp256k1 "github.com/btcsuite/btcd/btcec/v2"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,7 +23,7 @@ func Test_genPrivKey(t *testing.T) {
 		shouldPanic bool
 	}{
 		{"empty bytes (panics because 1st 32 bytes are zero and 0 is not a valid field element)", empty, true},
-		{"curve order: N", secp.S256().N.Bytes(), true},
+		{"curve order: N", btcSecp256k1.S256().N.Bytes(), true},
 		{"valid because 0 < 1 < N", validOne, false},
 	}
 	for _, tt := range tests {
@@ -31,13 +31,13 @@ func Test_genPrivKey(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.shouldPanic {
 				require.Panics(t, func() {
-					genPrivKeyLegacy(bytes.NewReader(tt.notSoRand))
+					genPrivKey(bytes.NewReader(tt.notSoRand))
 				})
 				return
 			}
-			got := genPrivKeyLegacy(bytes.NewReader(tt.notSoRand))
-			fe := new(big.Int).SetBytes(got)
-			require.True(t, fe.Cmp(secp.S256().N) < 0)
+			got := genPrivKey(bytes.NewReader(tt.notSoRand))
+			fe := new(big.Int).SetBytes(got[:])
+			require.True(t, fe.Cmp(btcSecp256k1.S256().N) < 0)
 			require.True(t, fe.Sign() > 0)
 		})
 	}

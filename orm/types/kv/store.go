@@ -3,7 +3,7 @@
 package kv
 
 import (
-	"cosmossdk.io/core/store"
+	dbm "github.com/cometbft/cometbft-db"
 )
 
 // ReadonlyStore is an interface for readonly access to a kv-store.
@@ -22,7 +22,7 @@ type ReadonlyStore interface {
 	// valid.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	// CONTRACT: start, end readonly []byte
-	Iterator(start, end []byte) (store.Iterator, error)
+	Iterator(start, end []byte) (Iterator, error)
 
 	// ReverseIterator returns an iterator over a domain of keys, in descending order. The caller
 	// must call Close when done. End is exclusive, and start must be less than end. A nil end
@@ -30,8 +30,11 @@ type ReadonlyStore interface {
 	// Empty keys are not valid.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	// CONTRACT: start, end readonly []byte
-	ReverseIterator(start, end []byte) (store.Iterator, error)
+	ReverseIterator(start, end []byte) (Iterator, error)
 }
+
+// Iterator aliases github.com/cometbft/cometbft-db.Iterator.
+type Iterator = dbm.Iterator
 
 // Store is an interface for writing to a kv-store.
 type Store interface {

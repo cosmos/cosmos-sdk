@@ -2,38 +2,74 @@ package rpc_test
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	"github.com/stretchr/testify/require"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/rpc"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func TestCLIQueryConn(t *testing.T) {
-	t.Skip("data race in comet is causing this to fail")
+type IntegrationTestSuite struct {
+	suite.Suite
 
+	network *network.Network
+}
+
+func (s *IntegrationTestSuite) SetupSuite() {
+	s.T().Log("setting up integration test suite")
+
+	cfg, err := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
+
+	s.NoError(err)
+
+	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
+	s.Require().NoError(err)
+
+	s.Require().NoError(s.network.WaitForNextBlock())
+}
+
+func (s *IntegrationTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite")
+	s.network.Cleanup()
+}
+
+func (s *IntegrationTestSuite) TestStatusCommand() {
+	val0 := s.network.Validators[0]
+	cmd := rpc.StatusCommand()
+
+	out, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cmd, []string{})
+	s.Require().NoError(err)
+
+	// Make sure the output has the validator moniker.
+	s.Require().Contains(out.String(), fmt.Sprintf("\"moniker\":\"%s\"", val0.Moniker))
+}
+
+func (s *IntegrationTestSuite) TestCLIQueryConn() {
 	var header metadata.MD
 
-	testClient := testdata.NewQueryClient(client.Context{})
+	testClient := testdata.NewQueryClient(s.network.Validators[0].ClientCtx)
 	res, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"}, grpc.Header(&header))
-	require.NoError(t, err)
+	s.NoError(err)
 
 	blockHeight := header.Get(grpctypes.GRPCBlockHeightHeader)
 	height, err := strconv.Atoi(blockHeight[0])
-	require.NoError(t, err)
-	require.GreaterOrEqual(t, height, 1) // at least the 1st block
-	require.Equal(t, "hello", res.Message)
+	s.Require().NoError(err)
+	s.Require().GreaterOrEqual(height, 1) // at least the 1st block
+
+	s.Equal("hello", res.Message)
 }
 
-func TestQueryABCIHeight(t *testing.T) {
+func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 	testCases := []struct {
 		name      string
 		reqHeight int64
@@ -61,22 +97,29 @@ func TestQueryABCIHeight(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			req := abci.QueryRequest{
-				Path:   "store/bank/key",
+		s.Run(tc.name, func() {
+			s.network.WaitForHeight(tc.expHeight)
+
+			val := s.network.Validators[0]
+
+			clientCtx := val.ClientCtx
+			clientCtx = clientCtx.WithHeight(tc.ctxHeight)
+
+			req := abci.RequestQuery{
+				Path:   fmt.Sprintf("store/%s/key", banktypes.StoreKey),
 				Height: tc.reqHeight,
-				Data:   address.MustLengthPrefix([]byte{}),
+				Data:   banktypes.CreateAccountBalancesPrefix(val.Address),
 				Prove:  true,
 			}
 
-			clientCtx := client.Context{}.WithHeight(tc.ctxHeight).
-				WithClient(clitestutil.NewMockCometRPC(abci.QueryResponse{
-					Height: tc.expHeight,
-				}))
-
 			res, err := clientCtx.QueryABCI(req)
-			require.NoError(t, err)
-			require.Equal(t, tc.expHeight, res.Height)
+			s.Require().NoError(err)
+
+			s.Require().Equal(tc.expHeight, res.Height)
 		})
 	}
+}
+
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }

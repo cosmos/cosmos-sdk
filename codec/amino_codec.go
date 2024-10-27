@@ -4,61 +4,56 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
-// Deprecated: AminoCodec defines a codec that utilizes Codec for both binary and JSON
-// encoding. Any usage of amino should be done using the LegacyAmino type directly.
-// Usage of amino with the Codec type is not well-supported and may be removed in the future.
+// AminoCodec defines a codec that utilizes Codec for both binary and JSON
+// encoding.
 type AminoCodec struct {
 	*LegacyAmino
 }
 
-var (
-	_ BinaryCodec = &AminoCodec{}
-	_ JSONCodec   = &AminoCodec{}
-)
+var _ Codec = &AminoCodec{}
 
-// Deprecated: NewAminoCodec returns a reference to a new AminoCodec.
-// Use NewLegacyAmino instead.
+// NewAminoCodec returns a reference to a new AminoCodec
 func NewAminoCodec(codec *LegacyAmino) *AminoCodec {
 	return &AminoCodec{LegacyAmino: codec}
 }
 
 // Marshal implements BinaryMarshaler.Marshal method.
-func (ac *AminoCodec) Marshal(o proto.Message) ([]byte, error) {
+func (ac *AminoCodec) Marshal(o ProtoMarshaler) ([]byte, error) {
 	return ac.LegacyAmino.Marshal(o)
 }
 
 // MustMarshal implements BinaryMarshaler.MustMarshal method.
-func (ac *AminoCodec) MustMarshal(o proto.Message) []byte {
+func (ac *AminoCodec) MustMarshal(o ProtoMarshaler) []byte {
 	return ac.LegacyAmino.MustMarshal(o)
 }
 
 // MarshalLengthPrefixed implements BinaryMarshaler.MarshalLengthPrefixed method.
-func (ac *AminoCodec) MarshalLengthPrefixed(o proto.Message) ([]byte, error) {
+func (ac *AminoCodec) MarshalLengthPrefixed(o ProtoMarshaler) ([]byte, error) {
 	return ac.LegacyAmino.MarshalLengthPrefixed(o)
 }
 
 // MustMarshalLengthPrefixed implements BinaryMarshaler.MustMarshalLengthPrefixed method.
-func (ac *AminoCodec) MustMarshalLengthPrefixed(o proto.Message) []byte {
+func (ac *AminoCodec) MustMarshalLengthPrefixed(o ProtoMarshaler) []byte {
 	return ac.LegacyAmino.MustMarshalLengthPrefixed(o)
 }
 
 // Unmarshal implements BinaryMarshaler.Unmarshal method.
-func (ac *AminoCodec) Unmarshal(bz []byte, ptr proto.Message) error {
+func (ac *AminoCodec) Unmarshal(bz []byte, ptr ProtoMarshaler) error {
 	return ac.LegacyAmino.Unmarshal(bz, ptr)
 }
 
 // MustUnmarshal implements BinaryMarshaler.MustUnmarshal method.
-func (ac *AminoCodec) MustUnmarshal(bz []byte, ptr proto.Message) {
+func (ac *AminoCodec) MustUnmarshal(bz []byte, ptr ProtoMarshaler) {
 	ac.LegacyAmino.MustUnmarshal(bz, ptr)
 }
 
 // UnmarshalLengthPrefixed implements BinaryMarshaler.UnmarshalLengthPrefixed method.
-func (ac *AminoCodec) UnmarshalLengthPrefixed(bz []byte, ptr proto.Message) error {
+func (ac *AminoCodec) UnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) error {
 	return ac.LegacyAmino.UnmarshalLengthPrefixed(bz, ptr)
 }
 
 // MustUnmarshalLengthPrefixed implements BinaryMarshaler.MustUnmarshalLengthPrefixed method.
-func (ac *AminoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr proto.Message) {
+func (ac *AminoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) {
 	ac.LegacyAmino.MustUnmarshalLengthPrefixed(bz, ptr)
 }
 

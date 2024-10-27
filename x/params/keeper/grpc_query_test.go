@@ -3,8 +3,9 @@ package keeper_test
 import (
 	"fmt"
 
-	"cosmossdk.io/x/params/types"
-	"cosmossdk.io/x/params/types/proposal"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 func (suite *KeeperTestSuite) TestGRPCQueryParams() {
@@ -64,12 +65,13 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 	}
 
 	suite.SetupTest()
+	ctx := sdk.WrapSDKContext(suite.ctx)
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 
-			res, err := suite.queryClient.Params(suite.ctx, req)
+			res, err := suite.queryClient.Params(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -84,9 +86,11 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 }
 
 func (suite *KeeperTestSuite) TestGRPCQuerySubspaces() {
+	ctx := sdk.WrapSDKContext(suite.ctx)
+
 	// NOTE: Each subspace will not have any keys that we can check against
 	// because InitGenesis has not been called during app construction.
-	resp, err := suite.queryClient.Subspaces(suite.ctx, &proposal.QuerySubspacesRequest{})
+	resp, err := suite.queryClient.Subspaces(ctx, &proposal.QuerySubspacesRequest{})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(resp)
 

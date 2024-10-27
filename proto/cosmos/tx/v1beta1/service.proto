@@ -5,9 +5,8 @@ import "google/api/annotations.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
 import "cosmos/tx/v1beta1/tx.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "cometbft/types/v1/block.proto";
-import "cometbft/types/v1/types.proto";
-import "cosmos_proto/cosmos.proto";
+import "tendermint/types/block.proto";
+import "tendermint/types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
@@ -36,41 +35,46 @@ service Service {
     option (google.api.http).get = "/cosmos/tx/v1beta1/txs";
   }
   // GetBlockWithTxs fetches a block with decoded txs.
+  //
+  // Since: cosmos-sdk 0.45.2
   rpc GetBlockWithTxs(GetBlockWithTxsRequest) returns (GetBlockWithTxsResponse) {
-    option (google.api.http).get          = "/cosmos/tx/v1beta1/txs/block/{height}";
-    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.45.2";
+    option (google.api.http).get = "/cosmos/tx/v1beta1/txs/block/{height}";
   }
   // TxDecode decodes the transaction.
+  //
+  // Since: cosmos-sdk 0.47
   rpc TxDecode(TxDecodeRequest) returns (TxDecodeResponse) {
     option (google.api.http) = {
       post: "/cosmos/tx/v1beta1/decode"
       body: "*"
     };
-    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.47";
   }
   // TxEncode encodes the transaction.
+  //
+  // Since: cosmos-sdk 0.47
   rpc TxEncode(TxEncodeRequest) returns (TxEncodeResponse) {
     option (google.api.http) = {
       post: "/cosmos/tx/v1beta1/encode"
       body: "*"
     };
-    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.47";
   }
   // TxEncodeAmino encodes an Amino transaction from JSON to encoded bytes.
+  //
+  // Since: cosmos-sdk 0.47
   rpc TxEncodeAmino(TxEncodeAminoRequest) returns (TxEncodeAminoResponse) {
     option (google.api.http) = {
       post: "/cosmos/tx/v1beta1/encode/amino"
       body: "*"
     };
-    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.47";
   }
   // TxDecodeAmino decodes an Amino transaction from encoded bytes to JSON.
+  //
+  // Since: cosmos-sdk 0.47
   rpc TxDecodeAmino(TxDecodeAminoRequest) returns (TxDecodeAminoResponse) {
     option (google.api.http) = {
       post: "/cosmos/tx/v1beta1/decode/amino"
       body: "*"
     };
-    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.47";
   }
 }
 
@@ -78,33 +82,22 @@ service Service {
 // RPC method.
 message GetTxsEventRequest {
   // events is the list of transaction event type.
-  // Deprecated: post v0.47.x use query instead, which should contain a valid
-  // events query.
-  repeated string events = 1 [deprecated = true];
-
+  repeated string events = 1;
   // pagination defines a pagination for the request.
-  // Deprecated: post v0.46.x use page and limit instead.
+  // Deprecated post v0.46.x: use page and limit instead.
   cosmos.base.query.v1beta1.PageRequest pagination = 2 [deprecated = true];
 
   OrderBy order_by = 3;
-
-  // page is the page number to query, starts at 1. If not provided, will
-  // default to first page.
+  // page is the page number to query, starts at 1. If not provided, will default to first page.
   uint64 page = 4;
-
   // limit is the total number of results to be returned in the result page.
   // If left empty it will default to a value to be set by each app.
   uint64 limit = 5;
-
-  // query defines the transaction event query that is proxied to Tendermint's
-  // TxSearch RPC method. The query must be valid.
-  string query = 6 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.50"];
 }
 
 // OrderBy defines the sorting order
 enum OrderBy {
-  // ORDER_BY_UNSPECIFIED specifies an unknown sorting order. OrderBy defaults
-  // to ASC in this case.
+  // ORDER_BY_UNSPECIFIED specifies an unknown sorting order. OrderBy defaults to ASC in this case.
   ORDER_BY_UNSPECIFIED = 0;
   // ORDER_BY_ASC defines ascending order
   ORDER_BY_ASC = 1;
@@ -120,7 +113,7 @@ message GetTxsEventResponse {
   // tx_responses is the list of queried TxResponses.
   repeated cosmos.base.abci.v1beta1.TxResponse tx_responses = 2;
   // pagination defines a pagination for the response.
-  // Deprecated: post v0.46.x use total instead.
+  // Deprecated post v0.46.x: use total instead.
   cosmos.base.query.v1beta1.PageResponse pagination = 3 [deprecated = true];
   // total is total number of results available
   uint64 total = 4;
@@ -134,19 +127,18 @@ message BroadcastTxRequest {
   BroadcastMode mode     = 2;
 }
 
-// BroadcastMode specifies the broadcast mode for the TxService.Broadcast RPC
-// method.
+// BroadcastMode specifies the broadcast mode for the TxService.Broadcast RPC method.
 enum BroadcastMode {
   // zero-value for mode ordering
   BROADCAST_MODE_UNSPECIFIED = 0;
-  // Deprecated: use BROADCAST_MODE_SYNC instead,
+  // DEPRECATED: use BROADCAST_MODE_SYNC instead,
   // BROADCAST_MODE_BLOCK is not supported by the SDK from v0.47.x onwards.
   BROADCAST_MODE_BLOCK = 1 [deprecated = true];
-  // BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits
-  // for a CheckTx execution response only.
+  // BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits for
+  // a CheckTx execution response only.
   BROADCAST_MODE_SYNC = 2;
-  // BROADCAST_MODE_ASYNC defines a tx broadcasting mode where the client
-  // returns immediately.
+  // BROADCAST_MODE_ASYNC defines a tx broadcasting mode where the client returns
+  // immediately.
   BROADCAST_MODE_ASYNC = 3;
 }
 
@@ -164,7 +156,9 @@ message SimulateRequest {
   // Deprecated. Send raw tx bytes instead.
   cosmos.tx.v1beta1.Tx tx = 1 [deprecated = true];
   // tx_bytes is the raw transaction.
-  bytes tx_bytes = 2 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.43"];
+  //
+  // Since: cosmos-sdk 0.43
+  bytes tx_bytes = 2;
 }
 
 // SimulateResponse is the response type for the
@@ -193,82 +187,91 @@ message GetTxResponse {
 
 // GetBlockWithTxsRequest is the request type for the Service.GetBlockWithTxs
 // RPC method.
+//
+// Since: cosmos-sdk 0.45.2
 message GetBlockWithTxsRequest {
   // height is the height of the block to query.
   int64 height = 1;
   // pagination defines a pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
-  option (cosmos_proto.message_added_in)           = "cosmos-sdk 0.45.2";
 }
 
-// GetBlockWithTxsResponse is the response type for the Service.GetBlockWithTxs
-// method.
+// GetBlockWithTxsResponse is the response type for the Service.GetBlockWithTxs method.
+//
+// Since: cosmos-sdk 0.45.2
 message GetBlockWithTxsResponse {
   // txs are the transactions in the block.
   repeated cosmos.tx.v1beta1.Tx txs      = 1;
-  .cometbft.types.v1.BlockID    block_id = 2;
-  .cometbft.types.v1.Block      block    = 3;
+  .tendermint.types.BlockID     block_id = 2;
+  .tendermint.types.Block       block    = 3;
   // pagination defines a pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 4;
-  option (cosmos_proto.message_added_in)            = "cosmos-sdk 0.45.2";
 }
 
 // TxDecodeRequest is the request type for the Service.TxDecode
 // RPC method.
+//
+// Since: cosmos-sdk 0.47
 message TxDecodeRequest {
   // tx_bytes is the raw transaction.
-  bytes tx_bytes                         = 1;
-  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.47";
+  bytes tx_bytes = 1;
 }
 
 // TxDecodeResponse is the response type for the
 // Service.TxDecode method.
+//
+// Since: cosmos-sdk 0.47
 message TxDecodeResponse {
   // tx is the decoded transaction.
-  cosmos.tx.v1beta1.Tx tx                = 1;
-  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.47";
+  cosmos.tx.v1beta1.Tx tx = 1;
 }
 
 // TxEncodeRequest is the request type for the Service.TxEncode
 // RPC method.
+//
+// Since: cosmos-sdk 0.47
 message TxEncodeRequest {
   // tx is the transaction to encode.
-  cosmos.tx.v1beta1.Tx tx                = 1;
-  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.47";
+  cosmos.tx.v1beta1.Tx tx = 1;
 }
 
 // TxEncodeResponse is the response type for the
 // Service.TxEncode method.
+//
+// Since: cosmos-sdk 0.47
 message TxEncodeResponse {
   // tx_bytes is the encoded transaction bytes.
-  bytes tx_bytes                         = 1;
-  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.47";
+  bytes tx_bytes = 1;
 }
 
 // TxEncodeAminoRequest is the request type for the Service.TxEncodeAmino
 // RPC method.
+//
+// Since: cosmos-sdk 0.47
 message TxEncodeAminoRequest {
-  string amino_json                      = 1;
-  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.47";
+  string amino_json = 1;
 }
 
 // TxEncodeAminoResponse is the response type for the Service.TxEncodeAmino
 // RPC method.
+//
+// Since: cosmos-sdk 0.47
 message TxEncodeAminoResponse {
-  bytes amino_binary                     = 1;
-  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.47";
+  bytes amino_binary = 1;
 }
 
 // TxDecodeAminoRequest is the request type for the Service.TxDecodeAmino
 // RPC method.
+//
+// Since: cosmos-sdk 0.47
 message TxDecodeAminoRequest {
-  bytes amino_binary                     = 1;
-  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.47";
+  bytes amino_binary = 1;
 }
 
 // TxDecodeAminoResponse is the response type for the Service.TxDecodeAmino
 // RPC method.
+//
+// Since: cosmos-sdk 0.47
 message TxDecodeAminoResponse {
-  string amino_json                      = 1;
-  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.47";
+  string amino_json = 1;
 }

@@ -2,20 +2,17 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"sort"
 
-	"github.com/cosmos/gogoproto/proto"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+	proto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-var _ gogoprotoany.UnpackInterfacesMessage = GenesisState{}
+var _ types.UnpackInterfacesMessage = GenesisState{}
 
 // RandomGenesisAccountsFn defines the function required to generate custom account types
 type RandomGenesisAccountsFn func(simState *module.SimulationState) GenesisAccounts
@@ -33,7 +30,7 @@ func NewGenesisState(params Params, accounts GenesisAccounts) *GenesisState {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (g GenesisState) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (g GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, any := range g.Accounts {
 		var account GenesisAccount
 		err := unpacker.UnpackAny(any, &account)
@@ -138,7 +135,7 @@ func ValidateGenAccounts(accounts GenesisAccounts) error {
 
 		// check account specific validation
 		if err := acc.Validate(); err != nil {
-			return fmt.Errorf("invalid account found in genesis state; address: %s, error: %w", addrStr, err)
+			return fmt.Errorf("invalid account found in genesis state; address: %s, error: %s", addrStr, err.Error())
 		}
 	}
 	return nil
@@ -151,10 +148,10 @@ type GenesisAccountIterator struct{}
 // appGenesis and invokes a callback on each genesis account. If any call
 // returns true, iteration stops.
 func (GenesisAccountIterator) IterateGenesisAccounts(
-	cdc codec.Codec, appGenesis map[string]json.RawMessage, cb func(sdk.AccountI) (stop bool),
+	cdc codec.Codec, appGenesis map[string]json.RawMessage, cb func(AccountI) (stop bool),
 ) {
 	for _, genAcc := range GetGenesisStateFromAppState(cdc, appGenesis).Accounts {
-		acc, ok := genAcc.GetCachedValue().(sdk.AccountI)
+		acc, ok := genAcc.GetCachedValue().(AccountI)
 		if !ok {
 			panic("expected account")
 		}
@@ -188,7 +185,7 @@ func UnpackAccounts(accountsAny []*types.Any) (GenesisAccounts, error) {
 	for i, any := range accountsAny {
 		acc, ok := any.GetCachedValue().(GenesisAccount)
 		if !ok {
-			return nil, errors.New("expected genesis account")
+			return nil, fmt.Errorf("expected genesis account")
 		}
 		accounts[i] = acc
 	}

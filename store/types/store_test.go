@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gotest.tools/v3/assert"
 )
 
 func TestStoreUpgrades(t *testing.T) {
@@ -223,18 +223,4 @@ func TestTraceContext_Merge(t *testing.T) {
 			require.Equal(t, tt.want, tt.tc.Merge(tt.other))
 		})
 	}
-}
-
-func TestNewTransientStoreKeys(t *testing.T) {
-	assert.DeepEqual(t, map[string]*TransientStoreKey{}, NewTransientStoreKeys())
-	assert.DeepEqual(t, 1, len(NewTransientStoreKeys("one")))
-}
-
-func TestNewInfiniteGasMeter(t *testing.T) {
-	gm := NewInfiniteGasMeter()
-	require.NotNil(t, gm)
-}
-
-func TestStoreTypes(t *testing.T) {
-	assert.DeepEqual(t, InclusiveEndBytes([]byte("endbytes")), InclusiveEndBytes([]byte("endbytes")))
 }

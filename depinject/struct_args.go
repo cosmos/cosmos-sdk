@@ -3,6 +3,8 @@ package depinject
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/pkg/errors"
 )
 
 // In can be embedded in another struct to inform the container that the
@@ -119,7 +121,7 @@ func structArgsInTypes(typ reflect.Type) ([]providerInput, error) {
 			if optTag == "true" {
 				optional = true
 			} else {
-				return nil, fmt.Errorf("bad optional tag %q (should be \"true\") in %v", optTag, typ)
+				return nil, errors.Errorf("bad optional tag %q (should be \"true\") in %v", optTag, typ)
 			}
 		}
 

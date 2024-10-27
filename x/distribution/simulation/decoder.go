@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"fmt"
 
-	"cosmossdk.io/x/distribution/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
@@ -21,6 +20,9 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 			cdc.MustUnmarshal(kvA.Value, &feePoolA)
 			cdc.MustUnmarshal(kvB.Value, &feePoolB)
 			return fmt.Sprintf("%v\n%v", feePoolA, feePoolB)
+
+		case bytes.Equal(kvA.Key[:1], types.ProposerKey):
+			return fmt.Sprintf("%v\n%v", sdk.ConsAddress(kvA.Value), sdk.ConsAddress(kvB.Value))
 
 		case bytes.Equal(kvA.Key[:1], types.ValidatorOutstandingRewardsPrefix):
 			var rewardsA, rewardsB types.ValidatorOutstandingRewards

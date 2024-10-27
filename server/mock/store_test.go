@@ -3,18 +3,18 @@ package mock
 import (
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/cometbft/cometbft-db"
 	"github.com/stretchr/testify/require"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestStore(t *testing.T) {
 	db := dbm.NewMemDB()
-
 	cms := NewCommitMultiStore()
 
-	key := storetypes.NewKVStoreKey("test")
+	key := sdk.NewKVStoreKey("test")
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	err := cms.LoadLatestVersion()
 	require.Nil(t, err)

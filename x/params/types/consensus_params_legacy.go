@@ -1,7 +1,7 @@
 package types
 
 import (
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 )
@@ -10,13 +10,13 @@ import (
 func ConsensusParamsKeyTable() KeyTable {
 	return NewKeyTable(
 		NewParamSetPair(
-			baseapp.ParamStoreKeyBlockParams, cmtproto.BlockParams{}, baseapp.ValidateBlockParams,
+			baseapp.ParamStoreKeyBlockParams, tmproto.BlockParams{}, baseapp.ValidateBlockParams,
 		),
 		NewParamSetPair(
-			baseapp.ParamStoreKeyEvidenceParams, cmtproto.EvidenceParams{}, baseapp.ValidateEvidenceParams,
+			baseapp.ParamStoreKeyEvidenceParams, tmproto.EvidenceParams{}, baseapp.ValidateEvidenceParams,
 		),
 		NewParamSetPair(
-			baseapp.ParamStoreKeyValidatorParams, cmtproto.ValidatorParams{}, baseapp.ValidateValidatorParams,
+			baseapp.ParamStoreKeyValidatorParams, tmproto.ValidatorParams{}, baseapp.ValidateValidatorParams,
 		),
 	)
 }

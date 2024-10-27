@@ -87,9 +87,9 @@ to the Cosmos chain identifier. The user-agent should **refuse** signing if the
 `@chain_id` field does not match the currently active chain! The `@type` field
 must equal the constant `"message"`. The `@type` field corresponds to the type of
 structure the user will be signing in an application. For now, a user is only
-allowed to sign bytes of valid ASCII text ([see here](https://github.com/cometbft/cometbft/blob/v0.38.0/libs/strings/string.go#L57-L67)).
+allowed to sign bytes of valid ASCII text ([see here](https://github.com/cometbft/cometbft/blob/v0.37.0/libs/strings/string.go#L35-L64)).
 However, this will change and evolve to support additional application-specific
-structures that are human-readable and machine-verifiable.
+structures that are human-readable and machine-verifiable ([see Future Adaptations](#futureadaptations)).
 
 Thus, we can have a canonical JSON structure for signing Cosmos messages using
 the [JSON schema](http://json-schema.org/) specification as such:

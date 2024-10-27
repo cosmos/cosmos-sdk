@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	any "github.com/cosmos/gogoproto/types/any"
 	"github.com/stretchr/testify/require"
 )
 
@@ -38,33 +37,6 @@ func TestNewGrant(t *testing.T) {
 		tc := tc
 		t.Run(tc.title, func(t *testing.T) {
 			_, err := NewGrant(tc.blockTime, tc.a, tc.expire)
-			expecError(require.New(t), tc.err, err)
-		})
-	}
-}
-
-func TestValidateBasic(t *testing.T) {
-	validAuthz, err := any.NewAnyWithCacheWithValue(NewGenericAuthorization("some-type"))
-	require.NoError(t, err)
-	invalidAuthz, err := any.NewAnyWithCacheWithValue(&Grant{})
-	require.NoError(t, err)
-	tcs := []struct {
-		title         string
-		authorization *any.Any
-		err           string
-	}{
-		{"valid grant", validAuthz, ""},
-		{"invalid authorization", invalidAuthz, "invalid type"},
-		{"empty authorization", nil, "authorization is nil"},
-	}
-
-	for _, tc := range tcs {
-		tc := tc
-		t.Run(tc.title, func(t *testing.T) {
-			grant := Grant{
-				Authorization: tc.authorization,
-			}
-			err := grant.ValidateBasic()
 			expecError(require.New(t), tc.err, err)
 		})
 	}

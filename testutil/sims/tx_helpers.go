@@ -1,17 +1,13 @@
 package sims
 
 import (
-	"context"
 	"math/rand"
 	"testing"
 	"time"
 
-	types2 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	types2 "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-
-	"cosmossdk.io/core/header"
-	"cosmossdk.io/errors"
-	authsign "cosmossdk.io/x/auth/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -19,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 // GenSignedMockTx generates a signed mock transaction.
@@ -28,10 +25,7 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 	// create a random length memo
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
 
-	signMode, err := authsign.APISignModeToInternal(txConfig.SignModeHandler().DefaultMode())
-	if err != nil {
-		return nil, err
-	}
+	signMode := txConfig.SignModeHandler().DefaultMode()
 
 	// 1st round: set SignatureV2 with empty signatures, to set correct
 	// signer infos.
@@ -46,7 +40,7 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 	}
 
 	tx := txConfig.NewTxBuilder()
-	err = tx.SetMsgs(msgs...)
+	err := tx.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -67,10 +61,7 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 			Sequence:      accSeqs[i],
 			PubKey:        p.PubKey(),
 		}
-
-		signBytes, err := authsign.GetSignBytesAdapter(
-			context.Background(), txConfig.SignModeHandler(), signMode, signerData,
-			tx.GetTx())
+		signBytes, err := txConfig.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
 		if err != nil {
 			panic(err)
 		}
@@ -79,10 +70,10 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 			panic(err)
 		}
 		sigs[i].Data.(*signing.SingleSignatureData).Signature = sig
-	}
-	err = tx.SetSignatures(sigs...)
-	if err != nil {
-		panic(err)
+		err = tx.SetSignatures(sigs...)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return tx.GetTx(), nil
@@ -93,10 +84,9 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 // the parameter 'expPass' against the result. A corresponding result is
 // returned.
 func SignCheckDeliver(
-	t *testing.T, txCfg client.TxConfig, app *baseapp.BaseApp, header header.Info, msgs []sdk.Msg,
+	t *testing.T, txCfg client.TxConfig, app *baseapp.BaseApp, header types.Header, msgs []sdk.Msg,
 	chainID string, accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
-	t.Helper()
 	tx, err := GenSignedMockTx(
 		rand.New(rand.NewSource(time.Now().UnixNano())),
 		txCfg,
@@ -123,33 +113,20 @@ func SignCheckDeliver(
 		require.Nil(t, res)
 	}
 
-	bz, err := txCfg.TxEncoder()(tx)
-	require.NoError(t, err)
+	// Simulate a sending a transaction and committing a block
+	app.BeginBlock(types2.RequestBeginBlock{Header: header})
+	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
 
-	resBlock, err := app.FinalizeBlock(&types2.FinalizeBlockRequest{
-		Height: header.Height,
-		Txs:    [][]byte{bz},
-	})
-	require.NoError(t, err)
-
-	require.Equal(t, 1, len(resBlock.TxResults))
-	txResult := resBlock.TxResults[0]
-	finalizeSuccess := txResult.Code == 0
 	if expPass {
-		require.True(t, finalizeSuccess)
+		require.NoError(t, err)
+		require.NotNil(t, res)
 	} else {
-		require.False(t, finalizeSuccess)
+		require.Error(t, err)
+		require.Nil(t, res)
 	}
 
-	_, err = app.Commit()
-	require.NoError(t, err)
-	gInfo := sdk.GasInfo{GasWanted: uint64(txResult.GasWanted), GasUsed: uint64(txResult.GasUsed)}
-	txRes := sdk.Result{Data: txResult.Data, Log: txResult.Log, Events: txResult.Events}
-	if finalizeSuccess {
-		err = nil
-	} else {
-		err = errors.ABCIError(txResult.Codespace, txResult.Code, txResult.Log)
-	}
+	app.EndBlock(types2.RequestEndBlock{})
+	app.Commit()
 
-	return gInfo, &txRes, err
+	return gInfo, res, err
 }

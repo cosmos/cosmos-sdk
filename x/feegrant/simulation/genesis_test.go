@@ -7,34 +7,30 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/math"
-	"cosmossdk.io/x/feegrant"
-	"cosmossdk.io/x/feegrant/module"
-	"cosmossdk.io/x/feegrant/simulation"
-
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	sdkmath "cosmossdk.io/math"
 	moduletypes "github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/module"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	cdcOpts := codectestutil.CodecOptions{}
+
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	simState := moduletypes.SimulationState{
-		AppParams:      make(simtypes.AppParams),
-		Cdc:            encCfg.Codec,
-		AddressCodec:   cdcOpts.GetAddressCodec(),
-		ValidatorCodec: cdcOpts.GetValidatorCodec(),
-		Rand:           r,
-		NumBonded:      3,
-		Accounts:       accounts,
-		InitialStake:   math.NewInt(1000),
-		GenState:       make(map[string]json.RawMessage),
+		AppParams:    make(simtypes.AppParams),
+		Cdc:          encCfg.Codec,
+		Rand:         r,
+		NumBonded:    3,
+		Accounts:     accounts,
+		InitialStake: sdkmath.NewInt(1000),
+		GenState:     make(map[string]json.RawMessage),
 	}
 
 	simulation.RandomizedGenState(&simState)

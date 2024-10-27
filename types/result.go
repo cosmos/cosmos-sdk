@@ -3,15 +3,18 @@ package types
 import (
 	"encoding/hex"
 	"encoding/json"
+	"math"
 	"strings"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
+
+var cdc = codec.NewLegacyAmino()
 
 func (gi GasInfo) String() string {
 	bz, _ := codec.MarshalYAML(codec.NewProtoCodec(nil), &gi)
@@ -46,7 +49,7 @@ func NewABCIMessageLog(i uint32, log string, events Events) ABCIMessageLog {
 // String implements the fmt.Stringer interface for the ABCIMessageLogs type.
 func (logs ABCIMessageLogs) String() (str string) {
 	if logs != nil {
-		raw, err := json.Marshal(logs)
+		raw, err := cdc.MarshalJSON(logs)
 		if err == nil {
 			str = string(raw)
 		}
@@ -80,25 +83,6 @@ func NewResponseResultTx(res *coretypes.ResultTx, anyTx *codectypes.Any, timesta
 	}
 }
 
-// NewResponseResultBlock returns a BlockResponse given a ResultBlock from CometBFT
-func NewResponseResultBlock(res *coretypes.ResultBlock, timestamp string) *cmtproto.Block {
-	if res == nil {
-		return nil
-	}
-
-	blk, err := res.Block.ToProto()
-	if err != nil {
-		return nil
-	}
-
-	return &cmtproto.Block{
-		Header:     blk.Header,
-		Data:       blk.Data,
-		Evidence:   blk.Evidence,
-		LastCommit: blk.LastCommit,
-	}
-}
-
 // NewResponseFormatBroadcastTx returns a TxResponse given a ResultBroadcastTx from tendermint
 func NewResponseFormatBroadcastTx(res *coretypes.ResultBroadcastTx) *TxResponse {
 	if res == nil {
@@ -128,28 +112,13 @@ func (r TxResponse) Empty() bool {
 }
 
 func NewSearchTxsResult(totalCount, count, page, limit uint64, txs []*TxResponse) *SearchTxsResult {
-	totalPages := calcTotalPages(int64(totalCount), int64(limit))
-
 	return &SearchTxsResult{
 		TotalCount: totalCount,
 		Count:      count,
 		PageNumber: page,
-		PageTotal:  uint64(totalPages),
+		PageTotal:  uint64(math.Ceil(float64(totalCount) / float64(limit))),
 		Limit:      limit,
 		Txs:        txs,
-	}
-}
-
-func NewSearchBlocksResult(totalCount, count, page, limit int64, blocks []*cmtproto.Block) *SearchBlocksResult {
-	totalPages := calcTotalPages(totalCount, limit)
-
-	return &SearchBlocksResult{
-		TotalCount: totalCount,
-		Count:      count,
-		PageNumber: page,
-		PageTotal:  totalPages,
-		Limit:      limit,
-		Blocks:     blocks,
 	}
 }
 
@@ -160,13 +129,13 @@ func ParseABCILogs(logs string) (res ABCIMessageLogs, err error) {
 	return res, err
 }
 
-var _, _ gogoprotoany.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
+var _, _ codectypes.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 //
 // types.UnpackInterfaces needs to be called for each nested Tx because
 // there are generally interfaces to unpack in Tx's
-func (s SearchTxsResult) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (s SearchTxsResult) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, tx := range s.Txs {
 		err := codectypes.UnpackInterfaces(tx, unpacker)
 		if err != nil {
@@ -177,31 +146,51 @@ func (s SearchTxsResult) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) err
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (r TxResponse) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (r TxResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if r.Tx != nil {
-		var tx HasMsgs
+		var tx Tx
 		return unpacker.UnpackAny(r.Tx, &tx)
 	}
 	return nil
 }
 
 // GetTx unpacks the Tx from within a TxResponse and returns it
-func (r TxResponse) GetTx() HasMsgs {
-	if tx, ok := r.Tx.GetCachedValue().(HasMsgs); ok {
+func (r TxResponse) GetTx() Tx {
+	if tx, ok := r.Tx.GetCachedValue().(Tx); ok {
 		return tx
 	}
 	return nil
 }
 
-// calculate total pages in an overflow safe manner
-func calcTotalPages(totalCount, limit int64) int64 {
-	totalPages := int64(0)
-	if totalCount != 0 && limit != 0 {
-		if totalCount%limit > 0 {
-			totalPages = totalCount/limit + 1
-		} else {
-			totalPages = totalCount / limit
+// WrapServiceResult wraps a result from a protobuf RPC service method call (res proto.Message, err error)
+// in a Result object or error. This method takes care of marshaling the res param to
+// protobuf and attaching any events on the ctx.EventManager() to the Result.
+func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, error) {
+	if err != nil {
+		return nil, err
+	}
+
+	any, err := codectypes.NewAnyWithValue(res)
+	if err != nil {
+		return nil, err
+	}
+
+	var data []byte
+	if res != nil {
+		data, err = proto.Marshal(res)
+		if err != nil {
+			return nil, err
 		}
 	}
-	return totalPages
+
+	var events []abci.Event
+	if evtMgr := ctx.EventManager(); evtMgr != nil {
+		events = evtMgr.ABCIEvents()
+	}
+
+	return &Result{
+		Data:         data,
+		Events:       events,
+		MsgResponses: []*codectypes.Any{any},
+	}, nil
 }

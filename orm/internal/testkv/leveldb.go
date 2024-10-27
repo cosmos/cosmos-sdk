@@ -3,17 +3,16 @@ package testkv
 import (
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/cometbft/cometbft-db"
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/orm/model/ormtable"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
-func NewGoLevelDBBackend(tb testing.TB) ormtable.Backend {
-	tb.Helper()
-	db, err := dbm.NewGoLevelDB("test", tb.TempDir(), nil)
-	assert.NilError(tb, err)
+func NewGoLevelDBBackend(t testing.TB) ormtable.Backend {
+	db, err := dbm.NewGoLevelDB("test", t.TempDir())
+	assert.NilError(t, err)
 	return ormtable.NewBackend(ormtable.BackendOptions{
-		CommitmentStore: TestStore{Db: db},
+		CommitmentStore: db,
 	})
 }

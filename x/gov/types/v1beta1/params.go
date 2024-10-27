@@ -3,7 +3,7 @@ package v1beta1
 import (
 	"time"
 
-	"cosmossdk.io/math"
+	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -15,10 +15,10 @@ const (
 
 // Default governance params
 var (
-	DefaultMinDepositTokens = math.NewInt(10000000)
-	DefaultQuorum           = math.LegacyNewDecWithPrec(334, 3)
-	DefaultThreshold        = math.LegacyNewDecWithPrec(5, 1)
-	DefaultVetoThreshold    = math.LegacyNewDecWithPrec(334, 3)
+	DefaultMinDepositTokens = sdk.NewInt(10000000)
+	DefaultQuorum           = sdk.NewDecWithPrec(334, 3)
+	DefaultThreshold        = sdk.NewDecWithPrec(5, 1)
+	DefaultVetoThreshold    = sdk.NewDecWithPrec(334, 3)
 )
 
 // NewDepositParams creates a new DepositParams object
@@ -37,13 +37,19 @@ func DefaultDepositParams() DepositParams {
 	)
 }
 
+// String implements stringer insterface
+func (dp DepositParams) String() string {
+	out, _ := yaml.Marshal(dp)
+	return string(out)
+}
+
 // Equal checks equality of DepositParams
 func (dp DepositParams) Equal(dp2 DepositParams) bool {
-	return dp.MinDeposit.Equal(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
+	return dp.MinDeposit.IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
 }
 
 // NewTallyParams creates a new TallyParams object
-func NewTallyParams(quorum, threshold, vetoThreshold math.LegacyDec) TallyParams {
+func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
 	return TallyParams{
 		Quorum:        quorum,
 		Threshold:     threshold,
@@ -61,6 +67,12 @@ func (tp TallyParams) Equal(other TallyParams) bool {
 	return tp.Quorum.Equal(other.Quorum) && tp.Threshold.Equal(other.Threshold) && tp.VetoThreshold.Equal(other.VetoThreshold)
 }
 
+// String implements stringer insterface
+func (tp TallyParams) String() string {
+	out, _ := yaml.Marshal(tp)
+	return string(out)
+}
+
 // NewVotingParams creates a new VotingParams object
 func NewVotingParams(votingPeriod time.Duration) VotingParams {
 	return VotingParams{
@@ -76,6 +88,12 @@ func DefaultVotingParams() VotingParams {
 // Equal checks equality of TallyParams
 func (vp VotingParams) Equal(other VotingParams) bool {
 	return vp.VotingPeriod == other.VotingPeriod
+}
+
+// String implements stringer interface
+func (vp VotingParams) String() string {
+	out, _ := yaml.Marshal(vp)
+	return string(out)
 }
 
 // Params returns all of the governance params

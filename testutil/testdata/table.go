@@ -1,14 +1,11 @@
 package testdata
 
-import (
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/errors"
-)
+import "github.com/cosmos/cosmos-sdk/types/errors"
 
 var ErrTest = errors.Register("table_testdata", 2, "test")
 
-func (g TableModel) PrimaryKeyFields(_ address.Codec) ([]interface{}, error) {
-	return []interface{}{g.Id}, nil
+func (g TableModel) PrimaryKeyFields() []interface{} {
+	return []interface{}{g.Id}
 }
 
 func (g TableModel) ValidateBasic() error {

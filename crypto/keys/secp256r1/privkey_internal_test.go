@@ -51,7 +51,7 @@ func (suite *SKSuite) TestBytes() {
 func (suite *SKSuite) TestMarshalProto() {
 	require := suite.Require()
 
-	/**** test structure marshaling ****/
+	/**** test structure marshalling ****/
 
 	var sk PrivKey
 	bz, err := proto.Marshal(suite.sk)
@@ -59,7 +59,7 @@ func (suite *SKSuite) TestMarshalProto() {
 	require.NoError(proto.Unmarshal(bz, &sk))
 	require.True(sk.Equals(suite.sk))
 
-	/**** test structure marshaling with codec ****/
+	/**** test structure marshalling with codec ****/
 
 	sk = PrivKey{}
 	registry := types.NewInterfaceRegistry()
@@ -112,15 +112,4 @@ func (suite *SKSuite) TestSize() {
 
 	var nilPk *ecdsaSK
 	require.Equal(0, nilPk.Size(), "nil value must have zero size")
-}
-
-func (suite *SKSuite) TestJson() {
-	require := suite.Require()
-	asd := suite.sk.(*PrivKey)
-	bz, err := asd.Secret.MarshalJSON()
-	require.NoError(err)
-
-	sk := &ecdsaSK{}
-	require.NoError(sk.UnmarshalJSON(bz))
-	require.Equal(suite.sk.(*PrivKey).Secret, sk)
 }

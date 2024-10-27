@@ -1,25 +1,17 @@
 package orm
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
-	grouperrors "cosmossdk.io/x/group/errors"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func TestNewTable(t *testing.T) {
@@ -28,7 +20,7 @@ func TestNewTable(t *testing.T) {
 
 	testCases := []struct {
 		name        string
-		model       proto.Message
+		model       codec.ProtoMarshaler
 		expectErr   bool
 		expectedErr string
 	}{
@@ -47,7 +39,7 @@ func TestNewTable(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			table, err := newTable([2]byte{0x1}, tc.model, cdc, address.NewBech32Codec("cosmos"))
+			table, err := newTable([2]byte{0x1}, tc.model, cdc)
 			if tc.expectErr {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.expectedErr)
@@ -62,8 +54,8 @@ func TestNewTable(t *testing.T) {
 func TestCreate(t *testing.T) {
 	specs := map[string]struct {
 		rowID  RowID
-		src    proto.Message
-		expErr *errorsmod.Error
+		src    codec.ProtoMarshaler
+		expErr *sdkerrors.Error
 	}{
 		"empty rowID": {
 			rowID: []byte{},
@@ -71,7 +63,7 @@ func TestCreate(t *testing.T) {
 				Id:   1,
 				Name: "some name",
 			},
-			expErr: grouperrors.ErrORMEmptyKey,
+			expErr: errors.ErrORMEmptyKey,
 		},
 		"happy path": {
 			rowID: EncodeSequence(1),
@@ -102,12 +94,11 @@ func TestCreate(t *testing.T) {
 			interfaceRegistry := types.NewInterfaceRegistry()
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
-			key := storetypes.NewKVStoreKey("test")
-			testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+			ctx := NewMockContext()
+			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 			anyPrefix := [2]byte{0x10}
-			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
+			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
 			require.NoError(t, err)
 
 			err = myTable.Create(store, spec.rowID, spec.src)
@@ -131,8 +122,8 @@ func TestCreate(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	specs := map[string]struct {
-		src    proto.Message
-		expErr *errorsmod.Error
+		src    codec.ProtoMarshaler
+		expErr *sdkerrors.Error
 	}{
 		"happy path": {
 			src: &testdata.TableModel{
@@ -160,12 +151,11 @@ func TestUpdate(t *testing.T) {
 			interfaceRegistry := types.NewInterfaceRegistry()
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
-			key := storetypes.NewKVStoreKey("test")
-			testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+			ctx := NewMockContext()
+			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 			anyPrefix := [2]byte{0x10}
-			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
+			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
 			require.NoError(t, err)
 
 			initValue := testdata.TableModel{
@@ -194,14 +184,14 @@ func TestUpdate(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	specs := map[string]struct {
-		rowID  []byte
-		expErr *errorsmod.Error
+		rowId  []byte
+		expErr *sdkerrors.Error
 	}{
 		"happy path": {
-			rowID: EncodeSequence(1),
+			rowId: EncodeSequence(1),
 		},
 		"not found": {
-			rowID:  []byte("not-found"),
+			rowId:  []byte("not-found"),
 			expErr: sdkerrors.ErrNotFound,
 		},
 	}
@@ -210,12 +200,11 @@ func TestDelete(t *testing.T) {
 			interfaceRegistry := types.NewInterfaceRegistry()
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
-			key := storetypes.NewKVStoreKey("test")
-			testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+			ctx := NewMockContext()
+			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 			anyPrefix := [2]byte{0x10}
-			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
+			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
 			require.NoError(t, err)
 
 			initValue := testdata.TableModel{
@@ -227,12 +216,12 @@ func TestDelete(t *testing.T) {
 			require.NoError(t, err)
 
 			// when
-			err = myTable.Delete(store, spec.rowID)
+			err = myTable.Delete(store, spec.rowId)
 			require.True(t, spec.expErr.Is(err), "got ", err)
 
 			// then
 			var loaded testdata.TableModel
-			if errors.Is(spec.expErr, sdkerrors.ErrNotFound) {
+			if spec.expErr == sdkerrors.ErrNotFound {
 				require.NoError(t, myTable.GetOne(store, EncodeSequence(1), &loaded))
 				assert.Equal(t, initValue, loaded)
 			} else {

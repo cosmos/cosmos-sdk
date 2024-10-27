@@ -8,7 +8,7 @@ import (
 )
 
 type Dog struct {
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name string `protobuf:"bytes,1,opt,name=size,proto3" json:"size,omitempty"`
 }
 
 func (d Dog) Greet() string { return d.Name }
@@ -48,7 +48,7 @@ func TestAnyPackUnpack(t *testing.T) {
 	require.Equal(t, spot, animal)
 
 	// without cache
-	any.ResetCachedValue()
+	any.cachedValue = nil
 	err = registry.UnpackAny(any, &animal)
 	require.NoError(t, err)
 	require.Equal(t, spot, animal)

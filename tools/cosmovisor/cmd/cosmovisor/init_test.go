@@ -9,21 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pelletier/go-toml/v2"
-	"github.com/spf13/viper"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
-)
-
-const (
-	notset            = " is not set"
-	cosmovisorDirName = "cosmovisor"
-
-	cfgFileWithExt = "config.toml"
 )
 
 type InitTestSuite struct {
@@ -36,24 +27,15 @@ func TestInitTestSuite(t *testing.T) {
 
 // cosmovisorInitEnv are some string values of environment variables used to configure Cosmovisor, and used by the init command.
 type cosmovisorInitEnv struct {
-	Home           string
-	Name           string
-	ColorLogs      string
-	TimeFormatLogs string
-}
-
-type envMap struct {
-	val        string
-	allowEmpty bool
+	Home string
+	Name string
 }
 
 // ToMap creates a map of the cosmovisorInitEnv where the keys are the env var names.
-func (c cosmovisorInitEnv) ToMap() map[string]envMap {
-	return map[string]envMap{
-		cosmovisor.EnvHome:           {val: c.Home, allowEmpty: false},
-		cosmovisor.EnvName:           {val: c.Name, allowEmpty: false},
-		cosmovisor.EnvColorLogs:      {val: c.ColorLogs, allowEmpty: false},
-		cosmovisor.EnvTimeFormatLogs: {val: c.TimeFormatLogs, allowEmpty: true},
+func (c cosmovisorInitEnv) ToMap() map[string]string {
+	return map[string]string{
+		cosmovisor.EnvHome: c.Home,
+		cosmovisor.EnvName: c.Name,
 	}
 }
 
@@ -63,10 +45,6 @@ func (c *cosmovisorInitEnv) Set(envVar, envVal string) {
 	case cosmovisor.EnvHome:
 		c.Home = envVal
 	case cosmovisor.EnvName:
-		c.Name = envVal
-	case cosmovisor.EnvColorLogs:
-		c.Name = envVal
-	case cosmovisor.EnvTimeFormatLogs:
 		c.Name = envVal
 	default:
 		panic(fmt.Errorf("Unknown environment variable [%s]. Cannot set field to [%s]. ", envVar, envVal))
@@ -84,7 +62,6 @@ func (s *InitTestSuite) clearEnv() *cosmovisorInitEnv {
 	for envVar := range rv.ToMap() {
 		rv.Set(envVar, os.Getenv(envVar))
 		s.Require().NoError(os.Unsetenv(envVar))
-		viper.Reset()
 	}
 	return &rv
 }
@@ -92,16 +69,16 @@ func (s *InitTestSuite) clearEnv() *cosmovisorInitEnv {
 // setEnv sets environment variables to the values provided.
 // If t is not nil, and there's a problem, the test will fail immediately.
 // If t is nil, problems will just be logged using s.T().
-func (s *InitTestSuite) setEnv(t *testing.T, env *cosmovisorInitEnv) { //nolint:thelper // false psotive
+func (s *InitTestSuite) setEnv(t *testing.T, env *cosmovisorInitEnv) {
 	if t == nil {
 		s.T().Logf("Restoring environment variables.")
 	}
 	for envVar, envVal := range env.ToMap() {
 		var err error
 		var msg string
-		if len(envVal.val) != 0 || envVal.allowEmpty {
-			err = os.Setenv(envVar, envVal.val)
-			msg = fmt.Sprintf("setting %s to %s", envVar, envVal.val)
+		if len(envVal) != 0 {
+			err = os.Setenv(envVar, envVal)
+			msg = fmt.Sprintf("setting %s to %s", envVar, envVal)
 		} else {
 			err = os.Unsetenv(envVar)
 			msg = fmt.Sprintf("unsetting %s", envVar)
@@ -115,26 +92,6 @@ func (s *InitTestSuite) setEnv(t *testing.T, env *cosmovisorInitEnv) { //nolint:
 			s.T().Logf("done %s", msg)
 		}
 	}
-}
-
-// readStdInpFromFile reads the provided data as if it were a standard input.
-func (s *InitTestSuite) readStdInpFromFile(data []byte) {
-	// Create a temporary file and write the test input into it
-	tmpfile, err := os.CreateTemp("", "test")
-	if err != nil {
-		s.T().Fatal(err)
-	}
-
-	// write the test input into the temporary file
-	if _, err := tmpfile.Write(data); err != nil {
-		s.T().Fatal(err)
-	}
-
-	if _, err := tmpfile.Seek(0, 0); err != nil {
-		s.T().Fatal(err)
-	}
-
-	os.Stdin = tmpfile
 }
 
 var (
@@ -270,11 +227,12 @@ func (p *BufferedPipe) panicIfStarted(msg string) {
 }
 
 // NewCapturingLogger creates a buffered stdout pipe, and a logger that uses it.
-func (s *InitTestSuite) NewCapturingLogger() (*BufferedPipe, log.Logger) {
+func (s *InitTestSuite) NewCapturingLogger() (*BufferedPipe, *zerolog.Logger) {
 	bufferedStdOut, err := StartNewBufferedPipe("stdout", os.Stdout)
 	s.Require().NoError(err, "creating stdout buffered pipe")
-	logger := log.NewLogger(bufferedStdOut, log.ColorOption(false), log.TimeFormatOption(time.RFC3339Nano)).With(log.ModuleKey, cosmovisorDirName)
-	return &bufferedStdOut, logger
+	output := zerolog.ConsoleWriter{Out: bufferedStdOut, TimeFormat: time.RFC3339Nano}
+	logger := zerolog.New(output).With().Str("module", "cosmovisor").Timestamp().Logger()
+	return &bufferedStdOut, &logger
 }
 
 // CreateHelloWorld creates a shell script that outputs HELLO WORLD.
@@ -332,13 +290,13 @@ func (s *InitTestSuite) TestInitializeCosmovisorNegativeValidation() {
 			name:  "no name",
 			env:   cosmovisorInitEnv{Home: "/example", Name: ""},
 			args:  []string{tmpExe},
-			inErr: []string{cosmovisor.EnvName + notset},
+			inErr: []string{cosmovisor.EnvName + " is not set"},
 		},
 		{
 			name:  "no home",
 			env:   cosmovisorInitEnv{Home: "", Name: "foo"},
 			args:  []string{tmpExe},
-			inErr: []string{cosmovisor.EnvHome + notset},
+			inErr: []string{cosmovisor.EnvHome + " is not set"},
 		},
 		{
 			name:  "home is relative",
@@ -350,13 +308,11 @@ func (s *InitTestSuite) TestInitializeCosmovisorNegativeValidation() {
 			name:  "no name and no home",
 			env:   cosmovisorInitEnv{Home: "", Name: ""},
 			args:  []string{tmpExe},
-			inErr: []string{cosmovisor.EnvName + notset, cosmovisor.EnvHome + notset},
+			inErr: []string{cosmovisor.EnvName + " is not set", cosmovisor.EnvHome + " is not set"},
 		},
 	}
 
 	for _, tc := range tests {
-		tc := tc
-
 		s.T().Run(tc.name, func(t *testing.T) {
 			s.setEnv(t, &tc.env)
 			buffer, logger := s.NewCapturingLogger()
@@ -386,15 +342,15 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 			Home: filepath.Join(testDir, "home"),
 			Name: "pear",
 		}
-		genDir := filepath.Join(env.Home, cosmovisorDirName, "genesis")
+		genDir := filepath.Join(env.Home, "cosmovisor", "genesis")
 		genBin := filepath.Join(genDir, "bin")
 		require.NoError(t, os.MkdirAll(genDir, 0o755), "creating genesis directory")
 		require.NoError(t, copyFile(hwExe, genBin), "copying exe to genesis/bin")
 
 		s.setEnv(t, env)
-		logger := log.NewNopLogger()
+		logger := zerolog.Nop()
 		expErr := fmt.Sprintf("the path %q already exists but is not a directory", genBin)
-		err := InitializeCosmovisor(logger, []string{hwExe})
+		err := InitializeCosmovisor(&logger, []string{hwExe})
 		require.EqualError(t, err, expErr, "invalid path to executable: must not be a directory", "calling InitializeCosmovisor")
 	})
 
@@ -406,7 +362,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 		}
 		// Create the genesis bin executable path fully as a directory (instead of a file).
 		// That should get through all the other stuff, but error when EnsureBinary is called.
-		genBinExe := filepath.Join(env.Home, cosmovisorDirName, "genesis", "bin", env.Name)
+		genBinExe := filepath.Join(env.Home, "cosmovisor", "genesis", "bin", env.Name)
 		require.NoError(t, os.MkdirAll(genBinExe, 0o755))
 		expErr := fmt.Sprintf("%s is not a regular file", env.Name)
 		// Check the log messages just to make sure it's erroring where expecting.
@@ -423,7 +379,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
-		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
+		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.EqualError(t, err, expErr, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
@@ -442,7 +398,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 			Home: filepath.Join(testDir, "home"),
 			Name: "orange",
 		}
-		rootDir := filepath.Join(env.Home, cosmovisorDirName)
+		rootDir := filepath.Join(env.Home, "cosmovisor")
 		require.NoError(t, os.MkdirAll(rootDir, 0o755))
 		curLn := filepath.Join(rootDir, "current")
 		genDir := filepath.Join(rootDir, "genesis")
@@ -451,7 +407,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
-		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
+		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.EqualError(t, err, expErr, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
@@ -491,8 +447,8 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			Home: filepath.Join(testDir, "home"),
 			Name: "blank",
 		}
-		curLn := filepath.Join(env.Home, cosmovisorDirName, "current")
-		genBinDir := filepath.Join(env.Home, cosmovisorDirName, "genesis", "bin")
+		curLn := filepath.Join(env.Home, "cosmovisor", "current")
+		genBinDir := filepath.Join(env.Home, "cosmovisor", "genesis", "bin")
 		genBinExe := filepath.Join(genBinDir, env.Name)
 		expInLog := []string{
 			"checking on the genesis/bin directory",
@@ -502,12 +458,11 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			fmt.Sprintf("making sure %q is executable", genBinExe),
 			"checking on the current symlink and creating it if needed",
 			fmt.Sprintf("the current symlink points to: %q", genBinExe),
-			fmt.Sprintf("cosmovisor config.toml created at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
 		}
 
 		s.setEnv(s.T(), env)
 		buffer, logger := s.NewCapturingLogger()
-		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
+		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
 		err := InitializeCosmovisor(logger, []string{hwNonExe})
 		require.NoError(t, err, "calling InitializeCosmovisor")
 
@@ -535,7 +490,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			Home: filepath.Join(testDir, "home"),
 			Name: "nocur",
 		}
-		rootDir := filepath.Join(env.Home, cosmovisorDirName)
+		rootDir := filepath.Join(env.Home, "cosmovisor")
 		genBinDir := filepath.Join(rootDir, "genesis", "bin")
 		genBinDirExe := filepath.Join(genBinDir, env.Name)
 		require.NoError(t, os.MkdirAll(genBinDir, 0o755), "making genesis bin dir")
@@ -555,12 +510,11 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			fmt.Sprintf("the %q file already exists", genBinDirExe),
 			fmt.Sprintf("making sure %q is executable", genBinDirExe),
 			fmt.Sprintf("the current symlink points to: %q", genBinDirExe),
-			fmt.Sprintf("cosmovisor config.toml created at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
 		}
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
-		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
+		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.NoError(t, err, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
@@ -576,7 +530,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			Home: filepath.Join(testDir, "home"),
 			Name: "emptygen",
 		}
-		rootDir := filepath.Join(env.Home, cosmovisorDirName)
+		rootDir := filepath.Join(env.Home, "cosmovisor")
 		genBinDir := filepath.Join(rootDir, "genesis", "bin")
 		genBinExe := filepath.Join(genBinDir, env.Name)
 		require.NoError(t, os.MkdirAll(genBinDir, 0o755), "making genesis bin dir")
@@ -588,12 +542,11 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			fmt.Sprintf("copying executable into place: %q", genBinExe),
 			fmt.Sprintf("making sure %q is executable", genBinExe),
 			fmt.Sprintf("the current symlink points to: %q", genBinExe),
-			fmt.Sprintf("cosmovisor config.toml created at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)),
 		}
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
-		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
+		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.NoError(t, err, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
@@ -602,111 +555,4 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 			assert.Contains(t, bufferStr, exp)
 		}
 	})
-
-	s.T().Run("ask to override (y/n) the existing config file", func(t *testing.T) {
-	})
-
-	s.T().Run("init command exports configs to default path", func(t *testing.T) {
-		testDir := s.T().TempDir()
-		env := &cosmovisorInitEnv{
-			Home: filepath.Join(testDir, "home"),
-			Name: "emptygen",
-		}
-
-		s.setEnv(t, env)
-		buffer, logger := s.NewCapturingLogger()
-		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
-		err := InitializeCosmovisor(logger, []string{hwExe})
-		require.NoError(t, err, "calling InitializeCosmovisor")
-		bufferBz := buffer.Collect()
-		bufferStr := string(bufferBz)
-		assert.Contains(t, bufferStr, fmt.Sprintf("cosmovisor config.toml created at: %s", filepath.Join(env.Home, cosmovisorDirName, cfgFileWithExt)))
-	})
-}
-
-func (s *InitTestSuite) TestInitializeCosmovisorWithOverrideCfg() {
-	initEnv := s.clearEnv()
-	defer s.setEnv(nil, initEnv)
-
-	tmpExe := s.CreateHelloWorld(0o755)
-	testDir := s.T().TempDir()
-	homePath := filepath.Join(testDir, "backup")
-	testCases := []struct {
-		name     string
-		input    string
-		cfg      *cosmovisor.Config
-		override bool
-	}{
-		{
-			name:  "yes override",
-			input: "y\n",
-			cfg: &cosmovisor.Config{
-				Home:           homePath,
-				Name:           "old_test",
-				DataBackupPath: homePath,
-			},
-			override: true,
-		},
-		{
-			name:  "no override",
-			input: "n\n",
-			cfg: &cosmovisor.Config{
-				Home:           homePath,
-				Name:           "old_test",
-				DataBackupPath: homePath,
-			},
-			override: false,
-		},
-	}
-
-	for _, tc := range testCases {
-		s.T().Run(tc.name, func(t *testing.T) {
-			// create a root cosmovisor directory
-			require.NoError(t, os.MkdirAll(tc.cfg.Root(), 0o755), "making root dir")
-
-			// create a config file in the default location
-			file, err := os.Create(tc.cfg.DefaultCfgPath())
-			require.NoError(t, err)
-
-			// write the config to the file
-			err = toml.NewEncoder(file).Encode(tc.cfg)
-			require.NoError(t, err)
-
-			err = file.Close()
-			require.NoError(t, err)
-
-			s.readStdInpFromFile([]byte(tc.input))
-
-			_, logger := s.NewCapturingLogger()
-			logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
-
-			// override the daemon name in environment file
-			// if override is true (y), then the name should be updated in the config file
-			// otherwise (n), the name should not be updated in the config file
-			s.setEnv(t, &cosmovisorInitEnv{
-				Home: tc.cfg.Home,
-				Name: "update_name",
-			})
-
-			err = InitializeCosmovisor(logger, []string{tmpExe})
-			require.NoError(t, err, "calling InitializeCosmovisor")
-
-			cfg := &cosmovisor.Config{}
-			// read the config file
-			cfgFile, err := os.Open(tc.cfg.DefaultCfgPath())
-			require.NoError(t, err)
-			defer cfgFile.Close()
-
-			err = toml.NewDecoder(cfgFile).Decode(cfg)
-			require.NoError(t, err)
-			if tc.override {
-				// check if the name is updated
-				// basically, override the existing config file
-				assert.Equal(t, "update_name", cfg.Name)
-			} else {
-				// daemon name should not be updated
-				assert.Equal(t, tc.cfg.Name, cfg.Name)
-			}
-		})
-	}
 }

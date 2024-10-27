@@ -31,33 +31,21 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### API Breaking
-
-* [#20402](https://github.com/cosmos/cosmos-sdk/pull/20402) Remove Grpc error codes from the error package. This is done in order to keep the dependency graph of errors minimal
-* [#20539](https://github.com/cosmos/cosmos-sdk/pull/20539) v2 errors removes `IsOf`, `Recover`, `WithType` and wrapped error. The errors package uses the go std library errors. It provides a `Wrap` and `Wrapf` to help in the migration from v1 to v2. 
-
-## [v1.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/errors%2Fv1.0.1)
-
 ### Improvements
 
-* [#18918](https://github.com/cosmos/cosmos-sdk/pull/18918) Improve `IsOf` by returning earlier when the checked error is nil.
+* [\#11762](https://github.com/cosmos/cosmos-sdk/pull/11762) Improve error messages
 
-## [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/errors%2Fv1.0.0)
+## v1.0.0
 
 ### Features
 
-* [#15989](https://github.com/cosmos/cosmos-sdk/pull/15989) Add `ErrStopIterating` for modules to use for breaking out of iteration.
-* [#10779](https://github.com/cosmos/cosmos-sdk/pull/10779) Import code from the `github.com/cosmos/cosmos-sdk/types/errors` package.
-* [#11274](https://github.com/cosmos/cosmos-sdk/pull/11274) Add `RegisterWithGRPCCode` function to associate a gRPC error code with errors.
-
-### Improvements
-
-* [#11762](https://github.com/cosmos/cosmos-sdk/pull/11762) Improve error messages.
+* [\#10779](https://github.com/cosmos/cosmos-sdk/pull/10779) Import code from the `github.com/cosmos/cosmos-sdk/types/errors` package.
+* [\#11274](https://github.com/cosmos/cosmos-sdk/pull/11274) Add `RegisterWithGRPCCode` function to associate a gRPC error code with errors.
 
 ### API Breaking
 
-* [#11274](https://github.com/cosmos/cosmos-sdk/pull/11274) `New` now is an alias for `Register` and should only be used in initialization code.
+* [\#11274](https://github.com/cosmos/cosmos-sdk/pull/11274) `New` now is an alias for `Register` and should only be used in initialization code.
 
 ### Bug Fixes
 
-* [#11714](https://github.com/cosmos/cosmos-sdk/pull/11714) Add wrapped error messages in `GRPCStatus()`
+* [\#11714](https://github.com/cosmos/cosmos-sdk/pull/11714) Add wrapped error messages in `GRPCStatus()`

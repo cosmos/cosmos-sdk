@@ -6,45 +6,23 @@ import (
 
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
-	testdata "github.com/cosmos/gogoproto/types/any/test"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	test "github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
 func TestAnyPackUnpack(t *testing.T) {
-	registry := test.NewTestInterfaceRegistry()
+	registry := testdata.NewTestInterfaceRegistry()
 
 	spot := &testdata.Dog{Name: "Spot"}
 	var animal testdata.Animal
 
 	// with cache
-	anyWithCache, err := types.NewAnyWithValue(spot)
+	any, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
-	require.Equal(t, spot, anyWithCache.GetCachedValue())
-	err = registry.UnpackAny(anyWithCache, &animal)
-	require.NoError(t, err)
-	require.Equal(t, spot, animal)
-}
-
-func TestAnyResetCache(t *testing.T) {
-	registry := test.NewTestInterfaceRegistry()
-
-	spot := &test.Dog{Name: "Spot"}
-	var animal test.Animal
-
-	// with cache
-	anyWithCache, err := types.NewAnyWithValue(spot)
-	require.NoError(t, err)
-	require.Equal(t, spot, anyWithCache.GetCachedValue())
-
-	// delete cache
-	anyWithCache.ResetCachedValue()
-	require.Nil(t, anyWithCache.GetCachedValue())
-
-	// restore cache
-	err = registry.UnpackAny(anyWithCache, &animal)
+	require.Equal(t, spot, any.GetCachedValue())
+	err = registry.UnpackAny(any, &animal)
 	require.NoError(t, err)
 	require.Equal(t, spot, animal)
 }
@@ -102,7 +80,7 @@ func TestRegister(t *testing.T) {
 	// Duplicate registration with different concrete type on same typeURL.
 	require.PanicsWithError(
 		t,
-		"concrete type *test.Dog has already been registered under typeURL /test.Dog, cannot register *types_test.FakeDog under same typeURL. "+
+		"concrete type *testdata.Dog has already been registered under typeURL /testpb.Dog, cannot register *types_test.FakeDog under same typeURL. "+
 			"This usually means that there are conflicting modules registering different concrete types for a same interface implementation",
 		func() {
 			registry.RegisterImplementations((*testdata.Animal)(nil), &FakeDog{})
@@ -111,20 +89,20 @@ func TestRegister(t *testing.T) {
 }
 
 func TestUnpackInterfaces(t *testing.T) {
-	registry := test.NewTestInterfaceRegistry()
+	registry := testdata.NewTestInterfaceRegistry()
 
-	spot := &test.Dog{Name: "Spot"}
+	spot := &testdata.Dog{Name: "Spot"}
 	any, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 
-	hasAny := test.HasAnimal{
+	hasAny := testdata.HasAnimal{
 		Animal: any,
 		X:      1,
 	}
 	bz, err := hasAny.Marshal()
 	require.NoError(t, err)
 
-	var hasAny2 test.HasAnimal
+	var hasAny2 testdata.HasAnimal
 	err = hasAny2.Unmarshal(bz)
 	require.NoError(t, err)
 
@@ -135,28 +113,28 @@ func TestUnpackInterfaces(t *testing.T) {
 }
 
 func TestNested(t *testing.T) {
-	registry := test.NewTestInterfaceRegistry()
+	registry := testdata.NewTestInterfaceRegistry()
 
-	spot := &test.Dog{Name: "Spot"}
+	spot := &testdata.Dog{Name: "Spot"}
 	any, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 
-	ha := &test.HasAnimal{Animal: any}
+	ha := &testdata.HasAnimal{Animal: any}
 	any2, err := types.NewAnyWithValue(ha)
 	require.NoError(t, err)
 
-	hha := &test.HasHasAnimal{HasAnimal: any2}
+	hha := &testdata.HasHasAnimal{HasAnimal: any2}
 	any3, err := types.NewAnyWithValue(hha)
 	require.NoError(t, err)
 
-	hhha := test.HasHasHasAnimal{HasHasAnimal: any3}
+	hhha := testdata.HasHasHasAnimal{HasHasAnimal: any3}
 
 	// marshal
 	bz, err := hhha.Marshal()
 	require.NoError(t, err)
 
 	// unmarshal
-	var hhha2 test.HasHasHasAnimal
+	var hhha2 testdata.HasHasHasAnimal
 	err = hhha2.Unmarshal(bz)
 	require.NoError(t, err)
 	err = types.UnpackInterfaces(hhha2, registry)
@@ -166,7 +144,7 @@ func TestNested(t *testing.T) {
 }
 
 func TestAny_ProtoJSON(t *testing.T) {
-	spot := &test.Dog{Name: "Spot"}
+	spot := &testdata.Dog{Name: "Spot"}
 	any, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 
@@ -175,17 +153,17 @@ func TestAny_ProtoJSON(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "{\"@type\":\"/testpb.Dog\",\"name\":\"Spot\"}", json)
 
-	registry := test.NewTestInterfaceRegistry()
+	registry := testdata.NewTestInterfaceRegistry()
 	jum := &jsonpb.Unmarshaler{}
 	var any2 types.Any
 	err = jum.Unmarshal(strings.NewReader(json), &any2)
 	require.NoError(t, err)
-	var animal test.Animal
+	var animal testdata.Animal
 	err = registry.UnpackAny(&any2, &animal)
 	require.NoError(t, err)
 	require.Equal(t, spot, animal)
 
-	ha := &test.HasAnimal{
+	ha := &testdata.HasAnimal{
 		Animal: any,
 	}
 	err = ha.UnpackInterfaces(types.ProtoJSONPacker{JSONPBMarshaler: jm})
@@ -195,7 +173,7 @@ func TestAny_ProtoJSON(t *testing.T) {
 	require.Equal(t, "{\"animal\":{\"@type\":\"/testpb.Dog\",\"name\":\"Spot\"}}", json)
 
 	require.NoError(t, err)
-	var ha2 test.HasAnimal
+	var ha2 testdata.HasAnimal
 	err = jum.Unmarshal(strings.NewReader(json), &ha2)
 	require.NoError(t, err)
 	err = ha2.UnpackInterfaces(registry)

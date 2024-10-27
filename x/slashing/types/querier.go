@@ -1,5 +1,7 @@
 package types
 
+// DONTCOVER
+
 // Query endpoints supported by the slashing querier
 const (
 	QueryParameters   = "parameters"

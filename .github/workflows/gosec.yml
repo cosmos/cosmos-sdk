@@ -1,9 +1,6 @@
 name: Run Gosec
 on:
   pull_request:
-    branches:
-      - main
-      - release/**
     paths:
       - "**/*.go"
       - "go.mod"
@@ -16,10 +13,6 @@ on:
       - "go.mod"
       - "go.sum"
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 jobs:
   Gosec:
     permissions:
@@ -30,16 +23,16 @@ jobs:
       GO111MODULE: on
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
         with:
           # we let the report trigger content trigger a failure using the GitHub Security features.
-          args: "-exclude=G101,G107 -exclude-dir=systemtests -no-fail -fmt sarif -out results.sarif ./..."
+          args: "-no-fail -fmt sarif -out results.sarif ./..."
 
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v2
         with:
           # Path to SARIF file relative to the root of the repository
           sarif_file: results.sarif

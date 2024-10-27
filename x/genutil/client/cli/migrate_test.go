@@ -1,20 +1,22 @@
 package cli_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
-func TestMigrateGenesis(t *testing.T) {
+func TestGetMigrationCallback(t *testing.T) {
+	for _, version := range cli.GetMigrationVersions() {
+		require.NotNil(t, cli.GetMigrationCallback(version))
+	}
+}
+
+func (s *CLITestSuite) TestMigrateGenesis() {
 	testCases := []struct {
 		name      string
 		genesis   string
@@ -24,45 +26,32 @@ func TestMigrateGenesis(t *testing.T) {
 		check     func(jsonOut string)
 	}{
 		{
-			"invalid target version",
-			func() string {
-				bz, err := os.ReadFile("../../types/testdata/app_genesis.json")
-				require.NoError(t, err)
-
-				return string(bz)
-			}(),
-			"v0.10",
-			true,
-			"unknown migration function for version: v0.10", func(_ string) {},
+			"migrate 0.37 to 0.42",
+			v037Exported,
+			"v0.42",
+			true, "Make sure that you have correctly migrated all Tendermint consensus params", func(_ string) {},
 		},
 		{
-			"invalid target version",
-			func() string {
-				bz, err := os.ReadFile("../../types/testdata/cmt_genesis.json")
-				require.NoError(t, err)
-
-				return string(bz)
-			}(),
-			"v0.10",
-			true,
-			"unknown migration function for version: v0.10", func(_ string) {},
+			"migrate 0.42 to 0.43",
+			v040Valid,
+			"v0.43",
+			false, "",
+			func(jsonOut string) {
+				// Make sure the json output contains the ADR-037 gov weighted votes.
+				s.Require().Contains(jsonOut, "\"weight\":\"1.000000000000000000\"")
+			},
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			genesisFile := testutil.WriteToNewTempFile(t, tc.genesis)
-			jsonOutput, err := clitestutil.ExecTestCLICmd(
-				// the codec does not contain any modules so that genutil does not bring unnecessary dependencies in the test
-				client.Context{Codec: moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec},
-				cli.MigrateGenesisCmd(cli.MigrationMap),
-				[]string{tc.target, genesisFile.Name()},
-			)
+		s.Run(tc.name, func() {
+			genesisFile := testutil.WriteToNewTempFile(s.T(), tc.genesis)
+			jsonOutput, err := clitestutil.ExecTestCLICmd(s.clientCtx, cli.MigrateGenesisCmd(), []string{tc.target, genesisFile.Name()})
 			if tc.expErr {
-				require.Contains(t, err.Error(), tc.expErrMsg)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
-				require.NoError(t, err)
+				s.Require().NoError(err)
 				tc.check(jsonOutput.String())
 			}
 		})

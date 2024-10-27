@@ -2,27 +2,29 @@ package rootmulti
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"fmt"
 	"testing"
 	"time"
 
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/errors"
-	"cosmossdk.io/log"
-	"cosmossdk.io/store/cachemulti"
-	"cosmossdk.io/store/iavl"
-	sdkmaps "cosmossdk.io/store/internal/maps"
-	"cosmossdk.io/store/metrics"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/store/cachemulti"
+	"github.com/cosmos/cosmos-sdk/store/iavl"
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func TestStoreType(t *testing.T) {
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, db)
 }
 
@@ -45,7 +47,7 @@ func TestGetCommitKVStore(t *testing.T) {
 
 func TestStoreMount(t *testing.T) {
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 
 	key1 := types.NewKVStoreKey("store1")
 	key2 := types.NewKVStoreKey("store2")
@@ -73,9 +75,7 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	emptyHash := sha256.Sum256([]byte{})
-	appHash := emptyHash[:]
-	commitID := types.CommitID{Hash: appHash}
+	commitID := types.CommitID{}
 	checkStore(t, ms, commitID, commitID)
 
 	k, v := []byte("wind"), []byte("blows")
@@ -100,18 +100,15 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	require.Equal(t, kvStore.Get(k), v)
 
 	// add new module stores (store4 and store5) to multi stores and commit
-	key4, key5 := types.NewKVStoreKey("store4"), types.NewKVStoreKey("store5")
-	ms.MountStoreWithDB(key4, types.StoreTypeIAVL, nil)
-	ms.MountStoreWithDB(key5, types.StoreTypeIAVL, nil)
+	ms.MountStoreWithDB(types.NewKVStoreKey("store4"), types.StoreTypeIAVL, nil)
+	ms.MountStoreWithDB(types.NewKVStoreKey("store5"), types.StoreTypeIAVL, nil)
 	err = ms.LoadLatestVersionAndUpgrade(&types.StoreUpgrades{Added: []string{"store4", "store5"}})
 	require.NoError(t, err)
 	ms.Commit()
 
 	// cache multistore of version before adding store4 should works
-	cms2, err := ms.CacheMultiStoreWithVersion(1)
+	_, err = ms.CacheMultiStoreWithVersion(1)
 	require.NoError(t, err)
-
-	require.Empty(t, cms2.GetKVStore(key4).Get([]byte("key")))
 
 	// require we cannot commit (write) to a cache-versioned multi-store
 	require.Panics(t, func() {
@@ -126,9 +123,7 @@ func TestHashStableWithEmptyCommit(t *testing.T) {
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	emptyHash := sha256.Sum256([]byte{})
-	appHash := emptyHash[:]
-	commitID := types.CommitID{Hash: appHash}
+	commitID := types.CommitID{}
 	checkStore(t, ms, commitID, commitID)
 
 	k, v := []byte("wind"), []byte("blows")
@@ -136,16 +131,12 @@ func TestHashStableWithEmptyCommit(t *testing.T) {
 	store1 := ms.GetStoreByName("store1").(types.KVStore)
 	store1.Set(k, v)
 
-	workingHash := ms.WorkingHash()
 	cID := ms.Commit()
 	require.Equal(t, int64(1), cID.Version)
 	hash := cID.Hash
-	require.Equal(t, workingHash, hash)
 
 	// make an empty commit, it should update version, but not affect hash
-	workingHash = ms.WorkingHash()
 	cID = ms.Commit()
-	require.Equal(t, workingHash, cID.Hash)
 	require.Equal(t, int64(2), cID.Version)
 	require.Equal(t, hash, cID.Hash)
 }
@@ -156,10 +147,8 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	err := store.LoadLatestVersion()
 	require.Nil(t, err)
 
-	emptyHash := sha256.Sum256([]byte{})
-	appHash := emptyHash[:]
 	// New store has empty last commit.
-	commitID := types.CommitID{Hash: appHash}
+	commitID := types.CommitID{}
 	checkStore(t, store, commitID, commitID)
 
 	// Make sure we can get stores by name.
@@ -173,9 +162,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	// Make a few commits and check them.
 	nCommits := int64(3)
 	for i := int64(0); i < nCommits; i++ {
-		workingHash := store.WorkingHash()
 		commitID = store.Commit()
-		require.Equal(t, workingHash, commitID.Hash)
 		expectedCommitID := getExpectedCommitID(store, i+1)
 		checkStore(t, store, expectedCommitID, commitID)
 	}
@@ -188,9 +175,7 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	checkStore(t, store, commitID, commitID)
 
 	// Commit and check version.
-	workingHash := store.WorkingHash()
 	commitID = store.Commit()
-	require.Equal(t, workingHash, commitID.Hash)
 	expectedCommitID := getExpectedCommitID(store, nCommits+1)
 	checkStore(t, store, expectedCommitID, commitID)
 
@@ -229,9 +214,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.Nil(t, s4)
 
 	// do one commit
-	workingHash := store.WorkingHash()
 	commitID := store.Commit()
-	require.Equal(t, workingHash, commitID.Hash)
 	expectedCommitID := getExpectedCommitID(store, 1)
 	checkStore(t, store, expectedCommitID, commitID)
 
@@ -277,7 +260,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 
 	values := 0
 	for ; iterator.Valid(); iterator.Next() {
-		values++
+		values += 1
 	}
 	require.Zero(t, values)
 
@@ -441,8 +424,7 @@ func TestMultiStoreQuery(t *testing.T) {
 	k2, v2 := []byte("water"), []byte("flows")
 	// v3 := []byte("is cold")
 
-	// Commit the multistore.
-	_ = multi.Commit()
+	cid := multi.Commit()
 
 	// Make sure we can get by name.
 	garbage := multi.GetStoreByName("bad-name")
@@ -457,7 +439,7 @@ func TestMultiStoreQuery(t *testing.T) {
 	store2.Set(k2, v2)
 
 	// Commit the multistore.
-	cid := multi.Commit()
+	cid = multi.Commit()
 	ver := cid.Version
 
 	// Reload multistore from database
@@ -466,44 +448,39 @@ func TestMultiStoreQuery(t *testing.T) {
 	require.Nil(t, err)
 
 	// Test bad path.
-	query := types.RequestQuery{Path: "/key", Data: k, Height: ver}
-	_, err = multi.Query(&query)
-	codespace, code, _ := errors.ABCIInfo(err, false)
-	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), code)
-	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), codespace)
+	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
+	qres := multi.Query(query)
+	require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), qres.Code)
+	require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), qres.Codespace)
 
 	query.Path = "h897fy32890rf63296r92"
-	_, err = multi.Query(&query)
-	codespace, code, _ = errors.ABCIInfo(err, false)
-	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), code)
-	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), codespace)
+	qres = multi.Query(query)
+	require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), qres.Code)
+	require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), qres.Codespace)
 
 	// Test invalid store name.
 	query.Path = "/garbage/key"
-	_, err = multi.Query(&query)
-	codespace, code, _ = errors.ABCIInfo(err, false)
-	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), code)
-	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), codespace)
+	qres = multi.Query(query)
+	require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), qres.Code)
+	require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), qres.Codespace)
 
 	// Test valid query with data.
 	query.Path = "/store1/key"
-	qres, err := multi.Query(&query)
-	require.NoError(t, err)
+	qres = multi.Query(query)
+	require.EqualValues(t, 0, qres.Code)
 	require.Equal(t, v, qres.Value)
 
 	// Test valid but empty query.
 	query.Path = "/store2/key"
 	query.Prove = true
-	qres, err = multi.Query(&query)
-	require.NoError(t, err)
+	qres = multi.Query(query)
+	require.EqualValues(t, 0, qres.Code)
 	require.Nil(t, qres.Value)
 
 	// Test store2 data.
-	// Since we are using the request as a reference, the path will be modified.
 	query.Data = k2
-	query.Path = "/store2/key"
-	qres, err = multi.Query(&query)
-	require.NoError(t, err)
+	qres = multi.Query(query)
+	require.EqualValues(t, 0, qres.Code)
 	require.Equal(t, v2, qres.Value)
 }
 
@@ -534,18 +511,14 @@ func TestMultiStore_Pruning(t *testing.T) {
 				ms.Commit()
 			}
 
-			for _, v := range tc.deleted {
-				// Ensure async pruning is done
-				checkErr := func() bool {
-					_, err := ms.CacheMultiStoreWithVersion(v)
-					return err != nil
-				}
-				require.Eventually(t, checkErr, 1*time.Second, 10*time.Millisecond, "expected error when loading height: %d", v)
-			}
-
 			for _, v := range tc.saved {
 				_, err := ms.CacheMultiStoreWithVersion(v)
 				require.NoError(t, err, "expected no error when loading height: %d", v)
+			}
+
+			for _, v := range tc.deleted {
+				_, err := ms.CacheMultiStoreWithVersion(v)
+				require.Error(t, err, "expected error when loading height: %d", v)
 			}
 		})
 	}
@@ -557,6 +530,11 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 		keepRecent  uint64 = 2
 		interval    uint64 = 10
 	)
+
+	expectedHeights := []int64{}
+	for i := int64(1); i < numVersions-int64(keepRecent); i++ {
+		expectedHeights = append(expectedHeights, i)
+	}
 
 	db := dbm.NewMemDB()
 
@@ -570,12 +548,26 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 
 	require.Equal(t, numVersions, lastCommitInfo.Version)
 
+	for v := int64(1); v < numVersions-int64(keepRecent); v++ {
+		err := ms.LoadVersion(v)
+		require.Error(t, err, "expected error when loading pruned height: %d", v)
+	}
+
+	for v := int64(numVersions - int64(keepRecent)); v < numVersions; v++ {
+		err := ms.LoadVersion(v)
+		require.NoError(t, err, "expected no error when loading height: %d", v)
+	}
+
 	// Get latest
 	err := ms.LoadVersion(numVersions - 1)
 	require.NoError(t, err)
 
-	// Ensure already pruned snapshot heights were loaded
-	require.NoError(t, ms.pruningManager.LoadSnapshotHeights(db))
+	// Ensure already pruned heights were loaded
+	heights, err := ms.pruningManager.GetFlushAndResetPruningHeights()
+	require.NoError(t, err)
+	require.Equal(t, expectedHeights, heights)
+
+	require.NoError(t, ms.pruningManager.LoadPruningHeights(db))
 
 	// Test pruning the same heights again
 	lastCommitInfo = ms.Commit()
@@ -584,23 +576,12 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 	// Ensure that can commit one more height with no panic
 	lastCommitInfo = ms.Commit()
 	require.Equal(t, numVersions+1, lastCommitInfo.Version)
-
-	isPruned := func() bool {
-		ls := ms.Commit() // to flush the batch with the pruned heights
-		for v := int64(1); v < numVersions-int64(keepRecent); v++ {
-			if err := ms.LoadVersion(v); err == nil {
-				require.NoError(t, ms.LoadVersion(ls.Version)) // load latest
-				return false
-			}
-		}
-		return true
-	}
-	require.Eventually(t, isPruned, 1000*time.Second, 10*time.Millisecond, "expected error when loading pruned heights")
 }
 
 func TestMultiStore_PruningRestart(t *testing.T) {
 	db := dbm.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 11))
+	ms.SetSnapshotInterval(3)
 	require.NoError(t, ms.LoadLatestVersion())
 
 	// Commit enough to build up heights to prune, where on the next block we should
@@ -609,60 +590,38 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 		ms.Commit()
 	}
 
-	actualHeightToPrune := ms.pruningManager.GetPruningHeight(ms.LatestVersion())
-	require.Equal(t, int64(0), actualHeightToPrune)
+	pruneHeights := []int64{1, 2, 4, 5, 7}
+
+	// ensure we've persisted the current batch of heights to prune to the store's DB
+	err := ms.pruningManager.LoadPruningHeights(ms.db)
+	require.NoError(t, err)
+
+	actualHeightsToPrune, err := ms.pruningManager.GetFlushAndResetPruningHeights()
+	require.NoError(t, err)
+	require.Equal(t, len(pruneHeights), len(actualHeightsToPrune))
+	require.Equal(t, pruneHeights, actualHeightsToPrune)
 
 	// "restart"
 	ms = newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 11))
-	err := ms.LoadLatestVersion()
+	ms.SetSnapshotInterval(3)
+	err = ms.LoadLatestVersion()
 	require.NoError(t, err)
 
-	actualHeightToPrune = ms.pruningManager.GetPruningHeight(ms.LatestVersion())
-	require.Equal(t, int64(0), actualHeightToPrune)
+	actualHeightsToPrune, err = ms.pruningManager.GetFlushAndResetPruningHeights()
+	require.NoError(t, err)
+	require.Equal(t, pruneHeights, actualHeightsToPrune)
 
 	// commit one more block and ensure the heights have been pruned
 	ms.Commit()
 
-	actualHeightToPrune = ms.pruningManager.GetPruningHeight(ms.LatestVersion())
-	require.Equal(t, int64(8), actualHeightToPrune)
+	actualHeightsToPrune, err = ms.pruningManager.GetFlushAndResetPruningHeights()
+	require.NoError(t, err)
+	require.Empty(t, actualHeightsToPrune)
 
-	// Ensure async pruning is done
-	isPruned := func() bool {
-		ms.Commit() // to flush the batch with the pruned heights
-		for v := int64(1); v <= actualHeightToPrune; v++ {
-			if _, err := ms.CacheMultiStoreWithVersion(v); err == nil {
-				return false
-			}
-		}
-		return true
+	for _, v := range pruneHeights {
+		_, err := ms.CacheMultiStoreWithVersion(v)
+		require.NoError(t, err, "expected error when loading height: %d", v)
 	}
-
-	require.Eventually(t, isPruned, 1*time.Second, 10*time.Millisecond, "expected error when loading pruned heights")
-}
-
-var _ types.PausablePruner = &pauseableCommitKVStoreStub{}
-
-type pauseableCommitKVStoreStub struct {
-	types.CommitKVStore
-	pauseCalled []bool
-}
-
-func (p *pauseableCommitKVStoreStub) PausePruning(b bool) {
-	p.pauseCalled = append(p.pauseCalled, b)
-}
-
-func TestPausePruningOnCommit(t *testing.T) {
-	store := NewStore(dbm.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
-	store.SetPruning(pruningtypes.NewCustomPruningOptions(2, 11))
-	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
-	require.NoError(t, store.LoadLatestVersion())
-
-	myStub := &pauseableCommitKVStoreStub{CommitKVStore: store.stores[testStoreKey1]}
-	store.stores[testStoreKey1] = myStub
-	// when
-	store.Commit()
-	// then
-	require.Equal(t, []bool{true, false}, myStub.pauseCalled)
 }
 
 // TestUnevenStoresHeightCheck tests if loading root store correctly errors when
@@ -697,8 +656,7 @@ func TestSetInitialVersion(t *testing.T) {
 
 	require.NoError(t, multi.LoadLatestVersion())
 
-	err := multi.SetInitialVersion(5)
-	require.NoError(t, err)
+	multi.SetInitialVersion(5)
 	require.Equal(t, int64(5), multi.initialVersion)
 
 	multi.Commit()
@@ -717,13 +675,104 @@ func TestAddListenersAndListeningEnabled(t *testing.T) {
 	enabled := multi.ListeningEnabled(testKey)
 	require.False(t, enabled)
 
+	multi.AddListeners(testKey, []types.WriteListener{})
+	enabled = multi.ListeningEnabled(testKey)
+	require.False(t, enabled)
+
+	mockListener := types.NewStoreKVPairWriteListener(nil, nil)
+	multi.AddListeners(testKey, []types.WriteListener{mockListener})
 	wrongTestKey := types.NewKVStoreKey("wrong_listening_test_key")
-	multi.AddListeners([]types.StoreKey{testKey})
 	enabled = multi.ListeningEnabled(wrongTestKey)
 	require.False(t, enabled)
 
 	enabled = multi.ListeningEnabled(testKey)
 	require.True(t, enabled)
+}
+
+var (
+	interfaceRegistry = codecTypes.NewInterfaceRegistry()
+	testMarshaller    = codec.NewProtoCodec(interfaceRegistry)
+	testKey1          = []byte{1, 2, 3, 4, 5}
+	testValue1        = []byte{5, 4, 3, 2, 1}
+	testKey2          = []byte{2, 3, 4, 5, 6}
+	testValue2        = []byte{6, 5, 4, 3, 2}
+)
+
+func TestGetListenWrappedKVStore(t *testing.T) {
+	buf := new(bytes.Buffer)
+	var db dbm.DB = dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	ms.LoadLatestVersion()
+	mockListeners := []types.WriteListener{types.NewStoreKVPairWriteListener(buf, testMarshaller)}
+	ms.AddListeners(testStoreKey1, mockListeners)
+	ms.AddListeners(testStoreKey2, mockListeners)
+
+	listenWrappedStore1 := ms.GetKVStore(testStoreKey1)
+	require.IsType(t, &listenkv.Store{}, listenWrappedStore1)
+
+	listenWrappedStore1.Set(testKey1, testValue1)
+	expectedOutputKVPairSet1, err := testMarshaller.MarshalLengthPrefixed(&types.StoreKVPair{
+		Key:      testKey1,
+		Value:    testValue1,
+		StoreKey: testStoreKey1.Name(),
+		Delete:   false,
+	})
+	require.Nil(t, err)
+	kvPairSet1Bytes := buf.Bytes()
+	buf.Reset()
+	require.Equal(t, expectedOutputKVPairSet1, kvPairSet1Bytes)
+
+	listenWrappedStore1.Delete(testKey1)
+	expectedOutputKVPairDelete1, err := testMarshaller.MarshalLengthPrefixed(&types.StoreKVPair{
+		Key:      testKey1,
+		Value:    nil,
+		StoreKey: testStoreKey1.Name(),
+		Delete:   true,
+	})
+	require.Nil(t, err)
+	kvPairDelete1Bytes := buf.Bytes()
+	buf.Reset()
+	require.Equal(t, expectedOutputKVPairDelete1, kvPairDelete1Bytes)
+
+	listenWrappedStore2 := ms.GetKVStore(testStoreKey2)
+	require.IsType(t, &listenkv.Store{}, listenWrappedStore2)
+
+	listenWrappedStore2.Set(testKey2, testValue2)
+	expectedOutputKVPairSet2, err := testMarshaller.MarshalLengthPrefixed(&types.StoreKVPair{
+		Key:      testKey2,
+		Value:    testValue2,
+		StoreKey: testStoreKey2.Name(),
+		Delete:   false,
+	})
+	require.NoError(t, err)
+	kvPairSet2Bytes := buf.Bytes()
+	buf.Reset()
+	require.Equal(t, expectedOutputKVPairSet2, kvPairSet2Bytes)
+
+	listenWrappedStore2.Delete(testKey2)
+	expectedOutputKVPairDelete2, err := testMarshaller.MarshalLengthPrefixed(&types.StoreKVPair{
+		Key:      testKey2,
+		Value:    nil,
+		StoreKey: testStoreKey2.Name(),
+		Delete:   true,
+	})
+	require.NoError(t, err)
+	kvPairDelete2Bytes := buf.Bytes()
+	buf.Reset()
+	require.Equal(t, expectedOutputKVPairDelete2, kvPairDelete2Bytes)
+
+	unwrappedStore := ms.GetKVStore(testStoreKey3)
+	require.IsType(t, &iavl.Store{}, unwrappedStore)
+
+	unwrappedStore.Set(testKey2, testValue2)
+	kvPairSet3Bytes := buf.Bytes()
+	buf.Reset()
+	require.Equal(t, []byte{}, kvPairSet3Bytes)
+
+	unwrappedStore.Delete(testKey2)
+	kvPairDelete3Bytes := buf.Bytes()
+	buf.Reset()
+	require.Equal(t, []byte{}, kvPairDelete3Bytes)
 }
 
 func TestCacheWraps(t *testing.T) {
@@ -793,9 +842,7 @@ func TestCommitOrdered(t *testing.T) {
 	err := multi.LoadLatestVersion()
 	require.Nil(t, err)
 
-	emptyHash := sha256.Sum256([]byte{})
-	appHash := emptyHash[:]
-	commitID := types.CommitID{Hash: appHash}
+	commitID := types.CommitID{}
 	checkStore(t, multi, commitID, commitID)
 
 	k, v := []byte("wind"), []byte("blows")
@@ -833,7 +880,7 @@ var (
 )
 
 func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) *Store {
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 	store.SetPruning(pruningOpts)
 
 	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
@@ -844,7 +891,7 @@ func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions)
 }
 
 func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) (*Store, *types.StoreUpgrades) {
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 	store.SetPruning(pruningOpts)
 
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
@@ -872,27 +919,26 @@ func unmountStore(rootStore *Store, storeKeyName string) {
 }
 
 func checkStore(t *testing.T, store *Store, expect, got types.CommitID) {
-	t.Helper()
 	require.Equal(t, expect, got)
 	require.Equal(t, expect, store.LastCommitID())
 }
 
-func checkContains(tb testing.TB, info []types.StoreInfo, wanted []string) {
-	tb.Helper()
+func checkContains(t testing.TB, info []types.StoreInfo, wanted []string) {
+	t.Helper()
 
 	for _, want := range wanted {
-		checkHas(tb, info, want)
+		checkHas(t, info, want)
 	}
 }
 
-func checkHas(tb testing.TB, info []types.StoreInfo, want string) {
-	tb.Helper()
+func checkHas(t testing.TB, info []types.StoreInfo, want string) {
+	t.Helper()
 	for _, i := range info {
 		if i.Name == want {
 			return
 		}
 	}
-	tb.Fatalf("storeInfo doesn't contain %s", want)
+	t.Fatalf("storeInfo doesn't contain %s", want)
 }
 
 func getExpectedCommitID(store *Store, ver int64) types.CommitID {
@@ -918,7 +964,7 @@ type MockListener struct {
 	stateCache []types.StoreKVPair
 }
 
-func (tl *MockListener) OnWrite(storeKey types.StoreKey, key, value []byte, delete bool) error {
+func (tl *MockListener) OnWrite(storeKey types.StoreKey, key []byte, value []byte, delete bool) error {
 	tl.stateCache = append(tl.stateCache, types.StoreKVPair{
 		StoreKey: storeKey.Name(),
 		Key:      key,
@@ -931,30 +977,36 @@ func (tl *MockListener) OnWrite(storeKey types.StoreKey, key, value []byte, dele
 func TestStateListeners(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
-	require.Empty(t, ms.listeners)
 
-	ms.AddListeners([]types.StoreKey{testStoreKey1})
-	require.Equal(t, 1, len(ms.listeners))
+	listener := &MockListener{}
+	ms.AddListeners(testStoreKey1, []types.WriteListener{listener})
 
 	require.NoError(t, ms.LoadLatestVersion())
 	cacheMulti := ms.CacheMultiStore()
 
-	store := cacheMulti.GetKVStore(testStoreKey1)
-	store.Set([]byte{1}, []byte{1})
-	require.Empty(t, ms.PopStateCache())
+	store1 := cacheMulti.GetKVStore(testStoreKey1)
+	store1.Set([]byte{1}, []byte{1})
+	require.Empty(t, listener.stateCache)
 
 	// writes are observed when cache store commit.
 	cacheMulti.Write()
-	require.Equal(t, 1, len(ms.PopStateCache()))
+	require.Equal(t, 1, len(listener.stateCache))
 
-	// test no listening on unobserved store
-	store = cacheMulti.GetKVStore(testStoreKey2)
-	store.Set([]byte{1}, []byte{1})
-	require.Empty(t, ms.PopStateCache())
+	// test nested cache store
+	listener.stateCache = []types.StoreKVPair{}
+	nested := cacheMulti.CacheMultiStore()
 
-	// writes are not observed when cache store commit
+	store1 = nested.GetKVStore(testStoreKey1)
+	store1.Set([]byte{1}, []byte{1})
+	require.Empty(t, listener.stateCache)
+
+	// writes are not observed when nested cache store commit
+	nested.Write()
+	require.Empty(t, listener.stateCache)
+
+	// writes are observed when inner cache store commit
 	cacheMulti.Write()
-	require.Empty(t, ms.PopStateCache())
+	require.Equal(t, 1, len(listener.stateCache))
 }
 
 type commitKVStoreStub struct {
@@ -964,19 +1016,17 @@ type commitKVStoreStub struct {
 
 func (stub *commitKVStoreStub) Commit() types.CommitID {
 	commitID := stub.CommitKVStore.Commit()
-	stub.Committed++
+	stub.Committed += 1
 	return commitID
 }
 
-func prepareStoreMap() (map[types.StoreKey]types.CommitKVStore, error) {
+func prepareStoreMap() map[types.StoreKey]types.CommitKVStore {
 	var db dbm.DB = dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store := NewStore(db, log.NewNopLogger())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
-	if err := store.LoadLatestVersion(); err != nil {
-		return nil, err
-	}
+	store.LoadLatestVersion()
 	return map[types.StoreKey]types.CommitKVStore{
 		testStoreKey1: &commitKVStoreStub{
 			CommitKVStore: store.GetStoreByName("iavl1").(types.CommitKVStore),
@@ -987,7 +1037,7 @@ func prepareStoreMap() (map[types.StoreKey]types.CommitKVStore, error) {
 		testStoreKey3: &commitKVStoreStub{
 			CommitKVStore: store.GetStoreByName("trans1").(types.CommitKVStore),
 		},
-	}, nil
+	}
 }
 
 func TestCommitStores(t *testing.T) {
@@ -1014,8 +1064,7 @@ func TestCommitStores(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			storeMap, err := prepareStoreMap()
-			require.NoError(t, err)
+			storeMap := prepareStoreMap()
 			store := storeMap[testStoreKey1].(*commitKVStoreStub)
 			for i := tc.committed; i > 0; i-- {
 				store.Commit()

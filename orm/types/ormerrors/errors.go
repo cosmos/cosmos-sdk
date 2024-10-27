@@ -1,9 +1,8 @@
 package ormerrors
 
 import (
-	"google.golang.org/grpc/codes"
-
 	"cosmossdk.io/errors"
+	"google.golang.org/grpc/codes"
 )
 
 var codespace = "orm"
@@ -44,5 +43,4 @@ var (
 	ReadOnly                      = errors.New(codespace, 30, "database is read-only")
 	AlreadyExists                 = errors.RegisterWithGRPCCode(codespace, 31, codes.AlreadyExists, "already exists")
 	ConstraintViolation           = errors.RegisterWithGRPCCode(codespace, 32, codes.FailedPrecondition, "failed precondition")
-	NoTableDescriptor             = errors.New(codespace, 33, "no table descriptor found")
 )

@@ -17,35 +17,9 @@ func TestDecimalInternalTestSuite(t *testing.T) {
 }
 
 func (s *decimalInternalTestSuite) TestPrecisionMultiplier() {
-	tests := []struct {
-		prec int64
-		exp  *big.Int
-	}{
-		{
-			5,
-			big.NewInt(10000000000000),
-		},
-		{
-			8,
-			big.NewInt(10000000000),
-		},
-		{
-			11,
-			big.NewInt(10000000),
-		},
-		{
-			15,
-			big.NewInt(1000),
-		},
-		{
-			18,
-			big.NewInt(1),
-		},
-	}
-	for _, tt := range tests {
-		res := precisionMultiplier(tt.prec)
-		s.Require().Equal(0, res.Cmp(tt.exp), "equality was incorrect, res %v, exp %v", res, tt.exp)
-	}
+	res := precisionMultiplier(5)
+	exp := big.NewInt(10000000000000)
+	s.Require().Equal(0, res.Cmp(exp), "equality was incorrect, res %v, exp %v", res, exp)
 }
 
 func (s *decimalInternalTestSuite) TestZeroDeserializationJSON() {
@@ -98,7 +72,7 @@ func (s *decimalInternalTestSuite) TestDecMarshalJSON() {
 				return
 			}
 			if !tt.wantErr {
-				s.Require().Equal(tt.want, string(got), "incorrect marshaled value")
+				s.Require().Equal(tt.want, string(got), "incorrect marshalled value")
 				unmarshalledDec := LegacyNewDec(0)
 				err := unmarshalledDec.UnmarshalJSON(got)
 				s.Require().NoError(err)

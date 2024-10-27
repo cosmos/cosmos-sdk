@@ -1,57 +1,54 @@
 package keeper
 
 import (
-	"bytes"
-	"context"
 	"fmt"
+	"strconv"
 	"time"
 
-	gogoproto "github.com/cosmos/gogoproto/proto"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/core/appmodule"
-	corecontext "cosmossdk.io/core/context"
-	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/authz"
-
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
-// TODO: Revisit this once we have proper gas fee framework.
+// TODO: Revisit this once we have propoer gas fee framework.
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054,
 // https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(20)
 
 type Keeper struct {
-	appmodule.Environment
-
-	cdc        codec.Codec
+	storeKey   storetypes.StoreKey
+	cdc        codec.BinaryCodec
+	router     *baseapp.MsgServiceRouter
 	authKeeper authz.AccountKeeper
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(env appmodule.Environment, cdc codec.Codec, ak authz.AccountKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, router *baseapp.MsgServiceRouter, ak authz.AccountKeeper) Keeper {
 	return Keeper{
-		Environment: env,
-		cdc:         cdc,
-		authKeeper:  ak,
+		storeKey:   storeKey,
+		cdc:        cdc,
+		router:     router,
+		authKeeper: ak,
 	}
 }
 
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", authz.ModuleName))
+}
+
 // getGrant returns grant stored at skey.
-func (k Keeper) getGrant(ctx context.Context, skey []byte) (grant authz.Grant, found bool) {
-	store := k.KVStoreService.OpenKVStore(ctx)
-
-	bz, err := store.Get(skey)
-	if err != nil {
-		panic(err)
-	}
-
+func (k Keeper) getGrant(ctx sdk.Context, skey []byte) (grant authz.Grant, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(skey)
 	if bz == nil {
 		return grant, false
 	}
@@ -59,14 +56,14 @@ func (k Keeper) getGrant(ctx context.Context, skey []byte) (grant authz.Grant, f
 	return grant, true
 }
 
-func (k Keeper) updateGrant(ctx context.Context, grantee, granter sdk.AccAddress, updated authz.Authorization) error {
+func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated authz.Authorization) error {
 	skey := grantStoreKey(grantee, granter, updated.MsgTypeURL())
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
 		return authz.ErrNoAuthorizationFound
 	}
 
-	msg, ok := updated.(gogoproto.Message)
+	msg, ok := updated.(proto.Message)
 	if !ok {
 		return sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", updated)
 	}
@@ -77,22 +74,20 @@ func (k Keeper) updateGrant(ctx context.Context, grantee, granter sdk.AccAddress
 	}
 
 	grant.Authorization = any
-	store := k.KVStoreService.OpenKVStore(ctx)
-	return store.Set(skey, k.cdc.MustMarshal(&grant))
+	store := ctx.KVStore(k.storeKey)
+	store.Set(skey, k.cdc.MustMarshal(&grant))
+
+	return nil
 }
 
 // DispatchActions attempts to execute the provided messages via authorization
 // grants from the message signer to the grantee.
-func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
+func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
 	results := make([][]byte, len(msgs))
-	now := k.Environment.HeaderService.HeaderInfo(ctx).Time
+	now := ctx.BlockTime()
 
 	for i, msg := range msgs {
-		signers, _, err := k.cdc.GetMsgSigners(msg)
-		if err != nil {
-			return nil, err
-		}
-
+		signers := msg.GetSigners()
 		if len(signers) != 1 {
 			return nil, authz.ErrAuthorizationNumOfSigners
 		}
@@ -101,13 +96,12 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 
 		// If granter != grantee then check authorization.Accept, otherwise we
 		// implicitly accept.
-		if !bytes.Equal(granter, grantee) {
+		if !granter.Equals(grantee) {
 			skey := grantStoreKey(grantee, granter, sdk.MsgTypeURL(msg))
 
 			grant, found := k.getGrant(ctx, skey)
 			if !found {
-				return nil, errorsmod.Wrapf(authz.ErrNoAuthorizationFound,
-					"failed to get grant with given granter: %s, grantee: %s & msgType: %s ", sdk.AccAddress(granter), grantee, sdk.MsgTypeURL(msg))
+				return nil, sdkerrors.Wrapf(authz.ErrNoAuthorizationFound, "failed to update grant with key %s", string(skey))
 			}
 
 			if grant.Expiration != nil && grant.Expiration.Before(now) {
@@ -119,10 +113,7 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 				return nil, err
 			}
 
-			// pass the environment in the context
-			// users on server/v2 are expected to unwrap the environment from the context
-			// users on baseapp can still unwrap the sdk context
-			resp, err := authorization.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, k.Environment), msg)
+			resp, err := authorization.Accept(ctx, msg)
 			if err != nil {
 				return nil, err
 			}
@@ -130,11 +121,7 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 			if resp.Delete {
 				err = k.DeleteGrant(ctx, grantee, granter, sdk.MsgTypeURL(msg))
 			} else if resp.Updated != nil {
-				updated, ok := resp.Updated.(authz.Authorization)
-				if !ok {
-					return nil, fmt.Errorf("expected authz.Authorization but got %T", resp.Updated)
-				}
-				err = k.updateGrant(ctx, grantee, granter, updated)
+				err = k.update(ctx, grantee, granter, resp.Updated)
 			}
 			if err != nil {
 				return nil, err
@@ -145,21 +132,29 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 			}
 		}
 
-		// no need to use the branch service here, as if the transaction fails, the transaction will be reverted
-		resp, err := k.MsgRouterService.InvokeUntyped(ctx, msg)
-		if err != nil {
-			return nil, fmt.Errorf("failed to execute message %d; message %v: %w", i, msg, err)
+		handler := k.router.Handler(msg)
+		if handler == nil {
+			return nil, sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", sdk.MsgTypeURL(msg))
 		}
 
-		msgRespAny, err := gogoprotoany.NewAnyWithCacheWithValue(resp)
+		msgResp, err := handler(ctx, msg)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create any for response %d; message %s: %w", i, gogoproto.MessageName(msg), err)
+			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %v", msg)
 		}
 
-		results[i], err = gogoproto.Marshal(msgRespAny)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal response %d; message %s: %w", i, gogoproto.MessageName(msg), err)
+		results[i] = msgResp.Data
+
+		// emit the events from the dispatched actions
+		events := msgResp.Events
+		sdkEvents := make([]sdk.Event, 0, len(events))
+		for _, event := range events {
+			e := event
+			e.Attributes = append(e.Attributes, abci.EventAttribute{Key: "authz_msg_index", Value: strconv.Itoa(i)})
+
+			sdkEvents = append(sdkEvents, sdk.Event(e))
 		}
+
+		ctx.EventManager().EmitEvents(sdkEvents)
 	}
 
 	return results, nil
@@ -168,12 +163,12 @@ func (k Keeper) DispatchActions(ctx context.Context, grantee sdk.AccAddress, msg
 // SaveGrant method grants the provided authorization to the grantee on the granter's account
 // with the provided expiration time and insert authorization key into the grants queue. If there is an existing authorization grant for the
 // same `sdk.Msg` type, this grant overwrites that.
-func (k Keeper) SaveGrant(ctx context.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration *time.Time) error {
+func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration *time.Time) error {
+	store := ctx.KVStore(k.storeKey)
 	msgType := authorization.MsgTypeURL()
-	store := k.KVStoreService.OpenKVStore(ctx)
 	skey := grantStoreKey(grantee, granter, msgType)
 
-	grant, err := authz.NewGrant(k.HeaderService.HeaderInfo(ctx).Time, authorization, expiration)
+	grant, err := authz.NewGrant(ctx.BlockTime(), authorization, expiration)
 	if err != nil {
 		return err
 	}
@@ -196,51 +191,24 @@ func (k Keeper) SaveGrant(ctx context.Context, grantee, granter sdk.AccAddress, 
 		}
 	}
 
-	bz, err := k.cdc.Marshal(&grant)
-	if err != nil {
-		return err
-	}
+	bz := k.cdc.MustMarshal(&grant)
+	store.Set(skey, bz)
 
-	err = store.Set(skey, bz)
-	if err != nil {
-		return err
-	}
-
-	granterAddr, err := k.authKeeper.AddressCodec().BytesToString(granter)
-	if err != nil {
-		return err
-	}
-	granteeAddr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
-	if err != nil {
-		return err
-	}
-
-	return k.EventService.EventManager(ctx).Emit(&authz.EventGrant{
+	return ctx.EventManager().EmitTypedEvent(&authz.EventGrant{
 		MsgTypeUrl: authorization.MsgTypeURL(),
-		Granter:    granterAddr,
-		Grantee:    granteeAddr,
+		Granter:    granter.String(),
+		Grantee:    grantee.String(),
 	})
 }
 
 // DeleteGrant revokes any authorization for the provided message type granted to the grantee
 // by the granter.
-func (k Keeper) DeleteGrant(ctx context.Context, grantee, granter sdk.AccAddress, msgType string) error {
-	store := k.KVStoreService.OpenKVStore(ctx)
+func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error {
+	store := ctx.KVStore(k.storeKey)
 	skey := grantStoreKey(grantee, granter, msgType)
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
-		granterAddr, err := k.authKeeper.AddressCodec().BytesToString(granter)
-		if err != nil {
-			return errorsmod.Wrapf(authz.ErrNoAuthorizationFound,
-				"could not convert granter address to string")
-		}
-		granteeAddr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
-		if err != nil {
-			return errorsmod.Wrapf(authz.ErrNoAuthorizationFound,
-				"could not convert grantee address to string")
-		}
-		return errorsmod.Wrapf(authz.ErrNoAuthorizationFound,
-			"failed to delete grant with given granter: %s, grantee: %s & msgType: %s ", granterAddr, granteeAddr, msgType)
+		return sdkerrors.Wrapf(authz.ErrNoAuthorizationFound, "failed to delete grant with key %s", string(skey))
 	}
 
 	if grant.Expiration != nil {
@@ -250,61 +218,25 @@ func (k Keeper) DeleteGrant(ctx context.Context, grantee, granter sdk.AccAddress
 		}
 	}
 
-	err := store.Delete(skey)
-	if err != nil {
-		return err
-	}
+	store.Delete(skey)
 
-	granterAddr, err := k.authKeeper.AddressCodec().BytesToString(granter)
-	if err != nil {
-		return err
-	}
-	granteeAddr, err := k.authKeeper.AddressCodec().BytesToString(grantee)
-	if err != nil {
-		return err
-	}
-	return k.EventService.EventManager(ctx).Emit(&authz.EventRevoke{
+	return ctx.EventManager().EmitTypedEvent(&authz.EventRevoke{
 		MsgTypeUrl: msgType,
-		Granter:    granterAddr,
-		Grantee:    granteeAddr,
-	})
-}
-
-// DeleteAllGrants revokes all authorizations granted to the grantee by the granter.
-func (k Keeper) DeleteAllGrants(ctx context.Context, granter sdk.AccAddress) error {
-	var keysToDelete [][]byte
-
-	err := k.IterateGranterGrants(ctx, granter, func(grantee sdk.AccAddress, msgType string) (stop bool, err error) {
-		keysToDelete = append(keysToDelete, grantStoreKey(grantee, granter, msgType))
-		return false, nil
-	})
-	if err != nil {
-		return err
-	}
-	if len(keysToDelete) == 0 {
-		return errorsmod.Wrapf(authz.ErrNoAuthorizationFound, "no grants found for granter %s", granter)
-	}
-	for _, key := range keysToDelete {
-		_, granteeAddr, msgType := parseGrantStoreKey(key)
-		if err := k.DeleteGrant(ctx, granteeAddr, granter, msgType); err != nil {
-			return err
-		}
-	}
-	return k.EventService.EventManager(ctx).Emit(&authz.EventRevokeAll{
-		Granter: granter.String(),
+		Granter:    granter.String(),
+		Grantee:    grantee.String(),
 	})
 }
 
 // GetAuthorizations Returns list of `Authorizations` granted to the grantee by the granter.
-func (k Keeper) GetAuthorizations(ctx context.Context, grantee, granter sdk.AccAddress) ([]authz.Authorization, error) {
-	store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
+func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) ([]authz.Authorization, error) {
+	store := ctx.KVStore(k.storeKey)
 	key := grantStoreKey(grantee, granter, "")
-	iter := storetypes.KVStorePrefixIterator(store, key)
+	iter := sdk.KVStorePrefixIterator(store, key)
 	defer iter.Close()
 
+	var authorization authz.Grant
 	var authorizations []authz.Authorization
 	for ; iter.Valid(); iter.Next() {
-		var authorization authz.Grant
 		if err := k.cdc.Unmarshal(iter.Value(), &authorization); err != nil {
 			return nil, err
 		}
@@ -325,9 +257,9 @@ func (k Keeper) GetAuthorizations(ctx context.Context, grantee, granter sdk.AccA
 //   - No grant is found.
 //   - A grant is found, but it is expired.
 //   - There was an error getting the authorization from the grant.
-func (k Keeper) GetAuthorization(ctx context.Context, grantee, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time) {
+func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time) {
 	grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, msgType))
-	if !found || (grant.Expiration != nil && grant.Expiration.Before(k.HeaderService.HeaderInfo(ctx).Time)) {
+	if !found || (grant.Expiration != nil && grant.Expiration.Before(ctx.BlockHeader().Time)) {
 		return nil, nil
 	}
 
@@ -343,57 +275,25 @@ func (k Keeper) GetAuthorization(ctx context.Context, grantee, granter sdk.AccAd
 // This function should be used with caution because it can involve significant IO operations.
 // It should not be used in query or msg services without charging additional gas.
 // The iteration stops when the handler function returns true or the iterator exhaust.
-func (k Keeper) IterateGrants(ctx context.Context,
-	handler func(granterAddr, granteeAddr sdk.AccAddress, grant authz.Grant) (bool, error),
-) error {
-	store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
-	iter := storetypes.KVStorePrefixIterator(store, GrantKey)
+func (k Keeper) IterateGrants(ctx sdk.Context,
+	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant authz.Grant) bool,
+) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, GrantKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var grant authz.Grant
 		granterAddr, granteeAddr, _ := parseGrantStoreKey(iter.Key())
 		k.cdc.MustUnmarshal(iter.Value(), &grant)
-		ok, err := handler(granterAddr, granteeAddr, grant)
-		if err != nil {
-			return err
-		}
-		if ok {
+		if handler(granterAddr, granteeAddr, grant) {
 			break
 		}
 	}
-	return nil
 }
 
-func (k Keeper) IterateGranterGrants(ctx context.Context, granter sdk.AccAddress,
-	handler func(granteeAddr sdk.AccAddress, msgType string) (stop bool, err error),
-) error {
-	// no-op if handler is nil
-	if handler == nil {
-		return nil
-	}
-	store := runtime.KVStoreAdapter(k.KVStoreService.OpenKVStore(ctx))
-	iter := storetypes.KVStorePrefixIterator(store, granterStoreKey(granter))
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		_, granteeAddr, msgType := parseGrantStoreKey(iter.Key())
-		ok, err := handler(granteeAddr, msgType)
-		if err != nil {
-			return err
-		}
-		if ok {
-			break
-		}
-	}
-	return nil
-}
-
-func (k Keeper) getGrantQueueItem(ctx context.Context, expiration time.Time, granter, grantee sdk.AccAddress) (*authz.GrantQueueItem, error) {
-	store := k.KVStoreService.OpenKVStore(ctx)
-	bz, err := store.Get(GrantQueueKey(expiration, granter, grantee))
-	if err != nil {
-		return nil, err
-	}
-
+func (k Keeper) getGrantQueueItem(ctx sdk.Context, expiration time.Time, granter, grantee sdk.AccAddress) (*authz.GrantQueueItem, error) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(GrantQueueKey(expiration, granter, grantee))
 	if bz == nil {
 		return &authz.GrantQueueItem{}, nil
 	}
@@ -405,39 +305,45 @@ func (k Keeper) getGrantQueueItem(ctx context.Context, expiration time.Time, gra
 	return &queueItems, nil
 }
 
-func (k Keeper) setGrantQueueItem(ctx context.Context, expiration time.Time,
-	granter, grantee sdk.AccAddress, queueItems *authz.GrantQueueItem,
+func (k Keeper) setGrantQueueItem(ctx sdk.Context, expiration time.Time,
+	granter sdk.AccAddress, grantee sdk.AccAddress, queueItems *authz.GrantQueueItem,
 ) error {
-	store := k.KVStoreService.OpenKVStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 	bz, err := k.cdc.Marshal(queueItems)
 	if err != nil {
 		return err
 	}
-	return store.Set(GrantQueueKey(expiration, granter, grantee), bz)
+	store.Set(GrantQueueKey(expiration, granter, grantee), bz)
+
+	return nil
 }
 
 // insertIntoGrantQueue inserts a grant key into the grant queue
-func (k Keeper) insertIntoGrantQueue(ctx context.Context, granter, grantee sdk.AccAddress, msgType string, expiration time.Time) error {
+func (k Keeper) insertIntoGrantQueue(ctx sdk.Context, granter, grantee sdk.AccAddress, msgType string, expiration time.Time) error {
 	queueItems, err := k.getGrantQueueItem(ctx, expiration, granter, grantee)
 	if err != nil {
 		return err
 	}
 
-	queueItems.MsgTypeUrls = append(queueItems.MsgTypeUrls, msgType)
-	return k.setGrantQueueItem(ctx, expiration, granter, grantee, queueItems)
+	if len(queueItems.MsgTypeUrls) == 0 {
+		k.setGrantQueueItem(ctx, expiration, granter, grantee, &authz.GrantQueueItem{
+			MsgTypeUrls: []string{msgType},
+		})
+	} else {
+		queueItems.MsgTypeUrls = append(queueItems.MsgTypeUrls, msgType)
+		k.setGrantQueueItem(ctx, expiration, granter, grantee, queueItems)
+	}
+
+	return nil
 }
 
 // removeFromGrantQueue removes a grant key from the grant queue
-func (k Keeper) removeFromGrantQueue(ctx context.Context, grantKey []byte, granter, grantee sdk.AccAddress, expiration time.Time) error {
-	store := k.KVStoreService.OpenKVStore(ctx)
+func (k Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, granter, grantee sdk.AccAddress, expiration time.Time) error {
+	store := ctx.KVStore(k.storeKey)
 	key := GrantQueueKey(expiration, granter, grantee)
-	bz, err := store.Get(key)
-	if err != nil {
-		return err
-	}
-
+	bz := store.Get(key)
 	if bz == nil {
-		return errorsmod.Wrap(authz.ErrNoGrantKeyFound, "can't remove grant from the expire queue, grant key not found")
+		return sdkerrors.Wrap(authz.ErrNoGrantKeyFound, "can't remove grant from the expire queue, grant key not found")
 	}
 
 	var queueItem authz.GrantQueueItem
@@ -449,9 +355,7 @@ func (k Keeper) removeFromGrantQueue(ctx context.Context, grantKey []byte, grant
 	queueItems := queueItem.MsgTypeUrls
 
 	for index, typeURL := range queueItems {
-		if err := k.GasService.GasMeter(ctx).Consume(gasCostPerIteration, "grant queue"); err != nil {
-			return err
-		}
+		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "grant queue")
 
 		if typeURL == msgType {
 			end := len(queueItem.MsgTypeUrls) - 1
@@ -471,16 +375,12 @@ func (k Keeper) removeFromGrantQueue(ctx context.Context, grantKey []byte, grant
 }
 
 // DequeueAndDeleteExpiredGrants deletes expired grants from the state and grant queue.
-func (k Keeper) DequeueAndDeleteExpiredGrants(ctx context.Context, limit int) error {
-	store := k.KVStoreService.OpenKVStore(ctx)
+func (k Keeper) DequeueAndDeleteExpiredGrants(ctx sdk.Context) error {
+	store := ctx.KVStore(k.storeKey)
 
-	iterator, err := store.Iterator(GrantQueuePrefix, storetypes.InclusiveEndBytes(GrantQueueTimePrefix(k.HeaderService.HeaderInfo(ctx).Time)))
-	if err != nil {
-		return err
-	}
+	iterator := store.Iterator(GrantQueuePrefix, sdk.InclusiveEndBytes(GrantQueueTimePrefix(ctx.BlockTime())))
 	defer iterator.Close()
 
-	count := 0
 	for ; iterator.Valid(); iterator.Next() {
 		var queueItem authz.GrantQueueItem
 		if err := k.cdc.Unmarshal(iterator.Value(), &queueItem); err != nil {
@@ -492,21 +392,10 @@ func (k Keeper) DequeueAndDeleteExpiredGrants(ctx context.Context, limit int) er
 			return err
 		}
 
-		if err = store.Delete(iterator.Key()); err != nil {
-			return err
-		}
+		store.Delete(iterator.Key())
 
 		for _, typeURL := range queueItem.MsgTypeUrls {
-			err = store.Delete(grantStoreKey(grantee, granter, typeURL))
-			if err != nil {
-				return err
-			}
-		}
-
-		// limit the amount of iterations to avoid taking too much time
-		count++
-		if count == limit {
-			return nil
+			store.Delete(grantStoreKey(grantee, granter, typeURL))
 		}
 	}
 

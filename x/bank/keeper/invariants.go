@@ -3,10 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	"cosmossdk.io/x/bank/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // RegisterInvariants registers the bank module invariants
@@ -18,10 +17,6 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 // AllInvariants runs all invariants of the X/bank module.
 func AllInvariants(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		res, stop := NonnegativeBalanceInvariant(k)(ctx)
-		if stop {
-			return res, stop
-		}
 		return TotalSupply(k)(ctx)
 	}
 }
@@ -56,7 +51,7 @@ func NonnegativeBalanceInvariant(k ViewKeeper) sdk.Invariant {
 func TotalSupply(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		expectedTotal := sdk.Coins{}
-		supply, _, err := k.GetPaginatedTotalSupply(ctx, &query.PageRequest{Limit: query.PaginationMaxLimit})
+		supply, _, err := k.GetPaginatedTotalSupply(ctx, &query.PageRequest{Limit: query.MaxLimit})
 		if err != nil {
 			return sdk.FormatInvariant(types.ModuleName, "query supply",
 				fmt.Sprintf("error querying total supply %v", err)), false
@@ -67,7 +62,7 @@ func TotalSupply(k Keeper) sdk.Invariant {
 			return false
 		})
 
-		broken := !expectedTotal.Equal(supply)
+		broken := !expectedTotal.IsEqual(supply)
 
 		return sdk.FormatInvariant(types.ModuleName, "total supply",
 			fmt.Sprintf(

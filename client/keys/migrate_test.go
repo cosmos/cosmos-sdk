@@ -11,15 +11,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/codec"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 type setter interface {
@@ -36,13 +34,9 @@ type MigrateTestSuite struct {
 	pub     cryptotypes.PubKey
 }
 
-func TestMigrateTestSuite(t *testing.T) {
-	suite.Run(t, new(MigrateTestSuite))
-}
-
 func (s *MigrateTestSuite) SetupSuite() {
 	s.dir = s.T().TempDir()
-	s.cdc = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
+	s.cdc = clienttestutil.MakeTestCodec(s.T())
 	s.appName = "cosmos"
 	s.priv = cryptotypes.PrivKey(secp256k1.GenPrivKey())
 	s.pub = s.priv.PubKey()
@@ -67,7 +61,7 @@ func (s *MigrateTestSuite) Test_runListAndShowCmd() {
 
 	// run test simd keys list - to see that the migrated key is there
 	cmd := ListKeysCmd()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kb, err := keyring.New(s.appName, keyring.BackendTest, s.dir, mockIn, s.cdc)
@@ -77,16 +71,11 @@ func (s *MigrateTestSuite) Test_runListAndShowCmd() {
 	s.Require().True(ok)
 	s.Require().NoError(setter.SetItem(item))
 
-	clientCtx := client.Context{}.
-		WithKeyring(kb).
-		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
-		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
-
+	clientCtx := client.Context{}.WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, s.dir),
+		fmt.Sprintf("--%s=%s", flags.FlagHome, s.dir),
 		fmt.Sprintf("--%s=false", flagListNames),
 	})
 
@@ -157,4 +146,8 @@ func (s *MigrateTestSuite) Test_runMigrateCmdLegacyMultiInfo() {
 	clientCtx := client.Context{}.WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 	s.Require().NoError(cmd.ExecuteContext(ctx))
+}
+
+func TestMigrateTestSuite(t *testing.T) {
+	suite.Run(t, new(MigrateTestSuite))
 }

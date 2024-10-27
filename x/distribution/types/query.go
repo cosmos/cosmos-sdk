@@ -32,6 +32,8 @@ func (res QueryDelegatorTotalRewardsResponse) String() string {
 }
 
 // NewDelegationDelegatorReward constructs a DelegationDelegatorReward.
-func NewDelegationDelegatorReward(valAddr string, reward sdk.DecCoins) DelegationDelegatorReward {
-	return DelegationDelegatorReward{ValidatorAddress: valAddr, Reward: reward}
+//
+//nolint:interfacer
+func NewDelegationDelegatorReward(valAddr sdk.ValAddress, reward sdk.DecCoins) DelegationDelegatorReward {
+	return DelegationDelegatorReward{ValidatorAddress: valAddr.String(), Reward: reward}
 }

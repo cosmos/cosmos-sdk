@@ -17,18 +17,18 @@ func NewEventStats() EventStats {
 }
 
 // Tally increases the count of a simulation event.
-func (es EventStats) Tally(moduleName, op, evResult string) {
-	_, ok := es[moduleName]
+func (es EventStats) Tally(route, op, evResult string) {
+	_, ok := es[route]
 	if !ok {
-		es[moduleName] = make(map[string]map[string]int)
+		es[route] = make(map[string]map[string]int)
 	}
 
-	_, ok = es[moduleName][op]
+	_, ok = es[route][op]
 	if !ok {
-		es[moduleName][op] = make(map[string]int)
+		es[route][op] = make(map[string]int)
 	}
 
-	es[moduleName][op][evResult]++
+	es[route][op][evResult]++
 }
 
 // Print the event stats in JSON format.

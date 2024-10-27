@@ -2,7 +2,7 @@ package ormfield
 
 import (
 	"encoding/binary"
-	"io"
+	io "io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -27,10 +27,7 @@ func (i Int32Codec) Decode(r Reader) (protoreflect.Value, error) {
 }
 
 func (i Int32Codec) Encode(value protoreflect.Value, w io.Writer) error {
-	var x int64
-	if value.IsValid() {
-		x = value.Int()
-	}
+	x := value.Int()
 	x += int32Offset
 	return binary.Write(w, binary.BigEndian, uint32(x))
 }

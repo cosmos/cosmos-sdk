@@ -22,10 +22,10 @@ func Test_sendParamEqual(t *testing.T) {
 }
 
 func Test_SendEnabledString(t *testing.T) {
-	paramStringTrue := "denom:\"foo\" enabled:true "
+	paramStringTrue := "denom: foo\nenabled: true\n"
 	paramTrue := NewSendEnabled("foo", true)
 	assert.Equal(t, paramStringTrue, paramTrue.String(), "true")
-	paramStringFalse := "denom:\"bar\" "
+	paramStringFalse := "denom: bar\nenabled: false\n"
 	paramFalse := NewSendEnabled("bar", false)
 	assert.Equal(t, paramStringFalse, paramFalse.String(), "false")
 }
@@ -39,22 +39,22 @@ func Test_ParamsString(t *testing.T) {
 		{
 			name:     "default true empty send enabled",
 			params:   Params{[]*SendEnabled{}, true},
-			expected: "default_send_enabled:true ",
+			expected: "default_send_enabled: true\nsend_enabled: []\n",
 		},
 		{
 			name:     "default false empty send enabled",
 			params:   Params{[]*SendEnabled{}, false},
-			expected: "",
+			expected: "default_send_enabled: false\nsend_enabled: []\n",
 		},
 		{
 			name:     "default true one true send enabled",
 			params:   Params{[]*SendEnabled{{"foocoin", true}}, true},
-			expected: "send_enabled:<denom:\"foocoin\" enabled:true > default_send_enabled:true ",
+			expected: "default_send_enabled: true\nsend_enabled:\n- denom: foocoin\n  enabled: true\n",
 		},
 		{
 			name:     "default true one false send enabled",
 			params:   Params{[]*SendEnabled{{"barcoin", false}}, true},
-			expected: "send_enabled:<denom:\"barcoin\" > default_send_enabled:true ",
+			expected: "default_send_enabled: true\nsend_enabled:\n- denom: barcoin\n",
 		},
 	}
 	for _, tc := range tests {

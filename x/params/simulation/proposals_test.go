@@ -4,13 +4,13 @@ import (
 	"math/rand"
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-
-	"cosmossdk.io/x/params/simulation"
-	"cosmossdk.io/x/params/types/proposal"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/params/simulation"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 func TestProposalContents(t *testing.T) {
@@ -18,7 +18,7 @@ func TestProposalContents(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
-	ctx := sdk.NewContext(nil, true, nil)
+	ctx := sdk.NewContext(nil, tmproto.Header{}, true, nil)
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	paramChangePool := []simtypes.LegacyParamChange{MockParamChange{1}, MockParamChange{2}, MockParamChange{3}}

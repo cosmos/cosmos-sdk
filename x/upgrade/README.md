@@ -8,7 +8,7 @@ sidebar_position: 1
 
 `x/upgrade` is an implementation of a Cosmos SDK module that facilitates smoothly
 upgrading a live Cosmos chain to a new (breaking) software version. It accomplishes this by
-providing a `PreBlocker` hook that prevents the blockchain state machine from
+providing a `BeginBlocker` hook that prevents the blockchain state machine from
 proceeding once a pre-defined upgrade block height has been reached.
 
 The module does not prescribe anything regarding how governance decides to do an
@@ -41,6 +41,12 @@ may contain various metadata about the upgrade, typically application specific
 upgrade info to be included on-chain such as a git commit that validators could
 automatically upgrade to.
 
+#### Sidecar Process
+
+If an operator running the application binary also runs a sidecar process to assist
+in the automatic download and upgrade of a binary, the `Info` allows this process to
+be seamless. This tool is [Cosmovisor](https://github.com/cosmos/cosmos-sdk/tree/main/tools/cosmovisor#readme).
+
 ```go
 type Plan struct {
   Name   string
@@ -48,12 +54,6 @@ type Plan struct {
   Info   string
 }
 ```
-
-#### Sidecar Process
-
-If an operator running the application binary also runs a sidecar process to assist
-in the automatic download and upgrade of a binary, the `Info` allows this process to
-be seamless. This tool is [Cosmovisor](https://github.com/cosmos/cosmos-sdk/tree/main/tools/cosmovisor#readme).
 
 ### Handler
 
@@ -91,7 +91,7 @@ If there's a planned upgrade and the upgrade height is reached, the old binary w
 
 This information is critical to ensure the `StoreUpgrades` happens smoothly at correct height and
 expected upgrade. It eliminiates the chances for the new binary to execute `StoreUpgrades` multiple
-times every time on restart. Also if there are multiple upgrades planned on same height, the `Name`
+times everytime on restart. Also if there are multiple upgrades planned on same height, the `Name`
 will ensure these `StoreUpgrades` takes place only in planned upgrade handler.
 
 ### Proposal
@@ -246,6 +246,10 @@ module_versions:
   version: "1"
 - name: bank
   version: "2"
+- name: capability
+  version: "1"
+- name: crisis
+  version: "1"
 - name: distribution
   version: "2"
 - name: evidence
@@ -310,23 +314,6 @@ info: ""
 name: test-upgrade
 time: "0001-01-01T00:00:00Z"
 upgraded_client_state: null
-```
-
-#### Transactions
-
-The upgrade module supports the following transactions:
-
-* `software-proposal` - submits an upgrade proposal:
-
-```bash
-simd tx upgrade software-upgrade v2 --title="Test Proposal" --summary="testing" --deposit="100000000stake" --upgrade-height 1000000 \
---upgrade-info '{ "binaries": { "linux/amd64":"https://example.com/simd.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f" } }' --from cosmos1..
-```
-
-* `cancel-software-upgrade` - cancels a previously submitted upgrade proposal:
-
-```bash
-simd tx upgrade cancel-software-upgrade --title="Test Proposal" --summary="testing" --deposit="100000000stake" --from cosmos1..
 ```
 
 ### REST
@@ -407,6 +394,14 @@ Example Output:
     {
       "name": "bank",
       "version": "2"
+    },
+    {
+      "name": "capability",
+      "version": "1"
+    },
+    {
+      "name": "crisis",
+      "version": "1"
     },
     {
       "name": "distribution",
@@ -545,6 +540,14 @@ Example Output:
     {
       "name": "bank",
       "version": "2"
+    },
+    {
+      "name": "capability",
+      "version": "1"
+    },
+    {
+      "name": "crisis",
+      "version": "1"
     },
     {
       "name": "distribution",

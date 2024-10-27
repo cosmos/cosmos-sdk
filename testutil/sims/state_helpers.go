@@ -1,32 +1,28 @@
 package sims
 
 import (
-	"bufio"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io"
 	"math/rand"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/math"
-	authtypes "cosmossdk.io/x/auth/types"
-	banktypes "cosmossdk.io/x/bank/types"
-	stakingtypes "cosmossdk.io/x/staking/types"
+	tmjson "github.com/cometbft/cometbft/libs/json"
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Simulation parameter constants
@@ -36,37 +32,30 @@ const (
 )
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
-// It calls appStateFnWithExtendedCb with nil rawStateCb.
-func AppStateFn(
-	cdc codec.JSONCodec,
-	addresCodec, validatorCodec address.Codec,
-	simManager *module.SimulationManager,
-	genesisState map[string]json.RawMessage,
-) simtypes.AppStateFn {
-	return appStateFnWithExtendedCb(cdc, addresCodec, validatorCodec, simManager, genesisState, nil)
+// It calls AppStateFnWithExtendedCb with nil rawStateCb.
+func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, genesisState map[string]json.RawMessage) simtypes.AppStateFn {
+	return AppStateFnWithExtendedCb(cdc, simManager, genesisState, nil)
 }
 
-// appStateFnWithExtendedCb returns the initial application state using a genesis or the simulation parameters.
-// It calls appStateFnWithExtendedCbs with nil moduleStateCb.
-func appStateFnWithExtendedCb(
+// AppStateFnWithExtendedCb returns the initial application state using a genesis or the simulation parameters.
+// It calls AppStateFnWithExtendedCbs with nil moduleStateCb.
+func AppStateFnWithExtendedCb(
 	cdc codec.JSONCodec,
-	addresCodec, validatorCodec address.Codec,
 	simManager *module.SimulationManager,
 	genesisState map[string]json.RawMessage,
 	rawStateCb func(rawState map[string]json.RawMessage),
 ) simtypes.AppStateFn {
-	return appStateFnWithExtendedCbs(cdc, addresCodec, validatorCodec, simManager, genesisState, nil, rawStateCb)
+	return AppStateFnWithExtendedCbs(cdc, simManager, genesisState, nil, rawStateCb)
 }
 
-// appStateFnWithExtendedCbs returns the initial application state using a genesis or the simulation parameters.
+// AppStateFnWithExtendedCbs returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
 // genesisState is the default genesis state of the whole app.
 // moduleStateCb is the callback function to access moduleState.
 // rawStateCb is the callback function to extend rawState.
-func appStateFnWithExtendedCbs(
+func AppStateFnWithExtendedCbs(
 	cdc codec.JSONCodec,
-	addressCodec, validatorCodec address.Codec,
 	simManager *module.SimulationManager,
 	genesisState map[string]json.RawMessage,
 	moduleStateCb func(moduleName string, genesisState interface{}),
@@ -77,9 +66,13 @@ func appStateFnWithExtendedCbs(
 		accs []simtypes.Account,
 		config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
-		genesisTimestamp = time.Unix(config.GenesisTime, 0)
-		chainID = config.ChainID
+		if simcli.FlagGenesisTimeValue == 0 {
+			genesisTimestamp = simtypes.RandTimestamp(r)
+		} else {
+			genesisTimestamp = time.Unix(simcli.FlagGenesisTimeValue, 0)
+		}
 
+		chainID = config.ChainID
 		switch {
 		case config.ParamsFile != "" && config.GenesisFile != "":
 			panic("cannot provide both a genesis file and a params file")
@@ -111,11 +104,11 @@ func appStateFnWithExtendedCbs(
 			if err != nil {
 				panic(err)
 			}
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState, addressCodec, validatorCodec)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
 
 		default:
 			appParams := make(simtypes.AppParams)
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState, addressCodec, validatorCodec)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
 		}
 
 		rawState := make(map[string]json.RawMessage)
@@ -143,7 +136,8 @@ func appStateFnWithExtendedCbs(
 		}
 		notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
 		// edit bank state to make it have the not bonded pool tokens
-		bankStateBz, ok := rawState[testutil.BankModuleName]
+		bankStateBz, ok := rawState[banktypes.ModuleName]
+		// TODO(fdymylja/jonathan): should we panic in this case
 		if !ok {
 			panic("bank genesis state is missing")
 		}
@@ -170,7 +164,7 @@ func appStateFnWithExtendedCbs(
 		// change appState back
 		for name, state := range map[string]proto.Message{
 			stakingtypes.ModuleName: stakingState,
-			testutil.BankModuleName: bankState,
+			banktypes.ModuleName:    bankState,
 		} {
 			if moduleStateCb != nil {
 				moduleStateCb(name, state)
@@ -202,7 +196,6 @@ func AppStateRandomizedFn(
 	genesisTimestamp time.Time,
 	appParams simtypes.AppParams,
 	genesisState map[string]json.RawMessage,
-	addressCodec, validatorCodec address.Codec,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
 	// generate a random amount of initial stake coins and a random initial
@@ -212,30 +205,36 @@ func AppStateRandomizedFn(
 		initialStake       math.Int
 	)
 	appParams.GetOrGenerate(
-		StakePerAccount, &initialStake, r,
-		func(r *rand.Rand) { initialStake = sdk.DefaultPowerReduction.AddRaw(r.Int63n(1e12)) },
+		cdc, StakePerAccount, &initialStake, r,
+		func(r *rand.Rand) { initialStake = math.NewInt(r.Int63n(1e12)) },
 	)
 	appParams.GetOrGenerate(
-		InitiallyBondedValidators, &numInitiallyBonded, r,
-		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(299) + 1) },
+		cdc, InitiallyBondedValidators, &numInitiallyBonded, r,
+		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(300)) },
 	)
 
 	if numInitiallyBonded > numAccs {
 		numInitiallyBonded = numAccs
 	}
 
+	fmt.Printf(
+		`Selected randomly generated parameters for simulated genesis:
+{
+  stake_per_account: "%d",
+  initially_bonded_validators: "%d"
+}
+`, initialStake, numInitiallyBonded,
+	)
+
 	simState := &module.SimulationState{
-		AppParams:      appParams,
-		Cdc:            cdc,
-		AddressCodec:   addressCodec,
-		ValidatorCodec: validatorCodec,
-		Rand:           r,
-		GenState:       genesisState,
-		Accounts:       accs,
-		InitialStake:   initialStake,
-		NumBonded:      numInitiallyBonded,
-		BondDenom:      sdk.DefaultBondDenom,
-		GenTimestamp:   genesisTimestamp,
+		AppParams:    appParams,
+		Cdc:          cdc,
+		Rand:         r,
+		GenState:     genesisState,
+		Accounts:     accs,
+		InitialStake: initialStake,
+		NumBonded:    numInitiallyBonded,
+		GenTimestamp: genesisTimestamp,
 	}
 
 	simManager.GenerateGenesisStates(simState)
@@ -250,36 +249,34 @@ func AppStateRandomizedFn(
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file.
-func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile string) (genutiltypes.AppGenesis, []simtypes.Account, error) {
-	file, err := os.Open(filepath.Clean(genesisFile))
+func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile string) (tmtypes.GenesisDoc, []simtypes.Account, error) {
+	bytes, err := os.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)
 	}
 
-	genesis, err := genutiltypes.AppGenesisFromReader(bufio.NewReader(file))
+	var genesis tmtypes.GenesisDoc
+	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
+	err = tmjson.Unmarshal(bytes, &genesis)
 	if err != nil {
-		return *genesis, nil, err
-	}
-
-	if err := file.Close(); err != nil {
-		return *genesis, nil, err
+		return genesis, nil, err
 	}
 
 	var appState map[string]json.RawMessage
 	if err = json.Unmarshal(genesis.AppState, &appState); err != nil {
-		return *genesis, nil, err
+		return genesis, nil, err
 	}
 
 	var authGenesis authtypes.GenesisState
-	if appState[testutil.AuthModuleName] != nil {
-		cdc.MustUnmarshalJSON(appState[testutil.AuthModuleName], &authGenesis)
+	if appState[authtypes.ModuleName] != nil {
+		cdc.MustUnmarshalJSON(appState[authtypes.ModuleName], &authGenesis)
 	}
 
 	newAccs := make([]simtypes.Account, len(authGenesis.Accounts))
 	for i, acc := range authGenesis.Accounts {
 		// Pick a random private key, since we don't know the actual key
-		// This should be fine as it's only used for mock CometBFT validators
-		// and these keys are never actually used to sign by mock CometBFT.
+		// This should be fine as it's only used for mock Tendermint validators
+		// and these keys are never actually used to sign by mock Tendermint.
 		privkeySeed := make([]byte, 15)
 		if _, err := r.Read(privkeySeed); err != nil {
 			panic(err)
@@ -287,15 +284,15 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 
 		privKey := secp256k1.GenPrivKeyFromSecret(privkeySeed)
 
-		a, ok := acc.GetCachedValue().(sdk.AccountI)
+		a, ok := acc.GetCachedValue().(authtypes.AccountI)
 		if !ok {
-			return *genesis, nil, errors.New("expected account")
+			return genesis, nil, fmt.Errorf("expected account")
 		}
 
 		// create simulator accounts
-		simAcc := simtypes.Account{PrivKey: privKey, PubKey: privKey.PubKey(), Address: a.GetAddress(), ConsKey: ed25519.GenPrivKeyFromSecret(privkeySeed)}
+		simAcc := simtypes.Account{PrivKey: privKey, PubKey: privKey.PubKey(), Address: a.GetAddress()}
 		newAccs[i] = simAcc
 	}
 
-	return *genesis, newAccs, nil
+	return genesis, newAccs, nil
 }

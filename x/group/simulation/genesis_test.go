@@ -7,36 +7,32 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/bank"
-	"cosmossdk.io/x/group"
-	groupmodule "cosmossdk.io/x/group/module"
-	"cosmossdk.io/x/group/simulation"
-
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/simulation"
+	"github.com/cosmos/cosmos-sdk/x/group/testutil"
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, groupmodule.AppModule{}, bank.AppModule{})
-	cdc := encodingConfig.Codec
-	cdcOpts := codectestutil.CodecOptions{}
+	var cdc codec.Codec
+	err := depinject.Inject(testutil.AppConfig, &cdc)
+	require.NoError(t, err)
 
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
 	simState := module.SimulationState{
-		AppParams:      make(simtypes.AppParams),
-		Cdc:            cdc,
-		AddressCodec:   cdcOpts.GetAddressCodec(),
-		ValidatorCodec: cdcOpts.GetValidatorCodec(),
-		Rand:           r,
-		NumBonded:      3,
-		Accounts:       simtypes.RandomAccounts(r, 3),
-		InitialStake:   sdkmath.NewInt(1000),
-		GenState:       make(map[string]json.RawMessage),
+		AppParams:    make(simtypes.AppParams),
+		Cdc:          cdc,
+		Rand:         r,
+		NumBonded:    3,
+		Accounts:     simtypes.RandomAccounts(r, 3),
+		InitialStake: sdkmath.NewInt(1000),
+		GenState:     make(map[string]json.RawMessage),
 	}
 
 	simulation.RandomizedGenState(&simState)

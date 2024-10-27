@@ -10,35 +10,31 @@ import (
 	"time"
 
 	abci_server "github.com/cometbft/cometbft/abci/server"
+	"github.com/cometbft/cometbft/libs/cli"
+	"github.com/cometbft/cometbft/libs/log"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-
-	corectx "cosmossdk.io/core/context"
-	"cosmossdk.io/log"
-	"cosmossdk.io/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/server"
-	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-var testMbm = module.NewManager(
-	staking.NewAppModule(makeCodec(), nil, nil, nil),
-	genutil.NewAppModule(makeCodec(), nil, nil, nil, nil, nil),
+var testMbm = module.NewBasicManager(
+	staking.AppModuleBasic{},
+	genutil.AppModuleBasic{},
 )
 
 func TestInitCmd(t *testing.T) {
@@ -65,23 +61,22 @@ func TestInitCmd(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			home := t.TempDir()
 			logger := log.NewNopLogger()
-			viper := viper.New()
-
-			err := writeAndTrackDefaultConfig(viper, home)
+			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 			require.NoError(t, err)
+
+			serverCtx := server.NewContext(viper.New(), cfg, logger)
 			interfaceRegistry := types.NewInterfaceRegistry()
 			marshaler := codec.NewProtoCodec(interfaceRegistry)
 			clientCtx := client.Context{}.
 				WithCodec(marshaler).
-				WithLegacyAmino(makeAminoCodec()).
+				WithLegacyAmino(makeCodec()).
 				WithHomeDir(home)
 
 			ctx := context.Background()
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-			ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
-			ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
+			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-			cmd := genutilcli.InitCmd(testMbm)
+			cmd := genutilcli.InitCmd(testMbm, home)
 			cmd.SetArgs(
 				tt.flags(home),
 			)
@@ -99,24 +94,22 @@ func TestInitCmd(t *testing.T) {
 func TestInitRecover(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	viper := viper.New()
-
-	err := writeAndTrackDefaultConfig(viper, home)
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 	require.NoError(t, err)
+
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
 		WithCodec(marshaler).
-		WithLegacyAmino(makeAminoCodec()).
+		WithLegacyAmino(makeCodec()).
 		WithHomeDir(home)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	cmd := genutilcli.InitCmd(testMbm)
-	cmd.SetContext(ctx)
+	cmd := genutilcli.InitCmd(testMbm, home)
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	cmd.SetArgs([]string{
@@ -132,26 +125,26 @@ func TestInitRecover(t *testing.T) {
 func TestInitDefaultBondDenom(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	viper := viper.New()
-
-	err := writeAndTrackDefaultConfig(viper, home)
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 	require.NoError(t, err)
+
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
 		WithCodec(marshaler).
-		WithLegacyAmino(makeAminoCodec()).
+		WithLegacyAmino(makeCodec()).
 		WithHomeDir(home)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	cmd := genutilcli.InitCmd(testMbm)
+	cmd := genutilcli.InitCmd(testMbm, home)
 
 	cmd.SetArgs([]string{
 		"appnode-test",
+		fmt.Sprintf("--%s=%s", cli.HomeFlag, home),
 		fmt.Sprintf("--%s=testtoken", genutilcli.FlagDefaultBondDenom),
 	})
 	require.NoError(t, cmd.ExecuteContext(ctx))
@@ -160,24 +153,23 @@ func TestInitDefaultBondDenom(t *testing.T) {
 func TestEmptyState(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	viper := viper.New()
-
-	err := writeAndTrackDefaultConfig(viper, home)
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 	require.NoError(t, err)
+
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
 		WithCodec(marshaler).
-		WithLegacyAmino(makeAminoCodec()).
+		WithLegacyAmino(makeCodec()).
 		WithHomeDir(home)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	cmd := genutilcli.InitCmd(testMbm)
-	cmd.SetArgs([]string{"appnode-test"})
+	cmd := genutilcli.InitCmd(testMbm, home)
+	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
@@ -185,15 +177,14 @@ func TestEmptyState(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	cmd = genutilcli.ExportCmd(nil)
+	cmd = server.ExportCmd(nil, home)
+	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", cli.HomeFlag, home)})
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	outC := make(chan string)
 	go func() {
 		var buf bytes.Buffer
-		_, err := io.Copy(&buf, r)
-		require.NoError(t, err)
-
+		io.Copy(&buf, r)
 		outC <- buf.String()
 	}()
 
@@ -203,7 +194,7 @@ func TestEmptyState(t *testing.T) {
 
 	require.Contains(t, out, "genesis_time")
 	require.Contains(t, out, "chain_id")
-	require.Contains(t, out, "consensus")
+	require.Contains(t, out, "consensus_params")
 	require.Contains(t, out, "app_hash")
 	require.Contains(t, out, "app_state")
 }
@@ -219,15 +210,13 @@ func TestStartStandAlone(t *testing.T) {
 	app, err := mock.NewApp(home, logger)
 	require.NoError(t, err)
 
-	svrAddr, _, closeFn, err := network.FreeTCPAddr()
+	svrAddr, _, err := server.FreeTCPAddr()
 	require.NoError(t, err)
-	require.NoError(t, closeFn())
 
-	cmtApp := server.NewCometABCIWrapper(app)
-	svr, err := abci_server.NewServer(svrAddr, "socket", cmtApp)
+	svr, err := abci_server.NewServer(svrAddr, "socket", app)
 	require.NoError(t, err, "error creating listener")
 
-	svr.SetLogger(servercmtlog.CometLoggerWrapper{Logger: logger.With("module", "abci-server")})
+	svr.SetLogger(logger.With("module", "abci-server"))
 	err = svr.Start()
 	require.NoError(t, err)
 
@@ -241,10 +230,10 @@ func TestStartStandAlone(t *testing.T) {
 
 func TestInitNodeValidatorFiles(t *testing.T) {
 	home := t.TempDir()
-	cfg, err := genutiltest.CreateDefaultCometConfig(home)
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 	require.NoError(t, err)
 
-	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg, ed25519.KeyType)
+	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg)
 	require.NoError(t, err)
 
 	require.NotEqual(t, "", nodeID)
@@ -254,41 +243,38 @@ func TestInitNodeValidatorFiles(t *testing.T) {
 func TestInitConfig(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	viper := viper.New()
-
-	err := writeAndTrackDefaultConfig(viper, home)
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 	require.NoError(t, err)
+
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
 		WithCodec(marshaler).
-		WithLegacyAmino(makeAminoCodec()).
+		WithLegacyAmino(makeCodec()).
 		WithChainID("foo"). // add chain-id to clientCtx
 		WithHomeDir(home)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	cmd := genutilcli.InitCmd(testMbm)
+	cmd := genutilcli.InitCmd(testMbm, home)
 	cmd.SetArgs([]string{"testnode"})
 
-	err = cmd.ExecuteContext(ctx)
-	require.NoError(t, err)
+	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	old := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	cmd = genutilcli.ExportCmd(nil)
+	cmd = server.ExportCmd(nil, home)
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	outC := make(chan string)
 	go func() {
 		var buf bytes.Buffer
-		_, err := io.Copy(&buf, r)
-		require.NoError(t, err)
+		io.Copy(&buf, r)
 		outC <- buf.String()
 	}()
 
@@ -302,35 +288,30 @@ func TestInitConfig(t *testing.T) {
 func TestInitWithHeight(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	viper := viper.New()
-	cfg, err := genutiltest.CreateDefaultCometConfig(home)
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 	require.NoError(t, err)
 
-	err = writeAndTrackDefaultConfig(viper, home)
-	require.NoError(t, err)
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
 		WithCodec(marshaler).
-		WithLegacyAmino(makeAminoCodec()).
+		WithLegacyAmino(makeCodec()).
 		WithChainID("foo"). // add chain-id to clientCtx
 		WithHomeDir(home)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
 	testInitialHeight := int64(333)
 
-	cmd := genutilcli.InitCmd(testMbm)
-
-	fmt.Println("RootDir", viper.Get(flags.FlagHome))
+	cmd := genutilcli.InitCmd(testMbm, home)
 	cmd.SetArgs([]string{"init-height-test", fmt.Sprintf("--%s=%d", flags.FlagInitHeight, testInitialHeight)})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
-	appGenesis, importErr := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+	appGenesis, importErr := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
 	require.NoError(t, importErr)
 
 	require.Equal(t, testInitialHeight, appGenesis.InitialHeight)
@@ -339,55 +320,39 @@ func TestInitWithHeight(t *testing.T) {
 func TestInitWithNegativeHeight(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
-	viper := viper.New()
-	cfg, err := genutiltest.CreateDefaultCometConfig(home)
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 	require.NoError(t, err)
 
-	err = writeAndTrackDefaultConfig(viper, home)
-	require.NoError(t, err)
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 	clientCtx := client.Context{}.
 		WithCodec(marshaler).
-		WithLegacyAmino(makeAminoCodec()).
+		WithLegacyAmino(makeCodec()).
 		WithChainID("foo"). // add chain-id to clientCtx
 		WithHomeDir(home)
 
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	ctx = context.WithValue(ctx, corectx.ViperContextKey, viper)
-	ctx = context.WithValue(ctx, corectx.LoggerContextKey, logger)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
 	testInitialHeight := int64(-333)
 
-	cmd := genutilcli.InitCmd(testMbm)
+	cmd := genutilcli.InitCmd(testMbm, home)
 	cmd.SetArgs([]string{"init-height-test", fmt.Sprintf("--%s=%d", flags.FlagInitHeight, testInitialHeight)})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
-	appGenesis, importErr := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+	appGenesis, importErr := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
 	require.NoError(t, importErr)
 
 	require.Equal(t, int64(1), appGenesis.InitialHeight)
 }
 
 // custom tx codec
-func makeAminoCodec() *codec.LegacyAmino {
+func makeCodec() *codec.LegacyAmino {
 	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 	return cdc
-}
-
-func makeCodec() codec.Codec {
-	interfaceRegistry := types.NewInterfaceRegistry()
-	return codec.NewProtoCodec(interfaceRegistry)
-}
-
-func writeAndTrackDefaultConfig(v *viper.Viper, home string) error {
-	cfg, err := genutiltest.CreateDefaultCometConfig(home)
-	if err != nil {
-		return err
-	}
-	return genutiltest.WriteAndTrackCometConfig(v, home, cfg)
 }

@@ -1,11 +1,9 @@
 package types
 
 import (
-	"crypto/sha256"
+	tmcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-
-	"cosmossdk.io/store/internal/maps"
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 )
 
 // GetHash returns the GetHash from the CommitID.
@@ -32,21 +30,14 @@ func (ci CommitInfo) toMap() map[string][]byte {
 func (ci CommitInfo) Hash() []byte {
 	// we need a special case for empty set, as SimpleProofsFromMap requires at least one entry
 	if len(ci.StoreInfos) == 0 {
-		emptyHash := sha256.Sum256([]byte{})
-		return emptyHash[:]
+		return nil
 	}
 
-	rootHash, _, _ := maps.ProofsFromMap(ci.toMap())
-
-	if len(rootHash) == 0 {
-		emptyHash := sha256.Sum256([]byte{})
-		return emptyHash[:]
-	}
-
+	rootHash, _, _ := sdkmaps.ProofsFromMap(ci.toMap())
 	return rootHash
 }
 
-func (ci CommitInfo) ProofOp(storeName string) cmtprotocrypto.ProofOp {
+func (ci CommitInfo) ProofOp(storeName string) tmcrypto.ProofOp {
 	ret, err := ProofOpFromMap(ci.toMap(), storeName)
 	if err != nil {
 		panic(err)

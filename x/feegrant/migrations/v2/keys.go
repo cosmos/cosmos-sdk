@@ -24,7 +24,7 @@ var (
 // Key format:
 // - <0x01><exp_bytes><len(grantee_address_bytes)><grantee_address_bytes><len(granter_address_bytes)><granter_address_bytes>
 func FeeAllowancePrefixQueue(exp *time.Time, granterAddrBz []byte) []byte {
-	// no need of appending len(exp_bytes) here, `FormatTimeBytes` gives const length every time.
+	// no need of appending len(exp_bytes) here, `FormatTimeBytes` gives const length everytime.
 	var key []byte
 	key = append(key, FeeAllowanceQueueKeyPrefix...)
 	key = append(key, sdk.FormatTimeBytes(*exp)...)
@@ -36,7 +36,7 @@ func FeeAllowancePrefixQueue(exp *time.Time, granterAddrBz []byte) []byte {
 //
 // Key format:
 // - <0x00><len(grantee_address_bytes)><grantee_address_bytes><len(granter_address_bytes)><granter_address_bytes>
-func FeeAllowanceKey(granter, grantee sdk.AccAddress) []byte {
+func FeeAllowanceKey(granter sdk.AccAddress, grantee sdk.AccAddress) []byte {
 	return append(FeeAllowancePrefixByGrantee(grantee), address.MustLengthPrefix(granter.Bytes())...)
 }
 

@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
 func TestThresholdDecisionPolicyValidate(t *testing.T) {
@@ -122,7 +122,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Second * 50,
+			time.Duration(time.Second * 50),
 			group.DecisionPolicyResult{
 				Allow: true,
 				Final: true,
@@ -144,7 +144,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"4",
-			time.Second * 50,
+			time.Duration(time.Second * 50),
 			group.DecisionPolicyResult{
 				Allow: true,
 				Final: true,
@@ -166,7 +166,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Second * 50,
+			time.Duration(time.Second * 50),
 			group.DecisionPolicyResult{
 				Allow: false,
 				Final: false,
@@ -188,7 +188,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Second * 50,
+			time.Duration(time.Second * 50),
 			group.DecisionPolicyResult{
 				Allow: false,
 				Final: true,
@@ -210,7 +210,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"4",
-			time.Second * 50,
+			time.Duration(time.Second * 50),
 			group.DecisionPolicyResult{
 				Allow: false,
 				Final: false,
@@ -232,7 +232,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Second * 50,
+			time.Duration(time.Second * 50),
 			group.DecisionPolicyResult{
 				Allow: false,
 				Final: false,
@@ -278,7 +278,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Second * 50,
+			time.Duration(time.Second * 50),
 			group.DecisionPolicyResult{
 				Allow: true,
 				Final: true,
@@ -300,7 +300,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Second * 50,
+			time.Duration(time.Second * 50),
 			group.DecisionPolicyResult{
 				Allow: false,
 				Final: false,
@@ -322,7 +322,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Second * 50,
+			time.Duration(time.Second * 50),
 			group.DecisionPolicyResult{
 				Allow: true,
 				Final: true,
@@ -344,7 +344,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Second * 50,
+			time.Duration(time.Second * 50),
 			group.DecisionPolicyResult{
 				Allow: false,
 				Final: true,
@@ -366,7 +366,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				NoWithVetoCount: "0",
 			},
 			"3",
-			time.Second * 50,
+			time.Duration(time.Second * 50),
 			group.DecisionPolicyResult{
 				Allow: false,
 				Final: false,

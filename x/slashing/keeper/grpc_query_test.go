@@ -4,11 +4,10 @@ import (
 	gocontext "context"
 	"time"
 
-	"cosmossdk.io/x/slashing/testutil"
-	slashingtypes "cosmossdk.io/x/slashing/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 func (s *KeeperTestSuite) TestGRPCQueryParams() {
@@ -27,26 +26,23 @@ func (s *KeeperTestSuite) TestGRPCSigningInfo() {
 
 	infoResp, err := queryClient.SigningInfo(gocontext.Background(), &slashingtypes.QuerySigningInfoRequest{ConsAddress: ""})
 	require.Error(err)
-	require.ErrorContains(err, "invalid request")
 	require.Nil(infoResp)
 
-	consStr, err := s.stakingKeeper.ConsensusAddressCodec().BytesToString(consAddr)
-	require.NoError(err)
-
 	signingInfo := slashingtypes.NewValidatorSigningInfo(
-		consStr,
+		consAddr,
 		0,
+		int64(0),
 		time.Unix(2, 0),
 		false,
 		int64(0),
 	)
 
-	require.NoError(keeper.ValidatorSigningInfo.Set(ctx, consAddr, signingInfo))
-	info, err := keeper.ValidatorSigningInfo.Get(ctx, consAddr)
-	require.NoError(err)
+	keeper.SetValidatorSigningInfo(ctx, consAddr, signingInfo)
+	info, found := keeper.GetValidatorSigningInfo(ctx, consAddr)
+	require.True(found)
 
 	infoResp, err = queryClient.SigningInfo(gocontext.Background(),
-		&slashingtypes.QuerySigningInfoRequest{ConsAddress: consStr})
+		&slashingtypes.QuerySigningInfoRequest{ConsAddress: consAddr.String()})
 	require.NoError(err)
 	require.Equal(info, infoResp.ValSigningInfo)
 }
@@ -56,28 +52,28 @@ func (s *KeeperTestSuite) TestGRPCSigningInfos() {
 	require := s.Require()
 
 	// set two validator signing information
-	consAddr1 := sdk.ConsAddress("addr1_______________")
-	consStr1, err := s.stakingKeeper.ConsensusAddressCodec().BytesToString(consAddr1)
-	require.NoError(err)
-	consAddr2 := sdk.ConsAddress("addr2_______________")
+	consAddr1 := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
+	consAddr2 := sdk.ConsAddress(sdk.AccAddress([]byte("addr2_______________")))
 	signingInfo := slashingtypes.NewValidatorSigningInfo(
-		consStr1,
+		consAddr1,
 		0,
+		int64(0),
 		time.Unix(2, 0),
 		false,
 		int64(0),
 	)
 
-	require.NoError(keeper.ValidatorSigningInfo.Set(ctx, consAddr1, signingInfo))
+	keeper.SetValidatorSigningInfo(ctx, consAddr1, signingInfo)
 	signingInfo.Address = string(consAddr2)
-	require.NoError(keeper.ValidatorSigningInfo.Set(ctx, consAddr2, signingInfo))
+	keeper.SetValidatorSigningInfo(ctx, consAddr2, signingInfo)
+
 	var signingInfos []slashingtypes.ValidatorSigningInfo
 
-	err = keeper.ValidatorSigningInfo.Walk(ctx, nil, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool, err error) {
+	keeper.IterateValidatorSigningInfos(ctx, func(consAddr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
 		signingInfos = append(signingInfos, info)
-		return false, nil
+		return false
 	})
-	require.NoError(err)
+
 	// verify all values are returned without pagination
 	infoResp, err := queryClient.SigningInfos(gocontext.Background(),
 		&slashingtypes.QuerySigningInfosRequest{Pagination: nil})

@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"io"
 
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -18,20 +19,24 @@ type AppBuilder struct {
 	app *App
 }
 
-// DefaultGenesis returns a default genesis from the registered modules.
+// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
 func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
 	return a.app.DefaultGenesis()
 }
 
 // Build builds an *App instance.
-func (a *AppBuilder) Build(db dbm.DB, traceStore io.Writer, baseAppOptions ...func(*baseapp.BaseApp)) *App {
+func (a *AppBuilder) Build(
+	logger log.Logger,
+	db dbm.DB,
+	traceStore io.Writer,
+	baseAppOptions ...func(*baseapp.BaseApp),
+) *App {
 	for _, option := range a.app.baseAppOptions {
 		baseAppOptions = append(baseAppOptions, option)
 	}
 
-	bApp := baseapp.NewBaseApp(a.app.config.AppName, a.app.logger, db, nil, baseAppOptions...)
+	bApp := baseapp.NewBaseApp(a.app.config.AppName, logger, db, nil, baseAppOptions...)
 	bApp.SetMsgServiceRouter(a.app.msgServiceRouter)
-	bApp.SetGRPCQueryRouter(a.app.grpcQueryRouter)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(a.app.interfaceRegistry)
@@ -39,10 +44,7 @@ func (a *AppBuilder) Build(db dbm.DB, traceStore io.Writer, baseAppOptions ...fu
 
 	a.app.BaseApp = bApp
 	a.app.configurator = module.NewConfigurator(a.app.cdc, a.app.MsgServiceRouter(), a.app.GRPCQueryRouter())
-
-	if err := a.app.ModuleManager.RegisterServices(a.app.configurator); err != nil {
-		panic(err)
-	}
+	a.app.ModuleManager.RegisterServices(a.app.configurator)
 
 	return a.app
 }

@@ -4,12 +4,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/x/upgrade/types"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func mustParseTime(s string) time.Time {
@@ -31,13 +33,13 @@ func TestPlanString(t *testing.T) {
 				Info:   "https://foo.bar/baz",
 				Height: 7890,
 			},
-			expect: "name:\"by height\" time:<seconds:-62135596800 > height:7890 info:\"https://foo.bar/baz\" ",
+			expect: "Upgrade Plan\n  Name: by height\n  height: 7890\n  Info: https://foo.bar/baz.",
 		},
 		"neither": {
 			p: types.Plan{
 				Name: "almost-empty",
 			},
-			expect: "name:\"almost-empty\" time:<seconds:-62135596800 > ",
+			expect: "Upgrade Plan\n  Name: almost-empty\n  height: 0\n  Info: .",
 		},
 	}
 
@@ -144,7 +146,8 @@ func TestShouldExecute(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc // copy to local variable for scopelint
 		t.Run(name, func(t *testing.T) {
-			should := tc.p.ShouldExecute(tc.ctxHeight)
+			ctx := sdk.NewContext(nil, tmproto.Header{Height: tc.ctxHeight, Time: tc.ctxTime}, false, log.NewNopLogger())
+			should := tc.p.ShouldExecute(ctx)
 			assert.Equal(t, tc.expected, should)
 		})
 	}

@@ -1,23 +1,20 @@
 package iavl
 
 import (
-	"bytes"
 	crand "crypto/rand"
 	"fmt"
-	"math"
-	"sort"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/internal/kv"
-	"cosmossdk.io/store/metrics"
-	"cosmossdk.io/store/types"
-	"cosmossdk.io/store/wrapper"
+	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 var (
@@ -37,19 +34,17 @@ func randBytes(numBytes int) []byte {
 
 // make a tree with data from above and save it
 func newAlohaTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, types.CommitID) {
-	t.Helper()
-	tree := iavl.NewMutableTree(wrapper.NewDBWrapper(db), cacheSize, false, log.NewNopLogger())
+	tree, err := iavl.NewMutableTree(db, cacheSize, false)
+	require.NoError(t, err)
 
 	for k, v := range treeData {
-		_, err := tree.Set([]byte(k), []byte(v))
-		require.NoError(t, err)
+		tree.Set([]byte(k), []byte(v))
 	}
 
 	for i := 0; i < nMoreData; i++ {
 		key := randBytes(12)
 		value := randBytes(50)
-		_, err := tree.Set(key, value)
-		require.NoError(t, err)
+		tree.Set(key, value)
 	}
 
 	hash, ver, err := tree.SaveVersion()
@@ -105,31 +100,31 @@ func TestLoadStore(t *testing.T) {
 	require.Equal(t, string(hcStore.Get([]byte("hello"))), "ciao")
 
 	// Querying a new store at some previous non-pruned height H
-	newHStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDH, DefaultIAVLCacheSize, false, metrics.NewNoOpMetrics())
+	newHStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDH, false, DefaultIAVLCacheSize, false)
 	require.NoError(t, err)
 	require.Equal(t, string(newHStore.Get([]byte("hello"))), "hallo")
 
 	// Querying a new store at some previous pruned height Hp
-	newHpStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDHp, DefaultIAVLCacheSize, false, metrics.NewNoOpMetrics())
+	newHpStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDHp, false, DefaultIAVLCacheSize, false)
 	require.NoError(t, err)
 	require.Equal(t, string(newHpStore.Get([]byte("hello"))), "hola")
 
 	// Querying a new store at current height H
-	newHcStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDHc, DefaultIAVLCacheSize, false, metrics.NewNoOpMetrics())
+	newHcStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDHc, false, DefaultIAVLCacheSize, false)
 	require.NoError(t, err)
 	require.Equal(t, string(newHcStore.Get([]byte("hello"))), "ciao")
 }
 
 func TestGetImmutable(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree, _ := newAlohaTree(t, db)
+	tree, cID := newAlohaTree(t, db)
 	store := UnsafeNewStore(tree)
 
 	updated, err := tree.Set([]byte("hello"), []byte("adios"))
 	require.NoError(t, err)
 	require.True(t, updated)
 	hash, ver, err := tree.SaveVersion()
-	cID := types.CommitID{Version: ver, Hash: hash}
+	cID = types.CommitID{Version: ver, Hash: hash}
 	require.Nil(t, err)
 
 	_, err = store.GetImmutable(cID.Version + 1)
@@ -143,8 +138,7 @@ func TestGetImmutable(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, newStore.Get([]byte("hello")), []byte("adios"))
 
-	res, err := newStore.Query(&types.RequestQuery{Data: []byte("hello"), Height: cID.Version, Path: "/key", Prove: true})
-	require.NoError(t, err)
+	res := newStore.Query(abci.RequestQuery{Data: []byte("hello"), Height: cID.Version, Path: "/key", Prove: true})
 	require.Equal(t, res.Value, []byte("adios"))
 	require.NotNil(t, res.ProofOps)
 
@@ -286,9 +280,10 @@ func TestIAVLIterator(t *testing.T) {
 }
 
 func TestIAVLReverseIterator(t *testing.T) {
-	db := wrapper.NewDBWrapper(dbm.NewMemDB())
+	db := dbm.NewMemDB()
 
-	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
+	tree, err := iavl.NewMutableTree(db, cacheSize, false)
+	require.NoError(t, err)
 
 	iavlStore := UnsafeNewStore(tree)
 
@@ -298,8 +293,7 @@ func TestIAVLReverseIterator(t *testing.T) {
 	iavlStore.Set([]byte{0x00, 0x02}, []byte("0 2"))
 	iavlStore.Set([]byte{0x01}, []byte("1"))
 
-	testReverseIterator := func(t *testing.T, start, end []byte, expected []string) {
-		t.Helper()
+	testReverseIterator := func(t *testing.T, start []byte, end []byte, expected []string) {
 		iter := iavlStore.ReverseIterator(start, end)
 		var i int
 		for i = 0; iter.Valid(); iter.Next() {
@@ -320,8 +314,9 @@ func TestIAVLReverseIterator(t *testing.T) {
 }
 
 func TestIAVLPrefixIterator(t *testing.T) {
-	db := wrapper.NewDBWrapper(dbm.NewMemDB())
-	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
+	db := dbm.NewMemDB()
+	tree, err := iavl.NewMutableTree(db, cacheSize, false)
+	require.NoError(t, err)
 
 	iavlStore := UnsafeNewStore(tree)
 
@@ -383,8 +378,9 @@ func TestIAVLPrefixIterator(t *testing.T) {
 }
 
 func TestIAVLReversePrefixIterator(t *testing.T) {
-	db := wrapper.NewDBWrapper(dbm.NewMemDB())
-	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
+	db := dbm.NewMemDB()
+	tree, err := iavl.NewMutableTree(db, cacheSize, false)
+	require.NoError(t, err)
 
 	iavlStore := UnsafeNewStore(tree)
 
@@ -450,8 +446,9 @@ func nextVersion(iavl *Store) {
 }
 
 func TestIAVLNoPrune(t *testing.T) {
-	db := wrapper.NewDBWrapper(dbm.NewMemDB())
-	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
+	db := dbm.NewMemDB()
+	tree, err := iavl.NewMutableTree(db, cacheSize, false)
+	require.NoError(t, err)
 
 	iavlStore := UnsafeNewStore(tree)
 	nextVersion(iavlStore)
@@ -468,8 +465,9 @@ func TestIAVLNoPrune(t *testing.T) {
 }
 
 func TestIAVLStoreQuery(t *testing.T) {
-	db := wrapper.NewDBWrapper(dbm.NewMemDB())
-	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
+	db := dbm.NewMemDB()
+	tree, err := iavl.NewMutableTree(db, cacheSize, false)
+	require.NoError(t, err)
 
 	iavlStore := UnsafeNewStore(tree)
 
@@ -503,12 +501,11 @@ func TestIAVLStoreQuery(t *testing.T) {
 
 	cid := iavlStore.Commit()
 	ver := cid.Version
-	query := types.RequestQuery{Path: "/key", Data: k1, Height: ver}
-	querySub := types.RequestQuery{Path: "/subspace", Data: ksub, Height: ver}
+	query := abci.RequestQuery{Path: "/key", Data: k1, Height: ver}
+	querySub := abci.RequestQuery{Path: "/subspace", Data: ksub, Height: ver}
 
 	// query subspace before anything set
-	qres, err := iavlStore.Query(&querySub)
-	require.NoError(t, err)
+	qres := iavlStore.Query(querySub)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, valExpSubEmpty, qres.Value)
 
@@ -517,28 +514,24 @@ func TestIAVLStoreQuery(t *testing.T) {
 	iavlStore.Set(k2, v2)
 
 	// set data without commit, doesn't show up
-	qres, err = iavlStore.Query(&query)
-	require.NoError(t, err)
+	qres = iavlStore.Query(query)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Nil(t, qres.Value)
 
 	// commit it, but still don't see on old version
 	cid = iavlStore.Commit()
-	qres, err = iavlStore.Query(&query)
-	require.NoError(t, err)
+	qres = iavlStore.Query(query)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Nil(t, qres.Value)
 
 	// but yes on the new version
 	query.Height = cid.Version
-	qres, err = iavlStore.Query(&query)
-	require.NoError(t, err)
+	qres = iavlStore.Query(query)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v1, qres.Value)
 
 	// and for the subspace
-	qres, err = iavlStore.Query(&querySub)
-	require.NoError(t, err)
+	qres = iavlStore.Query(querySub)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, valExpSub1, qres.Value)
 
@@ -547,48 +540,43 @@ func TestIAVLStoreQuery(t *testing.T) {
 	cid = iavlStore.Commit()
 
 	// query will return old values, as height is fixed
-	qres, err = iavlStore.Query(&query)
-	require.NoError(t, err)
+	qres = iavlStore.Query(query)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v1, qres.Value)
 
 	// update to latest in the query and we are happy
 	query.Height = cid.Version
-	qres, err = iavlStore.Query(&query)
-	require.NoError(t, err)
+	qres = iavlStore.Query(query)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v3, qres.Value)
-	query2 := types.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
+	query2 := abci.RequestQuery{Path: "/key", Data: k2, Height: cid.Version}
 
-	qres, err = iavlStore.Query(&query2)
-	require.NoError(t, err)
+	qres = iavlStore.Query(query2)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v2, qres.Value)
 	// and for the subspace
-	qres, err = iavlStore.Query(&querySub)
-	require.NoError(t, err)
+	qres = iavlStore.Query(querySub)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, valExpSub2, qres.Value)
 
 	// default (height 0) will show latest -1
-	query0 := types.RequestQuery{Path: "/key", Data: k1}
-	qres, err = iavlStore.Query(&query0)
-	require.NoError(t, err)
+	query0 := abci.RequestQuery{Path: "/key", Data: k1}
+	qres = iavlStore.Query(query0)
 	require.Equal(t, uint32(0), qres.Code)
 	require.Equal(t, v1, qres.Value)
 }
 
 func BenchmarkIAVLIteratorNext(b *testing.B) {
 	b.ReportAllocs()
-	db := wrapper.NewDBWrapper(dbm.NewMemDB())
+	db := dbm.NewMemDB()
 	treeSize := 1000
-	tree := iavl.NewMutableTree(db, cacheSize, false, log.NewNopLogger())
+	tree, err := iavl.NewMutableTree(db, cacheSize, false)
+	require.NoError(b, err)
 
 	for i := 0; i < treeSize; i++ {
 		key := randBytes(4)
 		value := randBytes(50)
-		_, err := tree.Set(key, value)
-		require.NoError(b, err)
+		tree.Set(key, value)
 	}
 
 	iavlStore := UnsafeNewStore(tree)
@@ -616,7 +604,8 @@ func TestSetInitialVersion(t *testing.T) {
 		{
 			"works with a mutable tree",
 			func(db *dbm.MemDB) *Store {
-				tree := iavl.NewMutableTree(wrapper.NewDBWrapper(db), cacheSize, false, log.NewNopLogger())
+				tree, err := iavl.NewMutableTree(db, cacheSize, false)
+				require.NoError(t, err)
 				store := UnsafeNewStore(tree)
 
 				return store
@@ -625,7 +614,8 @@ func TestSetInitialVersion(t *testing.T) {
 		{
 			"throws error on immutable tree",
 			func(db *dbm.MemDB) *Store {
-				tree := iavl.NewMutableTree(wrapper.NewDBWrapper(db), cacheSize, false, log.NewNopLogger())
+				tree, err := iavl.NewMutableTree(db, cacheSize, false)
+				require.NoError(t, err)
 				store := UnsafeNewStore(tree)
 				_, version, err := store.tree.SaveVersion()
 				require.NoError(t, err)
@@ -666,49 +656,4 @@ func TestCacheWraps(t *testing.T) {
 
 	cacheWrappedWithTrace := store.CacheWrapWithTrace(nil, nil)
 	require.IsType(t, &cachekv.Store{}, cacheWrappedWithTrace)
-}
-
-func TestChangeSets(t *testing.T) {
-	db := dbm.NewMemDB()
-	treeSize := 1000
-	treeVersion := int64(10)
-	targetVersion := int64(6)
-	tree := iavl.NewMutableTree(wrapper.NewDBWrapper(db), cacheSize, false, log.NewNopLogger(), iavl.FlushThresholdOption(math.MaxInt))
-
-	for j := int64(0); j < treeVersion; j++ {
-		keys := [][]byte{}
-		for i := 0; i < treeSize; i++ {
-			keys = append(keys, randBytes(4))
-		}
-		sort.Slice(keys, func(p, q int) bool {
-			return bytes.Compare(keys[p], keys[q]) < 0
-		})
-		for i := 0; i < treeSize; i++ {
-			key := keys[i]
-			value := randBytes(50)
-			_, err := tree.Set(key, value)
-			require.NoError(t, err)
-		}
-		_, _, err := tree.SaveVersion()
-		require.NoError(t, err)
-	}
-
-	changeSets := []*iavl.ChangeSet{}
-	iavlStore := UnsafeNewStore(tree)
-	commitID := iavlStore.LastCommitID()
-
-	require.NoError(t, iavlStore.TraverseStateChanges(targetVersion+1, treeVersion, func(v int64, cs *iavl.ChangeSet) error {
-		changeSets = append(changeSets, cs)
-		return nil
-	}))
-	require.NoError(t, iavlStore.LoadVersionForOverwriting(targetVersion))
-
-	for i, cs := range changeSets {
-		v, err := tree.SaveChangeSet(cs)
-		require.NoError(t, err)
-		require.Equal(t, v, targetVersion+int64(i+1))
-	}
-
-	restoreCommitID := iavlStore.LastCommitID()
-	require.Equal(t, commitID, restoreCommitID)
 }

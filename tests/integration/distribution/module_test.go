@@ -3,29 +3,23 @@ package distribution_test
 import (
 	"testing"
 
-	"gotest.tools/v3/assert"
-
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authtypes "cosmossdk.io/x/auth/types"
-	"cosmossdk.io/x/distribution/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	var accountKeeper authkeeper.AccountKeeper
 
-	app, err := simtestutil.SetupAtGenesis(
-		depinject.Configs(
-			AppConfig,
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&accountKeeper)
-	assert.NilError(t, err)
+	app, err := simtestutil.SetupAtGenesis(testutil.AppConfig, &accountKeeper)
+	require.NoError(t, err)
 
-	ctx := app.BaseApp.NewContext(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	acc := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
-	assert.Assert(t, acc != nil)
+	require.NotNil(t, acc)
 }

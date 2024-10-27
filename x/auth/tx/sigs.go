@@ -1,10 +1,7 @@
 package tx
 
 import (
-	"errors"
 	"fmt"
-
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -58,15 +55,15 @@ func SignatureDataToModeInfoAndSig(data signing.SignatureData) (*tx.ModeInfo, []
 
 // ModeInfoAndSigToSignatureData converts a ModeInfo and raw bytes signature to a SignatureData or returns
 // an error
-func ModeInfoAndSigToSignatureData(modeInfoPb *txv1beta1.ModeInfo, sig []byte) (signing.SignatureData, error) {
-	switch modeInfo := modeInfoPb.Sum.(type) {
-	case *txv1beta1.ModeInfo_Single_:
+func ModeInfoAndSigToSignatureData(modeInfo *tx.ModeInfo, sig []byte) (signing.SignatureData, error) {
+	switch modeInfo := modeInfo.Sum.(type) {
+	case *tx.ModeInfo_Single_:
 		return &signing.SingleSignatureData{
-			SignMode:  signing.SignMode(modeInfo.Single.Mode),
+			SignMode:  modeInfo.Single.Mode,
 			Signature: sig,
 		}, nil
 
-	case *txv1beta1.ModeInfo_Multi_:
+	case *tx.ModeInfo_Multi_:
 		multi := modeInfo.Multi
 
 		sigs, err := decodeMultisignatures(sig)
@@ -83,10 +80,7 @@ func ModeInfoAndSigToSignatureData(modeInfoPb *txv1beta1.ModeInfo, sig []byte) (
 		}
 
 		return &signing.MultiSignatureData{
-			BitArray: &cryptotypes.CompactBitArray{
-				ExtraBitsStored: multi.Bitarray.ExtraBitsStored,
-				Elems:           multi.Bitarray.Elems,
-			},
+			BitArray:   multi.Bitarray,
 			Signatures: sigv2s,
 		}, nil
 
@@ -106,7 +100,7 @@ func decodeMultisignatures(bz []byte) ([][]byte, error) {
 	// malleability in the protobuf message. Basically an attacker could bloat a MultiSignature message with unknown
 	// fields, thus bloating the transaction and causing it to fail.
 	if len(multisig.XXX_unrecognized) > 0 {
-		return nil, errors.New("rejecting unrecognized fields found in MultiSignature")
+		return nil, fmt.Errorf("rejecting unrecognized fields found in MultiSignature")
 	}
 	return multisig.Signatures, nil
 }

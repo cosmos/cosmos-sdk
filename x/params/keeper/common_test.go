@@ -1,24 +1,24 @@
 package keeper_test
 
 import (
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/params"
-	paramskeeper "cosmossdk.io/x/params/keeper"
-
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	"github.com/cosmos/cosmos-sdk/x/params/testutil"
 )
 
 func testComponents() (*codec.LegacyAmino, sdk.Context, storetypes.StoreKey, storetypes.StoreKey, paramskeeper.Keeper) {
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, params.AppModule{})
-	cdc := encodingConfig.Codec
+	var cdc codec.Codec
+	if err := depinject.Inject(testutil.AppConfig, &cdc); err != nil {
+		panic(err)
+	}
 
 	legacyAmino := createTestCodec()
-	mkey := storetypes.NewKVStoreKey("test")
-	tkey := storetypes.NewTransientStoreKey("transient_test")
+	mkey := sdk.NewKVStoreKey("test")
+	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := sdktestutil.DefaultContext(mkey, tkey)
 	keeper := paramskeeper.NewKeeper(cdc, legacyAmino, mkey, tkey)
 
@@ -34,7 +34,7 @@ type s struct {
 func createTestCodec() *codec.LegacyAmino {
 	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
-	cdc.RegisterConcrete(s{}, "test/s")
-	cdc.RegisterConcrete(invalid{}, "test/invalid")
+	cdc.RegisterConcrete(s{}, "test/s", nil)
+	cdc.RegisterConcrete(invalid{}, "test/invalid", nil)
 	return cdc
 }

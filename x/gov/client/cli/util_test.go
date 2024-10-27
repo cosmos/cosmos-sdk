@@ -13,26 +13,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	sdkmath "cosmossdk.io/math"
-	banktypes "cosmossdk.io/x/bank/types"
-	v1 "cosmossdk.io/x/gov/types/v1"
-	"cosmossdk.io/x/gov/types/v1beta1"
-	stakingtypes "cosmossdk.io/x/staking/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-const (
-	strPlus   = ` string\s+`
-	startStr  = `(?m:^\s+--`
-	strDollar = `$)`
-	strHelp   = "help output"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestParseSubmitLegacyProposal(t *testing.T) {
@@ -49,21 +39,17 @@ func TestParseSubmitLegacyProposal(t *testing.T) {
 	fs := NewCmdSubmitLegacyProposal().Flags()
 
 	// nonexistent json
-	err := fs.Set(FlagProposal, "fileDoesNotExist")
-	require.NoError(t, err)
-
-	_, err = parseSubmitLegacyProposal(fs)
+	fs.Set(FlagProposal, "fileDoesNotExist")
+	_, err := parseSubmitLegacyProposal(fs)
 	require.Error(t, err)
 
 	// invalid json
-	err = fs.Set(FlagProposal, badJSON.Name())
-	require.NoError(t, err)
+	fs.Set(FlagProposal, badJSON.Name())
 	_, err = parseSubmitLegacyProposal(fs)
 	require.Error(t, err)
 
 	// ok json
-	err = fs.Set(FlagProposal, okJSON.Name())
-	require.NoError(t, err)
+	fs.Set(FlagProposal, okJSON.Name())
 	proposal1, err := parseSubmitLegacyProposal(fs)
 	require.Nil(t, err, "unexpected error")
 	require.Equal(t, "Test Proposal", proposal1.Title)
@@ -73,17 +59,14 @@ func TestParseSubmitLegacyProposal(t *testing.T) {
 
 	// flags that can't be used with --proposal
 	for _, incompatibleFlag := range ProposalFlags {
-		err = fs.Set(incompatibleFlag, "some value")
-		require.NoError(t, err)
+		fs.Set(incompatibleFlag, "some value")
 		_, err := parseSubmitLegacyProposal(fs)
 		require.Error(t, err)
-		err = fs.Set(incompatibleFlag, "")
-		require.NoError(t, err)
+		fs.Set(incompatibleFlag, "")
 	}
 
 	// no --proposal, only flags
-	err = fs.Set(FlagProposal, "")
-	require.NoError(t, err)
+	fs.Set(FlagProposal, "")
 	flagTestCases := map[string]struct {
 		pTitle       string
 		pDescription string
@@ -117,14 +100,10 @@ func TestParseSubmitLegacyProposal(t *testing.T) {
 	}
 	for name, tc := range flagTestCases {
 		t.Run(name, func(t *testing.T) {
-			err = fs.Set(FlagTitle, tc.pTitle)
-			require.NoError(t, err)
-			err = fs.Set(FlagDescription, tc.pDescription)
-			require.NoError(t, err)
-			err = fs.Set(FlagProposalType, tc.pType)
-			require.NoError(t, err)
-			err = fs.Set(FlagDeposit, proposal1.Deposit)
-			require.NoError(t, err)
+			fs.Set(FlagTitle, tc.pTitle)
+			fs.Set(FlagDescription, tc.pDescription)
+			fs.Set(FlagProposalType, tc.pType)
+			fs.Set(FlagDeposit, proposal1.Deposit)
 			proposal2, err := parseSubmitLegacyProposal(fs)
 
 			if tc.expErr {
@@ -148,9 +127,6 @@ func TestParseSubmitLegacyProposal(t *testing.T) {
 
 func TestParseSubmitProposal(t *testing.T) {
 	_, _, addr := testdata.KeyTestPubAddr()
-	addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr)
-	require.NoError(t, err)
-
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	banktypes.RegisterInterfaces(interfaceRegistry)
@@ -187,47 +163,45 @@ func TestParseSubmitProposal(t *testing.T) {
 	"metadata": "%s",
 	"title": "My awesome title",
 	"summary": "My awesome summary",
-	"deposit": "1000test",
-	"proposal_type": "expedited"
+	"deposit": "1000test"
 }
 `, addr, addr, addr, addr, addr, base64.StdEncoding.EncodeToString(expectedMetadata)))
 
 	badJSON := testutil.WriteToNewTempFile(t, "bad json")
 
 	// nonexistent json
-	_, _, _, err = parseSubmitProposal(cdc, "fileDoesNotExist")
+	_, _, _, _, _, err := parseSubmitProposal(cdc, "fileDoesNotExist") //nolint: dogsled
 	require.Error(t, err)
 
 	// invalid json
-	_, _, _, err = parseSubmitProposal(cdc, badJSON.Name())
+	_, _, _, _, _, err = parseSubmitProposal(cdc, badJSON.Name()) //nolint: dogsled
 	require.Error(t, err)
 
 	// ok json
-	proposal, msgs, deposit, err := parseSubmitProposal(cdc, okJSON.Name())
+	msgs, metadata, title, summary, deposit, err := parseSubmitProposal(cdc, okJSON.Name())
 	require.NoError(t, err, "unexpected error")
-	require.Equal(t, sdk.NewCoins(sdk.NewCoin("test", sdkmath.NewInt(1000))), deposit)
-	require.Equal(t, base64.StdEncoding.EncodeToString(expectedMetadata), proposal.Metadata)
+	require.Equal(t, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1000))), deposit)
+	require.Equal(t, base64.StdEncoding.EncodeToString(expectedMetadata), metadata)
 	require.Len(t, msgs, 3)
 	msg1, ok := msgs[0].(*banktypes.MsgSend)
 	require.True(t, ok)
-	require.Equal(t, addrStr, msg1.FromAddress)
-	require.Equal(t, addrStr, msg1.ToAddress)
-	require.Equal(t, sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10))), msg1.Amount)
+	require.Equal(t, addr.String(), msg1.FromAddress)
+	require.Equal(t, addr.String(), msg1.ToAddress)
+	require.Equal(t, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))), msg1.Amount)
 	msg2, ok := msgs[1].(*stakingtypes.MsgDelegate)
 	require.True(t, ok)
-	require.Equal(t, addrStr, msg2.DelegatorAddress)
-	require.Equal(t, addrStr, msg2.ValidatorAddress)
-	require.Equal(t, sdk.NewCoin("stake", sdkmath.NewInt(10)), msg2.Amount)
+	require.Equal(t, addr.String(), msg2.DelegatorAddress)
+	require.Equal(t, addr.String(), msg2.ValidatorAddress)
+	require.Equal(t, sdk.NewCoin("stake", sdk.NewInt(10)), msg2.Amount)
 	msg3, ok := msgs[2].(*v1.MsgExecLegacyContent)
 	require.True(t, ok)
-	require.Equal(t, addrStr, msg3.Authority)
+	require.Equal(t, addr.String(), msg3.Authority)
 	textProp, ok := msg3.Content.GetCachedValue().(*v1beta1.TextProposal)
 	require.True(t, ok)
 	require.Equal(t, "My awesome title", textProp.Title)
 	require.Equal(t, "My awesome description", textProp.Description)
-	require.Equal(t, "My awesome title", proposal.Title)
-	require.Equal(t, "My awesome summary", proposal.Summary)
-	require.Equal(t, v1.ProposalType_PROPOSAL_TYPE_EXPEDITED, proposal.proposalType)
+	require.Equal(t, "My awesome title", title)
+	require.Equal(t, "My awesome summary", summary)
 
 	err = okJSON.Close()
 	require.Nil(t, err, "unexpected error")
@@ -236,7 +210,6 @@ func TestParseSubmitProposal(t *testing.T) {
 }
 
 func getCommandHelp(t *testing.T, cmd *cobra.Command) string {
-	t.Helper()
 	// Create a pipe, so we can capture the help sent to stdout.
 	reader, writer, err := os.Pipe()
 	require.NoError(t, err, "creating os.Pipe()")
@@ -291,10 +264,10 @@ func TestAddGovPropFlagsToCmd(t *testing.T) {
 	expSummaryDesc := "The summary to include with the governance proposal"
 	// Regexp notes: (?m:...) = multi-line mode so ^ and $ match the beginning and end of each line.
 	// Each regexp assertion checks for a line containing only a specific flag and its description.
-	assert.Regexp(t, startStr+FlagDeposit+strPlus+expDepositDesc+strDollar, help, strHelp)
-	assert.Regexp(t, startStr+FlagMetadata+strPlus+expMetadataDesc+strDollar, help, strHelp)
-	assert.Regexp(t, startStr+FlagTitle+strPlus+expTitleDesc+strDollar, help, strHelp)
-	assert.Regexp(t, startStr+FlagSummary+strPlus+expSummaryDesc+strDollar, help, strHelp)
+	assert.Regexp(t, `(?m:^\s+--`+FlagDeposit+` string\s+`+expDepositDesc+`$)`, help, "help output")
+	assert.Regexp(t, `(?m:^\s+--`+FlagMetadata+` string\s+`+expMetadataDesc+`$)`, help, "help output")
+	assert.Regexp(t, `(?m:^\s+--`+FlagTitle+` string\s+`+expTitleDesc+`$)`, help, "help output")
+	assert.Regexp(t, `(?m:^\s+--`+FlagSummary+` string\s+`+expSummaryDesc+`$)`, help, "help output")
 }
 
 func TestReadGovPropFlags(t *testing.T) {
@@ -304,8 +277,6 @@ func TestReadGovPropFlags(t *testing.T) {
 	argTitle := "--" + FlagTitle
 	argSummary := "--" + FlagSummary
 
-	fromAddrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(fromAddr)
-	require.NoError(t, err)
 	// cz is a shorter way to define coins objects for these tests.
 	cz := func(coins string) sdk.Coins {
 		rv, err := sdk.ParseCoinsNormalized(coins)
@@ -338,7 +309,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			args:     []string{},
 			exp: &v1.MsgSubmitProposal{
 				InitialDeposit: nil,
-				Proposer:       fromAddrStr,
+				Proposer:       fromAddr.String(),
 				Metadata:       "",
 				Title:          "",
 				Summary:        "",
@@ -374,7 +345,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			name:     "only deposit invalid coins",
 			fromAddr: nil,
 			args:     []string{argDeposit, "not really coins"},
-			expErr:   []string{"invalid deposit", "invalid character in denomination"},
+			expErr:   []string{"invalid deposit", "invalid decimal coin expression", "not really coins"},
 		},
 		{
 			name:     "only deposit two coins",
@@ -404,19 +375,19 @@ func TestReadGovPropFlags(t *testing.T) {
 			name:     "only deposit coin 1 of 3 bad",
 			fromAddr: nil,
 			args:     []string{argDeposit, "1bad^coin,2bcoin,3ccoin"},
-			expErr:   []string{"invalid deposit", "invalid character in denomination"},
+			expErr:   []string{"invalid deposit", "invalid decimal coin expression", "1bad^coin"},
 		},
 		{
 			name:     "only deposit coin 2 of 3 bad",
 			fromAddr: nil,
 			args:     []string{argDeposit, "1acoin,2bad^coin,3ccoin"},
-			expErr:   []string{"invalid deposit", "invalid character in denomination"},
+			expErr:   []string{"invalid deposit", "invalid decimal coin expression", "2bad^coin"},
 		},
 		{
 			name:     "only deposit coin 3 of 3 bad",
 			fromAddr: nil,
 			args:     []string{argDeposit, "1acoin,2bcoin,3bad^coin"},
-			expErr:   []string{"invalid deposit", "invalid character in denomination"},
+			expErr:   []string{"invalid deposit", "invalid decimal coin expression", "3bad^coin"},
 		},
 		// As far as I can tell, there's no way to make flagSet.GetString return an error for a defined string flag.
 		// So I don't have a test for the "could not read deposit" error case.
@@ -553,7 +524,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			},
 			exp: &v1.MsgSubmitProposal{
 				InitialDeposit: cz("56depcoin"),
-				Proposer:       fromAddrStr,
+				Proposer:       fromAddr.String(),
 				Metadata:       "my proposal is cool",
 				Title:          "Simple Gov Prop Title",
 				Summary:        "This is just a test summary on a simple gov prop.",
@@ -570,7 +541,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			},
 			exp: &v1.MsgSubmitProposal{
 				InitialDeposit: cz("78coolcoin"),
-				Proposer:       fromAddrStr,
+				Proposer:       fromAddr.String(),
 				Metadata:       "this proposal is cooler",
 				Title:          "This title is a *bit* more complex.",
 				Summary:        "This\nis\na\ncrazy\nsummary",
@@ -620,7 +591,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			},
 			exp: &v1.MsgSubmitProposal{
 				InitialDeposit: nil,
-				Proposer:       fromAddrStr,
+				Proposer:       fromAddr.String(),
 				Metadata:       "worthless metadata",
 				Title:          "This is a Title",
 				Summary:        "This is a useless summary",
@@ -637,7 +608,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			},
 			exp: &v1.MsgSubmitProposal{
 				InitialDeposit: cz("99mdcoin"),
-				Proposer:       fromAddrStr,
+				Proposer:       fromAddr.String(),
 				Metadata:       "",
 				Title:          "Bland Title",
 				Summary:        "Boring summary",
@@ -653,7 +624,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			},
 			exp: &v1.MsgSubmitProposal{
 				InitialDeposit: cz("71whatcoin"),
-				Proposer:       fromAddrStr,
+				Proposer:       fromAddr.String(),
 				Metadata:       "this metadata does not have the title either",
 				Title:          "",
 				Summary:        "This is a summary on a titleless proposal.",
@@ -670,7 +641,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			},
 			exp: &v1.MsgSubmitProposal{
 				InitialDeposit: cz("42musiccoin"),
-				Proposer:       fromAddrStr,
+				Proposer:       fromAddr.String(),
 				Metadata:       "28",
 				Title:          "Now This is What I Call A Governance Proposal 28",
 				Summary:        "",
@@ -693,8 +664,7 @@ func TestReadGovPropFlags(t *testing.T) {
 			flagSet := cmd.Flags()
 
 			clientCtx := client.Context{
-				FromAddress:  tc.fromAddr,
-				AddressCodec: codectestutil.CodecOptions{}.GetAddressCodec(),
+				FromAddress: tc.fromAddr,
 			}
 
 			var msg *v1.MsgSubmitProposal

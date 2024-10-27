@@ -73,7 +73,7 @@ func (m *PubKey) GetKey() crypto_ed25519.PublicKey {
 	return nil
 }
 
-// PrivKey defines a ed25519 private key.
+// Deprecated: PrivKey defines a ed25519 private key.
 // NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator context.
 type PrivKey struct {
 	Key crypto_ed25519.PrivateKey `protobuf:"bytes,1,opt,name=key,proto3,casttype=crypto/ed25519.PrivateKey" json:"key,omitempty"`

@@ -7,7 +7,7 @@ import "cosmos/app/v1alpha1/module.proto";
 // Config is the config object of the x/auth/tx package.
 message Config {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "cosmossdk.io/x/auth/tx"
+    go_import: "github.com/cosmos/cosmos-sdk/x/auth/tx"
   };
 
   // skip_ante_handler defines whether the ante handler registration should be skipped in case an app wants to override

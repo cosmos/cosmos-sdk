@@ -5,8 +5,8 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/orm/model/ormtable"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 )
 
 func AssertBackendsEqual(t assert.TestingT, b1, b2 ormtable.Backend) {
@@ -27,7 +27,7 @@ func AssertBackendsEqual(t assert.TestingT, b1, b2 ormtable.Backend) {
 	AssertIteratorsEqual(t, it1, it2)
 }
 
-func AssertIteratorsEqual(t assert.TestingT, it1, it2 store.Iterator) {
+func AssertIteratorsEqual(t assert.TestingT, it1, it2 kv.Iterator) {
 	for it1.Valid() {
 		assert.Assert(t, it2.Valid())
 		assert.Assert(t, bytes.Equal(it1.Key(), it2.Key()))

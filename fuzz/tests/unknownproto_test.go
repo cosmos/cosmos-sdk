@@ -13,8 +13,7 @@ func FuzzUnknownProto(f *testing.F) {
 	f.Fuzz(func(t *testing.T, b []byte) {
 		msg := new(testdata.TestVersion2)
 		resolver := new(unknownproto.DefaultAnyResolver)
-		_, _ = unknownproto.RejectUnknownFields(b, msg, true, resolver)
-
-		_, _ = unknownproto.RejectUnknownFields(b, msg, false, resolver)
+		unknownproto.RejectUnknownFields(b, msg, true, resolver)
+		unknownproto.RejectUnknownFields(b, msg, false, resolver)
 	})
 }

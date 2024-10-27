@@ -7,10 +7,10 @@ import (
 	"errors"
 	"fmt"
 
+	btcec "github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/go-bip39"
-	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
-	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	csecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -42,6 +42,10 @@ func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) (
 		return nil, errors.New("invalid derivation path")
 	}
 
+	if derivationPath[1] != sdk.GetConfig().GetCoinType() {
+		return nil, errors.New("invalid derivation path")
+	}
+
 	seed, err := bip39.NewSeedWithErrorChecking(testdata.TestMnemonic, "")
 	if err != nil {
 		return nil, err
@@ -54,7 +58,7 @@ func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) (
 		return nil, err
 	}
 
-	pubkeyObject := secp.PrivKeyFromBytes(derivedPriv).PubKey()
+	_, pubkeyObject := btcec.PrivKeyFromBytes(derivedPriv)
 
 	return pubkeyObject.SerializeUncompressed(), nil
 }
@@ -68,21 +72,21 @@ func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint3
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := secp.ParsePubKey(pk)
+	cmp, err := btcec.ParsePubKey(pk)
 	if err != nil {
-		return nil, "", fmt.Errorf("error parsing public key: %w", err)
+		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}
 
 	compressedPublicKey := make([]byte, csecp256k1.PubKeySize)
 	copy(compressedPublicKey, cmp.SerializeCompressed())
 
-	// Generate the bech32 addr using existing cmtcrypto/etc.
+	// Generate the bech32 addr using existing tmcrypto/etc.
 	pub := &csecp256k1.PubKey{Key: compressedPublicKey}
 	addr := sdk.AccAddress(pub.Address()).String()
 	return pk, addr, err
 }
 
-func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message []byte, p2 byte) ([]byte, error) {
+func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message []byte) ([]byte, error) {
 	path := hd.NewParams(derivationPath[0], derivationPath[1], derivationPath[2], derivationPath[3] != 0, derivationPath[4])
 	seed, err := bip39.NewSeedWithErrorChecking(testdata.TestMnemonic, "")
 	if err != nil {
@@ -95,7 +99,7 @@ func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message [
 		return nil, err
 	}
 
-	priv := secp.PrivKeyFromBytes(derivedPriv)
+	priv, _ := btcec.PrivKeyFromBytes(derivedPriv)
 	sig := ecdsa.Sign(priv, crypto.Sha256(message))
 
 	return sig.Serialize(), nil

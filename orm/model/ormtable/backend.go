@@ -2,11 +2,9 @@ package ormtable
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	"cosmossdk.io/core/store"
-	"cosmossdk.io/orm/types/kv"
+	"github.com/cosmos/cosmos-sdk/orm/types/kv"
 )
 
 // ReadBackend defines the type used for read-only ORM operations.
@@ -27,11 +25,11 @@ type Backend interface {
 	ReadBackend
 
 	// CommitmentStore returns the merklized commitment store.
-	CommitmentStore() store.KVStore
+	CommitmentStore() kv.Store
 
 	// IndexStore returns the index store if a separate one exists,
 	// otherwise it the commitment store.
-	IndexStore() store.KVStore
+	IndexStore() kv.Store
 
 	// ValidateHooks returns a ValidateHooks instance or nil.
 	ValidateHooks() ValidateHooks
@@ -88,8 +86,8 @@ func NewReadBackend(options ReadBackendOptions) ReadBackend {
 }
 
 type backend struct {
-	commitmentStore store.KVStore
-	indexStore      store.KVStore
+	commitmentStore kv.Store
+	indexStore      kv.Store
 	validateHooks   ValidateHooks
 	writeHooks      WriteHooks
 }
@@ -122,11 +120,11 @@ func (c backend) IndexStoreReader() kv.ReadonlyStore {
 	return c.indexStore
 }
 
-func (c backend) CommitmentStore() store.KVStore {
+func (c backend) CommitmentStore() kv.Store {
 	return c.commitmentStore
 }
 
-func (c backend) IndexStore() store.KVStore {
+func (c backend) IndexStore() kv.Store {
 	return c.indexStore
 }
 
@@ -137,11 +135,11 @@ func (c backend) IndexStore() store.KVStore {
 // used for all operations.
 type BackendOptions struct {
 	// CommitmentStore is the commitment store.
-	CommitmentStore store.KVStore
+	CommitmentStore kv.Store
 
 	// IndexStore is the optional index store.
 	// If it is nil the CommitmentStore will be used.
-	IndexStore store.KVStore
+	IndexStore kv.Store
 
 	// ValidateHooks are optional hooks into ORM insert, update and delete operations.
 	ValidateHooks ValidateHooks
@@ -183,7 +181,7 @@ var defaultContextKey = contextKeyType("backend")
 func getBackendDefault(ctx context.Context) (ReadBackend, error) {
 	value := ctx.Value(defaultContextKey)
 	if value == nil {
-		return nil, errors.New("can't resolve backend")
+		return nil, fmt.Errorf("can't resolve backend")
 	}
 
 	backend, ok := value.(ReadBackend)

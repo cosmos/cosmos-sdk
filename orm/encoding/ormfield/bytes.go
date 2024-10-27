@@ -22,9 +22,6 @@ func (b BytesCodec) ComputeBufferSize(value protoreflect.Value) (int, error) {
 }
 
 func bytesSize(value protoreflect.Value) int {
-	if !value.IsValid() {
-		return 0
-	}
 	return len(value.Bytes())
 }
 
@@ -38,15 +35,12 @@ func (b BytesCodec) Decode(r Reader) (protoreflect.Value, error) {
 }
 
 func (b BytesCodec) Encode(value protoreflect.Value, w io.Writer) error {
-	if !value.IsValid() {
-		return nil
-	}
 	_, err := w.Write(value.Bytes())
 	return err
 }
 
 func (b BytesCodec) Compare(v1, v2 protoreflect.Value) int {
-	return compareBytes(v1, v2)
+	return bytes.Compare(v1.Bytes(), v2.Bytes())
 }
 
 // NonTerminalBytesCodec encodes bytes as raw bytes length prefixed by a single
@@ -75,7 +69,7 @@ func (b NonTerminalBytesCodec) IsOrdered() bool {
 }
 
 func (b NonTerminalBytesCodec) Compare(v1, v2 protoreflect.Value) int {
-	return compareBytes(v1, v2)
+	return bytes.Compare(v1.Bytes(), v2.Bytes())
 }
 
 func (b NonTerminalBytesCodec) Decode(r Reader) (protoreflect.Value, error) {
@@ -94,10 +88,7 @@ func (b NonTerminalBytesCodec) Decode(r Reader) (protoreflect.Value, error) {
 }
 
 func (b NonTerminalBytesCodec) Encode(value protoreflect.Value, w io.Writer) error {
-	var bz []byte
-	if value.IsValid() {
-		bz = value.Bytes()
-	}
+	bz := value.Bytes()
 	n := len(bz)
 	var prefix [binary.MaxVarintLen64]byte
 	prefixLen := binary.PutUvarint(prefix[:], uint64(n))
@@ -107,15 +98,4 @@ func (b NonTerminalBytesCodec) Encode(value protoreflect.Value, w io.Writer) err
 	}
 	_, err = w.Write(bz)
 	return err
-}
-
-func compareBytes(v1, v2 protoreflect.Value) int {
-	var bz1, bz2 []byte
-	if v1.IsValid() {
-		bz1 = v1.Bytes()
-	}
-	if v2.IsValid() {
-		bz2 = v2.Bytes()
-	}
-	return bytes.Compare(bz1, bz2)
 }

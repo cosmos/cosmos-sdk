@@ -1,14 +1,12 @@
 syntax = "proto3";
 package cosmos.tx.v1beta1;
 
-import "cosmos_proto/cosmos.proto";
-import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/crypto/multisig/v1beta1/multisig.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/tx/signing/v1beta1/signing.proto";
 import "google/protobuf/any.proto";
-import "google/protobuf/timestamp.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
@@ -68,8 +66,9 @@ message SignDoc {
 
 // SignDocDirectAux is the type used for generating sign bytes for
 // SIGN_MODE_DIRECT_AUX.
+//
+// Since: cosmos-sdk 0.46
 message SignDocDirectAux {
-  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.46";
   // body_bytes is protobuf serialization of a TxBody that matches the
   // representation in TxRaw.
   bytes body_bytes = 1;
@@ -88,8 +87,13 @@ message SignDocDirectAux {
   // sequence is the sequence number of the signing account.
   uint64 sequence = 5;
 
-  // tips have been deprecated and should not be used
-  Tip tip = 6 [deprecated = true];
+  // Tip is the optional tip used for transactions fees paid in another denom.
+  // It should be left empty if the signer is not the tipper for this
+  // transaction.
+  //
+  // This field is ignored if the chain didn't enable tips, i.e. didn't add the
+  // `TipDecorator` in its posthandler.
+  Tip tip = 6;
 }
 
 // TxBody is the body of a transaction that all signers sign over.
@@ -105,32 +109,12 @@ message TxBody {
 
   // memo is any arbitrary note/comment to be added to the transaction.
   // WARNING: in clients, any publicly exposed text should not be called memo,
-  // but should be called `note` instead (see
-  // https://github.com/cosmos/cosmos-sdk/issues/9122).
+  // but should be called `note` instead (see https://github.com/cosmos/cosmos-sdk/issues/9122).
   string memo = 2;
 
-  // timeout_height is the block height after which this transaction will not
-  // be processed by the chain.
+  // timeout is the block height after which this transaction will not
+  // be processed by the chain
   uint64 timeout_height = 3;
-
-  // unordered, when set to true, indicates that the transaction signer(s)
-  // intend for the transaction to be evaluated and executed in an un-ordered
-  // fashion. Specifically, the account's nonce will NOT be checked or
-  // incremented, which allows for fire-and-forget as well as concurrent
-  // transaction execution.
-  //
-  // Note, when set to true, the existing 'timeout_height' value must
-  // be set and will be used to correspond to a time_stamp in which the transaction is deemed
-  // valid.
-  bool unordered = 4;
-
-  // timeout_timestamp is the block time after which this transaction will not
-  // be processed by the chain.
-  //
-  // Note, if unordered=true this value MUST be set
-  // and will act as a short-lived TTL in which the transaction is deemed valid
-  // and kept in memory to prevent duplicates.
-  google.protobuf.Timestamp timeout_timestamp = 5 [(gogoproto.nullable) = true, (gogoproto.stdtime) = true];
 
   // extension_options are arbitrary options that can be added by chains
   // when the default options are not sufficient. If any of these are present
@@ -157,11 +141,14 @@ message AuthInfo {
   // based on the cost of evaluating the body and doing signature verification
   // of the signers. This can be estimated via simulation.
   Fee fee = 2;
+
   // Tip is the optional tip used for transactions fees paid in another denom.
   //
   // This field is ignored if the chain didn't enable tips, i.e. didn't add the
   // `TipDecorator` in its posthandler.
-  Tip tip = 3 [deprecated = true, (cosmos_proto.field_added_in) = "cosmos-sdk 0.46"];
+  //
+  // Since: cosmos-sdk 0.46
+  Tip tip = 3;
 }
 
 // SignerInfo describes the public key and signing mode of a single top-level
@@ -215,44 +202,34 @@ message ModeInfo {
 
 // Fee includes the amount of coins paid in fees and the maximum
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
-// which must be above some minimum to be accepted into the mempool.
+// which must be above some miminum to be accepted into the mempool.
 message Fee {
   // amount is the amount of coins to be paid as a fee
-  repeated cosmos.base.v1beta1.Coin amount = 1 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "legacy_coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // gas_limit is the maximum gas that can be used in transaction processing
   // before an out of gas error occurs
   uint64 gas_limit = 2;
 
-  // if unset, the first signer is responsible for paying the fees. If set, the
-  // specified account must pay the fees. the payer must be a tx signer (and
-  // thus have signed this field in AuthInfo). setting this field does *not*
-  // change the ordering of required signers for the transaction.
+  // if unset, the first signer is responsible for paying the fees. If set, the specified account must pay the fees.
+  // the payer must be a tx signer (and thus have signed this field in AuthInfo).
+  // setting this field does *not* change the ordering of required signers for the transaction.
   string payer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // if set, the fee payer (either the first signer or the value of the payer
-  // field) requests that a fee grant be used to pay fees instead of the fee
-  // payer's own balance. If an appropriate fee grant does not exist or the
-  // chain does not support fee grants, this will fail
+  // if set, the fee payer (either the first signer or the value of the payer field) requests that a fee grant be used
+  // to pay fees instead of the fee payer's own balance. If an appropriate fee grant does not exist or the chain does
+  // not support fee grants, this will fail
   string granter = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // Tip is the tip used for meta-transactions.
+//
+// Since: cosmos-sdk 0.46
 message Tip {
-  option deprecated                      = true;
-  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.46";
   // amount is the amount of the tip
-  repeated cosmos.base.v1beta1.Coin amount = 1 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "legacy_coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   // tipper is the address of the account paying for the tip
   string tipper = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
@@ -261,9 +238,9 @@ message Tip {
 // tipper) builds and sends to the fee payer (who will build and broadcast the
 // actual tx). AuxSignerData is not a valid tx in itself, and will be rejected
 // by the node if sent directly as-is.
+//
+// Since: cosmos-sdk 0.46
 message AuxSignerData {
-  option (cosmos_proto.message_added_in) = "cosmos-sdk 0.46";
-
   // address is the bech32-encoded address of the auxiliary signer. If using
   // AuxSignerData across different chains, the bech32 prefix of the target
   // chain (where the final transaction is broadcasted) should be used.

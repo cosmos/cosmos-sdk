@@ -3,29 +3,22 @@ package orm
 import (
 	"testing"
 
-	"github.com/cosmos/gogoproto/proto"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/group/errors"
-
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestReadAll(t *testing.T) {
 	specs := map[string]struct {
 		srcIT     Iterator
 		destSlice func() ModelSlicePtr
-		expErr    *errorsmod.Error
+		expErr    *sdkerrors.Error
 		expIDs    []RowID
 		expResult ModelSlicePtr
 	}{
@@ -157,11 +150,11 @@ func TestFirst(t *testing.T) {
 	testCases := []struct {
 		name          string
 		iterator      Iterator
-		dest          proto.Message
+		dest          codec.ProtoMarshaler
 		expectErr     bool
 		expectedErr   string
 		expectedRowID RowID
-		expectedDest  proto.Message
+		expectedDest  codec.ProtoMarshaler
 	}{
 		{
 			name:        "nil iterator",
@@ -205,16 +198,15 @@ func TestPaginate(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	tb, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc, address.NewBech32Codec("cosmos"))
+	tb, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
 	require.NoError(t, err)
 	idx, err := NewIndex(tb, AutoUInt64TableModelByMetadataPrefix, func(val interface{}) ([]interface{}, error) {
-		return []interface{}{val.(*testdata.TableModel).Metadata}, nil
+		return []interface{}{[]byte(val.(*testdata.TableModel).Metadata)}, nil
 	}, testdata.TableModel{}.Metadata)
 	require.NoError(t, err)
 
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
+	ctx := NewMockContext()
+	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 	metadata := []byte("metadata")
 	t1 := testdata.TableModel{
@@ -244,7 +236,6 @@ func TestPaginate(t *testing.T) {
 	}
 
 	for _, g := range []testdata.TableModel{t1, t2, t3, t4, t5} {
-		g := g
 		_, err := tb.Create(store, &g)
 		require.NoError(t, err)
 	}
@@ -351,8 +342,8 @@ func TestPaginate(t *testing.T) {
 }
 
 // mockIter encodes + decodes value object.
-func mockIter(rowID RowID, val proto.Message) Iterator {
-	b, err := proto.Marshal(val)
+func mockIter(rowID RowID, val codec.ProtoMarshaler) Iterator {
+	b, err := val.Marshal()
 	if err != nil {
 		panic(err)
 	}
@@ -360,7 +351,7 @@ func mockIter(rowID RowID, val proto.Message) Iterator {
 }
 
 func noopIter() Iterator {
-	return IteratorFunc(func(dest proto.Message) (RowID, error) {
+	return IteratorFunc(func(dest codec.ProtoMarshaler) (RowID, error) {
 		return nil, nil
 	})
 }

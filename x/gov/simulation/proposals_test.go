@@ -1,17 +1,15 @@
 package simulation_test
 
 import (
-	"context"
 	"math/rand"
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/x/gov/simulation"
-
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 )
 
 func TestProposalMsgs(t *testing.T) {
@@ -19,6 +17,7 @@ func TestProposalMsgs(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
+	ctx := sdk.NewContext(nil, tmproto.Header{}, true, nil)
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalMsgs function
@@ -31,8 +30,7 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, simulation.OpWeightSubmitTextProposal, w0.AppParamsKey())
 	assert.Equal(t, simulation.DefaultWeightTextProposal, w0.DefaultWeight())
 
-	msg, err := w0.MsgSimulatorFn()(context.Background(), r, accounts, codectestutil.CodecOptions{}.GetAddressCodec())
-	assert.NilError(t, err)
+	msg := w0.MsgSimulatorFn()(r, ctx, accounts)
 	assert.Assert(t, msg == nil)
 }
 
@@ -41,7 +39,7 @@ func TestProposalContents(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
-	ctx := sdk.NewContext(nil, true, nil)
+	ctx := sdk.NewContext(nil, tmproto.Header{}, true, nil)
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalContents function

@@ -92,7 +92,7 @@ func (bA *CompactBitArray) NumTrueBitsBefore(index int) int {
 		index = max
 	}
 	// below we iterate over the bytes then over bits (in low endian) and count bits set to 1
-	for elem := range bA.Elems {
+	for elem := 0; elem < len(bA.Elems); elem++ {
 		if elem*8+7 >= index {
 			onesCount += bits.OnesCount8(bA.Elems[elem] >> (7 - (index % 8) + 1))
 			return onesCount

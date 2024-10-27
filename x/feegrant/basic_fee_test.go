@@ -1,42 +1,39 @@
 package feegrant_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/appmodule/v2"
-	corecontext "cosmossdk.io/core/context"
-	"cosmossdk.io/core/header"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/feegrant"
-
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 func TestBasicFeeValidAllow(t *testing.T) {
-	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	key := sdk.NewKVStoreKey(feegrant.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
 
-	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Height: 1})
+	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})
 
-	badTime := ctx.HeaderInfo().Time.AddDate(0, 0, -1)
+	badTime := ctx.BlockTime().AddDate(0, 0, -1)
 	allowace := &feegrant.BasicAllowance{
 		Expiration: &badTime,
 	}
 	require.Error(t, allowace.ValidateBasic())
 
-	ctx = ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+	ctx = ctx.WithBlockHeader(tmproto.Header{
+		Time: time.Now(),
+	})
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 10))
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 43))
 	bigAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1000))
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
-	now := ctx.HeaderInfo().Time
+	now := ctx.BlockTime()
 	oneHour := now.Add(1 * time.Hour)
 
 	cases := map[string]struct {
@@ -133,18 +130,13 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	for name, stc := range cases {
 		tc := stc // to make scopelint happy
 		t.Run(name, func(t *testing.T) {
-			err := tc.allowance.UpdatePeriodReset(tc.blockTime)
+			err := tc.allowance.ValidateBasic()
 			require.NoError(t, err)
 
-			err = tc.allowance.ValidateBasic()
-			require.NoError(t, err)
+			ctx := testCtx.Ctx.WithBlockTime(tc.blockTime)
 
-			ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: tc.blockTime})
 			// now try to deduct
-			removed, err := tc.allowance.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, appmodule.Environment{
-				HeaderService: mockHeaderService{},
-				GasService:    mockGasService{},
-			}), tc.fee, []sdk.Msg{})
+			removed, err := tc.allowance.Accept(ctx, tc.fee, []sdk.Msg{})
 			if !tc.accept {
 				require.Error(t, err)
 				return

@@ -1,24 +1,17 @@
 package client
 
 import (
-	"context"
 	"crypto/tls"
-	"errors"
 	"fmt"
-	"slices"
 	"strings"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/libs/cli"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
-
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	corectx "cosmossdk.io/core/context"
-	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -99,8 +92,8 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 // - client.Context field pre-populated & flag not set: uses pre-populated value
 // - client.Context field pre-populated & flag set: uses set flag value
 func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
-	if clientCtx.OutputFormat == "" || flagSet.Changed(flags.FlagOutput) {
-		output, _ := flagSet.GetString(flags.FlagOutput)
+	if clientCtx.OutputFormat == "" || flagSet.Changed(cli.OutputFlag) {
+		output, _ := flagSet.GetString(cli.OutputFlag)
 		clientCtx = clientCtx.WithOutputFormat(output)
 	}
 
@@ -172,7 +165,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 				})))
 			}
 
-			grpcClient, err := grpc.NewClient(grpcURI, dialOpts...)
+			grpcClient, err := grpc.Dial(grpcURI, dialOpts...)
 			if err != nil {
 				return Context{}, err
 			}
@@ -257,7 +250,7 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		payer, _ := flagSet.GetString(flags.FlagFeePayer)
 
 		if payer != "" {
-			payerAcc, err := clientCtx.AddressCodec.StringToBytes(payer)
+			payerAcc, err := sdk.AccAddressFromBech32(payer)
 			if err != nil {
 				return clientCtx, err
 			}
@@ -270,7 +263,7 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		granter, _ := flagSet.GetString(flags.FlagFeeGranter)
 
 		if granter != "" {
-			granterAcc, err := clientCtx.AddressCodec.StringToBytes(granter)
+			granterAcc, err := sdk.AccAddressFromBech32(granter)
 			if err != nil {
 				return clientCtx, err
 			}
@@ -283,24 +276,15 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		from, _ := flagSet.GetString(flags.FlagFrom)
 		fromAddr, fromName, keyType, err := GetFromFields(clientCtx, clientCtx.Keyring, from)
 		if err != nil {
-			return clientCtx, fmt.Errorf("failed to convert address field to address: %w", err)
+			return clientCtx, err
 		}
 
 		clientCtx = clientCtx.WithFrom(from).WithFromAddress(fromAddr).WithFromName(fromName)
 
-		if keyType == keyring.TypeLedger && clientCtx.SignModeStr == flags.SignModeTextual {
-			if !slices.Contains(clientCtx.TxConfig.SignModeHandler().SupportedModes(), signingv1beta1.SignMode_SIGN_MODE_TEXTUAL) {
-				return clientCtx, errors.New("SIGN_MODE_TEXTUAL is not available")
-			}
-		}
-
 		// If the `from` signer account is a ledger key, we need to use
 		// SIGN_MODE_AMINO_JSON, because ledger doesn't support proto yet.
 		// ref: https://github.com/cosmos/cosmos-sdk/issues/8109
-		if keyType == keyring.TypeLedger &&
-			clientCtx.SignModeStr != flags.SignModeLegacyAminoJSON &&
-			clientCtx.SignModeStr != flags.SignModeTextual &&
-			!clientCtx.LedgerHasProtobuf {
+		if keyType == keyring.TypeLedger && clientCtx.SignModeStr != flags.SignModeLegacyAminoJSON && !clientCtx.LedgerHasProtobuf {
 			fmt.Println("Default sign-mode 'direct' not supported by Ledger, using sign-mode 'amino-json'.")
 			clientCtx = clientCtx.WithSignModeStr(flags.SignModeLegacyAminoJSON)
 		}
@@ -310,12 +294,14 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		isAux, _ := flagSet.GetBool(flags.FlagAux)
 		clientCtx = clientCtx.WithAux(isAux)
 		if isAux {
-			// If the user didn't explicitly set an --output flag, use JSON by default.
-			if clientCtx.OutputFormat == "" || !flagSet.Changed(flags.FlagOutput) {
-				clientCtx = clientCtx.WithOutputFormat(flags.OutputFormatJSON)
+			// If the user didn't explicitly set an --output flag, use JSON by
+			// default.
+			if clientCtx.OutputFormat == "" || !flagSet.Changed(cli.OutputFlag) {
+				clientCtx = clientCtx.WithOutputFormat("json")
 			}
 
-			// If the user didn't explicitly set a --sign-mode flag, use DIRECT_AUX by default.
+			// If the user didn't explicitly set a --sign-mode flag, use
+			// DIRECT_AUX by default.
 			if clientCtx.SignModeStr == "" || !flagSet.Changed(flags.FlagSignMode) {
 				clientCtx = clientCtx.WithSignModeStr(flags.SignModeDirectAux)
 			}
@@ -361,56 +347,14 @@ func GetClientContextFromCmd(cmd *cobra.Command) Context {
 }
 
 // SetCmdClientContext sets a command's Context value to the provided argument.
-// If the context has not been set, set the given context as the default.
 func SetCmdClientContext(cmd *cobra.Command, clientCtx Context) error {
-	cmdCtx := cmd.Context()
-	if cmdCtx == nil {
-		cmdCtx = context.Background()
+	v := cmd.Context().Value(ClientContextKey)
+	if v == nil {
+		return errors.New("client context not set")
 	}
 
-	v := cmd.Context().Value(ClientContextKey)
-	if clientCtxPtr, ok := v.(*Context); ok {
-		*clientCtxPtr = clientCtx
-	} else {
-		cmd.SetContext(context.WithValue(cmdCtx, ClientContextKey, &clientCtx))
-	}
+	clientCtxPtr := v.(*Context)
+	*clientCtxPtr = clientCtx
 
 	return nil
-}
-
-func GetViperFromCmd(cmd *cobra.Command) *viper.Viper {
-	value := cmd.Context().Value(corectx.ViperContextKey)
-	v, ok := value.(*viper.Viper)
-	if !ok {
-		return viper.New()
-	}
-	return v
-}
-
-func GetConfigFromCmd(cmd *cobra.Command) *cmtcfg.Config {
-	v := cmd.Context().Value(corectx.ViperContextKey)
-	viper, ok := v.(*viper.Viper)
-	if !ok {
-		return cmtcfg.DefaultConfig()
-	}
-	return GetConfigFromViper(viper)
-}
-
-func GetLoggerFromCmd(cmd *cobra.Command) log.Logger {
-	v := cmd.Context().Value(corectx.LoggerContextKey)
-	logger, ok := v.(log.Logger)
-	if !ok {
-		return log.NewLogger(cmd.OutOrStdout())
-	}
-	return logger
-}
-
-func GetConfigFromViper(v *viper.Viper) *cmtcfg.Config {
-	conf := cmtcfg.DefaultConfig()
-	err := v.Unmarshal(conf)
-	rootDir := v.GetString(flags.FlagHome)
-	if err != nil {
-		return cmtcfg.DefaultConfig().SetRoot(rootDir)
-	}
-	return conf.SetRoot(rootDir)
 }

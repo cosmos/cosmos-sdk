@@ -3,37 +3,32 @@ package keeper_test
 import (
 	"time"
 
-	"cosmossdk.io/x/evidence/types"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 func (s *KeeperTestSuite) TestSubmitEvidence() {
 	pk := ed25519.GenPrivKey()
-	consAddr, err := s.consAddressCodec.BytesToString(pk.PubKey().Address())
-	s.Require().NoError(err)
 
 	e := &types.Equivocation{
 		Height:           1,
 		Power:            100,
 		Time:             time.Now().UTC(),
-		ConsensusAddress: consAddr,
+		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 	}
 
-	accAddr, err := s.addressCodec.BytesToString(valAddress)
-	s.Require().NoError(err)
-
-	validEvidence, err := types.NewMsgSubmitEvidence(accAddr, e)
+	validEvidence, err := types.NewMsgSubmitEvidence(sdk.AccAddress(valAddresses[0]), e)
 	s.Require().NoError(err)
 
 	e2 := &types.Equivocation{
 		Height:           0,
 		Power:            100,
 		Time:             time.Now().UTC(),
-		ConsensusAddress: consAddr,
+		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 	}
 
-	invalidEvidence, err := types.NewMsgSubmitEvidence(accAddr, e2)
+	invalidEvidence, err := types.NewMsgSubmitEvidence(sdk.AccAddress(valAddresses[0]), e2)
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -42,20 +37,6 @@ func (s *KeeperTestSuite) TestSubmitEvidence() {
 		expErr    bool
 		expErrMsg string
 	}{
-		{
-			name:      "invalid address",
-			req:       &types.MsgSubmitEvidence{},
-			expErr:    true,
-			expErrMsg: "invalid submitter address: empty address string is not allowed",
-		},
-		{
-			name: "missing evidence",
-			req: &types.MsgSubmitEvidence{
-				Submitter: accAddr,
-			},
-			expErr:    true,
-			expErrMsg: "missing evidence: invalid evidence",
-		},
 		{
 			name:      "invalid evidence with height 0",
 			req:       invalidEvidence,

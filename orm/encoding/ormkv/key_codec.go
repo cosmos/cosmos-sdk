@@ -2,14 +2,14 @@ package ormkv
 
 import (
 	"bytes"
-	"errors"
 	"io"
+
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/orm/encoding/encodeutil"
-	"cosmossdk.io/orm/encoding/ormfield"
-	"cosmossdk.io/orm/types/ormerrors"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
 )
 
 type KeyCodec struct {
@@ -104,9 +104,7 @@ func (cdc *KeyCodec) EncodeKey(values []protoreflect.Value) ([]byte, error) {
 func (cdc *KeyCodec) GetKeyValues(message protoreflect.Message) []protoreflect.Value {
 	res := make([]protoreflect.Value, len(cdc.fieldDescriptors))
 	for i, f := range cdc.fieldDescriptors {
-		if message.Has(f) {
-			res[i] = message.Get(f)
-		}
+		res[i] = message.Get(f)
 	}
 	return res
 }
@@ -123,7 +121,7 @@ func (cdc *KeyCodec) DecodeKey(r *bytes.Reader) ([]protoreflect.Value, error) {
 	values := make([]protoreflect.Value, 0, n)
 	for i := 0; i < n; i++ {
 		value, err := cdc.fieldCodecs[i].Decode(r)
-		if errors.Is(err, io.EOF) {
+		if err == io.EOF {
 			return values, err
 		} else if err != nil {
 			return nil, err
@@ -177,12 +175,11 @@ func (cdc *KeyCodec) CompareKeys(values1, values2 []protoreflect.Value) int {
 	}
 
 	// values are equal but arrays of different length
-	switch {
-	case j == k:
+	if j == k {
 		return 0
-	case j < k:
+	} else if j < k {
 		return -1
-	default:
+	} else {
 		return 1
 	}
 }
@@ -212,10 +209,7 @@ func (cdc KeyCodec) ComputeKeyBufferSize(values []protoreflect.Value) (int, erro
 // supported.
 func (cdc *KeyCodec) SetKeyValues(message protoreflect.Message, values []protoreflect.Value) {
 	for i, f := range cdc.fieldDescriptors {
-		value := values[i]
-		if value.IsValid() {
-			message.Set(f, value)
-		}
+		message.Set(f, values[i])
 	}
 }
 

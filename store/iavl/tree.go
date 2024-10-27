@@ -3,8 +3,8 @@ package iavl
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/iavl"
-	idb "github.com/cosmos/iavl/db"
 )
 
 var (
@@ -22,21 +22,19 @@ type (
 		Get(key []byte) ([]byte, error)
 		Set(key, value []byte) (bool, error)
 		Remove(key []byte) ([]byte, bool, error)
-		SetCommitting()
-		UnsetCommitting()
 		SaveVersion() ([]byte, int64, error)
+		DeleteVersion(version int64) error
+		DeleteVersions(versions ...int64) error
 		Version() int64
-		Hash() []byte
-		WorkingHash() []byte
+		Hash() ([]byte, error)
 		VersionExists(version int64) bool
-		DeleteVersionsTo(version int64) error
 		GetVersioned(key []byte, version int64) ([]byte, error)
 		GetImmutable(version int64) (*iavl.ImmutableTree, error)
 		SetInitialVersion(version uint64)
-		Iterator(start, end []byte, ascending bool) (idb.Iterator, error)
+		Iterator(start, end []byte, ascending bool) (types.Iterator, error)
 		AvailableVersions() []int
-		LoadVersionForOverwriting(targetVersion int64) error
-		TraverseStateChanges(startVersion, endVersion int64, fn func(version int64, changeSet *iavl.ChangeSet) error) error
+		LoadVersionForOverwriting(targetVersion int64) (int64, error)
+		LazyLoadVersionForOverwriting(targetVersion int64) (int64, error)
 	}
 
 	// immutableTree is a simple wrapper around a reference to an iavl.ImmutableTree
@@ -55,20 +53,16 @@ func (it *immutableTree) Remove(_ []byte) ([]byte, bool, error) {
 	panic("cannot call 'Remove' on an immutable IAVL tree")
 }
 
-func (it *immutableTree) SetCommitting() {
-	panic("cannot call 'SetCommitting' on an immutable IAVL tree")
-}
-
-func (it *immutableTree) UnsetCommitting() {
-	panic("cannot call 'UnsetCommitting' on an immutable IAVL tree")
-}
-
 func (it *immutableTree) SaveVersion() ([]byte, int64, error) {
 	panic("cannot call 'SaveVersion' on an immutable IAVL tree")
 }
 
-func (it *immutableTree) DeleteVersionsTo(_ int64) error {
-	panic("cannot call 'DeleteVersionsTo' on an immutable IAVL tree")
+func (it *immutableTree) DeleteVersion(_ int64) error {
+	panic("cannot call 'DeleteVersion' on an immutable IAVL tree")
+}
+
+func (it *immutableTree) DeleteVersions(_ ...int64) error {
+	panic("cannot call 'DeleteVersions' on an immutable IAVL tree")
 }
 
 func (it *immutableTree) SetInitialVersion(_ uint64) {
@@ -99,10 +93,10 @@ func (it *immutableTree) AvailableVersions() []int {
 	return []int{}
 }
 
-func (it *immutableTree) LoadVersionForOverwriting(targetVersion int64) error {
+func (it *immutableTree) LoadVersionForOverwriting(targetVersion int64) (int64, error) {
 	panic("cannot call 'LoadVersionForOverwriting' on an immutable IAVL tree")
 }
 
-func (it *immutableTree) WorkingHash() []byte {
-	panic("cannot call 'WorkingHash' on an immutable IAVL tree")
+func (it *immutableTree) LazyLoadVersionForOverwriting(targetVersion int64) (int64, error) {
+	panic("cannot call 'LazyLoadVersionForOverwriting' on an immutable IAVL tree")
 }

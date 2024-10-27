@@ -8,13 +8,14 @@ import (
 	"io"
 	"math"
 
+	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
+
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	"cosmossdk.io/orm/encoding/encodeutil"
-	"cosmossdk.io/orm/encoding/ormkv"
-	"cosmossdk.io/orm/internal/fieldnames"
-	"cosmossdk.io/orm/types/ormerrors"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/encodeutil"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
 )
 
 // tableImpl implements Table.
@@ -23,10 +24,10 @@ type tableImpl struct {
 	indexes               []Index
 	indexesByFields       map[fieldnames.FieldNames]concreteIndex
 	uniqueIndexesByFields map[fieldnames.FieldNames]UniqueIndex
-	indexesByID           map[uint32]Index
-	entryCodecsByID       map[uint32]ormkv.EntryCodec
+	indexesById           map[uint32]Index
+	entryCodecsById       map[uint32]ormkv.EntryCodec
 	tablePrefix           []byte
-	tableID               uint32
+	tableId               uint32
 	typeResolver          TypeResolver
 	customJSONValidator   func(message proto.Message) error
 }
@@ -43,7 +44,7 @@ func (t tableImpl) PrimaryKey() UniqueIndex {
 }
 
 func (t tableImpl) GetIndexByID(id uint32) Index {
-	return t.indexesByID[id]
+	return t.indexesById[id]
 }
 
 func (t tableImpl) Save(ctx context.Context, message proto.Message) error {
@@ -121,9 +122,6 @@ func (t tableImpl) doSave(ctx context.Context, writer *batchIndexCommitmentWrite
 
 	// store object
 	bz, err := proto.MarshalOptions{Deterministic: true}.Marshal(message)
-	if err != nil {
-		return err
-	}
 	err = writer.CommitmentStore().Set(pk, bz)
 	if err != nil {
 		return err
@@ -186,16 +184,16 @@ func (t tableImpl) DefaultJSON() json.RawMessage {
 	return json.RawMessage("[]")
 }
 
-func (t tableImpl) decodeJSON(reader io.Reader, onMsg func(message proto.Message) error) error {
-	decoder, err := t.startDecodeJSON(reader)
+func (t tableImpl) decodeJson(reader io.Reader, onMsg func(message proto.Message) error) error {
+	decoder, err := t.startDecodeJson(reader)
 	if err != nil {
 		return err
 	}
 
-	return t.doDecodeJSON(decoder, nil, onMsg)
+	return t.doDecodeJson(decoder, nil, onMsg)
 }
 
-func (t tableImpl) startDecodeJSON(reader io.Reader) (*json.Decoder, error) {
+func (t tableImpl) startDecodeJson(reader io.Reader) (*json.Decoder, error) {
 	decoder := json.NewDecoder(reader)
 	token, err := decoder.Token()
 	if err != nil {
@@ -212,13 +210,13 @@ func (t tableImpl) startDecodeJSON(reader io.Reader) (*json.Decoder, error) {
 // onFirst is called on the first RawMessage and used for auto-increment tables
 // to decode the sequence in which case it should return true.
 // onMsg is called on every decoded message
-func (t tableImpl) doDecodeJSON(decoder *json.Decoder, onFirst func(message json.RawMessage) bool, onMsg func(message proto.Message) error) error {
+func (t tableImpl) doDecodeJson(decoder *json.Decoder, onFirst func(message json.RawMessage) bool, onMsg func(message proto.Message) error) error {
 	unmarshalOptions := protojson.UnmarshalOptions{Resolver: t.typeResolver}
 
 	first := true
 	for decoder.More() {
-		var rawJSON json.RawMessage
-		err := decoder.Decode(&rawJSON)
+		var rawJson json.RawMessage
+		err := decoder.Decode(&rawJson)
 		if err != nil {
 			return ormerrors.JSONImportError.Wrapf("%s", err)
 		}
@@ -226,7 +224,7 @@ func (t tableImpl) doDecodeJSON(decoder *json.Decoder, onFirst func(message json
 		if first {
 			first = false
 			if onFirst != nil {
-				if onFirst(rawJSON) {
+				if onFirst(rawJson) {
 					// if onFirst handled this, skip decoding into a proto message
 					continue
 				}
@@ -234,7 +232,7 @@ func (t tableImpl) doDecodeJSON(decoder *json.Decoder, onFirst func(message json
 		}
 
 		msg := t.MessageType().New().Interface()
-		err = unmarshalOptions.Unmarshal(rawJSON, msg)
+		err = unmarshalOptions.Unmarshal(rawJson, msg)
 		if err != nil {
 			return err
 		}
@@ -279,12 +277,12 @@ func DefaultJSONValidator(message proto.Message) error {
 }
 
 func (t tableImpl) ValidateJSON(reader io.Reader) error {
-	return t.decodeJSON(reader, func(message proto.Message) error {
+	return t.decodeJson(reader, func(message proto.Message) error {
 		if t.customJSONValidator != nil {
 			return t.customJSONValidator(message)
+		} else {
+			return DefaultJSONValidator(message)
 		}
-
-		return DefaultJSONValidator(message)
 	})
 }
 
@@ -294,7 +292,7 @@ func (t tableImpl) ImportJSON(ctx context.Context, reader io.Reader) error {
 		return err
 	}
 
-	return t.decodeJSON(reader, func(message proto.Message) error {
+	return t.decodeJson(reader, func(message proto.Message) error {
 		return t.save(ctx, backend, message, saveModeDefault)
 	})
 }
@@ -365,7 +363,7 @@ func (t tableImpl) DecodeEntry(k, v []byte) (ormkv.Entry, error) {
 		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("uint32 varint id out of range %d", id)
 	}
 
-	idx, ok := t.entryCodecsByID[uint32(id)]
+	idx, ok := t.entryCodecsById[uint32(id)]
 	if !ok {
 		return nil, ormerrors.UnexpectedDecodePrefix.Wrapf("can't find field with id %d", id)
 	}
@@ -390,7 +388,7 @@ func (t tableImpl) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
 }
 
 func (t tableImpl) ID() uint32 {
-	return t.tableID
+	return t.tableId
 }
 
 func (t tableImpl) Has(ctx context.Context, message proto.Message) (found bool, err error) {

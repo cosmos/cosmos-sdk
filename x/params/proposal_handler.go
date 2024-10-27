@@ -1,31 +1,24 @@
 package params
 
 import (
-	"context"
 	"fmt"
-
-	errorsmod "cosmossdk.io/errors"
-	govtypes "cosmossdk.io/x/gov/types/v1beta1"
-	"cosmossdk.io/x/params/keeper"
-	"cosmossdk.io/x/params/types/proposal"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/params/keeper"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 // NewParamChangeProposalHandler creates a new governance Handler for a ParamChangeProposal
 func NewParamChangeProposalHandler(k keeper.Keeper) govtypes.Handler {
-	return func(ctx context.Context, content govtypes.Content) error {
-		// UnwrapSDKContext makes x/params baseapp compatible only and not server/v2
-		// We should investigate if we want to make x/params server/v2 compatible
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-
+	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
 		case *proposal.ParameterChangeProposal:
-			return handleParameterChangeProposal(sdkCtx, k, c)
+			return handleParameterChangeProposal(ctx, k, c)
 
 		default:
-			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized param proposal content type: %T", c)
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized param proposal content type: %T", c)
 		}
 	}
 }
@@ -34,7 +27,7 @@ func handleParameterChangeProposal(ctx sdk.Context, k keeper.Keeper, p *proposal
 	for _, c := range p.Changes {
 		ss, ok := k.GetSubspace(c.Subspace)
 		if !ok {
-			return errorsmod.Wrap(proposal.ErrUnknownSubspace, c.Subspace)
+			return sdkerrors.Wrap(proposal.ErrUnknownSubspace, c.Subspace)
 		}
 
 		k.Logger(ctx).Info(
@@ -42,7 +35,7 @@ func handleParameterChangeProposal(ctx sdk.Context, k keeper.Keeper, p *proposal
 		)
 
 		if err := ss.Update(ctx, []byte(c.Key), []byte(c.Value)); err != nil {
-			return errorsmod.Wrapf(proposal.ErrSettingParameter, "key: %s, value: %s, err: %s", c.Key, c.Value, err.Error())
+			return sdkerrors.Wrapf(proposal.ErrSettingParameter, "key: %s, value: %s, err: %s", c.Key, c.Value, err.Error())
 		}
 	}
 

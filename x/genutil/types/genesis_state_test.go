@@ -4,21 +4,19 @@ import (
 	"encoding/json"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/math"
-	banktypes "cosmossdk.io/x/bank/types"
-	"cosmossdk.io/x/staking"
-	stakingtypes "cosmossdk.io/x/staking/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -41,20 +39,16 @@ func TestNetGenesisState(t *testing.T) {
 func TestValidateGenesisMultipleMessages(t *testing.T) {
 	desc := stakingtypes.NewDescription("testname", "", "", "", "")
 	comm := stakingtypes.CommissionRates{}
-	valAc := codectestutil.CodecOptions{}.GetValidatorCodec()
 
-	pk1Addr, err := valAc.BytesToString(pk1.Address())
-	require.NoError(t, err)
-	msg1, err := stakingtypes.NewMsgCreateValidator(pk1Addr, pk1, sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, math.OneInt())
-	require.NoError(t, err)
-
-	pk2Addr, err := valAc.BytesToString(pk2.Address())
-	require.NoError(t, err)
-	msg2, err := stakingtypes.NewMsgCreateValidator(pk2Addr, pk2,
+	msg1, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk1.Address()), pk1,
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, math.OneInt())
 	require.NoError(t, err)
 
-	txConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, staking.AppModule{}, genutil.AppModule{}).TxConfig
+	msg2, err := stakingtypes.NewMsgCreateValidator(sdk.ValAddress(pk2.Address()), pk2,
+		sdk.NewInt64Coin(sdk.DefaultBondDenom, 50), desc, comm, math.OneInt())
+	require.NoError(t, err)
+
+	txConfig := moduletestutil.MakeTestEncodingConfig(staking.AppModuleBasic{}, genutil.AppModuleBasic{}).TxConfig
 	txBuilder := txConfig.NewTxBuilder()
 	require.NoError(t, txBuilder.SetMsgs(msg1, msg2))
 
@@ -67,13 +61,12 @@ func TestValidateGenesisMultipleMessages(t *testing.T) {
 
 func TestValidateGenesisBadMessage(t *testing.T) {
 	desc := stakingtypes.NewDescription("testname", "", "", "", "")
-	pk1Addr, err := codectestutil.CodecOptions{}.GetValidatorCodec().BytesToString(pk1.Address())
-	require.NoError(t, err)
-	msg1 := stakingtypes.NewMsgEditValidator(pk1Addr, desc, nil, nil)
 
-	txConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, staking.AppModule{}, genutil.AppModule{}).TxConfig
+	msg1 := stakingtypes.NewMsgEditValidator(sdk.ValAddress(pk1.Address()), desc, nil, nil)
+
+	txConfig := moduletestutil.MakeTestEncodingConfig(staking.AppModuleBasic{}, genutil.AppModuleBasic{}).TxConfig
 	txBuilder := txConfig.NewTxBuilder()
-	err = txBuilder.SetMsgs(msg1)
+	err := txBuilder.SetMsgs(msg1)
 	require.NoError(t, err)
 
 	tx := txBuilder.GetTx()
@@ -95,7 +88,7 @@ func TestGenesisStateFromGenFile(t *testing.T) {
 
 	require.True(t, bankGenesis.Params.DefaultSendEnabled)
 	require.Equal(t, "1000nametoken,100000000stake", bankGenesis.Balances[0].GetCoins().String())
-	require.Equal(t, "cosmos106vrzv5xkheqhjm023pxcxlqmcjvuhtfyachz4", bankGenesis.Balances[0].Address)
+	require.Equal(t, "cosmos106vrzv5xkheqhjm023pxcxlqmcjvuhtfyachz4", bankGenesis.Balances[0].GetAddress().String())
 	require.Equal(t, "The native staking token of the Cosmos Hub.", bankGenesis.DenomMetadata[0].GetDescription())
 	require.Equal(t, "uatom", bankGenesis.DenomMetadata[0].GetBase())
 	require.Equal(t, "matom", bankGenesis.DenomMetadata[0].GetDenomUnits()[1].GetDenom())

@@ -3,11 +3,12 @@ package ormfield
 import (
 	"io"
 
-	"google.golang.org/protobuf/reflect/protoreflect"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"cosmossdk.io/orm/types/ormerrors"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // Codec defines an interface for decoding and encoding values in ORM index keys.
@@ -71,16 +72,15 @@ func GetCodec(field protoreflect.FieldDescriptor, nonTerminal bool) (Codec, erro
 	case protoreflect.BytesKind:
 		if nonTerminal {
 			return NonTerminalBytesCodec{}, nil
+		} else {
+			return BytesCodec{}, nil
 		}
-
-		return BytesCodec{}, nil
 	case protoreflect.StringKind:
 		if nonTerminal {
 			return NonTerminalStringCodec{}, nil
+		} else {
+			return StringCodec{}, nil
 		}
-
-		return StringCodec{}, nil
-
 	case protoreflect.Uint32Kind:
 		return CompactUint32Codec{}, nil
 	case protoreflect.Fixed32Kind:

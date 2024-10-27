@@ -442,26 +442,10 @@ More information about the `sign-batch` command can be found running `simd tx si
 The `multi-sign` command allows users to sign transactions that was generated offline by a multisig account.
 
 ```bash
-simd tx multi-sign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
+simd tx multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
 ```
 
 Where `k1k2k3` is the multisig account address, `k1sig.json` is the signature of the first signer, `k2sig.json` is the signature of the second signer, and `k3sig.json` is the signature of the third signer.
-
-##### Nested multisig transactions
-
-To allow transactions to be signed by nested multisigs, meaning that a participant of a multisig account can be another multisig account, the `--skip-signature-verification` flag must be used.
-
-```bash
-# First aggregate signatures of the multisig participant
-simd tx multi-sign transaction.json ms1 ms1p1sig.json ms1p2sig.json --signature-only --skip-signature-verification > ms1sig.json
-
-# Then use the aggregated signatures and the other signatures to sign the final transaction
-simd tx multi-sign transaction.json k1ms1 k1sig.json ms1sig.json --skip-signature-verification
-```
-
-Where `ms1` is the nested multisig account address, `ms1p1sig.json` is the signature of the first participant of the nested multisig account, `ms1p2sig.json` is the signature of the second participant of the nested multisig account, and `ms1sig.json` is the aggregated signature of the nested multisig account.
-
-`k1ms1` is a multisig account comprised of an individual signer and another nested multisig account (`ms1`). `k1sig.json` is the signature of the first signer of the individual member.
 
 More information about the `multi-sign` command can be found running `simd tx multi-sign --help`.
 
@@ -497,6 +481,17 @@ simd tx broadcast tx.signed.json
 
 More information about the `broadcast` command can be found running `simd tx broadcast --help`.
 
+#### `aux-to-fee`
+
+The `aux-to-fee` comamnds includes the aux signer data in the tx, broadcast the tx, and sends the tip amount to the broadcaster.
+[Learn more about tip transaction](https://docs.cosmos.network/main/core/tips).
+
+```bash
+# simd tx bank send <from> <to> <amount> --aux (optional: --tip <tipAmt> --tipper <tipper>)
+simd tx aux-to-fee tx.aux.signed.json
+```
+
+More information about the `aux-to-fee` command can be found running `simd tx aux-to-fee --help`.
 
 ### gRPC
 

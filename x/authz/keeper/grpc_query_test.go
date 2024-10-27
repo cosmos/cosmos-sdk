@@ -7,11 +7,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/x/authz"
-	banktypes "cosmossdk.io/x/bank/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func (suite *TestSuite) TestGRPCQueryAuthorization() {
@@ -20,12 +19,6 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 		req              *authz.QueryGrantsRequest
 		expAuthorization authz.Authorization
 	)
-
-	addr0, err := suite.accountKeeper.AddressCodec().BytesToString(addrs[0])
-	suite.Require().NoError(err)
-	addr1, err := suite.accountKeeper.AddressCodec().BytesToString(addrs[1])
-	suite.Require().NoError(err)
-
 	testCases := []struct {
 		msg      string
 		malleate func(require *require.Assertions)
@@ -44,7 +37,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 			"fail invalid grantee addr",
 			func(require *require.Assertions) {
 				req = &authz.QueryGrantsRequest{
-					Granter: addr0,
+					Granter: addrs[0].String(),
 				}
 			},
 			"empty address string is not allowed",
@@ -54,8 +47,8 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 			"fail invalid msg-type",
 			func(require *require.Assertions) {
 				req = &authz.QueryGrantsRequest{
-					Granter:    addr0,
-					Grantee:    addr1,
+					Granter:    addrs[0].String(),
+					Grantee:    addrs[1].String(),
 					MsgTypeUrl: "unknown",
 				}
 			},
@@ -63,24 +56,12 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 			func(require *require.Assertions, res *authz.QueryGrantsResponse) {},
 		},
 		{
-			"authorization not found",
-			func(require *require.Assertions) {
-				req = &authz.QueryGrantsRequest{
-					Granter:    addr1,
-					Grantee:    addr0,
-					MsgTypeUrl: banktypes.SendAuthorization{}.MsgTypeURL(),
-				}
-			},
-			"authorization not found for /cosmos.bank.v1beta1.MsgSend",
-			func(require *require.Assertions, res *authz.QueryGrantsResponse) {},
-		},
-		{
-			"success",
+			"Success",
 			func(require *require.Assertions) {
 				expAuthorization = suite.createSendAuthorization(addrs[0], addrs[1])
 				req = &authz.QueryGrantsRequest{
-					Granter:    addr1,
-					Grantee:    addr0,
+					Granter:    addrs[1].String(),
+					Grantee:    addrs[0].String(),
 					MsgTypeUrl: expAuthorization.MsgTypeURL(),
 				}
 			},
@@ -92,28 +73,6 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 				require.NoError(err)
 				require.NotNil(auth)
 				require.Equal(auth.String(), expAuthorization.String())
-			},
-		},
-		{
-			"success with allow list",
-			func(require *require.Assertions) {
-				expAuthorization = suite.createSendAuthorizationWithAllowList(addrs[0], addrs[1])
-				require.Len(expAuthorization.(*banktypes.SendAuthorization).GetAllowList(), 1)
-				req = &authz.QueryGrantsRequest{
-					Granter:    addr1,
-					Grantee:    addr0,
-					MsgTypeUrl: expAuthorization.MsgTypeURL(),
-				}
-			},
-			"",
-			func(require *require.Assertions, res *authz.QueryGrantsResponse) {
-				var auth authz.Authorization
-				require.Equal(1, len(res.Grants))
-				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Grants[0].Authorization, &auth)
-				require.NoError(err)
-				require.NotNil(auth)
-				require.Equal(auth.String(), expAuthorization.String())
-				require.Equal(auth.(*banktypes.SendAuthorization).GetAllowList(), expAuthorization.(*banktypes.SendAuthorization).GetAllowList())
 			},
 		},
 	}
@@ -133,12 +92,73 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 	}
 }
 
+func (suite *TestSuite) TestGRPCQueryAuthorizations() {
+	queryClient, addrs := suite.queryClient, suite.addrs
+	var (
+		req              *authz.QueryGrantsRequest
+		expAuthorization authz.Authorization
+	)
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+		postTest func(res *authz.QueryGrantsResponse)
+	}{
+		{
+			"fail invalid granter addr",
+			func() {
+				req = &authz.QueryGrantsRequest{}
+			},
+			false,
+			func(res *authz.QueryGrantsResponse) {},
+		},
+		{
+			"fail invalid grantee addr",
+			func() {
+				req = &authz.QueryGrantsRequest{
+					Granter: addrs[0].String(),
+				}
+			},
+			false,
+			func(res *authz.QueryGrantsResponse) {},
+		},
+		{
+			"Success",
+			func() {
+				expAuthorization = suite.createSendAuthorization(addrs[0], addrs[1])
+				req = &authz.QueryGrantsRequest{
+					Granter: addrs[1].String(),
+					Grantee: addrs[0].String(),
+				}
+			},
+			true,
+			func(res *authz.QueryGrantsResponse) {
+				var auth authz.Authorization
+				suite.Require().Equal(1, len(res.Grants))
+				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Grants[0].Authorization, &auth)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(auth)
+				suite.Require().Equal(auth.String(), expAuthorization.String())
+			},
+		},
+	}
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+			result, err := queryClient.Grants(gocontext.Background(), req)
+			if testCase.expPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+			testCase.postTest(result)
+		})
+	}
+}
+
 func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 	require := suite.Require()
 	queryClient, addrs := suite.queryClient, suite.addrs
-
-	addr0, err := suite.accountKeeper.AddressCodec().BytesToString(addrs[0])
-	suite.Require().NoError(err)
 
 	testCases := []struct {
 		msg      string
@@ -161,7 +181,7 @@ func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 			},
 			false,
 			authz.QueryGranterGrantsRequest{
-				Granter: addr0,
+				Granter: addrs[0].String(),
 			},
 			1,
 		},
@@ -172,7 +192,7 @@ func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 			},
 			false,
 			authz.QueryGranterGrantsRequest{
-				Granter: addr0,
+				Granter: addrs[0].String(),
 			},
 			2,
 		},
@@ -182,7 +202,7 @@ func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 			},
 			false,
 			authz.QueryGranterGrantsRequest{
-				Granter: addr0,
+				Granter: addrs[0].String(),
 				Pagination: &query.PageRequest{
 					Limit: 1,
 				},
@@ -192,7 +212,6 @@ func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.preRun()
 			result, err := queryClient.GranterGrants(gocontext.Background(), &tc.request)
@@ -209,11 +228,6 @@ func (suite *TestSuite) TestGRPCQueryGranterGrants() {
 func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 	require := suite.Require()
 	queryClient, addrs := suite.queryClient, suite.addrs
-
-	addr0, err := suite.accountKeeper.AddressCodec().BytesToString(addrs[0])
-	suite.Require().NoError(err)
-	addr2, err := suite.accountKeeper.AddressCodec().BytesToString(addrs[2])
-	suite.Require().NoError(err)
 
 	testCases := []struct {
 		msg      string
@@ -236,7 +250,7 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 			},
 			false,
 			authz.QueryGranteeGrantsRequest{
-				Grantee: addr0,
+				Grantee: addrs[0].String(),
 			},
 			1,
 		},
@@ -245,7 +259,7 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 			func() {},
 			false,
 			authz.QueryGranteeGrantsRequest{
-				Grantee: addr2,
+				Grantee: addrs[2].String(),
 			},
 			0,
 		},
@@ -256,7 +270,7 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 			},
 			false,
 			authz.QueryGranteeGrantsRequest{
-				Grantee: addr0,
+				Grantee: addrs[0].String(),
 			},
 			2,
 		},
@@ -265,7 +279,7 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 			func() {},
 			false,
 			authz.QueryGranteeGrantsRequest{
-				Grantee: addr0,
+				Grantee: addrs[0].String(),
 				Pagination: &query.PageRequest{
 					Limit: 1,
 				},
@@ -275,8 +289,6 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.preRun()
 			result, err := queryClient.GranteeGrants(gocontext.Background(), &tc.request)
@@ -291,21 +303,10 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 }
 
 func (suite *TestSuite) createSendAuthorization(grantee, granter sdk.AccAddress) authz.Authorization {
-	exp := suite.ctx.HeaderInfo().Time.Add(time.Hour)
+	exp := suite.ctx.BlockHeader().Time.Add(time.Hour)
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}
 	err := suite.authzKeeper.SaveGrant(suite.ctx, grantee, granter, authorization, &exp)
-	suite.Require().NoError(err)
-	return authorization
-}
-
-func (suite *TestSuite) createSendAuthorizationWithAllowList(grantee, granter sdk.AccAddress) authz.Authorization {
-	exp := suite.ctx.HeaderInfo().Time.Add(time.Hour)
-	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
-	addr, err := suite.accountKeeper.AddressCodec().BytesToString(suite.addrs[5])
-	suite.Require().NoError(err)
-	authorization := &banktypes.SendAuthorization{SpendLimit: newCoins, AllowList: []string{addr}}
-	err = suite.authzKeeper.SaveGrant(suite.ctx, grantee, granter, authorization, &exp)
 	suite.Require().NoError(err)
 	return authorization
 }

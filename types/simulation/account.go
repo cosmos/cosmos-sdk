@@ -1,7 +1,7 @@
 package simulation
 
 import (
-	"errors"
+	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -31,32 +31,22 @@ func RandomAcc(r *rand.Rand, accs []Account) (Account, int) {
 	return accs[idx], idx
 }
 
-// RandomAccounts deterministic generates n random accounts without duplicates.
+// RandomAccounts generates n random accounts
 func RandomAccounts(r *rand.Rand, n int) []Account {
 	accs := make([]Account, n)
-	idx := make(map[string]struct{}, n)
-	var i int
-	for i < n {
+
+	for i := 0; i < n; i++ {
 		// don't need that much entropy for simulation
 		privkeySeed := make([]byte, 15)
-		if _, err := r.Read(privkeySeed); err != nil {
-			panic(err)
-		}
-		privKey := secp256k1.GenPrivKeyFromSecret(privkeySeed)
-		pubKey := privKey.PubKey()
-		addr := sdk.AccAddress(pubKey.Address())
-		if _, exists := idx[string(addr.Bytes())]; exists {
-			continue
-		}
-		idx[string(addr.Bytes())] = struct{}{}
-		accs[i] = Account{
-			Address: addr,
-			PrivKey: privKey,
-			PubKey:  pubKey,
-			ConsKey: ed25519.GenPrivKeyFromSecret(privkeySeed),
-		}
-		i++
+		r.Read(privkeySeed)
+
+		accs[i].PrivKey = secp256k1.GenPrivKeyFromSecret(privkeySeed)
+		accs[i].PubKey = accs[i].PrivKey.PubKey()
+		accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())
+
+		accs[i].ConsKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
 	}
+
 	return accs
 }
 
@@ -75,7 +65,7 @@ func FindAccount(accs []Account, address sdk.Address) (Account, bool) {
 // RandomFees returns a random fee by selecting a random coin denomination and
 // amount from the account's available balance. If the user doesn't have enough
 // funds for paying fees, it returns empty coins.
-func RandomFees(r *rand.Rand, spendableCoins sdk.Coins) (sdk.Coins, error) {
+func RandomFees(r *rand.Rand, ctx sdk.Context, spendableCoins sdk.Coins) (sdk.Coins, error) {
 	if spendableCoins.Empty() {
 		return nil, nil
 	}
@@ -90,7 +80,7 @@ func RandomFees(r *rand.Rand, spendableCoins sdk.Coins) (sdk.Coins, error) {
 	}
 
 	if randCoin.Amount.IsZero() {
-		return nil, errors.New("no coins found for random fees")
+		return nil, fmt.Errorf("no coins found for random fees")
 	}
 
 	amt, err := RandPositiveInt(r, randCoin.Amount)

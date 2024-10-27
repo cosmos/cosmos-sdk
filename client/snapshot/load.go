@@ -4,19 +4,16 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"reflect"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/spf13/cobra"
 
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 )
 
 const SnapshotFileName = "_snapshot"
@@ -28,8 +25,8 @@ func LoadArchiveCmd() *cobra.Command {
 		Short: "Load a snapshot archive file (.tar.gz) into snapshot store",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			viper := client.GetViperFromCmd(cmd)
-			snapshotStore, err := server.GetSnapshotStore(viper)
+			ctx := server.GetServerContextFromCmd(cmd)
+			snapshotStore, err := server.GetSnapshotStore(ctx.Viper)
 			if err != nil {
 				return err
 			}
@@ -82,7 +79,7 @@ func LoadArchiveCmd() *cobra.Command {
 			for i := uint32(0); i < snapshot.Chunks; i++ {
 				hdr, err = tr.Next()
 				if err != nil {
-					if errors.Is(err, io.EOF) {
+					if err == io.EOF {
 						break
 					}
 					return err
@@ -102,12 +99,12 @@ func LoadArchiveCmd() *cobra.Command {
 
 			savedSnapshot := <-quitChan
 			if savedSnapshot == nil {
-				return errors.New("failed to save snapshot")
+				return fmt.Errorf("failed to save snapshot")
 			}
 
 			if !reflect.DeepEqual(&snapshot, savedSnapshot) {
 				_ = snapshotStore.Delete(snapshot.Height, snapshot.Format)
-				return errors.New("invalid archive, the saved snapshot is not equal to the original one")
+				return fmt.Errorf("invalid archive, the saved snapshot is not equal to the original one")
 			}
 
 			return nil

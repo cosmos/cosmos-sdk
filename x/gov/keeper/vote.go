@@ -1,107 +1,125 @@
 package keeper
 
 import (
-	"context"
-	stderrors "errors"
 	"fmt"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/core/event"
-	"cosmossdk.io/errors"
-	"cosmossdk.io/x/gov/types"
-	v1 "cosmossdk.io/x/gov/types/v1"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // AddVote adds a vote on a specific proposal
-func (k Keeper) AddVote(ctx context.Context, proposalID uint64, voterAddr sdk.AccAddress, options v1.WeightedVoteOptions, metadata string) error {
-	// get proposal
-	proposal, err := k.Proposals.Get(ctx, proposalID)
-	if err != nil {
-		if stderrors.Is(err, collections.ErrNotFound) {
-			return errors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
-		}
-
-		return err
+func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, options v1.WeightedVoteOptions, metadata string) error {
+	// Check if proposal is in voting period.
+	store := ctx.KVStore(keeper.storeKey)
+	if !store.Has(types.VotingPeriodProposalKey(proposalID)) {
+		return sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
 
-	// check if proposal is in voting period.
-	if proposal.Status != v1.StatusVotingPeriod {
-		return errors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
-	}
-
-	if err := k.assertMetadataLength(metadata); err != nil {
-		return err
-	}
-
-	err = k.assertVoteOptionsLen(options)
+	err := keeper.assertMetadataLength(metadata)
 	if err != nil {
 		return err
 	}
 
 	for _, option := range options {
-		switch proposal.ProposalType {
-		case v1.ProposalType_PROPOSAL_TYPE_OPTIMISTIC:
-			if option.Option != v1.OptionNo {
-				return errors.Wrap(types.ErrInvalidVote, "optimistic proposals can only be rejected")
-			}
-		case v1.ProposalType_PROPOSAL_TYPE_MULTIPLE_CHOICE:
-			proposalOptionsStr, err := k.ProposalVoteOptions.Get(ctx, proposalID)
-			if err != nil {
-				if stderrors.Is(err, collections.ErrNotFound) {
-					return errors.Wrap(types.ErrInvalidProposal, "invalid multiple choice proposal, no options set")
-				}
-
-				return err
-			}
-
-			// verify votes only on existing votes
-			if proposalOptionsStr.OptionOne == "" && option.Option == v1.OptionOne { // should never trigger option one is always mandatory
-				return errors.Wrap(types.ErrInvalidVote, "invalid vote option")
-			} else if proposalOptionsStr.OptionTwo == "" && option.Option == v1.OptionTwo { // should never trigger option two is always mandatory
-				return errors.Wrap(types.ErrInvalidVote, "invalid vote option")
-			} else if proposalOptionsStr.OptionThree == "" && option.Option == v1.OptionThree {
-				return errors.Wrap(types.ErrInvalidVote, "invalid vote option")
-			} else if proposalOptionsStr.OptionFour == "" && option.Option == v1.OptionFour {
-				return errors.Wrap(types.ErrInvalidVote, "invalid vote option")
-			}
-		}
-
 		if !v1.ValidWeightedVoteOption(*option) {
-			return errors.Wrap(types.ErrInvalidVote, option.String())
+			return sdkerrors.Wrap(types.ErrInvalidVote, option.String())
 		}
 	}
 
-	voterStrAddr, err := k.authKeeper.AddressCodec().BytesToString(voterAddr)
-	if err != nil {
-		return err
-	}
-	vote := v1.NewVote(proposalID, voterStrAddr, options, metadata)
-	err = k.Votes.Set(ctx, collections.Join(proposalID, voterAddr), vote)
-	if err != nil {
-		return err
-	}
+	vote := v1.NewVote(proposalID, voterAddr, options, metadata)
+	keeper.SetVote(ctx, vote)
 
 	// called after a vote on a proposal is cast
-	if err = k.Hooks().AfterProposalVote(ctx, proposalID, voterAddr); err != nil {
-		return err
-	}
+	keeper.Hooks().AfterProposalVote(ctx, proposalID, voterAddr)
 
-	return k.EventService.EventManager(ctx).EmitKV(types.EventTypeProposalVote,
-		event.NewAttribute(types.AttributeKeyVoter, voterStrAddr),
-		event.NewAttribute(types.AttributeKeyOption, options.String()),
-		event.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeProposalVote,
+			sdk.NewAttribute(types.AttributeKeyVoter, voterAddr.String()),
+			sdk.NewAttribute(types.AttributeKeyOption, options.String()),
+			sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposalID)),
+		),
 	)
-}
-
-// deleteVotes deletes all the votes from a given proposalID.
-func (k Keeper) deleteVotes(ctx context.Context, proposalID uint64) error {
-	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposalID)
-	err := k.Votes.Clear(ctx, rng)
-	if err != nil {
-		return err
-	}
 
 	return nil
+}
+
+// GetAllVotes returns all the votes from the store
+func (keeper Keeper) GetAllVotes(ctx sdk.Context) (votes v1.Votes) {
+	keeper.IterateAllVotes(ctx, func(vote v1.Vote) bool {
+		votes = append(votes, &vote)
+		return false
+	})
+	return
+}
+
+// GetVotes returns all the votes from a proposal
+func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID uint64) (votes v1.Votes) {
+	keeper.IterateVotes(ctx, proposalID, func(vote v1.Vote) bool {
+		votes = append(votes, &vote)
+		return false
+	})
+	return
+}
+
+// GetVote gets the vote from an address on a specific proposal
+func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) (vote v1.Vote, found bool) {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := store.Get(types.VoteKey(proposalID, voterAddr))
+	if bz == nil {
+		return vote, false
+	}
+
+	keeper.cdc.MustUnmarshal(bz, &vote)
+
+	return vote, true
+}
+
+// SetVote sets a Vote to the gov store
+func (keeper Keeper) SetVote(ctx sdk.Context, vote v1.Vote) {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := keeper.cdc.MustMarshal(&vote)
+	addr := sdk.MustAccAddressFromBech32(vote.Voter)
+
+	store.Set(types.VoteKey(vote.ProposalId, addr), bz)
+}
+
+// IterateAllVotes iterates over all the stored votes and performs a callback function
+func (keeper Keeper) IterateAllVotes(ctx sdk.Context, cb func(vote v1.Vote) (stop bool)) {
+	store := ctx.KVStore(keeper.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.VotesKeyPrefix)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var vote v1.Vote
+		keeper.cdc.MustUnmarshal(iterator.Value(), &vote)
+
+		if cb(vote) {
+			break
+		}
+	}
+}
+
+// IterateVotes iterates over all the proposals votes and performs a callback function
+func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vote v1.Vote) (stop bool)) {
+	store := ctx.KVStore(keeper.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.VotesKey(proposalID))
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		var vote v1.Vote
+		keeper.cdc.MustUnmarshal(iterator.Value(), &vote)
+
+		if cb(vote) {
+			break
+		}
+	}
+}
+
+// deleteVote deletes a vote from a given proposalID and voter from the store
+func (keeper Keeper) deleteVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
+	store := ctx.KVStore(keeper.storeKey)
+	store.Delete(types.VoteKey(proposalID, voterAddr))
 }

@@ -1,17 +1,13 @@
 package rootmulti
 
 import (
-	"cosmossdk.io/store/dbadapter"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/types"
+
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 )
 
 var commithash = []byte("FAKE_HASH")
-
-var (
-	_ types.KVStore   = (*commitDBStoreAdapter)(nil)
-	_ types.Committer = (*commitDBStoreAdapter)(nil)
-)
 
 //----------------------------------------
 // commitDBStoreWrapper should only be used for simulation/debugging,
@@ -34,10 +30,6 @@ func (cdsa commitDBStoreAdapter) LastCommitID() types.CommitID {
 		Version: -1,
 		Hash:    commithash,
 	}
-}
-
-func (cdsa commitDBStoreAdapter) WorkingHash() []byte {
-	return commithash
 }
 
 func (cdsa commitDBStoreAdapter) SetPruning(_ pruningtypes.PruningOptions) {}

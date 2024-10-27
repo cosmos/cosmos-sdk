@@ -9,8 +9,11 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-func checkAminoJSON(t *testing.T, src, dst interface{}, isNil bool) {
-	t.Helper()
+type byter interface {
+	Bytes() []byte
+}
+
+func checkAminoJSON(t *testing.T, src interface{}, dst interface{}, isNil bool) {
 	// Marshal to JSON bytes.
 	js, err := cdc.MarshalJSON(src)
 	require.Nil(t, err, "%+v", err)
@@ -25,7 +28,8 @@ func checkAminoJSON(t *testing.T, src, dst interface{}, isNil bool) {
 	require.Nil(t, err, "%+v", err)
 }
 
-func ExamplePrintRegisteredTypes() { //nolint:govet // ignore for examples
+// nolint: govet
+func ExamplePrintRegisteredTypes() {
 	_ = cdc.PrintTypes(os.Stdout)
 	// | Type | Name | Prefix | Length | Notes |
 	// | ---- | ---- | ------ | ----- | ------ |

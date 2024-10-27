@@ -1,9 +1,9 @@
 package authz
 
 import (
-	"fmt"
+	fmt "fmt"
 
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // NewGenesisState creates new GenesisState object
@@ -32,10 +32,10 @@ func DefaultGenesisState() *GenesisState {
 	return &GenesisState{}
 }
 
-var _ gogoprotoany.UnpackInterfacesMessage = GenesisState{}
+var _ cdctypes.UnpackInterfacesMessage = GenesisState{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (data GenesisState) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (data GenesisState) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 	for _, a := range data.Authorization {
 		err := a.UnpackInterfaces(unpacker)
 		if err != nil {
@@ -46,7 +46,7 @@ func (data GenesisState) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) err
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg GrantAuthorization) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (msg GrantAuthorization) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 	var a Authorization
 	return unpacker.UnpackAny(msg.Authorization, &a)
 }

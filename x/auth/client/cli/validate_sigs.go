@@ -1,21 +1,16 @@
 package cli
 
 import (
-	"bytes"
-	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/types/known/anypb"
-
-	authclient "cosmossdk.io/x/auth/client"
-	authsigning "cosmossdk.io/x/auth/signing"
-	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func GetValidateSignaturesCommand() *cobra.Command {
@@ -52,7 +47,7 @@ func makeValidateSignaturesCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		if !printAndValidateSigs(cmd, clientCtx, txBldr.ChainID(), stdTx, clientCtx.Offline) {
-			return errors.New("signatures validation failed")
+			return fmt.Errorf("signatures validation failed")
 		}
 
 		return nil
@@ -67,20 +62,11 @@ func printAndValidateSigs(
 ) bool {
 	sigTx := tx.(authsigning.SigVerifiableTx)
 	signModeHandler := clientCtx.TxConfig.SignModeHandler()
-	addrCdc := clientCtx.TxConfig.SigningContext().AddressCodec()
 
 	cmd.Println("Signers:")
-	signers, err := sigTx.GetSigners()
-	if err != nil {
-		panic(err)
-	}
-
+	signers := sigTx.GetSigners()
 	for i, signer := range signers {
-		signerStr, err := addrCdc.BytesToString(signer)
-		if err != nil {
-			panic(err)
-		}
-		cmd.Printf("  %v: %v\n", i, signerStr)
+		cmd.Printf("  %v: %v\n", i, signer.String())
 	}
 
 	success := true
@@ -104,7 +90,7 @@ func printAndValidateSigs(
 			sigSanity      = "OK"
 		)
 
-		if i >= len(signers) || !bytes.Equal(sigAddr, signers[i]) {
+		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
 			sigSanity = "ERROR: signature does not match its respective signer"
 			success = false
 		}
@@ -125,32 +111,8 @@ func printAndValidateSigs(
 				Sequence:      accSeq,
 				PubKey:        pubKey,
 			}
-			anyPk, err := codectypes.NewAnyWithValue(pubKey)
+			err = authsigning.VerifySignature(pubKey, signingData, sig.Data, signModeHandler, sigTx)
 			if err != nil {
-				cmd.PrintErrf("failed to pack public key: %v", err)
-				return false
-			}
-			txSignerData := txsigning.SignerData{
-				ChainID:       signingData.ChainID,
-				AccountNumber: signingData.AccountNumber,
-				Sequence:      signingData.Sequence,
-				Address:       signingData.Address,
-				PubKey: &anypb.Any{
-					TypeUrl: anyPk.TypeUrl,
-					Value:   anyPk.Value,
-				},
-			}
-
-			adaptableTx, ok := tx.(authsigning.V2AdaptableTx)
-			if !ok {
-				cmd.PrintErrf("expected V2AdaptableTx, got %T", tx)
-				return false
-			}
-			txData := adaptableTx.GetSigningTxData()
-
-			err = authsigning.VerifySignature(cmd.Context(), pubKey, txSignerData, sig.Data, signModeHandler, txData)
-			if err != nil {
-				cmd.PrintErrf("failed to verify signature: %v", err)
 				return false
 			}
 		}

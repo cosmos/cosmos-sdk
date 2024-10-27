@@ -1,6 +1,3 @@
-//go:build ledger
-// +build ledger
-
 package ledger
 
 import (
@@ -16,6 +13,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func TestErrorHandling(t *testing.T) {
+	// first, try to generate a key, must return an error
+	// (no panic)
+	path := *hd.NewParams(44, 555, 0, false, 0)
+	_, err := NewPrivKeySecp256k1Unsafe(path)
+	require.Error(t, err)
+}
+
 func TestPublicKeyUnsafe(t *testing.T) {
 	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	priv, err := NewPrivKeySecp256k1Unsafe(path)
@@ -24,7 +29,6 @@ func TestPublicKeyUnsafe(t *testing.T) {
 }
 
 func checkDefaultPubKey(t *testing.T, priv types.LedgerPrivKey) {
-	t.Helper()
 	require.NotNil(t, priv)
 	expectedPkStr := "PubKeySecp256k1{034FEF9CD7C4C63588D3B03FEB5281B9D232CBA34D6F3D71AEE59211FFBFE1FE87}"
 	require.Equal(t, "eb5ae98721034fef9cd7c4c63588d3b03feb5281b9d232cba34d6f3d71aee59211ffbfe1fe87",
@@ -95,7 +99,7 @@ func TestPublicKeySafe(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, priv)
-	require.Nil(t, ShowAddress(path, priv.PubKey(), "cosmos"))
+	require.Nil(t, ShowAddress(path, priv.PubKey(), sdk.GetConfig().GetBech32AccountAddrPrefix()))
 	checkDefaultPubKey(t, priv)
 
 	addr2 := sdk.AccAddress(priv.PubKey().Address()).String()

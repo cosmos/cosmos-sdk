@@ -1,45 +1,44 @@
 package keeper_test
 
 import (
-	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
-	"gotest.tools/v3/assert"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
-	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtestutil "cosmossdk.io/x/auth/testutil"
-	_ "cosmossdk.io/x/auth/tx/config"
-	authtypes "cosmossdk.io/x/auth/types"
-	"cosmossdk.io/x/bank"
-	"cosmossdk.io/x/bank/keeper"
-	banktestutil "cosmossdk.io/x/bank/testutil"
-	banktypes "cosmossdk.io/x/bank/types"
-	_ "cosmossdk.io/x/consensus"
-	minttypes "cosmossdk.io/x/mint/types"
-	_ "cosmossdk.io/x/staking"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil/integration"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/params"
+	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
+type DeterministicTestSuite struct {
+	suite.Suite
+
+	ctx        sdk.Context
+	bankKeeper keeper.BaseKeeper
+
+	queryClient banktypes.QueryClient
+}
+
 var (
-	denomRegex   = `[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`
+	denomRegex   = sdk.DefaultCoinDenomRegex()
 	addr1        = sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
-	coin1        = sdk.NewCoin("denom", math.NewInt(10))
+	coin1        = sdk.NewCoin("denom", sdk.NewInt(10))
 	metadataAtom = banktypes.Metadata{
 		Description: "The native staking token of the Cosmos Hub.",
 		DenomUnits: []*banktypes.DenomUnit{
@@ -59,304 +58,205 @@ var (
 	}
 )
 
-type deterministicFixture struct {
-	ctx         sdk.Context
-	bankKeeper  keeper.BaseKeeper
-	queryClient banktypes.QueryClient
+func TestDeterministicTestSuite(t *testing.T) {
+	suite.Run(t, new(DeterministicTestSuite))
 }
 
-func initDeterministicFixture(t *testing.T) *deterministicFixture {
-	t.Helper()
-	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey)
-	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, bank.AppModule{})
-	cdc := encodingCfg.Codec
+func (suite *DeterministicTestSuite) SetupTest() {
+	var interfaceRegistry codectypes.InterfaceRegistry
 
-	logger := log.NewTestLogger(t)
-	cms := integration.CreateMultiStore(keys, logger)
-
-	newCtx := sdk.NewContext(cms, true, logger)
-
-	authority := authtypes.NewModuleAddress("gov")
-
-	maccPerms := map[string][]string{
-		minttypes.ModuleName: {authtypes.Minter},
-	}
-
-	// gomock initializations
-	ctrl := gomock.NewController(t)
-	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
-	accNum := uint64(0)
-	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
-		currentNum := accNum
-		accNum++
-		return currentNum, nil
-	})
-
-	accountKeeper := authkeeper.NewAccountKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
-		cdc,
-		authtypes.ProtoBaseAccount,
-		acctsModKeeper,
-		maccPerms,
-		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
-		sdk.Bech32MainPrefix,
-		authority.String(),
+	app, err := simtestutil.Setup(
+		configurator.NewAppConfig(
+			configurator.AuthModule(),
+			configurator.TxModule(),
+			configurator.ParamsModule(),
+			configurator.ConsensusModule(),
+			configurator.BankModule(),
+			configurator.StakingModule(),
+		),
+		&suite.bankKeeper,
+		&interfaceRegistry,
 	)
+	suite.Require().NoError(err)
 
-	blockedAddresses := map[string]bool{
-		accountKeeper.GetAuthority(): false,
-	}
-	bankKeeper := keeper.NewBaseKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
-		cdc,
-		accountKeeper,
-		blockedAddresses,
-		authority.String(),
-	)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.ctx = ctx
 
-	assert.NilError(t, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
-
-	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
-	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
-
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
-		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
-		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
-		map[string]appmodule.AppModule{
-			authtypes.ModuleName: authModule,
-			banktypes.ModuleName: bankModule,
-		},
-		baseapp.NewMsgServiceRouter(),
-		baseapp.NewGRPCQueryRouter(),
-	)
-
-	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
-
-	// Register MsgServer and QueryServer
-	banktypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), keeper.NewMsgServerImpl(bankKeeper))
-	banktypes.RegisterQueryServer(integrationApp.QueryHelper(), keeper.NewQuerier(&bankKeeper))
-
-	qr := integrationApp.QueryHelper()
-	queryClient := banktypes.NewQueryClient(qr)
-
-	f := deterministicFixture{
-		ctx:         sdkCtx,
-		bankKeeper:  bankKeeper,
-		queryClient: queryClient,
-	}
-
-	return &f
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
+	banktypes.RegisterQueryServer(queryHelper, suite.bankKeeper)
+	suite.queryClient = banktypes.NewQueryClient(queryHelper)
 }
 
-func fundAccount(f *deterministicFixture, addr sdk.AccAddress, coin ...sdk.Coin) {
-	err := banktestutil.FundAccount(f.ctx, f.bankKeeper, addr, sdk.NewCoins(coin...))
-	assert.NilError(&testing.T{}, err)
+func (suite *DeterministicTestSuite) fundAccount(addr sdk.AccAddress, coin ...sdk.Coin) {
+	err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin...))
+	suite.Require().NoError(err)
 }
 
-func getCoin(rt *rapid.T) sdk.Coin {
+func (suite *DeterministicTestSuite) getCoin(t *rapid.T) sdk.Coin {
 	return sdk.NewCoin(
-		rapid.StringMatching(denomRegex).Draw(rt, "denom"),
-		math.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+		rapid.StringMatching(denomRegex).Draw(t, "denom"),
+		sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
 	)
 }
 
-func TestGRPCQueryBalance(t *testing.T) {
-	t.Parallel()
-	f := initDeterministicFixture(t)
+func (suite *DeterministicTestSuite) TestGRPCQueryBalance() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		addr := testdata.AddressGenerator(t).Draw(t, "address")
+		coin := suite.getCoin(t)
+		suite.fundAccount(addr, coin)
 
-	rapid.Check(t, func(rt *rapid.T) {
-		addr := testdata.AddressGenerator(rt).Draw(rt, "address")
-		coin := getCoin(rt)
-		fundAccount(f, addr, coin)
-
-		addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr)
-		assert.NilError(t, err)
-
-		req := banktypes.NewQueryBalanceRequest(addrStr, coin.GetDenom())
-
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Balance, 0, true)
+		req := banktypes.NewQueryBalanceRequest(addr, coin.GetDenom())
+		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Balance, 0, true)
 	})
 
-	addr1Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr1)
-	assert.NilError(t, err)
-
-	fundAccount(f, addr1, coin1)
-	req := banktypes.NewQueryBalanceRequest(addr1Str, coin1.GetDenom())
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Balance, 1087, false)
+	suite.fundAccount(addr1, coin1)
+	req := banktypes.NewQueryBalanceRequest(addr1, coin1.GetDenom())
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Balance, 1087, false)
 }
 
-func TestGRPCQueryAllBalances(t *testing.T) {
-	t.Parallel()
-	f := initDeterministicFixture(t)
-	addressCodec := codectestutil.CodecOptions{}.GetAddressCodec()
-
-	rapid.Check(t, func(rt *rapid.T) {
-		addr := testdata.AddressGenerator(rt).Draw(rt, "address")
-		numCoins := rapid.IntRange(1, 10).Draw(rt, "num-count")
+func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		addr := testdata.AddressGenerator(t).Draw(t, "address")
+		numCoins := rapid.IntRange(1, 10).Draw(t, "num-count")
 		coins := make(sdk.Coins, 0, numCoins)
 
-		addrStr, err := addressCodec.BytesToString(addr)
-		assert.NilError(t, err)
-
 		for i := 0; i < numCoins; i++ {
-			coin := getCoin(rt)
+			coin := suite.getCoin(t)
 
 			// NewCoins sorts the denoms
 			coins = sdk.NewCoins(append(coins, coin)...)
 		}
 
-		fundAccount(f, addr, coins...)
+		suite.fundAccount(addr, coins...)
 
-		req := banktypes.NewQueryAllBalancesRequest(addrStr, testdata.PaginationGenerator(rt, uint64(numCoins)).Draw(rt, "pagination"), false)
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.AllBalances, 0, true)
+		req := banktypes.NewQueryAllBalancesRequest(addr, testdata.PaginationGenerator(t, uint64(numCoins)).Draw(t, "pagination"))
+		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.AllBalances, 0, true)
 	})
 
 	coins := sdk.NewCoins(
-		sdk.NewCoin("stake", math.NewInt(10)),
-		sdk.NewCoin("denom", math.NewInt(100)),
+		sdk.NewCoin("stake", sdk.NewInt(10)),
+		sdk.NewCoin("denom", sdk.NewInt(100)),
 	)
 
-	fundAccount(f, addr1, coins...)
-	addr1Str, err := addressCodec.BytesToString(addr1)
-	assert.NilError(t, err)
+	suite.fundAccount(addr1, coins...)
+	req := banktypes.NewQueryAllBalancesRequest(addr1, nil)
 
-	req := banktypes.NewQueryAllBalancesRequest(addr1Str, nil, false)
-
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.AllBalances, 357, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.AllBalances, 357, false)
 }
 
-func TestGRPCQuerySpendableBalances(t *testing.T) {
-	t.Parallel()
-	f := initDeterministicFixture(t)
+func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		addr := testdata.AddressGenerator(t).Draw(t, "address")
+		numCoins := rapid.IntRange(1, 10).Draw(t, "num-count")
+		coins := make(sdk.Coins, 0, numCoins)
 
-	rapid.Check(t, func(rt *rapid.T) {
-		addr := testdata.AddressGenerator(rt).Draw(rt, "address")
-		addrStr, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr)
-		assert.NilError(t, err)
-
-		// Denoms must be unique, otherwise sdk.NewCoins will panic.
-		denoms := rapid.SliceOfNDistinct(rapid.StringMatching(denomRegex), 1, 10, rapid.ID[string]).Draw(rt, "denoms")
-		coins := make(sdk.Coins, 0, len(denoms))
-		for _, denom := range denoms {
+		for i := 0; i < numCoins; i++ {
 			coin := sdk.NewCoin(
-				denom,
-				math.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+				rapid.StringMatching(denomRegex).Draw(t, "denom"),
+				sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
 			)
 
 			// NewCoins sorts the denoms
 			coins = sdk.NewCoins(append(coins, coin)...)
 		}
 
-		err = banktestutil.FundAccount(f.ctx, f.bankKeeper, addr, coins)
-		assert.NilError(t, err)
+		err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, coins)
+		suite.Require().NoError(err)
 
-		req := banktypes.NewQuerySpendableBalancesRequest(addrStr, testdata.PaginationGenerator(rt, uint64(len(denoms))).Draw(rt, "pagination"))
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.SpendableBalances, 0, true)
+		req := banktypes.NewQuerySpendableBalancesRequest(addr, testdata.PaginationGenerator(t, uint64(numCoins)).Draw(t, "pagination"))
+		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SpendableBalances, 0, true)
 	})
 
 	coins := sdk.NewCoins(
-		sdk.NewCoin("stake", math.NewInt(10)),
-		sdk.NewCoin("denom", math.NewInt(100)),
+		sdk.NewCoin("stake", sdk.NewInt(10)),
+		sdk.NewCoin("denom", sdk.NewInt(100)),
 	)
 
-	err := banktestutil.FundAccount(f.ctx, f.bankKeeper, addr1, coins)
-	assert.NilError(t, err)
+	err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr1, coins)
+	suite.Require().NoError(err)
 
-	addr1Str, err := codectestutil.CodecOptions{}.GetAddressCodec().BytesToString(addr1)
-	assert.NilError(t, err)
-
-	req := banktypes.NewQuerySpendableBalancesRequest(addr1Str, nil)
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.SpendableBalances, 1777, false)
+	req := banktypes.NewQuerySpendableBalancesRequest(addr1, nil)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SpendableBalances, 2032, false)
 }
 
-func TestGRPCQueryTotalSupply(t *testing.T) {
-	t.Parallel()
-	f := initDeterministicFixture(t)
-
-	res, err := f.queryClient.TotalSupply(f.ctx, &banktypes.QueryTotalSupplyRequest{})
-	assert.NilError(t, err)
+func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
+	res, err := suite.queryClient.TotalSupply(suite.ctx, &banktypes.QueryTotalSupplyRequest{})
+	suite.Require().NoError(err)
 	initialSupply := res.GetSupply()
 
-	rapid.Check(t, func(rt *rapid.T) {
-		numCoins := rapid.IntRange(1, 3).Draw(rt, "num-count")
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		numCoins := rapid.IntRange(1, 3).Draw(t, "num-count")
 		coins := make(sdk.Coins, 0, numCoins)
 
 		for i := 0; i < numCoins; i++ {
 			coin := sdk.NewCoin(
-				rapid.StringMatching(denomRegex).Draw(rt, "denom"),
-				math.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+				rapid.StringMatching(denomRegex).Draw(t, "denom"),
+				sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
 			)
 
 			coins = coins.Add(coin)
 		}
 
-		assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, coins))
+		suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins))
 
 		initialSupply = initialSupply.Add(coins...)
 
 		req := &banktypes.QueryTotalSupplyRequest{
-			Pagination: testdata.PaginationGenerator(rt, uint64(len(initialSupply))).Draw(rt, "pagination"),
+			Pagination: testdata.PaginationGenerator(t, uint64(len(initialSupply))).Draw(t, "pagination"),
 		}
 
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.TotalSupply, 0, true)
+		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.TotalSupply, 0, true)
 	})
 
-	f = initDeterministicFixture(t) // reset
+	suite.SetupTest() // reset
 
 	coins := sdk.NewCoins(
-		sdk.NewCoin("foo", math.NewInt(10)),
-		sdk.NewCoin("bar", math.NewInt(100)),
+		sdk.NewCoin("foo", sdk.NewInt(10)),
+		sdk.NewCoin("bar", sdk.NewInt(100)),
 	)
 
-	assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, coins))
+	suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins))
 
 	req := &banktypes.QueryTotalSupplyRequest{}
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.TotalSupply, 150, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.TotalSupply, 243, false)
 }
 
-func TestGRPCQueryTotalSupplyOf(t *testing.T) {
-	t.Parallel()
-	f := initDeterministicFixture(t)
-
-	rapid.Check(t, func(rt *rapid.T) {
+func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupplyOf() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
 		coin := sdk.NewCoin(
-			rapid.StringMatching(denomRegex).Draw(rt, "denom"),
-			math.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+			rapid.StringMatching(denomRegex).Draw(t, "denom"),
+			sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
 		)
 
-		assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
+		suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
 
 		req := &banktypes.QuerySupplyOfRequest{Denom: coin.GetDenom()}
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.SupplyOf, 0, true)
+		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SupplyOf, 0, true)
 	})
 
-	coin := sdk.NewCoin("bar", math.NewInt(100))
+	coin := sdk.NewCoin("bar", sdk.NewInt(100))
 
-	assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
+	suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
 	req := &banktypes.QuerySupplyOfRequest{Denom: coin.GetDenom()}
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.SupplyOf, 1021, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SupplyOf, 1021, false)
 }
 
-func TestGRPCQueryParams(t *testing.T) {
-	t.Parallel()
-	f := initDeterministicFixture(t)
-
-	rapid.Check(t, func(rt *rapid.T) {
+func (suite *DeterministicTestSuite) TestGRPCQueryParams() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
 		enabledStatus := banktypes.SendEnabled{
-			Denom:   rapid.StringMatching(denomRegex).Draw(rt, "denom"),
-			Enabled: rapid.Bool().Draw(rt, "status"),
+			Denom:   rapid.StringMatching(denomRegex).Draw(t, "denom"),
+			Enabled: rapid.Bool().Draw(t, "status"),
 		}
 
 		params := banktypes.Params{
 			SendEnabled:        []*banktypes.SendEnabled{&enabledStatus},
-			DefaultSendEnabled: rapid.Bool().Draw(rt, "send"),
+			DefaultSendEnabled: rapid.Bool().Draw(t, "send"),
 		}
 
-		err := f.bankKeeper.SetParams(f.ctx, params)
-		assert.NilError(t, err)
+		suite.bankKeeper.SetParams(suite.ctx, params)
 
 		req := &banktypes.QueryParamsRequest{}
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Params, 0, true)
+		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Params, 0, true)
 	})
 
 	enabledStatus := banktypes.SendEnabled{
@@ -369,13 +269,13 @@ func TestGRPCQueryParams(t *testing.T) {
 		DefaultSendEnabled: false,
 	}
 
-	err := f.bankKeeper.SetParams(f.ctx, params)
-	assert.NilError(t, err)
+	suite.bankKeeper.SetParams(suite.ctx, params)
+
 	req := &banktypes.QueryParamsRequest{}
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.Params, 1003, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Params, 1003, false)
 }
 
-func createAndReturnMetadatas(t *rapid.T, count int) []banktypes.Metadata {
+func (suite *DeterministicTestSuite) createAndReturnMetadatas(t *rapid.T, count int) []banktypes.Metadata {
 	denomsMetadata := make([]banktypes.Metadata, 0, count)
 	for i := 0; i < count; i++ {
 
@@ -410,76 +310,67 @@ func createAndReturnMetadatas(t *rapid.T, count int) []banktypes.Metadata {
 	return denomsMetadata
 }
 
-func TestGRPCDenomsMetadata(t *testing.T) {
-	t.Parallel()
-	f := initDeterministicFixture(t)
-
-	rapid.Check(t, func(rt *rapid.T) {
-		count := rapid.IntRange(1, 3).Draw(rt, "count")
-		denomsMetadata := createAndReturnMetadatas(rt, count)
-		assert.Assert(t, len(denomsMetadata) == count)
+func (suite *DeterministicTestSuite) TestGRPCDenomsMetadata() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		count := rapid.IntRange(1, 3).Draw(t, "count")
+		denomsMetadata := suite.createAndReturnMetadatas(t, count)
+		suite.Require().Len(denomsMetadata, count)
 
 		for i := 0; i < count; i++ {
-			f.bankKeeper.SetDenomMetaData(f.ctx, denomsMetadata[i])
+			suite.bankKeeper.SetDenomMetaData(suite.ctx, denomsMetadata[i])
 		}
 
 		req := &banktypes.QueryDenomsMetadataRequest{
-			Pagination: testdata.PaginationGenerator(rt, uint64(count)).Draw(rt, "pagination"),
+			Pagination: testdata.PaginationGenerator(t, uint64(count)).Draw(t, "pagination"),
 		}
 
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DenomsMetadata, 0, true)
+		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomsMetadata, 0, true)
 	})
 
-	f = initDeterministicFixture(t) // reset
+	suite.SetupTest() // reset
 
-	f.bankKeeper.SetDenomMetaData(f.ctx, metadataAtom)
+	suite.bankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
 
 	req := &banktypes.QueryDenomsMetadataRequest{}
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DenomsMetadata, 660, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomsMetadata, 660, false)
 }
 
-func TestGRPCDenomMetadata(t *testing.T) {
-	t.Parallel()
-	f := initDeterministicFixture(t)
-
-	rapid.Check(t, func(rt *rapid.T) {
-		denomMetadata := createAndReturnMetadatas(rt, 1)
-		assert.Assert(t, len(denomMetadata) == 1)
-		f.bankKeeper.SetDenomMetaData(f.ctx, denomMetadata[0])
+func (suite *DeterministicTestSuite) TestGRPCDenomMetadata() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		denomMetadata := suite.createAndReturnMetadatas(t, 1)
+		suite.Require().Len(denomMetadata, 1)
+		suite.bankKeeper.SetDenomMetaData(suite.ctx, denomMetadata[0])
 
 		req := &banktypes.QueryDenomMetadataRequest{
 			Denom: denomMetadata[0].Base,
 		}
 
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DenomMetadata, 0, true)
+		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomMetadata, 0, true)
 	})
 
-	f.bankKeeper.SetDenomMetaData(f.ctx, metadataAtom)
+	suite.bankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
 
 	req := &banktypes.QueryDenomMetadataRequest{
 		Denom: metadataAtom.Base,
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DenomMetadata, 1300, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomMetadata, 1300, false)
 }
 
-func TestGRPCSendEnabled(t *testing.T) {
-	t.Parallel()
-	f := initDeterministicFixture(t)
-
+func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
 	allDenoms := []string{}
 
-	rapid.Check(t, func(rt *rapid.T) {
-		count := rapid.IntRange(0, 10).Draw(rt, "count")
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		count := rapid.IntRange(0, 10).Draw(t, "count")
 		denoms := make([]string, 0, count)
 
 		for i := 0; i < count; i++ {
 			coin := banktypes.SendEnabled{
-				Denom:   rapid.StringMatching(denomRegex).Draw(rt, "denom"),
-				Enabled: rapid.Bool().Draw(rt, "enabled-status"),
+				Denom:   rapid.StringMatching(denomRegex).Draw(t, "denom"),
+				Enabled: rapid.Bool().Draw(t, "enabled-status"),
 			}
 
-			f.bankKeeper.SetSendEnabled(f.ctx, coin.Denom, coin.Enabled)
+			suite.bankKeeper.SetSendEnabled(suite.ctx, coin.Denom, coin.Enabled)
 			denoms = append(denoms, coin.Denom)
 		}
 
@@ -488,9 +379,9 @@ func TestGRPCSendEnabled(t *testing.T) {
 		req := &banktypes.QuerySendEnabledRequest{
 			Denoms: denoms,
 			// Pagination is only taken into account when `denoms` is an empty array
-			Pagination: testdata.PaginationGenerator(rt, uint64(len(allDenoms))).Draw(rt, "pagination"),
+			Pagination: testdata.PaginationGenerator(t, uint64(len(allDenoms))).Draw(t, "pagination"),
 		}
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.SendEnabled, 0, true)
+		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SendEnabled, 0, true)
 	})
 
 	coin1 := banktypes.SendEnabled{
@@ -502,40 +393,37 @@ func TestGRPCSendEnabled(t *testing.T) {
 		Enabled: true,
 	}
 
-	f.bankKeeper.SetSendEnabled(f.ctx, coin1.Denom, false)
-	f.bankKeeper.SetSendEnabled(f.ctx, coin2.Denom, true)
+	suite.bankKeeper.SetSendEnabled(suite.ctx, coin1.Denom, false)
+	suite.bankKeeper.SetSendEnabled(suite.ctx, coin2.Denom, true)
 
 	req := &banktypes.QuerySendEnabledRequest{
 		Denoms: []string{coin1.GetDenom(), coin2.GetDenom()},
 	}
 
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.SendEnabled, 4063, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SendEnabled, 4063, false)
 }
 
-func TestGRPCDenomOwners(t *testing.T) {
-	t.Parallel()
-	f := initDeterministicFixture(t)
-
-	rapid.Check(t, func(rt *rapid.T) {
-		denom := rapid.StringMatching(denomRegex).Draw(rt, "denom")
-		numAddr := rapid.IntRange(1, 10).Draw(rt, "number-address")
+func (suite *DeterministicTestSuite) TestGRPCDenomOwners() {
+	rapid.Check(suite.T(), func(t *rapid.T) {
+		denom := rapid.StringMatching(denomRegex).Draw(t, "denom")
+		numAddr := rapid.IntRange(1, 10).Draw(t, "number-address")
 		for i := 0; i < numAddr; i++ {
-			addr := testdata.AddressGenerator(rt).Draw(rt, "address")
+			addr := testdata.AddressGenerator(t).Draw(t, "address")
 
 			coin := sdk.NewCoin(
 				denom,
-				math.NewInt(rapid.Int64Min(1).Draw(rt, "amount")),
+				sdk.NewInt(rapid.Int64Min(1).Draw(t, "amount")),
 			)
 
-			err := banktestutil.FundAccount(f.ctx, f.bankKeeper, addr, sdk.NewCoins(coin))
-			assert.NilError(t, err)
+			err := banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin))
+			suite.Require().NoError(err)
 		}
 
 		req := &banktypes.QueryDenomOwnersRequest{
 			Denom:      denom,
-			Pagination: testdata.PaginationGenerator(rt, uint64(numAddr)).Draw(rt, "pagination"),
+			Pagination: testdata.PaginationGenerator(t, uint64(numAddr)).Draw(t, "pagination"),
 		}
-		testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DenomOwners, 0, true)
+		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomOwners, 0, true)
 	})
 
 	denomOwners := []*banktypes.DenomOwner{
@@ -551,14 +439,14 @@ func TestGRPCDenomOwners(t *testing.T) {
 
 	for i := 0; i < len(denomOwners); i++ {
 		addr, err := sdk.AccAddressFromBech32(denomOwners[i].Address)
-		assert.NilError(t, err)
+		suite.Require().NoError(err)
 
-		err = banktestutil.FundAccount(f.ctx, f.bankKeeper, addr, sdk.NewCoins(coin1))
-		assert.NilError(t, err)
+		err = banktestutil.FundAccount(suite.bankKeeper, suite.ctx, addr, sdk.NewCoins(coin1))
+		suite.Require().NoError(err)
 	}
 
 	req := &banktypes.QueryDenomOwnersRequest{
 		Denom: coin1.GetDenom(),
 	}
-	testdata.DeterministicIterations(t, f.ctx, req, f.queryClient.DenomOwners, 2516, false)
+	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomOwners, 2525, false)
 }

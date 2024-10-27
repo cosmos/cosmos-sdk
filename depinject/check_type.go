@@ -1,11 +1,11 @@
 package depinject
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 	"unicode"
 
+	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
 )
 
@@ -21,12 +21,12 @@ func isExportedType(typ reflect.Type) error {
 	pkgPath := typ.PkgPath()
 	if name != "" && pkgPath != "" {
 		if unicode.IsLower([]rune(name)[0]) {
-			return fmt.Errorf("type must be exported: %s", typ)
+			return errors.Errorf("type must be exported: %s", typ)
 		}
 
 		pkgParts := strings.Split(pkgPath, "/")
 		if slices.Contains(pkgParts, "internal") {
-			return fmt.Errorf("type must not come from an internal package: %s", typ)
+			return errors.Errorf("type must not come from an internal package: %s", typ)
 		}
 
 		return nil

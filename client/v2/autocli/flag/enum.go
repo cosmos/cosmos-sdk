@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/iancoleman/strcase"
 	"google.golang.org/protobuf/reflect/protoreflect"
-
-	"cosmossdk.io/client/v2/internal/strcase"
 )
 
 type enumType struct {
 	enum protoreflect.EnumDescriptor
 }
 
-func (b enumType) NewValue(*context.Context, *Builder) Value {
+func (b enumType) NewValue(context.Context, *Builder) Value {
 	val := &enumValue{
 		enum:   b.enum,
 		valMap: map[string]protoreflect.EnumValueDescriptor{},

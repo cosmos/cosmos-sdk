@@ -6,7 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/go-metrics"
+	"github.com/armon/go-metrics"
+	"github.com/prometheus/common/expfmt"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,7 +19,6 @@ func TestMetrics_Disabled(t *testing.T) {
 
 func TestMetrics_InMem(t *testing.T) {
 	m, err := New(Config{
-		MetricsSink:    MetricSinkInMem,
 		Enabled:        true,
 		EnableHostname: false,
 		ServiceName:    "test",
@@ -42,7 +42,6 @@ func TestMetrics_InMem(t *testing.T) {
 
 func TestMetrics_Prom(t *testing.T) {
 	m, err := New(Config{
-		MetricsSink:             MetricSinkInMem,
 		Enabled:                 true,
 		EnableHostname:          false,
 		ServiceName:             "test",
@@ -57,7 +56,7 @@ func TestMetrics_Prom(t *testing.T) {
 
 	gr, err := m.Gather(FormatPrometheus)
 	require.NoError(t, err)
-	require.Equal(t, gr.ContentType, string(ContentTypeText))
+	require.Equal(t, gr.ContentType, string(expfmt.FmtText))
 
 	require.True(t, strings.Contains(string(gr.Metrics), "test_dummy_counter 30"))
 }

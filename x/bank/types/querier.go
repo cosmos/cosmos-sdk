@@ -1,6 +1,7 @@
 package types
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -13,28 +14,37 @@ const (
 )
 
 // NewQueryBalanceRequest creates a new instance of QueryBalanceRequest.
-func NewQueryBalanceRequest(addr, denom string) *QueryBalanceRequest {
-	return &QueryBalanceRequest{Address: addr, Denom: denom}
+//
+//nolint:interfacer
+func NewQueryBalanceRequest(addr sdk.AccAddress, denom string) *QueryBalanceRequest {
+	return &QueryBalanceRequest{Address: addr.String(), Denom: denom}
 }
 
 // NewQueryAllBalancesRequest creates a new instance of QueryAllBalancesRequest.
-func NewQueryAllBalancesRequest(addr string, req *query.PageRequest, resolveDenom bool) *QueryAllBalancesRequest {
-	return &QueryAllBalancesRequest{Address: addr, Pagination: req, ResolveDenom: resolveDenom}
+//
+//nolint:interfacer
+func NewQueryAllBalancesRequest(addr sdk.AccAddress, req *query.PageRequest) *QueryAllBalancesRequest {
+	return &QueryAllBalancesRequest{Address: addr.String(), Pagination: req}
 }
 
 // NewQuerySpendableBalancesRequest creates a new instance of a
 // QuerySpendableBalancesRequest.
-func NewQuerySpendableBalancesRequest(addr string, req *query.PageRequest) *QuerySpendableBalancesRequest {
-	return &QuerySpendableBalancesRequest{Address: addr, Pagination: req}
+//
+//nolint:interfacer
+func NewQuerySpendableBalancesRequest(addr sdk.AccAddress, req *query.PageRequest) *QuerySpendableBalancesRequest {
+	return &QuerySpendableBalancesRequest{Address: addr.String(), Pagination: req}
 }
 
 // NewQuerySpendableBalanceByDenomRequest creates a new instance of a
 // QuerySpendableBalanceByDenomRequest.
-func NewQuerySpendableBalanceByDenomRequest(addr, denom string) *QuerySpendableBalanceByDenomRequest {
-	return &QuerySpendableBalanceByDenomRequest{Address: addr, Denom: denom}
+//
+//nolint:interfacer
+func NewQuerySpendableBalanceByDenomRequest(addr sdk.AccAddress, denom string) *QuerySpendableBalanceByDenomRequest {
+	return &QuerySpendableBalanceByDenomRequest{Address: addr.String(), Denom: denom}
 }
 
 // QueryTotalSupplyParams defines the params for the following queries:
+//
 // - 'custom/bank/totalSupply'
 type QueryTotalSupplyParams struct {
 	Page, Limit int
@@ -46,6 +56,7 @@ func NewQueryTotalSupplyParams(page, limit int) QueryTotalSupplyParams {
 }
 
 // QuerySupplyOfParams defines the params for the following queries:
+//
 // - 'custom/bank/totalSupplyOf'
 type QuerySupplyOfParams struct {
 	Denom string

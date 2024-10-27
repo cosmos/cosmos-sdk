@@ -5,16 +5,16 @@ import (
 	"errors"
 	"io"
 
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 var _ types.KVStore = Store{}
 
-// Store is similar with cometbft/cometbft/libs/db/prefix_db
+// Store is similar with tendermint/tendermint/libs/db/prefix_db
 // both gives access only to the limited subset of the store
-// for convenience or safety
+// for convinience or safety
 type Store struct {
 	parent types.KVStore
 	prefix []byte
@@ -27,7 +27,7 @@ func NewStore(parent types.KVStore, prefix []byte) Store {
 	}
 }
 
-func cloneAppend(bz, tail []byte) (res []byte) {
+func cloneAppend(bz []byte, tail []byte) (res []byte) {
 	res = make([]byte, len(bz)+len(tail))
 	copy(res, bz)
 	copy(res[len(bz):], tail)
@@ -42,12 +42,12 @@ func (s Store) key(key []byte) (res []byte) {
 	return
 }
 
-// GetStoreType implements Store
+// Implements Store
 func (s Store) GetStoreType() types.StoreType {
 	return s.parent.GetStoreType()
 }
 
-// CacheWrap implements CacheWrap
+// Implements CacheWrap
 func (s Store) CacheWrap() types.CacheWrap {
 	return cachekv.NewStore(s)
 }
@@ -57,31 +57,31 @@ func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Cach
 	return cachekv.NewStore(tracekv.NewStore(s, w, tc))
 }
 
-// Get implements KVStore
+// Implements KVStore
 func (s Store) Get(key []byte) []byte {
 	res := s.parent.Get(s.key(key))
 	return res
 }
 
-// Has implements KVStore
+// Implements KVStore
 func (s Store) Has(key []byte) bool {
 	return s.parent.Has(s.key(key))
 }
 
-// Set implements KVStore
+// Implements KVStore
 func (s Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 	s.parent.Set(s.key(key), value)
 }
 
-// Delete implements KVStore
+// Implements KVStore
 func (s Store) Delete(key []byte) {
 	s.parent.Delete(s.key(key))
 }
 
-// Iterator implements KVStore
-// Check https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db.go#L106
+// Implements KVStore
+// Check https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db.go#L106
 func (s Store) Iterator(start, end []byte) types.Iterator {
 	newstart := cloneAppend(s.prefix, start)
 
@@ -98,7 +98,7 @@ func (s Store) Iterator(start, end []byte) types.Iterator {
 }
 
 // ReverseIterator implements KVStore
-// Check https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db.go#L129
+// Check https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db.go#L129
 func (s Store) ReverseIterator(start, end []byte) types.Iterator {
 	newstart := cloneAppend(s.prefix, start)
 
@@ -134,17 +134,17 @@ func newPrefixIterator(prefix, start, end []byte, parent types.Iterator) *prefix
 	}
 }
 
-// Domain implements Iterator
+// Implements Iterator
 func (pi *prefixIterator) Domain() ([]byte, []byte) {
 	return pi.start, pi.end
 }
 
-// Valid implements Iterator
+// Implements Iterator
 func (pi *prefixIterator) Valid() bool {
 	return pi.valid && pi.iter.Valid()
 }
 
-// Next implements Iterator
+// Implements Iterator
 func (pi *prefixIterator) Next() {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Next()")
@@ -156,7 +156,7 @@ func (pi *prefixIterator) Next() {
 	}
 }
 
-// Key implements Iterator
+// Implements Iterator
 func (pi *prefixIterator) Key() (key []byte) {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Key()")
@@ -168,7 +168,7 @@ func (pi *prefixIterator) Key() (key []byte) {
 	return
 }
 
-// Value implements Iterator
+// Implements Iterator
 func (pi *prefixIterator) Value() []byte {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Value()")
@@ -177,7 +177,7 @@ func (pi *prefixIterator) Value() []byte {
 	return pi.iter.Value()
 }
 
-// Close implements Iterator
+// Implements Iterator
 func (pi *prefixIterator) Close() error {
 	return pi.iter.Close()
 }
@@ -192,8 +192,8 @@ func (pi *prefixIterator) Error() error {
 	return nil
 }
 
-// copied from github.com/cometbft/cometbft/libs/db/prefix_db.go
-func stripPrefix(key, prefix []byte) []byte {
+// copied from github.com/tendermint/tendermint/libs/db/prefix_db.go
+func stripPrefix(key []byte, prefix []byte) []byte {
 	if len(key) < len(prefix) || !bytes.Equal(key[:len(prefix)], prefix) {
 		panic("should not happen")
 	}

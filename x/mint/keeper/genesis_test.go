@@ -3,25 +3,20 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/log"
-	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
-	authtypes "cosmossdk.io/x/auth/types"
-	"cosmossdk.io/x/mint"
-	"cosmossdk.io/x/mint/keeper"
-	minttestutil "cosmossdk.io/x/mint/testutil"
-	"cosmossdk.io/x/mint/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	minttestutil "github.com/cosmos/cosmos-sdk/x/mint/testutil"
+	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var minterAcc = authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
@@ -41,9 +36,9 @@ func TestGenesisTestSuite(t *testing.T) {
 }
 
 func (s *GenesisTestSuite) SetupTest() {
-	key := storetypes.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, mint.AppModule{})
+	key := sdk.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
@@ -58,38 +53,31 @@ func (s *GenesisTestSuite) SetupTest() {
 	accountKeeper.EXPECT().GetModuleAddress(minterAcc.Name).Return(minterAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(s.sdkCtx, minterAcc.Name).Return(minterAcc)
 
-	s.keeper = keeper.NewKeeper(s.cdc, runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger()), stakingKeeper, accountKeeper, bankKeeper, "", "")
+	s.keeper = keeper.NewKeeper(s.cdc, key, stakingKeeper, accountKeeper, bankKeeper, "", "")
 }
 
 func (s *GenesisTestSuite) TestImportExportGenesis() {
 	genesisState := types.DefaultGenesisState()
-	genesisState.Minter = types.NewMinter(math.LegacyNewDecWithPrec(20, 2), math.LegacyNewDec(1))
+	genesisState.Minter = types.NewMinter(sdk.NewDecWithPrec(20, 2), math.LegacyNewDec(1))
 	genesisState.Params = types.NewParams(
 		"testDenom",
-		math.LegacyNewDecWithPrec(15, 2),
-		math.LegacyNewDecWithPrec(22, 2),
-		math.LegacyNewDecWithPrec(9, 2),
-		math.LegacyNewDecWithPrec(69, 2),
+		sdk.NewDecWithPrec(15, 2),
+		sdk.NewDecWithPrec(22, 2),
+		sdk.NewDecWithPrec(9, 2),
+		sdk.NewDecWithPrec(69, 2),
 		uint64(60*60*8766/5),
-		math.ZeroInt(),
 	)
 
-	err := s.keeper.InitGenesis(s.sdkCtx, s.accountKeeper, genesisState)
-	s.NoError(err)
+	s.keeper.InitGenesis(s.sdkCtx, s.accountKeeper, genesisState)
 
-	minter, err := s.keeper.Minter.Get(s.sdkCtx)
-	s.Equal(genesisState.Minter, minter)
-	s.NoError(err)
+	minter := s.keeper.GetMinter(s.sdkCtx)
+	s.Require().Equal(genesisState.Minter, minter)
 
-	invalidCtx := testutil.DefaultContextWithDB(s.T(), s.key, storetypes.NewTransientStoreKey("transient_test"))
-	_, err = s.keeper.Minter.Get(invalidCtx.Ctx)
-	s.ErrorIs(err, collections.ErrNotFound)
+	invalidCtx := testutil.DefaultContextWithDB(s.T(), s.key, sdk.NewTransientStoreKey("transient_test"))
+	s.Require().Panics(func() { s.keeper.GetMinter(invalidCtx.Ctx) }, "stored minter should not have been nil")
+	params := s.keeper.GetParams(s.sdkCtx)
+	s.Require().Equal(genesisState.Params, params)
 
-	params, err := s.keeper.Params.Get(s.sdkCtx)
-	s.Equal(genesisState.Params, params)
-	s.NoError(err)
-
-	genesisState2, err := s.keeper.ExportGenesis(s.sdkCtx)
-	s.NoError(err)
-	s.Equal(genesisState, genesisState2)
+	genesisState2 := s.keeper.ExportGenesis(s.sdkCtx)
+	s.Require().Equal(genesisState, genesisState2)
 }

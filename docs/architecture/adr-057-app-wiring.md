@@ -4,7 +4,6 @@
 
 * 2022-05-04: Initial Draft
 * 2022-08-19: Updates
-* 2024-01-12: Updates
 
 ## Status
 
@@ -80,6 +79,7 @@ of protobuf and its basic structure is very simple:
 
 ```protobuf
 package cosmos.app.v1;
+
 message Config {
   repeated ModuleConfig modules = 1;
 }
@@ -90,7 +90,9 @@ message ModuleConfig {
 }
 ```
 
-The configuration for every module is a protobuf message and modules will be identified and loaded based
+(See also https://github.com/cosmos/cosmos-sdk/blob/6e18f582bf69e3926a1e22a6de3c35ea327aadce/proto/cosmos/app/v1alpha1/config.proto)
+
+The configuration for every module is itself a protobuf message and modules will be identified and loaded based
 on the protobuf type URL of their config object (ex. `cosmos.bank.module.v1.Module`). Modules are given a unique short `name`
 to share resources across different versions of the same module which might have a different protobuf package
 versions (ex. `cosmos.bank.module.v2.Module`). All module config objects should define the `cosmos.app.v1alpha1.module`
@@ -147,7 +149,7 @@ to decode the app config in separate phases:
 3. decode the app config as proto JSON using the protobuf type registry
 
 Because in [ADR 054: Protobuf Semver Compatible Codegen](https://github.com/cosmos/cosmos-sdk/pull/11802), each module
-might use `internal` generated code which is not registered with the global protobuf registry, this code should provide
+should use `internal` generated code which is not registered with the global protobuf registry, this code should provide
 an alternate way to register protobuf types with a type registry. In the same way that `.pb.go` files currently have a
 `var File_foo_proto protoreflect.FileDescriptor` for the file `foo.proto`, generated code should have a new member
 `var Types_foo_proto TypeInfo` where `TypeInfo` is an interface or struct with all the necessary info to register both
@@ -179,13 +181,13 @@ Ex:
 
 ```go
 func init() {
-	appconfig.Register("cosmos.bank.module.v1.Module",
-		appconfig.Types(
+	appmodule.Register("cosmos.bank.module.v1.Module",
+		appmodule.Types(
 			types.Types_tx_proto,
             types.Types_query_proto,
             types.Types_types_proto,
 	    ),
-	    appconfig.Provide(
+	    appmodule.Provide(
 			provideBankModule,
 	    )
 	)
@@ -213,9 +215,6 @@ can help us figure out issues with missing dependencies in an app config if the 
 In cases where required modules are not loaded at runtime, it may be possible to guide users to the correct module if
 through a global Cosmos SDK module registry.
 
-The `*appmodule.Handler` type referenced above is a replacement for the legacy `AppModule` framework, and
-described in [ADR 063: Core Module API](./adr-063-core-module-api.md).
-
 ### New `app.go`
 
 With this setup, `app.go` might now look something like this:
@@ -226,9 +225,9 @@ package main
 import (
 	// Each go package which registers a module must be imported just for side-effects
 	// so that module implementations are registered.
-	_ "cosmossdk.io/x/auth/module"
-	_ "cosmossdk.io/x/bank/module"
-	_ "cosmossdk.io/x/staking/module"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/module"
+	_ "github.com/cosmos/cosmos-sdk/x/bank/module"
+	_ "github.com/cosmos/cosmos-sdk/x/staking/module"
 	"github.com/cosmos/cosmos-sdk/core/app"
 )
 
@@ -243,8 +242,8 @@ func main() {
 ### Application to existing SDK modules
 
 So far we have described a system which is largely agnostic to the specifics of the SDK such as store keys, `AppModule`,
-`BaseApp`, etc. Improvements to these parts of the framework that integrate with the general app wiring framework
-defined here are described in [ADR 063: Core Module API](./adr-063-core-module-api.md).
+`BaseApp`, etc. A second app wiring ADR will be created which outlines the details of how this app wiring system will
+be applied to the existing SDK in a way that:
 
 ### Registration of Inter-Module Hooks
 
@@ -253,12 +252,11 @@ when certain events happen.
 
 With the app wiring framework, these hooks interfaces can be defined as a `OnePerModuleType`s and then the module
 which consumes these hooks can collect these hooks as a map of module name to hook type (ex. `map[string]FooHooks`). Ex:
-
 ```go
 func init() {
-    appconfig.RegisterModule(
+    appmodule.Register(
         &foomodulev1.Module{},
-        appconfig.Invoke(InvokeSetFooHooks),
+        appmodule.Invoke(InvokeSetFooHooks),
 	    ...
     )
 }
@@ -277,7 +275,6 @@ in its config object.
 
 An alternative way for registering hooks via reflection was considered where all keeper types are inspected to see if
 they implement the hook interface by the modules exposing hooks. This has the downsides of:
-
 * needing to expose all the keepers of all modules to the module providing hooks,
 * not allowing for encapsulating hooks on a different type which doesn't expose all keeper methods,
 * harder to know statically which module expose hooks or are checking for them.
@@ -287,46 +284,12 @@ With the approach proposed here, hooks registration will be obviously observable
 
 ### Code Generation
 
-> Not yet implemented
-
 The `depinject` framework will optionally allow the app configuration and dependency injection wiring to be code
 generated. This will allow:
-
 * dependency injection wiring to be inspected as regular go code just like the existing `app.go`,
 * dependency injection to be opt-in with manual wiring 100% still possible.
 
 Code generation requires that all providers and invokers and their parameters are exported and in non-internal packages.
-
-### Module Semantic Versioning
-
-When we start creating semantically versioned SDK modules that are in standalone go modules, a state machine breaking
-change to a module should be handled as follows:
-
-* the semantic major version should be incremented, and
-* a new semantically versioned module config protobuf type should be created.
-
-For instance, if we have the SDK module for bank in the go module `cosmossdk.io/x/bank` with the module config type
-`cosmos.bank.module.v1.Module`, and we want to make a state machine breaking change to the module, we would:
-
-* create a new go module `cosmossdk.io/x/bank/v2`,
-* with the module config protobuf type `cosmos.bank.module.v2.Module`.
-
-This *does not* mean that we need to increment the protobuf API version for bank. Both modules can support
-`cosmos.bank.v1`, but `cosmossdk.io/x/bank/v2` will be a separate go module with a separate module config type.
-
-This practice will eventually allow us to use appconfig to load new versions of a module via a configuration change.
-
-Effectively, there should be a 1:1 correspondence between a semantically versioned go module and a 
-versioned module config protobuf type, and major versioning bumps should occur whenever state machine breaking changes
-are made to a module.
-
-NOTE: SDK modules that are standalone go modules *should not* adopt semantic versioning until the concerns described in
-[ADR 054: Module Semantic Versioning](./adr-054-semver-compatible-modules.md) are
-addressed. The short-term solution for this issue was left somewhat unresolved. However, the easiest tactic is
-likely to use a standalone API go module and follow the guidelines described in this comment: https://github.com/cosmos/cosmos-sdk/pull/11802#issuecomment-1406815181. For the time-being, it is recommended that
-Cosmos SDK modules continue to follow tried and true [0-based versioning](https://0ver.org) until an officially
-recommended solution is provided. This section of the ADR will be updated when that happens and for now, this section
-should be considered as a design recommendation for future adoption of semantic versioning.
 
 ## Consequences
 
@@ -366,4 +329,3 @@ light of code generation. It may be better to do this type registration with a D
 * https://github.com/google/wire
 * https://pkg.go.dev/github.com/cosmos/cosmos-sdk/container
 * https://github.com/cosmos/cosmos-sdk/pull/11802
-* [ADR 063: Core Module API](./adr-063-core-module-api.md)

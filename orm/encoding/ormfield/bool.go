@@ -1,7 +1,7 @@
 package ormfield
 
 import (
-	"io"
+	io "io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -21,28 +21,22 @@ var (
 
 func (b BoolCodec) Encode(value protoreflect.Value, w io.Writer) error {
 	var err error
-	if !value.IsValid() || !value.Bool() {
-		_, err = w.Write(zeroBz)
-	} else {
+	if value.Bool() {
 		_, err = w.Write(oneBz)
+	} else {
+		_, err = w.Write(zeroBz)
 	}
 	return err
 }
 
 func (b BoolCodec) Compare(v1, v2 protoreflect.Value) int {
-	var b1, b2 bool
-	if v1.IsValid() {
-		b1 = v1.Bool()
-	}
-	if v2.IsValid() {
-		b2 = v2.Bool()
-	}
-	switch {
-	case b1 == b2:
+	b1 := v1.Bool()
+	b2 := v2.Bool()
+	if b1 == b2 {
 		return 0
-	case b1:
+	} else if b1 {
 		return -1
-	default:
+	} else {
 		return 1
 	}
 }

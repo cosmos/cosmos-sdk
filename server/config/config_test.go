@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,73 +43,30 @@ func TestIndexEventsMarshalling(t *testing.T) {
 	require.Contains(t, actual, expectedIn, "config file contents")
 }
 
-func TestStreamingConfig(t *testing.T) {
-	cfg := Config{
-		Streaming: StreamingConfig{
-			ABCI: ABCIListenerConfig{
-				Keys:          []string{"one", "two"},
-				Plugin:        "plugin-A",
-				StopNodeOnErr: false,
-			},
-		},
-	}
+func TestParseStoreStreaming(t *testing.T) {
+	expectedContents := `[store]
+streamers = ["file", ]
 
-	testDir := t.TempDir()
-	cfgFile := filepath.Join(testDir, "app.toml")
-	err := WriteConfigFile(cfgFile, &cfg)
-	require.NoError(t, err)
-
-	cfgFileBz, err := os.ReadFile(cfgFile)
-	require.NoError(t, err, "reading %s", cfgFile)
-	cfgFileContents := string(cfgFileBz)
-	t.Logf("Config file contents: %s:\n%s", cfgFile, cfgFileContents)
-
-	expectedLines := []string{
-		`keys = ["one", "two", ]`,
-		`plugin = "plugin-A"`,
-		`stop-node-on-err = false`,
-	}
-
-	for _, line := range expectedLines {
-		assert.Contains(t, cfgFileContents, line+"\n", "config file contents")
-	}
-
-	vpr := viper.New()
-	vpr.SetConfigFile(cfgFile)
-	err = vpr.ReadInConfig()
-	require.NoError(t, err, "reading config file into viper")
-
-	var actual Config
-	err = vpr.Unmarshal(&actual)
-	require.NoError(t, err, "vpr.Unmarshal")
-
-	assert.Equal(t, cfg.Streaming, actual.Streaming, "Streaming")
-}
-
-func TestParseStreaming(t *testing.T) {
-	expectedKeys := `keys = ["*", ]` + "\n"
-	expectedPlugin := `plugin = "abci_v1"` + "\n"
-	expectedStopNodeOnErr := `stop-node-on-err = true` + "\n"
+[streamers]
+[streamers.file]
+keys = ["*", ]
+write_dir = "/foo/bar"
+prefix = ""`
 
 	cfg := DefaultConfig()
-	cfg.Streaming.ABCI.Keys = []string{"*"}
-	cfg.Streaming.ABCI.Plugin = "abci_v1"
-	cfg.Streaming.ABCI.StopNodeOnErr = true
+	cfg.Store.Streamers = []string{FileStreamer}
+	cfg.Streamers.File.Keys = []string{"*"}
+	cfg.Streamers.File.WriteDir = "/foo/bar"
 
 	var buffer bytes.Buffer
-	err := configTemplate.Execute(&buffer, cfg)
-	require.NoError(t, err, "executing template")
-	actual := buffer.String()
-	require.Contains(t, actual, expectedKeys, "config file contents")
-	require.Contains(t, actual, expectedPlugin, "config file contents")
-	require.Contains(t, actual, expectedStopNodeOnErr, "config file contents")
+	require.NoError(t, configTemplate.Execute(&buffer, cfg), "executing template")
+	require.Contains(t, buffer.String(), expectedContents, "config file contents")
 }
 
 func TestReadConfig(t *testing.T) {
 	cfg := DefaultConfig()
 	tmpFile := filepath.Join(t.TempDir(), "config")
-	err := WriteConfigFile(tmpFile, cfg)
-	require.NoError(t, err)
+	WriteConfigFile(tmpFile, cfg)
 
 	v := viper.New()
 	otherCfg, err := GetConfig(v)
@@ -127,14 +83,13 @@ func TestIndexEventsWriteRead(t *testing.T) {
 	conf := DefaultConfig()
 	conf.IndexEvents = expected
 
-	err := WriteConfigFile(confFile, conf)
-	require.NoError(t, err)
+	WriteConfigFile(confFile, conf)
 
 	// read the file into Viper
 	vpr := viper.New()
 	vpr.SetConfigFile(confFile)
 
-	err = vpr.ReadInConfig()
+	err := vpr.ReadInConfig()
 	require.NoError(t, err, "reading config file into viper")
 
 	// Check that the raw viper value is correct.
@@ -179,8 +134,7 @@ func TestGlobalLabelsWriteRead(t *testing.T) {
 	confFile := filepath.Join(t.TempDir(), "app.toml")
 	conf := DefaultConfig()
 	conf.Telemetry.GlobalLabels = expected
-	err := WriteConfigFile(confFile, conf)
-	require.NoError(t, err)
+	WriteConfigFile(confFile, conf)
 
 	// Read that file into viper.
 	vpr := viper.New()
@@ -209,7 +163,7 @@ func TestSetConfigTemplate(t *testing.T) {
 	// Set the template to the default one.
 	initTmpl := configTemplate
 	require.NotPanics(t, func() {
-		_ = SetConfigTemplate(DefaultConfigTemplate)
+		SetConfigTemplate(DefaultConfigTemplate)
 	}, "SetConfigTemplate")
 	setTmpl := configTemplate
 	require.NotSame(t, initTmpl, setTmpl, "configTemplate after set")
@@ -228,8 +182,8 @@ func TestAppConfig(t *testing.T) {
 	}()
 
 	defAppConfig := DefaultConfig()
-	require.NoError(t, SetConfigTemplate(DefaultConfigTemplate))
-	require.NoError(t, WriteConfigFile(appConfigFile, defAppConfig))
+	SetConfigTemplate(DefaultConfigTemplate)
+	WriteConfigFile(appConfigFile, defAppConfig)
 
 	v := viper.New()
 	v.SetConfigFile(appConfigFile)

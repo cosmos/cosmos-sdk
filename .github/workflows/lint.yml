@@ -5,60 +5,22 @@ on:
       - main
       - release/**
   pull_request:
-  merge_group:
 permissions:
   contents: read
+  # Optional: allow read access to pull request. Use with `only-new-issues` option.
+  # pull-requests: read
 jobs:
   golangci:
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v3
         with:
-          go-version: "1.23"
+          go-version: "1.19"
           check-latest: true
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
+      - uses: actions/checkout@v3
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
         with:
-          PATTERNS: |
-            **/*.mk
-            Makefile
-            **/Makefile
-            .golangci.yml
-      - name: run linting (long)
-        if: env.GIT_DIFF
-        id: lint_long
-        run: |
-          nix develop -c make lint
-        env:
-          NIX: 1
-      - uses: technote-space/get-diff-action@v6.1.2
-        if: steps.lint_long.outcome == 'skipped'
-        with:
-          PATTERNS: |
-            **/*.go
-            *.go
-            !store/**
-      - name: run linting (short)
-        if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
-        run: |
-          make lint
-        env:
-          GIT_DIFF: ${{ env.GIT_DIFF }}
-          LINT_DIFF: 1
-      - uses: technote-space/get-diff-action@v6.1.2
-        if: steps.lint_long.outcome == 'skipped'
-        with:
-          PATTERNS: |
-            store/**
-      - name: run linting (short)
-        if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
-        run: |
-          nix develop -c make lint
-        env:
-          GIT_DIFF: ${{ env.GIT_DIFF }}
-          LINT_DIFF: 1
-          NIX: 1
+          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
+          version: v1.50.1

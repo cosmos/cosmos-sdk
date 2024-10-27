@@ -15,18 +15,7 @@ type Uint struct {
 
 // BigInt converts Uint to big.Int
 func (u Uint) BigInt() *big.Int {
-	if u.IsNil() {
-		return nil
-	}
 	return new(big.Int).Set(u.i)
-}
-
-// BigIntMut converts Uint to big.Int, mutative the input
-func (u Uint) BigIntMut() *big.Int {
-	if u.IsNil() {
-		return nil
-	}
-	return u.i
 }
 
 // IsNil returns true if Uint is uninitialized
@@ -34,17 +23,16 @@ func (u Uint) IsNil() bool {
 	return u.i == nil
 }
 
-// NewUintFromBigInt constructs Uint from big.Int
-// Panics if i is negative or wider than 256 bits
+// NewUintFromBigUint constructs Uint from big.Uint
 func NewUintFromBigInt(i *big.Int) Uint {
 	u, err := checkNewUint(i)
 	if err != nil {
-		panic(fmt.Errorf("overflow: %w", err))
+		panic(fmt.Errorf("overflow: %s", err))
 	}
 	return u
 }
 
-// NewUint constructs Uint from uint64
+// NewUint constructs Uint from int64
 func NewUint(n uint64) Uint {
 	i := new(big.Int)
 	i.SetUint64(n)
@@ -52,7 +40,6 @@ func NewUint(n uint64) Uint {
 }
 
 // NewUintFromString constructs Uint from string
-// Panics if parsed s is negative or wider than 256 bits
 func NewUintFromString(s string) Uint {
 	u, err := ParseUint(s)
 	if err != nil {
@@ -99,7 +86,7 @@ func (u Uint) LTE(u2 Uint) bool { return !u.GT(u2) }
 // Add adds Uint from another
 func (u Uint) Add(u2 Uint) Uint { return NewUintFromBigInt(new(big.Int).Add(u.i, u2.i)) }
 
-// AddUint64 convert uint64 and add it to Uint
+// Add convert uint64 and add it to Uint
 func (u Uint) AddUint64(u2 uint64) Uint { return u.Add(NewUint(u2)) }
 
 // Sub adds Uint from another
@@ -113,14 +100,13 @@ func (u Uint) Mul(u2 Uint) (res Uint) {
 	return NewUintFromBigInt(new(big.Int).Mul(u.i, u2.i))
 }
 
-// MulUint64 multiplies two Uints
+// Mul multiplies two Uints
 func (u Uint) MulUint64(u2 uint64) (res Uint) { return u.Mul(NewUint(u2)) }
 
 // Quo divides Uint with Uint
 func (u Uint) Quo(u2 Uint) (res Uint) { return NewUintFromBigInt(div(u.i, u2.i)) }
 
 // Mod returns remainder after dividing with Uint
-// Panics if u2 is zero
 func (u Uint) Mod(u2 Uint) Uint {
 	if u2.IsZero() {
 		panic("division-by-zero")
@@ -139,16 +125,16 @@ func (u Uint) Decr() Uint {
 	return u.Sub(OneUint())
 }
 
-// QuoUint64 divides Uint with uint64
+// Quo divides Uint with uint64
 func (u Uint) QuoUint64(u2 uint64) Uint { return u.Quo(NewUint(u2)) }
 
-// MinUint returns the minimum of the Uints
+// Return the minimum of the Uints
 func MinUint(u1, u2 Uint) Uint { return NewUintFromBigInt(min(u1.i, u2.i)) }
 
-// MaxUint returns the maximum of the Uints
+// Return the maximum of the Uints
 func MaxUint(u1, u2 Uint) Uint { return NewUintFromBigInt(max(u1.i, u2.i)) }
 
-// String returns human-readable string
+// Human readable string
 func (u Uint) String() string { return u.i.String() }
 
 // MarshalJSON defines custom encoding scheme
@@ -219,7 +205,7 @@ func (u *Uint) Size() int {
 	return len(bz)
 }
 
-// MarshalAmino override Amino binary serialization by proxying to protobuf.
+// Override Amino binary serialization by proxying to protobuf.
 func (u Uint) MarshalAmino() ([]byte, error)   { return u.Marshal() }
 func (u *Uint) UnmarshalAmino(bz []byte) error { return u.Unmarshal(bz) }
 
@@ -249,19 +235,19 @@ func checkNewUint(i *big.Int) (Uint, error) {
 	if err := UintOverflow(i); err != nil {
 		return Uint{}, err
 	}
-	return Uint{new(big.Int).Set(i)}, nil
+	return Uint{i}, nil
 }
 
 // RelativePow raises x to the power of n, where x (and the result, z) are scaled by factor b
 // for example, RelativePow(210, 2, 100) = 441 (2.1^2 = 4.41)
-func RelativePow(x, n, b Uint) (z Uint) {
+func RelativePow(x Uint, n Uint, b Uint) (z Uint) {
 	if x.IsZero() {
 		if n.IsZero() {
-			z = OneUint() // 0^0 = 1
-			return z
+			z = b // 0^0 = 1
+			return
 		}
 		z = ZeroUint() // otherwise 0^a = 0
-		return z
+		return
 	}
 
 	z = x

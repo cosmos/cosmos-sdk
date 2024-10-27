@@ -1,187 +1,68 @@
 package keeper_test
 
 import (
-	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
-	"gotest.tools/v3/assert"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/auth"
-	authkeeper "cosmossdk.io/x/auth/keeper"
-	authsims "cosmossdk.io/x/auth/simulation"
-	authtestutil "cosmossdk.io/x/auth/testutil"
-	authtypes "cosmossdk.io/x/auth/types"
-	"cosmossdk.io/x/bank"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	banktypes "cosmossdk.io/x/bank/types"
-	"cosmossdk.io/x/gov"
-	"cosmossdk.io/x/gov/keeper"
-	"cosmossdk.io/x/gov/types"
-	v1 "cosmossdk.io/x/gov/types/v1"
-	"cosmossdk.io/x/gov/types/v1beta1"
-	minttypes "cosmossdk.io/x/mint/types"
-	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
-	pooltypes "cosmossdk.io/x/protocolpool/types"
-	"cosmossdk.io/x/staking"
-	stakingkeeper "cosmossdk.io/x/staking/keeper"
-	stakingtypes "cosmossdk.io/x/staking/types"
-
+	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-type fixture struct {
-	ctx sdk.Context
+// KeeperTestSuite only tests gov's keeper logic around tallying, since it
+// relies on complex interactions with x/staking.
+//
+// It also uses simapp (and not a depinjected app) because we manually set a
+// new app.StakingKeeper in `createValidators`.
+type KeeperTestSuite struct {
+	suite.Suite
 
+	app               *simapp.SimApp
+	ctx               sdk.Context
 	queryClient       v1.QueryClient
 	legacyQueryClient v1beta1.QueryClient
-
-	accountKeeper authkeeper.AccountKeeper
-	bankKeeper    bankkeeper.Keeper
-	stakingKeeper *stakingkeeper.Keeper
-	govKeeper     *keeper.Keeper
+	addrs             []sdk.AccAddress
+	msgSrvr           v1.MsgServer
+	legacyMsgSrvr     v1beta1.MsgServer
 }
 
-func initFixture(tb testing.TB) *fixture {
-	tb.Helper()
-	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey, pooltypes.StoreKey, types.StoreKey,
-	)
-	encodingCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, auth.AppModule{}, bank.AppModule{}, gov.AppModule{})
-	cdc := encodingCfg.Codec
+func (suite *KeeperTestSuite) SetupTest() {
+	app := simapp.Setup(suite.T(), false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	logger := log.NewTestLogger(tb)
-	cms := integration.CreateMultiStore(keys, logger)
+	// Populate the gov account with some coins, as the TestProposal we have
+	// is a MsgSend from the gov account.
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000)))
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
+	suite.NoError(err)
+	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
+	suite.NoError(err)
 
-	newCtx := sdk.NewContext(cms, true, logger)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	v1.RegisterQueryServer(queryHelper, app.GovKeeper)
+	legacyQueryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	v1beta1.RegisterQueryServer(legacyQueryHelper, keeper.NewLegacyQueryServer(app.GovKeeper))
+	queryClient := v1.NewQueryClient(queryHelper)
+	legacyQueryClient := v1beta1.NewQueryClient(legacyQueryHelper)
 
-	authority := authtypes.NewModuleAddress(types.ModuleName)
+	suite.app = app
+	suite.ctx = ctx
+	suite.queryClient = queryClient
+	suite.legacyQueryClient = legacyQueryClient
+	suite.msgSrvr = keeper.NewMsgServerImpl(suite.app.GovKeeper)
 
-	maccPerms := map[string][]string{
-		pooltypes.ModuleName:               {},
-		pooltypes.StreamAccount:            {},
-		pooltypes.ProtocolPoolDistrAccount: {},
-		minttypes.ModuleName:               {authtypes.Minter},
-		stakingtypes.BondedPoolName:        {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:     {authtypes.Burner, authtypes.Staking},
-		types.ModuleName:                   {authtypes.Burner},
-	}
+	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
+	suite.legacyMsgSrvr = keeper.NewLegacyMsgServerImpl(govAcct.String(), suite.msgSrvr)
+	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
+}
 
-	// gomock initializations
-	ctrl := gomock.NewController(tb)
-	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
-	accNum := uint64(0)
-	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
-		currentNum := accNum
-		accNum++
-		return currentNum, nil
-	})
-
-	accountKeeper := authkeeper.NewAccountKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger()),
-		cdc,
-		authtypes.ProtoBaseAccount,
-		acctsModKeeper,
-		maccPerms,
-		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
-		sdk.Bech32MainPrefix,
-		authority.String(),
-	)
-
-	blockedAddresses := map[string]bool{
-		accountKeeper.GetAuthority(): false,
-	}
-	bankKeeper := bankkeeper.NewBaseKeeper(
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[banktypes.StoreKey]), log.NewNopLogger()),
-		cdc,
-		accountKeeper,
-		blockedAddresses,
-		authority.String(),
-	)
-
-	assert.NilError(tb, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
-
-	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
-
-	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[pooltypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, stakingKeeper, authority.String())
-
-	// set default staking params
-	err := stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams())
-	assert.NilError(tb, err)
-
-	// Create MsgServiceRouter, but don't populate it before creating the gov
-	// keeper.
-	router := baseapp.NewMsgServiceRouter()
-	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
-	queryRouter := baseapp.NewGRPCQueryRouter()
-	queryRouter.SetInterfaceRegistry(cdc.InterfaceRegistry())
-
-	govKeeper := keeper.NewKeeper(
-		cdc,
-		runtime.NewEnvironment(runtime.NewKVStoreService(keys[types.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(router)),
-		accountKeeper,
-		bankKeeper,
-		stakingKeeper,
-		poolKeeper,
-		keeper.DefaultConfig(),
-		authority.String(),
-	)
-	assert.NilError(tb, govKeeper.ProposalID.Set(newCtx, 1))
-	govRouter := v1beta1.NewRouter()
-	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
-	govKeeper.SetLegacyRouter(govRouter)
-	err = govKeeper.Params.Set(newCtx, v1.DefaultParams())
-	assert.NilError(tb, err)
-
-	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts)
-	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
-	govModule := gov.NewAppModule(cdc, govKeeper, accountKeeper, bankKeeper, poolKeeper)
-
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
-		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
-		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
-		map[string]appmodule.AppModule{
-			authtypes.ModuleName:    authModule,
-			banktypes.ModuleName:    bankModule,
-			stakingtypes.ModuleName: stakingModule,
-			types.ModuleName:        govModule,
-		},
-		baseapp.NewMsgServiceRouter(),
-		baseapp.NewGRPCQueryRouter(),
-	)
-
-	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
-
-	msgSrvr := keeper.NewMsgServerImpl(govKeeper)
-	legacyMsgSrvr := keeper.NewLegacyMsgServerImpl(authority.String(), msgSrvr)
-
-	// Register MsgServer and QueryServer
-	v1.RegisterMsgServer(router, msgSrvr)
-	v1beta1.RegisterMsgServer(router, legacyMsgSrvr)
-
-	v1.RegisterQueryServer(integrationApp.QueryHelper(), keeper.NewQueryServer(govKeeper))
-	v1beta1.RegisterQueryServer(integrationApp.QueryHelper(), keeper.NewLegacyQueryServer(govKeeper))
-
-	queryClient := v1.NewQueryClient(integrationApp.QueryHelper())
-	legacyQueryClient := v1beta1.NewQueryClient(integrationApp.QueryHelper())
-
-	return &fixture{
-		ctx:               sdkCtx,
-		queryClient:       queryClient,
-		legacyQueryClient: legacyQueryClient,
-		accountKeeper:     accountKeeper,
-		bankKeeper:        bankKeeper,
-		stakingKeeper:     stakingKeeper,
-		govKeeper:         govKeeper,
-	}
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }

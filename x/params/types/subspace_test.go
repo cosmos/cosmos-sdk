@@ -6,20 +6,18 @@ import (
 	"testing"
 	"time"
 
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/store"
-	"cosmossdk.io/store/metrics"
-	storetypes "cosmossdk.io/store/types"
-	paramsmodule "cosmossdk.io/x/params"
-	"cosmossdk.io/x/params/types"
-
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	"github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/params/testutil"
+	"github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 type SubspaceTestSuite struct {
@@ -34,17 +32,19 @@ type SubspaceTestSuite struct {
 func (suite *SubspaceTestSuite) SetupTest() {
 	db := dbm.NewMemDB()
 
-	ms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
 	suite.NoError(ms.LoadLatestVersion())
 
-	encodingConfig := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, paramsmodule.AppModule{})
-	suite.cdc = encodingConfig.Codec
-	suite.amino = encodingConfig.Amino
+	err := depinject.Inject(testutil.AppConfig,
+		&suite.cdc,
+		&suite.amino,
+	)
+	suite.NoError(err)
 
 	ss := types.NewSubspace(suite.cdc, suite.amino, key, tkey, "testsubspace")
-	suite.ctx = sdk.NewContext(ms, false, log.NewNopLogger())
+	suite.ctx = sdk.NewContext(ms, tmproto.Header{}, false, log.NewNopLogger())
 	suite.ss = ss.WithKeyTable(paramKeyTable())
 }
 
@@ -55,7 +55,7 @@ func (suite *SubspaceTestSuite) TestKeyTable() {
 	})
 	suite.Require().NotPanics(func() {
 		ss := types.NewSubspace(suite.cdc, suite.amino, key, tkey, "testsubspace2")
-		_ = ss.WithKeyTable(paramKeyTable())
+		ss = ss.WithKeyTable(paramKeyTable())
 	})
 }
 
@@ -154,8 +154,7 @@ func (suite *SubspaceTestSuite) TestModified() {
 
 func (suite *SubspaceTestSuite) TestUpdate() {
 	suite.Require().Panics(func() {
-		err := suite.ss.Update(suite.ctx, []byte("invalid_key"), nil)
-		suite.Require().NoError(err)
+		suite.ss.Update(suite.ctx, []byte("invalid_key"), nil) // nolint:errcheck
 	})
 
 	t := time.Hour * 48

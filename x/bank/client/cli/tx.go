@@ -1,19 +1,16 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
-
-	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var FlagSplit = "split"
@@ -29,10 +26,49 @@ func NewTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(
+		NewSendTxCmd(),
 		NewMultiSendTxCmd(),
 	)
 
 	return txCmd
+}
+
+// NewSendTxCmd returns a CLI command handler for creating a MsgSend transaction.
+func NewSendTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "send [from_key_or_address] [to_address] [amount]",
+		Short: "Send funds from one account to another.",
+		Long: `Send funds from one account to another.
+Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
+When using '--dry-run' a key name cannot be used, only a bech32 address.
+`,
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Flags().Set(flags.FlagFrom, args[0])
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			toAddr, err := sdk.AccAddressFromBech32(args[1])
+			if err != nil {
+				return err
+			}
+
+			coins, err := sdk.ParseCoinsNormalized(args[2])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
 // NewMultiSendTxCmd returns a CLI command handler for creating a MsgMultiSend transaction.
@@ -50,10 +86,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.`,
 		Example: fmt.Sprintf("%s tx bank multi-send cosmos1... cosmos1... cosmos1... cosmos1... 10stake", version.AppName),
 		Args:    cobra.MinimumNArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := cmd.Flags().Set(flags.FlagFrom, args[0])
-			if err != nil {
-				return err
-			}
+			cmd.Flags().Set(flags.FlagFrom, args[0])
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -65,7 +98,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.`,
 			}
 
 			if coins.IsZero() {
-				return errors.New("must send positive amount")
+				return fmt.Errorf("must send positive amount")
 			}
 
 			split, err := cmd.Flags().GetBool(FlagSplit)
@@ -73,7 +106,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.`,
 				return err
 			}
 
-			totalAddrs := sdkmath.NewInt(int64(len(args) - 2))
+			totalAddrs := sdk.NewInt(int64(len(args) - 2))
 			// coins to be received by the addresses
 			sendCoins := coins
 			if split {
@@ -82,12 +115,12 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.`,
 
 			var output []types.Output
 			for _, arg := range args[1 : len(args)-1] {
-				_, err = clientCtx.AddressCodec.StringToBytes(arg)
+				toAddr, err := sdk.AccAddressFromBech32(arg)
 				if err != nil {
 					return err
 				}
 
-				output = append(output, types.NewOutput(arg, sendCoins))
+				output = append(output, types.NewOutput(toAddr, sendCoins))
 			}
 
 			// amount to be send from the from address
@@ -100,12 +133,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.`,
 				amount = coins.MulInt(totalAddrs)
 			}
 
-			fromAddr, err := clientCtx.AddressCodec.BytesToString(clientCtx.FromAddress)
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgMultiSend(types.NewInput(fromAddr, amount), output)
+			msg := types.NewMsgMultiSend([]types.Input{types.NewInput(clientCtx.FromAddress, amount)}, output)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

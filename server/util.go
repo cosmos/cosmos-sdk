@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -10,58 +9,70 @@ import (
 	"os/signal"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
-	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
-	cmtcfg "github.com/cometbft/cometbft/config"
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"golang.org/x/sync/errgroup"
 
-	corectx "cosmossdk.io/core/context"
 	"cosmossdk.io/log"
-	"cosmossdk.io/store"
-	"cosmossdk.io/store/snapshots"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
+	dbm "github.com/cometbft/cometbft-db"
+	tmcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	tmcfg "github.com/cometbft/cometbft/config"
+	tmlog "github.com/cometbft/cometbft/libs/log"
+	"github.com/cometbft/cometbft/node"
+	tmstore "github.com/cometbft/cometbft/store"
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	serverlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/version"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
+
+// DONTCOVER
 
 // ServerContextKey defines the context key used to retrieve a server.Context from
 // a command's Context.
 const ServerContextKey = sdk.ContextKey("server.context")
 
-// Context server context
-// Deprecated: Do not use since we use viper to track all config
+// server context
 type Context struct {
 	Viper  *viper.Viper
-	Config *cmtcfg.Config
-	Logger log.Logger
+	Config *tmcfg.Config
+	Logger tmlog.Logger
+}
+
+// ErrorCode contains the exit code for server exit.
+type ErrorCode struct {
+	Code int
+}
+
+func (e ErrorCode) Error() string {
+	return strconv.Itoa(e.Code)
 }
 
 func NewDefaultContext() *Context {
 	return NewContext(
 		viper.New(),
-		cmtcfg.DefaultConfig(),
-		log.NewLogger(os.Stdout),
+		tmcfg.DefaultConfig(),
+		tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout)),
 	)
 }
 
-func NewContext(v *viper.Viper, config *cmtcfg.Config, logger log.Logger) *Context {
+func NewContext(v *viper.Viper, config *tmcfg.Config, logger tmlog.Logger) *Context {
 	return &Context{v, config, logger}
 }
 
@@ -99,36 +110,17 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 	return err
 }
 
-// InterceptConfigsPreRunHandler is identical to InterceptConfigsAndCreateContext
-// except it also sets the server context on the command and the server logger.
-func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) error {
-	serverCtx, err := InterceptConfigsAndCreateContext(cmd, customAppConfigTemplate, customAppConfig, cmtConfig)
-	if err != nil {
-		return err
-	}
-
-	// overwrite default server logger
-	logger, err := CreateSDKLogger(serverCtx, cmd.OutOrStdout())
-	if err != nil {
-		return err
-	}
-	serverCtx.Logger = logger.With(log.ModuleKey, "server")
-
-	// set server context
-	return SetCmdServerContext(cmd, serverCtx)
-}
-
-// InterceptConfigsAndCreateContext performs a pre-run function for the root daemon
+// InterceptConfigsPreRunHandler performs a pre-run function for the root daemon
 // application command. It will create a Viper literal and a default server
-// Context. The server CometBFT configuration will either be read and parsed
+// Context. The server Tendermint configuration will either be read and parsed
 // or created and saved to disk, where the server Context is updated to reflect
-// the CometBFT configuration. It takes custom app config template and config
-// settings to create a custom CometBFT configuration. If the custom template
+// the Tendermint configuration. It takes custom app config template and config
+// settings to create a custom Tendermint configuration. If the custom template
 // is empty, it uses default-template provided by the server. The Viper literal
 // is used to read and parse the application configuration. Command handlers can
-// fetch the server Context to get the CometBFT configuration or to get access
+// fetch the server Context to get the Tendermint configuration or to get access
 // to Viper.
-func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) (*Context, error) {
+func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, tmConfig *tmcfg.Config) error {
 	serverCtx := NewDefaultContext()
 
 	// Get the executable name and configure the viper instance so that environmental
@@ -136,17 +128,17 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 	// as a separator.
 	executableName, err := os.Executable()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	basename := path.Base(executableName)
 
 	// configure the viper instance
 	if err := serverCtx.Viper.BindPFlags(cmd.Flags()); err != nil {
-		return nil, err
+		return err
 	}
 	if err := serverCtx.Viper.BindPFlags(cmd.PersistentFlags()); err != nil {
-		return nil, err
+		return err
 	}
 
 	serverCtx.Viper.SetEnvPrefix(basename)
@@ -154,53 +146,49 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 	serverCtx.Viper.AutomaticEnv()
 
 	// intercept configuration files, using both Viper instances separately
-	config, err := interceptConfigs(serverCtx.Viper, customAppConfigTemplate, customAppConfig, cmtConfig)
+	config, err := interceptConfigs(serverCtx.Viper, customAppConfigTemplate, customAppConfig, tmConfig)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// return value is a CometBFT configuration object
+	// return value is a tendermint configuration object
 	serverCtx.Config = config
 	if err = bindFlags(basename, cmd, serverCtx.Viper); err != nil {
-		return nil, err
+		return err
 	}
 
-	return serverCtx, nil
-}
-
-// CreateSDKLogger creates the default SDK logger.
-// It reads the log level and format from the server context.
-func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
-	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
+	if serverCtx.Viper.GetString(flags.FlagLogFormat) == tmcfg.LogFormatJSON {
 		opts = append(opts, log.OutputJSONOption())
 	}
+
 	opts = append(opts,
-		log.ColorOption(!ctx.Viper.GetBool(flags.FlagLogNoColor)),
+		log.ColorOption(!serverCtx.Viper.GetBool(flags.FlagLogNoColor)),
 		// We use CometBFT flag (cmtcli.TraceFlag) for trace logging.
-		log.TraceOption(ctx.Viper.GetBool(FlagTrace)))
+		log.TraceOption(serverCtx.Viper.GetBool(FlagTrace)))
 
 	// check and set filter level or keys for the logger if any
-	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)
-	if logLvlStr == "" {
-		return log.NewLogger(out, opts...), nil
-	}
+	logLvlStr := serverCtx.Viper.GetString(flags.FlagLogLevel)
+	if logLvlStr != "" {
+		logLvl, err := zerolog.ParseLevel(logLvlStr)
+		switch {
+		case err != nil:
+			// If the log level is not a valid zerolog level, then we try to parse it as a key filter.
+			filterFunc, err := log.ParseLogLevel(logLvlStr)
+			if err != nil {
+				return err
+			}
 
-	logLvl, err := zerolog.ParseLevel(logLvlStr)
-	switch {
-	case err != nil:
-		// If the log level is not a valid zerolog level, then we try to parse it as a key filter.
-		filterFunc, err := log.ParseLogLevel(logLvlStr)
-		if err != nil {
-			return nil, err
+			opts = append(opts, log.FilterOption(filterFunc))
+		default:
+			opts = append(opts, log.LevelOption(logLvl))
 		}
-
-		opts = append(opts, log.FilterOption(filterFunc))
-	default:
-		opts = append(opts, log.LevelOption(logLvl))
 	}
 
-	return log.NewLogger(out, opts...), nil
+	logger := log.NewLogger(tmlog.NewSyncWriter(os.Stdout), opts...).With(log.ModuleKey, "server")
+	serverCtx.Logger = serverlog.CometLoggerWrapper{Logger: logger}
+
+	return SetCmdServerContext(cmd, serverCtx)
 }
 
 // GetServerContextFromCmd returns a Context from a command or an empty Context
@@ -215,46 +203,39 @@ func GetServerContextFromCmd(cmd *cobra.Command) *Context {
 }
 
 // SetCmdServerContext sets a command's Context value to the provided argument.
-// If the context has not been set, set the given context as the default.
 func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
-	var cmdCtx context.Context
-
-	if cmd.Context() == nil {
-		cmdCtx = context.Background()
-	} else {
-		cmdCtx = cmd.Context()
+	v := cmd.Context().Value(ServerContextKey)
+	if v == nil {
+		return errors.New("server context not set")
 	}
 
-	cmdCtx = context.WithValue(cmdCtx, ServerContextKey, serverCtx)
-	cmdCtx = context.WithValue(cmdCtx, corectx.ViperContextKey, serverCtx.Viper)
-	cmdCtx = context.WithValue(cmdCtx, corectx.LoggerContextKey, serverCtx.Logger)
-
-	cmd.SetContext(cmdCtx)
+	serverCtxPtr := v.(*Context)
+	*serverCtxPtr = *serverCtx
 
 	return nil
 }
 
-// interceptConfigs parses and updates a CometBFT configuration file or
+// interceptConfigs parses and updates a Tendermint configuration file or
 // creates a new one and saves it. It also parses and saves the application
-// configuration file. The CometBFT configuration file is parsed given a root
+// configuration file. The Tendermint configuration file is parsed given a root
 // Viper object, whereas the application is parsed with the private package-aware
 // viperCfg object.
-func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customConfig interface{}, cmtConfig *cmtcfg.Config) (*cmtcfg.Config, error) {
+func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customConfig interface{}, tmConfig *tmcfg.Config) (*tmcfg.Config, error) {
 	rootDir := rootViper.GetString(flags.FlagHome)
 	configPath := filepath.Join(rootDir, "config")
-	cmtCfgFile := filepath.Join(configPath, "config.toml")
+	tmCfgFile := filepath.Join(configPath, "config.toml")
 
-	conf := cmtConfig
+	conf := tmConfig
 
-	switch _, err := os.Stat(cmtCfgFile); {
+	switch _, err := os.Stat(tmCfgFile); {
 	case os.IsNotExist(err):
-		cmtcfg.EnsureRoot(rootDir)
+		tmcfg.EnsureRoot(rootDir)
 
 		if err = conf.ValidateBasic(); err != nil {
 			return nil, fmt.Errorf("error in config file: %w", err)
 		}
 
-		defaultCometCfg := cmtcfg.DefaultConfig()
+		defaultCometCfg := tmcfg.DefaultConfig()
 		// The SDK is opinionated about those comet values, so we set them here.
 		// We verify first that the user has not changed them for not overriding them.
 		if conf.Consensus.TimeoutCommit == defaultCometCfg.Consensus.TimeoutCommit {
@@ -263,9 +244,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		if conf.RPC.PprofListenAddress == defaultCometCfg.RPC.PprofListenAddress {
 			conf.RPC.PprofListenAddress = "localhost:6060"
 		}
-
-		cmtcfg.WriteConfigFile(cmtCfgFile, conf)
-
+		tmcfg.WriteConfigFile(tmCfgFile, conf)
 	case err != nil:
 		return nil, err
 
@@ -275,7 +254,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		rootViper.AddConfigPath(configPath)
 
 		if err := rootViper.ReadInConfig(); err != nil {
-			return nil, fmt.Errorf("failed to read in %s: %w", cmtCfgFile, err)
+			return nil, fmt.Errorf("failed to read in %s: %w", tmCfgFile, err)
 		}
 	}
 
@@ -290,31 +269,21 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 
 	appCfgFilePath := filepath.Join(configPath, "app.toml")
 	if _, err := os.Stat(appCfgFilePath); os.IsNotExist(err) {
-		if (customAppTemplate != "" && customConfig == nil) || (customAppTemplate == "" && customConfig != nil) {
-			return nil, errors.New("customAppTemplate and customConfig should be both nil or not nil")
-		}
-
 		if customAppTemplate != "" {
-			if err := config.SetConfigTemplate(customAppTemplate); err != nil {
-				return nil, fmt.Errorf("failed to set config template: %w", err)
-			}
+			config.SetConfigTemplate(customAppTemplate)
 
 			if err = rootViper.Unmarshal(&customConfig); err != nil {
 				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
 			}
 
-			if err := config.WriteConfigFile(appCfgFilePath, customConfig); err != nil {
-				return nil, fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
-			}
+			config.WriteConfigFile(appCfgFilePath, customConfig)
 		} else {
 			appConf, err := config.ParseConfig(rootViper)
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
 			}
 
-			if err := config.WriteConfigFile(appCfgFilePath, appConf); err != nil {
-				return nil, fmt.Errorf("failed to write %s: %w", appCfgFilePath, err)
-			}
+			config.WriteConfigFile(appCfgFilePath, appConf)
 		}
 	}
 
@@ -329,47 +298,37 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 	return conf, nil
 }
 
-// AddCommands add server commands
-func AddCommands[T types.Application](rootCmd *cobra.Command, appCreator types.AppCreator[T], opts StartCmdOptions[T]) {
-	cometCmd := &cobra.Command{
-		Use:     "comet",
-		Aliases: []string{"cometbft", "tendermint"},
-		Short:   "CometBFT subcommands",
+// add server commands
+func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
+	tendermintCmd := &cobra.Command{
+		Use:     "tendermint",
+		Aliases: []string{"comet", "cometbft"},
+		Short:   "Tendermint subcommands",
 	}
 
-	cometCmd.AddCommand(
+	tendermintCmd.AddCommand(
 		ShowNodeIDCmd(),
 		ShowValidatorCmd(),
 		ShowAddressCmd(),
 		VersionCmd(),
-		cmtcmd.ResetAllCmd,
-		cmtcmd.ResetStateCmd,
+		tmcmd.ResetAllCmd,
+		tmcmd.ResetStateCmd,
 		BootstrapStateCmd(appCreator),
 	)
 
-	startCmd := StartCmdWithOptions(appCreator, opts)
+	startCmd := StartCmd(appCreator, defaultNodeHome)
+	addStartFlags(startCmd)
+
 	rootCmd.AddCommand(
 		startCmd,
-		cometCmd,
+		tendermintCmd,
+		ExportCmd(appExport, defaultNodeHome),
 		version.NewVersionCommand(),
-		NewRollbackCmd(appCreator),
-		ModuleHashByHeightQuery(appCreator),
+		NewRollbackCmd(appCreator, defaultNodeHome),
 	)
 }
 
-// AddCommandsWithStartCmdOptions adds server commands with the provided StartCmdOptions.
-// Deprecated: Use AddCommands directly instead.
-func AddCommandsWithStartCmdOptions[T types.Application](rootCmd *cobra.Command, appCreator types.AppCreator[T], opts StartCmdOptions[T]) {
-	AddCommands(rootCmd, appCreator, opts)
-}
-
-// AddTestnetCreatorCommand allows chains to create a testnet from the state existing in their node's data directory.
-func AddTestnetCreatorCommand[T types.Application](rootCmd *cobra.Command, appCreator types.AppCreator[T]) {
-	testnetCreateCmd := InPlaceTestnetCreator(appCreator)
-	rootCmd.AddCommand(testnetCreateCmd)
-}
-
-// ExternalIP https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go
+// https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go
 // TODO there must be a better way to get external IP
 func ExternalIP() (string, error) {
 	ifaces, err := net.Interfaces()
@@ -401,31 +360,36 @@ func ExternalIP() (string, error) {
 	return "", errors.New("are you connected to the network?")
 }
 
-// ListenForQuitSignals listens for SIGINT and SIGTERM. When a signal is received,
-// the cleanup function is called, indicating the caller can gracefully exit or
-// return.
-//
-// Note, the blocking behavior of this depends on the block argument.
-// The caller must ensure the corresponding context derived from the cancelFn is used correctly.
-func ListenForQuitSignals(g *errgroup.Group, block bool, cancelFn context.CancelFunc, logger log.Logger) {
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+// TrapSignal traps SIGINT and SIGTERM and terminates the server correctly.
+func TrapSignal(cleanupFunc func()) {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	f := func() {
-		sig := <-sigCh
-		cancelFn()
+	go func() {
+		sig := <-sigs
 
-		logger.Info("caught signal", "signal", sig.String())
-	}
+		if cleanupFunc != nil {
+			cleanupFunc()
+		}
+		exitCode := 128
 
-	if block {
-		g.Go(func() error {
-			f()
-			return nil
-		})
-	} else {
-		go f()
-	}
+		switch sig {
+		case syscall.SIGINT:
+			exitCode += int(syscall.SIGINT)
+		case syscall.SIGTERM:
+			exitCode += int(syscall.SIGTERM)
+		}
+
+		os.Exit(exitCode)
+	}()
+}
+
+// WaitForQuitSignals waits for SIGINT and SIGTERM and returns.
+func WaitForQuitSignals() ErrorCode {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-sigs
+	return ErrorCode{Code: int(sig.(syscall.Signal)) + 128}
 }
 
 // GetAppDBBackend gets the backend type to use for the application DBs.
@@ -434,12 +398,6 @@ func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
 	if len(rv) == 0 {
 		rv = cast.ToString(opts.Get("db_backend"))
 	}
-
-	// Cosmos SDK has migrated to cosmos-db which does not support all the backends which tm-db supported
-	if rv == "cleveldb" || rv == "badgerdb" || rv == "boltdb" {
-		panic(fmt.Sprintf("invalid app-db-backend %q, use %q, %q, %q instead", rv, dbm.GoLevelDBBackend, dbm.PebbleDBBackend, dbm.RocksDBBackend))
-	}
-
 	if len(rv) != 0 {
 		return dbm.BackendType(rv)
 	}
@@ -471,8 +429,7 @@ func addrToIP(addr net.Addr) net.IP {
 	return ip
 }
 
-// OpenDB opens the application database using the appropriate driver.
-func OpenDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
+func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 	dataDir := filepath.Join(rootDir, "data")
 	return dbm.NewDB("application", backendType, dataDir)
 }
@@ -490,7 +447,7 @@ func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 
 // DefaultBaseappOptions returns the default baseapp options provided by the Cosmos SDK
 func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
-	var cache storetypes.MultiStorePersistentCache
+	var cache sdk.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
@@ -504,17 +461,14 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
-		// fallback to genesis chain-id
-		reader, err := os.Open(filepath.Join(homeDir, "config", "genesis.json"))
+		// read the chainID from home directory (either from comet or genesis).
+		dbBackend := cast.ToString(appOpts.Get("db_backend"))
+		chainId, err := readChainIdFromHome(homeDir, dbBackend)
 		if err != nil {
 			panic(err)
 		}
-		defer reader.Close()
 
-		chainID, err = genutiltypes.ParseChainIDFromGenesis(reader)
-		if err != nil {
-			panic(fmt.Errorf("failed to parse chain-id from genesis file: %w", err))
-		}
+		chainID = chainId
 	}
 
 	snapshotStore, err := GetSnapshotStore(appOpts)
@@ -526,15 +480,6 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		cast.ToUint64(appOpts.Get(FlagStateSyncSnapshotInterval)),
 		cast.ToUint32(appOpts.Get(FlagStateSyncSnapshotKeepRecent)),
 	)
-
-	defaultMempool := baseapp.SetMempool(mempool.NoOpMempool{})
-	if maxTxs := cast.ToInt(appOpts.Get(FlagMempoolMaxTxs)); maxTxs >= 0 {
-		defaultMempool = baseapp.SetMempool(
-			mempool.NewSenderNonceMempool(
-				mempool.SenderNonceMaxTxOpt(maxTxs),
-			),
-		)
-	}
 
 	return []func(*baseapp.BaseApp){
 		baseapp.SetPruning(pruningOpts),
@@ -548,10 +493,47 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(FlagDisableIAVLFastNode))),
-		defaultMempool,
+		baseapp.SetMempool(
+			mempool.NewSenderNonceMempool(
+				mempool.SenderNonceMaxTxOpt(cast.ToInt(appOpts.Get(FlagMempoolMaxTxs))),
+			),
+		),
+		baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(FlagIAVLLazyLoading))),
 		baseapp.SetChainID(chainID),
-		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
 	}
+}
+
+// readChainIdFromHome reads chain id from home directory.
+func readChainIdFromHome(homeDir string, dbBackend string) (string, error) {
+	cfg := tmcfg.DefaultConfig()
+	cfg.SetRoot(homeDir)
+	cfg.BaseConfig.DBBackend = dbBackend
+
+	// if the node's current height is not zero then try to read the chainID from comet db.
+	db, err := node.DefaultDBProvider(&node.DBContext{ID: "blockstore", Config: cfg})
+	if err != nil {
+		return "", err
+	}
+
+	blockStore := tmstore.NewBlockStore(db)
+	defer func() {
+		if err := blockStore.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
+	// if the blockStore.LoadBaseMeta() is nil (no blocks are created/synced so far), fallback to genesis chain-id.
+	baseMeta := blockStore.LoadBaseMeta()
+	if baseMeta != nil {
+		return baseMeta.Header.ChainID, nil
+	}
+
+	appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(homeDir, "config", "genesis.json"))
+	if err != nil {
+		return "", err
+	}
+
+	return appGenesis.ChainID, nil
 }
 
 func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {

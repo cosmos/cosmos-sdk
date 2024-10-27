@@ -3,61 +3,44 @@ package math
 import (
 	"encoding"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/big"
-	"math/bits"
 	"strings"
-	"sync"
 	"testing"
 )
 
 // MaxBitLen defines the maximum bit length supported bit Int and Uint types.
 const MaxBitLen = 256
 
-// maxWordLen defines the maximum word length supported by Int and Uint types.
-// We check overflow, by first doing a fast check if the word length is below maxWordLen
-// and if not then do the slower full bitlen check.
-// NOTE: If MaxBitLen is not a multiple of bits.UintSize, then we need to edit the used logic slightly.
-const maxWordLen = MaxBitLen / bits.UintSize
-
-// Integer errors
-var (
-	// ErrIntOverflow is the error returned when an integer overflow occurs
-	ErrIntOverflow = errors.New("integer overflow")
-	// ErrDivideByZero is the error returned when a divide by zero occurs
-	ErrDivideByZero = errors.New("divide by zero")
-)
-
 func newIntegerFromString(s string) (*big.Int, bool) {
 	return new(big.Int).SetString(s, 0)
 }
 
-func equal(i, i2 *big.Int) bool { return i.Cmp(i2) == 0 }
+func equal(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == 0 }
 
-func gt(i, i2 *big.Int) bool { return i.Cmp(i2) == 1 }
+func gt(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == 1 }
 
-func gte(i, i2 *big.Int) bool { return i.Cmp(i2) >= 0 }
+func gte(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) >= 0 }
 
-func lt(i, i2 *big.Int) bool { return i.Cmp(i2) == -1 }
+func lt(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == -1 }
 
-func lte(i, i2 *big.Int) bool { return i.Cmp(i2) <= 0 }
+func lte(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) <= 0 }
 
-func add(i, i2 *big.Int) *big.Int { return new(big.Int).Add(i, i2) }
+func add(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Add(i, i2) }
 
-func sub(i, i2 *big.Int) *big.Int { return new(big.Int).Sub(i, i2) }
+func sub(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Sub(i, i2) }
 
-func mul(i, i2 *big.Int) *big.Int { return new(big.Int).Mul(i, i2) }
+func mul(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mul(i, i2) }
 
-func div(i, i2 *big.Int) *big.Int { return new(big.Int).Quo(i, i2) }
+func div(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Quo(i, i2) }
 
-func mod(i, i2 *big.Int) *big.Int { return new(big.Int).Mod(i, i2) }
+func mod(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mod(i, i2) }
 
 func neg(i *big.Int) *big.Int { return new(big.Int).Neg(i) }
 
 func abs(i *big.Int) *big.Int { return new(big.Int).Abs(i) }
 
-func min(i, i2 *big.Int) *big.Int {
+func min(i *big.Int, i2 *big.Int) *big.Int {
 	if i.Cmp(i2) == 1 {
 		return new(big.Int).Set(i2)
 	}
@@ -65,7 +48,7 @@ func min(i, i2 *big.Int) *big.Int {
 	return new(big.Int).Set(i)
 }
 
-func max(i, i2 *big.Int) *big.Int {
+func max(i *big.Int, i2 *big.Int) *big.Int {
 	if i.Cmp(i2) == -1 {
 		return new(big.Int).Set(i2)
 	}
@@ -78,7 +61,7 @@ func unmarshalText(i *big.Int, text string) error {
 		return err
 	}
 
-	if bigIntOverflows(i) {
+	if i.BitLen() > MaxBitLen {
 		return fmt.Errorf("integer out of range: %s", text)
 	}
 
@@ -87,7 +70,7 @@ func unmarshalText(i *big.Int, text string) error {
 
 var _ customProtobufType = (*Int)(nil)
 
-// Int wraps big.Int with a 256 bit range bound
+// Int wraps big.Int with a 257 bit range bound
 // Checks overflow, underflow and division by zero
 // Exists in range from -(2^256 - 1) to 2^256 - 1
 type Int struct {
@@ -100,14 +83,6 @@ func (i Int) BigInt() *big.Int {
 		return nil
 	}
 	return new(big.Int).Set(i.i)
-}
-
-// BigIntMut converts Int to big.Int, mutative the input
-func (i Int) BigIntMut() *big.Int {
-	if i.IsNil() {
-		return nil
-	}
-	return i.i
 }
 
 // IsNil returns true if Int is uninitialized
@@ -129,31 +104,14 @@ func NewIntFromUint64(n uint64) Int {
 
 // NewIntFromBigInt constructs Int from big.Int. If the provided big.Int is nil,
 // it returns an empty instance. This function panics if the bit length is > 256.
-// Note, the caller can safely mutate the argument after this function returns.
 func NewIntFromBigInt(i *big.Int) Int {
 	if i == nil {
 		return Int{}
 	}
 
-	if bigIntOverflows(i) {
+	if i.BitLen() > MaxBitLen {
 		panic("NewIntFromBigInt() out of bound")
 	}
-
-	return Int{new(big.Int).Set(i)}
-}
-
-// NewIntFromBigIntMut constructs Int from big.Int. If the provided big.Int is nil,
-// it returns an empty instance. This function panics if the bit length is > 256.
-// Note, this function mutate the argument.
-func NewIntFromBigIntMut(i *big.Int) Int {
-	if i == nil {
-		return Int{}
-	}
-
-	if bigIntOverflows(i) {
-		panic("NewIntFromBigInt() out of bound")
-	}
-
 	return Int{i}
 }
 
@@ -164,7 +122,7 @@ func NewIntFromString(s string) (res Int, ok bool) {
 		return
 	}
 	// Check overflow
-	if bigIntOverflows(i) {
+	if i.BitLen() > MaxBitLen {
 		ok = false
 		return
 	}
@@ -182,7 +140,7 @@ func NewIntWithDecimal(n int64, dec int) Int {
 	i.Mul(big.NewInt(n), exp)
 
 	// Check overflow
-	if bigIntOverflows(i) {
+	if i.BitLen() > MaxBitLen {
 		panic("NewIntWithDecimal() out of bound")
 	}
 	return Int{i}
@@ -193,11 +151,6 @@ func ZeroInt() Int { return Int{big.NewInt(0)} }
 
 // OneInt returns Int value with one
 func OneInt() Int { return Int{big.NewInt(1)} }
-
-// ToLegacyDec converts Int to LegacyDec
-func (i Int) ToLegacyDec() LegacyDec {
-	return LegacyNewDecFromInt(i)
-}
 
 // Int64 converts Int to int64
 // Panics if the value is out of range
@@ -275,12 +228,12 @@ func (i Int) LTE(i2 Int) bool {
 
 // Add adds Int from another
 func (i Int) Add(i2 Int) (res Int) {
+	res = Int{add(i.i, i2.i)}
 	// Check overflow
-	x, err := i.SafeAdd(i2)
-	if err != nil {
-		panic(err)
+	if res.i.BitLen() > MaxBitLen {
+		panic("Int overflow")
 	}
-	return x
+	return
 }
 
 // AddRaw adds int64 to Int
@@ -288,24 +241,14 @@ func (i Int) AddRaw(i2 int64) Int {
 	return i.Add(NewInt(i2))
 }
 
-// SafeAdd adds Int from another and returns an error if overflow
-func (i Int) SafeAdd(i2 Int) (res Int, err error) {
-	res = Int{add(i.i, i2.i)}
-	// Check overflow
-	if bigIntOverflows(res.i) {
-		return Int{}, ErrIntOverflow
-	}
-	return res, nil
-}
-
 // Sub subtracts Int from another
 func (i Int) Sub(i2 Int) (res Int) {
+	res = Int{sub(i.i, i2.i)}
 	// Check overflow
-	x, err := i.SafeSub(i2)
-	if err != nil {
-		panic(err)
+	if res.i.BitLen() > MaxBitLen {
+		panic("Int overflow")
 	}
-	return x
+	return
 }
 
 // SubRaw subtracts int64 from Int
@@ -313,49 +256,32 @@ func (i Int) SubRaw(i2 int64) Int {
 	return i.Sub(NewInt(i2))
 }
 
-// SafeSub subtracts Int from another and returns an error if overflow or underflow
-func (i Int) SafeSub(i2 Int) (res Int, err error) {
-	res = Int{sub(i.i, i2.i)}
-	// Check overflow/underflow
-	if bigIntOverflows(res.i) {
-		return Int{}, ErrIntOverflow
-	}
-	return res, nil
-}
-
 // Mul multiples two Ints
 func (i Int) Mul(i2 Int) (res Int) {
 	// Check overflow
-	x, err := i.SafeMul(i2)
-	if err != nil {
-		panic(err)
+	if i.i.BitLen()+i2.i.BitLen()-1 > MaxBitLen {
+		panic("Int overflow")
 	}
-	return x
+	res = Int{mul(i.i, i2.i)}
+	// Check overflow if sign of both are same
+	if res.i.BitLen() > MaxBitLen {
+		panic("Int overflow")
+	}
+	return
 }
 
-// MulRaw multiplies Int and int64
+// MulRaw multipies Int and int64
 func (i Int) MulRaw(i2 int64) Int {
 	return i.Mul(NewInt(i2))
-}
-
-// SafeMul multiples Int from another and returns an error if overflow
-func (i Int) SafeMul(i2 Int) (res Int, err error) {
-	res = Int{mul(i.i, i2.i)}
-	// Check overflow
-	if bigIntOverflows(res.i) {
-		return Int{}, ErrIntOverflow
-	}
-	return res, nil
 }
 
 // Quo divides Int with Int
 func (i Int) Quo(i2 Int) (res Int) {
 	// Check division-by-zero
-	x, err := i.SafeQuo(i2)
-	if err != nil {
+	if i2.i.Sign() == 0 {
 		panic("Division by zero")
 	}
-	return x
+	return Int{div(i.i, i2.i)}
 }
 
 // QuoRaw divides Int with int64
@@ -363,35 +289,17 @@ func (i Int) QuoRaw(i2 int64) Int {
 	return i.Quo(NewInt(i2))
 }
 
-// SafeQuo divides Int with Int and returns an error if division by zero
-func (i Int) SafeQuo(i2 Int) (res Int, err error) {
-	// Check division-by-zero
-	if i2.i.Sign() == 0 {
-		return Int{}, ErrDivideByZero
-	}
-	return Int{div(i.i, i2.i)}, nil
-}
-
 // Mod returns remainder after dividing with Int
 func (i Int) Mod(i2 Int) Int {
-	x, err := i.SafeMod(i2)
-	if err != nil {
-		panic(err)
+	if i2.Sign() == 0 {
+		panic("division-by-zero")
 	}
-	return x
+	return Int{mod(i.i, i2.i)}
 }
 
 // ModRaw returns remainder after dividing with int64
 func (i Int) ModRaw(i2 int64) Int {
 	return i.Mod(NewInt(i2))
-}
-
-// SafeMod returns remainder after dividing with Int and returns an error if division by zero
-func (i Int) SafeMod(i2 Int) (res Int, err error) {
-	if i2.Sign() == 0 {
-		return Int{}, ErrDivideByZero
-	}
-	return Int{mod(i.i, i2.i)}, nil
 }
 
 // Neg negates Int
@@ -404,7 +312,7 @@ func (i Int) Abs() Int {
 	return Int{abs(i.i)}
 }
 
-// MinInt return the minimum of the ints
+// return the minimum of the ints
 func MinInt(i1, i2 Int) Int {
 	return Int{min(i1.BigInt(), i2.BigInt())}
 }
@@ -414,7 +322,7 @@ func MaxInt(i, i2 Int) Int {
 	return Int{max(i.BigInt(), i2.BigInt())}
 }
 
-// String returns human-readable string
+// Human readable string
 func (i Int) String() string {
 	return i.i.String()
 }
@@ -504,7 +412,7 @@ func (i *Int) Unmarshal(data []byte) error {
 		return err
 	}
 
-	if bigIntOverflows(i.i) {
+	if i.i.BitLen() > MaxBitLen {
 		return fmt.Errorf("integer out of range; got: %d, max: %d", i.i.BitLen(), MaxBitLen)
 	}
 
@@ -517,13 +425,12 @@ func (i *Int) Size() int {
 	return len(bz)
 }
 
-// MarshalAmino Override Amino binary serialization by proxying to protobuf.
+// Override Amino binary serialization by proxying to protobuf.
 func (i Int) MarshalAmino() ([]byte, error)   { return i.Marshal() }
 func (i *Int) UnmarshalAmino(bz []byte) error { return i.Unmarshal(bz) }
 
-// IntEq intended to be used with require/assert:  require.True(IntEq(...))
+// intended to be used with require/assert:  require.True(IntEq(...))
 func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {
-	t.Helper()
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
@@ -541,18 +448,10 @@ func hasOnlyDigits(s string) bool {
 
 const thousandSeparator string = "'"
 
-var stringsBuilderPool = &sync.Pool{
-	New: func() any { return new(strings.Builder) },
-}
-
 // FormatInt formats an integer (encoded as in protobuf) into a value-rendered
 // string following ADR-050. This function operates with string manipulation
-// (instead of manipulating the int or math.Int object).
+// (instead of manipulating the int or sdk.Int object).
 func FormatInt(v string) (string, error) {
-	if len(v) == 0 {
-		return "", errors.New("cannot format empty string")
-	}
-
 	sign := ""
 	if v[0] == '-' {
 		sign = "-"
@@ -567,46 +466,11 @@ func FormatInt(v string) (string, error) {
 		return "", fmt.Errorf("expecting only digits 0-9, but got non-digits in %q", v)
 	}
 
-	// 1. Less than 4 digits don't need any formatting.
-	if len(v) <= 3 {
-		return sign + v, nil
+	startOffset := 3
+	for outputIndex := len(v); outputIndex > startOffset; {
+		outputIndex -= 3
+		v = v[:outputIndex] + thousandSeparator + v[outputIndex:]
 	}
 
-	sb := stringsBuilderPool.Get().(*strings.Builder)
-	defer stringsBuilderPool.Put(sb)
-	sb.Reset()
-	sb.Grow(len(v) + len(v)/3) // Exactly v + numberOfThousandSeparatorsIn(v)
-
-	// 2. If the length of v is not a multiple of 3 e.g. 1234 or 12345, to achieve 1'234 or 12'345,
-	// we can simply slide to the first mod3 values of v that aren't the multiples of 3 then insert in
-	// the thousands separator so in this case: write(12'); then the remaining v will be entirely multiple
-	// of 3 hence v = 34*
-	if mod3 := len(v) % 3; mod3 != 0 {
-		sb.WriteString(v[:mod3])
-		v = v[mod3:]
-		sb.WriteString(thousandSeparator)
-	}
-
-	// 3. By this point v is entirely multiples of 3 hence we just insert the separator at every 3 digit.
-	for i := 0; i < len(v); i += 3 {
-		end := i + 3
-		sb.WriteString(v[i:end])
-		if end < len(v) {
-			sb.WriteString(thousandSeparator)
-		}
-	}
-
-	return sign + sb.String(), nil
-}
-
-// check if the big int overflows.
-func bigIntOverflows(i *big.Int) bool {
-	// overflow is defined as i.BitLen() > MaxBitLen
-	// however this check can be expensive when doing many operations.
-	// So we first check if the word length is greater than maxWordLen.
-	// However the most significant word could be zero, hence we still do the bitlen check.
-	if len(i.Bits()) > maxWordLen {
-		return i.BitLen() > MaxBitLen
-	}
-	return false
+	return sign + v, nil
 }

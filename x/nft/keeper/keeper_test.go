@@ -2,27 +2,21 @@ package keeper_test
 
 import (
 	"testing"
-	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/keeper"
-	"cosmossdk.io/x/nft/module"
-	nfttestutil "cosmossdk.io/x/nft/testutil"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/nft"
+	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
+	"github.com/cosmos/cosmos-sdk/x/nft/module"
+	nfttestutil "github.com/cosmos/cosmos-sdk/x/nft/testutil"
 )
 
 const (
@@ -40,12 +34,10 @@ const (
 type TestSuite struct {
 	suite.Suite
 
-	ctx           sdk.Context
-	addrs         []sdk.AccAddress
-	encodedAddrs  []string
-	queryClient   nft.QueryClient
-	nftKeeper     keeper.Keeper
-	accountKeeper *nfttestutil.MockAccountKeeper
+	ctx         sdk.Context
+	addrs       []sdk.AccAddress
+	queryClient nft.QueryClient
+	nftKeeper   keeper.Keeper
 
 	encCfg moduletestutil.TestEncodingConfig
 }
@@ -53,29 +45,19 @@ type TestSuite struct {
 func (s *TestSuite) SetupTest() {
 	// suite setup
 	s.addrs = simtestutil.CreateIncrementalAccounts(3)
-	s.encCfg = moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
-	key := storetypes.NewKVStoreKey(nft.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now().Round(0).UTC()})
+	key := sdk.NewKVStoreKey(nft.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
 	accountKeeper := nfttestutil.NewMockAccountKeeper(ctrl)
 	bankKeeper := nfttestutil.NewMockBankKeeper(ctrl)
 	accountKeeper.EXPECT().GetModuleAddress("nft").Return(s.addrs[0]).AnyTimes()
-	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
-	for _, addr := range s.addrs {
-		st, err := accountKeeper.AddressCodec().BytesToString(addr.Bytes())
-		s.Require().NoError(err)
-		s.encodedAddrs = append(s.encodedAddrs, st)
-	}
-
-	s.accountKeeper = accountKeeper
-
-	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), log.NewNopLogger())
-	nftKeeper := keeper.NewKeeper(env, s.encCfg.Codec, accountKeeper, bankKeeper)
+	nftKeeper := keeper.NewKeeper(key, s.encCfg.Codec, accountKeeper, bankKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.encCfg.InterfaceRegistry)
 	nft.RegisterQueryServer(queryHelper, nftKeeper)
 
@@ -357,12 +339,11 @@ func (s *TestSuite) TestExportGenesis() {
 	expGenesis := &nft.GenesisState{
 		Classes: []*nft.Class{&class},
 		Entries: []*nft.Entry{{
-			Owner: s.encodedAddrs[0],
+			Owner: s.addrs[0].String(),
 			Nfts:  []*nft.NFT{&expNFT},
 		}},
 	}
-	genesis, err := s.nftKeeper.ExportGenesis(s.ctx)
-	s.Require().NoError(err)
+	genesis := s.nftKeeper.ExportGenesis(s.ctx)
 	s.Require().Equal(expGenesis, genesis)
 }
 
@@ -383,12 +364,11 @@ func (s *TestSuite) TestInitGenesis() {
 	expGenesis := &nft.GenesisState{
 		Classes: []*nft.Class{&expClass},
 		Entries: []*nft.Entry{{
-			Owner: s.encodedAddrs[0],
+			Owner: s.addrs[0].String(),
 			Nfts:  []*nft.NFT{&expNFT},
 		}},
 	}
-	err := s.nftKeeper.InitGenesis(s.ctx, expGenesis)
-	s.Require().NoError(err)
+	s.nftKeeper.InitGenesis(s.ctx, expGenesis)
 
 	actual, has := s.nftKeeper.GetClass(s.ctx, testClassID)
 	s.Require().True(has)

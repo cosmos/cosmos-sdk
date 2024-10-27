@@ -4,10 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"golang.org/x/sync/errgroup"
 
-	"cosmossdk.io/core/address"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // NewGenesisState creates a new genesis state for the governance module
@@ -35,7 +34,7 @@ func (data GenesisState) Empty() bool {
 // It checks if params are in valid ranges
 // It also makes sure that the provided proposal IDs are unique and
 // that there are no duplicate deposit or vote records and no vote or deposits for non-existent proposals
-func ValidateGenesis(ac address.Codec, data *GenesisState) error {
+func ValidateGenesis(data *GenesisState) error {
 	if data.StartingProposalId == 0 {
 		return errors.New("starting proposal id must be greater than 0")
 	}
@@ -100,16 +99,16 @@ func ValidateGenesis(ac address.Codec, data *GenesisState) error {
 
 	// verify params
 	errGroup.Go(func() error {
-		return data.Params.ValidateBasic(ac)
+		return data.Params.ValidateBasic()
 	})
 
 	return errGroup.Wait()
 }
 
-var _ gogoprotoany.UnpackInterfacesMessage = GenesisState{}
+var _ types.UnpackInterfacesMessage = GenesisState{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (data GenesisState) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
+func (data GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, p := range data.Proposals {
 		err := p.UnpackInterfaces(unpacker)
 		if err != nil {

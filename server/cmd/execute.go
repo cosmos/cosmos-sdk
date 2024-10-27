@@ -2,11 +2,10 @@ package cmd
 
 import (
 	"context"
-	"strings"
 
-	"github.com/rs/zerolog"
+	tmcfg "github.com/cometbft/cometbft/config"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -17,27 +16,21 @@ import (
 // server context object with the appropriate server and client objects injected
 // into the underlying stdlib Context. It also handles adding core CLI flags,
 // specifically the logging flags. It returns an error upon execution failure.
-func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
+func Execute(rootCmd *cobra.Command, envPrefix string, defaultHome string) error {
 	// Create and set a client.Context on the command's Context. During the pre-run
 	// of the root command, a default initialized client.Context is provided to
 	// seed child command execution with values such as AccountRetriever, Keyring,
-	// and a CometBFT RPC. This requires the use of a pointer reference when
+	// and a Tendermint RPC. This requires the use of a pointer reference when
 	// getting and setting the client.Context. Ideally, we utilize
 	// https://github.com/spf13/cobra/pull/1118.
 	ctx := CreateExecuteContext(context.Background())
 
-	rootCmd.PersistentFlags().String(flags.FlagLogLevel, zerolog.InfoLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:<level>,<key>:<level>')")
-	rootCmd.PersistentFlags().String(flags.FlagLogFormat, "plain", "The logging format (json|plain)")
+	rootCmd.PersistentFlags().String(flags.FlagLogLevel, tmcfg.DefaultLogLevel, "The logging level (trace|debug|info|warn|error|fatal|panic)")
+	rootCmd.PersistentFlags().String(flags.FlagLogFormat, tmcfg.LogFormatPlain, "The logging format (json|plain)")
 	rootCmd.PersistentFlags().Bool(flags.FlagLogNoColor, false, "Disable colored logs")
-	rootCmd.PersistentFlags().StringP(flags.FlagHome, "", defaultHome, "directory for config and data")
-	rootCmd.PersistentFlags().Bool(server.FlagTrace, false, "print out full stack trace on errors")
 
-	// update the global viper with the root command's configuration
-	viper.SetEnvPrefix(envPrefix)
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
-	viper.AutomaticEnv()
-
-	return rootCmd.ExecuteContext(ctx)
+	executor := tmcli.PrepareBaseCmd(rootCmd, envPrefix, defaultHome)
+	return executor.ExecuteContext(ctx)
 }
 
 // CreateExecuteContext returns a base Context with server and client context

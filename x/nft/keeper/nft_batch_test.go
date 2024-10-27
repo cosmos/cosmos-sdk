@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 
-	"cosmossdk.io/x/nft"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 func (s *TestSuite) TestBatchMint() {
@@ -58,7 +59,7 @@ func (s *TestSuite) TestBatchMint() {
 			true,
 		},
 		{
-			"failed with repeated nft",
+			"faild with repeated nft",
 			func(tokens []nft.NFT) {
 				s.saveClass(tokens)
 			},
@@ -70,7 +71,7 @@ func (s *TestSuite) TestBatchMint() {
 			false,
 		},
 		{
-			"failed with not exist class",
+			"faild with not exist class",
 			func(tokens []nft.NFT) {
 				// do nothing
 			},
@@ -82,12 +83,11 @@ func (s *TestSuite) TestBatchMint() {
 			false,
 		},
 		{
-			"failed with exist nft",
+			"faild with exist nft",
 			func(tokens []nft.NFT) {
 				s.saveClass(tokens)
 				idx := rand.Intn(len(tokens))
-				err := s.nftKeeper.Mint(s.ctx, tokens[idx], receiver)
-				s.Require().NoError(err)
+				s.nftKeeper.Mint(s.ctx, tokens[idx], receiver)
 			},
 			[]nft.NFT{
 				{ClassId: "classID1", Id: "nftID1"},
@@ -157,8 +157,7 @@ func (s *TestSuite) TestBatchBurn() {
 			"success",
 			func() {
 				s.saveClass(tokens)
-				err := s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
-				s.Require().NoError(err)
+				s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
 			},
 			"classID1",
 			[]string{"nftID1", "nftID2"},
@@ -218,8 +217,7 @@ func (s *TestSuite) TestBatchUpdate() {
 			"success",
 			func() {
 				s.saveClass(tokens)
-				err := s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
-				s.Require().NoError(err)
+				s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
 			},
 			[]nft.NFT{
 				{ClassId: "classID1", Id: "nftID1", Uri: "nftID1_URI"},
@@ -289,8 +287,7 @@ func (s *TestSuite) TestBatchTransfer() {
 			"success",
 			func() {
 				s.saveClass(tokens)
-				err := s.nftKeeper.BatchMint(s.ctx, tokens, owner)
-				s.Require().NoError(err)
+				s.nftKeeper.BatchMint(s.ctx, tokens, owner)
 			},
 			"classID1",
 			[]string{"nftID1", "nftID2"},
@@ -300,8 +297,7 @@ func (s *TestSuite) TestBatchTransfer() {
 			"failed with not exist classID",
 			func() {
 				s.saveClass(tokens)
-				err := s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
-				s.Require().NoError(err)
+				s.nftKeeper.BatchMint(s.ctx, tokens, receiver)
 			},
 			"classID3",
 			[]string{"nftID1", "nftID2"},
@@ -352,6 +348,13 @@ func (s *TestSuite) saveClass(tokens []nft.NFT) {
 	classMap := groupByClassID(tokens)
 	for classID := range classMap {
 		err := s.nftKeeper.SaveClass(s.ctx, nft.Class{Id: classID})
+		s.Require().NoError(err)
+	}
+}
+
+func (s *TestSuite) mintNFT(tokens []nft.NFT, receiver sdk.AccAddress) {
+	for _, token := range tokens {
+		err := s.nftKeeper.Mint(s.ctx, token, receiver)
 		s.Require().NoError(err)
 	}
 }

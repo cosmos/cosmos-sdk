@@ -2,13 +2,11 @@ package keeper
 
 import (
 	"context"
-	"strings"
 
-	"cosmossdk.io/core/event"
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/feegrant"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 type msgServer struct {
@@ -26,31 +24,26 @@ func NewMsgServerImpl(k Keeper) feegrant.MsgServer {
 var _ feegrant.MsgServer = msgServer{}
 
 // GrantAllowance grants an allowance from the granter's funds to be used by the grantee.
-func (k msgServer) GrantAllowance(ctx context.Context, msg *feegrant.MsgGrantAllowance) (*feegrant.MsgGrantAllowanceResponse, error) {
-	if strings.EqualFold(msg.Grantee, msg.Granter) {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
-	}
+func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantAllowance) (*feegrant.MsgGrantAllowanceResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	grantee, err := k.authKeeper.AddressCodec().StringToBytes(msg.Grantee)
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	granter, err := k.authKeeper.AddressCodec().StringToBytes(msg.Granter)
+	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {
 		return nil, err
 	}
 
-	if f, _ := k.GetAllowance(ctx, granter, grantee); f != nil {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
+	// Checking for duplicate entry
+	if f, _ := k.Keeper.GetAllowance(ctx, granter, grantee); f != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
 	}
 
 	allowance, err := msg.GetFeeAllowanceI()
 	if err != nil {
-		return nil, err
-	}
-
-	if err := allowance.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
@@ -63,17 +56,15 @@ func (k msgServer) GrantAllowance(ctx context.Context, msg *feegrant.MsgGrantAll
 }
 
 // RevokeAllowance revokes a fee allowance between a granter and grantee.
-func (k msgServer) RevokeAllowance(ctx context.Context, msg *feegrant.MsgRevokeAllowance) (*feegrant.MsgRevokeAllowanceResponse, error) {
-	if msg.Grantee == msg.Granter {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "addresses must be different")
-	}
+func (k msgServer) RevokeAllowance(goCtx context.Context, msg *feegrant.MsgRevokeAllowance) (*feegrant.MsgRevokeAllowanceResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	grantee, err := k.authKeeper.AddressCodec().StringToBytes(msg.Grantee)
+	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	granter, err := k.authKeeper.AddressCodec().StringToBytes(msg.Granter)
+	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {
 		return nil, err
 	}
@@ -84,22 +75,4 @@ func (k msgServer) RevokeAllowance(ctx context.Context, msg *feegrant.MsgRevokeA
 	}
 
 	return &feegrant.MsgRevokeAllowanceResponse{}, nil
-}
-
-// PruneAllowances removes expired allowances from the store.
-func (k msgServer) PruneAllowances(ctx context.Context, req *feegrant.MsgPruneAllowances) (*feegrant.MsgPruneAllowancesResponse, error) {
-	// 75 is an arbitrary value, we can change it later if needed
-	err := k.RemoveExpiredAllowances(ctx, 75)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := k.EventService.EventManager(ctx).EmitKV(
-		feegrant.EventTypePruneFeeGrant,
-		event.NewAttribute(feegrant.AttributeKeyPruner, req.Pruner),
-	); err != nil {
-		return nil, err
-	}
-
-	return &feegrant.MsgPruneAllowancesResponse{}, nil
 }

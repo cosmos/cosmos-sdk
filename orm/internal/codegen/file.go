@@ -1,4 +1,3 @@
-//nolint:unused // ignore unused code linting
 package codegen
 
 import (

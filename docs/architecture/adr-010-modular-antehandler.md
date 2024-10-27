@@ -142,7 +142,7 @@ type ModuleManager struct {
 }
 
 func (mm ModuleManager) GetAnteHandler() AnteHandler {
-    return Chainer(mm.AnteHandlerOrder)
+    retun Chainer(mm.AnteHandlerOrder)
 }
 ```
 

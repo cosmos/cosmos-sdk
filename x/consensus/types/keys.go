@@ -7,3 +7,5 @@ const (
 	// StoreKey defines the module's store key.
 	StoreKey = ModuleName
 )
+
+var ParamStoreKeyConsensusParams = []byte("Consensus")

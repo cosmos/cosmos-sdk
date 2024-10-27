@@ -13,12 +13,18 @@ private
 
 # Build
 vendor
-/build
+build
+docs/node_modules
+docs/docs/modules
+docs/docs/spec
+docs/docs/architecture
+docs/docs/tooling/01-cosmovisor.md
+docs/docs/tooling/02-depinject.md
+docs/run-node/04-rosetta.md
 dist
 tools-stamp
 buf-stamp
 artifacts
-simapp/simd/simd
 
 # Go
 go.work
@@ -36,7 +42,6 @@ coverage.txt
 sim_log_file
 x/genutil/config
 x/genutil/data
-*.fail
 
 # Vagrant
 .vagrant/
@@ -47,15 +52,12 @@ vagrant
 # IDE
 .idea
 *.iml
-*.ipr
-*.iws
 .dir-locals.el
 .vscode
 
-# Depinject & Graphviz
+# Graphviz
 dependency-graph.png
 debug_container.dot
-debug_container.log
 
 # Latex
 *.aux
@@ -63,4 +65,3 @@ debug_container.log
 *.synctex.gz
 /x/genutil/config/priv_validator_key.json
 /x/genutil/data/priv_validator_state.json
-simapp/simapp.test

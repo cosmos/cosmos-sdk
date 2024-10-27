@@ -1,31 +1,21 @@
 package keeper
 
 import (
-	"context"
-
-	"cosmossdk.io/errors"
-	"cosmossdk.io/x/slashing/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // Unjail calls the staking Unjail function to unjail a validator if the
 // jailed period has concluded
-func (k Keeper) Unjail(ctx context.Context, validatorAddr sdk.ValAddress) error {
-	validator, err := k.sk.Validator(ctx, validatorAddr)
-	if err != nil {
-		return err
-	}
+func (k Keeper) Unjail(ctx sdk.Context, validatorAddr sdk.ValAddress) error {
+	validator := k.sk.Validator(ctx, validatorAddr)
 	if validator == nil {
 		return types.ErrNoValidatorForAddress
 	}
 
 	// cannot be unjailed if no self-delegation exists
-	selfDel, err := k.sk.Delegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
-	if err != nil {
-		return err
-	}
-
+	selfDel := k.sk.Delegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
 	if selfDel == nil {
 		return types.ErrMissingSelfDelegation
 	}
@@ -33,7 +23,7 @@ func (k Keeper) Unjail(ctx context.Context, validatorAddr sdk.ValAddress) error 
 	tokens := validator.TokensFromShares(selfDel.GetShares()).TruncateInt()
 	minSelfBond := validator.GetMinSelfDelegation()
 	if tokens.LT(minSelfBond) {
-		return errors.Wrapf(
+		return sdkerrors.Wrapf(
 			types.ErrSelfDelegationTooLowToUnjail, "%s less than %s", tokens, minSelfBond,
 		)
 	}
@@ -55,17 +45,19 @@ func (k Keeper) Unjail(ctx context.Context, validatorAddr sdk.ValAddress) error 
 	// that the validator was never bonded and must've been jailed due to falling
 	// below their minimum self-delegation. The validator can unjail at any point
 	// assuming they've now bonded above their minimum self-delegation.
-	info, err := k.ValidatorSigningInfo.Get(ctx, consAddr)
-	if err == nil {
+	info, found := k.GetValidatorSigningInfo(ctx, consAddr)
+	if found {
 		// cannot be unjailed if tombstoned
 		if info.Tombstoned {
 			return types.ErrValidatorJailed
 		}
 
-		if k.HeaderService.HeaderInfo(ctx).Time.Before(info.JailedUntil) {
+		// cannot be unjailed until out of jail
+		if ctx.BlockHeader().Time.Before(info.JailedUntil) {
 			return types.ErrValidatorJailed
 		}
 	}
 
-	return k.sk.Unjail(ctx, consAddr)
+	k.sk.Unjail(ctx, consAddr)
+	return nil
 }

@@ -1,13 +1,14 @@
 package server
 
 import (
-	"io/fs"
+	"fmt"
 	"net/http"
 
-	"github.com/gorilla/mux"
-
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/docs"
+	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
+
+	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
 
 // RegisterSwaggerAPI provides a common function which registers swagger route with API Server
@@ -16,12 +17,12 @@ func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router, swaggerEnabled bool) 
 		return nil
 	}
 
-	root, err := fs.Sub(docs.SwaggerUI, "swagger-ui")
+	statikFS, err := fs.New()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create filesystem: %w", err)
 	}
 
-	staticServer := http.FileServer(http.FS(root))
+	staticServer := http.FileServer(statikFS)
 	rtr.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", staticServer))
 
 	return nil

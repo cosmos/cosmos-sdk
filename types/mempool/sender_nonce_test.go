@@ -5,9 +5,9 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-
-	"cosmossdk.io/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -16,7 +16,7 @@ import (
 
 func (s *MempoolTestSuite) TestTxOrder() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 5)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
@@ -114,7 +114,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000), mempool.SenderNonceSeedOpt(tt.seed))
+			pool := mempool.NewSenderNonceMempool(mempool.SenderNonceSeedOpt(tt.seed))
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
 				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
@@ -140,7 +140,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 
 func (s *MempoolTestSuite) TestMaxTx() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
 	mp := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(1))
 
@@ -170,9 +170,9 @@ func (s *MempoolTestSuite) TestMaxTx() {
 
 func (s *MempoolTestSuite) TestTxNotFoundOnSender() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
-	mp := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
+	mp := mempool.NewSenderNonceMempool()
 
 	txSender := testTx{
 		nonce:    0,

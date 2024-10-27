@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // cacheMergeIterator merges a parent Iterator and a cache Iterator.
@@ -24,7 +24,7 @@ type cacheMergeIterator struct {
 
 var _ types.Iterator = (*cacheMergeIterator)(nil)
 
-func NewCacheMergeIterator(parent, cache types.Iterator, ascending bool) types.Iterator {
+func NewCacheMergeIterator(parent, cache types.Iterator, ascending bool) *cacheMergeIterator {
 	iter := &cacheMergeIterator{
 		parent:    parent,
 		cache:     cache,

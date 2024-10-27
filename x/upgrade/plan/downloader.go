@@ -1,7 +1,6 @@
 package plan
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	neturl "net/url"
@@ -9,11 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/go-getter"
 )
 
-// DownloadUpgrade downloads the given url into the provided directory.
+// DownloadUpgrade downloads the given url into the provided directory and ensures it's valid.
+// The provided url must contain a checksum parameter that matches the file being downloaded.
 // If this returns nil, the download was successful, and {dstRoot}/bin/{daemonName} is a regular executable file.
 // This is an opinionated directory structure that corresponds with Cosmovisor requirements.
 // If the url is not an archive, it is downloaded and saved to {dstRoot}/bin/{daemonName}.
@@ -22,16 +21,17 @@ import (
 //	If the archive does not contain a /bin/{daemonName} file, then this will attempt to move /{daemonName} to /bin/{daemonName}.
 //	If the archive does not contain either /bin/{daemonName} or /{daemonName}, an error is returned.
 //
+// Note: Because a checksum is required, this function cannot be used to download non-archive directories.
 // If dstRoot already exists, some or all of its contents might be updated.
-// NOTE: This functions does not check the provided url for validity.
 func DownloadUpgrade(dstRoot, url, daemonName string) error {
+	if err := ValidateIsURLWithChecksum(url); err != nil {
+		return err
+	}
 	target := filepath.Join(dstRoot, "bin", daemonName)
-
 	// First try to download it as a single file. If there's no error, it's okay and we're done.
-	if err := getFile(url, target); err != nil {
+	if err := getter.GetFile(target, url); err != nil {
 		// If it was a checksum error, no need to try as directory.
-		var checksumError *getter.ChecksumError
-		if errors.As(err, &checksumError) {
+		if _, ok := err.(*getter.ChecksumError); ok {
 			return err
 		}
 		// File download didn't work, try it as an archive.
@@ -97,24 +97,26 @@ func EnsureBinary(path string) error {
 	return nil
 }
 
-// DownloadURL gets the contents of the given url.
-// The provided url can contain a checksum parameter that matches the file being downloaded.
+// DownloadURLWithChecksum gets the contents of the given url, ensuring the checksum is correct.
+// The provided url must contain a checksum parameter that matches the file being downloaded.
 // If there isn't an error, the content returned by the url will be returned as a string.
 // Returns an error if:
-//   - The url is not a URL or does not contain a checksum parameter (when required).
+//   - The url is not a URL or does not contain a checksum parameter.
 //   - Downloading the URL fails.
 //   - The checksum does not match what is returned by the URL.
 //   - The URL does not return a regular file.
 //   - The downloaded file is empty or only whitespace.
-func DownloadURL(url string) (string, error) {
+func DownloadURLWithChecksum(url string) (string, error) {
+	if err := ValidateIsURLWithChecksum(url); err != nil {
+		return "", err
+	}
 	tempDir, err := os.MkdirTemp("", "reference")
 	if err != nil {
 		return "", fmt.Errorf("could not create temp directory: %w", err)
 	}
 	defer os.RemoveAll(tempDir)
 	tempFile := filepath.Join(tempDir, "content")
-
-	if err := getFile(url, tempFile); err != nil {
+	if err = getter.GetFile(tempFile, url); err != nil {
 		return "", fmt.Errorf("could not download url \"%s\": %w", url, err)
 	}
 	tempFileBz, rerr := os.ReadFile(tempFile)
@@ -128,40 +130,14 @@ func DownloadURL(url string) (string, error) {
 	return tempFileStr, nil
 }
 
-// ValidateURL checks that the given string is a valid url and optionally contains a checksum query parameter.
-func ValidateURL(urlStr string, mustChecksum bool) error {
+// ValidateIsURLWithChecksum checks that the given string is a url and contains a checksum query parameter.
+func ValidateIsURLWithChecksum(urlStr string) error {
 	url, err := neturl.Parse(urlStr)
 	if err != nil {
 		return err
 	}
-
-	if mustChecksum && len(url.Query().Get("checksum")) == 0 {
+	if len(url.Query().Get("checksum")) == 0 {
 		return errors.New("missing checksum query parameter")
 	}
-
 	return nil
-}
-
-// getFile downloads the given url into the provided directory.
-func getFile(url, dst string) error {
-	httpGetter := &getter.HttpGetter{
-		Client:                cleanhttp.DefaultClient(),
-		XTerraformGetDisabled: true,
-	}
-
-	goGetterGetters := getter.Getters
-	goGetterGetters["http"] = httpGetter
-	goGetterGetters["https"] = httpGetter
-
-	// https://github.com/hashicorp/go-getter#security-options
-	getterClient := &getter.Client{
-		Ctx:             context.Background(),
-		DisableSymlinks: true,
-		Src:             url,
-		Dst:             dst,
-		Pwd:             dst,
-		Getters:         goGetterGetters,
-	}
-
-	return getterClient.Get()
 }

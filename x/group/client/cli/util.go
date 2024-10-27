@@ -2,20 +2,18 @@ package cli
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 
-	"cosmossdk.io/x/group"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
 // parseDecisionPolicy reads and parses the decision policy.
 func parseDecisionPolicy(cdc codec.Codec, decisionPolicyFile string) (group.DecisionPolicy, error) {
 	if decisionPolicyFile == "" {
-		return nil, errors.New("decision policy is required")
+		return nil, fmt.Errorf("decision policy is required")
 	}
 
 	contents, err := os.ReadFile(decisionPolicyFile)
@@ -33,9 +31,7 @@ func parseDecisionPolicy(cdc codec.Codec, decisionPolicyFile string) (group.Deci
 
 // parseMembers reads and parses the members.
 func parseMembers(membersFile string) ([]group.MemberRequest, error) {
-	members := struct {
-		Members []group.MemberRequest `json:"members"`
-	}{}
+	members := group.MemberRequests{}
 
 	if membersFile == "" {
 		return members.Members, nil
@@ -46,7 +42,8 @@ func parseMembers(membersFile string) ([]group.MemberRequest, error) {
 		return nil, err
 	}
 
-	if err := json.Unmarshal(contents, &members); err != nil {
+	err = json.Unmarshal(contents, &members)
+	if err != nil {
 		return nil, err
 	}
 

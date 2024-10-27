@@ -43,57 +43,6 @@ func (s *intTestSuite) TestFromUint64() {
 	}
 }
 
-func (s *intTestSuite) TestNewIntFromBigInt() {
-	i := math.NewIntFromBigInt(nil)
-	s.Require().True(i.IsNil())
-
-	r := big.NewInt(42)
-	i = math.NewIntFromBigInt(r)
-	s.Require().Equal(r, i.BigInt())
-
-	// modify r and ensure i doesn't change
-	r = r.SetInt64(100)
-	s.Require().NotEqual(r, i.BigInt())
-}
-
-func (s *intTestSuite) TestNewIntFromBigIntMut() {
-	im := math.NewIntFromBigIntMut(nil)
-	s.Require().True(im.IsNil())
-
-	r := big.NewInt(42)
-	im = math.NewIntFromBigIntMut(r)
-	s.Require().Equal(r, im.BigInt())
-
-	// Compare value of NewIntFromBigInt and NewIntFromBigIntMut
-	i := math.NewIntFromBigInt(r)
-	s.Require().Equal(i, im)
-
-	// modify r and ensure i doesn't change & im changes
-	r = r.SetInt64(100)
-	s.Require().NotEqual(r, i.BigInt())
-	s.Require().Equal(r, im.BigInt())
-}
-
-func (s *intTestSuite) TestConvertToBigIntMutative() {
-	r := big.NewInt(42)
-	i := math.NewIntFromBigInt(r)
-
-	// Compare value of BigInt & BigIntMut
-	s.Require().Equal(i.BigInt(), i.BigIntMut())
-
-	// Modify BigIntMut() pointer and ensure i.BigIntMut() & i.BigInt() change
-	p := i.BigIntMut()
-	p.SetInt64(50)
-	s.Require().Equal(big.NewInt(50), i.BigIntMut())
-	s.Require().Equal(big.NewInt(50), i.BigInt())
-
-	// Modify big.Int() pointer and ensure i.BigIntMut() & i.BigInt() don't change
-	p = i.BigInt()
-	p.SetInt64(60)
-	s.Require().NotEqual(big.NewInt(60), i.BigIntMut())
-	s.Require().NotEqual(big.NewInt(60), i.BigInt())
-}
-
 func (s *intTestSuite) TestIntPanic() {
 	// Max Int = 2^256-1 = 1.1579209e+77
 	// Min Int = -(2^256-1) = -1.1579209e+77
@@ -111,66 +60,32 @@ func (s *intTestSuite) TestIntPanic() {
 	s.Require().NotPanics(func() { i1.Add(i1) })
 	s.Require().NotPanics(func() { i2.Add(i2) })
 	s.Require().Panics(func() { i3.Add(i3) })
-	_, err := i1.SafeAdd(i1)
-	s.Require().Nil(err)
-	_, err = i2.SafeAdd(i2)
-	s.Require().Nil(err)
-	_, err = i3.SafeAdd(i3)
-	s.Require().Error(err)
 
 	s.Require().NotPanics(func() { i1.Sub(i1.Neg()) })
 	s.Require().NotPanics(func() { i2.Sub(i2.Neg()) })
 	s.Require().Panics(func() { i3.Sub(i3.Neg()) })
-	_, err = i1.SafeSub(i1.Neg())
-	s.Require().Nil(err)
-	_, err = i2.SafeSub(i2.Neg())
-	s.Require().Nil(err)
-	_, err = i3.SafeSub(i3.Neg())
-	s.Require().Error(err)
 
 	s.Require().Panics(func() { i1.Mul(i1) })
 	s.Require().Panics(func() { i2.Mul(i2) })
 	s.Require().Panics(func() { i3.Mul(i3) })
-	_, err = i1.SafeMul(i1)
-	s.Require().Error(err)
-	_, err = i2.SafeMul(i2)
-	s.Require().Error(err)
-	_, err = i3.SafeMul(i3)
-	s.Require().Error(err)
 
 	s.Require().Panics(func() { i1.Neg().Mul(i1.Neg()) })
 	s.Require().Panics(func() { i2.Neg().Mul(i2.Neg()) })
 	s.Require().Panics(func() { i3.Neg().Mul(i3.Neg()) })
-	_, err = i1.Neg().SafeMul(i1.Neg())
-	s.Require().Error(err)
-	_, err = i2.Neg().SafeMul(i2.Neg())
-	s.Require().Error(err)
-	_, err = i3.Neg().SafeMul(i3.Neg())
-	s.Require().Error(err)
 
-	// Underflow check
+	// // Underflow check
 	i3n := i3.Neg()
 	s.Require().NotPanics(func() { i3n.Sub(i1) })
 	s.Require().NotPanics(func() { i3n.Sub(i2) })
 	s.Require().Panics(func() { i3n.Sub(i3) })
-	_, err = i3n.SafeSub(i3)
-	s.Require().Error(err)
 
 	s.Require().NotPanics(func() { i3n.Add(i1.Neg()) })
 	s.Require().NotPanics(func() { i3n.Add(i2.Neg()) })
 	s.Require().Panics(func() { i3n.Add(i3.Neg()) })
-	_, err = i3n.SafeAdd(i3.Neg())
-	s.Require().Error(err)
 
 	s.Require().Panics(func() { i1.Mul(i1.Neg()) })
 	s.Require().Panics(func() { i2.Mul(i2.Neg()) })
 	s.Require().Panics(func() { i3.Mul(i3.Neg()) })
-	_, err = i1.SafeMul(i1.Neg())
-	s.Require().Error(err)
-	_, err = i2.SafeMul(i2.Neg())
-	s.Require().Error(err)
-	_, err = i3.SafeMul(i3.Neg())
-	s.Require().Error(err)
 
 	// Bound check
 	intmax := math.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(256), nil), big.NewInt(1)))
@@ -179,18 +94,12 @@ func (s *intTestSuite) TestIntPanic() {
 	s.Require().NotPanics(func() { intmin.Sub(math.ZeroInt()) })
 	s.Require().Panics(func() { intmax.Add(math.OneInt()) })
 	s.Require().Panics(func() { intmin.Sub(math.OneInt()) })
-	_, err = intmax.SafeAdd(math.OneInt())
-	s.Require().Error(err)
-	_, err = intmin.SafeSub(math.OneInt())
-	s.Require().Error(err)
 
 	s.Require().NotPanics(func() { math.NewIntFromBigInt(nil) })
 	s.Require().True(math.NewIntFromBigInt(nil).IsNil())
 
 	// Division-by-zero check
 	s.Require().Panics(func() { i1.Quo(math.NewInt(0)) })
-	_, err = i1.SafeQuo(math.NewInt(0))
-	s.Require().Error(err)
 
 	s.Require().NotPanics(func() { math.Int{}.BigInt() })
 }
@@ -523,7 +432,7 @@ func TestRoundTripMarshalToInt(t *testing.T) {
 func TestFormatInt(t *testing.T) {
 	type integerTest []string
 	var testcases []integerTest
-	raw, err := os.ReadFile("testdata/integers.json")
+	raw, err := os.ReadFile("../tx/textual/internal/testdata/integers.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
@@ -562,150 +471,4 @@ func TestFormatIntNonDigits(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestFormatIntEmptyString(t *testing.T) {
-	_, err := math.FormatInt("")
-	require.ErrorContains(t, err, "cannot format empty string")
-}
-
-func TestFormatIntCorrectness(t *testing.T) {
-	tests := []struct {
-		in   string
-		want string
-	}{
-		{"0", "0"},
-		{"-2", "-2"},
-		{"10", "10"},
-		{"123", "123"},
-		{"1234", "1'234"},
-		{"12345", "12'345"},
-		{"123456", "123'456"},
-		{"-123456", "-123'456"},
-		{"1234567", "1'234'567"},
-		{"12345678", "12'345'678"},
-		{"123456789", "123'456'789"},
-		{"12345678910", "12'345'678'910"},
-		{"9999999999999999", "9'999'999'999'999'999"},
-		{"-9999999999999999", "-9'999'999'999'999'999"},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.in, func(t *testing.T) {
-			got, err := math.FormatInt(tt.in)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if got != tt.want {
-				t.Fatalf("Mismatch:\n\tGot:  %q\n\tWant: %q", got, tt.want)
-			}
-		})
-	}
-}
-
-var sizeTests = []struct {
-	s    string
-	want int
-}{
-	{"", 1},
-	{"0", 1},
-	{"-0", 1},
-	{"-10", 3},
-	{"-10000", 6},
-	{"10000", 5},
-	{"100000", 6},
-	{"99999", 5},
-	{"9999999999", 10},
-	{"10000000000", 11},
-	{"99999999999", 11},
-	{"999999999999", 12},
-	{"9999999999999", 13},
-	{"99999999999999", 14},
-	{"999999999999999", 15},
-	{"1000000000000000", 16},
-	{"9999999999999999", 16},
-	{"99999999999999999", 17},
-	{"999999999999999999", 18},
-	{"-999999999999999999", 19},
-	{"9000000000000000000", 19},
-	{"-9999999999999990000", 20},
-	{"9999999999999990000", 19},
-	{"9999999999999999000", 19},
-	{"9999999999999999999", 19},
-	{"-9999999999999999999", 20},
-	{"18446744073709551616", 20},
-	{"18446744073709551618", 20},
-	{"184467440737095516181", 21},
-	{"100000000000000000000000", 24},
-	{"1000000000000000000000000000", 28},
-	{"9000000000099999999999999999", 28},
-	{"9999999999999999999999999999", 28},
-	{"9903520314283042199192993792", 28},
-	{"340282366920938463463374607431768211456", 39},
-	{"3402823669209384634633746074317682114569999", 43},
-	{"9999999999999999999999999999999999999999999", 43},
-	{"99999999999999999999999999999999999999999999", 44},
-	{"999999999999999999999999999999999999999999999", 45},
-	{"90000000000999999999999999999000000000099999999999999999", 56},
-	{"-90000000000999999999999999999000000000099999999999999999", 57},
-	{"9000000000099999999999999999900000000009999999999999999990", 58},
-	{"990000000009999999999999999990000000000999999999999999999999", 60},
-	{"99000000000999999999999999999000000000099999999999999999999919", 62},
-	{"90000000000999999990000000000000000000000000000000000000000000", 62},
-	{"99999999999999999999999999990000000000000000000000000000000000", 62},
-	{"11111111111111119999999999990000000000000000000000000000000000", 62},
-	{"99000000000999999999999999999000000000099999999999999999999919", 62},
-	{"10000000000000000000000000000000000000000000000000000000000000", 62},
-	{"10000000000000000000000000000000000000000000000000000000000000000000000000000", 77},
-	{"99999999999999999999999999999999999999999999999999999999999999999999999999999", 77},
-	{"110000000000000000000000000000000000000000000000000000000000000000000000000009", 78},
-}
-
-func TestNewIntFromString(t *testing.T) {
-	for _, st := range sizeTests {
-		ii, _ := math.NewIntFromString(st.s)
-		require.Equal(t, st.want, ii.Size(), "size mismatch for %q", st.s)
-	}
-}
-
-func BenchmarkIntSize(b *testing.B) {
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		for _, st := range sizeTests {
-			ii, _ := math.NewIntFromString(st.s)
-			got := ii.Size()
-			if got != st.want {
-				b.Errorf("%q:: got=%d, want=%d", st.s, got, st.want)
-			}
-			sink = got
-		}
-	}
-	if sink == nil {
-		b.Fatal("Benchmark did not run!")
-	}
-	sink = nil
-}
-
-func BenchmarkIntOverflowCheckTime(b *testing.B) {
-	ints := []*big.Int{}
-
-	for _, st := range sizeTests {
-		ii, _ := math.NewIntFromString(st.s)
-		ints = append(ints, ii.BigInt())
-	}
-	b.ResetTimer()
-
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		for j := range sizeTests {
-			got := math.NewIntFromBigIntMut(ints[j])
-			sink = got
-		}
-	}
-	if sink == nil {
-		b.Fatal("Benchmark did not run!")
-	}
-	sink = nil
 }

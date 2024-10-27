@@ -3,23 +3,22 @@ package keeper_test
 import (
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/store"
-	"cosmossdk.io/store/metrics"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/group"
-	"cosmossdk.io/x/group/internal/orm"
-	"cosmossdk.io/x/group/keeper"
+	dbm "github.com/cometbft/cometbft-db"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/store"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
+	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 )
 
 type invariantTestSuite struct {
@@ -38,12 +37,12 @@ func (s *invariantTestSuite) SetupSuite() {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	group.RegisterInterfaces(interfaceRegistry)
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	key := storetypes.NewKVStoreKey(group.ModuleName)
+	key := sdk.NewKVStoreKey(group.ModuleName)
 	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	_ = cms.LoadLatestVersion()
-	sdkCtx := sdk.NewContext(cms, false, log.NewNopLogger())
+	sdkCtx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
 
 	s.ctx = sdkCtx
 	s.cdc = cdc
@@ -53,14 +52,13 @@ func (s *invariantTestSuite) SetupSuite() {
 func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 	sdkCtx, _ := s.ctx.CacheContext()
 	curCtx, cdc, key := sdkCtx, s.cdc, s.key
-	addressCodec := codectestutil.CodecOptions{}.GetAddressCodec()
 
 	// Group Table
-	groupTable, err := orm.NewAutoUInt64Table([2]byte{keeper.GroupTablePrefix}, keeper.GroupTableSeqPrefix, &group.GroupInfo{}, cdc, addressCodec)
+	groupTable, err := orm.NewAutoUInt64Table([2]byte{keeper.GroupTablePrefix}, keeper.GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
 	s.Require().NoError(err)
 
 	// Group Member Table
-	groupMemberTable, err := orm.NewPrimaryKeyTable([2]byte{keeper.GroupMemberTablePrefix}, &group.GroupMember{}, cdc, addressCodec)
+	groupMemberTable, err := orm.NewPrimaryKeyTable([2]byte{keeper.GroupMemberTablePrefix}, &group.GroupMember{}, cdc)
 	s.Require().NoError(err)
 
 	groupMemberByGroupIndex, err := orm.NewIndex(groupMemberTable, keeper.GroupMemberByGroupIndexPrefix, func(val interface{}) ([]interface{}, error) {
@@ -72,11 +70,6 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 	_, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 
-	addr1Str, err := addressCodec.BytesToString(addr1)
-	s.Require().NoError(err)
-	addr2Str, err := addressCodec.BytesToString(addr2)
-	s.Require().NoError(err)
-
 	specs := map[string]struct {
 		groupsInfo   *group.GroupInfo
 		groupMembers []*group.GroupMember
@@ -85,7 +78,7 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 		"invariant not broken": {
 			groupsInfo: &group.GroupInfo{
 				Id:          1,
-				Admin:       addr1Str,
+				Admin:       addr1.String(),
 				Version:     1,
 				TotalWeight: "3",
 			},
@@ -93,14 +86,14 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 				{
 					GroupId: 1,
 					Member: &group.Member{
-						Address: addr1Str,
+						Address: addr1.String(),
 						Weight:  "1",
 					},
 				},
 				{
 					GroupId: 1,
 					Member: &group.Member{
-						Address: addr2Str,
+						Address: addr2.String(),
 						Weight:  "2",
 					},
 				},
@@ -111,7 +104,7 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 		"group's TotalWeight must be equal to sum of its members weight ": {
 			groupsInfo: &group.GroupInfo{
 				Id:          1,
-				Admin:       addr1Str,
+				Admin:       addr1.String(),
 				Version:     1,
 				TotalWeight: "3",
 			},
@@ -119,14 +112,14 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 				{
 					GroupId: 1,
 					Member: &group.Member{
-						Address: addr1Str,
+						Address: addr1.String(),
 						Weight:  "2",
 					},
 				},
 				{
 					GroupId: 1,
 					Member: &group.Member{
-						Address: addr2Str,
+						Address: addr2.String(),
 						Weight:  "2",
 					},
 				},
@@ -139,17 +132,16 @@ func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {
 		cacheCurCtx, _ := curCtx.CacheContext()
 		groupsInfo := spec.groupsInfo
 		groupMembers := spec.groupMembers
-		storeService := runtime.NewKVStoreService(key)
-		kvStore := storeService.OpenKVStore(cacheCurCtx)
-		_, err := groupTable.Create(kvStore, groupsInfo)
+
+		_, err := groupTable.Create(cacheCurCtx.KVStore(key), groupsInfo)
 		s.Require().NoError(err)
 
 		for i := 0; i < len(groupMembers); i++ {
-			err := groupMemberTable.Create(kvStore, groupMembers[i])
+			err := groupMemberTable.Create(cacheCurCtx.KVStore(key), groupMembers[i])
 			s.Require().NoError(err)
 		}
 
-		_, broken := keeper.GroupTotalWeightInvariantHelper(cacheCurCtx, storeService, *groupTable, groupMemberByGroupIndex)
+		_, broken := keeper.GroupTotalWeightInvariantHelper(cacheCurCtx, key, *groupTable, groupMemberByGroupIndex)
 		s.Require().Equal(spec.expBroken, broken)
 
 	}

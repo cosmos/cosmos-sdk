@@ -1,17 +1,21 @@
 package listenkv_test
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/internal/kv"
-	"cosmossdk.io/store/listenkv"
-	"cosmossdk.io/store/prefix"
-	"cosmossdk.io/store/types"
+	dbm "github.com/cometbft/cometbft-db"
 )
 
 func bz(s string) []byte { return []byte(s) }
@@ -19,16 +23,20 @@ func bz(s string) []byte { return []byte(s) }
 func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
 func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
-var kvPairs = []kv.Pair{
+var kvPairs = []types.KVPair{
 	{Key: keyFmt(1), Value: valFmt(1)},
 	{Key: keyFmt(2), Value: valFmt(2)},
 	{Key: keyFmt(3), Value: valFmt(3)},
 }
 
-var testStoreKey = types.NewKVStoreKey("listen_test")
+var (
+	testStoreKey      = types.NewKVStoreKey("listen_test")
+	interfaceRegistry = codecTypes.NewInterfaceRegistry()
+	testMarshaller    = codec.NewProtoCodec(interfaceRegistry)
+)
 
-func newListenKVStore(listener *types.MemoryListener) *listenkv.Store {
-	store := newEmptyListenKVStore(listener)
+func newListenKVStore(w io.Writer) *listenkv.Store {
+	store := newEmptyListenKVStore(w)
 
 	for _, kvPair := range kvPairs {
 		store.Set(kvPair.Key, kvPair.Value)
@@ -37,10 +45,11 @@ func newListenKVStore(listener *types.MemoryListener) *listenkv.Store {
 	return store
 }
 
-func newEmptyListenKVStore(listener *types.MemoryListener) *listenkv.Store {
+func newEmptyListenKVStore(w io.Writer) *listenkv.Store {
+	listener := types.NewStoreKVPairWriteListener(w, testMarshaller)
 	memDB := dbadapter.Store{DB: dbm.NewMemDB()}
 
-	return listenkv.NewStore(memDB, testStoreKey, listener)
+	return listenkv.NewStore(memDB, testStoreKey, []types.WriteListener{listener})
 }
 
 func TestListenKVStoreGet(t *testing.T) {
@@ -59,9 +68,10 @@ func TestListenKVStoreGet(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		listener := types.NewMemoryListener()
+		var buf bytes.Buffer
 
-		store := newListenKVStore(listener)
+		store := newListenKVStore(&buf)
+		buf.Reset()
 		value := store.Get(tc.key)
 
 		require.Equal(t, tc.expectedValue, value)
@@ -107,17 +117,19 @@ func TestListenKVStoreSet(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		listener := types.NewMemoryListener()
+		var buf bytes.Buffer
 
-		store := newEmptyListenKVStore(listener)
+		store := newEmptyListenKVStore(&buf)
+		buf.Reset()
 		store.Set(tc.key, tc.value)
-		storeKVPair := listener.PopStateCache()[0]
+		storeKVPair := new(types.StoreKVPair)
+		testMarshaller.UnmarshalLengthPrefixed(buf.Bytes(), storeKVPair)
 
 		require.Equal(t, tc.expectedOut, storeKVPair)
 	}
 
-	listener := types.NewMemoryListener()
-	store := newEmptyListenKVStore(listener)
+	var buf bytes.Buffer
+	store := newEmptyListenKVStore(&buf)
 	require.Panics(t, func() { store.Set([]byte(""), []byte("value")) }, "setting an empty key should panic")
 	require.Panics(t, func() { store.Set(nil, []byte("value")) }, "setting a nil key should panic")
 }
@@ -139,13 +151,13 @@ func TestListenKVStoreDelete(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		listener := types.NewMemoryListener()
+		var buf bytes.Buffer
 
-		store := newListenKVStore(listener)
+		store := newListenKVStore(&buf)
+		buf.Reset()
 		store.Delete(tc.key)
-		cache := listener.PopStateCache()
-		require.NotEmpty(t, cache)
-		storeKVPair := cache[len(cache)-1]
+		storeKVPair := new(types.StoreKVPair)
+		testMarshaller.UnmarshalLengthPrefixed(buf.Bytes(), storeKVPair)
 
 		require.Equal(t, tc.expectedOut, storeKVPair)
 	}
@@ -163,9 +175,10 @@ func TestListenKVStoreHas(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		listener := types.NewMemoryListener()
+		var buf bytes.Buffer
 
-		store := newListenKVStore(listener)
+		store := newListenKVStore(&buf)
+		buf.Reset()
 		ok := store.Has(tc.key)
 
 		require.Equal(t, tc.expected, ok)
@@ -173,9 +186,9 @@ func TestListenKVStoreHas(t *testing.T) {
 }
 
 func TestTestListenKVStoreIterator(t *testing.T) {
-	listener := types.NewMemoryListener()
+	var buf bytes.Buffer
 
-	store := newListenKVStore(listener)
+	store := newListenKVStore(&buf)
 	iterator := store.Iterator(nil, nil)
 
 	s, e := iterator.Domain()
@@ -216,9 +229,9 @@ func TestTestListenKVStoreIterator(t *testing.T) {
 }
 
 func TestTestListenKVStoreReverseIterator(t *testing.T) {
-	listener := types.NewMemoryListener()
+	var buf bytes.Buffer
 
-	store := newListenKVStore(listener)
+	store := newListenKVStore(&buf)
 	iterator := store.ReverseIterator(nil, nil)
 
 	s, e := iterator.Domain()

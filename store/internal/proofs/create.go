@@ -2,11 +2,12 @@ package proofs
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 
-	ics23 "github.com/cosmos/ics23/go"
+	ics23 "github.com/confio/ics23/go"
 
-	sdkmaps "cosmossdk.io/store/internal/maps"
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 )
 
 var (
@@ -44,7 +45,7 @@ func CreateNonMembershipProof(data map[string][]byte, key []byte) (*ics23.Commit
 	}
 	// ensure this key is not in the store
 	if _, ok := data[string(key)]; ok {
-		return nil, errors.New("cannot create non-membership proof if key is in map")
+		return nil, fmt.Errorf("cannot create non-membership proof if key is in map")
 	}
 
 	keys := SortedKeys(data)
@@ -90,13 +91,13 @@ func createExistenceProof(data map[string][]byte, key []byte) (*ics23.ExistenceP
 	}
 	value, ok := data[string(key)]
 	if !ok {
-		return nil, errors.New("cannot make existence proof if key is not in map")
+		return nil, fmt.Errorf("cannot make existence proof if key is not in map")
 	}
 
 	_, proofs, _ := sdkmaps.ProofsFromMap(data)
 	proof := proofs[string(key)]
 	if proof == nil {
-		return nil, errors.New("returned no proof for key")
+		return nil, fmt.Errorf("returned no proof for key")
 	}
 
 	return ConvertExistenceProof(proof, key, value)

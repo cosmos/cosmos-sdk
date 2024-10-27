@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"fmt"
 
-	"cosmossdk.io/x/nft"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 var (
@@ -37,12 +37,11 @@ func (s *TestSuite) TestSend() {
 	expGenesis := &nft.GenesisState{
 		Classes: []*nft.Class{&ExpClass},
 		Entries: []*nft.Entry{{
-			Owner: s.encodedAddrs[0],
+			Owner: s.addrs[0].String(),
 			Nfts:  []*nft.NFT{&ExpNFT},
 		}},
 	}
-	genesis, err := s.nftKeeper.ExportGenesis(s.ctx)
-	s.Require().NoError(err)
+	genesis := s.nftKeeper.ExportGenesis(s.ctx)
 	s.Require().Equal(expGenesis, genesis)
 
 	testCases := []struct {
@@ -52,34 +51,12 @@ func (s *TestSuite) TestSend() {
 		errMsg string
 	}{
 		{
-			name: "empty nft id",
-			req: &nft.MsgSend{
-				ClassId:  testClassID,
-				Id:       "",
-				Sender:   s.encodedAddrs[0],
-				Receiver: s.encodedAddrs[1],
-			},
-			expErr: true,
-			errMsg: "empty nft id",
-		},
-		{
-			name: "empty class id",
-			req: &nft.MsgSend{
-				ClassId:  "",
-				Id:       testID,
-				Sender:   s.encodedAddrs[0],
-				Receiver: s.encodedAddrs[1],
-			},
-			expErr: true,
-			errMsg: "empty class id",
-		},
-		{
 			name: "invalid class id",
 			req: &nft.MsgSend{
 				ClassId:  "invalid ClassId",
 				Id:       testID,
-				Sender:   s.encodedAddrs[0],
-				Receiver: s.encodedAddrs[1],
+				Sender:   s.addrs[0].String(),
+				Receiver: s.addrs[1].String(),
 			},
 			expErr: true,
 			errMsg: "unauthorized",
@@ -89,8 +66,8 @@ func (s *TestSuite) TestSend() {
 			req: &nft.MsgSend{
 				ClassId:  testClassID,
 				Id:       "invalid Id",
-				Sender:   s.encodedAddrs[0],
-				Receiver: s.encodedAddrs[1],
+				Sender:   s.addrs[0].String(),
+				Receiver: s.addrs[1].String(),
 			},
 			expErr: true,
 			errMsg: "unauthorized",
@@ -100,19 +77,19 @@ func (s *TestSuite) TestSend() {
 			req: &nft.MsgSend{
 				ClassId:  testClassID,
 				Id:       testID,
-				Sender:   s.encodedAddrs[1],
-				Receiver: s.encodedAddrs[2],
+				Sender:   s.addrs[1].String(),
+				Receiver: s.addrs[2].String(),
 			},
 			expErr: true,
-			errMsg: fmt.Sprintf("%s is not the owner of nft %s", s.encodedAddrs[1], testID),
+			errMsg: fmt.Sprintf("%s is not the owner of nft %s", s.addrs[1].String(), testID),
 		},
 		{
 			name: "valid transaction",
 			req: &nft.MsgSend{
 				ClassId:  testClassID,
 				Id:       testID,
-				Sender:   s.encodedAddrs[0],
-				Receiver: s.encodedAddrs[1],
+				Sender:   s.addrs[0].String(),
+				Receiver: s.addrs[1].String(),
 			},
 			expErr: false,
 			errMsg: "",

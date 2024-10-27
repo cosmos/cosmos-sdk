@@ -10,19 +10,16 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func cleanupKeys(t *testing.T, kb keyring.Keyring, keys ...string) func() {
-	t.Helper()
 	return func() {
 		for _, k := range keys {
 			if err := kb.Delete(k); err != nil {
@@ -34,22 +31,17 @@ func cleanupKeys(t *testing.T, kb keyring.Keyring, keys ...string) func() {
 
 func Test_runListCmd(t *testing.T) {
 	cmd := ListKeysCmd()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
 	kbHome1 := t.TempDir()
 	kbHome2 := t.TempDir()
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
-	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
+	cdc := clienttestutil.MakeTestCodec(t)
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome2, mockIn, cdc)
 	assert.NilError(t, err)
 
-	clientCtx := client.Context{}.
-		WithKeyring(kb).
-		WithAddressCodec(addresscodec.NewBech32Codec("cosmos")).
-		WithValidatorAddressCodec(addresscodec.NewBech32Codec("cosmosvaloper")).
-		WithConsensusAddressCodec(addresscodec.NewBech32Codec("cosmosvalcons"))
-
+	clientCtx := client.Context{}.WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	path := "" // sdk.GetConfig().GetFullBIP44Path()
@@ -70,7 +62,7 @@ func Test_runListCmd(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			cmd.SetArgs([]string{
-				fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, tt.kbDir),
+				fmt.Sprintf("--%s=%s", flags.FlagHome, tt.kbDir),
 				fmt.Sprintf("--%s=false", flagListNames),
 			})
 
@@ -79,7 +71,7 @@ func Test_runListCmd(t *testing.T) {
 			}
 
 			cmd.SetArgs([]string{
-				fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, tt.kbDir),
+				fmt.Sprintf("--%s=%s", flags.FlagHome, tt.kbDir),
 				fmt.Sprintf("--%s=true", flagListNames),
 			})
 
@@ -93,7 +85,7 @@ func Test_runListCmd(t *testing.T) {
 func Test_runListKeyTypeCmd(t *testing.T) {
 	cmd := ListKeyTypesCmd()
 
-	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
+	cdc := clienttestutil.MakeTestCodec(t)
 	kbHome := t.TempDir()
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 

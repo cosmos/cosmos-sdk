@@ -3,15 +3,13 @@ package orm
 import (
 	"testing"
 
-	"github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
-
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/group/errors"
-
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 func TestPaginationProperty(t *testing.T) {
@@ -42,8 +40,7 @@ func TestPaginationProperty(t *testing.T) {
 			}
 			dest := reconstructedTableModels[offset:end]
 			tableModelsIt := testTableModelIterator(tableModels, nil)
-			_, err := Paginate(tableModelsIt, pageRequest, &dest)
-			require.NoError(t, err)
+			Paginate(tableModelsIt, pageRequest, &dest)
 			reconstructedTableModels = append(reconstructedTableModels, dest...)
 		}
 
@@ -55,7 +52,7 @@ func TestPaginationProperty(t *testing.T) {
 
 		// Reconstruct the slice from keyed pages
 		reconstructedTableModels = make([]*testdata.TableModel, 0, len(tableModels))
-		var start uint64
+		var start uint64 = 0
 		key := EncodeSequence(0)
 		for key != nil {
 			pageRequest := &query.PageRequest{
@@ -97,9 +94,9 @@ func testTableModelIterator(tms []*testdata.TableModel, key RowID) Iterator {
 	if key != nil {
 		index = int(DecodeSequence(key))
 	}
-	return IteratorFunc(func(dest proto.Message) (RowID, error) {
+	return IteratorFunc(func(dest codec.ProtoMarshaler) (RowID, error) {
 		if dest == nil {
-			return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "destination object must not be nil")
+			return nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "destination object must not be nil")
 		}
 
 		if index == len(tms) {
@@ -119,6 +116,6 @@ func testTableModelIterator(tms []*testdata.TableModel, key RowID) Iterator {
 
 		index++
 
-		return rowID, proto.Unmarshal(bytes, dest)
+		return rowID, dest.Unmarshal(bytes)
 	})
 }

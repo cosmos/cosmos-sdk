@@ -10,18 +10,13 @@ sidebar_position: 1
 
 `x/nft` is an implementation of a Cosmos SDK module, per [ADR 43](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-043-nft-module.md), that allows you to create nft classification, create nft, transfer nft, update nft, and support various queries by integrating the module. It is fully compatible with the ERC721 specification.
 
-* [Concepts](#concepts)
+* [Concept](#concepts)
     * [Class](#class)
     * [NFT](#nft)
-* [State](#state)
-    * [Class](#class-1)
-    * [NFT](#nft-1)
-    * [NFTOfClassByOwner](#nftofclassbyowner)
-    * [Owner](#owner)
-    * [TotalSupply](#totalsupply)
-* [Messages](#messages)
+*[State](#state)
+*[Messages](#messages)
     * [MsgSend](#msgsend)
-* [Events](#events)
+*[Events](#events)
 
 ## Concepts
 

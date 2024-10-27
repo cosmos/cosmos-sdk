@@ -3,10 +3,8 @@ package snapshot
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/spf13/cobra"
 )
 
 // ListSnapshotsCmd returns the command to list local snapshots
@@ -14,8 +12,8 @@ var ListSnapshotsCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List local snapshots",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		viper := client.GetViperFromCmd(cmd)
-		snapshotStore, err := server.GetSnapshotStore(viper)
+		ctx := server.GetServerContextFromCmd(cmd)
+		snapshotStore, err := server.GetSnapshotStore(ctx.Viper)
 		if err != nil {
 			return err
 		}

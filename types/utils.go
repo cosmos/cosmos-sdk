@@ -2,11 +2,42 @@ package types
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"time"
 
+	log "github.com/cometbft/cometbft/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
+
+// SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
+// are removed.
+// This method can be used to canonicalize JSON to be returned by GetSignBytes,
+// e.g. for the ledger integration.
+// If the passed JSON isn't valid it will return an error.
+func SortJSON(toSortJSON []byte) ([]byte, error) {
+	var c interface{}
+	err := json.Unmarshal(toSortJSON, &c)
+	if err != nil {
+		return nil, err
+	}
+	js, err := json.Marshal(c)
+	if err != nil {
+		return nil, err
+	}
+	return js, nil
+}
+
+// MustSortJSON is like SortJSON but panic if an error occurs, e.g., if
+// the passed JSON isn't valid.
+func MustSortJSON(toSortJSON []byte) []byte {
+	js, err := SortJSON(toSortJSON)
+	if err != nil {
+		panic(err)
+	}
+	return js
+}
 
 // Uint64ToBigEndian - marshals uint64 to a bigendian byte slice so it can be sorted
 func Uint64ToBigEndian(i uint64) []byte {
@@ -44,13 +75,13 @@ func ParseTimeBytes(bz []byte) (time.Time, error) {
 }
 
 // Parses an encoded type using FormatTimeKey back into a time.Time
-func ParseTime(t any) (time.Time, error) {
+func ParseTime(T any) (time.Time, error) { //nolint:gocritic
 	var (
 		result time.Time
 		err    error
 	)
 
-	switch t := t.(type) {
+	switch t := T.(type) {
 	case time.Time:
 		result, err = t, nil
 	case []byte:
@@ -96,11 +127,30 @@ func AppendLengthPrefixedBytes(args ...[]byte) []byte {
 }
 
 // ParseLengthPrefixedBytes panics when store key length is not equal to the given length.
-func ParseLengthPrefixedBytes(key []byte, startIndex, sliceLength int) ([]byte, int) {
+func ParseLengthPrefixedBytes(key []byte, startIndex int, sliceLength int) ([]byte, int) {
 	neededLength := startIndex + sliceLength
 	endIndex := neededLength - 1
 	kv.AssertKeyAtLeastLength(key, neededLength)
 	byteSlice := key[startIndex:neededLength]
 
 	return byteSlice, endIndex
+}
+
+// LogDeferred logs an error in a deferred function call if the returned error is non-nil.
+func LogDeferred(logger log.Logger, f func() error) {
+	if err := f(); err != nil {
+		logger.Error(err.Error())
+	}
+}
+
+// SliceContains implements a generic function for checking if a slice contains
+// a certain value.
+func SliceContains[T comparable](elements []T, v T) bool {
+	for _, s := range elements {
+		if v == s {
+			return true
+		}
+	}
+
+	return false
 }

@@ -2,7 +2,7 @@ package ormfield
 
 import (
 	"encoding/binary"
-	"io"
+	io "io"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -16,10 +16,7 @@ func (e EnumCodec) Decode(r Reader) (protoreflect.Value, error) {
 }
 
 func (e EnumCodec) Encode(value protoreflect.Value, w io.Writer) error {
-	var x protoreflect.EnumNumber
-	if value.IsValid() {
-		x = value.Enum()
-	}
+	x := value.Enum()
 	buf := make([]byte, binary.MaxVarintLen32)
 	n := binary.PutVarint(buf, int64(x))
 	_, err := w.Write(buf[:n])
@@ -27,19 +24,13 @@ func (e EnumCodec) Encode(value protoreflect.Value, w io.Writer) error {
 }
 
 func (e EnumCodec) Compare(v1, v2 protoreflect.Value) int {
-	var x, y protoreflect.EnumNumber
-	if v1.IsValid() {
-		x = v1.Enum()
-	}
-	if v2.IsValid() {
-		y = v2.Enum()
-	}
-	switch {
-	case x == y:
+	x := v1.Enum()
+	y := v2.Enum()
+	if x == y {
 		return 0
-	case x < y:
+	} else if x < y {
 		return -1
-	default:
+	} else {
 		return 1
 	}
 }

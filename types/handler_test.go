@@ -5,21 +5,34 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestChainAnteDecorators(t *testing.T) {
-	// test panic
-	require.Nil(t, sdk.ChainAnteDecorators([]sdk.AnteDecorator{}...))
+type handlerTestSuite struct {
+	suite.Suite
+}
 
-	ctx, tx := sdk.Context{}.WithExecMode(sdk.ExecModeSimulate), sdk.Tx(nil)
-	mockCtrl := gomock.NewController(t)
+func TestHandlerTestSuite(t *testing.T) {
+	suite.Run(t, new(handlerTestSuite))
+}
+
+func (s *handlerTestSuite) SetupSuite() {
+	s.T().Parallel()
+}
+
+func (s *handlerTestSuite) TestChainAnteDecorators() {
+	// test panic
+	s.Require().Nil(sdk.ChainAnteDecorators([]sdk.AnteDecorator{}...))
+
+	ctx, tx := sdk.Context{}, sdk.Tx(nil)
+	mockCtrl := gomock.NewController(s.T())
 	mockAnteDecorator1 := mock.NewMockAnteDecorator(mockCtrl)
 	mockAnteDecorator1.EXPECT().AnteHandle(gomock.Eq(ctx), gomock.Eq(tx), true, gomock.Any()).Times(1)
 	_, err := sdk.ChainAnteDecorators(mockAnteDecorator1)(ctx, tx, true)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
 	mockAnteDecorator2 := mock.NewMockAnteDecorator(mockCtrl)
 	// NOTE: we can't check that mockAnteDecorator2 is passed as the last argument because
@@ -31,7 +44,7 @@ func TestChainAnteDecorators(t *testing.T) {
 	_, err = sdk.ChainAnteDecorators(
 		mockAnteDecorator1,
 		mockAnteDecorator2)(ctx, tx, true)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 }
 
 func TestChainPostDecorators(t *testing.T) {
@@ -39,7 +52,7 @@ func TestChainPostDecorators(t *testing.T) {
 	require.Nil(t, sdk.ChainPostDecorators([]sdk.PostDecorator{}...))
 
 	// Create empty context as well as transaction
-	ctx := sdk.Context{}.WithExecMode(sdk.ExecModeSimulate)
+	ctx := sdk.Context{}
 	tx := sdk.Tx(nil)
 
 	// Create mocks

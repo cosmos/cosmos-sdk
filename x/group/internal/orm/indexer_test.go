@@ -5,17 +5,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	corestore "cosmossdk.io/core/store"
-	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/group/errors"
-	"cosmossdk.io/x/group/internal/orm/prefixstore"
-
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestNewIndexer(t *testing.T) {
@@ -167,9 +162,9 @@ func TestIndexerOnDelete(t *testing.T) {
 	myRowID := EncodeSequence(1)
 
 	var multiKeyIndex MultiKeyIndex
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	store := prefixstore.New(runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx), []byte{multiKeyIndex.prefix})
+	ctx := NewMockContext()
+	storeKey := sdk.NewKVStoreKey("test")
+	store := prefix.NewStore(ctx.KVStore(storeKey), []byte{multiKeyIndex.prefix})
 
 	specs := map[string]struct {
 		srcFunc        IndexerFunc
@@ -228,9 +223,7 @@ func TestIndexerOnDelete(t *testing.T) {
 				err = idx.OnCreate(store, myRowID, nil)
 				require.NoError(t, err)
 				for _, key := range spec.expDeletedKeys {
-					has, err := store.Has(key)
-					require.NoError(t, err)
-					require.True(t, has)
+					require.Equal(t, true, store.Has(key))
 				}
 			}
 
@@ -241,9 +234,7 @@ func TestIndexerOnDelete(t *testing.T) {
 			}
 			require.NoError(t, err)
 			for _, key := range spec.expDeletedKeys {
-				has, err := store.Has(key)
-				require.NoError(t, err)
-				require.False(t, has)
+				require.Equal(t, false, store.Has(key))
 			}
 		})
 	}
@@ -253,16 +244,16 @@ func TestIndexerOnUpdate(t *testing.T) {
 	myRowID := EncodeSequence(1)
 
 	var multiKeyIndex MultiKeyIndex
-	key := storetypes.NewKVStoreKey("test")
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	store := prefixstore.New(runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx), []byte{multiKeyIndex.prefix})
+	ctx := NewMockContext()
+	storeKey := sdk.NewKVStoreKey("test")
+	store := prefix.NewStore(ctx.KVStore(storeKey), []byte{multiKeyIndex.prefix})
 
 	specs := map[string]struct {
 		srcFunc        IndexerFunc
 		expAddedKeys   []RowID
 		expDeletedKeys []RowID
 		expErr         error
-		addFunc        func(corestore.KVStore, interface{}, RowID) error
+		addFunc        func(sdk.KVStore, interface{}, RowID) error
 	}{
 		"single key - same key, no update": {
 			srcFunc: func(value interface{}) ([]interface{}, error) {
@@ -342,7 +333,7 @@ func TestIndexerOnUpdate(t *testing.T) {
 				keys := []uint64{1, 2}
 				return []interface{}{keys[value.(int)]}, nil
 			},
-			addFunc: func(_ corestore.KVStore, _ interface{}, _ RowID) error {
+			addFunc: func(_ sdk.KVStore, _ interface{}, _ RowID) error {
 				return stdErrors.New("test")
 			},
 			expErr: stdErrors.New("test"),
@@ -368,14 +359,10 @@ func TestIndexerOnUpdate(t *testing.T) {
 			}
 			require.NoError(t, err)
 			for _, key := range spec.expAddedKeys {
-				has, err := store.Has(key)
-				assert.NoError(t, err)
-				assert.True(t, has)
+				require.Equal(t, true, store.Has(key))
 			}
 			for _, key := range spec.expDeletedKeys {
-				has, err := store.Has(key)
-				assert.NoError(t, err)
-				assert.False(t, has)
+				require.Equal(t, false, store.Has(key))
 			}
 		})
 	}
@@ -388,7 +375,7 @@ func TestUniqueKeyAddFunc(t *testing.T) {
 
 	specs := map[string]struct {
 		srcKey           []byte
-		expErr           *errorsmod.Error
+		expErr           *sdkerrors.Error
 		expExistingEntry []byte
 	}{
 		"create when not exists": {
@@ -410,20 +397,16 @@ func TestUniqueKeyAddFunc(t *testing.T) {
 	}
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
-			key := storetypes.NewKVStoreKey("test")
-			testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
-			require.NoError(t, store.Set(presetKey, []byte{}))
+			storeKey := sdk.NewKVStoreKey("test")
+			store := NewMockContext().KVStore(storeKey)
+			store.Set(presetKey, []byte{})
 
 			err := uniqueKeysAddFunc(store, spec.srcKey, myRowID)
 			require.True(t, spec.expErr.Is(err))
 			if spec.expErr != nil {
 				return
 			}
-
-			has, err := store.Has(spec.expExistingEntry)
-			assert.NoError(t, err)
-			assert.True(t, has, "not found")
+			assert.True(t, store.Has(spec.expExistingEntry), "not found")
 		})
 	}
 }
@@ -435,7 +418,7 @@ func TestMultiKeyAddFunc(t *testing.T) {
 
 	specs := map[string]struct {
 		srcKey           []byte
-		expErr           *errorsmod.Error
+		expErr           *sdkerrors.Error
 		expExistingEntry []byte
 	}{
 		"create when not exists": {
@@ -457,20 +440,16 @@ func TestMultiKeyAddFunc(t *testing.T) {
 	}
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
-			key := storetypes.NewKVStoreKey("test")
-			testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-			store := runtime.NewKVStoreService(key).OpenKVStore(testCtx.Ctx)
-			require.NoError(t, store.Set(presetKey, []byte{}))
+			storeKey := sdk.NewKVStoreKey("test")
+			store := NewMockContext().KVStore(storeKey)
+			store.Set(presetKey, []byte{})
 
 			err := multiKeyAddFunc(store, spec.srcKey, myRowID)
 			require.True(t, spec.expErr.Is(err))
 			if spec.expErr != nil {
 				return
 			}
-
-			has, err := store.Has(spec.expExistingEntry)
-			assert.NoError(t, err)
-			assert.True(t, has)
+			assert.True(t, store.Has(spec.expExistingEntry))
 		})
 	}
 }
@@ -582,7 +561,7 @@ type addFuncRecorder struct {
 	called             bool
 }
 
-func (c *addFuncRecorder) add(_ corestore.KVStore, key interface{}, rowID RowID) error {
+func (c *addFuncRecorder) add(_ sdk.KVStore, key interface{}, rowID RowID) error {
 	c.secondaryIndexKeys = append(c.secondaryIndexKeys, key)
 	c.rowIDs = append(c.rowIDs, rowID)
 	c.called = true

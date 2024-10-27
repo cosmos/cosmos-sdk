@@ -1,14 +1,14 @@
 package query
 
 import (
-	"errors"
+	"fmt"
 	"math"
 
-	db "github.com/cosmos/cosmos-db"
+	db "github.com/cometbft/cometbft-db"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // DefaultPage is the default `page` number for queries.
@@ -19,16 +19,11 @@ const DefaultPage = 1
 // if the `limit` is not supplied, paginate will use `DefaultLimit`
 const DefaultLimit = 100
 
-// PaginationMaxLimit is the maximum limit the paginate function can handle
+// MaxLimit is the maximum limit the paginate function can handle
 // which equals the maximum value that can be stored in uint64
-var PaginationMaxLimit uint64 = math.MaxUint64
+const MaxLimit = math.MaxUint64
 
 // ParsePagination validate PageRequest and returns page number & limit.
-// Note: cometBFT enforces a maximum query limit of 100 to avoid node overload.
-// Queries above this limit will return the first 100 items.
-// To retrieve subsequent pages, use an offset equal to the
-// total number of results retrieved so far. For example, if you have retrieved 100 results and want to
-// retrieve the next set of results, set the offset to 100 and the appropriate limit.
 func ParsePagination(pageReq *PageRequest) (page, limit int, err error) {
 	offset := 0
 	limit = DefaultLimit
@@ -57,23 +52,40 @@ func ParsePagination(pageReq *PageRequest) (page, limit int, err error) {
 func Paginate(
 	prefixStore types.KVStore,
 	pageRequest *PageRequest,
-	onResult func(key, value []byte) error,
+	onResult func(key []byte, value []byte) error,
 ) (*PageResponse, error) {
-	pageRequest = initPageRequestDefaults(pageRequest)
-
-	if pageRequest.Offset > 0 && pageRequest.Key != nil {
-		return nil, errors.New("invalid request, either offset or key is expected, got both")
+	// if the PageRequest is nil, use default PageRequest
+	if pageRequest == nil {
+		pageRequest = &PageRequest{}
 	}
 
-	iterator := getIterator(prefixStore, pageRequest.Key, pageRequest.Reverse)
-	defer iterator.Close()
+	offset := pageRequest.Offset
+	key := pageRequest.Key
+	limit := pageRequest.Limit
+	countTotal := pageRequest.CountTotal
+	reverse := pageRequest.Reverse
 
-	var count uint64
-	var nextKey []byte
+	if offset > 0 && key != nil {
+		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
+	}
 
-	if len(pageRequest.Key) != 0 {
+	if limit == 0 {
+		limit = DefaultLimit
+
+		// count total results when the limit is zero/not supplied
+		countTotal = true
+	}
+
+	if len(key) != 0 {
+		iterator := getIterator(prefixStore, key, reverse)
+		defer iterator.Close()
+
+		var count uint64
+		var nextKey []byte
+
 		for ; iterator.Valid(); iterator.Next() {
-			if count == pageRequest.Limit {
+
+			if count == limit {
 				nextKey = iterator.Key()
 				break
 			}
@@ -93,12 +105,18 @@ func Paginate(
 		}, nil
 	}
 
-	end := pageRequest.Offset + pageRequest.Limit
+	iterator := getIterator(prefixStore, nil, reverse)
+	defer iterator.Close()
+
+	end := offset + limit
+
+	var count uint64
+	var nextKey []byte
 
 	for ; iterator.Valid(); iterator.Next() {
 		count++
 
-		if count <= pageRequest.Offset {
+		if count <= offset {
 			continue
 		}
 		if count <= end {
@@ -109,7 +127,7 @@ func Paginate(
 		} else if count == end+1 {
 			nextKey = iterator.Key()
 
-			if !pageRequest.CountTotal {
+			if !countTotal {
 				break
 			}
 		}
@@ -119,7 +137,7 @@ func Paginate(
 	}
 
 	res := &PageResponse{NextKey: nextKey}
-	if pageRequest.CountTotal {
+	if countTotal {
 		res.Total = count
 	}
 
@@ -140,26 +158,4 @@ func getIterator(prefixStore types.KVStore, start []byte, reverse bool) db.Itera
 		return prefixStore.ReverseIterator(nil, end)
 	}
 	return prefixStore.Iterator(start, nil)
-}
-
-// initPageRequestDefaults initializes a PageRequest's defaults when those are not set.
-func initPageRequestDefaults(pageRequest *PageRequest) *PageRequest {
-	// if the PageRequest is nil, use default PageRequest
-	if pageRequest == nil {
-		pageRequest = &PageRequest{}
-	}
-
-	pageRequestCopy := *pageRequest
-	if len(pageRequestCopy.Key) == 0 {
-		pageRequestCopy.Key = nil
-	}
-
-	if pageRequestCopy.Limit == 0 {
-		pageRequestCopy.Limit = DefaultLimit
-
-		// count total results when the limit is zero/not supplied
-		pageRequestCopy.CountTotal = true
-	}
-
-	return &pageRequestCopy
 }

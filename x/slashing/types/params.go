@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Default parameter namespace
@@ -14,15 +16,15 @@ const (
 )
 
 var (
-	DefaultMinSignedPerWindow      = math.LegacyNewDecWithPrec(5, 1)
+	DefaultMinSignedPerWindow      = sdk.NewDecWithPrec(5, 1)
 	DefaultSlashFractionDoubleSign = math.LegacyNewDec(1).Quo(math.LegacyNewDec(20))
 	DefaultSlashFractionDowntime   = math.LegacyNewDec(1).Quo(math.LegacyNewDec(100))
 )
 
 // NewParams creates a new Params object
 func NewParams(
-	signedBlocksWindow int64, minSignedPerWindow math.LegacyDec, downtimeJailDuration time.Duration,
-	slashFractionDoubleSign, slashFractionDowntime math.LegacyDec,
+	signedBlocksWindow int64, minSignedPerWindow sdk.Dec, downtimeJailDuration time.Duration,
+	slashFractionDoubleSign, slashFractionDowntime sdk.Dec,
 ) Params {
 	return Params{
 		SignedBlocksWindow:      signedBlocksWindow,
@@ -78,7 +80,7 @@ func validateSignedBlocksWindow(i interface{}) error {
 }
 
 func validateMinSignedPerWindow(i interface{}) error {
-	v, ok := i.(math.LegacyDec)
+	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -110,7 +112,7 @@ func validateDowntimeJailDuration(i interface{}) error {
 }
 
 func validateSlashFractionDoubleSign(i interface{}) error {
-	v, ok := i.(math.LegacyDec)
+	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -129,7 +131,7 @@ func validateSlashFractionDoubleSign(i interface{}) error {
 }
 
 func validateSlashFractionDowntime(i interface{}) error {
-	v, ok := i.(math.LegacyDec)
+	v, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -145,14 +147,4 @@ func validateSlashFractionDowntime(i interface{}) error {
 	}
 
 	return nil
-}
-
-// MinSignedPerWindowInt returns min signed per window as an integer (vs the decimal in the param)
-func (p *Params) MinSignedPerWindowInt() int64 {
-	signedBlocksWindow := p.SignedBlocksWindow
-	minSignedPerWindow := p.MinSignedPerWindow
-
-	// NOTE: RoundInt64 will never panic as minSignedPerWindow is
-	//       less than 1.
-	return minSignedPerWindow.MulInt64(signedBlocksWindow).RoundInt64()
 }

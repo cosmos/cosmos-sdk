@@ -11,15 +11,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func Test_runImportCmd(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
+	cdc := clienttestutil.MakeTestCodec(t)
 	testCases := []struct {
 		name           string
 		keyringBackend string
@@ -77,16 +76,11 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := ImportKeyCommand()
-			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+			cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 			// Now add a temporary keybase
-			kbHome := filepath.Join(t.TempDir(), fmt.Sprintf("kbhome-%s", tc.name))
-			// Create dir, otherwise os.WriteFile will fail
-			if _, err := os.Stat(kbHome); os.IsNotExist(err) {
-				err = os.MkdirAll(kbHome, 0o700)
-				require.NoError(t, err)
-			}
+			kbHome := t.TempDir()
 			kb, err := keyring.New(sdk.KeyringServiceName(), tc.keyringBackend, kbHome, nil, cdc)
 			require.NoError(t, err)
 
@@ -100,7 +94,7 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 			t.Cleanup(cleanupKeys(t, kb, "keyname1"))
 
 			keyfile := filepath.Join(kbHome, "key.asc")
-			require.NoError(t, os.WriteFile(keyfile, []byte(armoredKey), 0o600))
+			require.NoError(t, os.WriteFile(keyfile, []byte(armoredKey), 0o644))
 
 			defer func() {
 				_ = os.RemoveAll(kbHome)
@@ -123,7 +117,7 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 }
 
 func Test_runImportHexCmd(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
+	cdc := clienttestutil.MakeTestCodec(t)
 	testCases := []struct {
 		name           string
 		keyringBackend string
@@ -142,11 +136,11 @@ func Test_runImportHexCmd(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := ImportKeyHexCommand()
-			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+			cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 			// Now add a temporary keybase
-			kbHome := filepath.Join(t.TempDir(), fmt.Sprintf("kbhome-%s", tc.name))
+			kbHome := t.TempDir()
 			kb, err := keyring.New(sdk.KeyringServiceName(), tc.keyringBackend, kbHome, nil, cdc)
 			require.NoError(t, err)
 
@@ -177,38 +171,4 @@ func Test_runImportHexCmd(t *testing.T) {
 			}
 		})
 	}
-}
-
-func Test_runImportCmdWithEmptyName(t *testing.T) {
-	cmd := ImportKeyCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
-	// Now add a temporary keybase
-	kbHome := t.TempDir()
-	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
-	require.NoError(t, err)
-
-	clientCtx := client.Context{}.
-		WithKeyringDir(kbHome).
-		WithKeyring(kb).
-		WithInput(mockIn).
-		WithCodec(cdc)
-	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
-	cmd.SetArgs([]string{
-		"", "fake-file",
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
-	})
-
-	require.ErrorContains(t, cmd.ExecuteContext(ctx), "the provided name is invalid or empty after trimming whitespace")
-
-	cmd = ImportKeyHexCommand()
-	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
-	testutil.ApplyMockIODiscardOutErr(cmd)
-	cmd.SetArgs([]string{
-		"", "fake-hex",
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
-	})
-
-	require.ErrorContains(t, cmd.ExecuteContext(ctx), "the provided name is invalid or empty after trimming whitespace")
 }

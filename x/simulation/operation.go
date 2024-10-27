@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"math/rand"
 	"sort"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -23,38 +22,36 @@ type OperationEntry struct {
 	Height    int64           `json:"height" yaml:"height"`
 	Order     int64           `json:"order" yaml:"order"`
 	Operation json.RawMessage `json:"operation" yaml:"operation"`
-	BlockTime int64           `json:"block_time" yaml:"block_time"`
 }
 
 // NewOperationEntry creates a new OperationEntry instance
-func NewOperationEntry(entry string, blockTime time.Time, height, order int64, op json.RawMessage) OperationEntry {
+func NewOperationEntry(entry string, height, order int64, op json.RawMessage) OperationEntry {
 	return OperationEntry{
 		EntryKind: entry,
 		Height:    height,
 		Order:     order,
-		BlockTime: blockTime.UnixNano(),
 		Operation: op,
 	}
 }
 
 // BeginBlockEntry - operation entry for begin block
-func BeginBlockEntry(blockTime time.Time, height int64) OperationEntry {
-	return NewOperationEntry(BeginBlockEntryKind, blockTime, height, -1, nil)
+func BeginBlockEntry(height int64) OperationEntry {
+	return NewOperationEntry(BeginBlockEntryKind, height, -1, nil)
 }
 
 // EndBlockEntry - operation entry for end block
-func EndBlockEntry(blockTime time.Time, height int64) OperationEntry {
-	return NewOperationEntry(EndBlockEntryKind, blockTime, height, -1, nil)
+func EndBlockEntry(height int64) OperationEntry {
+	return NewOperationEntry(EndBlockEntryKind, height, -1, nil)
 }
 
 // MsgEntry - operation entry for standard msg
-func MsgEntry(blockTime time.Time, height, order int64, opMsg simulation.OperationMsg) OperationEntry {
-	return NewOperationEntry(MsgEntryKind, blockTime, height, order, opMsg.MustMarshal())
+func MsgEntry(height, order int64, opMsg simulation.OperationMsg) OperationEntry {
+	return NewOperationEntry(MsgEntryKind, height, order, opMsg.MustMarshal())
 }
 
 // QueuedMsgEntry creates an operation entry for a given queued message.
-func QueuedMsgEntry(blockTime time.Time, height int64, opMsg simulation.OperationMsg) OperationEntry {
-	return NewOperationEntry(QueuedMsgEntryKind, blockTime, height, -1, opMsg.MustMarshal())
+func QueuedMsgEntry(height int64, opMsg simulation.OperationMsg) OperationEntry {
+	return NewOperationEntry(QueuedMsgEntryKind, height, -1, opMsg.MustMarshal())
 }
 
 // MustMarshal marshals the operation entry, panic on error.
@@ -76,7 +73,7 @@ func NewOperationQueue() OperationQueue {
 }
 
 // queueOperations adds all future operations into the operation queue.
-func queueOperations(queuedOps OperationQueue, queuedTimeOps, futureOps []simulation.FutureOperation) {
+func queueOperations(queuedOps OperationQueue, queuedTimeOps []simulation.FutureOperation, futureOps []simulation.FutureOperation) {
 	if futureOps == nil {
 		return
 	}

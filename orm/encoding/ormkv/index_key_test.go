@@ -8,9 +8,9 @@ import (
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
-	"cosmossdk.io/orm/encoding/ormkv"
-	"cosmossdk.io/orm/internal/testpb"
-	"cosmossdk.io/orm/internal/testutil"
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormkv"
+	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
+	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
 )
 
 func TestIndexKeyCodec(t *testing.T) {

@@ -1,16 +1,16 @@
 package store
 
 import (
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
 
-	"cosmossdk.io/store/cache"
-	"cosmossdk.io/store/metrics"
-	"cosmossdk.io/store/rootmulti"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/cache"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-func NewCommitMultiStore(db dbm.DB, logger types.Logger, metricGatherer metrics.StoreMetrics) types.CommitMultiStore {
-	return rootmulti.NewStore(db, logger, metricGatherer)
+func NewCommitMultiStore(db dbm.DB) types.CommitMultiStore {
+	return rootmulti.NewStore(db, log.NewNopLogger())
 }
 
 func NewCommitKVStoreCacheManager() types.MultiStorePersistentCache {

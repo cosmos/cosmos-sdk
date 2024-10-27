@@ -4,8 +4,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -655,11 +656,11 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 func TestPackedEncoding(t *testing.T) {
 	data := testdata.TestRepeatedUints{Nums: []uint64{12, 13}}
 
-	marshaled, err := data.Marshal()
+	marshalled, err := data.Marshal()
 	require.NoError(t, err)
 
 	unmarshalled := &testdata.TestRepeatedUints{}
-	_, err = RejectUnknownFields(marshaled, unmarshalled, false, DefaultAnyResolver{})
+	_, err = RejectUnknownFields(marshalled, unmarshalled, false, DefaultAnyResolver{})
 	require.NoError(t, err)
 }
 

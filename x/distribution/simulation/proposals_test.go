@@ -1,27 +1,25 @@
 package simulation_test
 
 import (
-	"context"
 	"math/rand"
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
-	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/distribution/simulation"
-	"cosmossdk.io/x/distribution/types"
-
-	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestProposalMsgs(t *testing.T) {
 	// initialize parameters
 	s := rand.NewSource(1)
 	r := rand.New(s)
-	addressCodec := codectestutil.CodecOptions{}.GetAddressCodec()
+
+	ctx := sdk.NewContext(nil, tmproto.Header{}, true, nil)
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalMsgs function
@@ -34,14 +32,11 @@ func TestProposalMsgs(t *testing.T) {
 	assert.Equal(t, simulation.OpWeightMsgUpdateParams, w0.AppParamsKey())
 	assert.Equal(t, simulation.DefaultWeightMsgUpdateParams, w0.DefaultWeight())
 
-	msg, err := w0.MsgSimulatorFn()(context.Background(), r, accounts, addressCodec)
-	assert.NilError(t, err)
+	msg := w0.MsgSimulatorFn()(r, ctx, accounts)
 	msgUpdateParams, ok := msg.(*types.MsgUpdateParams)
 	assert.Assert(t, ok)
 
-	addr, err := addressCodec.BytesToString(sdk.AccAddress(address.Module("gov")))
-	assert.NilError(t, err)
-	assert.Equal(t, addr, msgUpdateParams.Authority)
-	assert.DeepEqual(t, sdkmath.LegacyNewDec(0), msgUpdateParams.Params.CommunityTax)
+	assert.Equal(t, sdk.AccAddress(address.Module("gov")).String(), msgUpdateParams.Authority)
+	assert.DeepEqual(t, sdk.NewDec(0), msgUpdateParams.Params.CommunityTax)
 	assert.Equal(t, true, msgUpdateParams.Params.WithdrawAddrEnabled)
 }

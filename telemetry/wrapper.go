@@ -3,16 +3,14 @@ package telemetry
 import (
 	"time"
 
-	"github.com/hashicorp/go-metrics"
+	"github.com/armon/go-metrics"
 )
 
 // Common metric key constants
 const (
-	MetricKeyBeginBlocker       = "begin_blocker"
-	MetricKeyEndBlocker         = "end_blocker"
-	MetricKeyPrepareCheckStater = "prepare_check_stater"
-	MetricKeyPrecommiter        = "precommiter"
-	MetricLabelNameModule       = "module"
+	MetricKeyBeginBlocker = "begin_blocker"
+	MetricKeyEndBlocker   = "end_blocker"
+	MetricLabelNameModule = "module"
 )
 
 // NewLabel creates a new instance of Label with name and value
@@ -24,10 +22,6 @@ func NewLabel(name, value string) metrics.Label {
 // metric for a module with a given set of keys. If any global labels are defined,
 // they will be added to the module label.
 func ModuleMeasureSince(module string, start time.Time, keys ...string) {
-	if !IsTelemetryEnabled() {
-		return
-	}
-
 	metrics.MeasureSinceWithLabels(
 		keys,
 		start.UTC(),
@@ -39,10 +33,6 @@ func ModuleMeasureSince(module string, start time.Time, keys ...string) {
 // module with a given set of keys. If any global labels are defined, they will
 // be added to the module label.
 func ModuleSetGauge(module string, val float32, keys ...string) {
-	if !IsTelemetryEnabled() {
-		return
-	}
-
 	metrics.SetGaugeWithLabels(
 		keys,
 		val,
@@ -53,58 +43,29 @@ func ModuleSetGauge(module string, val float32, keys ...string) {
 // IncrCounter provides a wrapper functionality for emitting a counter metric with
 // global labels (if any).
 func IncrCounter(val float32, keys ...string) {
-	if !IsTelemetryEnabled() {
-		return
-	}
-
 	metrics.IncrCounterWithLabels(keys, val, globalLabels)
 }
 
 // IncrCounterWithLabels provides a wrapper functionality for emitting a counter
 // metric with global labels (if any) along with the provided labels.
 func IncrCounterWithLabels(keys []string, val float32, labels []metrics.Label) {
-	if !IsTelemetryEnabled() {
-		return
-	}
-
 	metrics.IncrCounterWithLabels(keys, val, append(labels, globalLabels...))
 }
 
 // SetGauge provides a wrapper functionality for emitting a gauge metric with
 // global labels (if any).
 func SetGauge(val float32, keys ...string) {
-	if !IsTelemetryEnabled() {
-		return
-	}
-
 	metrics.SetGaugeWithLabels(keys, val, globalLabels)
 }
 
 // SetGaugeWithLabels provides a wrapper functionality for emitting a gauge
 // metric with global labels (if any) along with the provided labels.
 func SetGaugeWithLabels(keys []string, val float32, labels []metrics.Label) {
-	if !IsTelemetryEnabled() {
-		return
-	}
-
 	metrics.SetGaugeWithLabels(keys, val, append(labels, globalLabels...))
 }
 
-// MeasureSince provides a wrapper functionality for emitting a time measure
+// MeasureSince provides a wrapper functionality for emitting a a time measure
 // metric with global labels (if any).
 func MeasureSince(start time.Time, keys ...string) {
-	if !IsTelemetryEnabled() {
-		return
-	}
-
 	metrics.MeasureSinceWithLabels(keys, start.UTC(), globalLabels)
-}
-
-// Now return the current time if telemetry is enabled or a zero time if it's not
-func Now() time.Time {
-	if !IsTelemetryEnabled() {
-		return time.Time{}
-	}
-
-	return time.Now()
 }

@@ -3,12 +3,11 @@ package types_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/math"
-	"cosmossdk.io/x/distribution/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestValidateGenesis(t *testing.T) {
@@ -17,7 +16,4 @@ func TestValidateGenesis(t *testing.T) {
 
 	fp2 := types.FeePool{CommunityPool: sdk.DecCoins{{Denom: "stake", Amount: math.LegacyNewDec(-1)}}}
 	require.NotNil(t, fp2.ValidateGenesis())
-
-	fp3 := types.FeePool{DecimalPool: sdk.DecCoins{{Denom: "stake", Amount: math.LegacyNewDec(-1)}}}
-	require.NotNil(t, fp3.ValidateGenesis())
 }

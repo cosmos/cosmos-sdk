@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 )
 
@@ -40,15 +39,13 @@ func MnemonicKeyCommand() *cobra.Command {
 					return fmt.Errorf("256-bits is 43 characters in Base-64, and 100 in Base-6. You entered %v, and probably want more", len(inputEntropy))
 				}
 
-				if skip, _ := cmd.Flags().GetBool(flagYes); !skip {
-					yes, err := input.GetConfirmation(fmt.Sprintf("> Input length: %d", len(inputEntropy)), buf, cmd.ErrOrStderr())
-					if err != nil {
-						return err
-					}
+				conf, err := input.GetConfirmation(fmt.Sprintf("> Input length: %d", len(inputEntropy)), buf, cmd.ErrOrStderr())
+				if err != nil {
+					return err
+				}
 
-					if !yes {
-						return nil
-					}
+				if !conf {
+					return nil
 				}
 
 				// hash input entropy to get entropy seed
@@ -67,17 +64,12 @@ func MnemonicKeyCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			indiscreet, _ := cmd.Flags().GetBool(flagIndiscreet)
-			if !indiscreet {
-				return printDiscreetly(client.GetClientContextFromCmd(cmd), cmd.ErrOrStderr(), "**Important** write this mnemonic phrase in a safe place. Do not share it to anyone.", mnemonic)
-			}
+
 			cmd.Println(mnemonic)
 			return nil
 		},
 	}
 
 	cmd.Flags().Bool(flagUserEntropy, false, "Prompt the user to supply their own entropy, instead of relying on the system")
-	cmd.Flags().Bool(flagIndiscreet, false, "Print mnemonic directly on current terminal")
-	cmd.Flags().BoolP(flagYes, "y", false, "Skip confirmation prompt when check input entropy length")
 	return cmd
 }

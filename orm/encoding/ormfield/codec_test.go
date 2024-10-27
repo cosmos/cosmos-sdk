@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/orm/encoding/ormfield"
+
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
-	"cosmossdk.io/orm/encoding/ormfield"
-	"cosmossdk.io/orm/internal/testutil"
-	"cosmossdk.io/orm/types/ormerrors"
+	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+
+	"github.com/cosmos/cosmos-sdk/orm/internal/testutil"
 )
 
 func TestCodec(t *testing.T) {
@@ -21,7 +23,6 @@ func TestCodec(t *testing.T) {
 }
 
 func testCodec(t *testing.T, spec testutil.TestFieldSpec) {
-	t.Helper()
 	t.Run(fmt.Sprintf("%s %v", spec.FieldName, false), func(t *testing.T) {
 		testCodecNT(t, spec.FieldName, spec.Gen, false)
 	})
@@ -31,7 +32,6 @@ func testCodec(t *testing.T, spec testutil.TestFieldSpec) {
 }
 
 func testCodecNT(t *testing.T, fname protoreflect.Name, generator *rapid.Generator[any], nonTerminal bool) {
-	t.Helper()
 	cdc, err := testutil.MakeTestCodec(fname, nonTerminal)
 	assert.NilError(t, err)
 	rapid.Check(t, func(t *rapid.T) {
@@ -105,12 +105,11 @@ func TestCompactUInt32(t *testing.T) {
 		by := ormfield.EncodeCompactUint32(y)
 
 		cmp := bytes.Compare(bx, by)
-		switch {
-		case x < y:
+		if x < y {
 			assert.Equal(t, -1, cmp)
-		case x == y:
+		} else if x == y {
 			assert.Equal(t, 0, cmp)
-		default:
+		} else {
 			assert.Equal(t, 1, cmp)
 		}
 
@@ -154,12 +153,11 @@ func TestCompactUInt64(t *testing.T) {
 		by := ormfield.EncodeCompactUint64(y)
 
 		cmp := bytes.Compare(bx, by)
-		switch {
-		case x < y:
+		if x < y {
 			assert.Equal(t, -1, cmp)
-		case x == y:
+		} else if x == y {
 			assert.Equal(t, 0, cmp)
-		default:
+		} else {
 			assert.Equal(t, 1, cmp)
 		}
 

@@ -1,28 +1,23 @@
 package feegrant_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/appmodule/v2"
-	corecontext "cosmossdk.io/core/context"
-	"cosmossdk.io/core/header"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/feegrant"
-
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 func TestPeriodicFeeValidAllow(t *testing.T) {
-	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	key := sdk.NewKVStoreKey(feegrant.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
 
-	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now()})
 
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 43))
@@ -31,22 +26,21 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 1))
 	emptyCoins := sdk.Coins{}
 
-	now := ctx.HeaderInfo().Time
+	now := ctx.BlockTime()
 	oneHour := now.Add(1 * time.Hour)
 	twoHours := now.Add(2 * time.Hour)
 	tenMinutes := time.Duration(10) * time.Minute
 
 	cases := map[string]struct {
-		allow             feegrant.PeriodicAllowance
-		fee               sdk.Coins
-		blockTime         time.Time
-		valid             bool // all other checks are ignored if valid=false
-		accept            bool
-		remove            bool
-		remains           sdk.Coins
-		remainsPeriod     sdk.Coins
-		periodReset       time.Time
-		updatePeriodReset bool
+		allow         feegrant.PeriodicAllowance
+		fee           sdk.Coins
+		blockTime     time.Time
+		valid         bool // all other checks are ignored if valid=false
+		accept        bool
+		remove        bool
+		remains       sdk.Coins
+		remainsPeriod sdk.Coins
+		periodReset   time.Time
 	}{
 		"empty": {
 			allow: feegrant.PeriodicAllowance{},
@@ -189,20 +183,6 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			accept:    false,
 			remove:    true,
 		},
-		"test update PeriodReset ": {
-			allow: feegrant.PeriodicAllowance{
-				Period:           tenMinutes,
-				PeriodSpendLimit: smallAtom,
-				PeriodReset:      now.Add(30 * time.Minute),
-			},
-			blockTime:         now,
-			valid:             true,
-			accept:            true,
-			remove:            false,
-			remainsPeriod:     emptyCoins,
-			periodReset:       now.Add(10 * time.Minute),
-			updatePeriodReset: true,
-		},
 	}
 
 	for name, stc := range cases {
@@ -215,18 +195,9 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			if tc.updatePeriodReset {
-				err = tc.allow.UpdatePeriodReset(tc.blockTime)
-				require.NoError(t, err)
-			}
-
-			ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: tc.blockTime})
+			ctx := testCtx.Ctx.WithBlockTime(tc.blockTime)
 			// now try to deduct
-			// Set environment to ctx
-			remove, err := tc.allow.Accept(context.WithValue(ctx, corecontext.EnvironmentContextKey, appmodule.Environment{
-				HeaderService: mockHeaderService{},
-				GasService:    mockGasService{},
-			}), tc.fee, []sdk.Msg{})
+			remove, err := tc.allow.Accept(ctx, tc.fee, []sdk.Msg{})
 			if !tc.accept {
 				require.Error(t, err)
 				return

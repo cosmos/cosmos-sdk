@@ -22,7 +22,7 @@ that allows for the submission and handling of arbitrary evidence of misbehavior
 as equivocation and counterfactual signing.
 
 The evidence module differs from standard evidence handling which typically expects the
-underlying consensus engine, e.g. CometBFT, to automatically submit evidence when
+underlying consensus engine, e.g. Tendermint, to automatically submit evidence when
 it is discovered by allowing clients and foreign chains to submit more complex evidence
 directly.
 
@@ -53,8 +53,9 @@ type Evidence interface {
 	proto.Message
 
 	Route() string
+	Type() string
 	String() string
-	Hash() []byte
+	Hash() tmbytes.HexBytes
 	ValidateBasic() error
 
 	// Height at which the infraction occurred
@@ -107,7 +108,7 @@ by the `Handler` should be persisted.
 // for executing all corresponding business logic necessary for verifying the
 // evidence as valid. In addition, the Handler may execute any necessary
 // slashing and potential jailing.
-type Handler func(context.Context, Evidence) error
+type Handler func(sdk.Context, Evidence) error
 ```
 
 
@@ -152,22 +153,22 @@ as follows:
 
 ```go
 func SubmitEvidence(ctx Context, evidence Evidence) error {
-  if _, err := GetEvidence(ctx, evidence.Hash()); err == nil {
-    return errorsmod.Wrap(types.ErrEvidenceExists, strings.ToUpper(hex.EncodeToString(evidence.Hash())))
+  if _, ok := GetEvidence(ctx, evidence.Hash()); ok {
+    return sdkerrors.Wrap(types.ErrEvidenceExists, evidence.Hash().String())
   }
   if !router.HasRoute(evidence.Route()) {
-    return errorsmod.Wrap(types.ErrNoEvidenceHandlerExists, evidence.Route())
+    return sdkerrors.Wrap(types.ErrNoEvidenceHandlerExists, evidence.Route())
   }
 
   handler := router.GetRoute(evidence.Route())
   if err := handler(ctx, evidence); err != nil {
-    return errorsmod.Wrap(types.ErrInvalidEvidence, err.Error())
+    return sdkerrors.Wrap(types.ErrInvalidEvidence, err.Error())
   }
 
   ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSubmitEvidence,
-			sdk.NewAttribute(types.AttributeKeyEvidenceHash, strings.ToUpper(hex.EncodeToString(evidence.Hash()))),
+			sdk.NewAttribute(types.AttributeKeyEvidenceHash, evidence.Hash().String()),
 		),
 	)
 
@@ -206,8 +207,8 @@ The evidence module does not contain any parameters.
 
 ### Evidence Handling
 
-CometBFT blocks can include
-[Evidence](https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md#evidence) that indicates if a validator committed malicious behavior. The relevant information is forwarded to the application as ABCI Evidence in `abci.RequestBeginBlock` so that the validator can be punished accordingly.
+Tendermint blocks can include
+[Evidence](https://github.com/tendermint/tendermint/blob/master/docs/spec/blockchain/blockchain.md#evidence) that indicates if a validator committed malicious behavior. The relevant information is forwarded to the application as ABCI Evidence in `abci.RequestBeginBlock` so that the validator can be punished accordingly.
 
 #### Equivocation
 
@@ -216,7 +217,7 @@ The Cosmos SDK handles two types of evidence inside the ABCI `BeginBlock`:
 * `DuplicateVoteEvidence`,
 * `LightClientAttackEvidence`.
 
-The evidence module handles these two evidence types the same way. First, the Cosmos SDK converts the CometBFT concrete evidence type to an SDK `Evidence` interface using `Equivocation` as the concrete type.
+The evidence module handles these two evidence types the same way. First, the Cosmos SDK converts the Tendermint concrete evidence type to an SDK `Evidence` interface using `Equivocation` as the concrete type.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/evidence/v1beta1/evidence.proto#L12-L32
@@ -271,7 +272,7 @@ The `evidence` command allows users to list all evidence or evidence by hash.
 Usage:
 
 ```bash
-simd query evidence evidence [flags]
+simd query evidence [flags]
 ```
 
 To query evidence by hash
@@ -279,7 +280,7 @@ To query evidence by hash
 Example:
 
 ```bash
-simd query evidence evidence "DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"
+simd query evidence "DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"
 ```
 
 Example Output:
@@ -297,7 +298,7 @@ To get all evidence
 Example:
 
 ```bash
-simd query evidence list
+simd query evidence
 ```
 
 Example Output:

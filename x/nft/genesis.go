@@ -1,11 +1,11 @@
 package nft
 
 import (
-	"cosmossdk.io/core/address"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ValidateGenesis checks that the given genesis state has no integrity issues
-func ValidateGenesis(data GenesisState, ac address.Codec) error {
+func ValidateGenesis(data GenesisState) error {
 	for _, class := range data.Classes {
 		if len(class.Id) == 0 {
 			return ErrEmptyClassID
@@ -16,7 +16,7 @@ func ValidateGenesis(data GenesisState, ac address.Codec) error {
 			if len(nft.Id) == 0 {
 				return ErrEmptyNFTID
 			}
-			if _, err := ac.StringToBytes(entry.Owner); err != nil {
+			if _, err := sdk.AccAddressFromBech32(entry.Owner); err != nil {
 				return err
 			}
 		}

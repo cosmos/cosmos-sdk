@@ -7,11 +7,11 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
+	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
-	any "github.com/cosmos/gogoproto/types/any"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -39,7 +39,7 @@ type MsgGrantAllowance struct {
 	// grantee is the address of the user being granted an allowance of another user's funds.
 	Grantee string `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`
 	// allowance can be any of basic, periodic, allowed fee allowance.
-	Allowance *any.Any `protobuf:"bytes,3,opt,name=allowance,proto3" json:"allowance,omitempty"`
+	Allowance *types.Any `protobuf:"bytes,3,opt,name=allowance,proto3" json:"allowance,omitempty"`
 }
 
 func (m *MsgGrantAllowance) Reset()         { *m = MsgGrantAllowance{} }
@@ -89,7 +89,7 @@ func (m *MsgGrantAllowance) GetGrantee() string {
 	return ""
 }
 
-func (m *MsgGrantAllowance) GetAllowance() *any.Any {
+func (m *MsgGrantAllowance) GetAllowance() *types.Any {
 	if m != nil {
 		return m.Allowance
 	}
@@ -225,102 +225,17 @@ func (m *MsgRevokeAllowanceResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRevokeAllowanceResponse proto.InternalMessageInfo
 
-// MsgPruneAllowances prunes expired fee allowances.
-type MsgPruneAllowances struct {
-	// pruner is the address of the user pruning expired allowances.
-	Pruner string `protobuf:"bytes,1,opt,name=pruner,proto3" json:"pruner,omitempty"`
-}
-
-func (m *MsgPruneAllowances) Reset()         { *m = MsgPruneAllowances{} }
-func (m *MsgPruneAllowances) String() string { return proto.CompactTextString(m) }
-func (*MsgPruneAllowances) ProtoMessage()    {}
-func (*MsgPruneAllowances) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dd44ad7946dad783, []int{4}
-}
-func (m *MsgPruneAllowances) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgPruneAllowances) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgPruneAllowances.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgPruneAllowances) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgPruneAllowances.Merge(m, src)
-}
-func (m *MsgPruneAllowances) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgPruneAllowances) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgPruneAllowances.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgPruneAllowances proto.InternalMessageInfo
-
-func (m *MsgPruneAllowances) GetPruner() string {
-	if m != nil {
-		return m.Pruner
-	}
-	return ""
-}
-
-// MsgPruneAllowancesResponse defines the Msg/PruneAllowancesResponse response type.
-type MsgPruneAllowancesResponse struct {
-}
-
-func (m *MsgPruneAllowancesResponse) Reset()         { *m = MsgPruneAllowancesResponse{} }
-func (m *MsgPruneAllowancesResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgPruneAllowancesResponse) ProtoMessage()    {}
-func (*MsgPruneAllowancesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_dd44ad7946dad783, []int{5}
-}
-func (m *MsgPruneAllowancesResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgPruneAllowancesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgPruneAllowancesResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgPruneAllowancesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgPruneAllowancesResponse.Merge(m, src)
-}
-func (m *MsgPruneAllowancesResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgPruneAllowancesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgPruneAllowancesResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgPruneAllowancesResponse proto.InternalMessageInfo
-
 func init() {
 	proto.RegisterType((*MsgGrantAllowance)(nil), "cosmos.feegrant.v1beta1.MsgGrantAllowance")
 	proto.RegisterType((*MsgGrantAllowanceResponse)(nil), "cosmos.feegrant.v1beta1.MsgGrantAllowanceResponse")
 	proto.RegisterType((*MsgRevokeAllowance)(nil), "cosmos.feegrant.v1beta1.MsgRevokeAllowance")
 	proto.RegisterType((*MsgRevokeAllowanceResponse)(nil), "cosmos.feegrant.v1beta1.MsgRevokeAllowanceResponse")
-	proto.RegisterType((*MsgPruneAllowances)(nil), "cosmos.feegrant.v1beta1.MsgPruneAllowances")
-	proto.RegisterType((*MsgPruneAllowancesResponse)(nil), "cosmos.feegrant.v1beta1.MsgPruneAllowancesResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/feegrant/v1beta1/tx.proto", fileDescriptor_dd44ad7946dad783) }
 
 var fileDescriptor_dd44ad7946dad783 = []byte{
-	// 483 bytes of a gzipped FileDescriptorProto
+	// 416 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x48, 0xce, 0x2f, 0xce,
 	0xcd, 0x2f, 0xd6, 0x4f, 0x4b, 0x4d, 0x4d, 0x2f, 0x4a, 0xcc, 0x2b, 0xd1, 0x2f, 0x33, 0x4c, 0x4a,
 	0x2d, 0x49, 0x34, 0xd4, 0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x87, 0xa8,
@@ -339,19 +254,14 @@ var fileDescriptor_dd44ad7946dad783 = []byte{
 	0xb2, 0xf5, 0x31, 0x7c, 0xad, 0x24, 0xcd, 0x25, 0x89, 0x21, 0x18, 0x94, 0x5a, 0x5c, 0x90, 0x9f,
 	0x57, 0x9c, 0xaa, 0xb4, 0x86, 0x91, 0x4b, 0xc8, 0xb7, 0x38, 0x3d, 0x28, 0xb5, 0x2c, 0x3f, 0x3b,
 	0x95, 0xee, 0x21, 0x65, 0xa5, 0x87, 0xee, 0x15, 0x59, 0x54, 0xaf, 0xa0, 0xb9, 0x4b, 0x49, 0x86,
-	0x4b, 0x0a, 0x53, 0x14, 0xee, 0x99, 0x34, 0xb0, 0x5f, 0x02, 0x8a, 0x4a, 0xf3, 0x10, 0x92, 0xc5,
-	0x42, 0x06, 0x5c, 0x6c, 0x05, 0x20, 0x21, 0xc2, 0x5e, 0x81, 0xaa, 0xb3, 0x92, 0xbb, 0xb4, 0x45,
-	0x97, 0x1f, 0xe1, 0x10, 0x05, 0x03, 0x3d, 0x53, 0x03, 0x90, 0x43, 0xa1, 0xf2, 0x4a, 0x86, 0x60,
-	0x57, 0xa0, 0xd9, 0x03, 0x73, 0x85, 0x95, 0x30, 0x16, 0xdd, 0x46, 0xff, 0x98, 0xb8, 0x98, 0x7d,
-	0x8b, 0xd3, 0x85, 0x0a, 0xb8, 0xf8, 0xd0, 0x12, 0xa5, 0x96, 0x1e, 0xae, 0x04, 0x80, 0x11, 0x6b,
-	0x52, 0x46, 0xc4, 0xab, 0x85, 0x39, 0x47, 0xa8, 0x98, 0x8b, 0x1f, 0x3d, 0x76, 0xb5, 0xf1, 0x19,
-	0x83, 0xa6, 0x58, 0xca, 0x98, 0x04, 0xc5, 0x70, 0x4b, 0x3b, 0x18, 0xb9, 0xf8, 0xd1, 0xe3, 0x01,
-	0xaf, 0xad, 0x68, 0x8a, 0xf1, 0xdb, 0x8a, 0x23, 0xe4, 0x95, 0x84, 0x4f, 0x61, 0x86, 0xbc, 0x14,
-	0x6b, 0xc3, 0xf3, 0x0d, 0x5a, 0x8c, 0x4e, 0x86, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7,
-	0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc, 0x78, 0x2c,
-	0xc7, 0x10, 0x05, 0x2d, 0x57, 0x8a, 0x53, 0xb2, 0xf5, 0x32, 0xf3, 0xf5, 0x2b, 0xe0, 0x05, 0x5a,
-	0x12, 0x1b, 0x38, 0xaf, 0x1a, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0xf5, 0x32, 0x6b, 0x8d, 0xea,
-	0x04, 0x00, 0x00,
+	0x4b, 0x0a, 0x53, 0x14, 0xe6, 0x19, 0xa3, 0xcf, 0x8c, 0x5c, 0xcc, 0xbe, 0xc5, 0xe9, 0x42, 0x05,
+	0x5c, 0x7c, 0x68, 0x31, 0xaf, 0xa5, 0x87, 0x2b, 0x94, 0x31, 0x82, 0x46, 0xca, 0x88, 0x78, 0xb5,
+	0x30, 0x9b, 0x85, 0x8a, 0xb9, 0xf8, 0xd1, 0x83, 0x50, 0x1b, 0x9f, 0x31, 0x68, 0x8a, 0xa5, 0x8c,
+	0x49, 0x50, 0x0c, 0xb3, 0x54, 0x8a, 0xb5, 0xe1, 0xf9, 0x06, 0x2d, 0x46, 0x27, 0xc7, 0x13, 0x8f,
+	0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b,
+	0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x88, 0x52, 0x4f, 0xcf, 0x2c, 0xc9, 0x28, 0x4d, 0xd2,
+	0x4b, 0xce, 0xcf, 0x85, 0x66, 0x25, 0x7d, 0xa4, 0xe0, 0xad, 0x80, 0x67, 0xdd, 0x24, 0x36, 0x70,
+	0xaa, 0x34, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0x5c, 0x31, 0x95, 0xae, 0xd4, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -372,8 +282,6 @@ type MsgClient interface {
 	// RevokeAllowance revokes any fee allowance of granter's account that
 	// has been granted to the grantee.
 	RevokeAllowance(ctx context.Context, in *MsgRevokeAllowance, opts ...grpc.CallOption) (*MsgRevokeAllowanceResponse, error)
-	// PruneAllowances prunes expired fee allowances, currently up to 75 at a time.
-	PruneAllowances(ctx context.Context, in *MsgPruneAllowances, opts ...grpc.CallOption) (*MsgPruneAllowancesResponse, error)
 }
 
 type msgClient struct {
@@ -402,15 +310,6 @@ func (c *msgClient) RevokeAllowance(ctx context.Context, in *MsgRevokeAllowance,
 	return out, nil
 }
 
-func (c *msgClient) PruneAllowances(ctx context.Context, in *MsgPruneAllowances, opts ...grpc.CallOption) (*MsgPruneAllowancesResponse, error) {
-	out := new(MsgPruneAllowancesResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.Msg/PruneAllowances", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// GrantAllowance grants fee allowance to the grantee on the granter's
@@ -419,8 +318,6 @@ type MsgServer interface {
 	// RevokeAllowance revokes any fee allowance of granter's account that
 	// has been granted to the grantee.
 	RevokeAllowance(context.Context, *MsgRevokeAllowance) (*MsgRevokeAllowanceResponse, error)
-	// PruneAllowances prunes expired fee allowances, currently up to 75 at a time.
-	PruneAllowances(context.Context, *MsgPruneAllowances) (*MsgPruneAllowancesResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -432,9 +329,6 @@ func (*UnimplementedMsgServer) GrantAllowance(ctx context.Context, req *MsgGrant
 }
 func (*UnimplementedMsgServer) RevokeAllowance(ctx context.Context, req *MsgRevokeAllowance) (*MsgRevokeAllowanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RevokeAllowance not implemented")
-}
-func (*UnimplementedMsgServer) PruneAllowances(ctx context.Context, req *MsgPruneAllowances) (*MsgPruneAllowancesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PruneAllowances not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -477,25 +371,6 @@ func _Msg_RevokeAllowance_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_PruneAllowances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgPruneAllowances)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).PruneAllowances(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.feegrant.v1beta1.Msg/PruneAllowances",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).PruneAllowances(ctx, req.(*MsgPruneAllowances))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.feegrant.v1beta1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -507,10 +382,6 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RevokeAllowance",
 			Handler:    _Msg_RevokeAllowance_Handler,
-		},
-		{
-			MethodName: "PruneAllowances",
-			Handler:    _Msg_PruneAllowances_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -649,59 +520,6 @@ func (m *MsgRevokeAllowanceResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgPruneAllowances) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgPruneAllowances) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgPruneAllowances) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Pruner) > 0 {
-		i -= len(m.Pruner)
-		copy(dAtA[i:], m.Pruner)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Pruner)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgPruneAllowancesResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgPruneAllowancesResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgPruneAllowancesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -761,28 +579,6 @@ func (m *MsgRevokeAllowance) Size() (n int) {
 }
 
 func (m *MsgRevokeAllowanceResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *MsgPruneAllowances) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Pruner)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgPruneAllowancesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -920,7 +716,7 @@ func (m *MsgGrantAllowance) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Allowance == nil {
-				m.Allowance = &any.Any{}
+				m.Allowance = &types.Any{}
 			}
 			if err := m.Allowance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1138,138 +934,6 @@ func (m *MsgRevokeAllowanceResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgRevokeAllowanceResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgPruneAllowances) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgPruneAllowances: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgPruneAllowances: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pruner", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Pruner = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgPruneAllowancesResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgPruneAllowancesResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgPruneAllowancesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

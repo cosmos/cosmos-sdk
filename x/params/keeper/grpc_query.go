@@ -6,10 +6,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/errors"
-	"cosmossdk.io/x/params/types/proposal"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 var _ proposal.QueryServer = Keeper{}
@@ -26,7 +25,7 @@ func (k Keeper) Params(c context.Context, req *proposal.QueryParamsRequest) (*pr
 
 	ss, ok := k.GetSubspace(req.Subspace)
 	if !ok {
-		return nil, errors.Wrap(proposal.ErrUnknownSubspace, req.Subspace)
+		return nil, sdkerrors.Wrap(proposal.ErrUnknownSubspace, req.Subspace)
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)

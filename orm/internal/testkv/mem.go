@@ -1,9 +1,9 @@
 package testkv
 
 import (
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/cometbft/cometbft-db"
 
-	"cosmossdk.io/orm/model/ormtable"
+	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 )
 
 // NewSplitMemBackend returns a Backend instance
@@ -11,8 +11,8 @@ import (
 // are really two separate backing stores.
 func NewSplitMemBackend() ormtable.Backend {
 	return ormtable.NewBackend(ormtable.BackendOptions{
-		CommitmentStore: TestStore{dbm.NewMemDB()},
-		IndexStore:      TestStore{dbm.NewMemDB()},
+		CommitmentStore: dbm.NewMemDB(),
+		IndexStore:      dbm.NewMemDB(),
 	})
 }
 
@@ -21,7 +21,7 @@ func NewSplitMemBackend() ormtable.Backend {
 // where only a single KV-store is available to modules.
 func NewSharedMemBackend() ormtable.Backend {
 	return ormtable.NewBackend(ormtable.BackendOptions{
-		CommitmentStore: TestStore{dbm.NewMemDB()},
+		CommitmentStore: dbm.NewMemDB(),
 		// commit store is automatically used as the index store
 	})
 }

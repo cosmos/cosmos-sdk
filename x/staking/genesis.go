@@ -1,52 +1,41 @@
 package staking
 
 import (
-	"context"
 	"fmt"
 
-	cmttypes "github.com/cometbft/cometbft/types"
-	gogotypes "github.com/cosmos/gogoproto/types"
-
-	"cosmossdk.io/x/staking/keeper"
-	"cosmossdk.io/x/staking/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // WriteValidators returns a slice of bonded genesis validators.
-func WriteValidators(ctx context.Context, keeper *keeper.Keeper) (vals []cmttypes.GenesisValidator, returnErr error) {
-	err := keeper.LastValidatorPower.Walk(ctx, nil, func(key []byte, _ gogotypes.Int64Value) (bool, error) {
-		validator, err := keeper.GetValidator(ctx, key)
-		if err != nil {
-			return true, err
-		}
-
+func WriteValidators(ctx sdk.Context, keeper *keeper.Keeper) (vals []tmtypes.GenesisValidator, returnErr error) {
+	keeper.IterateLastValidators(ctx, func(_ int64, validator types.ValidatorI) (stop bool) {
 		pk, err := validator.ConsPubKey()
 		if err != nil {
 			returnErr = err
-			return true, err
+			return true
 		}
-		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
+		tmPk, err := cryptocodec.ToTmPubKeyInterface(pk)
 		if err != nil {
 			returnErr = err
-			return true, err
+			return true
 		}
 
-		vals = append(vals, cmttypes.GenesisValidator{
-			Address: sdk.ConsAddress(cmtPk.Address()).Bytes(),
-			PubKey:  cmtPk,
+		vals = append(vals, tmtypes.GenesisValidator{
+			Address: sdk.ConsAddress(tmPk.Address()).Bytes(),
+			PubKey:  tmPk,
 			Power:   validator.GetConsensusPower(keeper.PowerReduction(ctx)),
 			Name:    validator.GetMoniker(),
 		})
 
-		return false, nil
+		return false
 	})
-	if err != nil {
-		return nil, err
-	}
 
-	return vals, returnErr
+	return
 }
 
 // ValidateGenesis validates the provided staking genesis state to ensure the

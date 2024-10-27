@@ -6,14 +6,13 @@ import (
 
 	"github.com/spf13/cobra"
 
-	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
-	paramscutils "cosmossdk.io/x/params/client/utils"
-	paramproposal "cosmossdk.io/x/params/types/proposal"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 // NewSubmitParamChangeProposalTxCmd returns a CLI command handler for creating
@@ -67,11 +66,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			from, err := clientCtx.AddressCodec.BytesToString(clientCtx.GetFromAddress())
-			if err != nil {
-				return err
-			}
-
+			from := clientCtx.GetFromAddress()
 			content := paramproposal.NewParameterChangeProposal(
 				proposal.Title, proposal.Description, proposal.Changes.ToParamChanges(),
 			)

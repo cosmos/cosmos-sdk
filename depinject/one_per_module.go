@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/pkg/errors"
+
 	"cosmossdk.io/depinject/internal/graphviz"
 )
 
@@ -44,7 +46,7 @@ type mapOfOnePerModuleResolver struct {
 }
 
 func (o *onePerModuleResolver) resolve(_ *container, _ *moduleKey, _ Location) (reflect.Value, error) {
-	return reflect.Value{}, fmt.Errorf("%v is a one-per-module type and thus can't be used as an input parameter, instead use %v", o.typ, o.mapType)
+	return reflect.Value{}, errors.Errorf("%v is a one-per-module type and thus can't be used as an input parameter, instead use %v", o.typ, o.mapType)
 }
 
 func (o *onePerModuleResolver) describeLocation() string {
@@ -70,7 +72,7 @@ func (o *mapOfOnePerModuleResolver) resolve(c *container, _ *moduleKey, caller L
 			}
 			idx := o.idxMap[key]
 			if len(values) <= idx {
-				return reflect.Value{}, fmt.Errorf("expected value of type %T at index %d", o.typ, idx)
+				return reflect.Value{}, errors.Errorf("expected value of type %T at index %d", o.typ, idx)
 			}
 			value := values[idx]
 			res.SetMapIndex(reflect.ValueOf(key.name), value)
@@ -85,11 +87,11 @@ func (o *mapOfOnePerModuleResolver) resolve(c *container, _ *moduleKey, caller L
 
 func (o *onePerModuleResolver) addNode(n *simpleProvider, i int) error {
 	if n.moduleKey == nil {
-		return fmt.Errorf("cannot define a provider with one-per-module dependency %v which isn't provided in a module", o.typ)
+		return errors.Errorf("cannot define a provider with one-per-module dependency %v which isn't provided in a module", o.typ)
 	}
 
 	if existing, ok := o.providers[n.moduleKey]; ok {
-		return fmt.Errorf("duplicate provision for one-per-module type %v in module %s: %s\n\talready provided by %s",
+		return errors.Errorf("duplicate provision for one-per-module type %v in module %s: %s\n\talready provided by %s",
 			o.typ, n.moduleKey.name, n.provider.Location, existing.provider.Location)
 	}
 
@@ -100,7 +102,7 @@ func (o *onePerModuleResolver) addNode(n *simpleProvider, i int) error {
 }
 
 func (o *mapOfOnePerModuleResolver) addNode(s *simpleProvider, _ int) error {
-	return fmt.Errorf("%v is a one-per-module type and thus %v can't be used as an output parameter in %s", o.typ, o.mapType, s.provider.Location)
+	return errors.Errorf("%v is a one-per-module type and thus %v can't be used as an output parameter in %s", o.typ, o.mapType, s.provider.Location)
 }
 
 func (o onePerModuleResolver) typeGraphNode() *graphviz.Node {

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"io"
 
-	"cosmossdk.io/errors"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -59,7 +59,7 @@ func (tkv *Store) Get(key []byte) []byte {
 
 // Set implements the KVStore interface. It traces a write operation and
 // delegates the Set call to the parent KVStore.
-func (tkv *Store) Set(key, value []byte) {
+func (tkv *Store) Set(key []byte, value []byte) {
 	types.AssertValidKey(key)
 	writeOperation(tkv.writer, writeOp, tkv.context, key, value)
 	tkv.parent.Set(key, value)
@@ -115,7 +115,7 @@ func newTraceIterator(w io.Writer, parent types.Iterator, tc types.TraceContext)
 }
 
 // Domain implements the Iterator interface.
-func (ti *traceIterator) Domain() (start, end []byte) {
+func (ti *traceIterator) Domain() (start []byte, end []byte) {
 	return ti.parent.Domain()
 }
 
@@ -195,8 +195,7 @@ func writeOperation(w io.Writer, op operation, tc types.TraceContext, key, value
 		panic(errors.Wrap(err, "failed to write trace operation"))
 	}
 
-	_, err = io.WriteString(w, "\n")
-	if err != nil {
+	if _, err = io.WriteString(w, "\n"); err != nil {
 		panic(errors.Wrap(err, "failed to write newline"))
 	}
 }

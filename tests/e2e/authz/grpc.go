@@ -4,21 +4,19 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/math"
-	"cosmossdk.io/x/authz"
-	"cosmossdk.io/x/authz/client/cli"
-	authzclitestutil "cosmossdk.io/x/authz/client/testutil"
-	banktypes "cosmossdk.io/x/bank/types"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
+	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func (s *E2ETestSuite) TestQueryGrantGRPC() {
-	val := s.network.GetValidators()[0]
+	val := s.network.Validators[0]
 	grantee := s.grantee[1]
-	grantsURL := val.GetAPIAddress() + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s&msg_type_url=%s"
+	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s&msg_type_url=%s"
 	testCases := []struct {
 		name      string
 		url       string
@@ -33,7 +31,7 @@ func (s *E2ETestSuite) TestQueryGrantGRPC() {
 		},
 		{
 			"fail invalid grantee address",
-			fmt.Sprintf(grantsURL, val.GetAddress().String(), "invalid_grantee", typeMsgSend),
+			fmt.Sprintf(grantsURL, val.Address.String(), "invalid_grantee", typeMsgSend),
 			true,
 			"decoding bech32 failed: invalid separator index -1: invalid request",
 		},
@@ -45,19 +43,19 @@ func (s *E2ETestSuite) TestQueryGrantGRPC() {
 		},
 		{
 			"fail with empty grantee",
-			fmt.Sprintf(grantsURL, val.GetAddress().String(), "", typeMsgSend),
+			fmt.Sprintf(grantsURL, val.Address.String(), "", typeMsgSend),
 			true,
 			"empty address string is not allowed: invalid request",
 		},
 		{
 			"fail invalid msg-type",
-			fmt.Sprintf(grantsURL, val.GetAddress().String(), grantee.String(), "invalidMsg"),
+			fmt.Sprintf(grantsURL, val.Address.String(), grantee.String(), "invalidMsg"),
 			true,
 			"authorization not found for invalidMsg type",
 		},
 		{
 			"valid query",
-			fmt.Sprintf(grantsURL, val.GetAddress().String(), grantee.String(), typeMsgSend),
+			fmt.Sprintf(grantsURL, val.Address.String(), grantee.String(), typeMsgSend),
 			false,
 			"",
 		},
@@ -71,11 +69,10 @@ func (s *E2ETestSuite) TestQueryGrantGRPC() {
 				require.Contains(string(resp), tc.errorMsg)
 			} else {
 				var g authz.QueryGrantsResponse
-				err := val.GetClientCtx().Codec.UnmarshalJSON(resp, &g)
+				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &g)
 				require.NoError(err)
 				require.Len(g.Grants, 1)
-				err = g.Grants[0].UnpackInterfaces(val.GetClientCtx().InterfaceRegistry)
-				require.NoError(err)
+				g.Grants[0].UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
 				auth, err := g.Grants[0].GetAuthorization()
 				require.NoError(err)
 				require.Equal(auth.MsgTypeURL(), banktypes.SendAuthorization{}.MsgTypeURL())
@@ -85,9 +82,9 @@ func (s *E2ETestSuite) TestQueryGrantGRPC() {
 }
 
 func (s *E2ETestSuite) TestQueryGrantsGRPC() {
-	val := s.network.GetValidators()[0]
+	val := s.network.Validators[0]
 	grantee := s.grantee[1]
-	grantsURL := val.GetAPIAddress() + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s"
+	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s"
 	testCases := []struct {
 		name      string
 		url       string
@@ -98,7 +95,7 @@ func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 	}{
 		{
 			"valid query: expect single grant",
-			fmt.Sprintf(grantsURL, val.GetAddress().String(), grantee.String()),
+			fmt.Sprintf(grantsURL, val.Address.String(), grantee.String()),
 			false,
 			"",
 			func() {},
@@ -108,18 +105,18 @@ func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 		},
 		{
 			"valid query: expect two grants",
-			fmt.Sprintf(grantsURL, val.GetAddress().String(), grantee.String()),
+			fmt.Sprintf(grantsURL, val.Address.String(), grantee.String()),
 			false,
 			"",
 			func() {
-				_, err := authzclitestutil.CreateGrant(val.GetClientCtx(), []string{
+				_, err := authzclitestutil.CreateGrant(val.ClientCtx, []string{
 					grantee.String(),
 					"generic",
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.GetAddress().String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 					fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
 					fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 					fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10))).String()),
+					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
 				})
 				s.Require().NoError(err)
@@ -131,7 +128,7 @@ func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 		},
 		{
 			"valid query: expect single grant with pagination",
-			fmt.Sprintf(grantsURL+"&pagination.limit=1", val.GetAddress().String(), grantee.String()),
+			fmt.Sprintf(grantsURL+"&pagination.limit=1", val.Address.String(), grantee.String()),
 			false,
 			"",
 			func() {},
@@ -141,7 +138,7 @@ func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 		},
 		{
 			"valid query: expect two grants with pagination",
-			fmt.Sprintf(grantsURL+"&pagination.limit=2", val.GetAddress().String(), grantee.String()),
+			fmt.Sprintf(grantsURL+"&pagination.limit=2", val.Address.String(), grantee.String()),
 			false,
 			"",
 			func() {},
@@ -161,7 +158,7 @@ func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 				s.Require().Contains(string(resp), tc.errMsg)
 			} else {
 				var authorizations authz.QueryGrantsResponse
-				err := val.GetClientCtx().Codec.UnmarshalJSON(resp, &authorizations)
+				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
 				s.Require().NoError(err)
 				tc.postRun(&authorizations)
 			}
@@ -170,7 +167,7 @@ func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 }
 
 func (s *E2ETestSuite) TestQueryGranterGrantsGRPC() {
-	val := s.network.GetValidators()[0]
+	val := s.network.Validators[0]
 	grantee := s.grantee[1]
 	require := s.Require()
 
@@ -183,24 +180,24 @@ func (s *E2ETestSuite) TestQueryGranterGrantsGRPC() {
 	}{
 		{
 			"invalid account address",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.GetAPIAddress(), "invalid address"),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, "invalid address"),
 			true,
 			"decoding bech32 failed",
 			0,
 		},
 		{
 			"no authorizations found",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.GetAPIAddress(), grantee.String()),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, grantee.String()),
 			false,
 			"",
 			0,
 		},
 		{
 			"valid query",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.GetAPIAddress(), val.GetAddress().String()),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, val.Address.String()),
 			false,
 			"",
-			6,
+			8,
 		},
 	}
 	for _, tc := range testCases {
@@ -212,8 +209,9 @@ func (s *E2ETestSuite) TestQueryGranterGrantsGRPC() {
 				require.Contains(string(resp), tc.errMsg)
 			} else {
 				var authorizations authz.QueryGranterGrantsResponse
-				err := val.GetClientCtx().Codec.UnmarshalJSON(resp, &authorizations)
+				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
 				require.NoError(err)
+				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
 				require.Len(authorizations.Grants, tc.numItems)
 			}
 		})
@@ -221,7 +219,7 @@ func (s *E2ETestSuite) TestQueryGranterGrantsGRPC() {
 }
 
 func (s *E2ETestSuite) TestQueryGranteeGrantsGRPC() {
-	val := s.network.GetValidators()[0]
+	val := s.network.Validators[0]
 	grantee := s.grantee[1]
 	require := s.Require()
 
@@ -234,21 +232,21 @@ func (s *E2ETestSuite) TestQueryGranteeGrantsGRPC() {
 	}{
 		{
 			"invalid account address",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.GetAPIAddress(), "invalid address"),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.APIAddress, "invalid address"),
 			true,
 			"decoding bech32 failed",
 			0,
 		},
 		{
 			"no authorizations found",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.GetAPIAddress(), val.GetAddress().String()),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.APIAddress, val.Address.String()),
 			false,
 			"",
 			0,
 		},
 		{
 			"valid query",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.GetAPIAddress(), grantee.String()),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/grantee/%s", val.APIAddress, grantee.String()),
 			false,
 			"",
 			1,
@@ -263,8 +261,9 @@ func (s *E2ETestSuite) TestQueryGranteeGrantsGRPC() {
 				require.Contains(string(resp), tc.errMsg)
 			} else {
 				var authorizations authz.QueryGranteeGrantsResponse
-				err := val.GetClientCtx().Codec.UnmarshalJSON(resp, &authorizations)
+				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
 				require.NoError(err)
+				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
 				require.Len(authorizations.Grants, tc.numItems)
 			}
 		})

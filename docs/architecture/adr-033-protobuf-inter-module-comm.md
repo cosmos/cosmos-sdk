@@ -20,7 +20,7 @@ service definitions defined in [ADR 021](./adr-021-protobuf-query-encoding.md) a
 
 ## Context
 
-In the current Cosmos SDK documentation on the [Object-Capability Model](https://docs.cosmos.network/main/learn/advanced/ocap#ocaps-in-practice), it is stated that:
+In the current Cosmos SDK documentation on the [Object-Capability Model](../core/10-ocap.md), it is stated that:
 
 > We assume that a thriving ecosystem of Cosmos SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
 
@@ -264,7 +264,7 @@ type Configurator interface {
 
 The `ModuleKey` is passed to modules in the `RegisterService` method itself so that `RegisterServices` serves as a single
 entry point for configuring module services. This is intended to also have the side-effect of greatly reducing boilerplate in
-`app.go`. For now, `ModuleKey`s will be created based on `AppModule.Name()`, but a more flexible system may be
+`app.go`. For now, `ModuleKey`s will be created based on `AppModuleBasic.Name()`, but a more flexible system may be
 introduced in the future. The `ModuleManager` will handle creation of module accounts behind the scenes.
 
 Because modules do not get direct access to each other anymore, modules may have unfulfilled dependencies. To make sure
@@ -344,7 +344,7 @@ Other future improvements may include:
     * optimizes inter-module calls - for instance caching resolved methods after first invocation
 * combining `StoreKey`s and `ModuleKey`s into a single interface so that modules have a single OCAPs handle
 * code generation which makes inter-module communication more performant
-* decoupling `ModuleKey` creation from `AppModule.Name()` so that app's can override root module account names
+* decoupling `ModuleKey` creation from `AppModuleBasic.Name()` so that app's can override root module account names
 * inter-module hooks and plugins
 
 ## Alternatives
@@ -397,4 +397,4 @@ replacing `Keeper` interfaces altogether.
 * [ADR 031](./adr-031-msg-service.md)
 * [ADR 028](./adr-028-public-key-addresses.md)
 * [ADR 030 draft](https://github.com/cosmos/cosmos-sdk/pull/7105)
-* [Object-Capability Model](https://docs.cosmos.network/main/learn/advanced/ocap#ocaps-in-practice)
+* [Object-Capability Model](https://docs.network.com/main/core/ocap)

@@ -6,7 +6,7 @@ package group
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	proto "github.com/cosmos/gogoproto/proto"
+	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"

@@ -9,8 +9,8 @@ import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	proto "github.com/cosmos/gogoproto/proto"
-	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	proto "github.com/gogo/protobuf/proto"
+	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
@@ -286,7 +286,7 @@ func (m *Grant) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Expiration != nil {
-		n1, err1 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.Expiration, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.Expiration):])
+		n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.Expiration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.Expiration):])
 		if err1 != nil {
 			return 0, err1
 		}
@@ -331,7 +331,7 @@ func (m *GrantAuthorization) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Expiration != nil {
-		n3, err3 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(*m.Expiration, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.Expiration):])
+		n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.Expiration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.Expiration):])
 		if err3 != nil {
 			return 0, err3
 		}
@@ -436,7 +436,7 @@ func (m *Grant) Size() (n int) {
 		n += 1 + l + sovAuthz(uint64(l))
 	}
 	if m.Expiration != nil {
-		l = github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.Expiration)
+		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.Expiration)
 		n += 1 + l + sovAuthz(uint64(l))
 	}
 	return n
@@ -461,7 +461,7 @@ func (m *GrantAuthorization) Size() (n int) {
 		n += 1 + l + sovAuthz(uint64(l))
 	}
 	if m.Expiration != nil {
-		l = github_com_cosmos_gogoproto_types.SizeOfStdTime(*m.Expiration)
+		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.Expiration)
 		n += 1 + l + sovAuthz(uint64(l))
 	}
 	return n
@@ -667,7 +667,7 @@ func (m *Grant) Unmarshal(dAtA []byte) error {
 			if m.Expiration == nil {
 				m.Expiration = new(time.Time)
 			}
-			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(m.Expiration, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.Expiration, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -853,7 +853,7 @@ func (m *GrantAuthorization) Unmarshal(dAtA []byte) error {
 			if m.Expiration == nil {
 				m.Expiration = new(time.Time)
 			}
-			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(m.Expiration, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(m.Expiration, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

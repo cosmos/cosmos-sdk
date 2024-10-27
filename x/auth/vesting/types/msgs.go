@@ -25,11 +25,12 @@ var _ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
 //
 //nolint:interfacer
-func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins, endTime int64, delayed bool) *MsgCreateVestingAccount {
+func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins, startTime, endTime int64, delayed bool) *MsgCreateVestingAccount {
 	return &MsgCreateVestingAccount{
 		FromAddress: fromAddr.String(),
 		ToAddress:   toAddr.String(),
 		Amount:      amount,
+		StartTime:   startTime,
 		EndTime:     endTime,
 		Delayed:     delayed,
 	}
@@ -60,6 +61,10 @@ func (msg MsgCreateVestingAccount) ValidateBasic() error {
 
 	if msg.EndTime <= 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid end time")
+	}
+
+	if msg.StartTime > msg.EndTime {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid start time")
 	}
 
 	return nil

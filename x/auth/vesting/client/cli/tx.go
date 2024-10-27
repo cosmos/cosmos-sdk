@@ -18,6 +18,7 @@ import (
 // Transaction command flags
 const (
 	FlagDelayed = "delayed"
+	FlagStartTime = "start-time"
 )
 
 // GetTxCmd returns vesting module's transaction commands.
@@ -72,8 +73,9 @@ timestamp.`,
 			}
 
 			delayed, _ := cmd.Flags().GetBool(FlagDelayed)
+			startTime, _ := cmd.Flags().GetInt64(FlagStartTime)
 
-			msg := types.NewMsgCreateVestingAccount(clientCtx.GetFromAddress(), toAddr, amount, endTime, delayed)
+			msg := types.NewMsgCreateVestingAccount(clientCtx.GetFromAddress(), toAddr, amount, startTime, endTime, delayed)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

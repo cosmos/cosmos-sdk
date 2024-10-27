@@ -12,7 +12,7 @@ import (
 	types2 "github.com/cosmos/cosmos-sdk/types"
 	signing "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	proto "github.com/cosmos/gogoproto/proto"
+	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"

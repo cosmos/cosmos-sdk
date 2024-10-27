@@ -6,7 +6,7 @@ package types
 import (
 	fmt "fmt"
 	types "github.com/cometbft/cometbft/abci/types"
-	proto "github.com/cosmos/gogoproto/proto"
+	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"

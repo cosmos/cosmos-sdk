@@ -9,8 +9,8 @@ import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	proto "github.com/cosmos/gogoproto/proto"
-	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	proto "github.com/gogo/protobuf/proto"
+	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	_ "google.golang.org/protobuf/types/known/durationpb"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
@@ -1070,7 +1070,7 @@ func (m *Member) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n1, err1 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.AddedAt, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.AddedAt):])
+	n1, err1 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.AddedAt, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.AddedAt):])
 	if err1 != nil {
 		return 0, err1
 	}
@@ -1250,7 +1250,7 @@ func (m *DecisionPolicyWindows) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n4, err4 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.MinExecutionPeriod, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.MinExecutionPeriod):])
+	n4, err4 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.MinExecutionPeriod, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.MinExecutionPeriod):])
 	if err4 != nil {
 		return 0, err4
 	}
@@ -1258,7 +1258,7 @@ func (m *DecisionPolicyWindows) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i = encodeVarintTypes(dAtA, i, uint64(n4))
 	i--
 	dAtA[i] = 0x12
-	n5, err5 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.VotingPeriod, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.VotingPeriod):])
+	n5, err5 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.VotingPeriod, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.VotingPeriod):])
 	if err5 != nil {
 		return 0, err5
 	}
@@ -1289,7 +1289,7 @@ func (m *GroupInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n6, err6 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.CreatedAt, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.CreatedAt):])
+	n6, err6 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.CreatedAt, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.CreatedAt):])
 	if err6 != nil {
 		return 0, err6
 	}
@@ -1391,7 +1391,7 @@ func (m *GroupPolicyInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n8, err8 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.CreatedAt, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.CreatedAt):])
+	n8, err8 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.CreatedAt, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.CreatedAt):])
 	if err8 != nil {
 		return 0, err8
 	}
@@ -1498,7 +1498,7 @@ func (m *Proposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x58
 	}
-	n10, err10 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.VotingPeriodEnd, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.VotingPeriodEnd):])
+	n10, err10 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.VotingPeriodEnd, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.VotingPeriodEnd):])
 	if err10 != nil {
 		return 0, err10
 	}
@@ -1531,7 +1531,7 @@ func (m *Proposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x30
 	}
-	n12, err12 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.SubmitTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.SubmitTime):])
+	n12, err12 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.SubmitTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.SubmitTime):])
 	if err12 != nil {
 		return 0, err12
 	}
@@ -1641,7 +1641,7 @@ func (m *Vote) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n13, err13 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.SubmitTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.SubmitTime):])
+	n13, err13 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.SubmitTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.SubmitTime):])
 	if err13 != nil {
 		return 0, err13
 	}
@@ -1705,7 +1705,7 @@ func (m *Member) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.AddedAt)
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.AddedAt)
 	n += 1 + l + sovTypes(uint64(l))
 	return n
 }
@@ -1771,9 +1771,9 @@ func (m *DecisionPolicyWindows) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.VotingPeriod)
+	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.VotingPeriod)
 	n += 1 + l + sovTypes(uint64(l))
-	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.MinExecutionPeriod)
+	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.MinExecutionPeriod)
 	n += 1 + l + sovTypes(uint64(l))
 	return n
 }
@@ -1802,7 +1802,7 @@ func (m *GroupInfo) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.CreatedAt)
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.CreatedAt)
 	n += 1 + l + sovTypes(uint64(l))
 	return n
 }
@@ -1851,7 +1851,7 @@ func (m *GroupPolicyInfo) Size() (n int) {
 		l = m.DecisionPolicy.Size()
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.CreatedAt)
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.CreatedAt)
 	n += 1 + l + sovTypes(uint64(l))
 	return n
 }
@@ -1879,7 +1879,7 @@ func (m *Proposal) Size() (n int) {
 			n += 1 + l + sovTypes(uint64(l))
 		}
 	}
-	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.SubmitTime)
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.SubmitTime)
 	n += 1 + l + sovTypes(uint64(l))
 	if m.GroupVersion != 0 {
 		n += 1 + sovTypes(uint64(m.GroupVersion))
@@ -1892,7 +1892,7 @@ func (m *Proposal) Size() (n int) {
 	}
 	l = m.FinalTallyResult.Size()
 	n += 1 + l + sovTypes(uint64(l))
-	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.VotingPeriodEnd)
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.VotingPeriodEnd)
 	n += 1 + l + sovTypes(uint64(l))
 	if m.ExecutorResult != 0 {
 		n += 1 + sovTypes(uint64(m.ExecutorResult))
@@ -1959,7 +1959,7 @@ func (m *Vote) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.SubmitTime)
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.SubmitTime)
 	n += 1 + l + sovTypes(uint64(l))
 	return n
 }
@@ -2124,7 +2124,7 @@ func (m *Member) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.AddedAt, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.AddedAt, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2589,7 +2589,7 @@ func (m *DecisionPolicyWindows) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.VotingPeriod, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.VotingPeriod, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2622,7 +2622,7 @@ func (m *DecisionPolicyWindows) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.MinExecutionPeriod, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.MinExecutionPeriod, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2839,7 +2839,7 @@ func (m *GroupInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.CreatedAt, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.CreatedAt, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3197,7 +3197,7 @@ func (m *GroupPolicyInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.CreatedAt, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.CreatedAt, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3395,7 +3395,7 @@ func (m *Proposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.SubmitTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.SubmitTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3518,7 +3518,7 @@ func (m *Proposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.VotingPeriodEnd, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.VotingPeriodEnd, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3998,7 +3998,7 @@ func (m *Vote) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.SubmitTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.SubmitTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -1312,7 +1312,6 @@ func must[T any](r T, err error) T {
 }
 
 func TestMarshalUnmarshal(t *testing.T) {
-	t.Skip("not supported, yet")
 	specs := map[string]struct {
 		x      Dec
 		exp    string

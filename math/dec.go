@@ -400,12 +400,43 @@ func (x Dec) Reduce() (Dec, int) {
 	return y, n
 }
 
+// Marshal serializes the decimal value into a byte slice in text format.
+// This method represents the decimal in a portable and compact hybrid notation.
+// Based on the exponent value, the number is formatted into decimal: -ddddd.dddd, no exponent
+// or scientific notation: -d.ddddE±dd
+//
+// For example, the following transformations are made:
+//   - 0 -> 0
+//   - 123 -> 123
+//   - -0.001 -> -0.001
+//   - -0.000000001 -> -1E-9
+//
+// Returns:
+//   - A byte slice of the decimal in text format.
+//   - An error if the decimal cannot be reduced or marshaled properly.
 func (x Dec) Marshal() ([]byte, error) {
-	panic("not implemented")
+	var d apd.Decimal
+	if _, _, err := dec128Context.Reduce(&d, &x.dec); err != nil {
+		return nil, ErrInvalidDec.Wrap(err.Error())
+	}
+
+	return []byte(d.Text('G')), nil
 }
 
+// Unmarshal parses a byte slice containing a text-formatted decimal and stores the result in the receiver.
+// It returns an error if the byte slice does not represent a valid decimal.
 func (x *Dec) Unmarshal(data []byte) error {
-	panic("not implemented")
+	result, err := NewDecFromString(string(data))
+	if err != nil {
+		return ErrInvalidDec.Wrap(err.Error())
+	}
+
+	if result.dec.Form != apd.Finite {
+		return ErrInvalidDec.Wrap("unknown decimal form")
+	}
+
+	x.dec = result.dec
+	return nil
 }
 
 // MarshalTo encodes the receiver into the provided byte slice and returns the number of bytes written and any error encountered.

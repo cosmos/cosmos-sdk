@@ -1312,7 +1312,6 @@ func must[T any](r T, err error) T {
 }
 
 func TestMarshalUnmarshal(t *testing.T) {
-	t.Skip("not supported, yet")
 	specs := map[string]struct {
 		x      Dec
 		exp    string
@@ -1391,8 +1390,8 @@ func TestMarshalUnmarshal(t *testing.T) {
 			exp: "1E+100000",
 		},
 		"1.1e100000": {
-			x:      NewDecWithExp(11, 100_000),
-			expErr: ErrInvalidDec,
+			x:   NewDecWithExp(11, 100_000),
+			exp: "1.E+100001",
 		},
 		"1.e100000": {
 			x:   NewDecWithExp(1, 100_000),

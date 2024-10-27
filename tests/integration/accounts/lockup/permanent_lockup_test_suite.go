@@ -16,7 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (s *E2ETestSuite) TestPermanentLockingAccount() {
+func (s *IntegrationTestSuite) TestPermanentLockingAccount() {
 	t := s.T()
 	app := setupApp(t)
 	currentTime := time.Now()

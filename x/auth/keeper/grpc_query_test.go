@@ -8,7 +8,7 @@ import (
 	"sort"
 
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"

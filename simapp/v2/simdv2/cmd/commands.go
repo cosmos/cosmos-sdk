@@ -15,8 +15,8 @@ import (
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/api/rest"
 	"cosmossdk.io/server/v2/api/telemetry"
-	"cosmossdk.io/server/v2/cometbft"
 	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
@@ -36,14 +36,14 @@ import (
 )
 
 func newApp[T transaction.Tx](logger log.Logger, viper *viper.Viper) serverv2.AppI[T] {
-	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
+	viper.SetDefault(serverv2.FlagHome, simapp.DefaultNodeHome)
 	return serverv2.AppI[T](simapp.NewSimApp[T](logger, viper))
 }
 
 func initRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
-	txConfig client.TxConfig,
 	moduleManager *runtimev2.MM[T],
+	consensusComponent serverv2.ServerComponent[T],
 ) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
@@ -69,14 +69,11 @@ func initRootCmd[T transaction.Tx](
 		rootCmd,
 		newApp,
 		initServerConfig(),
-		cometbft.New(
-			&genericTxDecoder[T]{txConfig},
-			initCometOptions[T](),
-			initCometConfig(),
-		),
+		consensusComponent,
 		grpc.New[T](),
 		serverstore.New[T](),
 		telemetry.New[T](),
+		rest.New[T](),
 	); err != nil {
 		panic(err)
 	}
@@ -163,7 +160,7 @@ func appExport[T transaction.Tx](
 
 	// overwrite the FlagInvCheckPeriod
 	viper.Set(server.FlagInvCheckPeriod, 1)
-	viper.Set(serverv2.FlagHome, simapp.DefaultNodeHome)
+	viper.SetDefault(serverv2.FlagHome, simapp.DefaultNodeHome)
 
 	var simApp *simapp.SimApp[T]
 	if height != -1 {

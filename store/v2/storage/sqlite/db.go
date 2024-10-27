@@ -103,7 +103,11 @@ func (db *Database) NewBatch(version uint64) (store.Batch, error) {
 }
 
 func (db *Database) GetLatestVersion() (uint64, error) {
-	stmt, err := db.storage.Prepare("SELECT value FROM state_storage WHERE store_key = ? AND key = ?")
+	stmt, err := db.storage.Prepare(`
+	SELECT value
+	FROM state_storage 
+	WHERE store_key = ? AND key = ?
+	`)
 	if err != nil {
 		return 0, fmt.Errorf("failed to prepare SQL statement: %w", err)
 	}
@@ -121,6 +125,15 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	}
 
 	return latestHeight, nil
+}
+
+func (db *Database) VersionExists(v uint64) (bool, error) {
+	latestVersion, err := db.GetLatestVersion()
+	if err != nil {
+		return false, err
+	}
+
+	return latestVersion >= v && v >= db.earliestVersion, nil
 }
 
 func (db *Database) SetLatestVersion(version uint64) error {

@@ -1,7 +1,6 @@
 package lockup
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -17,7 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (s *E2ETestSuite) TestPeriodicLockingAccount() {
+func (s *IntegrationTestSuite) TestContinuousLockingAccount() {
 	t := s.T()
 	app := setupApp(t)
 	currentTime := time.Now()
@@ -30,24 +29,12 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 	randAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	withdrawAcc := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
-	_, accountAddr, err := app.AccountsKeeper.Init(ctx, lockupaccount.PERIODIC_LOCKING_ACCOUNT, accOwner, &types.MsgInitPeriodicLockingAccount{
+	_, accountAddr, err := app.AccountsKeeper.Init(ctx, lockupaccount.CONTINUOUS_LOCKING_ACCOUNT, accOwner, &types.MsgInitLockupAccount{
 		Owner:     ownerAddrStr,
 		StartTime: currentTime,
-		LockingPeriods: []types.Period{
-			{
-				Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500))),
-				Length: time.Minute,
-			},
-			{
-				Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500))),
-				Length: time.Minute,
-			},
-			{
-				Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500))),
-				Length: time.Minute,
-			},
-		},
-	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1500))})
+		// end time in 1 minutes
+		EndTime: currentTime.Add(time.Minute),
+	}, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000))})
 	require.NoError(t, err)
 
 	addr, err := app.AuthKeeper.AddressCodec().BytesToString(randAcc)
@@ -66,7 +53,6 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
 		require.NotNil(t, err)
 	})
-	// No token being unlocked yet
 	t.Run("error - execute send message, insufficient fund", func(t *testing.T) {
 		msg := &types.MsgSend{
 			Sender:    ownerAddrStr,
@@ -91,32 +77,25 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 	})
 
 	// Update context time
-	// After first period 500stake should be unlock
+	// 12 sec = 1/5 of a minute so 200stake should be released
 	ctx = ctx.WithHeaderInfo(header.Info{
-		Time: currentTime.Add(time.Minute),
+		Time: currentTime.Add(time.Second * 12),
 	})
 
-	// Check if 500 stake is sendable now
+	// Check if token is sendable
 	t.Run("ok - execute send message", func(t *testing.T) {
 		msg := &types.MsgSend{
 			Sender:    ownerAddrStr,
 			ToAddress: addr,
-			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(500))},
+			Amount:    sdk.Coins{sdk.NewCoin("stake", math.NewInt(100))},
 		}
 		err := s.executeTx(ctx, msg, app, accountAddr, accOwner)
 		require.NoError(t, err)
 
 		balance := app.BankKeeper.GetBalance(ctx, randAcc, "stake")
-		require.True(t, balance.Amount.Equal(math.NewInt(500)))
+		require.True(t, balance.Amount.Equal(math.NewInt(100)))
 	})
-
-	// Update context time
-	// After second period 1000stake should be unlock
-	ctx = ctx.WithHeaderInfo(header.Info{
-		Time: currentTime.Add(time.Minute * 2),
-	})
-
-	t.Run("oke - execute withdraw message", func(t *testing.T) {
+	t.Run("ok - execute withdraw message", func(t *testing.T) {
 		ownerAddr, err := app.AuthKeeper.AddressCodec().BytesToString(accOwner)
 		require.NoError(t, err)
 		withdrawAddr, err := app.AuthKeeper.AddressCodec().BytesToString(withdrawAcc)
@@ -129,12 +108,10 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 		err = s.executeTx(ctx, msg, app, accountAddr, accOwner)
 		require.NoError(t, err)
 
-		// withdrawable amount should be
-		// 1000stake - 500stake( above sent amt ) = 500stake
+		// withdrawable amount should be 200 - 100 = 100stake
 		balance := app.BankKeeper.GetBalance(ctx, withdrawAcc, "stake")
-		require.True(t, balance.Amount.Equal(math.NewInt(500)))
+		require.True(t, balance.Amount.Equal(math.NewInt(100)))
 	})
-
 	t.Run("ok - execute delegate message", func(t *testing.T) {
 		msg := &types.MsgDelegate{
 			Sender:           ownerAddrStr,
@@ -155,7 +132,6 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 
 		// check if tracking is updated accordingly
 		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
-		fmt.Println(lockupAccountInfoResponse)
 		delLocking := lockupAccountInfoResponse.DelegatedLocking
 		require.True(t, delLocking.AmountOf("stake").Equal(math.NewInt(100)))
 	})
@@ -193,12 +169,12 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
 	})
 
-	// Update context time
-	// After third period 1500stake should be unlock
+	// Update context time to end time
 	ctx = ctx.WithHeaderInfo(header.Info{
-		Time: currentTime.Add(time.Minute * 3),
+		Time: currentTime.Add(time.Minute),
 	})
 
+	// test if tracking delegate work perfectly
 	t.Run("ok - execute delegate message", func(t *testing.T) {
 		msg := &types.MsgDelegate{
 			Sender:           ownerAddrStr,
@@ -219,6 +195,8 @@ func (s *E2ETestSuite) TestPeriodicLockingAccount() {
 
 		// check if tracking is updated accordingly
 		lockupAccountInfoResponse := s.queryLockupAccInfo(ctx, app, accountAddr)
+		delLocking := lockupAccountInfoResponse.DelegatedLocking
+		require.True(t, delLocking.AmountOf("stake").Equal(math.ZeroInt()))
 		delFree := lockupAccountInfoResponse.DelegatedFree
 		require.True(t, delFree.AmountOf("stake").Equal(math.NewInt(100)))
 	})

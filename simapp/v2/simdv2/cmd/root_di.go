@@ -53,7 +53,7 @@ func NewRootCmd[T transaction.Tx](
 			),
 		)
 	)
-	if isAppRequired(subCommand) {
+	if serverv2.IsAppRequired(subCommand) {
 		// server construction
 		simApp, err = simapp.NewSimApp[T](depinjectConfig, &autoCliOpts, &moduleManager, &clientCtx)
 		if err != nil {

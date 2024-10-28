@@ -23,10 +23,9 @@ const (
 // ExportCmd dumps app state to JSON.
 func ExportCmd(app ExportableApp) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "export",
-		Short:       "Export state to JSON",
-		Args:        cobra.NoArgs,
-		Annotations: map[string]string{"needs-app": "true"},
+		Use:   "export",
+		Short: "Export state to JSON",
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			config := client.GetConfigFromCmd(cmd)
 

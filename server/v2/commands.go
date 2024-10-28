@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime/pprof"
+	"slices"
 	"strings"
 	"syscall"
 
@@ -31,7 +32,6 @@ func AddCommands[T transaction.Tx](
 	srv := NewServer(globalServerConfig, components...)
 	cmds := srv.CLICommands()
 	startCmd := createStartCommand(srv, globalAppConfig, logger)
-	// TODO necessary? won't the parent context be inherited?
 	startCmd.SetContext(rootCmd.Context())
 	cmds.Commands = append(cmds.Commands, startCmd)
 	rootCmd.AddCommand(cmds.Commands...)
@@ -69,9 +69,8 @@ func createStartCommand[T transaction.Tx](
 	flags := server.StartFlags()
 
 	cmd := &cobra.Command{
-		Use:         "start",
-		Short:       "Run the application",
-		Annotations: map[string]string{"needs-app": "true"},
+		Use:   "start",
+		Short: "Run the application",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx, cancelFn := context.WithCancel(cmd.Context())
 			go func() {
@@ -169,4 +168,35 @@ func topLevelCmd(ctx context.Context, use, short string) *cobra.Command {
 	cmd.SetContext(ctx)
 
 	return cmd
+}
+
+// appBuildingCommands are the commands which need a full application to be built
+var appBuildingCommands = [][]string{
+	{"start"},
+	{"genesis", "export"},
+}
+
+// IsAppRequired returns true if the command requires a full app to be built
+// by recursively checking the `Use` property of `cmd` and its parents.
+// By default, the commands in `appBuildingCommands` are considered to require
+// a full app to be built. They are "start" and "genesis export".
+// Additional commands can be passed as arguments to this function.
+func IsAppRequired(cmd *cobra.Command, required ...[]string) bool {
+	m := map[string]bool{}
+	cmds := append(appBuildingCommands, required...)
+	for _, c := range cmds {
+		slices.Reverse(c)
+		m[strings.Join(c, "")] = true
+	}
+	cmdPath := make([]string, 0, 5) // Pre-allocate with reasonable capacity
+	for {
+		cmdPath = append(cmdPath, cmd.Use)
+		if _, ok := m[strings.Join(cmdPath, "")]; ok {
+			return true
+		}
+		if cmd.Parent() == nil {
+			return false
+		}
+		cmd = cmd.Parent()
+	}
 }

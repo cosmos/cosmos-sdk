@@ -1,12 +1,10 @@
 package cmd
 
 import (
-	"slices"
 	"strings"
 	"time"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
-	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
@@ -105,32 +103,4 @@ func initCometOptions[T transaction.Tx]() cometbft.ServerOptions[T] {
 	// }
 
 	return serverOptions
-}
-
-// appBuildingCommands are the commands which need a full SimApp to be built
-var appBuildingCommands = [][]string{
-	{"start"},
-	{"genesis", "export"},
-}
-
-// isAppRequired returns true if the command requires a full app to be built
-// by recursively checking the command and its parents, and comparing it with
-// the appBuildingCommands.
-func isAppRequired(cmd *cobra.Command) bool {
-	m := map[string]bool{}
-	for _, c := range appBuildingCommands {
-		slices.Reverse(c)
-		m[strings.Join(c, "")] = true
-	}
-	cmdPath := make([]string, 0, 5) // Pre-allocate with reasonable capacity
-	for {
-		cmdPath = append(cmdPath, cmd.Use)
-		if _, ok := m[strings.Join(cmdPath, "")]; ok {
-			return true
-		}
-		if cmd.Parent() == nil {
-			return false
-		}
-		cmd = cmd.Parent()
-	}
 }

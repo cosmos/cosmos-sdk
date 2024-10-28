@@ -188,6 +188,8 @@ func (registry *interfaceRegistry) EnsureRegistered(impl interface{}) error {
 // This function PANICs if different concrete types are registered under the
 // same typeURL.
 func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, impls ...proto.Message) {
+	fmt.Printf("registering implementations for %T\n", iface)
+	debug.PrintStack()
 	for _, impl := range impls {
 		typeURL := MsgTypeURL(impl)
 		registry.registerImpl(iface, typeURL, impl)

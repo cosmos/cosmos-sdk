@@ -41,6 +41,10 @@ type AppManager[T transaction.Tx] interface {
 	// Simulate runs validation and execution flow of a Tx.
 	Simulate(ctx context.Context, tx T) (server.TxResult, corestore.WriterMap, error)
 
+	// SimulateWithState runs validation and execution flow of a Tx,
+	// using the provided state instead of loading the latest state from the underlying database.
+	SimulateWithState(ctx context.Context, state corestore.ReaderMap, tx T) (server.TxResult, corestore.WriterMap, error)
+
 	// Query queries the application at the provided version.
 	// CONTRACT: Version must always be provided, if 0, get latest
 	Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error)
@@ -189,6 +193,13 @@ func (a appManager[T]) Simulate(ctx context.Context, tx T) (server.TxResult, cor
 	if err != nil {
 		return server.TxResult{}, nil, err
 	}
+	result, cs := a.stf.Simulate(ctx, state, a.config.SimulationGasLimit, tx) // TODO: check if this is done in the antehandler
+	return result, cs, nil
+}
+
+// SimulateWithState runs validation and execution flow of a Tx,
+// using the provided state instead of loading the latest state from the underlying database.
+func (a appManager[T]) SimulateWithState(ctx context.Context, state corestore.ReaderMap, tx T) (server.TxResult, corestore.WriterMap, error) {
 	result, cs := a.stf.Simulate(ctx, state, a.config.SimulationGasLimit, tx) // TODO: check if this is done in the antehandler
 	return result, cs, nil
 }

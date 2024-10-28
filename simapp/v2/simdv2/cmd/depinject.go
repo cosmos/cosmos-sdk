@@ -5,7 +5,8 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/registry"
-	"cosmossdk.io/simapp/v2"
+	"cosmossdk.io/runtime/v2"
+	serverv2 "cosmossdk.io/server/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -18,6 +19,7 @@ import (
 
 // ProvideClientContext is a depinject Provider function which assembles and returns a client.Context.
 func ProvideClientContext(
+	configMap runtime.GlobalConfig,
 	appCodec codec.Codec,
 	interfaceRegistry codectypes.InterfaceRegistry,
 	txConfigOpts tx.ConfigOptions,
@@ -31,6 +33,10 @@ func ProvideClientContext(
 	if !ok {
 		panic("registry.AminoRegistrar must be an *codec.LegacyAmino instance for legacy ClientContext")
 	}
+	homeDir, ok := configMap[serverv2.FlagHome].(string)
+	if !ok {
+		panic("server.ConfigMap must contain a string value for serverv2.FlagHome")
+	}
 
 	clientCtx := client.Context{}.
 		WithCodec(appCodec).
@@ -41,7 +47,7 @@ func ProvideClientContext(
 		WithAddressCodec(addressCodec).
 		WithValidatorAddressCodec(validatorAddressCodec).
 		WithConsensusAddressCodec(consensusAddressCodec).
-		WithHomeDir(simapp.DefaultNodeHome).
+		WithHomeDir(homeDir).
 		WithViper("") // uses by default the binary name as prefix
 
 	// Read the config to overwrite the default values with the values from the config file

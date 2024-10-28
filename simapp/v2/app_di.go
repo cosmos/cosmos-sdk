@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 
-	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
@@ -27,9 +26,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 )
 
-// DefaultNodeHome default home directories for the application daemon
-var DefaultNodeHome string
-
 // SimApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
@@ -45,14 +41,6 @@ type SimApp[T transaction.Tx] struct {
 	// others keepers are all in the app
 	UpgradeKeeper *upgradekeeper.Keeper
 	StakingKeeper *stakingkeeper.Keeper
-}
-
-func init() {
-	var err error
-	DefaultNodeHome, err = clienthelpers.GetNodeHomeDirectory(".simappv2")
-	if err != nil {
-		panic(err)
-	}
 }
 
 // AppConfig returns the default app config.

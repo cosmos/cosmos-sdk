@@ -3,7 +3,6 @@ package authz
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -15,12 +14,11 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/accounts/accountstd"
-	"cosmossdk.io/x/accounts/defaults/authz/types"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/authz"
 )
 
 var TestFunds = sdk.NewCoins(sdk.NewCoin("test", math.NewInt(10)))
@@ -30,22 +28,13 @@ type mockStateCodec struct {
 	codec.Codec
 }
 
-var _ codec.Codec = mockStateCodec{}
-
-func (c mockStateCodec) Marshal(m gogoproto.Message) ([]byte, error) {
-	// Size() check can catch the typed nil value.
-	if m == nil || gogoproto.Size(m) == 0 {
-		// return empty bytes instead of nil, because nil has special meaning in places like store.Set
-		return []byte{}, nil
+func (c mockStateCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
+	any, err := types.NewAnyWithValue(i)
+	if err != nil {
+		return nil, err
 	}
 
-	return gogoproto.Marshal(m)
-}
-
-func (c mockStateCodec) Unmarshal(bz []byte, ptr gogoproto.Message) error {
-	err := gogoproto.Unmarshal(bz, ptr)
-
-	return err
+	return c.Marshal(any)
 }
 
 type (
@@ -67,7 +56,7 @@ func (h headerService) HeaderInfo(ctx context.Context) header.Info {
 	return sdk.UnwrapSDKContext(ctx).HeaderInfo()
 }
 
-func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
+func NewMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 	t.Helper()
 	return accountstd.NewMockContext(
 		0, []byte("authz"), []byte("sender"), TestFunds,
@@ -85,54 +74,17 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 	)
 }
 
-func makeMockDependencies(storeservice store.KVStoreService) accountstd.Dependencies {
+func MakeMockDependencies(storeservice store.KVStoreService, codec codec.Codec) accountstd.Dependencies {
 	sb := collections.NewSchemaBuilder(storeservice)
 
 	return accountstd.Dependencies{
-		SchemaBuilder:    sb,
-		AddressCodec:     addressCodec{},
-		LegacyStateCodec: mockStateCodec{},
+		SchemaBuilder: sb,
+		AddressCodec:  addressCodec{},
+		LegacyStateCodec: mockStateCodec{
+			Codec: codec,
+		},
 		Environment: appmodulev2.Environment{
 			HeaderService: headerService{},
 		},
 	}
-}
-
-var _ types.Authorization = mockAuthorization{}
-
-// mock grant
-type mockAuthorization struct {
-	*types.GenericAuthoriztion
-	sendAmt sdk.Coins
-	typeUrl string
-}
-
-func newMockAuthorization(typeUrl string) mockAuthorization {
-	return mockAuthorization{
-		GenericAuthoriztion: &types.GenericAuthoriztion{},
-		sendAmt:             sdk.NewCoins(),
-		typeUrl:             typeUrl,
-	}
-}
-
-func (m mockAuthorization) MsgTypeURL() string {
-	return m.typeUrl
-}
-
-func (m mockAuthorization) Accept(ctx context.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
-	msgSend, ok := msg.(*banktypes.MsgSend)
-	if !ok {
-		return authz.AcceptResponse{}, fmt.Errorf("invalid message")
-	}
-
-	m.sendAmt = m.sendAmt.Add(msgSend.Amount...)
-	return authz.AcceptResponse{
-		Accept:  true,
-		Delete:  false,
-		Updated: &m,
-	}, nil
-}
-
-func (m mockAuthorization) ValidateBasic() error {
-	return nil
 }

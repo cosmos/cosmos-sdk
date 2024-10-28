@@ -110,6 +110,14 @@ func (a *Account) Grant(ctx context.Context, msg *types.MsgGrant) (
 	if err != nil {
 		return nil, err
 	}
+
+	grant, err := a.Grantees.Get(ctx, collections.Join(granteeAddr, msgTypeUrl))
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("*", grant.Authorization.GetCachedValue())
+
 	return &types.MsgGrantResponse{}, nil
 }
 
@@ -158,6 +166,8 @@ func (a *Account) Exec(ctx context.Context, msg *types.MsgExec) (
 			if grant.Expiration != nil && grant.Expiration.Before(currentTime) {
 				return nil, types.ErrAuthorizationExpired
 			}
+
+			fmt.Println(grant.Authorization.GetCachedValue())
 
 			authorization, err := grant.GetGrantAuthorization()
 			if err != nil {

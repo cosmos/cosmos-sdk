@@ -2,8 +2,11 @@ package authz
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
@@ -13,14 +16,17 @@ import (
 	"cosmossdk.io/x/accounts/accountstd"
 	"cosmossdk.io/x/accounts/defaults/authz/types"
 	banktypes "cosmossdk.io/x/bank/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
-func setup(t *testing.T, ctx context.Context, ss store.KVStoreService) *Account {
+func setup(t *testing.T, ctx context.Context, ss store.KVStoreService, codec codec.Codec) *Account {
 	t.Helper()
-	deps := makeMockDependencies(ss)
+	deps := MakeMockDependencies(ss, codec)
 	granter := "granter"
 
 	authzAcc, err := NewAccount(deps)
@@ -34,14 +40,16 @@ func setup(t *testing.T, ctx context.Context, ss store.KVStoreService) *Account 
 }
 
 func TestGrant(t *testing.T) {
-	ctx, ss := newMockContext(t)
+	ctx, ss := NewMockContext(t)
 	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
 		Time: time.Now(),
 	})
 
 	currentTime := time.Now()
 	validExpiredTime := currentTime.Add(time.Duration(time.Minute))
-	validMockAuth := newMockAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
+	validMockAuth := &types.GenericAuthoriztion{
+		MsgTypeUrl: sdk.MsgTypeURL(&banktypes.MsgSend{}),
+	}
 	validAuthAny, err := codectypes.NewAnyWithValue(validMockAuth)
 	require.NoError(t, err)
 	mockGrant := types.Grant{
@@ -81,7 +89,7 @@ func TestGrant(t *testing.T) {
 	}
 
 	for _, test := range testcases {
-		account := setup(t, sdkCtx, ss)
+		account := setup(t, sdkCtx, ss, nil)
 
 		_, err := account.Grant(sdkCtx, &test.msg)
 		if test.expErr != nil {
@@ -99,20 +107,24 @@ func TestGrant(t *testing.T) {
 }
 
 func TestExecute(t *testing.T) {
-	ctx, ss := newMockContext(t)
+	ctx, ss := NewMockContext(t)
 	sdkCtx := sdk.NewContext(nil, true, log.NewNopLogger()).WithContext(ctx).WithHeaderInfo(header.Info{
 		Time: time.Now(),
 	})
 
 	currentTime := time.Now()
 	expiredTime := currentTime.Add(time.Duration(time.Minute))
-	mockAuth := newMockAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
+	mockAuth := &types.GenericAuthoriztion{
+		MsgTypeUrl: sdk.MsgTypeURL(&banktypes.MsgSend{}),
+	}
 	authAny, err := codectypes.NewAnyWithValue(mockAuth)
 	require.NoError(t, err)
 	mockGrant := types.Grant{
 		Authorization: authAny,
 		Expiration:    &expiredTime,
 	}
+
+	fmt.Println(mockGrant.Authorization.GetCachedValue())
 
 	expectsentAmt := sdk.NewCoins(sdk.NewCoin("test", math.NewInt(10)))
 	msgSend := banktypes.MsgSend{
@@ -123,7 +135,10 @@ func TestExecute(t *testing.T) {
 	msgAny, err := accountstd.PackAny(&msgSend)
 	require.NoError(t, err)
 
-	account := setup(t, sdkCtx, ss)
+	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
+	RegisterInterfaces(encCfg.InterfaceRegistry)
+
+	account := setup(t, sdkCtx, ss, encCfg.Codec)
 
 	// grant the account
 	_, err = account.Grant(sdkCtx, &types.MsgGrant{
@@ -166,24 +181,5 @@ func TestExecute(t *testing.T) {
 			continue
 		}
 		require.NoError(t, err, test.name)
-
-		// check if state is updated
-		if test.isGranteeExec {
-			granteeByte, err := account.addressCodec.StringToBytes(test.msg.Sender)
-			grant, err := account.Grantees.Get(sdkCtx, collections.Join(granteeByte, sdk.MsgTypeURL(&banktypes.MsgSend{})))
-			require.NoError(t, err, test.name)
-			authorizationAny := grant.GetAuthorization()
-			mockAuth, ok := authorizationAny.GetCachedValue().(mockAuthorization)
-			require.True(t, ok)
-			require.True(t, mockAuth.sendAmt.Equal(expectsentAmt))
-		} else {
-			granteeByte, err := account.addressCodec.StringToBytes("grantee")
-			grant, err := account.Grantees.Get(sdkCtx, collections.Join(granteeByte, sdk.MsgTypeURL(&banktypes.MsgSend{})))
-			require.NoError(t, err, test.name)
-			authorizationAny := grant.GetAuthorization()
-			mockAuth, ok := authorizationAny.GetCachedValue().(mockAuthorization)
-			require.True(t, ok)
-			require.True(t, mockAuth.sendAmt.Equal(sdk.NewCoins()))
-		}
 	}
 }

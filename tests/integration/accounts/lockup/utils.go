@@ -72,7 +72,7 @@ func (s *IntegrationTestSuite) queryLockupAccInfo(ctx sdk.Context, app *simapp.S
 	return lockupAccountInfoResponse
 }
 
-func (s *E2ETestSuite) queryUnbondingEntries(ctx sdk.Context, app *simapp.SimApp, accAddr []byte) *types.QueryUnbondingEntriesResponse {
+func (s *IntegrationTestSuite) queryUnbondingEntries(ctx sdk.Context, app *simapp.SimApp, accAddr []byte) *types.QueryUnbondingEntriesResponse {
 	req := &types.QueryUnbondingEntriesRequest{}
 	resp, err := s.queryAcc(ctx, req, app, accAddr)
 	require.NoError(s.T(), err)
@@ -84,7 +84,7 @@ func (s *E2ETestSuite) queryUnbondingEntries(ctx sdk.Context, app *simapp.SimApp
 	return unbondingEntriesResponse
 }
 
-func (s *E2ETestSuite) setupStakingParams(ctx sdk.Context, app *simapp.SimApp) {
+func (s *IntegrationTestSuite) setupStakingParams(ctx sdk.Context, app *simapp.SimApp) {
 	params, err := app.StakingKeeper.Params.Get(ctx)
 	require.NoError(s.T(), err)
 

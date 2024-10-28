@@ -47,10 +47,8 @@ func NewRootCmd[T transaction.Tx](
 		clientCtx       client.Context
 		simApp          *simapp.SimApp[T]
 		depinjectConfig = depinject.Configs(
-			depinject.Configs(
-				depinject.Supply(logger, runtime.GlobalConfig(configMap)),
-				depinject.Provide(ProvideClientContext),
-			),
+			depinject.Supply(logger, runtime.GlobalConfig(configMap)),
+			depinject.Provide(ProvideClientContext),
 		)
 	)
 	if serverv2.IsAppRequired(subCommand) {
@@ -84,7 +82,7 @@ func NewRootCmd[T transaction.Tx](
 		SilenceErrors:     true,
 		PersistentPreRunE: rootCommandPersistentPreRun(clientCtx),
 	}
-	factory.EnchanceRootCommand(rootCommand)
+	factory.EnhanceRootCommand(rootCommand)
 	_, err = initRootCmd(rootCommand, logger, commandDeps)
 	if err != nil {
 		return nil, err

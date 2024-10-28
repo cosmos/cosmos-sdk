@@ -28,7 +28,7 @@ type CommandFactory struct {
 	// this viper handle is kept because certain commands in server/v2 fetch a viper instance
 	// from the command context in order to read the config.
 	// After merging #22267 this is no longer required, and server.ConfigMap can be used instead.
-	//  See issue #<CREATE ME>
+	// See issue #22388
 	vipr *viper.Viper
 }
 
@@ -127,7 +127,7 @@ func (f *CommandFactory) enhanceCommand(cmd *cobra.Command) {
 }
 
 // EnhanceCommandContext sets the viper and logger in the command context.
-func (f *CommandFactory) EnchanceRootCommand(cmd *cobra.Command) {
+func (f *CommandFactory) EnhanceRootCommand(cmd *cobra.Command) {
 	f.enhanceCommand(cmd)
 	SetCmdServerContext(cmd, f.vipr, f.logger)
 }

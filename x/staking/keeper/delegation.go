@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"runtime/debug"
 	"time"
 
 	corestore "cosmossdk.io/core/store"
@@ -69,18 +68,15 @@ func (k Keeper) GetAllDelegations(ctx context.Context) (delegations []types.Dele
 func (k Keeper) GetValidatorDelegations(ctx context.Context, valAddr sdk.ValAddress) (delegations []types.Delegation, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	prefix := types.GetDelegationsByValPrefixKey(valAddr)
-	fmt.Println("GetValidatorDelegations prefix", string(prefix))
 	iterator, err := store.Iterator(prefix, storetypes.PrefixEndBytes(prefix))
 	if err != nil {
 		return delegations, err
 	}
 	defer iterator.Close()
-	fmt.Println("GetValidatorDelegations", valAddr)
 
 	for ; iterator.Valid(); iterator.Next() {
 		var delegation types.Delegation
 		valAddr, delAddr, err := types.ParseDelegationsByValKey(iterator.Key())
-		fmt.Println("GetValidatorDelegations internal", valAddr, delAddr, err)
 		if err != nil {
 			return delegations, err
 		}
@@ -96,9 +92,6 @@ func (k Keeper) GetValidatorDelegations(ctx context.Context, valAddr sdk.ValAddr
 
 		delegations = append(delegations, delegation)
 	}
-	fmt.Println("iterator valid", iterator.Valid())
-
-	fmt.Println("GetValidatorDelegations finish", delegations)
 
 	return delegations, nil
 }
@@ -131,7 +124,6 @@ func (k Keeper) GetDelegatorDelegations(ctx context.Context, delegator sdk.AccAd
 
 // SetDelegation sets a delegation.
 func (k Keeper) SetDelegation(ctx context.Context, delegation types.Delegation) error {
-	fmt.Println("SetDelegation", delegation)
 	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
 	if err != nil {
 		return err
@@ -386,8 +378,6 @@ func (k Keeper) HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorA
 
 // SetUnbondingDelegation sets the unbonding delegation and associated index.
 func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingDelegation) error {
-	fmt.Println("SetUnbondingDelegation", ubd)
-	debug.Stack()
 	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
 		return err
@@ -435,8 +425,6 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance math.Int,
 ) (types.UnbondingDelegation, error) {
-	fmt.Println("SetUnbondingDelegationEntry", delegatorAddr, validatorAddr, creationHeight, minTime, balance)
-	debug.Stack()
 	id, err := k.IncrementUnbondingID(ctx)
 	if err != nil {
 		return types.UnbondingDelegation{}, err
@@ -934,10 +922,7 @@ func (k Keeper) Delegate(
 			return math.LegacyDec{}, err
 		}
 
-		fmt.Println("bondDenom", bondDenom)
-
 		coins := sdk.NewCoins(sdk.NewCoin(bondDenom, bondAmt))
-		fmt.Println("coins", coins)
 		if err := k.bankKeeper.DelegateCoinsFromAccountToModule(ctx, delAddr, sendName, coins); err != nil {
 			return math.LegacyDec{}, err
 		}
@@ -965,7 +950,6 @@ func (k Keeper) Delegate(
 		}
 	}
 
-	fmt.Println("bondAmt", bondAmt)
 	_, newShares, err = k.AddValidatorTokensAndShares(ctx, validator, bondAmt)
 	if err != nil {
 		return newShares, err
@@ -1120,16 +1104,12 @@ func (k Keeper) getBeginInfo(
 func (k Keeper) Undelegate(
 	ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount math.LegacyDec,
 ) (time.Time, math.Int, error) {
-	fmt.Println("Undelegate called")
 	validator, err := k.GetValidator(ctx, valAddr)
-	fmt.Println("Undelegate: validator", validator)
-	fmt.Println("Undelegate: validator err", err)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}
 
 	hasMaxEntries, err := k.HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr)
-	fmt.Println("Undelegate: max entries", hasMaxEntries, err)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}
@@ -1139,38 +1119,31 @@ func (k Keeper) Undelegate(
 	}
 
 	returnAmount, err := k.Unbond(ctx, delAddr, valAddr, sharesAmount)
-	fmt.Println("Undelegate: return amount", returnAmount)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}
 
 	// transfer the validator tokens to the not bonded pool
 	if validator.IsBonded() {
-		fmt.Println("Undelegate: bonded")
 		err = k.bondedTokensToNotBonded(ctx, returnAmount)
-		fmt.Println("Undelegate: bondedTokensToNotBonded", err)
 		if err != nil {
 			return time.Time{}, math.Int{}, err
 		}
 	}
 
 	unbondingTime, err := k.UnbondingTime(ctx)
-	fmt.Println("Undelegate: unbondingTime", unbondingTime, err)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	completionTime := sdkCtx.BlockHeader().Time.Add(unbondingTime)
-	fmt.Println("Undelegate: completionTime", completionTime)
 	ubd, err := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, sdkCtx.BlockHeight(), completionTime, returnAmount)
-	fmt.Println("Undelegate: SetUnbondingDelegationEntry", ubd, err)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}
 
 	err = k.InsertUBDQueue(ctx, ubd, completionTime)
-	fmt.Println("Undelegate: InsertUBDQueue", err)
 	if err != nil {
 		return time.Time{}, math.Int{}, err
 	}

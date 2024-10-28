@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"runtime/debug"
 	"sort"
 	"strings"
 
@@ -654,8 +653,6 @@ func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
 // Expected format: "{amount0}{denomination},...,{amountN}{denominationN}"
 func ParseDecCoins(coinsStr string) (DecCoins, error) {
 	coinsStr = strings.TrimSpace(coinsStr)
-	fmt.Println("ParseDecCoins", coinsStr)
-	debug.PrintStack()
 	if len(coinsStr) == 0 {
 		return nil, nil
 	}
@@ -664,7 +661,6 @@ func ParseDecCoins(coinsStr string) (DecCoins, error) {
 	decCoins := make(DecCoins, len(coinStrs))
 	for i, coinStr := range coinStrs {
 		coin, err := ParseDecCoin(coinStr)
-		fmt.Println("ParseDecCoins: coin", coinStr, coin, err)
 		if err != nil {
 			return nil, err
 		}
@@ -673,12 +669,9 @@ func ParseDecCoins(coinsStr string) (DecCoins, error) {
 	}
 
 	newDecCoins := sanitizeDecCoins(decCoins)
-	fmt.Println("ParseDecCoins: newDecCoins", newDecCoins)
 	if err := newDecCoins.Validate(); err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("ParseDecCoins: newDecCoins %v\n", newDecCoins)
 
 	return newDecCoins, nil
 }

@@ -1011,7 +1011,7 @@ func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {
 }
 
 func (ks keystore) SetItem(item keyring.Item) error {
-	fmt.Println("SetItem", item.Key, item.Label)
+	fmt.Println("SetItem keyring", item.Key, item.Label)
 	return ks.db.Set(item)
 }
 

@@ -94,29 +94,22 @@ func DeliverGenTxs(
 	stakingKeeper types.StakingKeeper, deliverTx genesis.TxHandler,
 	txEncodingConfig client.TxEncodingConfig,
 ) ([]abci.ValidatorUpdate, error) {
-	fmt.Println("DeliverGenTxs for genutils", txEncodingConfig)
 	for _, genTx := range genTxs {
-		fmt.Println("DeliverGenTxs for genutils", genTx)
 		tx, err := txEncodingConfig.TxJSONDecoder()(genTx)
-		fmt.Println("DeliverGenTxs TxJSONDecoder", tx, err)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode GenTx '%s': %s", genTx, err)
 		}
 
 		bz, err := txEncodingConfig.TxEncoder()(tx)
-		fmt.Println("DeliverGenTxs TxEncoder", bz, err)
 		if err != nil {
 			return nil, fmt.Errorf("failed to encode GenTx '%s': %s", genTx, err)
 		}
 
 		err = deliverTx.ExecuteGenesisTx(bz)
-		fmt.Println("DeliverGenTxs ExecuteGenesisTx", err)
 		if err != nil {
 			return nil, fmt.Errorf("failed to execute DeliverTx for '%s': %s", genTx, err)
 		}
 	}
-
-	fmt.Println("DeliverGenTxs ApplyAndReturnValidatorSetUpdates")
 
 	return stakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 }

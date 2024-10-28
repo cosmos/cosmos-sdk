@@ -2,8 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
-
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,16 +76,11 @@ func (k Keeper) burnNotBondedTokens(ctx context.Context, amt math.Int) error {
 
 // TotalBondedTokens total staking tokens supply which is bonded
 func (k Keeper) TotalBondedTokens(ctx context.Context) (math.Int, error) {
-	fmt.Println("TotalBondedTokens")
 	bondedPool := k.GetBondedPool(ctx)
 	bondDenom, err := k.BondDenom(ctx)
 	if err != nil {
 		return math.ZeroInt(), err
 	}
-
-	fmt.Println("bondedPool.GetAddress(): ", bondedPool.GetAddress())
-	fmt.Println("bondDenom: ", bondDenom)
-	fmt.Println("k.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount: ", k.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount)
 
 	return k.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount, nil
 }

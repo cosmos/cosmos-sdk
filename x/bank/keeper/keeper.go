@@ -382,8 +382,6 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 
 	for _, amount := range amounts {
 		supply := k.GetSupply(ctx, amount.GetDenom())
-		fmt.Println("MintCoins amount", amount)
-		fmt.Println("MintCoins supply", supply)
 		supply = supply.Add(amount)
 		k.setSupply(ctx, supply)
 	}
@@ -417,8 +415,6 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, moduleName string, amounts sd
 
 	for _, amount := range amounts {
 		supply := k.GetSupply(ctx, amount.GetDenom())
-		fmt.Println("BurnCoins amount", amount)
-		fmt.Println("BurnCoins supply", supply)
 		supply = supply.Sub(amount)
 		k.setSupply(ctx, supply)
 	}
@@ -436,8 +432,6 @@ func (k BaseKeeper) BurnCoins(ctx context.Context, moduleName string, amounts sd
 
 // setSupply sets the supply for the given coin
 func (k BaseKeeper) setSupply(ctx context.Context, coin sdk.Coin) {
-	//fmt.Println("setSupply", coin)
-	//debug.PrintStack()
 	// Bank invariants and IBC requires to remove zero coins.
 	if coin.IsZero() {
 		_ = k.Supply.Remove(ctx, coin.Denom)

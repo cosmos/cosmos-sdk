@@ -760,9 +760,6 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 	events = append(events, preblockEvents...)
 
-	fmt.Println("internalFinalizeBlock before begin block", req.Time)
-	fmt.Println("internalFinalizeBlock before begin block", req.Height)
-
 	beginBlock, err := app.beginBlock(req)
 	if err != nil {
 		return nil, err
@@ -821,8 +818,6 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	if app.finalizeBlockState.ms.TracingEnabled() {
 		app.finalizeBlockState.ms = app.finalizeBlockState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
 	}
-
-	fmt.Println("internalFinalizeBlock before end block")
 
 	endBlock, err := app.endBlock(app.finalizeBlockState.Context())
 	if err != nil {

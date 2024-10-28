@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -30,10 +29,6 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx = sdkCtx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
 	ctx = sdkCtx
-
-	fmt.Println("InitGenesis", data)
-	dd, _ := json.Marshal(data)
-	fmt.Println("InitGenesis data: ", string(dd))
 
 	if err := k.SetParams(ctx, data.Params); err != nil {
 		panic(err)
@@ -93,11 +88,7 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) (res 
 			panic(fmt.Errorf("invalid delegator address: %s", err))
 		}
 
-		fmt.Println("delegatorAddress", delegatorAddress)
-		fmt.Println("delegatorAddress", delegation.GetValidatorAddr())
 		valAddr, err := k.validatorAddressCodec.StringToBytes(delegation.GetValidatorAddr())
-		fmt.Printf("valAddr: %v\n", valAddr)
-		fmt.Println("err", err)
 		if err != nil {
 			panic(err)
 		}

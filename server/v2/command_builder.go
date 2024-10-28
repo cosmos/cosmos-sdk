@@ -115,7 +115,7 @@ func WithLoggerFactory(loggerFactory func(server.ConfigMap, io.Writer) (log.Logg
 // --home: directory for config and data
 //
 // It also sets the environment variable prefix for the viper instance.
-func (f *CommandFactory) EnhanceCommand(cmd *cobra.Command) {
+func (f *CommandFactory) enhanceCommand(cmd *cobra.Command) {
 	pflags := cmd.PersistentFlags()
 	pflags.String(FlagLogLevel, "info", "The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:<level>,<key>:<level>')")
 	pflags.String(FlagLogFormat, "plain", "The logging format (json|plain)")
@@ -127,7 +127,8 @@ func (f *CommandFactory) EnhanceCommand(cmd *cobra.Command) {
 }
 
 // EnhanceCommandContext sets the viper and logger in the command context.
-func (f *CommandFactory) EnhanceCommandContext(cmd *cobra.Command) {
+func (f *CommandFactory) EnchanceRootCommand(cmd *cobra.Command) {
+	f.enhanceCommand(cmd)
 	SetCmdServerContext(cmd, f.vipr, f.logger)
 }
 
@@ -140,7 +141,7 @@ func (f *CommandFactory) ParseCommand(
 	rootCmd *cobra.Command,
 	args []string,
 ) (*cobra.Command, server.ConfigMap, log.Logger, error) {
-	f.EnhanceCommand(rootCmd)
+	f.enhanceCommand(rootCmd)
 	cmd, _, err := rootCmd.Traverse(args)
 	if err != nil {
 		return nil, nil, nil, err

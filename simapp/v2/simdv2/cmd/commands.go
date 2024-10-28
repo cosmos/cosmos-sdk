@@ -52,11 +52,11 @@ func initRootCmd[T transaction.Tx](
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(deps.moduleManager),
+		genesisCommand(deps.moduleManager, deps.simApp),
+		NewTestnetCmd(deps.moduleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		NewTestnetCmd(deps.moduleManager),
 		// add keybase, auxiliary RPC, query, genesis, and tx child commands
-		genesisCommand(deps.moduleManager, deps.simApp),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),

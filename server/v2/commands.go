@@ -176,13 +176,18 @@ var appBuildingCommands = [][]string{
 	{"genesis", "export"},
 }
 
-// IsAppRequired returns true if the command requires a full app to be built
-// by recursively checking the `Use` property of `cmd` and its parents.
-// By default, the commands in `appBuildingCommands` are considered to require
-// a full app to be built. They are "start" and "genesis export".
-// Additional commands can be passed as arguments to this function.
+// IsAppRequired determines if a command requires a full application to be built by
+// recursively checking the command hierarchy against known command paths.
+//
+// The function works by:
+// 1. Combining default appBuildingCommands with additional required commands
+// 2. Building command paths by traversing up the command tree
+// 3. Checking if any known command path matches the current command path
+//
+// Time Complexity: O(d * p) where d is command depth and p is number of paths
+// Space Complexity: O(p) where p is total number of command paths
 func IsAppRequired(cmd *cobra.Command, required ...[]string) bool {
-	m := map[string]bool{}
+	m := make(map[string]bool)
 	cmds := append(appBuildingCommands, required...)
 	for _, c := range cmds {
 		slices.Reverse(c)

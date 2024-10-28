@@ -23,7 +23,7 @@ type ModuleConfigMaps map[string]server.ConfigMap
 // The module config map is a map of flag to value.
 func ProvideModuleConfigMaps(
 	moduleConfigs []server.ModuleConfigMap,
-	globalConfig server.ConfigMap,
+	globalConfig GlobalConfig,
 ) ModuleConfigMaps {
 	moduleConfigMaps := make(ModuleConfigMaps)
 	for _, moduleConfig := range moduleConfigs {

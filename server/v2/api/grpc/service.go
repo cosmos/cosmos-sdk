@@ -4,14 +4,14 @@ import (
 	"context"
 	"errors"
 
+	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/core/transaction"
 	serverv2 "cosmossdk.io/server/v2"
-	"github.com/cosmos/gogoproto/proto"
-	gogoproto "github.com/cosmos/gogoproto/types/any"
 )
 
 // RegisterV2Service registers the V2 gRPC service implementation with the given server.

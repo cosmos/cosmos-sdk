@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"testing"
 
-	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/transaction"
-	serverv2 "cosmossdk.io/server/v2"
 	"github.com/cosmos/gogoproto/proto"
 	gogoproto "github.com/cosmos/gogoproto/types/any"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/transaction"
+	serverv2 "cosmossdk.io/server/v2"
 )
 
 type MockRequestMessage struct {
@@ -209,6 +210,8 @@ func TestV2Service_ListQueryHandlers(t *testing.T) {
 }
 
 func createTestRequest(t *testing.T) *QueryRequest {
+	t.Helper()
+
 	reqMsg := &MockRequestMessage{Data: "request"}
 	reqBytes, err := proto.Marshal(reqMsg)
 	if err != nil {

@@ -7,6 +7,8 @@ import (
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"reflect"
+	"runtime/debug"
+	"strings"
 
 	"cosmossdk.io/x/tx/signing"
 )
@@ -330,6 +332,10 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 // registered with RegisterInterface/RegisterImplementations, as well as those
 // registered with RegisterWithCustomTypeURL.
 func (registry *interfaceRegistry) Resolve(typeURL string) (proto.Message, error) {
+	fmt.Printf("resolving typeURL %s\n", typeURL)
+	if strings.Contains(typeURL, "ethermint") {
+		debug.PrintStack()
+	}
 	typ, found := registry.typeURLMap[typeURL]
 	if !found {
 		return nil, fmt.Errorf("unable to resolve type URL %s", typeURL)

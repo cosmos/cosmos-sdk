@@ -16,7 +16,7 @@ import (
 )
 
 func TestInitCmd(t *testing.T) {
-	rootCmd := cmd.NewRootCmd[transaction.Tx]()
+	rootCmd := cmd.NewCometBFTRootCmd[transaction.Tx]()
 	rootCmd.SetArgs([]string{
 		"init",        // Test the init cmd
 		"simapp-test", // Moniker
@@ -29,7 +29,7 @@ func TestInitCmd(t *testing.T) {
 func TestHomeFlagRegistration(t *testing.T) {
 	homeDir := "/tmp/foo"
 
-	rootCmd := cmd.NewRootCmd[transaction.Tx]()
+	rootCmd := cmd.NewCometBFTRootCmd[transaction.Tx]()
 	rootCmd.SetArgs([]string{
 		"query",
 		fmt.Sprintf("--%s", flags.FlagHome),

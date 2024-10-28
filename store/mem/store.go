@@ -59,4 +59,6 @@ func (s *Store) GetPruning() pruningtypes.PruningOptions {
 
 func (s Store) LastCommitID() (id types.CommitID) { return }
 
+func (s Store) LatestVersion() (version int64) { return }
+
 func (s Store) WorkingHash() (hash []byte) { return }

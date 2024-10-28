@@ -38,7 +38,7 @@ type Store struct {
 	dbCloser io.Closer
 
 	// stateStorage reflects the state storage backend
-	stateStorage store.VersionedDatabase
+	stateStorage store.VersionedWriter
 
 	// stateCommitment reflects the state commitment (SC) backend
 	stateCommitment store.Committer
@@ -74,7 +74,7 @@ type Store struct {
 func New(
 	dbCloser io.Closer,
 	logger corelog.Logger,
-	ss store.VersionedDatabase,
+	ss store.VersionedWriter,
 	sc store.Committer,
 	pm *pruning.Manager,
 	mm *migration.Manager,
@@ -118,28 +118,54 @@ func (s *Store) SetInitialVersion(v uint64) error {
 	return s.stateCommitment.SetInitialVersion(v)
 }
 
+// getVersionedReader returns a VersionedReader based on the given version. If the
+// version exists in the state storage, it returns the state storage.
+// If not, it checks if the state commitment implements the VersionedReader interface
+// and the version exists in the state commitment, since the state storage will be
+// synced during migration.
+func (s *Store) getVersionedReader(version uint64) (store.VersionedReader, error) {
+	isExist, err := s.stateStorage.VersionExists(version)
+	if err != nil {
+		return nil, err
+	}
+	if isExist {
+		return s.stateStorage, nil
+	}
+
+	if vReader, ok := s.stateCommitment.(store.VersionedReader); ok {
+		isExist, err := vReader.VersionExists(version)
+		if err != nil {
+			return nil, err
+		}
+		if isExist {
+			return vReader, nil
+		}
+	}
+
+	return nil, fmt.Errorf("version %d does not exist", version)
+}
+
 func (s *Store) StateLatest() (uint64, corestore.ReaderMap, error) {
 	v, err := s.GetLatestVersion()
 	if err != nil {
 		return 0, nil, err
 	}
 
-	return v, NewReaderMap(v, s), nil
-}
-
-func (s *Store) StateAt(v uint64) (corestore.ReaderMap, error) {
-	// TODO(bez): We may want to avoid relying on the SC metadata here. Instead,
-	// we should add a VersionExists() method to the VersionedDatabase interface.
-	//
-	// Ref: https://github.com/cosmos/cosmos-sdk/issues/19091
-	if cInfo, err := s.stateCommitment.GetCommitInfo(v); err != nil || cInfo == nil {
-		return nil, fmt.Errorf("failed to get commit info for version %d: %w", v, err)
+	vReader, err := s.getVersionedReader(v)
+	if err != nil {
+		return 0, nil, err
 	}
 
-	return NewReaderMap(v, s), nil
+	return v, NewReaderMap(v, vReader), nil
 }
 
-func (s *Store) GetStateStorage() store.VersionedDatabase {
+// StateAt returns a read-only view of the state at a given version.
+func (s *Store) StateAt(v uint64) (corestore.ReaderMap, error) {
+	vReader, err := s.getVersionedReader(v)
+	return NewReaderMap(v, vReader), err
+}
+
+func (s *Store) GetStateStorage() store.VersionedWriter {
 	return s.stateStorage
 }
 

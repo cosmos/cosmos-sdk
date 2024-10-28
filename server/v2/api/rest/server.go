@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	ServerName = "rest-v2"
+	ServerName = "rest"
 )
 
 type Server[T transaction.Tx] struct {
@@ -45,7 +45,7 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.L
 	}
 
 	s.router = http.NewServeMux()
-	s.router.Handle("/", NewDefaultHandler(appI.GetAppManager()))
+	s.router.Handle("/", NewDefaultHandler(appI))
 	s.config = serverCfg
 
 	return nil

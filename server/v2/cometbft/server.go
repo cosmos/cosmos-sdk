@@ -102,15 +102,15 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	}
 
 	s.logger = logger.With(log.ModuleKey, s.Name())
-	rs := appI.GetStore()
+	rs := appI.Store()
 	consensus := NewConsensus(
 		s.logger,
 		appI.Name(),
-		appI.GetAppManager(),
+		appI,
 		appI.Close,
 		s.serverOptions.Mempool(cfg),
 		indexEvents,
-		appI.GetQueryHandlers(),
+		appI.QueryHandlers(),
 		rs,
 		s.config,
 		s.initTxCodec,
@@ -137,7 +137,7 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 	if indexerCfg := s.config.AppTomlConfig.Indexer; len(indexerCfg.Target) > 0 {
 		listener, err := indexer.StartIndexing(indexer.IndexingOptions{
 			Config:   indexerCfg,
-			Resolver: appI.GetSchemaDecoderResolver(),
+			Resolver: appI.SchemaDecoderResolver(),
 			Logger:   s.logger.With(log.ModuleKey, "indexer"),
 		})
 		if err != nil {

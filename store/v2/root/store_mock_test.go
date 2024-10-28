@@ -16,7 +16,7 @@ import (
 	"cosmossdk.io/store/v2/pruning"
 )
 
-func newTestRootStore(ss store.VersionedDatabase, sc store.Committer) *Store {
+func newTestRootStore(ss store.VersionedWriter, sc store.Committer) *Store {
 	noopLog := coretesting.NewNopLogger()
 	pm := pruning.NewManager(sc.(store.Pruner), ss.(store.Pruner), nil, nil)
 	return &Store{

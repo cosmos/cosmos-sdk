@@ -200,7 +200,7 @@ func (s *IntegrationTestSuite) TestPeriodicLockingAccount() {
 	})
 
 	t.Run("ok - execute tracking unbonding entry", func(t *testing.T) {
-		msg := &types.MsgTrackUndelegation{
+		msg := &types.MsgUpdateUndelegationEntry{
 			Sender: ownerAddrStr,
 			Id:     0,
 		}

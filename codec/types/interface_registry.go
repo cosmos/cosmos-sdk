@@ -189,7 +189,6 @@ func (registry *interfaceRegistry) EnsureRegistered(impl interface{}) error {
 // same typeURL.
 func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, impls ...proto.Message) {
 	fmt.Printf("registering implementations for %T\n", iface)
-	debug.PrintStack()
 	for _, impl := range impls {
 		typeURL := MsgTypeURL(impl)
 		registry.registerImpl(iface, typeURL, impl)
@@ -212,7 +211,9 @@ func (registry *interfaceRegistry) RegisterCustomTypeURL(iface interface{}, type
 // same typeURL.
 func (registry *interfaceRegistry) registerImpl(iface interface{}, typeURL string, impl proto.Message) {
 	fmt.Println("registering impl", typeURL)
-	debug.PrintStack()
+	if strings.Contains(typeURL, "ethermint") {
+		debug.PrintStack()
+	}
 	ityp := reflect.TypeOf(iface).Elem()
 	imap, found := registry.interfaceImpls[ityp]
 	if !found {

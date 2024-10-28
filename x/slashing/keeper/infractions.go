@@ -195,12 +195,6 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 			"slashed", slashFractionDowntime.String(),
 			"jailed_until", signInfo.JailedUntil,
 		)
-	} else {
-		// validator was (a) not found or (b) already jailed so we do not slash
-		k.Logger.Info(
-			"validator would have been slashed for downtime, but was either not found in store or already jailed",
-			"validator", consStr,
-		)
 	}
 
 	// Set the updated signing info

@@ -71,16 +71,16 @@ func NewRootCmd[T transaction.Tx](
 	}
 
 	commandDeps := CommandDependencies[T]{
-		globalAppConfig: configMap,
-		txConfig:        clientCtx.TxConfig,
-		moduleManager:   moduleManager,
-		simApp:          simApp,
+		GlobalConfig:  configMap,
+		TxConfig:      clientCtx.TxConfig,
+		ModuleManager: moduleManager,
+		SimApp:        simApp,
 	}
 	rootCommand = &cobra.Command{
 		Use:               "simdv2",
 		Short:             "simulation app",
 		SilenceErrors:     true,
-		PersistentPreRunE: rootCommandPersistentPreRun(clientCtx),
+		PersistentPreRunE: RootCommandPersistentPreRun(clientCtx),
 	}
 	factory.EnhanceRootCommand(rootCommand)
 	_, err = InitRootCmd(rootCommand, logger, commandDeps)

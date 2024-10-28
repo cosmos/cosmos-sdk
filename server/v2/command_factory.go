@@ -107,7 +107,7 @@ func WithLoggerFactory(loggerFactory func(server.ConfigMap, io.Writer) (log.Logg
 	}
 }
 
-// EnhanceCommand adds the following flags to the command:
+// enhanceCommand adds the following flags to the command:
 //
 // --log-level: The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:<level>,<key>:<level>')
 // --log-format: The logging format (json|plain)
@@ -126,7 +126,7 @@ func (f *CommandFactory) enhanceCommand(cmd *cobra.Command) {
 	viper.AutomaticEnv()
 }
 
-// EnhanceCommandContext sets the viper and logger in the command context.
+// EnhanceRootCommand sets the viper and logger in the command context.
 func (f *CommandFactory) EnhanceRootCommand(cmd *cobra.Command) {
 	f.enhanceCommand(cmd)
 	SetCmdServerContext(cmd, f.vipr, f.logger)

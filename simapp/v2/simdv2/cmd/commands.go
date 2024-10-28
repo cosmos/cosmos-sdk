@@ -35,11 +35,11 @@ import (
 // CommandDependencies is a struct that contains all the dependencies needed to initialize the root command.
 // an alternative design could fetch these even later from the command context
 type CommandDependencies[T transaction.Tx] struct {
-	globalAppConfig    coreserver.ConfigMap
-	txConfig           client.TxConfig
-	moduleManager      *runtimev2.MM[T]
-	simApp             *simapp.SimApp[T]
-	consensusComponent serverv2.ServerComponent[T]
+	GlobalConfig  coreserver.ConfigMap
+	TxConfig      client.TxConfig
+	ModuleManager *runtimev2.MM[T]
+	SimApp        *simapp.SimApp[T]
+	Consensus     serverv2.ServerComponent[T]
 }
 
 func InitRootCmd[T transaction.Tx](
@@ -51,9 +51,9 @@ func InitRootCmd[T transaction.Tx](
 	cfg.Seal()
 
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(deps.moduleManager),
-		genesisCommand(deps.moduleManager, deps.simApp),
-		NewTestnetCmd(deps.moduleManager),
+		genutilcli.InitCmd(deps.ModuleManager),
+		genesisCommand(deps.ModuleManager, deps.SimApp),
+		NewTestnetCmd(deps.ModuleManager),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
 		// add keybase, auxiliary RPC, query, genesis, and tx child commands
@@ -64,16 +64,16 @@ func InitRootCmd[T transaction.Tx](
 	)
 
 	// build CLI skeleton for initial config parsing or a client application invocation
-	if deps.simApp == nil {
-		if deps.consensusComponent == nil {
-			deps.consensusComponent = cometbft.NewWithConfigOptions[T](initCometConfig())
+	if deps.SimApp == nil {
+		if deps.Consensus == nil {
+			deps.Consensus = cometbft.NewWithConfigOptions[T](initCometConfig())
 		}
 		return serverv2.AddCommands[T](
 			rootCmd,
 			logger,
-			deps.globalAppConfig,
+			deps.GlobalConfig,
 			initServerConfig(),
-			deps.consensusComponent,
+			deps.Consensus,
 			&grpc.Server[T]{},
 			&serverstore.Server[T]{},
 			&telemetry.Server[T]{},
@@ -82,39 +82,39 @@ func InitRootCmd[T transaction.Tx](
 	}
 
 	// build full app!
-	simApp := deps.simApp
-	grpcServer, err := grpc.New[T](logger, simApp.InterfaceRegistry(), simApp.QueryHandlers(), simApp, deps.globalAppConfig)
+	simApp := deps.SimApp
+	grpcServer, err := grpc.New[T](logger, simApp.InterfaceRegistry(), simApp.QueryHandlers(), simApp, deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}
 	// store component (not a server)
-	storeComponent, err := serverstore.New[T](simApp.Store(), deps.globalAppConfig)
+	storeComponent, err := serverstore.New[T](simApp.Store(), deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}
-	restServer, err := rest.New[T](simApp.App.AppManager, logger, deps.globalAppConfig)
+	restServer, err := rest.New[T](simApp.App.AppManager, logger, deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}
 
 	// consensus component
-	if deps.consensusComponent == nil {
-		deps.consensusComponent, err = cometbft.New(
+	if deps.Consensus == nil {
+		deps.Consensus, err = cometbft.New(
 			logger,
 			simApp.Name(),
 			simApp.Store(),
 			simApp.App.AppManager,
 			simApp.App.QueryHandlers(),
 			simApp.App.SchemaDecoderResolver(),
-			&genericTxDecoder[T]{deps.txConfig},
-			deps.globalAppConfig,
+			&genericTxDecoder[T]{deps.TxConfig},
+			deps.GlobalConfig,
 			initCometOptions[T](),
 		)
 		if err != nil {
 			return nil, err
 		}
 	}
-	telemetryServer, err := telemetry.New[T](deps.globalAppConfig, logger)
+	telemetryServer, err := telemetry.New[T](deps.GlobalConfig, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -123,9 +123,9 @@ func InitRootCmd[T transaction.Tx](
 	return serverv2.AddCommands[T](
 		rootCmd,
 		logger,
-		deps.globalAppConfig,
+		deps.GlobalConfig,
 		initServerConfig(),
-		deps.consensusComponent,
+		deps.Consensus,
 		grpcServer,
 		storeComponent,
 		telemetryServer,
@@ -194,7 +194,7 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
-func rootCommandPersistentPreRun(clientCtx client.Context) func(*cobra.Command, []string) error {
+func RootCommandPersistentPreRun(clientCtx client.Context) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		// set the default command outputs
 		cmd.SetOut(cmd.OutOrStdout())

@@ -1,4 +1,4 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
+	authTest "github.com/cosmos/cosmos-sdk/tests/integration/auth/keeper"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -17,7 +18,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	var accountKeeper keeper.AccountKeeper
 	app, err := simtestutil.SetupAtGenesis(
 		depinject.Configs(
-			AppConfig,
+			authTest.AppConfig,
 			depinject.Supply(log.NewNopLogger()),
 		),
 		&accountKeeper)

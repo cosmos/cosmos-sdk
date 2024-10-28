@@ -750,3 +750,7 @@ func (bva BaseLockup) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder
 	accountstd.RegisterExecuteHandler(builder, bva.WithdrawReward)
 	accountstd.RegisterExecuteHandler(builder, bva.TrackUndelegationEntry)
 }
+
+func (bva BaseLockup) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
+	accountstd.RegisterQueryHandler(builder, bva.QueryUnbondingEntries)
+}

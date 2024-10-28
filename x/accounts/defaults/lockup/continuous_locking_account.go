@@ -200,5 +200,5 @@ func (cva ContinuousLockingAccount) RegisterExecuteHandlers(builder *accountstd.
 
 func (cva ContinuousLockingAccount) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, cva.QueryLockupAccountInfo)
-	accountstd.RegisterQueryHandler(builder, cva.QueryUnbondingEntries)
+	cva.BaseLockup.RegisterQueryHandlers(builder)
 }

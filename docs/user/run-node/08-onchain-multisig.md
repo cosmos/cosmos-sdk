@@ -14,7 +14,7 @@ features.
 The previous implementation only allowed for m-of-n multisig accounts, where m is the number of signatures required to
 authorize a transaction and n is the total number of signers. The new implementation allows for more flexibility by
 introducing threshold and quorum values. The quorum is the minimum voting power to make a proposal valid, while the
-threshol is the minimum of voting power of YES votes to pass a proposal.
+threshold is the minimum of voting power of YES votes to pass a proposal.
 
 ### Revote
 

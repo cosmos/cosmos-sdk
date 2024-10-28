@@ -150,7 +150,7 @@ hubl:
 
 #? mocks: Generate mock file
 mocks: $(MOCKS_DIR)
-	@go install github.com/golang/mock/mockgen@v1.6.0
+	@go install go.uber.org/mock/mockgen@v0.5.0
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
 

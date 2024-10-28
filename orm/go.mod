@@ -4,17 +4,17 @@ go 1.23
 
 require (
 	cosmossdk.io/api v0.7.6
-	cosmossdk.io/core v1.0.0-alpha.3
+	cosmossdk.io/core v1.0.0-alpha.5
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
 	cosmossdk.io/depinject v1.0.0
 	cosmossdk.io/errors v1.0.1
 	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.6.0
 	github.com/iancoleman/strcase v0.3.0
 	github.com/regen-network/gocuke v1.1.1
 	github.com/stretchr/testify v1.9.0
+	go.uber.org/mock v0.5.0
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
 	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.35.1
@@ -56,7 +56,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.20.5 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.60.0 // indirect
+	github.com/prometheus/common v0.60.1 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/spf13/cast v1.7.0 // indirect

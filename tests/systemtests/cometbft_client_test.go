@@ -20,6 +20,17 @@ import (
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 )
 
+func TestQueryStatus(t *testing.T) {
+	sut.ResetChain(t)
+	cli := NewCLIWrapper(t, sut, verbose)
+	sut.StartChain(t)
+
+	resp := cli.CustomQuery("status")
+
+	// make sure the output has the validator moniker.
+	assert.Contains(t, resp, "\"moniker\":\"node0\"")
+}
+
 func TestQueryNodeInfo(t *testing.T) {
 	baseurl := fmt.Sprintf("http://localhost:%d", apiPortStart)
 	sut.ResetChain(t)

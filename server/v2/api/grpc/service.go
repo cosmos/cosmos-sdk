@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"errors"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -15,11 +16,13 @@ import (
 
 // RegisterV2Service registers the V2 gRPC service implementation with the given server.
 // It takes a generic type T that implements the transaction.Tx interface.
-func RegisterV2Service[T transaction.Tx](server *grpc.Server, app serverv2.AppI[T]) {
+func RegisterV2Service[T transaction.Tx](server *grpc.Server, app serverv2.AppI[T]) error {
 	if server == nil || app == nil {
-		panic("server and app must not be nil")
+		return errors.New("nil server or app when registering service")
 	}
 	RegisterServiceServer(server, NewV2Service(app))
+
+	return nil
 }
 
 // V2Service implements the gRPC service interface for handling queries and listing handlers.

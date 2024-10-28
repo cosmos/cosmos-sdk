@@ -71,7 +71,10 @@ func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.L
 	// Reflection allows external clients to see what services and methods the gRPC server exposes.
 	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(methodsMap)), logger.With("sub-module", "grpc-reflection"))
 
-	RegisterV2Service(grpcSrv, appI)
+	err := RegisterV2Service(grpcSrv, appI)
+	if err != nil {
+		return fmt.Errorf("failed to register V2 service: %w", err)
+	}
 
 	s.grpcSrv = grpcSrv
 	s.config = serverCfg

@@ -4,7 +4,6 @@ import (
 	"context"
 	"cosmossdk.io/collections"
 	"errors"
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -55,7 +54,6 @@ func (ak AccountKeeper) GetAllAccounts(ctx context.Context) (accounts []sdk.Acco
 
 // SetAccount implements AccountKeeperI.
 func (ak AccountKeeper) SetAccount(ctx context.Context, acc sdk.AccountI) {
-	fmt.Println("goign to set up accoutn", acc.GetAddress().String(), acc.GetSequence())
 	err := ak.Accounts.Set(ctx, acc.GetAddress(), acc)
 	if err != nil {
 		panic(err)

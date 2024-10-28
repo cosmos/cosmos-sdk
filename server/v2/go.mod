@@ -6,13 +6,10 @@ toolchain go1.23.2
 
 replace (
 	cosmossdk.io/api => ../../api
-	cosmossdk.io/core => ../../core
 	cosmossdk.io/server/v2/appmanager => ./appmanager
 	cosmossdk.io/server/v2/stf => ./stf
 	cosmossdk.io/store/v2 => ../../store/v2
 	cosmossdk.io/store/v2/db => ../../store/v2/db
-	cosmossdk.io/x/bank => ../../x/bank
-	cosmossdk.io/x/staking => ../../x/staking
 	cosmossdk.io/x/tx => ../../x/tx
 )
 

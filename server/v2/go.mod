@@ -17,7 +17,7 @@ replace (
 
 require (
 	cosmossdk.io/api v0.7.6
-	cosmossdk.io/core v1.0.0-alpha.4
+	cosmossdk.io/core v1.0.0-alpha.5
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac
@@ -31,11 +31,11 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-metrics v0.5.3
-	github.com/hashicorp/go-plugin v1.6.1
+	github.com/hashicorp/go-plugin v1.6.2
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pelletier/go-toml/v2 v2.2.3
 	github.com/prometheus/client_golang v1.20.5
-	github.com/prometheus/common v0.60.0
+	github.com/prometheus/common v0.60.1
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
@@ -84,7 +84,7 @@ require (
 	github.com/dgraph-io/ristretto v0.1.2-0.20240116140435-c67e07994f91 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/emicklei/dot v1.6.2 // indirect
-	github.com/fatih/color v1.17.0 // indirect
+	github.com/fatih/color v1.18.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/getsentry/sentry-go v0.27.0 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
@@ -100,7 +100,7 @@ require (
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hashicorp/yamux v0.1.1 // indirect
+	github.com/hashicorp/yamux v0.1.2 // indirect
 	github.com/hdevalence/ed25519consensus v0.2.0 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -114,7 +114,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
-	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
 	github.com/oklog/run v1.1.0 // indirect
@@ -144,13 +143,13 @@ require (
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 	golang.org/x/mod v0.18.0 // indirect
-	golang.org/x/net v0.29.0 // indirect
+	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/text v0.19.0 // indirect
 	golang.org/x/tools v0.22.0 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240930140551-af27646dc61f // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241021214115-324edc3d5d38 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect

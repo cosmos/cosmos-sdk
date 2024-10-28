@@ -79,6 +79,7 @@ func initFixture(t *testing.T, extraAccs map[string]accountstd.Interface) *fixtu
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[accounts.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(router)),
 		addresscodec.NewBech32Codec("cosmos"),
 		cdc.InterfaceRegistry(),
+		nil,
 		append(accs, account)...,
 	)
 	assert.NilError(t, err)

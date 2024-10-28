@@ -523,10 +523,12 @@ func (ks keystore) Delete(uid string) error {
 func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 	ik, err := ks.db.Get(addrHexKeyAsString(address))
 	if err != nil {
+		fmt.Println("error for KeyByAddress", err)
 		return nil, wrapKeyNotFound(err, fmt.Sprintf("key with address %s not found", address.String()))
 	}
 
 	if len(ik.Data) == 0 {
+		fmt.Println("KeyByAddress ik.Data is empty")
 		return nil, wrapKeyNotFound(err, fmt.Sprintf("key with address %s not found", address.String()))
 	}
 
@@ -1009,6 +1011,7 @@ func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {
 }
 
 func (ks keystore) SetItem(item keyring.Item) error {
+	fmt.Println("SetItem", item.Key, item.Label)
 	return ks.db.Set(item)
 }
 

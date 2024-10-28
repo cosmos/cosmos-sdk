@@ -1,16 +1,13 @@
 package types
 
 import (
+	"cosmossdk.io/x/tx/signing"
 	"fmt"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"reflect"
-	"runtime/debug"
-	"strings"
-
-	"cosmossdk.io/x/tx/signing"
 )
 
 // AnyUnpacker is an interface which allows safely unpacking types packed
@@ -157,7 +154,6 @@ func NewInterfaceRegistryWithOptions(options InterfaceRegistryOptions) (Interfac
 }
 
 func (registry *interfaceRegistry) RegisterInterface(protoName string, iface interface{}, impls ...proto.Message) {
-	fmt.Printf("registering interface %s\n", protoName)
 	typ := reflect.TypeOf(iface)
 	if typ.Elem().Kind() != reflect.Interface {
 		panic(fmt.Errorf("%T is not an interface type", iface))
@@ -209,10 +205,6 @@ func (registry *interfaceRegistry) RegisterCustomTypeURL(iface interface{}, type
 // This function PANICs if different concrete types are registered under the
 // same typeURL.
 func (registry *interfaceRegistry) registerImpl(iface interface{}, typeURL string, impl proto.Message) {
-	if strings.Contains(typeURL, "ethermint.types") {
-		fmt.Println("registering impl", typeURL)
-		debug.PrintStack()
-	}
 	ityp := reflect.TypeOf(iface).Elem()
 	imap, found := registry.interfaceImpls[ityp]
 	if !found {
@@ -337,10 +329,6 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 // registered with RegisterInterface/RegisterImplementations, as well as those
 // registered with RegisterWithCustomTypeURL.
 func (registry *interfaceRegistry) Resolve(typeURL string) (proto.Message, error) {
-	if strings.Contains(typeURL, "ethermint.types") {
-		fmt.Printf("resolving typeURL %s\n", typeURL)
-		debug.PrintStack()
-	}
 	typ, found := registry.typeURLMap[typeURL]
 	if !found {
 		return nil, fmt.Errorf("unable to resolve type URL %s", typeURL)

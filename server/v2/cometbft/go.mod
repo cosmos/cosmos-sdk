@@ -6,8 +6,6 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	// pseudo version lower than the latest tag
-	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.4 // main
-	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241009154331-597e0fac1173 // main
 	cosmossdk.io/x/bank => ../../../x/bank
 	cosmossdk.io/x/consensus => ../../../x/consensus
@@ -18,7 +16,7 @@ replace (
 require (
 	cosmossdk.io/api v0.8.0
 	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab
-	cosmossdk.io/core v1.0.0-alpha.4
+	cosmossdk.io/core v1.0.0-alpha.5
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/server/v2 v2.0.0-20241021134528-681366e3469c // main

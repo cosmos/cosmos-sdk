@@ -211,7 +211,7 @@ func (registry *interfaceRegistry) RegisterCustomTypeURL(iface interface{}, type
 // same typeURL.
 func (registry *interfaceRegistry) registerImpl(iface interface{}, typeURL string, impl proto.Message) {
 	fmt.Println("registering impl", typeURL)
-	if strings.Contains(typeURL, "ethermint") {
+	if strings.Contains(typeURL, "ethermint.types") {
 		debug.PrintStack()
 	}
 	ityp := reflect.TypeOf(iface).Elem()

@@ -110,7 +110,7 @@ func TestContinousAccountUndelegate(t *testing.T) {
 	require.True(t, ubdEntry.Amount.Amount.Equal(math.NewInt(1)))
 	require.True(t, ubdEntry.ValidatorAddress == "val_address")
 
-	_, err = acc.TrackUndelegationEntry(sdkCtx, &lockuptypes.MsgTrackUndelegation{
+	_, err = acc.UpdateUndelegationEntry(sdkCtx, &lockuptypes.MsgUpdateUndelegationEntry{
 		Sender: "owner",
 		Id:     ubdSeq - 1,
 	})

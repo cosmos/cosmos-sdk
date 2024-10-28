@@ -88,7 +88,7 @@ func (m *Period) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
 
 // UnbondingEntry defines an entry tracking the lockup account unbonding operation.
 type UnbondingEntry struct {
-	// entry id
+	// ID of entry
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	// end time of entry
 	EndTime time.Time `protobuf:"bytes,2,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time"`

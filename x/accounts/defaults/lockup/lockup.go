@@ -234,8 +234,8 @@ func (bva *BaseLockup) Undelegate(
 	return &lockuptypes.MsgExecuteMessagesResponse{Responses: resp}, nil
 }
 
-func (bva *BaseLockup) TrackUndelegationEntry(
-	ctx context.Context, msg *lockuptypes.MsgTrackUndelegation,
+func (bva *BaseLockup) UpdateUndelegationEntry(
+	ctx context.Context, msg *lockuptypes.MsgUpdateUndelegationEntry,
 ) (
 	*lockuptypes.MsgExecuteMessagesResponse, error,
 ) {
@@ -748,7 +748,7 @@ func (bva BaseLockup) QueryUnbondingEntries(ctx context.Context, _ *lockuptypes.
 func (bva BaseLockup) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 	accountstd.RegisterExecuteHandler(builder, bva.Undelegate)
 	accountstd.RegisterExecuteHandler(builder, bva.WithdrawReward)
-	accountstd.RegisterExecuteHandler(builder, bva.TrackUndelegationEntry)
+	accountstd.RegisterExecuteHandler(builder, bva.UpdateUndelegationEntry)
 }
 
 func (bva BaseLockup) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {

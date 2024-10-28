@@ -158,6 +158,11 @@ func initFixture(t *testing.T, f func(ctx context.Context, msg *account_abstract
 		authority.String(),
 	)
 
+	maccs := runtime.NewModuleAccountsService(
+		runtime.NewModuleAccount(minttypes.ModuleName, authtypes.Minter),
+		runtime.NewModuleAccount("gov"),
+	)
+
 	blockedAddresses := map[string]bool{
 		authKeeper.GetAuthority(): false,
 	}
@@ -167,6 +172,7 @@ func initFixture(t *testing.T, f func(ctx context.Context, msg *account_abstract
 		authKeeper,
 		blockedAddresses,
 		authority.String(),
+		maccs,
 	)
 
 	params := banktypes.DefaultParams()

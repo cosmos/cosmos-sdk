@@ -16,8 +16,10 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	serverv2store "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2/db"
@@ -39,7 +41,7 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	vp.Set(serverv2store.FlagAppDBBackend, string(db.DBTypeGoLevelDB))
 	vp.Set(serverv2.FlagHome, t.TempDir())
 
-	app := NewSimAppWithInputs[transaction.Tx](logger, vp)
+	app := newSimAppWithInputs[transaction.Tx](logger, vp)
 	genesis := app.ModuleManager().DefaultGenesis()
 
 	privVal := mock.NewPV()
@@ -101,6 +103,20 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	require.NoError(t, err)
 
 	return app, ctx
+}
+
+// newSimAppWithInputs returns a reference to an initialized SimApp.
+func newSimAppWithInputs[T transaction.Tx](
+	logger log.Logger,
+	viper *viper.Viper,
+) *SimApp[T] {
+	app, err := NewSimApp[T](depinject.Configs(
+		depinject.Supply(logger, runtime.GlobalConfig(viper.AllSettings()))),
+	)
+	if err != nil {
+		panic(err)
+	}
+	return app
 }
 
 func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Context) {

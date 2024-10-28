@@ -4,8 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 
-	"github.com/spf13/viper"
-
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
@@ -190,20 +188,6 @@ func NewSimApp[T transaction.Tx](
 		return nil, err
 	}
 	return app, nil
-}
-
-// NewSimAppWithInputs returns a reference to an initialized SimApp.
-func NewSimAppWithInputs[T transaction.Tx](
-	logger log.Logger,
-	viper *viper.Viper,
-) *SimApp[T] {
-	app, err := NewSimApp[T](depinject.Configs(
-		depinject.Supply(logger, runtime.GlobalConfig(viper.AllSettings()))),
-	)
-	if err != nil {
-		panic(err)
-	}
-	return app
 }
 
 // AppCodec returns SimApp's app codec.

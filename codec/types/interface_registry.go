@@ -8,6 +8,8 @@ import (
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"reflect"
+	"runtime/debug"
+	"strings"
 )
 
 // AnyUnpacker is an interface which allows safely unpacking types packed
@@ -296,6 +298,13 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 	imap, found := registry.interfaceImpls[rt]
 	if !found {
 		return fmt.Errorf("no registered implementations of type %+v", rt)
+	}
+
+	fmt.Println("imap", imap)
+	fmt.Println("any.TypeUrl", any.TypeUrl)
+	fmt.Println("rt", rt)
+	if strings.Contains(any.TypeUrl, "cosmos.auth.v1beta1") {
+		debug.PrintStack()
 	}
 
 	typ, found := imap[any.TypeUrl]

@@ -488,12 +488,12 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 			close(s.chDone)
 			close(s.chChangeset)
 			s.isMigrating = false
-			// close the old state commitment and replace it with the new one
-			if err := s.stateCommitment.Close(); err != nil {
-				return fmt.Errorf("failed to close the old SC store: %w", err)
-			}
 			newStateCommitment := s.migrationManager.GetStateCommitment()
 			if newStateCommitment != nil {
+				// close the old state commitment and replace it with the new one
+				if err := s.stateCommitment.Close(); err != nil {
+					return fmt.Errorf("failed to close the old SC store: %w", err)
+				}
 				s.stateCommitment = newStateCommitment
 			}
 			if err := s.migrationManager.Close(); err != nil {

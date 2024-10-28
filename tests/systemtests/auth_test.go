@@ -517,25 +517,25 @@ func TestTxWithFeePayer(t *testing.T) {
 	sut.StartChain(t)
 
 	// send a tx with FeePayer without his signature
-	rsp := cli.RunCommandWithArgs(cli.withTXFlags([]string{
+	rsp := cli.RunCommandWithArgs(cli.withTXFlags(
 		"tx", "bank", "send", senderAddr, "cosmos108jsm625z3ejy63uef2ke7t67h6nukt4ty93nr", "1000stake", "--fees", "1000000stake", "--fee-payer", feePayerAddr,
-	}...)...)
+	)...)
 	RequireTxFailure(t, rsp, "invalid number of signatures")
 
 	// send tx with feePayers signature
-	rsp = cli.RunCommandWithArgs(cli.withTXFlags([]string{
+	rsp = cli.RunCommandWithArgs(cli.withTXFlags(
 		"tx", "bank", "send", senderAddr, "cosmos108jsm625z3ejy63uef2ke7t67h6nukt4ty93nr", "1000stake", "--fees", "1000000stake", "--fee-payer", feePayerAddr, "--generate-only",
-	}...)...)
+	)...)
 	tempFile := StoreTempFile(t, []byte(rsp))
 
-	rsp = cli.RunCommandWithArgs(cli.withTXFlags([]string{
+	rsp = cli.RunCommandWithArgs(cli.withTXFlags(
 		"tx", "sign", tempFile.Name(), "--from", senderAddr, "--sign-mode", "amino-json",
-	}...)...)
+	)...)
 	tempFile = StoreTempFile(t, []byte(rsp))
 
-	rsp = cli.RunCommandWithArgs(cli.withTXFlags([]string{
+	rsp = cli.RunCommandWithArgs(cli.withTXFlags(
 		"tx", "sign", tempFile.Name(), "--from", feePayerAddr, "--sign-mode", "amino-json",
-	}...)...)
+	)...)
 	tempFile = StoreTempFile(t, []byte(rsp))
 
 	rsp = cli.RunAndWait([]string{"tx", "broadcast", tempFile.Name()}...)

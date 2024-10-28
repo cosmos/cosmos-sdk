@@ -18,7 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type E2ETestSuite struct {
+type IntegrationTestSuite struct {
 	suite.Suite
 
 	app         *simapp.SimApp
@@ -26,11 +26,11 @@ type E2ETestSuite struct {
 	membersAddr []string
 }
 
-func NewE2ETestSuite() *E2ETestSuite {
-	return &E2ETestSuite{}
+func NewIntegrationTestSuite() *IntegrationTestSuite {
+	return &IntegrationTestSuite{}
 }
 
-func (s *E2ETestSuite) SetupSuite() {
+func (s *IntegrationTestSuite) SetupSuite() {
 	s.app = setupApp(s.T())
 
 	s.members = []sdk.AccAddress{}
@@ -43,7 +43,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	}
 }
 
-func (s *E2ETestSuite) TearDownSuite() {}
+func (s *IntegrationTestSuite) TearDownSuite() {}
 
 func setupApp(t *testing.T) *simapp.SimApp {
 	t.Helper()
@@ -51,23 +51,23 @@ func setupApp(t *testing.T) *simapp.SimApp {
 	return app
 }
 
-func (s *E2ETestSuite) executeTx(ctx context.Context, msg sdk.Msg, accAddr, sender []byte) error {
+func (s *IntegrationTestSuite) executeTx(ctx context.Context, msg sdk.Msg, accAddr, sender []byte) error {
 	_, err := s.app.AccountsKeeper.Execute(ctx, accAddr, sender, msg, nil)
 	return err
 }
 
-func (s *E2ETestSuite) queryAcc(ctx context.Context, req sdk.Msg, accAddr []byte) (transaction.Msg, error) {
+func (s *IntegrationTestSuite) queryAcc(ctx context.Context, req sdk.Msg, accAddr []byte) (transaction.Msg, error) {
 	resp, err := s.app.AccountsKeeper.Query(ctx, accAddr, req)
 	return resp, err
 }
 
-func (s *E2ETestSuite) fundAccount(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) {
+func (s *IntegrationTestSuite) fundAccount(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) {
 	require.NoError(s.T(), testutil.FundAccount(ctx, s.app.BankKeeper, addr, amt))
 }
 
 // initAccount initializes a multisig account with the given members and powers
 // and returns the account address
-func (s *E2ETestSuite) initAccount(ctx context.Context, sender []byte, membersPowers map[string]uint64) ([]byte, string) {
+func (s *IntegrationTestSuite) initAccount(ctx context.Context, sender []byte, membersPowers map[string]uint64) ([]byte, string) {
 	s.fundAccount(ctx, sender, sdk.Coins{sdk.NewCoin("stake", math.NewInt(1000000))})
 
 	members := []*v1.Member{}
@@ -95,7 +95,7 @@ func (s *E2ETestSuite) initAccount(ctx context.Context, sender []byte, membersPo
 }
 
 // createProposal
-func (s *E2ETestSuite) createProposal(ctx context.Context, accAddr, sender []byte, msgs ...*codectypes.Any) {
+func (s *IntegrationTestSuite) createProposal(ctx context.Context, accAddr, sender []byte, msgs ...*codectypes.Any) {
 	propReq := &v1.MsgCreateProposal{
 		Proposal: &v1.Proposal{
 			Title:    "test",
@@ -107,7 +107,7 @@ func (s *E2ETestSuite) createProposal(ctx context.Context, accAddr, sender []byt
 	s.NoError(err)
 }
 
-func (s *E2ETestSuite) executeProposal(ctx context.Context, accAddr, sender []byte, proposalID uint64) error {
+func (s *IntegrationTestSuite) executeProposal(ctx context.Context, accAddr, sender []byte, proposalID uint64) error {
 	execReq := &v1.MsgExecuteProposal{
 		ProposalId: proposalID,
 	}

@@ -41,7 +41,11 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	vp.Set(serverv2store.FlagAppDBBackend, string(db.DBTypeGoLevelDB))
 	vp.Set(serverv2.FlagHome, t.TempDir())
 
-	app := newSimAppWithInputs[transaction.Tx](logger, vp)
+	app, err := NewSimApp[transaction.Tx](depinject.Configs(
+		depinject.Supply(logger, runtime.GlobalConfig(vp.AllSettings()))),
+	)
+	require.NoError(t, err)
+
 	genesis := app.ModuleManager().DefaultGenesis()
 
 	privVal := mock.NewPV()
@@ -103,20 +107,6 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	require.NoError(t, err)
 
 	return app, ctx
-}
-
-// newSimAppWithInputs returns a reference to an initialized SimApp.
-func newSimAppWithInputs[T transaction.Tx](
-	logger log.Logger,
-	viper *viper.Viper,
-) *SimApp[T] {
-	app, err := NewSimApp[T](depinject.Configs(
-		depinject.Supply(logger, runtime.GlobalConfig(viper.AllSettings()))),
-	)
-	if err != nil {
-		panic(err)
-	}
-	return app
 }
 
 func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Context) {

@@ -110,8 +110,6 @@ type interfaceMap = map[string]reflect.Type
 
 // NewInterfaceRegistry returns a new InterfaceRegistry
 func NewInterfaceRegistry() InterfaceRegistry {
-	fmt.Println("NewInterfaceRegistry")
-	//debug.PrintStack()
 	registry, err := NewInterfaceRegistryWithOptions(InterfaceRegistryOptions{
 		ProtoFiles: proto.HybridResolver,
 		SigningOptions: signing.Options{

@@ -3,7 +3,7 @@ package cosmos.base.grpc.v2;
 
 import "google/protobuf/any.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/server/v2/api/grpc";
+option go_package = "cosmossdk.io/server/v2/api/grpc";
 
 service Service {
   rpc Query(QueryRequest) returns (QueryResponse) {}

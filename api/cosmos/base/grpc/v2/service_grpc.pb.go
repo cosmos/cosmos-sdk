@@ -26,8 +26,12 @@ const (
 // ServiceClient is the client API for Service service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// Service defines the gRPC service for query server for v2
 type ServiceClient interface {
+	// Query queries the server with a request, the request can be any sdk Msg.
 	Query(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (*QueryResponse, error)
+	// ListQueryHandlers lists all the available query handlers.
 	ListQueryHandlers(ctx context.Context, in *ListQueryHandlersRequest, opts ...grpc.CallOption) (*ListQueryHandlersResponse, error)
 }
 
@@ -62,8 +66,12 @@ func (c *serviceClient) ListQueryHandlers(ctx context.Context, in *ListQueryHand
 // ServiceServer is the server API for Service service.
 // All implementations must embed UnimplementedServiceServer
 // for forward compatibility.
+//
+// Service defines the gRPC service for query server for v2
 type ServiceServer interface {
+	// Query queries the server with a request, the request can be any sdk Msg.
 	Query(context.Context, *QueryRequest) (*QueryResponse, error)
+	// ListQueryHandlers lists all the available query handlers.
 	ListQueryHandlers(context.Context, *ListQueryHandlersRequest) (*ListQueryHandlersResponse, error)
 	mustEmbedUnimplementedServiceServer()
 }

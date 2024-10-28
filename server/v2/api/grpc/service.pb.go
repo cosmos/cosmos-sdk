@@ -28,6 +28,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// QueryRequest is the request for the Query method
 type QueryRequest struct {
 	Request *any.Any `protobuf:"bytes,1,opt,name=request,proto3" json:"request,omitempty"`
 }
@@ -72,6 +73,7 @@ func (m *QueryRequest) GetRequest() *any.Any {
 	return nil
 }
 
+// QueryResponse is the response for the Query method
 type QueryResponse struct {
 	Response *any.Any `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"`
 }
@@ -116,6 +118,7 @@ func (m *QueryResponse) GetResponse() *any.Any {
 	return nil
 }
 
+// ListQueryHandlersRequest is the request for the ListQueryHandlers method
 type ListQueryHandlersRequest struct {
 }
 
@@ -152,6 +155,7 @@ func (m *ListQueryHandlersRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ListQueryHandlersRequest proto.InternalMessageInfo
 
+// ListQueryHandlersResponse is the response for the ListQueryHandlers method
 type ListQueryHandlersResponse struct {
 	Handlers []*Handler `protobuf:"bytes,1,rep,name=handlers,proto3" json:"handlers,omitempty"`
 }
@@ -196,6 +200,7 @@ func (m *ListQueryHandlersResponse) GetHandlers() []*Handler {
 	return nil
 }
 
+// Handler defines a query handler
 type Handler struct {
 	RequestName  string `protobuf:"bytes,1,opt,name=request_name,json=requestName,proto3" json:"request_name,omitempty"`
 	ResponseName string `protobuf:"bytes,2,opt,name=response_name,json=responseName,proto3" json:"response_name,omitempty"`
@@ -296,7 +301,9 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ServiceClient interface {
+	// Query queries the server with a request, the request can be any sdk Msg.
 	Query(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (*QueryResponse, error)
+	// ListQueryHandlers lists all the available query handlers.
 	ListQueryHandlers(ctx context.Context, in *ListQueryHandlersRequest, opts ...grpc.CallOption) (*ListQueryHandlersResponse, error)
 }
 
@@ -328,7 +335,9 @@ func (c *serviceClient) ListQueryHandlers(ctx context.Context, in *ListQueryHand
 
 // ServiceServer is the server API for Service service.
 type ServiceServer interface {
+	// Query queries the server with a request, the request can be any sdk Msg.
 	Query(context.Context, *QueryRequest) (*QueryResponse, error)
+	// ListQueryHandlers lists all the available query handlers.
 	ListQueryHandlers(context.Context, *ListQueryHandlersRequest) (*ListQueryHandlersResponse, error)
 }
 

@@ -2230,6 +2230,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// QueryRequest is the request for the Query method
 type QueryRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -2265,6 +2266,7 @@ func (x *QueryRequest) GetRequest() *anypb.Any {
 	return nil
 }
 
+// QueryResponse is the response for the Query method
 type QueryResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -2300,6 +2302,7 @@ func (x *QueryResponse) GetResponse() *anypb.Any {
 	return nil
 }
 
+// ListQueryHandlersRequest is the request for the ListQueryHandlers method
 type ListQueryHandlersRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -2326,6 +2329,7 @@ func (*ListQueryHandlersRequest) Descriptor() ([]byte, []int) {
 	return file_cosmos_base_grpc_v2_service_proto_rawDescGZIP(), []int{2}
 }
 
+// ListQueryHandlersResponse is the response for the ListQueryHandlers method
 type ListQueryHandlersResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -2361,6 +2365,7 @@ func (x *ListQueryHandlersResponse) GetHandlers() []*Handler {
 	return nil
 }
 
+// Handler defines a query handler
 type Handler struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

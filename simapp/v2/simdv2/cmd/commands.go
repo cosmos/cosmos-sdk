@@ -32,9 +32,9 @@ import (
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2/cli"
 )
 
-// commandDependencies is a struct that contains all the dependencies needed to initialize the root command.
+// CommandDependencies is a struct that contains all the dependencies needed to initialize the root command.
 // an alternative design could fetch these even later from the command context
-type commandDependencies[T transaction.Tx] struct {
+type CommandDependencies[T transaction.Tx] struct {
 	globalAppConfig    coreserver.ConfigMap
 	txConfig           client.TxConfig
 	moduleManager      *runtimev2.MM[T]
@@ -42,10 +42,10 @@ type commandDependencies[T transaction.Tx] struct {
 	consensusComponent serverv2.ServerComponent[T]
 }
 
-func initRootCmd[T transaction.Tx](
+func InitRootCmd[T transaction.Tx](
 	rootCmd *cobra.Command,
 	logger log.Logger,
-	deps commandDependencies[T],
+	deps CommandDependencies[T],
 ) (serverv2.ConfigWriter, error) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()

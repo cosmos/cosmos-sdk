@@ -23,7 +23,7 @@ func NewRootCmd[T transaction.Tx](
 		Use:           "simdv2",
 		SilenceErrors: true,
 	}
-	configWriter, err := initRootCmd(rootCommand, log.NewNopLogger(), commandDependencies[T]{})
+	configWriter, err := InitRootCmd(rootCommand, log.NewNopLogger(), CommandDependencies[T]{})
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func NewRootCmd[T transaction.Tx](
 		}
 	}
 
-	commandDeps := commandDependencies[T]{
+	commandDeps := CommandDependencies[T]{
 		globalAppConfig: configMap,
 		txConfig:        clientCtx.TxConfig,
 		moduleManager:   moduleManager,
@@ -83,7 +83,7 @@ func NewRootCmd[T transaction.Tx](
 		PersistentPreRunE: rootCommandPersistentPreRun(clientCtx),
 	}
 	factory.EnhanceRootCommand(rootCommand)
-	_, err = initRootCmd(rootCommand, logger, commandDeps)
+	_, err = InitRootCmd(rootCommand, logger, commandDeps)
 	if err != nil {
 		return nil, err
 	}

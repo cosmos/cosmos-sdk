@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 
+	"cosmossdk.io/server/v2/api"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
@@ -192,7 +193,7 @@ func (s *Server[T]) Start(ctx context.Context) error {
 		return nil
 	}
 
-	listener, err := net.Listen("tcp", s.config.Address)
+	listener, err := (&net.ListenConfig{}).Listen(ctx, "tcp", s.config.Address)
 	if err != nil {
 		return fmt.Errorf("failed to listen on address %s: %w", s.config.Address, err)
 	}
@@ -211,8 +212,7 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	}
 
 	s.logger.Info("stopping gRPC server...", "address", s.config.Address)
-	s.grpcSrv.GracefulStop()
-	return nil
+	return api.DoUntilCtxExpired(ctx, s.grpcSrv.GracefulStop)
 }
 
 // GetGRPCServer returns the underlying gRPC server.

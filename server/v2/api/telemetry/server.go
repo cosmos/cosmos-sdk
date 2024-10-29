@@ -45,7 +45,7 @@ func (s *Server[T]) Config() any {
 }
 
 // Init implements serverv2.ServerComponent.
-func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
+func (s *Server[T]) Init(_ serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
 	serverCfg := s.Config().(*Config)
 	if len(cfg) > 0 {
 		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {

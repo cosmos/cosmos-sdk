@@ -479,21 +479,86 @@ func (s *KeeperTestSuite) TestMintHandler() {
 			msg: &types.MsgMint{
 				Authority: accAddrs[0].String(),
 				ToAddress: accAddrs[1].String(),
-				Amount:    sdk.NewCoin(newDenom + "s", math.NewInt(100)),
+				Amount:    sdk.NewCoin(newDenom+"s", math.NewInt(100)),
 			},
 			expErr: true,
 		},
 	} {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			_, err := handler.MsgMint(s.ctx, tc.msg)
-			fmt.Println("err", err)
 			if tc.expErr {
 				require.Error(err)
 			} else {
 				require.NoError(err)
 				// Check ToAddress balance after
-				balance := s.bankKeeper.GetBalance(s.ctx, accAddrs[1], tc.msg.Amount.Denom)
+				toAddr, err := s.addressCodec.StringToBytes(tc.msg.ToAddress)
+				require.NoError(err)
+				balance := s.bankKeeper.GetBalance(s.ctx, toAddr, tc.msg.Amount.Denom)
 				require.Equal(balance, tc.msg.Amount)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSendHandler_TokenfactoryDenom() {
+	s.SetupTest()
+	require := s.Require()
+	s.bankKeeper.SetParams(s.ctx, types.Params{
+		DenomCreationFee: sdk.NewCoins(sdk.NewCoin(fooDenom, math.NewInt(10))),
+	})
+	handler := keeper.NewHandlers(&s.bankKeeper)
+	require.NoError(banktestutil.FundAccount(s.ctx, s.bankKeeper, accAddrs[0], sdk.NewCoins(sdk.NewCoin(fooDenom, math.NewInt(100)))))
+
+	resp, err := handler.MsgCreateDenom(s.ctx, &types.MsgCreateDenom{
+		Sender:   accAddrs[0].String(),
+		Subdenom: "test",
+	})
+	require.NoError(err)
+
+	newDenom := resp.NewTokenDenom
+
+	_, err = handler.MsgMint(s.ctx, &types.MsgMint{
+		Authority: accAddrs[0].String(),
+		ToAddress: accAddrs[0].String(),
+		Amount:    sdk.NewCoin(newDenom, math.NewInt(100)),
+	})
+	require.NoError(err)
+
+	for _, tc := range []struct {
+		desc   string
+		msg    *types.MsgSend
+		expErr bool
+	}{
+		{
+			desc: "valid",
+			msg: &types.MsgSend{
+				FromAddress: accAddrs[0].String(),
+				ToAddress:   accAddrs[1].String(),
+				Amount:      sdk.NewCoins(sdk.NewCoin(newDenom, math.NewInt(50))),
+			},
+			expErr: false,
+		},
+		{
+			desc: "insufficient funds",
+			msg: &types.MsgSend{
+				FromAddress: accAddrs[0].String(),
+				ToAddress:   accAddrs[1].String(),
+				Amount:      sdk.NewCoins(sdk.NewCoin(newDenom, math.NewInt(150))),
+			},
+			expErr: true,
+		},
+	} {
+		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			_, err := handler.MsgSend(s.ctx, tc.msg)
+			if tc.expErr {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+				// Check ToAddress balances after
+				toAddr, err := s.addressCodec.StringToBytes(tc.msg.ToAddress)
+				require.NoError(err)
+				balances := s.bankKeeper.GetAllBalances(s.ctx, toAddr)
+				require.Equal(balances, tc.msg.Amount)
 			}
 		})
 	}

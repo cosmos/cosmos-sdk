@@ -93,8 +93,10 @@ func init() {
 // AppConfig returns the default app config.
 func AppConfig() depinject.Config {
 	return depinject.Configs(
-		appConfig,                               // Alternatively use appconfig.LoadYAML(AppConfigYAML)
-		depinject.Provide(ProvideExampleMintFn), // optional: override the mint module's mint function with epoched minting
+		appConfig, // Alternatively use appconfig.LoadYAML(AppConfigYAML)
+		depinject.Provide(
+			ProvideExampleMintFn, // optional: override the mint module's mint function with epoched minting
+		),
 	)
 }
 

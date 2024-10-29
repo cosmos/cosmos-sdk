@@ -7,8 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/transaction"
-	svrcmd "cosmossdk.io/server/v2"
-	"cosmossdk.io/simapp/v2"
 	"cosmossdk.io/simapp/v2/simdv2/cmd"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -16,27 +14,29 @@ import (
 )
 
 func TestInitCmd(t *testing.T) {
-	rootCmd := cmd.NewCometBFTRootCmd[transaction.Tx]()
-	rootCmd.SetArgs([]string{
+	args := []string{
 		"init",        // Test the init cmd
 		"simapp-test", // Moniker
 		fmt.Sprintf("--%s=%s", cli.FlagOverwrite, "true"), // Overwrite genesis.json, in case it already exists
-	})
-
-	require.NoError(t, svrcmd.Execute(rootCmd, "", simapp.DefaultNodeHome))
+	}
+	rootCmd, err := cmd.NewRootCmd[transaction.Tx](args...)
+	require.NoError(t, err)
+	rootCmd.SetArgs(args)
+	require.NoError(t, rootCmd.Execute())
 }
 
 func TestHomeFlagRegistration(t *testing.T) {
 	homeDir := "/tmp/foo"
-
-	rootCmd := cmd.NewCometBFTRootCmd[transaction.Tx]()
-	rootCmd.SetArgs([]string{
+	args := []string{
 		"query",
 		fmt.Sprintf("--%s", flags.FlagHome),
 		homeDir,
-	})
+	}
 
-	require.NoError(t, svrcmd.Execute(rootCmd, "", simapp.DefaultNodeHome))
+	rootCmd, err := cmd.NewRootCmd[transaction.Tx](args...)
+	require.NoError(t, err)
+	rootCmd.SetArgs(args)
+	require.NoError(t, rootCmd.Execute())
 
 	result, err := rootCmd.Flags().GetString(flags.FlagHome)
 	require.NoError(t, err)

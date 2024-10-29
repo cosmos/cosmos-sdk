@@ -334,15 +334,10 @@ func initTestnetFiles[T transaction.Tx](
 		serverCfg := serverv2.DefaultServerConfig()
 		serverCfg.MinGasPrices = args.minGasPrices
 
-		// Write server config
-		cometServer := cometbft.New[T](
-			&genericTxDecoder[T]{clientCtx.TxConfig},
-			cometbft.ServerOptions[T]{},
-			cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig),
-		)
-		storeServer := store.New[T]()
-		grpcServer := grpc.New[T](grpc.OverwriteDefaultConfig(grpcConfig))
-		server := serverv2.NewServer[T](serverCfg, cometServer, grpcServer, storeServer)
+		cometServer := cometbft.NewWithConfigOptions[T](cometbft.OverwriteDefaultConfigTomlConfig(nodeConfig))
+		storeServer := &store.Server[T]{}
+		grpcServer := grpc.NewWithConfigOptions[T](grpc.OverwriteDefaultConfig(grpcConfig))
+		server := serverv2.NewServer[T](serverCfg, cometServer, storeServer, grpcServer)
 		err = server.WriteConfig(filepath.Join(nodeDir, "config"))
 		if err != nil {
 			return err
@@ -362,7 +357,6 @@ func initTestnetFiles[T transaction.Tx](
 		return err
 	}
 
-	// Update viper root since root dir become rootdir/node/simd
 	serverv2.GetViperFromCmd(cmd).Set(flags.FlagHome, nodeConfig.RootDir)
 
 	cmd.PrintErrf("Successfully initialized %d node directories\n", args.numValidators)

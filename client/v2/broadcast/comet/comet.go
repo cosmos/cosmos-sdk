@@ -127,7 +127,7 @@ func (c *CometBFTBroadcaster) broadcast(ctx context.Context, txBytes []byte,
 	fn func(ctx context.Context, tx cmttypes.Tx) (*coretypes.ResultBroadcastTx, error),
 ) (*apiacbci.TxResponse, error) {
 	bResult, err := fn(ctx, txBytes)
-	if errRes := checkCometError(err, txBytes); err != nil {
+	if errRes := checkCometError(err, txBytes); errRes != nil {
 		return errRes, nil
 	}
 

@@ -381,8 +381,6 @@ func (a *App) SignCheckDeliver(
 	require.NoError(t, err)
 
 	builtTx := txBuilder.GetTx()
-	require.NoError(t, err)
-
 	blockResponse, blockState := a.Deliver(t, ctx, []stateMachineTx{builtTx})
 
 	require.Equal(t, 1, len(blockResponse.TxResults))

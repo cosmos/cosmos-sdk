@@ -103,6 +103,8 @@ func init() {
 			ProvideTransientStoreService,
 			ProvideModuleManager,
 			ProvideCometService,
+			ProvideModuleConfigMaps,
+			ProvideModuleScopedConfigMap,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)

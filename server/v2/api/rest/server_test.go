@@ -17,7 +17,7 @@ func TestServerConfig(t *testing.T) {
 		{
 			name: "Default configuration, no custom configuration",
 			setupFunc: func() *Config {
-				s := New[transaction.Tx]()
+				s := &Server[transaction.Tx]{}
 				return s.Config().(*Config)
 			},
 			expectedConfig: DefaultConfig(),
@@ -25,7 +25,7 @@ func TestServerConfig(t *testing.T) {
 		{
 			name: "Custom configuration",
 			setupFunc: func() *Config {
-				s := New[transaction.Tx](func(config *Config) {
+				s := NewWithConfigOptions[transaction.Tx](func(config *Config) {
 					config.Enable = false
 				})
 				return s.Config().(*Config)

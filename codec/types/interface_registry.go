@@ -207,7 +207,7 @@ func (registry *interfaceRegistry) RegisterCustomTypeURL(iface interface{}, type
 // This function PANICs if different concrete types are registered under the
 // same typeURL.
 func (registry *interfaceRegistry) registerImpl(iface interface{}, typeURL string, impl proto.Message) {
-	if strings.Contains(typeURL, "cosmos.auth.v1beta1") {
+	if strings.Contains(typeURL, "cosmos.auth.v1beta1.BaseAccount") {
 		fmt.Println("typeURL", typeURL)
 		debug.PrintStack()
 	}
@@ -304,9 +304,11 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 		return fmt.Errorf("no registered implementations of type %+v", rt)
 	}
 
-	fmt.Println("imap", imap)
-	fmt.Println("any.TypeUrl", any.TypeUrl)
-	fmt.Println("rt", rt)
+	if strings.Contains(any.TypeUrl, "cosmos.auth.v1beta1.BaseAccount") {
+		fmt.Println("imap", imap)
+		fmt.Println("any.TypeUrl", any.TypeUrl)
+		fmt.Println("rt", rt)
+	}
 
 	typ, found := imap[any.TypeUrl]
 	if !found {

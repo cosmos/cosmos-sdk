@@ -16,6 +16,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/bank/v2/keeper"
 	banktestutil "cosmossdk.io/x/bank/v2/testutil"
+	"cosmossdk.io/x/bank/v2/types"
 	banktypes "cosmossdk.io/x/bank/v2/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -410,6 +411,90 @@ func (s *KeeperTestSuite) TestCreateDenom_GasConsume() {
 			gasConsumed := gasConsumedAfter - gasConsumedBefore
 			s.Require().Greater(gasConsumed, tc.gasConsume)
 			s.Require().Less(gasConsumed, tc.gasConsume+offset)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestMintHandler() {
+	s.SetupTest()
+	require := s.Require()
+	s.bankKeeper.SetParams(s.ctx, types.Params{
+		DenomCreationFee: sdk.NewCoins(sdk.NewCoin(fooDenom, math.NewInt(10))),
+	})
+	handler := keeper.NewHandlers(&s.bankKeeper)
+	require.NoError(banktestutil.FundAccount(s.ctx, s.bankKeeper, accAddrs[0], sdk.NewCoins(sdk.NewCoin(fooDenom, math.NewInt(100)))))
+
+	resp, err := handler.MsgCreateDenom(s.ctx, &types.MsgCreateDenom{
+		Sender:   accAddrs[0].String(),
+		Subdenom: "test",
+	})
+	require.NoError(err)
+
+	newDenom := resp.NewTokenDenom
+	authority := authtypes.NewModuleAddress("gov")
+
+	for _, tc := range []struct {
+		desc   string
+		msg    *types.MsgMint
+		expErr bool
+	}{
+		{
+			desc: "Mint bar denom, valid",
+			msg: &types.MsgMint{
+				Authority: authority.String(),
+				ToAddress: accAddrs[1].String(),
+				Amount:    sdk.NewCoin(barDenom, math.NewInt(100)),
+			},
+			expErr: false,
+		},
+		{
+			desc: "Mint bar denom, invalid authority",
+			msg: &types.MsgMint{
+				Authority: authority.String() + "s",
+				ToAddress: accAddrs[1].String(),
+				Amount:    sdk.NewCoin(barDenom, math.NewInt(100)),
+			},
+			expErr: true,
+		},
+		{
+			desc: "Mint tokenfatory denom, valid",
+			msg: &types.MsgMint{
+				Authority: accAddrs[0].String(),
+				ToAddress: accAddrs[1].String(),
+				Amount:    sdk.NewCoin(newDenom, math.NewInt(100)),
+			},
+			expErr: false,
+		},
+		{
+			desc: "Mint tokenfatory denom, invalid admin",
+			msg: &types.MsgMint{
+				Authority: authority.String(),
+				ToAddress: accAddrs[1].String(),
+				Amount:    sdk.NewCoin(newDenom, math.NewInt(100)),
+			},
+			expErr: true,
+		},
+		{
+			desc: "Mint tokenfatory denom, denom not created",
+			msg: &types.MsgMint{
+				Authority: accAddrs[0].String(),
+				ToAddress: accAddrs[1].String(),
+				Amount:    sdk.NewCoin(newDenom + "s", math.NewInt(100)),
+			},
+			expErr: true,
+		},
+	} {
+		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			_, err := handler.MsgMint(s.ctx, tc.msg)
+			fmt.Println("err", err)
+			if tc.expErr {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+				// Check ToAddress balance after
+				balance := s.bankKeeper.GetBalance(s.ctx, accAddrs[1], tc.msg.Amount.Denom)
+				require.Equal(balance, tc.msg.Amount)
+			}
 		})
 	}
 }

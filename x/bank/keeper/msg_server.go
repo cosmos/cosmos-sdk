@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"context"
-
-	"github.com/hashicorp/go-metrics"
+	"fmt"
+	"github.com/armon/go-metrics"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -31,13 +31,16 @@ func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSe
 		from, to []byte
 		err      error
 	)
+	fmt.Println("Send msgServer.Send", msg.String())
 
 	if base, ok := k.Keeper.(BaseKeeper); ok {
 		from, err = base.ak.AddressCodec().StringToBytes(msg.FromAddress)
+		fmt.Println("Send from", from)
 		if err != nil {
 			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
 		}
 		to, err = base.ak.AddressCodec().StringToBytes(msg.ToAddress)
+		fmt.Println("Send to", to)
 		if err != nil {
 			return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %s", err)
 		}
@@ -61,6 +64,8 @@ func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSe
 	if k.BlockedAddr(to) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
+
+	fmt.Println("Send k.SendCoins", from, to, msg.Amount)
 
 	err = k.SendCoins(ctx, from, to, msg.Amount)
 	if err != nil {

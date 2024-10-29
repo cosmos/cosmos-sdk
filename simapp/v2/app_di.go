@@ -49,10 +49,7 @@ func AppConfig() depinject.Config {
 		ModuleConfig, // Alternatively use appconfig.LoadYAML(AppConfigYAML)
 		runtime.DefaultServiceBindings(),
 		depinject.Provide(
-			codec.ProvideInterfaceRegistry,
-			codec.ProvideAddressCodec,
-			codec.ProvideProtoCodec,
-			codec.ProvideLegacyAmino,
+			codec.DefaultProviders,
 			ProvideRootStoreConfig,
 			// inject desired account types:
 			multisigdepinject.ProvideAccount,

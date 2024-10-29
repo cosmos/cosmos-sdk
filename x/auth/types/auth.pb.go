@@ -246,8 +246,6 @@ func (m *Params) GetSigVerifyCostSecp256k1() uint64 {
 }
 
 func init() {
-	fmt.Println("auth.proto init")
-	debug.PrintStack()
 	proto.RegisterType((*BaseAccount)(nil), "cosmos.auth.v1beta1.BaseAccount")
 	proto.RegisterType((*ModuleAccount)(nil), "cosmos.auth.v1beta1.ModuleAccount")
 	proto.RegisterType((*ModuleCredential)(nil), "cosmos.auth.v1beta1.ModuleCredential")

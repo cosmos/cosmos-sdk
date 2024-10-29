@@ -9,8 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/store/v2/root"
-
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -27,6 +25,7 @@ import (
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
+	"cosmossdk.io/store/v2/root"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
 	consensustypes "cosmossdk.io/x/consensus/types"

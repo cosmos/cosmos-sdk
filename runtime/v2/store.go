@@ -1,12 +1,13 @@
 package runtime
 
 import (
+	"errors"
+	"fmt"
+
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/server/v2/stf"
 	storev2 "cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/proof"
-	"errors"
-	"fmt"
 )
 
 // NewKVStoreService creates a new KVStoreService.

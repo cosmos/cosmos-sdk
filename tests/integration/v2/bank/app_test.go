@@ -45,7 +45,6 @@ var (
 	addr3               = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	coins               = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	halfCoins           = sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}
-	sendMsg1            = types.NewMsgSend(addr1.String(), addr2.String(), coins)
 	moduleAccAddr       = authtypes.NewModuleAddress(stakingtypes.BondedPoolName)
 )
 

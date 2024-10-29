@@ -1,4 +1,4 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
+	authTest "github.com/cosmos/cosmos-sdk/tests/integration/auth/keeper"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -19,7 +20,7 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 	app, err := simtestutil.Setup(
 		depinject.Configs(
 			depinject.Supply(log.NewNopLogger()),
-			AppConfig,
+			authTest.AppConfig,
 		),
 		&accountKeeper,
 	)
@@ -48,7 +49,7 @@ func BenchmarkAccountMapperSetAccount(b *testing.B) {
 	app, err := simtestutil.Setup(
 		depinject.Configs(
 			depinject.Supply(log.NewNopLogger()),
-			AppConfig,
+			authTest.AppConfig,
 		), &accountKeeper)
 	require.NoError(b, err)
 

@@ -121,18 +121,36 @@ func (h handlers) MsgSend(ctx context.Context, msg *types.MsgSend) (*types.MsgSe
 }
 
 func (h handlers) MsgMint(ctx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
-	authorityBytes, err := h.addressCodec.StringToBytes(msg.Authority)
-	if err != nil {
-		return nil, err
-	}
+	// Check if is a tokenfatory denom
+	_, _, err := types.DeconstructDenom(msg.Amount.Denom)
+	if err == nil {
+		_, denomExists := h.GetDenomMetaData(ctx, msg.Amount.Denom)
+		if !denomExists {
+			return nil, types.ErrDenomDoesNotExist.Wrapf("denom: %s", msg.Amount.Denom)
+		}
 
-	if !bytes.Equal(h.authority, authorityBytes) {
-		expectedAuthority, err := h.addressCodec.BytesToString(h.authority)
+		authorityMetadata, err := h.GetAuthorityMetadata(ctx, msg.Amount.Denom)
 		if err != nil {
 			return nil, err
 		}
 
-		return nil, fmt.Errorf("invalid authority; expected %s, got %s", expectedAuthority, msg.Authority)
+		if msg.Authority != authorityMetadata.GetAdmin() {
+			return nil, types.ErrUnauthorized
+		}
+	} else {
+		authorityBytes, err := h.addressCodec.StringToBytes(msg.Authority)
+		if err != nil {
+			return nil, err
+		}
+
+		if !bytes.Equal(h.authority, authorityBytes) {
+			expectedAuthority, err := h.addressCodec.BytesToString(h.authority)
+			if err != nil {
+				return nil, err
+			}
+
+			return nil, fmt.Errorf("invalid authority; expected %s, got %s", expectedAuthority, msg.Authority)
+		}
 	}
 
 	to, err := h.addressCodec.StringToBytes(msg.ToAddress)
@@ -144,12 +162,12 @@ func (h handlers) MsgMint(ctx context.Context, msg *types.MsgMint) (*types.MsgMi
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 
-	if !msg.Amount.IsAllPositive() {
+	if !msg.Amount.IsPositive() {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 
 	// TODO: should mint to mint module then transfer?
-	err = h.MintCoins(ctx, to, msg.Amount)
+	err = h.MintCoins(ctx, to, sdk.NewCoins(msg.Amount))
 	if err != nil {
 		return nil, err
 	}

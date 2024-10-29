@@ -8,6 +8,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	anypb "google.golang.org/protobuf/types/known/anypb"
 	io "io"
 	reflect "reflect"
 	sync "sync"
@@ -1831,6 +1832,644 @@ func (x *fastReflection_QueryAuthenticationMethodsResponse) ProtoMethods() *prot
 	}
 }
 
+var _ protoreflect.List = (*_TxExtension_2_list)(nil)
+
+type _TxExtension_2_list struct {
+	list *[]*anypb.Any
+}
+
+func (x *_TxExtension_2_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_TxExtension_2_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_TxExtension_2_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_TxExtension_2_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_TxExtension_2_list) AppendMutable() protoreflect.Value {
+	v := new(anypb.Any)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_TxExtension_2_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_TxExtension_2_list) NewElement() protoreflect.Value {
+	v := new(anypb.Any)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_TxExtension_2_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_TxExtension                           protoreflect.MessageDescriptor
+	fd_TxExtension_authentication_gas_limit  protoreflect.FieldDescriptor
+	fd_TxExtension_bundler_payment_messages  protoreflect.FieldDescriptor
+	fd_TxExtension_bundler_payment_gas_limit protoreflect.FieldDescriptor
+	fd_TxExtension_execution_gas_limit       protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_init()
+	md_TxExtension = File_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto.Messages().ByName("TxExtension")
+	fd_TxExtension_authentication_gas_limit = md_TxExtension.Fields().ByName("authentication_gas_limit")
+	fd_TxExtension_bundler_payment_messages = md_TxExtension.Fields().ByName("bundler_payment_messages")
+	fd_TxExtension_bundler_payment_gas_limit = md_TxExtension.Fields().ByName("bundler_payment_gas_limit")
+	fd_TxExtension_execution_gas_limit = md_TxExtension.Fields().ByName("execution_gas_limit")
+}
+
+var _ protoreflect.Message = (*fastReflection_TxExtension)(nil)
+
+type fastReflection_TxExtension TxExtension
+
+func (x *TxExtension) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_TxExtension)(x)
+}
+
+func (x *TxExtension) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_TxExtension_messageType fastReflection_TxExtension_messageType
+var _ protoreflect.MessageType = fastReflection_TxExtension_messageType{}
+
+type fastReflection_TxExtension_messageType struct{}
+
+func (x fastReflection_TxExtension_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_TxExtension)(nil)
+}
+func (x fastReflection_TxExtension_messageType) New() protoreflect.Message {
+	return new(fastReflection_TxExtension)
+}
+func (x fastReflection_TxExtension_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_TxExtension
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_TxExtension) Descriptor() protoreflect.MessageDescriptor {
+	return md_TxExtension
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_TxExtension) Type() protoreflect.MessageType {
+	return _fastReflection_TxExtension_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_TxExtension) New() protoreflect.Message {
+	return new(fastReflection_TxExtension)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_TxExtension) Interface() protoreflect.ProtoMessage {
+	return (*TxExtension)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_TxExtension) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.AuthenticationGasLimit != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.AuthenticationGasLimit)
+		if !f(fd_TxExtension_authentication_gas_limit, value) {
+			return
+		}
+	}
+	if len(x.BundlerPaymentMessages) != 0 {
+		value := protoreflect.ValueOfList(&_TxExtension_2_list{list: &x.BundlerPaymentMessages})
+		if !f(fd_TxExtension_bundler_payment_messages, value) {
+			return
+		}
+	}
+	if x.BundlerPaymentGasLimit != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.BundlerPaymentGasLimit)
+		if !f(fd_TxExtension_bundler_payment_gas_limit, value) {
+			return
+		}
+	}
+	if x.ExecutionGasLimit != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ExecutionGasLimit)
+		if !f(fd_TxExtension_execution_gas_limit, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_TxExtension) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.authentication_gas_limit":
+		return x.AuthenticationGasLimit != uint64(0)
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.bundler_payment_messages":
+		return len(x.BundlerPaymentMessages) != 0
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.bundler_payment_gas_limit":
+		return x.BundlerPaymentGasLimit != uint64(0)
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.execution_gas_limit":
+		return x.ExecutionGasLimit != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.interfaces.account_abstraction.v1.TxExtension"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.interfaces.account_abstraction.v1.TxExtension does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_TxExtension) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.authentication_gas_limit":
+		x.AuthenticationGasLimit = uint64(0)
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.bundler_payment_messages":
+		x.BundlerPaymentMessages = nil
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.bundler_payment_gas_limit":
+		x.BundlerPaymentGasLimit = uint64(0)
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.execution_gas_limit":
+		x.ExecutionGasLimit = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.interfaces.account_abstraction.v1.TxExtension"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.interfaces.account_abstraction.v1.TxExtension does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_TxExtension) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.authentication_gas_limit":
+		value := x.AuthenticationGasLimit
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.bundler_payment_messages":
+		if len(x.BundlerPaymentMessages) == 0 {
+			return protoreflect.ValueOfList(&_TxExtension_2_list{})
+		}
+		listValue := &_TxExtension_2_list{list: &x.BundlerPaymentMessages}
+		return protoreflect.ValueOfList(listValue)
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.bundler_payment_gas_limit":
+		value := x.BundlerPaymentGasLimit
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.execution_gas_limit":
+		value := x.ExecutionGasLimit
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.interfaces.account_abstraction.v1.TxExtension"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.interfaces.account_abstraction.v1.TxExtension does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_TxExtension) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.authentication_gas_limit":
+		x.AuthenticationGasLimit = value.Uint()
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.bundler_payment_messages":
+		lv := value.List()
+		clv := lv.(*_TxExtension_2_list)
+		x.BundlerPaymentMessages = *clv.list
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.bundler_payment_gas_limit":
+		x.BundlerPaymentGasLimit = value.Uint()
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.execution_gas_limit":
+		x.ExecutionGasLimit = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.interfaces.account_abstraction.v1.TxExtension"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.interfaces.account_abstraction.v1.TxExtension does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_TxExtension) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.bundler_payment_messages":
+		if x.BundlerPaymentMessages == nil {
+			x.BundlerPaymentMessages = []*anypb.Any{}
+		}
+		value := &_TxExtension_2_list{list: &x.BundlerPaymentMessages}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.authentication_gas_limit":
+		panic(fmt.Errorf("field authentication_gas_limit of message cosmos.accounts.interfaces.account_abstraction.v1.TxExtension is not mutable"))
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.bundler_payment_gas_limit":
+		panic(fmt.Errorf("field bundler_payment_gas_limit of message cosmos.accounts.interfaces.account_abstraction.v1.TxExtension is not mutable"))
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.execution_gas_limit":
+		panic(fmt.Errorf("field execution_gas_limit of message cosmos.accounts.interfaces.account_abstraction.v1.TxExtension is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.interfaces.account_abstraction.v1.TxExtension"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.interfaces.account_abstraction.v1.TxExtension does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_TxExtension) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.authentication_gas_limit":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.bundler_payment_messages":
+		list := []*anypb.Any{}
+		return protoreflect.ValueOfList(&_TxExtension_2_list{list: &list})
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.bundler_payment_gas_limit":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.execution_gas_limit":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.accounts.interfaces.account_abstraction.v1.TxExtension"))
+		}
+		panic(fmt.Errorf("message cosmos.accounts.interfaces.account_abstraction.v1.TxExtension does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_TxExtension) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.accounts.interfaces.account_abstraction.v1.TxExtension", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_TxExtension) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_TxExtension) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_TxExtension) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_TxExtension) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*TxExtension)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.AuthenticationGasLimit != 0 {
+			n += 1 + runtime.Sov(uint64(x.AuthenticationGasLimit))
+		}
+		if len(x.BundlerPaymentMessages) > 0 {
+			for _, e := range x.BundlerPaymentMessages {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.BundlerPaymentGasLimit != 0 {
+			n += 1 + runtime.Sov(uint64(x.BundlerPaymentGasLimit))
+		}
+		if x.ExecutionGasLimit != 0 {
+			n += 1 + runtime.Sov(uint64(x.ExecutionGasLimit))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*TxExtension)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.ExecutionGasLimit != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.ExecutionGasLimit))
+			i--
+			dAtA[i] = 0x20
+		}
+		if x.BundlerPaymentGasLimit != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.BundlerPaymentGasLimit))
+			i--
+			dAtA[i] = 0x18
+		}
+		if len(x.BundlerPaymentMessages) > 0 {
+			for iNdEx := len(x.BundlerPaymentMessages) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.BundlerPaymentMessages[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x12
+			}
+		}
+		if x.AuthenticationGasLimit != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.AuthenticationGasLimit))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*TxExtension)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: TxExtension: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: TxExtension: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AuthenticationGasLimit", wireType)
+				}
+				x.AuthenticationGasLimit = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.AuthenticationGasLimit |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BundlerPaymentMessages", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.BundlerPaymentMessages = append(x.BundlerPaymentMessages, &anypb.Any{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.BundlerPaymentMessages[len(x.BundlerPaymentMessages)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BundlerPaymentGasLimit", wireType)
+				}
+				x.BundlerPaymentGasLimit = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.BundlerPaymentGasLimit |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ExecutionGasLimit", wireType)
+				}
+				x.ExecutionGasLimit = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.ExecutionGasLimit |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -2007,6 +2646,83 @@ func (x *QueryAuthenticationMethodsResponse) GetAuthenticationMethods() []string
 	return nil
 }
 
+// TxExtension is the extension option that AA's add to txs when they're bundled.
+type TxExtension struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// authentication_gas_limit expresses the gas limit to be used for the authentication part of the
+	// bundled tx.
+	AuthenticationGasLimit uint64 `protobuf:"varint,1,opt,name=authentication_gas_limit,json=authenticationGasLimit,proto3" json:"authentication_gas_limit,omitempty"`
+	// bundler_payment_messages expresses a list of messages that the account
+	// executes to pay the bundler for submitting the bundled tx.
+	// It can be empty if the bundler does not need any form of payment,
+	// the handshake for submitting the UserOperation might have happened off-chain.
+	// Bundlers and accounts are free to use any form of payment, in fact the payment can
+	// either be empty or be expressed as:
+	// - NFT payment
+	// - IBC Token payment.
+	// - Payment through delegations.
+	BundlerPaymentMessages []*anypb.Any `protobuf:"bytes,2,rep,name=bundler_payment_messages,json=bundlerPaymentMessages,proto3" json:"bundler_payment_messages,omitempty"`
+	// bundler_payment_gas_limit defines the gas limit to be used for the bundler payment.
+	// This ensures that, since the bundler executes a list of bundled tx and there needs to
+	// be minimal trust between bundler and the tx sender, the sender cannot consume
+	// the whole bundle gas.
+	BundlerPaymentGasLimit uint64 `protobuf:"varint,3,opt,name=bundler_payment_gas_limit,json=bundlerPaymentGasLimit,proto3" json:"bundler_payment_gas_limit,omitempty"`
+	// execution_gas_limit defines the gas limit to be used for the execution of the UserOperation's
+	// execution messages.
+	ExecutionGasLimit uint64 `protobuf:"varint,4,opt,name=execution_gas_limit,json=executionGasLimit,proto3" json:"execution_gas_limit,omitempty"`
+}
+
+func (x *TxExtension) Reset() {
+	*x = TxExtension{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *TxExtension) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TxExtension) ProtoMessage() {}
+
+// Deprecated: Use TxExtension.ProtoReflect.Descriptor instead.
+func (*TxExtension) Descriptor() ([]byte, []int) {
+	return file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *TxExtension) GetAuthenticationGasLimit() uint64 {
+	if x != nil {
+		return x.AuthenticationGasLimit
+	}
+	return 0
+}
+
+func (x *TxExtension) GetBundlerPaymentMessages() []*anypb.Any {
+	if x != nil {
+		return x.BundlerPaymentMessages
+	}
+	return nil
+}
+
+func (x *TxExtension) GetBundlerPaymentGasLimit() uint64 {
+	if x != nil {
+		return x.BundlerPaymentGasLimit
+	}
+	return 0
+}
+
+func (x *TxExtension) GetExecutionGasLimit() uint64 {
+	if x != nil {
+		return x.ExecutionGasLimit
+	}
+	return 0
+}
+
 var File_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto protoreflect.FileDescriptor
 
 var file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_rawDesc = []byte{
@@ -2017,29 +2733,47 @@ var file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_rawDe
 	0x6f, 0x74, 0x6f, 0x12, 0x31, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f,
 	0x75, 0x6e, 0x74, 0x73, 0x2e, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x66, 0x61, 0x63, 0x65, 0x73, 0x2e,
 	0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x61, 0x62, 0x73, 0x74, 0x72, 0x61, 0x63, 0x74,
-	0x69, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x1a, 0x1a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x74,
-	0x78, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x78, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x22, 0xa6, 0x01, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x41, 0x75, 0x74, 0x68, 0x65, 0x6e,
-	0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65,
-	0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x72,
-	0x12, 0x2f, 0x0a, 0x06, 0x72, 0x61, 0x77, 0x5f, 0x74, 0x78, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x18, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x74, 0x78, 0x2e, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x2e, 0x54, 0x78, 0x52, 0x61, 0x77, 0x52, 0x05, 0x72, 0x61, 0x77, 0x54,
-	0x78, 0x12, 0x25, 0x0a, 0x02, 0x74, 0x78, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x74, 0x78, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x54, 0x78, 0x52, 0x02, 0x74, 0x78, 0x12, 0x21, 0x0a, 0x0c, 0x73, 0x69, 0x67, 0x6e,
-	0x65, 0x72, 0x5f, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0b,
-	0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x22, 0x19, 0x0a, 0x17, 0x4d,
-	0x73, 0x67, 0x41, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x1c, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41,
-	0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4d, 0x65, 0x74,
-	0x68, 0x6f, 0x64, 0x73, 0x22, 0x5b, 0x0a, 0x22, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x75, 0x74,
-	0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4d, 0x65, 0x74, 0x68, 0x6f,
-	0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x35, 0x0a, 0x16, 0x61, 0x75,
-	0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x6d, 0x65, 0x74,
-	0x68, 0x6f, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x15, 0x61, 0x75, 0x74, 0x68,
-	0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64,
-	0x73, 0x42, 0x86, 0x03, 0x0a, 0x35, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x69, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x1a, 0x19, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x61, 0x6e, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x1a, 0x1a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x74, 0x78, 0x2f, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x78, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xa6, 0x01,
+	0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x41, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74,
+	0x65, 0x12, 0x18, 0x0a, 0x07, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x07, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x12, 0x2f, 0x0a, 0x06, 0x72,
+	0x61, 0x77, 0x5f, 0x74, 0x78, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x74, 0x78, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x54, 0x78, 0x52, 0x61, 0x77, 0x52, 0x05, 0x72, 0x61, 0x77, 0x54, 0x78, 0x12, 0x25, 0x0a, 0x02,
+	0x74, 0x78, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x74, 0x78, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x54, 0x78, 0x52,
+	0x02, 0x74, 0x78, 0x12, 0x21, 0x0a, 0x0c, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x5f, 0x69, 0x6e,
+	0x64, 0x65, 0x78, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0b, 0x73, 0x69, 0x67, 0x6e, 0x65,
+	0x72, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x22, 0x19, 0x0a, 0x17, 0x4d, 0x73, 0x67, 0x41, 0x75, 0x74,
+	0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x1c, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x75, 0x74, 0x68, 0x65, 0x6e,
+	0x74, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x22,
+	0x5b, 0x0a, 0x22, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69,
+	0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x35, 0x0a, 0x16, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74,
+	0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x18,
+	0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x15, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x73, 0x22, 0x82, 0x02, 0x0a,
+	0x0b, 0x54, 0x78, 0x45, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x38, 0x0a, 0x18,
+	0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x67,
+	0x61, 0x73, 0x5f, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x16,
+	0x61, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x47, 0x61,
+	0x73, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x12, 0x4e, 0x0a, 0x18, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65,
+	0x72, 0x5f, 0x70, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x5f, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67,
+	0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x16,
+	0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65, 0x72, 0x50, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x4d, 0x65,
+	0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x12, 0x39, 0x0a, 0x19, 0x62, 0x75, 0x6e, 0x64, 0x6c, 0x65,
+	0x72, 0x5f, 0x70, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x5f, 0x67, 0x61, 0x73, 0x5f, 0x6c, 0x69,
+	0x6d, 0x69, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x16, 0x62, 0x75, 0x6e, 0x64, 0x6c,
+	0x65, 0x72, 0x50, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x47, 0x61, 0x73, 0x4c, 0x69, 0x6d, 0x69,
+	0x74, 0x12, 0x2e, 0x0a, 0x13, 0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x67,
+	0x61, 0x73, 0x5f, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x11,
+	0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x47, 0x61, 0x73, 0x4c, 0x69, 0x6d, 0x69,
+	0x74, 0x42, 0x86, 0x03, 0x0a, 0x35, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x2e, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x66,
 	0x61, 0x63, 0x65, 0x73, 0x2e, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x61, 0x62, 0x73,
 	0x74, 0x72, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x42, 0x0e, 0x49, 0x6e, 0x74,
@@ -2079,23 +2813,26 @@ func file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_rawD
 	return file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_rawDescData
 }
 
-var file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_goTypes = []interface{}{
 	(*MsgAuthenticate)(nil),                    // 0: cosmos.accounts.interfaces.account_abstraction.v1.MsgAuthenticate
 	(*MsgAuthenticateResponse)(nil),            // 1: cosmos.accounts.interfaces.account_abstraction.v1.MsgAuthenticateResponse
 	(*QueryAuthenticationMethods)(nil),         // 2: cosmos.accounts.interfaces.account_abstraction.v1.QueryAuthenticationMethods
 	(*QueryAuthenticationMethodsResponse)(nil), // 3: cosmos.accounts.interfaces.account_abstraction.v1.QueryAuthenticationMethodsResponse
-	(*v1beta1.TxRaw)(nil),                      // 4: cosmos.tx.v1beta1.TxRaw
-	(*v1beta1.Tx)(nil),                         // 5: cosmos.tx.v1beta1.Tx
+	(*TxExtension)(nil),                        // 4: cosmos.accounts.interfaces.account_abstraction.v1.TxExtension
+	(*v1beta1.TxRaw)(nil),                      // 5: cosmos.tx.v1beta1.TxRaw
+	(*v1beta1.Tx)(nil),                         // 6: cosmos.tx.v1beta1.Tx
+	(*anypb.Any)(nil),                          // 7: google.protobuf.Any
 }
 var file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_depIdxs = []int32{
-	4, // 0: cosmos.accounts.interfaces.account_abstraction.v1.MsgAuthenticate.raw_tx:type_name -> cosmos.tx.v1beta1.TxRaw
-	5, // 1: cosmos.accounts.interfaces.account_abstraction.v1.MsgAuthenticate.tx:type_name -> cosmos.tx.v1beta1.Tx
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	5, // 0: cosmos.accounts.interfaces.account_abstraction.v1.MsgAuthenticate.raw_tx:type_name -> cosmos.tx.v1beta1.TxRaw
+	6, // 1: cosmos.accounts.interfaces.account_abstraction.v1.MsgAuthenticate.tx:type_name -> cosmos.tx.v1beta1.Tx
+	7, // 2: cosmos.accounts.interfaces.account_abstraction.v1.TxExtension.bundler_payment_messages:type_name -> google.protobuf.Any
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_init() }
@@ -2152,6 +2889,18 @@ func file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_init
 				return nil
 			}
 		}
+		file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*TxExtension); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2159,7 +2908,7 @@ func file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_init
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_accounts_interfaces_account_abstraction_v1_interface_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

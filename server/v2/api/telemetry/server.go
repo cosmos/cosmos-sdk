@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -27,8 +28,23 @@ type Server[T transaction.Tx] struct {
 }
 
 // New creates a new telemetry server.
-func New[T transaction.Tx]() *Server[T] {
-	return &Server[T]{}
+func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger) (*Server[T], error) {
+	srv := &Server[T]{}
+	serverCfg := srv.Config().(*Config)
+	if len(cfg) > 0 {
+		if err := serverv2.UnmarshalSubConfig(cfg, srv.Name(), &serverCfg); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+	}
+	srv.config = serverCfg
+	srv.logger = logger.With(log.ModuleKey, srv.Name())
+
+	metrics, err := NewMetrics(srv.config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize metrics: %w", err)
+	}
+	srv.metrics = metrics
+	return srv, nil
 }
 
 // Name returns the server name.
@@ -42,26 +58,6 @@ func (s *Server[T]) Config() any {
 	}
 
 	return s.config
-}
-
-// Init implements serverv2.ServerComponent.
-func (s *Server[T]) Init(_ serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
-	serverCfg := s.Config().(*Config)
-	if len(cfg) > 0 {
-		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
-		}
-	}
-	s.config = serverCfg
-	s.logger = logger.With(log.ModuleKey, s.Name())
-
-	metrics, err := NewMetrics(s.config)
-	if err != nil {
-		return fmt.Errorf("failed to initialize metrics: %w", err)
-	}
-	s.metrics = metrics
-
-	return nil
 }
 
 func (s *Server[T]) Start(ctx context.Context) error {

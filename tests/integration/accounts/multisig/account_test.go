@@ -18,12 +18,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestE2ETestSuite(t *testing.T) {
-	suite.Run(t, NewE2ETestSuite())
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, NewIntegrationTestSuite())
 }
 
 // TestSimpleSendProposal creates a multisig account with 1 member, sends a tx, votes and executes it.
-func (s *E2ETestSuite) TestSimpleSendProposal() {
+func (s *IntegrationTestSuite) TestSimpleSendProposal() {
 	ctx := sdk.NewContext(s.app.CommitMultiStore(), false, s.app.Logger()).WithHeaderInfo(header.Info{
 		Time: time.Now(),
 	})
@@ -110,7 +110,7 @@ func (s *E2ETestSuite) TestSimpleSendProposal() {
 
 // TestConfigUpdate creates a multisig with 1 member, adds 2 more members and
 // changes the config to require 2/3 majority (also through a proposal).
-func (s *E2ETestSuite) TestConfigUpdate() {
+func (s *IntegrationTestSuite) TestConfigUpdate() {
 	ctx := sdk.NewContext(s.app.CommitMultiStore(), false, s.app.Logger()).WithHeaderInfo(header.Info{
 		Time: time.Now(),
 	})

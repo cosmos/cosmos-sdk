@@ -22,6 +22,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -43,40 +44,50 @@ type Server[T transaction.Tx] struct {
 }
 
 // New creates a new grpc server.
-func New[T transaction.Tx](cfgOptions ...CfgOption) *Server[T] {
-	return &Server[T]{
+func New[T transaction.Tx](
+	logger log.Logger,
+	interfaceRegistry server.InterfaceRegistry,
+	queryHandlers map[string]appmodulev2.Handler,
+	queryable interface {
+		Query(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error)
+	},
+	cfg server.ConfigMap,
+	cfgOptions ...CfgOption,
+) (*Server[T], error) {
+	srv := &Server[T]{
 		cfgOptions: cfgOptions,
 	}
-}
-
-// Init returns a correctly configured and initialized gRPC server.
-// Note, the caller is responsible for starting the server.
-func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
-	serverCfg := s.Config().(*Config)
+	serverCfg := srv.Config().(*Config)
 	if len(cfg) > 0 {
-		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
+		if err := serverv2.UnmarshalSubConfig(cfg, srv.Name(), &serverCfg); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
-	methodsMap := appI.QueryHandlers()
 
 	grpcSrv := grpc.NewServer(
-		grpc.ForceServerCodec(newProtoCodec(appI.InterfaceRegistry()).GRPCCodec()),
+		grpc.ForceServerCodec(newProtoCodec(interfaceRegistry).GRPCCodec()),
 		grpc.MaxSendMsgSize(serverCfg.MaxSendMsgSize),
 		grpc.MaxRecvMsgSize(serverCfg.MaxRecvMsgSize),
-		grpc.UnknownServiceHandler(
-			makeUnknownServiceHandler(methodsMap, appI),
-		),
+		grpc.UnknownServiceHandler(makeUnknownServiceHandler(queryHandlers, queryable)),
 	)
 
 	// Reflection allows external clients to see what services and methods the gRPC server exposes.
-	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(methodsMap)), logger.With("sub-module", "grpc-reflection"))
+	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(queryHandlers)), logger.With("sub-module", "grpc-reflection"))
 
-	s.grpcSrv = grpcSrv
-	s.config = serverCfg
-	s.logger = logger.With(log.ModuleKey, s.Name())
+	srv.grpcSrv = grpcSrv
+	srv.config = serverCfg
+	srv.logger = logger.With(log.ModuleKey, srv.Name())
 
-	return nil
+	return srv, nil
+}
+
+// NewWithConfigOptions creates a new GRPC server with the provided config options.
+// It is *not* a fully functional server (since it has been created without dependencies)
+// The returned server should only be used to get and set configuration.
+func NewWithConfigOptions[T transaction.Tx](opts ...CfgOption) *Server[T] {
+	return &Server[T]{
+		cfgOptions: opts,
+	}
 }
 
 func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
@@ -187,7 +198,7 @@ func (s *Server[T]) Config() any {
 	return s.config
 }
 
-func (s *Server[T]) Start(ctx context.Context) error {
+func (s *Server[T]) Start(context.Context) error {
 	if !s.config.Enable {
 		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil

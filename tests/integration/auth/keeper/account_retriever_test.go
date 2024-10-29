@@ -1,16 +1,17 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	authTest "github.com/cosmos/cosmos-sdk/tests/integration/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestAccountRetriever(t *testing.T) {
-	cfg, err := network.DefaultConfigWithAppConfig(AppConfig)
+	cfg, err := network.DefaultConfigWithAppConfig(authTest.AppConfig)
 	require.NoError(t, err)
 	cfg.NumValidators = 1
 

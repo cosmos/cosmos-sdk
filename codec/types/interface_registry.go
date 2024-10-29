@@ -308,6 +308,7 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 		fmt.Println("imap", imap)
 		fmt.Println("any.TypeUrl", any.TypeUrl)
 		fmt.Println("rt", rt)
+		debug.PrintStack()
 	}
 
 	typ, found := imap[any.TypeUrl]

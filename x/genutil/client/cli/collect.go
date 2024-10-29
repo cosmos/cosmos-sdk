@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -16,7 +17,7 @@ import (
 const flagGenTxDir = "gentx-dir"
 
 // CollectGenTxsCmd - return the cobra command to collect genesis transactions
-func CollectGenTxsCmd(validator types.MessageValidator) *cobra.Command {
+func CollectGenTxsCmd(validator func([]transaction.Msg) error) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "collect-gentxs",
 		Short: "Collect genesis txs and output a genesis.json file",
@@ -50,7 +51,9 @@ func CollectGenTxsCmd(validator types.MessageValidator) *cobra.Command {
 			toPrint := newPrintInfo(config.Moniker, appGenesis.ChainID, nodeID, genTxsDir, json.RawMessage(""))
 			initCfg := types.NewInitConfig(appGenesis.ChainID, genTxsDir, nodeID, valPubKey)
 
-			appMessage, err := genutil.GenAppStateFromConfig(cdc, clientCtx.TxConfig, config, initCfg, appGenesis, validator, clientCtx.ValidatorAddressCodec, clientCtx.AddressCodec)
+			appMessage, err := genutil.GenAppStateFromConfig(
+				cdc, clientCtx.TxConfig, config, initCfg, appGenesis,
+				validator, clientCtx.ValidatorAddressCodec, clientCtx.AddressCodec)
 			if err != nil {
 				return errors.Wrap(err, "failed to get genesis app state from config")
 			}

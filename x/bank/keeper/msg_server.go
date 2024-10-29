@@ -3,7 +3,8 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"github.com/armon/go-metrics"
+
+	"github.com/hashicorp/go-metrics"
 
 	errorsmod "cosmossdk.io/errors"
 

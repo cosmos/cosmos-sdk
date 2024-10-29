@@ -500,6 +500,128 @@ func (s *KeeperTestSuite) TestMintHandler() {
 	}
 }
 
+func (s *KeeperTestSuite) TestBurnHandler() {
+	s.SetupTest()
+	require := s.Require()
+	s.bankKeeper.SetParams(s.ctx, types.Params{
+		DenomCreationFee: sdk.NewCoins(sdk.NewCoin(fooDenom, math.NewInt(10))),
+	})
+	handler := keeper.NewHandlers(&s.bankKeeper)
+	require.NoError(banktestutil.FundAccount(s.ctx, s.bankKeeper, accAddrs[0], sdk.NewCoins(sdk.NewCoin(fooDenom, math.NewInt(100)))))
+
+	resp, err := handler.MsgCreateDenom(s.ctx, &types.MsgCreateDenom{
+		Sender:   accAddrs[0].String(),
+		Subdenom: "test",
+	})
+	require.NoError(err)
+
+	newDenom := resp.NewTokenDenom
+	authority := authtypes.NewModuleAddress("gov")
+
+	_, err = handler.MsgMint(s.ctx, &types.MsgMint{
+		Authority: accAddrs[0].String(),
+		ToAddress: accAddrs[0].String(),
+		Amount:    sdk.NewCoin(newDenom, math.NewInt(100)),
+	})
+	require.NoError(err)
+
+	for _, tc := range []struct {
+		desc   string
+		msg    *types.MsgBurn
+		expErr bool
+	}{
+		{
+			desc: "Burn foo denom, valid",
+			msg: &types.MsgBurn{
+				Authority:       authority.String(),
+				BurnFromAddress: accAddrs[0].String(),
+				Amount:          sdk.NewCoin(fooDenom, math.NewInt(50)),
+			},
+			expErr: false,
+		},
+		{
+			desc: "Burn foo denom, invalid authority",
+			msg: &types.MsgBurn{
+				Authority:       accAddrs[0].String(),
+				BurnFromAddress: accAddrs[0].String(),
+				Amount:          sdk.NewCoin(fooDenom, math.NewInt(50)),
+			},
+			expErr: true,
+		},
+		{
+			desc: "Burn foo denom, insufficient funds",
+			msg: &types.MsgBurn{
+				Authority:       authority.String(),
+				BurnFromAddress: accAddrs[0].String(),
+				Amount:          sdk.NewCoin(fooDenom, math.NewInt(200)),
+			},
+			expErr: true,
+		},
+		{
+			desc: "Burn bar denom, invalid denom",
+			msg: &types.MsgBurn{
+				Authority:       authority.String(),
+				BurnFromAddress: accAddrs[0].String(),
+				Amount:          sdk.NewCoin(barDenom, math.NewInt(50)),
+			},
+			expErr: true,
+		},
+		{
+			desc: "Burn tokenfactory denom, valid",
+			msg: &types.MsgBurn{
+				Authority:       accAddrs[0].String(),
+				BurnFromAddress: accAddrs[0].String(),
+				Amount:          sdk.NewCoin(newDenom, math.NewInt(50)),
+			},
+			expErr: false,
+		},
+		{
+			desc: "Burn tokenfactory denom, invalid admin",
+			msg: &types.MsgBurn{
+				Authority:       authority.String(),
+				BurnFromAddress: accAddrs[0].String(),
+				Amount:          sdk.NewCoin(newDenom, math.NewInt(50)),
+			},
+			expErr: true,
+		},
+		{
+			desc: "Burn tokenfactory denom, insufficient funds",
+			msg: &types.MsgBurn{
+				Authority:       accAddrs[0].String(),
+				BurnFromAddress: accAddrs[0].String(),
+				Amount:          sdk.NewCoin(newDenom, math.NewInt(150)),
+			},
+			expErr: true,
+		},
+		{
+			desc: "Burn tokenfactory denom, token not exist",
+			msg: &types.MsgBurn{
+				Authority:       authority.String(),
+				BurnFromAddress: accAddrs[0].String(),
+				Amount:          sdk.NewCoin(newDenom+"s", math.NewInt(50)),
+			},
+			expErr: true,
+		},
+	} {
+		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			// Get balance before burn
+			fromAddr, err := s.addressCodec.StringToBytes(tc.msg.BurnFromAddress)
+			require.NoError(err)
+
+			beforeBalances := s.bankKeeper.GetAllBalances(s.ctx, fromAddr)
+			_, err = handler.MsgBurn(s.ctx, tc.msg)
+			if tc.expErr {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+				// Check ToAddress balance after
+				afterBalances := s.bankKeeper.GetAllBalances(s.ctx, fromAddr)
+				require.Equal(beforeBalances.Sub(afterBalances...), sdk.NewCoins(tc.msg.Amount))
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestSendHandler_TokenfactoryDenom() {
 	s.SetupTest()
 	require := s.Require()

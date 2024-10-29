@@ -91,6 +91,42 @@ func (k Keeper) MintCoins(ctx context.Context, addr []byte, amounts sdk.Coins) e
 	)
 }
 
+// BurnCoins burns coins deletes coins from the balance of an account.
+// An error is returned if the module account does not exist or is unauthorized.
+func (k Keeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.Coins) error {
+
+	// TODO: Burn restriction & permission
+	
+	if !amounts.IsValid() {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amounts.String())
+	}
+
+	err := k.subUnlockedCoins(ctx, address, amounts)
+	if err != nil {
+		return err
+	}
+
+	for _, amount := range amounts {
+		supply := k.GetSupply(ctx, amount.GetDenom())
+		supply = supply.Sub(amount)
+		k.setSupply(ctx, supply)
+	}
+
+	addrStr, err := k.addressCodec.BytesToString(address)
+	if err != nil {
+		return err
+	}
+
+	k.Logger.Debug("burned tokens from account", "amount", amounts.String(), "from", addrStr)
+
+	// emit burn event
+	return k.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeCoinBurn,
+		event.NewAttribute(types.AttributeKeyBurner, addrStr),
+		event.NewAttribute(sdk.AttributeKeyAmount, amounts.String()),
+	)
+}
+
 // SendCoins transfers amt coins from a sending account to a receiving account.
 // Function take sender & receipient as []byte.
 // They can be sdk address or module name.

@@ -175,6 +175,60 @@ func (h handlers) MsgMint(ctx context.Context, msg *types.MsgMint) (*types.MsgMi
 	return &types.MsgMintResponse{}, nil
 }
 
+func (h handlers) MsgBurn(ctx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
+	// Check if is a tokenfatory denom
+	_, _, err := types.DeconstructDenom(msg.Amount.Denom)
+	if err == nil {
+		_, denomExists := h.GetDenomMetaData(ctx, msg.Amount.Denom)
+		if !denomExists {
+			return nil, types.ErrDenomDoesNotExist.Wrapf("denom: %s", msg.Amount.Denom)
+		}
+
+		authorityMetadata, err := h.GetAuthorityMetadata(ctx, msg.Amount.Denom)
+		if err != nil {
+			return nil, err
+		}
+
+		if msg.Authority != authorityMetadata.GetAdmin() {
+			return nil, types.ErrUnauthorized
+		}
+	} else {
+		authorityBytes, err := h.addressCodec.StringToBytes(msg.Authority)
+		if err != nil {
+			return nil, err
+		}
+
+		if !bytes.Equal(h.authority, authorityBytes) {
+			expectedAuthority, err := h.addressCodec.BytesToString(h.authority)
+			if err != nil {
+				return nil, err
+			}
+
+			return nil, fmt.Errorf("invalid authority; expected %s, got %s", expectedAuthority, msg.Authority)
+		}
+	}
+
+	from, err := h.addressCodec.StringToBytes(msg.BurnFromAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %s", err)
+	}
+
+	if !msg.Amount.IsValid() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	}
+
+	if !msg.Amount.IsPositive() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	}
+
+	err = h.BurnCoins(ctx, from, sdk.NewCoins(msg.Amount))
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgBurnResponse{}, nil
+}
+
 // QueryParams queries the parameters of the bank/v2 module.
 func (h handlers) QueryParams(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {

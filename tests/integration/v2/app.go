@@ -2,13 +2,14 @@ package integration
 
 import (
 	"context"
-	"cosmossdk.io/store/v2/root"
 	"crypto/sha256"
 	"errors"
 	"fmt"
 	"math/rand"
 	"testing"
 	"time"
+
+	"cosmossdk.io/store/v2/root"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
@@ -125,9 +126,9 @@ func NewApp(
 ) (*App, error) {
 	// create the app with depinject
 	var (
+		storeBuilder    = root.NewBuilder()
 		app             *runtime.App[stateMachineTx]
 		appBuilder      *runtime.AppBuilder[stateMachineTx]
-		storeBuilder    root.Builder
 		txConfig        client.TxConfig
 		txConfigOptions tx.ConfigOptions
 		cometService    comet.Service                   = &cometServiceImpl{}
@@ -143,11 +144,21 @@ func NewApp(
 			appConfig,
 			codec.DefaultProviders,
 			depinject.Supply(
+				&root.Config{
+					Home:         startupConfig.HomeDir,
+					AppDBBackend: "goleveldb",
+					Options:      root.DefaultStoreOptions(),
+				},
+				runtime.GlobalConfig{
+					"server": server.ConfigMap{
+						"minimum-gas-prices": "0stake",
+					},
+				},
 				services.NewGenesisHeaderService(stf.HeaderService{}),
-				&dynamicConfigImpl{startupConfig.HomeDir},
 				cometService,
 				kvFactory,
 				&eventService{},
+				storeBuilder,
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,
@@ -248,7 +259,7 @@ func NewApp(
 		&genesisTxCodec{txConfigOptions},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed init genesiss: %w", err)
+		return nil, fmt.Errorf("failed init genesis: %w", err)
 	}
 
 	if startupConfig.GenesisBehavior == Genesis_NOCOMMIT {

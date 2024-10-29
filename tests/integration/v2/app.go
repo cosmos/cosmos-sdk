@@ -2,6 +2,7 @@ package integration
 
 import (
 	"context"
+	"cosmossdk.io/store/v2/root"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -126,7 +127,7 @@ func NewApp(
 	var (
 		app             *runtime.App[stateMachineTx]
 		appBuilder      *runtime.AppBuilder[stateMachineTx]
-		storeBuilder    *runtime.StoreBuilder
+		storeBuilder    root.Builder
 		txConfig        client.TxConfig
 		txConfigOptions tx.ConfigOptions
 		cometService    comet.Service                   = &cometServiceImpl{}

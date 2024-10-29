@@ -696,26 +696,26 @@ func TestBaseAppPostHandler(t *testing.T) {
 	require.NotContains(t, suite.logBuffer.String(), "panic recovered in runTx")
 }
 
+type mockABCIListener struct {
+	ListenCommitFn func(context.Context, abci.CommitResponse, []*storetypes.StoreKVPair) error
+}
+
+func (m mockABCIListener) ListenFinalizeBlock(_ context.Context, _ abci.FinalizeBlockRequest, _ abci.FinalizeBlockResponse) error {
+	return nil
+}
+
+func (m *mockABCIListener) ListenCommit(ctx context.Context, commit abci.CommitResponse, pairs []*storetypes.StoreKVPair) error {
+	return m.ListenCommitFn(ctx, commit, pairs)
+}
+
 // Test and ensure that invalid block heights always cause errors.
 // See issues:
 // - https://github.com/cosmos/cosmos-sdk/issues/11220
 // - https://github.com/cosmos/cosmos-sdk/issues/7662
 func TestABCI_CreateQueryContext(t *testing.T) {
 	t.Parallel()
+	app := getQueryBaseapp(t)
 
-	db := coretesting.NewMemDB()
-	name := t.Name()
-	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
-
-	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
-	require.NoError(t, err)
-	_, err = app.Commit()
-	require.NoError(t, err)
-
-	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 2})
-	require.NoError(t, err)
-	_, err = app.Commit()
-	require.NoError(t, err)
 	testCases := []struct {
 		name         string
 		height       int64
@@ -724,7 +724,7 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 		expErr       bool
 	}{
 		{"valid height", 2, 2, true, false},
-		{"valid height with different initial height", 2, 1, true, false},
+		{"valid height with different initial height", 2, 1, true, true},
 		{"future height", 10, 10, true, true},
 		{"negative height, prove=true", -1, -1, true, true},
 		{"negative height, prove=false", -1, -1, false, true},
@@ -738,7 +738,11 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 				})
 				require.NoError(t, err)
 			}
-			ctx, err := app.CreateQueryContext(tc.height, tc.prove)
+			height := tc.height
+			if tc.height > tc.headerHeight {
+				height = 0
+			}
+			ctx, err := app.CreateQueryContext(height, tc.prove)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {
@@ -747,6 +751,81 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestABCI_CreateQueryContextWithCheckHeader(t *testing.T) {
+	t.Parallel()
+	app := getQueryBaseapp(t)
+	var height int64 = 2
+	var headerHeight int64 = 1
+
+	testCases := []struct {
+		checkHeader bool
+		expErr      bool
+	}{
+		{true, true},
+		{false, false},
+	}
+
+	for _, tc := range testCases {
+		t.Run("valid height with different initial height", func(t *testing.T) {
+			_, err := app.InitChain(&abci.InitChainRequest{
+				InitialHeight: headerHeight,
+			})
+			require.NoError(t, err)
+			ctx, err := app.CreateQueryContextWithCheckHeader(0, true, tc.checkHeader)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, height, ctx.BlockHeight())
+			}
+		})
+	}
+}
+
+func TestABCI_CreateQueryContext_Before_Set_CheckState(t *testing.T) {
+	t.Parallel()
+
+	db := coretesting.NewMemDB()
+	name := t.Name()
+	var height int64 = 2
+	var headerHeight int64 = 1
+
+	t.Run("valid height with different initial height", func(t *testing.T) {
+		app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+
+		_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
+		require.NoError(t, err)
+		_, err = app.Commit()
+		require.NoError(t, err)
+
+		_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 2})
+		require.NoError(t, err)
+
+		var queryCtx *sdk.Context
+		var queryCtxErr error
+		app.SetStreamingManager(storetypes.StreamingManager{
+			ABCIListeners: []storetypes.ABCIListener{
+				&mockABCIListener{
+					ListenCommitFn: func(context.Context, abci.CommitResponse, []*storetypes.StoreKVPair) error {
+						qCtx, qErr := app.CreateQueryContext(0, true)
+						queryCtx = &qCtx
+						queryCtxErr = qErr
+						return nil
+					},
+				},
+			},
+		})
+		_, err = app.Commit()
+		require.NoError(t, err)
+		require.NoError(t, queryCtxErr)
+		require.Equal(t, height, queryCtx.BlockHeight())
+		_, err = app.InitChain(&abci.InitChainRequest{
+			InitialHeight: headerHeight,
+		})
+		require.NoError(t, err)
+	})
 }
 
 func TestSetMinGasPrices(t *testing.T) {

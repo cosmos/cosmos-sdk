@@ -163,7 +163,7 @@ You might need to implement them only if you're migrating to collections and the
 
 Let's explore an example:
 
-````go
+```go
 package collections
 
 import (
@@ -186,7 +186,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 		IDs: collections.NewMap(sb, IDsPrefix, "ids", collections.StringKey, collections.Uint64Value),
 	}
 }
-````
+```
 
 We're now instantiating a map where the key is string and the value is `uint64`.
 We already know the first three arguments of the ``NewMap`` function.
@@ -687,9 +687,9 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 
 First of all we can see that in order to define a composite key of two elements we use the `collections.Pair` type:
 
-````go
+```go
 collections.Map[collections.Pair[sdk.AccAddress, string], math.Int]
-````
+```
 
 `collections.Pair` defines a key composed of two other keys, in our case the first part is `sdk.AccAddress`, the second
 part is `string`.
@@ -706,7 +706,7 @@ encode the second part of the key.
 
 Let's expand on the example we used before:
 
-````go
+```go
 var BalancesPrefix = collections.NewPrefix(1)
 
 type Keeper struct {
@@ -766,7 +766,7 @@ func (k Keeper) GetAllAddressBalancesBetween(ctx sdk.Context, address sdk.AccAdd
 	}
     ...
 }
-````
+```
 
 #### SetBalance
 

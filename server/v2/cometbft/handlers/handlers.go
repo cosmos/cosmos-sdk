@@ -5,6 +5,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 )
@@ -27,4 +28,7 @@ type (
 	// It takes a context, a store reader map, and a request to extend a vote.
 	// It returns a response to extend the vote and an error if any.
 	ExtendVoteHandler func(context.Context, store.ReaderMap, *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error)
+
+	// CheckTxHandler is a function type that handles the execution of a transaction.
+	CheckTxHandler[T transaction.Tx] func(func(ctx context.Context, tx T) (server.TxResult, error)) (*abci.CheckTxResponse, error)
 )

@@ -41,7 +41,7 @@ The CLI understands a specific set of commands, defined in a hierarchical struct
 
 ### gRPC
 
-Another interface through which users can make queries is [gRPC](https://grpc.io) requests to a [gRPC server](../advanced/06-grpc_rest.md#grpc-server). The endpoints are defined as [Protocol Buffers](https://developers.google.com/protocol-buffers) service methods inside `.proto` files, written in Protobuf's own language-agnostic interface definition language (IDL). The Protobuf ecosystem developed tools for code-generation from `*.proto` files into various languages. These tools allow to build gRPC clients easily.
+Another interface through which users can make queries is [gRPC](https://grpc.io) requests to a [gRPC server](../advanced/06-grpc_rest.md#grpc-server). The endpoints are defined as [Protocol Buffers](https://protobuf.dev/) service methods inside `.proto` files, written in Protobuf's own language-agnostic interface definition language (IDL). The Protobuf ecosystem developed tools for code-generation from `*.proto` files into various languages. These tools allow to build gRPC clients easily.
 
 One such tool is [grpcurl](https://github.com/fullstorydev/grpcurl), and a gRPC request for `MyQuery` using this client looks like:
 
@@ -83,14 +83,14 @@ The first thing that is created in the execution of a CLI command is a `client.C
 The `client.Context` also contains various functions such as `Query()`, which retrieves the RPC Client and makes an ABCI call to relay a query to a full-node.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/context.go#L25-L68
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/client/context.go#L29-L86
 ```
 
 The `client.Context`'s primary role is to store data used during interactions with the end-user and provide methods to interact with this data - it is used before and after the query is processed by the full-node. Specifically, in handling `MyQuery`, the `client.Context` is utilized to encode the query parameters, retrieve the full-node, and write the output. Prior to being relayed to a full-node, the query needs to be encoded into a `[]byte` form, as full-nodes are application-agnostic and do not understand specific types. The full-node (RPC Client) itself is retrieved using the `client.Context`, which knows which node the user CLI is connected to. The query is relayed to this full-node to be processed. Finally, the `client.Context` contains a `Writer` to write output when the response is returned. These steps are further described in later sections.
 
 ### Arguments and Route Creation
 
-At this point in the lifecycle, the user has created a CLI command with all of the data they wish to include in their query. A `client.Context` exists to assist in the rest of the `MyQuery`'s journey. Now, the next step is to parse the command or request, extract the arguments, and encode everything. These steps all happen on the user side within the interface they are interacting with.
+At this point in the lifecycle, the user has created a CLI command with all of the data they wish to include in their query. A `client.Context` exists to assist in the rest of the `MyQuery`'s journey. Now, the next steps are to parse the command or request, extract the arguments, and encode everything. These steps all happen on the user side within the interface they are interacting with.
 
 #### Encoding
 
@@ -99,23 +99,25 @@ In our case (querying an address's delegations), `MyQuery` contains an [address]
 Here is what the code looks like for the CLI command:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/staking/client/cli/query.go#L315-L318
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/client/grpc_query.go#L64-L68
 ```
 
 #### gRPC Query Client Creation
 
-The Cosmos SDK leverages code generated from Protobuf services to make queries. The `staking` module's `MyQuery` service generates a `queryClient`, which the CLI uses to make queries. Here is the relevant code:
+The Cosmos SDK uses Protobuf-generated services for queries. The `staking` module's `MyQuery` service generates a `queryClient` used by the CLI.
+
+With the introduction of AutoCLI, query client creation is now automated and integrated into the module's setup. This approach simplifies the process of exposing module queries through the CLI.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/staking/client/cli/query.go#L308-L343
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/x/staking/autocli.go#L73-L81
 ```
 
-Under the hood, the `client.Context` has a `Query()` function used to retrieve the pre-configured node and relay a query to it; the function takes the query fully-qualified service method name as path (in our case: `/cosmos.staking.v1beta1.Query/Delegations`), and arguments as parameters. It first retrieves the RPC Client (called the [**node**](../advanced/03-node.md)) configured by the user to relay this query to, and creates the `ABCIQueryOptions` (parameters formatted for the ABCI call). The node is then used to make the ABCI call, `ABCIQueryWithOptions()`.
+The `client.Context` still contains a `Query()` function to retrieve the pre-configured node and relay queries. It takes the fully-qualified service method name as a path (e.g. `/cosmos.staking.v1beta1.Query/Delegations`) and arguments as parameters. The function retrieves the RPC Client, creates `ABCIQueryOptions`, and makes the ABCI call using `ABCIQueryWithOptions()`.
 
 Here is what the code looks like:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/query.go#L79-L113
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/client/query.go#L64-L98
 ```
 
 ## RPC
@@ -141,7 +143,7 @@ Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci
 The application [`codec`](../advanced/05-encoding.md) is used to unmarshal the response to a JSON and the `client.Context` prints the output to the command line, applying any configurations such as the output type (text, JSON or YAML).
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/context.go#L341-L349
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/client/context.go#L391-L398
 ```
 
 And that's a wrap! The result of the query is outputted to the console by the CLI.

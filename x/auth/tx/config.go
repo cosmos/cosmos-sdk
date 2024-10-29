@@ -193,8 +193,7 @@ func NewTxConfigWithOptions(protoCodec codec.Codec, configOptions ConfigOptions)
 		dec, err := txdecode.NewDecoder(txdecode.Options{
 			SigningContext: configOptions.SigningContext,
 			ProtoCodec:     protoCodec,
-		},
-		)
+		})
 		if err != nil {
 			return nil, err
 		}

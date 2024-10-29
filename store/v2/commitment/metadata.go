@@ -17,6 +17,7 @@ const (
 )
 
 // MetadataStore is a store for metadata related to the commitment store.
+// It isn't metadata store role to close the underlying KVStore.
 type MetadataStore struct {
 	kv corestore.KVStoreWithBatch
 }
@@ -82,10 +83,7 @@ func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo)
 
 	batch := m.kv.NewBatch()
 	defer func() {
-		cErr := batch.Close()
-		if err == nil {
-			err = cErr
-		}
+		err = errors.Join(err, batch.Close())
 	}()
 	cInfoKey := []byte(fmt.Sprintf(commitInfoKeyFmt, version))
 	value, err := cInfo.Marshal()
@@ -114,10 +112,7 @@ func (m *MetadataStore) flushCommitInfo(version uint64, cInfo *proof.CommitInfo)
 func (m *MetadataStore) flushRemovedStoreKeys(version uint64, storeKeys []string) (err error) {
 	batch := m.kv.NewBatch()
 	defer func() {
-		cErr := batch.Close()
-		if err == nil {
-			err = cErr
-		}
+		err = errors.Join(err, batch.Close())
 	}()
 
 	for _, storeKey := range storeKeys {

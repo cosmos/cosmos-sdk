@@ -4,21 +4,17 @@ sidebar_position: 1
 
 # Protocol Buffers
 
-It is known that Cosmos SDK uses protocol buffers extensively, this document is meant to provide a guide on how it is used in the cosmos-sdk.
+Cosmos SDK uses protocol buffers extensively, this document is meant to provide a guide on how it is used in the cosmos-sdk.
 
-To generate the proto file, the Cosmos SDK uses a docker image, this image is provided to all to use as well. The latest version is `ghcr.io/cosmos/proto-builder:0.12.x`
+To generate the proto file, the Cosmos SDK uses a docker image, this image is provided to all to use as well. The latest version is `ghcr.io/cosmos/proto-builder:0.15.x`
 
 Below is the example of the Cosmos SDK's commands for generating, linting, and formatting protobuf files that can be reused in any applications makefile. 
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/Makefile#L411-L432
+https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/scripts/build/protobuf.mk#L1-L10
 ```
 
-The script used to generate the protobuf files can be found in the `scripts/` directory. 
-
-```shell reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/scripts/protocgen.sh
-```
+The [`protocgen.sh`](https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/scripts/protocgen.sh) script used to generate the protobuf files via buf can be found in the `scripts/` directory.
 
 ## Buf
 
@@ -36,7 +32,9 @@ https://github.com/cosmos/cosmos-sdk/blob/main/buf.work.yaml#L6-L9
 
 ### Proto Directory
 
-Next is the `proto/` directory where all of our protobuf files live. In here there are many different buf files defined each serving a different purpose. 
+The `proto/` directory where all of global protobuf files live.
+In here there are many different buf files defined each serving a different purpose. 
+Modules proto files are defined in their respective module directories (in the SDK `x/{moduleName}/proto`).
 
 ```bash
 ├── README.md
@@ -50,8 +48,6 @@ Next is the `proto/` directory where all of our protobuf files live. In here the
 └── tendermint
 ```
 
-The above diagram all the files and directories within the Cosmos SDK `proto/` directory. 
-
 #### `buf.gen.gogo.yaml`
 
 `buf.gen.gogo.yaml` defines how the protobuf files should be generated for use with in the module. This file uses [gogoproto](https://github.com/gogo/protobuf), a separate generator from the google go-proto generator that makes working with various objects more ergonomic, and it has more performant encode and decode steps
@@ -59,10 +55,6 @@ The above diagram all the files and directories within the Cosmos SDK `proto/` d
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.gogo.yaml#L1-L9
 ```
-
-:::tip
-Example of how to define `gen` files can be found [here](https://docs.buf.build/tour/generate-go-code)
-:::
 
 #### `buf.gen.pulsar.yaml`
 
@@ -72,10 +64,6 @@ Example of how to define `gen` files can be found [here](https://docs.buf.build/
 https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.pulsar.yaml#L1-L18
 ```
 
-:::tip
-Example of how to define `gen` files can be found [here](https://docs.buf.build/tour/generate-go-code)
-:::
-
 #### `buf.gen.swagger.yaml`
 
 `buf.gen.swagger.yaml` generates the swagger documentation for the query and messages of the chain. This will only define the REST API end points that were defined in the query and msg servers. You can find examples of this [here](https://github.com/cosmos/cosmos-sdk/blob/main/x/bank/proto/cosmos/bank/v1beta1/query.proto)
@@ -83,10 +71,6 @@ Example of how to define `gen` files can be found [here](https://docs.buf.build/
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.swagger.yaml#L1-L6
 ```
-
-:::tip
-Example of how to define `gen` files can be found [here](https://docs.buf.build/tour/generate-go-code)
-:::
 
 #### `buf.lock`
 
@@ -100,14 +84,11 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.lock#L1-L16
 
 `buf.yaml` defines the [name of your package](https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.yaml#L3), which [breakage checker](https://buf.build/docs/tutorials/getting-started-with-buf-cli#detect-breaking-changes) to use and how to [lint your protobuf files](https://buf.build/docs/tutorials/getting-started-with-buf-cli#lint-your-api). 
 
+It is advised to use a tagged version of the buf modules corresponding to the version of the Cosmos SDK being are used. 
+
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.yaml#L1-L24
 ```
 
 We use a variety of linters for the Cosmos SDK protobuf files. The repo also checks this in ci. 
-
 A reference to the github actions can be found [here](https://github.com/cosmos/cosmos-sdk/blob/main/.github/workflows/proto.yml#L1-L32)
-
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/.github/workflows/proto.yml#L1-L32
-```

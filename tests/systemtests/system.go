@@ -35,6 +35,8 @@ var (
 
 	// ExecBinaryUnversionedRegExp regular expression to extract the unversioned binary name
 	ExecBinaryUnversionedRegExp = regexp.MustCompile(`^(\w+)-?.*$`)
+
+	MaxGas = 10_000_000
 )
 
 type TestnetInitializer interface {
@@ -53,6 +55,7 @@ type SystemUnderTest struct {
 	// since Tendermint consensus does not allow specifying it directly.
 	blockTime         time.Duration
 	rpcAddr           string
+	apiAddr           string
 	initialNodesCount int
 	nodesCount        int
 	minGasPrice       string
@@ -86,6 +89,7 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 		outputDir:         "./testnet",
 		blockTime:         blockTime,
 		rpcAddr:           "tcp://localhost:26657",
+		apiAddr:           fmt.Sprintf("http://localhost:%d", apiPortStart),
 		initialNodesCount: nodesCount,
 		outBuff:           ring.New(100),
 		errBuff:           ring.New(100),
@@ -128,14 +132,9 @@ func (s *SystemUnderTest) SetupChain() {
 		panic(fmt.Sprintf("failed to load genesis: %s", err))
 	}
 
-	genesisBz, err = sjson.SetRawBytes(genesisBz, "consensus.params.block.max_gas", []byte(fmt.Sprintf(`"%d"`, 10_000_000)))
+	genesisBz, err = sjson.SetRawBytes(genesisBz, "consensus.params.block.max_gas", []byte(fmt.Sprintf(`"%d"`, MaxGas)))
 	if err != nil {
-		panic(fmt.Sprintf("failed set block max gas: %s", err))
-	}
-	// Short period for gov
-	genesisBz, err = sjson.SetRawBytes(genesisBz, "app_state.gov.params.voting_period", []byte(fmt.Sprintf(`"%s"`, "8s")))
-	if err != nil {
-		panic(fmt.Sprintf("failed set block max gas: %s", err))
+		panic(fmt.Sprintf("failed to set block max gas: %s", err))
 	}
 	s.withEachNodeHome(func(i int, home string) {
 		if err := saveGenesis(home, genesisBz); err != nil {
@@ -145,15 +144,11 @@ func (s *SystemUnderTest) SetupChain() {
 
 	// backup genesis
 	dest := filepath.Join(WorkDir, s.nodePath(0), "config", "genesis.json.orig")
-	if _, err := copyFile(src, dest); err != nil {
-		panic(fmt.Sprintf("copy failed :%#+v", err))
-	}
+	MustCopyFile(src, dest)
 	// backup keyring
 	src = filepath.Join(WorkDir, s.nodePath(0), "keyring-test")
 	dest = filepath.Join(WorkDir, s.outputDir, "keyring-test")
-	if err := copyFilesInDir(src, dest); err != nil {
-		panic(fmt.Sprintf("copy files from dir :%#+v", err))
-	}
+	MustCopyFilesInDir(src, dest)
 }
 
 func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
@@ -483,7 +478,7 @@ func (s *SystemUnderTest) modifyGenesisJSON(t *testing.T, mutators ...GenesisMut
 	for _, m := range mutators {
 		current = m(current)
 	}
-	out := storeTempFile(t, current)
+	out := StoreTempFile(t, current)
 	defer os.Remove(out.Name())
 	s.setGenesis(t, out.Name())
 	s.MarkDirty()
@@ -638,6 +633,10 @@ func (s *SystemUnderTest) RPCClient(t *testing.T) RPCClient {
 	return NewRPCClient(t, s.rpcAddr)
 }
 
+func (s *SystemUnderTest) APIAddress() string {
+	return s.apiAddr
+}
+
 func (s *SystemUnderTest) AllPeers(t *testing.T) []string {
 	t.Helper()
 	result := make([]string, s.nodesCount)
@@ -706,8 +705,7 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 	for _, tomlFile := range []string{"config.toml", "app.toml"} {
 		configFile := filepath.Join(configPath, tomlFile)
 		_ = os.Remove(configFile)
-		_, err := copyFile(filepath.Join(WorkDir, s.nodePath(0), "config", tomlFile), configFile)
-		require.NoError(t, err)
+		_ = MustCopyFile(filepath.Join(WorkDir, s.nodePath(0), "config", tomlFile), configFile)
 	}
 	// start node
 	allNodes := s.AllNodes(t)
@@ -758,6 +756,11 @@ func (s *SystemUnderTest) anyNodeRunning() bool {
 
 func (s *SystemUnderTest) CurrentHeight() int64 {
 	return s.currentHeight.Load()
+}
+
+// NodesCount returns the number of node instances used
+func (s *SystemUnderTest) NodesCount() int {
+	return s.nodesCount
 }
 
 type Node struct {
@@ -943,54 +946,6 @@ func restoreOriginalKeyring(t *testing.T, s *SystemUnderTest) {
 	require.NoError(t, os.RemoveAll(dest))
 	for i := 0; i < s.initialNodesCount; i++ {
 		src := filepath.Join(WorkDir, s.nodePath(i), "keyring-test")
-		require.NoError(t, copyFilesInDir(src, dest))
+		MustCopyFilesInDir(src, dest)
 	}
-}
-
-// copyFile copy source file to dest file path
-func copyFile(src, dest string) (*os.File, error) {
-	in, err := os.Open(src)
-	if err != nil {
-		return nil, err
-	}
-	defer in.Close()
-	out, err := os.Create(dest)
-	if err != nil {
-		return nil, err
-	}
-	defer out.Close()
-
-	_, err = io.Copy(out, in)
-	return out, err
-}
-
-// copyFilesInDir copy files in src dir to dest path
-func copyFilesInDir(src, dest string) error {
-	err := os.MkdirAll(dest, 0o750)
-	if err != nil {
-		return fmt.Errorf("mkdirs: %w", err)
-	}
-	fs, err := os.ReadDir(src)
-	if err != nil {
-		return fmt.Errorf("read dir: %w", err)
-	}
-	for _, f := range fs {
-		if f.IsDir() {
-			continue
-		}
-		if _, err := copyFile(filepath.Join(src, f.Name()), filepath.Join(dest, f.Name())); err != nil {
-			return fmt.Errorf("copy file: %q: %w", f.Name(), err)
-		}
-	}
-	return nil
-}
-
-func storeTempFile(t *testing.T, content []byte) *os.File {
-	t.Helper()
-	out, err := os.CreateTemp(t.TempDir(), "genesis")
-	require.NoError(t, err)
-	_, err = io.Copy(out, bytes.NewReader(content))
-	require.NoError(t, err)
-	require.NoError(t, out.Close())
-	return out
 }

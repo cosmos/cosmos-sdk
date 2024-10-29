@@ -46,7 +46,7 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
 	return k.DelegatorStartingInfo.Set(ctx, collections.Join(val, del), types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(headerinfo.Height)))
 }
 
-// calculate the rewards accrued by a delegation between two periods
+// calculateDelegationRewardsBetween calculates the rewards accrued by a delegation between two periods
 func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val sdk.ValidatorI,
 	startingPeriod, endingPeriod uint64, stake math.LegacyDec,
 ) (sdk.DecCoins, error) {
@@ -85,9 +85,9 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, val sdk.V
 	return rewards, nil
 }
 
-// calculate the total rewards accrued by a delegation
+// CalculateDelegationRewards calculate the total rewards accrued by a delegation
 func (k Keeper) CalculateDelegationRewards(ctx context.Context, val sdk.ValidatorI, del sdk.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins, err error) {
-	addrCodec := k.authKeeper.AddressCodec()
+	addrCodec := k.addrCdc
 	delAddr, err := addrCodec.StringToBytes(del.GetDelegatorAddr())
 	if err != nil {
 		return sdk.DecCoins{}, err
@@ -200,8 +200,9 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val sdk.Validato
 	return rewards, nil
 }
 
+// withdrawDelegationRewards withdraws the rewards accrued by a delegation.
 func (k Keeper) withdrawDelegationRewards(ctx context.Context, val sdk.ValidatorI, del sdk.DelegationI) (sdk.Coins, error) {
-	addrCodec := k.authKeeper.AddressCodec()
+	addrCodec := k.addrCdc
 	delAddr, err := addrCodec.StringToBytes(del.GetDelegatorAddr())
 	if err != nil {
 		return nil, err

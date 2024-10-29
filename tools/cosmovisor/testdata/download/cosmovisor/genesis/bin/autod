@@ -10,7 +10,7 @@ cat > "$3" <<EOL
 {
 	"name": "chain2",
 	"height": 49,
-	"info": "{\"binaries\":{\"linux/amd64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/chain2-zip_bin/autod.zip?checksum=sha256:339911508de5e20b573ce902c500ee670589073485216bee8b045e853f24bce8\",\"linux/arm64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/chain2-zip_bin/autod.zip?checksum=sha256:339911508de5e20b573ce902c500ee670589073485216bee8b045e853f24bce8\",\"darwin/amd64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/chain2-zip_bin/autod.zip?checksum=sha256:339911508de5e20b573ce902c500ee670589073485216bee8b045e853f24bce8\",\"darwin/arm64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/chain2-zip_bin/autod.zip?checksum=sha256:339911508de5e20b573ce902c500ee670589073485216bee8b045e853f24bce8\"}}"
+	"info": "{\"binaries\":{\"linux/amd64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/chain2-zip_bin/autod.zip?checksum=sha256:e84db844e123e3bb888c9ec52f6768ae29fbef7c17eaf8fc7431485a65dae6b9\",\"linux/arm64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/chain2-zip_bin/autod.zip?checksum=sha256:e84db844e123e3bb888c9ec52f6768ae29fbef7c17eaf8fc7431485a65dae6b9\",\"darwin/amd64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/chain2-zip_bin/autod.zip?checksum=sha256:e84db844e123e3bb888c9ec52f6768ae29fbef7c17eaf8fc7431485a65dae6b9\",\"darwin/arm64\": \"https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/chain2-zip_bin/autod.zip?checksum=sha256:e84db844e123e3bb888c9ec52f6768ae29fbef7c17eaf8fc7431485a65dae6b9\"}}"
 }
 EOL
 

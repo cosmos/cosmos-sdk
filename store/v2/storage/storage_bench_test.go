@@ -24,12 +24,12 @@ import (
 var storeKey1 = []byte("store1")
 
 var (
-	backends = map[string]func(dataDir string) (store.VersionedDatabase, error){
-		"rocksdb_versiondb_opts": func(dataDir string) (store.VersionedDatabase, error) {
+	backends = map[string]func(dataDir string) (store.VersionedWriter, error){
+		"rocksdb_versiondb_opts": func(dataDir string) (store.VersionedWriter, error) {
 			db, err := rocksdb.New(dataDir)
 			return storage.NewStorageStore(db, coretesting.NewNopLogger()), err
 		},
-		"pebbledb_default_opts": func(dataDir string) (store.VersionedDatabase, error) {
+		"pebbledb_default_opts": func(dataDir string) (store.VersionedWriter, error) {
 			db, err := pebbledb.New(dataDir)
 			if err == nil && db != nil {
 				db.SetSync(false)
@@ -37,7 +37,7 @@ var (
 
 			return storage.NewStorageStore(db, coretesting.NewNopLogger()), err
 		},
-		"btree_sqlite": func(dataDir string) (store.VersionedDatabase, error) {
+		"btree_sqlite": func(dataDir string) (store.VersionedWriter, error) {
 			db, err := sqlite.New(dataDir)
 			return storage.NewStorageStore(db, coretesting.NewNopLogger()), err
 		},

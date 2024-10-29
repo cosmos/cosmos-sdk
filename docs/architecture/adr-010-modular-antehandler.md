@@ -29,7 +29,7 @@ Pros:
 Cons:
 
 1. Improves granularity but still cannot get more granular than a per-module basis. e.g. If auth's `AnteHandle` function is in charge of validating memo and signatures, users cannot swap the signature-checking functionality while keeping the rest of auth's `AnteHandle` functionality.
-2. Module AnteHandler are run one after the other. There is no way for one AnteHandler to wrap or "decorate" another.
+2. Module AnteHandlers are run one after the other. There is no way for one AnteHandler to wrap or "decorate" another.
 
 ### Decorator Pattern
 
@@ -157,7 +157,7 @@ app.SetAnteHandler(mm.GetAnteHandler())
 
 #### Custom Workflow
 
-This is an example workflow for a user that wants to implement custom antehandler logic. In this example, the user wants to implement custom signature verification and change the order of antehandler so that validate memo runs before signature verification.
+This is an example workflow for a user who wants to implement custom antehandler logic. In this example, the user wants to implement custom signature verification and change the order of antehandler so that validate memo runs before signature verification.
 
 ##### User Code
 
@@ -192,7 +192,7 @@ In addition, this approach will not break any core Cosmos SDK API's. Since we pr
 
 Allow Decorator interface that can be chained together to create a Cosmos SDK AnteHandler.
 
-This allows users to choose between implementing an AnteHandler by themselves and setting it in the baseapp, or use the decorator pattern to chain their custom decorators with the Cosmos SDK provided decorators in the order they wish.
+This allows users to choose between implementing an AnteHandler by themselves and setting it in the baseapp, or using the decorator pattern to chain their custom decorators with the Cosmos SDK provided decorators in the order they wish.
 
 ```go
 // An AnteDecorator wraps an AnteHandler, and can do pre- and post-processing on the next AnteHandler

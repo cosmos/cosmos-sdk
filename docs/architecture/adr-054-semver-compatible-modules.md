@@ -37,7 +37,7 @@ In order to achieve this, we need to solve the following problems:
 2. circular dependencies between modules need to be broken to actually release
    many modules in the SDK independently
 3. pernicious minor version incompatibilities introduced through correctly
-   [evolving protobuf schemas](https://developers.google.com/protocol-buffers/docs/proto3#updating)
+   [evolving protobuf schemas](https://protobuf.dev/programming-guides/proto3/#updating)
    without correct [unknown field filtering](./adr-020-protobuf-transaction-encoding.md#unknown-field-filtering)
 
 Note that all the following discussion assumes that the proto file versioning and state machine versioning of a module
@@ -320,7 +320,7 @@ generate its own version of `MsgDoSomething` as `bar/internal/foo/v1.MsgDoSometh
 inter-module router which would somehow convert it to the version which foo needs (ex. `foo/internal.MsgDoSomething`).
 
 Currently, two generated structs for the same protobuf type cannot exist in the same go binary without special
-build flags (see https://developers.google.com/protocol-buffers/docs/reference/go/faq#fix-namespace-conflict).
+build flags (see https://protobuf.dev/reference/go/faq/#fix-namespace-conflict).
 A relatively simple mitigation to this issue would be to set up the protobuf code to not register protobuf types
 globally if they are generated in an `internal/` package. This will require modules to register their types manually
 with the app-level level protobuf registry, this is similar to what modules already do with the `InterfaceRegistry`

@@ -367,6 +367,15 @@ func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
 	app.prepareProposal = handler
 }
 
+// SetCheckTxHandler sets the checkTx function for the BaseApp.
+func (app *BaseApp) SetCheckTxHandler(handler sdk.CheckTxHandler) {
+	if app.sealed {
+		panic("SetCheckTx() on sealed BaseApp")
+	}
+
+	app.checkTxHandler = handler
+}
+
 func (app *BaseApp) SetExtendVoteHandler(handler sdk.ExtendVoteHandler) {
 	if app.sealed {
 		panic("SetExtendVoteHandler() on sealed BaseApp")

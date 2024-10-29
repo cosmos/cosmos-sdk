@@ -23,14 +23,14 @@ func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisStat
 	}
 	totalSupplyMap := sdk.NewMapCoins(sdk.Coins{})
 
-	genState.Balances, err = types.SanitizeGenesisBalances(genState.Balances, k.ak.AddressCodec())
+	genState.Balances, err = types.SanitizeGenesisBalances(genState.Balances, k.addrCdc)
 	if err != nil {
 		return err
 	}
 
 	for _, balance := range genState.Balances {
 		addr := balance.GetAddress()
-		bz, err := k.ak.AddressCodec().StringToBytes(addr)
+		bz, err := k.addrCdc.StringToBytes(addr)
 		if err != nil {
 			return err
 		}

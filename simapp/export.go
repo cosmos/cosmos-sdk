@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cmttypes "github.com/cometbft/cometbft/types"
 
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
@@ -13,7 +12,6 @@ import (
 	"cosmossdk.io/x/staking"
 	stakingtypes "cosmossdk.io/x/staking/types"
 
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -43,25 +41,10 @@ func (app *SimApp) ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAd
 	}
 
 	validators, err := staking.WriteValidators(ctx, app.StakingKeeper)
-	cmtValidators := []cmttypes.GenesisValidator{}
-	for _, val := range validators {
-		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(val.PubKey)
-		if err != nil {
-			return servertypes.ExportedApp{}, err
-		}
-		cmtVal := cmttypes.GenesisValidator{
-			Address: val.Address.Bytes(),
-			PubKey:  cmtPk,
-			Power:   val.Power,
-			Name:    val.Name,
-		}
-
-		cmtValidators = append(cmtValidators, cmtVal)
-	}
 
 	return servertypes.ExportedApp{
 		AppState:        appState,
-		Validators:      cmtValidators,
+		Validators:      validators,
 		Height:          height,
 		ConsensusParams: app.BaseApp.GetConsensusParams(ctx),
 	}, err
@@ -233,7 +216,6 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 	// update bond intra-tx counters.
 	store := ctx.KVStore(app.GetKey(stakingtypes.StoreKey))
 	iter := storetypes.KVStoreReversePrefixIterator(store, stakingtypes.ValidatorsKey)
-	counter := int16(0)
 
 	for ; iter.Valid(); iter.Next() {
 		addr := sdk.ValAddress(stakingtypes.AddressFromValidatorsKey(iter.Key()))
@@ -255,7 +237,6 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 		if err = app.StakingKeeper.SetValidator(ctx, validator); err != nil {
 			panic(err)
 		}
-		counter++
 	}
 
 	if err := iter.Close(); err != nil {

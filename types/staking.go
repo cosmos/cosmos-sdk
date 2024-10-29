@@ -3,6 +3,7 @@ package types
 import (
 	"cosmossdk.io/math"
 
+	cryptokeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -97,4 +98,12 @@ type ValidatorI interface {
 	TokensFromSharesRoundUp(math.LegacyDec) math.LegacyDec          // token worth of provided delegator shares, rounded up
 	SharesFromTokens(amt math.Int) (math.LegacyDec, error)          // shares worth of delegator's bond
 	SharesFromTokensTruncated(amt math.Int) (math.LegacyDec, error) // truncated shares worth of delegator's bond
+}
+
+// GenesisValidator is an initial validator.
+type GenesisValidator struct {
+	Address ConsAddress           `json:"address"`
+	PubKey  cryptokeys.JSONPubkey `json:"pub_key"`
+	Power   int64                 `json:"power"`
+	Name    string                `json:"name"`
 }

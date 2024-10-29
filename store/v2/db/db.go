@@ -3,8 +3,8 @@ package db
 import (
 	"fmt"
 
+	coreserver "cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/store/v2"
 )
 
 type DBType string
@@ -18,7 +18,7 @@ const (
 	DBFileSuffix string = ".db"
 )
 
-func NewDB(dbType DBType, name, dataDir string, opts store.DBOptions) (corestore.KVStoreWithBatch, error) {
+func NewDB(dbType DBType, name, dataDir string, opts coreserver.DynamicConfig) (corestore.KVStoreWithBatch, error) {
 	switch dbType {
 	case DBTypeGoLevelDB:
 		return NewGoLevelDB(name, dataDir, opts)

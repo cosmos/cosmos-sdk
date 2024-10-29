@@ -3,8 +3,8 @@ package v2_test
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/address"
 	corestore "cosmossdk.io/core/store"

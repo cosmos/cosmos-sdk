@@ -100,7 +100,7 @@ require (
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.7.0 // indirect
 	github.com/cosmos/iavl v1.3.0 // indirect
-	github.com/cosmos/iavl/v2 v2.0.0-20241021162339-e99f035d10e3 // indirect
+	github.com/cosmos/iavl/v2 v2.0.0-20241029195051-d3ac274b6b58 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
 	github.com/creachadair/atomicfile v0.3.5 // indirect

@@ -318,7 +318,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	bz := sha256.Sum256([]byte{})
 
 	br := &server.BlockRequest[T]{
-		Height:    uint64(req.InitialHeight),
+		Height:    uint64(req.InitialHeight - 1),
 		Time:      req.Time,
 		Hash:      bz[:],
 		AppHash:   ci.Hash,
@@ -345,6 +345,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 	validatorUpdates := intoABCIValidatorUpdates(blockResponse.ValidatorUpdates)
 
 	// set the initial version of the store
+	// TODO n or n-1?
 	if err := c.store.SetInitialVersion(uint64(req.InitialHeight)); err != nil {
 		return nil, fmt.Errorf("failed to set initial version: %w", err)
 	}

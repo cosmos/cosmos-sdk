@@ -5,10 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/core/transaction"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
@@ -19,17 +19,26 @@ type genesisMM interface {
 	ValidateGenesis(genesisData map[string]json.RawMessage) error
 }
 
+type ExportableApp interface {
+	ExportAppStateAndValidators([]string) (v2.ExportedApp, error)
+	LoadHeight(uint64) error
+}
+
 // Commands adds core sdk's sub-commands into genesis command.
-func Commands(genutilModule genutil.AppModule, genMM genesisMM, appExport v2.AppExporter) *cobra.Command {
-	return CommandsWithCustomMigrationMap(genutilModule, genMM, appExport, cli.MigrationMap)
+func Commands(
+	genTxValidator func([]transaction.Msg) error,
+	genMM genesisMM,
+	exportable ExportableApp,
+) *cobra.Command {
+	return CommandsWithCustomMigrationMap(genTxValidator, genMM, exportable, cli.MigrationMap)
 }
 
 // CommandsWithCustomMigrationMap adds core sdk's sub-commands into genesis command with custom migration map.
 // This custom migration map can be used by the application to add its own migration map.
 func CommandsWithCustomMigrationMap(
-	genutilModule genutil.AppModule,
+	genTxValidator func([]transaction.Msg) error,
 	genMM genesisMM,
-	appExport v2.AppExporter,
+	exportable ExportableApp,
 	migrationMap genutiltypes.MigrationMap,
 ) *cobra.Command {
 	cmd := &cobra.Command{
@@ -42,12 +51,12 @@ func CommandsWithCustomMigrationMap(
 	cmd.AddCommand(
 		cli.GenTxCmd(genMM, banktypes.GenesisBalancesIterator{}),
 		cli.MigrateGenesisCmd(migrationMap),
-		cli.CollectGenTxsCmd(genutilModule.GenTxValidator()),
+		cli.CollectGenTxsCmd(genTxValidator),
 		cli.ValidateGenesisCmd(genMM),
 		cli.AddGenesisAccountCmd(),
 		cli.AddBulkGenesisAccountCmd(),
 		cli.GenerateSendTransactions(),
-		ExportCmd(appExport),
+		ExportCmd(exportable),
 	)
 
 	return cmd

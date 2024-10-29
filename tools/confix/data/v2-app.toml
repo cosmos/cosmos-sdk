@@ -41,6 +41,12 @@ max-recv-msg-size = 10485760
 # The default value is math.MaxInt32.
 max-send-msg-size = 2147483647
 
+[rest]
+# Enable defines if the REST server should be enabled.
+enable = true
+# Address defines the REST server address to bind to.
+address = 'localhost:8080'
+
 [server]
 # minimum-gas-prices defines the price which a validator is willing to accept for processing a transaction. A transaction's fees must meet the minimum of any denomination specified in this config (e.g. 0.25token1;0.0001token2).
 minimum-gas-prices = '0stake'
@@ -79,7 +85,7 @@ skip-fast-storage-upgrade = true
 # Enable enables the application telemetry functionality. When enabled, an in-memory sink is also enabled by default. Operators may also enabled other sinks such as Prometheus.
 enable = true
 # Address defines the metrics server address to bind to.
-address = 'localhost:1318'
+address = 'localhost:1327'
 # Prefixed with keys to separate services.
 service-name = ''
 # Enable prefixing gauge values with hostname.

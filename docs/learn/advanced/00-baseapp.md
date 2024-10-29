@@ -462,7 +462,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/baseapp/abci.go#L894
 
 * Run the application's [`preBlocker()`](../beginner/00-app-anatomy.md#preblocker), which mainly runs the [`PreBlocker()`](../../build/building-modules/06-preblock-beginblock-endblock.md#preblocker) method of each of the modules.
 
-#### BeginBlock 
+#### BeginBlock
 
 * Initialize [`finalizeBlockState`](#state-updates) with the latest header using the `req abci.RequestFinalizeBlock` passed as parameter via the `setState` function.
 
@@ -518,7 +518,7 @@ Each transaction returns a response to the underlying consensus engine of type [
 * `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`events`](./08-events.md) for more.
 * `Codespace (string)`: Namespace for the Code.
 
-#### EndBlock 
+#### EndBlock
 
 EndBlock is run after transaction execution completes. It allows developers to have logic be executed at the end of each block. In the Cosmos SDK, the bulk EndBlock() method is to run the application's EndBlocker(), which mainly runs the EndBlocker() method of each of the application's modules.
 

@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/x/accounts"
+	epochstypes "cosmossdk.io/x/epochs/types"
 	protocolpooltypes "cosmossdk.io/x/protocolpool/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -36,6 +37,7 @@ func (app *SimApp[T]) RegisterUpgradeHandlers() {
 		storeUpgrades := store.StoreUpgrades{
 			Added: []string{
 				accounts.ModuleName,
+				epochstypes.StoreKey,
 				protocolpooltypes.ModuleName,
 			},
 			Deleted: []string{"crisis"}, // The SDK discontinued the crisis module in v0.52.0

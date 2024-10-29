@@ -12,6 +12,7 @@ import (
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
+	"cosmossdk.io/server/v2/api/rest"
 	"cosmossdk.io/server/v2/api/telemetry"
 	"cosmossdk.io/server/v2/cometbft"
 	serverstore "cosmossdk.io/server/v2/store"
@@ -62,19 +63,6 @@ func InitRootCmd[T transaction.Tx](
 		offchain.OffChain(),
 	)
 
-<<<<<<< HEAD
-	// wire server commands
-	if err := serverv2.AddCommands(
-		rootCmd,
-		newApp,
-		initServerConfig(),
-		consensusComponent,
-		grpc.New[T](),
-		serverstore.New[T](),
-		telemetry.New[T](),
-	); err != nil {
-		panic(err)
-=======
 	// build CLI skeleton for initial config parsing or a client application invocation
 	if deps.SimApp == nil {
 		if deps.Consensus == nil {
@@ -91,7 +79,6 @@ func InitRootCmd[T transaction.Tx](
 			&telemetry.Server[T]{},
 			&rest.Server[T]{},
 		)
->>>>>>> 31f97e934 (refactor(server/v2): eager config loading (#22267))
 	}
 
 	// build full app!

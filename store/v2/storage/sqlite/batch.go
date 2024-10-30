@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/bvinc/go-sqlite-lite/sqlite3"
 
@@ -25,12 +26,13 @@ type batchOp struct {
 
 type Batch struct {
 	db      *sqlite3.Conn
+	lock    *sync.Mutex
 	ops     []batchOp
 	size    int
 	version int64
 }
 
-func NewBatch(db *sqlite3.Conn, version uint64) (*Batch, error) {
+func NewBatch(db *sqlite3.Conn, writeLock *sync.Mutex, version uint64) (*Batch, error) {
 	err := db.Begin()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create SQL transaction: %w", err)
@@ -38,6 +40,7 @@ func NewBatch(db *sqlite3.Conn, version uint64) (*Batch, error) {
 
 	return &Batch{
 		db:      db,
+		lock:    writeLock,
 		ops:     make([]batchOp, 0),
 		version: int64(version),
 	}, nil
@@ -73,6 +76,8 @@ func (b *Batch) Delete(storeKey, key []byte) error {
 }
 
 func (b *Batch) Write() error {
+	b.lock.Lock()
+	defer b.lock.Unlock()
 	err := b.db.Exec(reservedUpsertStmt, reservedStoreKey, keyLatestHeight, b.version, 0, b.version)
 	if err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
@@ -98,5 +103,5 @@ func (b *Batch) Write() error {
 		return fmt.Errorf("failed to write SQL transaction: %w", err)
 	}
 
-	return nil
+	return b.db.Close()
 }

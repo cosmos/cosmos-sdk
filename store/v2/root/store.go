@@ -347,6 +347,10 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 		defer s.telemetry.MeasureSince(now, "root_store", "commit")
 	}
 
+	if err := s.handleMigration(cs); err != nil {
+		return nil, err
+	}
+
 	// signal to the pruning manager that a new version is about to be committed
 	// this may be required if the SS and SC backends implementation have the
 	// background pruning process (iavl v1 for example) which must be paused during the commit
@@ -354,10 +358,9 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 
 	eg := new(errgroup.Group)
 
-	// if we're migrating, we don't want to commit to the state storage to avoid
-	// parallel writes
+	// if migrating the changeset will be sent to migration manager to fill SS
+	// otherwise commit to SS async here
 	if !s.isMigrating {
-		// commit SS async
 		eg.Go(func() error {
 			if err := s.stateStorage.ApplyChangeset(cs); err != nil {
 				return fmt.Errorf("failed to commit SS: %w", err)
@@ -368,16 +371,16 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	}
 
 	// commit SC async
-	var (
-		cInfo *proof.CommitInfo
-		err   error
-	)
+	var cInfo *proof.CommitInfo
 	eg.Go(func() error {
-		cInfo, err = s.commitSC(cs)
-		if err != nil {
-			return fmt.Errorf("failed to commit SC: %w", err)
+		if err := s.stateCommitment.WriteChangeset(cs); err != nil {
+			return fmt.Errorf("failed to write batch to SC store: %w", err)
 		}
-
+		var scErr error
+		cInfo, scErr = s.stateCommitment.Commit(cs.Version)
+		if scErr != nil {
+			return fmt.Errorf("failed to commit SC store: %w", scErr)
+		}
 		return nil
 	})
 
@@ -385,6 +388,9 @@ func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 		return nil, err
 	}
 
+	if cInfo.Version != cs.Version {
+		return nil, fmt.Errorf("commit version mismatch: got %d, expected %d", cInfo.Version, cs.Version)
+	}
 	s.lastCommitInfo = cInfo
 
 	// signal to the pruning manager that the commit is done
@@ -424,12 +430,7 @@ func (s *Store) startMigration() {
 	defer mtx.Unlock()
 }
 
-// writeSC accepts a Changeset and writes that as a batch to the underlying SC
-// tree, which allows us to retrieve the working hash of the SC tree. Finally,
-// we construct a *CommitInfo and set that as lastCommitInfo. Note, this should
-// only be called once per block!
-// If migration is in progress, the changeset is sent to the migration manager.
-func (s *Store) commitSC(cs *corestore.Changeset) (*proof.CommitInfo, error) {
+func (s *Store) handleMigration(cs *corestore.Changeset) error {
 	if s.isMigrating {
 		// if the migration manager has already migrated to the version, close the
 		// channels and replace the state commitment
@@ -439,14 +440,14 @@ func (s *Store) commitSC(cs *corestore.Changeset) (*proof.CommitInfo, error) {
 			s.isMigrating = false
 			// close the old state commitment and replace it with the new one
 			if err := s.stateCommitment.Close(); err != nil {
-				return nil, fmt.Errorf("failed to close the old SC store: %w", err)
+				return fmt.Errorf("failed to close the old SC store: %w", err)
 			}
 			newStateCommitment := s.migrationManager.GetStateCommitment()
 			if newStateCommitment != nil {
 				s.stateCommitment = newStateCommitment
 			}
 			if err := s.migrationManager.Close(); err != nil {
-				return nil, fmt.Errorf("failed to close migration manager: %w", err)
+				return fmt.Errorf("failed to close migration manager: %w", err)
 			}
 			s.logger.Info("migration completed", "version", s.lastCommitInfo.Version)
 		} else {
@@ -454,12 +455,7 @@ func (s *Store) commitSC(cs *corestore.Changeset) (*proof.CommitInfo, error) {
 			s.chChangeset <- &migration.VersionedChangeset{Version: s.lastCommitInfo.Version + 1, Changeset: cs}
 		}
 	}
-
-	if err := s.stateCommitment.WriteChangeset(cs); err != nil {
-		return nil, fmt.Errorf("failed to write batch to SC store: %w", err)
-	}
-
-	return s.stateCommitment.Commit(s.lastCommitInfo.Version)
+	return nil
 }
 
 func (s *Store) Prune(version uint64) error {

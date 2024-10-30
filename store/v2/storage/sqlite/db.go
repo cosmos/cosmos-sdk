@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/bvinc/go-sqlite-lite/sqlite3"
 
@@ -16,7 +17,7 @@ import (
 
 const (
 	driverName        = "sqlite3"
-	dbName            = "ss.db?cache=shared&mode=rwc&_journal_mode=WAL"
+	dbName            = "ss.db"
 	reservedStoreKey  = "_RESERVED_"
 	keyLatestHeight   = "latest_height"
 	keyPruneHeight    = "prune_height"
@@ -48,17 +49,23 @@ var (
 )
 
 type Database struct {
-	storage *sqlite3.Conn
-
+	storage   *sqlite3.Conn
+	connStr   string
+	writeLock *sync.Mutex
 	// earliestVersion defines the earliest version set in the database, which is
 	// only updated when the database is pruned.
 	earliestVersion uint64
 }
 
 func New(dataDir string) (*Database, error) {
-	db, err := sqlite3.Open(filepath.Join(dataDir, dbName))
+	connStr := fmt.Sprintf("file:%s", filepath.Join(dataDir, dbName))
+	db, err := sqlite3.Open(connStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open sqlite DB: %w", err)
+	}
+	err = db.Exec("PRAGMA journal_mode=WAL;")
+	if err != nil {
+		return nil, fmt.Errorf("failed to set journal mode: %w", err)
 	}
 
 	stmt := `
@@ -86,6 +93,8 @@ func New(dataDir string) (*Database, error) {
 
 	return &Database{
 		storage:         db,
+		connStr:         connStr,
+		writeLock:       new(sync.Mutex),
 		earliestVersion: pruneHeight,
 	}, nil
 }
@@ -97,7 +106,12 @@ func (db *Database) Close() error {
 }
 
 func (db *Database) NewBatch(version uint64) (store.Batch, error) {
-	return NewBatch(db.storage, version)
+	conn, err := sqlite3.Open(db.connStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open sqlite DB: %w", err)
+	}
+
+	return NewBatch(conn, db.writeLock, version)
 }
 
 func (db *Database) GetLatestVersion() (version uint64, err error) {
@@ -148,6 +162,8 @@ func (db *Database) VersionExists(v uint64) (bool, error) {
 }
 
 func (db *Database) SetLatestVersion(version uint64) error {
+	db.writeLock.Lock()
+	defer db.writeLock.Unlock()
 	err := db.storage.Exec(reservedUpsertStmt, reservedStoreKey, keyLatestHeight, int64(version), 0, int64(version))
 	if err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
@@ -219,6 +235,8 @@ func (db *Database) Get(storeKey []byte, targetVersion uint64, key []byte) ([]by
 // that are <= the given version, except for the latest version of the key.
 func (db *Database) Prune(version uint64) error {
 	v := int64(version)
+	db.writeLock.Lock()
+	defer db.writeLock.Unlock()
 	err := db.storage.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to create SQL transaction: %w", err)
@@ -303,6 +321,8 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 }
 
 func (db *Database) PruneStoreKeys(storeKeys []string, version uint64) (err error) {
+	db.writeLock.Lock()
+	defer db.writeLock.Unlock()
 	err = db.storage.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to create SQL transaction: %w", err)

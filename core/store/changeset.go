@@ -45,6 +45,7 @@ func NewChangesetWithPairs(version uint64, pairs map[string]KVPairs) *Changeset 
 		i++
 	}
 	return &Changeset{
+		Version: version,
 		Changes: changes,
 	}
 }

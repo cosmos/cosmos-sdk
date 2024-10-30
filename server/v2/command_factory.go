@@ -149,7 +149,7 @@ func (f *CommandFactory) ParseCommand(
 	if err = cmd.ParseFlags(args); err != nil {
 		// help requested, return the command early
 		if errors.Is(err, pflag.ErrHelp) {
-			return cmd, nil, nil, nil
+			return cmd, nil, nil, err
 		}
 		return nil, nil, nil, err
 	}

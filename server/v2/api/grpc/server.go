@@ -12,7 +12,6 @@ import (
 	"strings"
 	"sync"
 
-	"cosmossdk.io/server/v2/api"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
@@ -26,6 +25,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/api"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 

@@ -1,6 +1,7 @@
 package cmd_test
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -41,4 +42,26 @@ func TestHomeFlagRegistration(t *testing.T) {
 	result, err := rootCmd.Flags().GetString(flags.FlagHome)
 	require.NoError(t, err)
 	require.Equal(t, result, homeDir)
+}
+
+func TestHelpRequested(t *testing.T) {
+	argz := [][]string{
+		{"query", "--help"},
+		{"query", "tx", "-h"},
+		{"--help"},
+		{"start", "-h"},
+	}
+
+	for _, args := range argz {
+		rootCmd, err := cmd.NewRootCmd[transaction.Tx](args...)
+		require.NoError(t, err)
+
+		var out bytes.Buffer
+		rootCmd.SetArgs(args)
+		rootCmd.SetOut(&out)
+		require.NoError(t, rootCmd.Execute())
+		require.Contains(t, out.String(), args[0])
+		require.Contains(t, out.String(), "--help")
+		require.Contains(t, out.String(), "Usage:")
+	}
 }

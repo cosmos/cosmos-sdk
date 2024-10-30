@@ -163,9 +163,16 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
+require cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9
+
 require (
+<<<<<<< HEAD
 	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
+=======
+	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
+	github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22 // indirect
+>>>>>>> 6b6e71594 (feat(indexer): implement `schema.HasModuleCodec` interface in the `bank` module (#22349))
 	github.com/google/uuid v1.6.0 // indirect
 )
 

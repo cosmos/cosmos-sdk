@@ -228,10 +228,18 @@ Example:
 			args.numValidators, _ = cmd.Flags().GetInt(flagNumValidators)
 			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyType)
 			args.enableLogging, _ = cmd.Flags().GetBool(flagEnableLogging)
+
 			rpcAddress, _ := cmd.Flags().GetString(flagRPCAddress)
 			args.listenIPAddress, args.rpcPort, err = parseURL(rpcAddress)
+			if err != nil {
+				return fmt.Errorf("invalid rpc address: %w", err)
+			}
+
 			apiAddress, _ := cmd.Flags().GetString(flagAPIAddress)
 			args.apiListenAddress, args.apiPort, err = parseURL(apiAddress)
+			if err != nil {
+				return fmt.Errorf("invalid api address: %w", err)
+			}
 
 			grpcAddress, _ := cmd.Flags().GetString(flagGRPCAddress)
 			// add scheme to avoid issues with parsing
@@ -239,6 +247,9 @@ Example:
 				grpcAddress = "tcp://" + grpcAddress
 			}
 			args.grpcListenAddress, args.grpcPort, err = parseURL(grpcAddress)
+			if err != nil {
+				return fmt.Errorf("invalid grpc address: %w", err)
+			}
 
 			args.printMnemonic, _ = cmd.Flags().GetBool(flagPrintMnemonic)
 
@@ -267,13 +278,7 @@ func parseURL(str string) (host string, port int, err error) {
 
 	host = u.Hostname()
 
-	portInt64, err := strconv.ParseInt(u.Port(), 10, 64)
-	if err != nil {
-		return
-	}
-
-	port = int(portInt64)
-
+	port, err = strconv.Atoi(u.Port())
 	return
 }
 
@@ -641,13 +646,13 @@ func printMnemonic(secret string) {
 		}
 	}
 
-	fmt.Printf("\n")
-	fmt.Printf(strings.Repeat("+", maxLineLength+8))
+	fmt.Printf("\n\n")
+	fmt.Println(strings.Repeat("+", maxLineLength+8))
 	for _, line := range lines {
 		fmt.Printf("++  %s  ++\n", centerText(line, maxLineLength))
 	}
-	fmt.Printf(strings.Repeat("+", maxLineLength+8))
-	fmt.Printf("\n")
+	fmt.Println(strings.Repeat("+", maxLineLength+8))
+	fmt.Printf("\n\n")
 }
 
 // centerText centers text across a fixed width, filling either side with whitespace buffers
@@ -673,6 +678,8 @@ func startTestnet(
 	mm *module.Manager,
 	args initArgs,
 ) error {
+	fmt.Printf(`Preparing test network with chain-id "%s"`, args.chainID)
+
 	args.outputDir = fmt.Sprintf("%s/%s", args.outputDir, args.chainID)
 	err := initTestnetFiles(clientCtx, cmd, nodeConfig, mm, args)
 	if err != nil {

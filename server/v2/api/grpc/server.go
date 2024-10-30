@@ -25,6 +25,7 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/api"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
@@ -197,13 +198,13 @@ func (s *Server[T]) Config() any {
 	return s.config
 }
 
-func (s *Server[T]) Start(context.Context) error {
+func (s *Server[T]) Start(ctx context.Context) error {
 	if !s.config.Enable {
 		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil
 	}
 
-	listener, err := net.Listen("tcp", s.config.Address)
+	listener, err := (&net.ListenConfig{}).Listen(ctx, "tcp", s.config.Address)
 	if err != nil {
 		return fmt.Errorf("failed to listen on address %s: %w", s.config.Address, err)
 	}
@@ -222,8 +223,7 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	}
 
 	s.logger.Info("stopping gRPC server...", "address", s.config.Address)
-	s.grpcSrv.GracefulStop()
-	return nil
+	return api.DoUntilCtxExpired(ctx, s.grpcSrv.GracefulStop)
 }
 
 // GetGRPCServer returns the underlying gRPC server.

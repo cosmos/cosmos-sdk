@@ -118,7 +118,9 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 		})
 	}
 
-	return g.Wait()
+	err := g.Wait()
+	logger.With(log.ModuleKey, s.Name()).Info("stopped all server components")
+	return err
 }
 
 // CLICommands returns all CLI commands of all components.

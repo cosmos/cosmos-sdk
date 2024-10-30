@@ -179,29 +179,16 @@ func (c *CommitStore) Commit(version uint64) (*proof.CommitInfo, error) {
 		if internal.IsMemoryStoreKey(storeKey) {
 			continue
 		}
-		// If a commit event execution is interrupted, a new iavl store's version
-		// will be larger than the RMS's metadata, when the block is replayed, we
-		// should avoid committing that iavl store again.
-		var commitID proof.CommitID
-		v, err := tree.GetLatestVersion()
+		hash, cversion, err := tree.Commit()
 		if err != nil {
 			return nil, err
 		}
-		if v >= version {
-			commitID.Version = version
-			commitID.Hash = tree.Hash()
-		} else {
-			hash, cversion, err := tree.Commit()
-			if err != nil {
-				return nil, err
-			}
-			if cversion != version {
-				return nil, fmt.Errorf("commit version %d does not match the target version %d", cversion, version)
-			}
-			commitID = proof.CommitID{
-				Version: version,
-				Hash:    hash,
-			}
+		if cversion != version {
+			return nil, fmt.Errorf("commit version %d does not match the target version %d", cversion, version)
+		}
+		commitID := proof.CommitID{
+			Version: version,
+			Hash:    hash,
 		}
 		storeInfos = append(storeInfos, proof.StoreInfo{
 			Name:     []byte(storeKey),
@@ -561,11 +548,13 @@ func (c *CommitStore) GetLatestVersion() (uint64, error) {
 }
 
 func (c *CommitStore) Close() error {
-	for _, tree := range c.multiTrees {
+	fmt.Printf("Closing CommitStore\n")
+	c.logger.Info("Closing CommitStore", "len", len(c.multiTrees))
+	for k, tree := range c.multiTrees {
+		c.logger.Info("Closing tree", "storeKey", k)
 		if err := tree.Close(); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }

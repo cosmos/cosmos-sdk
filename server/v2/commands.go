@@ -81,6 +81,7 @@ func createStartCommand[T transaction.Tx](
 					cancelFn()
 					cmd.Printf("caught %s signal\n", sig.String())
 				case <-ctx.Done():
+					cmd.Printf("context canceled\n")
 					// If the root context is canceled (which is likely to happen in tests involving cobra commands),
 					// don't block waiting for the OS signal before stopping the server.
 					cancelFn()
@@ -89,6 +90,7 @@ func createStartCommand[T transaction.Tx](
 				if err := server.Stop(ctx); err != nil {
 					cmd.PrintErrln("failed to stop servers:", err)
 				}
+				cmd.Println("background signal thread exited")
 			}()
 
 			return wrapCPUProfile(logger, config, func() error {

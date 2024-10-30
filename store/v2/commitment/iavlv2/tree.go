@@ -60,10 +60,12 @@ func (t Tree) LoadVersion(version uint64) error {
 }
 
 func (t Tree) Commit() ([]byte, uint64, error) {
-	return t.tree.Hash(), uint64(t.tree.Version()), t.saveErr
+	h, v, err := t.tree.SaveVersion()
+	return h, uint64(v), err
 }
 
 func (t Tree) SetInitialVersion(version uint64) error {
+	t.tree.SetShouldCheckpoint()
 	return t.tree.SetInitialVersion(int64(version))
 }
 
@@ -90,6 +92,7 @@ func (t Tree) Import(version uint64) (commitment.Importer, error) {
 }
 
 func (t Tree) Close() error {
+	fmt.Printf("Closing tree\n")
 	return t.tree.Close()
 }
 

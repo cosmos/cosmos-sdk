@@ -346,7 +346,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 
 	// set the initial version of the store
 	// TODO n or n-1?
-	if err := c.store.SetInitialVersion(uint64(req.InitialHeight)); err != nil {
+	if err := c.store.SetInitialVersion(uint64(req.InitialHeight - 1)); err != nil {
 		return nil, fmt.Errorf("failed to set initial version: %w", err)
 	}
 
@@ -355,6 +355,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		return nil, err
 	}
 	cs := &store.Changeset{
+		Version: uint64(req.InitialHeight - 1),
 		Changes: stateChanges,
 	}
 	stateRoot, err := c.store.Commit(cs)
@@ -506,7 +507,7 @@ func (c *Consensus[T]) FinalizeBlock(
 	if err != nil {
 		return nil, err
 	}
-	appHash, err := c.store.Commit(&store.Changeset{Changes: stateChanges})
+	appHash, err := c.store.Commit(&store.Changeset{Version: uint64(req.Height), Changes: stateChanges})
 	if err != nil {
 		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 	}

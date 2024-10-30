@@ -9,6 +9,8 @@ replace (
 	cosmossdk.io/store/v2 => ../../store/v2
 	cosmossdk.io/store/v2/db => ../../store/v2/db
 	cosmossdk.io/x/tx => ../../x/tx
+	cosmossdk.io/core => ../../core
+	github.com/cosmos/iavl/v2 => ../../../../iavl/iavl-v2
 )
 
 require (

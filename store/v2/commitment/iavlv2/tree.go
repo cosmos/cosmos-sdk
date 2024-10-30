@@ -47,11 +47,8 @@ func (t Tree) Hash() []byte {
 	return t.tree.Hash()
 }
 
-func (t Tree) WorkingHash() []byte {
-	// iavl v2 and store/v2 have different working hash semantics so we must commit here
-	var hash []byte
-	hash, _, t.saveErr = t.tree.SaveVersion()
-	return hash
+func (t Tree) Version() uint64 {
+	return uint64(t.tree.Version())
 }
 
 func (t Tree) LoadVersion(version uint64) error {
@@ -67,7 +64,7 @@ func (t Tree) Commit() ([]byte, uint64, error) {
 }
 
 func (t Tree) SetInitialVersion(version uint64) error {
-	return nil
+	return t.tree.SetInitialVersion(int64(version))
 }
 
 func (t Tree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error) {

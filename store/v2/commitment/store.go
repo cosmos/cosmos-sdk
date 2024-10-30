@@ -82,28 +82,6 @@ func (c *CommitStore) WriteChangeset(cs *corestore.Changeset) error {
 	return nil
 }
 
-func (c *CommitStore) WorkingCommitInfo(version uint64) *proof.CommitInfo {
-	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
-	for storeKey, tree := range c.multiTrees {
-		if internal.IsMemoryStoreKey(storeKey) {
-			continue
-		}
-		bz := []byte(storeKey)
-		storeInfos = append(storeInfos, proof.StoreInfo{
-			Name: bz,
-			CommitID: proof.CommitID{
-				Version: version,
-				Hash:    tree.WorkingHash(),
-			},
-		})
-	}
-
-	return &proof.CommitInfo{
-		Version:    version,
-		StoreInfos: storeInfos,
-	}
-}
-
 func (c *CommitStore) LoadVersion(targetVersion uint64) error {
 	storeKeys := make([]string, 0, len(c.multiTrees))
 	for storeKey := range c.multiTrees {
@@ -184,7 +162,10 @@ func (c *CommitStore) loadVersion(targetVersion uint64, storeKeys []string) erro
 	// If the target version is greater than the latest version, it is the snapshot
 	// restore case, we should create a new commit info for the target version.
 	if targetVersion > latestVersion {
-		cInfo := c.WorkingCommitInfo(targetVersion)
+		cInfo, err := c.GetCommitInfo(targetVersion)
+		if err != nil {
+			return err
+		}
 		return c.metadata.flushCommitInfo(targetVersion, cInfo)
 	}
 
@@ -541,7 +522,38 @@ loop:
 }
 
 func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
-	return c.metadata.GetCommitInfo(version)
+	// if the commit info is already stored, return it
+	ci, err := c.metadata.GetCommitInfo(version)
+	if err != nil {
+		return nil, err
+	}
+	if ci != nil {
+		return ci, nil
+	}
+	// otherwise built the commit info from the trees
+	storeInfos := make([]proof.StoreInfo, 0, len(c.multiTrees))
+	for storeKey, tree := range c.multiTrees {
+		if internal.IsMemoryStoreKey(storeKey) {
+			continue
+		}
+		v := tree.Version()
+		if v != version {
+			return nil, fmt.Errorf("tree version %d does not match the target version %d", v, version)
+		}
+		bz := []byte(storeKey)
+		storeInfos = append(storeInfos, proof.StoreInfo{
+			Name: bz,
+			CommitID: proof.CommitID{
+				Version: v,
+				Hash:    tree.Hash(),
+			},
+		})
+	}
+
+	return &proof.CommitInfo{
+		Version:    version,
+		StoreInfos: storeInfos,
+	}, nil
 }
 
 func (c *CommitStore) GetLatestVersion() (uint64, error) {

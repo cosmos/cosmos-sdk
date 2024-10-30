@@ -454,8 +454,9 @@ func (c *Consensus[T]) FinalizeBlock(
 	}
 
 	// we don't need to deliver the block in the genesis block
+	// TODO audit this
 	if req.Height == int64(c.initialHeight) {
-		appHash, err := c.store.Commit(store.NewChangeset())
+		appHash, err := c.store.Commit(store.NewChangeset(uint64(req.Height)))
 		if err != nil {
 			return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 		}

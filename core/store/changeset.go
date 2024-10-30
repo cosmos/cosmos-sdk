@@ -6,6 +6,7 @@ import (
 
 // Changeset is a list of changes to be written to disk
 type Changeset struct {
+	Version uint64
 	Changes []StateChanges
 }
 
@@ -29,11 +30,11 @@ type KVPair = struct {
 	Remove bool
 }
 
-func NewChangeset() *Changeset {
-	return &Changeset{}
+func NewChangeset(version uint64) *Changeset {
+	return &Changeset{Version: version}
 }
 
-func NewChangesetWithPairs(pairs map[string]KVPairs) *Changeset {
+func NewChangesetWithPairs(version uint64, pairs map[string]KVPairs) *Changeset {
 	changes := make([]StateChanges, len(pairs))
 	i := 0
 	for storeKey, kvPairs := range pairs {

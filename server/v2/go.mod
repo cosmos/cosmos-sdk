@@ -4,12 +4,12 @@ go 1.23
 
 replace (
 	cosmossdk.io/api => ../../api
+	cosmossdk.io/core => ../../core
 	cosmossdk.io/server/v2/appmanager => ./appmanager
 	cosmossdk.io/server/v2/stf => ./stf
 	cosmossdk.io/store/v2 => ../../store/v2
 	cosmossdk.io/store/v2/db => ../../store/v2/db
 	cosmossdk.io/x/tx => ../../x/tx
-	cosmossdk.io/core => ../../core
 	github.com/cosmos/iavl/v2 => ../../../../iavl/iavl-v2
 )
 
@@ -69,7 +69,7 @@ require (
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/btree v1.1.2 // indirect
+	github.com/google/btree v1.1.3 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect

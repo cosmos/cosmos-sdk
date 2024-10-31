@@ -213,7 +213,7 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 		wrappedLogger,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("comet: %w", err)
 	}
 
 	return s.Node.Start()

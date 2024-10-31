@@ -358,6 +358,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		Version: uint64(req.InitialHeight - 1),
 		Changes: stateChanges,
 	}
+	// TODO  this call should be FinalizeBlock to run full ABCI flow for genesis block
 	stateRoot, err := c.store.Commit(cs)
 	if err != nil {
 		return nil, fmt.Errorf("unable to write the changeset: %w", err)

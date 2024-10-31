@@ -294,6 +294,7 @@ replace (
 // server v2 integration
 replace (
 	cosmossdk.io/api => ../../api
+	cosmossdk.io/core => ../../core
 	cosmossdk.io/runtime/v2 => ../../runtime/v2
 	cosmossdk.io/server/v2 => ../../server/v2
 	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
@@ -301,6 +302,6 @@ replace (
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/store/v2 => ../../store/v2
-	cosmossdk.io/core => ../../core
+	github.com/cosmos/iavl => ../../../../iavl/iavl-master
 	github.com/cosmos/iavl/v2 => ../../../../iavl/iavl-v2
 )

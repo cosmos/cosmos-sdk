@@ -14,7 +14,7 @@ require (
 	github.com/cosmos/iavl v1.3.0
 	github.com/cosmos/iavl/v2 v2.0.0-20241029195051-d3ac274b6b58
 	github.com/cosmos/ics23/go v0.11.0
-	github.com/google/btree v1.1.2
+	github.com/google/btree v1.1.3
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/linxGnu/grocksdb v1.9.3
 	github.com/spf13/cast v1.7.0
@@ -70,6 +70,7 @@ require (
 )
 
 replace (
-	github.com/cosmos/iavl/v2 => ../../../../iavl/iavl-v2
 	cosmossdk.io/core => ../../core
+	github.com/cosmos/iavl => ../../../../iavl/iavl-master
+	github.com/cosmos/iavl/v2 => ../../../../iavl/iavl-v2
 )

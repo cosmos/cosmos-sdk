@@ -86,23 +86,33 @@ func (s *Server[T]) Name() string {
 }
 
 // Start starts all components concurrently.
+// CONTRACT:
+// All components are started concurrently.
+// A failure in any one component to start causes the server to stop.
 func (s *Server[T]) Start(ctx context.Context) error {
 	logger := GetLoggerFromContext(ctx)
 	logger.With(log.ModuleKey, s.Name()).Info("starting servers...")
 
-	g, ctx := errgroup.WithContext(ctx)
+	resCh := make(chan error, len(s.components))
 	for _, mod := range s.components {
-		g.Go(func() error {
-			return mod.Start(ctx)
-		})
+		go func() {
+			resCh <- mod.Start(ctx)
+		}()
 	}
 
-	if err := g.Wait(); err != nil {
-		return fmt.Errorf("failed to start servers: %w", err)
+	for range s.components {
+		select {
+		case err := <-resCh:
+			if err != nil {
+				logger.Error("failed to start server", "err", err)
+				return fmt.Errorf("failed to start servers: %w", err)
+			}
+		case <-ctx.Done():
+			return nil
+		}
 	}
-
+	// this will rarely (if ever) be reached, since Component.Start() tends to Block
 	<-ctx.Done()
-
 	return nil
 }
 
@@ -121,7 +131,10 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 
 	err := g.Wait()
 	logger.With(log.ModuleKey, s.Name()).Info("stopped all server components")
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to stop servers: %w", err)
+	}
+	return nil
 }
 
 // CLICommands returns all CLI commands of all components.

@@ -4,6 +4,7 @@ go 1.23.1
 
 replace (
 	cosmossdk.io/api => ../../../api
+	cosmossdk.io/core => ../../../core
 	cosmossdk.io/server/v2 => ../
 	cosmossdk.io/server/v2/appmanager => ../appmanager
 	cosmossdk.io/server/v2/stf => ../stf
@@ -13,7 +14,6 @@ replace (
 	cosmossdk.io/x/consensus => ../../../x/consensus
 	cosmossdk.io/x/staking => ../../../x/staking
 	cosmossdk.io/x/tx => ../../../x/tx
-	cosmossdk.io/core => ../../../core
 	github.com/cosmos/cosmos-sdk => ../../../
 )
 

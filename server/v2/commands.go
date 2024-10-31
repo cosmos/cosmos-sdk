@@ -3,7 +3,6 @@ package serverv2
 import (
 	"context"
 	"errors"
-	"fmt"
 	"golang.org/x/sync/errgroup"
 	"os"
 	"os/signal"
@@ -84,7 +83,6 @@ func createStartCommand[T transaction.Tx](
 					cancelFn()
 					cmd.Printf("caught %s signal\n", sig.String())
 				case <-ctx.Done():
-					cmd.Printf("context canceled\n")
 					// If the root context is canceled (which is likely to happen in tests involving cobra commands),
 					// don't block waiting for the OS signal before stopping the server.
 					cancelFn()
@@ -99,11 +97,7 @@ func createStartCommand[T transaction.Tx](
 			if err != nil {
 				cancelFn()
 			}
-			err = eg.Wait()
-			if err != nil {
-				return fmt.Errorf("failed to stop server: %w", err)
-			}
-			return nil
+			return errors.Join(err, eg.Wait())
 		},
 	}
 

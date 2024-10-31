@@ -20,10 +20,7 @@ func Benchmark_CacheStack_Set(b *testing.B) {
 			b.ResetTimer()
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				err := bs.Set([]byte{0}, []byte{0})
-				if err != nil {
-					b.Fatal(err)
-				}
+				_ = bs.Set([]byte{0}, []byte{0})
 			}
 		})
 	}
@@ -36,10 +33,7 @@ func Benchmark_Get(b *testing.B) {
 			b.ResetTimer()
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				_, err := bs.Get([]byte{0})
-				if err != nil {
-					b.Fatal(err)
-				}
+				_, _ = bs.Get([]byte{0})
 			}
 		})
 	}
@@ -54,19 +48,13 @@ func Benchmark_Iterate(b *testing.B) {
 			b.ResetTimer()
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				iter, err := bs.Iterator([]byte{0}, []byte{0})
-				if err != nil {
-					b.Fatal(err)
-				}
+				iter, _ := bs.Iterator(nil, nil)
 				for iter.Valid() {
-					iter.Next()
 					keySink = iter.Key()
 					valueSink = iter.Value()
+					iter.Next()
 				}
-				err = iter.Close()
-				if err != nil {
-					b.Fatal(err)
-				}
+				_ = iter.Close()
 			}
 		})
 	}

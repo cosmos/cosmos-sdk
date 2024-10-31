@@ -63,6 +63,10 @@ func Benchmark_Iterate(b *testing.B) {
 					keySink = iter.Key()
 					valueSink = iter.Value()
 				}
+				err = iter.Close()
+				if err != nil {
+					b.Fatal(err)
+				}
 			}
 		})
 	}

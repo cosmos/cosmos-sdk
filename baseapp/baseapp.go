@@ -1032,11 +1032,11 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, reflectMsgs []proto
 	msgResponses := make([]*codectypes.Any, 0, len(msgs))
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
-		start := telemetry.Now()
-
 		if mode != execModeFinalize && mode != execModeSimulate {
 			break
 		}
+
+		start := telemetry.Now()
 
 		handler := app.msgServiceRouter.Handler(msg)
 		if handler == nil {

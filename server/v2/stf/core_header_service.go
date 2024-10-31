@@ -7,6 +7,8 @@ import (
 	"cosmossdk.io/core/store"
 )
 
+var stfIdentity = []byte(Identity)
+
 var _ header.Service = (*HeaderService)(nil)
 
 type HeaderService struct{}
@@ -26,7 +28,7 @@ const headerInfoPrefix = 0x37
 func (s STF[T]) setHeaderInfo(state store.WriterMap, headerInfo header.Info) error {
 	// TODO storing header info is too low level here, stf should be stateless.
 	// We should have a keeper that does this.
-	runtimeStore, err := state.GetWriter(Identity)
+	runtimeStore, err := state.GetWriter(stfIdentity)
 	if err != nil {
 		return err
 	}
@@ -43,7 +45,7 @@ func (s STF[T]) setHeaderInfo(state store.WriterMap, headerInfo header.Info) err
 
 // getHeaderInfo gets the header info from the state. It should only be used for queries
 func (s STF[T]) getHeaderInfo(state store.WriterMap) (i header.Info, err error) {
-	runtimeStore, err := state.GetWriter(Identity)
+	runtimeStore, err := state.GetWriter(stfIdentity)
 	if err != nil {
 		return header.Info{}, err
 	}

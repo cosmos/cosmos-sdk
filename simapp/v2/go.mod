@@ -12,9 +12,13 @@ require (
 	cosmossdk.io/runtime/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/server/v2 v2.0.0-20240718121635-a877e3e8048a
 	cosmossdk.io/server/v2/cometbft v0.0.0-20241015140036-ee3d320eaa55
+	cosmossdk.io/server/v2/stf v0.0.0-20240708142107-25e99c54bac1
 	cosmossdk.io/store/v2 v2.0.0
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
+	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f
@@ -34,18 +38,11 @@ require (
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.53.0
-	github.com/spf13/cast v1.7.0 // indirect
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/protobuf v1.35.1
-)
-
-require (
-	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -63,7 +60,6 @@ require (
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-20240802110823-cffeedff643d // indirect
-	cosmossdk.io/server/v2/stf v0.0.0-20240708142107-25e99c54bac1 // indirect
 	cosmossdk.io/store v1.1.1 // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -197,6 +193,7 @@ require (
 	github.com/sasha-s/go-deadlock v0.3.5 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
+	github.com/spf13/cast v1.7.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/supranational/blst v0.3.13 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect

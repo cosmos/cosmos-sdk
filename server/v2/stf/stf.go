@@ -242,7 +242,7 @@ func (s STF[T]) validateTx(
 	if err != nil {
 		return 0, nil, err
 	}
-	validateCtx := s.makeContext(ctx, RuntimeIdentity, validateState, execMode)
+	validateCtx := s.makeContext(ctx, ConsensusIdentity, validateState, execMode)
 	validateCtx.setHeaderInfo(hi)
 	validateCtx.setGasLimit(gasLimit)
 	err = s.doTxValidation(validateCtx, tx)
@@ -271,7 +271,7 @@ func (s STF[T]) execTx(
 		// in case of error during message execution, we do not apply the exec state.
 		// instead we run the post exec handler in a new branchFn from the initial state.
 		postTxState := s.branchFn(state)
-		postTxCtx := s.makeContext(ctx, RuntimeIdentity, postTxState, execMode)
+		postTxCtx := s.makeContext(ctx, ConsensusIdentity, postTxState, execMode)
 		postTxCtx.setHeaderInfo(hi)
 
 		postTxErr := s.postTxExec(postTxCtx, tx, false)
@@ -297,7 +297,7 @@ func (s STF[T]) execTx(
 	// tx execution went fine, now we use the same state to run the post tx exec handler,
 	// in case the execution of the post tx fails, then no state change is applied and the
 	// whole execution step is rolled back.
-	postTxCtx := s.makeContext(ctx, RuntimeIdentity, execState, execMode) // NO gas limit.
+	postTxCtx := s.makeContext(ctx, ConsensusIdentity, execState, execMode) // NO gas limit.
 	postTxCtx.setHeaderInfo(hi)
 	postTxErr := s.postTxExec(postTxCtx, tx, true)
 	if postTxErr != nil {
@@ -339,7 +339,7 @@ func (s STF[T]) runTxMsgs(
 	}
 	msgResps := make([]transaction.Msg, len(msgs))
 
-	execCtx := s.makeContext(ctx, RuntimeIdentity, state, execMode)
+	execCtx := s.makeContext(ctx, ConsensusIdentity, state, execMode)
 	execCtx.setHeaderInfo(hi)
 	execCtx.setGasLimit(gasLimit)
 	events := make([]event.Event, 0)

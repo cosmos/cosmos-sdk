@@ -44,8 +44,8 @@ type STF[T transaction.Tx] struct {
 	makeGasMeteredState makeGasMeteredStateFn
 }
 
-// NewSTF returns a new STF instance.
-func NewSTF[T transaction.Tx](
+// New returns a new STF instance.
+func New[T transaction.Tx](
 	logger log.Logger,
 	msgRouterBuilder *MsgRouterBuilder,
 	queryRouterBuilder *MsgRouterBuilder,

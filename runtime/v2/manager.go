@@ -642,7 +642,7 @@ func registerServices[T transaction.Tx](s appmodulev2.AppModule, app *App[T], re
 
 	// if module implements register msg handlers
 	if module, ok := s.(appmodulev2.HasMsgHandlers); ok {
-		wrapper := stfRouterWrapper{stfRouter: app.msgRouterBuilder}
+		wrapper := NewStfRouterWrapper(app.msgRouterBuilder)
 		module.RegisterMsgHandlers(&wrapper)
 		if wrapper.error != nil {
 			return fmt.Errorf("unable to register handlers: %w", wrapper.error)
@@ -651,7 +651,7 @@ func registerServices[T transaction.Tx](s appmodulev2.AppModule, app *App[T], re
 
 	// if module implements register query handlers
 	if module, ok := s.(appmodulev2.HasQueryHandlers); ok {
-		wrapper := stfRouterWrapper{stfRouter: app.queryRouterBuilder}
+		wrapper := NewStfRouterWrapper(app.queryRouterBuilder)
 		module.RegisterQueryHandlers(&wrapper)
 
 		for path, handler := range wrapper.handlers {
@@ -842,6 +842,13 @@ type stfRouterWrapper struct {
 	handlers map[string]appmodulev2.Handler
 }
 
+func NewStfRouterWrapper(stfRouterBuilder *stf.MsgRouterBuilder) stfRouterWrapper {
+	wrapper := stfRouterWrapper{stfRouter: stfRouterBuilder}
+	wrapper.error = nil
+	wrapper.handlers = map[string]appmodulev2.Handler{}
+	return wrapper
+}
+
 func (s *stfRouterWrapper) RegisterHandler(handler appmodulev2.Handler) {
 	req := handler.MakeMsg()
 	requestName := gogoproto.MessageName(req)
@@ -854,7 +861,7 @@ func (s *stfRouterWrapper) RegisterHandler(handler appmodulev2.Handler) {
 	s.error = errors.Join(s.error, err)
 
 	// also make the decoder
-	if s.error == nil {
+	if s.error != nil {
 		s.handlers = map[string]appmodulev2.Handler{}
 	}
 	s.handlers[requestName] = handler

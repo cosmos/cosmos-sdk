@@ -111,7 +111,8 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	logger := GetLoggerFromContext(ctx)
 	logger.With(log.ModuleKey, s.Name()).Info("stopping servers...")
 
-	g, ctx := errgroup.WithContext(ctx)
+	// cannot reuse context as it's already canceled, so create a new one for stopping
+	g, ctx := errgroup.WithContext(context.Background())
 	for _, mod := range s.components {
 		g.Go(func() error {
 			return mod.Stop(ctx)

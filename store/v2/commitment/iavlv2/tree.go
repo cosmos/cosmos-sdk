@@ -92,7 +92,6 @@ func (t Tree) Import(version uint64) (commitment.Importer, error) {
 }
 
 func (t Tree) Close() error {
-	fmt.Printf("Closing tree\n")
 	return t.tree.Close()
 }
 

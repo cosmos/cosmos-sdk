@@ -548,10 +548,7 @@ func (c *CommitStore) GetLatestVersion() (uint64, error) {
 }
 
 func (c *CommitStore) Close() error {
-	fmt.Printf("Closing CommitStore\n")
-	c.logger.Info("Closing CommitStore", "len", len(c.multiTrees))
-	for k, tree := range c.multiTrees {
-		c.logger.Info("Closing tree", "storeKey", k)
+	for _, tree := range c.multiTrees {
 		if err := tree.Close(); err != nil {
 			return err
 		}

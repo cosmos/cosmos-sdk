@@ -3,6 +3,8 @@ package serverv2
 import (
 	"context"
 	"errors"
+	"fmt"
+	"golang.org/x/sync/errgroup"
 	"os"
 	"os/signal"
 	"runtime/pprof"
@@ -73,7 +75,8 @@ func createStartCommand[T transaction.Tx](
 		Short: "Run the application",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx, cancelFn := context.WithCancel(cmd.Context())
-			go func() {
+			eg := new(errgroup.Group)
+			eg.Go(func() error {
 				sigCh := make(chan os.Signal, 1)
 				signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 				select {
@@ -87,15 +90,20 @@ func createStartCommand[T transaction.Tx](
 					cancelFn()
 				}
 
-				if err := server.Stop(ctx); err != nil {
-					cmd.PrintErrln("failed to stop servers:", err)
-				}
-				cmd.Println("background signal thread exited")
-			}()
+				return server.Stop(ctx)
+			})
 
-			return wrapCPUProfile(logger, config, func() error {
+			err := wrapCPUProfile(logger, config, func() error {
 				return server.Start(ctx)
 			})
+			if err != nil {
+				cancelFn()
+			}
+			err = eg.Wait()
+			if err != nil {
+				return fmt.Errorf("failed to stop server: %w", err)
+			}
+			return nil
 		},
 	}
 

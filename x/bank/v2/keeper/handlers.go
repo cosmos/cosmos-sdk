@@ -262,3 +262,23 @@ func (h handlers) QueryBalance(ctx context.Context, req *types.QueryBalanceReque
 
 	return &types.QueryBalanceResponse{Balance: &balance}, nil
 }
+
+// DenomAuthorityMetadata queries the authority metadata of a denom.
+func (h handlers) DenomAuthorityMetadata(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
+	if req == nil {
+		return nil, errors.New("empty request")
+	}
+
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	addr, err := h.addressCodec.StringToBytes(req.Address)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid address: %s", err)
+	}
+
+	balance := h.Keeper.GetBalance(ctx, addr, req.Denom)
+
+	return &types.QueryBalanceResponse{Balance: &balance}, nil
+}

@@ -6,6 +6,7 @@ import "amino/amino.proto";
 import "cosmos/bank/v2/bank.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/bank/v2/authorityMetadata.proto";
 
 option go_package = "cosmossdk.io/x/bank/v2/types";
 
@@ -34,4 +35,17 @@ message QueryBalanceRequest {
 message QueryBalanceResponse {
   // balance is the balance of the coin.
   cosmos.base.v1beta1.Coin balance = 1;
+}
+
+// QueryDenomAuthorityMetadataRequest defines the request structure for the
+// DenomAuthorityMetadata gRPC query.
+message QueryDenomAuthorityMetadataRequest {
+  string denom = 1 [(gogoproto.moretags) = "yaml:\"denom\""];
+}
+
+// QueryDenomAuthorityMetadataResponse defines the response structure for the
+// DenomAuthorityMetadata gRPC query.
+message QueryDenomAuthorityMetadataResponse {
+  DenomAuthorityMetadata authority_metadata = 1
+      [(gogoproto.moretags) = "yaml:\"authority_metadata\"", (gogoproto.nullable) = false];
 }

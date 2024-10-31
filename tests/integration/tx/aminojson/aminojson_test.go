@@ -316,9 +316,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 				},
 				AuthorizationType: stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			},
-			// to be fixed in https://github.com/cosmos/cosmos-sdk/pull/21782
-			// TODO remove once merged
-			fails: true,
 		},
 		"vesting/base_account_empty": {
 			gogo: &vestingtypes.BaseVestingAccount{BaseAccount: &authtypes.BaseAccount{}},

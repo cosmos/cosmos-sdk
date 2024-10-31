@@ -80,7 +80,7 @@ func (s *MigrateStoreTestSuite) SetupTest() {
 	pm := pruning.NewManager(sc, ss, nil, nil)
 
 	// assume no storage store, simulate the migration process
-	s.rootStore, err = New(testLog, ss, orgSC, pm, migrationManager, nil)
+	s.rootStore, err = New(dbm.NewMemDB(), testLog, ss, orgSC, pm, migrationManager, nil)
 	s.Require().NoError(err)
 }
 

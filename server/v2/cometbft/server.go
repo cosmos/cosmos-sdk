@@ -8,9 +8,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/server/v2/store"
-	"cosmossdk.io/store/v2/root"
-
 	abciserver "github.com/cometbft/cometbft/abci/server"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
@@ -21,11 +18,17 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/schema/decoding"
+	"cosmossdk.io/schema/indexer"
 	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/appmanager"
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/mempool"
+	"cosmossdk.io/server/v2/cometbft/types"
 	"cosmossdk.io/store/v2/snapshots"
 
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -45,43 +48,45 @@ type CometBFTServer[T transaction.Tx] struct {
 
 	initTxCodec   transaction.Codec[T]
 	logger        log.Logger
-	storeBuilder  root.Builder
 	serverOptions ServerOptions[T]
 	config        Config
 	cfgOptions    []CfgOption
 }
 
 func New[T transaction.Tx](
+	logger log.Logger,
+	appName string,
+	store types.Store,
+	appManager appmanager.AppManager[T],
+	queryHandlers map[string]appmodulev2.Handler,
+	decoderResolver decoding.DecoderResolver,
 	txCodec transaction.Codec[T],
-	storeBuilder root.Builder,
+	cfg server.ConfigMap,
 	serverOptions ServerOptions[T],
 	cfgOptions ...CfgOption,
-) *CometBFTServer[T] {
-	return &CometBFTServer[T]{
+) (*CometBFTServer[T], error) {
+	srv := &CometBFTServer[T]{
 		initTxCodec:   txCodec,
-		storeBuilder:  storeBuilder,
 		serverOptions: serverOptions,
 		cfgOptions:    cfgOptions,
 	}
-}
 
-func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
 	home, _ := cfg[serverv2.FlagHome].(string)
 
 	// get configs (app.toml + config.toml) from viper
-	appTomlConfig := s.Config().(*AppTomlConfig)
+	appTomlConfig := srv.Config().(*AppTomlConfig)
 	configTomlConfig := cmtcfg.DefaultConfig().SetRoot(home)
 	if len(cfg) > 0 {
-		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &appTomlConfig); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
+		if err := serverv2.UnmarshalSubConfig(cfg, srv.Name(), &appTomlConfig); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 
 		if err := serverv2.UnmarshalSubConfig(cfg, "", &configTomlConfig); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
 
-	s.config = Config{
+	srv.config = Config{
 		ConfigTomlConfig: configTomlConfig,
 		AppTomlConfig:    appTomlConfig,
 	}
@@ -101,53 +106,68 @@ func (s *CometBFTServer[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logg
 		}
 	}
 
-	indexEvents := make(map[string]struct{}, len(s.config.AppTomlConfig.IndexEvents))
-	for _, e := range s.config.AppTomlConfig.IndexEvents {
+	indexEvents := make(map[string]struct{}, len(srv.config.AppTomlConfig.IndexEvents))
+	for _, e := range srv.config.AppTomlConfig.IndexEvents {
 		indexEvents[e] = struct{}{}
 	}
 
-	storeCfg, err := store.UnmarshalConfig(cfg)
-	if err != nil {
-		return err
-	}
-	rs, err := s.storeBuilder.Build(logger, storeCfg)
-	if err != nil {
-		return err
-	}
-
-	s.logger = logger.With(log.ModuleKey, s.Name())
+	srv.logger = logger.With(log.ModuleKey, srv.Name())
 	consensus := NewConsensus(
-		s.logger,
-		appI.Name(),
-		appI.GetAppManager(),
-		s.serverOptions.Mempool(cfg),
+		logger,
+		appName,
+		appManager,
+		nil,
+		srv.serverOptions.Mempool(cfg),
 		indexEvents,
-		appI.GetQueryHandlers(),
-		rs,
-		s.config,
-		s.initTxCodec,
+		queryHandlers,
+		store,
+		srv.config,
+		srv.initTxCodec,
 		chainID,
 	)
-	consensus.prepareProposalHandler = s.serverOptions.PrepareProposalHandler
-	consensus.processProposalHandler = s.serverOptions.ProcessProposalHandler
-	consensus.checkTxHandler = s.serverOptions.CheckTxHandler
-	consensus.verifyVoteExt = s.serverOptions.VerifyVoteExtensionHandler
-	consensus.extendVote = s.serverOptions.ExtendVoteHandler
-	consensus.addrPeerFilter = s.serverOptions.AddrPeerFilter
-	consensus.idPeerFilter = s.serverOptions.IdPeerFilter
+	consensus.prepareProposalHandler = srv.serverOptions.PrepareProposalHandler
+	consensus.processProposalHandler = srv.serverOptions.ProcessProposalHandler
+	consensus.checkTxHandler = srv.serverOptions.CheckTxHandler
+	consensus.verifyVoteExt = srv.serverOptions.VerifyVoteExtensionHandler
+	consensus.extendVote = srv.serverOptions.ExtendVoteHandler
+	consensus.addrPeerFilter = srv.serverOptions.AddrPeerFilter
+	consensus.idPeerFilter = srv.serverOptions.IdPeerFilter
 
-	ss := rs.GetStateStorage().(snapshots.StorageSnapshotter)
-	sc := rs.GetStateCommitment().(snapshots.CommitSnapshotter)
+	ss := store.GetStateStorage().(snapshots.StorageSnapshotter)
+	sc := store.GetStateCommitment().(snapshots.CommitSnapshotter)
 
-	snapshotStore, err := GetSnapshotStore(s.config.ConfigTomlConfig.RootDir)
+	snapshotStore, err := GetSnapshotStore(srv.config.ConfigTomlConfig.RootDir)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	consensus.snapshotManager = snapshots.NewManager(snapshotStore, s.serverOptions.SnapshotOptions(cfg), sc, ss, nil, s.logger)
+	consensus.snapshotManager = snapshots.NewManager(
+		snapshotStore, srv.serverOptions.SnapshotOptions(cfg), sc, ss, nil, logger)
 
-	s.Consensus = consensus
+	srv.Consensus = consensus
 
-	return nil
+	// initialize the indexer
+	if indexerCfg := srv.config.AppTomlConfig.Indexer; len(indexerCfg.Target) > 0 {
+		listener, err := indexer.StartIndexing(indexer.IndexingOptions{
+			Config:   indexerCfg,
+			Resolver: decoderResolver,
+			Logger:   logger.With(log.ModuleKey, "indexer"),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to start indexing: %w", err)
+		}
+		consensus.listener = &listener.Listener
+	}
+
+	return srv, nil
+}
+
+// NewWithConfigOptions creates a new CometBFT server with the provided config options.
+// It is *not* a fully functional server (since it has been created without dependencies)
+// The returned server should only be used to get and set configuration.
+func NewWithConfigOptions[T transaction.Tx](opts ...CfgOption) *CometBFTServer[T] {
+	return &CometBFTServer[T]{
+		cfgOptions: opts,
+	}
 }
 
 func (s *CometBFTServer[T]) Name() string {

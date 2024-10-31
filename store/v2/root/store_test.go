@@ -59,7 +59,7 @@ func (s *RootStoreTestSuite) SetupTest() {
 	s.Require().NoError(err)
 
 	pm := pruning.NewManager(sc, ss, nil, nil)
-	rs, err := New(noopLog, ss, sc, pm, nil, nil)
+	rs, err := New(dbm.NewMemDB(), noopLog, ss, sc, pm, nil, nil)
 	s.Require().NoError(err)
 
 	s.rootStore = rs
@@ -84,16 +84,16 @@ func (s *RootStoreTestSuite) newStoreWithPruneConfig(config *store.PruningOption
 
 	pm := pruning.NewManager(sc, ss, config, config)
 
-	rs, err := New(noopLog, ss, sc, pm, nil, nil)
+	rs, err := New(dbm.NewMemDB(), noopLog, ss, sc, pm, nil, nil)
 	s.Require().NoError(err)
 
 	s.rootStore = rs
 }
 
-func (s *RootStoreTestSuite) newStoreWithBackendMount(ss store.VersionedDatabase, sc store.Committer, pm *pruning.Manager) {
+func (s *RootStoreTestSuite) newStoreWithBackendMount(ss store.VersionedWriter, sc store.Committer, pm *pruning.Manager) {
 	noopLog := coretesting.NewNopLogger()
 
-	rs, err := New(noopLog, ss, sc, pm, nil, nil)
+	rs, err := New(dbm.NewMemDB(), noopLog, ss, sc, pm, nil, nil)
 	s.Require().NoError(err)
 
 	s.rootStore = rs

@@ -17,6 +17,7 @@ const (
 )
 
 // MetadataStore is a store for metadata related to the commitment store.
+// It isn't metadata store role to close the underlying KVStore.
 type MetadataStore struct {
 	kv corestore.KVStoreWithBatch
 }

@@ -99,6 +99,8 @@ func init() {
 			ProvideModuleManager[transaction.Tx],
 			ProvideEnvironment,
 			ProvideKVService,
+			ProvideModuleConfigMaps,
+			ProvideModuleScopedConfigMap,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -108,6 +110,7 @@ func ProvideAppBuilder[T transaction.Tx](
 	interfaceRegistrar registry.InterfaceRegistrar,
 	amino registry.AminoRegistrar,
 	storeBuilder root.Builder,
+	storeConfig *root.Config,
 ) (
 	*AppBuilder[T],
 	*stf.MsgRouterBuilder,
@@ -131,10 +134,10 @@ func ProvideAppBuilder[T transaction.Tx](
 		amino:              amino,
 		msgRouterBuilder:   msgRouterBuilder,
 		queryRouterBuilder: stf.NewMsgRouterBuilder(), // TODO dedicated query router
-		QueryHandlers:      map[string]appmodulev2.Handler{},
+		queryHandlers:      map[string]appmodulev2.Handler{},
 		storeLoader:        DefaultStoreLoader,
 	}
-	appBuilder := &AppBuilder[T]{app: app, storeBuilder: storeBuilder}
+	appBuilder := &AppBuilder[T]{app: app, storeBuilder: storeBuilder, storeConfig: storeConfig}
 
 	return appBuilder, msgRouterBuilder, appModule[T]{app}, protoFiles, protoTypes
 }
@@ -142,6 +145,7 @@ func ProvideAppBuilder[T transaction.Tx](
 type AppInputs struct {
 	depinject.In
 
+	StoreConfig        *root.Config
 	Config             *runtimev2.Module
 	AppBuilder         *AppBuilder[transaction.Tx]
 	ModuleManager      *MM[transaction.Tx]
@@ -229,6 +233,7 @@ func ProvideEnvironment(
 // - header.Service
 // - comet.Service
 // - event.Service
+// - store/v2/root.Builder
 //
 // They are all required.  For most use cases these default services bindings should be sufficient.
 // Power users (or tests) may wish to provide their own services bindings, in which case they must
@@ -244,11 +249,13 @@ func DefaultServiceBindings() depinject.Config {
 		cometService  comet.Service = &services.ContextAwareCometInfoService{}
 		headerService               = services.NewGenesisHeaderService(stf.HeaderService{})
 		eventService                = services.NewGenesisEventService(stf.NewEventService())
+		storeBuilder                = root.NewBuilder()
 	)
 	return depinject.Supply(
 		kvServiceFactory,
 		headerService,
 		cometService,
 		eventService,
+		storeBuilder,
 	)
 }

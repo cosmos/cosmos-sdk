@@ -9,7 +9,7 @@ if [ -d "$SIMD_HOME" ]; then rm -rv $SIMD_HOME; fi
 $SIMD_BIN config set client chain-id simapp-v2-chain
 $SIMD_BIN config set client keyring-backend test
 $SIMD_BIN config set client keyring-default-keyname alice
-$SIMD_BIN config set app api.enable true
+$SIMD_BIN config set app rest.enable true
 $SIMD_BIN keys add alice --indiscreet
 $SIMD_BIN keys add bob --indiscreet
 $SIMD_BIN init simapp-v2-node --chain-id simapp-v2-chain

@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
+	"cosmossdk.io/schema/decoding"
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 )
@@ -22,26 +23,24 @@ import (
 // done declaratively with an app config and the rest of it is done the old way.
 // See simapp/app_v2.go for an example of this setup.
 type App[T transaction.Tx] struct {
-	*appmanager.AppManager[T]
-
-	// app manager dependencies
-	stf                *stf.STF[T]
-	msgRouterBuilder   *stf.MsgRouterBuilder
-	queryRouterBuilder *stf.MsgRouterBuilder
-	db                 Store
+	appmanager.AppManager[T]
 
 	// app configuration
 	logger log.Logger
 	config *runtimev2.Module
 
+	// state
+	stf                *stf.STF[T]
+	msgRouterBuilder   *stf.MsgRouterBuilder
+	queryRouterBuilder *stf.MsgRouterBuilder
+	db                 Store
+	storeLoader        StoreLoader
+
+	// modules
 	interfaceRegistrar registry.InterfaceRegistrar
 	amino              registry.AminoRegistrar
 	moduleManager      *MM[T]
-
-	// QueryHandlers defines the query handlers
-	QueryHandlers map[string]appmodulev2.Handler
-
-	storeLoader StoreLoader
+	queryHandlers      map[string]appmodulev2.Handler // queryHandlers defines the query handlers
 }
 
 // Name returns the app name.
@@ -84,15 +83,21 @@ func (a *App[T]) LoadLatestHeight() (uint64, error) {
 	return a.db.GetLatestVersion()
 }
 
+// QueryHandlers returns the query handlers.
+func (a *App[T]) QueryHandlers() map[string]appmodulev2.Handler {
+	return a.queryHandlers
+}
+
+// SchemaDecoderResolver returns the module schema resolver.
+func (a *App[T]) SchemaDecoderResolver() decoding.DecoderResolver {
+	moduleSet := map[string]any{}
+	for moduleName, module := range a.moduleManager.Modules() {
+		moduleSet[moduleName] = module
+	}
+	return decoding.ModuleSetDecoderResolver(moduleSet)
+}
+
 // Close is called in start cmd to gracefully cleanup resources.
 func (a *App[T]) Close() error {
 	return nil
-}
-
-func (a *App[T]) GetAppManager() *appmanager.AppManager[T] {
-	return a.AppManager
-}
-
-func (a *App[T]) GetQueryHandlers() map[string]appmodulev2.Handler {
-	return a.QueryHandlers
 }

@@ -100,6 +100,8 @@ func init() {
 			ProvideEnvironment,
 			ProvideKVService,
 			ProvideModuleAccountsService,
+			ProvideModuleConfigMaps,
+			ProvideModuleScopedConfigMap,
 		),
 		appconfig.Invoke(SetupAppBuilder, SetupModuleAccountsService),
 	)
@@ -109,6 +111,7 @@ func ProvideAppBuilder[T transaction.Tx](
 	interfaceRegistrar registry.InterfaceRegistrar,
 	amino registry.AminoRegistrar,
 	storeBuilder root.Builder,
+	storeConfig *root.Config,
 ) (
 	*AppBuilder[T],
 	*stf.MsgRouterBuilder,
@@ -135,7 +138,7 @@ func ProvideAppBuilder[T transaction.Tx](
 		queryHandlers:      map[string]appmodulev2.Handler{},
 		storeLoader:        DefaultStoreLoader,
 	}
-	appBuilder := &AppBuilder[T]{app: app, storeBuilder: storeBuilder}
+	appBuilder := &AppBuilder[T]{app: app, storeBuilder: storeBuilder, storeConfig: storeConfig}
 
 	return appBuilder, msgRouterBuilder, appModule[T]{app}, protoFiles, protoTypes
 }
@@ -143,6 +146,7 @@ func ProvideAppBuilder[T transaction.Tx](
 type AppInputs struct {
 	depinject.In
 
+	StoreConfig        *root.Config
 	Config             *runtimev2.Module
 	AppBuilder         *AppBuilder[transaction.Tx]
 	ModuleManager      *MM[transaction.Tx]

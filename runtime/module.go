@@ -104,6 +104,8 @@ func init() {
 			ProvideModuleManager,
 			ProvideCometService,
 			ProvideModuleAccountsService,
+			ProvideModuleConfigMaps,
+			ProvideModuleScopedConfigMap,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 		appconfig.Invoke(SetupModuleAccountsService),

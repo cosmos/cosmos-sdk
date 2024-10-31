@@ -92,8 +92,8 @@ var (
 		// pooltypes.ModuleName
 	}
 
-	// application configuration (used by depinject)
-	appConfig = appconfig.Compose(&appv1alpha1.Config{
+	// ModuleConfig is the application module configuration used by depinject
+	ModuleConfig = appconfig.Compose(&appv1alpha1.Config{
 		Modules: []*appv1alpha1.ModuleConfig{
 			{
 				Name: runtime.ModuleName,

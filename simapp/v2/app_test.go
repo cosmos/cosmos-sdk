@@ -16,8 +16,10 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
 	serverv2store "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2/db"
@@ -39,7 +41,11 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	vp.Set(serverv2store.FlagAppDBBackend, string(db.DBTypeGoLevelDB))
 	vp.Set(serverv2.FlagHome, t.TempDir())
 
-	app := NewSimApp[transaction.Tx](logger, vp)
+	app, err := NewSimApp[transaction.Tx](depinject.Configs(
+		depinject.Supply(logger, runtime.GlobalConfig(vp.AllSettings()))),
+	)
+	require.NoError(t, err)
+
 	genesis := app.ModuleManager().DefaultGenesis()
 
 	privVal := mock.NewPV()

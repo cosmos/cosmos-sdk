@@ -15,23 +15,21 @@ import (
 	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
+	"cosmossdk.io/store/v2/root"
 )
 
 // AppBuilder is a type that is injected into a container by the runtime/v2 module
 // (as *AppBuilder) which can be used to create an app which is compatible with
 // the existing app.go initialization conventions.
 type AppBuilder[T transaction.Tx] struct {
-	app *App[T]
+	app          *App[T]
+	storeBuilder root.Builder
+	storeConfig  *root.Config
 
 	// the following fields are used to overwrite the default
 	branch      func(state store.ReaderMap) store.WriterMap
 	txValidator func(ctx context.Context, tx T) error
 	postTxExec  func(ctx context.Context, tx T, success bool) error
-}
-
-// DefaultGenesis returns a default genesis from the registered AppModule's.
-func (a *AppBuilder[T]) DefaultGenesis() map[string]json.RawMessage {
-	return a.app.moduleManager.DefaultGenesis()
 }
 
 // RegisterModules registers the provided modules with the module manager.
@@ -62,14 +60,6 @@ func (a *AppBuilder[T]) RegisterModules(modules map[string]appmodulev2.AppModule
 	return nil
 }
 
-// RegisterStores registers the provided store keys.
-// This method should only be used for registering extra stores
-// which is necessary for modules that not registered using the app config.
-// To be used in combination of RegisterModules.
-func (a *AppBuilder[T]) RegisterStores(keys ...string) {
-	a.app.storeKeys = append(a.app.storeKeys, keys...)
-}
-
 // Build builds an *App instance.
 func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	for _, opt := range opts {
@@ -93,17 +83,19 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 		}
 	}
 
-	if a.app.db == nil {
-		return nil, fmt.Errorf("app.db is not set, it is required to build the app")
+	var err error
+	a.app.db, err = a.storeBuilder.Build(a.app.logger, a.storeConfig)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := a.app.moduleManager.RegisterServices(a.app); err != nil {
+	if err = a.app.moduleManager.RegisterServices(a.app); err != nil {
 		return nil, err
 	}
 
 	endBlocker, valUpdate := a.app.moduleManager.EndBlock()
 
-	stf, err := stf.NewSTF[T](
+	stf, err := stf.New[T](
 		a.app.logger.With("module", "stf"),
 		a.app.msgRouterBuilder,
 		a.app.queryRouterBuilder,
@@ -120,77 +112,75 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	}
 	a.app.stf = stf
 
-	appManagerBuilder := appmanager.Builder[T]{
-		STF:                a.app.stf,
-		DB:                 a.app.db,
-		ValidateTxGasLimit: a.app.config.GasConfig.ValidateTxGasLimit,
-		QueryGasLimit:      a.app.config.GasConfig.QueryGasLimit,
-		SimulationGasLimit: a.app.config.GasConfig.SimulationGasLimit,
-		InitGenesis: func(
-			ctx context.Context,
-			src io.Reader,
-			txHandler func(json.RawMessage) error,
-		) (store.WriterMap, error) {
-			// this implementation assumes that the state is a JSON object
-			bz, err := io.ReadAll(src)
-			if err != nil {
-				return nil, fmt.Errorf("failed to read import state: %w", err)
-			}
-			var genesisJSON map[string]json.RawMessage
-			if err = json.Unmarshal(bz, &genesisJSON); err != nil {
-				return nil, err
-			}
-
-			v, zeroState, err := a.app.db.StateLatest()
-			if err != nil {
-				return nil, fmt.Errorf("unable to get latest state: %w", err)
-			}
-			if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
-				return nil, errors.New("cannot init genesis on non-zero state")
-			}
-			genesisCtx := services.NewGenesisContext(a.branch(zeroState))
-			genesisState, err := genesisCtx.Run(ctx, func(ctx context.Context) error {
-				err = a.app.moduleManager.InitGenesisJSON(ctx, genesisJSON, txHandler)
-				if err != nil {
-					return fmt.Errorf("failed to init genesis: %w", err)
-				}
-				return nil
-			})
-
-			return genesisState, err
+	a.app.AppManager = appmanager.New[T](
+		appmanager.Config{
+			ValidateTxGasLimit: a.app.config.GasConfig.ValidateTxGasLimit,
+			QueryGasLimit:      a.app.config.GasConfig.QueryGasLimit,
+			SimulationGasLimit: a.app.config.GasConfig.SimulationGasLimit,
 		},
-		ExportGenesis: func(ctx context.Context, version uint64) ([]byte, error) {
-			state, err := a.app.db.StateAt(version)
-			if err != nil {
-				return nil, fmt.Errorf("unable to get state at given version: %w", err)
-			}
-
-			genesisJson, err := a.app.moduleManager.ExportGenesisForModules(
-				ctx,
-				func() store.WriterMap {
-					return a.branch(state)
-				},
-			)
-			if err != nil {
-				return nil, fmt.Errorf("failed to export genesis: %w", err)
-			}
-
-			bz, err := json.Marshal(genesisJson)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal genesis: %w", err)
-			}
-
-			return bz, nil
-		},
-	}
-
-	appManager, err := appManagerBuilder.Build()
-	if err != nil {
-		return nil, fmt.Errorf("failed to build app manager: %w", err)
-	}
-	a.app.AppManager = appManager
+		a.app.db,
+		a.app.stf,
+		a.initGenesis,
+		a.exportGenesis,
+	)
 
 	return a.app, nil
+}
+
+// initGenesis returns the app initialization genesis for modules
+func (a *AppBuilder[T]) initGenesis(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {
+	// this implementation assumes that the state is a JSON object
+	bz, err := io.ReadAll(src)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read import state: %w", err)
+	}
+	var genesisJSON map[string]json.RawMessage
+	if err = json.Unmarshal(bz, &genesisJSON); err != nil {
+		return nil, err
+	}
+
+	v, zeroState, err := a.app.db.StateLatest()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get latest state: %w", err)
+	}
+	if v != 0 { // TODO: genesis state may be > 0, we need to set version on store
+		return nil, errors.New("cannot init genesis on non-zero state")
+	}
+	genesisCtx := services.NewGenesisContext(a.branch(zeroState))
+	genesisState, err := genesisCtx.Mutate(ctx, func(ctx context.Context) error {
+		err = a.app.moduleManager.InitGenesisJSON(ctx, genesisJSON, txHandler)
+		if err != nil {
+			return fmt.Errorf("failed to init genesis: %w", err)
+		}
+		return nil
+	})
+
+	return genesisState, err
+}
+
+// exportGenesis returns the app export genesis logic for modules
+func (a *AppBuilder[T]) exportGenesis(ctx context.Context, version uint64) ([]byte, error) {
+	state, err := a.app.db.StateAt(version)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get state at given version: %w", err)
+	}
+
+	genesisJson, err := a.app.moduleManager.ExportGenesisForModules(
+		ctx,
+		func() store.WriterMap {
+			return a.branch(state)
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to export genesis: %w", err)
+	}
+
+	bz, err := json.Marshal(genesisJson)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal genesis: %w", err)
+	}
+
+	return bz, nil
 }
 
 // AppBuilderOption is a function that can be passed to AppBuilder.Build to customize the resulting app.
@@ -205,7 +195,11 @@ func AppBuilderWithBranch[T transaction.Tx](branch func(state store.ReaderMap) s
 
 // AppBuilderWithTxValidator sets the tx validator for the app.
 // It overrides all default tx validators defined by modules.
-func AppBuilderWithTxValidator[T transaction.Tx](txValidators func(ctx context.Context, tx T) error) AppBuilderOption[T] {
+func AppBuilderWithTxValidator[T transaction.Tx](
+	txValidators func(
+		ctx context.Context, tx T,
+	) error,
+) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.txValidator = txValidators
 	}
@@ -213,7 +207,11 @@ func AppBuilderWithTxValidator[T transaction.Tx](txValidators func(ctx context.C
 
 // AppBuilderWithPostTxExec sets logic that will be executed after each transaction.
 // When not provided, a no-op function will be used.
-func AppBuilderWithPostTxExec[T transaction.Tx](postTxExec func(ctx context.Context, tx T, success bool) error) AppBuilderOption[T] {
+func AppBuilderWithPostTxExec[T transaction.Tx](
+	postTxExec func(
+		ctx context.Context, tx T, success bool,
+	) error,
+) AppBuilderOption[T] {
 	return func(a *AppBuilder[T]) {
 		a.postTxExec = postTxExec
 	}

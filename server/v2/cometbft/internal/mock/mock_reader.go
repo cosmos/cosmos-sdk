@@ -23,7 +23,7 @@ func (roa *ReaderMap) GetReader(actor []byte) (corestore.Reader, error) {
 	return NewMockReader(roa.version, roa.store, actor), nil
 }
 
-// Reader represents a read-only adapter for accessing data from the root store.
+// MockReader represents a read-only adapter for accessing data from the root store.
 type MockReader struct {
 	version uint64     // The version of the data.
 	store   *MockStore // The root store to read data from.

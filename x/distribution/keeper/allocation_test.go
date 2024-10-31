@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/comet"
@@ -57,6 +57,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	valCodec := address.NewBech32Codec("cosmosvaloper")
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	accountKeeper.EXPECT().AddressCodec().Return(cdcOpts.GetAddressCodec())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
 
 	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
@@ -120,6 +121,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
+	accountKeeper.EXPECT().AddressCodec().Return(cdcOpts.GetAddressCodec())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
@@ -258,6 +260,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount("fee_collector")
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
 	accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), "fee_collector").Return(feeCollectorAcc)
+	accountKeeper.EXPECT().AddressCodec().Return(cdcOpts.GetAddressCodec())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(address.NewBech32Codec("cosmosvaloper")).AnyTimes()
 
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
@@ -391,8 +394,10 @@ func TestAllocateTokensToValidatorWithoutCommission(t *testing.T) {
 	env := runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger())
 
 	valCodec := address.NewBech32Codec("cosmosvaloper")
+	addrCdc := address.NewBech32Codec("cosmos")
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	accountKeeper.EXPECT().AddressCodec().Return(addrCdc)
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
 
 	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))
@@ -460,6 +465,7 @@ func TestAllocateTokensWithZeroTokens(t *testing.T) {
 	valCodec := address.NewBech32Codec("cosmosvaloper")
 
 	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+	accountKeeper.EXPECT().AddressCodec().Return(cdcOpts.GetAddressCodec())
 	stakingKeeper.EXPECT().ValidatorAddressCodec().Return(valCodec).AnyTimes()
 
 	authorityAddr, err := cdcOpts.GetAddressCodec().BytesToString(authtypes.NewModuleAddress("gov"))

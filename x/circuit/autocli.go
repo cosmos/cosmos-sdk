@@ -43,7 +43,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 "SOME_MSGS" =     1,
 "ALL_MSGS" =      2,
 "SUPER_ADMIN" =   3,`,
-					Example: fmt.Sprintf(`%s tx circuit authorize [address] '{"level":1,"limit_type_urls":["/cosmos.bank.v1beta1.MsgSend, /cosmos.bank.v1beta1.MsgMultiSend"]}'"`, version.AppName),
+					Example: fmt.Sprintf(`%s tx circuit authorize [address] '{"level":1,"limit_type_urls":["/cosmos.bank.v1beta1.MsgSend", "/cosmos.bank.v1beta1.MsgMultiSend"]}'"`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "grantee"},
 						{ProtoField: "permissions"}, // TODO(@julienrbrt) Support flattening msg for setting each field as a positional arg

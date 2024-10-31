@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/gas"
 	"cosmossdk.io/core/header"
@@ -915,6 +915,8 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				require.NoError(t, accs[0].acc.SetSequence(2)) // wrong accSeq
 
+				suite.ctx = suite.ctx.WithExecMode(sdk.ExecModeFinalize)
+
 				return TestCaseArgs{
 					chainID:   suite.ctx.ChainID(),
 					feeAmount: feeAmount,
@@ -1080,6 +1082,8 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(2)
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+				suite.ctx = suite.ctx.WithExecMode(sdk.ExecModeFinalize)
 
 				// Make sure public key has not been set from previous test.
 				acc1 := suite.accountKeeper.GetAccount(suite.ctx, accs[1].acc.GetAddress())

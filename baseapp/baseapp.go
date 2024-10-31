@@ -397,7 +397,7 @@ func (app *BaseApp) LastCommitID() storetypes.CommitID {
 
 // LastBlockHeight returns the last committed block height.
 func (app *BaseApp) LastBlockHeight() int64 {
-	return app.cms.LastCommitID().Version
+	return app.cms.LatestVersion()
 }
 
 // ChainID returns the chainID of the app.

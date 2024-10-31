@@ -4,18 +4,17 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"gotest.tools/v3/assert"
 
+	address "cosmossdk.io/core/address"
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
 	"cosmossdk.io/x/feegrant/module"
-	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
 
-	"github.com/cosmos/cosmos-sdk/codec/address"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -24,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -37,7 +35,7 @@ var (
 type genesisFixture struct {
 	ctx            sdk.Context
 	feegrantKeeper keeper.Keeper
-	accountKeeper  *feegranttestutil.MockAccountKeeper
+	addrCdc        address.Codec
 }
 
 func initFixture(t *testing.T) *genesisFixture {
@@ -46,21 +44,17 @@ func initFixture(t *testing.T) *genesisFixture {
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 
-	ctrl := gomock.NewController(t)
-	accountKeeper := feegranttestutil.NewMockAccountKeeper(ctrl)
-	accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
+	addrCdc := addresscodec.NewBech32Codec(sdk.Bech32MainPrefix)
 
 	return &genesisFixture{
 		ctx:            testCtx.Ctx,
-		feegrantKeeper: keeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger()), encCfg.Codec, accountKeeper),
-		accountKeeper:  accountKeeper,
+		feegrantKeeper: keeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger()), encCfg.Codec, addrCdc),
+		addrCdc:        addrCdc,
 	}
 }
 
 func TestImportExportGenesis(t *testing.T) {
 	f := initFixture(t)
-
-	f.accountKeeper.EXPECT().GetAccount(gomock.Any(), granteeAddr).Return(authtypes.NewBaseAccountWithAddress(granteeAddr)).AnyTimes()
 
 	coins := sdk.NewCoins(sdk.NewCoin("foo", math.NewInt(1_000)))
 	now := f.ctx.HeaderInfo().Time
@@ -74,9 +68,9 @@ func TestImportExportGenesis(t *testing.T) {
 	genesis, err := f.feegrantKeeper.ExportGenesis(f.ctx)
 	assert.NilError(t, err)
 
-	granter, err := f.accountKeeper.AddressCodec().BytesToString(granterAddr.Bytes())
+	granter, err := f.addrCdc.BytesToString(granterAddr.Bytes())
 	assert.NilError(t, err)
-	grantee, err := f.accountKeeper.AddressCodec().BytesToString(granteeAddr.Bytes())
+	grantee, err := f.addrCdc.BytesToString(granteeAddr.Bytes())
 	assert.NilError(t, err)
 
 	// revoke fee allowance
@@ -98,7 +92,7 @@ func TestInitGenesis(t *testing.T) {
 	any, err := codectypes.NewAnyWithValue(&testdata.Dog{})
 	assert.NilError(t, err)
 
-	ac := address.NewBech32Codec("cosmos")
+	ac := addresscodec.NewBech32Codec("cosmos")
 
 	granter, err := ac.BytesToString(granterAddr.Bytes())
 	assert.NilError(t, err)

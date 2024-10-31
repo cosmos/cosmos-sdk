@@ -1,8 +1,6 @@
 package systemtests
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -243,24 +241,17 @@ func (c CLIWrapper) runWithInput(args []string, input io.Reader) (output string,
 		cmd.Stdin = input
 		return cmd.CombinedOutput()
 	}()
-	gotOut = filterProtoNoise(gotOut)
-	ok = c.assertErrorFn(c.t, gotErr, string(gotOut))
-	return strings.TrimSpace(string(gotOut)), ok
-}
 
-func filterProtoNoise(in []byte) []byte {
-	// temporary hack to get rid of all the noise on the stderr
-	var out bytes.Buffer
-	scanner := bufio.NewScanner(bytes.NewReader(in))
-	for scanner.Scan() {
-		if !strings.Contains(scanner.Text(), " proto: duplicate proto type registered") {
-			_, _ = out.Write(scanner.Bytes())
+	if c.Debug {
+		if gotErr != nil {
+			c.t.Logf("+++ ERROR output: %s - %s", gotOut, gotErr)
+		} else {
+			c.t.Logf("+++ output: %s", gotOut)
 		}
 	}
-	if err := scanner.Err(); err != nil {
-		panic(err)
-	}
-	return out.Bytes()
+
+	ok = c.assertErrorFn(c.t, gotErr, string(gotOut))
+	return strings.TrimSpace(string(gotOut)), ok
 }
 
 func (c CLIWrapper) withQueryFlags(args ...string) []string {
@@ -338,6 +329,23 @@ func (c CLIWrapper) GetKeyAddrPrefix(name, prefix string) string {
 	addr := strings.Trim(out, "\n")
 	require.NotEmpty(c.t, addr, "got %q", out)
 	return addr
+}
+
+// GetPubKeyByCustomField returns pubkey in base64 by custom field
+func (c CLIWrapper) GetPubKeyByCustomField(addr, field string) string {
+	keysListOutput := c.Keys("keys", "list")
+	keysList := gjson.Parse(keysListOutput)
+
+	var pubKeyValue string
+	keysList.ForEach(func(_, value gjson.Result) bool {
+		if value.Get(field).String() == addr {
+			pubKeyJSON := gjson.Parse(value.Get("pubkey").String())
+			pubKeyValue = pubKeyJSON.Get("key").String()
+			return false
+		}
+		return true
+	})
+	return pubKeyValue
 }
 
 const defaultSrcAddr = "node0"

@@ -35,6 +35,8 @@ var (
 
 	// ExecBinaryUnversionedRegExp regular expression to extract the unversioned binary name
 	ExecBinaryUnversionedRegExp = regexp.MustCompile(`^(\w+)-?.*$`)
+
+	MaxGas = 10_000_000
 )
 
 type TestnetInitializer interface {
@@ -130,19 +132,9 @@ func (s *SystemUnderTest) SetupChain() {
 		panic(fmt.Sprintf("failed to load genesis: %s", err))
 	}
 
-	genesisBz, err = sjson.SetRawBytes(genesisBz, "consensus.params.block.max_gas", []byte(fmt.Sprintf(`"%d"`, 10_000_000)))
+	genesisBz, err = sjson.SetRawBytes(genesisBz, "consensus.params.block.max_gas", []byte(fmt.Sprintf(`"%d"`, MaxGas)))
 	if err != nil {
 		panic(fmt.Sprintf("failed to set block max gas: %s", err))
-	}
-	// Short period for gov
-	genesisBz, err = sjson.SetRawBytes(genesisBz, "app_state.gov.params.voting_period", []byte(fmt.Sprintf(`"%s"`, "8s")))
-	if err != nil {
-		panic(fmt.Sprintf("failed to set regular voting period: %s", err))
-	}
-	// update expedited voting period to avoid validation error
-	genesisBz, err = sjson.SetRawBytes(genesisBz, "app_state.gov.params.expedited_voting_period", []byte(fmt.Sprintf(`"%s"`, "7s")))
-	if err != nil {
-		panic(fmt.Sprintf("failed to set expedited voting period: %s", err))
 	}
 	s.withEachNodeHome(func(i int, home string) {
 		if err := saveGenesis(home, genesisBz); err != nil {

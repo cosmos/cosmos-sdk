@@ -89,8 +89,8 @@ func TestWithdrawAllRewardsCmd(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			assertGenOnlyOutput := func(_ assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
 				require.Len(t, gotOutputs, 1)
-				// gets output combining two objects without any space or new line
-				splitOutput := strings.Split(gotOutputs[0].(string), "}{")
+				// split txs with new line
+				splitOutput := strings.Split(strings.Trim(gotOutputs[0].(string), "\n"), "\n")
 				require.Len(t, splitOutput, tc.expTxLen)
 				return false
 			}

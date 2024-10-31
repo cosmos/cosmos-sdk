@@ -14,6 +14,8 @@ import (
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -118,6 +120,26 @@ func AppGenesisFromReader(reader io.Reader) (*AppGenesis, error) {
 		return nil, err
 	}
 
+	vals := []sdk.GenesisValidator{}
+	for _, cmtVal := range ctmGenesis.Validators {
+		pk, err := cryptocodec.FromCmtPubKeyInterface(cmtVal.PubKey)
+		if err != nil {
+			return nil, err
+		}
+		jsonPk, err := cryptocodec.PubKeyFromProto(pk)
+		if err != nil {
+			return nil, err
+		}
+		val := sdk.GenesisValidator{
+			Address: cmtVal.Address.Bytes(),
+			PubKey:  jsonPk,
+			Power:   cmtVal.Power,
+			Name:    cmtVal.Name,
+		}
+
+		vals = append(vals, val)
+	}
+
 	ag = AppGenesis{
 		AppName: version.AppName,
 		// AppVersion is not filled as we do not know it from a CometBFT genesis
@@ -127,7 +149,7 @@ func AppGenesisFromReader(reader io.Reader) (*AppGenesis, error) {
 		AppHash:       ctmGenesis.AppHash,
 		AppState:      ctmGenesis.AppState,
 		Consensus: &ConsensusGenesis{
-			Validators: ctmGenesis.Validators,
+			Validators: vals,
 			Params:     ctmGenesis.ConsensusParams,
 		},
 	}
@@ -160,13 +182,36 @@ func AppGenesisFromFile(genFile string) (*AppGenesis, error) {
 
 // ToGenesisDoc converts the AppGenesis to a CometBFT GenesisDoc.
 func (ag *AppGenesis) ToGenesisDoc() (*cmttypes.GenesisDoc, error) {
+	cmtValidators := []cmttypes.GenesisValidator{}
+	for _, val := range ag.Consensus.Validators {
+		pk, err := cryptocodec.PubKeyToProto(val.PubKey)
+		if err != nil {
+			return nil, err
+		}
+		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
+		if err != nil {
+			return nil, err
+		}
+		cmtVal := cmttypes.GenesisValidator{
+			Address: val.Address.Bytes(),
+			PubKey:  cmtPk,
+			Power:   val.Power,
+			Name:    val.Name,
+		}
+
+		cmtValidators = append(cmtValidators, cmtVal)
+	}
+	// assert nil value for empty validators set
+	if len(cmtValidators) == 0 {
+		cmtValidators = nil
+	}
 	return &cmttypes.GenesisDoc{
 		GenesisTime:     ag.GenesisTime,
 		ChainID:         ag.ChainID,
 		InitialHeight:   ag.InitialHeight,
 		AppHash:         ag.AppHash,
 		AppState:        ag.AppState,
-		Validators:      ag.Consensus.Validators,
+		Validators:      cmtValidators,
 		ConsensusParams: ag.Consensus.Params,
 	}, nil
 }
@@ -174,13 +219,13 @@ func (ag *AppGenesis) ToGenesisDoc() (*cmttypes.GenesisDoc, error) {
 // ConsensusGenesis defines the consensus layer's genesis.
 // TODO(@julienrbrt) eventually abstract from CometBFT types
 type ConsensusGenesis struct {
-	Validators []cmttypes.GenesisValidator `json:"validators,omitempty"`
-	Params     *cmttypes.ConsensusParams   `json:"params,omitempty"`
+	Validators []sdk.GenesisValidator    `json:"validators,omitempty"`
+	Params     *cmttypes.ConsensusParams `json:"params,omitempty"`
 }
 
 // NewConsensusGenesis returns a ConsensusGenesis with given values.
 // It takes a proto consensus params so it can called from server export command.
-func NewConsensusGenesis(params cmtproto.ConsensusParams, validators []cmttypes.GenesisValidator) *ConsensusGenesis {
+func NewConsensusGenesis(params cmtproto.ConsensusParams, validators []sdk.GenesisValidator) *ConsensusGenesis {
 	return &ConsensusGenesis{
 		Params: &cmttypes.ConsensusParams{
 			Block: cmttypes.BlockParams{
@@ -211,7 +256,7 @@ func (cs *ConsensusGenesis) MarshalJSON() ([]byte, error) {
 func (cs *ConsensusGenesis) UnmarshalJSON(b []byte) error {
 	type Alias ConsensusGenesis
 
-	result := Alias{}
+	var result Alias
 	if err := cmtjson.Unmarshal(b, &result); err != nil {
 		return err
 	}
@@ -241,7 +286,7 @@ func (cs *ConsensusGenesis) ValidateAndComplete() error {
 			return fmt.Errorf("incorrect address for validator %v in the genesis file, should be %v", v, v.PubKey.Address())
 		}
 		if len(v.Address) == 0 {
-			cs.Validators[i].Address = v.PubKey.Address()
+			cs.Validators[i].Address = v.PubKey.Address().Bytes()
 		}
 	}
 

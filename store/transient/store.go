@@ -42,6 +42,11 @@ func (ts *Store) LastCommitID() types.CommitID {
 	return types.CommitID{}
 }
 
+// LatestVersion implements Committer
+func (ts *Store) LatestVersion() int64 {
+	return 0
+}
+
 func (ts *Store) WorkingHash() []byte {
 	return []byte{}
 }

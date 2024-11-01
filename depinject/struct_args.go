@@ -113,6 +113,13 @@ func structArgsInTypes(typ reflect.Type) ([]providerInput, error) {
 			continue
 		}
 
+		var ignored bool
+		_, found := f.Tag.Lookup("ignored")
+		if found {
+			continue
+			// ignored = true
+		}
+
 		var optional bool
 		optTag, found := f.Tag.Lookup("optional")
 		if found {
@@ -126,6 +133,7 @@ func structArgsInTypes(typ reflect.Type) ([]providerInput, error) {
 		res = append(res, providerInput{
 			Type:     f.Type,
 			Optional: optional,
+			Ignored:  ignored,
 		})
 	}
 	return res, nil
@@ -170,6 +178,11 @@ func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int, erro
 		if f.Type.AssignableTo(isInType) {
 			continue
 		}
+		_, found := f.Tag.Lookup("ignored")
+		if found {
+			continue
+		}
+
 		if !res.Elem().Field(i).CanSet() {
 			return reflect.Value{}, 0, fmt.Errorf("depinject.In struct %s on package %s can't have unexported field", res.Elem().String(), f.PkgPath)
 		}

@@ -115,7 +115,6 @@ func structArgsInTypes(typ reflect.Type) ([]providerInput, error) {
 			continue
 		}
 
-		var ignored bool
 		_, found := f.Tag.Lookup("ignored")
 		if found {
 			continue
@@ -134,7 +133,6 @@ func structArgsInTypes(typ reflect.Type) ([]providerInput, error) {
 		res = append(res, providerInput{
 			Type:     f.Type,
 			Optional: optional,
-			Ignored:  ignored,
 		})
 	}
 	return res, nil

@@ -32,7 +32,6 @@ type providerDescriptor struct {
 type providerInput struct {
 	Type     reflect.Type
 	Optional bool
-	Ignored  bool
 }
 
 type providerOutput struct {

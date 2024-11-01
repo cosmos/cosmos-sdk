@@ -12,9 +12,11 @@ import (
 //
 // Fields of the struct may support the following tags:
 //
-//	optional	if set to true, the dependency is optional and will
-//				be set to its default value if not found, rather than causing
-//				an error
+//		optional	if set to true, the dependency is optional and will
+//					be set to its default value if not found, rather than causing
+//					an error
+//
+//	    ignored     if set to any value the dependency will be ignored
 type In struct{}
 
 func (In) isIn() {}
@@ -117,7 +119,6 @@ func structArgsInTypes(typ reflect.Type) ([]providerInput, error) {
 		_, found := f.Tag.Lookup("ignored")
 		if found {
 			continue
-			// ignored = true
 		}
 
 		var optional bool

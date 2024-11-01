@@ -7,10 +7,15 @@ import (
 
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
+	"cosmossdk.io/core/header"
 )
 
 func contextWithCometInfo(ctx context.Context, info comet.Info) context.Context {
 	return context.WithValue(ctx, corecontext.CometInfoKey, info)
+}
+
+func contextWithHeaderInfo(ctx context.Context, info header.Info) context.Context {
+	return context.WithValue(ctx, corecontext.HeaderInfoKey, info)
 }
 
 // toCoreEvidence takes comet evidence and returns sdk evidence

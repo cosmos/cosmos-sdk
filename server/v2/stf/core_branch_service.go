@@ -57,7 +57,6 @@ func (bs BranchService) execute(ctx *executionContext, f func(ctx context.Contex
 		meter:               ctx.meter,
 		events:              nil,
 		sender:              ctx.sender,
-		headerInfo:          ctx.headerInfo,
 		execMode:            ctx.execMode,
 		branchFn:            ctx.branchFn,
 		makeGasMeter:        ctx.makeGasMeter,

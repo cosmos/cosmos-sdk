@@ -14,9 +14,9 @@ import (
 	consensustypes "cosmossdk.io/x/consensus/types"
 )
 
-type AppManager[T transaction.Tx] interface {
-	ValidateTx(ctx context.Context, tx T) (server.TxResult, error)
-	Query(ctx context.Context, version uint64, request transaction.Msg) (response transaction.Msg, err error)
+type StateTransitionFunction[T transaction.Tx] interface {
+	ValidateTx(ctx context.Context, state store.ReaderMap, gasLimit uint64, tx T) server.TxResult
+	Query(ctx context.Context, state store.ReaderMap, gaslimit uint64, request transaction.Msg) (response transaction.Msg, err error)
 }
 
 type DefaultProposalHandler[T transaction.Tx] struct {
@@ -32,10 +32,10 @@ func NewDefaultProposalHandler[T transaction.Tx](mp mempool.Mempool[T]) *Default
 }
 
 func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
-	return func(ctx context.Context, app AppManager[T], codec transaction.Codec[T], req *abci.PrepareProposalRequest) ([]T, error) {
+	return func(ctx context.Context, store store.ReaderMap, app StateTransitionFunction[T], codec transaction.Codec[T], req *abci.PrepareProposalRequest) ([]T, error) {
 		var maxBlockGas uint64
 
-		res, err := app.Query(ctx, 0, &consensustypes.QueryParamsRequest{})
+		res, err := app.Query(ctx, store, 0, &consensustypes.QueryParamsRequest{})
 		if err != nil {
 			return nil, err
 		}
@@ -45,7 +45,9 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 			return nil, fmt.Errorf("unexpected consensus params response type; expected: %T, got: %T", &consensustypes.QueryParamsResponse{}, res)
 		}
 
-		if b := paramsResp.GetParams().Block; b != nil {
+		params := paramsResp.GetParams()
+
+		if b := params.Block; b != nil {
 			maxBlockGas = uint64(b.MaxGas)
 		}
 
@@ -77,8 +79,8 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 			// which calls mempool.Insert, in theory everything in the pool should be
 			// valid. But some mempool implementations may insert invalid txs, so we
 			// check again.
-			_, err := app.ValidateTx(ctx, memTx)
-			if err != nil {
+			res := app.ValidateTx(ctx, store, uint64(params.Block.MaxGas), memTx)
+			if res.Error != nil {
 				err := h.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 					return nil, err
@@ -98,7 +100,7 @@ func (h *DefaultProposalHandler[T]) PrepareHandler() PrepareHandler[T] {
 }
 
 func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
-	return func(ctx context.Context, app AppManager[T], codec transaction.Codec[T], req *abci.ProcessProposalRequest) error {
+	return func(ctx context.Context, store store.ReaderMap, app StateTransitionFunction[T], codec transaction.Codec[T], req *abci.ProcessProposalRequest) error {
 		// If the mempool is nil we simply return ACCEPT,
 		// because PrepareProposal may have included txs that could fail verification.
 		_, isNoOp := h.mempool.(mempool.NoOpMempool[T])
@@ -106,7 +108,7 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 			return nil
 		}
 
-		res, err := app.Query(ctx, 0, &consensustypes.QueryParamsRequest{})
+		res, err := app.Query(ctx, store, 0, &consensustypes.QueryParamsRequest{})
 		if err != nil {
 			return err
 		}
@@ -134,8 +136,8 @@ func (h *DefaultProposalHandler[T]) ProcessHandler() ProcessHandler[T] {
 
 		var totalTxGas uint64
 		for _, tx := range txs {
-			_, err := app.ValidateTx(ctx, tx)
-			if err != nil {
+			res := app.ValidateTx(ctx, store, maxBlockGas, tx)
+			if res.Error != nil {
 				return fmt.Errorf("failed to validate tx: %w", err)
 			}
 
@@ -174,7 +176,7 @@ func decodeTxs[T transaction.Tx](codec transaction.Codec[T], txsBz [][]byte) []T
 // NoOpPrepareProposal defines a no-op PrepareProposal handler. It will always
 // return the transactions sent by the client's request.
 func NoOpPrepareProposal[T transaction.Tx]() PrepareHandler[T] {
-	return func(ctx context.Context, app AppManager[T], codec transaction.Codec[T], req *abci.PrepareProposalRequest) ([]T, error) {
+	return func(ctx context.Context, store store.ReaderMap, app StateTransitionFunction[T], codec transaction.Codec[T], req *abci.PrepareProposalRequest) ([]T, error) {
 		return decodeTxs(codec, req.Txs), nil
 	}
 }
@@ -182,7 +184,7 @@ func NoOpPrepareProposal[T transaction.Tx]() PrepareHandler[T] {
 // NoOpProcessProposal defines a no-op ProcessProposal Handler. It will always
 // return ACCEPT.
 func NoOpProcessProposal[T transaction.Tx]() ProcessHandler[T] {
-	return func(context.Context, AppManager[T], transaction.Codec[T], *abci.ProcessProposalRequest) error {
+	return func(context.Context, store.ReaderMap, StateTransitionFunction[T], transaction.Codec[T], *abci.ProcessProposalRequest) error {
 		return nil
 	}
 }

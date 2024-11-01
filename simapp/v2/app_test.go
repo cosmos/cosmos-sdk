@@ -132,10 +132,8 @@ func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Contex
 	_, newState, err := app.DeliverBlock(
 		ctx,
 		&server.BlockRequest[transaction.Tx]{
-			Height:  height + 1,
-			Time:    time.Now(),
-			Hash:    bz[:],
-			AppHash: ci.Hash,
+			Height: height + 1,
+			Time:   time.Now(),
 		})
 	require.NoError(t, err)
 

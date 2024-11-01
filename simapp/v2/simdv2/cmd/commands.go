@@ -92,7 +92,7 @@ func InitRootCmd[T transaction.Tx](
 	if err != nil {
 		return nil, err
 	}
-	restServer, err := rest.New[T](simApp.App.AppManager, logger, deps.GlobalConfig)
+	restServer, err := rest.New[T](simApp.App.StateTransitionFunction(), logger, deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,8 @@ func InitRootCmd[T transaction.Tx](
 			logger,
 			simApp.Name(),
 			simApp.Store(),
-			simApp.App.AppManager,
+			simApp.App.GenesisManager,
+			simApp.App.StateTransitionFunction(),
 			simApp.App.QueryHandlers(),
 			simApp.App.SchemaDecoderResolver(),
 			&genericTxDecoder[T]{deps.TxConfig},

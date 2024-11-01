@@ -16,6 +16,10 @@ type Store interface {
 	// associated with it.
 	StateLatest() (uint64, store.ReaderMap, error)
 
+	// StateAt returns a readonly view over the provided
+	// state. Must error when the version does not exist.
+	StateAt(version uint64) (store.ReaderMap, error)
+
 	// SetInitialVersion sets the initial version of the store.
 	SetInitialVersion(uint64) error
 

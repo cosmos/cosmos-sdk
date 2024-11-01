@@ -57,7 +57,12 @@ func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *
 			return nil, errorsmod.Wrap(err, "failed to decode tx")
 		}
 
-		txResult, _, err := c.app.Simulate(ctx, tx)
+		_, state, err := c.store.StateLatest()
+		if err != nil {
+			return nil, errorsmod.Wrap(err, "failed to get latest state")
+		}
+		hiCtx := context.Background() // attach the header here
+		txResult, _ := c.stf.Simulate(hiCtx, state, tx)
 		if err != nil {
 			return nil, errorsmod.Wrap(err, "failed to simulate tx")
 		}

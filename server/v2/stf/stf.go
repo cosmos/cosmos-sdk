@@ -9,7 +9,6 @@ import (
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/gas"
-	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/log"
 	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/server"
@@ -93,21 +92,8 @@ func (s STF[T]) DeliverBlock(
 	// creates a new branchFn state, from the readonly view of the state
 	// that can be written to.
 	newState = s.branchFn(state)
-	hi := header.Info{
-		Hash:    block.Hash,
-		AppHash: block.AppHash,
-		ChainID: block.ChainId,
-		Time:    block.Time,
-		Height:  int64(block.Height),
-	}
-	// set header info
-	err = s.setHeaderInfo(newState, hi)
-	if err != nil {
-		return nil, nil, fmt.Errorf("unable to set initial header info, %w", err)
-	}
 
 	exCtx := s.makeContext(ctx, ConsensusIdentity, newState, internal.ExecModeFinalize)
-	exCtx.setHeaderInfo(hi)
 
 	// reset events
 	exCtx.events = make([]event.Event, 0)
@@ -146,7 +132,9 @@ func (s STF[T]) DeliverBlock(
 		if err = isCtxCancelled(ctx); err != nil {
 			return nil, nil, err
 		}
-		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi, int32(i+1))
+		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, int32(i+1))
+
+		//TODO: check block gas
 	}
 	// reset events
 	exCtx.events = make([]event.Event, 0)
@@ -171,7 +159,6 @@ func (s STF[T]) deliverTx(
 	state store.WriterMap,
 	tx T,
 	execMode transaction.ExecMode,
-	hi header.Info,
 	txIndex int32,
 ) server.TxResult {
 	// recover in the case of a panic
@@ -211,7 +198,7 @@ func (s STF[T]) deliverTx(
 		events = append(events, e)
 	}
 
-	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
+	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode)
 	// set the TxIndex in the exec events
 	for _, e := range execEvents {
 		e.BlockStage = appdata.TxProcessingStage
@@ -238,12 +225,7 @@ func (s STF[T]) validateTx(
 	execMode transaction.ExecMode,
 ) (gasUsed uint64, events []event.Event, err error) {
 	validateState := s.branchFn(state)
-	hi, err := s.getHeaderInfo(validateState)
-	if err != nil {
-		return 0, nil, err
-	}
 	validateCtx := s.makeContext(ctx, ConsensusIdentity, validateState, execMode)
-	validateCtx.setHeaderInfo(hi)
 	validateCtx.setGasLimit(gasLimit)
 	err = s.doTxValidation(validateCtx, tx)
 	if err != nil {
@@ -262,17 +244,15 @@ func (s STF[T]) execTx(
 	gasLimit uint64,
 	tx T,
 	execMode transaction.ExecMode,
-	hi header.Info,
 ) ([]transaction.Msg, uint64, []event.Event, error) {
 	execState := s.branchFn(state)
 
-	msgsResp, gasUsed, runTxMsgsEvents, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode, hi)
+	msgsResp, gasUsed, runTxMsgsEvents, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode)
 	if txErr != nil {
 		// in case of error during message execution, we do not apply the exec state.
 		// instead we run the post exec handler in a new branchFn from the initial state.
 		postTxState := s.branchFn(state)
 		postTxCtx := s.makeContext(ctx, ConsensusIdentity, postTxState, execMode)
-		postTxCtx.setHeaderInfo(hi)
 
 		postTxErr := s.postTxExec(postTxCtx, tx, false)
 		if postTxErr != nil {
@@ -298,7 +278,6 @@ func (s STF[T]) execTx(
 	// in case the execution of the post tx fails, then no state change is applied and the
 	// whole execution step is rolled back.
 	postTxCtx := s.makeContext(ctx, ConsensusIdentity, execState, execMode) // NO gas limit.
-	postTxCtx.setHeaderInfo(hi)
 	postTxErr := s.postTxExec(postTxCtx, tx, true)
 	if postTxErr != nil {
 		// if post tx fails, then we do not apply any state change, we return the post tx error,
@@ -327,7 +306,6 @@ func (s STF[T]) runTxMsgs(
 	gasLimit uint64,
 	tx T,
 	execMode transaction.ExecMode,
-	hi header.Info,
 ) ([]transaction.Msg, uint64, []event.Event, error) {
 	txSenders, err := tx.GetSenders()
 	if err != nil {
@@ -340,7 +318,6 @@ func (s STF[T]) runTxMsgs(
 	msgResps := make([]transaction.Msg, len(msgs))
 
 	execCtx := s.makeContext(ctx, ConsensusIdentity, state, execMode)
-	execCtx.setHeaderInfo(hi)
 	execCtx.setGasLimit(gasLimit)
 	events := make([]event.Event, 0)
 	for i, msg := range msgs {
@@ -435,15 +412,10 @@ func (s STF[T]) validatorUpdates(
 func (s STF[T]) Simulate(
 	ctx context.Context,
 	state store.ReaderMap,
-	gasLimit uint64,
 	tx T,
 ) (server.TxResult, store.WriterMap) {
 	simulationState := s.branchFn(state)
-	hi, err := s.getHeaderInfo(simulationState)
-	if err != nil {
-		return server.TxResult{}, nil
-	}
-	txr := s.deliverTx(ctx, simulationState, tx, internal.ExecModeSimulate, hi, 0)
+	txr := s.deliverTx(ctx, simulationState, tx, internal.ExecModeSimulate, 0)
 
 	return txr, simulationState
 }
@@ -473,13 +445,12 @@ func (s STF[T]) Query(
 	req transaction.Msg,
 ) (transaction.Msg, error) {
 	queryState := s.branchFn(state)
-	hi, err := s.getHeaderInfo(queryState)
-	if err != nil {
-		return nil, err
-	}
 	queryCtx := s.makeContext(ctx, nil, queryState, internal.ExecModeSimulate)
-	queryCtx.setHeaderInfo(hi)
-	queryCtx.setGasLimit(gasLimit)
+	if gasLimit == 0 {
+		queryCtx.setGasLimit(gas.NoGasLimit)
+	} else {
+		queryCtx.setGasLimit(gasLimit)
+	}
 	return s.queryRouter.Invoke(queryCtx, req)
 }
 
@@ -516,8 +487,6 @@ type executionContext struct {
 	events []event.Event
 	// sender is the causer of the state transition.
 	sender transaction.Identity
-	// headerInfo contains the block info.
-	headerInfo header.Info
 	// execMode retains information about the exec mode.
 	execMode transaction.ExecMode
 
@@ -527,11 +496,6 @@ type executionContext struct {
 
 	msgRouter   router.Service
 	queryRouter router.Service
-}
-
-// setHeaderInfo sets the header info in the state to be used by queries in the future.
-func (e *executionContext) setHeaderInfo(hi header.Info) {
-	e.headerInfo = hi
 }
 
 // setGasLimit will update the gas limit of the *executionContext
@@ -601,7 +565,6 @@ func newExecutionContext(
 		state:               meteredState,
 		meter:               meter,
 		events:              make([]event.Event, 0),
-		headerInfo:          header.Info{},
 		execMode:            execMode,
 		sender:              sender,
 		branchFn:            branchFn,

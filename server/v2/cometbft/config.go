@@ -44,6 +44,8 @@ type AppTomlConfig struct {
 	// Sub configs
 	Mempool mempool.Config         `mapstructure:"mempool" toml:"mempool" comment:"mempool defines the configuration for the SDK built-in app-side mempool implementations."`
 	Indexer indexer.IndexingConfig `mapstructure:"indexer" toml:"indexer" comment:"indexer defines the configuration for the SDK built-in indexer implementation."`
+
+	QueryGasLimit uint64 `mapstructure:"query-gas-limit"`
 }
 
 // CfgOption is a function that allows to overwrite the default server configuration.

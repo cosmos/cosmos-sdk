@@ -23,7 +23,7 @@ import (
 // done declaratively with an app config and the rest of it is done the old way.
 // See simapp/app_v2.go for an example of this setup.
 type App[T transaction.Tx] struct {
-	appmanager.AppManager[T]
+	appmanager.GenesisManager[T]
 
 	// app configuration
 	logger log.Logger
@@ -86,6 +86,11 @@ func (a *App[T]) LoadLatestHeight() (uint64, error) {
 // QueryHandlers returns the query handlers.
 func (a *App[T]) QueryHandlers() map[string]appmodulev2.Handler {
 	return a.queryHandlers
+}
+
+// StateTransitionFunction returns the state transition function.
+func (a *App[T]) StateTransitionFunction() *stf.STF[T] {
+	return a.stf
 }
 
 // SchemaDecoderResolver returns the module schema resolver.

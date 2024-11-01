@@ -15,7 +15,7 @@ import (
 type AppCreator[T transaction.Tx] func(log.Logger, *viper.Viper) AppI[T]
 
 type AppI[T transaction.Tx] interface {
-	appmanager.AppManager[T]
+	appmanager.GenesisManager[T]
 
 	Name() string
 	InterfaceRegistry() server.InterfaceRegistry

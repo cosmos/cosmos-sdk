@@ -303,12 +303,12 @@ func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.FinalizeBlockReques
 // GetConsensusParams makes a query to the consensus module in order to get the latest consensus
 // parameters from committed state
 func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.ConsensusParams, error) {
-	latestVersion, err := c.store.GetLatestVersion()
+	_, state, err := c.store.StateLatest()
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := c.app.Query(ctx, latestVersion, &consensus.QueryParamsRequest{})
+	res, err := c.stf.Query(ctx, state, c.cfg.AppTomlConfig.QueryGasLimit, &consensus.QueryParamsRequest{})
 	if err != nil {
 		return nil, err
 	}

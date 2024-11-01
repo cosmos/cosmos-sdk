@@ -672,13 +672,7 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 	sc := cometmock.NewMockCommiter(log.NewNopLogger(), string(actorName), "stf")
 	mockStore := cometmock.NewMockStore(ss, sc)
 
-	am := appmanager.New(appmanager.Config{
-		ValidateTxGasLimit: gasLimit,
-		QueryGasLimit:      gasLimit,
-		SimulationGasLimit: gasLimit,
-	},
-		mockStore,
-		s,
+	am := appmanager.New[mock.Tx](
 		func(ctx context.Context, src io.Reader, txHandler func(json.RawMessage) error) (store.WriterMap, error) {
 			_, st, err := mockStore.StateLatest()
 			require.NoError(t, err)
@@ -687,7 +681,7 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		nil,
 	)
 
-	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", am, func() error { return nil }, mempool, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
+	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", am, s, func() error { return nil }, mempool, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
 }
 
 // Check target version same with store's latest version

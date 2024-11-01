@@ -2,7 +2,6 @@ package cometbft
 
 import (
 	"context"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"strings"
@@ -20,6 +19,7 @@ import (
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -42,7 +42,8 @@ var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 type Consensus[T transaction.Tx] struct {
 	logger           log.Logger
 	appName, version string
-	app              appmanager.AppManager[T]
+	genesisManager   appmanager.GenesisManager[T]
+	stf              types.StateTransitionFunction[T]
 	appCloser        func() error
 	txCodec          transaction.Codec[T]
 	store            types.Store
@@ -77,7 +78,8 @@ type Consensus[T transaction.Tx] struct {
 func NewConsensus[T transaction.Tx](
 	logger log.Logger,
 	appName string,
-	app appmanager.AppManager[T],
+	app appmanager.GenesisManager[T],
+	stf appmanager.StateTransitionFunction[T],
 	appCloser func() error,
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
@@ -90,7 +92,7 @@ func NewConsensus[T transaction.Tx](
 	return &Consensus[T]{
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
-		app:                    app,
+		genesisManager:         app,
 		appCloser:              appCloser,
 		cfg:                    cfg,
 		store:                  store,
@@ -135,8 +137,19 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		return nil, err
 	}
 
+	_, state, err := c.store.StateLatest()
+	if err != nil {
+		return nil, err
+	}
+
+	// Use the block gas as the maximum gas for the transactions
+	cs, err := c.GetConsensusParams(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	if c.checkTxHandler == nil {
-		resp, err := c.app.ValidateTx(ctx, decodedTx)
+		resp := c.stf.ValidateTx(ctx, state, uint64(cs.Block.MaxGas), decodedTx)
 		// we do not want to return a cometbft error, but a check tx response with the error
 		if err != nil && !errors.Is(err, resp.Error) {
 			return nil, err
@@ -163,7 +176,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 		return cometResp, nil
 	}
 
-	return c.checkTxHandler(c.app.ValidateTx)
+	return c.checkTxHandler(c.stf.ValidateTx)
 }
 
 // Info implements types.Application.
@@ -273,7 +286,24 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 	if err != nil {
 		return nil, true, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
 	}
-	res, err := c.app.Query(ctx, uint64(req.Height), protoRequest)
+
+	var res transaction.Msg
+	// if the query height is the same as the last committed height we can query the latest state get the latest state
+	if req.Height == c.lastCommittedHeight.Load() {
+		_, queryState, err := c.store.StateLatest()
+		if err != nil {
+			return nil, true, err
+		}
+
+		res, err = c.stf.Query(ctx, queryState, c.cfg.AppTomlConfig.QueryGasLimit, protoRequest)
+	} else {
+		state, err := c.store.StateAt(uint64(req.Height))
+		if err != nil {
+			return nil, true, err
+		}
+		res, err = c.stf.Query(ctx, state, c.cfg.AppTomlConfig.QueryGasLimit, protoRequest)
+	}
+
 	if err != nil {
 		resp := QueryResult(err, c.cfg.AppTomlConfig.Trace)
 		resp.Height = req.Height
@@ -309,25 +339,24 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		})
 	}
 
-	ci, err := c.store.LastCommitID()
-	if err != nil {
-		return nil, err
-	}
+	// TODO: removal of blockrequest values could be an issue
+	// ci, err := c.store.LastCommitID()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	// populate hash with empty byte slice instead of nil
-	bz := sha256.Sum256([]byte{})
+	// // populate hash with empty byte slice instead of nil
+	// bz := sha256.Sum256([]byte{})
 
 	br := &server.BlockRequest[T]{
 		Height:    uint64(req.InitialHeight - 1),
 		Time:      req.Time,
-		Hash:      bz[:],
-		AppHash:   ci.Hash,
-		ChainId:   req.ChainId,
 		IsGenesis: true,
 	}
 
-	blockresponse, genesisState, err := c.app.InitGenesis(
+	blockresponse, genesisState, err := c.genesisManager.InitGenesis(
 		ctx,
+		c.stf,
 		br,
 		req.AppStateBytes,
 		c.txCodec)
@@ -389,7 +418,12 @@ func (c *Consensus[T]) PrepareProposal(
 		LastCommit:      toCoreExtendedCommitInfo(req.LocalLastCommit),
 	})
 
-	txs, err := c.prepareProposalHandler(ciCtx, c.app, c.txCodec, req)
+	_, state, err := c.store.StateLatest()
+	if err != nil {
+		return nil, err
+	}
+
+	txs, err := c.prepareProposalHandler(ciCtx, state, c.stf, c.txCodec, req)
 	if err != nil {
 		return nil, err
 	}
@@ -425,7 +459,12 @@ func (c *Consensus[T]) ProcessProposal(
 		LastCommit:      toCoreCommitInfo(req.ProposedLastCommit),
 	})
 
-	err := c.processProposalHandler(ciCtx, c.app, c.txCodec, req)
+	_, state, err := c.store.StateLatest()
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.processProposalHandler(ciCtx, state, c.stf, c.txCodec, req)
 	if err != nil {
 		c.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abciproto.ProcessProposalResponse{
@@ -478,12 +517,9 @@ func (c *Consensus[T]) FinalizeBlock(
 	}
 
 	blockReq := &server.BlockRequest[T]{
-		Height:  uint64(req.Height),
-		Time:    req.Time,
-		Hash:    req.Hash,
-		AppHash: cid.Hash,
-		ChainId: c.chainID,
-		Txs:     decodedTxs,
+		Height: uint64(req.Height),
+		Time:   req.Time,
+		Txs:    decodedTxs,
 	}
 
 	ciCtx := contextWithCometInfo(ctx, comet.Info{
@@ -493,7 +529,29 @@ func (c *Consensus[T]) FinalizeBlock(
 		LastCommit:      toCoreCommitInfo(req.DecidedLastCommit),
 	})
 
-	resp, newState, err := c.app.DeliverBlock(ciCtx, blockReq)
+	hi := header.Info{
+		Height:  req.Height,
+		Time:    req.Time,
+		Hash:    req.Hash,
+		AppHash: cid.Hash,
+		ChainID: c.chainID,
+	}
+
+	hiCtx := contextWithHeaderInfo(ciCtx, hi)
+
+	//TODO
+	// setHeaderInfo(c.store, hi)
+
+	latestVersion, state, err := c.store.StateLatest()
+	if err != nil {
+		return nil, err
+	}
+
+	if latestVersion+1 != uint64(req.Height) {
+		return nil, fmt.Errorf("invalid DeliverBlock height wanted %d, got %d", latestVersion+1, req.Height)
+	}
+
+	resp, newState, err := c.stf.DeliverBlock(hiCtx, blockReq, state)
 	if err != nil {
 		return nil, err
 	}

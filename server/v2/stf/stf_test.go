@@ -2,7 +2,6 @@ package stf
 
 import (
 	"context"
-	"crypto/sha256"
 	"errors"
 	"strings"
 	"testing"
@@ -68,8 +67,6 @@ func TestSTF(t *testing.T) {
 		Msg:      &gogotypes.BoolValue{Value: true},
 		GasLimit: 100_000,
 	}
-
-	sum := sha256.Sum256([]byte("test-hash"))
 
 	s := &STF[mock.Tx]{
 		doPreBlock: func(ctx context.Context, txs []mock.Tx) error {
@@ -137,10 +134,8 @@ func TestSTF(t *testing.T) {
 
 	t.Run("begin and end block", func(t *testing.T) {
 		_, newState, err := s.DeliverBlock(context.Background(), &server.BlockRequest[mock.Tx]{
-			Height:  uint64(1),
-			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
-			AppHash: sum[:],
-			Hash:    sum[:],
+			Height: uint64(1),
+			Time:   time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
 		}, state)
 		if err != nil {
 			t.Errorf("DeliverBlock error: %v", err)
@@ -151,11 +146,9 @@ func TestSTF(t *testing.T) {
 
 	t.Run("basic tx", func(t *testing.T) {
 		result, newState, err := s.DeliverBlock(context.Background(), &server.BlockRequest[mock.Tx]{
-			Height:  uint64(1),
-			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
-			AppHash: sum[:],
-			Hash:    sum[:],
-			Txs:     []mock.Tx{mockTx},
+			Height: uint64(1),
+			Time:   time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
+			Txs:    []mock.Tx{mockTx},
 		}, state)
 		if err != nil {
 			t.Errorf("DeliverBlock error: %v", err)
@@ -311,11 +304,9 @@ func TestSTF(t *testing.T) {
 		}
 
 		result, newState, err := s.DeliverBlock(context.Background(), &server.BlockRequest[mock.Tx]{
-			Height:  uint64(1),
-			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
-			AppHash: sum[:],
-			Hash:    sum[:],
-			Txs:     []mock.Tx{mockTx},
+			Height: uint64(1),
+			Time:   time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
+			Txs:    []mock.Tx{mockTx},
 		}, state)
 		if err != nil {
 			t.Errorf("DeliverBlock error: %v", err)
@@ -334,11 +325,9 @@ func TestSTF(t *testing.T) {
 		})
 
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &server.BlockRequest[mock.Tx]{
-			Height:  uint64(1),
-			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
-			AppHash: sum[:],
-			Hash:    sum[:],
-			Txs:     []mock.Tx{mockTx},
+			Height: uint64(1),
+			Time:   time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
+			Txs:    []mock.Tx{mockTx},
 		}, state)
 		if err != nil {
 			t.Errorf("DeliverBlock error: %v", err)
@@ -359,11 +348,9 @@ func TestSTF(t *testing.T) {
 			return errors.New("post tx failure")
 		}
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &server.BlockRequest[mock.Tx]{
-			Height:  uint64(1),
-			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
-			AppHash: sum[:],
-			Hash:    sum[:],
-			Txs:     []mock.Tx{mockTx},
+			Height: uint64(1),
+			Time:   time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
+			Txs:    []mock.Tx{mockTx},
 		}, state)
 		if err != nil {
 			t.Errorf("DeliverBlock error: %v", err)
@@ -385,11 +372,9 @@ func TestSTF(t *testing.T) {
 		})
 		s.postTxExec = func(ctx context.Context, tx mock.Tx, success bool) error { return errors.New("post tx failure") }
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &server.BlockRequest[mock.Tx]{
-			Height:  uint64(1),
-			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
-			AppHash: sum[:],
-			Hash:    sum[:],
-			Txs:     []mock.Tx{mockTx},
+			Height: uint64(1),
+			Time:   time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
+			Txs:    []mock.Tx{mockTx},
 		}, state)
 		if err != nil {
 			t.Errorf("DeliverBlock error: %v", err)
@@ -409,11 +394,9 @@ func TestSTF(t *testing.T) {
 		s := s.clone()
 		s.doTxValidation = func(ctx context.Context, tx mock.Tx) error { return errors.New("failure") }
 		blockResult, newState, err := s.DeliverBlock(context.Background(), &server.BlockRequest[mock.Tx]{
-			Height:  uint64(1),
-			Time:    time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
-			AppHash: sum[:],
-			Hash:    sum[:],
-			Txs:     []mock.Tx{mockTx},
+			Height: uint64(1),
+			Time:   time.Date(2024, 2, 3, 18, 23, 0, 0, time.UTC),
+			Txs:    []mock.Tx{mockTx},
 		}, state)
 		if err != nil {
 			t.Errorf("DeliverBlock error: %v", err)

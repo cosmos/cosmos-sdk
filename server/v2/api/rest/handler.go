@@ -20,12 +20,14 @@ const (
 	MaxBodySize     = 1 << 20 // 1 MB
 )
 
-func NewDefaultHandler[T transaction.Tx](appManager appmanager.AppManager[T]) http.Handler {
-	return &DefaultHandler[T]{appManager: appManager}
+func NewDefaultHandler[T transaction.Tx](stf appmanager.StateTransitionFunction[T], store Store, gasLimit uint64) http.Handler {
+	return &DefaultHandler[T]{stf: stf}
 }
 
 type DefaultHandler[T transaction.Tx] struct {
-	appManager appmanager.AppManager[T]
+	stf      appmanager.StateTransitionFunction[T]
+	store    Store
+	gasLimit uint64
 }
 
 func (h *DefaultHandler[T]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +47,7 @@ func (h *DefaultHandler[T]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query, err := h.appManager.Query(r.Context(), 0, msg)
+	query, err := h.stf.Query(r.Context(), 0, msg)
 	if err != nil {
 		http.Error(w, "Error querying", http.StatusInternalServerError)
 		return

@@ -22,6 +22,8 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
+* [#22409](https://github.com/cosmos/cosmos-sdk/pull/22409) Add support for `ignored` field tag input structs.
+
 ## 1.0.0
 
 * [#20540](https://github.com/cosmos/cosmos-sdk/pull/20540) Add support for defining `appconfig` module configuration types using `github.com/cosmos/gogoproto/proto` in addition to `google.golang.org/protobuf` so that users can use gogo proto across their stack.

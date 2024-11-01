@@ -9,9 +9,13 @@ import (
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
@@ -36,7 +40,17 @@ type AppOptions struct {
 
 	// ClientCtx contains the necessary information needed to execute the commands.
 	ClientCtx client.Context
+
+	// SkipValidation is used to skip the validation of the autocli options. This is useful when
+	// constructing the options manually and not using depinject.
+	// TODO: replace custom type once `ignored` tag is available in depinject
+	// in https://github.com/cosmos/cosmos-sdk/pull/22409
+	// at the point it can be made private and ignored. i.e.
+	// skipValidation bool `ignored:"true"`
+	SkipValidation SkipValidationBool `optional:"true"`
 }
+
+type SkipValidationBool bool
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
 // only adding missing commands and doesn't override commands already
@@ -73,8 +87,10 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 }
 
 func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Command, builder *Builder) error {
-	if err := builder.ValidateAndComplete(); err != nil {
-		return err
+	if !appOptions.SkipValidation {
+		if err := builder.ValidateAndComplete(); err != nil {
+			return err
+		}
 	}
 
 	// extract any custom commands from modules
@@ -124,3 +140,46 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 
 	return nil
 }
+
+func NewAppOptionsSkeleton(
+	modulesConfig depinject.Config,
+	moduleOptions map[string]*autocliv1.ModuleOptions,
+) (AppOptions, error) {
+	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
+		ProtoFiles: proto.HybridResolver,
+		SigningOptions: signing.Options{
+			AddressCodec:          nopAddressCodec{},
+			ValidatorAddressCodec: nopAddressCodec{},
+		},
+	})
+	if err != nil {
+		return AppOptions{}, err
+	}
+	cfg := struct {
+		depinject.In
+		Modules map[string]appmodule.AppModule
+	}{
+		Modules: nil,
+	}
+	err = depinject.Inject(depinject.Configs(
+		modulesConfig,
+		depinject.Supply(
+			log.NewNopLogger(),
+		)), &cfg)
+	if err != nil {
+		return AppOptions{}, err
+	}
+
+	return AppOptions{
+		Modules:        cfg.Modules,
+		ClientCtx:      client.Context{InterfaceRegistry: interfaceRegistry},
+		ModuleOptions:  moduleOptions,
+		SkipValidation: true,
+	}, nil
+}
+
+type nopAddressCodec struct{}
+
+func (nopAddressCodec) StringToBytes(_ string) ([]byte, error) { return nil, nil }
+
+func (nopAddressCodec) BytesToString(_ []byte) (string, error) { return "", nil }

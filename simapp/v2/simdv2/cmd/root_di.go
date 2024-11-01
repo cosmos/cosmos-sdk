@@ -39,6 +39,20 @@ func NewRootCmd[T transaction.Tx](
 		return nil, err
 	}
 
+	nodeCmds := nodeservice.NewNodeCommands()
+	autoCLIModuleOpts := make(map[string]*autocliv1.ModuleOptions)
+	autoCLIModuleOpts[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()
+	autoCliOpts, err := autocli.NewAppOptionsSkeleton(
+		depinject.Configs(simapp.AppConfig(), depinject.Supply(runtime.GlobalConfig{})),
+		autoCLIModuleOpts,
+	)
+	if err != nil {
+		return rootCommand, nil
+	}
+
+	if err = autoCliOpts.EnhanceRootCommand(rootCommand); err != nil {
+		return rootCommand, nil
+	}
 	subCommand, configMap, logger, err := factory.ParseCommand(rootCommand, args)
 	if err != nil {
 		if errors.Is(err, pflag.ErrHelp) {
@@ -48,7 +62,6 @@ func NewRootCmd[T transaction.Tx](
 	}
 
 	var (
-		autoCliOpts     autocli.AppOptions
 		moduleManager   *runtime.MM[T]
 		clientCtx       client.Context
 		simApp          *simapp.SimApp[T]
@@ -93,9 +106,7 @@ func NewRootCmd[T transaction.Tx](
 	if err != nil {
 		return nil, err
 	}
-	nodeCmds := nodeservice.NewNodeCommands()
-	autoCliOpts.ModuleOptions = make(map[string]*autocliv1.ModuleOptions)
-	autoCliOpts.ModuleOptions[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()
+	autoCliOpts.ModuleOptions = autoCLIModuleOpts
 	if err := autoCliOpts.EnhanceRootCommand(rootCommand); err != nil {
 		return nil, err
 	}

@@ -49,7 +49,7 @@ Once the main binary is built, the node can be started by running the [`start` c
 
 :::note
 When starting a CometBFT instance, the genesis file is the `0` height and the state within the genesis file is committed at block height `1`. When querying the state of the node, querying block height 0 will return an error.
-::: 
+:::
 
 ## Core Application File
 

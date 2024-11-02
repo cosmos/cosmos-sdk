@@ -1,14 +1,38 @@
-docs/modules
-docs/spec
-docs/architecture
-docs/rfc
-docs/tooling/01-cosmovisor.md
-docs/tooling/02-confix.md
-docs/tooling/03-hubl.md
-docs/core/17-autocli.md
-docs/packages/01-depinject.md
-docs/packages/02-collections.md
-docs/packages/03-orm.md
-docs/user/run-node/04-rosetta.md
-docs/build/migrations/02-upgrading.md
-docs/learn/advanced/17-autocli.md
+# TODO: why?
+# docs/modules
+# docs/spec
+# docs/architecture
+# docs/rfc
+# docs/tooling/01-cosmovisor.md
+# docs/tooling/02-confix.md
+# docs/tooling/03-hubl.md
+# docs/core/17-autocli.md
+# docs/packages/01-depinject.md
+# docs/packages/02-collections.md
+# docs/packages/03-orm.md
+# docs/user/run-node/04-rosetta.md
+# docs/build/migrations/02-upgrading.md
+# docs/learn/advanced/17-autocli.md
+
+# dependencies
+/node_modules
+/cosmos-sdk
+
+# production
+/build
+
+# generated files
+.docusaurus
+.cache-loader
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.idea
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

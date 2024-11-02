@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
@@ -25,6 +26,7 @@ type Keeper struct {
 	cometService comet.Service
 
 	cdc           codec.BinaryCodec
+	addrCdc       address.Codec
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
@@ -76,6 +78,7 @@ func NewKeeper(
 		Environment:      env,
 		cometService:     cometService,
 		cdc:              cdc,
+		addrCdc:          ak.AddressCodec(),
 		authKeeper:       ak,
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
@@ -163,7 +166,7 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 		return types.ErrSetWithdrawAddrDisabled
 	}
 
-	addr, err := k.authKeeper.AddressCodec().BytesToString(withdrawAddr)
+	addr, err := k.addrCdc.BytesToString(withdrawAddr)
 	if err != nil {
 		return err
 	}
@@ -178,7 +181,7 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 	return k.DelegatorsWithdrawAddress.Set(ctx, delegatorAddr, withdrawAddr)
 }
 
-// withdraw rewards from a delegation
+// WithdrawDelegationRewards withdraw rewards from a delegation
 func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	val, err := k.stakingKeeper.Validator(ctx, valAddr)
 	if err != nil {
@@ -212,7 +215,7 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 	return rewards, nil
 }
 
-// withdraw validator commission
+// WithdrawValidatorCommission withdraw validator commission
 func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	// fetch validator accumulated commission
 	accumCommission, err := k.ValidatorsAccumulatedCommission.Get(ctx, valAddr)

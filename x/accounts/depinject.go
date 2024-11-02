@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/x/accounts/accountstd"
+	txdecode "cosmossdk.io/x/tx/decode"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -48,8 +49,16 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		accCreators[i] = acc.MakeAccount
 	}
 
+	txDec, err := txdecode.NewDecoder(txdecode.Options{
+		SigningContext: in.Registry.SigningContext(),
+		ProtoCodec:     in.Cdc,
+	})
+	if err != nil {
+		panic(err)
+	}
+
 	accountsKeeper, err := NewKeeper(
-		in.Cdc, in.Environment, in.AddressCodec, in.Registry,
+		in.Cdc, in.Environment, in.AddressCodec, in.Registry, txDec,
 		accCreators...,
 	)
 	if err != nil {

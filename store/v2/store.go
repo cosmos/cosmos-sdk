@@ -12,6 +12,9 @@ import (
 // RootStore defines an abstraction layer containing a State Storage (SS) engine
 // and one or more State Commitment (SC) engines.
 type RootStore interface {
+	Pruner
+	Backend
+
 	// StateLatest returns a read-only version of the RootStore at the latest
 	// height, alongside the associated version.
 	StateLatest() (uint64, corestore.ReaderMap, error)
@@ -20,12 +23,6 @@ type RootStore interface {
 	// of the RootStore at the provided version. If such a version cannot be found,
 	// an error must be returned.
 	StateAt(version uint64) (corestore.ReaderMap, error)
-
-	// GetStateStorage returns the SS backend.
-	GetStateStorage() VersionedDatabase
-
-	// GetStateCommitment returns the SC backend.
-	GetStateCommitment() Committer
 
 	// Query performs a query on the RootStore for a given store key, version (height),
 	// and key tuple. Queries should be routed to the underlying SS engine.
@@ -67,9 +64,16 @@ type RootStore interface {
 	// SetMetrics sets the telemetry handler on the RootStore.
 	SetMetrics(m metrics.Metrics)
 
-	Prune(version uint64) error
-
 	io.Closer
+}
+
+// Backend defines the interface for the RootStore backends.
+type Backend interface {
+	// GetStateStorage returns the SS backend.
+	GetStateStorage() VersionedWriter
+
+	// GetStateCommitment returns the SC backend.
+	GetStateCommitment() Committer
 }
 
 // UpgradeableStore defines the interface for upgrading store keys.

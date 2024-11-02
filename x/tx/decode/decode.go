@@ -13,7 +13,6 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/tx/signing"
 )
@@ -32,8 +31,11 @@ type DecodedTx struct {
 	cachedBytes  []byte
 	cachedHashed bool
 }
-
-var _ transaction.Tx = &DecodedTx{}
+type Msg = interface {
+	Reset()
+	String() string
+	ProtoMessage()
+}
 
 type gogoProtoCodec interface {
 	Unmarshal([]byte, gogoproto.Message) error
@@ -84,7 +86,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 
 	err = proto.Unmarshal(txBytes, &raw)
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
 	}
 
 	var body v1beta1.TxBody
@@ -136,7 +138,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		dynamicMsg := dynamicpb.NewMessageType(msgDesc.(protoreflect.MessageDescriptor)).New().Interface()
 		err = anyMsg.UnmarshalTo(dynamicMsg)
 		if err != nil {
-			return nil, err
+			return nil, errorsmod.Wrap(ErrTxDecode, fmt.Sprintf("cannot unmarshal Any message: %v", err))
 		}
 		dynamicMsgs = append(dynamicMsgs, dynamicMsg)
 
@@ -148,7 +150,7 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 		msg := reflect.New(gogoType.Elem()).Interface().(gogoproto.Message)
 		err = d.codec.Unmarshal(anyMsg.Value, msg)
 		if err != nil {
-			return nil, err
+			return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
 		}
 		msgs = append(msgs, msg)
 
@@ -164,6 +166,18 @@ func (d *Decoder) Decode(txBytes []byte) (*DecodedTx, error) {
 			}
 			signers = append(signers, s)
 			seenSigners[string(s)] = struct{}{}
+		}
+	}
+
+	// If a fee payer is specified in the AuthInfo, it must be added to the list of signers
+	if authInfo.Fee != nil && authInfo.Fee.Payer != "" {
+		feeAddr, err := d.signingCtx.AddressCodec().StringToBytes(authInfo.Fee.Payer)
+		if err != nil {
+			return nil, errorsmod.Wrap(ErrTxDecode, err.Error())
+		}
+
+		if _, seen := seenSigners[string(feeAddr)]; !seen {
+			signers = append(signers, feeAddr)
 		}
 	}
 
@@ -192,7 +206,7 @@ func (dtx *DecodedTx) GetGasLimit() (uint64, error) {
 	return dtx.Tx.AuthInfo.Fee.GasLimit, nil
 }
 
-func (dtx *DecodedTx) GetMessages() ([]transaction.Msg, error) {
+func (dtx *DecodedTx) GetMessages() ([]Msg, error) {
 	if dtx == nil || dtx.Messages == nil {
 		return nil, errors.New("messages not available or are nil")
 	}

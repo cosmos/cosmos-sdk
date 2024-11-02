@@ -3,16 +3,10 @@ package runtime
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
 
-	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/log"
 	"cosmossdk.io/server/v2/stf"
 	storev2 "cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/db"
-	"cosmossdk.io/store/v2/proof"
-	"cosmossdk.io/store/v2/root"
 )
 
 // NewKVStoreService creates a new KVStoreService.
@@ -34,86 +28,12 @@ type Store interface {
 	// version. Must error when the version does not exist.
 	StateAt(version uint64) (store.ReaderMap, error)
 
-	// SetInitialVersion sets the initial version of the store.
-	SetInitialVersion(uint64) error
-
-	// WorkingHash writes the provided changeset to the state and returns
-	// the working hash of the state.
-	WorkingHash(changeset *store.Changeset) (store.Hash, error)
-
-	// Commit commits the provided changeset and returns the new state root of the state.
-	Commit(changeset *store.Changeset) (store.Hash, error)
-
-	// Query is a key/value query directly to the underlying database. This skips the appmanager
-	Query(storeKey []byte, version uint64, key []byte, prove bool) (storev2.QueryResult, error)
-
-	// GetStateStorage returns the SS backend.
-	GetStateStorage() storev2.VersionedDatabase
-
-	// GetStateCommitment returns the SC backend.
-	GetStateCommitment() storev2.Committer
-
 	// LoadVersion loads the RootStore to the given version.
 	LoadVersion(version uint64) error
 
 	// LoadLatestVersion behaves identically to LoadVersion except it loads the
 	// latest version implicitly.
 	LoadLatestVersion() error
-
-	// LastCommitID returns the latest commit ID
-	LastCommitID() (proof.CommitID, error)
-}
-
-// StoreBuilder is a builder for a store/v2 RootStore satisfying the Store interface.
-type StoreBuilder struct {
-	store Store
-}
-
-// Build creates a new store/v2 RootStore.
-func (sb *StoreBuilder) Build(
-	logger log.Logger,
-	storeKeys []string,
-	config server.DynamicConfig,
-	options root.Options,
-) (Store, error) {
-	if sb.store != nil {
-		return sb.store, nil
-	}
-	home := config.GetString(flagHome)
-	scRawDb, err := db.NewDB(
-		db.DBType(config.GetString("store.app-db-backend")),
-		"application",
-		filepath.Join(home, "data"),
-		nil,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create SCRawDB: %w", err)
-	}
-
-	factoryOptions := &root.FactoryOptions{
-		Logger:  logger,
-		RootDir: home,
-		Options: options,
-		// STF needs to store a bit of state
-		StoreKeys: append(storeKeys, "stf"),
-		SCRawDB:   scRawDb,
-	}
-
-	rs, err := root.CreateRootStore(factoryOptions)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create root store: %w", err)
-	}
-	sb.store = rs
-	return sb.store, nil
-}
-
-// Get returns the Store.  Build must be called before calling Get or the result will be nil.
-func (sb *StoreBuilder) Get() Store {
-	return sb.store
-}
-
-func ProvideStoreBuilder() *StoreBuilder {
-	return &StoreBuilder{}
 }
 
 // StoreLoader allows for custom loading of the store, this is useful when upgrading the store from a previous version

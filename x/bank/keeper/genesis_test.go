@@ -21,7 +21,7 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 
 	for i := range []int{1, 2} {
 		suite.bankKeeper.SetDenomMetaData(ctx, expectedMetadata[i])
-		accAddr, err1 := suite.authKeeper.AddressCodec().StringToBytes(expectedBalances[i].Address)
+		accAddr, err1 := suite.addrCdc.StringToBytes(expectedBalances[i].Address)
 		if err1 != nil {
 			panic(err1)
 		}

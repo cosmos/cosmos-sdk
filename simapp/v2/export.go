@@ -3,27 +3,46 @@ package simapp
 import (
 	"context"
 
+	"cosmossdk.io/runtime/v2/services"
+	"cosmossdk.io/x/staking"
+
 	v2 "github.com/cosmos/cosmos-sdk/x/genutil/v2"
 )
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
 // file.
-func (app *SimApp[T]) ExportAppStateAndValidators(jailAllowedAddrs []string) (v2.ExportedApp, error) {
-	// as if they could withdraw from the start of the next block
+// This is a demonstation of how to export a genesis file. Export may need extended at
+// the user discretion for cleaning the genesis state at the end provided with jailAllowedAddrs
+func (app *SimApp[T]) ExportAppStateAndValidators(
+	jailAllowedAddrs []string,
+) (v2.ExportedApp, error) {
 	ctx := context.Background()
+	var exportedApp v2.ExportedApp
 
 	latestHeight, err := app.LoadLatestHeight()
 	if err != nil {
-		return v2.ExportedApp{}, err
+		return exportedApp, err
 	}
 
 	genesis, err := app.ExportGenesis(ctx, latestHeight)
 	if err != nil {
-		return v2.ExportedApp{}, err
+		return exportedApp, err
 	}
 
-	return v2.ExportedApp{
-		AppState: genesis,
-		Height:   int64(latestHeight),
-	}, nil
+	readerMap, err := app.Store().StateAt(latestHeight)
+	if err != nil {
+		return exportedApp, err
+	}
+	genesisCtx := services.NewGenesisContext(readerMap)
+	err = genesisCtx.Read(ctx, func(ctx context.Context) error {
+		exportedApp.Validators, err = staking.WriteValidators(ctx, app.StakingKeeper)
+		return err
+	})
+	if err != nil {
+		return exportedApp, err
+	}
+
+	exportedApp.AppState = genesis
+	exportedApp.Height = int64(latestHeight)
+	return exportedApp, nil
 }

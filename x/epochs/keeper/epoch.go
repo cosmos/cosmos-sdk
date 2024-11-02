@@ -5,12 +5,10 @@ import (
 	"fmt"
 
 	"cosmossdk.io/x/epochs/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetEpochInfo returns epoch info by identifier.
-func (k Keeper) GetEpochInfo(ctx sdk.Context, identifier string) (types.EpochInfo, error) {
+func (k Keeper) GetEpochInfo(ctx context.Context, identifier string) (types.EpochInfo, error) {
 	return k.EpochInfo.Get(ctx, identifier)
 }
 

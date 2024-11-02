@@ -44,11 +44,8 @@ func ReadConfig(configPath string) (*viper.Viper, error) {
 func UnmarshalSubConfig(cfg map[string]any, subName string, target any) error {
 	var sub any
 	if subName != "" {
-		for k, val := range cfg {
-			if k == subName {
-				sub = val
-				break
-			}
+		if val, ok := cfg[subName]; ok {
+			sub = val
 		}
 	} else {
 		sub = cfg

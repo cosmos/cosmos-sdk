@@ -6,16 +6,16 @@
 
 ## Background
 
-When the SDK originally migrated to [protobuf state encoding](./../architecture/adr-019-protobuf-state-encoding.md),
+When the SDK originally migrated to [protobuf state encoding](../../architecture/adr-019-protobuf-state-encoding.md),
 zero-copy encodings such as [Cap'n Proto](https://capnproto.org/)
 and [FlatBuffers](https://google.github.io/flatbuffers/)
 were considered. We considered how a zero-copy encoding could be beneficial for interoperability with modules
 and scripts in other languages and VMs. However, protobuf was still chosen because the maturity of its ecosystem and
 tooling was much higher and the client experience and performance were considered the highest priorities.
 
-In [ADR 033: Protobuf-based Inter-Module Communication](./../architecture/adr-033-protobuf-inter-module-comm.md), the
+In [ADR 033: Protobuf-based Inter-Module Communication](../../architecture/adr-033-protobuf-inter-module-comm.md), the
 idea of cross-language/VM inter-module
-communication was considered again. And in the discussions surrounding [ADR 054: Semver Compatible SDK Modules](./../architecture/adr-054-semver-compatible-modules.md),
+communication was considered again. And in the discussions surrounding [ADR 054: Semver Compatible SDK Modules](../../architecture/adr-054-semver-compatible-modules.md),
 it was determined that multi-language/VM support in the SDK is a near term priority.
 
 While we could do cross-language/VM inter-module communication with protobuf binary or even JSON, the performance
@@ -28,7 +28,7 @@ improving performance, and we want to avoid inter-module calls from becoming a b
 reduce performance overhead as well as the size of generated code will make it easier and more feasible to deploy
 first-class integrations with these virtual machines.
 
-Thus, the agreement when the [ADR 054](./../architecture/adr-054-semver-compatible-modules.md) working group concluded
+Thus, the agreement when the [ADR 054](../../architecture/adr-054-semver-compatible-modules.md) working group concluded
 was to pursue a performant zero-copy encoding which is suitable for usage in highly resource constrained environments.
 
 ## Proposal
@@ -37,7 +37,7 @@ This RFC proposes a zero-copy encoding that is derived from the schema definitio
 and all app chains. This would result in a new code generator for that supports both this zero-copy encoding as well as
 the existing protobuf binary and JSON encodings as well as the google.golang.org/protobuf API. To make this zero-copy
 encoding work, a number of changes are needed to how we manage the versioning of protobuf messages that should
-address other concerns raised in [ADR 054](./../architecture/adr-054-semver-compatible-modules.md). The API for using
+address other concerns raised in [ADR 054](../../architecture/adr-054-semver-compatible-modules.md). The API for using
 protobuf in golang would also change and this will be described in the [code generation](#generated-code) section
 along with a proposed Rust code generator.
 
@@ -234,7 +234,7 @@ or struct methods, ex:
 ```go
 type Foo interface {
     X() int32
-    SetX(int32) 
+    SetX(int32)
     Y() zpb.Option[uint32]
     SetY(zpb.Option[uint32])
     Z() (string, error)

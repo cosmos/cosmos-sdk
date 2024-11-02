@@ -56,7 +56,7 @@ The most used implementation of the `Tx` interface is the Protobuf `Tx` message,
 https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/proto/cosmos/tx/v1beta1/tx.proto#L15-L28
 ```
 
-Because Protobuf serialization is not deterministic, the Cosmos SDK uses an additional `TxRaw` type to denote the pinned bytes over which a transaction is signed. Any user can generate a valid `body` and `auth_info` for a transaction, and serialize these two messages using Protobuf. `TxRaw` then pins the user's exact binary representation of `body` and `auth_info`, called respectively `body_bytes` and `auth_info_bytes`. The document that is signed by all signers of the transaction is `SignDoc` (deterministically serialized using [ADR-027](../../architecture/adr-027-deterministic-protobuf-serialization.md)):
+Because Protobuf serialization is not deterministic, the Cosmos SDK uses an additional `TxRaw` type to denote the pinned bytes over which a transaction is signed. Any user can generate a valid `body` and `auth_info` for a transaction, and serialize these two messages using Protobuf. `TxRaw` then pins the user's exact binary representation of `body` and `auth_info`, called respectively `body_bytes` and `auth_info_bytes`. The document that is signed by all signers of the transaction is `SignDoc` (deterministically serialized using [ADR-027](../../../architecture/adr-027-deterministic-protobuf-serialization.md)):
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/proto/cosmos/tx/v1beta1/tx.proto#L50-L67
@@ -105,7 +105,7 @@ There are also _expert_ screens, which will only be displayed if the user has ch
 
 Data is formatted using a set of `ValueRenderer` which the SDK provides defaults for all the known messages and value types. Chain developers can also opt to implement their own `ValueRenderer` for a type/message if they'd like to display information differently.
 
-If you wish to learn more, please refer to [ADR-050](../../architecture/adr-050-sign-mode-textual.md).
+If you wish to learn more, please refer to [ADR-050](../../../architecture/adr-050-sign-mode-textual.md).
 
 #### Custom Sign modes
 

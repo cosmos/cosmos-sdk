@@ -7,13 +7,13 @@ sidebar_position: 1
 :::note Synopsis
 
 The Cosmos SDK allows much easier wiring of an `app.go` thanks to App Wiring and [`depinject`](../packages/01-depinject.md).
-Learn more about the rationale of App Wiring in [ADR-057](../architecture/adr-057-app-wiring.md).
+Learn more about the rationale of App Wiring in [ADR-057](../../architecture/adr-057-app-wiring.md).
 
 :::
 
 :::note Pre-requisite Readings
 
-* [ADR 057: App Wiring](../architecture/adr-057-app-wiring.md)
+* [ADR 057: App Wiring](../../architecture/adr-057-app-wiring.md)
 * [Depinject Documentation](../packages/01-depinject.md)
 * [Modules depinject-ready](../building-modules/15-depinject.md)
 
@@ -56,7 +56,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_config.go
 ### Alternative formats
 
 :::tip
-The example above shows how to create an `AppConfig` using Go. However, it is also possible to create an `AppConfig` using YAML, or JSON.  
+The example above shows how to create an `AppConfig` using Go. However, it is also possible to create an `AppConfig` using YAML, or JSON.
 The configuration can then be embed with `go:embed` and read with [`appconfig.LoadYAML`](https://pkg.go.dev/cosmossdk.io/core/appconfig#LoadYAML), or [`appconfig.LoadJSON`](https://pkg.go.dev/cosmossdk.io/core/appconfig#LoadJSON), in `app_di.go`.
 
 ```go
@@ -97,7 +97,7 @@ A more complete example of `app.yaml` can be found [here](https://github.com/cos
 
 ## `app_di.go`
 
-`app_di.go` is the place where `SimApp` is constructed. `depinject.Inject` facilitates that by automatically wiring the app modules and keepers, provided an application configuration `AppConfig` is provided. `SimApp` is constructed, when calling the injected `*runtime.AppBuilder`, with `appBuilder.Build(...)`.    
+`app_di.go` is the place where `SimApp` is constructed. `depinject.Inject` facilitates that by automatically wiring the app modules and keepers, provided an application configuration `AppConfig` is provided. `SimApp` is constructed, when calling the injected `*runtime.AppBuilder`, with `appBuilder.Build(...)`.
 In short `depinject` and the [`runtime` package](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/runtime) abstract the wiring of the app, and the `AppBuilder` is the place where the app is constructed. [`runtime`](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/runtime) takes care of registering the codecs, KV store, subspaces and instantiating `baseapp`.
 
 ```go reference
@@ -110,7 +110,7 @@ When using `depinject.Inject`, the injected types must be pointers.
 
 ### Advanced Configuration
 
-In advanced cases, it is possible to inject extra (module) configuration in a way that is not (yet) supported by `AppConfig`.  
+In advanced cases, it is possible to inject extra (module) configuration in a way that is not (yet) supported by `AppConfig`.
 In this case, use `depinject.Configs` for combining the extra configuration and `AppConfig`, and `depinject.Supply` to providing that extra configuration.
 More information on how work `depinject.Configs` and `depinject.Supply` can be found in the [`depinject` documentation](https://pkg.go.dev/cosmossdk.io/depinject).
 

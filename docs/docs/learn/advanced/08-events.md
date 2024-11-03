@@ -32,7 +32,7 @@ An Event contains:
 To parse the attribute values as strings, make sure to add `'` (single quotes) around each attribute value.
 :::
 
-_Typed Events_ are Protobuf-defined [messages](../../../architecture/adr-032-typed-events.md) used by the Cosmos SDK
+_Typed Events_ are Protobuf-defined [messages](../../architecture/adr-032-typed-events.md) used by the Cosmos SDK
 for emitting and querying Events. They are defined in a `event.proto` file, on a **per-module basis** and are read as `proto.Message`.
 _Legacy Events_ are defined on a **per-module basis** in the module's `/types/events.go` file.
 They are triggered from the module's Protobuf [`Msg` service](../../build/building-modules/03-msg-services.md)

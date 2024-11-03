@@ -9,5 +9,5 @@ sidebar_position: 0
 * [Migrations](./migrations/01-intro.md) - See what has been updated in each release the process of the transition between versions.
 * [Packages](./packages/README.md) - Explore a curated collection of pre-built modules and functionalities, streamlining the development process.
 * [Tooling](./tooling/README.md) - A suite of utilities designed to enhance the development workflow, optimizing the efficiency of Cosmos SDK-based projects.
-* [ADR's](./architecture/README.md) - Provides a structured repository of key decisions made during the development process, which have been documented and offers rationale behind key decisions being made.
-* [REST API](https://docs.cosmos.network/api) - A comprehensive reference for the application programming interfaces (APIs) provided by the SDK. 
+* [ADR's](../architecture/README.md) - Provides a structured repository of key decisions made during the development process, which have been documented and offers rationale behind key decisions being made.
+* [REST API](https://docs.cosmos.network/api) - A comprehensive reference for the application programming interfaces (APIs) provided by the SDK.

@@ -12,4 +12,4 @@ Additionally, the SDK includes in-place migrations for its core modules. These i
 
 Migration from a version older than the last two major releases is not supported.
 
-When migrating from a previous version, refer to the [`UPGRADING.md`](./02-upgrading.md) and the CHANGELOG.md of the version you are migrating to.
+When migrating from a previous version, refer to the [`UPGRADING`](./02-upgrading.md) and the CHANGELOG of the version you are migrating to.

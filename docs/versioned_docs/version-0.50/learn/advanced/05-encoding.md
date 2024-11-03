@@ -91,7 +91,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/tx/decoder.go
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/tx/encoder.go
 ```
 
-See [ADR-020](../../../../architecture/adr-020-protobuf-transaction-encoding.md) for details of how a transaction is encoded.
+See [ADR-020](../../build/architecture/adr-020-protobuf-transaction-encoding.md) for details of how a transaction is encoded.
 
 ### Interface Encoding and Usage of `Any`
 
@@ -112,7 +112,7 @@ In this `Profile` example, we hardcoded `account` as a `BaseAccount`. However, t
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/account.go#L15-L32
 ```
 
-In [ADR-019](../../../../architecture/adr-019-protobuf-state-encoding.md), it has been decided to use [`Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto)s to encode interfaces in protobuf. An `Any` contains an arbitrary serialized message as bytes, along with a URL that acts as a globally unique identifier for and resolves to that message's type. This strategy allows us to pack arbitrary Go types inside protobuf messages. Our new `Profile` then looks like:
+In [ADR-019](../../build/architecture/adr-019-protobuf-state-encoding.md), it has been decided to use [`Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto)s to encode interfaces in protobuf. An `Any` contains an arbitrary serialized message as bytes, along with a URL that acts as a globally unique identifier for and resolves to that message's type. This strategy allows us to pack arbitrary Go types inside protobuf messages. Our new `Profile` then looks like:
 
 ```protobuf
 message Profile {
@@ -181,7 +181,7 @@ func (p *Profile) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 The `UnpackInterfaces` gets called recursively on all structs implementing this method, to allow all `Any`s to have their `GetCachedValue()` correctly populated.
 
-For more information about interface encoding, and especially on `UnpackInterfaces` and how the `Any`'s `type_url` gets resolved using the `InterfaceRegistry`, please refer to [ADR-019](../../../../architecture/adr-019-protobuf-state-encoding.md).
+For more information about interface encoding, and especially on `UnpackInterfaces` and how the `Any`'s `type_url` gets resolved using the `InterfaceRegistry`, please refer to [ADR-019](../../build/architecture/adr-019-protobuf-state-encoding.md).
 
 #### `Any` Encoding in the Cosmos SDK
 
@@ -246,7 +246,7 @@ Protobuf types can be defined to encode:
 #### Naming and conventions
 
 We encourage developers to follow industry guidelines: [Protocol Buffers style guide](https://developers.google.com/protocol-buffers/docs/style)
-and [Buf](https://buf.build/docs/style-guide), see more details in [ADR 023](../../../../architecture/adr-023-protobuf-naming.md)
+and [Buf](https://buf.build/docs/style-guide), see more details in [ADR 023](../../build/architecture/adr-023-protobuf-naming.md)
 
 ### How to update modules to protobuf encoding
 

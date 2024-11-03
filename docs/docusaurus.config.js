@@ -292,7 +292,7 @@ const config = {
           },
           {
             from: "/main/modules/auth/05_vesting",
-            to: "/main/build/modules/auth/vesting",
+            to: "/v0.50/build/modules/auth/vesting",
           },
           {
             from: [
@@ -322,7 +322,7 @@ const config = {
               "/main/modules/crisis/04_params",
               "/main/modules/crisis/05_client",
             ],
-            to: "/main/build/modules/crisis",
+            to: "/v0.50/build/modules/crisis",
           },
           {
             from: [

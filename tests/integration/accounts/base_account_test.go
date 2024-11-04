@@ -9,7 +9,6 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
 
-	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 	baseaccountv1 "cosmossdk.io/x/accounts/defaults/base/v1"
 	"cosmossdk.io/x/bank/testutil"
@@ -48,7 +47,7 @@ func TestBaseAccount(t *testing.T) {
 	msg := &banktypes.MsgSend{
 		FromAddress: bechify(t, app, baseAccountAddr),
 		ToAddress:   bechify(t, app, []byte("random-addr")),
-		Amount:      sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
+		Amount:      coins(t, "100stake"),
 	}
 	sendTx(t, ctx, app, baseAccountAddr, msg)
 }

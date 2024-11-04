@@ -98,6 +98,9 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/codec/address/bech32_co
 
 ### Module Accounts
 
+Module accounts are special accounts used by modules to perform specific operations within the blockchain. These accounts are not controlled by users but by the modules themselves. Each module account has a unique name and a set of permissions that define what operations it can perform. Examples of module accounts include the distribution module account, which handles the distribution of staking rewards and the governance module account, which manages the funds related to governance proposals.
+
+
 #### Address Generation
 
 Module account addresses are generated deterministically from the module name, as defined in [ADR-028](../../architecture/adr-028-public-key-addresses.md) 

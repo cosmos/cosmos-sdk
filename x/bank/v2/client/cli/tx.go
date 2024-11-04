@@ -24,6 +24,7 @@ func NewTxCmd() *cobra.Command {
 
 	txCmd.AddCommand(
 		NewSendTxCmd(),
+		NewCreateDenomTxCmd(),
 	)
 
 	return txCmd
@@ -55,6 +56,37 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 
 			msg := types.NewMsgSend(clientCtx.GetFromAddress().String(), args[1], coins)
 
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewCreateDenomTxCmd returns a CLI command handler for creating a MsgCreateDenom transaction.
+func NewCreateDenomTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-denom [subdenom]",
+		Short: "Create new tokenfactory denom",
+		Long: `Create new tokenfactory denom.
+Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
+When using '--dry-run' a key name cannot be used, only a bech32 address.
+`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			fromAddr := clientCtx.GetFromAddress()
+
+			msg := &types.MsgCreateDenom{
+				Sender:   fromAddr.String(),
+				Subdenom: args[0],
+			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

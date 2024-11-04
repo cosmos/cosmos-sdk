@@ -262,21 +262,36 @@ func (h handlers) QueryBalance(ctx context.Context, req *types.QueryBalanceReque
 }
 
 // DenomAuthorityMetadata queries the authority metadata of a denom.
-func (h handlers) DenomAuthorityMetadata(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
+func (h handlers) QueryDenomAuthorityMetadata(ctx context.Context, req *types.QueryDenomAuthorityMetadataRequest) (*types.QueryDenomAuthorityMetadataResponse, error) {
 	if req == nil {
 		return nil, errors.New("empty request")
 	}
 
-	if err := sdk.ValidateDenom(req.Denom); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-
-	addr, err := h.addressCodec.StringToBytes(req.Address)
+	authorityMetadata, err := h.GetAuthorityMetadata(ctx, req.GetDenom())
 	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid address: %s", err)
+		return nil, err
 	}
 
-	balance := h.Keeper.GetBalance(ctx, addr, req.Denom)
+	return &types.QueryDenomAuthorityMetadataResponse{AuthorityMetadata: authorityMetadata}, nil
+}
 
-	return &types.QueryBalanceResponse{Balance: &balance}, nil
+// DenomsFromCreator queries all denom created by creator.
+func (h handlers) QueryDenomsFromCreator(ctx context.Context, req *types.QueryDenomsFromCreatorRequest) (*types.QueryDenomsFromCreatorResponse, error) {
+	if req == nil {
+		return nil, errors.New("empty request")
+	}
+
+	denoms := []string{}
+
+	err := h.Keeper.denomAuthority.Walk(ctx, nil, func (denom string, authority types.DenomAuthorityMetadata) (stop bool, err error) {
+		if authority.Admin == req.Creator {
+			denoms = append(denoms, denom)
+		}
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryDenomsFromCreatorResponse{Denoms: denoms}, nil
 }

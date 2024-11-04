@@ -99,4 +99,14 @@ func TestCreateDenom(t *testing.T) {
 	fmt.Println("valBalanceAfter", valBalanceAfter)
 
 	require.Equal(t, valBalanceBefore - valBalanceAfter, feeAmount.Int64())
+
+	raw = cli.CustomQuery("q", "bankv2", "denoms-from-creator", valAddr)
+	denoms := gjson.Get(raw, "denoms").Array()
+	require.Equal(t, len(denoms), 1)
+	fmt.Println("denoms", raw)
+
+	raw = cli.CustomQuery("q", "bankv2", "denom-authority-metadata", denoms[0].String())
+	admin := gjson.Get(raw, "authority_metadata.admin").String()
+	require.Equal(t, len(denoms), 1)
+	fmt.Println("authority", raw)
 }

@@ -40,12 +40,24 @@ message QueryBalanceResponse {
 // QueryDenomAuthorityMetadataRequest defines the request structure for the
 // DenomAuthorityMetadata gRPC query.
 message QueryDenomAuthorityMetadataRequest {
-  string denom = 1 [(gogoproto.moretags) = "yaml:\"denom\""];
+  string denom = 1;
 }
 
 // QueryDenomAuthorityMetadataResponse defines the response structure for the
 // DenomAuthorityMetadata gRPC query.
 message QueryDenomAuthorityMetadataResponse {
-  DenomAuthorityMetadata authority_metadata = 1
-      [(gogoproto.moretags) = "yaml:\"authority_metadata\"", (gogoproto.nullable) = false];
+  DenomAuthorityMetadata authority_metadata = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryDenomsFromCreatorRequest defines the request structure for the
+// QueryDenomsFromCreator gRPC query.
+message QueryDenomsFromCreatorRequest {
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  ;
+}
+
+// QueryDenomsFromCreatorResponse defines the response structure for the
+// QueryDenomsFromCreator gRPC query.
+message QueryDenomsFromCreatorResponse {
+  repeated string denoms = 1;
 }

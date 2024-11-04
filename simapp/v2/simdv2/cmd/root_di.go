@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 

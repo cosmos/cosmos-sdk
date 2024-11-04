@@ -142,7 +142,7 @@ func (f *CommandFactory) ParseCommand(
 	args []string,
 ) (*cobra.Command, server.ConfigMap, log.Logger, error) {
 	f.enhanceCommand(rootCmd)
-	cmd, _, err := rootCmd.Traverse(args)
+	cmd, _, err := rootCmd.Find(args)
 	if err != nil {
 		return nil, nil, nil, err
 	}

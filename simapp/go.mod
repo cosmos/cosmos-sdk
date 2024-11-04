@@ -60,7 +60,7 @@ require (
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
-	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
+	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

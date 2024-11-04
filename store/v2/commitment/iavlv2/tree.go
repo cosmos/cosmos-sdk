@@ -52,6 +52,10 @@ func (t *Tree) Version() uint64 {
 }
 
 func (t *Tree) LoadVersion(version uint64) error {
+	if err := isHighBitSet(version); err != nil {
+		return err
+	}
+
 	if version == 0 {
 		return nil
 	}
@@ -64,15 +68,24 @@ func (t *Tree) Commit() ([]byte, uint64, error) {
 }
 
 func (t *Tree) SetInitialVersion(version uint64) error {
+	if err := isHighBitSet(version); err != nil {
+		return err
+	}
 	t.tree.SetShouldCheckpoint()
 	return t.tree.SetInitialVersion(int64(version))
 }
 
 func (t *Tree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error) {
+	if err := isHighBitSet(version); err != nil {
+		return nil, err
+	}
 	return t.tree.GetProof(int64(version), key)
 }
 
 func (t *Tree) Get(version uint64, key []byte) ([]byte, error) {
+	if err := isHighBitSet(version); err != nil {
+		return nil, err
+	}
 	if int64(version) != t.tree.Version() {
 		return nil, fmt.Errorf("loading past version not yet supported")
 	}
@@ -92,6 +105,10 @@ func (t *Tree) Close() error {
 }
 
 func (t *Tree) Prune(version uint64) error {
+	if err := isHighBitSet(version); err != nil {
+		return err
+	}
+
 	return t.tree.DeleteVersionsTo(int64(version))
 }
 
@@ -100,4 +117,11 @@ func (t *Tree) PausePruning(bool) {}
 
 func (t *Tree) WorkingHash() []byte {
 	return t.tree.Hash()
+}
+
+func isHighBitSet(version uint64) error {
+	if version&(1<<63) != 0 {
+		return fmt.Errorf("%d too large; uint64 with the highest bit set are not supported", version)
+	}
+	return nil
 }

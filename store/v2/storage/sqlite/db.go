@@ -123,7 +123,7 @@ func (db *Database) GetLatestVersion() (version uint64, err error) {
 	defer func(stmt *sqlite3.Stmt) {
 		cErr := stmt.Close()
 		if cErr != nil {
-			err = fmt.Errorf("failed to close GetLatestVersion statement: %w", cErr)
+			err = errors.Join(err, fmt.Errorf("failed to close GetLatestVersion statement: %w", cErr))
 		}
 	}(stmt)
 
@@ -325,7 +325,7 @@ func (db *Database) PruneStoreKeys(storeKeys []string, version uint64) (err erro
 	}
 	defer func() {
 		if err != nil {
-			err = db.storage.Rollback()
+			err = errors.Join(err, db.storage.Rollback())
 		}
 	}()
 

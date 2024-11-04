@@ -344,8 +344,6 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 
 	validatorUpdates := intoABCIValidatorUpdates(blockResponse.ValidatorUpdates)
 
-	// set the initial version of the store
-	// TODO n or n-1?
 	if err := c.store.SetInitialVersion(uint64(req.InitialHeight - 1)); err != nil {
 		return nil, fmt.Errorf("failed to set initial version: %w", err)
 	}
@@ -358,7 +356,6 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		Version: uint64(req.InitialHeight - 1),
 		Changes: stateChanges,
 	}
-	// TODO  this call should be FinalizeBlock to run full ABCI flow for genesis block
 	stateRoot, err := c.store.Commit(cs)
 	if err != nil {
 		return nil, fmt.Errorf("unable to write the changeset: %w", err)
@@ -453,19 +450,6 @@ func (c *Consensus[T]) FinalizeBlock(
 
 	if err := c.checkHalt(req.Height, req.Time); err != nil {
 		return nil, err
-	}
-
-	// we don't need to deliver the block in the genesis block
-	// TODO audit this
-	if req.Height == int64(c.initialHeight) {
-		appHash, err := c.store.Commit(store.NewChangeset(uint64(req.Height)))
-		if err != nil {
-			return nil, fmt.Errorf("unable to commit the changeset: %w", err)
-		}
-		c.lastCommittedHeight.Store(req.Height)
-		return &abciproto.FinalizeBlockResponse{
-			AppHash: appHash,
-		}, nil
 	}
 
 	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,

@@ -146,6 +146,8 @@ func (f *CommandFactory) ParseCommand(
 	if err != nil {
 		return nil, nil, nil, err
 	}
+	// AutoCLI will set this to true for its commands to disable flag parsing in execution.  We want to parse flags here.
+	cmd.DisableFlagParsing = false
 	if err = cmd.ParseFlags(args); err != nil {
 		// help requested, return the command early
 		if errors.Is(err, pflag.ErrHelp) {

@@ -88,7 +88,9 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 }
 
 func TestParallelWrites(t *testing.T) {
-	db, err := New(t.TempDir())
+	// tmpDir := t.TempDir()
+	tmpDir := "/tmp/sqlite"
+	db, err := New(tmpDir)
 	require.NoError(t, err)
 	defer db.Close()
 

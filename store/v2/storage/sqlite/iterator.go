@@ -7,22 +7,23 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/bvinc/go-sqlite-lite/sqlite3"
+
 	corestore "cosmossdk.io/core/store"
 )
 
 var _ corestore.Iterator = (*iterator)(nil)
 
 type iterator struct {
-	statement  *sql.Stmt
-	rows       *sql.Rows
+	statement  *sqlite3.Stmt
 	key, val   []byte
 	start, end []byte
 	valid      bool
 	err        error
 }
 
-func newIterator(db *Database, storeKey []byte, targetVersion uint64, start, end []byte, reverse bool) (*iterator, error) {
-	if targetVersion < db.earliestVersion {
+func newIterator(db *Database, storeKey []byte, version uint64, start, end []byte, reverse bool) (*iterator, error) {
+	if version < db.earliestVersion {
 		return &iterator{
 			start: start,
 			end:   end,
@@ -31,8 +32,9 @@ func newIterator(db *Database, storeKey []byte, targetVersion uint64, start, end
 	}
 
 	var (
-		keyClause = []string{"store_key = ?", "version <= ?"}
-		queryArgs []any
+		targetVersion = int64(version)
+		keyClause     = []string{"store_key = ?", "version <= ?"}
+		queryArgs     []any
 	)
 
 	switch {
@@ -72,18 +74,21 @@ func newIterator(db *Database, storeKey []byte, targetVersion uint64, start, end
 		return nil, fmt.Errorf("failed to prepare SQL statement: %w", err)
 	}
 
-	rows, err := stmt.Query(queryArgs...)
+	err = stmt.Bind(queryArgs...)
 	if err != nil {
 		_ = stmt.Close()
-		return nil, fmt.Errorf("failed to execute SQL query: %w", err)
+		return nil, fmt.Errorf("failed to bind SQL iterator query arguments: %w", err)
 	}
 
 	itr := &iterator{
 		statement: stmt,
-		rows:      rows,
 		start:     start,
 		end:       end,
-		valid:     rows.Next(),
+	}
+	itr.valid, err = itr.statement.Step()
+	if err != nil {
+		itr.err = fmt.Errorf("failed to step SQL iterator: %w", err)
+		return itr, nil
 	}
 	if !itr.valid {
 		itr.err = fmt.Errorf("iterator invalid: %w", sql.ErrNoRows)
@@ -106,7 +111,6 @@ func (itr *iterator) Close() (err error) {
 
 	itr.valid = false
 	itr.statement = nil
-	itr.rows = nil
 
 	return err
 }
@@ -128,8 +132,7 @@ func (itr *iterator) Value() []byte {
 }
 
 func (itr *iterator) Valid() bool {
-	if !itr.valid || itr.rows.Err() != nil {
-		itr.valid = false
+	if !itr.valid {
 		return itr.valid
 	}
 
@@ -145,19 +148,16 @@ func (itr *iterator) Valid() bool {
 }
 
 func (itr *iterator) Next() {
-	if itr.rows.Next() {
-		itr.parseRow()
+	var hasRow bool
+	hasRow, itr.err = itr.statement.Step()
+	if itr.err != nil || !hasRow {
+		itr.valid = false
 		return
 	}
-
-	itr.valid = false
+	itr.parseRow()
 }
 
 func (itr *iterator) Error() error {
-	if err := itr.rows.Err(); err != nil {
-		return err
-	}
-
 	return itr.err
 }
 
@@ -166,7 +166,7 @@ func (itr *iterator) parseRow() {
 		key   []byte
 		value []byte
 	)
-	if err := itr.rows.Scan(&key, &value); err != nil {
+	if err := itr.statement.Scan(&key, &value); err != nil {
 		itr.err = fmt.Errorf("failed to scan row: %w", err)
 		itr.valid = false
 		return

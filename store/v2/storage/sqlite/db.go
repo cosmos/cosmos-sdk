@@ -2,13 +2,12 @@ package sqlite
 
 import (
 	"bytes"
-	"database/sql"
-	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
+	"sync"
 
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/bvinc/go-sqlite-lite/sqlite3"
 
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
@@ -18,7 +17,7 @@ import (
 
 const (
 	driverName        = "sqlite3"
-	dbName            = "ss.db?cache=shared&mode=rwc&_journal_mode=WAL"
+	dbName            = "ss.db"
 	reservedStoreKey  = "_RESERVED_"
 	keyLatestHeight   = "latest_height"
 	keyPruneHeight    = "prune_height"
@@ -50,17 +49,23 @@ var (
 )
 
 type Database struct {
-	storage *sql.DB
-
+	storage   *sqlite3.Conn
+	connStr   string
+	writeLock *sync.Mutex
 	// earliestVersion defines the earliest version set in the database, which is
 	// only updated when the database is pruned.
 	earliestVersion uint64
 }
 
 func New(dataDir string) (*Database, error) {
-	storage, err := sql.Open(driverName, filepath.Join(dataDir, dbName))
+	connStr := fmt.Sprintf("file:%s", filepath.Join(dataDir, dbName))
+	db, err := sqlite3.Open(connStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open sqlite DB: %w", err)
+	}
+	err = db.Exec("PRAGMA journal_mode=WAL;")
+	if err != nil {
+		return nil, fmt.Errorf("failed to set journal mode: %w", err)
 	}
 
 	stmt := `
@@ -76,18 +81,20 @@ func New(dataDir string) (*Database, error) {
 
 	CREATE UNIQUE INDEX IF NOT EXISTS idx_store_key_version ON state_storage (store_key, key, version);
 	`
-	_, err = storage.Exec(stmt)
+	err = db.Exec(stmt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
 
-	pruneHeight, err := getPruneHeight(storage)
+	pruneHeight, err := getPruneHeight(db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get prune height: %w", err)
 	}
 
 	return &Database{
-		storage:         storage,
+		storage:         db,
+		connStr:         connStr,
+		writeLock:       new(sync.Mutex),
 		earliestVersion: pruneHeight,
 	}, nil
 }
@@ -99,10 +106,15 @@ func (db *Database) Close() error {
 }
 
 func (db *Database) NewBatch(version uint64) (store.Batch, error) {
-	return NewBatch(db.storage, version)
+	conn, err := sqlite3.Open(db.connStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open sqlite DB: %w", err)
+	}
+
+	return NewBatch(conn, db.writeLock, version)
 }
 
-func (db *Database) GetLatestVersion() (uint64, error) {
+func (db *Database) GetLatestVersion() (version uint64, err error) {
 	stmt, err := db.storage.Prepare(`
 	SELECT value
 	FROM state_storage 
@@ -112,19 +124,32 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 		return 0, fmt.Errorf("failed to prepare SQL statement: %w", err)
 	}
 
-	defer stmt.Close()
-
-	var latestHeight uint64
-	if err := stmt.QueryRow(reservedStoreKey, keyLatestHeight).Scan(&latestHeight); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// in case of a fresh database
-			return 0, nil
+	defer func(stmt *sqlite3.Stmt) {
+		cErr := stmt.Close()
+		if cErr != nil {
+			err = fmt.Errorf("failed to close GetLatestVersion statement: %w", cErr)
 		}
+	}(stmt)
 
-		return 0, fmt.Errorf("failed to query row: %w", err)
+	err = stmt.Bind(reservedStoreKey, keyLatestHeight)
+	if err != nil {
+		return 0, fmt.Errorf("failed to bind GetLatestVersion statement: %w", err)
 	}
-
-	return latestHeight, nil
+	hasRow, err := stmt.Step()
+	if err != nil {
+		return 0, fmt.Errorf("failed to step through GetLatestVersion rows: %w", err)
+	}
+	if !hasRow {
+		// in case of a fresh database
+		return 0, nil
+	}
+	var v int64
+	err = stmt.Scan(&v)
+	if err != nil {
+		return 0, fmt.Errorf("failed to scan GetLatestVersion row: %w", err)
+	}
+	version = uint64(v)
+	return version, nil
 }
 
 func (db *Database) VersionExists(v uint64) (bool, error) {
@@ -137,7 +162,9 @@ func (db *Database) VersionExists(v uint64) (bool, error) {
 }
 
 func (db *Database) SetLatestVersion(version uint64) error {
-	_, err := db.storage.Exec(reservedUpsertStmt, reservedStoreKey, keyLatestHeight, version, 0, version)
+	db.writeLock.Lock()
+	defer db.writeLock.Unlock()
+	err := db.storage.Exec(reservedUpsertStmt, reservedStoreKey, keyLatestHeight, int64(version), 0, int64(version))
 	if err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
@@ -172,19 +199,27 @@ func (db *Database) Get(storeKey []byte, targetVersion uint64, key []byte) ([]by
 
 	var (
 		value []byte
-		tomb  uint64
+		tomb  int64
 	)
-	if err := stmt.QueryRow(storeKey, key, targetVersion).Scan(&value, &tomb); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		}
-
-		return nil, fmt.Errorf("failed to query row: %w", err)
+	err = stmt.Bind(storeKey, key, int64(targetVersion))
+	if err != nil {
+		return nil, fmt.Errorf("failed to bind SQL statement: %w", err)
+	}
+	hasRow, err := stmt.Step()
+	if err != nil {
+		return nil, fmt.Errorf("failed to step through SQL rows: %w", err)
+	}
+	if !hasRow {
+		return nil, nil
+	}
+	err = stmt.Scan(&value, &tomb)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan row: %w", err)
 	}
 
 	// A tombstone of zero or a target version that is less than the tombstone
 	// version means the key is not deleted at the target version.
-	if tomb == 0 || targetVersion < tomb {
+	if tomb == 0 || targetVersion < uint64(tomb) {
 		return value, nil
 	}
 
@@ -199,13 +234,16 @@ func (db *Database) Get(storeKey []byte, targetVersion uint64, key []byte) ([]by
 // We perform the prune by deleting all versions of a key, excluding reserved keys,
 // that are <= the given version, except for the latest version of the key.
 func (db *Database) Prune(version uint64) error {
-	tx, err := db.storage.Begin()
+	v := int64(version)
+	db.writeLock.Lock()
+	defer db.writeLock.Unlock()
+	err := db.storage.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to create SQL transaction: %w", err)
 	}
 	defer func() {
 		if err != nil {
-			err = tx.Rollback()
+			err = db.storage.Rollback()
 		}
 	}()
 
@@ -218,8 +256,8 @@ func (db *Database) Prune(version uint64) error {
 		t2.version <= ?
 	) AND store_key != ?;
 	`
-	if _, err := tx.Exec(pruneStmt, version, reservedStoreKey); err != nil {
-		return fmt.Errorf("failed to exec SQL statement: %w", err)
+	if err := db.storage.Exec(pruneStmt, v, reservedStoreKey); err != nil {
+		return fmt.Errorf("failed to exec prune keys statement: %w", err)
 	}
 
 	// prune removed stores
@@ -235,22 +273,23 @@ func (db *Database) Prune(version uint64) error {
 		WHERE s.store_key = t.key AND s.version <= t.max_version LIMIT 1
 	);
 	`
-	if _, err := tx.Exec(pruneRemovedStoreKeysStmt, reservedStoreKey, valueRemovedStore, version, version); err != nil {
-		return fmt.Errorf("failed to exec SQL statement: %w", err)
+	if err := db.storage.Exec(pruneRemovedStoreKeysStmt, reservedStoreKey, valueRemovedStore, v); err != nil {
+		return fmt.Errorf("failed to exec prune store keys statement: %w", err)
 	}
 
 	// delete the removedKeys
-	if _, err := tx.Exec("DELETE FROM state_storage WHERE store_key = ? AND value = ? AND version <= ?", reservedStoreKey, valueRemovedStore, version); err != nil {
-		return fmt.Errorf("failed to exec SQL statement: %w", err)
+	if err := db.storage.Exec("DELETE FROM state_storage WHERE store_key = ? AND value = ? AND version <= ?",
+		reservedStoreKey, valueRemovedStore, v); err != nil {
+		return fmt.Errorf("failed to exec remove keys statement: %w", err)
 	}
 
 	// set the prune height so we can return <nil> for queries below this height
-	if _, err := tx.Exec(reservedUpsertStmt, reservedStoreKey, keyPruneHeight, version, 0, version); err != nil {
-		return fmt.Errorf("failed to exec SQL statement: %w", err)
+	if err := db.storage.Exec(reservedUpsertStmt, reservedStoreKey, keyPruneHeight, v, 0, v); err != nil {
+		return fmt.Errorf("failed to exec set prune height statement: %w", err)
 	}
 
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("failed to write SQL transaction: %w", err)
+	if err := db.storage.Commit(); err != nil {
+		return fmt.Errorf("failed to commit prune transaction: %w", err)
 	}
 
 	db.earliestVersion = version + 1
@@ -282,13 +321,15 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 }
 
 func (db *Database) PruneStoreKeys(storeKeys []string, version uint64) (err error) {
-	tx, err := db.storage.Begin()
+	db.writeLock.Lock()
+	defer db.writeLock.Unlock()
+	err = db.storage.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to create SQL transaction: %w", err)
 	}
 	defer func() {
 		if err != nil {
-			err = tx.Rollback()
+			err = db.storage.Rollback()
 		}
 	}()
 
@@ -296,12 +337,12 @@ func (db *Database) PruneStoreKeys(storeKeys []string, version uint64) (err erro
 	flushRemovedStoreKeyStmt := `INSERT INTO state_storage(store_key, key, value, version) 
 		VALUES (?, ?, ?, ?)`
 	for _, storeKey := range storeKeys {
-		if _, err := tx.Exec(flushRemovedStoreKeyStmt, reservedStoreKey, []byte(storeKey), valueRemovedStore, version); err != nil {
+		if err := db.storage.Exec(flushRemovedStoreKeyStmt, reservedStoreKey, []byte(storeKey), valueRemovedStore, version); err != nil {
 			return fmt.Errorf("failed to exec SQL statement: %w", err)
 		}
 	}
 
-	return tx.Commit()
+	return db.storage.Commit()
 }
 
 func (db *Database) PrintRowsDebug() {
@@ -312,49 +353,66 @@ func (db *Database) PrintRowsDebug() {
 
 	defer stmt.Close()
 
-	rows, err := stmt.Query()
+	err = stmt.Exec()
 	if err != nil {
 		panic(fmt.Errorf("failed to execute SQL query: %w", err))
 	}
 
-	var sb strings.Builder
-	for rows.Next() {
+	var (
+		sb strings.Builder
+	)
+	for {
+		hasRow, err := stmt.Step()
+		if err != nil {
+			panic(fmt.Errorf("failed to step through SQL rows: %w", err))
+		}
+		if !hasRow {
+			break
+		}
 		var (
 			storeKey []byte
 			key      []byte
 			value    []byte
-			version  uint64
-			tomb     uint64
+			version  int64
+			tomb     int64
 		)
-		if err := rows.Scan(&storeKey, &key, &value, &version, &tomb); err != nil {
+		if err := stmt.Scan(&storeKey, &key, &value, &version, &tomb); err != nil {
 			panic(fmt.Sprintf("failed to scan row: %s", err))
 		}
 
 		sb.WriteString(fmt.Sprintf("STORE_KEY: %s, KEY: %s, VALUE: %s, VERSION: %d, TOMBSTONE: %d\n", storeKey, key, value, version, tomb))
 	}
-	if err := rows.Err(); err != nil {
-		panic(fmt.Errorf("received unexpected error: %w", err))
-	}
 
 	fmt.Println(strings.TrimSpace(sb.String()))
 }
 
-func getPruneHeight(storage *sql.DB) (uint64, error) {
+func getPruneHeight(storage *sqlite3.Conn) (height uint64, err error) {
 	stmt, err := storage.Prepare(`SELECT value FROM state_storage WHERE store_key = ? AND key = ?`)
 	if err != nil {
 		return 0, fmt.Errorf("failed to prepare SQL statement: %w", err)
 	}
 
-	defer stmt.Close()
-
-	var value uint64
-	if err := stmt.QueryRow(reservedStoreKey, keyPruneHeight).Scan(&value); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return 0, nil
+	defer func(stmt *sqlite3.Stmt) {
+		cErr := stmt.Close()
+		if cErr != nil {
+			err = fmt.Errorf("failed to close SQL statement: %w", cErr)
 		}
+	}(stmt)
 
-		return 0, fmt.Errorf("failed to query row: %w", err)
+	if err = stmt.Bind(reservedStoreKey, keyPruneHeight); err != nil {
+		return 0, fmt.Errorf("failed to bind prune height SQL statement: %w", err)
 	}
-
-	return value, nil
+	hasRows, err := stmt.Step()
+	if err != nil {
+		return 0, fmt.Errorf("failed to step prune height SQL statement: %w", err)
+	}
+	if !hasRows {
+		return 0, nil
+	}
+	var h int64
+	if err = stmt.Scan(&h); err != nil {
+		return 0, fmt.Errorf("failed to scan prune height SQL statement: %w", err)
+	}
+	height = uint64(h)
+	return height, nil
 }

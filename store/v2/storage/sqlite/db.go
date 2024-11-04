@@ -106,12 +106,7 @@ func (db *Database) Close() error {
 }
 
 func (db *Database) NewBatch(version uint64) (store.Batch, error) {
-	conn, err := sqlite3.Open(db.connStr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open sqlite DB: %w", err)
-	}
-
-	return NewBatch(conn, db.writeLock, version)
+	return NewBatch(db.connStr, db.writeLock, version)
 }
 
 func (db *Database) GetLatestVersion() (version uint64, err error) {

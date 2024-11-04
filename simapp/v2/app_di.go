@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	"cosmossdk.io/client/v2/autocli"
 	_ "embed"
 	"fmt"
 
@@ -58,6 +59,8 @@ func AppConfig() depinject.Config {
 			multisigdepinject.ProvideAccount,
 			basedepinject.ProvideAccount,
 			lockupdepinject.ProvideAllLockupAccounts,
+			// autocli
+			autocli.ProvideAppOptions,
 
 			// provide base account options
 			basedepinject.ProvideSecp256K1PubKey,

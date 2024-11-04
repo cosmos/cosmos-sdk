@@ -42,7 +42,7 @@ func NewRootCmd[T transaction.Tx](
 	nodeCmds := nodeservice.NewNodeCommands()
 	autoCLIModuleOpts := make(map[string]*autocliv1.ModuleOptions)
 	autoCLIModuleOpts[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()
-	autoCliOpts, err := autocli.NewAppOptionsSkeleton(
+	autoCliOpts, err := autocli.NewAppOptionsFromConfig(
 		depinject.Configs(simapp.AppConfig(), depinject.Supply(runtime.GlobalConfig{})),
 		autoCLIModuleOpts,
 	)

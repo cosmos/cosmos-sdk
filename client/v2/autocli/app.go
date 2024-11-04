@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-// AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
+// Options are input options for an autocli enabled app. These options can be built via depinject based on an app config.
 // Ex:
 //
 //	var autoCliOpts autocli.AppOptions
@@ -26,7 +26,7 @@ import (
 //
 // If depinject isn't used, options can be provided manually or extracted from modules and the address codec can be provided by the auth keeper.
 // One method for extracting autocli options is via the github.com/cosmos/cosmos-sdk/runtime/services.ExtractAutoCLIOptions function.
-type AppOptions struct {
+type Options struct {
 	depinject.In
 
 	// Modules are the AppModule implementations for the modules in the app.
@@ -40,17 +40,25 @@ type AppOptions struct {
 
 	// ClientCtx contains the necessary information needed to execute the commands.
 	ClientCtx client.Context
-
-	// SkipValidation is used to skip the validation of the autocli options. This is useful when
-	// constructing the options manually and not using depinject.
-	// TODO: replace custom type once `ignored` tag is available in depinject
-	// in https://github.com/cosmos/cosmos-sdk/pull/22409
-	// at the point it can be made private and ignored. i.e.
-	// skipValidation bool `ignored:"true"`
-	SkipValidation SkipValidationBool `optional:"true"`
 }
 
-type SkipValidationBool bool
+// AppOptions are the autocli options for an app.
+type AppOptions struct {
+	Modules       map[string]appmodule.AppModule
+	ModuleOptions map[string]*autocliv1.ModuleOptions
+	ClientCtx     client.Context
+
+	skipValidation bool
+}
+
+// ProvideAppOptions returns AppOptions with the provided Options.
+func ProvideAppOptions(options Options) AppOptions {
+	return AppOptions{
+		Modules:       options.Modules,
+		ModuleOptions: options.ModuleOptions,
+		ClientCtx:     options.ClientCtx,
+	}
+}
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
 // only adding missing commands and doesn't override commands already
@@ -87,7 +95,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 }
 
 func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Command, builder *Builder) error {
-	if !appOptions.SkipValidation {
+	if !appOptions.skipValidation {
 		if err := builder.ValidateAndComplete(); err != nil {
 			return err
 		}
@@ -141,7 +149,10 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 	return nil
 }
 
-func NewAppOptionsSkeleton(
+// NewAppOptionsFromConfig returns AppOptions for an app based on the provided modulesConfig and moduleOptions.
+// It returns an AppOptions instance usable for CLI parsing but not execution. For an execution usable AppOptions
+// see ProvideAppOptions, which expects input to be filled by depinject.
+func NewAppOptionsFromConfig(
 	modulesConfig depinject.Config,
 	moduleOptions map[string]*autocliv1.ModuleOptions,
 ) (AppOptions, error) {
@@ -174,7 +185,7 @@ func NewAppOptionsSkeleton(
 		Modules:        cfg.Modules,
 		ClientCtx:      client.Context{InterfaceRegistry: interfaceRegistry},
 		ModuleOptions:  moduleOptions,
-		SkipValidation: true,
+		skipValidation: true,
 	}, nil
 }
 

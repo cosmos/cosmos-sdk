@@ -71,6 +71,5 @@ require (
 
 replace (
 	cosmossdk.io/core => ../../core
-	github.com/cosmos/iavl => ../../../../iavl/iavl-master
 	github.com/cosmos/iavl/v2 => ../../../../iavl/iavl-v2
 )

@@ -1,10 +1,10 @@
 package simapp
 
 import (
-	"cosmossdk.io/client/v2/autocli"
 	_ "embed"
 	"fmt"
 
+	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"

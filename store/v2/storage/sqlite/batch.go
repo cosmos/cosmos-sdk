@@ -32,17 +32,9 @@ type Batch struct {
 	version int64
 }
 
-func NewBatch(connStr string, writeLock *sync.Mutex, version uint64) (*Batch, error) {
+func NewBatch(db *sqlite3.Conn, writeLock *sync.Mutex, version uint64) (*Batch, error) {
 	if version&(1<<63) != 0 {
 		return nil, fmt.Errorf("%d too large; uint64 with the highest bit set are not supported", version)
-	}
-	db, err := sqlite3.Open(connStr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open SQL database: %w", err)
-	}
-	err = db.Begin()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create SQL transaction: %w", err)
 	}
 
 	return &Batch{
@@ -85,7 +77,11 @@ func (b *Batch) Delete(storeKey, key []byte) error {
 func (b *Batch) Write() error {
 	b.lock.Lock()
 	defer b.lock.Unlock()
-	err := b.db.Exec(reservedUpsertStmt, reservedStoreKey, keyLatestHeight, b.version, 0, b.version)
+	err := b.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to start SQL transaction: %w", err)
+	}
+	err = b.db.Exec(reservedUpsertStmt, reservedStoreKey, keyLatestHeight, b.version, 0, b.version)
 	if err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
@@ -110,5 +106,5 @@ func (b *Batch) Write() error {
 		return fmt.Errorf("failed to write SQL transaction: %w", err)
 	}
 
-	return b.db.Close()
+	return nil
 }

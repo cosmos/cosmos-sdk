@@ -33,6 +33,9 @@ type Batch struct {
 }
 
 func NewBatch(db *sqlite3.Conn, writeLock *sync.Mutex, version uint64) (*Batch, error) {
+	if version&(1<<63) != 0 {
+		return nil, fmt.Errorf("%d too large; uint64 with the highest bit set are not supported", version)
+	}
 	err := db.Begin()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create SQL transaction: %w", err)

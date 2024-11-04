@@ -7,8 +7,8 @@ import (
 
 	"github.com/cometbft/cometbft/mempool"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
 
 	apiacbci "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	mockrpc "cosmossdk.io/client/v2/broadcast/comet/testutil"

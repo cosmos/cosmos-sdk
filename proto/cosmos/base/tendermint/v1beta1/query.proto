@@ -1,17 +1,17 @@
 syntax = "proto3";
 package cosmos.base.tendermint.v1beta1;
 
-import "gogoproto/gogo.proto";
-import "google/protobuf/any.proto";
-import "google/api/annotations.proto";
+import "amino/amino.proto";
+import "cometbft/crypto/v1/proof.proto";
 import "cometbft/p2p/v1/types.proto";
+import "cometbft/types/v1/block.proto";
 import "cometbft/types/v1/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/tendermint/v1beta1/types.proto";
 import "cosmos_proto/cosmos.proto";
-import "cometbft/types/v1/block.proto";
-import "cometbft/crypto/v1/proof.proto";
-import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice";
 
@@ -51,7 +51,7 @@ service Service {
   // application, bypassing Tendermint completely. The ABCI query must contain
   // a valid and supported path, including app, custom, p2p, and store.
   rpc ABCIQuery(ABCIQueryRequest) returns (ABCIQueryResponse) {
-    option (google.api.http).get          = "/cosmos/base/tendermint/v1beta1/abci_query";
+    option (google.api.http).get = "/cosmos/base/tendermint/v1beta1/abci_query";
     option (cosmos_proto.method_added_in) = "cosmos-sdk 0.46";
   }
 }
@@ -59,15 +59,15 @@ service Service {
 // GetValidatorSetByHeightRequest is the request type for the Query/GetValidatorSetByHeight RPC method.
 message GetValidatorSetByHeightRequest {
   int64 height = 1;
-  // pagination defines an pagination for the request.
+  // pagination defines an pagination for the request. page and limit are used for pagination, nextKey is not supported for this query.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // GetValidatorSetByHeightResponse is the response type for the Query/GetValidatorSetByHeight RPC method.
 message GetValidatorSetByHeightResponse {
-  int64              block_height = 1;
-  repeated Validator validators   = 2;
-  // pagination defines an pagination for the response.
+  int64 block_height = 1;
+  repeated Validator validators = 2;
+  // pagination defines an pagination for the response. page and limit are used for pagination, nextKey is not supported for this query.
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 
@@ -79,18 +79,18 @@ message GetLatestValidatorSetRequest {
 
 // GetLatestValidatorSetResponse is the response type for the Query/GetValidatorSetByHeight RPC method.
 message GetLatestValidatorSetResponse {
-  int64              block_height = 1;
-  repeated Validator validators   = 2;
-  // pagination defines an pagination for the response.
+  int64 block_height = 1;
+  repeated Validator validators = 2;
+  // pagination defines an pagination for the response. page and limit are used for pagination, nextKey is not supported for this query.
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 
 // Validator is the type for the validator-set.
 message Validator {
-  string              address           = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  google.protobuf.Any pub_key           = 2;
-  int64               voting_power      = 3;
-  int64               proposer_priority = 4;
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  google.protobuf.Any pub_key = 2;
+  int64 voting_power = 3;
+  int64 proposer_priority = 4;
 }
 
 // GetBlockByHeightRequest is the request type for the Query/GetBlockByHeight RPC method.
@@ -134,20 +134,20 @@ message GetNodeInfoRequest {}
 
 // GetNodeInfoResponse is the response type for the Query/GetNodeInfo RPC method.
 message GetNodeInfoResponse {
-  .cometbft.p2p.v1.DefaultNodeInfo default_node_info   = 1;
-  VersionInfo                      application_version = 2;
+  .cometbft.p2p.v1.DefaultNodeInfo default_node_info = 1;
+  VersionInfo application_version = 2;
 }
 
 // VersionInfo is the type for the GetNodeInfoResponse message.
 message VersionInfo {
-  string          name               = 1;
-  string          app_name           = 2;
-  string          version            = 3;
-  string          git_commit         = 4;
-  string          build_tags         = 5;
-  string          go_version         = 6;
-  repeated Module build_deps         = 7;
-  string          cosmos_sdk_version = 8 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.43"];
+  string name = 1;
+  string app_name = 2;
+  string version = 3;
+  string git_commit = 4;
+  string build_tags = 5;
+  string go_version = 6;
+  repeated Module build_deps = 7;
+  string cosmos_sdk_version = 8 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.43"];
 }
 
 // Module is the type for VersionInfo
@@ -162,10 +162,10 @@ message Module {
 
 // ABCIQueryRequest defines the request structure for the ABCIQuery gRPC query.
 message ABCIQueryRequest {
-  bytes  data   = 1;
-  string path   = 2;
-  int64  height = 3;
-  bool   prove  = 4;
+  bytes data = 1;
+  string path = 2;
+  int64 height = 3;
+  bool prove = 4;
 }
 
 // ABCIQueryResponse defines the response structure for the ABCIQuery gRPC query.
@@ -176,15 +176,15 @@ message ABCIQueryResponse {
   uint32 code = 1;
   // Deprecated: use "value" instead
   reserved 2;
-  string log   = 3; // nondeterministic
-  string info  = 4; // nondeterministic
-  int64  index = 5;
-  bytes  key   = 6;
-  bytes  value = 7;
+  string log = 3; // nondeterministic
+  string info = 4; // nondeterministic
+  int64 index = 5;
+  bytes key = 6;
+  bytes value = 7;
   // deprecated in favor of comet proof type
   reserved 8;
-  int64                        height    = 9;
-  string                       codespace = 10;
+  int64 height = 9;
+  string codespace = 10;
   .cometbft.crypto.v1.ProofOps proof_ops = 11;
 }
 
@@ -195,15 +195,18 @@ message ABCIQueryResponse {
 // Note: This type is a duplicate of the ProofOp proto type defined in Tendermint.
 message ProofOp {
   option deprecated = true;
-  string type       = 1;
-  bytes  key        = 2;
-  bytes  data       = 3;
+  string type = 1;
+  bytes key = 2;
+  bytes data = 3;
 }
 
 // ProofOps is Merkle proof defined by the list of ProofOps.
 //
 // Note: This type is a duplicate of the ProofOps proto type defined in Tendermint.
 message ProofOps {
-  option           deprecated = true;
-  repeated ProofOp ops        = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  option deprecated = true;
+  repeated ProofOp ops = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
 }

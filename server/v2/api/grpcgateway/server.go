@@ -11,6 +11,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -34,7 +35,13 @@ type Server[T transaction.Tx] struct {
 }
 
 // New creates a new gRPC-gateway server.
-func New[T transaction.Tx](grpcSrv *grpc.Server, ir jsonpb.AnyResolver, cfgOptions ...CfgOption) *Server[T] {
+func New[T transaction.Tx](
+	logger log.Logger,
+	config server.ConfigMap,
+	grpcSrv *grpc.Server,
+	ir jsonpb.AnyResolver,
+	cfgOptions ...CfgOption,
+) (*Server[T], error) {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
 	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshaling issue.
 	marshalerOption := &gateway.JSONPb{
@@ -44,7 +51,7 @@ func New[T transaction.Tx](grpcSrv *grpc.Server, ir jsonpb.AnyResolver, cfgOptio
 		AnyResolver:  ir,
 	}
 
-	return &Server[T]{
+	s := &Server[T]{
 		gRPCSrv: grpcSrv,
 		gRPCGatewayRouter: runtime.NewServeMux(
 			// Custom marshaler option is required for gogo proto
@@ -60,6 +67,20 @@ func New[T transaction.Tx](grpcSrv *grpc.Server, ir jsonpb.AnyResolver, cfgOptio
 		),
 		cfgOptions: cfgOptions,
 	}
+
+	serverCfg := s.Config().(*Config)
+	if len(config) > 0 {
+		if err := serverv2.UnmarshalSubConfig(config, s.Name(), &serverCfg); err != nil {
+			return s, fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+	}
+
+	// TODO: register the gRPC-Gateway routes
+
+	s.logger = logger.With(log.ModuleKey, s.Name())
+	s.config = serverCfg
+
+	return s, nil
 }
 
 func (s *Server[T]) Name() string {
@@ -78,22 +99,6 @@ func (s *Server[T]) Config() any {
 	}
 
 	return s.config
-}
-
-func (s *Server[T]) Init(appI serverv2.AppI[transaction.Tx], cfg map[string]any, logger log.Logger) error {
-	serverCfg := s.Config().(*Config)
-	if len(cfg) > 0 {
-		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
-		}
-	}
-
-	// TODO: register the gRPC-Gateway routes
-
-	s.logger = logger.With(log.ModuleKey, s.Name())
-	s.config = serverCfg
-
-	return nil
 }
 
 func (s *Server[T]) Start(ctx context.Context) error {

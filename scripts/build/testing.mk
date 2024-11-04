@@ -17,8 +17,11 @@ test-integration:
 #? test-integration-cov: Run `make -C tests test-integration-cov`
 test-integration-cov:
 	$(MAKE) -C tests test-integration-cov
+#? test-integration-v1: Run `make -C tests test-integration-v1`
+test-integration-v1:
+	$(MAKE) -C tests test-integration-v1
 #? test-all: Run all test
-test-all: test-unit test-integration test-ledger-mock test-race
+test-all: test-unit test-integration test-integration-v1 test-ledger-mock test-race
 
 .PHONY: test-system
 test-system: build

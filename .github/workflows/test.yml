@@ -112,6 +112,10 @@ jobs:
         with:
           name: "${{ github.sha }}-integration-coverage"
           path: ./tests/integration-profile.out
+      - name: integration tests v1
+        if: env.GIT_DIFF
+        run: |
+          make test-integration-v1
 
   test-system: # v2 system tests are in v2-test.yml
     runs-on: ubuntu-latest

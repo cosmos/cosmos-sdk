@@ -9,16 +9,23 @@ import (
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	gogoany "github.com/cosmos/gogoproto/types/any"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 	baseaccountv1 "cosmossdk.io/x/accounts/defaults/base/v1"
 	"cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+)
+
+var (
+	privKey    = secp256k1.GenPrivKey()
+	accCreator = []byte("creator")
 )
 
 func TestBaseAccount(t *testing.T) {
@@ -41,7 +48,7 @@ func TestBaseAccount(t *testing.T) {
 	msg := &banktypes.MsgSend{
 		FromAddress: bechify(t, app, baseAccountAddr),
 		ToAddress:   bechify(t, app, []byte("random-addr")),
-		Amount:      coins(t, "100stake"),
+		Amount:      sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 	}
 	sendTx(t, ctx, app, baseAccountAddr, msg)
 }
@@ -94,4 +101,17 @@ func toAnyPb(t *testing.T, pm gogoproto.Message) *codectypes.Any {
 	pb, err := codectypes.NewAnyWithValue(pm)
 	require.NoError(t, err)
 	return pb
+}
+
+func coins(t *testing.T, s string) sdk.Coins {
+	t.Helper()
+	coins, err := sdk.ParseCoinsNormalized(s)
+	require.NoError(t, err)
+	return coins
+}
+
+func setupApp(t *testing.T) *simapp.SimApp {
+	t.Helper()
+	app := simapp.Setup(t, false)
+	return app
 }

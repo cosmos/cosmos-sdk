@@ -139,15 +139,6 @@ Modules not returning simulation operations:
 * Useful error messages not provided on from CI, requiring a developer to run
   the simulation locally to reproduce.
 
-### E2E tests
-
-End to end tests exercise the entire system as we understand it in as close an approximation
-to a production environment as is practical. Presently these tests are located at
-[tests/e2e](https://github.com/cosmos/cosmos-sdk/tree/main/tests/e2e) and rely on [testutil/network](https://github.com/cosmos/cosmos-sdk/tree/main/testutil/network) to start up an in-process Tendermint node.
-
-An application should be built as minimally as possible to exercise the desired functionality.
-The SDK uses an application will only the required modules for the tests. The application developer is advised to use its own application for e2e tests.
-
 #### Limitations
 
 In general the limitations of end to end tests are orchestration and compute cost.

@@ -239,7 +239,7 @@ func (db *Database) Prune(version uint64) (err error) {
 	}
 	defer func() {
 		if err != nil {
-			err = errors.Join(db.storage.Rollback())
+			err = errors.Join(err, db.storage.Rollback())
 		}
 	}()
 

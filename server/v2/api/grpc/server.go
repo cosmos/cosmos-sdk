@@ -22,6 +22,7 @@ import (
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/server"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -43,13 +44,31 @@ type Server[T transaction.Tx] struct {
 	grpcSrv *grpc.Server
 }
 
+type Store interface {
+	// StateLatest returns a readonly view over the latest
+	// committed state of the store. Alongside the version
+	// associated with it.
+	StateLatest() (uint64, corestore.ReaderMap, error)
+
+	// StateAt returns a readonly view over the provided
+	// state. Must error when the version does not exist.
+	StateAt(version uint64) (corestore.ReaderMap, error)
+}
+
 // New creates a new grpc server.
 func New[T transaction.Tx](
 	logger log.Logger,
+	store Store,
+	gasLimit uint64,
 	interfaceRegistry server.InterfaceRegistry,
 	queryHandlers map[string]appmodulev2.Handler,
 	queryable interface {
-		Query(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error)
+		Query(
+			ctx context.Context,
+			state corestore.ReaderMap,
+			gasLimit uint64,
+			req transaction.Msg,
+		) (transaction.Msg, error)
 	},
 	cfg server.ConfigMap,
 	cfgOptions ...CfgOption,
@@ -68,7 +87,7 @@ func New[T transaction.Tx](
 		grpc.ForceServerCodec(newProtoCodec(interfaceRegistry).GRPCCodec()),
 		grpc.MaxSendMsgSize(serverCfg.MaxSendMsgSize),
 		grpc.MaxRecvMsgSize(serverCfg.MaxRecvMsgSize),
-		grpc.UnknownServiceHandler(makeUnknownServiceHandler(queryHandlers, queryable)),
+		grpc.UnknownServiceHandler(makeUnknownServiceHandler(queryHandlers, queryable, store, gasLimit)),
 	)
 
 	// Reflection allows external clients to see what services and methods the gRPC server exposes.
@@ -97,8 +116,15 @@ func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 }
 
 func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier interface {
-	Query(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error)
+	Query(
+		ctx context.Context,
+		state corestore.ReaderMap,
+		gasLimit uint64,
+		req transaction.Msg,
+	) (transaction.Msg, error)
 },
+	store Store,
+	gasLimit uint64,
 ) grpc.StreamHandler {
 	getRegistry := sync.OnceValues(gogoproto.MergedRegistry)
 
@@ -146,7 +172,20 @@ func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier 
 			if err != nil {
 				return status.Errorf(codes.InvalidArgument, "invalid get height from context: %v", err)
 			}
-			resp, err := querier.Query(ctx, height, req)
+
+			var state corestore.ReaderMap
+			if height == 0 {
+				_, state, err = store.StateLatest()
+				if err != nil {
+					return status.Errorf(codes.Internal, "failed to get latest state: %v", err)
+				}
+			} else {
+				state, err = store.StateAt(height)
+				if err != nil {
+					return status.Errorf(codes.Internal, "failed to get state at height %d: %v", height, err)
+				}
+			}
+			resp, err := querier.Query(ctx, state, gasLimit, req)
 			if err != nil {
 				return err
 			}

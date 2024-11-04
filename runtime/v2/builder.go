@@ -112,14 +112,7 @@ func (a *AppBuilder[T]) Build(opts ...AppBuilderOption[T]) (*App[T], error) {
 	}
 	a.app.stf = stf
 
-	a.app.AppManager = appmanager.New[T](
-		appmanager.Config{
-			ValidateTxGasLimit: a.app.config.GasConfig.ValidateTxGasLimit,
-			QueryGasLimit:      a.app.config.GasConfig.QueryGasLimit,
-			SimulationGasLimit: a.app.config.GasConfig.SimulationGasLimit,
-		},
-		a.app.db,
-		a.app.stf,
+	a.app.GenesisManager = appmanager.New[T](
 		a.initGenesis,
 		a.exportGenesis,
 	)

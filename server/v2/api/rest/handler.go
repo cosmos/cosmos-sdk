@@ -24,7 +24,11 @@ const (
 )
 
 func NewDefaultHandler[T transaction.Tx](stf appmanager.StateTransitionFunction[T], store Store, gasLimit uint64) http.Handler {
-	return &DefaultHandler[T]{stf: stf}
+	return &DefaultHandler[T]{
+		stf:      stf,
+		store:    store,
+		gasLimit: gasLimit,
+	}
 }
 
 type DefaultHandler[T transaction.Tx] struct {

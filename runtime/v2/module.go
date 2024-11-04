@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"slices"
@@ -16,8 +17,10 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/comet"
+	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -247,7 +250,7 @@ func DefaultServiceBindings() depinject.Config {
 			)
 		}
 		cometService  comet.Service = &services.ContextAwareCometInfoService{}
-		headerService               = services.NewGenesisHeaderService(stf.HeaderService{})
+		headerService               = services.NewGenesisHeaderService(HeaderService{})
 		eventService                = services.NewGenesisEventService(stf.NewEventService())
 		storeBuilder                = root.NewBuilder()
 	)
@@ -258,4 +261,12 @@ func DefaultServiceBindings() depinject.Config {
 		eventService,
 		storeBuilder,
 	)
+}
+
+var _ header.Service = (*HeaderService)(nil)
+
+type HeaderService struct{}
+
+func (h HeaderService) HeaderInfo(ctx context.Context) header.Info {
+	return ctx.Value(corecontext.HeaderInfoKey).(coreheader.Info)
 }

@@ -42,6 +42,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#18626](https://github.com/cosmos/cosmos-sdk/pull/18626) Support for off-chain signing and verification of a file.
 * [#18461](https://github.com/cosmos/cosmos-sdk/pull/18461) Support governance proposals.
+* [#20623](https://github.com/cosmos/cosmos-sdk/pull/20623) Introduce client/v2 tx factory.
+* [#20623](https://github.com/cosmos/cosmos-sdk/pull/20623) Extend client/v2 keyring interface with `KeyType` and `KeyInfo`.
 
 ### Improvements
 

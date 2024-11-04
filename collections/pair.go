@@ -33,6 +33,11 @@ func (p Pair[K1, K2]) K2() (k2 K2) {
 	return *p.key2
 }
 
+// Keys returns key1 and key2 as a slice.
+func (p Pair[K1, K2]) Keys() []interface{} {
+	return []interface{}{p.K1(), p.K2()}
+}
+
 // Join creates a new Pair instance composed of the two provided keys, in order.
 func Join[K1, K2 any](key1 K1, key2 K2) Pair[K1, K2] {
 	return Pair[K1, K2]{

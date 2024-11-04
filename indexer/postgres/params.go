@@ -8,6 +8,11 @@ import (
 	"cosmossdk.io/schema"
 )
 
+type keyCollection interface {
+	// Keys returns the key fields for the collection.
+	Keys() []interface{}
+}
+
 // bindKeyParams binds the key to the key columns.
 func (tm *objectIndexer) bindKeyParams(key interface{}) ([]interface{}, []string, error) {
 	n := len(tm.typ.KeyFields)
@@ -17,6 +22,9 @@ func (tm *objectIndexer) bindKeyParams(key interface{}) ([]interface{}, []string
 	} else if n == 1 {
 		return tm.bindParams(tm.typ.KeyFields, []interface{}{key})
 	} else {
+		if kc, ok := key.(keyCollection); ok {
+			return tm.bindParams(tm.typ.KeyFields, kc.Keys())
+		}
 		key, ok := key.([]interface{})
 		if !ok {
 			return nil, nil, errors.New("expected key to be a slice")

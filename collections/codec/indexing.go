@@ -81,20 +81,20 @@ func FallbackSchemaCodec[T any]() SchemaCodec[T] {
 			FromSchemaType: nil,
 		}
 	} else {
-		// we default to encoding everything to JSON
+		// we default to encoding everything to String
 		return SchemaCodec[T]{
-			Fields: []schema.Field{{Kind: schema.JSONKind}},
+			Fields: []schema.Field{{Kind: schema.StringKind}},
 			ToSchemaType: func(t T) (any, error) {
 				bz, err := json.Marshal(t)
-				return json.RawMessage(bz), err
+				return string(json.RawMessage(bz)), err
 			},
 			FromSchemaType: func(a any) (T, error) {
 				var t T
-				bz, ok := a.(json.RawMessage)
+				sz, ok := a.(string)
 				if !ok {
-					return t, fmt.Errorf("expected json.RawMessage, got %T", a)
+					return t, fmt.Errorf("expected string, got %T", a)
 				}
-				err := json.Unmarshal(bz, &t)
+				err := json.Unmarshal([]byte(sz), &t)
 				return t, err
 			},
 		}

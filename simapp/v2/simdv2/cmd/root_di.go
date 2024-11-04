@@ -47,11 +47,11 @@ func NewRootCmd[T transaction.Tx](
 		autoCLIModuleOpts,
 	)
 	if err != nil {
-		return rootCommand, nil
+		return nil, err
 	}
 
 	if err = autoCliOpts.EnhanceRootCommand(rootCommand); err != nil {
-		return rootCommand, nil
+		return nil, err
 	}
 	subCommand, configMap, logger, err := factory.ParseCommand(rootCommand, args)
 	if err != nil {

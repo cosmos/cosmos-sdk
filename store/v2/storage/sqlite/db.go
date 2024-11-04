@@ -389,7 +389,7 @@ func getPruneHeight(storage *sqlite3.Conn) (height uint64, err error) {
 	defer func(stmt *sqlite3.Stmt) {
 		cErr := stmt.Close()
 		if cErr != nil {
-			err = fmt.Errorf("failed to close SQL statement: %w", cErr)
+			err = errors.Join(err, fmt.Errorf("failed to close SQL statement: %w", cErr))
 		}
 	}(stmt)
 
@@ -409,4 +409,8 @@ func getPruneHeight(storage *sqlite3.Conn) (height uint64, err error) {
 	}
 	height = uint64(h)
 	return height, nil
+}
+
+func isHighBitSet(version uint64) bool {
+	return version&(1<<63) != 0
 }

@@ -23,6 +23,9 @@ type iterator struct {
 }
 
 func newIterator(db *Database, storeKey []byte, version uint64, start, end []byte, reverse bool) (*iterator, error) {
+	if isHighBitSet(version) {
+		return nil, fmt.Errorf("%d too large; uint64 with the highest bit set are not supported", version)
+	}
 	if version < db.earliestVersion {
 		return &iterator{
 			start: start,

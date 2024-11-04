@@ -5,6 +5,7 @@ import (
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/server"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	"cosmossdk.io/schema/decoding"
@@ -23,4 +24,15 @@ type AppI[T transaction.Tx] interface {
 	Store() store.RootStore
 	SchemaDecoderResolver() decoding.DecoderResolver
 	Close() error
+}
+
+type Store interface {
+	// StateLatest returns a readonly view over the latest
+	// committed state of the store. Alongside the version
+	// associated with it.
+	StateLatest() (uint64, corestore.ReaderMap, error)
+
+	// StateAt returns a readonly view over the provided
+	// state. Must error when the version does not exist.
+	StateAt(version uint64) (corestore.ReaderMap, error)
 }

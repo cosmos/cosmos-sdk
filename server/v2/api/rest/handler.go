@@ -6,18 +6,21 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/cosmos/gogoproto/jsonpb"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/server/v2/appmanager"
 )
 
 const (
-	ContentTypeJSON = "application/json"
-	MaxBodySize     = 1 << 20 // 1 MB
+	ContentTypeJSON   = "application/json"
+	MaxBodySize       = 1 << 20 // 1 MB
+	BlockHeightHeader = "x-cosmos-block-height"
 )
 
 func NewDefaultHandler[T transaction.Tx](stf appmanager.StateTransitionFunction[T], store Store, gasLimit uint64) http.Handler {
@@ -47,7 +50,28 @@ func (h *DefaultHandler[T]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query, err := h.stf.Query(r.Context(), 0, msg)
+	var reader store.ReaderMap
+	height := w.Header().Get(BlockHeightHeader)
+	if height == "" {
+		_, reader, err = h.store.StateLatest()
+		if err != nil {
+			http.Error(w, "Error getting latest state", http.StatusInternalServerError)
+			return
+		}
+	} else {
+		ih, err := strconv.ParseUint(height, 10, 64)
+		if err != nil {
+			http.Error(w, "Error parsing block height", http.StatusBadRequest)
+			return
+		}
+		reader, err = h.store.StateAt(ih)
+		if err != nil {
+			http.Error(w, "Error getting state at height", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	query, err := h.stf.Query(r.Context(), reader, h.gasLimit, msg)
 	if err != nil {
 		http.Error(w, "Error querying", http.StatusInternalServerError)
 		return

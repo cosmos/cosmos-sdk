@@ -2,7 +2,6 @@ package simapp
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"testing"
 	"time"
@@ -79,10 +78,6 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	require.NoError(t, err)
 
 	st := app.Store()
-	ci, err := st.LastCommitID()
-	require.NoError(t, err)
-
-	bz := sha256.Sum256([]byte{})
 
 	ctx := context.Background()
 
@@ -90,9 +85,6 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 		ctx,
 		&server.BlockRequest[transaction.Tx]{
 			Time:      time.Now(),
-			Hash:      bz[:],
-			ChainId:   "theChain",
-			AppHash:   ci.Hash,
 			IsGenesis: true,
 		},
 		genesisBytes,
@@ -111,12 +103,6 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 
 func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Context) {
 	t.Helper()
-
-	bz := sha256.Sum256([]byte{})
-
-	st := app.Store()
-	ci, err := st.LastCommitID()
-	require.NoError(t, err)
 
 	height, err := app.LoadLatestHeight()
 	require.NoError(t, err)

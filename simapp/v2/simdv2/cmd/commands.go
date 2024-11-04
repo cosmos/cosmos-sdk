@@ -92,7 +92,8 @@ func InitRootCmd[T transaction.Tx](
 	if err != nil {
 		return nil, err
 	}
-	restServer, err := rest.New[T](simApp.App.StateTransitionFunction(), logger, deps.GlobalConfig)
+
+	restServer, err := rest.New[T](simApp.App.StateTransitionFunction(), simApp.Store(), 0, logger, deps.GlobalConfig) // TODO: get gaslimit
 	if err != nil {
 		return nil, err
 	}

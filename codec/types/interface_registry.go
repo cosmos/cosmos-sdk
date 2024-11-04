@@ -206,8 +206,8 @@ func (registry *interfaceRegistry) RegisterCustomTypeURL(iface interface{}, type
 // This function PANICs if different concrete types are registered under the
 // same typeURL.
 func (registry *interfaceRegistry) registerImpl(iface interface{}, typeURL string, impl proto.Message) {
-	fmt.Println("registering impl", typeURL)
-	debug.PrintStack()
+	//fmt.Println("registering impl", typeURL)
+	//debug.PrintStack()
 	ityp := reflect.TypeOf(iface).Elem()
 	imap, found := registry.interfaceImpls[ityp]
 	if !found {

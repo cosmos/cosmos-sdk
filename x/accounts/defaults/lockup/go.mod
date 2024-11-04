@@ -3,7 +3,7 @@ module cosmossdk.io/x/accounts/defaults/lockup
 go 1.23.1
 
 require (
-	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab // main
+	cosmossdk.io/collections v0.4.1-0.20241031202146-5b7fc8ae90a7 // main
 	cosmossdk.io/core v1.0.0-alpha.5 // main
 	cosmossdk.io/x/accounts v0.0.0-20240226161501-23359a0b6d91
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91

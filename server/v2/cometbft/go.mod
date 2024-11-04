@@ -15,7 +15,7 @@ replace (
 
 require (
 	cosmossdk.io/api v0.8.0
-	cosmossdk.io/collections v0.4.1-0.20240802064046-23fac2f1b8ab
+	cosmossdk.io/collections v0.4.1-0.20241031202146-5b7fc8ae90a7
 	cosmossdk.io/core v1.0.0-alpha.5
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.4.1

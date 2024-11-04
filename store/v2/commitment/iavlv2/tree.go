@@ -1,6 +1,7 @@
 package iavlv2
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/iavl/v2"
@@ -69,8 +70,7 @@ func (t Tree) SetInitialVersion(version uint64) error {
 }
 
 func (t Tree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error) {
-	//TODO implement me
-	panic("implement me")
+	return t.tree.GetProof(int64(version), key)
 }
 
 func (t Tree) Get(version uint64, key []byte) ([]byte, error) {
@@ -81,13 +81,11 @@ func (t Tree) Get(version uint64, key []byte) ([]byte, error) {
 }
 
 func (t Tree) Export(version uint64) (commitment.Exporter, error) {
-	//TODO implement me
-	panic("implement me")
+	return nil, errors.New("snapshot import/export not yet supported")
 }
 
 func (t Tree) Import(version uint64) (commitment.Importer, error) {
-	//TODO implement me
-	panic("implement me")
+	return nil, errors.New("snapshot import/export not yet supported")
 }
 
 func (t Tree) Close() error {

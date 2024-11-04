@@ -69,7 +69,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace (
-	cosmossdk.io/core => ../../core
-	github.com/cosmos/iavl/v2 => ../../../../iavl/iavl-v2
-)
+replace cosmossdk.io/core => ../../core

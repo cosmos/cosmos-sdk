@@ -3,6 +3,7 @@ package types
 import (
 	fmt "fmt"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -16,7 +17,7 @@ func NewParams(denomCreationFee sdk.Coins, gasConsume uint64) Params {
 
 // DefaultParams is the default parameter configuration for the bank/v2 module
 func DefaultParams() Params {
-	return NewParams(sdk.NewCoins(), 1_000_000)
+	return NewParams(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))), 1_000_000)
 }
 
 // Validate all bank/v2 module parameters

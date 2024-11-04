@@ -52,9 +52,7 @@ func (h handlers) MsgUpdateParams(ctx context.Context, msg *types.MsgUpdateParam
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
-func (h handlers) MsgCreateDenom(goCtx context.Context, msg *types.MsgCreateDenom) (*types.MsgCreateDenomResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
+func (h handlers) MsgCreateDenom(ctx context.Context, msg *types.MsgCreateDenom) (*types.MsgCreateDenomResponse, error) {
 	denom, err := h.Keeper.CreateDenom(ctx, msg.Sender, msg.Subdenom)
 	if err != nil {
 		return nil, err

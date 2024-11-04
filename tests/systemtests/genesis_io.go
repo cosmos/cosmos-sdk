@@ -9,6 +9,7 @@ import (
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,6 +40,15 @@ func SetGovExpeditedVotingPeriod(t *testing.T, period time.Duration) GenesisMuta
 		state, err := sjson.SetRawBytes(genesis, "app_state.gov.params.expedited_voting_period", []byte(fmt.Sprintf("%q", period.String())))
 		require.NoError(t, err)
 		return state
+	}
+}
+
+func SetDenomCreationFee(t *testing.T, denom string, amount math.Int) GenesisMutator {
+	t.Helper()
+	return func(genesis []byte) []byte {
+		state, err := sjson.SetBytes(genesis, "app_state.bankv2.params.denom_creation_fee", sdk.NewCoins(sdk.NewCoin(denom, amount)))
+		require.NoError(t, err)
+		return []byte(state)
 	}
 }
 

@@ -9,5 +9,6 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	registrar.RegisterImplementations((*transaction.Msg)(nil),
 		&MsgUpdateParams{},
 		&MsgSend{},
+		&MsgCreateDenom{},
 	)
 }

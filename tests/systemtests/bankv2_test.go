@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 )
@@ -55,4 +56,47 @@ func TestBankV2SendTxCmd(t *testing.T) {
 	receiverRaw := cli.CustomQuery("q", "bankv2", "balance", receiverAddr, denom)
 	receiverBalance := gjson.Get(receiverRaw, "balance.amount").Int()
 	require.Equal(t, receiverBalance, transferAmount)
+}
+
+func TestCreateDenom(t *testing.T) {
+	// Currently only run with app v2
+	if !isV2() {
+		t.Skip()
+	}
+	// given a running chain
+
+	sut.ResetChain(t)
+	cli := NewCLIWrapper(t, sut, verbose)
+
+	// add new key
+	denom := "stake"
+	subDenom := "test"
+	feeAmount := math.NewInt(1000000)
+
+	sut.ModifyGenesisJSON(
+		t,
+		SetDenomCreationFee(t, "stake", feeAmount),
+	)
+
+	// get validator address
+	valAddr := gjson.Get(cli.Keys("keys", "list"), "1.address").String()
+	require.NotEmpty(t, valAddr)
+
+	sut.StartChain(t)
+
+	raw := cli.CustomQuery("q", "bankv2", "balance", valAddr, denom)
+	valBalanceBefore := gjson.Get(raw, "balance.amount").Int()
+	fmt.Println("valBalance", valBalanceBefore)
+
+	rsp := cli.Run("tx", "bankv2", "create-denom", subDenom, "--from", valAddr)
+	txResult, found := cli.AwaitTxCommitted(rsp)
+	fmt.Println("txResult", txResult)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
+
+	raw = cli.CustomQuery("q", "bankv2", "balance", valAddr, denom)
+	valBalanceAfter := gjson.Get(raw, "balance.amount").Int()
+	fmt.Println("valBalanceAfter", valBalanceAfter)
+
+	require.Equal(t, valBalanceBefore - valBalanceAfter, feeAmount.Int64())
 }

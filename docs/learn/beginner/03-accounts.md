@@ -95,6 +95,23 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.2/codec/address/bech32_co
 | Validator Operator | cosmosvaloper         |
 | Consensus Nodes    | cosmosvalcons         |
 
+
+### Module Accounts
+
+#### Address Generation
+
+Module account addresses are generated deterministically from the module name, as defined in [ADR-028](../../architecture/adr-028-public-key-addresses.md) 
+
+Definition of account permissions is done during the app initialization.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/3a03804c148d0da8d6df1ad839b08c50f6896fa1/simapp/app.go#L130-L141
+```
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/3a03804c148d0da8d6df1ad839b08c50f6896fa1/simapp/app.go#L328
+```
+
 ### Public Keys
 
 Public keys in Cosmos SDK are defined by `cryptotypes.PubKey` interface. Since public keys are saved in a store, the `cryptotypes.PubKey` extends the `proto.Message` interface:

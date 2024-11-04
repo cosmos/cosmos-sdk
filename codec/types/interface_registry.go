@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"reflect"
+	"runtime/debug"
 )
 
 // AnyUnpacker is an interface which allows safely unpacking types packed
@@ -300,6 +301,8 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 
 	typ, found := imap[any.TypeUrl]
 	if !found {
+		fmt.Println("error for concrete type url", any)
+		debug.PrintStack()
 		return fmt.Errorf("no concrete type registered for type URL %s against interface %T", any.TypeUrl, iface)
 	}
 

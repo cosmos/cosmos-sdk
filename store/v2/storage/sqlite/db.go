@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -51,7 +52,7 @@ var (
 type Database struct {
 	storage   *sqlite3.Conn
 	connStr   string
-	writeLock *sync.Mutex
+	writeLock sync.Mutex
 	// earliestVersion defines the earliest version set in the database, which is
 	// only updated when the database is pruned.
 	earliestVersion uint64
@@ -94,7 +95,7 @@ func New(dataDir string) (*Database, error) {
 	return &Database{
 		storage:         db,
 		connStr:         connStr,
-		writeLock:       new(sync.Mutex),
+		writeLock:       sync.Mutex{},
 		earliestVersion: pruneHeight,
 	}, nil
 }
@@ -106,12 +107,7 @@ func (db *Database) Close() error {
 }
 
 func (db *Database) NewBatch(version uint64) (store.Batch, error) {
-	conn, err := sqlite3.Open(db.connStr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open sqlite DB: %w", err)
-	}
-
-	return NewBatch(conn, db.writeLock, version)
+	return NewBatch(db.storage, &db.writeLock, version)
 }
 
 func (db *Database) GetLatestVersion() (version uint64, err error) {
@@ -127,7 +123,7 @@ func (db *Database) GetLatestVersion() (version uint64, err error) {
 	defer func(stmt *sqlite3.Stmt) {
 		cErr := stmt.Close()
 		if cErr != nil {
-			err = fmt.Errorf("failed to close GetLatestVersion statement: %w", cErr)
+			err = errors.Join(err, fmt.Errorf("failed to close GetLatestVersion statement: %w", cErr))
 		}
 	}(stmt)
 
@@ -233,17 +229,17 @@ func (db *Database) Get(storeKey []byte, targetVersion uint64, key []byte) ([]by
 //
 // We perform the prune by deleting all versions of a key, excluding reserved keys,
 // that are <= the given version, except for the latest version of the key.
-func (db *Database) Prune(version uint64) error {
+func (db *Database) Prune(version uint64) (err error) {
 	v := int64(version)
 	db.writeLock.Lock()
 	defer db.writeLock.Unlock()
-	err := db.storage.Begin()
+	err = db.storage.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to create SQL transaction: %w", err)
 	}
 	defer func() {
 		if err != nil {
-			err = db.storage.Rollback()
+			err = errors.Join(err, db.storage.Rollback())
 		}
 	}()
 
@@ -329,7 +325,7 @@ func (db *Database) PruneStoreKeys(storeKeys []string, version uint64) (err erro
 	}
 	defer func() {
 		if err != nil {
-			err = db.storage.Rollback()
+			err = errors.Join(err, db.storage.Rollback())
 		}
 	}()
 
@@ -358,9 +354,7 @@ func (db *Database) PrintRowsDebug() {
 		panic(fmt.Errorf("failed to execute SQL query: %w", err))
 	}
 
-	var (
-		sb strings.Builder
-	)
+	var sb strings.Builder
 	for {
 		hasRow, err := stmt.Step()
 		if err != nil {
@@ -395,7 +389,7 @@ func getPruneHeight(storage *sqlite3.Conn) (height uint64, err error) {
 	defer func(stmt *sqlite3.Stmt) {
 		cErr := stmt.Close()
 		if cErr != nil {
-			err = fmt.Errorf("failed to close SQL statement: %w", cErr)
+			err = errors.Join(err, fmt.Errorf("failed to close SQL statement: %w", cErr))
 		}
 	}(stmt)
 
@@ -415,4 +409,8 @@ func getPruneHeight(storage *sqlite3.Conn) (height uint64, err error) {
 	}
 	height = uint64(h)
 	return height, nil
+}
+
+func isHighBitSet(version uint64) bool {
+	return version&(1<<63) != 0
 }

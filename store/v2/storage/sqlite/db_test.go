@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"fmt"
+	"math"
 	"sync"
 	"testing"
 
@@ -88,8 +89,7 @@ func TestDatabase_ReverseIterator(t *testing.T) {
 }
 
 func TestParallelWrites(t *testing.T) {
-	// tmpDir := t.TempDir()
-	tmpDir := "/tmp/sqlite"
+	tmpDir := t.TempDir()
 	db, err := New(tmpDir)
 	require.NoError(t, err)
 	defer db.Close()
@@ -199,4 +199,12 @@ func TestParallelWriteAndPruning(t *testing.T) {
 	val, err = db.Get(storeKey1, version, []byte(fmt.Sprintf("key-%d-%03d", version-1, 0)))
 	require.NoError(t, err)
 	require.Equal(t, []byte(fmt.Sprintf("val-%d-%03d", version-1, 0)), val)
+}
+
+func TestUint64(t *testing.T) {
+	tmpDir := t.TempDir()
+	db, err := New(tmpDir)
+	require.NoError(t, err)
+	_, err = db.NewBatch(math.MaxUint64)
+	require.Error(t, err)
 }

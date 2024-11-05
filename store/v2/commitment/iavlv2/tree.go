@@ -1,6 +1,7 @@
 package iavlv2
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/iavl/v2"
@@ -16,8 +17,7 @@ var (
 )
 
 type Tree struct {
-	tree    *iavl.Tree
-	saveErr error
+	tree *iavl.Tree
 }
 
 func NewTree(treeOptions iavl.TreeOptions, dbOptions iavl.SqliteDbOptions, pool *iavl.NodePool) (*Tree, error) {
@@ -29,75 +29,99 @@ func NewTree(treeOptions iavl.TreeOptions, dbOptions iavl.SqliteDbOptions, pool 
 	return &Tree{tree: tree}, nil
 }
 
-func (t Tree) Set(key, value []byte) error {
+func (t *Tree) Set(key, value []byte) error {
 	_, err := t.tree.Set(key, value)
 	return err
 }
 
-func (t Tree) Remove(key []byte) error {
+func (t *Tree) Remove(key []byte) error {
 	_, _, err := t.tree.Remove(key)
 	return err
 }
 
-func (t Tree) GetLatestVersion() (uint64, error) {
+func (t *Tree) GetLatestVersion() (uint64, error) {
 	return uint64(t.tree.Version()), nil
 }
 
-func (t Tree) Hash() []byte {
+func (t *Tree) Hash() []byte {
 	return t.tree.Hash()
 }
 
-func (t Tree) Version() uint64 {
+func (t *Tree) Version() uint64 {
 	return uint64(t.tree.Version())
 }
 
-func (t Tree) LoadVersion(version uint64) error {
-	// TODO fix this in iavl v2
+func (t *Tree) LoadVersion(version uint64) error {
+	if err := isHighBitSet(version); err != nil {
+		return err
+	}
+
 	if version == 0 {
 		return nil
 	}
 	return t.tree.LoadVersion(int64(version))
 }
 
-func (t Tree) Commit() ([]byte, uint64, error) {
+func (t *Tree) Commit() ([]byte, uint64, error) {
 	h, v, err := t.tree.SaveVersion()
 	return h, uint64(v), err
 }
 
-func (t Tree) SetInitialVersion(version uint64) error {
+func (t *Tree) SetInitialVersion(version uint64) error {
+	if err := isHighBitSet(version); err != nil {
+		return err
+	}
 	t.tree.SetShouldCheckpoint()
 	return t.tree.SetInitialVersion(int64(version))
 }
 
-func (t Tree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error) {
-	//TODO implement me
-	panic("implement me")
+func (t *Tree) GetProof(version uint64, key []byte) (*ics23.CommitmentProof, error) {
+	if err := isHighBitSet(version); err != nil {
+		return nil, err
+	}
+	return t.tree.GetProof(int64(version), key)
 }
 
-func (t Tree) Get(version uint64, key []byte) ([]byte, error) {
+func (t *Tree) Get(version uint64, key []byte) ([]byte, error) {
+	if err := isHighBitSet(version); err != nil {
+		return nil, err
+	}
 	if int64(version) != t.tree.Version() {
 		return nil, fmt.Errorf("loading past version not yet supported")
 	}
 	return t.tree.Get(key)
 }
 
-func (t Tree) Export(version uint64) (commitment.Exporter, error) {
-	//TODO implement me
-	panic("implement me")
+func (t *Tree) Export(version uint64) (commitment.Exporter, error) {
+	return nil, errors.New("snapshot import/export not yet supported")
 }
 
-func (t Tree) Import(version uint64) (commitment.Importer, error) {
-	//TODO implement me
-	panic("implement me")
+func (t *Tree) Import(version uint64) (commitment.Importer, error) {
+	return nil, errors.New("snapshot import/export not yet supported")
 }
 
-func (t Tree) Close() error {
+func (t *Tree) Close() error {
 	return t.tree.Close()
 }
 
-func (t Tree) Prune(version uint64) error {
+func (t *Tree) Prune(version uint64) error {
+	if err := isHighBitSet(version); err != nil {
+		return err
+	}
+
 	return t.tree.DeleteVersionsTo(int64(version))
 }
 
 // PausePruning is unnecessary in IAVL v2 due to the advanced pruning mechanism
-func (t Tree) PausePruning(bool) {}
+func (t *Tree) PausePruning(bool) {}
+
+func (t *Tree) WorkingHash() []byte {
+	return t.tree.Hash()
+}
+
+func isHighBitSet(version uint64) error {
+	if version&(1<<63) != 0 {
+		return fmt.Errorf("%d too large; uint64 with the highest bit set are not supported", version)
+	}
+	return nil
+}

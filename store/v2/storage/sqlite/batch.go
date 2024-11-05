@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 
@@ -33,9 +34,8 @@ type Batch struct {
 }
 
 func NewBatch(db *sqlite3.Conn, writeLock *sync.Mutex, version uint64) (*Batch, error) {
-	err := db.Begin()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create SQL transaction: %w", err)
+	if isHighBitSet(version) {
+		return nil, fmt.Errorf("%d too large; uint64 with the highest bit set are not supported", version)
 	}
 
 	return &Batch{
@@ -75,25 +75,31 @@ func (b *Batch) Delete(storeKey, key []byte) error {
 	return nil
 }
 
-func (b *Batch) Write() error {
+func (b *Batch) Write() (err error) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
-	err := b.db.Exec(reservedUpsertStmt, reservedStoreKey, keyLatestHeight, b.version, 0, b.version)
+	err = b.db.Begin()
 	if err != nil {
+		return fmt.Errorf("failed to start SQL transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			err = errors.Join(err, b.db.Rollback())
+		}
+	}()
+	if err := b.db.Exec(reservedUpsertStmt, reservedStoreKey, keyLatestHeight, b.version, 0, b.version); err != nil {
 		return fmt.Errorf("failed to exec SQL statement: %w", err)
 	}
 
 	for _, op := range b.ops {
 		switch op.action {
 		case batchActionSet:
-			err := b.db.Exec(upsertStmt, op.storeKey, op.key, op.value, b.version, op.value)
-			if err != nil {
+			if err := b.db.Exec(upsertStmt, op.storeKey, op.key, op.value, b.version, op.value); err != nil {
 				return fmt.Errorf("failed to exec SQL statement: %w", err)
 			}
 
 		case batchActionDel:
-			err := b.db.Exec(delStmt, b.version, op.storeKey, op.key, b.version)
-			if err != nil {
+			if err := b.db.Exec(delStmt, b.version, op.storeKey, op.key, b.version); err != nil {
 				return fmt.Errorf("failed to exec SQL statement: %w", err)
 			}
 		}
@@ -103,5 +109,5 @@ func (b *Batch) Write() error {
 		return fmt.Errorf("failed to write SQL transaction: %w", err)
 	}
 
-	return b.db.Close()
+	return nil
 }

@@ -12,7 +12,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/iavl v1.3.0
-	github.com/cosmos/iavl/v2 v2.0.0-20241029195051-d3ac274b6b58
+	github.com/cosmos/iavl/v2 v2.0.0-20241104195329-835276bdf831
 	github.com/cosmos/ics23/go v0.11.0
 	github.com/google/btree v1.1.3
 	github.com/hashicorp/go-metrics v0.5.3
@@ -69,8 +69,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace (
-	cosmossdk.io/core => ../../core
-	github.com/cosmos/iavl => ../../../../iavl/iavl-master
-	github.com/cosmos/iavl/v2 => ../../../../iavl/iavl-v2
-)
+replace cosmossdk.io/core => ../../core

@@ -7,11 +7,13 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
@@ -34,8 +36,10 @@ type AppOptions struct {
 	// module or need to be improved.
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
 
-	// ClientCtx contains the necessary information needed to execute the commands.
-	ClientCtx client.Context
+	InterfaceRegistry     types.InterfaceRegistry
+	AddressCodec          address.Codec
+	ValidatorAddressCodec address.Codec
+	ConsensusAddressCodec address.Codec
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -57,13 +61,13 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
-			FileResolver:          appOptions.ClientCtx.InterfaceRegistry,
-			AddressCodec:          appOptions.ClientCtx.AddressCodec,
-			ValidatorAddressCodec: appOptions.ClientCtx.ValidatorAddressCodec,
-			ConsensusAddressCodec: appOptions.ClientCtx.ConsensusAddressCodec,
+			FileResolver:          appOptions.InterfaceRegistry,
+			AddressCodec:          appOptions.AddressCodec,
+			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
+			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
 		},
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
-			return client.GetClientQueryContext(cmd)
+			return client.GetClientQueryContext(cmd) // TODO: implement client/v2/grpcconn
 		},
 		AddQueryConnFlags: sdkflags.AddQueryFlagsToCmd,
 		AddTxConnFlags:    sdkflags.AddTxFlagsToCmd,

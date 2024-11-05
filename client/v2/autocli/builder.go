@@ -1,6 +1,7 @@
 package autocli
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
@@ -19,6 +20,8 @@ type Builder struct {
 	// AddQueryConnFlags and AddTxConnFlags are functions that add flags to query and transaction commands
 	AddQueryConnFlags func(*cobra.Command)
 	AddTxConnFlags    func(*cobra.Command)
+
+	JSONCodec codec.JSONCodec
 }
 
 // ValidateAndComplete the builder fields.

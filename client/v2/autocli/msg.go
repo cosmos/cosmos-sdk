@@ -194,7 +194,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 func (b *Builder) handleGovProposal(
 	cmd *cobra.Command,
 	input protoreflect.Message,
-	clientCtx client.Context,
+	clientCtx client.Context, // TODO: this could be just the address
 	addressCodec addresscodec.Codec,
 	fd protoreflect.FieldDescriptor,
 ) error {

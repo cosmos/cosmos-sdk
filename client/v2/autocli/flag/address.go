@@ -147,6 +147,7 @@ func (a *consensusAddressValue) Set(s string) error {
 	return nil
 }
 
+// TODO: this should be deleted. Keyring should be obtain from flags
 func getKeyringFromCtx(ctx *context.Context) keyring.Keyring {
 	dctx := *ctx
 	if dctx != nil {

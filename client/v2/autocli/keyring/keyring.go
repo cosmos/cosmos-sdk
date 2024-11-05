@@ -2,7 +2,6 @@ package keyring
 
 import (
 	"context"
-
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/crypto/types"
@@ -24,6 +23,10 @@ type KeyringImpl struct {
 func NewKeyringInContext(ctx context.Context, k Keyring) context.Context {
 	return context.WithValue(ctx, KeyringContextKey, NewKeyringImpl(k))
 }
+
+//func NewKeyringFromFlags(ctx context.Context, flagSet *pflag.FlagSet) (Keyring, error) {
+//	k := keyring.New(sdk.KeyringServiceName(), )
+//}
 
 func NewKeyringImpl(k Keyring) *KeyringImpl {
 	return &KeyringImpl{k: k}

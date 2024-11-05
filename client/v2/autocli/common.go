@@ -1,18 +1,13 @@
 package autocli
 
 import (
-	"fmt"
-	"strings"
-
-	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"sigs.k8s.io/yaml"
-
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/client/v2/autocli/print"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
-
-	"github.com/cosmos/cosmos-sdk/client"
+	"fmt"
+	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type cmdType int
@@ -228,27 +223,6 @@ func enhanceCustomCmd(builder *Builder, cmd *cobra.Command, cmdType cmdType, mod
 
 // outOrStdoutFormat formats the output based on the output flag and writes it to the command's output stream.
 func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
-	clientCtx := client.Context{}
-	if v := cmd.Context().Value(client.ClientContextKey); v != nil {
-		clientCtx = *(v.(*client.Context))
-	}
-	flagSet := cmd.Flags()
-	if clientCtx.OutputFormat == "" || flagSet.Changed(flags.FlagOutput) {
-		output, _ := flagSet.GetString(flags.FlagOutput)
-		clientCtx = clientCtx.WithOutputFormat(output)
-	}
-
-	var err error
-	outputType := clientCtx.OutputFormat
-	// if the output type is text, convert the json to yaml
-	// if output type is json or nil, default to json
-	if outputType == flags.OutputFormatText {
-		out, err = yaml.JSONToYAML(out)
-		if err != nil {
-			return err
-		}
-	}
-
-	cmd.Println(strings.TrimSpace(string(out)))
-	return nil
+	output, _ := cmd.Flags().GetString(flags.FlagOutput)
+	return print.NewPrinter(output, cmd.OutOrStdout()).PrintBytes(out)
 }

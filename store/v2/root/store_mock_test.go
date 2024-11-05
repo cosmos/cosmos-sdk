@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/mock"
-	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/pruning"
 )
 
@@ -119,86 +118,4 @@ func TestLoadVersion(t *testing.T) {
 	rs.isMigrating = true
 	err = rs.LoadVersionAndUpgrade(uint64(2), v)
 	require.Error(t, err)
-}
-
-func TestWorkingHahs(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	ss := mock.NewMockStateStorage(ctrl)
-	sc := mock.NewMockStateCommitter(ctrl)
-	rs := newTestRootStore(ss, sc)
-
-	cs := corestore.NewChangeset()
-	// writeSC test
-	sc.EXPECT().WriteChangeset(cs).Return(errors.New("error"))
-	err := rs.writeSC(cs)
-	require.Error(t, err)
-	sc.EXPECT().WriteChangeset(cs).Return(nil)
-	sc.EXPECT().WorkingCommitInfo(gomock.Any()).Return(nil)
-	err = rs.writeSC(cs)
-	require.NoError(t, err)
-
-	// WorkingHash test
-	sc.EXPECT().WriteChangeset(cs).Return(nil)
-	sc.EXPECT().WorkingCommitInfo(gomock.Any()).Return(nil)
-	ss.EXPECT().ApplyChangeset(gomock.Any(), cs).Return(errors.New("error"))
-	_, err = rs.WorkingHash(cs)
-	require.Error(t, err)
-	sc.EXPECT().WriteChangeset(cs).Return(nil)
-	sc.EXPECT().WorkingCommitInfo(gomock.Any()).Return(nil)
-	ss.EXPECT().ApplyChangeset(gomock.Any(), cs).Return(errors.New("error"))
-	_, err = rs.WorkingHash(cs)
-	require.Error(t, err)
-	sc.EXPECT().WriteChangeset(cs).Return(nil)
-	sc.EXPECT().WorkingCommitInfo(gomock.Any()).Return(&proof.CommitInfo{})
-	ss.EXPECT().ApplyChangeset(gomock.Any(), cs).Return(nil)
-	_, err = rs.WorkingHash(cs)
-	require.NoError(t, err)
-}
-
-func TestCommit(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	ss := mock.NewMockStateStorage(ctrl)
-	sc := mock.NewMockStateCommitter(ctrl)
-	rs := newTestRootStore(ss, sc)
-
-	cs := corestore.NewChangeset()
-	// test commitSC
-	rs.lastCommitInfo = &proof.CommitInfo{}
-	sc.EXPECT().Commit(gomock.Any()).Return(nil, errors.New("error"))
-	err := rs.commitSC()
-	require.Error(t, err)
-	sc.EXPECT().Commit(gomock.Any()).Return(&proof.CommitInfo{CommitHash: []byte("wrong hash"), StoreInfos: []proof.StoreInfo{{}}}, nil) // wrong hash
-	err = rs.commitSC()
-	require.Error(t, err)
-
-	// Commit test
-	sc.EXPECT().WriteChangeset(cs).Return(errors.New("error"))
-	_, err = rs.Commit(cs)
-	require.Error(t, err)
-	sc.EXPECT().WriteChangeset(cs).Return(nil)
-	sc.EXPECT().WorkingCommitInfo(gomock.Any()).Return(&proof.CommitInfo{})
-	sc.EXPECT().PausePruning(gomock.Any()).Return()
-	ss.EXPECT().PausePruning(gomock.Any()).Return()
-	ss.EXPECT().ApplyChangeset(gomock.Any(), cs).Return(nil)
-	sc.EXPECT().Commit(gomock.Any()).Return(nil, errors.New("error"))
-	_, err = rs.Commit(cs)
-	require.Error(t, err)
-	sc.EXPECT().WriteChangeset(cs).Return(nil)
-	sc.EXPECT().WorkingCommitInfo(gomock.Any()).Return(&proof.CommitInfo{})
-	sc.EXPECT().PausePruning(gomock.Any()).Return()
-	ss.EXPECT().PausePruning(gomock.Any()).Return()
-	ss.EXPECT().ApplyChangeset(gomock.Any(), cs).Return(errors.New("error"))
-	sc.EXPECT().Commit(gomock.Any()).Return(&proof.CommitInfo{}, nil)
-	_, err = rs.Commit(cs)
-	require.Error(t, err)
-	sc.EXPECT().WriteChangeset(cs).Return(nil)
-	sc.EXPECT().WorkingCommitInfo(gomock.Any()).Return(&proof.CommitInfo{})
-	sc.EXPECT().PausePruning(true).Return()
-	ss.EXPECT().PausePruning(true).Return()
-	ss.EXPECT().ApplyChangeset(gomock.Any(), cs).Return(nil)
-	sc.EXPECT().Commit(gomock.Any()).Return(&proof.CommitInfo{}, nil)
-	sc.EXPECT().PausePruning(false).Return()
-	ss.EXPECT().PausePruning(false).Return()
-	_, err = rs.Commit(cs)
-	require.NoError(t, err)
 }

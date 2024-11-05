@@ -570,7 +570,8 @@ func TestConsensus_Query(t *testing.T) {
 	c := setUpConsensus(t, 100_000, cometmock.MockMempool[mock.Tx]{})
 
 	// Write data to state storage
-	err := c.store.GetStateStorage().ApplyChangeset(1, &store.Changeset{
+	err := c.store.GetStateStorage().ApplyChangeset(&store.Changeset{
+		Version: 1,
 		Changes: []store.StateChanges{
 			{
 				Actor: actorName,
@@ -687,7 +688,9 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		nil,
 	)
 
-	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", am, func() error { return nil }, mempool, map[string]struct{}{}, nil, mockStore, Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
+	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", am, func() error { return nil },
+		mempool, map[string]struct{}{}, nil, mockStore,
+		Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
 }
 
 // Check target version same with store's latest version

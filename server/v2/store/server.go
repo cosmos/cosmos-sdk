@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -47,7 +48,10 @@ func (s *Server[T]) Start(context.Context) error {
 }
 
 func (s *Server[T]) Stop(context.Context) error {
-	return nil
+	return errors.Join(
+		s.backend.GetStateStorage().Close(),
+		s.backend.GetStateCommitment().Close(),
+	)
 }
 
 func (s *Server[T]) CLICommands() serverv2.CLIConfig {

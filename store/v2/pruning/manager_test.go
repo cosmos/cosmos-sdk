@@ -205,7 +205,8 @@ func (s *PruningManagerTestSuite) TestSignalCommit() {
 	s.Require().Equal(val, []byte(fmt.Sprintf("value-%d-%d", 1, 0)))
 
 	// signaling commit has finished, version 1 should be pruned
-	s.manager.ResumePruning(2)
+	err = s.manager.ResumePruning(2)
+	s.Require().NoError(err)
 
 	checkSCPrune = func() bool {
 		count := 0
@@ -238,8 +239,8 @@ func (s *PruningManagerTestSuite) TestSignalCommit() {
 		s.Require().NoError(err)
 
 		s.Require().NoError(s.ss.ApplyChangeset(cs))
-		s.manager.ResumePruning(version)
-
+		err = s.manager.ResumePruning(version)
+		s.Require().NoError(err)
 	}
 
 	// wait for the pruning to finish in the commitment store

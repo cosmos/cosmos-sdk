@@ -57,13 +57,12 @@ func (app *BaseApp) InitChain(req *abci.InitChainRequest) (*abci.InitChainRespon
 	if app.initialHeight == 0 { // If initial height is 0, set it to 1
 		app.initialHeight = 1
 	}
+	if err := app.cms.SetInitialVersion(app.initialHeight); err != nil {
+		return nil, err
+	}
 
-	// if req.InitialHeight is > 1, then we set the initial version on all stores
 	if req.InitialHeight > 1 {
 		initHeader.Height = req.InitialHeight
-		if err := app.cms.SetInitialVersion(req.InitialHeight); err != nil {
-			return nil, err
-		}
 	}
 
 	// initialize states with a correct header

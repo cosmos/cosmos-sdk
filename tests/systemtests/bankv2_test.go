@@ -75,7 +75,7 @@ func TestCreateDenom(t *testing.T) {
 
 	sut.ModifyGenesisJSON(
 		t,
-		SetDenomCreationFee(t, "stake", feeAmount),
+		SetDenomCreationFee(t, denom, feeAmount),
 	)
 
 	// get validator address
@@ -107,6 +107,57 @@ func TestCreateDenom(t *testing.T) {
 
 	raw = cli.CustomQuery("q", "bankv2", "denom-authority-metadata", denoms[0].String())
 	admin := gjson.Get(raw, "authority_metadata.admin").String()
-	require.Equal(t, len(denoms), 1)
+	require.Equal(t, admin, valAddr)
 	fmt.Println("authority", raw)
+}
+
+func TestMintTokenCmd(t *testing.T) {
+	// Currently only run with app v2
+	if !isV2() {
+		t.Skip()
+	}
+	// given a running chain
+
+	sut.ResetChain(t)
+	cli := NewCLIWrapper(t, sut, verbose)
+
+	// add new key
+	denom := "stake"
+	subDenom := "test"
+	feeAmount := math.NewInt(1000000)
+	mintAmount := 1000000
+
+	sut.ModifyGenesisJSON(
+		t,
+		SetDenomCreationFee(t, denom, feeAmount),
+	)
+
+	// get validator address
+	valAddr := gjson.Get(cli.Keys("keys", "list"), "1.address").String()
+	require.NotEmpty(t, valAddr)
+
+	// add new key
+	receiverAddr := cli.AddKey("account1")
+
+	sut.StartChain(t)
+
+
+	rsp := cli.Run("tx", "bankv2", "create-denom", subDenom, "--from", valAddr)
+	txResult, found := cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
+
+	raw := cli.CustomQuery("q", "bankv2", "denoms-from-creator", valAddr)
+	denoms := gjson.Get(raw, "denoms").Array()
+	require.Equal(t, len(denoms), 1)
+	fmt.Println("denoms", raw)
+
+	rsp = cli.Run("tx", "bankv2", "mint",valAddr, receiverAddr, fmt.Sprintf("%d%s", mintAmount, denoms[0]))
+	txResult, found = cli.AwaitTxCommitted(rsp)
+	fmt.Println("mint result", txResult)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
+
+	raw = cli.CustomQuery("q", "bankv2", "balance", receiverAddr, denoms[0].String())
+	fmt.Println("raw balance after mint", raw)
 }

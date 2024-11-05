@@ -54,6 +54,11 @@ func (t Quad[K1, K2, K3, K4]) K4() (x K4) {
 	return x
 }
 
+// Keys returns key1, key2, key3 and key4 as a slice.
+func (t Quad[K1, K2, K3, K4]) Keys() []interface{} {
+	return []interface{}{t.K1(), t.K2(), t.K3(), t.K4()}
+}
+
 // QuadPrefix creates a new Quad instance composed only of the first part of the key.
 func QuadPrefix[K1, K2, K3, K4 any](k1 K1) Quad[K1, K2, K3, K4] {
 	return Quad[K1, K2, K3, K4]{k1: &k1}

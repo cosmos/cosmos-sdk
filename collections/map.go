@@ -27,8 +27,8 @@ type Map[K, V any] struct {
 	isSecondaryIndex bool
 }
 
-// WithMapSecondaryIndex changes the behavior of the Map to be a secondary index.
-func WithMapSecondaryIndex(isSecondaryIndex bool) func(opt *mapOptions) {
+// withMapSecondaryIndex changes the behavior of the Map to be a secondary index.
+func withMapSecondaryIndex(isSecondaryIndex bool) func(opt *mapOptions) {
 	return func(opt *mapOptions) {
 		opt.isSecondaryIndex = isSecondaryIndex
 	}

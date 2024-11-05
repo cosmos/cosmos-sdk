@@ -54,7 +54,7 @@ func NewKeySet[K any](
 	if o.uncheckedValue {
 		vc = codec.NewAltValueCodec(vc, func(_ []byte) (NoValue, error) { return NoValue{}, nil })
 	}
-	return (KeySet[K])(NewMap(schema, prefix, name, keyCodec, vc, WithMapSecondaryIndex(o.isSecondaryIndex)))
+	return (KeySet[K])(NewMap(schema, prefix, name, keyCodec, vc, withMapSecondaryIndex(o.isSecondaryIndex)))
 }
 
 // Set adds the key to the KeySet. Errors on encoding problems.

@@ -45,6 +45,11 @@ func (t Triple[K1, K2, K3]) K3() (x K3) {
 	return x
 }
 
+// Keys returns key1, key2 and key3 as a slice.
+func (t Triple[K1, K2, K3]) Keys() []interface{} {
+	return []interface{}{t.K1(), t.K2(), t.K3()}
+}
+
 // TriplePrefix creates a new Triple instance composed only of the first part of the key.
 func TriplePrefix[K1, K2, K3 any](k1 K1) Triple[K1, K2, K3] {
 	return Triple[K1, K2, K3]{k1: &k1}

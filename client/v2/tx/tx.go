@@ -2,6 +2,7 @@ package tx
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -10,6 +11,8 @@ import (
 	"github.com/spf13/pflag"
 
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/client/v2/broadcast"
+	"cosmossdk.io/client/v2/broadcast/comet"
 	"cosmossdk.io/client/v2/internal/account"
 	"cosmossdk.io/core/transaction"
 
@@ -18,9 +21,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
-// GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
-// or sign it and broadcast it returning an error upon failure.
-func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) error {
+// GenerateOrBroadcastTxCLIWithBroadcaster will either generate and print an unsigned transaction
+// or sign it and broadcast it with the specified broadcaster returning an error upon failure.
+func GenerateOrBroadcastTxCLIWithBroadcaster(ctx client.Context, flagSet *pflag.FlagSet, broadcaster broadcast.Broadcaster, msgs ...transaction.Msg) error {
 	if err := validateMessages(msgs...); err != nil {
 		return err
 	}
@@ -40,7 +43,25 @@ func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs .
 		return dryRun(txf, msgs...)
 	}
 
-	return BroadcastTx(ctx, txf, msgs...)
+	return BroadcastTx(ctx, txf, broadcaster, msgs...)
+}
+
+// GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
+// or sign it and broadcast it using default CometBFT broadcaster, returning an error upon failure.
+func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) error {
+	cometBroadcaster, err := getCometBroadcaster(ctx, flagSet)
+	if err != nil {
+		return err
+	}
+
+	return GenerateOrBroadcastTxCLIWithBroadcaster(ctx, flagSet, cometBroadcaster, msgs...)
+}
+
+// getCometBroadcaster returns a new CometBFT broadcaster based on the provided context and flag set.
+func getCometBroadcaster(ctx client.Context, flagSet *pflag.FlagSet) (broadcast.Broadcaster, error) {
+	url, _ := flagSet.GetString("node")
+	mode, _ := flagSet.GetString("broadcast-mode")
+	return comet.NewCometBFTBroadcaster(url, mode, ctx.Codec)
 }
 
 // newFactory creates a new transaction Factory based on the provided context and flag set.
@@ -129,7 +150,7 @@ func SimulateTx(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
-func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg) error {
+func BroadcastTx(clientCtx client.Context, txf Factory, broadcaster broadcast.Broadcaster, msgs ...transaction.Msg) error {
 	if txf.simulateAndExecute() {
 		err := txf.calculateGas(msgs...)
 		if err != nil {
@@ -183,13 +204,12 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...transaction.Msg)
 		return err
 	}
 
-	// broadcast to a CometBFT node
-	res, err := clientCtx.BroadcastTx(txBytes)
+	res, err := broadcaster.Broadcast(context.Background(), txBytes)
 	if err != nil {
 		return err
 	}
 
-	return clientCtx.PrintProto(res)
+	return clientCtx.PrintString(string(res))
 }
 
 // countDirectSigners counts the number of DIRECT signers in a signature data.

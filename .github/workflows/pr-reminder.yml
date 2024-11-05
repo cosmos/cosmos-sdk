@@ -38,7 +38,7 @@ jobs:
 
       - name: Send Slack Reminder
         if: steps.pr-list.outputs.result != ''
-        uses: rtCamp/action-slack-notify@v2.3.1
+        uses: rtCamp/action-slack-notify@v2.3.2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: pr-github

@@ -467,33 +467,41 @@ func (d LegacyDec) ApproxRoot(root uint64) (guess LegacyDec, err error) {
 		}
 	}()
 
+	if root == 0 {
+		// Return 1 as root 0 of any number is considered 1.
+		return LegacyOneDec(), nil
+	}
+
 	if d.IsNegative() {
 		absRoot, err := d.Neg().ApproxRoot(root)
 		return absRoot.NegMut(), err
 	}
 
-	// One decimal, that we invalidate later. Helps us save a heap allocation.
+	// Direct return for base cases: d^1 = d or when d is 0 or 1.
 	scratchOneDec := LegacyOneDec()
 	if root == 1 || d.IsZero() || d.Equal(scratchOneDec) {
 		return d, nil
 	}
 
-	if root == 0 {
-		return scratchOneDec, nil
-	}
-
 	guess, delta := scratchOneDec, LegacyOneDec()
 
-	for iter := 0; iter < maxApproxRootIterations && delta.Abs().GT(smallestDec); iter++ {
+	for iter := 0; iter < maxApproxRootIterations; iter++ {
 		prev := guess.Power(root - 1)
 		if prev.IsZero() {
 			prev = smallestDec
 		}
+
+		// Compute delta = (d/prev - guess) / root
 		delta.Set(d).QuoMut(prev)
 		delta.SubMut(guess)
 		delta.QuoInt64Mut(int64(root))
 
 		guess.AddMut(delta)
+
+		// Stop when delta is small enough
+		if delta.Abs().LTE(smallestDec) {
+			break
+		}
 	}
 
 	return guess, nil

@@ -40,7 +40,7 @@ import (
 	_ "cosmossdk.io/x/bank/v2" // import for side-effects
 	bankv2types "cosmossdk.io/x/bank/v2/types"
 	bankmodulev2 "cosmossdk.io/x/bank/v2/types/module"
-	"cosmossdk.io/x/benchmark"
+	benchmark "cosmossdk.io/x/benchmark/module"
 	_ "cosmossdk.io/x/circuit" // import for side-effects
 	circuittypes "cosmossdk.io/x/circuit/types"
 	_ "cosmossdk.io/x/consensus" // import for side-effects

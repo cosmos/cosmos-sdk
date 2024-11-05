@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             (unknown)
-// source: testpb/msg.proto
+// source: cosmos/benchmark/v1/tx.proto
 
-package testpb
+package benchmarkv1
 
 import (
 	context "context"
@@ -19,17 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Msg_Send_FullMethodName     = "/testpb.Msg/Send"
-	Msg_Clawback_FullMethodName = "/testpb.Msg/Clawback"
+	Msg_LoadTest_FullMethodName = "/cosmos.benchmark.v1.Msg/LoadTest"
 )
 
 // MsgClient is the client API for Msg service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// Msg defines the benchmark Msg service.
 type MsgClient interface {
-	// Send a request and returns the request as a response.
-	Send(ctx context.Context, in *MsgRequest, opts ...grpc.CallOption) (*MsgResponse, error)
-	Clawback(ctx context.Context, in *MsgClawbackRequest, opts ...grpc.CallOption) (*MsgClawbackResponse, error)
+	// LoadTest defines a method for executing a sequence of load test operations.
+	LoadTest(ctx context.Context, in *MsgLoadTest, opts ...grpc.CallOption) (*MsgLoadTestResponse, error)
 }
 
 type msgClient struct {
@@ -40,20 +40,10 @@ func NewMsgClient(cc grpc.ClientConnInterface) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) Send(ctx context.Context, in *MsgRequest, opts ...grpc.CallOption) (*MsgResponse, error) {
+func (c *msgClient) LoadTest(ctx context.Context, in *MsgLoadTest, opts ...grpc.CallOption) (*MsgLoadTestResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgResponse)
-	err := c.cc.Invoke(ctx, Msg_Send_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) Clawback(ctx context.Context, in *MsgClawbackRequest, opts ...grpc.CallOption) (*MsgClawbackResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgClawbackResponse)
-	err := c.cc.Invoke(ctx, Msg_Clawback_FullMethodName, in, out, cOpts...)
+	out := new(MsgLoadTestResponse)
+	err := c.cc.Invoke(ctx, Msg_LoadTest_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -63,10 +53,11 @@ func (c *msgClient) Clawback(ctx context.Context, in *MsgClawbackRequest, opts .
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
+//
+// Msg defines the benchmark Msg service.
 type MsgServer interface {
-	// Send a request and returns the request as a response.
-	Send(context.Context, *MsgRequest) (*MsgResponse, error)
-	Clawback(context.Context, *MsgClawbackRequest) (*MsgClawbackResponse, error)
+	// LoadTest defines a method for executing a sequence of load test operations.
+	LoadTest(context.Context, *MsgLoadTest) (*MsgLoadTestResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -77,11 +68,8 @@ type MsgServer interface {
 // pointer dereference when methods are called.
 type UnimplementedMsgServer struct{}
 
-func (UnimplementedMsgServer) Send(context.Context, *MsgRequest) (*MsgResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Send not implemented")
-}
-func (UnimplementedMsgServer) Clawback(context.Context, *MsgClawbackRequest) (*MsgClawbackResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Clawback not implemented")
+func (UnimplementedMsgServer) LoadTest(context.Context, *MsgLoadTest) (*MsgLoadTestResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LoadTest not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -104,38 +92,20 @@ func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {
 	s.RegisterService(&Msg_ServiceDesc, srv)
 }
 
-func _Msg_Send_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgRequest)
+func _Msg_LoadTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgLoadTest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).Send(ctx, in)
+		return srv.(MsgServer).LoadTest(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Msg_Send_FullMethodName,
+		FullMethod: Msg_LoadTest_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Send(ctx, req.(*MsgRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_Clawback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgClawbackRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).Clawback(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Msg_Clawback_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Clawback(ctx, req.(*MsgClawbackRequest))
+		return srv.(MsgServer).LoadTest(ctx, req.(*MsgLoadTest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -144,18 +114,14 @@ func _Msg_Clawback_Handler(srv interface{}, ctx context.Context, dec func(interf
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Msg_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "testpb.Msg",
+	ServiceName: "cosmos.benchmark.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Send",
-			Handler:    _Msg_Send_Handler,
-		},
-		{
-			MethodName: "Clawback",
-			Handler:    _Msg_Clawback_Handler,
+			MethodName: "LoadTest",
+			Handler:    _Msg_LoadTest_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "testpb/msg.proto",
+	Metadata: "cosmos/benchmark/v1/tx.proto",
 }

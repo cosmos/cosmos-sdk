@@ -22,9 +22,7 @@ func init() {
 }
 
 func ProvideModule(collector *KVServiceCollector) appmodule.AppModule {
-	return AppModule{
-		collector: collector,
-	}
+	return NewAppModule(collector)
 }
 
 type KVServiceCollector struct {

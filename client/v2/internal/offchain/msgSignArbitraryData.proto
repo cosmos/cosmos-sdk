@@ -6,6 +6,8 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 
+option go_package = "cosmossdk.io/client/v2/offchain";
+
 // MsgSignArbitraryData defines an arbitrary, general-purpose, off-chain message
 message MsgSignArbitraryData {
   option (amino.name)           = "offchain/MsgSignArbitraryData";

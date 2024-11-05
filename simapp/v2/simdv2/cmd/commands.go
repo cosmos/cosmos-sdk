@@ -83,7 +83,7 @@ func InitRootCmd[T transaction.Tx](
 
 	// build full app!
 	simApp := deps.SimApp
-	grpcServer, err := grpc.New[T](logger, simApp.InterfaceRegistry(), simApp.QueryHandlers(), simApp, deps.GlobalConfig)
+	grpcServer, err := grpc.New[T](logger, simApp.InterfaceRegistry(), simApp.QueryHandlers(), nil, simApp, deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}

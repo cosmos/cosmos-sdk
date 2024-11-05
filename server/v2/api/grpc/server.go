@@ -51,6 +51,7 @@ func New[T transaction.Tx](
 	queryable interface {
 		Query(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error)
 	},
+	extraGRPCHandlers []func(*grpc.Server),
 	cfg server.ConfigMap,
 	cfgOptions ...CfgOption,
 ) (*Server[T], error) {
@@ -71,11 +72,16 @@ func New[T transaction.Tx](
 		grpc.UnknownServiceHandler(makeUnknownServiceHandler(queryHandlers, queryable)),
 	)
 
-	// Reflection allows external clients to see what services and methods the gRPC server exposes.
+	// reflection allows external clients to see what services and methods the gRPC server exposes.
 	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(queryHandlers)), logger.With("sub-module", "grpc-reflection"))
 
-	// Register V2
+	// register V2 service
 	RegisterServiceServer(grpcSrv, &v2Service{queryHandlers, queryable})
+
+	// register extra handlers on the grpc server
+	for _, fn := range extraGRPCHandlers {
+		fn(grpcSrv)
+	}
 
 	srv.grpcSrv = grpcSrv
 	srv.config = serverCfg
@@ -227,9 +233,4 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 
 	s.logger.Info("stopping gRPC server...", "address", s.config.Address)
 	return api.DoUntilCtxExpired(ctx, s.grpcSrv.GracefulStop)
-}
-
-// GetGRPCServer returns the underlying gRPC server.
-func (s *Server[T]) GetGRPCServer() *grpc.Server {
-	return s.grpcSrv
 }

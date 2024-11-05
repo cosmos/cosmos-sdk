@@ -74,6 +74,9 @@ func New[T transaction.Tx](
 	// Reflection allows external clients to see what services and methods the gRPC server exposes.
 	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(queryHandlers)), logger.With("sub-module", "grpc-reflection"))
 
+	// Register V2
+	RegisterServiceServer(grpcSrv, &v2Service{queryHandlers, queryable})
+
 	srv.grpcSrv = grpcSrv
 	srv.config = serverCfg
 	srv.logger = logger.With(log.ModuleKey, srv.Name())

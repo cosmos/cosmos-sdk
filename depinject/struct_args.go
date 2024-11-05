@@ -8,7 +8,7 @@ import (
 // In can be embedded in another struct to inform the container that the
 // fields of the struct should be treated as dependency inputs.
 // This allows a struct to be used to specify dependencies rather than
-// positional parameters.
+// positional parameters.  Unexpected fields will be ignored.
 //
 // Fields of the struct may support the following tags:
 //

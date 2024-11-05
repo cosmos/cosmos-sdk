@@ -42,3 +42,12 @@ func getEncoder(encoder string) (encodingFunc, error) {
 		return nil, fmt.Errorf("unknown encoder: %s", encoder)
 	}
 }
+
+func encodeDigest(encodingFormat string, digest []byte) (string, error) {
+	encoder, err := getEncoder(encodingFormat)
+	if err != nil {
+		return "", err
+	}
+
+	return encoder(digest)
+}

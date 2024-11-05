@@ -2481,7 +2481,7 @@ Example Output:
       "description": {
         "moniker": "jabbey",
         "identity": "",
-        "website": "https://twitter.com/JoeAbbey",
+        "website": "https://x.com/JoeAbbey",
         "security_contact": "",
         "details": "just another dad in the cosmos"
       },
@@ -2538,7 +2538,7 @@ Example Output:
     "description": {
       "moniker": "jabbey",
       "identity": "",
-      "website": "https://twitter.com/JoeAbbey",
+      "website": "https://x.com/JoeAbbey",
       "security_contact": "",
       "details": "just another dad in the cosmos"
     },

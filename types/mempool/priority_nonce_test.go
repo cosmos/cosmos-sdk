@@ -540,10 +540,8 @@ func (s *MempoolTestSuite) TestRandomTxOrderManyTimes() {
 // validateOrder checks that the txs are ordered by priority and nonce
 // in O(n^2) time by checking each tx against all the other txs
 func validateOrder(mtxs []sdk.Tx) error {
-	iterations := 0
 	var itxs []txSpec
 	for i, mtx := range mtxs {
-		iterations++
 		tx := mtx.(testTx)
 		itxs = append(itxs, txSpec{p: int(tx.priority), n: int(tx.nonce), a: tx.address, i: i})
 	}
@@ -556,7 +554,6 @@ func validateOrder(mtxs []sdk.Tx) error {
 
 	for _, a := range itxs {
 		for _, b := range itxs {
-			iterations++
 			// when b is before a
 
 			// when a is before b
@@ -574,7 +571,6 @@ func validateOrder(mtxs []sdk.Tx) error {
 					// find a tx with same sender as b and lower nonce
 					found := false
 					for _, c := range itxs {
-						iterations++
 						if c.a.Equals(b.a) && c.n < b.n && c.p <= a.p {
 							found = true
 							break
@@ -588,7 +584,6 @@ func validateOrder(mtxs []sdk.Tx) error {
 			}
 		}
 	}
-	// fmt.Printf("validation in iterations: %d\n", iterations)
 	return nil
 }
 

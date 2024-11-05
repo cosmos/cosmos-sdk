@@ -89,6 +89,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (x/validate) [#21822](https://github.com/cosmos/cosmos-sdk/pull/21822) New module solely responsible for providing ante/post handlers and tx validators for v2. It can be extended by the app developer to provide extra tx validators.
     * In comparison to x/auth/tx/config, there is no app config to skip ante/post handlers, as overwriting them in baseapp or not injecting the x/validate module has the same effect.
 * (baseapp) [#21979](https://github.com/cosmos/cosmos-sdk/pull/21979) Create CheckTxHandler to allow extending the logic of CheckTx.
+* (baseapp) [[#13981](https://github.com/cosmos/cosmos-sdk/issues/13981)] Add per-message telemetry.
 
 ### Improvements
 
@@ -228,6 +229,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * (types/mempool) [#21744](https://github.com/cosmos/cosmos-sdk/pull/21744) Update types/mempool.Mempool interface to take decoded transactions. This avoid to decode the transaction twice.
 * (x/auth/tx/config)  [#21822](https://github.com/cosmos/cosmos-sdk/pull/21822) Sign mode textual is no more automatically added to tx config when using runtime. Should be added manually on the server side.
 * (x/auth/tx/config)  [#21822](https://github.com/cosmos/cosmos-sdk/pull/21822) This depinject module now only provide txconfig and tx config options. `x/validate` now handles the providing of ante/post handlers, alongside tx validators for v2. The corresponding app config options have been removed from the depinject module config.
+* (x/crisis) [#20809](https://github.com/cosmos/cosmos-sdk/pull/20809) Crisis module was removed from the Cosmos SDK.
 
 ### Client Breaking Changes
 

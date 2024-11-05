@@ -67,13 +67,6 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 	sendAmount := transferAmount + newAmount
 	fees := feeAmount * 2
 
-	// TODO: remove below block code once v2 supports multi messages
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/22215
-	if isV2() {
-		sendAmount = transferAmount
-		fees = feeAmount
-	}
-
 	testSignTxBroadcast(t, cli, signBatchCmd, "sign-batch tx", val1Addr, val2Addr, sendAmount, fees)
 }
 
@@ -304,13 +297,6 @@ func TestAuthMultisigTxCmds(t *testing.T) {
 	sendAmount := transferAmount * 2
 	fees := feeAmount * 2
 
-	// TODO: remove below block code once v2 supports multi messages
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/22215
-	if isV2() {
-		sendAmount = transferAmount
-		fees = feeAmount
-	}
-
 	testMultisigTxBroadcast(t, cli, multiSigTxInput{
 		"multisign-batch",
 		multiAddr,
@@ -505,4 +491,57 @@ func TestTxEncodeandDecode(t *testing.T) {
 	// check transaction decodes as expected
 	decodedTx := cli.RunCommandWithArgs("tx", "decode", encodedText)
 	require.Equal(t, gjson.Get(decodedTx, "body.memo").String(), memoText)
+}
+
+func TestTxWithFeePayer(t *testing.T) {
+	// Scenario:
+	// send a tx with FeePayer without his signature
+	// check tx fails
+	// send tx with feePayers signature
+	// check tx executed ok
+	// check fees had been deducted from feePayers balance
+
+	sut.ResetChain(t)
+	cli := NewCLIWrapper(t, sut, verbose).WithRunErrorsIgnored()
+
+	// add sender and feePayer accounts
+	senderAddr := cli.AddKey("sender")
+	sut.ModifyGenesisCLI(t,
+		[]string{"genesis", "add-genesis-account", senderAddr, "10000000stake"},
+	)
+	feePayerAddr := cli.AddKey("feePayer")
+	sut.ModifyGenesisCLI(t,
+		[]string{"genesis", "add-genesis-account", feePayerAddr, "10000000stake"},
+	)
+
+	sut.StartChain(t)
+
+	// send a tx with FeePayer without his signature
+	rsp := cli.RunCommandWithArgs(cli.withTXFlags(
+		"tx", "bank", "send", senderAddr, "cosmos108jsm625z3ejy63uef2ke7t67h6nukt4ty93nr", "1000stake", "--fees", "1000000stake", "--fee-payer", feePayerAddr,
+	)...)
+	RequireTxFailure(t, rsp, "invalid number of signatures")
+
+	// send tx with feePayers signature
+	rsp = cli.RunCommandWithArgs(cli.withTXFlags(
+		"tx", "bank", "send", senderAddr, "cosmos108jsm625z3ejy63uef2ke7t67h6nukt4ty93nr", "1000stake", "--fees", "1000000stake", "--fee-payer", feePayerAddr, "--generate-only",
+	)...)
+	tempFile := StoreTempFile(t, []byte(rsp))
+
+	rsp = cli.RunCommandWithArgs(cli.withTXFlags(
+		"tx", "sign", tempFile.Name(), "--from", senderAddr, "--sign-mode", "amino-json",
+	)...)
+	tempFile = StoreTempFile(t, []byte(rsp))
+
+	rsp = cli.RunCommandWithArgs(cli.withTXFlags(
+		"tx", "sign", tempFile.Name(), "--from", feePayerAddr, "--sign-mode", "amino-json",
+	)...)
+	tempFile = StoreTempFile(t, []byte(rsp))
+
+	rsp = cli.RunAndWait([]string{"tx", "broadcast", tempFile.Name()}...)
+	RequireTxSuccess(t, rsp)
+
+	// Query to check fee has been deducted from feePayer
+	balance := cli.QueryBalance(feePayerAddr, authTestDenom)
+	assert.Equal(t, balance, int64(9000000))
 }

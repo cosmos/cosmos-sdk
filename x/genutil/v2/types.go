@@ -1,19 +1,10 @@
 package v2
 
 import (
-	"context"
 	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// AppExporter is a function that dumps all app state to
-// JSON-serializable structure and returns the current validator set.
-type AppExporter func(
-	ctx context.Context,
-	height int64,
-	jailAllowedAddrs []string,
-) (ExportedApp, error)
 
 // ExportedApp represents an exported app state, along with
 // validators, consensus params and latest app height.

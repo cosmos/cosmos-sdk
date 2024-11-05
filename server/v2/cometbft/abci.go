@@ -42,7 +42,7 @@ var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 type Consensus[T transaction.Tx] struct {
 	logger           log.Logger
 	appName, version string
-	app              *appmanager.AppManager[T]
+	app              appmanager.AppManager[T]
 	appCloser        func() error
 	txCodec          transaction.Codec[T]
 	store            types.Store
@@ -77,7 +77,7 @@ type Consensus[T transaction.Tx] struct {
 func NewConsensus[T transaction.Tx](
 	logger log.Logger,
 	appName string,
-	app *appmanager.AppManager[T],
+	app appmanager.AppManager[T],
 	appCloser func() error,
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
@@ -242,7 +242,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 }
 
 func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryRequest) (resp *abciproto.QueryResponse, isGRPC bool, err error) {
-	// if this fails  then we cannot serve queries anymore
+	// if this fails then we cannot serve queries anymore
 	registry, err := c.getProtoRegistry()
 	if err != nil {
 		return nil, false, err
@@ -259,12 +259,15 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 		return nil, false, err
 	}
 
+	var handlerFullName string
 	md, isGRPC := desc.(protoreflect.MethodDescriptor)
 	if !isGRPC {
-		return nil, false, nil
+		handlerFullName = string(desc.FullName())
+	} else {
+		handlerFullName = string(md.Input().FullName())
 	}
 
-	handler, found := c.queryHandlersMap[string(md.Input().FullName())]
+	handler, found := c.queryHandlersMap[handlerFullName]
 	if !found {
 		return nil, true, fmt.Errorf("no query handler found for %s", req.Path)
 	}
@@ -282,7 +285,7 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 	}
 
 	resp, err = queryResponse(res, req.Height)
-	return resp, isGRPC, err
+	return resp, true, err
 }
 
 // InitChain implements types.Application.

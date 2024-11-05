@@ -131,6 +131,15 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	return binary.LittleEndian.Uint64(bz), nil
 }
 
+func (db *Database) VersionExists(version uint64) (bool, error) {
+	latestVersion, err := db.GetLatestVersion()
+	if err != nil {
+		return false, err
+	}
+
+	return latestVersion >= version && version >= db.tsLow, nil
+}
+
 func (db *Database) Has(storeKey []byte, version uint64, key []byte) (bool, error) {
 	slice, err := db.getSlice(storeKey, version, key)
 	if err != nil {

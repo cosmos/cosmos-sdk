@@ -139,7 +139,7 @@ func TestQuery(t *testing.T) {
 				tt.setupMock(mockApp)
 			}
 
-			service := &V2Service[transaction.Tx]{app: mockApp}
+			service := &v2Service{mockApp.QueryHandlers(), mockApp}
 			resp, err := service.Query(context.Background(), tt.request)
 
 			if tt.expectError {
@@ -195,7 +195,7 @@ func TestV2Service_ListQueryHandlers(t *testing.T) {
 				tt.setupMock(mockApp)
 			}
 
-			service := &V2Service[transaction.Tx]{app: mockApp}
+			service := &v2Service{mockApp.QueryHandlers(), mockApp}
 			resp, err := service.ListQueryHandlers(context.Background(), &ListQueryHandlersRequest{})
 
 			assert.NoError(t, err)

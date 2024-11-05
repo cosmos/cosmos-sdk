@@ -5,6 +5,7 @@ package systemtests
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
@@ -86,7 +87,6 @@ func TestCreateDenom(t *testing.T) {
 
 	raw := cli.CustomQuery("q", "bankv2", "balance", valAddr, denom)
 	valBalanceBefore := gjson.Get(raw, "balance.amount").Int()
-	fmt.Println("valBalance", valBalanceBefore)
 
 	rsp := cli.Run("tx", "bankv2", "create-denom", subDenom, "--from", valAddr)
 	txResult, found := cli.AwaitTxCommitted(rsp)
@@ -96,19 +96,16 @@ func TestCreateDenom(t *testing.T) {
 
 	raw = cli.CustomQuery("q", "bankv2", "balance", valAddr, denom)
 	valBalanceAfter := gjson.Get(raw, "balance.amount").Int()
-	fmt.Println("valBalanceAfter", valBalanceAfter)
 
-	require.Equal(t, valBalanceBefore - valBalanceAfter, feeAmount.Int64())
+	require.Equal(t, valBalanceBefore-valBalanceAfter, feeAmount.Int64())
 
 	raw = cli.CustomQuery("q", "bankv2", "denoms-from-creator", valAddr)
-	denoms := gjson.Get(raw, "denoms").Array()
-	require.Equal(t, len(denoms), 1)
-	fmt.Println("denoms", raw)
+	newDenoms := gjson.Get(raw, "denoms").Array()
+	require.Equal(t, len(newDenoms), 1)
 
-	raw = cli.CustomQuery("q", "bankv2", "denom-authority-metadata", denoms[0].String())
+	raw = cli.CustomQuery("q", "bankv2", "denom-authority-metadata", newDenoms[0].String())
 	admin := gjson.Get(raw, "authority_metadata.admin").String()
 	require.Equal(t, admin, valAddr)
-	fmt.Println("authority", raw)
 }
 
 func TestMintTokenCmd(t *testing.T) {
@@ -141,6 +138,61 @@ func TestMintTokenCmd(t *testing.T) {
 
 	sut.StartChain(t)
 
+	rsp := cli.Run("tx", "bankv2", "create-denom", subDenom, "--from", valAddr)
+	txResult, found := cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
+
+	raw := cli.CustomQuery("q", "bankv2", "denoms-from-creator", valAddr)
+	newDenoms := gjson.Get(raw, "denoms").Array()
+	require.Equal(t, len(newDenoms), 1)
+
+	rsp = cli.Run("tx", "bankv2", "mint", valAddr, receiverAddr, fmt.Sprintf("%d%s", mintAmount, newDenoms[0]))
+	txResult, found = cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
+
+	raw = cli.CustomQuery("q", "bankv2", "balance", receiverAddr, newDenoms[0].String())
+	balance := gjson.Get(raw, "balance.amount").Int()
+	require.Equal(t, balance, int64(mintAmount))
+}
+
+func TestMintTokenProposal(t *testing.T) {
+	// Currently only run with app v2
+	if !isV2() {
+		t.Skip()
+	}
+	// given a running chain
+
+	sut.ResetChain(t)
+	cli := NewCLIWrapper(t, sut, verbose)
+
+	// add new key
+	denom := "stake"
+	subDenom := "test"
+	mintAmount := 1000000
+
+	sut.ModifyGenesisJSON(
+		t,
+		SetGovVotingPeriod(t, time.Second*8),
+		SetGovExpeditedVotingPeriod(t, time.Second*7),
+	)
+
+	// get validator address
+	valAddr := cli.GetKeyAddr("node0")
+	require.NotEmpty(t, valAddr)
+
+	valAddr1 := cli.GetKeyAddr("node1")
+	require.NotEmpty(t, valAddr1)
+
+	// add new key
+	receiverAddr := cli.AddKey("account1")
+
+	sut.StartChain(t)
+
+	// get gov module address
+	resp := cli.CustomQuery("q", "auth", "module-account", "gov")
+	govAddr := gjson.Get(resp, "account.value.address").String()
 
 	rsp := cli.Run("tx", "bankv2", "create-denom", subDenom, "--from", valAddr)
 	txResult, found := cli.AwaitTxCommitted(rsp)
@@ -148,16 +200,81 @@ func TestMintTokenCmd(t *testing.T) {
 	RequireTxSuccess(t, txResult)
 
 	raw := cli.CustomQuery("q", "bankv2", "denoms-from-creator", valAddr)
-	denoms := gjson.Get(raw, "denoms").Array()
-	require.Equal(t, len(denoms), 1)
+	newDenoms := gjson.Get(raw, "denoms").Array()
+	require.Equal(t, len(newDenoms), 1)
 	fmt.Println("denoms", raw)
 
-	rsp = cli.Run("tx", "bankv2", "mint",valAddr, receiverAddr, fmt.Sprintf("%d%s", mintAmount, denoms[0]))
-	txResult, found = cli.AwaitTxCommitted(rsp)
-	fmt.Println("mint result", txResult)
-	require.True(t, found)
-	RequireTxSuccess(t, txResult)
 
-	raw = cli.CustomQuery("q", "bankv2", "balance", receiverAddr, denoms[0].String())
-	fmt.Println("raw balance after mint", raw)
+	invalidProposal := fmt.Sprintf(`
+	{
+ "messages": [
+  {
+   "@type": "/cosmos.bank.v2.MsgMint",
+   "authority": "%s",
+   "to_address": "%s",
+   "amount": {
+     "denom": "%s",
+     "amount": "%d"
+   }
+  }
+ ],
+ "metadata": "ipfs://CID",
+ "deposit": "100000000stake",
+ "title": "mint tokenfactory token",
+ "summary": "testing"
+}`, govAddr, receiverAddr, newDenoms[0], mintAmount)
+
+	invalidProposalFile := StoreTempFile(t, []byte(invalidProposal))
+	rsp = cli.RunAndWait("tx", "gov", "submit-proposal", invalidProposalFile.Name(), "--from", valAddr)
+	RequireTxSuccess(t, rsp)
+
+	// vote to proposal from two validators
+	rsp = cli.RunAndWait("tx", "gov", "vote", "1", "yes", "--from", valAddr)
+	RequireTxSuccess(t, rsp)
+	rsp = cli.RunAndWait("tx", "gov", "vote", "1", "yes", "--from", valAddr1)
+	RequireTxSuccess(t, rsp)
+
+	time.Sleep(8 * time.Second)
+
+	// Token should not be minted to receiver
+	raw = cli.CustomQuery("q", "bankv2", "balance", receiverAddr, newDenoms[0].String())
+	balance := gjson.Get(raw, "balance.amount").Int()
+	require.Equal(t, balance, int64(0))
+
+	validProposal := fmt.Sprintf(`
+	{
+ "messages": [
+  {
+   "@type": "/cosmos.bank.v2.MsgMint",
+   "authority": "%s",
+   "to_address": "%s",
+   "amount": {
+     "denom": "%s",
+     "amount": "%d"
+   }
+  }
+ ],
+ "metadata": "ipfs://CID",
+ "deposit": "100000000stake",
+ "title": "mint tokenfactory token",
+ "summary": "testing"
+}`, govAddr, receiverAddr, denom, mintAmount)
+
+	proposalFile := StoreTempFile(t, []byte(validProposal))
+
+	rsp = cli.RunAndWait("tx", "gov", "submit-proposal", proposalFile.Name(), "--from", valAddr)
+	RequireTxSuccess(t, rsp)
+
+	// vote to proposal from two validators
+	rsp = cli.RunAndWait("tx", "gov", "vote", "2", "yes", "--from", valAddr)
+	RequireTxSuccess(t, rsp)
+	rsp = cli.RunAndWait("tx", "gov", "vote", "2", "yes", "--from", valAddr1)
+	RequireTxSuccess(t, rsp)
+
+	time.Sleep(8 * time.Second)
+
+	// stake should be minted to receiver
+	raw = cli.CustomQuery("q", "bankv2", "balance", receiverAddr, denom)
+	balance = gjson.Get(raw, "balance.amount").Int()
+	require.Equal(t, balance, int64(mintAmount))
 }

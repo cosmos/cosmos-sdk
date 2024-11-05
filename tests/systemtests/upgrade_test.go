@@ -1,4 +1,4 @@
-//go:build system_test && linux
+//go:build system_test
 
 package systemtests
 
@@ -28,7 +28,7 @@ func TestChainUpgrade(t *testing.T) {
 	currentBranchBinary := sut.execBinary
 	currentInitializer := sut.testnetInitializer
 	sut.SetExecBinary(legacyBinary)
-	sut.SetTestnetInitializer(InitializerWithBinary(legacyBinary, sut))
+	sut.SetTestnetInitializer(NewModifyConfigYamlInitializer(legacyBinary, sut))
 	sut.SetupChain()
 	votingPeriod := 5 * time.Second // enough time to vote
 	sut.ModifyGenesisJSON(t, SetGovVotingPeriod(t, votingPeriod))

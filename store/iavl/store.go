@@ -51,7 +51,7 @@ func LoadStore(db corestore.KVStoreWithBatch, logger types.Logger, key types.Sto
 // provided DB. An error is returned if the version fails to load, or if called with a positive
 // version on an empty tree.
 func LoadStoreWithInitialVersion(db corestore.KVStoreWithBatch, logger types.Logger, key types.StoreKey, id types.CommitID, initialVersion uint64, cacheSize int, disableFastNode bool, metrics metrics.StoreMetrics) (types.CommitKVStore, error) {
-	// store/v1 and app/v1 flows never required an initial version of 0
+	// store/v1 and app/v1 flows never require an initial version of 0
 	if initialVersion == 0 {
 		initialVersion = 1
 	}

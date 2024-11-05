@@ -76,7 +76,21 @@ func ensureMsgAuthZ(msgs []sdk.Msg, groupPolicyAcc sdk.AccAddress, cdc codec.Cod
 
 		for _, acct := range signers {
 			if !bytes.Equal(groupPolicyAcc, acct) {
+<<<<<<< HEAD
 				return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; expected %s, got %s", groupPolicyAcc.String(), acct)
+=======
+				groupPolicyAddr, err := addressCodec.BytesToString(groupPolicyAcc)
+				if err != nil {
+					return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; error retrieving group policy address")
+				}
+
+				acctStr, _ := addressCodec.BytesToString(acct)
+				if acctStr == "" {
+					acctStr = "unmarshalable address"
+				}
+
+				return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; expected %s, got %s", groupPolicyAddr, acctStr)
+>>>>>>> 8c24b6bef (fix(x/group): proper address rendering in error (#22425))
 			}
 		}
 	}

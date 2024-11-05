@@ -3,6 +3,7 @@ package autocli
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/config"
+	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/autocli/print"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
@@ -60,7 +61,15 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 	cmd.Args = binder.CobraArgs
 
 	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-		return b.setFlagsFromConfig(cmd, args)
+		err := b.setFlagsFromConfig(cmd, args)
+		if err != nil {
+			return err
+		}
+
+		k, err := keyring.NewKeyringFromFlags(cmd.Context(), cmd.Flags(), b.AddressCodec, cmd.InOrStdin(), b.Cdc)
+		b.SetKeyring(k) // global flag keyring must be set on PreRunE.
+
+		return err
 	}
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {

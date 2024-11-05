@@ -2,8 +2,17 @@ package keyring
 
 import (
 	"context"
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"io"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
+	"github.com/spf13/pflag"
+
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/core/address"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -24,9 +33,27 @@ func NewKeyringInContext(ctx context.Context, k Keyring) context.Context {
 	return context.WithValue(ctx, KeyringContextKey, NewKeyringImpl(k))
 }
 
-//func NewKeyringFromFlags(ctx context.Context, flagSet *pflag.FlagSet) (Keyring, error) {
-//	k := keyring.New(sdk.KeyringServiceName(), )
-//}
+func NewKeyringFromFlags(ctx context.Context, flagSet *pflag.FlagSet, ac address.Codec, input io.Reader, cdc codec.Codec) (Keyring, error) {
+	backEnd, err := flagSet.GetString("keyring-backend")
+	if err != nil {
+		return nil, err
+	}
+
+	keyringDir, err := flagSet.GetString("keyring-dir")
+	if err != nil {
+		return nil, err
+	}
+	if keyringDir == "" {
+		keyringDir, _ = flagSet.GetString("home")
+	}
+
+	k, err := keyring.New(sdk.KeyringServiceName(), backEnd, keyringDir, input, cdc)
+	if err != nil {
+		return nil, err
+	}
+
+	return keyring.NewAutoCLIKeyring(k, ac)
+}
 
 func NewKeyringImpl(k Keyring) *KeyringImpl {
 	return &KeyringImpl{k: k}

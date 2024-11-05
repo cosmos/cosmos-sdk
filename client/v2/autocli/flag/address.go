@@ -6,14 +6,11 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -54,9 +51,11 @@ func (a addressValue) String() string {
 
 // Set implements the flag.Value interface for addressValue.
 func (a *addressValue) Set(s string) error {
-	// we get the keyring on set, as in NewValue the context is the parent context (before RunE)
-	keyring := getKeyringFromCtx(a.ctx)
-	addr, err := keyring.LookupAddressByKeyName(s)
+	if keybase == nil {
+		return fmt.Errorf("keybase is nil")
+	}
+
+	addr, err := keybase.LookupAddressByKeyName(s)
 	if err == nil {
 		addrStr, err := a.addressCodec.BytesToString(addr)
 		if err != nil {
@@ -109,9 +108,11 @@ func (a consensusAddressValue) String() string {
 }
 
 func (a *consensusAddressValue) Set(s string) error {
-	// we get the keyring on set, as in NewValue the context is the parent context (before RunE)
-	keyring := getKeyringFromCtx(a.ctx)
-	addr, err := keyring.LookupAddressByKeyName(s)
+	if keybase == nil {
+		return fmt.Errorf("keybase is nil")
+	}
+
+	addr, err := keybase.LookupAddressByKeyName(s)
 	if err == nil {
 		addrStr, err := a.addressCodec.BytesToString(addr)
 		if err != nil {
@@ -145,23 +146,4 @@ func (a *consensusAddressValue) Set(s string) error {
 	}
 
 	return nil
-}
-
-// TODO: this should be deleted. Keyring should be obtain from flags
-func getKeyringFromCtx(ctx *context.Context) keyring.Keyring {
-	dctx := *ctx
-	if dctx != nil {
-		if clientCtx := dctx.Value(client.ClientContextKey); clientCtx != nil {
-			k, err := sdkkeyring.NewAutoCLIKeyring(clientCtx.(*client.Context).Keyring, clientCtx.(*client.Context).AddressCodec)
-			if err != nil {
-				panic(fmt.Errorf("failed to create keyring: %w", err))
-			}
-
-			return k
-		} else if k := dctx.Value(keyring.KeyringContextKey); k != nil {
-			return k.(*keyring.KeyringImpl)
-		}
-	}
-
-	return keyring.NoKeyring{}
 }

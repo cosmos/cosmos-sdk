@@ -1,6 +1,7 @@
 package autocli
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -40,6 +41,8 @@ type AppOptions struct {
 	AddressCodec          address.Codec
 	ValidatorAddressCodec address.Codec
 	ConsensusAddressCodec address.Codec
+
+	Cdc codec.Codec
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -71,6 +74,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 		},
 		AddQueryConnFlags: sdkflags.AddQueryFlagsToCmd,
 		AddTxConnFlags:    sdkflags.AddTxFlagsToCmd,
+		Cdc:               appOptions.Cdc,
 	}
 
 	return appOptions.EnhanceRootCommandWithBuilder(rootCmd, builder)

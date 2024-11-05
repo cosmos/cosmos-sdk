@@ -861,7 +861,7 @@ func (s *stfRouterWrapper) RegisterHandler(handler appmodulev2.Handler) {
 	s.error = errors.Join(s.error, err)
 
 	// also make the decoder
-	if s.handlers != nil {
+	if s.handlers == nil {
 		s.handlers = map[string]appmodulev2.Handler{}
 	}
 	s.handlers[requestName] = handler

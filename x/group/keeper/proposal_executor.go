@@ -76,7 +76,7 @@ func ensureMsgAuthZ(msgs []sdk.Msg, groupPolicyAcc sdk.AccAddress, cdc codec.Cod
 
 		for _, acct := range signers {
 			if !bytes.Equal(groupPolicyAcc, acct) {
-				return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; expected %s, got %s", groupPolicyAcc.String(), acct)
+				return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "msg does not have group policy authorization; expected %s, got %s", groupPolicyAcc.String(), sdk.AccAddress(acct).String())
 			}
 		}
 	}

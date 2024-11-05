@@ -5,10 +5,11 @@
 * 2022-08-02: Initial Draft
 * 2023-03-02: Add precision for integration tests
 * 2023-03-23: Add precision for E2E tests
+* 2024-11-04: Update E2E mention by system tests
 
 ## Status
 
-PROPOSED Partially Implemented
+PROPOSED Implemented
 
 ## Abstract
 
@@ -141,9 +142,13 @@ Modules not returning simulation operations:
 
 ### E2E tests
 
+:::note
+End-to-end tests have been removed from v0.52+ and have been replaced fully by system tests.
+:::
+
 End to end tests exercise the entire system as we understand it in as close an approximation
 to a production environment as is practical. Presently these tests are located at
-[tests/e2e](https://github.com/cosmos/cosmos-sdk/tree/main/tests/e2e) and rely on [testutil/network](https://github.com/cosmos/cosmos-sdk/tree/main/testutil/network) to start up an in-process Tendermint node.
+[tests/e2e](https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/tests/e2e) and rely on [testutil/network](https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/testutil/network) to start up an in-process Tendermint node.
 
 An application should be built as minimally as possible to exercise the desired functionality.
 The SDK uses an application will only the required modules for the tests. The application developer is advised to use its own application for e2e tests.
@@ -168,7 +173,7 @@ We accept these test scopes and identify the following decisions points for each
 | Unit        | None                | Yes    |
 | Integration | integration helpers | Some   |
 | Simulation  | minimal app         | No     |
-| E2E         | minimal app         | No     |
+| System Test | full app            | No     |
 
 The decision above is valid for the SDK. An application developer should test their application with their full application instead of the minimal app.
 
@@ -205,16 +210,14 @@ Simulations shall use a minimal application (usually via app wiring). They are l
 
 ### E2E Tests
 
-Existing e2e tests shall be migrated to integration tests by removing the dependency on the
-test network and in-process Tendermint node to ensure we do not lose test coverage.
+:::note
+End-to-end tests have been removed from v0.52+ and have been replaced fully by system tests.
+:::
 
-The e2e rest runner shall transition from in process Tendermint to a runner powered by
-Docker via [dockertest](https://github.com/ory/dockertest).
+Existing E2E tests have been removed from the SDK and migrated to [system tests](https://github.com/cosmos/cosmos-sdk/issues/20800). System tests are running for v0.xx applications and v2 applications.
+They ensure that the application, CLI, and REST API are working as expected on both v0.xx and v2 applications.
 
-E2E tests exercising a full network upgrade shall be written.
-
-The CLI testing aspect of existing e2e tests shall be rewritten using the network mocking
-demonstrated in [PR#12706](https://github.com/cosmos/cosmos-sdk/pull/12706).
+Learn more about system tests [here](https://github.com/cosmos/cosmos-sdk/blob/main/tests/systemtests/README.md).
 
 ## Consequences
 
@@ -234,7 +237,7 @@ demonstrated in [PR#12706](https://github.com/cosmos/cosmos-sdk/pull/12706).
 
 ### Neutral
 
-* some discovery required for e2e transition to dockertest
+* ~~some discovery required for e2e transition to dockertest~~ (e2e tests have been migrated to system tests)
 
 ## Further Discussions
 

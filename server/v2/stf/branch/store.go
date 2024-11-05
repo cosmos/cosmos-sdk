@@ -10,24 +10,22 @@ var _ store.Writer = (*Store[store.Reader])(nil)
 
 // Store wraps an in-memory child around an underlying types.KVStore.
 type Store[T store.Reader] struct {
-	changeSet   changeSet   // ordered changeset.
-	memoryCache memoryCache // fast lookup map for changeset, unordered.
-	parent      T
+	changeSet changeSet // ordered changeset.
+	parent    T
 }
 
 // NewStore creates a new Store object
 func NewStore[T store.Reader](parent T) Store[T] {
 	return Store[T]{
-		changeSet:   newChangeSet(),
-		memoryCache: newMemoryCache(),
-		parent:      parent,
+		changeSet: newChangeSet(),
+		parent:    parent,
 	}
 }
 
 // Get implements types.KVStore.
 func (s Store[T]) Get(key []byte) (value []byte, err error) {
 	// if found in memory cache, immediately return.
-	value, found := s.memoryCache.get(key)
+	value, found := s.changeSet.get(key)
 	if found {
 		return
 	}
@@ -37,7 +35,6 @@ func (s Store[T]) Get(key []byte) (value []byte, err error) {
 	if err != nil {
 		return nil, err
 	}
-	s.memoryCache.set(key, value)
 	return value, nil
 }
 
@@ -46,10 +43,7 @@ func (s Store[T]) Set(key, value []byte) error {
 	if value == nil {
 		return errors.New("cannot set a nil value")
 	}
-
 	s.changeSet.set(key, value)
-	s.memoryCache.set(key, value)
-
 	return nil
 }
 
@@ -65,7 +59,6 @@ func (s Store[T]) Has(key []byte) (bool, error) {
 // Delete implements types.KVStore.
 func (s Store[T]) Delete(key []byte) error {
 	s.changeSet.delete(key)
-	s.memoryCache.delete(key)
 	return nil
 }
 

@@ -25,7 +25,7 @@
 /runtime/v2/ @julienrbrt @hieuvubk @cosmos/sdk-core-dev
 /schema/ @aaronc @testinginprod @cosmos/sdk-core-dev
 /server/ @cosmos/sdk-core-dev
-/server/v2/ @julienrbrt @hieuvubk @cosmos/sdk-core-dev
+/server/v2/ @julienrbrt @hieuvubk @kocubinski @cosmos/sdk-core-dev
 /server/v2/stf/ @testinginprod @kocubinski @cosmos/sdk-core-dev
 /server/v2/appmanager/ @testinginprod @facundomedica @cosmos/sdk-core-dev
 /server/v2/cometbft/ @facundomedica @sontrinh16 @cosmos/sdk-core-dev

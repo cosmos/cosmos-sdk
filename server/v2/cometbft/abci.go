@@ -264,12 +264,15 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 		return nil, false, err
 	}
 
+	var handlerFullName string
 	md, isGRPC := desc.(protoreflect.MethodDescriptor)
 	if !isGRPC {
-		return nil, false, nil
+		handlerFullName = string(desc.FullName())
+	} else {
+		handlerFullName = string(md.Input().FullName())
 	}
 
-	handler, found := c.queryHandlersMap[string(md.Input().FullName())]
+	handler, found := c.queryHandlersMap[handlerFullName]
 	if !found {
 		return nil, true, fmt.Errorf("no query handler found for %s", req.Path)
 	}
@@ -287,7 +290,7 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 	}
 
 	resp, err = queryResponse(res, req.Height)
-	return resp, isGRPC, err
+	return resp, true, err
 }
 
 // InitChain implements types.Application.

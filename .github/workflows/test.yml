@@ -604,6 +604,29 @@ jobs:
         with:
           projectBaseDir: collections/
 
+  test-collections-protocodec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+          cache: true
+          cache-dependency-path: collections/protocodec/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            collections/protocodec/**/*.go
+            collections/protocodec/go.mod
+            collections/protocodec/go.sum
+      - name: tests
+        if: env.GIT_DIFF
+        run: |
+          cd collections/protocodec
+          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+
   test-orm:
     runs-on: ubuntu-latest
     steps:

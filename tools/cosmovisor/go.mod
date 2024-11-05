@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/x/upgrade v0.1.4
 	github.com/cosmos/cosmos-sdk v0.50.10
-	github.com/fsnotify/fsnotify v1.7.0
+	github.com/fsnotify/fsnotify v1.8.0
 	github.com/otiai10/copy v1.14.0
 	github.com/pelletier/go-toml/v2 v2.2.3
 	github.com/spf13/cobra v1.8.1

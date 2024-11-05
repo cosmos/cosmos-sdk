@@ -2,6 +2,7 @@ package autocli
 
 import (
 	"context"
+	"cosmossdk.io/client/v2/tx"
 	"fmt"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -166,6 +167,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		msg := dynamicpb.NewMessage(input.Descriptor())
 		proto.Merge(msg, input.Interface())
 
+		return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 	}
 

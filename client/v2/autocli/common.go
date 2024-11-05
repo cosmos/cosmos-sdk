@@ -2,12 +2,14 @@ package autocli
 
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/client/v2/autocli/config"
 	"cosmossdk.io/client/v2/autocli/print"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
 	"fmt"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"strconv"
 )
 
 type cmdType int
@@ -56,6 +58,10 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		return nil, err
 	}
 	cmd.Args = binder.CobraArgs
+
+	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		return b.setFlagsFromConfig(cmd, args)
+	}
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx = cmd.Context()
@@ -225,4 +231,45 @@ func enhanceCustomCmd(builder *Builder, cmd *cobra.Command, cmdType cmdType, mod
 func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
 	output, _ := cmd.Flags().GetString(flags.FlagOutput)
 	return print.NewPrinter(output, cmd.OutOrStdout()).PrintBytes(out)
+}
+
+func (b *Builder) setFlagsFromConfig(cmd *cobra.Command, args []string) error {
+	conf, err := config.CreateClientConfigFromFlags(cmd.Flags())
+	if err != nil {
+		return err
+	}
+
+	if cmd.Flags().Lookup("chain-id") != nil && !cmd.Flags().Changed("chain-id") {
+		cmd.Flags().Set("chain-id", conf.ChainID)
+	}
+
+	if cmd.Flags().Lookup("keyring-backend") != nil && !cmd.Flags().Changed("keyring-backend") {
+		cmd.Flags().Set("keyring-backend", conf.KeyringBackend)
+	}
+
+	if cmd.Flags().Lookup("from") != nil && !cmd.Flags().Changed("from") {
+		cmd.Flags().Set("from", conf.KeyringDefaultKeyName)
+	}
+
+	if cmd.Flags().Lookup("output") != nil && !cmd.Flags().Changed("output") {
+		cmd.Flags().Set("output", conf.Output)
+	}
+
+	if cmd.Flags().Lookup("node") != nil && !cmd.Flags().Changed("node") {
+		cmd.Flags().Set("node", conf.Node)
+	}
+
+	if cmd.Flags().Lookup("broadcast-mode") != nil && !cmd.Flags().Changed("broadcast-mode") {
+		cmd.Flags().Set("broadcast-mode", conf.BroadcastMode)
+	}
+
+	if cmd.Flags().Lookup("grpc-addr") != nil && !cmd.Flags().Changed("grpc-addr") {
+		cmd.Flags().Set("grpc-addr", conf.GRPC.Address)
+	}
+
+	if cmd.Flags().Lookup("grpc-insecure") != nil && !cmd.Flags().Changed("grpc-insecure") {
+		cmd.Flags().Set("grpc-insecure", strconv.FormatBool(conf.GRPC.Insecure))
+	}
+
+	return nil
 }

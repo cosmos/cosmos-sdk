@@ -2,17 +2,14 @@ package config
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"cosmossdk.io/client/v2/autocli/config"
+
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 // DefaultConfig returns default config for the client.toml
@@ -27,25 +24,17 @@ func DefaultConfig() *Config {
 	}
 }
 
-// ClientConfig is an alias for Config for backward compatibility
-// Deprecated: use Config instead which avoid name stuttering
-type ClientConfig Config
+type (
+	// ClientConfig is an alias for Config for backward compatibility
+	// Deprecated: use Config instead which avoid name stuttering
+	ClientConfig config.Config
 
-type Config struct {
-	ChainID               string     `mapstructure:"chain-id" json:"chain-id"`
-	KeyringBackend        string     `mapstructure:"keyring-backend" json:"keyring-backend"`
-	KeyringDefaultKeyName string     `mapstructure:"keyring-default-keyname" json:"keyring-default-keyname"`
-	Output                string     `mapstructure:"output" json:"output"`
-	Node                  string     `mapstructure:"node" json:"node"`
-	BroadcastMode         string     `mapstructure:"broadcast-mode" json:"broadcast-mode"`
-	GRPC                  GRPCConfig `mapstructure:",squash"`
-}
+	Config = config.Config
 
-// GRPCConfig holds the gRPC client configuration.
-type GRPCConfig struct {
-	Address  string `mapstructure:"grpc-address"  json:"grpc-address"`
-	Insecure bool   `mapstructure:"grpc-insecure"  json:"grpc-insecure"`
-}
+	GRPCConfig = config.GRPCConfig
+)
+
+var DefaultClientConfigTemplate = config.DefaultClientConfigTemplate
 
 // ReadFromClientConfig reads values from client.toml file and updates them in client.Context
 // It uses CreateClientConfig internally with no custom template and custom config.
@@ -59,51 +48,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 // It takes a customClientTemplate and customConfig as input that can be used to overwrite the default config and enhance the client.toml file.
 // The custom template/config must be both provided or be "" and nil.
 func CreateClientConfig(ctx client.Context, customClientTemplate string, customConfig interface{}) (client.Context, error) {
-	configPath := filepath.Join(ctx.HomeDir, "config")
-	configFilePath := filepath.Join(configPath, "client.toml")
-
-	// when client.toml does not exist create and init with default values
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
-			return ctx, fmt.Errorf("couldn't make client config: %w", err)
-		}
-
-		if (customClientTemplate != "" && customConfig == nil) || (customClientTemplate == "" && customConfig != nil) {
-			return ctx, errors.New("customClientTemplate and customConfig should be both nil or not nil")
-		}
-
-		if customClientTemplate != "" {
-			if err := setConfigTemplate(customClientTemplate); err != nil {
-				return ctx, fmt.Errorf("couldn't set client config template: %w", err)
-			}
-
-			if ctx.ChainID != "" {
-				// chain-id will be written to the client.toml while initiating the chain.
-				ctx.Viper.Set(flags.FlagChainID, ctx.ChainID)
-			}
-
-			if err = ctx.Viper.Unmarshal(&customConfig); err != nil {
-				return ctx, fmt.Errorf("failed to parse custom client config: %w", err)
-			}
-
-			if err := writeConfigFile(configFilePath, customConfig); err != nil {
-				return ctx, fmt.Errorf("could not write client config to the file: %w", err)
-			}
-
-		} else {
-			conf := DefaultConfig()
-			if ctx.ChainID != "" {
-				// chain-id will be written to the client.toml while initiating the chain.
-				conf.ChainID = ctx.ChainID
-			}
-
-			if err := writeConfigFile(configFilePath, conf); err != nil {
-				return ctx, fmt.Errorf("could not write client config to the file: %w", err)
-			}
-		}
-	}
-
-	conf, err := getClientConfig(configPath, ctx.Viper)
+	conf, err := config.CreateClientConfig(ctx.HomeDir, ctx.ChainID, ctx.Viper, customClientTemplate, customConfig)
 	if err != nil {
 		return ctx, fmt.Errorf("couldn't get client config: %w", err)
 	}

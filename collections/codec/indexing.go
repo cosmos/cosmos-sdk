@@ -65,7 +65,7 @@ func ValueSchemaCodec[V any](cdc ValueCodec[V]) (SchemaCodec[V], error) {
 
 // FallbackSchemaCodec returns a fallback schema codec for T when one isn't explicitly
 // specified with HasSchemaCodec. It maps all simple types directly to schema kinds
-// and converts everything else to String.
+// and converts everything else to JSON String.
 func FallbackSchemaCodec[T any]() SchemaCodec[T] {
 	var t T
 	kind := schema.KindForGoValue(t)
@@ -81,7 +81,7 @@ func FallbackSchemaCodec[T any]() SchemaCodec[T] {
 			FromSchemaType: nil,
 		}
 	} else {
-		// we default to encoding everything to String
+		// we default to encoding everything to JSON String
 		return SchemaCodec[T]{
 			Fields: []schema.Field{{Kind: schema.StringKind}},
 			ToSchemaType: func(t T) (any, error) {

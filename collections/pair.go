@@ -33,11 +33,6 @@ func (p Pair[K1, K2]) K2() (k2 K2) {
 	return *p.key2
 }
 
-// Keys returns key1 and key2 as a slice.
-func (p Pair[K1, K2]) Keys() []interface{} {
-	return []interface{}{p.K1(), p.K2()}
-}
-
 // Join creates a new Pair instance composed of the two provided keys, in order.
 func Join[K1, K2 any](key1 K1, key2 K2) Pair[K1, K2] {
 	return Pair[K1, K2]{
@@ -252,6 +247,16 @@ func (p pairKeyCodec[K1, K2]) SchemaCodec() (codec.SchemaCodec[Pair[K1, K2]], er
 
 	return codec.SchemaCodec[Pair[K1, K2]]{
 		Fields: []schema.Field{field1, field2},
+		ToSchemaType: func(pair Pair[K1, K2]) (any, error) {
+			return []interface{}{pair.K1(), pair.K2()}, nil
+		},
+		FromSchemaType: func(a any) (Pair[K1, K2], error) {
+			aSlice, ok := a.([]interface{})
+			if !ok || len(aSlice) != 2 {
+				return Pair[K1, K2]{}, fmt.Errorf("expected slice of length 2, got %T", a)
+			}
+			return Join(aSlice[0].(K1), aSlice[1].(K2)), nil
+		},
 	}, nil
 }
 

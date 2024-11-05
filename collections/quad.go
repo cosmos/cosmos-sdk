@@ -54,11 +54,6 @@ func (t Quad[K1, K2, K3, K4]) K4() (x K4) {
 	return x
 }
 
-// Keys returns key1, key2, key3 and key4 as a slice.
-func (t Quad[K1, K2, K3, K4]) Keys() []interface{} {
-	return []interface{}{t.K1(), t.K2(), t.K3(), t.K4()}
-}
-
 // QuadPrefix creates a new Quad instance composed only of the first part of the key.
 func QuadPrefix[K1, K2, K3, K4 any](k1 K1) Quad[K1, K2, K3, K4] {
 	return Quad[K1, K2, K3, K4]{k1: &k1}
@@ -387,6 +382,16 @@ func (t quadKeyCodec[K1, K2, K3, K4]) SchemaCodec() (codec.SchemaCodec[Quad[K1, 
 
 	return codec.SchemaCodec[Quad[K1, K2, K3, K4]]{
 		Fields: []schema.Field{field1, field2, field3, field4},
+		ToSchemaType: func(q Quad[K1, K2, K3, K4]) (any, error) {
+			return []interface{}{q.K1(), q.K2(), q.K3(), q.K4()}, nil
+		},
+		FromSchemaType: func(a any) (Quad[K1, K2, K3, K4], error) {
+			aSlice, ok := a.([]interface{})
+			if !ok || len(aSlice) != 4 {
+				return Quad[K1, K2, K3, K4]{}, fmt.Errorf("expected slice of length 4, got %T", a)
+			}
+			return Join4(aSlice[0].(K1), aSlice[1].(K2), aSlice[2].(K3), aSlice[3].(K4)), nil
+		},
 	}, nil
 }
 

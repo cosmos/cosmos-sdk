@@ -33,6 +33,9 @@ require (
 
 require (
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
+	cosmossdk.io/runtime/v2 v2.0.0-20240911143651-72620a577660
+	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
+	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
@@ -52,6 +55,7 @@ require (
 	github.com/jhump/protoreflect v1.17.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/viper v1.19.0
+	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
 )
 
 require (
@@ -65,7 +69,9 @@ require (
 	cloud.google.com/go/storage v1.43.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
+	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
+	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -162,6 +168,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
@@ -196,7 +203,6 @@ require (
 	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/zondax/hid v0.9.2 // indirect
 	github.com/zondax/ledger-go v0.14.3 // indirect
-	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b // indirect
 	gitlab.com/yawning/tuplehash v0.0.0-20230713102510-df83abbf9a02 // indirect
 	go.etcd.io/bbolt v1.4.0-alpha.0.0.20240404170359-43604f3112c5 // indirect
 	go.opencensus.io v0.24.0 // indirect
@@ -237,7 +243,11 @@ replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/collections => ../collections
+	cosmossdk.io/runtime/v2 => ../runtime/v2
+	cosmossdk.io/server/v2/appmanager => ../server/v2/appmanager
+	cosmossdk.io/server/v2/stf => ../server/v2/stf
 	cosmossdk.io/store => ../store
+	cosmossdk.io/store/v2 => ../store/v2
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../x/accounts/defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup

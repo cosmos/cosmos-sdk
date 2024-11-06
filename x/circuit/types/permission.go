@@ -9,6 +9,8 @@ func (p *Permissions) Validation() error {
 		if len(p.LimitTypeUrls) == 0 {
 			return errors.New("LimitTypeUrls of LEVEL_SOME_MSGS should NOT be empty")
 		}
+
+		p.LimitTypeUrls = MsgTypeURLValidation(p.LimitTypeUrls)
 	case p.Level == Permissions_LEVEL_ALL_MSGS || p.Level == Permissions_LEVEL_SUPER_ADMIN:
 		// if permission is all msg or super addmin, LimitTypeUrls array clear
 		// all p.LimitTypeUrls since we not use this field
@@ -17,4 +19,13 @@ func (p *Permissions) Validation() error {
 	}
 
 	return nil
+}
+
+func MsgTypeURLValidation(urls []string) []string {
+	for idx, url := range urls {
+		if url[0] != '/' {
+			urls[idx] = "/" + url
+		}
+	}
+	return urls
 }

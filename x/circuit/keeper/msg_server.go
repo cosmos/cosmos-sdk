@@ -94,7 +94,8 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 		return nil, err
 	}
 
-	for _, msgTypeURL := range msg.MsgTypeUrls {
+	msgTypeUrls := types.MsgTypeURLValidation(msg.MsgTypeUrls)
+	for _, msgTypeURL := range msgTypeUrls {
 		// check if the message is in the list of allowed messages
 		isAllowed, err := srv.IsAllowed(ctx, msgTypeURL)
 		if err != nil {
@@ -153,7 +154,8 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgRese
 		return nil, err
 	}
 
-	for _, msgTypeURL := range msg.MsgTypeUrls {
+	msgTypeUrls := types.MsgTypeURLValidation(msg.MsgTypeUrls)
+	for _, msgTypeURL := range msgTypeUrls {
 		// check if the message is in the list of allowed messages
 		isAllowed, err := srv.IsAllowed(ctx, msgTypeURL)
 		if err != nil {

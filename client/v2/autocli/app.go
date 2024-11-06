@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-// Options are input options for an autocli enabled app. These options can be built via depinject based on an app config.
+// AppOptions are input options for an autocli enabled app. These options can be built via depinject based on an app config.
 // Ex:
 //
 //	var autoCliOpts autocli.AppOptions
@@ -26,7 +26,7 @@ import (
 //
 // If depinject isn't used, options can be provided manually or extracted from modules and the address codec can be provided by the auth keeper.
 // One method for extracting autocli options is via the github.com/cosmos/cosmos-sdk/runtime/services.ExtractAutoCLIOptions function.
-type Options struct {
+type AppOptions struct {
 	depinject.In
 
 	// Modules are the AppModule implementations for the modules in the app.
@@ -40,24 +40,8 @@ type Options struct {
 
 	// ClientCtx contains the necessary information needed to execute the commands.
 	ClientCtx client.Context
-}
-
-// AppOptions are the autocli options for an app.
-type AppOptions struct {
-	Modules       map[string]appmodule.AppModule
-	ModuleOptions map[string]*autocliv1.ModuleOptions
-	ClientCtx     client.Context
 
 	skipValidation bool
-}
-
-// ProvideAppOptions returns AppOptions with the provided Options.
-func ProvideAppOptions(options Options) AppOptions {
-	return AppOptions{
-		Modules:       options.Modules,
-		ModuleOptions: options.ModuleOptions,
-		ClientCtx:     options.ClientCtx,
-	}
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,

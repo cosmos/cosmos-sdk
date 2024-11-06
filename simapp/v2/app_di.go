@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 
-	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
@@ -59,8 +58,6 @@ func AppConfig() depinject.Config {
 			multisigdepinject.ProvideAccount,
 			basedepinject.ProvideAccount,
 			lockupdepinject.ProvideAllLockupAccounts,
-			// autocli
-			autocli.ProvideAppOptions,
 
 			// provide base account options
 			basedepinject.ProvideSecp256K1PubKey,

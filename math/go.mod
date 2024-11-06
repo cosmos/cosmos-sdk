@@ -1,6 +1,6 @@
 module cosmossdk.io/math
 
-go 1.23.1
+go 1.23
 
 require (
 	github.com/cockroachdb/apd/v3 v3.2.1

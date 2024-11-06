@@ -12,7 +12,6 @@ import (
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
-	serverv2 "cosmossdk.io/server/v2"
 )
 
 type MockRequestMessage struct {
@@ -42,8 +41,6 @@ func (m *MockResponseMessage) ValidateBasic() error {
 
 type mockApp[T transaction.Tx] struct {
 	mock.Mock
-
-	serverv2.AppI[T]
 }
 
 func (m *mockApp[T]) QueryHandlers() map[string]appmodulev2.Handler {

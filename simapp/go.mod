@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/collections v0.4.1-0.20241104084251-838f1557af0a
 	cosmossdk.io/core v1.0.0-alpha.5
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
-	cosmossdk.io/depinject v1.0.0
+	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.1.1

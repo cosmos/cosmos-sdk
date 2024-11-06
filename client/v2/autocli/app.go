@@ -87,8 +87,11 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)
 		},
-		AddQueryConnFlags: sdkflags.AddQueryFlagsToCmd,
-		AddTxConnFlags:    sdkflags.AddTxFlagsToCmd,
+		AddQueryConnFlags: func(c *cobra.Command) {
+			sdkflags.AddQueryFlagsToCmd(c)
+			sdkflags.AddKeyringFlags(c.Flags())
+		},
+		AddTxConnFlags: sdkflags.AddTxFlagsToCmd,
 	}
 
 	return appOptions.EnhanceRootCommandWithBuilder(rootCmd, builder)

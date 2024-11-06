@@ -397,13 +397,12 @@ func (d LegacyDec) QuoTruncate(d2 LegacyDec) LegacyDec {
 	return d.ImmutOp(LegacyDec.QuoTruncateMut, d2)
 }
 
-// QuoTruncateMut mutable quotient truncate
+// QuoTruncateMut divides the current LegacyDec value by the provided LegacyDec value, truncating the result.
 func (d LegacyDec) QuoTruncateMut(d2 LegacyDec) LegacyDec {
-	// multiply precision twice
-	d.i.Mul(d.i, squaredPrecisionReuse)
+	// multiply precision once before performing division
+	d.i.Mul(d.i, precisionReuse)
 	d.i.Quo(d.i, d2.i)
 
-	chopPrecisionAndTruncate(d.i)
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
@@ -418,10 +417,13 @@ func (d LegacyDec) QuoRoundUp(d2 LegacyDec) LegacyDec {
 // QuoRoundupMut mutable quotient, round up
 func (d LegacyDec) QuoRoundupMut(d2 LegacyDec) LegacyDec {
 	// multiply precision twice
-	d.i.Mul(d.i, squaredPrecisionReuse)
-	d.i.Quo(d.i, d2.i)
+	d.i.Mul(d.i, precisionReuse)
+	_, rem := d.i.QuoRem(d.i, d2.i, big.NewInt(0))
+	if rem.Sign() > 0 && d.IsNegative() == d2.IsNegative() ||
+		rem.Sign() < 0 && d.IsNegative() != d2.IsNegative() {
+		d.i.Add(d.i, oneInt)
+	}
 
-	chopPrecisionAndRoundUp(d.i)
 	if d.i.BitLen() > maxDecBitLen {
 		panic("Int overflow")
 	}
@@ -465,39 +467,47 @@ func (d LegacyDec) ApproxRoot(root uint64) (guess LegacyDec, err error) {
 		}
 	}()
 
+	if root == 0 {
+		// Return 1 as root 0 of any number is considered 1.
+		return LegacyOneDec(), nil
+	}
+
 	if d.IsNegative() {
 		absRoot, err := d.Neg().ApproxRoot(root)
 		return absRoot.NegMut(), err
 	}
 
-	// One decimal, that we invalidate later. Helps us save a heap allocation.
+	// Direct return for base cases: d^1 = d or when d is 0 or 1.
 	scratchOneDec := LegacyOneDec()
 	if root == 1 || d.IsZero() || d.Equal(scratchOneDec) {
 		return d, nil
 	}
 
-	if root == 0 {
-		return scratchOneDec, nil
-	}
-
 	guess, delta := scratchOneDec, LegacyOneDec()
 
-	for iter := 0; iter < maxApproxRootIterations && delta.Abs().GT(smallestDec); iter++ {
+	for iter := 0; iter < maxApproxRootIterations; iter++ {
 		prev := guess.Power(root - 1)
 		if prev.IsZero() {
 			prev = smallestDec
 		}
+
+		// Compute delta = (d/prev - guess) / root
 		delta.Set(d).QuoMut(prev)
 		delta.SubMut(guess)
 		delta.QuoInt64Mut(int64(root))
 
 		guess.AddMut(delta)
+
+		// Stop when delta is small enough
+		if delta.Abs().LTE(smallestDec) {
+			break
+		}
 	}
 
 	return guess, nil
 }
 
-// Power returns a the result of raising to a positive integer power
+// Power returns the result of raising to a positive integer power
 func (d LegacyDec) Power(power uint64) LegacyDec {
 	res := LegacyDec{new(big.Int).Set(d.i)}
 	return res.PowerMut(power)
@@ -894,7 +904,7 @@ func (d *LegacyDec) UnmarshalAmino(bz []byte) error { return d.Unmarshal(bz) }
 
 // helpers
 
-// test if two decimal arrays are equal
+// LegacyDecsEqual return true if two decimal arrays are equal.
 func LegacyDecsEqual(d1s, d2s []LegacyDec) bool {
 	if len(d1s) != len(d2s) {
 		return false
@@ -966,8 +976,4 @@ func FormatDec(v string) (string, error) {
 	}
 
 	return intPart + "." + decPart, nil
-}
-
-func LegacyDecToDec(ld LegacyDec) (Dec, error) {
-	return NewDecFromString(ld.String())
 }

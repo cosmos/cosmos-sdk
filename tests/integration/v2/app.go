@@ -25,6 +25,7 @@ import (
 	"cosmossdk.io/runtime/v2/services"
 	"cosmossdk.io/server/v2/stf"
 	"cosmossdk.io/server/v2/stf/branch"
+	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/root"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -278,7 +279,7 @@ func NewApp(
 type App struct {
 	*runtime.App[stateMachineTx]
 	lastHeight uint64
-	Store      runtime.Store
+	Store      store.RootStore
 	txConfig   client.TxConfig
 }
 

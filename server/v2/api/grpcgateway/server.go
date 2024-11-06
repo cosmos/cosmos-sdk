@@ -25,7 +25,6 @@ var (
 const ServerName = "grpc-gateway"
 
 type Server[T transaction.Tx] struct {
-	logger     log.Logger
 	config     *Config
 	cfgOptions []CfgOption
 
@@ -36,7 +35,6 @@ type Server[T transaction.Tx] struct {
 
 // New creates a new gRPC-gateway server.
 func New[T transaction.Tx](
-	logger log.Logger,
 	config server.ConfigMap,
 	grpcSrv *grpc.Server,
 	ir jsonpb.AnyResolver,
@@ -77,7 +75,6 @@ func New[T transaction.Tx](
 
 	// TODO: register the gRPC-Gateway routes
 
-	s.logger = logger.With(log.ModuleKey, s.Name())
 	s.config = serverCfg
 
 	return s, nil
@@ -102,8 +99,10 @@ func (s *Server[T]) Config() any {
 }
 
 func (s *Server[T]) Start(ctx context.Context) error {
+	logger := serverv2.GetLoggerFromContext(ctx).With(log.ModuleKey, s.Name())
+
 	if !s.config.Enable {
-		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
+		logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil
 	}
 
@@ -115,7 +114,7 @@ func (s *Server[T]) Start(ctx context.Context) error {
 		Handler: mux,
 	}
 
-	s.logger.Info("starting gRPC-Gateway server...", "address", s.config.Address)
+	logger.Info("starting gRPC-Gateway server...", "address", s.config.Address)
 	if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		return fmt.Errorf("failed to start gRPC-Gateway server: %w", err)
 	}
@@ -124,11 +123,13 @@ func (s *Server[T]) Start(ctx context.Context) error {
 }
 
 func (s *Server[T]) Stop(ctx context.Context) error {
+	logger := serverv2.GetLoggerFromContext(ctx).With(log.ModuleKey, s.Name())
+
 	if !s.config.Enable {
 		return nil
 	}
 
-	s.logger.Info("stopping gRPC-Gateway server...", "address", s.config.Address)
+	logger.Info("stopping gRPC-Gateway server...", "address", s.config.Address)
 	return s.server.Shutdown(ctx)
 }
 

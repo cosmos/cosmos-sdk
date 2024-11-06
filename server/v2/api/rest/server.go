@@ -18,7 +18,6 @@ const (
 )
 
 type Server[T transaction.Tx] struct {
-	logger log.Logger
 	router *http.ServeMux
 
 	httpServer *http.Server
@@ -34,7 +33,6 @@ func New[T transaction.Tx](
 ) (*Server[T], error) {
 	srv := &Server[T]{
 		cfgOptions: cfgOptions,
-		logger:     logger.With(log.ModuleKey, ServerName),
 		router:     http.NewServeMux(),
 	}
 
@@ -65,8 +63,10 @@ func (s *Server[T]) Name() string {
 }
 
 func (s *Server[T]) Start(ctx context.Context) error {
+	logger := serverv2.GetLoggerFromContext(ctx).With(log.ModuleKey, s.Name())
+
 	if !s.config.Enable {
-		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
+		logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil
 	}
 
@@ -75,9 +75,9 @@ func (s *Server[T]) Start(ctx context.Context) error {
 		Handler: s.router,
 	}
 
-	s.logger.Info("starting HTTP server", "address", s.config.Address)
+	logger.Info("starting HTTP server", "address", s.config.Address)
 	if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		s.logger.Error("failed to start HTTP server", "error", err)
+		logger.Error("failed to start HTTP server", "error", err)
 		return err
 	}
 
@@ -85,12 +85,13 @@ func (s *Server[T]) Start(ctx context.Context) error {
 }
 
 func (s *Server[T]) Stop(ctx context.Context) error {
+	logger := serverv2.GetLoggerFromContext(ctx).With(log.ModuleKey, s.Name())
+
 	if !s.config.Enable {
 		return nil
 	}
 
-	s.logger.Info("stopping HTTP server")
-
+	logger.Info("stopping HTTP server")
 	return s.httpServer.Shutdown(ctx)
 }
 

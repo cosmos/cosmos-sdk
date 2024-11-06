@@ -2,6 +2,7 @@ package serverv2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,7 +11,6 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
@@ -87,38 +87,41 @@ func (s *Server[T]) Name() string {
 
 // Start starts all components concurrently.
 func (s *Server[T]) Start(ctx context.Context) error {
-	logger := GetLoggerFromContext(ctx)
-	logger.With(log.ModuleKey, s.Name()).Info("starting servers...")
+	logger := GetLoggerFromContext(ctx).With(log.ModuleKey, s.Name())
+	logger.Info("starting servers...")
 
-	g, ctx := errgroup.WithContext(ctx)
+	resCh := make(chan error, len(s.components))
 	for _, mod := range s.components {
-		g.Go(func() error {
-			return mod.Start(ctx)
-		})
+		go func() {
+			resCh <- mod.Start(ctx)
+		}()
 	}
 
-	if err := g.Wait(); err != nil {
-		return fmt.Errorf("failed to start servers: %w", err)
+	for range s.components {
+		select {
+		case err := <-resCh:
+			if err != nil {
+				return fmt.Errorf("failed to start servers: %w", err)
+			}
+		case <-ctx.Done():
+			return nil
+		}
 	}
-
-	<-ctx.Done()
 
 	return nil
 }
 
-// Stop stops all components concurrently.
+// Stop stops all server components synchronously.
 func (s *Server[T]) Stop(ctx context.Context) error {
-	logger := GetLoggerFromContext(ctx)
-	logger.With(log.ModuleKey, s.Name()).Info("stopping servers...")
+	logger := GetLoggerFromContext(ctx).With(log.ModuleKey, s.Name())
+	logger.Info("stopping servers...")
 
-	g, ctx := errgroup.WithContext(ctx)
+	var err error
 	for _, mod := range s.components {
-		g.Go(func() error {
-			return mod.Stop(ctx)
-		})
+		err = errors.Join(err, mod.Stop(ctx))
 	}
 
-	return g.Wait()
+	return err
 }
 
 // CLICommands returns all CLI commands of all components.

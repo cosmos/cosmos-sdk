@@ -85,13 +85,15 @@ func createStartCommand[T transaction.Tx](
 					// don't block waiting for the OS signal before stopping the server.
 					cancelFn()
 				}
-
-				if err := server.Stop(ctx); err != nil {
-					cmd.PrintErrln("failed to stop servers:", err)
-				}
 			}()
 
 			return wrapCPUProfile(logger, config, func() error {
+				defer func() {
+					if err := server.Stop(cmd.Context()); err != nil {
+						cmd.PrintErrln("failed to stop servers:", err)
+					}
+				}()
+
 				return server.Start(ctx)
 			})
 		},

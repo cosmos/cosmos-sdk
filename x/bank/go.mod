@@ -160,7 +160,7 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-require cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9
+require cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac
 
 require (
 	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect

@@ -136,7 +136,7 @@ func TestQuery(t *testing.T) {
 				tt.setupMock(mockApp)
 			}
 
-			service := &v2Service{mockApp.QueryHandlers(), mockApp}
+			service := &v2Service{mockApp.QueryHandlers(), mockApp.Query}
 			resp, err := service.Query(context.Background(), tt.request)
 
 			if tt.expectError {
@@ -192,7 +192,7 @@ func TestV2Service_ListQueryHandlers(t *testing.T) {
 				tt.setupMock(mockApp)
 			}
 
-			service := &v2Service{mockApp.QueryHandlers(), mockApp}
+			service := &v2Service{mockApp.QueryHandlers(), mockApp.Query}
 			resp, err := service.ListQueryHandlers(context.Background(), &ListQueryHandlersRequest{})
 
 			assert.NoError(t, err)

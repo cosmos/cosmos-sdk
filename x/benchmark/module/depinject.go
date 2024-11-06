@@ -1,22 +1,19 @@
 package module
 
 import (
-	"errors"
 	"fmt"
-	"io"
-	"math/rand"
-	"os"
-	"strings"
-	"unicode"
 	"unsafe"
 
 	modulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject/appconfig"
+	"cosmossdk.io/log"
+	gen "cosmossdk.io/x/benchmark/generator"
 )
 
 const ModuleName = "benchmark"
+const maxStoreKeyGenIterations = 100
 
 func init() {
 	// TODO try depinject gogo API
@@ -33,45 +30,36 @@ type StoreKeyRegistrar interface {
 }
 
 func ProvideModule(
+	logger log.Logger,
 	cfg *modulev1.Module,
 	registrar StoreKeyRegistrar,
 	kvStoreServiceFactory store.KVStoreServiceFactory,
 ) (appmodule.AppModule, error) {
-	rand := rand.New(rand.NewSource(int64(cfg.GenesisParams.Seed)))
-	collector := NewKVServiceCollector()
-	for range cfg.GenesisParams.StoreKeyCount {
-		suffix, err := randomWords(rand, 2, "_")
-		if err != nil {
-			return nil, err
+	g := gen.NewGenerator(gen.Options{Seed: cfg.GenesisParams.Seed})
+	kvMap := make(KVServiceMap)
+	storeKeys := make([]string, cfg.GenesisParams.StoreKeyCount)
+
+	var i, j uint64
+	for i < cfg.GenesisParams.StoreKeyCount {
+		if j > maxStoreKeyGenIterations {
+			return nil, fmt.Errorf("failed to generate %d unique store keys", cfg.GenesisParams.StoreKeyCount)
 		}
-		sk := fmt.Sprintf("bench_%s", suffix)
+		sk := fmt.Sprintf("%s_%x", ModuleName, g.Bytes(cfg.GenesisParams.Seed, 8))
+		if _, ok := kvMap[sk]; ok {
+			j++
+			continue
+		}
 		registrar.RegisterKey(sk)
 		kvService := kvStoreServiceFactory(unsafeStrToBytes(sk))
-		collector.services[sk] = kvService
+		kvMap[sk] = kvService
+		storeKeys[i] = sk
+		i++
+		j++
 	}
-	return NewAppModule(collector), nil
+	return NewAppModule(cfg.GenesisParams, storeKeys, kvMap, logger), nil
 }
 
-type KVServiceCollector struct {
-	services map[string]store.KVStoreService
-}
-
-func NewKVServiceCollector() *KVServiceCollector {
-	return &KVServiceCollector{
-		services: make(map[string]store.KVStoreService),
-	}
-}
-
-func NewKVStoreServiceFactory(
-	collector *KVServiceCollector,
-	runtimeFactory store.KVStoreServiceFactory,
-) store.KVStoreServiceFactory {
-	return func(address []byte) store.KVStoreService {
-		service := runtimeFactory(address)
-		collector.services[unsafeBytesToStr(address)] = service
-		return service
-	}
-}
+type KVServiceMap map[string]store.KVStoreService
 
 // unsafeStrToBytes uses unsafe to convert string into byte array. Returned bytes
 // must not be altered after this function is called as it will cause a segmentation fault.
@@ -85,56 +73,4 @@ func unsafeStrToBytes(s string) []byte {
 // from a map.
 func unsafeBytesToStr(b []byte) string {
 	return unsafe.String(unsafe.SliceData(b), len(b))
-}
-
-func randomWords(rand *rand.Rand, count int, separator string) (string, error) {
-	const wordsPath = "/usr/share/dict/words"
-	stat, err := os.Stat(wordsPath)
-	if err != nil {
-		return "", err
-	}
-	f, err := os.Open(wordsPath)
-	if err != nil {
-		return "", err
-	}
-
-	words := make([]string, count)
-	buf := make([]byte, 1)
-	for i := 0; i < count; i++ {
-		x := rand.Intn(int(stat.Size()))
-		_, err := f.Seek(int64(x), 0)
-		if err != nil {
-			return "", err
-		}
-		for {
-			_, err := f.Read(buf)
-			if err != nil {
-				if errors.Is(err, io.EOF) {
-					i--
-					continue
-				}
-			}
-			if string(buf) == "\n" {
-				break
-			}
-		}
-		for {
-			_, err := f.Read(buf)
-			if err != nil {
-				if errors.Is(err, io.EOF) {
-					break
-				}
-			}
-			if string(buf) == "\n" {
-				break
-			}
-			words[i] += string(buf)
-		}
-		if len(words[i]) < 4 || len(words[i]) > 8 || unicode.IsUpper(rune(words[i][0])) {
-			words[i] = ""
-			i--
-			continue
-		}
-	}
-	return strings.Join(words, separator), nil
 }

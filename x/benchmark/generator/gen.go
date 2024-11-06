@@ -1,7 +1,7 @@
-package generator
+package gen
 
 import (
-	"math/rand"
+	"math/rand/v2"
 
 	"github.com/cespare/xxhash/v2"
 
@@ -9,24 +9,18 @@ import (
 )
 
 type Options struct {
-	Seed int64
+	Seed uint64
 
-	StoreKeys []string
+	KeyMean     uint64
+	KeyStdDev   uint64
+	ValueMean   uint64
+	ValueStdDev uint64
 
-	KeyMean     int
-	KeyStdDev   int
-	ValueMean   int
-	ValueStdDev int
-
-	// Inserts specifies the number of Insert operations to generate. If zero, inserts will
-	// occur naturally.  If set to a non-zero value, inserts will be weighted in generation until
-	// the target number of inserts is reached
-	Inserts        int
 	DeleteFraction float64
 }
 
 type State struct {
-	Keys map[string]map[int]struct{}
+	Keys map[int]map[int]struct{}
 }
 
 type Generator struct {
@@ -40,7 +34,7 @@ func NewGenerator(opts Options) *Generator {
 	return &Generator{
 		Options: opts,
 		digest:  xxhash.New(),
-		rand:    rand.New(rand.NewSource(opts.Seed)),
+		rand:    rand.New(rand.NewPCG(opts.Seed, opts.Seed>>32)),
 	}
 }
 
@@ -68,6 +62,26 @@ func (g *Generator) Bytes(seed, length uint64) []byte {
 	return b
 }
 
+func (g *Generator) NormUint64(mean, stdDev uint64) uint64 {
+	return uint64(g.rand.NormFloat64()*float64(stdDev) + float64(mean))
+}
+
+func (g *Generator) Key() []byte {
+	length := g.NormUint64(g.KeyMean, g.KeyStdDev)
+	seed := g.rand.Uint64()
+	return g.Bytes(seed, length)
+}
+
+func (g *Generator) Value() []byte {
+	length := g.NormUint64(g.ValueMean, g.ValueStdDev)
+	seed := g.rand.Uint64()
+	return g.Bytes(seed, length)
+}
+
+func (g *Generator) UintN(n uint64) uint64 {
+	return g.rand.Uint64N(n)
+}
+
 func encodeUint64(x uint64) []byte {
 	var b [8]byte
 	b[0] = byte(x)
@@ -79,14 +93,4 @@ func encodeUint64(x uint64) []byte {
 	b[6] = byte(x >> 48)
 	b[7] = byte(x >> 56)
 	return b[:]
-}
-
-func (g *Generator) genLength() int64 {
-	return 0
-}
-
-func genLength(seed int64) int64 {
-	rand := rand.New(rand.NewSource(seed))
-	rand.NormFloat64()
-	return 0
 }

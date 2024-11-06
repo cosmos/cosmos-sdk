@@ -4,31 +4,25 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/x/benchmark"
-	"cosmossdk.io/x/benchmark/generator"
+	gen "cosmossdk.io/x/benchmark/generator"
 )
 
 var _ benchmark.MsgServer = &Keeper{}
 
 type Keeper struct {
-	collector *KVServiceCollector
-	generator *generator.Generator
+	kvServiceMap KVServiceMap
+	generator    *gen.Generator
 }
 
-func NewKeeper(collector *KVServiceCollector) *Keeper {
-	return &Keeper{collector: collector}
+func NewKeeper(kvMap KVServiceMap) *Keeper {
+	return &Keeper{kvServiceMap: kvMap}
 }
 
 func (k *Keeper) LoadTest(ctx context.Context, msg *benchmark.MsgLoadTest) (*benchmark.MsgLoadTestResponse, error) {
 	res := &benchmark.MsgLoadTestResponse{}
 	for _, op := range msg.Ops {
-		svc, ok := k.collector.services[op.Actor]
-		if !ok {
-			return res, fmt.Errorf("actor %s not found", op.Actor)
-		}
-		kv := svc.OpenKVStore(ctx)
-		err := k.executeOp(ctx, kv, op)
+		err := k.executeOp(ctx, op)
 		if err != nil {
 			return res, err
 		}
@@ -36,7 +30,12 @@ func (k *Keeper) LoadTest(ctx context.Context, msg *benchmark.MsgLoadTest) (*ben
 	return res, nil
 }
 
-func (k *Keeper) executeOp(ctx context.Context, kv store.KVStore, op *benchmark.Op) error {
+func (k *Keeper) executeOp(ctx context.Context, op *benchmark.Op) error {
+	svc, ok := k.kvServiceMap[op.Actor]
+	if !ok {
+		return fmt.Errorf("actor %s not found", op.Actor)
+	}
+	kv := svc.OpenKVStore(ctx)
 	key := k.generator.Bytes(op.Seed, op.KeyLength)
 	switch {
 	case op.Delete:
@@ -52,4 +51,13 @@ func (k *Keeper) executeOp(ctx context.Context, kv store.KVStore, op *benchmark.
 	default:
 		return fmt.Errorf("invalid op: %+v", op)
 	}
+}
+
+func (k *Keeper) set(ctx context.Context, actor string, key, value []byte) error {
+	svc, ok := k.kvServiceMap[actor]
+	if !ok {
+		return fmt.Errorf("actor %s not found", actor)
+	}
+	kv := svc.OpenKVStore(ctx)
+	return kv.Set(key, value)
 }

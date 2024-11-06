@@ -10,16 +10,19 @@ message Module {
     go_import: "cosmossdk.io/x/benchmark"
   };
 
-  // GenesisParams defines the genesis parameters for the benchmark module.
   GenesisParams genesis_params = 1;
 }
 
 // GenesisParams defines the genesis parameters for the benchmark module.
 message GenesisParams {
-  uint64 store_key_count      = 1;
-  uint64 seed                 = 2;
-  uint64 key_mean_length      = 3;
-  uint64 key_std_dev_length   = 4;
-  uint64 value_mean_length    = 5;
-  uint64 value_std_dev_length = 6;
+  uint64 seed = 1;
+
+  uint64 store_key_count = 2;
+
+  uint64 key_mean_length    = 3;
+  uint64 key_std_dev_length = 4;
+  uint64 key_count          = 5;
+
+  uint64 value_mean_length    = 6;
+  uint64 value_std_dev_length = 7;
 }

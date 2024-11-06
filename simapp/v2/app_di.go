@@ -4,23 +4,18 @@ import (
 	_ "embed"
 	"fmt"
 
-	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/server"
-	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	"cosmossdk.io/runtime/v2"
-	"cosmossdk.io/runtime/v2/services"
-	"cosmossdk.io/server/v2/stf"
 	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/root"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
 	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
-	benchmark "cosmossdk.io/x/benchmark/module"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
@@ -48,36 +43,11 @@ type SimApp[T transaction.Tx] struct {
 	StakingKeeper *stakingkeeper.Keeper
 }
 
-func BenchmarkServiceBindings() depinject.Config {
-	var (
-		runtimeFactory corestore.KVStoreServiceFactory = func(actor []byte) corestore.KVStoreService {
-			return services.NewGenesisKVService(
-				actor,
-				stf.NewKVStoreService(actor),
-			)
-		}
-		collector                      = benchmark.NewKVServiceCollector()
-		kvServiceFactory               = benchmark.NewKVStoreServiceFactory(collector, runtimeFactory)
-		cometService     comet.Service = &services.ContextAwareCometInfoService{}
-		headerService                  = services.NewGenesisHeaderService(stf.HeaderService{})
-		eventService                   = services.NewGenesisEventService(stf.NewEventService())
-		storeBuilder                   = root.NewBuilder()
-	)
-	return depinject.Supply(
-		collector,
-		kvServiceFactory,
-		headerService,
-		cometService,
-		eventService,
-		storeBuilder,
-	)
-}
-
 // AppConfig returns the default app config.
 func AppConfig() depinject.Config {
 	return depinject.Configs(
 		ModuleConfig, // Alternatively use appconfig.LoadYAML(AppConfigYAML)
-		BenchmarkServiceBindings(),
+		runtime.DefaultServiceBindings(),
 		depinject.Provide(
 			codec.ProvideInterfaceRegistry,
 			codec.ProvideAddressCodec,

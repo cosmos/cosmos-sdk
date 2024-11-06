@@ -214,8 +214,8 @@ cosmossdk.io/runtime/v2 v2.0.0-20241105073932-55f7cfcebae4 h1:uo4LBzsp1bIZ3rBUyo
 cosmossdk.io/runtime/v2 v2.0.0-20241105073932-55f7cfcebae4/go.mod h1:SCdBCUiZGKVFNUvglrCUontMZSoXAES5iMbRvPv8bsI=
 cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac h1:3joNZZWZ3k7fMsrBDL1ktuQ2xQwYLZOaDhkruadDFmc=
 cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac/go.mod h1:RDAhxIeNB4bYqAlF4NBJwRrgtnciMcyyg0DOKnhNZQQ=
-cosmossdk.io/server/v2 v2.0.0-20241104160456-3ba4661dc7cf h1:UbuLoAN6+31O50i4zyfYM9pu4aZDQIda5PPYStuGq3A=
-cosmossdk.io/server/v2 v2.0.0-20241104160456-3ba4661dc7cf/go.mod h1:CwDB1XPrjXyK1nBtmOf5hW/JtNb4nqqhwFQ2bPittfo=
+cosmossdk.io/server/v2 v2.0.0-20241106171414-3014713d442f h1:iOwpowDlNam9Pu/vqLfR7lZBPsf0uIBo0GmAtlJBaA4=
+cosmossdk.io/server/v2 v2.0.0-20241106171414-3014713d442f/go.mod h1:rwmmHi0GKaAjMXsWtcrIdZAWaw2oxOHdOkZ09of45H8=
 cosmossdk.io/server/v2/appmanager v0.0.0-20241029092041-78cfc68c83af h1:uDQXvGBH3kZW1UXFccMlNCgHf2L5QCGjNmw51q6atzI=
 cosmossdk.io/server/v2/appmanager v0.0.0-20241029092041-78cfc68c83af/go.mod h1:mONOF8GRbxs5R04zMscuQQI1gx/XHTY7imKjcwLI5uo=
 cosmossdk.io/server/v2/stf v0.0.0-20241029092041-78cfc68c83af h1:jefP4LTtln0XsXHeSqRENeAGyPQ9qSbGHMy6811FE/c=
@@ -347,8 +347,8 @@ github.com/cosmos/gogogateway v1.2.0/go.mod h1:iQpLkGWxYcnCdz5iAdLcRBSw3h7NXeOkZ
 github.com/cosmos/gogoproto v1.4.2/go.mod h1:cLxOsn1ljAHSV527CHOtaIP91kK6cCrZETRBrkzItWU=
 github.com/cosmos/gogoproto v1.7.0 h1:79USr0oyXAbxg3rspGh/m4SWNyoz/GLaAh0QlCe2fro=
 github.com/cosmos/gogoproto v1.7.0/go.mod h1:yWChEv5IUEYURQasfyBW5ffkMHR/90hiHgbNgrtp4j0=
-github.com/cosmos/iavl v1.3.0 h1:Ezaxt8aPA3kbkhsfyqwenChGLQwHDAIif3tG9x1FMV8=
-github.com/cosmos/iavl v1.3.0/go.mod h1:T6SfBcyhulVIY2G/ZtAtQm/QiJvsuhIos52V4dWYk88=
+github.com/cosmos/iavl v1.3.1 h1:+W1G2uSUtJMqMGpwz/fKiwZxY2DDT/9/0hyNLm6Geu0=
+github.com/cosmos/iavl v1.3.1/go.mod h1:T6SfBcyhulVIY2G/ZtAtQm/QiJvsuhIos52V4dWYk88=
 github.com/cosmos/ics23/go v0.11.0 h1:jk5skjT0TqX5e5QJbEnwXIS2yI2vnmLOgpQPeM5RtnU=
 github.com/cosmos/ics23/go v0.11.0/go.mod h1:A8OjxPE67hHST4Icw94hOxxFEJMBG031xIGF/JHNIY0=
 github.com/cosmos/keyring v1.2.0 h1:8C1lBP9xhImmIabyXW4c3vFjjLiBdGCmfLUfeZlV1Yo=
@@ -411,8 +411,8 @@ github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHk
 github.com/frankban/quicktest v1.14.6/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=
-github.com/fsnotify/fsnotify v1.7.0 h1:8JEhPFa5W2WU7YfeZzPNqzMP6Lwt7L2715Ggo0nosvA=
-github.com/fsnotify/fsnotify v1.7.0/go.mod h1:40Bi/Hjc2AVfZrqy+aj+yEI+/bRxZnMJyTJwOpGvigM=
+github.com/fsnotify/fsnotify v1.8.0 h1:dAwr6QBTBZIkG8roQaJjGof0pp0EeF+tNV7YBP3F/8M=
+github.com/fsnotify/fsnotify v1.8.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
 github.com/getsentry/sentry-go v0.29.0 h1:YtWluuCFg9OfcqnaujpY918N/AhCCwarIDWOYSBAjCA=
 github.com/getsentry/sentry-go v0.29.0/go.mod h1:jhPesDAL0Q0W2+2YEuVOvdWmVtdsr1+jtBrlDEVWwLY=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=

@@ -11,7 +11,36 @@ require (
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/simapp v0.0.0-20230309163709-87da587416ba
+<<<<<<< HEAD
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // main
+=======
+	cosmossdk.io/store v1.1.1
+	cosmossdk.io/x/evidence v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/feegrant v0.0.0-20230613133644-0a778132a60f
+	cosmossdk.io/x/nft v0.0.0-20230613133644-0a778132a60f // indirect
+	cosmossdk.io/x/protocolpool v0.0.0-20230925135524-a1bc045b3190
+	cosmossdk.io/x/tx v1.0.0-alpha.1
+	cosmossdk.io/x/upgrade v0.0.0-20230613133644-0a778132a60f
+	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
+	github.com/cosmos/cosmos-proto v1.0.0-beta.5
+	// this version is not used as it is always replaced by the latest Cosmos SDK version
+	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/gogoproto v1.7.0
+	github.com/spf13/cobra v1.8.1 // indirect
+	github.com/stretchr/testify v1.9.0
+	go.uber.org/mock v0.5.0
+	google.golang.org/grpc v1.67.1
+	google.golang.org/protobuf v1.35.1
+	gotest.tools/v3 v3.5.1
+	pgregory.net/rapid v1.1.0
+)
+
+require (
+	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
+	cosmossdk.io/runtime/v2 v2.0.0-20240911143651-72620a577660
+	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
+	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
+>>>>>>> b5993d6b0 (test(integration): port x/bank tests to server/v2 app (#21912))
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
@@ -45,11 +74,15 @@ require (
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1 // indirect
 	github.com/spf13/viper v1.19.0
+<<<<<<< HEAD
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.35.1
 	gotest.tools/v3 v3.5.1
 	pgregory.net/rapid v1.1.0
+=======
+	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
+>>>>>>> b5993d6b0 (test(integration): port x/bank tests to server/v2 app (#21912))
 )
 
 require (
@@ -63,7 +96,9 @@ require (
 	cloud.google.com/go/storage v1.42.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
+	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
+	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -159,6 +194,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
@@ -193,7 +229,6 @@ require (
 	github.com/ulikunitz/xz v0.5.12 // indirect
 	github.com/zondax/hid v0.9.2 // indirect
 	github.com/zondax/ledger-go v0.14.3 // indirect
-	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b // indirect
 	gitlab.com/yawning/tuplehash v0.0.0-20230713102510-df83abbf9a02 // indirect
 	go.etcd.io/bbolt v1.4.0-alpha.1 // indirect
 	go.opencensus.io v0.24.0 // indirect
@@ -234,8 +269,17 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	cosmossdk.io/client/v2 => ../client/v2
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214 // main
+=======
+	cosmossdk.io/collections => ../collections
+	cosmossdk.io/runtime/v2 => ../runtime/v2
+	cosmossdk.io/server/v2/appmanager => ../server/v2/appmanager
+	cosmossdk.io/server/v2/stf => ../server/v2/stf
+	cosmossdk.io/store => ../store
+	cosmossdk.io/store/v2 => ../store/v2
+>>>>>>> b5993d6b0 (test(integration): port x/bank tests to server/v2 app (#21912))
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../x/accounts/defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup

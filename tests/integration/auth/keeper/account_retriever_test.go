@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/math"
+	minttypes "cosmossdk.io/x/mint/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -16,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestAccountRetriever(t *testing.T) {
@@ -39,14 +42,30 @@ func TestAccountRetriever(t *testing.T) {
 	)
 	require.NoError(t, err)
 
+	defer conn.Close()
+
 	pubkeys := simtestutil.CreateTestPubKeys(1)
 	addr := sdk.AccAddress(pubkeys[0].Address())
+
+	newAcc := authtypes.BaseAccount{
+		Address:       addr.String(),
+		PubKey:        nil,
+		AccountNumber: 2,
+		Sequence:      7,
+	}
+
+	updatedAcc := f.authKeeper.NewAccount(f.ctx, &newAcc)
+	f.authKeeper.SetAccount(f.ctx, updatedAcc)
+
+	amount := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10000)))
+	require.NoError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, amount))
+	require.NoError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.ctx, minttypes.ModuleName, addr, amount))
 
 	ar := types.AccountRetriever{}
 
 	clientCtx := client.Context{}.
-		WithAccountRetriever(types.AccountRetriever{}).
-		WithGRPCClient(conn)
+		WithGRPCClient(conn).
+		WithAddressPrefix(sdk.Bech32MainPrefix)
 
 	acc, err := ar.GetAccount(clientCtx, addr)
 	require.NoError(t, err)

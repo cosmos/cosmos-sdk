@@ -8,7 +8,6 @@ import (
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
@@ -17,6 +16,7 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 
 	storetypes "cosmossdk.io/store/types"
+	cmtabcitypes "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -29,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -133,7 +132,17 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 	)
 	s.Require().NoError(err)
 
-	s.grpcCtx = metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "1")
+	// commit and finalize block
+	defer func() {
+		_, err := integrationApp.Commit()
+		if err != nil {
+			panic(err)
+		}
+	}()
+
+	height := integrationApp.LastBlockHeight() + 1
+	_, err = integrationApp.FinalizeBlock(&cmtabcitypes.FinalizeBlockRequest{Height: height, DecidedLastCommit: cmtabcitypes.CommitInfo{Votes: []cmtabcitypes.VoteInfo{{}}}})
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestOutOfGasSuite) TearDownSuite() {
@@ -145,7 +154,7 @@ func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_TestService() {
 	// gRPC query to test service should work
 	testClient := testdata.NewQueryClient(s.conn)
 	testRes, err := testClient.Echo(
-		s.grpcCtx,
+		context.Background(),
 		&testdata.EchoRequest{Message: "hello"})
 	s.Require().NoError(err)
 	s.Require().Equal("hello", testRes.Message)
@@ -156,7 +165,7 @@ func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_BankBalance_OutOfGas() {
 	bankClient := banktypes.NewQueryClient(s.conn)
 
 	_, err := bankClient.Balance(
-		s.grpcCtx,
+		context.Background(),
 		&banktypes.QueryBalanceRequest{Address: s.address.String(), Denom: "stake"},
 	)
 

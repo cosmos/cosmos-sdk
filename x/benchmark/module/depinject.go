@@ -1,6 +1,13 @@
-package benchmark
+package module
 
 import (
+	"errors"
+	"fmt"
+	"io"
+	"math/rand"
+	"os"
+	"strings"
+	"unicode"
 	"unsafe"
 
 	modulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
@@ -21,8 +28,28 @@ func init() {
 	)
 }
 
-func ProvideModule(collector *KVServiceCollector) appmodule.AppModule {
-	return NewAppModule(collector)
+type StoreKeyRegistrar interface {
+	RegisterKey(string)
+}
+
+func ProvideModule(
+	cfg *modulev1.Module,
+	registrar StoreKeyRegistrar,
+	kvStoreServiceFactory store.KVStoreServiceFactory,
+) (appmodule.AppModule, error) {
+	rand := rand.New(rand.NewSource(int64(cfg.GenesisParams.Seed)))
+	collector := NewKVServiceCollector()
+	for range cfg.GenesisParams.StoreKeyCount {
+		suffix, err := randomWords(rand, 2, "_")
+		if err != nil {
+			return nil, err
+		}
+		sk := fmt.Sprintf("bench_%s", suffix)
+		registrar.RegisterKey(sk)
+		kvService := kvStoreServiceFactory(unsafeStrToBytes(sk))
+		collector.services[sk] = kvService
+	}
+	return NewAppModule(collector), nil
 }
 
 type KVServiceCollector struct {
@@ -58,4 +85,56 @@ func unsafeStrToBytes(s string) []byte {
 // from a map.
 func unsafeBytesToStr(b []byte) string {
 	return unsafe.String(unsafe.SliceData(b), len(b))
+}
+
+func randomWords(rand *rand.Rand, count int, separator string) (string, error) {
+	const wordsPath = "/usr/share/dict/words"
+	stat, err := os.Stat(wordsPath)
+	if err != nil {
+		return "", err
+	}
+	f, err := os.Open(wordsPath)
+	if err != nil {
+		return "", err
+	}
+
+	words := make([]string, count)
+	buf := make([]byte, 1)
+	for i := 0; i < count; i++ {
+		x := rand.Intn(int(stat.Size()))
+		_, err := f.Seek(int64(x), 0)
+		if err != nil {
+			return "", err
+		}
+		for {
+			_, err := f.Read(buf)
+			if err != nil {
+				if errors.Is(err, io.EOF) {
+					i--
+					continue
+				}
+			}
+			if string(buf) == "\n" {
+				break
+			}
+		}
+		for {
+			_, err := f.Read(buf)
+			if err != nil {
+				if errors.Is(err, io.EOF) {
+					break
+				}
+			}
+			if string(buf) == "\n" {
+				break
+			}
+			words[i] += string(buf)
+		}
+		if len(words[i]) < 4 || len(words[i]) > 8 || unicode.IsUpper(rune(words[i][0])) {
+			words[i] = ""
+			i--
+			continue
+		}
+	}
+	return strings.Join(words, separator), nil
 }

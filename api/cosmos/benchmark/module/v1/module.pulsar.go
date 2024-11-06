@@ -14,12 +14,14 @@ import (
 )
 
 var (
-	md_Module protoreflect.MessageDescriptor
+	md_Module                protoreflect.MessageDescriptor
+	fd_Module_genesis_params protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_benchmark_module_v1_module_proto_init()
 	md_Module = File_cosmos_benchmark_module_v1_module_proto.Messages().ByName("Module")
+	fd_Module_genesis_params = md_Module.Fields().ByName("genesis_params")
 }
 
 var _ protoreflect.Message = (*fastReflection_Module)(nil)
@@ -87,6 +89,12 @@ func (x *fastReflection_Module) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Module) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.GenesisParams != nil {
+		value := protoreflect.ValueOfMessage(x.GenesisParams.ProtoReflect())
+		if !f(fd_Module_genesis_params, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -102,6 +110,8 @@ func (x *fastReflection_Module) Range(f func(protoreflect.FieldDescriptor, proto
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Module) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
+	case "cosmos.benchmark.module.v1.Module.genesis_params":
+		return x.GenesisParams != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.benchmark.module.v1.Module"))
@@ -118,6 +128,8 @@ func (x *fastReflection_Module) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
+	case "cosmos.benchmark.module.v1.Module.genesis_params":
+		x.GenesisParams = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.benchmark.module.v1.Module"))
@@ -134,6 +146,9 @@ func (x *fastReflection_Module) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Module) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
+	case "cosmos.benchmark.module.v1.Module.genesis_params":
+		value := x.GenesisParams
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.benchmark.module.v1.Module"))
@@ -154,6 +169,8 @@ func (x *fastReflection_Module) Get(descriptor protoreflect.FieldDescriptor) pro
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
+	case "cosmos.benchmark.module.v1.Module.genesis_params":
+		x.GenesisParams = value.Message().Interface().(*GenesisParams)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.benchmark.module.v1.Module"))
@@ -174,6 +191,11 @@ func (x *fastReflection_Module) Set(fd protoreflect.FieldDescriptor, value proto
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Module) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "cosmos.benchmark.module.v1.Module.genesis_params":
+		if x.GenesisParams == nil {
+			x.GenesisParams = new(GenesisParams)
+		}
+		return protoreflect.ValueOfMessage(x.GenesisParams.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.benchmark.module.v1.Module"))
@@ -187,6 +209,9 @@ func (x *fastReflection_Module) Mutable(fd protoreflect.FieldDescriptor) protore
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Module) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "cosmos.benchmark.module.v1.Module.genesis_params":
+		m := new(GenesisParams)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.benchmark.module.v1.Module"))
@@ -256,6 +281,10 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
+		if x.GenesisParams != nil {
+			l = options.Size(x.GenesisParams)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -284,6 +313,20 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.GenesisParams != nil {
+			encoded, err := options.Marshal(x.GenesisParams)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -334,6 +377,686 @@ func (x *fastReflection_Module) ProtoMethods() *protoiface.Methods {
 				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Module: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field GenesisParams", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.GenesisParams == nil {
+					x.GenesisParams = &GenesisParams{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.GenesisParams); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_GenesisParams                      protoreflect.MessageDescriptor
+	fd_GenesisParams_store_key_count      protoreflect.FieldDescriptor
+	fd_GenesisParams_seed                 protoreflect.FieldDescriptor
+	fd_GenesisParams_key_mean_length      protoreflect.FieldDescriptor
+	fd_GenesisParams_key_std_dev_length   protoreflect.FieldDescriptor
+	fd_GenesisParams_value_mean_length    protoreflect.FieldDescriptor
+	fd_GenesisParams_value_std_dev_length protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_benchmark_module_v1_module_proto_init()
+	md_GenesisParams = File_cosmos_benchmark_module_v1_module_proto.Messages().ByName("GenesisParams")
+	fd_GenesisParams_store_key_count = md_GenesisParams.Fields().ByName("store_key_count")
+	fd_GenesisParams_seed = md_GenesisParams.Fields().ByName("seed")
+	fd_GenesisParams_key_mean_length = md_GenesisParams.Fields().ByName("key_mean_length")
+	fd_GenesisParams_key_std_dev_length = md_GenesisParams.Fields().ByName("key_std_dev_length")
+	fd_GenesisParams_value_mean_length = md_GenesisParams.Fields().ByName("value_mean_length")
+	fd_GenesisParams_value_std_dev_length = md_GenesisParams.Fields().ByName("value_std_dev_length")
+}
+
+var _ protoreflect.Message = (*fastReflection_GenesisParams)(nil)
+
+type fastReflection_GenesisParams GenesisParams
+
+func (x *GenesisParams) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_GenesisParams)(x)
+}
+
+func (x *GenesisParams) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_benchmark_module_v1_module_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_GenesisParams_messageType fastReflection_GenesisParams_messageType
+var _ protoreflect.MessageType = fastReflection_GenesisParams_messageType{}
+
+type fastReflection_GenesisParams_messageType struct{}
+
+func (x fastReflection_GenesisParams_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_GenesisParams)(nil)
+}
+func (x fastReflection_GenesisParams_messageType) New() protoreflect.Message {
+	return new(fastReflection_GenesisParams)
+}
+func (x fastReflection_GenesisParams_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_GenesisParams
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_GenesisParams) Descriptor() protoreflect.MessageDescriptor {
+	return md_GenesisParams
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_GenesisParams) Type() protoreflect.MessageType {
+	return _fastReflection_GenesisParams_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_GenesisParams) New() protoreflect.Message {
+	return new(fastReflection_GenesisParams)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_GenesisParams) Interface() protoreflect.ProtoMessage {
+	return (*GenesisParams)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_GenesisParams) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.StoreKeyCount != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.StoreKeyCount)
+		if !f(fd_GenesisParams_store_key_count, value) {
+			return
+		}
+	}
+	if x.Seed != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Seed)
+		if !f(fd_GenesisParams_seed, value) {
+			return
+		}
+	}
+	if x.KeyMeanLength != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.KeyMeanLength)
+		if !f(fd_GenesisParams_key_mean_length, value) {
+			return
+		}
+	}
+	if x.KeyStdDevLength != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.KeyStdDevLength)
+		if !f(fd_GenesisParams_key_std_dev_length, value) {
+			return
+		}
+	}
+	if x.ValueMeanLength != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ValueMeanLength)
+		if !f(fd_GenesisParams_value_mean_length, value) {
+			return
+		}
+	}
+	if x.ValueStdDevLength != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ValueStdDevLength)
+		if !f(fd_GenesisParams_value_std_dev_length, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_GenesisParams) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.benchmark.module.v1.GenesisParams.store_key_count":
+		return x.StoreKeyCount != uint64(0)
+	case "cosmos.benchmark.module.v1.GenesisParams.seed":
+		return x.Seed != uint64(0)
+	case "cosmos.benchmark.module.v1.GenesisParams.key_mean_length":
+		return x.KeyMeanLength != uint64(0)
+	case "cosmos.benchmark.module.v1.GenesisParams.key_std_dev_length":
+		return x.KeyStdDevLength != uint64(0)
+	case "cosmos.benchmark.module.v1.GenesisParams.value_mean_length":
+		return x.ValueMeanLength != uint64(0)
+	case "cosmos.benchmark.module.v1.GenesisParams.value_std_dev_length":
+		return x.ValueStdDevLength != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.benchmark.module.v1.GenesisParams"))
+		}
+		panic(fmt.Errorf("message cosmos.benchmark.module.v1.GenesisParams does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_GenesisParams) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.benchmark.module.v1.GenesisParams.store_key_count":
+		x.StoreKeyCount = uint64(0)
+	case "cosmos.benchmark.module.v1.GenesisParams.seed":
+		x.Seed = uint64(0)
+	case "cosmos.benchmark.module.v1.GenesisParams.key_mean_length":
+		x.KeyMeanLength = uint64(0)
+	case "cosmos.benchmark.module.v1.GenesisParams.key_std_dev_length":
+		x.KeyStdDevLength = uint64(0)
+	case "cosmos.benchmark.module.v1.GenesisParams.value_mean_length":
+		x.ValueMeanLength = uint64(0)
+	case "cosmos.benchmark.module.v1.GenesisParams.value_std_dev_length":
+		x.ValueStdDevLength = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.benchmark.module.v1.GenesisParams"))
+		}
+		panic(fmt.Errorf("message cosmos.benchmark.module.v1.GenesisParams does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_GenesisParams) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.benchmark.module.v1.GenesisParams.store_key_count":
+		value := x.StoreKeyCount
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.benchmark.module.v1.GenesisParams.seed":
+		value := x.Seed
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.benchmark.module.v1.GenesisParams.key_mean_length":
+		value := x.KeyMeanLength
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.benchmark.module.v1.GenesisParams.key_std_dev_length":
+		value := x.KeyStdDevLength
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.benchmark.module.v1.GenesisParams.value_mean_length":
+		value := x.ValueMeanLength
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.benchmark.module.v1.GenesisParams.value_std_dev_length":
+		value := x.ValueStdDevLength
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.benchmark.module.v1.GenesisParams"))
+		}
+		panic(fmt.Errorf("message cosmos.benchmark.module.v1.GenesisParams does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_GenesisParams) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.benchmark.module.v1.GenesisParams.store_key_count":
+		x.StoreKeyCount = value.Uint()
+	case "cosmos.benchmark.module.v1.GenesisParams.seed":
+		x.Seed = value.Uint()
+	case "cosmos.benchmark.module.v1.GenesisParams.key_mean_length":
+		x.KeyMeanLength = value.Uint()
+	case "cosmos.benchmark.module.v1.GenesisParams.key_std_dev_length":
+		x.KeyStdDevLength = value.Uint()
+	case "cosmos.benchmark.module.v1.GenesisParams.value_mean_length":
+		x.ValueMeanLength = value.Uint()
+	case "cosmos.benchmark.module.v1.GenesisParams.value_std_dev_length":
+		x.ValueStdDevLength = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.benchmark.module.v1.GenesisParams"))
+		}
+		panic(fmt.Errorf("message cosmos.benchmark.module.v1.GenesisParams does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_GenesisParams) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.benchmark.module.v1.GenesisParams.store_key_count":
+		panic(fmt.Errorf("field store_key_count of message cosmos.benchmark.module.v1.GenesisParams is not mutable"))
+	case "cosmos.benchmark.module.v1.GenesisParams.seed":
+		panic(fmt.Errorf("field seed of message cosmos.benchmark.module.v1.GenesisParams is not mutable"))
+	case "cosmos.benchmark.module.v1.GenesisParams.key_mean_length":
+		panic(fmt.Errorf("field key_mean_length of message cosmos.benchmark.module.v1.GenesisParams is not mutable"))
+	case "cosmos.benchmark.module.v1.GenesisParams.key_std_dev_length":
+		panic(fmt.Errorf("field key_std_dev_length of message cosmos.benchmark.module.v1.GenesisParams is not mutable"))
+	case "cosmos.benchmark.module.v1.GenesisParams.value_mean_length":
+		panic(fmt.Errorf("field value_mean_length of message cosmos.benchmark.module.v1.GenesisParams is not mutable"))
+	case "cosmos.benchmark.module.v1.GenesisParams.value_std_dev_length":
+		panic(fmt.Errorf("field value_std_dev_length of message cosmos.benchmark.module.v1.GenesisParams is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.benchmark.module.v1.GenesisParams"))
+		}
+		panic(fmt.Errorf("message cosmos.benchmark.module.v1.GenesisParams does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_GenesisParams) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.benchmark.module.v1.GenesisParams.store_key_count":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.benchmark.module.v1.GenesisParams.seed":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.benchmark.module.v1.GenesisParams.key_mean_length":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.benchmark.module.v1.GenesisParams.key_std_dev_length":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.benchmark.module.v1.GenesisParams.value_mean_length":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.benchmark.module.v1.GenesisParams.value_std_dev_length":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.benchmark.module.v1.GenesisParams"))
+		}
+		panic(fmt.Errorf("message cosmos.benchmark.module.v1.GenesisParams does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_GenesisParams) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.benchmark.module.v1.GenesisParams", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_GenesisParams) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_GenesisParams) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_GenesisParams) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_GenesisParams) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*GenesisParams)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.StoreKeyCount != 0 {
+			n += 1 + runtime.Sov(uint64(x.StoreKeyCount))
+		}
+		if x.Seed != 0 {
+			n += 1 + runtime.Sov(uint64(x.Seed))
+		}
+		if x.KeyMeanLength != 0 {
+			n += 1 + runtime.Sov(uint64(x.KeyMeanLength))
+		}
+		if x.KeyStdDevLength != 0 {
+			n += 1 + runtime.Sov(uint64(x.KeyStdDevLength))
+		}
+		if x.ValueMeanLength != 0 {
+			n += 1 + runtime.Sov(uint64(x.ValueMeanLength))
+		}
+		if x.ValueStdDevLength != 0 {
+			n += 1 + runtime.Sov(uint64(x.ValueStdDevLength))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*GenesisParams)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.ValueStdDevLength != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.ValueStdDevLength))
+			i--
+			dAtA[i] = 0x30
+		}
+		if x.ValueMeanLength != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.ValueMeanLength))
+			i--
+			dAtA[i] = 0x28
+		}
+		if x.KeyStdDevLength != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.KeyStdDevLength))
+			i--
+			dAtA[i] = 0x20
+		}
+		if x.KeyMeanLength != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.KeyMeanLength))
+			i--
+			dAtA[i] = 0x18
+		}
+		if x.Seed != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Seed))
+			i--
+			dAtA[i] = 0x10
+		}
+		if x.StoreKeyCount != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.StoreKeyCount))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*GenesisParams)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: GenesisParams: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: GenesisParams: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StoreKeyCount", wireType)
+				}
+				x.StoreKeyCount = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.StoreKeyCount |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Seed", wireType)
+				}
+				x.Seed = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Seed |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field KeyMeanLength", wireType)
+				}
+				x.KeyMeanLength = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.KeyMeanLength |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field KeyStdDevLength", wireType)
+				}
+				x.KeyStdDevLength = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.KeyStdDevLength |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 5:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValueMeanLength", wireType)
+				}
+				x.ValueMeanLength = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.ValueMeanLength |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 6:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValueStdDevLength", wireType)
+				}
+				x.ValueStdDevLength = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.ValueStdDevLength |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -387,6 +1110,9 @@ type Module struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
+
+	// GenesisParams defines the genesis parameters for the benchmark module.
+	GenesisParams *GenesisParams `protobuf:"bytes,1,opt,name=genesis_params,json=genesisParams,proto3" json:"genesis_params,omitempty"`
 }
 
 func (x *Module) Reset() {
@@ -409,6 +1135,89 @@ func (*Module) Descriptor() ([]byte, []int) {
 	return file_cosmos_benchmark_module_v1_module_proto_rawDescGZIP(), []int{0}
 }
 
+func (x *Module) GetGenesisParams() *GenesisParams {
+	if x != nil {
+		return x.GenesisParams
+	}
+	return nil
+}
+
+// GenesisParams defines the genesis parameters for the benchmark module.
+type GenesisParams struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	StoreKeyCount     uint64 `protobuf:"varint,1,opt,name=store_key_count,json=storeKeyCount,proto3" json:"store_key_count,omitempty"`
+	Seed              uint64 `protobuf:"varint,2,opt,name=seed,proto3" json:"seed,omitempty"`
+	KeyMeanLength     uint64 `protobuf:"varint,3,opt,name=key_mean_length,json=keyMeanLength,proto3" json:"key_mean_length,omitempty"`
+	KeyStdDevLength   uint64 `protobuf:"varint,4,opt,name=key_std_dev_length,json=keyStdDevLength,proto3" json:"key_std_dev_length,omitempty"`
+	ValueMeanLength   uint64 `protobuf:"varint,5,opt,name=value_mean_length,json=valueMeanLength,proto3" json:"value_mean_length,omitempty"`
+	ValueStdDevLength uint64 `protobuf:"varint,6,opt,name=value_std_dev_length,json=valueStdDevLength,proto3" json:"value_std_dev_length,omitempty"`
+}
+
+func (x *GenesisParams) Reset() {
+	*x = GenesisParams{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_benchmark_module_v1_module_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GenesisParams) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GenesisParams) ProtoMessage() {}
+
+// Deprecated: Use GenesisParams.ProtoReflect.Descriptor instead.
+func (*GenesisParams) Descriptor() ([]byte, []int) {
+	return file_cosmos_benchmark_module_v1_module_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *GenesisParams) GetStoreKeyCount() uint64 {
+	if x != nil {
+		return x.StoreKeyCount
+	}
+	return 0
+}
+
+func (x *GenesisParams) GetSeed() uint64 {
+	if x != nil {
+		return x.Seed
+	}
+	return 0
+}
+
+func (x *GenesisParams) GetKeyMeanLength() uint64 {
+	if x != nil {
+		return x.KeyMeanLength
+	}
+	return 0
+}
+
+func (x *GenesisParams) GetKeyStdDevLength() uint64 {
+	if x != nil {
+		return x.KeyStdDevLength
+	}
+	return 0
+}
+
+func (x *GenesisParams) GetValueMeanLength() uint64 {
+	if x != nil {
+		return x.ValueMeanLength
+	}
+	return 0
+}
+
+func (x *GenesisParams) GetValueStdDevLength() uint64 {
+	if x != nil {
+		return x.ValueStdDevLength
+	}
+	return 0
+}
+
 var File_cosmos_benchmark_module_v1_module_proto protoreflect.FileDescriptor
 
 var file_cosmos_benchmark_module_v1_module_proto_rawDesc = []byte{
@@ -418,25 +1227,46 @@ var file_cosmos_benchmark_module_v1_module_proto_rawDesc = []byte{
 	0x73, 0x2e, 0x62, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x2e, 0x6d, 0x6f, 0x64, 0x75,
 	0x6c, 0x65, 0x2e, 0x76, 0x31, 0x1a, 0x20, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x70,
 	0x70, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c,
-	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x2a, 0x0a, 0x06, 0x4d, 0x6f, 0x64, 0x75, 0x6c,
-	0x65, 0x3a, 0x20, 0xba, 0xc0, 0x96, 0xda, 0x01, 0x1a, 0x0a, 0x18, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x78, 0x2f, 0x62, 0x65, 0x6e, 0x63, 0x68, 0x6d,
-	0x61, 0x72, 0x6b, 0x42, 0xee, 0x01, 0x0a, 0x1e, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x7c, 0x0a, 0x06, 0x4d, 0x6f, 0x64, 0x75, 0x6c,
+	0x65, 0x12, 0x50, 0x0a, 0x0e, 0x67, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x5f, 0x70, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x29, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2e, 0x62, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x2e, 0x6d, 0x6f, 0x64,
-	0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x50, 0x72,
-	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x34, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b,
-	0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62,
-	0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2f,
-	0x76, 0x31, 0x3b, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x42,
-	0x4d, 0xaa, 0x02, 0x1a, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x42, 0x65, 0x6e, 0x63, 0x68,
-	0x6d, 0x61, 0x72, 0x6b, 0x2e, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x56, 0x31, 0xca, 0x02,
-	0x1a, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72,
-	0x6b, 0x5c, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x26, 0x43, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x5c, 0x4d,
-	0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x1d, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x42,
-	0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x3a, 0x3a, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65,
-	0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x52, 0x0d, 0x67, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x3a, 0x20, 0xba, 0xc0, 0x96, 0xda, 0x01, 0x1a, 0x0a, 0x18, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x78, 0x2f, 0x62, 0x65, 0x6e, 0x63,
+	0x68, 0x6d, 0x61, 0x72, 0x6b, 0x22, 0xfd, 0x01, 0x0a, 0x0d, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69,
+	0x73, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x26, 0x0a, 0x0f, 0x73, 0x74, 0x6f, 0x72, 0x65,
+	0x5f, 0x6b, 0x65, 0x79, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04,
+	0x52, 0x0d, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x4b, 0x65, 0x79, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12,
+	0x12, 0x0a, 0x04, 0x73, 0x65, 0x65, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x04, 0x73,
+	0x65, 0x65, 0x64, 0x12, 0x26, 0x0a, 0x0f, 0x6b, 0x65, 0x79, 0x5f, 0x6d, 0x65, 0x61, 0x6e, 0x5f,
+	0x6c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0d, 0x6b, 0x65,
+	0x79, 0x4d, 0x65, 0x61, 0x6e, 0x4c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x12, 0x2b, 0x0a, 0x12, 0x6b,
+	0x65, 0x79, 0x5f, 0x73, 0x74, 0x64, 0x5f, 0x64, 0x65, 0x76, 0x5f, 0x6c, 0x65, 0x6e, 0x67, 0x74,
+	0x68, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0f, 0x6b, 0x65, 0x79, 0x53, 0x74, 0x64, 0x44,
+	0x65, 0x76, 0x4c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x12, 0x2a, 0x0a, 0x11, 0x76, 0x61, 0x6c, 0x75,
+	0x65, 0x5f, 0x6d, 0x65, 0x61, 0x6e, 0x5f, 0x6c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x18, 0x05, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x0f, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x4d, 0x65, 0x61, 0x6e, 0x4c, 0x65,
+	0x6e, 0x67, 0x74, 0x68, 0x12, 0x2f, 0x0a, 0x14, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x5f, 0x73, 0x74,
+	0x64, 0x5f, 0x64, 0x65, 0x76, 0x5f, 0x6c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x18, 0x06, 0x20, 0x01,
+	0x28, 0x04, 0x52, 0x11, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x53, 0x74, 0x64, 0x44, 0x65, 0x76, 0x4c,
+	0x65, 0x6e, 0x67, 0x74, 0x68, 0x42, 0xee, 0x01, 0x0a, 0x1e, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x2e, 0x6d,
+	0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65,
+	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x34, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,
+	0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2f, 0x62, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c,
+	0x65, 0x2f, 0x76, 0x31, 0x3b, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x76, 0x31, 0xa2, 0x02, 0x03,
+	0x43, 0x42, 0x4d, 0xaa, 0x02, 0x1a, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x42, 0x65, 0x6e,
+	0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x2e, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x2e, 0x56, 0x31,
+	0xca, 0x02, 0x1a, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x65, 0x6e, 0x63, 0x68, 0x6d,
+	0x61, 0x72, 0x6b, 0x5c, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x26,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b,
+	0x5c, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x1d, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a,
+	0x3a, 0x42, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x3a, 0x3a, 0x4d, 0x6f, 0x64, 0x75,
+	0x6c, 0x65, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -451,16 +1281,18 @@ func file_cosmos_benchmark_module_v1_module_proto_rawDescGZIP() []byte {
 	return file_cosmos_benchmark_module_v1_module_proto_rawDescData
 }
 
-var file_cosmos_benchmark_module_v1_module_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_cosmos_benchmark_module_v1_module_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_cosmos_benchmark_module_v1_module_proto_goTypes = []interface{}{
-	(*Module)(nil), // 0: cosmos.benchmark.module.v1.Module
+	(*Module)(nil),        // 0: cosmos.benchmark.module.v1.Module
+	(*GenesisParams)(nil), // 1: cosmos.benchmark.module.v1.GenesisParams
 }
 var file_cosmos_benchmark_module_v1_module_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: cosmos.benchmark.module.v1.Module.genesis_params:type_name -> cosmos.benchmark.module.v1.GenesisParams
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_benchmark_module_v1_module_proto_init() }
@@ -481,6 +1313,18 @@ func file_cosmos_benchmark_module_v1_module_proto_init() {
 				return nil
 			}
 		}
+		file_cosmos_benchmark_module_v1_module_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GenesisParams); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -488,7 +1332,7 @@ func file_cosmos_benchmark_module_v1_module_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_benchmark_module_v1_module_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

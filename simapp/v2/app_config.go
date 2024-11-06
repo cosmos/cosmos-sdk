@@ -304,8 +304,17 @@ var (
 				Config: appconfig.WrapAny(&bankmodulev2.Module{}),
 			},
 			{
-				Name:   benchmark.ModuleName,
-				Config: appconfig.WrapAny(&benchmarkmodulev1.Module{}),
+				Name: benchmark.ModuleName,
+				Config: appconfig.WrapAny(&benchmarkmodulev1.Module{
+					GenesisParams: &benchmarkmodulev1.GenesisParams{
+						StoreKeyCount:     10,
+						Seed:              34,
+						KeyMeanLength:     64,
+						KeyStdDevLength:   12,
+						ValueMeanLength:   1024,
+						ValueStdDevLength: 256,
+					},
+				}),
 			},
 		},
 	})

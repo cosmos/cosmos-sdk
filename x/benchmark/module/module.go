@@ -1,4 +1,4 @@
-package benchmark
+package module
 
 import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"

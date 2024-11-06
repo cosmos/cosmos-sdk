@@ -98,8 +98,8 @@ func (x *fastReflection_Op) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Op) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Seed != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Seed)
+	if x.Seed != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Seed)
 		if !f(fd_Op_seed, value) {
 			return
 		}
@@ -110,14 +110,14 @@ func (x *fastReflection_Op) Range(f func(protoreflect.FieldDescriptor, protorefl
 			return
 		}
 	}
-	if x.KeyLength != uint32(0) {
-		value := protoreflect.ValueOfUint32(x.KeyLength)
+	if x.KeyLength != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.KeyLength)
 		if !f(fd_Op_key_length, value) {
 			return
 		}
 	}
-	if x.ValueLength != uint32(0) {
-		value := protoreflect.ValueOfUint32(x.ValueLength)
+	if x.ValueLength != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ValueLength)
 		if !f(fd_Op_value_length, value) {
 			return
 		}
@@ -150,13 +150,13 @@ func (x *fastReflection_Op) Range(f func(protoreflect.FieldDescriptor, protorefl
 func (x *fastReflection_Op) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "cosmos.benchmark.v1.Op.seed":
-		return x.Seed != int64(0)
+		return x.Seed != uint64(0)
 	case "cosmos.benchmark.v1.Op.actor":
 		return x.Actor != ""
 	case "cosmos.benchmark.v1.Op.key_length":
-		return x.KeyLength != uint32(0)
+		return x.KeyLength != uint64(0)
 	case "cosmos.benchmark.v1.Op.value_length":
-		return x.ValueLength != uint32(0)
+		return x.ValueLength != uint64(0)
 	case "cosmos.benchmark.v1.Op.iterations":
 		return x.Iterations != uint32(0)
 	case "cosmos.benchmark.v1.Op.delete":
@@ -178,13 +178,13 @@ func (x *fastReflection_Op) Has(fd protoreflect.FieldDescriptor) bool {
 func (x *fastReflection_Op) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "cosmos.benchmark.v1.Op.seed":
-		x.Seed = int64(0)
+		x.Seed = uint64(0)
 	case "cosmos.benchmark.v1.Op.actor":
 		x.Actor = ""
 	case "cosmos.benchmark.v1.Op.key_length":
-		x.KeyLength = uint32(0)
+		x.KeyLength = uint64(0)
 	case "cosmos.benchmark.v1.Op.value_length":
-		x.ValueLength = uint32(0)
+		x.ValueLength = uint64(0)
 	case "cosmos.benchmark.v1.Op.iterations":
 		x.Iterations = uint32(0)
 	case "cosmos.benchmark.v1.Op.delete":
@@ -207,16 +207,16 @@ func (x *fastReflection_Op) Get(descriptor protoreflect.FieldDescriptor) protore
 	switch descriptor.FullName() {
 	case "cosmos.benchmark.v1.Op.seed":
 		value := x.Seed
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "cosmos.benchmark.v1.Op.actor":
 		value := x.Actor
 		return protoreflect.ValueOfString(value)
 	case "cosmos.benchmark.v1.Op.key_length":
 		value := x.KeyLength
-		return protoreflect.ValueOfUint32(value)
+		return protoreflect.ValueOfUint64(value)
 	case "cosmos.benchmark.v1.Op.value_length":
 		value := x.ValueLength
-		return protoreflect.ValueOfUint32(value)
+		return protoreflect.ValueOfUint64(value)
 	case "cosmos.benchmark.v1.Op.iterations":
 		value := x.Iterations
 		return protoreflect.ValueOfUint32(value)
@@ -244,13 +244,13 @@ func (x *fastReflection_Op) Get(descriptor protoreflect.FieldDescriptor) protore
 func (x *fastReflection_Op) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.benchmark.v1.Op.seed":
-		x.Seed = value.Int()
+		x.Seed = value.Uint()
 	case "cosmos.benchmark.v1.Op.actor":
 		x.Actor = value.Interface().(string)
 	case "cosmos.benchmark.v1.Op.key_length":
-		x.KeyLength = uint32(value.Uint())
+		x.KeyLength = value.Uint()
 	case "cosmos.benchmark.v1.Op.value_length":
-		x.ValueLength = uint32(value.Uint())
+		x.ValueLength = value.Uint()
 	case "cosmos.benchmark.v1.Op.iterations":
 		x.Iterations = uint32(value.Uint())
 	case "cosmos.benchmark.v1.Op.delete":
@@ -301,13 +301,13 @@ func (x *fastReflection_Op) Mutable(fd protoreflect.FieldDescriptor) protoreflec
 func (x *fastReflection_Op) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.benchmark.v1.Op.seed":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.benchmark.v1.Op.actor":
 		return protoreflect.ValueOfString("")
 	case "cosmos.benchmark.v1.Op.key_length":
-		return protoreflect.ValueOfUint32(uint32(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.benchmark.v1.Op.value_length":
-		return protoreflect.ValueOfUint32(uint32(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "cosmos.benchmark.v1.Op.iterations":
 		return protoreflect.ValueOfUint32(uint32(0))
 	case "cosmos.benchmark.v1.Op.delete":
@@ -529,7 +529,7 @@ func (x *fastReflection_Op) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Seed |= int64(b&0x7F) << shift
+					x.Seed |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -580,7 +580,7 @@ func (x *fastReflection_Op) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.KeyLength |= uint32(b&0x7F) << shift
+					x.KeyLength |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -599,7 +599,7 @@ func (x *fastReflection_Op) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.ValueLength |= uint32(b&0x7F) << shift
+					x.ValueLength |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -697,10 +697,10 @@ type Op struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Seed        int64  `protobuf:"varint,1,opt,name=seed,proto3" json:"seed,omitempty"`
+	Seed        uint64 `protobuf:"varint,1,opt,name=seed,proto3" json:"seed,omitempty"`
 	Actor       string `protobuf:"bytes,2,opt,name=actor,proto3" json:"actor,omitempty"`
-	KeyLength   uint32 `protobuf:"varint,3,opt,name=key_length,json=keyLength,proto3" json:"key_length,omitempty"`
-	ValueLength uint32 `protobuf:"varint,4,opt,name=value_length,json=valueLength,proto3" json:"value_length,omitempty"`
+	KeyLength   uint64 `protobuf:"varint,3,opt,name=key_length,json=keyLength,proto3" json:"key_length,omitempty"`
+	ValueLength uint64 `protobuf:"varint,4,opt,name=value_length,json=valueLength,proto3" json:"value_length,omitempty"`
 	Iterations  uint32 `protobuf:"varint,5,opt,name=iterations,proto3" json:"iterations,omitempty"`
 	Delete      bool   `protobuf:"varint,6,opt,name=delete,proto3" json:"delete,omitempty"`
 }
@@ -725,7 +725,7 @@ func (*Op) Descriptor() ([]byte, []int) {
 	return file_cosmos_benchmark_v1_benchmark_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Op) GetSeed() int64 {
+func (x *Op) GetSeed() uint64 {
 	if x != nil {
 		return x.Seed
 	}
@@ -739,14 +739,14 @@ func (x *Op) GetActor() string {
 	return ""
 }
 
-func (x *Op) GetKeyLength() uint32 {
+func (x *Op) GetKeyLength() uint64 {
 	if x != nil {
 		return x.KeyLength
 	}
 	return 0
 }
 
-func (x *Op) GetValueLength() uint32 {
+func (x *Op) GetValueLength() uint64 {
 	if x != nil {
 		return x.ValueLength
 	}
@@ -774,12 +774,12 @@ var file_cosmos_benchmark_v1_benchmark_proto_rawDesc = []byte{
 	0x72, 0x6b, 0x2f, 0x76, 0x31, 0x2f, 0x62, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x13, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x65,
 	0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x2e, 0x76, 0x31, 0x22, 0xa8, 0x01, 0x0a, 0x02, 0x4f,
-	0x70, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x65, 0x65, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52,
+	0x70, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x65, 0x65, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
 	0x04, 0x73, 0x65, 0x65, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x18, 0x02,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x12, 0x1d, 0x0a, 0x0a, 0x6b,
-	0x65, 0x79, 0x5f, 0x6c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52,
+	0x65, 0x79, 0x5f, 0x6c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52,
 	0x09, 0x6b, 0x65, 0x79, 0x4c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x12, 0x21, 0x0a, 0x0c, 0x76, 0x61,
-	0x6c, 0x75, 0x65, 0x5f, 0x6c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0d,
+	0x6c, 0x75, 0x65, 0x5f, 0x6c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04,
 	0x52, 0x0b, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x4c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x12, 0x1e, 0x0a,
 	0x0a, 0x69, 0x74, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28,
 	0x0d, 0x52, 0x0a, 0x69, 0x74, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x16, 0x0a,

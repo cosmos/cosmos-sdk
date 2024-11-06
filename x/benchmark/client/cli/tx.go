@@ -69,6 +69,10 @@ func NewLoadTestCmd() *cobra.Command {
 				ValueStdDev: 256,
 				BucketCount: storeKeyCount,
 			})
+			var txCount uint64
+			defer func() {
+				cmd.Printf("generated %d transactions\n", txCount)
+			}()
 			for {
 				select {
 				case <-ctx.Done():
@@ -81,7 +85,11 @@ func NewLoadTestCmd() *cobra.Command {
 					Caller: clientCtx.FromAddress,
 					Ops:    []*benchmark.Op{op},
 				}
-				tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+				err := tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+				if err != nil {
+					return err
+				}
+				txCount++
 			}
 		},
 	}

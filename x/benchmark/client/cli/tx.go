@@ -1,7 +1,13 @@
 package cli
 
 import (
+	"context"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"cosmossdk.io/x/benchmark"
+	gen "cosmossdk.io/x/benchmark/generator"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -27,16 +33,56 @@ func NewTxCmd() *cobra.Command {
 
 func NewLoadTestCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "load-test [from_key_or_address]",
-		Args: cobra.ExactArgs(3),
+		Use: "load-test [from_key_or_address]",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := &benchmark.MsgLoadTest{Caller: clientCtx.FromAddress}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			ctx, cancelFn := context.WithCancel(cmd.Context())
+			go func() {
+				sigCh := make(chan os.Signal, 1)
+				signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+				select {
+				case sig := <-sigCh:
+					cancelFn()
+					cmd.Printf("caught %s signal\n", sig.String())
+				case <-ctx.Done():
+					cancelFn()
+				}
+			}()
+
+			// TODO: fetch or share state from genesis
+			seed := uint64(34)
+			storeKeyCount := uint64(10)
+			storeKeys, err := gen.StoreKeys("benchmark", seed, storeKeyCount)
+			if err != nil {
+				return err
+			}
+
+			g := gen.NewGenerator(gen.Options{
+				Seed:        34,
+				KeyMean:     64,
+				KeyStdDev:   8,
+				ValueMean:   1024,
+				ValueStdDev: 256,
+				BucketCount: storeKeyCount,
+			})
+			for {
+				select {
+				case <-ctx.Done():
+					return nil
+				default:
+				}
+				op, ski := g.Next()
+				op.Actor = storeKeys[ski]
+				msg := &benchmark.MsgLoadTest{
+					Caller: clientCtx.FromAddress,
+					Ops:    []*benchmark.Op{op},
+				}
+				tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			}
 		},
 	}
 

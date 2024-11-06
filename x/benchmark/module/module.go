@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/core/registry"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/spf13/cobra"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	grpc "google.golang.org/grpc"
@@ -14,6 +15,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/benchmark"
+	"cosmossdk.io/x/benchmark/client/cli"
 	gen "cosmossdk.io/x/benchmark/generator"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -92,6 +94,10 @@ func (a *AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 
 func (a *AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 	msgservice.RegisterMsgServiceDesc(registrar, &benchmark.Msg_serviceDesc)
+}
+
+func (a *AppModule) GetTxCmd() *cobra.Command {
+	return cli.NewTxCmd()
 }
 
 func (a *AppModule) IsOnePerModuleType() {}

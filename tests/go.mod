@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/tests
 
-go 1.23.1
+go 1.23.2
 
 require (
 	cosmossdk.io/api v0.7.6
@@ -72,6 +72,7 @@ require (
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-00010101000000-000000000000 // indirect
+	cosmossdk.io/x/benchmark v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -254,6 +255,7 @@ replace (
 	cosmossdk.io/x/accounts/defaults/multisig => ../x/accounts/defaults/multisig
 	cosmossdk.io/x/authz => ../x/authz
 	cosmossdk.io/x/bank => ../x/bank
+	cosmossdk.io/x/benchmark => ../x/benchmark
 	cosmossdk.io/x/circuit => ../x/circuit
 	cosmossdk.io/x/consensus => ../x/consensus
 	cosmossdk.io/x/distribution => ../x/distribution

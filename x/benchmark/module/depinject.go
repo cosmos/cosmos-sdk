@@ -1,10 +1,9 @@
 package module
 
 import (
-	"cosmossdk.io/depinject"
-	"fmt"
-	"math/rand/v2"
 	"unsafe"
+
+	"cosmossdk.io/depinject"
 
 	modulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	"cosmossdk.io/core/appmodule"
@@ -44,31 +43,20 @@ func ProvideModule(
 	in Input,
 ) (appmodule.AppModule, error) {
 	cfg := in.Cfg
-	g := gen.NewGenerator(gen.Options{Seed: cfg.GenesisParams.Seed})
-	r := rand.New(rand.NewPCG(cfg.GenesisParams.Seed, cfg.GenesisParams.Seed>>32))
 	kvMap := make(KVServiceMap)
-	storeKeys := make([]string, cfg.GenesisParams.StoreKeyCount)
-
-	var i, j uint64
-	for i < cfg.GenesisParams.StoreKeyCount {
-		if j > maxStoreKeyGenIterations {
-			return nil, fmt.Errorf("failed to generate %d unique store keys", cfg.GenesisParams.StoreKeyCount)
-		}
-		sk := fmt.Sprintf("%s_%x", ModuleName, g.Bytes(r.Uint64(), 8))
-		if _, ok := kvMap[sk]; ok {
-			j++
-			continue
-		}
+	storeKeys, err := gen.StoreKeys(ModuleName, cfg.GenesisParams.Seed, cfg.GenesisParams.StoreKeyCount)
+	if err != nil {
+		return nil, err
+	}
+	for _, sk := range storeKeys {
 		// app v2 case
 		if in.Registrar != nil {
 			in.Registrar.RegisterKey(sk)
 		}
 		kvService := in.StoreFactory(unsafeStrToBytes(sk))
 		kvMap[sk] = kvService
-		storeKeys[i] = sk
-		i++
-		j++
 	}
+
 	return NewAppModule(cfg.GenesisParams, storeKeys, kvMap, in.Logger), nil
 }
 

@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"fmt"
 	"math/rand/v2"
 
 	"github.com/cespare/xxhash/v2"
@@ -17,6 +18,8 @@ type Options struct {
 	ValueStdDev uint64
 
 	DeleteFraction float64
+
+	BucketCount uint64
 }
 
 type State struct {
@@ -26,20 +29,27 @@ type State struct {
 type Generator struct {
 	Options
 
-	digest *xxhash.Digest
-	rand   *rand.Rand
+	rand *rand.Rand
 }
 
 func NewGenerator(opts Options) *Generator {
 	return &Generator{
 		Options: opts,
-		digest:  xxhash.New(),
 		rand:    rand.New(rand.NewPCG(opts.Seed, opts.Seed>>32)),
 	}
 }
 
-func (g *Generator) Next() (*benchmark.Op, error) {
-	return nil, nil
+func (g *Generator) Next() (*benchmark.Op, uint64) {
+	op := &benchmark.Op{
+		Seed:        g.rand.Uint64(),
+		KeyLength:   g.NormUint64(g.KeyMean, g.KeyStdDev),
+		ValueLength: g.NormUint64(g.ValueMean, g.ValueStdDev),
+	}
+	if op.KeyLength == 0 {
+		op.KeyLength = 1
+	}
+
+	return op, g.rand.Uint64N(g.BucketCount)
 }
 
 func (g *Generator) Bytes(seed, length uint64) []byte {
@@ -99,4 +109,29 @@ func encodeUint64(x uint64) []byte {
 	b[6] = byte(x >> 48)
 	b[7] = byte(x >> 56)
 	return b[:]
+}
+
+const maxStoreKeyGenIterations = 100
+
+func StoreKeys(prefix string, seed, count uint64) ([]string, error) {
+	g := NewGenerator(Options{})
+	r := rand.New(rand.NewPCG(seed, seed>>32))
+	keys := make([]string, count)
+	seen := make(map[string]struct{})
+
+	var i, j uint64
+	for i < count {
+		if j > maxStoreKeyGenIterations {
+			return nil, fmt.Errorf("failed to generate %d unique store keys", count)
+		}
+		sk := fmt.Sprintf("%s_%x", prefix, g.Bytes(r.Uint64(), 8))
+		if _, ok := seen[sk]; ok {
+			j++
+			continue
+		}
+		keys[i] = sk
+		seen[sk] = struct{}{}
+		i++
+	}
+	return keys, nil
 }

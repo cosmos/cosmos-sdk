@@ -305,7 +305,7 @@ var (
 					GenesisParams: &benchmarkmodulev1.GenesisParams{
 						Seed:              34,
 						StoreKeyCount:     10,
-						KeyCount:          10_000_000,
+						KeyCount:          100_000,
 						KeyMeanLength:     64,
 						KeyStdDevLength:   12,
 						ValueMeanLength:   1024,

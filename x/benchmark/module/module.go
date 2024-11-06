@@ -37,14 +37,17 @@ func NewAppModule(
 	logger log.Logger,
 ) *AppModule {
 	return &AppModule{
-		keeper:    NewKeeper(kvMap),
-		storeKeys: storeKeys,
-		log:       logger,
+		genesisParams: genesisParams,
+		keeper:        NewKeeper(kvMap),
+		storeKeys:     storeKeys,
+		log:           logger,
 	}
 }
 
 // DefaultGenesis implements appmodulev2.HasGenesis.
-func (a *AppModule) DefaultGenesis() json.RawMessage { return nil }
+func (a *AppModule) DefaultGenesis() json.RawMessage {
+	return nil
+}
 
 // ExportGenesis implements appmodulev2.HasGenesis.
 func (a *AppModule) ExportGenesis(context.Context) (json.RawMessage, error) { return nil, nil }

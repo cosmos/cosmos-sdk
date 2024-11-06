@@ -175,6 +175,7 @@ var (
 						circuittypes.ModuleName,
 						pooltypes.ModuleName,
 						epochstypes.ModuleName,
+						benchmark.ModuleName,
 					},
 					// When ExportGenesis is not specified, the export genesis module order
 					// is equal to the init genesis order
@@ -307,8 +308,9 @@ var (
 				Name: benchmark.ModuleName,
 				Config: appconfig.WrapAny(&benchmarkmodulev1.Module{
 					GenesisParams: &benchmarkmodulev1.GenesisParams{
-						StoreKeyCount:     10,
 						Seed:              34,
+						StoreKeyCount:     10,
+						KeyCount:          10_000_000,
 						KeyMeanLength:     64,
 						KeyStdDevLength:   12,
 						ValueMeanLength:   1024,

@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
+	"cosmossdk.io/core/registry"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
+
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	grpc "google.golang.org/grpc"
 
@@ -67,7 +70,10 @@ func (a *AppModule) InitGenesis(ctx context.Context, _ json.RawMessage) error {
 			a.log.Warn("init genesis", "progress", i, "total", a.genesisParams.KeyCount)
 		}
 		sk := a.storeKeys[g.UintN(skCount)]
-		a.keeper.set(ctx, sk, g.Key(), g.Value())
+		err := a.keeper.set(ctx, sk, g.Key(), g.Value())
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -79,9 +85,13 @@ func (a *AppModule) RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 }
 
 // RegisterServices registers module services.
-func (am *AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	benchmark.RegisterMsgServer(registrar, am.keeper)
+func (a *AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
+	benchmark.RegisterMsgServer(registrar, a.keeper)
 	return nil
+}
+
+func (a *AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	msgservice.RegisterMsgServiceDesc(registrar, &benchmark.Msg_serviceDesc)
 }
 
 func (a *AppModule) IsOnePerModuleType() {}

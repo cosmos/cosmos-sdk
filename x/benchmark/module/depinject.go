@@ -1,6 +1,7 @@
 package module
 
 import (
+	"cosmossdk.io/depinject"
 	"fmt"
 	"math/rand/v2"
 	"unsafe"
@@ -30,12 +31,19 @@ type StoreKeyRegistrar interface {
 	RegisterKey(string)
 }
 
+type Input struct {
+	depinject.In
+
+	Logger       log.Logger
+	Cfg          *modulev1.Module
+	Registrar    StoreKeyRegistrar `optional:"true"`
+	StoreFactory store.KVStoreServiceFactory
+}
+
 func ProvideModule(
-	logger log.Logger,
-	cfg *modulev1.Module,
-	registrar StoreKeyRegistrar,
-	kvStoreServiceFactory store.KVStoreServiceFactory,
+	in Input,
 ) (appmodule.AppModule, error) {
+	cfg := in.Cfg
 	g := gen.NewGenerator(gen.Options{Seed: cfg.GenesisParams.Seed})
 	r := rand.New(rand.NewPCG(cfg.GenesisParams.Seed, cfg.GenesisParams.Seed>>32))
 	kvMap := make(KVServiceMap)
@@ -51,14 +59,17 @@ func ProvideModule(
 			j++
 			continue
 		}
-		registrar.RegisterKey(sk)
-		kvService := kvStoreServiceFactory(unsafeStrToBytes(sk))
+		// app v2 case
+		if in.Registrar != nil {
+			in.Registrar.RegisterKey(sk)
+		}
+		kvService := in.StoreFactory(unsafeStrToBytes(sk))
 		kvMap[sk] = kvService
 		storeKeys[i] = sk
 		i++
 		j++
 	}
-	return NewAppModule(cfg.GenesisParams, storeKeys, kvMap, logger), nil
+	return NewAppModule(cfg.GenesisParams, storeKeys, kvMap, in.Logger), nil
 }
 
 type KVServiceMap map[string]store.KVStoreService

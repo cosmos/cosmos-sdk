@@ -68,12 +68,18 @@ func (g *Generator) NormUint64(mean, stdDev uint64) uint64 {
 
 func (g *Generator) Key() []byte {
 	length := g.NormUint64(g.KeyMean, g.KeyStdDev)
+	if length == 0 {
+		length = 1
+	}
 	seed := g.rand.Uint64()
 	return g.Bytes(seed, length)
 }
 
 func (g *Generator) Value() []byte {
 	length := g.NormUint64(g.ValueMean, g.ValueStdDev)
+	if length == 0 {
+		length = 1
+	}
 	seed := g.rand.Uint64()
 	return g.Bytes(seed, length)
 }

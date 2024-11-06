@@ -23,6 +23,11 @@ func (p *Permissions) Validation() error {
 
 func MsgTypeURLValidation(urls []string) []string {
 	for idx, url := range urls {
+		if len(url) == 0 {
+			// remove this element
+			urls = append(urls[:idx], urls[idx+1:]...)
+			continue
+		}
 		if url[0] != '/' {
 			urls[idx] = "/" + url
 		}

@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	coreserver "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -20,6 +19,14 @@ import (
 	"cosmossdk.io/server/v2/store"
 	storev2 "cosmossdk.io/store/v2"
 )
+
+type mockStore struct {
+	storev2.RootStore
+}
+
+func (*mockStore) Close() error {
+	return nil
+}
 
 type mockInterfaceRegistry struct{}
 
@@ -31,22 +38,6 @@ func (*mockInterfaceRegistry) ListImplementations(ifaceTypeURL string) []string 
 	panic("not implemented")
 }
 func (*mockInterfaceRegistry) ListAllInterfaces() []string { panic("not implemented") }
-
-type mockApp[T transaction.Tx] struct {
-	serverv2.AppI[T]
-}
-
-func (*mockApp[T]) QueryHandlers() map[string]appmodulev2.Handler {
-	return map[string]appmodulev2.Handler{}
-}
-
-func (*mockApp[T]) InterfaceRegistry() coreserver.InterfaceRegistry {
-	return &mockInterfaceRegistry{}
-}
-
-func (*mockApp[T]) Store() storev2.RootStore {
-	return nil
-}
 
 func TestServer(t *testing.T) {
 	currentDir, err := os.Getwd()
@@ -62,12 +53,11 @@ func TestServer(t *testing.T) {
 	logger := log.NewLogger(os.Stdout)
 
 	ctx := serverv2.SetServerContext(context.Background(), v, logger)
-	app := &mockApp[transaction.Tx]{}
 
-	grpcServer, err := grpc.New[transaction.Tx](logger, app.InterfaceRegistry(), app.QueryHandlers(), app, cfg)
+	grpcServer, err := grpc.New[transaction.Tx](logger, &mockInterfaceRegistry{}, map[string]appmodulev2.Handler{}, nil, cfg)
 	require.NoError(t, err)
 
-	storeServer, err := store.New[transaction.Tx](app.Store(), cfg)
+	storeServer, err := store.New[transaction.Tx](&mockStore{}, cfg)
 	require.NoError(t, err)
 
 	mockServer := &mockServer{name: "mock-server-1", ch: make(chan string, 100)}

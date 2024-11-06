@@ -25,7 +25,7 @@ func DefaultGenesisState() *GenesisState {
 		ContinuousFund: []*ContinuousFund{},
 		Budget:         []*Budget{},
 		Params: &Params{
-			EnabledDistributionDenoms: []string{"stake"},
+			EnabledDistributionDenoms: []string{sdk.DefaultBondDenom},
 		},
 	}
 }

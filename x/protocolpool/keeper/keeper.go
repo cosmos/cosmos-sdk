@@ -228,35 +228,35 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 	}
 
 	// next we iterate over the distributions, calculate each recipient's share and the remaining pool funds
-	toDistribute := map[string]sdk.Coins{}
-	amountToDistribute := sdk.NewCoins() // amount assigned to distributions
-	allDistributions := sdk.NewCoins()   // total amount distributed to the pool, to then calculate the remaining pool funds
+	distributeToRecipient := map[string]sdk.Coins{}
+	effectiveDistributionAmounts := sdk.NewCoins() // amount assigned to distributions
+	totalDistributionAmounts := sdk.NewCoins()     // total amount distributed to the pool, to then calculate the remaining pool funds
 
 	if err = k.Distributions.Walk(ctx, nil, func(key time.Time, amount types.DistributionAmount) (stop bool, err error) {
-		percentageToDistribute := math.LegacyZeroDec()
-		allDistributions = allDistributions.Add(amount.Amount...)
+		totalPercentageApplied := math.LegacyZeroDec()
+		totalDistributionAmounts = totalDistributionAmounts.Add(amount.Amount...)
 
 		for _, f := range funds {
 			if f.Expiry != nil && f.Expiry.Before(key) {
 				continue
 			}
 
-			percentageToDistribute = percentageToDistribute.Add(f.Percentage)
+			totalPercentageApplied = totalPercentageApplied.Add(f.Percentage)
 
-			_, ok := toDistribute[f.Recipient]
+			_, ok := distributeToRecipient[f.Recipient]
 			if !ok {
-				toDistribute[f.Recipient] = sdk.NewCoins()
+				distributeToRecipient[f.Recipient] = sdk.NewCoins()
 			}
 
 			for _, denom := range amount.Amount.Denoms() {
 				am := sdk.NewCoin(denom, f.Percentage.MulInt(amount.Amount.AmountOf(denom)).TruncateInt())
-				toDistribute[f.Recipient] = toDistribute[f.Recipient].Add(am)
-				amountToDistribute = amountToDistribute.Add(am)
+				distributeToRecipient[f.Recipient] = distributeToRecipient[f.Recipient].Add(am)
+				effectiveDistributionAmounts = effectiveDistributionAmounts.Add(am)
 			}
 		}
 
 		// sanity check for max percentage
-		if percentageToDistribute.GT(math.LegacyOneDec()) {
+		if totalPercentageApplied.GT(math.LegacyOneDec()) {
 			return true, errors.New("total funds percentage cannot exceed 100")
 		}
 
@@ -275,13 +275,13 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 	}
 
 	// send the funds to the stream account to be distributed later, and the remaining to the community pool
-	if !amountToDistribute.IsZero() {
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.StreamAccount, amountToDistribute); err != nil {
+	if !effectiveDistributionAmounts.IsZero() {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.StreamAccount, effectiveDistributionAmounts); err != nil {
 			return err
 		}
 	}
 
-	poolFunds := allDistributions.Sub(amountToDistribute...)
+	poolFunds := totalDistributionAmounts.Sub(effectiveDistributionAmounts...)
 	if !poolFunds.IsZero() {
 		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ProtocolPoolDistrAccount, types.ModuleName, poolFunds); err != nil {
 			return err
@@ -289,8 +289,8 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 	}
 
 	// update the recipient fund distribution, first get the keys and sort them
-	recipients := make([]string, 0, len(toDistribute))
-	for k2 := range toDistribute {
+	recipients := make([]string, 0, len(distributeToRecipient))
+	for k2 := range distributeToRecipient {
 		recipients = append(recipients, k2)
 	}
 	sort.Strings(recipients)
@@ -311,7 +311,7 @@ func (k Keeper) IterateAndUpdateFundsDistribution(ctx context.Context) error {
 			}
 		}
 
-		toClaim.Amount = toClaim.Amount.Add(toDistribute[recipient]...)
+		toClaim.Amount = toClaim.Amount.Add(distributeToRecipient[recipient]...)
 		if err = k.RecipientFundDistribution.Set(ctx, bzAddr, toClaim); err != nil {
 			return err
 		}

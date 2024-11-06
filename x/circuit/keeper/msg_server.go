@@ -58,6 +58,11 @@ func (srv msgServer) AuthorizeCircuitBreaker(ctx context.Context, msg *types.Msg
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "permissions cannot be nil")
 	}
 
+	err = msg.Permissions.Validation()
+	if err != nil {
+		return nil, err
+	}
+
 	// Append the account in the msg to the store's set of authorized super admins
 	if err = srv.Permissions.Set(ctx, grantee, *msg.Permissions); err != nil {
 		return nil, err

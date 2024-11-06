@@ -111,6 +111,59 @@ func TestAuthorizeCircuitBreaker(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestAuthorizeCircuitBreakerWithPermissionValidation(t *testing.T) {
+	ft := initFixture(t)
+
+	srv := keeper.NewMsgServerImpl(ft.keeper)
+	authority, err := ft.ac.BytesToString(ft.mockAddr)
+	require.NoError(t, err)
+
+	// successfully add a new super admin with LimitTypeUrls not empty
+	adminPerms := types.Permissions{Level: types.Permissions_LEVEL_SUPER_ADMIN, LimitTypeUrls: []string{"cosmos.staking.v1beta1.MsgDelegate"}}
+	msg := &types.MsgAuthorizeCircuitBreaker{Granter: authority, Grantee: addresses[1], Permissions: &adminPerms}
+	_, err = srv.AuthorizeCircuitBreaker(ft.ctx, msg)
+	require.NoError(t, err)
+
+	add1, err := ft.ac.StringToBytes(addresses[1])
+	require.NoError(t, err)
+
+	perms, err := ft.keeper.Permissions.Get(ft.ctx, add1)
+	require.NoError(t, err)
+	// LimitTypeUrls should be empty
+	require.Equal(t, len(perms.LimitTypeUrls), 0)
+
+	// successfully add a new super user with LimitTypeUrls not empty
+	allmsgs := types.Permissions{Level: types.Permissions_LEVEL_ALL_MSGS, LimitTypeUrls: []string{"cosmos.staking.v1beta1.MsgDelegate"}}
+	msg = &types.MsgAuthorizeCircuitBreaker{Granter: authority, Grantee: addresses[2], Permissions: &allmsgs}
+	_, err = srv.AuthorizeCircuitBreaker(ft.ctx, msg)
+	require.NoError(t, err)
+	require.Equal(
+		t,
+		sdk.NewEvent(
+			"authorize_circuit_breaker",
+			sdk.NewAttribute("granter", authority),
+			sdk.NewAttribute("grantee", addresses[2]),
+			sdk.NewAttribute("permission", allmsgs.String()),
+		),
+		lastEvent(ft.ctx),
+	)
+
+	add2, err := ft.ac.StringToBytes(addresses[2])
+	require.NoError(t, err)
+
+	perms, err = ft.keeper.Permissions.Get(ft.ctx, add2)
+	require.NoError(t, err)
+
+	// LimitTypeUrls should be empty
+	require.Equal(t, len(perms.LimitTypeUrls), 0)
+
+	// grants user perms to Permissions_LEVEL_SOME_MSGS with empty LimitTypeUrls
+	somemsgs := types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{}}
+	msg = &types.MsgAuthorizeCircuitBreaker{Granter: authority, Grantee: addresses[3], Permissions: &somemsgs}
+	_, err = srv.AuthorizeCircuitBreaker(ft.ctx, msg)
+	require.Error(t, err)
+}
+
 func TestTripCircuitBreaker(t *testing.T) {
 	ft := initFixture(t)
 

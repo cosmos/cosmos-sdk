@@ -1,0 +1,20 @@
+package types
+
+import "errors"
+
+func (p *Permissions) Validation() error {
+	switch {
+	case p.Level == Permissions_LEVEL_SOME_MSGS:
+		// if permission is some msg, LimitTypeUrls array must not be empty
+		if len(p.LimitTypeUrls) == 0 {
+			return errors.New("LimitTypeUrls of LEVEL_SOME_MSGS should NOT be empty")
+		}
+	case p.Level == Permissions_LEVEL_ALL_MSGS || p.Level == Permissions_LEVEL_SUPER_ADMIN:
+		// if permission is all msg or super addmin, LimitTypeUrls array clear
+		// all p.LimitTypeUrls since we not use this field
+		p.LimitTypeUrls = nil
+	default:
+	}
+
+	return nil
+}

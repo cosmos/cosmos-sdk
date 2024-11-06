@@ -155,20 +155,27 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgRese
 		switch {
 		case perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types.Permissions_LEVEL_ALL_MSGS || bytes.Equal(address, srv.GetAuthority()):
 			// if the sender is a super admin or the module authority, will remove all disabled msgs
-			srv.DisableList.Walk(ctx, nil, func(msgUrl string) (stop bool, err error) {
+			err := srv.DisableList.Walk(ctx, nil, func(msgUrl string) (stop bool, err error) {
 				msgTypeUrls = append(msgTypeUrls, msgUrl)
 				return false, nil
 			})
+			if err != nil {
+				return nil, err
+			}
 
 		case perms.Level == types.Permissions_LEVEL_SOME_MSGS:
 			// if the sender has permission for some messages, will remove all disabled msgs that in the perms.LimitTypeUrls
-			srv.DisableList.Walk(ctx, nil, func(msgUrl string) (stop bool, err error) {
+			err := srv.DisableList.Walk(ctx, nil, func(msgUrl string) (stop bool, err error) {
 				if slices.Contains(perms.LimitTypeUrls, msgUrl) {
 					msgTypeUrls = append(msgTypeUrls, msgUrl)
 				}
 				return false, nil
 			})
+			if err != nil {
+				return nil, err
+			}
 		default:
+			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "account does not have permission to reset circuit breaker")
 		}
 	}
 

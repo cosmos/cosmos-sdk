@@ -164,7 +164,7 @@ func TestAuthorizeCircuitBreakerWithPermissionValidation(t *testing.T) {
 	require.Error(t, err)
 
 	// grants user perms to Permissions_LEVEL_SOME_MSGS with empty LimitTypeUrls
-	permis := types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{"cosmos.staking.v1beta1.MsgDelegate", "/cosmos.gov.v1beta1.MsgDeposit", "cosmos.gov.v1beta1.MsgVote"}}
+	permis := types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{"cosmos.staking.v1beta1.MsgDelegate", "/cosmos.gov.v1beta1.MsgDeposit", ""}}
 	msg = &types.MsgAuthorizeCircuitBreaker{Granter: authority, Grantee: addresses[4], Permissions: &permis}
 	_, err = srv.AuthorizeCircuitBreaker(ft.ctx, msg)
 	require.NoError(t, err)
@@ -185,7 +185,7 @@ func TestAuthorizeCircuitBreakerWithPermissionValidation(t *testing.T) {
 	perms, err = ft.keeper.Permissions.Get(ft.ctx, add4)
 	require.NoError(t, err)
 
-	require.Equal(t, []string{"/cosmos.staking.v1beta1.MsgDelegate", "/cosmos.gov.v1beta1.MsgDeposit", "/cosmos.gov.v1beta1.MsgVote"}, perms.LimitTypeUrls)
+	require.Equal(t, []string{"/cosmos.staking.v1beta1.MsgDelegate", "/cosmos.gov.v1beta1.MsgDeposit"}, perms.LimitTypeUrls)
 }
 
 func TestTripCircuitBreaker(t *testing.T) {

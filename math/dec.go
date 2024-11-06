@@ -305,8 +305,8 @@ func (x Dec) BigInt() (*big.Int, error) {
 
 // SdkIntTrim rounds the decimal number towards zero to the nearest integer, then converts and returns it as `sdkmath.Int`.
 // It handles both positive and negative values correctly by truncating towards zero.
-// This function panics if the resulting integer is larger than the maximum value that `sdkmath.Int` can represent.
-func (x Dec) SdkIntTrim() Int {
+// This function returns an ErrNonIntegral error if the resulting integer is larger than the maximum value that `sdkmath.Int` can represent.
+func (x Dec) SdkIntTrim() (Int, error) {
 	y, _ := x.Reduce()
 	r := y.dec.Coeff
 	if y.dec.Exponent != 0 {
@@ -322,7 +322,11 @@ func (x Dec) SdkIntTrim() Int {
 	if x.dec.Negative {
 		r.Neg(&r)
 	}
-	return NewIntFromBigInt(r.MathBigInt())
+	bigInt := r.MathBigInt()
+	if bigInt.BitLen() > MaxBitLen {
+		return ZeroInt(), ErrNonIntegral
+	}
+	return NewIntFromBigInt(bigInt), nil
 }
 
 // String formatted in decimal notation: '-ddddd.dddd', no exponent

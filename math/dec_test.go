@@ -1274,27 +1274,38 @@ func TestToBigInt(t *testing.T) {
 }
 
 func TestToSdkInt(t *testing.T) {
-	i1 := "1000000000000000000000000000000000000123456789"
+	maxIntValue := "115792089237316195423570985008687907853269984665640564039457584007913129639935" // 2^256 -1
 	tcs := []struct {
-		intStr string
-		out    string
+		src    string
+		exp    string
+		expErr bool
 	}{
-		{i1, i1},
-		{"1000000000000000000000000000000000000123456789.00000000", i1},
-		{"123.456e6", "123456000"},
-		{"123.456e1", "1234"},
-		{"123.456", "123"},
-		{"123.956", "123"},
-		{"-123.456", "-123"},
-		{"-123.956", "-123"},
-		{"-0.956", "0"},
-		{"-0.9", "0"},
+		{src: maxIntValue, exp: maxIntValue},
+		{src: "1000000000000000000000000000000000000123456789.00000001", exp: "1000000000000000000000000000000000000123456789"},
+		{src: "123.456e6", exp: "123456000"},
+		{src: "123.456e1", exp: "1234"},
+		{src: "123.456", exp: "123"},
+		{src: "123.956", exp: "123"},
+		{src: "-123.456", exp: "-123"},
+		{src: "-123.956", exp: "-123"},
+		{src: "-0.956", exp: "0"},
+		{src: "-0.9", exp: "0"},
+		{src: "1E-100000", exp: "0"},
+		{src: "115792089237316195423570985008687907853269984665640564039457584007913129639936", expErr: true}, // 2^256
+		{src: "1E100000", expErr: true},
 	}
-	for idx, tc := range tcs {
-		a, err := NewDecFromString(tc.intStr)
-		require.NoError(t, err)
-		b := a.SdkIntTrim()
-		require.Equal(t, tc.out, b.String(), "test_%d", idx)
+	for _, tc := range tcs {
+		t.Run(fmt.Sprintf(tc.src), func(t *testing.T) {
+			a, err := NewDecFromString(tc.src)
+			require.NoError(t, err)
+			b, gotErr := a.SdkIntTrim()
+			if tc.expErr {
+				require.Error(t, gotErr, "value: %s", b.String())
+				return
+			}
+			require.NoError(t, gotErr)
+			require.Equal(t, tc.exp, b.String())
+		})
 	}
 }
 

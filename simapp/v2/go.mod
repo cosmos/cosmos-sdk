@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // indirect; main
-	cosmossdk.io/depinject v1.0.0
+	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/runtime/v2 v2.0.0-20241105073932-55f7cfcebae4 // main

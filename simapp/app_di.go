@@ -7,12 +7,15 @@ import (
 	"fmt"
 	"io"
 
+	_ "github.com/jackc/pgx/v5/stdlib" // Import and register pgx driver
+
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/registry"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	_ "cosmossdk.io/indexer/postgres" // register the postgres indexer
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/accounts"
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"

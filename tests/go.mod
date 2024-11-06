@@ -63,6 +63,11 @@ require (
 	cloud.google.com/go/storage v1.42.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
+<<<<<<< HEAD
+=======
+	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
+	cosmossdk.io/indexer/postgres v0.1.0 // indirect
+>>>>>>> 2290c5ee5 (fix(indexer): the issues during simapp v1 integration (#22413))
 	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
@@ -148,6 +153,10 @@ require (
 	github.com/huandu/skiplist v1.2.1 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/pgx/v5 v5.7.1 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.10 // indirect
@@ -234,8 +243,18 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	cosmossdk.io/client/v2 => ../client/v2
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20240913190136-3bc707a5a214 // main
+=======
+	cosmossdk.io/collections => ../collections
+	cosmossdk.io/indexer/postgres => ../indexer/postgres
+	cosmossdk.io/runtime/v2 => ../runtime/v2
+	cosmossdk.io/server/v2/appmanager => ../server/v2/appmanager
+	cosmossdk.io/server/v2/stf => ../server/v2/stf
+	cosmossdk.io/store => ../store
+	cosmossdk.io/store/v2 => ../store/v2
+>>>>>>> 2290c5ee5 (fix(indexer): the issues during simapp v1 integration (#22413))
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../x/accounts/defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup

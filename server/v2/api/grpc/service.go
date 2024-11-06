@@ -15,9 +15,7 @@ import (
 // v2Service implements the gRPC service interface for handling queries and listing handlers.
 type v2Service struct {
 	queryHandlers map[string]appmodulev2.Handler
-	queryable     interface {
-		Query(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error)
-	}
+	queryable     func(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error)
 }
 
 // Query handles incoming query requests by unmarshaling the request, processing it,
@@ -39,7 +37,7 @@ func (s v2Service) Query(ctx context.Context, request *QueryRequest) (*QueryResp
 		return nil, status.Errorf(codes.InvalidArgument, "failed to unmarshal request: %v", err)
 	}
 
-	queryResp, err := s.queryable.Query(ctx, 0, protoMsg)
+	queryResp, err := s.queryable(ctx, 0, protoMsg)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "query failed: %v", err)
 	}

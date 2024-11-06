@@ -423,6 +423,8 @@ func TestDenomsMetadata(t *testing.T) {
 		testdata.DeterministicIterationsV2(t, req, gasMeterFactory, queryFn, assertNonZeroGas, nil)
 	})
 
+	require.NoError(t, f.app.Close())
+
 	f = initDeterministicFixture(t) // reset
 	f.ctx = f.app.StateLatestContext(t)
 	gasMeterFactory = integration.GasMeterFactory(f.ctx)

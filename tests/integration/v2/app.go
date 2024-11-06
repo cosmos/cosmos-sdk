@@ -405,3 +405,7 @@ func (a *App) CheckBalance(
 	balances := keeper.GetAllBalances(ctx, addr)
 	require.Equal(t, expected, balances)
 }
+
+func (a *App) Close() error {
+	return a.Store.Close()
+}

@@ -22,7 +22,9 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
-* [#22438](https://github.com/cosmos/cosmos-sdk/pull/22438) Unexported fields on `In` structs are now silently ignored.
+## 1.1.0
+
+* [#22438](https://github.com/cosmos/cosmos-sdk/pull/22438) Unexported fields on `In` structs are now silently ignored instead of failing.
 
 ## 1.0.0
 

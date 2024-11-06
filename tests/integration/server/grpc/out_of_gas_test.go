@@ -2,25 +2,19 @@ package grpc_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
-	minttypes "cosmossdk.io/x/mint/types"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
-	_ "cosmossdk.io/x/accounts"
 	"cosmossdk.io/x/bank"
-	_ "cosmossdk.io/x/bank"
-	"cosmossdk.io/x/bank/keeper"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
-	_ "cosmossdk.io/x/consensus"
-	_ "cosmossdk.io/x/staking"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -35,19 +29,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type IntegrationTestOutOfGasSuite struct {
 	suite.Suite
-	ctx     context.Context
+
+	grpcCtx context.Context
 	conn    *grpc.ClientConn
 	address sdk.AccAddress
 }
@@ -66,10 +60,6 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 
 	authority := authtypes.NewModuleAddress("gov")
 
-	maccPerms := map[string][]string{
-		minttypes.ModuleName: {authtypes.Minter},
-	}
-
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
@@ -85,7 +75,7 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 		cdc,
 		authtypes.ProtoBaseAccount,
 		acctsModKeeper,
-		maccPerms,
+		map[string][]string{},
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		authority.String(),
@@ -116,39 +106,34 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 		},
 		baseapp.NewMsgServiceRouter(),
 		baseapp.NewGRPCQueryRouter(),
-		baseapp.SetQueryGasLimit(1),
+		baseapp.SetQueryGasLimit(10),
 	)
 
 	pubkeys := simtestutil.CreateTestPubKeys(1)
 	s.address = sdk.AccAddress(pubkeys[0].Address())
-	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
-
-	// mint some tokens
-	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-	s.Require().NoError(bankKeeper.MintCoins(sdkCtx, minttypes.ModuleName, amount))
-
-	s.Require().NoError(bankKeeper.SendCoinsFromModuleToAccount(sdkCtx, minttypes.ModuleName, s.address, amount))
 
 	grpcSrv := grpc.NewServer(grpc.ForceServerCodec(codec.NewProtoCodec(encodingCfg.InterfaceRegistry).GRPCCodec()))
+
+	// Register MsgServer and QueryServer
+	banktypes.RegisterQueryServer(integrationApp.GRPCQueryRouter(), bankkeeper.NewQuerier(&bankKeeper))
+	testdata.RegisterQueryServer(integrationApp.GRPCQueryRouter(), testdata.QueryImpl{})
 	integrationApp.RegisterGRPCServer(grpcSrv)
+
 	grpcCfg := srvconfig.DefaultConfig().GRPC
+
 	go func() {
 		s.Require().NoError(servergrpc.StartGRPCServer(context.Background(), integrationApp.Logger(), grpcCfg, grpcSrv))
 	}()
 
-	// Register MsgServer and QueryServer
-	banktypes.RegisterQueryServer(grpcSrv, keeper.NewQuerier(&bankKeeper))
-	testdata.RegisterQueryServer(grpcSrv, testdata.QueryImpl{})
-
 	var err error
 	s.conn, err = grpc.NewClient(
 		grpcCfg.Address,
-		grpc.WithInsecure(), //nolint:staticcheck // ignore SA1019, we don't need to use a secure connection for tests
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(encodingCfg.InterfaceRegistry).GRPCCodec())),
 	)
 	s.Require().NoError(err)
-	s.ctx = context.WithValue(context.Background(), sdk.SdkContextKey, integrationApp.Context())
-	fmt.Println("Ctx.........", s.ctx)
+
+	s.grpcCtx = metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "1")
 }
 
 func (s *IntegrationTestOutOfGasSuite) TearDownSuite() {
@@ -159,7 +144,9 @@ func (s *IntegrationTestOutOfGasSuite) TearDownSuite() {
 func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_TestService() {
 	// gRPC query to test service should work
 	testClient := testdata.NewQueryClient(s.conn)
-	testRes, err := testClient.Echo(context.Background(), &testdata.EchoRequest{Message: "hello"})
+	testRes, err := testClient.Echo(
+		s.grpcCtx,
+		&testdata.EchoRequest{Message: "hello"})
 	s.Require().NoError(err)
 	s.Require().Equal("hello", testRes.Message)
 }
@@ -167,13 +154,11 @@ func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_TestService() {
 func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_BankBalance_OutOfGas() {
 	// gRPC query to bank service should work
 	bankClient := banktypes.NewQueryClient(s.conn)
-	var header metadata.MD
-	res, err := bankClient.Balance(
-		s.ctx,
+
+	_, err := bankClient.Balance(
+		s.grpcCtx,
 		&banktypes.QueryBalanceRequest{Address: s.address.String(), Denom: "stake"},
-		grpc.Header(&header), // Also fetch grpc header
 	)
-	fmt.Println("Res....", res)
 
 	s.Require().ErrorContains(err, sdkerrors.ErrOutOfGas.Error())
 }

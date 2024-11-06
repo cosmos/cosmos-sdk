@@ -35,8 +35,9 @@ import (
 type fixture struct {
 	app *integration.App
 
-	cdc codec.Codec
-	ctx sdk.Context
+	cdc         codec.Codec
+	ctx         sdk.Context
+	encodingCfg moduletestutil.TestEncodingConfig
 
 	authKeeper     authkeeper.AccountKeeper
 	accountsKeeper accounts.Keeper
@@ -140,5 +141,6 @@ func initFixture(t *testing.T, extraAccs map[string]accountstd.Interface) *fixtu
 		accountsKeeper: accountsKeeper,
 		authKeeper:     authKeeper,
 		bankKeeper:     bankKeeper,
+		encodingCfg:    encodingCfg,
 	}
 }

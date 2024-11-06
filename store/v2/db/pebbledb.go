@@ -10,8 +10,8 @@ import (
 	"github.com/cockroachdb/pebble"
 	"github.com/spf13/cast"
 
+	coreserver "cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/store/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
 )
 
@@ -28,7 +28,7 @@ func NewPebbleDB(name, dataDir string) (*PebbleDB, error) {
 	return NewPebbleDBWithOpts(name, dataDir, nil)
 }
 
-func NewPebbleDBWithOpts(name, dataDir string, opts store.DBOptions) (*PebbleDB, error) {
+func NewPebbleDBWithOpts(name, dataDir string, opts coreserver.DynamicConfig) (*PebbleDB, error) {
 	do := &pebble.Options{
 		MaxConcurrentCompactions: func() int { return 3 }, // default 1
 	}

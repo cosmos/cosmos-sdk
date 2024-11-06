@@ -434,7 +434,11 @@ func (rs *Store) PopStateCache() []*types.StoreKVPair {
 
 // LatestVersion returns the latest version in the store
 func (rs *Store) LatestVersion() int64 {
-	return rs.LastCommitID().Version
+	if rs.lastCommitInfo == nil {
+		return GetLatestVersion(rs.db)
+	}
+
+	return rs.lastCommitInfo.Version
 }
 
 // LastCommitID implements Committer/CommitStore.
@@ -1147,7 +1151,9 @@ func (rs *Store) flushMetadata(db corestore.KVStoreWithBatch, version int64, cIn
 	rs.logger.Debug("flushing metadata", "height", version)
 	batch := db.NewBatch()
 	defer func() {
-		_ = batch.Close()
+		if err := batch.Close(); err != nil {
+			rs.logger.Error("call flushMetadata error on batch close", "err", err)
+		}
 	}()
 
 	if cInfo != nil {

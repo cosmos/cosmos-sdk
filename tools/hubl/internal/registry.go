@@ -26,9 +26,12 @@ func GetChainRegistryEntry(chain string) (*ChainRegistryEntry, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	bz, err := io.ReadAll(res.Body)
 	if err != nil {
+		return nil, err
+	}
+
+	if err = res.Body.Close(); err != nil {
 		return nil, err
 	}
 

@@ -7,8 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/transaction"
-	svrcmd "cosmossdk.io/server/v2"
-	"cosmossdk.io/simapp/v2"
 	"cosmossdk.io/simapp/v2/simdv2/cmd"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -16,12 +14,13 @@ import (
 )
 
 func TestInitTestFilesCmd(t *testing.T) {
-	rootCmd := cmd.NewRootCmd[transaction.Tx]()
-	rootCmd.SetArgs([]string{
+	args := []string{
 		"testnet", // Test the testnet init-files command
 		"init-files",
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest), // Set keyring-backend to test
-	})
-
-	require.NoError(t, svrcmd.Execute(rootCmd, "", simapp.DefaultNodeHome))
+	}
+	rootCmd, err := cmd.NewRootCmd[transaction.Tx](args...)
+	require.NoError(t, err)
+	rootCmd.SetArgs(args)
+	require.NoError(t, rootCmd.Execute())
 }

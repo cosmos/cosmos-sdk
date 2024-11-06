@@ -7,21 +7,21 @@ sidebar_position: 1
 `cosmovisor` is a process manager for Cosmos SDK application binaries that automates application binary switch at chain upgrades.
 It polls the `upgrade-info.json` file that is created by the x/upgrade module at upgrade height, and then can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
-* [Cosmovisor](#cosmovisor)
-  * [Design](#design)
-  * [Contributing](#contributing)
-  * [Setup](#setup)
+* [Design](#design)
+* [Contributing](#contributing)
+* [Setup](#setup)
     * [Installation](#installation)
     * [Command Line Arguments And Environment Variables](#command-line-arguments-and-environment-variables)
     * [Folder Layout](#folder-layout)
-  * [Usage](#usage)
+* [Usage](#usage)
     * [Initialization](#initialization)
     * [Detecting Upgrades](#detecting-upgrades)
     * [Adding Upgrade Binary](#adding-upgrade-binary)
     * [Auto-Download](#auto-download)
-  * [Example: SimApp Upgrade](#example-simapp-upgrade)
+    * [Preparing for an Upgrade](#preparing-for-an-upgrade)
+* [Example: SimApp Upgrade](#example-simapp-upgrade)
     * [Chain Setup](#chain-setup)
-      * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
+        * [Prepare Cosmovisor and Start the Chain](#prepare-cosmovisor-and-start-the-chain)
     * [Update App](#update-app)
 
 ## Design
@@ -262,6 +262,38 @@ sha256sum ./testdata/repo/zip_directory/autod.zip
 The result will look something like the following: `29139e1381b8177aec909fab9a75d11381cab5adf7d3af0c05ff1c9c117743a7`.
 
 You can also use `sha512sum` if you would prefer to use longer hashes, or `md5sum` if you would prefer to use broken hashes. Whichever you choose, make sure to set the hash algorithm properly in the checksum argument to the URL.
+
+### Preparing for an Upgrade
+
+To prepare for an upgrade, use the `prepare-upgrade` command:
+
+```shell
+cosmovisor prepare-upgrade
+```
+
+This command performs the following actions:
+
+1. Retrieves upgrade information directly from the blockchain about the next scheduled upgrade.
+2. Downloads the new binary specified in the upgrade plan.
+3. Verifies the binary's checksum (if required by configuration).
+4. Places the new binary in the appropriate directory for Cosmovisor to use during the upgrade.
+
+The `prepare-upgrade` command provides detailed logging throughout the process, including:
+
+* The name and height of the upcoming upgrade
+* The URL from which the new binary is being downloaded
+* Confirmation of successful download and verification
+* The path where the new binary has been placed
+
+Example output:
+
+```bash
+INFO Preparing for upgrade name=v1.0.0 height=1000000
+INFO Downloading upgrade binary url=https://example.com/binary/v1.0.0?checksum=sha256:339911508de5e20b573ce902c500ee670589073485216bee8b045e853f24bce8
+INFO Upgrade preparation complete name=v1.0.0 height=1000000
+```
+
+*Note: The current way of downloading manually and placing the binary at the right place would still work.*
 
 ## Example: SimApp Upgrade
 

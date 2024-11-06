@@ -106,6 +106,7 @@ type quadKeyCodec[K1, K2, K3, K4 any] struct {
 
 type jsonQuadKey [4]json.RawMessage
 
+// EncodeJSON encodes Quads to json
 func (t quadKeyCodec[K1, K2, K3, K4]) EncodeJSON(value Quad[K1, K2, K3, K4]) ([]byte, error) {
 	json1, err := t.keyCodec1.EncodeJSON(*value.k1)
 	if err != nil {
@@ -130,6 +131,7 @@ func (t quadKeyCodec[K1, K2, K3, K4]) EncodeJSON(value Quad[K1, K2, K3, K4]) ([]
 	return json.Marshal(jsonQuadKey{json1, json2, json3, json4})
 }
 
+// DecodeJSON decodes json to Quads
 func (t quadKeyCodec[K1, K2, K3, K4]) DecodeJSON(b []byte) (Quad[K1, K2, K3, K4], error) {
 	var jsonKey jsonQuadKey
 	err := json.Unmarshal(b, &jsonKey)
@@ -160,6 +162,7 @@ func (t quadKeyCodec[K1, K2, K3, K4]) DecodeJSON(b []byte) (Quad[K1, K2, K3, K4]
 	return Join4(key1, key2, key3, key4), nil
 }
 
+// Stringify converts Quads to string
 func (t quadKeyCodec[K1, K2, K3, K4]) Stringify(key Quad[K1, K2, K3, K4]) string {
 	b := new(strings.Builder)
 	b.WriteByte('(')

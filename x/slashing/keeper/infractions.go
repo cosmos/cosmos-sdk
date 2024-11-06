@@ -137,76 +137,64 @@ func (k Keeper) HandleValidatorSignatureWithParams(ctx context.Context, params t
 	// if we are past the minimum height and the validator has missed too many blocks, punish them
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
 		modifiedSignInfo = true
-		validator, err := k.sk.ValidatorByConsAddr(ctx, consAddr)
+		// Downtime confirmed: slash and jail the validator
+		// We need to retrieve the stake distribution that signed the block. To do this, we subtract ValidatorUpdateDelay from the evidence height,
+		// and subtract an additional 1 since this is the LastCommit.
+		// Note that this *can* result in a negative "distributionHeight" of up to -ValidatorUpdateDelay-1,
+		// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
+		// This is acceptable since it's only used to filter unbonding delegations & redelegations.
+		distributionHeight := height - sdk.ValidatorUpdateDelay - 1
+
+		slashFractionDowntime, err := k.SlashFractionDowntime(ctx)
 		if err != nil {
 			return err
 		}
-		if validator != nil && !validator.IsJailed() {
-			// Downtime confirmed: slash and jail the validator
-			// We need to retrieve the stake distribution that signed the block. To do this, we subtract ValidatorUpdateDelay from the evidence height,
-			// and subtract an additional 1 since this is the LastCommit.
-			// Note that this *can* result in a negative "distributionHeight" of up to -ValidatorUpdateDelay-1,
-			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
-			// This is acceptable since it's only used to filter unbonding delegations & redelegations.
-			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
 
-			slashFractionDowntime, err := k.SlashFractionDowntime(ctx)
-			if err != nil {
-				return err
-			}
-
-			coinsBurned, err := k.sk.SlashWithInfractionReason(ctx, consAddr, distributionHeight, power, slashFractionDowntime, st.Infraction_INFRACTION_DOWNTIME)
-			if err != nil {
-				return err
-			}
-
-			if err := k.EventService.EventManager(ctx).EmitKV(
-				types.EventTypeSlash,
-				event.NewAttribute(types.AttributeKeyAddress, consStr),
-				event.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
-				event.NewAttribute(types.AttributeKeyReason, types.AttributeValueMissingSignature),
-				event.NewAttribute(types.AttributeKeyJailed, consStr),
-				event.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
-			); err != nil {
-				return err
-			}
-
-			err = k.sk.Jail(ctx, consAddr)
-			if err != nil {
-				return err
-			}
-			downtimeJailDur, err := k.DowntimeJailDuration(ctx)
-			if err != nil {
-				return err
-			}
-			signInfo.JailedUntil = k.HeaderService.HeaderInfo(ctx).Time.Add(downtimeJailDur)
-
-			// We need to reset the counter & bitmap so that the validator won't be
-			// immediately slashed for downtime upon re-bonding.
-			// We don't set the start height as this will get correctly set
-			// once they bond again in the AfterValidatorBonded hook!
-			signInfo.MissedBlocksCounter = 0
-			err = k.DeleteMissedBlockBitmap(ctx, consAddr)
-			if err != nil {
-				return err
-			}
-
-			k.Logger.Info(
-				"slashing and jailing validator due to liveness fault",
-				"height", height,
-				"validator", consStr,
-				"min_height", minHeight,
-				"threshold", minSignedPerWindow,
-				"slashed", slashFractionDowntime.String(),
-				"jailed_until", signInfo.JailedUntil,
-			)
-		} else {
-			// validator was (a) not found or (b) already jailed so we do not slash
-			k.Logger.Info(
-				"validator would have been slashed for downtime, but was either not found in store or already jailed",
-				"validator", consStr,
-			)
+		coinsBurned, err := k.sk.SlashWithInfractionReason(ctx, consAddr, distributionHeight, power, slashFractionDowntime, st.Infraction_INFRACTION_DOWNTIME)
+		if err != nil {
+			return err
 		}
+
+		if err := k.EventService.EventManager(ctx).EmitKV(
+			types.EventTypeSlash,
+			event.NewAttribute(types.AttributeKeyAddress, consStr),
+			event.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
+			event.NewAttribute(types.AttributeKeyReason, types.AttributeValueMissingSignature),
+			event.NewAttribute(types.AttributeKeyJailed, consStr),
+			event.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
+		); err != nil {
+			return err
+		}
+
+		err = k.sk.Jail(ctx, consAddr)
+		if err != nil {
+			return err
+		}
+		downtimeJailDur, err := k.DowntimeJailDuration(ctx)
+		if err != nil {
+			return err
+		}
+		signInfo.JailedUntil = k.HeaderService.HeaderInfo(ctx).Time.Add(downtimeJailDur)
+
+		// We need to reset the counter & bitmap so that the validator won't be
+		// immediately slashed for downtime upon re-bonding.
+		// We don't set the start height as this will get correctly set
+		// once they bond again in the AfterValidatorBonded hook!
+		signInfo.MissedBlocksCounter = 0
+		err = k.DeleteMissedBlockBitmap(ctx, consAddr)
+		if err != nil {
+			return err
+		}
+
+		k.Logger.Info(
+			"slashing and jailing validator due to liveness fault",
+			"height", height,
+			"validator", consStr,
+			"min_height", minHeight,
+			"threshold", minSignedPerWindow,
+			"slashed", slashFractionDowntime.String(),
+			"jailed_until", signInfo.JailedUntil,
+		)
 	}
 
 	// Set the updated signing info

@@ -25,6 +25,11 @@ var (
 	_ store.UpgradeableStore      = (*CommitStore)(nil)
 	_ snapshots.CommitSnapshotter = (*CommitStore)(nil)
 	_ store.PausablePruner        = (*CommitStore)(nil)
+
+	// NOTE: It is not recommended to use the CommitStore as a reader. This is only used
+	// during the migration process. Generally, the SC layer does not provide a reader
+	// in the store/v2.
+	_ store.VersionedReader = (*CommitStore)(nil)
 )
 
 // MountTreeFn is a function that mounts a tree given a store key.
@@ -275,18 +280,69 @@ func (c *CommitStore) GetProof(storeKey []byte, version uint64, key []byte) ([]p
 	return []proof.CommitmentOp{commitOp, *storeCommitmentOp}, nil
 }
 
-func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
-	tree, ok := c.multiTrees[conv.UnsafeBytesToStr(storeKey)]
+// getReader returns a reader for the given store key. It will return an error if the
+// store key does not exist or the tree does not implement the Reader interface.
+// WARNING: This function is only used during the migration process. The SC layer
+// generally does not provide a reader for the CommitStore.
+func (c *CommitStore) getReader(storeKey string) (Reader, error) {
+	tree, ok := c.multiTrees[storeKey]
 	if !ok {
 		return nil, fmt.Errorf("store %s not found", storeKey)
 	}
 
-	bz, err := tree.Get(version, key)
+	reader, ok := tree.(Reader)
+	if !ok {
+		return nil, fmt.Errorf("tree for store %s does not implement Reader", storeKey)
+	}
+
+	return reader, nil
+}
+
+// VersionExists implements store.VersionedReader.
+func (c *CommitStore) VersionExists(version uint64) (bool, error) {
+	ci, err := c.metadata.GetCommitInfo(version)
+	return ci != nil, err
+}
+
+// Get implements store.VersionedReader.
+func (c *CommitStore) Get(storeKey []byte, version uint64, key []byte) ([]byte, error) {
+	reader, err := c.getReader(conv.UnsafeBytesToStr(storeKey))
+	if err != nil {
+		return nil, err
+	}
+
+	bz, err := reader.Get(version, key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get key %s from store %s: %w", key, storeKey, err)
 	}
 
 	return bz, nil
+}
+
+// Has implements store.VersionedReader.
+func (c *CommitStore) Has(storeKey []byte, version uint64, key []byte) (bool, error) {
+	val, err := c.Get(storeKey, version, key)
+	return val != nil, err
+}
+
+// Iterator implements store.VersionedReader.
+func (c *CommitStore) Iterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error) {
+	reader, err := c.getReader(conv.UnsafeBytesToStr(storeKey))
+	if err != nil {
+		return nil, err
+	}
+
+	return reader.Iterator(version, start, end, true)
+}
+
+// ReverseIterator implements store.VersionedReader.
+func (c *CommitStore) ReverseIterator(storeKey []byte, version uint64, start, end []byte) (corestore.Iterator, error) {
+	reader, err := c.getReader(conv.UnsafeBytesToStr(storeKey))
+	if err != nil {
+		return nil, err
+	}
+
+	return reader.Iterator(version, start, end, false)
 }
 
 // Prune implements store.Pruner.

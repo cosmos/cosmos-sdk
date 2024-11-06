@@ -37,6 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* [#21632](https://github.com/cosmos/cosmos-sdk/pull/21632) `NewKeeper` now takes `address.Codec` instead of `authKeeper`.
 * [#21044](https://github.com/cosmos/cosmos-sdk/pull/21044) `k.DispatchActions` returns a slice of byte slices of proto marshaled anys instead of a slice of byte slices of `sdk.Result.Data`.
 * [#20502](https://github.com/cosmos/cosmos-sdk/pull/20502) `Accept` on the `Authorization` interface now expects the authz environment in the `context.Context`. This is already done when `Accept` is called by `k.DispatchActions`, but should be done manually if `Accept` is called directly.
 * [#19783](https://github.com/cosmos/cosmos-sdk/pull/19783) Removes the use of Accounts String() method

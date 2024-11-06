@@ -11,13 +11,14 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	coreserver "cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
-	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/store"
+	storev2 "cosmossdk.io/store/v2"
 )
 
 type mockInterfaceRegistry struct{}
@@ -35,16 +36,16 @@ type mockApp[T transaction.Tx] struct {
 	serverv2.AppI[T]
 }
 
-func (*mockApp[T]) GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message {
-	return map[string]func() gogoproto.Message{}
-}
-
-func (*mockApp[T]) GetAppManager() *appmanager.AppManager[T] {
-	return nil
+func (*mockApp[T]) QueryHandlers() map[string]appmodulev2.Handler {
+	return map[string]appmodulev2.Handler{}
 }
 
 func (*mockApp[T]) InterfaceRegistry() coreserver.InterfaceRegistry {
 	return &mockInterfaceRegistry{}
+}
+
+func (*mockApp[T]) Store() storev2.RootStore {
+	return nil
 }
 
 func TestServer(t *testing.T) {
@@ -59,18 +60,19 @@ func TestServer(t *testing.T) {
 	cfg := v.AllSettings()
 
 	logger := log.NewLogger(os.Stdout)
-	grpcServer := grpc.New[transaction.Tx]()
-	err = grpcServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
+
+	ctx := serverv2.SetServerContext(context.Background(), v, logger)
+	app := &mockApp[transaction.Tx]{}
+
+	grpcServer, err := grpc.New[transaction.Tx](logger, app.InterfaceRegistry(), app.QueryHandlers(), app, cfg)
 	require.NoError(t, err)
 
-	storeServer := store.New[transaction.Tx](nil /* nil appCreator as not using CLI commands */)
-	err = storeServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
+	storeServer, err := store.New[transaction.Tx](app.Store(), cfg)
 	require.NoError(t, err)
 
 	mockServer := &mockServer{name: "mock-server-1", ch: make(chan string, 100)}
 
-	server := serverv2.NewServer(
-		logger,
+	server := serverv2.NewServer[transaction.Tx](
 		serverv2.DefaultServerConfig(),
 		grpcServer,
 		storeServer,
@@ -91,7 +93,7 @@ func TestServer(t *testing.T) {
 	require.Equal(t, v.GetString(grpcServer.Name()+".address"), grpc.DefaultConfig().Address)
 
 	// start empty
-	ctx, cancelFn := context.WithCancel(context.TODO())
+	ctx, cancelFn := context.WithCancel(ctx)
 	go func() {
 		// wait 5sec and cancel context
 		<-time.After(5 * time.Second)

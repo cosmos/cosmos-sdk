@@ -137,6 +137,15 @@ func (db *Database) GetLatestVersion() (uint64, error) {
 	return binary.LittleEndian.Uint64(bz), closer.Close()
 }
 
+func (db *Database) VersionExists(version uint64) (bool, error) {
+	latestVersion, err := db.GetLatestVersion()
+	if err != nil {
+		return false, err
+	}
+
+	return latestVersion >= version && version >= db.earliestVersion, nil
+}
+
 func (db *Database) setPruneHeight(pruneVersion uint64) error {
 	db.earliestVersion = pruneVersion + 1
 
@@ -212,10 +221,7 @@ func (db *Database) Prune(version uint64) (err error) {
 
 	batch := db.storage.NewBatch()
 	defer func() {
-		cErr := batch.Close()
-		if err == nil {
-			err = cErr
-		}
+		err = errors.Join(err, batch.Close())
 	}()
 
 	var (
@@ -339,10 +345,7 @@ func (db *Database) ReverseIterator(storeKey []byte, version uint64, start, end 
 func (db *Database) PruneStoreKeys(storeKeys []string, version uint64) (err error) {
 	batch := db.storage.NewBatch()
 	defer func() {
-		cErr := batch.Close()
-		if err == nil {
-			err = cErr
-		}
+		err = errors.Join(err, batch.Close())
 	}()
 
 	for _, storeKey := range storeKeys {
@@ -444,10 +447,7 @@ func getMVCCSlice(db *pebble.DB, storeKey, key []byte, version uint64) ([]byte, 
 func (db *Database) deleteRemovedStoreKeys(version uint64) (err error) {
 	batch := db.storage.NewBatch()
 	defer func() {
-		cErr := batch.Close()
-		if err == nil {
-			err = cErr
-		}
+		err = errors.Join(err, batch.Close())
 	}()
 
 	end := encoding.BuildPrefixWithVersion(removedStoreKeyPrefix, version+1)

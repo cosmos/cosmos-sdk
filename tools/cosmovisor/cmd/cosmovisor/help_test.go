@@ -12,7 +12,7 @@ func TestGetHelpText(t *testing.T) {
 	expectedPieces := []string{
 		"Cosmovisor",
 		cosmovisor.EnvName, cosmovisor.EnvHome,
-		"https://docs.cosmos.network/main/tooling/cosmovisor",
+		"https://docs.cosmos.network/main/build/tooling/cosmovisor",
 	}
 
 	actual := GetHelpText()

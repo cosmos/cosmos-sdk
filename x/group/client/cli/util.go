@@ -55,7 +55,7 @@ func parseMembers(membersFile string) ([]group.MemberRequest, error) {
 
 func execFromString(execStr string) group.Exec {
 	exec := group.Exec_EXEC_UNSPECIFIED
-	if execStr == ExecTry {
+	if execStr == ExecTry || execStr == "1" {
 		exec = group.Exec_EXEC_TRY
 	}
 

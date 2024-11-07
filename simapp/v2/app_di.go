@@ -48,11 +48,8 @@ func AppConfig() depinject.Config {
 	return depinject.Configs(
 		ModuleConfig, // Alternatively use appconfig.LoadYAML(AppConfigYAML)
 		runtime.DefaultServiceBindings(),
+		codec.DefaultProviders,
 		depinject.Provide(
-			codec.ProvideInterfaceRegistry,
-			codec.ProvideAddressCodec,
-			codec.ProvideProtoCodec,
-			codec.ProvideLegacyAmino,
 			ProvideRootStoreConfig,
 			// inject desired account types:
 			multisigdepinject.ProvideAccount,
@@ -199,15 +196,6 @@ func (app *SimApp[T]) TxConfig() client.TxConfig {
 // Store returns the root store.
 func (app *SimApp[T]) Store() store.RootStore {
 	return app.store
-}
-
-// Close overwrites the base Close method to close the stores.
-func (app *SimApp[T]) Close() error {
-	if err := app.store.Close(); err != nil {
-		return err
-	}
-
-	return app.App.Close()
 }
 
 func ProvideRootStoreConfig(config runtime.GlobalConfig) (*root.Config, error) {

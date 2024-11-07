@@ -4,7 +4,7 @@ go 1.23.1
 
 require (
 	cosmossdk.io/api v0.8.0 // main
-	cosmossdk.io/collections v0.4.1-0.20241031202146-5b7fc8ae90a7 // main
+	cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee // main
 	cosmossdk.io/core v1.0.0-alpha.5 // main
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // main
 	cosmossdk.io/depinject v1.1.0
@@ -63,6 +63,7 @@ require (
 	cloud.google.com/go/storage v1.42.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230630094428-02b760776860 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
+	cosmossdk.io/indexer/postgres v0.0.0-20241107084833-00f3065e70ee // indirect
 	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
 	cosmossdk.io/x/circuit v0.0.0-20230613133644-0a778132a60f // indirect
 	cosmossdk.io/x/epochs v0.0.0-20240522060652-a1ae4c3e0337 // indirect
@@ -148,6 +149,10 @@ require (
 	github.com/huandu/skiplist v1.2.1 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/pgx/v5 v5.7.1 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.10 // indirect

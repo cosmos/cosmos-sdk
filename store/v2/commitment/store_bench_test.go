@@ -35,8 +35,8 @@ var (
 )
 
 func init() {
-	for i := 0; i < 1000; i++ {
-		cs := corestore.NewChangeset()
+	for i := uint64(0); i < 1000; i++ {
+		cs := corestore.NewChangeset(i)
 		for _, storeKey := range storeKeys {
 			for j := 0; j < 100; j++ {
 				key := make([]byte, 16)

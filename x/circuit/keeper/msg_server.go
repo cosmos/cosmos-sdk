@@ -59,6 +59,11 @@ func (srv msgServer) AuthorizeCircuitBreaker(ctx context.Context, msg *types.Msg
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "permissions cannot be nil")
 	}
 
+	err = msg.Permissions.Validation()
+	if err != nil {
+		return nil, err
+	}
+
 	// Append the account in the msg to the store's set of authorized super admins
 	if err = srv.Permissions.Set(ctx, grantee, *msg.Permissions); err != nil {
 		return nil, err
@@ -90,7 +95,8 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 		return nil, err
 	}
 
-	for _, msgTypeURL := range msg.MsgTypeUrls {
+	msgTypeUrls := types.MsgTypeURLValidation(msg.MsgTypeUrls)
+	for _, msgTypeURL := range msgTypeUrls {
 		// check if the message is in the list of allowed messages
 		isAllowed, err := srv.IsAllowed(ctx, msgTypeURL)
 		if err != nil {
@@ -138,7 +144,7 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripC
 // have been paused using TripCircuitBreaker.
 func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgResetCircuitBreaker) (*types.MsgResetCircuitBreakerResponse, error) {
 	keeper := srv.Keeper
-	msgTypeUrls := msg.MsgTypeUrls
+	msgTypeUrls := types.MsgTypeURLValidation(msg.MsgTypeUrls)
 	address, err := srv.addressCodec.StringToBytes(msg.Authority)
 	if err != nil {
 		return nil, err

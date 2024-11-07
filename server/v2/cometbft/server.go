@@ -4,7 +4,9 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -45,6 +47,7 @@ var (
 type CometBFTServer[T transaction.Tx] struct {
 	Node      *node.Node
 	Consensus *Consensus[T]
+	appCloser io.Closer
 
 	initTxCodec   transaction.Codec[T]
 	logger        log.Logger
@@ -56,6 +59,7 @@ type CometBFTServer[T transaction.Tx] struct {
 func New[T transaction.Tx](
 	logger log.Logger,
 	appName string,
+	appCloser io.Closer,
 	store types.Store,
 	appManager appmanager.AppManager[T],
 	queryHandlers map[string]appmodulev2.Handler,
@@ -66,6 +70,7 @@ func New[T transaction.Tx](
 	cfgOptions ...CfgOption,
 ) (*CometBFTServer[T], error) {
 	srv := &CometBFTServer[T]{
+		appCloser:     appCloser,
 		initTxCodec:   txCodec,
 		serverOptions: serverOptions,
 		cfgOptions:    cfgOptions,
@@ -220,11 +225,16 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 }
 
 func (s *CometBFTServer[T]) Stop(context.Context) error {
-	if s.Node != nil && s.Node.IsRunning() {
-		return s.Node.Stop()
+	var err error
+	if s.appCloser != nil {
+		err = s.appCloser.Close()
 	}
 
-	return nil
+	if s.Node != nil && s.Node.IsRunning() {
+		errors.Join(err, s.Node.Stop())
+	}
+
+	return err
 }
 
 // returns a function which returns the genesis doc from the genesis file.

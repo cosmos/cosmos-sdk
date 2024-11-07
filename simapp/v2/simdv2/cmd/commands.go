@@ -102,6 +102,7 @@ func InitRootCmd[T transaction.Tx](
 		deps.Consensus, err = cometbft.New(
 			logger,
 			simApp.Name(),
+			simApp,
 			simApp.Store(),
 			simApp.App.AppManager,
 			simApp.App.QueryHandlers(),

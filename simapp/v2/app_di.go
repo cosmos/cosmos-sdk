@@ -201,6 +201,15 @@ func (app *SimApp[T]) Store() store.RootStore {
 	return app.store
 }
 
+// Close overwrites the base Close method to close the stores.
+func (app *SimApp[T]) Close() error {
+	if err := app.store.Close(); err != nil {
+		return err
+	}
+
+	return app.App.Close()
+}
+
 func ProvideRootStoreConfig(config runtime.GlobalConfig) (*root.Config, error) {
 	return serverstore.UnmarshalConfig(config)
 }

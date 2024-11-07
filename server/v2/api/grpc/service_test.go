@@ -12,7 +12,6 @@ import (
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
-	serverv2 "cosmossdk.io/server/v2"
 )
 
 type MockRequestMessage struct {
@@ -42,8 +41,6 @@ func (m *MockResponseMessage) ValidateBasic() error {
 
 type mockApp[T transaction.Tx] struct {
 	mock.Mock
-
-	serverv2.AppI[T]
 }
 
 func (m *mockApp[T]) QueryHandlers() map[string]appmodulev2.Handler {
@@ -139,7 +136,7 @@ func TestQuery(t *testing.T) {
 				tt.setupMock(mockApp)
 			}
 
-			service := &v2Service{mockApp.QueryHandlers(), mockApp}
+			service := &v2Service{mockApp.QueryHandlers(), mockApp.Query}
 			resp, err := service.Query(context.Background(), tt.request)
 
 			if tt.expectError {
@@ -195,7 +192,7 @@ func TestV2Service_ListQueryHandlers(t *testing.T) {
 				tt.setupMock(mockApp)
 			}
 
-			service := &v2Service{mockApp.QueryHandlers(), mockApp}
+			service := &v2Service{mockApp.QueryHandlers(), mockApp.Query}
 			resp, err := service.ListQueryHandlers(context.Background(), &ListQueryHandlersRequest{})
 
 			assert.NoError(t, err)

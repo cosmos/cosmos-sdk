@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v0.7.6
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v1.0.0-alpha.5
-	cosmossdk.io/depinject v1.0.0
+	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/tx v1.0.0-alpha.1
 	github.com/cosmos/cosmos-sdk v0.53.0

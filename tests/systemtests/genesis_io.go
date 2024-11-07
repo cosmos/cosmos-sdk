@@ -10,7 +10,6 @@ import (
 	"github.com/tidwall/sjson"
 
 	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -48,7 +47,7 @@ func SetDenomCreationFee(t *testing.T, denom string, amount math.Int) GenesisMut
 	return func(genesis []byte) []byte {
 		state, err := sjson.SetBytes(genesis, "app_state.bankv2.params.denom_creation_fee", sdk.NewCoins(sdk.NewCoin(denom, amount)))
 		require.NoError(t, err)
-		return []byte(state)
+		return state
 	}
 }
 
@@ -58,7 +57,7 @@ func GetGenesisBalance(rawGenesis []byte, addr string) sdk.Coins {
 	balances := gjson.GetBytes(rawGenesis, fmt.Sprintf(`app_state.bank.balances.#[address==%q]#.coins`, addr)).Array()
 	for _, coins := range balances {
 		for _, coin := range coins.Array() {
-			r = append(r, sdk.NewCoin(coin.Get("denom").String(), sdkmath.NewInt(coin.Get("amount").Int())))
+			r = append(r, sdk.NewCoin(coin.Get("denom").String(), math.NewInt(coin.Get("amount").Int())))
 		}
 	}
 	return r

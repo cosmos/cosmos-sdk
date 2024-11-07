@@ -22,9 +22,9 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
-### Improvements
+## [v1.5.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.4.1) - 2024-11-07
 
-* [#22347](https://github.com/cosmos/cosmos-sdk/pull/22347) Disable coloring in testing logger.
+* [#](https://github.com/cosmos/cosmos-sdk/pull/) Disable coloring in testing logger.
 * [#22233](https://github.com/cosmos/cosmos-sdk/pull/22233) Use sonic json library for faster json handling.
 * [#22347](https://github.com/cosmos/cosmos-sdk/pull/22347) Add cosmossdk.io/log/slog to allow using a standard library log/slog-backed logger.
 

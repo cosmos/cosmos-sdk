@@ -460,7 +460,7 @@ func TestResetCircuitBreakerEmptyMsgs(t *testing.T) {
 
 	// admin resets circuit breaker
 	url := msgSend
-	url2 := "the_only_message_acc2_can_trip_and_reset"
+	url2 := "/the_only_message_acc2_can_trip_and_reset"
 
 	// add acc2 as an authorized account for only url2
 	authmsg := &types.MsgAuthorizeCircuitBreaker{

@@ -207,17 +207,16 @@ func (a appManager[T]) SimulateWithState(ctx context.Context, state corestore.Re
 // Query queries the application at the provided version.
 // CONTRACT: Version must always be provided, if 0, get latest
 func (a appManager[T]) Query(ctx context.Context, version uint64, request transaction.Msg) (transaction.Msg, error) {
+	var (
+		queryState corestore.ReaderMap
+		err        error
+	)
 	// if version is provided attempt to do a height query.
 	if version != 0 {
-		queryState, err := a.db.StateAt(version)
-		if err != nil {
-			return nil, err
-		}
-		return a.stf.Query(ctx, queryState, a.config.QueryGasLimit, request)
+		queryState, err = a.db.StateAt(version)
+	} else { // otherwise rely on latest available state.
+		_, queryState, err = a.db.StateLatest()
 	}
-
-	// otherwise rely on latest available state.
-	_, queryState, err := a.db.StateLatest()
 	if err != nil {
 		return nil, err
 	}

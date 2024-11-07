@@ -2,6 +2,7 @@ package autocli
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -11,13 +12,16 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	"cosmossdk.io/x/tx/signing"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
-// AppOptions are autocli options for an app. These options can be built via depinject based on an app config. Ex:
+// AppOptions are input options for an autocli enabled app. These options can be built via depinject based on an app config.
 // Ex:
 //
 //	var autoCliOpts autocli.AppOptions
@@ -44,6 +48,8 @@ type AppOptions struct {
 
 	Cdc          codec.Codec
 	TxConfigOpts authtx.ConfigOptions
+
+	skipValidation bool
 }
 
 // EnhanceRootCommand enhances the provided root command with autocli AppOptions,
@@ -73,17 +79,22 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd) // TODO: implement client/v2/grpcconn
 		},
-		AddQueryConnFlags: sdkflags.AddQueryFlagsToCmd,
-		AddTxConnFlags:    sdkflags.AddTxFlagsToCmd,
-		Cdc:               appOptions.Cdc,
+		AddQueryConnFlags: func(c *cobra.Command) {
+			sdkflags.AddQueryFlagsToCmd(c)
+			sdkflags.AddKeyringFlags(c.Flags())
+		},
+		AddTxConnFlags: sdkflags.AddTxFlagsToCmd,
+		Cdc:            appOptions.Cdc,
 	}
 
 	return appOptions.EnhanceRootCommandWithBuilder(rootCmd, builder)
 }
 
 func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Command, builder *Builder) error {
-	if err := builder.ValidateAndComplete(); err != nil {
-		return err
+	if !appOptions.skipValidation {
+		if err := builder.ValidateAndComplete(); err != nil {
+			return err
+		}
 	}
 
 	// extract any custom commands from modules
@@ -133,3 +144,49 @@ func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Comman
 
 	return nil
 }
+
+// NewAppOptionsFromConfig returns AppOptions for an app based on the provided modulesConfig and moduleOptions.
+// It returns an AppOptions instance usable for CLI parsing but not execution. For an execution usable AppOptions
+// see ProvideAppOptions, which expects input to be filled by depinject.
+func NewAppOptionsFromConfig(
+	modulesConfig depinject.Config,
+	moduleOptions map[string]*autocliv1.ModuleOptions,
+) (AppOptions, error) {
+	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
+		ProtoFiles: proto.HybridResolver,
+		SigningOptions: signing.Options{
+			AddressCodec:          nopAddressCodec{},
+			ValidatorAddressCodec: nopAddressCodec{},
+		},
+	})
+	if err != nil {
+		return AppOptions{}, err
+	}
+	cfg := struct {
+		depinject.In
+		Modules map[string]appmodule.AppModule
+	}{
+		Modules: nil,
+	}
+	err = depinject.Inject(depinject.Configs(
+		modulesConfig,
+		depinject.Supply(
+			log.NewNopLogger(),
+		)), &cfg)
+	if err != nil {
+		return AppOptions{}, err
+	}
+
+	return AppOptions{
+		Modules:           cfg.Modules,
+		InterfaceRegistry: interfaceRegistry,
+		ModuleOptions:     moduleOptions,
+		skipValidation:    true,
+	}, nil
+}
+
+type nopAddressCodec struct{}
+
+func (nopAddressCodec) StringToBytes(_ string) ([]byte, error) { return nil, nil }
+
+func (nopAddressCodec) BytesToString(_ []byte) (string, error) { return "", nil }

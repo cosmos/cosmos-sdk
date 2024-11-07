@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/x/bank/v2/keeper"
 	banktestutil "cosmossdk.io/x/bank/v2/testutil"
 	"cosmossdk.io/x/bank/v2/types"
-	banktypes "cosmossdk.io/x/bank/v2/types"
 
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -34,7 +33,7 @@ const (
 
 var (
 	burnerAcc = authtypes.NewEmptyModuleAccount(authtypes.Burner, authtypes.Burner, authtypes.Staking)
-	mintAcc   = authtypes.NewEmptyModuleAccount(banktypes.MintModuleName, authtypes.Minter)
+	mintAcc   = authtypes.NewEmptyModuleAccount(types.MintModuleName, authtypes.Minter)
 
 	accAddrs = []sdk.AccAddress{
 		sdk.AccAddress([]byte("addr1_______________")),
@@ -66,7 +65,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
@@ -244,15 +243,15 @@ func (s *KeeperTestSuite) TestCreateDenom() {
 	var (
 		primaryDenom            = "foo"
 		secondaryDenom          = "bar"
-		defaultDenomCreationFee = banktypes.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, math.NewInt(50_000_000)))}
-		twoDenomCreationFee     = banktypes.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, math.NewInt(50_000_000)), sdk.NewCoin(secondaryDenom, math.NewInt(50_000_000)))}
-		nilCreationFee          = banktypes.Params{DenomCreationFee: nil}
-		largeCreationFee        = banktypes.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, math.NewInt(5_000_000_000)))}
+		defaultDenomCreationFee = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, math.NewInt(50_000_000)))}
+		twoDenomCreationFee     = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, math.NewInt(50_000_000)), sdk.NewCoin(secondaryDenom, math.NewInt(50_000_000)))}
+		nilCreationFee          = types.Params{DenomCreationFee: nil}
+		largeCreationFee        = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, math.NewInt(5_000_000_000)))}
 	)
 
 	for _, tc := range []struct {
 		desc             string
-		denomCreationFee banktypes.Params
+		denomCreationFee types.Params
 		setup            func()
 		subdenom         string
 		valid            bool
@@ -331,8 +330,8 @@ func (s *KeeperTestSuite) TestCreateDenom() {
 				// Make sure that the denom metadata is initialized correctly
 				metadata, found := s.bankKeeper.GetDenomMetaData(s.ctx, newDenom)
 				s.Require().True(found)
-				s.Require().Equal(banktypes.Metadata{
-					DenomUnits: []*banktypes.DenomUnit{{
+				s.Require().Equal(types.Metadata{
+					DenomUnits: []*types.DenomUnit{{
 						Denom:    newDenom,
 						Exponent: 0,
 					}},
@@ -395,7 +394,7 @@ func (s *KeeperTestSuite) TestCreateDenom_GasConsume() {
 		s.SetupTest()
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			// set params with the gas consume amount
-			s.Require().NoError(s.bankKeeper.SetParams(s.ctx, banktypes.NewParams(nil, tc.gasConsume)))
+			s.Require().NoError(s.bankKeeper.SetParams(s.ctx, types.NewParams(nil, tc.gasConsume)))
 
 			// amount of gas consumed prior to the denom creation
 			gasConsumedBefore := s.bankKeeper.Environment.GasService.GasMeter(s.ctx).Consumed()
@@ -418,9 +417,10 @@ func (s *KeeperTestSuite) TestCreateDenom_GasConsume() {
 func (s *KeeperTestSuite) TestMintHandler() {
 	s.SetupTest()
 	require := s.Require()
-	s.bankKeeper.SetParams(s.ctx, types.Params{
+	err := s.bankKeeper.SetParams(s.ctx, types.Params{
 		DenomCreationFee: sdk.NewCoins(sdk.NewCoin(fooDenom, math.NewInt(10))),
 	})
+	require.NoError(err)
 	handler := keeper.NewHandlers(&s.bankKeeper)
 	require.NoError(banktestutil.FundAccount(s.ctx, s.bankKeeper, accAddrs[0], sdk.NewCoins(sdk.NewCoin(fooDenom, math.NewInt(100)))))
 
@@ -503,9 +503,10 @@ func (s *KeeperTestSuite) TestMintHandler() {
 func (s *KeeperTestSuite) TestBurnHandler() {
 	s.SetupTest()
 	require := s.Require()
-	s.bankKeeper.SetParams(s.ctx, types.Params{
+	err := s.bankKeeper.SetParams(s.ctx, types.Params{
 		DenomCreationFee: sdk.NewCoins(sdk.NewCoin(fooDenom, math.NewInt(10))),
 	})
+	require.NoError(err)
 	handler := keeper.NewHandlers(&s.bankKeeper)
 	require.NoError(banktestutil.FundAccount(s.ctx, s.bankKeeper, accAddrs[0], sdk.NewCoins(sdk.NewCoin(fooDenom, math.NewInt(100)))))
 
@@ -625,9 +626,10 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 func (s *KeeperTestSuite) TestSendHandler_TokenfactoryDenom() {
 	s.SetupTest()
 	require := s.Require()
-	s.bankKeeper.SetParams(s.ctx, types.Params{
+	err := s.bankKeeper.SetParams(s.ctx, types.Params{
 		DenomCreationFee: sdk.NewCoins(sdk.NewCoin(fooDenom, math.NewInt(10))),
 	})
+	require.NoError(err)
 	handler := keeper.NewHandlers(&s.bankKeeper)
 	require.NoError(banktestutil.FundAccount(s.ctx, s.bankKeeper, accAddrs[0], sdk.NewCoins(sdk.NewCoin(fooDenom, math.NewInt(100)))))
 

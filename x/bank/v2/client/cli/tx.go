@@ -137,7 +137,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 			msg := &types.MsgMint{
 				Authority: clientCtx.GetFromAddress().String(),
 				ToAddress: toAddr,
-				Amount: coin,
+				Amount:    coin,
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -178,9 +178,9 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 			}
 
 			msg := &types.MsgBurn{
-				Authority: clientCtx.GetFromAddress().String(),
+				Authority:       clientCtx.GetFromAddress().String(),
 				BurnFromAddress: fromAddr,
-				Amount: coin,
+				Amount:          coin,
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

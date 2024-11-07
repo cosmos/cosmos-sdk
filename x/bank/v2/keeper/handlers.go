@@ -283,7 +283,7 @@ func (h handlers) QueryDenomsFromCreator(ctx context.Context, req *types.QueryDe
 
 	denoms := []string{}
 
-	err := h.Keeper.denomAuthority.Walk(ctx, nil, func (denom string, authority types.DenomAuthorityMetadata) (stop bool, err error) {
+	err := h.Keeper.denomAuthority.Walk(ctx, nil, func(denom string, authority types.DenomAuthorityMetadata) (stop bool, err error) {
 		if authority.Admin == req.Creator {
 			denoms = append(denoms, denom)
 		}

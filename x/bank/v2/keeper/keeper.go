@@ -94,9 +94,8 @@ func (k Keeper) MintCoins(ctx context.Context, addr []byte, amounts sdk.Coins) e
 // BurnCoins burns coins deletes coins from the balance of an account.
 // An error is returned if the module account does not exist or is unauthorized.
 func (k Keeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.Coins) error {
-
 	// TODO: Burn restriction & permission
-	
+
 	if !amounts.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amounts.String())
 	}

@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const msgSend = "cosmos.bank.v1beta1.MsgSend"
+const msgSend = "/cosmos.bank.v1beta1.MsgSend"
 
 func TestAuthorizeCircuitBreaker(t *testing.T) {
 	ft := initFixture(t)
@@ -235,7 +235,7 @@ func TestTripCircuitBreaker(t *testing.T) {
 	require.NoError(t, err)
 
 	// try to trip the circuit breaker
-	url2 = "cosmos.staking.v1beta1.MsgDelegate"
+	url2 = "/cosmos.staking.v1beta1.MsgDelegate"
 	superTrip := &types.MsgTripCircuitBreaker{Authority: addresses[1], MsgTypeUrls: []string{url2}}
 	_, err = srv.TripCircuitBreaker(ft.ctx, superTrip)
 	require.NoError(t, err)
@@ -336,7 +336,7 @@ func TestResetCircuitBreaker(t *testing.T) {
 	require.NoError(t, err)
 
 	//  trip the circuit breaker
-	url2 := "cosmos.staking.v1beta1.MsgDelegate"
+	url2 := "/cosmos.staking.v1beta1.MsgDelegate"
 	admintrip = &types.MsgTripCircuitBreaker{Authority: authority, MsgTypeUrls: []string{url2}}
 	_, err = srv.TripCircuitBreaker(ft.ctx, admintrip)
 	require.NoError(t, err)
@@ -356,7 +356,7 @@ func TestResetCircuitBreaker(t *testing.T) {
 	)
 
 	// user tries to reset a message they dont have permission to reset
-	url = "cosmos.staking.v1beta1.MsgCreateValidator"
+	url = "/cosmos.staking.v1beta1.MsgCreateValidator"
 	// give restricted perms to a user
 	someMsgs := &types.Permissions{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{url2}}
 	msg = &types.MsgAuthorizeCircuitBreaker{Granter: authority, Grantee: addresses[2], Permissions: someMsgs}
@@ -403,7 +403,7 @@ func TestResetCircuitBreakerSomeMsgs(t *testing.T) {
 
 	// admin resets circuit breaker
 	url := msgSend
-	url2 := "the_only_message_acc2_can_trip_and_reset"
+	url2 := "/the_only_message_acc2_can_trip_and_reset"
 
 	// add acc2 as an authorized account for only url2
 	authmsg := &types.MsgAuthorizeCircuitBreaker{

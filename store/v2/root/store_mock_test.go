@@ -21,7 +21,6 @@ func newTestRootStore(ss store.VersionedWriter, sc store.Committer) *Store {
 	return &Store{
 		logger:          noopLog,
 		telemetry:       metrics.Metrics{},
-		initialVersion:  1,
 		stateStorage:    ss,
 		stateCommitment: sc,
 		pruningManager:  pm,

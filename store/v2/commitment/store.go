@@ -541,7 +541,6 @@ func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
 		Version:    version,
 		StoreInfos: storeInfos,
 	}
-	ci.Hash()
 	return ci, nil
 }
 

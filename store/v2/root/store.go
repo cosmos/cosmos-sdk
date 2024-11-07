@@ -29,8 +29,7 @@ var (
 // backend may or may not support multiple store keys and is implementation
 // dependent.
 type Store struct {
-	logger         corelog.Logger
-	initialVersion uint64
+	logger corelog.Logger
 
 	// holds the db instance for closing it
 	dbCloser io.Closer
@@ -77,7 +76,6 @@ func New(
 	return &Store{
 		dbCloser:         dbCloser,
 		logger:           logger,
-		initialVersion:   1,
 		stateStorage:     ss,
 		stateCommitment:  sc,
 		pruningManager:   pm,
@@ -106,8 +104,6 @@ func (s *Store) SetMetrics(m metrics.Metrics) {
 }
 
 func (s *Store) SetInitialVersion(v uint64) error {
-	s.initialVersion = v
-
 	return s.stateCommitment.SetInitialVersion(v)
 }
 

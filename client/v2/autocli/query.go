@@ -116,7 +116,6 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 // BuildQueryMethodCommand creates a gRPC query command for the given service method. This can be used to auto-generate
 // just a single command for a single service rpc method.
 func (b *Builder) BuildQueryMethodCommand(ctx context.Context, descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
-	getClientConn := b.GetClientConn
 	serviceDescriptor := descriptor.Parent().(protoreflect.ServiceDescriptor)
 	methodName := fmt.Sprintf("/%s/%s", serviceDescriptor.FullName(), descriptor.Name())
 	outputType := util.ResolveMessageType(b.TypeResolver, descriptor.Output())
@@ -130,7 +129,7 @@ func (b *Builder) BuildQueryMethodCommand(ctx context.Context, descriptor protor
 	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
-		clientConn, err := getClientConn(cmd)
+		clientConn, err := b.getQueryClientConn(cmd)
 		if err != nil {
 			return err
 		}

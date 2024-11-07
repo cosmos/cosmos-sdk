@@ -4,7 +4,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -15,7 +14,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/tx/signing"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -75,9 +73,6 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 			AddressCodec:          appOptions.AddressCodec,
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
-		},
-		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
-			return client.GetClientQueryContext(cmd) // TODO: implement client/v2/grpcconn
 		},
 		AddQueryConnFlags: func(c *cobra.Command) {
 			sdkflags.AddQueryFlagsToCmd(c)

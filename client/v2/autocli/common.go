@@ -1,16 +1,23 @@
 package autocli
 
 import (
+	"crypto/tls"
+	"errors"
+	"fmt"
+	"strconv"
+
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	grpcinsecure "google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/reflect/protoreflect"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/config"
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/autocli/print"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
-	"fmt"
-	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/reflect/protoreflect"
-	"strconv"
 )
 
 type cmdType int
@@ -281,4 +288,32 @@ func (b *Builder) setFlagsFromConfig(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+// TODO: godoc
+func (b *Builder) getQueryClientConn(cmd *cobra.Command) (*grpc.ClientConn, error) {
+	if cmd.Flags().Lookup("grpc-insecure") == nil || cmd.Flags().Lookup("grpc-addr") == nil {
+		return nil, errors.New("grpc-insecure and grpc-addr flags are required")
+	}
+
+	creds := grpcinsecure.NewCredentials()
+	insecure, err := cmd.Flags().GetBool("grpc-insecure")
+	if err != nil {
+		return nil, err
+	}
+	if !insecure {
+		creds = credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS12})
+	}
+
+	addr, err := cmd.Flags().GetString("grpc-addr")
+	if err != nil {
+		return nil, err
+	}
+
+	if addr == "" {
+		// TODO: fall to default by querying state via abci query.
+		return nil, errors.New("grpc-addr flag must be set")
+	}
+
+	return grpc.NewClient(addr, []grpc.DialOption{grpc.WithTransportCredentials(creds)}...)
 }

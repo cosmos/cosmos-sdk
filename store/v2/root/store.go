@@ -327,12 +327,6 @@ func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades) error {
 	return nil
 }
 
-// WorkingHash writes the changeset to SC and SS and returns the workingHash
-// of the CommitInfo.
-func (s *Store) WorkingHash(cs *corestore.Changeset) ([]byte, error) {
-	return nil, errors.New("WorkingHash() not implemented")
-}
-
 // Commit commits all state changes to the underlying SS and SC backends. It
 // writes a batch of the changeset to the SC tree, and retrieves the CommitInfo
 // from the SC tree. Finally, it commits the SC tree and returns the hash of

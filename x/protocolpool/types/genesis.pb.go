@@ -41,7 +41,9 @@ type GenesisState struct {
 	// funds and budgets. It contains time in order to distribute to non-expired
 	// funds only.
 	Distributions []*Distribution `protobuf:"bytes,4,rep,name=distributions,proto3" json:"distributions,omitempty"`
-	Params        *Params         `protobuf:"bytes,5,opt,name=params,proto3" json:"params,omitempty"`
+	// params defines the parameters of this module, currently only contains the
+	// denoms that will be used for continuous fund distributions.
+	Params *Params `protobuf:"bytes,5,opt,name=params,proto3" json:"params,omitempty"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -113,7 +115,11 @@ func (m *GenesisState) GetParams() *Params {
 }
 
 type Distribution struct {
-	Time   *time.Time         `protobuf:"bytes,1,opt,name=time,proto3,stdtime" json:"time,omitempty"`
+	// time at which this distribution was made, in order to distribute to non-expired funds only
+	// and funds that existed at that time. Because we don't distribute right away, we keep track
+	// of the time of distribution.
+	Time *time.Time `protobuf:"bytes,1,opt,name=time,proto3,stdtime" json:"time,omitempty"`
+	// amount is the list of coins to be distributed.
 	Amount DistributionAmount `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount"`
 }
 

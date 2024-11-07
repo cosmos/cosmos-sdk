@@ -180,14 +180,25 @@ func (suite *KeeperTestSuite) TestGetCommunityPool() {
 func (suite *KeeperTestSuite) TestSetToDistribute() {
 	suite.SetupTest()
 
+	params, err := suite.poolKeeper.Params.Get(suite.ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal([]string{sdk.DefaultBondDenom}, params.EnabledDistributionDenoms)
+
+	// add another denom
+	err = suite.poolKeeper.Params.Set(suite.ctx, types.Params{
+		EnabledDistributionDenoms: []string{sdk.DefaultBondDenom, "foo"},
+	})
+	suite.Require().NoError(err)
+
 	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, types.ProtocolPoolDistrAccount).Return(poolDistrAcc).AnyTimes()
 	distrBal := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000000))
 	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).Return(distrBal).Times(2)
+	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), "foo").Return(sdk.NewCoin("foo", math.NewInt(1234))).Times(2)
 
 	// because there are no continuous funds, all are going to the community pool
-	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), sdk.NewCoins(distrBal))
+	suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, poolDistrAcc.GetName(), poolAcc.GetName(), sdk.NewCoins(distrBal, sdk.NewCoin("foo", math.NewInt(1234))))
 
-	err := suite.poolKeeper.SetToDistribute(suite.ctx)
+	err = suite.poolKeeper.SetToDistribute(suite.ctx)
 	suite.Require().NoError(err)
 
 	// Verify that LastBalance was not set (zero balance)
@@ -213,7 +224,7 @@ func (suite *KeeperTestSuite) TestSetToDistribute() {
 	// Verify that LastBalance was set correctly
 	lastBalance, err := suite.poolKeeper.LastBalance.Get(suite.ctx)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000))), lastBalance.Amount)
+	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000)), sdk.NewCoin("foo", math.NewInt(1234))), lastBalance.Amount)
 
 	// Verify that a distribution was set
 	var distribution types.DistributionAmount
@@ -222,11 +233,12 @@ func (suite *KeeperTestSuite) TestSetToDistribute() {
 		return true, nil
 	})
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000))), distribution.Amount)
+	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000000)), sdk.NewCoin("foo", math.NewInt(1234))), distribution.Amount)
 
 	// Test case when balance is zero
 	zeroBal := sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt())
 	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), sdk.DefaultBondDenom).Return(zeroBal)
+	suite.bankKeeper.EXPECT().GetBalance(suite.ctx, poolDistrAcc.GetAddress(), "foo").Return(sdk.NewCoin("foo", math.ZeroInt()))
 
 	err = suite.poolKeeper.SetToDistribute(suite.ctx)
 	suite.Require().NoError(err)

@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/core v1.0.0-alpha.5 // main
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // main
 	cosmossdk.io/depinject v1.1.0
-	cosmossdk.io/indexer/postgres v0.1.0
+	cosmossdk.io/indexer/postgres v0.0.0-20241107084833-00f3065e70ee
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // main
@@ -246,14 +246,8 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	cosmossdk.io/client/v2 => ../client/v2
-<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241009154331-597e0fac1173 // main
-=======
-	cosmossdk.io/collections => ../collections
-	cosmossdk.io/indexer/postgres => ../indexer/postgres
-	cosmossdk.io/store => ../store
->>>>>>> 2290c5ee5 (fix(indexer): the issues during simapp v1 integration (#22413))
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../x/accounts/defaults/base

@@ -2,6 +2,7 @@ package grpc_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -16,7 +17,7 @@ import (
 	banktypes "cosmossdk.io/x/bank/types"
 
 	storetypes "cosmossdk.io/store/types"
-	cmtabcitypes "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	minttypes "cosmossdk.io/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -74,7 +75,7 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 		cdc,
 		authtypes.ProtoBaseAccount,
 		acctsModKeeper,
-		map[string][]string{},
+		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		authority.String(),
@@ -105,43 +106,54 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 		},
 		baseapp.NewMsgServiceRouter(),
 		baseapp.NewGRPCQueryRouter(),
-		baseapp.SetQueryGasLimit(10),
+		// baseapp.SetQueryGasLimit(10),
 	)
 
-	pubkeys := simtestutil.CreateTestPubKeys(1)
+	pubkeys := simtestutil.CreateTestPubKeys(2)
 	s.address = sdk.AccAddress(pubkeys[0].Address())
+	addr2 := sdk.AccAddress(pubkeys[1].Address())
 
-	grpcSrv := grpc.NewServer(grpc.ForceServerCodec(codec.NewProtoCodec(encodingCfg.InterfaceRegistry).GRPCCodec()))
+	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
+
+	// mint some tokens
+	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+	s.Require().NoError(bankKeeper.MintCoins(sdkCtx, minttypes.ModuleName, amount))
+	s.Require().NoError(bankKeeper.SendCoinsFromModuleToAccount(sdkCtx, minttypes.ModuleName, addr2, amount))
 
 	// Register MsgServer and QueryServer
+	banktypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), bankkeeper.NewMsgServerImpl(bankKeeper))
 	banktypes.RegisterQueryServer(integrationApp.GRPCQueryRouter(), bankkeeper.NewQuerier(&bankKeeper))
 	testdata.RegisterQueryServer(integrationApp.GRPCQueryRouter(), testdata.QueryImpl{})
-	integrationApp.RegisterGRPCServer(grpcSrv)
+
+	banktypes.RegisterInterfaces(encodingCfg.InterfaceRegistry)
 
 	grpcCfg := srvconfig.DefaultConfig().GRPC
+
+	msgSend := banktypes.MsgSend{
+		FromAddress: addr2.String(),
+		ToAddress:   s.address.String(),
+		Amount:      sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
+	}
+
+	_, err := integrationApp.RunMsg(
+		&msgSend,
+		integration.WithAutomaticFinalizeBlock(),
+		integration.WithAutomaticCommit(),
+	)
+	s.Require().NoError(err)
+
+	grpcSrv := grpc.NewServer(grpc.ForceServerCodec(codec.NewProtoCodec(encodingCfg.InterfaceRegistry).GRPCCodec()))
+	integrationApp.RegisterGRPCServer(grpcSrv)
 
 	go func() {
 		s.Require().NoError(servergrpc.StartGRPCServer(context.Background(), integrationApp.Logger(), grpcCfg, grpcSrv))
 	}()
 
-	var err error
 	s.conn, err = grpc.NewClient(
 		grpcCfg.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(encodingCfg.InterfaceRegistry).GRPCCodec())),
 	)
-	s.Require().NoError(err)
-
-	// commit and finalize block
-	defer func() {
-		_, err := integrationApp.Commit()
-		if err != nil {
-			panic(err)
-		}
-	}()
-
-	height := integrationApp.LastBlockHeight() + 1
-	_, err = integrationApp.FinalizeBlock(&cmtabcitypes.FinalizeBlockRequest{Height: height, DecidedLastCommit: cmtabcitypes.CommitInfo{Votes: []cmtabcitypes.VoteInfo{{}}}})
 	s.Require().NoError(err)
 }
 
@@ -164,10 +176,12 @@ func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_BankBalance_OutOfGas() {
 	// gRPC query to bank service should work
 	bankClient := banktypes.NewQueryClient(s.conn)
 
-	_, err := bankClient.Balance(
+	res, err := bankClient.Balance(
 		context.Background(),
 		&banktypes.QueryBalanceRequest{Address: s.address.String(), Denom: "stake"},
 	)
+
+	fmt.Println("Res....", res)
 
 	s.Require().ErrorContains(err, sdkerrors.ErrOutOfGas.Error())
 }

@@ -66,7 +66,7 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 			return err
 		}
 
-		k, err := keyring.NewKeyringFromFlags(cmd.Context(), cmd.Flags(), b.AddressCodec, cmd.InOrStdin(), b.Cdc)
+		k, err := keyring.NewKeyringFromFlags(cmd.Flags(), b.AddressCodec, cmd.InOrStdin(), b.Cdc)
 		b.SetKeyring(k) // global flag keyring must be set on PreRunE.
 
 		return err

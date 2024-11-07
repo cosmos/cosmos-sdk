@@ -34,18 +34,7 @@ func NewKeyringInContext(ctx context.Context, k Keyring) context.Context {
 }
 
 // TODO: godco
-func NewKeyringFromFlags(ctx context.Context, flagSet *pflag.FlagSet, ac address.Codec, input io.Reader, cdc codec.Codec) (Keyring, error) {
-	// Some commands as query expect access to the keyring but don't provide keyring flags.
-	// In such case a default keyring of backed test and rootDir homeDir is set.
-	if flagSet.Lookup("keyring-backend") == nil && flagSet.Lookup("keyring-dir") == nil {
-		dir, err := flagSet.GetString("home")
-		if err != nil {
-			return nil, err
-		}
-
-		return defaultKeyring(dir, ac, input, cdc)
-	}
-
+func NewKeyringFromFlags(flagSet *pflag.FlagSet, ac address.Codec, input io.Reader, cdc codec.Codec) (Keyring, error) {
 	backEnd, err := flagSet.GetString("keyring-backend")
 	if err != nil {
 		return nil, err
@@ -63,16 +52,6 @@ func NewKeyringFromFlags(ctx context.Context, flagSet *pflag.FlagSet, ac address
 	}
 
 	k, err := keyring.New(sdk.KeyringServiceName(), backEnd, keyringDir, input, cdc)
-	if err != nil {
-		return nil, err
-	}
-
-	return keyring.NewAutoCLIKeyring(k, ac)
-}
-
-// TODO: godoc
-func defaultKeyring(rootDir string, ac address.Codec, input io.Reader, cdc codec.Codec) (Keyring, error) {
-	k, err := keyring.New(sdk.KeyringServiceName(), "test", rootDir, input, cdc)
 	if err != nil {
 		return nil, err
 	}

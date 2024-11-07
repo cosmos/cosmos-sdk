@@ -9,7 +9,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"cosmossdk.io/schema"
 	"cosmossdk.io/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -253,10 +252,4 @@ func (k BaseViewKeeper) ValidateBalance(ctx context.Context, addr sdk.AccAddress
 	}
 
 	return nil
-}
-
-// ModuleCodec implements `schema.HasModuleCodec` interface.
-// It allows the indexer to decode the module's KVPairUpdate.
-func (k BaseViewKeeper) ModuleCodec() (schema.ModuleCodec, error) {
-	return k.Schema.ModuleCodec(collections.IndexingOptions{})
 }

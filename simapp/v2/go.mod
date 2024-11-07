@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // indirect; main
-	cosmossdk.io/depinject v1.0.0
+	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/runtime/v2 v2.0.0-20241105073932-55f7cfcebae4 // main
@@ -58,14 +58,14 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.8 // indirect
 	cloud.google.com/go/storage v1.42.0 // indirect
-	cosmossdk.io/collections v0.4.1-0.20241031202146-5b7fc8ae90a7 // indirect; main
+	cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee // indirect; main
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241029092041-78cfc68c83af // indirect; main
 	cosmossdk.io/server/v2/stf v0.0.0-20241029092041-78cfc68c83af // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main
-	cosmossdk.io/x/tx v1.0.0-alpha.1 // indirect; main
+	cosmossdk.io/x/tx v1.0.0-alpha.2 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect

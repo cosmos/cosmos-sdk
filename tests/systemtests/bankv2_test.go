@@ -108,7 +108,7 @@ func TestCreateDenom(t *testing.T) {
 	require.Equal(t, admin, valAddr)
 }
 
-func TestMintTokenCmd(t *testing.T) {
+func TestMintBurnTokenCmd(t *testing.T) {
 	// Currently only run with app v2
 	if !isV2() {
 		t.Skip()
@@ -121,8 +121,9 @@ func TestMintTokenCmd(t *testing.T) {
 	// add new key
 	denom := "stake"
 	subDenom := "test"
-	feeAmount := math.NewInt(1000000)
-	mintAmount := 1000000
+	feeAmount := math.NewInt(1_000_000)
+	mintAmount := 1_000_000
+	burnAmount := 500_000
 
 	sut.ModifyGenesisJSON(
 		t,
@@ -147,6 +148,13 @@ func TestMintTokenCmd(t *testing.T) {
 	newDenoms := gjson.Get(raw, "denoms").Array()
 	require.Equal(t, len(newDenoms), 1)
 
+	// non tokenfactory should not be minted directly
+	rsp = cli.Run("tx", "bankv2", "mint", valAddr, receiverAddr, fmt.Sprintf("%d%s", mintAmount, denom))
+	code := gjson.Get(rsp, "code").Int()
+	require.NotEqual(t, code, int64(0))
+	rawLog := gjson.Get(rsp, "raw_log").String()
+	require.Contains(t, rawLog, "invalid authority")
+
 	rsp = cli.Run("tx", "bankv2", "mint", valAddr, receiverAddr, fmt.Sprintf("%d%s", mintAmount, newDenoms[0]))
 	txResult, found = cli.AwaitTxCommitted(rsp)
 	require.True(t, found)
@@ -155,9 +163,19 @@ func TestMintTokenCmd(t *testing.T) {
 	raw = cli.CustomQuery("q", "bankv2", "balance", receiverAddr, newDenoms[0].String())
 	balance := gjson.Get(raw, "balance.amount").Int()
 	require.Equal(t, balance, int64(mintAmount))
+
+	// Burn token from receiver
+	rsp = cli.Run("tx", "bankv2", "burn", valAddr, receiverAddr, fmt.Sprintf("%d%s", burnAmount, newDenoms[0]))
+	txResult, found = cli.AwaitTxCommitted(rsp)
+	require.True(t, found)
+	RequireTxSuccess(t, txResult)
+
+	raw = cli.CustomQuery("q", "bankv2", "balance", receiverAddr, newDenoms[0].String())
+	balance = gjson.Get(raw, "balance.amount").Int()
+	require.Equal(t, balance, int64(mintAmount-burnAmount))
 }
 
-func TestMintTokenProposal(t *testing.T) {
+func TestMintBurnTokenProposal(t *testing.T) {
 	// Currently only run with app v2
 	if !isV2() {
 		t.Skip()
@@ -170,7 +188,8 @@ func TestMintTokenProposal(t *testing.T) {
 	// add new key
 	denom := "stake"
 	subDenom := "test"
-	mintAmount := 1000000
+	mintAmount := 1_000_000
+	burnAmount := 500_000
 
 	sut.ModifyGenesisJSON(
 		t,
@@ -204,8 +223,7 @@ func TestMintTokenProposal(t *testing.T) {
 	require.Equal(t, len(newDenoms), 1)
 	fmt.Println("denoms", raw)
 
-
-	invalidProposal := fmt.Sprintf(`
+	invalidMintProposal := fmt.Sprintf(`
 	{
  "messages": [
   {
@@ -224,8 +242,8 @@ func TestMintTokenProposal(t *testing.T) {
  "summary": "testing"
 }`, govAddr, receiverAddr, newDenoms[0], mintAmount)
 
-	invalidProposalFile := StoreTempFile(t, []byte(invalidProposal))
-	rsp = cli.RunAndWait("tx", "gov", "submit-proposal", invalidProposalFile.Name(), "--from", valAddr)
+	invalidMintProposalFile := StoreTempFile(t, []byte(invalidMintProposal))
+	rsp = cli.RunAndWait("tx", "gov", "submit-proposal", invalidMintProposalFile.Name(), "--from", valAddr)
 	RequireTxSuccess(t, rsp)
 
 	// vote to proposal from two validators
@@ -241,7 +259,7 @@ func TestMintTokenProposal(t *testing.T) {
 	balance := gjson.Get(raw, "balance.amount").Int()
 	require.Equal(t, balance, int64(0))
 
-	validProposal := fmt.Sprintf(`
+	validMintProposal := fmt.Sprintf(`
 	{
  "messages": [
   {
@@ -260,9 +278,9 @@ func TestMintTokenProposal(t *testing.T) {
  "summary": "testing"
 }`, govAddr, receiverAddr, denom, mintAmount)
 
-	proposalFile := StoreTempFile(t, []byte(validProposal))
+	mintProposalFile := StoreTempFile(t, []byte(validMintProposal))
 
-	rsp = cli.RunAndWait("tx", "gov", "submit-proposal", proposalFile.Name(), "--from", valAddr)
+	rsp = cli.RunAndWait("tx", "gov", "submit-proposal", mintProposalFile.Name(), "--from", valAddr)
 	RequireTxSuccess(t, rsp)
 
 	// vote to proposal from two validators
@@ -277,4 +295,41 @@ func TestMintTokenProposal(t *testing.T) {
 	raw = cli.CustomQuery("q", "bankv2", "balance", receiverAddr, denom)
 	balance = gjson.Get(raw, "balance.amount").Int()
 	require.Equal(t, balance, int64(mintAmount))
+
+	validBurnProposal := fmt.Sprintf(`
+	{
+ "messages": [
+  {
+   "@type": "/cosmos.bank.v2.MsgBurn",
+   "authority": "%s",
+   "burn_from_address": "%s",
+   "amount": {
+     "denom": "%s",
+     "amount": "%d"
+   }
+  }
+ ],
+ "metadata": "ipfs://CID",
+ "deposit": "100000000stake",
+ "title": "mint tokenfactory token",
+ "summary": "testing"
+}`, govAddr, receiverAddr, denom, burnAmount)
+
+	burnProposalFile := StoreTempFile(t, []byte(validBurnProposal))
+
+	rsp = cli.RunAndWait("tx", "gov", "submit-proposal", burnProposalFile.Name(), "--from", valAddr)
+	RequireTxSuccess(t, rsp)
+
+	// vote to proposal from two validators
+	rsp = cli.RunAndWait("tx", "gov", "vote", "3", "yes", "--from", valAddr)
+	RequireTxSuccess(t, rsp)
+	rsp = cli.RunAndWait("tx", "gov", "vote", "3", "yes", "--from", valAddr1)
+	RequireTxSuccess(t, rsp)
+
+	time.Sleep(8 * time.Second)
+
+	// stake should be burned from receiver
+	raw = cli.CustomQuery("q", "bankv2", "balance", receiverAddr, denom)
+	balance = gjson.Get(raw, "balance.amount").Int()
+	require.Equal(t, balance, int64(mintAmount-burnAmount))
 }

@@ -537,10 +537,12 @@ func (c *CommitStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error) {
 		})
 	}
 
-	return &proof.CommitInfo{
+	ci = &proof.CommitInfo{
 		Version:    version,
 		StoreInfos: storeInfos,
-	}, nil
+	}
+	ci.Hash()
+	return ci, nil
 }
 
 func (c *CommitStore) GetLatestVersion() (uint64, error) {

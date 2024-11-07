@@ -55,12 +55,25 @@ func NewReversePair[Value, K1, K2 any](
 	}
 	if o.uncheckedValue {
 		return &ReversePair[K1, K2, Value]{
-			refKeys: collections.NewKeySet(sb, prefix, name, collections.PairKeyCodec(pkc.KeyCodec2(), pkc.KeyCodec1()), collections.WithKeySetUncheckedValue()),
+			refKeys: collections.NewKeySet(
+				sb,
+				prefix,
+				name,
+				collections.PairKeyCodec(pkc.KeyCodec2(), pkc.KeyCodec1()),
+				collections.WithKeySetUncheckedValue(),
+				collections.WithKeySetSecondaryIndex(),
+			),
 		}
 	}
 
 	mi := &ReversePair[K1, K2, Value]{
-		refKeys: collections.NewKeySet(sb, prefix, name, collections.PairKeyCodec(pkc.KeyCodec2(), pkc.KeyCodec1())),
+		refKeys: collections.NewKeySet(
+			sb,
+			prefix,
+			name,
+			collections.PairKeyCodec(pkc.KeyCodec2(), pkc.KeyCodec1()),
+			collections.WithKeySetSecondaryIndex(),
+		),
 	}
 
 	return mi

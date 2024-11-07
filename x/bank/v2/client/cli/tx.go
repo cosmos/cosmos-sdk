@@ -28,6 +28,7 @@ func NewTxCmd() *cobra.Command {
 		NewSendTxCmd(),
 		NewCreateDenomTxCmd(),
 		NewMintCmd(),
+		NewBurnCmd(),
 	)
 
 	return txCmd
@@ -125,7 +126,7 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 
 			toAddr := args[1]
 			if toAddr == "" {
-				return fmt.Errorf("Mint to address is empty")
+				return fmt.Errorf("mint to address is empty")
 			}
 
 			coin, err := sdk.ParseCoinNormalized(args[2])
@@ -136,6 +137,49 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 			msg := &types.MsgMint{
 				Authority: clientCtx.GetFromAddress().String(),
 				ToAddress: toAddr,
+				Amount: coin,
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewBurnCmd returns a CLI command handler for creating a MsgBurn transaction.
+func NewBurnCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "burn [sender] [burn_from] [amount]",
+		Short: "Burn a token denom from an address. Must have admin authority to do so.",
+		Long: `Burn a token denom from an address. Must have admin authority to do so..
+Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
+When using '--dry-run' a key name cannot be used, only a bech32 address.
+`,
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmd.Flags().Set(flags.FlagFrom, args[0]); err != nil {
+				return err
+			}
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			fromAddr := args[1]
+			if fromAddr == "" {
+				return fmt.Errorf("burn from address is empty")
+			}
+
+			coin, err := sdk.ParseCoinNormalized(args[2])
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgBurn{
+				Authority: clientCtx.GetFromAddress().String(),
+				BurnFromAddress: fromAddr,
 				Amount: coin,
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

@@ -11,5 +11,6 @@ func RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 		&MsgSend{},
 		&MsgCreateDenom{},
 		&MsgMint{},
+		&MsgBurn{},
 	)
 }

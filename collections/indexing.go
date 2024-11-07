@@ -133,6 +133,9 @@ func (c collectionImpl[K, V]) schemaCodec() (*collectionSchemaCodec, error) {
 		if err != nil {
 			return nil, err
 		}
+		if keyDecoder.ToSchemaType == nil {
+			return x, nil
+		}
 		return keyDecoder.ToSchemaType(x)
 	}
 	ensureFieldNames(c.m.kc, "key", res.objectType.KeyFields)

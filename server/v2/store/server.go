@@ -24,18 +24,18 @@ const ServerName = "store"
 
 // Server manages store config and contains prune & snapshot commands
 type Server[T transaction.Tx] struct {
-	config  *root.Config
-	backend storev2.Backend
+	config *root.Config
+	store  storev2.RootStore
 }
 
-func New[T transaction.Tx](store storev2.Backend, cfg server.ConfigMap) (*Server[T], error) {
+func New[T transaction.Tx](store storev2.RootStore, cfg server.ConfigMap) (*Server[T], error) {
 	config, err := UnmarshalConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 	return &Server[T]{
-		backend: store,
-		config:  config,
+		store:  store,
+		config: config,
 	}, nil
 }
 
@@ -48,10 +48,7 @@ func (s *Server[T]) Start(context.Context) error {
 }
 
 func (s *Server[T]) Stop(context.Context) error {
-	return errors.Join(
-		s.backend.GetStateStorage().Close(),
-		s.backend.GetStateCommitment().Close(),
-	)
+	return nil
 }
 
 func (s *Server[T]) CLICommands() serverv2.CLIConfig {

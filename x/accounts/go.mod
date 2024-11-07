@@ -4,12 +4,12 @@ go 1.23.1
 
 require (
 	cosmossdk.io/api v0.8.0 // main
-	cosmossdk.io/collections v0.4.1-0.20241031202146-5b7fc8ae90a7 // main
+	cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee // main
 	cosmossdk.io/core v1.0.0-alpha.5 // main
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // main
-	cosmossdk.io/depinject v1.0.0
+	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
-	cosmossdk.io/x/tx v1.0.0-alpha.1 // main
+	cosmossdk.io/x/tx v1.0.0-alpha.2 // main
 	github.com/cosmos/cosmos-sdk v0.52.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cobra v1.8.1

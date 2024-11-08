@@ -3,6 +3,7 @@ package serverv2
 import (
 	"context"
 	"errors"
+	"io"
 	"os"
 	"os/signal"
 	"runtime/pprof"
@@ -22,6 +23,7 @@ import (
 func AddCommands[T transaction.Tx](
 	rootCmd *cobra.Command,
 	logger log.Logger,
+	appCloser io.Closer,
 	globalAppConfig server.ConfigMap,
 	globalServerConfig ServerConfig,
 	components ...ServerComponent[T],
@@ -31,7 +33,7 @@ func AddCommands[T transaction.Tx](
 	}
 	srv := NewServer(globalServerConfig, components...)
 	cmds := srv.CLICommands()
-	startCmd := createStartCommand(srv, globalAppConfig, logger)
+	startCmd := createStartCommand(srv, appCloser, globalAppConfig, logger)
 	startCmd.SetContext(rootCmd.Context())
 	cmds.Commands = append(cmds.Commands, startCmd)
 	rootCmd.AddCommand(cmds.Commands...)
@@ -63,6 +65,7 @@ func AddCommands[T transaction.Tx](
 // createStartCommand creates the start command for the application.
 func createStartCommand[T transaction.Tx](
 	server *Server[T],
+	appCloser io.Closer,
 	config server.ConfigMap,
 	logger log.Logger,
 ) *cobra.Command {
@@ -85,13 +88,19 @@ func createStartCommand[T transaction.Tx](
 					// don't block waiting for the OS signal before stopping the server.
 					cancelFn()
 				}
-
-				if err := server.Stop(ctx); err != nil {
-					cmd.PrintErrln("failed to stop servers:", err)
-				}
 			}()
 
 			return wrapCPUProfile(logger, config, func() error {
+				defer func() {
+					if err := server.Stop(cmd.Context()); err != nil {
+						cmd.PrintErrln("failed to stop servers:", err)
+					}
+
+					if err := appCloser.Close(); err != nil {
+						cmd.PrintErrln("failed to close application:", err)
+					}
+				}()
+
 				return server.Start(ctx)
 			})
 		},

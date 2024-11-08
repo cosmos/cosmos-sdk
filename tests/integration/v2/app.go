@@ -397,6 +397,54 @@ func (a *App) SignCheckDeliver(
 	return txResult
 }
 
+func (app *App) RunMsg(msg sdk.Msg) (*codectypes.Any, error) {
+	// set options
+	cfg := &Config{}
+	for _, opt := range option {
+		opt(cfg)
+	}
+
+	if cfg.AutomaticCommit {
+		defer func() {
+			_, err := app.Commit()
+			if err != nil {
+				panic(err)
+			}
+		}()
+	}
+
+	if cfg.AutomaticFinalizeBlock {
+		height := app.LastBlockHeight() + 1
+		if _, err := app.FinalizeBlock(&cmtabcitypes.FinalizeBlockRequest{Height: height, DecidedLastCommit: cmtabcitypes.CommitInfo{Votes: []cmtabcitypes.VoteInfo{{}}}}); err != nil {
+			return nil, fmt.Errorf("failed to run finalize block: %w", err)
+		}
+	}
+
+	app.logger.Info("Running msg", "msg", msg.String())
+
+	handler := app.MsgServiceRouter().Handler(msg)
+	if handler == nil {
+		return nil, fmt.Errorf("handler is nil, can't route message %s: %+v", sdk.MsgTypeURL(msg), msg)
+	}
+
+	msgResult, err := handler(app.ctx, msg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute message %s: %w", sdk.MsgTypeURL(msg), err)
+	}
+
+	var response *codectypes.Any
+	if len(msgResult.MsgResponses) > 0 {
+		msgResponse := msgResult.MsgResponses[0]
+		if msgResponse == nil {
+			return nil, fmt.Errorf("got nil msg response %s in message result: %s", sdk.MsgTypeURL(msg), msgResult.String())
+		}
+
+		response = msgResponse
+	}
+
+	return response, nil
+}
+
 // CheckBalance checks the balance of the given address.
 func (a *App) CheckBalance(
 	t *testing.T, ctx context.Context, addr sdk.AccAddress, expected sdk.Coins, keeper bankkeeper.Keeper,

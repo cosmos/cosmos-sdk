@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"io"
 
 	"github.com/spf13/cobra"
 
@@ -71,6 +72,7 @@ func InitRootCmd[T transaction.Tx](
 		return serverv2.AddCommands[T](
 			rootCmd,
 			logger,
+			io.NopCloser(nil),
 			deps.GlobalConfig,
 			initServerConfig(),
 			deps.Consensus,
@@ -83,7 +85,7 @@ func InitRootCmd[T transaction.Tx](
 
 	// build full app!
 	simApp := deps.SimApp
-	grpcServer, err := grpc.New[T](simApp.InterfaceRegistry(), simApp.QueryHandlers(), simApp.Query, deps.GlobalConfig)
+	grpcServer, err := grpc.New[T](logger, simApp.InterfaceRegistry(), simApp.QueryHandlers(), simApp.Query, deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +94,7 @@ func InitRootCmd[T transaction.Tx](
 	if err != nil {
 		return nil, err
 	}
-	restServer, err := rest.New[T](simApp.App.AppManager, logger, deps.GlobalConfig)
+	restServer, err := rest.New[T](logger, simApp.App.AppManager, deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +104,6 @@ func InitRootCmd[T transaction.Tx](
 		deps.Consensus, err = cometbft.New(
 			logger,
 			simApp.Name(),
-			simApp,
 			simApp.Store(),
 			simApp.App.AppManager,
 			simApp.App.QueryHandlers(),
@@ -124,6 +125,7 @@ func InitRootCmd[T transaction.Tx](
 	return serverv2.AddCommands[T](
 		rootCmd,
 		logger,
+		simApp,
 		deps.GlobalConfig,
 		initServerConfig(),
 		deps.Consensus,

@@ -35,6 +35,7 @@ const (
 )
 
 type Server[T transaction.Tx] struct {
+	logger     log.Logger
 	config     *Config
 	cfgOptions []CfgOption
 
@@ -43,6 +44,7 @@ type Server[T transaction.Tx] struct {
 
 // New creates a new grpc server.
 func New[T transaction.Tx](
+	logger log.Logger,
 	interfaceRegistry server.InterfaceRegistry,
 	queryHandlers map[string]appmodulev2.Handler,
 	queryable func(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error),
@@ -67,13 +69,14 @@ func New[T transaction.Tx](
 	)
 
 	// Reflection allows external clients to see what services and methods the gRPC server exposes.
-	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(queryHandlers)), log.NewNopLogger())
+	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(queryHandlers)), logger.With("sub-module", "grpc-reflection"))
 
 	// Register V2 grpc handlers
 	RegisterServiceServer(grpcSrv, &v2Service{queryHandlers, queryable})
 
 	srv.grpcSrv = grpcSrv
 	srv.config = serverCfg
+	srv.logger = logger.With(log.ModuleKey, srv.Name())
 
 	return srv, nil
 }
@@ -196,10 +199,8 @@ func (s *Server[T]) Config() any {
 }
 
 func (s *Server[T]) Start(ctx context.Context) error {
-	logger := serverv2.GetLoggerFromContext(ctx).With(log.ModuleKey, s.Name())
-
 	if !s.config.Enable {
-		logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
+		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil
 	}
 
@@ -208,7 +209,7 @@ func (s *Server[T]) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to listen on address %s: %w", s.config.Address, err)
 	}
 
-	logger.Info("starting gRPC server...", "address", s.config.Address)
+	s.logger.Info("starting gRPC server...", "address", s.config.Address)
 	if err := s.grpcSrv.Serve(listener); err != nil {
 		return fmt.Errorf("failed to start gRPC server: %w", err)
 	}
@@ -217,13 +218,11 @@ func (s *Server[T]) Start(ctx context.Context) error {
 }
 
 func (s *Server[T]) Stop(ctx context.Context) error {
-	logger := serverv2.GetLoggerFromContext(ctx).With(log.ModuleKey, s.Name())
-
 	if !s.config.Enable {
 		return nil
 	}
 
-	logger.Info("stopping gRPC server...", "address", s.config.Address)
+	s.logger.Info("stopping gRPC server...", "address", s.config.Address)
 	s.grpcSrv.GracefulStop()
 
 	return nil

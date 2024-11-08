@@ -21,6 +21,7 @@ var (
 const ServerName = "telemetry"
 
 type Server[T transaction.Tx] struct {
+	logger  log.Logger
 	config  *Config
 	server  *http.Server
 	metrics *Metrics
@@ -36,6 +37,7 @@ func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger) (*Server[T],
 		}
 	}
 	srv.config = serverCfg
+	srv.logger = logger.With(log.ModuleKey, srv.Name())
 
 	metrics, err := NewMetrics(srv.config)
 	if err != nil {
@@ -59,10 +61,8 @@ func (s *Server[T]) Config() any {
 }
 
 func (s *Server[T]) Start(ctx context.Context) error {
-	logger := serverv2.GetLoggerFromContext(ctx).With(log.ModuleKey, s.Name())
-
 	if !s.config.Enable {
-		logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
+		s.logger.Info(fmt.Sprintf("%s server is disabled via config", s.Name()))
 		return nil
 	}
 
@@ -78,7 +78,7 @@ func (s *Server[T]) Start(ctx context.Context) error {
 		Handler: mux,
 	}
 
-	logger.Info("starting telemetry server...", "address", s.config.Address)
+	s.logger.Info("starting telemetry server...", "address", s.config.Address)
 	if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		return fmt.Errorf("failed to start telemetry server: %w", err)
 	}
@@ -87,13 +87,11 @@ func (s *Server[T]) Start(ctx context.Context) error {
 }
 
 func (s *Server[T]) Stop(ctx context.Context) error {
-	logger := serverv2.GetLoggerFromContext(ctx).With(log.ModuleKey, s.Name())
-
 	if !s.config.Enable || s.server == nil {
 		return nil
 	}
 
-	logger.Info("stopping telemetry server...", "address", s.config.Address)
+	s.logger.Info("stopping telemetry server...", "address", s.config.Address)
 	return s.server.Shutdown(ctx)
 }
 

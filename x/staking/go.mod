@@ -137,7 +137,7 @@ require (
 	golang.org/x/mod v0.18.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/sys v0.27.0 // indirect
 	golang.org/x/term v0.25.0 // indirect
 	golang.org/x/text v0.19.0 // indirect
 	golang.org/x/tools v0.22.0 // indirect
@@ -151,7 +151,7 @@ require (
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.1-20240701160653-fedbb9acfd2f.1 // indirect
-	cosmossdk.io/log v1.4.1
+	cosmossdk.io/log v1.5.0
 	github.com/cosmos/crypto v0.1.2 // indirect
 	github.com/dgraph-io/badger/v4 v4.3.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
@@ -163,10 +163,17 @@ require (
 
 require (
 	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
+	github.com/bytedance/sonic v1.12.4 // indirect
+	github.com/bytedance/sonic/loader v0.2.1 // indirect
+	github.com/cloudwego/base64x v0.1.4 // indirect
+	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240606204812-0bbfbd93a7ce // indirect
 	github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
+	golang.org/x/arch v0.12.0 // indirect
 	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 	gotest.tools/v3 v3.5.1 // indirect
 )

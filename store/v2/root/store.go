@@ -66,6 +66,9 @@ type Store struct {
 	chDone chan struct{}
 	// isMigrating reflects whether the store is currently migrating
 	isMigrating bool
+
+	// isCommitting reflects whether the store is currently committing
+	isCommitting bool
 }
 
 // New creates a new root Store instance.
@@ -177,8 +180,10 @@ func (s *Store) GetStateCommitment() store.Committer {
 // If an internal CommitInfo is not set, a new one will be returned with only the
 // latest version set, which is based off of the SC view.
 func (s *Store) LastCommitID() (proof.CommitID, error) {
-	if s.lastCommitInfo != nil {
-		return s.lastCommitInfo.CommitID(), nil
+	if !s.isCommitting {
+		if s.lastCommitInfo != nil {
+			return s.lastCommitInfo.CommitID(), nil
+		}
 	}
 
 	latestVersion, err := s.stateCommitment.GetLatestVersion()
@@ -525,6 +530,7 @@ func (s *Store) writeSC(cs *corestore.Changeset) error {
 		version = previousHeight + 1
 	}
 
+	s.isCommitting = true
 	s.lastCommitInfo = s.stateCommitment.WorkingCommitInfo(version)
 
 	return nil
@@ -539,6 +545,7 @@ func (s *Store) commitSC() error {
 	if err != nil {
 		return fmt.Errorf("failed to commit SC store: %w", err)
 	}
+	s.isCommitting = false
 
 	if !bytes.Equal(cInfo.Hash(), s.lastCommitInfo.Hash()) {
 		return fmt.Errorf("unexpected commit hash; got: %X, expected: %X", cInfo.Hash(), s.lastCommitInfo.Hash())

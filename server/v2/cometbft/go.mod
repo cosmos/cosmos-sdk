@@ -22,7 +22,7 @@ require (
 	cosmossdk.io/server/v2 v2.0.0-20241029092041-78cfc68c83af // main
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241029092041-78cfc68c83af // main
 	cosmossdk.io/server/v2/stf v0.0.0-20241029092041-78cfc68c83af // main
-	cosmossdk.io/store/v2 v2.0.0-20241017091405-f01baf302e2b // main
+	cosmossdk.io/store/v2 v2.0.0-20241108140525-43e28b43ad7a // main
 	cosmossdk.io/x/consensus v0.0.0-00010101000000-000000000000
 	github.com/cometbft/cometbft v1.0.0-rc1.0.20240908111210-ab0be101882f
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
@@ -83,7 +83,7 @@ require (
 	github.com/emicklei/dot v1.6.2 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/getsentry/sentry-go v0.29.0 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect

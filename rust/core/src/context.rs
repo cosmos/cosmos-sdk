@@ -1,7 +1,6 @@
 use core::cell::Cell;
 use ixc_message_api::handler::HostBackend;
 use ixc_message_api::AccountID;
-use ixc_message_api::header::ContextInfo;
 use ixc_schema::mem::MemoryManager;
 
 /// Context wraps a single message request (and possibly response as well) along with
@@ -9,8 +8,9 @@ use ixc_schema::mem::MemoryManager;
 pub struct Context<'a> {
     pub(crate) mem: MemHandle<'a>,
     pub(crate) backend: &'a dyn HostBackend,
-    pub(crate) context_info: ContextInfo,
-    gas_consumed: Cell<u64>,
+    pub(crate) account: AccountID, // 16 bytes
+    pub(crate) caller: AccountID, // 16 bytes
+    gas_left: Cell<u64>,
 }
 
 enum MemHandle<'a> {
@@ -20,34 +20,36 @@ enum MemHandle<'a> {
 
 impl<'a> Context<'a> {
     /// Create a new context from a message packet and host callbacks.
-    pub fn new(context_info: ContextInfo, host_callbacks: &'a dyn HostBackend) -> Self {
+    pub fn new(account: AccountID, caller: AccountID, gas_left: u64, host_callbacks: &'a dyn HostBackend) -> Self {
         Self {
             mem: MemHandle::Owned(MemoryManager::new()),
             backend: host_callbacks,
-            context_info,
-            gas_consumed: Cell::new(0),
+            account,
+            caller,
+            gas_left: Cell::new(gas_left),
         }
     }
 
     /// Create a new context from a message packet and host callbacks with a pre-allocated memory manager.
-    pub fn new_with_mem(context_info: ContextInfo, host_callbacks: &'a dyn HostBackend, mem: &'a MemoryManager) -> Self {
+    pub fn new_with_mem(account: AccountID, caller: AccountID, gas_left: u64, host_callbacks: &'a dyn HostBackend, mem: &'a MemoryManager) -> Self {
         Self {
             mem: MemHandle::Borrowed(mem),
             backend: host_callbacks,
-            context_info,
-            gas_consumed: Cell::new(0),
+            account,
+            caller,
+            gas_left: Cell::new(gas_left),
         }
     }
 
     /// This is the address of the account that is getting called.
     /// In a receiving account, this is the account's own address.
     pub fn self_account_id(&self) -> AccountID {
-        self.context_info.account
+        self.account
     }
 
     /// This is the address of the account which is making the message call.
     pub fn caller(&self) -> AccountID {
-        self.context_info.caller
+        self.caller
     }
 
     /// Get the host backend.

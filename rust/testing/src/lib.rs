@@ -18,7 +18,6 @@ use ixc_core::routing::{Router};
 use crate::hypervisor::Hypervisor;
 use ixc_message_api::code::{ErrorCode, SystemCode};
 use ixc_message_api::handler::{HostBackend, RawHandler};
-use ixc_message_api::header::{ContextInfo};
 use ixc_message_api::packet::MessagePacket;
 use ixc_schema::mem::MemoryManager;
 use crate::store::{VersionedMultiStore};
@@ -76,7 +75,7 @@ impl TestApp {
     /// Creates a new random client account that can be used in calls.
     pub fn new_client_account(&self) -> ClientResult<AccountID> {
         let mut ctx = self.client_context_for(ROOT_ACCOUNT);
-        let client = create_account::<DefaultAccount>(&mut ctx, DefaultAccountCreate{})?;
+        let client = create_account::<DefaultAccount>(&mut ctx, DefaultAccountCreate {})?;
         Ok(client.account_id())
     }
 
@@ -90,12 +89,11 @@ impl TestApp {
     pub fn client_context_for(&self, account_id: AccountID) -> Context
     {
         unsafe {
-            let ctx = Context::new(ContextInfo{
-                account: account_id,
-                caller: account_id,
-                gas_limit: 0,
-                gas_consumed: 0,
-            }, self);
+            let ctx = Context::new(
+                account_id,
+                account_id,
+                0,
+                self);
             ctx
         }
     }
@@ -115,7 +113,7 @@ impl TestApp {
     /// This method will panic if we can't call into the handler, but panicking is acceptable in tests.
     pub fn exec_in<HC: HandlerClient, F, R>(&self, client: &HC, f: F) -> R
     where
-        F: FnOnce(&HC::Handler, &mut Context)  -> R,
+        F: FnOnce(&HC::Handler, &mut Context) -> R,
     {
         // TODO lookup handler ID to make sure this is the correct handler
         let scope = ResourceScope::default();
@@ -171,7 +169,7 @@ impl RawHandler for MockHandler {
 }
 
 struct MockWrapper<T: RawHandler + ?Sized>(std::boxed::Box<T>);
-impl <T: RawHandler + ?Sized> RawHandler for MockWrapper<T> {
+impl<T: RawHandler + ?Sized> RawHandler for MockWrapper<T> {
     fn handle(&self, message_packet: &mut MessagePacket, callbacks: &dyn HostBackend, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
         self.0.handle(message_packet, callbacks, allocator)
     }
@@ -182,7 +180,7 @@ mod default_account {
     use ixc::*;
 
     #[derive(Resources)]
-    pub struct DefaultAccount{}
+    pub struct DefaultAccount {}
 
     impl DefaultAccount {
         #[on_create]

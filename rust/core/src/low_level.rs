@@ -62,8 +62,8 @@ pub fn create_packet<'a, E: HandlerCode>(context: &'a Context, account: AccountI
     unsafe {
         let packet = MessagePacket::allocate(context.memory_manager(), 0)?;
         let header = packet.header_mut();
-        header.context_info.caller = context.self_account_id();
-        header.context_info.account = account;
+        header.caller = context.self_account_id();
+        header.account = account;
         header.message_selector = selector;
         Ok(packet)
     }

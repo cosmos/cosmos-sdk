@@ -440,10 +440,11 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
                     (< #msg_struct_name #opt_underscore_lifetime as ::ixc::core::message::Message >::SELECTOR, |h: &Self, packet, cb, a| {
                         unsafe {
                             let cdc = < #msg_struct_name as ::ixc::core::message::Message<'_> >::Codec::default();
-                            let in1 = packet.header().in_pointer1.get(packet);
+                            let header = packet.header();
+                            let in1 = header.in_pointer1.get(packet);
                             let mem = ::ixc::schema::mem::MemoryManager::new();
                             let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc::schema::codec::decode_value::< #msg_struct_name >(&cdc, in1, &mem)?;
-                            let mut ctx = ::ixc::core::Context::new_with_mem(packet.header().context_info, cb, &mem);
+                            let mut ctx = ::ixc::core::Context::new_with_mem(header.account, header.caller, header.gas_left, cb, &mem);
                             let res = h.#fn_name(&mut ctx, #(#fn_ctr_args)*);
                             ::ixc::core::low_level::encode_response::< #msg_struct_name >(&cdc, res, a, packet)
                         }
@@ -466,10 +467,11 @@ fn derive_api_method(handler_ident: &Ident, handler_ty: &TokenStream2, publish_t
             (::ixc::core::account_api::ON_CREATE_SELECTOR, | h: &Self, packet, cb, a| {
                 unsafe {
                     let cdc = < #msg_struct_name #opt_underscore_lifetime as::ixc::core::handler::InitMessage<'_> >::Codec::default();
-                    let in1 = packet.header().in_pointer1.get(packet);
+                    let header = packet.header();
+                    let in1 = header.in_pointer1.get(packet);
                     let mem = ::ixc::schema::mem::MemoryManager::new();
                     let #msg_struct_name { #(#msg_deconstruct)* } = ::ixc::schema::codec::decode_value::< #msg_struct_name > ( & cdc, in1, &mem)?;
-                    let mut ctx =::ixc::core::Context::new_with_mem(packet.header().context_info, cb, &mem);
+                    let mut ctx =::ixc::core::Context::new_with_mem(header.account, header.caller, header.gas_left, cb, &mem);
                     let res = h.#fn_name(&mut ctx, #(#fn_ctr_args)*);
                     ::ixc::core::low_level::encode_default_response(res, a, packet)
                 }

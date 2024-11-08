@@ -14,13 +14,23 @@ require (
 )
 
 require (
+	github.com/bytedance/sonic v1.12.4 // indirect
+	github.com/bytedance/sonic/loader v0.2.1 // indirect
+	github.com/cloudwego/base64x v0.1.4 // indirect
+	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
+	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
+	golang.org/x/arch v0.12.0 // indirect
+)
+
+require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.1-20240701160653-fedbb9acfd2f.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.1-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/api v0.7.6 // indirect
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // indirect
 	cosmossdk.io/depinject v1.1.0 // indirect
 	cosmossdk.io/errors v1.0.1
-	cosmossdk.io/log v1.4.1
+	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
@@ -129,7 +139,7 @@ require (
 	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/sys v0.27.0 // indirect
 	golang.org/x/term v0.25.0 // indirect
 	golang.org/x/text v0.19.0 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect

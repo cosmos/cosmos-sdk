@@ -36,6 +36,45 @@ pub mod counter {
     }
 }
 
+const HANDLER_0: counter::Counter = unsafe { <counter::Counter as ::ixc::core::resource::Resources>::new(&<::ixc::core::resource::ResourceScope as core::default::Default>::default()).unwrap() };
+
+const HANDLER_DESCRIPTOR_0: &[RawHandlerDescriptor] = &[RawHandlerDescriptor {
+    name: b"Counter\0".as_ptr(),
+    name_len: 7,
+}];
+
+type Callback = fn(ctx: u64, packet: *mut u8, packet_len: u32) -> u32;
+
+#[no_mangle]
+pub extern "C" fn ixc_handle(handler_idx: u32, packet: *mut u8, packet_len: u32, ctx: u64, callback: Callback) -> u32 {
+    todo!()
+}
+
+#[no_mangle]
+pub extern "C" fn ixc_num_handlers() -> u32 {
+    todo!()
+}
+
+#[no_mangle]
+pub extern "C" fn ixc_describe_handler(handler_idx: u32) -> *const RawHandlerDescriptor {
+    todo!()
+}
+
+#[repr(C)]
+struct RawHandlerDescriptor {
+    name: *const u8,
+    name_len: u32,
+}
+
+#[no_mangle]
+pub extern "C" fn ixc_alloc(size: u32, align: u32) -> *mut u8 {
+    todo!()
+}
+
+#[no_mangle]
+pub extern "C" fn ixc_free(ptr: *mut u8, size: u32) {
+    todo!()
+}
 
 #[cfg(test)]
 mod tests {

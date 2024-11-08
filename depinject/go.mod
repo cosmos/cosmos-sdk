@@ -28,5 +28,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// keep grpc 1.64.1 to avoid go minimum version bump (depinject should be compatible with 0.47, 0.50 and 0.52)
-replace google.golang.org/grpc => google.golang.org/grpc v1.64.1
+// keep grpc 1.67.1 to avoid go minimum version bump (depinject should be compatible with 0.47, 0.50 and 0.52)
+replace google.golang.org/grpc => google.golang.org/grpc v1.67.1

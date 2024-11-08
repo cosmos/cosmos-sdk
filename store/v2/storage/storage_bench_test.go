@@ -69,12 +69,12 @@ func BenchmarkGet(b *testing.B) {
 			_ = db.Close()
 		}()
 
-		cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{string(storeKey1): {}})
+		cs := corestore.NewChangesetWithPairs(1, map[string]corestore.KVPairs{string(storeKey1): {}})
 		for i := 0; i < numKeyVals; i++ {
 			cs.AddKVPair(storeKey1, corestore.KVPair{Key: keys[i], Value: vals[i]})
 		}
 
-		require.NoError(b, db.ApplyChangeset(1, cs))
+		require.NoError(b, db.ApplyChangeset(cs))
 
 		b.Run(fmt.Sprintf("backend_%s", ty), func(b *testing.B) {
 			b.ResetTimer()
@@ -105,7 +105,8 @@ func BenchmarkApplyChangeset(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				b.StopTimer()
 
-				cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{string(storeKey1): {}})
+				ver := uint64(b.N + 1)
+				cs := corestore.NewChangesetWithPairs(ver, map[string]corestore.KVPairs{string(storeKey1): {}})
 				for j := 0; j < 1000; j++ {
 					key := make([]byte, 128)
 					val := make([]byte, 128)
@@ -119,7 +120,7 @@ func BenchmarkApplyChangeset(b *testing.B) {
 				}
 
 				b.StartTimer()
-				require.NoError(b, db.ApplyChangeset(uint64(b.N+1), cs))
+				require.NoError(b, db.ApplyChangeset(cs))
 			}
 		})
 	}
@@ -152,12 +153,12 @@ func BenchmarkIterate(b *testing.B) {
 
 		b.StopTimer()
 
-		cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{string(storeKey1): {}})
+		cs := corestore.NewChangesetWithPairs(1, map[string]corestore.KVPairs{string(storeKey1): {}})
 		for i := 0; i < numKeyVals; i++ {
 			cs.AddKVPair(storeKey1, corestore.KVPair{Key: keys[i], Value: vals[i]})
 		}
 
-		require.NoError(b, db.ApplyChangeset(1, cs))
+		require.NoError(b, db.ApplyChangeset(cs))
 
 		sort.Slice(keys, func(i, j int) bool {
 			return bytes.Compare(keys[i], keys[j]) < 0

@@ -240,8 +240,7 @@ replace (
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	cosmossdk.io/client/v2 => ../client/v2
 	// pseudo version lower than the latest tag
-	cosmossdk.io/store => cosmossdk.io/store 43e28b43ad7aa787c99c161d83ccc0cbd872612b // main
-	cosmossdk.io/store/v2 => cosmossdk.io/store/v2 43e28b43ad7aa787c99c161d83ccc0cbd872612b // main
+	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241106093505-9611c5a0e6e3 // main
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../x/accounts/defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup

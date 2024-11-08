@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v1.0.0-alpha.5
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29
-	cosmossdk.io/depinject v1.0.0
+	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.3.0
@@ -84,7 +84,7 @@ require (
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft-db v0.15.0 // indirect
-	github.com/cosmos/iavl v1.3.0 // indirect
+	github.com/cosmos/iavl v1.3.1 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -95,7 +95,7 @@ require (
 	github.com/emicklei/dot v1.6.2 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/getsentry/sentry-go v0.27.0 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect

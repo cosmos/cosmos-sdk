@@ -239,8 +239,20 @@ replace (
 	// pseudo version lower than the latest tag
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	cosmossdk.io/client/v2 => ../client/v2
+<<<<<<< HEAD
 	// pseudo version lower than the latest tag
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241106093505-9611c5a0e6e3 // main
+=======
+	cosmossdk.io/collections => ../collections
+	cosmossdk.io/core => ../core
+	cosmossdk.io/core/testing => ../core/testing
+	cosmossdk.io/indexer/postgres => ../indexer/postgres
+	cosmossdk.io/runtime/v2 => ../runtime/v2
+	cosmossdk.io/server/v2/appmanager => ../server/v2/appmanager
+	cosmossdk.io/server/v2/stf => ../server/v2/stf
+	cosmossdk.io/store => ../store
+	cosmossdk.io/store/v2 => ../store/v2
+>>>>>>> 43e28b43a (refactor(store/v2): simplify genesis flow (#22435))
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../x/accounts/defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup

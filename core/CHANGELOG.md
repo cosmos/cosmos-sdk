@@ -36,14 +36,24 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### API Breaking
+## [v1.0.0-alpha.6](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.6)
+
+### API Breaking Changes
 
 * [#22435](https://github.com/cosmos/cosmos-sdk/pull/22435) Add `Version uint64` field to `store.Changeset` and update `Changeset` constructors to accept a `version uint64` as their first argument.
+
+## [v1.0.0-alpha.5](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.5)
 
 ### Features
 
 * [#22326](https://github.com/cosmos/cosmos-sdk/pull/22326) Introduce codec package in order to facilitate removal of Cosmos SDK dependency in modules. 
 * [*22267](https://github.com/cosmos/cosmos-sdk/pull/22267) Add `server.ConfigMap` and `server.ModuleConfigMap` to replace `server.DynamicConfig` in module configuration.
+
+## [v1.0.0-alpha.4](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.4)
+
+### Improvements
+
+* [#22007](https://github.com/cosmos/cosmos-sdk/pull/22007) Improve handlers registration `DevX`.
 
 ## [v1.0.0-alpha.3](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv1.0.0-alpha.3)
 

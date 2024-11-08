@@ -4,7 +4,6 @@ go 1.23.1
 
 replace (
 	cosmossdk.io/api => ../../../api
-	cosmossdk.io/core => ../../../core
 	cosmossdk.io/core/testing => ../../../core/testing
 	cosmossdk.io/server/v2 => ../
 	cosmossdk.io/server/v2/appmanager => ../appmanager
@@ -21,7 +20,7 @@ replace (
 require (
 	cosmossdk.io/api v0.7.6
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v1.0.0-alpha.5
+	cosmossdk.io/core v1.0.0-alpha.5.0.20241108140525-43e28b43ad7a
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac

@@ -129,7 +129,11 @@ require (
 	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sync v0.9.0 // indirect
+<<<<<<< HEAD
 	golang.org/x/sys v0.27.0 // indirect
+=======
+	golang.org/x/sys v0.26.0 // indirect
+>>>>>>> main
 	golang.org/x/term v0.25.0 // indirect
 	golang.org/x/text v0.20.0 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect

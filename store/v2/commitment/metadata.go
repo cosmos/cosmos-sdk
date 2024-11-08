@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	commitInfoKeyFmt      = "c/%d" // c/<version>
-	latestVersionKey      = "c/latest"
-	removedStoreKeyPrefix = "c/removed/" // c/removed/<version>/<store-name>
+	commitInfoKeyFmt      = "s/%d" // c/<version>
+	latestVersionKey      = "s/latest"
+	removedStoreKeyPrefix = "s/removed/" // c/removed/<version>/<store-name>
 )
 
 // MetadataStore is a store for metadata related to the commitment store.
@@ -69,7 +69,10 @@ func (m *MetadataStore) GetCommitInfo(version uint64) (*proof.CommitInfo, error)
 
 	cInfo := &proof.CommitInfo{}
 	if err := cInfo.Unmarshal(value); err != nil {
-		return nil, err
+		cInfo, err = proof.ConvertV1CommitInfo(value)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return cInfo, nil

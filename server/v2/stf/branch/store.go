@@ -12,6 +12,7 @@ var _ store.Writer = (*Store[store.Reader])(nil)
 type Store[T store.Reader] struct {
 	changeSet changeSet // ordered changeset.
 	parent    T
+	cache     memCache
 }
 
 // NewStore creates a new Store object
@@ -19,13 +20,14 @@ func NewStore[T store.Reader](parent T) Store[T] {
 	return Store[T]{
 		changeSet: newChangeSet(),
 		parent:    parent,
+		cache:     newMemCache(),
 	}
 }
 
 // Get implements types.KVStore.
 func (s Store[T]) Get(key []byte) (value []byte, err error) {
 	// if found in memory cache, immediately return.
-	value, found := s.changeSet.get(key)
+	value, found := s.cache.get(key)
 	if found {
 		return
 	}
@@ -35,6 +37,7 @@ func (s Store[T]) Get(key []byte) (value []byte, err error) {
 	if err != nil {
 		return nil, err
 	}
+	s.cache.set(key, value)
 	return value, nil
 }
 
@@ -44,6 +47,7 @@ func (s Store[T]) Set(key, value []byte) error {
 		return errors.New("cannot set a nil value")
 	}
 	s.changeSet.set(key, value)
+	s.cache.set(key, value) // persist in cache.
 	return nil
 }
 
@@ -59,6 +63,7 @@ func (s Store[T]) Has(key []byte) (bool, error) {
 // Delete implements types.KVStore.
 func (s Store[T]) Delete(key []byte) error {
 	s.changeSet.delete(key)
+	s.cache.delete(key)
 	return nil
 }
 

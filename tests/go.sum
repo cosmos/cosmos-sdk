@@ -196,8 +196,8 @@ cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf h1:CttA/mEIxGm4E7vwrjUpju7
 cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf/go.mod h1:YMfx2ATpgITsoydD3hIBa8IkDHtyXp/14rmG0d3sEew=
 cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee h1:OLqvi9ekfShobmdgr4Q/8pu+LjzYJSrNl9tiadPg2xY=
 cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee/go.mod h1:DcD++Yfcq0OFtM3CJNYLIBjfZ+4DEyeJ/AUk6gkwlOE=
-cosmossdk.io/core v1.0.0-alpha.5 h1:McjYXAQ6XcT20v2uHyH7PhoWH8V+mebzfVFqT3GinsI=
-cosmossdk.io/core v1.0.0-alpha.5/go.mod h1:3u9cWq1FAVtiiCrDPpo4LhR+9V6k/ycSG4/Y/tREWCY=
+cosmossdk.io/core v1.0.0-alpha.6 h1:5ukC4JcQKmemLQXcAgu/QoOvJI50hpBkIIg4ZT2EN8E=
+cosmossdk.io/core v1.0.0-alpha.6/go.mod h1:3u9cWq1FAVtiiCrDPpo4LhR+9V6k/ycSG4/Y/tREWCY=
 cosmossdk.io/core/testing v0.0.0-20241107153845-4e240908dd60 h1:owHSnQ2LZ4Kqgb1qhl8HeOTgebR04FwKHrZk4Q2d50Y=
 cosmossdk.io/core/testing v0.0.0-20241107153845-4e240908dd60/go.mod h1:3YvVv9aJayjPhdX0DY1IMrGse4sR63hNBWx2VtDWjGQ=
 cosmossdk.io/depinject v1.1.0 h1:wLan7LG35VM7Yo6ov0jId3RHWCGRhe8E8bsuARorl5E=
@@ -223,8 +223,8 @@ cosmossdk.io/server/v2/stf v0.0.0-20241107153845-4e240908dd60 h1:+PYG1Wjsu8ZX5vv
 cosmossdk.io/server/v2/stf v0.0.0-20241107153845-4e240908dd60/go.mod h1:njNsfl5hKTylxDgSiBTLuOM1tic04aPk0k5Af6ybPN0=
 cosmossdk.io/store v1.0.0-rc.0.0.20241106093505-9611c5a0e6e3 h1:p69ThBO2dqCHKA3GcVoGr18Q4oH04asl1TsDPloxtSI=
 cosmossdk.io/store v1.0.0-rc.0.0.20241106093505-9611c5a0e6e3/go.mod h1:uaysXSQHWUykekFPvS1JqQ7HM58Zuqcby1DNlLQPWSg=
-cosmossdk.io/store/v2 v2.0.0-20241107153845-4e240908dd60 h1:2DnhJcJEoVDqz1aoqmy4RXiAnpqy9GNW1gzgnkesJmI=
-cosmossdk.io/store/v2 v2.0.0-20241107153845-4e240908dd60/go.mod h1:calxpXVRO0AZRYdV+Kup74XP7rhDWAzVHKwHWm2TQZc=
+cosmossdk.io/store/v2 v2.0.0-20241108144957-78b5cd4dbd08 h1:7dIhcS/VhEM/vnZWDVtDKqCF/OGaq8Gx+5ekD9GT71k=
+cosmossdk.io/store/v2 v2.0.0-20241108144957-78b5cd4dbd08/go.mod h1:A2aW375561viy3GcD8GhUwUWnow+R2Du6yCSpAGwsgY=
 cosmossdk.io/x/tx v1.0.0-alpha.2 h1:UW80FMm7B0fiAMsrfe5+HabSJ3XBg+tQa6/GK9prqWk=
 cosmossdk.io/x/tx v1.0.0-alpha.2/go.mod h1:r4yTKSJ7ZCCR95YbBfY3nfvbgNw6m9F6f25efWYYQWo=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
@@ -1020,8 +1020,8 @@ golang.org/x/sync v0.0.0-20210220032951-036812b2e83c/go.mod h1:RxMgew5VJxzue5/jJ
 golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
-golang.org/x/sync v0.8.0 h1:3NFvSEYkUoMifnESzZl15y791HH1qU2xm6eCJU5ZPXQ=
-golang.org/x/sync v0.8.0/go.mod h1:Czt+wKu1gCyEFDUtn0jG5QVvpJ6rzVqr5aXyt9drQfk=
+golang.org/x/sync v0.9.0 h1:fEo0HyrW1GIgZdpbhCRO0PkJajUS5H9IFUztCgEo2jQ=
+golang.org/x/sync v0.9.0/go.mod h1:Czt+wKu1gCyEFDUtn0jG5QVvpJ6rzVqr5aXyt9drQfk=
 golang.org/x/sys v0.0.0-20180830151530-49385e6e1522/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20180905080454-ebe1bf3edb33/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20180909124046-d0be0721c37e/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=

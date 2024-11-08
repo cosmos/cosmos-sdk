@@ -33,7 +33,7 @@ func NewKeyringInContext(ctx context.Context, k Keyring) context.Context {
 	return context.WithValue(ctx, KeyringContextKey, NewKeyringImpl(k))
 }
 
-// TODO: godco
+// TODO: godoc
 func NewKeyringFromFlags(flagSet *pflag.FlagSet, ac address.Codec, input io.Reader, cdc codec.Codec) (Keyring, error) {
 	backEnd, err := flagSet.GetString("keyring-backend")
 	if err != nil {

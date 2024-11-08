@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"strings"
 
 	"github.com/cometbft/cometbft/mempool"
@@ -66,11 +67,12 @@ var _ broadcast.Broadcaster = &CometBFTBroadcaster{}
 type CometBFTBroadcaster struct {
 	rpcClient CometRPC
 	mode      string
-	cdc       codec.JSONCodec
+	cdc       codec.Codec
+	ir        types.InterfaceRegistry
 }
 
 // NewCometBFTBroadcaster creates a new CometBFTBroadcaster.
-func NewCometBFTBroadcaster(rpcURL, mode string, cdc codec.JSONCodec) (*CometBFTBroadcaster, error) {
+func NewCometBFTBroadcaster(rpcURL, mode string, cdc codec.Codec, ir types.InterfaceRegistry) (*CometBFTBroadcaster, error) {
 	if cdc == nil {
 		return nil, errors.New("codec can't be nil")
 	}
@@ -88,6 +90,7 @@ func NewCometBFTBroadcaster(rpcURL, mode string, cdc codec.JSONCodec) (*CometBFT
 		rpcClient: rpcClient,
 		mode:      mode,
 		cdc:       cdc,
+		ir:        ir,
 	}, nil
 }
 

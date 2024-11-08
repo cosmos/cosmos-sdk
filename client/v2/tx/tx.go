@@ -5,32 +5,43 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"os"
 
+	"github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 
 	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/autocli/print"
 	"cosmossdk.io/client/v2/broadcast"
 	"cosmossdk.io/client/v2/broadcast/comet"
 	"cosmossdk.io/client/v2/internal/account"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 // GenerateOrBroadcastTxCLIWithBroadcaster will either generate and print an unsigned transaction
 // or sign it and broadcast it with the specified broadcaster returning an error upon failure.
-func GenerateOrBroadcastTxCLIWithBroadcaster(ctx client.Context, flagSet *pflag.FlagSet, broadcaster broadcast.Broadcaster, msgs ...transaction.Msg) error {
+func GenerateOrBroadcastTxCLIWithBroadcaster(
+	keybase keyring.Keyring,
+	cdc codec.Codec,
+	addressCodec, validatorCodec address.Codec,
+	enablesSignModes []apitxsigning.SignMode,
+	conn grpc.ClientConn,
+	flagSet *pflag.FlagSet,
+	broadcaster broadcast.Broadcaster,
+	msgs ...transaction.Msg,
+) error {
 	if err := validateMessages(msgs...); err != nil {
 		return err
 	}
 
-	txf, err := newFactory(ctx, flagSet)
+	txf, err := newFactory(keybase, cdc, addressCodec, validatorCodec, enablesSignModes, conn, flagSet)
 	if err != nil {
 		return err
 	}
@@ -54,44 +65,54 @@ func GenerateOrBroadcastTxCLIWithBroadcaster(ctx client.Context, flagSet *pflag.
 
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
 // or sign it and broadcast it using default CometBFT broadcaster, returning an error upon failure.
-func GenerateOrBroadcastTxCLI(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) error {
-	cometBroadcaster, err := getCometBroadcaster(ctx.Codec, flagSet)
+func GenerateOrBroadcastTxCLI(
+	keybase keyring.Keyring,
+	cdc codec.Codec,
+	addressCodec, validatorCodec address.Codec,
+	enablesSignModes []apitxsigning.SignMode,
+	conn grpc.ClientConn,
+	flagSet *pflag.FlagSet,
+	msgs ...transaction.Msg,
+) error {
+	cometBroadcaster, err := getCometBroadcaster(cdc, cdc.InterfaceRegistry(), flagSet)
 	if err != nil {
 		return err
 	}
 
-	return GenerateOrBroadcastTxCLIWithBroadcaster(ctx, flagSet, cometBroadcaster, msgs...)
+	return GenerateOrBroadcastTxCLIWithBroadcaster(keybase, cdc, addressCodec, validatorCodec, enablesSignModes, conn, flagSet, cometBroadcaster, msgs...)
 }
 
 // getCometBroadcaster returns a new CometBFT broadcaster based on the provided context and flag set.
-func getCometBroadcaster(cdc codec.JSONCodec, flagSet *pflag.FlagSet) (broadcast.Broadcaster, error) {
+func getCometBroadcaster(cdc codec.Codec, ir types.InterfaceRegistry, flagSet *pflag.FlagSet) (broadcast.Broadcaster, error) {
 	url, _ := flagSet.GetString("node")
 	mode, _ := flagSet.GetString("broadcast-mode")
-	return comet.NewCometBFTBroadcaster(url, mode, cdc)
+	return comet.NewCometBFTBroadcaster(url, mode, cdc, ir)
 }
 
 // newFactory creates a new transaction Factory based on the provided context and flag set.
 // It initializes a new CLI keyring, extracts transaction parameters from the flag set,
 // configures transaction settings, and sets up an account retriever for the transaction Factory.
-func newFactory(ctx client.Context, flagSet *pflag.FlagSet) (Factory, error) {
-	k, err := keyring.NewAutoCLIKeyring(ctx.Keyring, ctx.AddressCodec)
-	if err != nil {
-		return Factory{}, err
-	}
-
+func newFactory(
+	keybase keyring.Keyring,
+	cdc codec.Codec,
+	addressCodec, validatorCodec address.Codec,
+	enablesSignModes []apitxsigning.SignMode,
+	conn grpc.ClientConn,
+	flagSet *pflag.FlagSet,
+) (Factory, error) {
 	txConfig, err := NewTxConfig(ConfigOptions{
-		AddressCodec:          ctx.AddressCodec,
-		Cdc:                   ctx.Codec,
-		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
-		EnabledSignModes:      ctx.TxConfig.SignModeHandler().SupportedModes(),
+		AddressCodec:          addressCodec,
+		Cdc:                   cdc,
+		ValidatorAddressCodec: validatorCodec,
+		EnabledSignModes:      enablesSignModes,
 	})
 	if err != nil {
 		return Factory{}, err
 	}
 
-	accRetriever := account.NewAccountRetriever(ctx.AddressCodec, ctx, ctx.InterfaceRegistry)
+	accRetriever := account.NewAccountRetriever(addressCodec, conn, cdc.InterfaceRegistry())
 
-	txf, err := NewFactoryFromFlagSet(flagSet, k, ctx.Codec, accRetriever, txConfig, ctx.AddressCodec, ctx)
+	txf, err := NewFactoryFromFlagSet(flagSet, keybase, cdc, accRetriever, txConfig, addressCodec, conn)
 	if err != nil {
 		return Factory{}, err
 	}
@@ -142,8 +163,16 @@ func dryRun(printer *print.Printer, txf Factory, msgs ...transaction.Msg) error 
 }
 
 // SimulateTx simulates a tx and returns the simulation response obtained by the query.
-func SimulateTx(ctx client.Context, flagSet *pflag.FlagSet, msgs ...transaction.Msg) (proto.Message, error) {
-	txf, err := newFactory(ctx, flagSet)
+func SimulateTx(
+	keybase keyring.Keyring,
+	cdc codec.Codec,
+	addressCodec, validatorCodec address.Codec,
+	enablesSignModes []apitxsigning.SignMode,
+	conn grpc.ClientConn,
+	flagSet *pflag.FlagSet,
+	msgs ...transaction.Msg,
+) (proto.Message, error) {
+	txf, err := newFactory(keybase, cdc, addressCodec, validatorCodec, enablesSignModes, conn, flagSet)
 	if err != nil {
 		return nil, err
 	}

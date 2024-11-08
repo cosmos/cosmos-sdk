@@ -81,9 +81,6 @@ func initFixture(t *testing.T) *fixture {
 			ValidatorAddressCodec: clientCtx.ValidatorAddressCodec,
 			ConsensusAddressCodec: clientCtx.ConsensusAddressCodec,
 		},
-		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
-			return conn, nil
-		},
 		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
 		AddTxConnFlags:    flags.AddTxFlagsToCmd,
 	}

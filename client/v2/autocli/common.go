@@ -2,10 +2,10 @@ package autocli
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"strconv"
 
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/client/v2/autocli/config"
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/autocli/print"
+	"cosmossdk.io/client/v2/broadcast/comet"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
 )
@@ -67,17 +68,7 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 	}
 	cmd.Args = binder.CobraArgs
 
-	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-		err := b.setFlagsFromConfig(cmd, args)
-		if err != nil {
-			return err
-		}
-
-		k, err := keyring.NewKeyringFromFlags(cmd.Flags(), b.AddressCodec, cmd.InOrStdin(), b.Cdc)
-		b.SetKeyring(k) // global flag keyring must be set on PreRunE.
-
-		return err
-	}
+	cmd.PreRunE = b.preRunE()
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx = cmd.Context()
@@ -249,6 +240,20 @@ func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
 	return print.NewPrinter(output, cmd.OutOrStdout()).PrintBytes(out)
 }
 
+func (b *Builder) preRunE() func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		err := b.setFlagsFromConfig(cmd, args)
+		if err != nil {
+			return err
+		}
+
+		k, err := keyring.NewKeyringFromFlags(cmd.Flags(), b.AddressCodec, cmd.InOrStdin(), b.Cdc)
+		b.SetKeyring(k) // global flag keyring must be set on PreRunE.
+
+		return err
+	}
+}
+
 func (b *Builder) setFlagsFromConfig(cmd *cobra.Command, args []string) error {
 	conf, err := config.CreateClientConfigFromFlags(cmd.Flags())
 	if err != nil {
@@ -291,28 +296,36 @@ func (b *Builder) setFlagsFromConfig(cmd *cobra.Command, args []string) error {
 }
 
 // TODO: godoc
-func (b *Builder) getQueryClientConn(cmd *cobra.Command) (*grpc.ClientConn, error) {
-	if cmd.Flags().Lookup("grpc-insecure") == nil || cmd.Flags().Lookup("grpc-addr") == nil {
-		return nil, errors.New("grpc-insecure and grpc-addr flags are required")
-	}
-
+func (b *Builder) getQueryClientConn(cmd *cobra.Command) (gogogrpc.ClientConn, error) {
+	var err error
 	creds := grpcinsecure.NewCredentials()
-	insecure, err := cmd.Flags().GetBool("grpc-insecure")
-	if err != nil {
-		return nil, err
+
+	insecure := true
+	if cmd.Flags().Lookup("grpc-insecure") != nil {
+		insecure, err = cmd.Flags().GetBool("grpc-insecure")
+		if err != nil {
+			return nil, err
+		}
 	}
 	if !insecure {
 		creds = credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS12})
 	}
 
-	addr, err := cmd.Flags().GetString("grpc-addr")
-	if err != nil {
-		return nil, err
+	var addr string
+	if cmd.Flags().Lookup("grpc-addr") != nil {
+		addr, err = cmd.Flags().GetString("grpc-addr")
+		if err != nil {
+			return nil, err
+		}
 	}
-
 	if addr == "" {
-		// TODO: fall to default by querying state via abci query.
-		return nil, errors.New("grpc-addr flag must be set")
+		// if grpc-addr has not been set, use the default clientConn
+		// TODO: default is comet
+		node, err := cmd.Flags().GetString("node")
+		if err != nil {
+			return nil, err
+		}
+		return comet.NewCometBFTBroadcaster(node, comet.BroadcastSync, b.Cdc, b.Cdc.InterfaceRegistry())
 	}
 
 	return grpc.NewClient(addr, []grpc.DialOption{grpc.WithTransportCredentials(creds)}...)

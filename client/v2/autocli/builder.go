@@ -1,6 +1,7 @@
 package autocli
 
 import (
+	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/client/v2/autocli/flag"
@@ -16,7 +17,8 @@ type Builder struct {
 	AddQueryConnFlags func(*cobra.Command)
 	AddTxConnFlags    func(*cobra.Command)
 
-	Cdc codec.Codec
+	Cdc              codec.Codec
+	EnablesSignModes []apisigning.SignMode
 }
 
 // ValidateAndComplete the builder fields.

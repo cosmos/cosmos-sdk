@@ -22,7 +22,7 @@ var cdc = testutil.CodecOptions{}.NewCodec()
 func TestNewCometBftBroadcaster(t *testing.T) {
 	tests := []struct {
 		name    string
-		cdc     codec.JSONCodec
+		cdc     codec.Codec
 		mode    string
 		want    *CometBFTBroadcaster
 		wantErr bool
@@ -45,7 +45,7 @@ func TestNewCometBftBroadcaster(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewCometBFTBroadcaster("localhost:26657", tt.mode, tt.cdc)
+			got, err := NewCometBFTBroadcaster("localhost:26657", tt.mode, tt.cdc, testutil.CodecOptions{}.NewInterfaceRegistry())
 			if tt.wantErr {
 				require.Error(t, err)
 				require.Nil(t, got)

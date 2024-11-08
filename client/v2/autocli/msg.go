@@ -2,6 +2,7 @@ package autocli
 
 import (
 	"context"
+	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/tx"
 	"fmt"
 
@@ -167,7 +168,17 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		msg := dynamicpb.NewMessage(input.Descriptor())
 		proto.Merge(msg, input.Interface())
 
-		return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		k, err := keyring.NewKeyringFromFlags(cmd.Flags(), b.AddressCodec, cmd.InOrStdin(), b.Cdc)
+		if err != nil {
+			return err
+		}
+
+		cConn, err := b.getQueryClientConn(cmd)
+		if err != nil {
+			return err
+		}
+
+		return tx.GenerateOrBroadcastTxCLI(k, b.Cdc, b.AddressCodec, b.ValidatorAddressCodec, b.EnablesSignModes, cConn, cmd.Flags(), msg)
 		return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 	}
 

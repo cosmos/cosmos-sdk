@@ -71,6 +71,9 @@ func (c *container) call(provider *providerDescriptor, moduleKey *moduleKey) ([]
 	c.indentLogger()
 	inVals := make([]reflect.Value, len(provider.Inputs))
 	for i, in := range provider.Inputs {
+		if in.Ignored {
+			continue
+		}
 		val, err := c.resolve(in, moduleKey, loc)
 		if err != nil {
 			return nil, err

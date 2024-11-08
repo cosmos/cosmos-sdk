@@ -41,5 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Upgrade SDK version due to Prometheus breaking change.
 * (deps) [#19810](https://github.com/cosmos/cosmos-sdk/pull/19810) Bump `cosmossdk.io/store` to v1.1.0.
+* (feat) [#22459](https://github.com/cosmos/cosmos-sdk/pull/22459) Allow msg Reset with empty msgURL
+* (feat) [#22460](https://github.com/cosmos/cosmos-sdk/pull/22460) Add validation for permission when an account is assigned and validation for msgURL
 
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/circuit/v0.1.0) - 2023-11-07

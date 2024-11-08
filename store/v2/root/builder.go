@@ -71,7 +71,7 @@ func (sb *builder) Build(
 	}
 
 	factoryOptions := &FactoryOptions{
-		Logger:    logger,
+		Logger:    logger.With("module", "store"),
 		RootDir:   config.Home,
 		Options:   config.Options,
 		StoreKeys: storeKeys,

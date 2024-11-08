@@ -239,7 +239,7 @@ func (m *Manager) Sync() error {
 				continue
 			}
 
-			cs := corestore.NewChangeset()
+			cs := corestore.NewChangeset(version)
 			if err := encoding.UnmarshalChangeset(cs, csBytes); err != nil {
 				return fmt.Errorf("failed to unmarshal changeset: %w", err)
 			}
@@ -251,7 +251,7 @@ func (m *Manager) Sync() error {
 					return fmt.Errorf("failed to commit changeset to commitment: %w", err)
 				}
 			}
-			if err := m.stateStorage.ApplyChangeset(version, cs); err != nil {
+			if err := m.stateStorage.ApplyChangeset(cs); err != nil {
 				return fmt.Errorf("failed to write changeset to storage: %w", err)
 			}
 

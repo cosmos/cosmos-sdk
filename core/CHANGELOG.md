@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### API Breaking
+
+* [#22435](https://github.com/cosmos/cosmos-sdk/pull/22435) Add `Version uint64` field to `store.Changeset` and update `Changeset` constructors to accept a `version uint64` as their first argument.
+
 ### Features
 
 * [#22326](https://github.com/cosmos/cosmos-sdk/pull/22326) Introduce codec package in order to facilitate removal of Cosmos SDK dependency in modules. 

@@ -47,7 +47,7 @@ func (s *Server[T]) Start(context.Context) error {
 }
 
 func (s *Server[T]) Stop(context.Context) error {
-	return s.store.Close()
+	return nil
 }
 
 func (s *Server[T]) CLICommands() serverv2.CLIConfig {

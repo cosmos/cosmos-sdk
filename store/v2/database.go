@@ -13,9 +13,9 @@ type VersionedWriter interface {
 	VersionedReader
 
 	SetLatestVersion(version uint64) error
-	ApplyChangeset(version uint64, cs *corestore.Changeset) error
+	ApplyChangeset(cs *corestore.Changeset) error
 
-	// Close releases associated resources. It should NOT be idempotent. It must
+	// Closer releases associated resources. It should NOT be idempotent. It must
 	// only be called once and any call after may panic.
 	io.Closer
 }
@@ -44,9 +44,6 @@ type Committer interface {
 	// WriteChangeset writes the changeset to the commitment state.
 	WriteChangeset(cs *corestore.Changeset) error
 
-	// WorkingCommitInfo returns the CommitInfo for the working tree.
-	WorkingCommitInfo(version uint64) *proof.CommitInfo
-
 	// GetLatestVersion returns the latest version.
 	GetLatestVersion() (uint64, error)
 
@@ -67,7 +64,7 @@ type Committer interface {
 
 	Get(storeKey []byte, version uint64, key []byte) ([]byte, error)
 
-	// Close releases associated resources. It should NOT be idempotent. It must
+	// Closer releases associated resources. It should NOT be idempotent. It must
 	// only be called once and any call after may panic.
 	io.Closer
 }

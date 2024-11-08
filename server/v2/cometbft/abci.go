@@ -334,7 +334,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		IsGenesis: true,
 	}
 
-	blockresponse, genesisState, err := c.app.InitGenesis(
+	blockResponse, genesisState, err := c.app.InitGenesis(
 		ctx,
 		br,
 		req.AppStateBytes,
@@ -343,17 +343,16 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		return nil, fmt.Errorf("genesis state init failure: %w", err)
 	}
 
-	for _, txRes := range blockresponse.TxResults {
+	for _, txRes := range blockResponse.TxResults {
 		if err := txRes.Error; err != nil {
-			space, code, log := errorsmod.ABCIInfo(err, c.cfg.AppTomlConfig.Trace)
-			c.logger.Warn("genesis tx failed", "codespace", space, "code", code, "log", log)
+			space, code, txLog := errorsmod.ABCIInfo(err, c.cfg.AppTomlConfig.Trace)
+			c.logger.Warn("genesis tx failed", "codespace", space, "code", code, "log", txLog)
 		}
 	}
 
-	validatorUpdates := intoABCIValidatorUpdates(blockresponse.ValidatorUpdates)
+	validatorUpdates := intoABCIValidatorUpdates(blockResponse.ValidatorUpdates)
 
-	// set the initial version of the store
-	if err := c.store.SetInitialVersion(uint64(req.InitialHeight)); err != nil {
+	if err := c.store.SetInitialVersion(uint64(req.InitialHeight - 1)); err != nil {
 		return nil, fmt.Errorf("failed to set initial version: %w", err)
 	}
 
@@ -362,9 +361,10 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		return nil, err
 	}
 	cs := &store.Changeset{
+		Version: uint64(req.InitialHeight - 1),
 		Changes: stateChanges,
 	}
-	stateRoot, err := c.store.WorkingHash(cs)
+	stateRoot, err := c.store.Commit(cs)
 	if err != nil {
 		return nil, fmt.Errorf("unable to write the changeset: %w", err)
 	}
@@ -460,18 +460,6 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	// we don't need to deliver the block in the genesis block
-	if req.Height == int64(c.initialHeight) {
-		appHash, err := c.store.Commit(store.NewChangeset())
-		if err != nil {
-			return nil, fmt.Errorf("unable to commit the changeset: %w", err)
-		}
-		c.lastCommittedHeight.Store(req.Height)
-		return &abciproto.FinalizeBlockResponse{
-			AppHash: appHash,
-		}, nil
-	}
-
 	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,
 	// considering that prepare and process always decode txs, assuming they're the ones providing txs we should never
 	// have a tx that fails decoding.
@@ -512,7 +500,7 @@ func (c *Consensus[T]) FinalizeBlock(
 	if err != nil {
 		return nil, err
 	}
-	appHash, err := c.store.Commit(&store.Changeset{Changes: stateChanges})
+	appHash, err := c.store.Commit(&store.Changeset{Version: uint64(req.Height), Changes: stateChanges})
 	if err != nil {
 		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 	}

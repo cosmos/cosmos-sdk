@@ -21,8 +21,8 @@ var (
 const ServerName = "telemetry"
 
 type Server[T transaction.Tx] struct {
-	config  *Config
 	logger  log.Logger
+	config  *Config
 	server  *http.Server
 	metrics *Metrics
 }

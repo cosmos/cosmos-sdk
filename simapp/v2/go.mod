@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/runtime/v2 v2.0.0-20241105073932-55f7cfcebae4 // main
 	cosmossdk.io/server/v2 v2.0.0-20241106171414-3014713d442f // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store/v2 v2.0.0-20241017091405-f01baf302e2b // main
+	cosmossdk.io/store/v2 v2.0.0-20241108144957-78b5cd4dbd08 // main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
 	cosmossdk.io/x/authz v0.0.0-00010101000000-000000000000
@@ -221,17 +221,17 @@ require (
 	golang.org/x/mod v0.21.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/sync v0.9.0 // indirect
+	golang.org/x/sys v0.27.0 // indirect
 	golang.org/x/term v0.25.0 // indirect
-	golang.org/x/text v0.19.0 // indirect
+	golang.org/x/text v0.20.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.25.0 // indirect
 	google.golang.org/api v0.185.0 // indirect
 	google.golang.org/genproto v0.0.0-20240617180043-68d350f18fd4 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241021214115-324edc3d5d38 // indirect
-	google.golang.org/grpc v1.67.1 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241104194629-dd2ea8efbc28 // indirect
+	google.golang.org/grpc v1.68.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
@@ -252,10 +252,10 @@ replace (
 	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
 	cosmossdk.io/client/v2 => ../../client/v2
 	// pseudo version lower than the latest tag
-	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.5 // main
+	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 	// pseudo version lower than the latest tag
-	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241106093505-9611c5a0e6e3 // main
+	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241108140525-43e28b43ad7a // main
 	cosmossdk.io/tools/confix => ../../tools/confix
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../../x/accounts/defaults/base

@@ -5,7 +5,7 @@ go 1.23.1
 require (
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee // main
-	cosmossdk.io/core v1.0.0-alpha.5 // main
+	cosmossdk.io/core v1.0.0-alpha.6 // main
 	cosmossdk.io/core/testing v0.0.0 // main
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.4.1
@@ -219,7 +219,7 @@ require (
 	golang.org/x/mod v0.21.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/sync v0.9.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/term v0.25.0 // indirect
 	golang.org/x/text v0.19.0 // indirect
@@ -248,7 +248,7 @@ replace (
 	cosmossdk.io/core/testing => cosmossdk.io/core/testing v0.0.0-20241107153845-4e240908dd60
 	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241106093505-9611c5a0e6e3 // main
 	// pseudo version lower than the latest tag
-	cosmossdk.io/store/v2 => cosmossdk.io/store/v2 v2.0.0-20241107153845-4e240908dd60
+	cosmossdk.io/store/v2 => cosmossdk.io/store/v2 v2.0.0-20241108144957-78b5cd4dbd08
 	cosmossdk.io/x/accounts => ../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../x/accounts/defaults/base
 	cosmossdk.io/x/accounts/defaults/lockup => ../x/accounts/defaults/lockup

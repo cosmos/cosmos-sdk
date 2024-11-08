@@ -18,7 +18,7 @@ require (
 	cosmossdk.io/collections v0.4.1-0.20241107084833-00f3065e70ee
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5
-	cosmossdk.io/log v1.4.1
+	cosmossdk.io/log v1.5.0
 	cosmossdk.io/server/v2 v2.0.0-20241108144957-78b5cd4dbd08 // main
 	cosmossdk.io/server/v2/appmanager v0.0.0-20241029092041-78cfc68c83af // main
 	cosmossdk.io/server/v2/stf v0.0.0-20241029092041-78cfc68c83af // main
@@ -180,4 +180,14 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
+)
+
+require (
+	github.com/bytedance/sonic v1.12.4 // indirect
+	github.com/bytedance/sonic/loader v0.2.1 // indirect
+	github.com/cloudwego/base64x v0.1.4 // indirect
+	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
+	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
+	golang.org/x/arch v0.12.0 // indirect
 )

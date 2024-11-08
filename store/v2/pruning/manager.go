@@ -28,7 +28,7 @@ func NewManager(scPruner, ssPruner store.Pruner, scPruningOption, ssPruningOptio
 
 // Prune prunes the SC and SS to the provided version.
 //
-// NOTE: It can be called outside of the store manually.
+// NOTE: It can be called outside the store manually.
 func (m *Manager) Prune(version uint64) error {
 	// Prune the SC.
 	if m.scPruningOption != nil {
@@ -51,21 +51,20 @@ func (m *Manager) Prune(version uint64) error {
 	return nil
 }
 
-// SignalCommit signals to the manager that a commit has started or finished.
-// It is used to trigger the pruning of the SC and SS.
-// It pauses or resumes the pruning of the SC and SS if the pruner implements
-// the PausablePruner interface.
-func (m *Manager) SignalCommit(start bool, version uint64) error {
+func (m *Manager) signalPruning(pause bool) {
 	if scPausablePruner, ok := m.scPruner.(store.PausablePruner); ok {
-		scPausablePruner.PausePruning(start)
+		scPausablePruner.PausePruning(pause)
 	}
 	if ssPausablePruner, ok := m.ssPruner.(store.PausablePruner); ok {
-		ssPausablePruner.PausePruning(start)
+		ssPausablePruner.PausePruning(pause)
 	}
+}
 
-	if !start {
-		return m.Prune(version)
-	}
+func (m *Manager) PausePruning() {
+	m.signalPruning(true)
+}
 
-	return nil
+func (m *Manager) ResumePruning(version uint64) error {
+	m.signalPruning(false)
+	return m.Prune(version)
 }

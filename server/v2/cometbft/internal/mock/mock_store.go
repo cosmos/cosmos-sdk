@@ -59,8 +59,7 @@ func (s *MockStore) StateLatest() (uint64, corestore.ReaderMap, error) {
 }
 
 func (s *MockStore) Commit(changeset *corestore.Changeset) (corestore.Hash, error) {
-	v, _, _ := s.StateLatest()
-	err := s.Storage.ApplyChangeset(v, changeset)
+	err := s.Storage.ApplyChangeset(changeset)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -70,8 +69,7 @@ func (s *MockStore) Commit(changeset *corestore.Changeset) (corestore.Hash, erro
 		return []byte{}, err
 	}
 
-	commitInfo, err := s.Committer.Commit(v + 1)
-	fmt.Println("commitInfo", commitInfo, err)
+	_, err = s.Committer.Commit(changeset.Version)
 	return []byte{}, err
 }
 
@@ -126,18 +124,4 @@ func (s *MockStore) LastCommitID() (proof.CommitID, error) {
 
 func (s *MockStore) SetInitialVersion(v uint64) error {
 	return s.Committer.SetInitialVersion(v)
-}
-
-func (s *MockStore) WorkingHash(changeset *corestore.Changeset) (corestore.Hash, error) {
-	v, _, _ := s.StateLatest()
-	err := s.Storage.ApplyChangeset(v, changeset)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	err = s.Committer.WriteChangeset(changeset)
-	if err != nil {
-		return []byte{}, err
-	}
-	return []byte{}, nil
 }

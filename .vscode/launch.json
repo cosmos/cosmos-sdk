@@ -22,6 +22,15 @@
       "buildFlags": ""
     },
     {
+      "name": "load-test cli",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/simapp/v2/simdv2",
+      "args": ["tx", "benchmark", "load-test", "--yes", "--from", "5Aqlt0XL0DDb"],
+      "buildFlags": ""
+    },
+    {
       "name": "Start: simapp/v1",
       "type": "go",
       "request": "launch",

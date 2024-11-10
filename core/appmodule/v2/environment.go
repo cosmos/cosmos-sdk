@@ -26,4 +26,5 @@ type Environment struct {
 
 	KVStoreService  store.KVStoreService
 	MemStoreService store.MemoryStoreService
+	DecodedStore    store.DecodedCacheService
 }

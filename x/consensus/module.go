@@ -96,3 +96,21 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 
 // ConsensusVersion implements HasConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
+
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	v, err := am.keeper.ParamsStore.Get(ctx)
+	if err != nil {
+		return err
+	}
+	// Set block Params every being block to be used in antehandler
+	am.keeper.Environment.DecodedStore.OpenCache(ctx).Set(types.ByteBlockParamsKey, v)
+	// Set the validator pubkey types
+	am.keeper.Environment.DecodedStore.OpenCache(ctx).Set(types.ByteValidatorKeyTypesKey, v)
+	return nil
+}
+
+func (am AppModule) EndBlock(ctx context.Context) error {
+	// clear the decoded cache of values set in begin block
+	am.keeper.Environment.DecodedStore.OpenCache(ctx).Delete(types.ByteBlockParamsKey)
+	return nil
+}

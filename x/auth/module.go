@@ -182,6 +182,24 @@ func (am AppModule) TxValidator(ctx context.Context, tx transaction.Tx) error {
 // ConsensusVersion implements appmodule.HasConsensusVersion
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
+// BeginBlock implements appmodule.AppModule
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	v, err := am.accountKeeper.Params.Get(ctx)
+	if err != nil {
+		return err
+	}
+	// Set block Params every being block to be used in antehandler
+	am.accountKeeper.Environment.DecodedStore.OpenCache(ctx).Set(types.ParamsKey, v)
+	return nil
+}
+
+// Endblock implements appmodule.AppModule
+func (am AppModule) EndBlock(ctx context.Context) error {
+	// clear the decoded cache of values set in begin block
+	am.accountKeeper.Environment.DecodedStore.OpenCache(ctx).Delete(types.ParamsKey)
+	return nil
+}
+
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the auth module

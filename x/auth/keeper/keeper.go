@@ -295,6 +295,14 @@ func (ak AccountKeeper) getBech32Prefix() (string, error) {
 
 // GetParams gets the auth module's parameters.
 func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
+	// Check cache for value, if not present go to store
+	v, ok := ak.Environment.DecodedStore.OpenCache(ctx).Get(types.ParamsKey)
+	if ok {
+		params, ok := v.(types.Params)
+		if ok {
+			return params
+		}
+	}
 	params, err := ak.Params.Get(ctx)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		panic(err)

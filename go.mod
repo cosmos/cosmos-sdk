@@ -183,6 +183,7 @@ require (
 // TODO remove after all modules have their own go.mods
 replace (
 	cosmossdk.io/api => ./api
+	cosmossdk.io/core => ./core
 	cosmossdk.io/collections => ./collections
 	cosmossdk.io/store => ./store
 	cosmossdk.io/x/bank => ./x/bank

@@ -147,6 +147,15 @@ func (k Keeper) paramCheck(ctx context.Context, consensusParams cmtproto.Consens
 
 // BlockParams returns the maximum gas allowed in a block and the maximum bytes allowed in a block.
 func (k Keeper) BlockParams(ctx context.Context) (uint64, uint64, error) {
+	// Check cache for value, if not present go to store
+	v, ok := k.Environment.DecodedStore.OpenCache(ctx).Get(types.ByteBlockParamsKey)
+	if ok {
+		bp, ok := v.(*cmtproto.BlockParams)
+		if ok {
+			return uint64(bp.MaxGas), uint64(bp.MaxBytes), nil
+		}
+	}
+
 	params, err := k.ParamsStore.Get(ctx)
 	if err != nil {
 		return 0, 0, err
@@ -174,6 +183,14 @@ func (k Keeper) AppVersion(ctx context.Context) (uint64, error) {
 
 // ValidatorPubKeyTypes returns the list of public key types that are allowed to be used for validators.
 func (k Keeper) ValidatorPubKeyTypes(ctx context.Context) ([]string, error) {
+	// Check cache for value, if not present go to store
+	v, ok := k.Environment.DecodedStore.OpenCache(ctx).Get(types.ByteValidatorKeyTypesKey)
+	if ok {
+		bp, ok := v.(*cmtproto.ValidatorParams)
+		if ok {
+			return bp.PubKeyTypes, nil
+		}
+	}
 	params, err := k.ParamsStore.Get(ctx)
 	if err != nil {
 		return nil, err
@@ -187,6 +204,14 @@ func (k Keeper) ValidatorPubKeyTypes(ctx context.Context) ([]string, error) {
 
 // EvidenceParams returns the maximum age of evidence, the time duration of the maximum age, and the maximum bytes.
 func (k Keeper) EvidenceParams(ctx context.Context) (int64, time.Duration, uint64, error) {
+	// Check cache for value, if not present go to store
+	v, ok := k.Environment.DecodedStore.OpenCache(ctx).Get(types.ByteEvidenceKeyTypesKey)
+	if ok {
+		bp, ok := v.(*cmtproto.EvidenceParams)
+		if ok {
+			return bp.MaxAgeNumBlocks, bp.MaxAgeDuration, uint64(bp.MaxBytes), nil
+		}
+	}
 	params, err := k.ParamsStore.Get(ctx)
 	if err != nil {
 		return 0, 0, 0, err

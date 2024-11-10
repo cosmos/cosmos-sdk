@@ -5,17 +5,22 @@ n=$1
 
 # Function to start a load-test process
 start_process() {
-  simdv2 tx benchmark load-test alice --broadcast-mode async --yes &
+  simdv2 tx benchmark load-test --from $1 --yes &
   echo $!
 }
 
 # Trap SIGINT to kill all child processes
 trap 'kill $(jobs -p)' SIGINT
 
-# Start n processes
-for i in $(seq 1 $n); do
-  start_process
-  sleep 1
+files=(~/.simappv2/keyring-test/*.info)
+if [ ${#files[@]} -lt $n ]; then
+  echo "Error: Not enough accounts. Found ${#files[@]}, but need $n."
+  exit 1
+fi
+
+for i in $(seq 0 $(($n - 1))); do
+  echo "Selected account: ${files[$i]}"
+  start_process `basename ${files[$i]} .info`
 done
 
 # Wait for all processes to complete

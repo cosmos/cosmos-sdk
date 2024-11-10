@@ -117,7 +117,8 @@ func createStartCommand[T transaction.Tx](
 // wrapCPUProfile starts CPU profiling, if enabled, and executes the provided
 // callbackFn, then waits for it to return.
 func wrapCPUProfile(logger log.Logger, cfg server.ConfigMap, callbackFn func() error) error {
-	cpuProfileFile, ok := cfg[FlagCPUProfiling]
+	serverCfg := cfg[serverName].(map[string]any)
+	cpuProfileFile, ok := serverCfg["cpu-profile"]
 	if !ok {
 		// if cpu profiling is not enabled, just run the callback
 		return callbackFn()

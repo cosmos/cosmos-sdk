@@ -129,6 +129,20 @@ func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBalances", reflect.TypeOf((*MockBankKeeper)(nil).GetAllBalances), ctx, addr)
 }
 
+// GetBalance mocks base method.
+func (m *MockBankKeeper) GetBalance(ctx context.Context, addr types.AccAddress, denom string) types.Coin {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBalance", ctx, addr, denom)
+	ret0, _ := ret[0].(types.Coin)
+	return ret0
+}
+
+// GetBalance indicates an expected call of GetBalance.
+func (mr *MockBankKeeperMockRecorder) GetBalance(ctx, addr, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBalance", reflect.TypeOf((*MockBankKeeper)(nil).GetBalance), ctx, addr, denom)
+}
+
 // SendCoinsFromAccountToModule mocks base method.
 func (m *MockBankKeeper) SendCoinsFromAccountToModule(ctx context.Context, senderAddr types.AccAddress, recipientModule string, amt types.Coins) error {
 	m.ctrl.T.Helper()
@@ -184,6 +198,7 @@ func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr interface{}) *gom
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpendableCoins", reflect.TypeOf((*MockBankKeeper)(nil).SpendableCoins), ctx, addr)
 }
+<<<<<<< HEAD
 
 // MockStakingKeeper is a mock of StakingKeeper interface.
 type MockStakingKeeper struct {
@@ -222,3 +237,5 @@ func (mr *MockStakingKeeperMockRecorder) BondDenom(ctx interface{}) *gomock.Call
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondDenom", reflect.TypeOf((*MockStakingKeeper)(nil).BondDenom), ctx)
 }
+=======
+>>>>>>> 13c234f42 (feat(x/protocolpool)!: allow any coins in continuous funds (#21916))

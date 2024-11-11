@@ -2,8 +2,9 @@ package module
 
 import (
 	"context"
-	"cosmossdk.io/core/transaction"
 	"encoding/json"
+
+	"cosmossdk.io/core/transaction"
 
 	"cosmossdk.io/core/registry"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -33,12 +34,12 @@ var (
 type AppModule struct {
 	keeper        *Keeper
 	storeKeys     []string
-	genesisParams *modulev1.GenesisParams
+	genesisParams *modulev1.GeneratorParams
 	log           log.Logger
 }
 
 func NewAppModule(
-	genesisParams *modulev1.GenesisParams,
+	genesisParams *modulev1.GeneratorParams,
 	storeKeys []string,
 	kvMap KVServiceMap,
 	logger log.Logger,
@@ -61,20 +62,17 @@ func (a *AppModule) ExportGenesis(context.Context) (json.RawMessage, error) { re
 
 // InitGenesis implements appmodulev2.HasGenesis.
 func (a *AppModule) InitGenesis(ctx context.Context, _ json.RawMessage) error {
-	g := gen.NewGenerator(gen.Options{
-		Seed:        a.genesisParams.Seed,
-		KeyMean:     a.genesisParams.KeyMeanLength,
-		KeyStdDev:   a.genesisParams.KeyStdDevLength,
-		ValueMean:   a.genesisParams.ValueMeanLength,
-		ValueStdDev: a.genesisParams.ValueStdDevLength,
-	})
-	skCount := uint64(len(a.storeKeys))
-	for i := range a.genesisParams.KeyCount {
+	a.genesisParams.BucketCount = uint64(len(a.storeKeys))
+	g := gen.NewGenerator(gen.Options{GeneratorParams: a.genesisParams})
+	i := 0
+	for kv := range g.GenesisSet() {
 		if i%100_000 == 0 {
-			a.log.Warn("init genesis", "progress", i, "total", a.genesisParams.KeyCount)
+			a.log.Warn("init genesis", "progress", i, "total", a.genesisParams.GenesisCount)
 		}
-		sk := a.storeKeys[g.UintN(skCount)]
-		err := a.keeper.set(ctx, sk, g.Key(), g.Value())
+		sk := a.storeKeys[kv.StoreKey]
+		key := gen.Bytes(kv.Key[0], kv.Key[1])
+		value := gen.Bytes(kv.Value[0], kv.Value[1])
+		err := a.keeper.set(ctx, sk, key, value)
 		if err != nil {
 			return err
 		}

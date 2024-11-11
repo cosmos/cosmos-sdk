@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	modulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	"cosmossdk.io/x/benchmark"
 	gen "cosmossdk.io/x/benchmark/generator"
 
@@ -82,12 +83,19 @@ func NewLoadTestCmd() *cobra.Command {
 				seed += uint64(c)
 			}
 			g := gen.NewGenerator(gen.Options{
-				Seed:        seed,
-				KeyMean:     64,
-				KeyStdDev:   8,
-				ValueMean:   1024,
-				ValueStdDev: 256,
-				BucketCount: storeKeyCount,
+				GeneratorParams: &modulev1.GeneratorParams{
+					Seed:         seed,
+					KeyMean:      64,
+					KeyStdDev:    8,
+					ValueMean:    1024,
+					ValueStdDev:  256,
+					BucketCount:  storeKeyCount,
+					GenesisCount: 500_000,
+				},
+				InsertWeight: 0.25,
+				DeleteWeight: 0.05,
+				UpdateWeight: 0.50,
+				GetWeight:    0.20,
 			})
 
 			i := 0
@@ -99,8 +107,11 @@ func NewLoadTestCmd() *cobra.Command {
 					if i != 0 && i%1000 == 0 {
 						cmd.Printf("success_tx=%d err_tx=%d seq=%d\n", successCount, errCount, accSeq)
 					}
-					op, ski := g.Next()
-					op.Actor = storeKeys[ski]
+					bucket, op, err := g.Next()
+					if err != nil {
+						return err
+					}
+					op.Actor = storeKeys[bucket]
 					msg := &benchmark.MsgLoadTest{
 						Caller: clientCtx.FromAddress,
 						Ops:    []*benchmark.Op{op},

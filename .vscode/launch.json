@@ -27,7 +27,7 @@
       "request": "launch",
       "mode": "debug",
       "program": "${workspaceFolder}/simapp/v2/simdv2",
-      "args": ["tx", "benchmark", "load-test", "--yes", "--from", "5Aqlt0XL0DDb"],
+      "args": ["tx", "benchmark", "load-test", "--yes", "--from", "bob"],
       "buildFlags": ""
     },
     {

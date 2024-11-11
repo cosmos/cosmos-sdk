@@ -12,7 +12,6 @@ var _ benchmark.MsgServer = &Keeper{}
 
 type Keeper struct {
 	kvServiceMap KVServiceMap
-	generator    *gen.Generator
 }
 
 func NewKeeper(kvMap KVServiceMap) *Keeper {
@@ -36,13 +35,12 @@ func (k *Keeper) executeOp(ctx context.Context, op *benchmark.Op) error {
 		return fmt.Errorf("actor %s not found", op.Actor)
 	}
 	kv := svc.OpenKVStore(ctx)
-	key := k.generator.Bytes(op.Seed, op.KeyLength)
+	key := gen.Bytes(op.Seed, op.KeyLength)
 	switch {
 	case op.Delete:
 		return kv.Delete(key)
 	case op.ValueLength > 0:
-		fmt.Printf("set key: %s\n", key)
-		value := k.generator.Bytes(op.Seed, op.ValueLength)
+		value := gen.Bytes(op.Seed, op.ValueLength)
 		return kv.Set(key, value)
 	case op.Iterations > 0:
 		return fmt.Errorf("iterator not implemented")

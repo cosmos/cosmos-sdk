@@ -307,14 +307,14 @@ var (
 			{
 				Name: benchmark.ModuleName,
 				Config: appconfig.WrapAny(&benchmarkmodulev1.Module{
-					GenesisParams: &benchmarkmodulev1.GenesisParams{
-						Seed:              34,
-						StoreKeyCount:     10,
-						KeyCount:          500_000,
-						KeyMeanLength:     64,
-						KeyStdDevLength:   12,
-						ValueMeanLength:   1024,
-						ValueStdDevLength: 256,
+					GenesisParams: &benchmarkmodulev1.GeneratorParams{
+						Seed:         34,
+						BucketCount:  10,
+						GenesisCount: 500_000,
+						KeyMean:      64,
+						KeyStdDev:    12,
+						ValueMean:    1024,
+						ValueStdDev:  256,
 					},
 				}),
 			},

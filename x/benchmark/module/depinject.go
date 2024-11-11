@@ -44,7 +44,7 @@ func ProvideModule(
 ) (appmodule.AppModule, error) {
 	cfg := in.Cfg
 	kvMap := make(KVServiceMap)
-	storeKeys, err := gen.StoreKeys(ModuleName, cfg.GenesisParams.Seed, cfg.GenesisParams.StoreKeyCount)
+	storeKeys, err := gen.StoreKeys(ModuleName, cfg.GenesisParams.Seed, cfg.GenesisParams.BucketCount)
 	if err != nil {
 		return nil, err
 	}

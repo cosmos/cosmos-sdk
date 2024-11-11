@@ -19,7 +19,9 @@ import (
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/telemetry"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
@@ -101,6 +103,7 @@ func init() {
 			ProvideKVService,
 			ProvideModuleConfigMaps,
 			ProvideModuleScopedConfigMap,
+			ProvideTelemetryService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -228,8 +231,13 @@ func ProvideEnvironment(
 	}
 }
 
+func ProvideTelemetryService(cfg GlobalConfig, factory telemetry.ServiceFactory) telemetry.Service {
+	return factory(server.ConfigMap(cfg))
+}
+
 // DefaultServiceBindings provides default services for the following service interfaces:
 // - store.KVStoreServiceFactory
+// - telemetry.ServiceFactory
 // - header.Service
 // - comet.Service
 // - event.Service
@@ -246,6 +254,17 @@ func DefaultServiceBindings() depinject.Config {
 				stf.NewKVStoreService(actor),
 			)
 		}
+		telemetryFactory telemetry.ServiceFactory = func(cfg server.ConfigMap) telemetry.Service {
+			cfgLabels := cfg.GetSliceOfStringSlices("telemetry.global-labels")
+			var globalLabels []telemetry.Label
+			for _, label := range cfgLabels {
+				if len(label) != 2 {
+					continue
+				}
+				globalLabels = append(globalLabels, telemetry.Label{Name: label[0], Value: label[1]})
+			}
+			return services.NewGlobalTelemetryService(globalLabels)
+		}
 		cometService  comet.Service = &services.ContextAwareCometInfoService{}
 		headerService               = services.NewGenesisHeaderService(stf.HeaderService{})
 		eventService                = services.NewGenesisEventService(stf.NewEventService())
@@ -253,6 +272,7 @@ func DefaultServiceBindings() depinject.Config {
 	)
 	return depinject.Supply(
 		kvServiceFactory,
+		telemetryFactory,
 		headerService,
 		cometService,
 		eventService,

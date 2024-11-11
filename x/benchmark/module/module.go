@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"cosmossdk.io/core/telemetry"
 	"cosmossdk.io/core/transaction"
 
 	"cosmossdk.io/core/registry"
@@ -43,10 +44,11 @@ func NewAppModule(
 	storeKeys []string,
 	kvMap KVServiceMap,
 	logger log.Logger,
+	telemetryService telemetry.Service,
 ) *AppModule {
 	return &AppModule{
 		genesisParams: genesisParams,
-		keeper:        NewKeeper(kvMap),
+		keeper:        NewKeeper(kvMap, telemetryService),
 		storeKeys:     storeKeys,
 		log:           logger,
 	}
@@ -66,6 +68,7 @@ func (a *AppModule) InitGenesis(ctx context.Context, _ json.RawMessage) error {
 	g := gen.NewGenerator(gen.Options{GeneratorParams: a.genesisParams})
 	i := 0
 	for kv := range g.GenesisSet() {
+		i++
 		if i%100_000 == 0 {
 			a.log.Warn("init genesis", "progress", i, "total", a.genesisParams.GenesisCount)
 		}

@@ -5,6 +5,7 @@ go 1.23
 // server v2 integration
 replace (
 	cosmossdk.io/api => ../../api
+	cosmossdk.io/core => ../../core
 	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager
 	cosmossdk.io/server/v2/stf => ../../server/v2/stf
@@ -23,6 +24,7 @@ require (
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v1.0.0-alpha.1
 	github.com/cosmos/gogoproto v1.7.0
+	github.com/hashicorp/go-metrics v0.5.3
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/grpc v1.68.0
 	google.golang.org/protobuf v1.35.1
@@ -56,7 +58,6 @@ require (
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-metrics v0.5.3 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect

@@ -42,7 +42,10 @@ func NewGenerator(opts Options) *Generator {
 		window:  100_000,
 	}
 	g.rand = rand.New(g.src)
+	return g
+}
 
+func (g *Generator) Load() {
 	// sync state to genesis seed
 	// TODO: load state from disk if present
 	g.state = &State{Keys: map[uint64]map[uint64]bool{}}
@@ -54,8 +57,6 @@ func NewGenerator(opts Options) *Generator {
 			g.state.Keys[kv.StoreKey][kv.Key[0]] = true
 		}
 	}
-
-	return g
 }
 
 type KV struct {

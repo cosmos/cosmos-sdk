@@ -97,6 +97,7 @@ func NewLoadTestCmd() *cobra.Command {
 				UpdateWeight: 0.50,
 				GetWeight:    0.20,
 			})
+			g.Load()
 
 			i := 0
 			for {

@@ -25,6 +25,21 @@ type dynamicConfigImpl struct {
 	homeDir string
 }
 
+// GetInt64 implements server.DynamicConfig.
+func (d *dynamicConfigImpl) GetInt64(string) int64 {
+	panic("unimplemented")
+}
+
+// GetSliceOfStringSlices implements server.DynamicConfig.
+func (d *dynamicConfigImpl) GetSliceOfStringSlices(string) [][]string {
+	panic("unimplemented")
+}
+
+// GetUint64 implements server.DynamicConfig.
+func (d *dynamicConfigImpl) GetUint64(string) uint64 {
+	panic("unimplemented")
+}
+
 func (d *dynamicConfigImpl) Get(key string) any {
 	return d.GetString(key)
 }

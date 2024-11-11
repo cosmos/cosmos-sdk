@@ -254,6 +254,7 @@ replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/collections => ../collections
+	cosmossdk.io/core => ../core
 	cosmossdk.io/indexer/postgres => ../indexer/postgres
 	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix

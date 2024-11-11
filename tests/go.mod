@@ -256,6 +256,7 @@ replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/collections => ../collections
+	cosmossdk.io/core => ../core
 	cosmossdk.io/core/testing => ../core/testing
 	cosmossdk.io/indexer/postgres => ../indexer/postgres
 	cosmossdk.io/runtime/v2 => ../runtime/v2

@@ -3,6 +3,7 @@ package module
 import (
 	"unsafe"
 
+	"cosmossdk.io/core/telemetry"
 	"cosmossdk.io/depinject"
 
 	modulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
@@ -37,6 +38,7 @@ type Input struct {
 	Cfg          *modulev1.Module
 	Registrar    StoreKeyRegistrar `optional:"true"`
 	StoreFactory store.KVStoreServiceFactory
+	Telemetry    telemetry.Service
 }
 
 func ProvideModule(
@@ -57,7 +59,7 @@ func ProvideModule(
 		kvMap[sk] = kvService
 	}
 
-	return NewAppModule(cfg.GenesisParams, storeKeys, kvMap, in.Logger), nil
+	return NewAppModule(cfg.GenesisParams, storeKeys, kvMap, in.Logger, in.Telemetry), nil
 }
 
 type KVServiceMap map[string]store.KVStoreService

@@ -830,6 +830,11 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
+	// sanity check to avoid creating a tokenized share record with zero shares
+	if shares.IsZero() {
+		return nil, errorsmod.Wrap(types.ErrInsufficientShares, "cannot tokenize zero shares")
+	}
+
 	// Check that the delegator has no ongoing redelegations to the validator
 	found, err := k.HasReceivingRedelegation(ctx, delegatorAddress, valAddr)
 	if err != nil {

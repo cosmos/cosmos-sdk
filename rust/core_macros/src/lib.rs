@@ -511,9 +511,9 @@ pub fn derive_resources(input: DeriveInput) -> manyhow::Result<TokenStream2> {
             });
             prefix += 1;
         }  else if let Some(client) = maybe_extract_attribute::<_, Client>(field)? {
-            let account_id = client.0;
+            let account_name = client.0;
             field_inits.push(quote! {
-                #field_name: <#ty as ::ixc::core::handler::Client>::new(::ixc::message_api::AccountID::new(#account_id))
+                #field_name: <#ty as ::ixc::core::handler::Client>::new(scope.resolve_account(#account_name, ::ixc::core::known_accounts::lookup_known_account(#account_name))?)
             });
         } else {
             // TODO handle case where both #[state] and #[client] are present
@@ -543,7 +543,7 @@ struct State {
 
 #[derive(deluxe::ExtractAttributes, Debug)]
 #[deluxe(attributes(client))]
-struct Client(u128);
+struct Client(String);
 
 // /// This attribute bundles account and module handlers into a package root which can be
 // /// loaded into an application.

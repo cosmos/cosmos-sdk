@@ -113,11 +113,14 @@ impl TestApp {
     where
         F: FnOnce(&HC::Handler, &mut Context) -> R,
     {
-        // TODO lookup handler ID to make sure this is the correct handler
-        let scope = ResourceScope::default();
-        let h = unsafe { HC::Handler::new(&scope) }.unwrap();
-        let mut ctx = self.client_context_for(client.account_id());
-        f(&h, &mut ctx)
+        todo!()
+
+        // // Downcast the handler to the expected type
+        // let handler = handler.as_any()
+        //     .downcast_ref::<HC::Handler>()
+        //     .unwrap_or_else(|| panic!("Handler {} is not of the expected type", HC::Handler::NAME));
+        // let mut ctx = self.client_context_for(client.account_id());
+        // f(handler, &mut ctx)
     }
 }
 

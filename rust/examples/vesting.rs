@@ -15,9 +15,9 @@ mod vesting {
         pub(crate) beneficiary: Item<AccountID>,
         #[state]
         pub(crate) unlock_time: Item<Time>,
-        #[client(65536)]
+        #[client("bank")]
         bank_client: <dyn BankAPI as Service>::Client,
-        #[client(65537)]
+        #[client("block_info")]
         block_client: <dyn BlockInfoAPI as Service>::Client,
     }
 

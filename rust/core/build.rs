@@ -24,6 +24,7 @@ fn main() {
     let mut file = std::fs::File::create(format!("{}/known_accounts.rs", out_dir)).unwrap();
 
     let output = quote! {
+        /// Well-known account mappings.
         pub const KNOWN_ACCOUNTS: &[(&str, u128)] = &[
             #(#entries),*
         ];

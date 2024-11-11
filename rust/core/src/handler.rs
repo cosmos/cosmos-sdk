@@ -1,4 +1,6 @@
 //! Handler traits for account and module handlers.
+
+use core::any::Any;
 use crate::resource::Resources;
 use crate::routing::Router;
 use ixc_message_api::handler::RawHandler;
@@ -9,7 +11,7 @@ use ixc_schema::SchemaValue;
 use ixc_schema::value::OptionalValue;
 
 /// Handler trait for account and module handlers.
-pub trait Handler: RawHandler + Router + Resources + Service {
+pub trait Handler: RawHandler + Router + Resources + Service + Any + Clone {
     /// The name of the handler.
     const NAME: &'static str;
     /// The parameter used for initializing the handler.

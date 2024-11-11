@@ -26,7 +26,6 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/api"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
@@ -92,6 +91,9 @@ func New[T transaction.Tx](
 
 	// Reflection allows external clients to see what services and methods the gRPC server exposes.
 	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(queryHandlers)), logger.With("sub-module", "grpc-reflection"))
+
+	// Register V2 grpc handlers
+	RegisterServiceServer(grpcSrv, &v2Service{queryHandlers, queryable})
 
 	srv.grpcSrv = grpcSrv
 	srv.config = serverCfg
@@ -262,7 +264,9 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	}
 
 	s.logger.Info("stopping gRPC server...", "address", s.config.Address)
-	return api.DoUntilCtxExpired(ctx, s.grpcSrv.GracefulStop)
+	s.grpcSrv.GracefulStop()
+
+	return nil
 }
 
 // GetGRPCServer returns the underlying gRPC server.

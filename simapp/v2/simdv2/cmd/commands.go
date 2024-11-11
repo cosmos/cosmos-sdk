@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"io"
 
 	"github.com/spf13/cobra"
 
@@ -71,6 +72,7 @@ func InitRootCmd[T transaction.Tx](
 		return serverv2.AddCommands[T](
 			rootCmd,
 			logger,
+			io.NopCloser(nil),
 			deps.GlobalConfig,
 			initServerConfig(),
 			deps.Consensus,
@@ -83,7 +85,7 @@ func InitRootCmd[T transaction.Tx](
 
 	// build full app!
 	simApp := deps.SimApp
-	grpcServer, err := grpc.New[T](logger, simApp.InterfaceRegistry(), simApp.QueryHandlers(), simApp, deps.GlobalConfig)
+	grpcServer, err := grpc.New[T](logger, simApp.InterfaceRegistry(), simApp.QueryHandlers(), simApp.Query, deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +95,7 @@ func InitRootCmd[T transaction.Tx](
 		return nil, err
 	}
 
-	restServer, err := rest.New[T](simApp.App.StateTransitionFunction(), simApp.Store(), 0, logger, deps.GlobalConfig) // TODO: get gaslimit
+	restServer, err := rest.New[T](logger, simApp.App.StateTransitionFunction(), simApp.Store(), 0, logger, deps.GlobalConfig) // TODO: get gaslimit
 	if err != nil {
 		return nil, err
 	}
@@ -125,6 +127,7 @@ func InitRootCmd[T transaction.Tx](
 	return serverv2.AddCommands[T](
 		rootCmd,
 		logger,
+		simApp,
 		deps.GlobalConfig,
 		initServerConfig(),
 		deps.Consensus,

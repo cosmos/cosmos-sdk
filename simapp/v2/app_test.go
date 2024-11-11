@@ -86,6 +86,7 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 		&server.BlockRequest[transaction.Tx]{
 			Time:      time.Now(),
 			IsGenesis: true,
+			Height:    1,
 		},
 		genesisBytes,
 		nil,
@@ -95,7 +96,7 @@ func NewTestApp(t *testing.T) (*SimApp[transaction.Tx], context.Context) {
 	changes, err := newState.GetStateChanges()
 	require.NoError(t, err)
 
-	_, err = st.Commit(&store.Changeset{Changes: changes})
+	_, err = st.Commit(&store.Changeset{Version: 1, Changes: changes})
 	require.NoError(t, err)
 
 	return app, ctx
@@ -105,6 +106,7 @@ func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Contex
 	t.Helper()
 
 	height, err := app.LoadLatestHeight()
+	height++
 	require.NoError(t, err)
 
 	// TODO: this is a hack to set the comet info in the context for distribution module dependency.
@@ -126,7 +128,7 @@ func MoveNextBlock(t *testing.T, app *SimApp[transaction.Tx], ctx context.Contex
 	changes, err := newState.GetStateChanges()
 	require.NoError(t, err)
 
-	_, err = st.Commit(&store.Changeset{Changes: changes})
+	_, err = st.Commit(&store.Changeset{Version: height, Changes: changes})
 	require.NoError(t, err)
 }
 

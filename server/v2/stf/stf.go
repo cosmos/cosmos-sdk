@@ -546,6 +546,10 @@ func (e *executionContext) setGasLimit(limit uint64) {
 	e.state = meteredState
 }
 
+func (e *executionContext) GetCache() Cache {
+	return e.decodedCache.(Cache)
+}
+
 func (e *executionContext) SetCache(cache store.ObjectStore) {
 	e.decodedCache = cache
 }

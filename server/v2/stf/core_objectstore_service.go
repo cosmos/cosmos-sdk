@@ -36,6 +36,12 @@ func NewObjectCache() *Cache {
 	}
 }
 
+func ObjectCacheCopy(c Cache) *Cache {
+	return &Cache{
+		m: c.m,
+	}
+}
+
 // Get returns nil if key doesn't exist. Panics on nil key.
 // Contract: The set value must removed at the end of the block.
 func (c Cache) Set(prefix []byte, value any) {

@@ -4,7 +4,7 @@ go 1.23.2
 
 require (
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v0.11.1
+	cosmossdk.io/core v1.0.0-alpha.5.0.20241108140525-43e28b43ad7a
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/google/go-cmp v0.6.0
 	github.com/stretchr/testify v1.9.0
@@ -50,6 +50,3 @@ require (
 	golang.org/x/text v0.17.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// TODO: remove this once core is tagged.
-replace cosmossdk.io/core => ../../core

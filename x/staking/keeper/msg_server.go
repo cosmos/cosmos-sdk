@@ -800,6 +800,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
+	// ValidatorBond delegation is not allowed for tokenize share
 	if delegation.ValidatorBond {
 		return nil, types.ErrValidatorBondNotAllowedForTokenizeShare
 	}
@@ -1003,6 +1004,19 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 	// prevent redemption that returns a 0 amount
 	if tokens.IsZero() {
 		return nil, types.ErrTinyRedemptionAmount
+	}
+
+	// EDGECASE: tokenized share was transferred to a delegator with validator bond
+	// -> must increase validator bond shares
+	if delegation.ValidatorBond {
+		if err := k.IncreaseValidatorBondShares(ctx, valAddr, shares); err != nil {
+			return nil, err
+		}
+		// refetch the validator because the ValidatorBondShares have been updated
+		validator, err = k.GetValidator(ctx, valAddr)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// If this redemption is NOT from a liquid staking provider, decrement the total liquid staked

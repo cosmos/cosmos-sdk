@@ -41,6 +41,7 @@ func (k *Keeper) executeOp(ctx context.Context, op *benchmark.Op) error {
 	case op.Delete:
 		return kv.Delete(key)
 	case op.ValueLength > 0:
+		fmt.Printf("set key: %s\n", key)
 		value := k.generator.Bytes(op.Seed, op.ValueLength)
 		return kv.Set(key, value)
 	case op.Iterations > 0:

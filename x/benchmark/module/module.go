@@ -2,6 +2,7 @@ package module
 
 import (
 	"context"
+	"cosmossdk.io/core/transaction"
 	"encoding/json"
 
 	"cosmossdk.io/core/registry"
@@ -9,9 +10,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	grpc "google.golang.org/grpc"
+	"google.golang.org/grpc"
 
 	modulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
+	_ "cosmossdk.io/api/cosmos/benchmark/v1" // for some reason this is required to make msg server registration work
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/benchmark"
@@ -93,6 +95,9 @@ func (a *AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 }
 
 func (a *AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
+	registrar.RegisterImplementations(
+		(*transaction.Msg)(nil),
+		&benchmark.MsgLoadTest{})
 	msgservice.RegisterMsgServiceDesc(registrar, &benchmark.Msg_serviceDesc)
 }
 

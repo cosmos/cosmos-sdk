@@ -481,7 +481,8 @@ func (m *MM[T]) RunMigrations(ctx context.Context, fromVM appmodulev2.VersionMap
 
 // RegisterServices registers all module services.
 func (m *MM[T]) RegisterServices(app *App[T]) error {
-	for _, module := range m.modules {
+	for k, module := range m.modules {
+		fmt.Printf("Registering services for module %s\n", k)
 		// register msg + query
 		if err := registerServices(module, app, protoregistry.GlobalFiles); err != nil {
 			return err

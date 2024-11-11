@@ -119,7 +119,7 @@ func createStartCommand[T transaction.Tx](
 func wrapCPUProfile(logger log.Logger, cfg server.ConfigMap, callbackFn func() error) error {
 	serverCfg := cfg[serverName].(map[string]any)
 	cpuProfileFile, ok := serverCfg["cpu-profile"]
-	if !ok {
+	if !ok || cpuProfileFile == "" {
 		// if cpu profiling is not enabled, just run the callback
 		return callbackFn()
 	}

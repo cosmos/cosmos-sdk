@@ -29,7 +29,10 @@ func (k Keeper) GetLastTokenizeShareRecordID(ctx context.Context) uint64 {
 
 func (k Keeper) SetLastTokenizeShareRecordID(ctx context.Context, id uint64) {
 	store := k.storeService.OpenKVStore(ctx)
-	store.Set(types.LastTokenizeShareRecordIDKey, sdk.Uint64ToBigEndian(id))
+	err := store.Set(types.LastTokenizeShareRecordIDKey, sdk.Uint64ToBigEndian(id))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (k Keeper) GetTokenizeShareRecord(ctx context.Context, id uint64) (tokenizeShareRecord types.TokenizeShareRecord, err error) {
@@ -133,9 +136,18 @@ func (k Keeper) DeleteTokenizeShareRecord(ctx context.Context, recordID uint64) 
 	}
 
 	store := k.storeService.OpenKVStore(ctx)
-	store.Delete(types.GetTokenizeShareRecordByIndexKey(recordID))
-	store.Delete(types.GetTokenizeShareRecordIDByOwnerAndIDKey(owner, recordID))
-	store.Delete(types.GetTokenizeShareRecordIDByDenomKey(record.GetShareTokenDenom()))
+	err = store.Delete(types.GetTokenizeShareRecordByIndexKey(recordID))
+	if err != nil {
+		return err
+	}
+	err = store.Delete(types.GetTokenizeShareRecordIDByOwnerAndIDKey(owner, recordID))
+	if err != nil {
+		return err
+	}
+	err = store.Delete(types.GetTokenizeShareRecordIDByDenomKey(record.GetShareTokenDenom()))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -148,24 +160,36 @@ func (k Keeper) setTokenizeShareRecord(ctx context.Context, tokenizeShareRecord 
 	store := k.storeService.OpenKVStore(ctx)
 	bz := k.cdc.MustMarshal(&tokenizeShareRecord)
 
-	store.Set(types.GetTokenizeShareRecordByIndexKey(tokenizeShareRecord.Id), bz)
+	err := store.Set(types.GetTokenizeShareRecordByIndexKey(tokenizeShareRecord.Id), bz)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (k Keeper) setTokenizeShareRecordWithOwner(ctx context.Context, owner sdk.AccAddress, id uint64) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
 
-	store.Set(types.GetTokenizeShareRecordIDByOwnerAndIDKey(owner, id), bz)
+	err := store.Set(types.GetTokenizeShareRecordIDByOwnerAndIDKey(owner, id), bz)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (k Keeper) deleteTokenizeShareRecordWithOwner(ctx context.Context, owner sdk.AccAddress, id uint64) {
 	store := k.storeService.OpenKVStore(ctx)
-	store.Delete(types.GetTokenizeShareRecordIDByOwnerAndIDKey(owner, id))
+	err := store.Delete(types.GetTokenizeShareRecordIDByOwnerAndIDKey(owner, id))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (k Keeper) setTokenizeShareRecordWithDenom(ctx context.Context, denom string, id uint64) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
 
-	store.Set(types.GetTokenizeShareRecordIDByDenomKey(denom), bz)
+	err := store.Set(types.GetTokenizeShareRecordIDByDenomKey(denom), bz)
+	if err != nil {
+		panic(err)
+	}
 }

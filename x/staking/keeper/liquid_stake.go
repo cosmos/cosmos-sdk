@@ -22,7 +22,10 @@ func (k Keeper) SetTotalLiquidStakedTokens(ctx context.Context, tokens math.Int)
 		panic(err)
 	}
 
-	store.Set(types.TotalLiquidStakedTokensKey, tokensBz)
+	err = store.Set(types.TotalLiquidStakedTokensKey, tokensBz)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // GetTotalLiquidStakedTokens returns the total outstanding tokens owned by a liquid staking provider
@@ -204,7 +207,10 @@ func (k Keeper) SafelyIncreaseValidatorLiquidShares(ctx context.Context, valAddr
 
 	// Increment the validator's liquid shares
 	validator.LiquidShares = validator.LiquidShares.Add(shares)
-	k.SetValidator(ctx, validator)
+	err = k.SetValidator(ctx, validator)
+	if err != nil {
+		return types.Validator{}, err
+	}
 
 	return validator, nil
 }
@@ -221,7 +227,10 @@ func (k Keeper) DecreaseValidatorLiquidShares(ctx context.Context, valAddress sd
 	}
 
 	validator.LiquidShares = validator.LiquidShares.Sub(shares)
-	k.SetValidator(ctx, validator)
+	err = k.SetValidator(ctx, validator)
+	if err != nil {
+		return types.Validator{}, err
+	}
 
 	return validator, nil
 }
@@ -235,7 +244,10 @@ func (k Keeper) IncreaseValidatorBondShares(ctx context.Context, valAddress sdk.
 	}
 
 	validator.ValidatorBondShares = validator.ValidatorBondShares.Add(shares)
-	k.SetValidator(ctx, validator)
+	err = k.SetValidator(ctx, validator)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -264,7 +276,10 @@ func (k Keeper) SafelyDecreaseValidatorBond(ctx context.Context, valAddress sdk.
 
 	// Decrement the validator's self bond
 	validator.ValidatorBondShares = validator.ValidatorBondShares.Sub(shares)
-	k.SetValidator(ctx, validator)
+	err = k.SetValidator(ctx, validator)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -276,21 +291,30 @@ func (k Keeper) SafelyDecreaseValidatorBond(ctx context.Context, valAddress sdk.
 func (k Keeper) AddTokenizeSharesLock(ctx context.Context, address sdk.AccAddress) {
 	store := k.storeService.OpenKVStore(ctx)
 	key := types.GetTokenizeSharesLockKey(address)
-	store.Set(key, sdk.FormatTimeBytes(time.Time{}))
+	err := store.Set(key, sdk.FormatTimeBytes(time.Time{}))
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Removes the tokenize share lock for an account to enable tokenizing shares
 func (k Keeper) RemoveTokenizeSharesLock(ctx context.Context, address sdk.AccAddress) {
 	store := k.storeService.OpenKVStore(ctx)
 	key := types.GetTokenizeSharesLockKey(address)
-	store.Delete(key)
+	err := store.Delete(key)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Updates the timestamp associated with a lock to the time at which the lock expires
 func (k Keeper) SetTokenizeSharesUnlockTime(ctx context.Context, address sdk.AccAddress, completionTime time.Time) {
 	store := k.storeService.OpenKVStore(ctx)
 	key := types.GetTokenizeSharesLockKey(address)
-	store.Set(key, sdk.FormatTimeBytes(completionTime))
+	err := store.Set(key, sdk.FormatTimeBytes(completionTime))
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Checks if there is currently a tokenize share lock for a given account
@@ -356,7 +380,10 @@ func (k Keeper) SetPendingTokenizeShareAuthorizations(ctx context.Context, compl
 	store := k.storeService.OpenKVStore(ctx)
 	timeKey := types.GetTokenizeShareAuthorizationTimeKey(completionTime)
 	bz := k.cdc.MustMarshal(&authorizations)
-	store.Set(timeKey, bz)
+	err := store.Set(timeKey, bz)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Returns a list of addresses pending tokenize share unlocking at the same time
@@ -443,7 +470,10 @@ func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx context.Context, blockTime t
 
 	// delete unlocked addresses keys
 	for _, k := range keys {
-		store.Delete(k)
+		err := store.Delete(k)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// remove the lock from each unlocked address
@@ -473,7 +503,10 @@ func (k Keeper) RefreshTotalLiquidStaked(ctx context.Context) error {
 	// First reset each validator's liquid shares to 0
 	for _, validator := range validators {
 		validator.LiquidShares = math.LegacyZeroDec()
-		k.SetValidator(ctx, validator)
+		err = k.SetValidator(ctx, validator)
+		if err != nil {
+			return err
+		}
 	}
 
 	delegations, err := k.GetAllDelegations(ctx)
@@ -507,7 +540,10 @@ func (k Keeper) RefreshTotalLiquidStaked(ctx context.Context) error {
 			liquidTokens := validator.TokensFromShares(liquidShares).TruncateInt()
 
 			validator.LiquidShares = validator.LiquidShares.Add(liquidShares)
-			k.SetValidator(ctx, validator)
+			err = k.SetValidator(ctx, validator)
+			if err != nil {
+				return err
+			}
 
 			totalLiquidStakedTokens = totalLiquidStakedTokens.Add(liquidTokens)
 		}

@@ -474,13 +474,13 @@ func TestPlanCustomDataLocation(t *testing.T) {
 		t,
 		fmt.Sprintf("%s/%s", workDir, "testdata/custom-data-path"),
 		cosmovisor.Config{
-			Name:                  "autod",
+			Name:                  "dummyd",
 			AllowDownloadBinaries: true,
 			PollInterval:          100,
 			UnsafeSkipBackup:      true,
 		},
 	)
-
+	cfg.DataPath = filepath.Join(cfg.Home, "custom-location/data")
 	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmosvisor")
 
 	// should run the genesis binary and produce expected output

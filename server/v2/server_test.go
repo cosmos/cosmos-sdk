@@ -11,14 +11,22 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	coreserver "cosmossdk.io/core/server"
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	grpc "cosmossdk.io/server/v2/api/grpc"
-	"cosmossdk.io/server/v2/appmanager"
 	"cosmossdk.io/server/v2/store"
+	storev2 "cosmossdk.io/store/v2"
 )
+
+type mockStore struct {
+	storev2.RootStore
+}
+
+func (*mockStore) Close() error {
+	return nil
+}
 
 type mockInterfaceRegistry struct{}
 
@@ -30,22 +38,6 @@ func (*mockInterfaceRegistry) ListImplementations(ifaceTypeURL string) []string 
 	panic("not implemented")
 }
 func (*mockInterfaceRegistry) ListAllInterfaces() []string { panic("not implemented") }
-
-type mockApp[T transaction.Tx] struct {
-	serverv2.AppI[T]
-}
-
-func (*mockApp[T]) GetGPRCMethodsToMessageMap() map[string]func() gogoproto.Message {
-	return map[string]func() gogoproto.Message{}
-}
-
-func (*mockApp[T]) GetAppManager() *appmanager.AppManager[T] {
-	return nil
-}
-
-func (*mockApp[T]) InterfaceRegistry() coreserver.InterfaceRegistry {
-	return &mockInterfaceRegistry{}
-}
 
 func TestServer(t *testing.T) {
 	currentDir, err := os.Getwd()
@@ -59,18 +51,17 @@ func TestServer(t *testing.T) {
 	cfg := v.AllSettings()
 
 	logger := log.NewLogger(os.Stdout)
-	grpcServer := grpc.New[transaction.Tx]()
-	err = grpcServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
+	ctx := serverv2.SetServerContext(context.Background(), v, logger)
+
+	grpcServer, err := grpc.New[transaction.Tx](logger, &mockInterfaceRegistry{}, map[string]appmodulev2.Handler{}, nil, cfg)
 	require.NoError(t, err)
 
-	storeServer := store.New[transaction.Tx](nil /* nil appCreator as not using CLI commands */)
-	err = storeServer.Init(&mockApp[transaction.Tx]{}, cfg, logger)
+	storeServer, err := store.New[transaction.Tx](&mockStore{}, cfg)
 	require.NoError(t, err)
 
 	mockServer := &mockServer{name: "mock-server-1", ch: make(chan string, 100)}
 
-	server := serverv2.NewServer(
-		logger,
+	server := serverv2.NewServer[transaction.Tx](
 		serverv2.DefaultServerConfig(),
 		grpcServer,
 		storeServer,
@@ -91,7 +82,7 @@ func TestServer(t *testing.T) {
 	require.Equal(t, v.GetString(grpcServer.Name()+".address"), grpc.DefaultConfig().Address)
 
 	// start empty
-	ctx, cancelFn := context.WithCancel(context.TODO())
+	ctx, cancelFn := context.WithCancel(ctx)
 	go func() {
 		// wait 5sec and cancel context
 		<-time.After(5 * time.Second)

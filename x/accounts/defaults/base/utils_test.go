@@ -66,6 +66,12 @@ func newMockContext(t *testing.T) (context.Context, store.KVStoreService) {
 	)
 }
 
+type transactionService struct{}
+
+func (t transactionService) ExecMode(ctx context.Context) transaction.ExecMode {
+	return transaction.ExecModeFinalize
+}
+
 func makeMockDependencies(storeservice store.KVStoreService) accountstd.Dependencies {
 	sb := collections.NewSchemaBuilder(storeservice)
 
@@ -74,8 +80,9 @@ func makeMockDependencies(storeservice store.KVStoreService) accountstd.Dependen
 		AddressCodec:     addressCodec{},
 		LegacyStateCodec: mockStateCodec{},
 		Environment: appmodulev2.Environment{
-			EventService:  eventService{},
-			HeaderService: headerService{},
+			EventService:       eventService{},
+			HeaderService:      headerService{},
+			TransactionService: transactionService{},
 		},
 	}
 }

@@ -9,14 +9,19 @@ import (
 	"net"
 	"slices"
 	"strconv"
+	"strings"
+	"sync"
 
-	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
+	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -38,40 +43,51 @@ type Server[T transaction.Tx] struct {
 }
 
 // New creates a new grpc server.
-func New[T transaction.Tx](cfgOptions ...CfgOption) *Server[T] {
-	return &Server[T]{
+func New[T transaction.Tx](
+	logger log.Logger,
+	interfaceRegistry server.InterfaceRegistry,
+	queryHandlers map[string]appmodulev2.Handler,
+	queryable func(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error),
+	cfg server.ConfigMap,
+	cfgOptions ...CfgOption,
+) (*Server[T], error) {
+	srv := &Server[T]{
 		cfgOptions: cfgOptions,
 	}
-}
-
-// Init returns a correctly configured and initialized gRPC server.
-// Note, the caller is responsible for starting the server.
-func (s *Server[T]) Init(appI serverv2.AppI[T], cfg map[string]any, logger log.Logger) error {
-	serverCfg := s.Config().(*Config)
+	serverCfg := srv.Config().(*Config)
 	if len(cfg) > 0 {
-		if err := serverv2.UnmarshalSubConfig(cfg, s.Name(), &serverCfg); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
+		if err := serverv2.UnmarshalSubConfig(cfg, srv.Name(), &serverCfg); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 		}
 	}
-	methodsMap := appI.GetGPRCMethodsToMessageMap()
 
 	grpcSrv := grpc.NewServer(
-		grpc.ForceServerCodec(newProtoCodec(appI.InterfaceRegistry()).GRPCCodec()),
+		grpc.ForceServerCodec(newProtoCodec(interfaceRegistry).GRPCCodec()),
 		grpc.MaxSendMsgSize(serverCfg.MaxSendMsgSize),
 		grpc.MaxRecvMsgSize(serverCfg.MaxRecvMsgSize),
-		grpc.UnknownServiceHandler(
-			makeUnknownServiceHandler(methodsMap, appI.GetAppManager()),
-		),
+		grpc.UnknownServiceHandler(makeUnknownServiceHandler(queryHandlers, queryable)),
 	)
 
 	// Reflection allows external clients to see what services and methods the gRPC server exposes.
-	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(methodsMap)), logger.With("sub-module", "grpc-reflection"))
+	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(queryHandlers)), logger.With("sub-module", "grpc-reflection"))
 
-	s.grpcSrv = grpcSrv
-	s.config = serverCfg
-	s.logger = logger.With(log.ModuleKey, s.Name())
+	// Register V2 grpc handlers
+	RegisterServiceServer(grpcSrv, &v2Service{queryHandlers, queryable})
 
-	return nil
+	srv.grpcSrv = grpcSrv
+	srv.config = serverCfg
+	srv.logger = logger.With(log.ModuleKey, srv.Name())
+
+	return srv, nil
+}
+
+// NewWithConfigOptions creates a new GRPC server with the provided config options.
+// It is *not* a fully functional server (since it has been created without dependencies)
+// The returned server should only be used to get and set configuration.
+func NewWithConfigOptions[T transaction.Tx](opts ...CfgOption) *Server[T] {
+	return &Server[T]{
+		cfgOptions: opts,
+	}
 }
 
 func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
@@ -80,21 +96,42 @@ func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 	return flags
 }
 
-func makeUnknownServiceHandler(messageMap map[string]func() proto.Message, querier interface {
-	Query(ctx context.Context, version uint64, msg proto.Message) (proto.Message, error)
-},
+func makeUnknownServiceHandler(
+	handlers map[string]appmodulev2.Handler,
+	queryable func(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error),
 ) grpc.StreamHandler {
+	getRegistry := sync.OnceValues(gogoproto.MergedRegistry)
+
 	return func(srv any, stream grpc.ServerStream) error {
 		method, ok := grpc.MethodFromServerStream(stream)
 		if !ok {
 			return status.Error(codes.InvalidArgument, "unable to get method")
 		}
-		makeMsg, exists := messageMap[method]
+		// if this fails we cannot serve queries anymore...
+		registry, err := getRegistry()
+		if err != nil {
+			return fmt.Errorf("failed to get registry: %w", err)
+		}
+
+		method = strings.TrimPrefix(method, "/")
+		fullName := protoreflect.FullName(strings.ReplaceAll(method, "/", "."))
+		// get descriptor from the invoke method
+		desc, err := registry.FindDescriptorByName(fullName)
+		if err != nil {
+			return fmt.Errorf("failed to find descriptor %s: %w", method, err)
+		}
+		md, ok := desc.(protoreflect.MethodDescriptor)
+		if !ok {
+			return fmt.Errorf("%s is not a method", method)
+		}
+		// find handler
+		handler, exists := handlers[string(md.Input().FullName())]
 		if !exists {
 			return status.Errorf(codes.Unimplemented, "gRPC method %s is not handled", method)
 		}
+
 		for {
-			req := makeMsg()
+			req := handler.MakeMsg()
 			err := stream.RecvMsg(req)
 			if err != nil {
 				if errors.Is(err, io.EOF) {
@@ -109,7 +146,7 @@ func makeUnknownServiceHandler(messageMap map[string]func() proto.Message, queri
 			if err != nil {
 				return status.Errorf(codes.InvalidArgument, "invalid get height from context: %v", err)
 			}
-			resp, err := querier.Query(ctx, height, req)
+			resp, err := queryable(ctx, height, req)
 			if err != nil {
 				return err
 			}
@@ -167,7 +204,7 @@ func (s *Server[T]) Start(ctx context.Context) error {
 		return nil
 	}
 
-	listener, err := net.Listen("tcp", s.config.Address)
+	listener, err := (&net.ListenConfig{}).Listen(ctx, "tcp", s.config.Address)
 	if err != nil {
 		return fmt.Errorf("failed to listen on address %s: %w", s.config.Address, err)
 	}
@@ -187,6 +224,7 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 
 	s.logger.Info("stopping gRPC server...", "address", s.config.Address)
 	s.grpcSrv.GracefulStop()
+
 	return nil
 }
 

@@ -35,8 +35,7 @@ func TestValidatorDoubleSign(t *testing.T) {
 	newNode := sut.AddFullnode(t, func(nodeNumber int, nodePath string) {
 		valKeyFile := filepath.Join(WorkDir, nodePath, "config", "priv_validator_key.json")
 		_ = os.Remove(valKeyFile)
-		_, err := copyFile(filepath.Join(WorkDir, sut.nodePath(0), "config", "priv_validator_key.json"), valKeyFile)
-		require.NoError(t, err)
+		_ = MustCopyFile(filepath.Join(WorkDir, sut.nodePath(0), "config", "priv_validator_key.json"), valKeyFile)
 	})
 	sut.AwaitNodeUp(t, fmt.Sprintf("http://%s:%d", newNode.IP, newNode.RPCPort))
 

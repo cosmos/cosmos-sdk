@@ -1,7 +1,9 @@
 package keeper_test
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -183,4 +185,54 @@ func (suite *KeeperTestSuite) TestSendCoins_Module_To_Module() {
 	require.Equal(mintFooBalance.Amount, math.NewInt(0))
 	mintBarBalance := suite.bankKeeper.GetBalance(ctx, mintAcc.GetAddress(), barDenom)
 	require.Equal(mintBarBalance.Amount, math.NewInt(0))
+}
+
+func (suite *KeeperTestSuite) TestSendCoins_WithRestriction() {
+	ctx := suite.ctx
+	require := suite.Require()
+	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
+	sendAmt := sdk.NewCoins(newFooCoin(10), newBarCoin(10))
+
+	require.NoError(banktestutil.FundAccount(ctx, suite.bankKeeper, accAddrs[0], balances))
+
+	// Add first restriction
+	addrRestrictFunc := func(ctx context.Context, from, to []byte, amount sdk.Coins) ([]byte, error) {
+		if bytes.Equal(from, to) {
+			return nil, fmt.Errorf("Can not send to same address")
+		}
+		return to, nil
+	}
+	suite.bankKeeper.AppendGlobalSendRestriction(addrRestrictFunc)
+
+	err := suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[0], sendAmt)
+	require.Error(err)
+	require.Contains(err.Error(), "Can not send to same address")
+
+	// Add second restriction
+	amtRestrictFunc := func(ctx context.Context, from, to []byte, amount sdk.Coins) ([]byte, error) {
+		if len(amount) > 1 {
+			return nil, fmt.Errorf("Allow only one denom per one send")
+		}
+		return to, nil
+	}
+	suite.bankKeeper.AppendGlobalSendRestriction(amtRestrictFunc)
+
+	// Pass the 1st but failt at the 2nd
+	err = suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendAmt)
+	require.Error(err)
+	require.Contains(err.Error(), "Allow only one denom per one send")
+
+	// Pass both 2 restrictions
+	err = suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sdk.NewCoins(newFooCoin(10)))
+	require.NoError(err)
+
+	// Check balances
+	acc0FooBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[0], fooDenom)
+	require.Equal(acc0FooBalance.Amount, math.NewInt(90))
+	acc0BarBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[0], barDenom)
+	require.Equal(acc0BarBalance.Amount, math.NewInt(50))
+	acc1FooBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[1], fooDenom)
+	require.Equal(acc1FooBalance.Amount, math.NewInt(10))
+	acc1BarBalance := suite.bankKeeper.GetBalance(ctx, accAddrs[1], barDenom)
+	require.Equal(acc1BarBalance.Amount, math.ZeroInt())
 }

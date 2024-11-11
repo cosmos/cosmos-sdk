@@ -42,14 +42,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#18626](https://github.com/cosmos/cosmos-sdk/pull/18626) Support for off-chain signing and verification of a file.
 * [#18461](https://github.com/cosmos/cosmos-sdk/pull/18461) Support governance proposals.
+* [#20623](https://github.com/cosmos/cosmos-sdk/pull/20623) Introduce client/v2 tx factory.
+* [#20623](https://github.com/cosmos/cosmos-sdk/pull/20623) Extend client/v2 keyring interface with `KeyType` and `KeyInfo`.
+* [#22282](https://github.com/cosmos/cosmos-sdk/pull/22282) Added custom broadcast logic.
 
 ### Improvements
 
+* [#22443](https://github.com/cosmos/cosmos-sdk/pull/22443) Add keyring flags in query commands.
 * [#21936](https://github.com/cosmos/cosmos-sdk/pull/21936) Print possible enum values in error message after an invalid input was provided.
 
 ### API Breaking Changes
 
 * [#17709](https://github.com/cosmos/cosmos-sdk/pull/17709) Address codecs have been removed from `autocli.AppOptions` and `flag.Builder`. Instead client/v2 uses the address codecs present in the context (introduced in [#17503](https://github.com/cosmos/cosmos-sdk/pull/17503)).
+
+### Bug Fixes
+
+* [#21853](https://github.com/cosmos/cosmos-sdk/pull/21853) Fix `*big.Int` unmarshalling in txs.
 
 ## [v2.0.0-beta.5] - 2024-09-18
 

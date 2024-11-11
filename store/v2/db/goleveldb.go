@@ -14,8 +14,8 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
 
+	coreserver "cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/store/v2"
 	storeerrors "cosmossdk.io/store/v2/errors"
 )
 
@@ -28,7 +28,7 @@ type GoLevelDB struct {
 	db *leveldb.DB
 }
 
-func NewGoLevelDB(name, dir string, opts store.DBOptions) (*GoLevelDB, error) {
+func NewGoLevelDB(name, dir string, opts coreserver.DynamicConfig) (*GoLevelDB, error) {
 	defaultOpts := &opt.Options{
 		Filter: filter.NewBloomFilter(10), // by default, goleveldb doesn't use a bloom filter.
 	}

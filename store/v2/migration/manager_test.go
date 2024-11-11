@@ -66,7 +66,7 @@ func TestMigrateState(t *testing.T) {
 			toVersion := uint64(100)
 			keyCount := 10
 			for version := uint64(1); version <= toVersion; version++ {
-				cs := corestore.NewChangeset()
+				cs := corestore.NewChangeset(version)
 				for _, storeKey := range storeKeys {
 					for i := 0; i < keyCount; i++ {
 						cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
@@ -133,7 +133,7 @@ func TestStartMigrateState(t *testing.T) {
 			changesets := []corestore.Changeset{}
 
 			for version := uint64(1); version <= toVersion; version++ {
-				cs := corestore.NewChangeset()
+				cs := corestore.NewChangeset(version)
 				for _, storeKey := range storeKeys {
 					for i := 0; i < keyCount; i++ {
 						cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)

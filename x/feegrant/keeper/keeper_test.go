@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"
@@ -13,7 +12,6 @@ import (
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/feegrant/keeper"
 	"cosmossdk.io/x/feegrant/module"
-	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
@@ -22,7 +20,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type KeeperTestSuite struct {
@@ -34,7 +31,6 @@ type KeeperTestSuite struct {
 	msgSrvr        feegrant.MsgServer
 	atom           sdk.Coins
 	feegrantKeeper keeper.Keeper
-	accountKeeper  *feegranttestutil.MockAccountKeeper
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -48,21 +44,14 @@ func (suite *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}, module.AppModule{})
 
 	// setup gomock and initialize some globally expected executions
-	ctrl := gomock.NewController(suite.T())
-	suite.accountKeeper = feegranttestutil.NewMockAccountKeeper(ctrl)
-	for i := 0; i < len(suite.addrs); i++ {
-		suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), suite.addrs[i]).Return(authtypes.NewBaseAccountWithAddress(suite.addrs[i])).AnyTimes()
-	}
-
 	ac := codecaddress.NewBech32Codec("cosmos")
-	suite.accountKeeper.EXPECT().AddressCodec().Return(ac).AnyTimes()
 	for _, addr := range suite.addrs {
 		str, err := ac.BytesToString(addr)
 		suite.Require().NoError(err)
 		suite.encodedAddrs = append(suite.encodedAddrs, str)
 	}
 
-	suite.feegrantKeeper = keeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger()), encCfg.Codec, suite.accountKeeper)
+	suite.feegrantKeeper = keeper.NewKeeper(runtime.NewEnvironment(runtime.NewKVStoreService(key), coretesting.NewNopLogger()), encCfg.Codec, ac)
 	suite.ctx = testCtx.Ctx
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.feegrantKeeper)
 	suite.atom = sdk.NewCoins(sdk.NewCoin("atom", sdkmath.NewInt(555)))
@@ -181,7 +170,6 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	address := "cosmos1rxr4mq58w3gtnx5tsc438mwjjafv3mja7k5pnu"
 	accAddr, err := codecaddress.NewBech32Codec("cosmos").StringToBytes(address)
 	suite.Require().NoError(err)
-	suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), accAddr).Return(authtypes.NewBaseAccountWithAddress(accAddr)).AnyTimes()
 
 	// let's grant and revoke authorization to non existing account
 	err = suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[3], accAddr, basic2)

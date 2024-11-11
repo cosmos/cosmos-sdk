@@ -9,8 +9,10 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/schema"
 	"cosmossdk.io/x/bank/client/cli"
 	"cosmossdk.io/x/bank/keeper"
 	"cosmossdk.io/x/bank/simulation"
@@ -174,4 +176,10 @@ func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
 func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
 	reg.Add(weights.Get("msg_send", 100), simulation.MsgSendFactory())
 	reg.Add(weights.Get("msg_multisend", 10), simulation.MsgMultiSendFactory())
+}
+
+// ModuleCodec implements `schema.HasModuleCodec` interface.
+// It allows the indexer to decode the module's KVPairUpdate.
+func (am AppModule) ModuleCodec() (schema.ModuleCodec, error) {
+	return am.keeper.(keeper.BaseKeeper).Schema.ModuleCodec(collections.IndexingOptions{})
 }

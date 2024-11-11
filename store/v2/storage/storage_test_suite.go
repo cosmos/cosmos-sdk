@@ -61,7 +61,8 @@ func (s *StorageTestSuite) TestDatabase_VersionedKeys() {
 	defer db.Close()
 
 	for i := uint64(1); i <= 100; i++ {
-		s.Require().NoError(db.ApplyChangeset(i, corestore.NewChangesetWithPairs(
+		s.Require().NoError(db.ApplyChangeset(corestore.NewChangesetWithPairs(
+			i,
 			map[string]corestore.KVPairs{
 				storeKey1: {{Key: []byte("key"), Value: []byte(fmt.Sprintf("value%03d", i))}},
 			},
@@ -81,7 +82,8 @@ func (s *StorageTestSuite) TestDatabase_GetVersionedKey() {
 	defer db.Close()
 
 	// store a key at version 1
-	s.Require().NoError(db.ApplyChangeset(1, corestore.NewChangesetWithPairs(
+	s.Require().NoError(db.ApplyChangeset(corestore.NewChangesetWithPairs(
+		1,
 		map[string]corestore.KVPairs{
 			storeKey1: {{Key: []byte("key"), Value: []byte("value001")}},
 		},
@@ -97,7 +99,8 @@ func (s *StorageTestSuite) TestDatabase_GetVersionedKey() {
 	s.Require().True(ok)
 
 	// chain progresses to version 11 with an update to key
-	s.Require().NoError(db.ApplyChangeset(11, corestore.NewChangesetWithPairs(
+	s.Require().NoError(db.ApplyChangeset(corestore.NewChangesetWithPairs(
+		11,
 		map[string]corestore.KVPairs{
 			storeKey1: {{Key: []byte("key"), Value: []byte("value011")}},
 		},
@@ -122,7 +125,8 @@ func (s *StorageTestSuite) TestDatabase_GetVersionedKey() {
 	}
 
 	// chain progresses to version 15 with a delete to key
-	s.Require().NoError(db.ApplyChangeset(15, corestore.NewChangesetWithPairs(
+	s.Require().NoError(db.ApplyChangeset(corestore.NewChangesetWithPairs(
+		15,
 		map[string]corestore.KVPairs{storeKey1: {{Key: []byte("key"), Remove: true}}},
 	)))
 
@@ -154,7 +158,7 @@ func (s *StorageTestSuite) TestDatabase_ApplyChangeset() {
 	s.Require().NoError(err)
 	defer db.Close()
 
-	cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{storeKey1: {}})
+	cs := corestore.NewChangesetWithPairs(1, map[string]corestore.KVPairs{storeKey1: {}})
 	for i := 0; i < 100; i++ {
 		cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(fmt.Sprintf("key%03d", i)), Value: []byte("value")})
 	}
@@ -165,7 +169,7 @@ func (s *StorageTestSuite) TestDatabase_ApplyChangeset() {
 		}
 	}
 
-	s.Require().NoError(db.ApplyChangeset(1, cs))
+	s.Require().NoError(db.ApplyChangeset(cs))
 
 	lv, err := db.GetLatestVersion()
 	s.Require().NoError(err)
@@ -241,7 +245,7 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 	s.Require().NoError(err)
 	defer db.Close()
 
-	cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{storeKey1: {}})
+	cs := corestore.NewChangesetWithPairs(1, map[string]corestore.KVPairs{storeKey1: {}})
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key%03d", i) // key000, key001, ..., key099
 		val := fmt.Sprintf("val%03d", i) // val000, val001, ..., val099
@@ -249,7 +253,7 @@ func (s *StorageTestSuite) TestDatabase_Iterator() {
 		cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val), Remove: false})
 	}
 
-	s.Require().NoError(db.ApplyChangeset(1, cs))
+	s.Require().NoError(db.ApplyChangeset(cs))
 
 	// iterator without an end key over multiple versions
 	for v := uint64(1); v < 5; v++ {
@@ -310,7 +314,8 @@ func (s *StorageTestSuite) TestDatabase_Iterator_RangedDeletes() {
 	s.Require().NoError(err)
 	defer db.Close()
 
-	s.Require().NoError(db.ApplyChangeset(1, corestore.NewChangesetWithPairs(
+	s.Require().NoError(db.ApplyChangeset(corestore.NewChangesetWithPairs(
+		1,
 		map[string]corestore.KVPairs{
 			storeKey1: {
 				{Key: []byte("key001"), Value: []byte("value001"), Remove: false},
@@ -319,13 +324,15 @@ func (s *StorageTestSuite) TestDatabase_Iterator_RangedDeletes() {
 		},
 	)))
 
-	s.Require().NoError(db.ApplyChangeset(5, corestore.NewChangesetWithPairs(
+	s.Require().NoError(db.ApplyChangeset(corestore.NewChangesetWithPairs(
+		5,
 		map[string]corestore.KVPairs{
 			storeKey1: {{Key: []byte("key002"), Value: []byte("value002"), Remove: false}},
 		},
 	)))
 
-	s.Require().NoError(db.ApplyChangeset(10, corestore.NewChangesetWithPairs(
+	s.Require().NoError(db.ApplyChangeset(corestore.NewChangesetWithPairs(
+		10,
 		map[string]corestore.KVPairs{
 			storeKey1: {{Key: []byte("key002"), Remove: true}},
 		},
@@ -353,7 +360,7 @@ func (s *StorageTestSuite) TestDatabase_IteratorMultiVersion() {
 
 	// for versions 1-49, set all 10 keys
 	for v := uint64(1); v < 50; v++ {
-		cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{storeKey1: {}})
+		cs := corestore.NewChangesetWithPairs(v, map[string]corestore.KVPairs{storeKey1: {}})
 		for i := 0; i < 10; i++ {
 			key := fmt.Sprintf("key%03d", i)
 			val := fmt.Sprintf("val%03d-%03d", i, v)
@@ -361,12 +368,12 @@ func (s *StorageTestSuite) TestDatabase_IteratorMultiVersion() {
 			cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val)})
 		}
 
-		s.Require().NoError(db.ApplyChangeset(v, cs))
+		s.Require().NoError(db.ApplyChangeset(cs))
 	}
 
 	// for versions 50-100, only update even keys
 	for v := uint64(50); v <= 100; v++ {
-		cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{storeKey1: {}})
+		cs := corestore.NewChangesetWithPairs(v, map[string]corestore.KVPairs{storeKey1: {}})
 		for i := 0; i < 10; i++ {
 			if i%2 == 0 {
 				key := fmt.Sprintf("key%03d", i)
@@ -376,7 +383,7 @@ func (s *StorageTestSuite) TestDatabase_IteratorMultiVersion() {
 			}
 		}
 
-		s.Require().NoError(db.ApplyChangeset(v, cs))
+		s.Require().NoError(db.ApplyChangeset(cs))
 	}
 
 	itr, err := db.Iterator(storeKey1Bytes, 69, []byte("key000"), nil)
@@ -519,7 +526,7 @@ func (s *StorageTestSuite) TestDatabase_IteratorNoDomain() {
 
 	// for versions 1-50, set all 10 keys
 	for v := uint64(1); v <= 50; v++ {
-		cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{storeKey1: {}})
+		cs := corestore.NewChangesetWithPairs(v, map[string]corestore.KVPairs{storeKey1: {}})
 		for i := 0; i < 10; i++ {
 			key := fmt.Sprintf("key%03d", i)
 			val := fmt.Sprintf("val%03d-%03d", i, v)
@@ -527,7 +534,7 @@ func (s *StorageTestSuite) TestDatabase_IteratorNoDomain() {
 			cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val), Remove: false})
 		}
 
-		s.Require().NoError(db.ApplyChangeset(v, cs))
+		s.Require().NoError(db.ApplyChangeset(cs))
 	}
 
 	// create an iterator over the entire domain
@@ -559,7 +566,7 @@ func (s *StorageTestSuite) TestDatabase_Prune() {
 
 	// for versions 1-50, set 10 keys
 	for v := uint64(1); v <= 50; v++ {
-		cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{storeKey1: {}})
+		cs := corestore.NewChangesetWithPairs(v, map[string]corestore.KVPairs{storeKey1: {}})
 		for i := 0; i < 10; i++ {
 			key := fmt.Sprintf("key%03d", i)
 			val := fmt.Sprintf("val%03d-%03d", i, v)
@@ -567,7 +574,7 @@ func (s *StorageTestSuite) TestDatabase_Prune() {
 			cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val)})
 		}
 
-		s.Require().NoError(db.ApplyChangeset(v, cs))
+		s.Require().NoError(db.ApplyChangeset(cs))
 	}
 
 	// prune the first 25 versions
@@ -625,13 +632,16 @@ func (s *StorageTestSuite) TestDatabase_Prune_KeepRecent() {
 	key := []byte("key")
 
 	// write a key at three different versions
-	s.Require().NoError(db.ApplyChangeset(1, corestore.NewChangesetWithPairs(
+	s.Require().NoError(db.ApplyChangeset(corestore.NewChangesetWithPairs(
+		1,
 		map[string]corestore.KVPairs{storeKey1: {{Key: key, Value: []byte("val001"), Remove: false}}},
 	)))
-	s.Require().NoError(db.ApplyChangeset(100, corestore.NewChangesetWithPairs(
+	s.Require().NoError(db.ApplyChangeset(corestore.NewChangesetWithPairs(
+		100,
 		map[string]corestore.KVPairs{storeKey1: {{Key: key, Value: []byte("val100"), Remove: false}}},
 	)))
-	s.Require().NoError(db.ApplyChangeset(200, corestore.NewChangesetWithPairs(
+	s.Require().NoError(db.ApplyChangeset(corestore.NewChangesetWithPairs(
+		200,
 		map[string]corestore.KVPairs{storeKey1: {{Key: key, Value: []byte("val200"), Remove: false}}},
 	)))
 
@@ -677,7 +687,7 @@ func (s *StorageTestSuite) TestDatabase_Restore() {
 
 	// for versions 1-10, set 10 keys
 	for v := uint64(1); v <= toVersion; v++ {
-		cs := corestore.NewChangesetWithPairs(map[string]corestore.KVPairs{storeKey1: {}})
+		cs := corestore.NewChangesetWithPairs(v, map[string]corestore.KVPairs{storeKey1: {}})
 		for i := 0; i < keyCount; i++ {
 			key := fmt.Sprintf("key%03d", i)
 			val := fmt.Sprintf("val%03d-%03d", i, v)
@@ -685,7 +695,7 @@ func (s *StorageTestSuite) TestDatabase_Restore() {
 			cs.AddKVPair(storeKey1Bytes, corestore.KVPair{Key: []byte(key), Value: []byte(val)})
 		}
 
-		s.Require().NoError(db.ApplyChangeset(v, cs))
+		s.Require().NoError(db.ApplyChangeset(cs))
 	}
 
 	latestVersion, err := db.GetLatestVersion()
@@ -880,9 +890,149 @@ func (s *StorageTestSuite) TestRemovingOldStoreKey() {
 	}
 }
 
+// TestVersionExists tests the VersionExists method of the Database struct.
+func (s *StorageTestSuite) TestVersionExists() {
+	// Define test cases
+	testCases := []struct {
+		name           string
+		setup          func(t *testing.T, db *StorageStore)
+		version        uint64
+		expectedExists bool
+		expectError    bool
+	}{
+		{
+			name: "Fresh database: version 0 exists",
+			setup: func(t *testing.T, db *StorageStore) {
+				t.Helper()
+				// No setup needed for fresh database
+			},
+			version:        0,
+			expectedExists: true,
+			expectError:    false,
+		},
+		{
+			name: "Fresh database: version 1 exists",
+			setup: func(t *testing.T, db *StorageStore) {
+				t.Helper()
+				// No setup needed for fresh database
+			},
+			version:        1,
+			expectedExists: false,
+			expectError:    false,
+		},
+		{
+			name: "After setting latest version to 10, version 5 exists",
+			setup: func(t *testing.T, db *StorageStore) {
+				t.Helper()
+				err := db.SetLatestVersion(10)
+				if err != nil {
+					t.Fatalf("Setting latest version should not error: %v", err)
+				}
+			},
+			version:        5,
+			expectedExists: true, // Since pruning hasn't occurred, earliestVersion is still 0
+			expectError:    false,
+		},
+		{
+			name: "After setting latest version to 10 and pruning to 5, version 4 does not exist",
+			setup: func(t *testing.T, db *StorageStore) {
+				t.Helper()
+				err := db.SetLatestVersion(10)
+				if err != nil {
+					t.Fatalf("Setting latest version should not error: %v", err)
+				}
+
+				err = db.Prune(5)
+				if err != nil {
+					t.Fatalf("Pruning to version 5 should not error: %v", err)
+				}
+			},
+			version:        4,
+			expectedExists: false,
+			expectError:    false,
+		},
+		{
+			name: "After setting latest version to 10 and pruning to 5, version 5 does not exist",
+			setup: func(t *testing.T, db *StorageStore) {
+				t.Helper()
+				err := db.SetLatestVersion(10)
+				if err != nil {
+					t.Fatalf("Setting latest version should not error: %v", err)
+				}
+
+				err = db.Prune(5)
+				if err != nil {
+					t.Fatalf("Pruning to version 5 should not error: %v", err)
+				}
+			},
+			version:        5,
+			expectedExists: false,
+			expectError:    false,
+		},
+		{
+			name: "After setting latest version to 10 and pruning to 5, version 6 exists",
+			setup: func(t *testing.T, db *StorageStore) {
+				t.Helper()
+				err := db.SetLatestVersion(10)
+				if err != nil {
+					t.Fatalf("Setting latest version should not error: %v", err)
+				}
+
+				err = db.Prune(5)
+				if err != nil {
+					t.Fatalf("Pruning to version 5 should not error: %v", err)
+				}
+			},
+			version:        6,
+			expectedExists: true,
+			expectError:    false,
+		},
+		{
+			name: "After pruning to 0, all versions >=1 exist",
+			setup: func(t *testing.T, db *StorageStore) {
+				t.Helper()
+				err := db.SetLatestVersion(10)
+				if err != nil {
+					t.Fatalf("Setting latest version should not error: %v", err)
+				}
+				// Prune to version 0
+				err = db.Prune(0)
+				if err != nil {
+					t.Fatalf("Pruning to version 0 should not error: %v", err)
+				}
+			},
+			version:        1,
+			expectedExists: true,
+			expectError:    false,
+		},
+	}
+
+	// Iterate over each test case
+	for _, tc := range testCases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			// Initialize the database for each test
+			db, err := s.NewDB(t.TempDir())
+			require.NoError(t, err, "Failed to initialize the database")
+			defer db.Close()
+
+			// Setup test environment
+			tc.setup(t, db)
+
+			// Call VersionExists and check the result
+			exists, err := db.VersionExists(tc.version)
+			if tc.expectError {
+				require.Error(t, err, "Expected error but got none")
+			} else {
+				require.NoError(t, err, "Did not expect an error but got one")
+				require.Equal(t, tc.expectedExists, exists, "Version existence mismatch")
+			}
+		})
+	}
+}
+
 func dbApplyChangeset(
 	t *testing.T,
-	db store.VersionedDatabase,
+	db store.VersionedWriter,
 	version uint64,
 	storeKey string,
 	keys, vals [][]byte,
@@ -892,7 +1042,7 @@ func dbApplyChangeset(
 	require.Greater(t, version, uint64(0))
 	require.Equal(t, len(keys), len(vals))
 
-	cs := corestore.NewChangeset()
+	cs := corestore.NewChangeset(version)
 	for i := 0; i < len(keys); i++ {
 		remove := false
 		if vals[i] == nil {
@@ -902,5 +1052,5 @@ func dbApplyChangeset(
 		cs.AddKVPair([]byte(storeKey), corestore.KVPair{Key: keys[i], Value: vals[i], Remove: remove})
 	}
 
-	require.NoError(t, db.ApplyChangeset(version, cs))
+	require.NoError(t, db.ApplyChangeset(cs))
 }

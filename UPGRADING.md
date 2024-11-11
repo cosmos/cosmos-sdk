@@ -464,6 +464,23 @@ if err != nil {
 }
 ```
 
+##### TX Decoder
+
+In order to support x/accounts properly we need to init a `TxDecoder`, modify your `app.go`:
+
+```diff
+import (
++ 	txdecode "cosmossdk.io/x/tx/decode"
+)
++	txDecoder, err := txdecode.NewDecoder(txdecode.Options{
++		SigningContext: signingCtx,
++		ProtoCodec:     appCodec,
++	})
++	if err != nil {
++		panic(err)
++	}
+```
+
 #### `x/crisis`
 
 The `x/crisis` module was removed due to it not being supported or functional any longer. 
@@ -638,7 +655,7 @@ simd config migrate v0.50
 
 If you were using `<appd> config [key]` or `<appd> config [key] [value]` to set and get values from the `client.toml`, replace it with `<appd> config get client [key]` and `<appd> config set client [key] [value]`. The extra verbosity is due to the extra functionalities added in config.
 
-More information about [confix](https://docs.cosmos.network/main/tooling/confix) and how to add it in your application binary in the [documentation](https://docs.cosmos.network/main/tooling/confix).
+More information about [confix](https://docs.cosmos.network/main/build/tooling/confix) and how to add it in your application binary in the [documentation](https://docs.cosmos.network/main/build/tooling/confix).
 
 #### gRPC-Web
 

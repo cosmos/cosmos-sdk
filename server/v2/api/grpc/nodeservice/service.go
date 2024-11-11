@@ -40,10 +40,6 @@ func (s queryServer) Status(ctx context.Context, _ *StatusRequest) (*StatusRespo
 	headerInfo := environment.HeaderService.HeaderInfo(ctx)
 
 	return &StatusResponse{
-		// TODO: Get earliest version from store.
-		//
-		// Ref: ...
-		// EarliestStoreHeight: sdkCtx.MultiStore(),
 		Height:        uint64(headerInfo.Height),
 		Timestamp:     &headerInfo.Time,
 		AppHash:       headerInfo.AppHash,

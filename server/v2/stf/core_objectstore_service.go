@@ -42,6 +42,13 @@ func ObjectCacheCopy(c Cache) *Cache {
 	}
 }
 
+// Merge cache takes in the original cache and merges in the new cache
+func MergeCache(c *Cache, other Cache) {
+	for k, v := range other.m {
+		c.m[k] = v
+	}
+}
+
 // Get returns nil if key doesn't exist. Panics on nil key.
 // Contract: The set value must removed at the end of the block.
 func (c Cache) Set(prefix []byte, value any) {

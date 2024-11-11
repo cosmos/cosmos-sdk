@@ -36,9 +36,11 @@ func (bs BranchService) ExecuteWithGasLimit(
 
 	originalGasMeter := exCtx.meter
 
+	c1 := exCtx.GetCache()
+
 	exCtx.setGasLimit(gasLimit)
 	// Create a new cache from a copy of the existing cache for branching
-	exCtx.SetCache(ObjectCacheCopy(exCtx.GetCache()))
+	exCtx.SetCache(ObjectCacheCopy(c1))
 
 	// execute branched, with predefined gas limit.
 	err = bs.execute(exCtx, f)
@@ -46,6 +48,10 @@ func (bs BranchService) ExecuteWithGasLimit(
 	gasUsed = exCtx.meter.Limit() - exCtx.meter.Remaining()
 	_ = originalGasMeter.Consume(gasUsed, "execute-with-gas-limit")
 	exCtx.setGasLimit(originalGasMeter.Remaining())
+
+	c2 := exCtx.GetCache()
+	MergeCache(&c1, c2)
+	exCtx.SetCache(c1)
 
 	return gasUsed, err
 }

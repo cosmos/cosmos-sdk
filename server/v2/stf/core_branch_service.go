@@ -82,9 +82,9 @@ func (bs BranchService) execute(ctx *executionContext, f func(ctx context.Contex
 	}
 
 	// merge the cache in the case of no error
-	c1 := ctx.GetCache()
-	c2 := branchedCtx.GetCache()
-	MergeCache(&c1, c2)
+	c1 := ctx.GetCache().(*Cache)
+	c2 := branchedCtx.GetCache().(*Cache)
+	MergeCache(c1, c2)
 	ctx.SetCache(c1)
 
 	return nil

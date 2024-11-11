@@ -444,7 +444,7 @@ func TestSTF(t *testing.T) {
 
 		// test validate tx with exec mode as finalize
 		_, _, err := s.validateTx(context.Background(), s.branchFn(state), mockTx.GasLimit,
-			mockTx, transaction.ExecModeFinalize)
+			mockTx, transaction.ExecModeFinalize, nil) //TODO
 		if err != nil {
 			t.Errorf("validateTx error: %v", err)
 		}

@@ -43,7 +43,7 @@ func ObjectCacheCopy(c Cache) *Cache {
 }
 
 // Merge cache takes in the original cache and merges in the new cache
-func MergeCache(c *Cache, other Cache) {
+func MergeCache(c *Cache, other *Cache) {
 	for k, v := range other.m {
 		c.m[k] = v
 	}
@@ -51,7 +51,7 @@ func MergeCache(c *Cache, other Cache) {
 
 // Get returns nil if key doesn't exist. Panics on nil key.
 // Contract: The set value must removed at the end of the block.
-func (c Cache) Set(prefix []byte, value any) {
+func (c *Cache) Set(prefix []byte, value any) {
 	_, exists := c.m[unsafeString(prefix)]
 	if exists {
 		c.m[unsafeString(prefix)] = value
@@ -60,13 +60,13 @@ func (c Cache) Set(prefix []byte, value any) {
 }
 
 // Get returns nil if key doesn't exist.
-func (c Cache) Get(prefix []byte) (value any, ok bool) {
+func (c *Cache) Get(prefix []byte) (value any, ok bool) {
 	value, ok = c.m[unsafeString(prefix)]
 	return
 }
 
 // Delete deletes the key.
-func (c Cache) Delete(prefix []byte) {
+func (c *Cache) Delete(prefix []byte) {
 	c.m[unsafeString(prefix)] = nil
 }
 

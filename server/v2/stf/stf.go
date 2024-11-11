@@ -146,7 +146,13 @@ func (s STF[T]) DeliverBlock(
 		if err = isCtxCancelled(ctx); err != nil {
 			return nil, nil, err
 		}
-		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi, int32(i+1))
+		exCtx, err := getExecutionCtxFromContext(ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+		cache := exCtx.GetCache()
+		txResults[i] = s.deliverTx(exCtx, newState, txBytes, transaction.ExecModeFinalize, hi, int32(i+1), cache)
+		exCtx.SetCache(cache)
 	}
 	// reset events
 	exCtx.events = make([]event.Event, 0)
@@ -173,6 +179,7 @@ func (s STF[T]) deliverTx(
 	execMode transaction.ExecMode,
 	hi header.Info,
 	txIndex int32,
+	cache store.ObjectStore,
 ) server.TxResult {
 	// recover in the case of a panic
 	var recoveryError error
@@ -195,7 +202,8 @@ func (s STF[T]) deliverTx(
 			Error: recoveryError,
 		}
 	}
-	validateGas, validationEvents, err := s.validateTx(ctx, state, gasLimit, tx, execMode)
+	// need to get the previous cache
+	validateGas, validationEvents, err := s.validateTx(ctx, state, gasLimit, tx, execMode, cache)
 	if err != nil {
 		return server.TxResult{
 			Error: err,
@@ -211,7 +219,7 @@ func (s STF[T]) deliverTx(
 		events = append(events, e)
 	}
 
-	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
+	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi, cache)
 	// set the TxIndex in the exec events
 	for _, e := range execEvents {
 		e.BlockStage = appdata.TxProcessingStage
@@ -236,6 +244,7 @@ func (s STF[T]) validateTx(
 	gasLimit uint64,
 	tx T,
 	execMode transaction.ExecMode,
+	cache store.ObjectStore,
 ) (gasUsed uint64, events []event.Event, err error) {
 	validateState := s.branchFn(state)
 	hi, err := s.getHeaderInfo(validateState)
@@ -245,6 +254,7 @@ func (s STF[T]) validateTx(
 	validateCtx := s.makeContext(ctx, RuntimeIdentity, validateState, execMode)
 	validateCtx.setHeaderInfo(hi)
 	validateCtx.setGasLimit(gasLimit)
+	validateCtx.SetCache(cache)
 	err = s.doTxValidation(validateCtx, tx)
 	if err != nil {
 		return 0, nil, err
@@ -263,16 +273,22 @@ func (s STF[T]) execTx(
 	tx T,
 	execMode transaction.ExecMode,
 	hi header.Info,
+	cache store.ObjectStore,
 ) ([]transaction.Msg, uint64, []event.Event, error) {
 	execState := s.branchFn(state)
 
-	msgsResp, gasUsed, runTxMsgsEvents, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode, hi)
+	msgsResp, gasUsed, runTxMsgsEvents, txErr := s.runTxMsgs(ctx, execState, gasLimit, tx, execMode, hi, cache)
 	if txErr != nil {
 		// in case of error during message execution, we do not apply the exec state.
 		// instead we run the post exec handler in a new branchFn from the initial state.
+		exCtx, err := getExecutionCtxFromContext(ctx)
+		if err != nil {
+			return nil, 0, nil, err
+		}
 		postTxState := s.branchFn(state)
 		postTxCtx := s.makeContext(ctx, RuntimeIdentity, postTxState, execMode)
 		postTxCtx.setHeaderInfo(hi)
+		postTxCtx.SetCache(exCtx.decodedCache)
 
 		postTxErr := s.postTxExec(postTxCtx, tx, false)
 		if postTxErr != nil {
@@ -328,6 +344,7 @@ func (s STF[T]) runTxMsgs(
 	tx T,
 	execMode transaction.ExecMode,
 	hi header.Info,
+	cache store.ObjectStore,
 ) ([]transaction.Msg, uint64, []event.Event, error) {
 	txSenders, err := tx.GetSenders()
 	if err != nil {
@@ -338,10 +355,10 @@ func (s STF[T]) runTxMsgs(
 		return nil, 0, nil, err
 	}
 	msgResps := make([]transaction.Msg, len(msgs))
-
 	execCtx := s.makeContext(ctx, RuntimeIdentity, state, execMode)
 	execCtx.setHeaderInfo(hi)
 	execCtx.setGasLimit(gasLimit)
+	execCtx.SetCache(cache)
 	events := make([]event.Event, 0)
 	for i, msg := range msgs {
 		execCtx.sender = txSenders[i]
@@ -443,7 +460,7 @@ func (s STF[T]) Simulate(
 	if err != nil {
 		return server.TxResult{}, nil
 	}
-	txr := s.deliverTx(ctx, simulationState, tx, internal.ExecModeSimulate, hi, 0)
+	txr := s.deliverTx(ctx, simulationState, tx, internal.ExecModeSimulate, hi, 0, NewObjectCache())
 
 	return txr, simulationState
 }
@@ -457,7 +474,7 @@ func (s STF[T]) ValidateTx(
 	tx T,
 ) server.TxResult {
 	validationState := s.branchFn(state)
-	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx, transaction.ExecModeCheck)
+	gasUsed, events, err := s.validateTx(ctx, validationState, gasLimit, tx, transaction.ExecModeCheck, NewObjectCache())
 	return server.TxResult{
 		Events:  events,
 		GasUsed: gasUsed,
@@ -546,8 +563,8 @@ func (e *executionContext) setGasLimit(limit uint64) {
 	e.state = meteredState
 }
 
-func (e *executionContext) GetCache() Cache {
-	return e.decodedCache.(Cache)
+func (e *executionContext) GetCache() store.ObjectStore {
+	return e.decodedCache
 }
 
 func (e *executionContext) SetCache(cache store.ObjectStore) {

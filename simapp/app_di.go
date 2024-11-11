@@ -21,6 +21,8 @@ import (
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
 	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
+	"cosmossdk.io/x/accounts/testing/account_abstraction"
+	"cosmossdk.io/x/accounts/testing/counter"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	consensuskeeper "cosmossdk.io/x/consensus/keeper"
@@ -184,6 +186,10 @@ func NewSimApp(
 				//				return fmt.Errorf("invalid pub key size")
 				//			}
 				// 		})
+
+				// TESTING: do not add below account types
+				counter.ProvideAccount,
+				account_abstraction.ProvideAccount,
 			),
 		)
 	)
@@ -300,14 +306,15 @@ func (app *SimApp) setCustomAnteHandler() {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
 			ante.HandlerOptions{
-				AccountKeeper:      app.AuthKeeper,
-				BankKeeper:         app.BankKeeper,
-				ConsensusKeeper:    app.ConsensusParamsKeeper,
-				SignModeHandler:    app.txConfig.SignModeHandler(),
-				FeegrantKeeper:     app.FeeGrantKeeper,
-				SigGasConsumer:     ante.DefaultSigVerificationGasConsumer,
-				UnorderedTxManager: app.UnorderedTxManager,
-				Environment:        app.AuthKeeper.Environment,
+				AccountKeeper:            app.AuthKeeper,
+				BankKeeper:               app.BankKeeper,
+				ConsensusKeeper:          app.ConsensusParamsKeeper,
+				SignModeHandler:          app.txConfig.SignModeHandler(),
+				FeegrantKeeper:           app.FeeGrantKeeper,
+				SigGasConsumer:           ante.DefaultSigVerificationGasConsumer,
+				UnorderedTxManager:       app.UnorderedTxManager,
+				Environment:              app.AuthKeeper.Environment,
+				AccountAbstractionKeeper: app.AccountsKeeper,
 			},
 			&app.CircuitBreakerKeeper,
 		},

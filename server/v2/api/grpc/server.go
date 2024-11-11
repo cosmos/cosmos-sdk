@@ -35,6 +35,15 @@ const (
 	BlockHeightHeader = "x-cosmos-block-height"
 )
 
+type queryable interface {
+	Query(
+		ctx context.Context,
+		state corestore.ReaderMap,
+		gasLimit uint64,
+		req transaction.Msg,
+	) (transaction.Msg, error)
+}
+
 type Server[T transaction.Tx] struct {
 	logger     log.Logger
 	config     *Config
@@ -61,14 +70,7 @@ func New[T transaction.Tx](
 	gasLimit uint64,
 	interfaceRegistry server.InterfaceRegistry,
 	queryHandlers map[string]appmodulev2.Handler,
-	queryable interface {
-		Query(
-			ctx context.Context,
-			state corestore.ReaderMap,
-			gasLimit uint64,
-			req transaction.Msg,
-		) (transaction.Msg, error)
-	},
+	queryable queryable,
 	cfg server.ConfigMap,
 	cfgOptions ...CfgOption,
 ) (*Server[T], error) {

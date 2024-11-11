@@ -9,13 +9,12 @@ import (
 	"google.golang.org/grpc/status"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
-	"cosmossdk.io/core/transaction"
 )
 
 // v2Service implements the gRPC service interface for handling queries and listing handlers.
 type v2Service struct {
 	queryHandlers map[string]appmodulev2.Handler
-	queryable     func(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error)
+	queryable     queryable
 }
 
 // Query handles incoming query requests by unmarshaling the request, processing it,

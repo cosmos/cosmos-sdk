@@ -15,4 +15,6 @@ require (
 	google.golang.org/protobuf v1.35.1 // indirect
 )
 
+replace cosmossdk.io/core => ../../../core
+
 replace cosmossdk.io/core/testing => ../../../core/testing

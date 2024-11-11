@@ -18,6 +18,8 @@ func (bs BranchService) Execute(ctx context.Context, f func(ctx context.Context)
 	if err != nil {
 		return err
 	}
+	// Create a new cache for branching
+	exCtx.SetCache(NewObjectCache())
 
 	return bs.execute(exCtx, f)
 }
@@ -35,6 +37,8 @@ func (bs BranchService) ExecuteWithGasLimit(
 	originalGasMeter := exCtx.meter
 
 	exCtx.setGasLimit(gasLimit)
+	// Create a new cache for branching
+	exCtx.SetCache(NewObjectCache())
 
 	// execute branched, with predefined gas limit.
 	err = bs.execute(exCtx, f)

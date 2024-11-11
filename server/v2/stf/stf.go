@@ -521,6 +521,9 @@ type executionContext struct {
 	// execMode retains information about the exec mode.
 	execMode transaction.ExecMode
 
+	// cache is the cache for the execution context.
+	decodedCache store.ObjectStore
+
 	branchFn            branchFn
 	makeGasMeter        makeGasMeterFn
 	makeGasMeteredStore makeGasMeteredStateFn
@@ -541,6 +544,10 @@ func (e *executionContext) setGasLimit(limit uint64) {
 
 	e.meter = meter
 	e.state = meteredState
+}
+
+func (e *executionContext) SetCache(cache store.ObjectStore) {
+	e.decodedCache = cache
 }
 
 func (e *executionContext) Value(key any) any {
@@ -600,6 +607,7 @@ func newExecutionContext(
 		unmeteredState:      state,
 		state:               meteredState,
 		meter:               meter,
+		decodedCache:        NewObjectCache(),
 		events:              make([]event.Event, 0),
 		headerInfo:          header.Info{},
 		execMode:            execMode,

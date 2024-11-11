@@ -16,6 +16,11 @@ ixc_schema = { path = "../schema", version = "0.0.4" }
 ixc_core_macros = { path = "../core_macros", version = "0.0.4" }
 allocator-api2 = "0.2.18"
 constcat = "0.5.1"
+litemap = "0.7.3"
+
+[build-dependencies]
+toml = "0.8.19"
+quote = "1.0.37"
 
 [features]
 default = ["std"]

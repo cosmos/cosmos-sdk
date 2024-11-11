@@ -18,8 +18,6 @@ func (bs BranchService) Execute(ctx context.Context, f func(ctx context.Context)
 	if err != nil {
 		return err
 	}
-	// Create a new cache from a copy of the existing cache for branching
-	exCtx.SetCache(ObjectCacheCopy(exCtx.GetCache()))
 
 	return bs.execute(exCtx, f)
 }
@@ -36,11 +34,7 @@ func (bs BranchService) ExecuteWithGasLimit(
 
 	originalGasMeter := exCtx.meter
 
-	c1 := exCtx.GetCache()
-
 	exCtx.setGasLimit(gasLimit)
-	// Create a new cache from a copy of the existing cache for branching
-	exCtx.SetCache(ObjectCacheCopy(c1))
 
 	// execute branched, with predefined gas limit.
 	err = bs.execute(exCtx, f)
@@ -48,10 +42,6 @@ func (bs BranchService) ExecuteWithGasLimit(
 	gasUsed = exCtx.meter.Limit() - exCtx.meter.Remaining()
 	_ = originalGasMeter.Consume(gasUsed, "execute-with-gas-limit")
 	exCtx.setGasLimit(originalGasMeter.Remaining())
-
-	c2 := exCtx.GetCache()
-	MergeCache(&c1, c2)
-	exCtx.SetCache(c1)
 
 	return gasUsed, err
 }
@@ -90,6 +80,12 @@ func (bs BranchService) execute(ctx *executionContext, f func(ctx context.Contex
 	if err != nil {
 		return err
 	}
+
+	// merge the cache in the case of no error
+	c1 := ctx.GetCache()
+	c2 := branchedCtx.GetCache()
+	MergeCache(&c1, c2)
+	ctx.SetCache(c1)
 
 	return nil
 }

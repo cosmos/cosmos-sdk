@@ -67,7 +67,7 @@ func (c Cache) Get(prefix []byte) (value any, ok bool) {
 
 // Delete deletes the key.
 func (c Cache) Delete(prefix []byte) {
-	delete(c.m, unsafeString(prefix))
+	c.m[unsafeString(prefix)] = nil
 }
 
 func unsafeString(b []byte) string { return *(*string)(unsafe.Pointer(&b)) }

@@ -61,6 +61,7 @@ impl<'a> ixc_schema::encoder::Encoder for Encoder<'a> {
         if x == 0 && !self.emit_defaults {
             return Ok(());
         }
+        todo!()
     }
 
     fn encode_i8(&mut self, x: i8) -> Result<(), EncodeError> {

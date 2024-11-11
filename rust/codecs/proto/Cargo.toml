@@ -9,7 +9,7 @@ publish = false
 [dependencies]
 ixc_schema = { path = "../../schema" }
 ixc_message_api = { path = "../../message_api" }
-simple_time = { path = "../../util/simple_time", version = "0.0.1" }
+simple_time = { path = "../../util/simple_time" }
 integer-encoding = "4.0.2"
 
 [lints]

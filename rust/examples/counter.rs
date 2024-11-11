@@ -36,7 +36,7 @@ pub mod counter {
     }
 }
 
-const HANDLER_0: counter::Counter = unsafe { <counter::Counter as ::ixc::core::resource::Resources>::new(&<::ixc::core::resource::ResourceScope as core::default::Default>::default()).unwrap() };
+const HANDLER_0: counter::Counter = unsafe { ::ixc::core::resource::new_unwrap::<counter::Counter>(&<::ixc::core::resource::ResourceScope as core::default::Default>::default()) };
 
 const HANDLER_DESCRIPTOR_0: &[RawHandlerDescriptor] = &[RawHandlerDescriptor {
     name: b"Counter\0".as_ptr(),

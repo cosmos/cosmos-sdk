@@ -9,7 +9,8 @@ members = [
     "message_api",
     "testing",
     "util/simple_time",
-#    "codecs/proto", "codecs/evm",
+    "codecs/proto",
+#    "codecs/evm",
 #    "vm/wasmtime",
     "vm/api",
 #    "vm/hypervisor",
@@ -69,3 +70,7 @@ default = []
 
 [profile.release]
 lto = true
+
+[[example]]
+name = "counter"
+crate-type = ["cdylib"]

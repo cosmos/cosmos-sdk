@@ -16,37 +16,6 @@ import (
 	"cosmossdk.io/log"
 )
 
-// ServerComponent is a server module that can be started and stopped.
-type ServerComponent[T transaction.Tx] interface {
-	Name() string
-
-	Start(context.Context) error
-	Stop(context.Context) error
-}
-
-// HasStartFlags is a server module that has start flags.
-type HasStartFlags interface {
-	// StartCmdFlags returns server start flags.
-	// Those flags should be prefixed with the server name.
-	// They are then merged with the server config in one viper instance.
-	StartCmdFlags() *pflag.FlagSet
-}
-
-// HasConfig is a server module that has a config.
-type HasConfig interface {
-	Config() any
-}
-
-// ConfigWriter is a server module that can write its config to a file.
-type ConfigWriter interface {
-	WriteConfig(path string) error
-}
-
-// HasCLICommands is a server module that has CLI commands.
-type HasCLICommands interface {
-	CLICommands() CLIConfig
-}
-
 // CLIConfig defines the CLI configuration for a module server.
 type CLIConfig struct {
 	// Commands defines the main command of a module server.

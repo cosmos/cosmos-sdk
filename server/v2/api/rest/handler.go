@@ -14,6 +14,7 @@ import (
 
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
+	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/appmanager"
 )
 
@@ -23,7 +24,7 @@ const (
 	BlockHeightHeader = "x-cosmos-block-height"
 )
 
-func NewDefaultHandler[T transaction.Tx](stf appmanager.StateTransitionFunction[T], store Store, gasLimit uint64) http.Handler {
+func NewDefaultHandler[T transaction.Tx](stf appmanager.StateTransitionFunction[T], store serverv2.Store, gasLimit uint64) http.Handler {
 	return &DefaultHandler[T]{
 		stf:      stf,
 		store:    store,
@@ -33,7 +34,7 @@ func NewDefaultHandler[T transaction.Tx](stf appmanager.StateTransitionFunction[
 
 type DefaultHandler[T transaction.Tx] struct {
 	stf      appmanager.StateTransitionFunction[T]
-	store    Store
+	store    serverv2.Store
 	gasLimit uint64
 }
 

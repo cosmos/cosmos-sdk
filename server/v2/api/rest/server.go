@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"cosmossdk.io/core/server"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
@@ -26,20 +25,9 @@ type Server[T transaction.Tx] struct {
 	cfgOptions []CfgOption
 }
 
-type Store interface {
-	// StateLatest returns a readonly view over the latest
-	// committed state of the store. Alongside the version
-	// associated with it.
-	StateLatest() (uint64, store.ReaderMap, error)
-
-	// StateAt returns a readonly view over the provided
-	// state. Must error when the version does not exist.
-	StateAt(version uint64) (store.ReaderMap, error)
-}
-
 func New[T transaction.Tx](
 	stf appmanager.StateTransitionFunction[T],
-	store Store,
+	store serverv2.Store,
 	gasLimit uint64,
 	logger log.Logger,
 	cfg server.ConfigMap,

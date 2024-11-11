@@ -27,6 +27,7 @@ import (
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
+	"cosmossdk.io/server/v2/appmanager"
 )
 
 const (
@@ -35,7 +36,7 @@ const (
 	BlockHeightHeader = "x-cosmos-block-height"
 )
 
-type queryable interface {
+type queryFunc interface {
 	Query(
 		ctx context.Context,
 		state corestore.ReaderMap,
@@ -52,25 +53,15 @@ type Server[T transaction.Tx] struct {
 	grpcSrv *grpc.Server
 }
 
-type Store interface {
-	// StateLatest returns a readonly view over the latest
-	// committed state of the store. Alongside the version
-	// associated with it.
-	StateLatest() (uint64, corestore.ReaderMap, error)
-
-	// StateAt returns a readonly view over the provided
-	// state. Must error when the version does not exist.
-	StateAt(version uint64) (corestore.ReaderMap, error)
-}
-
 // New creates a new grpc server.
 func New[T transaction.Tx](
 	logger log.Logger,
-	store Store,
+	store serverv2.Store,
+	stf appmanager.StateTransitionFunction[T],
 	gasLimit uint64,
 	interfaceRegistry server.InterfaceRegistry,
 	queryHandlers map[string]appmodulev2.Handler,
-	queryable queryable,
+	queryable queryFunc,
 	cfg server.ConfigMap,
 	cfgOptions ...CfgOption,
 ) (*Server[T], error) {
@@ -95,7 +86,13 @@ func New[T transaction.Tx](
 	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(queryHandlers)), logger.With("sub-module", "grpc-reflection"))
 
 	// Register V2 grpc handlers
-	RegisterServiceServer(grpcSrv, &v2Service{queryHandlers, queryable})
+	RegisterServiceServer(grpcSrv, &v2Service[T]{
+		queryHandlers,
+		queryable,
+		stf,
+		store,
+		gasLimit,
+	})
 
 	srv.grpcSrv = grpcSrv
 	srv.config = serverCfg
@@ -127,7 +124,7 @@ func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier 
 		req transaction.Msg,
 	) (transaction.Msg, error)
 },
-	store Store,
+	store serverv2.Store,
 	gasLimit uint64,
 ) grpc.StreamHandler {
 	getRegistry := sync.OnceValues(gogoproto.MergedRegistry)

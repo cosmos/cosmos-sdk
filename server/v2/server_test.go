@@ -52,7 +52,7 @@ func TestServer(t *testing.T) {
 	logger := log.NewLogger(os.Stdout)
 	ctx := serverv2.SetServerContext(context.Background(), v, logger)
 
-	grpcServer, err := grpc.New[transaction.Tx](logger, nil, 100_000, app.InterfaceRegistry(), app.QueryHandlers(), app, cfg)
+	grpcServer, err := grpc.New[transaction.Tx](logger, nil, nil, 100_000, app.InterfaceRegistry(), app.QueryHandlers(), app, cfg)
 	require.NoError(t, err)
 
 	storeServer, err := store.New[transaction.Tx](&mockStore{}, cfg)

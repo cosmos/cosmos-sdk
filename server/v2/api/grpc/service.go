@@ -9,17 +9,24 @@ import (
 	"google.golang.org/grpc/status"
 
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	corestore "cosmossdk.io/core/store"
+	"cosmossdk.io/core/transaction"
+	serverv2 "cosmossdk.io/server/v2"
+	"cosmossdk.io/server/v2/appmanager"
 )
 
 // v2Service implements the gRPC service interface for handling queries and listing handlers.
-type v2Service struct {
+type v2Service[T transaction.Tx] struct {
 	queryHandlers map[string]appmodulev2.Handler
-	queryable     queryable
+	queryable     queryFunc
+	stf           appmanager.StateTransitionFunction[T]
+	store         serverv2.Store
+	gaslimit      uint64
 }
 
 // Query handles incoming query requests by unmarshaling the request, processing it,
 // and returning the response in an Any protobuf message.
-func (s v2Service) Query(ctx context.Context, request *QueryRequest) (*QueryResponse, error) {
+func (s v2Service[T]) Query(ctx context.Context, request *QueryRequest) (*QueryResponse, error) {
 	if request == nil || request.Request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -36,7 +43,25 @@ func (s v2Service) Query(ctx context.Context, request *QueryRequest) (*QueryResp
 		return nil, status.Errorf(codes.InvalidArgument, "failed to unmarshal request: %v", err)
 	}
 
-	queryResp, err := s.queryable(ctx, 0, protoMsg)
+	height, err := getHeightFromCtx(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid get height from context: %v", err)
+	}
+
+	var state corestore.ReaderMap
+	if height == 0 {
+		_, state, err = s.store.StateLatest()
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to get latest state: %v", err)
+		}
+	} else {
+		state, err = s.store.StateAt(height)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to get state at height %d: %v", height, err)
+		}
+	}
+
+	queryResp, err := s.queryable.Query(ctx, state, s.gaslimit, protoMsg)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "query failed: %v", err)
 	}
@@ -54,7 +79,7 @@ func (s v2Service) Query(ctx context.Context, request *QueryRequest) (*QueryResp
 	return &QueryResponse{Response: anyResp}, nil
 }
 
-func (s v2Service) ListQueryHandlers(_ context.Context, _ *ListQueryHandlersRequest) (*ListQueryHandlersResponse, error) {
+func (s v2Service[T]) ListQueryHandlers(_ context.Context, _ *ListQueryHandlersRequest) (*ListQueryHandlersResponse, error) {
 	var handlerDescriptors []*Handler
 	for handlerName := range s.queryHandlers {
 		msg := s.queryHandlers[handlerName].MakeMsg()

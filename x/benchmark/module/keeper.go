@@ -34,7 +34,7 @@ func (k *Keeper) LoadTest(ctx context.Context, msg *benchmark.MsgLoadTest) (*ben
 }
 
 func (k *Keeper) measureSince(since time.Time, opType string) {
-	k.telemetryService.MeasureSince(since, []string{"benchmark", "op"}, telemetry.Label{Name: "op-type", Value: opType})
+	k.telemetryService.MeasureSince(since, []string{"benchmark", "op"}, telemetry.Label{Name: "op", Value: opType})
 }
 
 func (k *Keeper) executeOp(ctx context.Context, op *benchmark.Op) error {

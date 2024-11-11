@@ -13,7 +13,7 @@ members = [
 #    "codecs/evm",
 #    "vm/wasmtime",
     "vm/api",
-#    "vm/hypervisor",
+    "vm/hypervisor",
     "example",
 ]
 

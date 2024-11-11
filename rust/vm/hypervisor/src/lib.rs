@@ -1,4 +1,6 @@
 //! Rust Cosmos SDK RFC 003 hypervisor implementation.
+
+use std::alloc::Layout;
 use ixc_core_macros::message_selector;
 use ixc_message_api::code::{ErrorCode};
 use ixc_message_api::handler::{Allocator, HostBackend, RawHandler};
@@ -57,7 +59,7 @@ impl<ST: StateHandler> Hypervisor<ST> {
 
     /// Invoke a message packet.
     pub fn invoke(&mut self, message_packet: &mut MessagePacket, allocator: &dyn Allocator) -> Result<(), ErrorCode> {
-        let tx = self.state_handler.new_transaction(message_packet.header().context_info.caller, true).
+        let tx = self.state_handler.new_transaction(message_packet.header().caller, true).
             map_err(|_| SystemCode(FatalExecutionError))?;
         let mut exec_context = ExecContext {
             vmdata: self.vmdata.clone(),
@@ -136,7 +138,7 @@ struct ExecContext<TX: Transaction> {
 
 impl<'a, TX: Transaction> ExecContext<TX> {
     fn get_account_handler_id(&self, account_id: AccountID) -> Option<HandlerID> {
-        let id: u64 = account_id.into();
+        let id: u128 = account_id.into();
         let key = format!("h:{}", id);
         let value = self.tx.borrow().raw_kv_get(HYPERVISOR_ACCOUNT, key.as_bytes())?;
         self.parse_handler_id(&value)
@@ -145,7 +147,7 @@ impl<'a, TX: Transaction> ExecContext<TX> {
     fn init_next_account(&self, handler_id: &HandlerID) -> Result<AccountID, PushFrameError> {
         let mut tx = self.tx.borrow_mut();
         let id = tx.raw_kv_get(HYPERVISOR_ACCOUNT, b"next_account_id").map_or(ACCOUNT_ID_NON_RESERVED_START, |v| {
-            u64::from_le_bytes(v.try_into().unwrap())
+            u128::from_le_bytes(v.try_into().unwrap())
         });
         // we push a new storage frame here because if initialization fails all of this gets rolled back
         tx.init_account_storage(AccountID::new(id))?;
@@ -156,7 +158,7 @@ impl<'a, TX: Transaction> ExecContext<TX> {
 
     fn destroy_current_account_data(&self) -> Result<(), ()> {
         let current_account = self.tx.borrow().active_account();
-        let id: u64 = current_account.into();
+        let id: u128 = current_account.into();
         let key = format!("h:{}", id);
         self.tx.borrow().raw_kv_delete(HYPERVISOR_ACCOUNT, key.as_bytes());
         self.tx.borrow_mut().self_destruct_account()
@@ -167,7 +169,7 @@ impl<'a, TX: Transaction> ExecContext<TX> {
     }
 }
 
-const ACCOUNT_ID_NON_RESERVED_START: u64 = u16::MAX as u64 + 1;
+const ACCOUNT_ID_NON_RESERVED_START: u128 = u16::MAX as u128 + 1;
 
 const HYPERVISOR_ACCOUNT: AccountID = AccountID::new(1);
 const STATE_ACCOUNT: AccountID = AccountID::new(2);
@@ -177,12 +179,12 @@ impl<TX: Transaction> HostBackend for ExecContext<TX> {
         // get the mutable transaction from the RefCell
         // check if the caller matches the active account
         let account = self.tx.borrow().active_account();
-        if message_packet.header().context_info.caller != account {
+        if message_packet.header().caller != account {
             return Err(SystemCode(UnauthorizedCallerAccess));
         }
         // TODO support authorization middleware
 
-        let target_account = message_packet.header().context_info.account;
+        let target_account = message_packet.header().account;
         // check if the target account is a system account
         match target_account {
             HYPERVISOR_ACCOUNT => return self.handle_system_message(message_packet, allocator),
@@ -235,8 +237,8 @@ impl<TX: Transaction> ExecContext<TX> {
                     map_err(|_| SystemCode(FatalExecutionError))?;
                 let mut on_create_header = on_create_packet.header_mut();
                 // TODO: how do we specify a selector that can only be called by the system?
-                on_create_header.context_info.account = id;
-                on_create_header.context_info.caller = create_header.context_info.caller;
+                on_create_header.account = id;
+                on_create_header.caller = create_header.caller;
                 on_create_header.message_selector = ON_CREATE_SELECTOR;
                 on_create_header.in_pointer1.set_slice(init_data);
 
@@ -250,7 +252,11 @@ impl<TX: Transaction> ExecContext<TX> {
                     map_err(|_| SystemCode(FatalExecutionError))?;
 
                 if is_ok {
-                    create_header.in_pointer1.set_u64(id.into());
+                    let mut res = allocator.allocate(Layout::from_size_align_unchecked(16, 16)).
+                        map_err(|_| SystemCode(FatalExecutionError))?;
+                    let id: u128 = id.into();
+                    res.as_mut().copy_from_slice(&id.to_le_bytes());
+                    create_header.in_pointer1.set_slice(res.as_ref());
                     Ok(())
                 } else {
                     res

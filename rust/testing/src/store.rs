@@ -1,7 +1,7 @@
 use allocator_api2::alloc::Allocator;
 use imbl::{HashMap, OrdMap, Vector};
 use ixc_core_macros::message_selector;
-use crate::hypervisor::{CommitError, NewTxError, PopFrameError, PushFrameError, StateHandler, Transaction};
+use ixc_hypervisor::{CommitError, NewTxError, PopFrameError, PushFrameError, StateHandler, Transaction};
 use ixc_message_api::header::MessageSelector;
 use ixc_message_api::packet::MessagePacket;
 use ixc_message_api::AccountID;

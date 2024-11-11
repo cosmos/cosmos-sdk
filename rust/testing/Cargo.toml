@@ -15,6 +15,7 @@ ixc_message_api = { path = "../message_api", version = "0.0.4" }
 ixc_vm_api = { path = "../vm/api", version = "0.0.2" }
 ixc_schema = { path = "../schema", version = "0.0.4" }
 ixc_schema_macros = { path = "../schema_macros", version = "0.0.3" }
+ixc_hypervisor = { path = "../vm/hypervisor" }
 imbl = "3.0.0"
 arc-swap = "1.7.1"
 thiserror = "1.0.64"

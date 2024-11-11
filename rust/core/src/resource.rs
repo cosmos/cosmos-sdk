@@ -9,17 +9,6 @@ pub unsafe trait Resources: Sized {
     unsafe fn new(scope: &ResourceScope) -> Result<Self, InitializationError>;
 }
 
-/// Creates a new resource or panics if an error occurs.
-pub const unsafe fn new_unwrap<R: Resources>(scope: &ResourceScope) -> R {
-    // match  {
-    //     Ok(r) => { r }
-    //     Err(_) => { panic!("initialization error") }
-    // }
-    //
-
-    todo!()
-}
-
 /// The resource scope.
 #[derive(Default)]
 pub struct ResourceScope<'a> {

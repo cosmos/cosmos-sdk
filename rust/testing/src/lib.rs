@@ -2,31 +2,29 @@
 
 mod store;
 mod vm;
-mod hypervisor;
 
-use std::any::Any;
-use std::cell::{Cell, RefCell};
-use std::collections::{BTreeMap, HashMap};
+use crate::store::VersionedMultiStore;
+use crate::vm::NativeVM;
 use allocator_api2::alloc::Allocator;
-use ixc::SchemaValue;
-use ixc_message_api::{AccountID};
-use ixc_core::{Context};
 use ixc_core::account_api::{create_account_raw, ROOT_ACCOUNT};
-use ixc_core::handler::{Handler, Service, Client, InitMessage, HandlerClient};
+use ixc_core::handler::{Client, Handler, HandlerClient, InitMessage, Service};
 use ixc_core::resource::{InitializationError, ResourceScope, Resources};
-use ixc_core::routing::{Router};
-use crate::hypervisor::Hypervisor;
+use ixc_core::result::ClientResult;
+use ixc_core::routing::Router;
+use ixc_core::Context;
 use ixc_message_api::code::{ErrorCode, SystemCode};
 use ixc_message_api::handler::{HostBackend, RawHandler};
 use ixc_message_api::packet::MessagePacket;
+use ixc_message_api::AccountID;
 use ixc_schema::mem::MemoryManager;
-use crate::store::{VersionedMultiStore};
-use crate::vm::{NativeVM};
-use ixc_core::result::ClientResult;
+use std::any::Any;
+use std::cell::{Cell, RefCell};
+use std::collections::BTreeMap;
 
+use crate::default_account::{DefaultAccount, DefaultAccountCreate};
 #[doc(hidden)]
 pub use ixc_core::account_api::create_account;
-use crate::default_account::{DefaultAccount, DefaultAccountCreate};
+use ixc_hypervisor::Hypervisor;
 
 /// Defines a test harness for running tests against account and module implementations.
 pub struct TestApp {

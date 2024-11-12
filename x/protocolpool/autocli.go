@@ -89,6 +89,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 					GovProposal: true,
 				},
+				{
+					RpcMethod:      "UpdateParams",
+					Use:            "update-params-proposal <params>",
+					Short:          "Submit a proposal to update protocolpool module params. Note: the entire params must be provided.",
+					Example:        fmt.Sprintf(`%s tx protocolpool update-params-proposal '{ "enabled_distribution_denoms": ["stake", "foo"] }'`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
+					GovProposal:    true,
+				},
 			},
 		},
 	}

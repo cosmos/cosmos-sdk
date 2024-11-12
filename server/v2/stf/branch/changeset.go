@@ -15,7 +15,7 @@ const (
 
 var errKeyEmpty = errors.New("key cannot be empty")
 
-// changeSet implements the sorted cache for cachekv store,
+// changeSet implements the sorted tree for cachekv store,
 // we don't use MemDB here because cachekv is used extensively in sdk core path,
 // we need it to be as fast as possible, while `MemDB` is mainly used as a mocking db in unit tests.
 //

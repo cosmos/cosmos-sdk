@@ -1,6 +1,10 @@
 package log
 
-import "github.com/rs/zerolog"
+import (
+	"time"
+
+	"github.com/rs/zerolog"
+)
 
 // TestingT is the interface required for logging in tests.
 // It is a subset of testing.T to avoid a direct dependency on the testing package.
@@ -39,15 +43,18 @@ func NewTestLoggerError(t TestingT) Logger {
 }
 
 func newTestLogger(t TestingT, lvl zerolog.Level) Logger {
-	cw := zerolog.NewConsoleWriter()
-	cw.Out = zerolog.TestWriter{
-		T: t,
-		// Normally one would use zerolog.ConsoleTestWriter
-		// to set the option on NewConsoleWriter,
-		// but the zerolog source for that is hardcoded to Frame=6.
-		// With Frame=6, all source locations are printed as "logger.go",
-		// but Frame=7 prints correct source locations.
-		Frame: 7,
+	cw := zerolog.ConsoleWriter{
+		NoColor:    true,
+		TimeFormat: time.Kitchen,
+		Out: zerolog.TestWriter{
+			T: t,
+			// Normally one would use zerolog.ConsoleTestWriter
+			// to set the option on NewConsoleWriter,
+			// but the zerolog source for that is hardcoded to Frame=6.
+			// With Frame=6, all source locations are printed as "logger.go",
+			// but Frame=7 prints correct source locations.
+			Frame: 7,
+		},
 	}
 	return NewCustomLogger(zerolog.New(cw).Level(lvl))
 }

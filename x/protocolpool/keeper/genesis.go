@@ -69,13 +69,6 @@ func (k Keeper) InitGenesis(ctx context.Context, data *types.GenesisState) error
 	}
 
 	// sanity check to avoid trying to distribute more than what is available
-<<<<<<< HEAD
-	if data.LastBalance.LT(totalToBeDistributed) {
-		return fmt.Errorf("total to be distributed is greater than the last balance")
-	}
-=======
->>>>>>> 13c234f42 (feat(x/protocolpool)!: allow any coins in continuous funds (#21916))
-
 	if totalToBeDistributed.IsAnyGT(data.LastBalance.Amount) || !totalToBeDistributed.DenomsSubsetOf(data.LastBalance.Amount) {
 		return fmt.Errorf("total to be distributed is greater than the last balance: %s > %s", totalToBeDistributed, data.LastBalance.Amount)
 	}

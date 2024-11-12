@@ -32,6 +32,10 @@ type fixture struct {
 	conn      *testClientConn
 	b         *Builder
 	clientCtx client.Context
+
+	home     string
+	chainID  string
+	kBackend string
 }
 
 func initFixture(t *testing.T) *fixture {
@@ -53,7 +57,7 @@ func initFixture(t *testing.T) *fixture {
 	assert.NilError(t, err)
 
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{}, bank.AppModule{})
-	kr, err := sdkkeyring.New(sdk.KeyringServiceName(), sdkkeyring.BackendMemory, home, nil, encodingConfig.Codec)
+	kr, err := sdkkeyring.New(sdk.KeyringServiceName(), sdkkeyring.BackendTest, home, nil, encodingConfig.Codec)
 	assert.NilError(t, err)
 
 	interfaceRegistry := encodingConfig.Codec.InterfaceRegistry()
@@ -81,8 +85,12 @@ func initFixture(t *testing.T) *fixture {
 			ValidatorAddressCodec: clientCtx.ValidatorAddressCodec,
 			ConsensusAddressCodec: clientCtx.ConsensusAddressCodec,
 		},
+		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
+			return conn, nil
+		},
 		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
-		AddTxConnFlags:    flags.AddTxFlagsToCmd,
+		AddTxConnFlags:    addTxAndGlobalFlagsToCmd,
+		Cdc:               encodingConfig.Codec,
 	}
 	assert.NilError(t, b.ValidateAndComplete())
 
@@ -90,7 +98,17 @@ func initFixture(t *testing.T) *fixture {
 		conn:      conn,
 		b:         b,
 		clientCtx: clientCtx,
+
+		home:     home,
+		chainID:  "autocli-test",
+		kBackend: sdkkeyring.BackendTest,
 	}
+}
+
+func addTxAndGlobalFlagsToCmd(cmd *cobra.Command) {
+	f := cmd.Flags()
+	f.String("home", "", "home directory")
+	flags.AddTxFlagsToCmd(cmd)
 }
 
 func runCmd(fixture *fixture, command func(moduleName string, f *fixture) (*cobra.Command, error), args ...string) (*bytes.Buffer, error) {

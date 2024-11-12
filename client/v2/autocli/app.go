@@ -1,6 +1,7 @@
 package autocli
 
 import (
+	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
@@ -46,6 +47,7 @@ type AppOptions struct {
 
 	Cdc          codec.Codec
 	TxConfigOpts authtx.ConfigOptions
+	//Keyring      keyring.Keyring
 
 	skipValidation bool
 }
@@ -74,12 +76,14 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
 		},
+		GetClientConn: getQueryClientConn(appOptions.Cdc, appOptions.Cdc.InterfaceRegistry()),
 		AddQueryConnFlags: func(c *cobra.Command) {
 			sdkflags.AddQueryFlagsToCmd(c)
 			sdkflags.AddKeyringFlags(c.Flags())
 		},
-		AddTxConnFlags: sdkflags.AddTxFlagsToCmd,
-		Cdc:            appOptions.Cdc,
+		AddTxConnFlags:   sdkflags.AddTxFlagsToCmd,
+		Cdc:              appOptions.Cdc,
+		EnablesSignModes: []apitxsigning.SignMode{apitxsigning.SignMode_SIGN_MODE_DIRECT},
 	}
 
 	return appOptions.EnhanceRootCommandWithBuilder(rootCmd, builder)

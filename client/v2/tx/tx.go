@@ -28,12 +28,13 @@ import (
 // GenerateOrBroadcastTxCLIWithBroadcaster will either generate and print an unsigned transaction
 // or sign it and broadcast it with the specified broadcaster returning an error upon failure.
 func GenerateOrBroadcastTxCLIWithBroadcaster(
+	flagSet *pflag.FlagSet,
+	printer *print.Printer,
 	keybase keyring.Keyring,
 	cdc codec.Codec,
 	addressCodec, validatorCodec address.Codec,
 	enablesSignModes []apitxsigning.SignMode,
 	conn grpc.ClientConn,
-	flagSet *pflag.FlagSet,
 	broadcaster broadcast.Broadcaster,
 	msgs ...transaction.Msg,
 ) error {
@@ -45,9 +46,6 @@ func GenerateOrBroadcastTxCLIWithBroadcaster(
 	if err != nil {
 		return err
 	}
-
-	output, _ := flagSet.GetString("output")
-	printer := print.NewPrinter(output, os.Stdout)
 
 	genOnly, _ := flagSet.GetBool(flagGenerateOnly)
 	if genOnly {
@@ -66,12 +64,13 @@ func GenerateOrBroadcastTxCLIWithBroadcaster(
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
 // or sign it and broadcast it using default CometBFT broadcaster, returning an error upon failure.
 func GenerateOrBroadcastTxCLI(
+	flagSet *pflag.FlagSet,
+	printer *print.Printer,
 	keybase keyring.Keyring,
 	cdc codec.Codec,
 	addressCodec, validatorCodec address.Codec,
 	enablesSignModes []apitxsigning.SignMode,
 	conn grpc.ClientConn,
-	flagSet *pflag.FlagSet,
 	msgs ...transaction.Msg,
 ) error {
 	cometBroadcaster, err := getCometBroadcaster(cdc, cdc.InterfaceRegistry(), flagSet)
@@ -79,7 +78,7 @@ func GenerateOrBroadcastTxCLI(
 		return err
 	}
 
-	return GenerateOrBroadcastTxCLIWithBroadcaster(keybase, cdc, addressCodec, validatorCodec, enablesSignModes, conn, flagSet, cometBroadcaster, msgs...)
+	return GenerateOrBroadcastTxCLIWithBroadcaster(flagSet, printer, keybase, cdc, addressCodec, validatorCodec, enablesSignModes, conn, cometBroadcaster, msgs...)
 }
 
 // getCometBroadcaster returns a new CometBFT broadcaster based on the provided context and flag set.

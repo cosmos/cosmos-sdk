@@ -2,6 +2,7 @@ package print
 
 import (
 	"encoding/json"
+	"github.com/spf13/cobra"
 	"io"
 	"os"
 
@@ -20,15 +21,15 @@ type Printer struct {
 }
 
 // NewPrinter creates a new Printer instance with default stdout
-func NewPrinter(format string, out io.Writer) *Printer {
-	if format == "" {
-		format = jsonOutput
+func NewPrinter(cmd *cobra.Command) (*Printer, error) {
+	outputFormat, err := cmd.Flags().GetString("output")
+	if err != nil {
+		return nil, err
 	}
-
 	return &Printer{
-		Output:       out,
-		OutputFormat: format,
-	}
+		Output:       cmd.OutOrStdout(),
+		OutputFormat: outputFormat,
+	}, nil
 }
 
 // PrintString prints the raw string

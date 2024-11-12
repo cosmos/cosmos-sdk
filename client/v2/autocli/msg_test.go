@@ -55,8 +55,7 @@ func TestMsg(t *testing.T) {
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
 		"--generate-only",
 		"--output", "json",
-		"--home", fixture.home,
-		"--keyring-backend", fixture.keyringBackend,
+		"--generate-only", "--offline",
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
@@ -76,6 +75,7 @@ func TestMsg(t *testing.T) {
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
 		"--generate-only",
 		"--output", "json",
+		"--generate-only", "--offline",
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
@@ -95,8 +95,8 @@ func TestMsg(t *testing.T) {
 	}), "send",
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
 		"--from", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
-		"--generate-only",
 		"--output", "json",
+		"--generate-only", "--offline",
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
@@ -118,8 +118,8 @@ func TestMsg(t *testing.T) {
 	}), "send",
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
 		"--sender", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
-		"--generate-only",
 		"--output", "json",
+		"--generate-only", "--offline",
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))

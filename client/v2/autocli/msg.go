@@ -14,6 +14,7 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/client/v2/autocli/print"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
 	addresscodec "cosmossdk.io/core/address"
@@ -173,12 +174,17 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 			return err
 		}
 
-		cConn, err := b.getQueryClientConn(cmd)
+		cConn, err := b.GetClientConn(cmd)
 		if err != nil {
 			return err
 		}
 
-		return tx.GenerateOrBroadcastTxCLI(k, b.Cdc, b.AddressCodec, b.ValidatorAddressCodec, b.EnablesSignModes, cConn, cmd.Flags(), msg)
+		printer, err := print.NewPrinter(cmd)
+		if err != nil {
+			return err
+		}
+
+		return tx.GenerateOrBroadcastTxCLI(cmd.Flags(), printer, k, b.Cdc, b.AddressCodec, b.ValidatorAddressCodec, b.EnablesSignModes, cConn, msg)
 		return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 	}
 

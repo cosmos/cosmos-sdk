@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 
-	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -19,6 +18,9 @@ import (
 	"cosmossdk.io/client/v2/broadcast/comet"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 type cmdType int
@@ -236,8 +238,11 @@ func enhanceCustomCmd(builder *Builder, cmd *cobra.Command, cmdType cmdType, mod
 
 // outOrStdoutFormat formats the output based on the output flag and writes it to the command's output stream.
 func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
-	output, _ := cmd.Flags().GetString(flags.FlagOutput)
-	return print.NewPrinter(output, cmd.OutOrStdout()).PrintBytes(out)
+	p, err := print.NewPrinter(cmd)
+	if err != nil {
+		return err
+	}
+	return p.PrintBytes(out)
 }
 
 func (b *Builder) preRunE() func(cmd *cobra.Command, args []string) error {
@@ -248,6 +253,7 @@ func (b *Builder) preRunE() func(cmd *cobra.Command, args []string) error {
 		}
 
 		k, err := keyring.NewKeyringFromFlags(cmd.Flags(), b.AddressCodec, cmd.InOrStdin(), b.Cdc)
+		err = nil
 		b.SetKeyring(k) // global flag keyring must be set on PreRunE.
 
 		return err
@@ -296,37 +302,39 @@ func (b *Builder) setFlagsFromConfig(cmd *cobra.Command, args []string) error {
 }
 
 // TODO: godoc
-func (b *Builder) getQueryClientConn(cmd *cobra.Command) (gogogrpc.ClientConn, error) {
-	var err error
-	creds := grpcinsecure.NewCredentials()
+func getQueryClientConn(cdc codec.Codec, ir types.InterfaceRegistry) func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
+	return func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
+		var err error
+		creds := grpcinsecure.NewCredentials()
 
-	insecure := true
-	if cmd.Flags().Lookup("grpc-insecure") != nil {
-		insecure, err = cmd.Flags().GetBool("grpc-insecure")
-		if err != nil {
-			return nil, err
+		insecure := true
+		if cmd.Flags().Lookup("grpc-insecure") != nil {
+			insecure, err = cmd.Flags().GetBool("grpc-insecure")
+			if err != nil {
+				return nil, err
+			}
 		}
-	}
-	if !insecure {
-		creds = credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS12})
-	}
+		if !insecure {
+			creds = credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS12})
+		}
 
-	var addr string
-	if cmd.Flags().Lookup("grpc-addr") != nil {
-		addr, err = cmd.Flags().GetString("grpc-addr")
-		if err != nil {
-			return nil, err
+		var addr string
+		if cmd.Flags().Lookup("grpc-addr") != nil {
+			addr, err = cmd.Flags().GetString("grpc-addr")
+			if err != nil {
+				return nil, err
+			}
 		}
-	}
-	if addr == "" {
-		// if grpc-addr has not been set, use the default clientConn
-		// TODO: default is comet
-		node, err := cmd.Flags().GetString("node")
-		if err != nil {
-			return nil, err
+		if addr == "" {
+			// if grpc-addr has not been set, use the default clientConn
+			// TODO: default is comet
+			node, err := cmd.Flags().GetString("node")
+			if err != nil {
+				return nil, err
+			}
+			return comet.NewCometBFTBroadcaster(node, comet.BroadcastSync, cdc, ir)
 		}
-		return comet.NewCometBFTBroadcaster(node, comet.BroadcastSync, b.Cdc, b.Cdc.InterfaceRegistry())
-	}
 
-	return grpc.NewClient(addr, []grpc.DialOption{grpc.WithTransportCredentials(creds)}...)
+		return grpc.NewClient(addr, []grpc.DialOption{grpc.WithTransportCredentials(creds)}...)
+	}
 }

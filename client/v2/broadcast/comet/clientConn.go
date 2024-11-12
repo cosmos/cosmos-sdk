@@ -24,7 +24,10 @@ import (
 
 const grpcBlockHeightHeader = "x-cosmos-block-height"
 
-var _ gogogrpc.ClientConn = &CometBFTBroadcaster{}
+var (
+	_ gogogrpc.ClientConn      = &CometBFTBroadcaster{}
+	_ grpc.ClientConnInterface = &CometBFTBroadcaster{}
+)
 
 func (c *CometBFTBroadcaster) NewStream(_ context.Context, _ *grpc.StreamDesc, _ string, _ ...grpc.CallOption) (grpc.ClientStream, error) {
 	return nil, errors.New("not implemented")

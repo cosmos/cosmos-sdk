@@ -129,7 +129,7 @@ func (b *Builder) BuildQueryMethodCommand(ctx context.Context, descriptor protor
 	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
-		clientConn, err := b.getQueryClientConn(cmd)
+		clientConn, err := b.GetClientConn(cmd)
 		if err != nil {
 			return err
 		}

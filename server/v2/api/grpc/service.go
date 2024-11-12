@@ -18,7 +18,6 @@ import (
 // v2Service implements the gRPC service interface for handling queries and listing handlers.
 type v2Service[T transaction.Tx] struct {
 	queryHandlers map[string]appmodulev2.Handler
-	queryable     queryFunc
 	stf           appmanager.StateTransitionFunction[T]
 	store         serverv2.Store
 	gaslimit      uint64
@@ -61,7 +60,7 @@ func (s v2Service[T]) Query(ctx context.Context, request *QueryRequest) (*QueryR
 		}
 	}
 
-	queryResp, err := s.queryable.Query(ctx, state, s.gaslimit, protoMsg)
+	queryResp, err := s.stf.Query(ctx, state, s.gaslimit, protoMsg)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "query failed: %v", err)
 	}

@@ -26,10 +26,10 @@ type Server[T transaction.Tx] struct {
 }
 
 func New[T transaction.Tx](
+	logger log.Logger,
 	stf appmanager.StateTransitionFunction[T],
 	store serverv2.Store,
 	gasLimit uint64,
-	logger log.Logger,
 	cfg server.ConfigMap,
 	cfgOptions ...CfgOption,
 ) (*Server[T], error) {

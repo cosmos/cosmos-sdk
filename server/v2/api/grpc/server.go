@@ -36,15 +36,6 @@ const (
 	BlockHeightHeader = "x-cosmos-block-height"
 )
 
-type queryFunc interface {
-	Query(
-		ctx context.Context,
-		state corestore.ReaderMap,
-		gasLimit uint64,
-		req transaction.Msg,
-	) (transaction.Msg, error)
-}
-
 type Server[T transaction.Tx] struct {
 	logger     log.Logger
 	config     *Config
@@ -61,7 +52,6 @@ func New[T transaction.Tx](
 	gasLimit uint64,
 	interfaceRegistry server.InterfaceRegistry,
 	queryHandlers map[string]appmodulev2.Handler,
-	queryable queryFunc,
 	cfg server.ConfigMap,
 	cfgOptions ...CfgOption,
 ) (*Server[T], error) {
@@ -79,7 +69,7 @@ func New[T transaction.Tx](
 		grpc.ForceServerCodec(newProtoCodec(interfaceRegistry).GRPCCodec()),
 		grpc.MaxSendMsgSize(serverCfg.MaxSendMsgSize),
 		grpc.MaxRecvMsgSize(serverCfg.MaxRecvMsgSize),
-		grpc.UnknownServiceHandler(makeUnknownServiceHandler(queryHandlers, queryable, store, gasLimit)),
+		grpc.UnknownServiceHandler(makeUnknownServiceHandler(queryHandlers, stf, store, gasLimit)),
 	)
 
 	// Reflection allows external clients to see what services and methods the gRPC server exposes.
@@ -88,7 +78,6 @@ func New[T transaction.Tx](
 	// Register V2 grpc handlers
 	RegisterServiceServer(grpcSrv, &v2Service[T]{
 		queryHandlers,
-		queryable,
 		stf,
 		store,
 		gasLimit,
@@ -116,17 +105,7 @@ func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 	return flags
 }
 
-func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier interface {
-	Query(
-		ctx context.Context,
-		state corestore.ReaderMap,
-		gasLimit uint64,
-		req transaction.Msg,
-	) (transaction.Msg, error)
-},
-	store serverv2.Store,
-	gasLimit uint64,
-) grpc.StreamHandler {
+func makeUnknownServiceHandler[T transaction.Tx](handlers map[string]appmodulev2.Handler, stf appmanager.StateTransitionFunction[T], store serverv2.Store, gasLimit uint64) grpc.StreamHandler {
 	getRegistry := sync.OnceValues(gogoproto.MergedRegistry)
 
 	return func(srv any, stream grpc.ServerStream) error {
@@ -186,7 +165,7 @@ func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier 
 					return status.Errorf(codes.Internal, "failed to get state at height %d: %v", height, err)
 				}
 			}
-			resp, err := querier.Query(ctx, state, gasLimit, req)
+			resp, err := stf.Query(ctx, state, gasLimit, req)
 			if err != nil {
 				return err
 			}

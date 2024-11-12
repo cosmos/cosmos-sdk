@@ -3,6 +3,7 @@ package context
 type (
 	execModeKey    struct{}
 	cometInfoKey   struct{}
+	headerInfoKey  struct{}
 	initInfoKey    struct{}
 	environmentKey struct{}
 )
@@ -12,6 +13,8 @@ var (
 	ExecModeKey = execModeKey{}
 	// CometInfoKey is the context key for allowing modules to get CometInfo.
 	CometInfoKey = cometInfoKey{}
+	// HeaderInfoKey is the context key for allowing modules to get HeaderInfo.
+	HeaderInfoKey = headerInfoKey{}
 	// CometParamsInitInfoKey is the context key for setting consensus params from genesis in the consensus module.
 	CometParamsInitInfoKey = initInfoKey{}
 

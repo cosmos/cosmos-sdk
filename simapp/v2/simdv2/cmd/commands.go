@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/spf13/cobra"
@@ -83,9 +84,18 @@ func InitRootCmd[T transaction.Tx](
 		)
 	}
 
+	globalCfg := deps.GlobalConfig
+
+	appTomlConfig := &cometbft.AppTomlConfig{}
+	if len(globalCfg) > 0 {
+		if err := serverv2.UnmarshalSubConfig(globalCfg, "comet", &appTomlConfig); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+		}
+	}
+
 	// build full app!
 	simApp := deps.SimApp
-	grpcServer, err := grpc.New[T](logger, simApp.InterfaceRegistry(), simApp.QueryHandlers(), simApp.Query, deps.GlobalConfig)
+	grpcServer, err := grpc.New[T](logger, simApp.Store(), simApp.StateTransitionFunction(), appTomlConfig.QueryGasLimit, simApp.InterfaceRegistry(), simApp.QueryHandlers(), deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +105,7 @@ func InitRootCmd[T transaction.Tx](
 		return nil, err
 	}
 
-	restServer, err := rest.New[T](logger, simApp.App.StateTransitionFunction(), simApp.Store(), 0, logger, deps.GlobalConfig) // TODO: get gaslimit
+	restServer, err := rest.New[T](logger, simApp.App.StateTransitionFunction(), simApp.Store(), appTomlConfig.QueryGasLimit, deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}

@@ -13,5 +13,5 @@ message DenomAuthorityMetadata {
   option (gogoproto.equal) = true;
 
   // Can be empty for no admin, or a valid osmosis address
-  string admin = 1 [(gogoproto.moretags) = "yaml:\"admin\""];
+  bytes admin = 1;
 }

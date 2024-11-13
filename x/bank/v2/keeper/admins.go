@@ -28,7 +28,12 @@ func (k Keeper) setAdmin(ctx context.Context, denom, admin string) error {
 		return err
 	}
 
-	metadata.Admin = admin
+	adminAddr, err := k.addressCodec.StringToBytes(admin)
+	if err != nil {
+		return err
+	}
+
+	metadata.Admin = adminAddr
 
 	return k.setAuthorityMetadata(ctx, denom, metadata)
 }

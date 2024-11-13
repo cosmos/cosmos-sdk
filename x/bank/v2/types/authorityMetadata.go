@@ -1,15 +1,13 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"bytes"
+	"errors"
 )
 
 func (metadata DenomAuthorityMetadata) Validate() error {
-	if metadata.Admin != "" {
-		_, err := sdk.AccAddressFromBech32(metadata.Admin)
-		if err != nil {
-			return err
-		}
+	if bytes.Equal(metadata.Admin, []byte{}) {
+		return errors.New("empty admin")
 	}
 	return nil
 }

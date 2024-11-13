@@ -14,6 +14,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	adminv1 "cosmossdk.io/x/accounts/defaults/admin/v1"
 )
 
 type handlers struct {
@@ -63,27 +64,6 @@ func (h handlers) MsgCreateDenom(ctx context.Context, msg *types.MsgCreateDenom)
 	}, nil
 }
 
-// TODO: should be gov?
-func (h handlers) MsgChangeAdmin(goCtx context.Context, msg *types.MsgChangeAdmin) (*types.MsgChangeAdminResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	authorityMetadata, err := h.Keeper.GetAuthorityMetadata(ctx, msg.Denom)
-	if err != nil {
-		return nil, err
-	}
-
-	if msg.Sender != authorityMetadata.GetAdmin() {
-		return nil, types.ErrUnauthorized
-	}
-
-	err = h.Keeper.setAdmin(ctx, msg.Denom, msg.NewAdmin)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.MsgChangeAdminResponse{}, nil
-}
-
 func (h handlers) MsgSend(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
 	var (
 		from, to []byte
@@ -119,23 +99,37 @@ func (h handlers) MsgSend(ctx context.Context, msg *types.MsgSend) (*types.MsgSe
 }
 
 func (h handlers) MsgMint(ctx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
-	// Check if is a tokenfatory denom
-	_, _, err := types.DeconstructDenom(msg.Amount.Denom)
-	if err == nil {
-		_, denomExists := h.GetDenomMetaData(ctx, msg.Amount.Denom)
-		if !denomExists {
-			return nil, types.ErrDenomDoesNotExist.Wrapf("denom: %s", msg.Amount.Denom)
-		}
+	// Check if disable admin role or not
+	params := h.GetParams(ctx)
 
-		authorityMetadata, err := h.GetAuthorityMetadata(ctx, msg.Amount.Denom)
-		if err != nil {
-			return nil, err
-		}
+	isGov := false
+	if !params.AdminDisable {
+		// Check if a tokenfactory denom
+		_, _, err := types.DeconstructDenom(msg.Amount.Denom)
+		if err == nil {
+			authorityMetadata, err := h.GetAuthorityMetadata(ctx, msg.Amount.Denom)
+			if err != nil {
+				return nil, err
+			}
 
-		if msg.Authority != authorityMetadata.GetAdmin() {
-			return nil, types.ErrUnauthorized
+			adminAccAddr := authorityMetadata.Admin
+
+			// Query if sender have mint perm
+
+			_, err = h.accountsKeeper.Query(ctx, adminAccAddr, &adminv1.QueryMintPerm{
+				Sender: msg.Authority,
+				Denom: msg.Amount.Denom,
+			})
+
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			isGov = true
 		}
-	} else {
+	}
+
+	if params.AdminDisable || isGov {
 		authorityBytes, err := h.addressCodec.StringToBytes(msg.Authority)
 		if err != nil {
 			return nil, err
@@ -174,23 +168,37 @@ func (h handlers) MsgMint(ctx context.Context, msg *types.MsgMint) (*types.MsgMi
 }
 
 func (h handlers) MsgBurn(ctx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
-	// Check if is a tokenfatory denom
-	_, _, err := types.DeconstructDenom(msg.Amount.Denom)
-	if err == nil {
-		_, denomExists := h.GetDenomMetaData(ctx, msg.Amount.Denom)
-		if !denomExists {
-			return nil, types.ErrDenomDoesNotExist.Wrapf("denom: %s", msg.Amount.Denom)
-		}
+	// Check if disable admin role or not
+	params := h.GetParams(ctx)
 
-		authorityMetadata, err := h.GetAuthorityMetadata(ctx, msg.Amount.Denom)
-		if err != nil {
-			return nil, err
-		}
+	isGov := false
+	if !params.AdminDisable {
+		// Check if a tokenfactory denom
+		_, _, err := types.DeconstructDenom(msg.Amount.Denom)
+		if err == nil {
+			authorityMetadata, err := h.GetAuthorityMetadata(ctx, msg.Amount.Denom)
+			if err != nil {
+				return nil, err
+			}
 
-		if msg.Authority != authorityMetadata.GetAdmin() {
-			return nil, types.ErrUnauthorized
+			adminAccAddr := authorityMetadata.Admin
+
+			// Query if sender have mint perm
+
+			_, err = h.accountsKeeper.Query(ctx, adminAccAddr, &adminv1.QueryBurnPerm{
+				Sender: msg.Authority,
+				Denom: msg.Amount.Denom,
+			})
+
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			isGov = true
 		}
-	} else {
+	}
+
+	if params.AdminDisable || isGov {
 		authorityBytes, err := h.addressCodec.StringToBytes(msg.Authority)
 		if err != nil {
 			return nil, err
@@ -284,7 +292,15 @@ func (h handlers) QueryDenomsFromCreator(ctx context.Context, req *types.QueryDe
 	denoms := []string{}
 
 	err := h.Keeper.denomAuthority.Walk(ctx, nil, func(denom string, authority types.DenomAuthorityMetadata) (stop bool, err error) {
-		if authority.Admin == req.Creator {
+		resp, err := h.accountsKeeper.Query(ctx, authority.Admin, &adminv1.QueryOwner{})
+		if err != nil {
+			return true, err
+		}
+		v1Resp, ok := resp.(*adminv1.QueryOwnerResponse)
+		if !ok {
+			return true, errors.New("invalid response")
+		}
+		if v1Resp.Owner == req.Creator {
 			denoms = append(denoms, denom)
 		}
 		return false, nil

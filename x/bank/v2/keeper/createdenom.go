@@ -6,6 +6,8 @@ import (
 
 	"cosmossdk.io/x/bank/v2/types"
 
+	admin "cosmossdk.io/x/accounts/defaults/admin"
+	adminv1 "cosmossdk.io/x/accounts/defaults/admin/v1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -48,8 +50,21 @@ func (k Keeper) createDenomAfterValidation(ctx context.Context, creatorAddr, den
 		}
 	}
 
+	creatorAddrBz, err := k.addressCodec.StringToBytes(creatorAddr)
+	if err != nil {
+		return err
+	}
+
+	msgInitAdmin := &adminv1.MsgInit{
+		Owner: creatorAddr,
+		Denom: denom,
+	}
+
+	// Create denom admin account
+	_, accountAddr, err := k.accountsKeeper.Init(ctx, admin.Type, creatorAddrBz, msgInitAdmin, sdk.NewCoins())
+
 	authorityMetadata := types.DenomAuthorityMetadata{
-		Admin: creatorAddr,
+		Admin: accountAddr,
 	}
 	err = k.setAuthorityMetadata(ctx, denom, authorityMetadata)
 	if err != nil {

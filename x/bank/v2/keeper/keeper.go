@@ -22,6 +22,7 @@ import (
 type Keeper struct {
 	appmodulev2.Environment
 
+	accountsKeeper types.AccountsModKeeper
 	authority      []byte
 	addressCodec   address.Codec
 	schema         collections.Schema
@@ -34,11 +35,12 @@ type Keeper struct {
 	sendRestriction *sendRestriction
 }
 
-func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec) *Keeper {
+func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec, accountsKeeper types.AccountsModKeeper) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	k := &Keeper{
 		Environment:     env,
+		accountsKeeper:  accountsKeeper,
 		authority:       authority,
 		addressCodec:    addressCodec, // TODO(@julienrbrt): Should we add address codec to the environment?
 		params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),

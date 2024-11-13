@@ -129,7 +129,7 @@ func (k Keeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.Coins
 }
 
 // SendCoins transfers amt coins from a sending account to a receiving account.
-// Function take sender & receipient as []byte.
+// Function take sender & recipient as []byte.
 // They can be sdk address or module name.
 // An error is returned upon failure.
 func (k Keeper) SendCoins(ctx context.Context, from, to []byte, amt sdk.Coins) error {

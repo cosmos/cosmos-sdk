@@ -58,7 +58,7 @@ require (
 	cloud.google.com/go/iam v1.1.13 // indirect
 	cloud.google.com/go/storage v1.43.0 // indirect
 	cosmossdk.io/collections v0.4.1-0.20241104084251-838f1557af0a // indirect
-	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e // indirect
+	cosmossdk.io/core/testing v0.0.0 // indirect
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
@@ -300,6 +300,7 @@ replace (
 // server v2 integration
 replace (
 	cosmossdk.io/api => ../../api
+	cosmossdk.io/core/testing => ../../core/testing
 	cosmossdk.io/runtime/v2 => ../../runtime/v2
 	cosmossdk.io/server/v2 => ../../server/v2
 	cosmossdk.io/server/v2/appmanager => ../../server/v2/appmanager

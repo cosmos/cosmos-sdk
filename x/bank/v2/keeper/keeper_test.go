@@ -228,7 +228,7 @@ func (suite *KeeperTestSuite) TestSendCoins_WithRestriction() {
 	}
 	suite.bankKeeper.AppendGlobalSendRestriction(amtRestrictFunc)
 
-	// Pass the 1st but failt at the 2nd
+	// Pass the 1st but failed at the 2nd
 	err = suite.bankKeeper.SendCoins(ctx, accAddrs[0], accAddrs[1], sendAmt)
 	require.Error(err)
 	require.Contains(err.Error(), "Allow only one denom per one send")

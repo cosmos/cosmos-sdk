@@ -162,11 +162,11 @@ require (
 
 require (
 	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9
+	cosmossdk.io/x/accounts v0.0.0-20241112091912-96a1c1c833ea
 	cosmossdk.io/x/accounts/defaults/admin v0.0.0-00010101000000-000000000000
 )
 
 require (
-	cosmossdk.io/x/accounts v0.0.0-20241112091912-96a1c1c833ea // indirect
 	github.com/bytedance/sonic v1.12.4 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect

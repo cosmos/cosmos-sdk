@@ -32,7 +32,7 @@ require (
 )
 
 require (
-	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e
+	cosmossdk.io/core/testing v0.0.0
 	cosmossdk.io/runtime/v2 v2.0.0-20240911143651-72620a577660
 	cosmossdk.io/server/v2/stf v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-00010101000000-000000000000
@@ -256,6 +256,7 @@ replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/collections => ../collections
+	cosmossdk.io/core/testing => ../core/testing
 	cosmossdk.io/indexer/postgres => ../indexer/postgres
 	cosmossdk.io/runtime/v2 => ../runtime/v2
 	cosmossdk.io/server/v2/appmanager => ../server/v2/appmanager

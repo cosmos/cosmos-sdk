@@ -856,10 +856,10 @@ $ %s tx staking enable-tokenize-shares --from mykey
 func NewValidatorBondCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validator-bond [validator]",
-		Short: "Mark a delegation as a validator self-bond",
+		Short: "Mark a delegation as a validator bond.",
 		Args:  cobra.ExactArgs(1),
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Mark a delegation as a validator self-bond.
+			fmt.Sprintf(`Mark a delegation as a validator bond. This can be done by any delegator but it is recommended to be done from the validator's delegation address.
 
 Example:
 $ %s tx staking validator-bond cosmosvaloper13h5xdxhsdaugwdrkusf8lkgu406h8t62jkqv3h --from mykey

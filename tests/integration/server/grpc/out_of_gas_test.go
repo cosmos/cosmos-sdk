@@ -2,7 +2,6 @@ package grpc_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -12,6 +11,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	"cosmossdk.io/x/bank"
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -41,7 +41,6 @@ import (
 type IntegrationTestOutOfGasSuite struct {
 	suite.Suite
 
-	grpcCtx context.Context
 	conn    *grpc.ClientConn
 	address sdk.AccAddress
 }
@@ -124,29 +123,39 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 	banktypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), bankkeeper.NewMsgServerImpl(bankKeeper))
 	banktypes.RegisterQueryServer(integrationApp.GRPCQueryRouter(), bankkeeper.NewQuerier(&bankKeeper))
 	testdata.RegisterQueryServer(integrationApp.GRPCQueryRouter(), testdata.QueryImpl{})
-
 	banktypes.RegisterInterfaces(encodingCfg.InterfaceRegistry)
 
-	grpcCfg := srvconfig.DefaultConfig().GRPC
-
-	msgSend := banktypes.MsgSend{
-		FromAddress: addr2.String(),
-		ToAddress:   s.address.String(),
-		Amount:      sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
-	}
-
 	_, err := integrationApp.RunMsg(
-		&msgSend,
+		&banktypes.MsgSend{
+			FromAddress: addr2.String(),
+			ToAddress:   s.address.String(),
+			Amount:      sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
+		},
 		integration.WithAutomaticFinalizeBlock(),
 		integration.WithAutomaticCommit(),
 	)
 	s.Require().NoError(err)
+	s.Require().Equal(integrationApp.LastBlockHeight(), int64(2))
 
-	grpcSrv := grpc.NewServer(grpc.ForceServerCodec(codec.NewProtoCodec(encodingCfg.InterfaceRegistry).GRPCCodec()))
+	resp, err := bankKeeper.Balance(integrationApp.Context(), &banktypes.QueryBalanceRequest{Address: s.address.String(), Denom: "stake"})
+	s.Require().NoError(err)
+	s.Require().Equal(int64(50), resp.Balance.Amount.Int64())
+
+	grpcSrv := grpc.NewServer(
+		grpc.ForceServerCodec(codec.NewProtoCodec(encodingCfg.InterfaceRegistry).GRPCCodec()),
+	)
 	integrationApp.RegisterGRPCServer(grpcSrv)
 
+	grpcCfg := srvconfig.DefaultConfig().GRPC
 	go func() {
-		s.Require().NoError(servergrpc.StartGRPCServer(context.Background(), integrationApp.Logger(), grpcCfg, grpcSrv))
+		err := servergrpc.StartGRPCServer(
+			integrationApp.Context(),
+			integrationApp.Logger(),
+			grpcCfg,
+			grpcSrv,
+		)
+		s.Require().NoError(err)
+		defer grpcSrv.GracefulStop()
 	}()
 
 	s.conn, err = grpc.NewClient(
@@ -181,8 +190,7 @@ func (s *IntegrationTestOutOfGasSuite) TestGRPCServer_BankBalance_OutOfGas() {
 		&banktypes.QueryBalanceRequest{Address: s.address.String(), Denom: "stake"},
 	)
 
-	fmt.Println("Res....", res)
-
+	s.Require().Equal(math.NewInt(50).Int64(), res.Balance.Amount.Int64())
 	s.Require().ErrorContains(err, sdkerrors.ErrOutOfGas.Error())
 }
 

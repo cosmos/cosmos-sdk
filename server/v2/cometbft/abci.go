@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -67,6 +68,11 @@ type Consensus[T transaction.Tx] struct {
 	extendVote             handlers.ExtendVoteHandler
 	checkTxHandler         handlers.CheckTxHandler[T]
 
+	// optimisticExec contains the context required for Optimistic Execution,
+	// including the goroutine handling.This is experimental and must be enabled
+	// by developers.
+	optimisticExec *oe.OptimisticExecution
+
 	addrPeerFilter types.PeerFilter // filter peers by address and port
 	idPeerFilter   types.PeerFilter // filter peers by node ID
 
@@ -115,6 +121,10 @@ func NewConsensus[T transaction.Tx](
 // SetStreamingManager sets the streaming manager for the consensus module.
 func (c *Consensus[T]) SetStreamingManager(sm streaming.Manager) {
 	c.streaming = sm
+}
+
+func (c *Consensus[T]) SetOptimisticExecution(oe *oe.OptimisticExecution) {
+	c.optimisticExec = oe
 }
 
 // RegisterSnapshotExtensions registers the given extensions with the consensus module's snapshot manager.
@@ -385,6 +395,14 @@ func (c *Consensus[T]) PrepareProposal(
 		return nil, errors.New("no prepare proposal function was set")
 	}
 
+	// Abort any running OE so it cannot overlap with `PrepareProposal`. This could happen if optimistic
+	// `internalFinalizeBlock` from previous round takes a long time, but consensus has moved on to next round.
+	// Overlap is undesirable, since `internalFinalizeBlock` and `PrepareProoposal` could share access to
+	// in-memory structs depending on application implementation.
+	// No-op if OE is not enabled.
+	// Similar call to Abort() is done in `ProcessProposal`.
+	c.optimisticExec.Abort()
+
 	ciCtx := contextWithCometInfo(ctx, comet.Info{
 		Evidence:        toCoreEvidence(req.Misbehavior),
 		ValidatorsHash:  req.NextValidatorsHash,
@@ -421,6 +439,17 @@ func (c *Consensus[T]) ProcessProposal(
 		return nil, errors.New("no process proposal function was set")
 	}
 
+	// Since the application can get access to FinalizeBlock state and write to it,
+	// we must be sure to reset it in case ProcessProposal timeouts and is called
+	// again in a subsequent round. However, we only want to do this after we've
+	// processed the first block, as we want to avoid overwriting the finalizeState
+	// after state changes during InitChain.
+	if req.Height > int64(c.initialHeight) {
+		// abort any running OE
+		c.optimisticExec.Abort()
+		//c.setState(execModeFinalize, header)
+	}
+
 	ciCtx := contextWithCometInfo(ctx, comet.Info{
 		Evidence:        toCoreEvidence(req.Misbehavior),
 		ValidatorsHash:  req.NextValidatorsHash,
@@ -434,6 +463,17 @@ func (c *Consensus[T]) ProcessProposal(
 		return &abciproto.ProcessProposalResponse{
 			Status: abciproto.PROCESS_PROPOSAL_STATUS_REJECT,
 		}, nil
+	}
+
+	// Only execute optimistic execution if the proposal is accepted, OE is
+	// enabled and the block height is greater than the initial height. During
+	// the first block we'll be carrying state from InitChain, so it would be
+	// impossible for us to easily revert.
+	// After the first block has been processed, the next blocks will get executed
+	// optimistically, so that when the ABCI client calls `FinalizeBlock` the app
+	// can have a response ready.
+	if c.optimisticExec.Enabled() && req.Height > int64(c.initialHeight) {
+		c.optimisticExec.Execute(req)
 	}
 
 	return &abciproto.ProcessProposalResponse{
@@ -453,6 +493,26 @@ func (c *Consensus[T]) FinalizeBlock(
 
 	if err := c.checkHalt(req.Height, req.Time); err != nil {
 		return nil, err
+	}
+
+	if c.optimisticExec.Initialized() {
+		// check if the hash we got is the same as the one we are executing
+		aborted := c.optimisticExec.AbortIfNeeded(req.Hash)
+		// Wait for the OE to finish, regardless of whether it was aborted or not
+		res, err := c.optimisticExec.WaitResult()
+
+		// only return if we are not aborting
+		if !aborted {
+			if res != nil {
+				res.AppHash = c.workingHash()
+			}
+
+			return res, err
+		}
+
+		// if it was aborted, we need to reset the state
+		c.finalizeBlockState = nil
+		c.optimisticExec.Reset()
 	}
 
 	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,

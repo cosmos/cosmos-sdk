@@ -14,7 +14,7 @@ import (
 	serverv2 "cosmossdk.io/server/v2"
 	"cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/api/rest"
-	"cosmossdk.io/server/v2/api/telemetry"
+	telemetry "cosmossdk.io/server/v2/api/telemetry/prometheus"
 	"cosmossdk.io/server/v2/cometbft"
 	serverstore "cosmossdk.io/server/v2/store"
 	"cosmossdk.io/simapp/v2"

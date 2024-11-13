@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"cosmossdk.io/core/telemetry"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/v2"
 	"cosmossdk.io/store/v2/db"
@@ -38,10 +39,19 @@ type builder struct {
 
 	// output
 	store store.RootStore
+
+	telemetryService telemetry.Service
 }
 
 func NewBuilder() Builder {
 	return &builder{storeKeys: make(map[string]struct{})}
+}
+
+func NewBuilderWithTelemetry(telemetryService telemetry.Service) Builder {
+	return &builder{
+		storeKeys:        make(map[string]struct{}),
+		telemetryService: telemetryService,
+	}
 }
 
 // Build creates a new store/v2 RootStore.

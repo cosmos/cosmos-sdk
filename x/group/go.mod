@@ -188,6 +188,7 @@ replace github.com/cosmos/cosmos-sdk => ../../
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/collections => ../../collections
+	cosmossdk.io/core => ../../core
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/accounts => ../accounts
 	cosmossdk.io/x/accounts/defaults/base => ../accounts/defaults/base

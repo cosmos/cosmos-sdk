@@ -1,6 +1,7 @@
 package root
 
 import (
+	"cosmossdk.io/core/telemetry"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -13,7 +14,6 @@ import (
 	corelog "cosmossdk.io/core/log"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/v2"
-	"cosmossdk.io/store/v2/metrics"
 	"cosmossdk.io/store/v2/migration"
 	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/pruning"
@@ -44,7 +44,7 @@ type Store struct {
 	lastCommitInfo *proof.CommitInfo
 
 	// telemetry reflects a telemetry agent responsible for emitting metrics (if any)
-	telemetry metrics.StoreMetrics
+	telemetry telemetry.Service
 
 	// pruningManager reflects the pruning manager used to prune state of the SS and SC backends
 	pruningManager *pruning.Manager
@@ -71,7 +71,7 @@ func New(
 	sc store.Committer,
 	pm *pruning.Manager,
 	mm *migration.Manager,
-	m metrics.StoreMetrics,
+	m telemetry.Service,
 ) (store.RootStore, error) {
 	return &Store{
 		dbCloser:         dbCloser,
@@ -97,10 +97,6 @@ func (s *Store) Close() (err error) {
 	s.lastCommitInfo = nil
 
 	return err
-}
-
-func (s *Store) SetMetrics(m metrics.Metrics) {
-	s.telemetry = m
 }
 
 func (s *Store) SetInitialVersion(v uint64) error {
@@ -195,7 +191,7 @@ func (s *Store) GetLatestVersion() (uint64, error) {
 func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (store.QueryResult, error) {
 	if s.telemetry != nil {
 		now := time.Now()
-		defer s.telemetry.MeasureSince(now, "root_store", "query")
+		defer s.telemetry.MeasureSince(now, []string{"root", "store", "query"})
 	}
 
 	var val []byte
@@ -242,7 +238,7 @@ func (s *Store) Query(storeKey []byte, version uint64, key []byte, prove bool) (
 func (s *Store) LoadLatestVersion() error {
 	if s.telemetry != nil {
 		now := time.Now()
-		defer s.telemetry.MeasureSince(now, "root_store", "load_latest_version")
+		defer s.telemetry.MeasureSince(now, []string{"root_store", "load_latest_version"})
 	}
 
 	lv, err := s.GetLatestVersion()
@@ -256,7 +252,7 @@ func (s *Store) LoadLatestVersion() error {
 func (s *Store) LoadVersion(version uint64) error {
 	if s.telemetry != nil {
 		now := time.Now()
-		defer s.telemetry.MeasureSince(now, "root_store", "load_version")
+		defer s.telemetry.MeasureSince(now, []string{"root_store", "load_version"})
 	}
 
 	return s.loadVersion(version, nil)
@@ -271,7 +267,7 @@ func (s *Store) LoadVersionAndUpgrade(version uint64, upgrades *corestore.StoreU
 	}
 
 	if s.telemetry != nil {
-		defer s.telemetry.MeasureSince(time.Now(), "root_store", "load_version_and_upgrade")
+		defer s.telemetry.MeasureSince(time.Now(), []string{"root_store", "load_version_and_upgrade"})
 	}
 
 	if s.isMigrating {
@@ -334,7 +330,7 @@ func (s *Store) loadVersion(v uint64, upgrades *corestore.StoreUpgrades) error {
 func (s *Store) Commit(cs *corestore.Changeset) ([]byte, error) {
 	if s.telemetry != nil {
 		now := time.Now()
-		defer s.telemetry.MeasureSince(now, "root_store", "commit")
+		defer s.telemetry.MeasureSince(now, []string{"root_store", "commit"})
 	}
 
 	if err := s.handleMigration(cs); err != nil {

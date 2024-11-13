@@ -1,6 +1,7 @@
 package root
 
 import (
+	"cosmossdk.io/core/telemetry"
 	"errors"
 	"fmt"
 	"os"
@@ -49,6 +50,7 @@ type FactoryOptions struct {
 	Options   Options
 	StoreKeys []string
 	SCRawDB   corestore.KVStoreWithBatch
+	Telemetry telemetry.Service
 }
 
 // DefaultStoreOptions returns the default options for creating a root store.
@@ -177,5 +179,5 @@ func CreateRootStore(opts *FactoryOptions) (store.RootStore, error) {
 	}
 
 	pm := pruning.NewManager(sc, ss, storeOpts.SCPruningOption, storeOpts.SSPruningOption)
-	return New(opts.SCRawDB, opts.Logger, ss, sc, pm, nil, nil)
+	return New(opts.SCRawDB, opts.Logger, ss, sc, pm, nil, opts.Telemetry)
 }

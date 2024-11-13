@@ -6,8 +6,6 @@ cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cosmossdk.io/collections v0.4.1-0.20241104084251-838f1557af0a h1:9DxUD+82dO3c+R3XqwW+a7i4nVLiN6I0g2rp2rLOh7E=
 cosmossdk.io/collections v0.4.1-0.20241104084251-838f1557af0a/go.mod h1:DcD++Yfcq0OFtM3CJNYLIBjfZ+4DEyeJ/AUk6gkwlOE=
-cosmossdk.io/core v1.0.0-alpha.6 h1:5ukC4JcQKmemLQXcAgu/QoOvJI50hpBkIIg4ZT2EN8E=
-cosmossdk.io/core v1.0.0-alpha.6/go.mod h1:3u9cWq1FAVtiiCrDPpo4LhR+9V6k/ycSG4/Y/tREWCY=
 cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e h1:F+ScucYxwrrDJU8guJXQXpGhdpziYSbxW6HMP2wCNxs=
 cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e/go.mod h1:3YvVv9aJayjPhdX0DY1IMrGse4sR63hNBWx2VtDWjGQ=
 cosmossdk.io/depinject v1.1.0 h1:wLan7LG35VM7Yo6ov0jId3RHWCGRhe8E8bsuARorl5E=

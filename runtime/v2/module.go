@@ -263,12 +263,12 @@ func DefaultServiceBindings() depinject.Config {
 				}
 				globalLabels = append(globalLabels, telemetry.Label{Name: label[0], Value: label[1]})
 			}
-			return services.NewGlobalTelemetryService(globalLabels)
+			return services.NewPrometheusTelemetryService(globalLabels)
 		}
 		cometService  comet.Service = &services.ContextAwareCometInfoService{}
 		headerService               = services.NewGenesisHeaderService(stf.HeaderService{})
 		eventService                = services.NewGenesisEventService(stf.NewEventService())
-		storeBuilder                = root.NewBuilder()
+		storeBuilder                = root.NewBuilderWithTelemetry(services.NewPrometheusTelemetryService(nil))
 	)
 	return depinject.Supply(
 		kvServiceFactory,

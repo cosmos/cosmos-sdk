@@ -3,6 +3,7 @@ package module
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"cosmossdk.io/core/telemetry"
@@ -10,28 +11,44 @@ import (
 	gen "cosmossdk.io/x/benchmark/generator"
 )
 
-var _ benchmark.MsgServer = &Keeper{}
+var (
+	_    benchmark.MsgServer = &Keeper{}
+	once sync.Once
+)
 
 type Keeper struct {
 	kvServiceMap     KVServiceMap
 	telemetryService telemetry.Service
 	validate         bool
 	errExit          bool
+
+	metricOpKey    []string
+	metricTotalKey []string
+	metricMissKey  []string
 }
 
 func NewKeeper(kvMap KVServiceMap, telemetryService telemetry.Service) *Keeper {
-	return &Keeper{
+	k := &Keeper{
 		kvServiceMap:     kvMap,
 		telemetryService: telemetryService,
 		validate:         false,
 		errExit:          false,
+		metricOpKey:      []string{"benchmark", "op"},
+		metricTotalKey:   []string{"benchmark", "total"},
+		metricMissKey:    []string{"benchmark", "miss"},
 	}
+	once.Do(func() {
+		telemetryService.RegisterMeasure(k.metricOpKey, "op")
+		telemetryService.RegisterCounter(k.metricMissKey, "op")
+		telemetryService.RegisterCounter(k.metricTotalKey)
+	})
+	return k
 }
 
 func (k *Keeper) LoadTest(ctx context.Context, msg *benchmark.MsgLoadTest) (*benchmark.MsgLoadTestResponse, error) {
 	res := &benchmark.MsgLoadTestResponse{}
 	for _, op := range msg.Ops {
-		k.telemetryService.IncrCounter([]string{"benchmark", "op", "cnt"}, 1)
+		k.telemetryService.IncrCounter(k.metricTotalKey, 1)
 		err := k.executeOp(ctx, op)
 		if err != nil {
 			return res, err
@@ -41,21 +58,21 @@ func (k *Keeper) LoadTest(ctx context.Context, msg *benchmark.MsgLoadTest) (*ben
 }
 
 func (k *Keeper) measureSince(since time.Time, opType string) {
-	k.telemetryService.MeasureSince(since, []string{"benchmark", "op"}, telemetry.Label{Name: "op", Value: opType})
+	k.telemetryService.MeasureSince(since, k.metricOpKey, telemetry.Label{Name: "op", Value: opType})
 }
 
 func (k *Keeper) countMiss(opType string) {
-	k.telemetryService.IncrCounter([]string{"benchmark", "miss"}, 1, telemetry.Label{Name: "op", Value: opType})
+	k.telemetryService.IncrCounter(k.metricMissKey, 1, telemetry.Label{Name: "op", Value: opType})
 }
 
 func (k *Keeper) executeOp(ctx context.Context, op *benchmark.Op) error {
-	start := time.Now()
 	svc, ok := k.kvServiceMap[op.Actor]
+	key := gen.Bytes(op.Seed, op.KeyLength)
 	if !ok {
 		return fmt.Errorf("actor %s not found", op.Actor)
 	}
+	start := time.Now()
 	kv := svc.OpenKVStore(ctx)
-	key := gen.Bytes(op.Seed, op.KeyLength)
 	switch {
 	case op.Delete:
 		defer k.measureSince(start, "delete")

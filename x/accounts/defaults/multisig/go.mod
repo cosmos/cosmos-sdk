@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/x/accounts v0.0.0-00010101000000-000000000000
+	cosmossdk.io/x/accounts v0.0.0-20241112091912-96a1c1c833ea
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.0

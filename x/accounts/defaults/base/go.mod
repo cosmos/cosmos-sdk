@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/depinject v1.1.0
-	cosmossdk.io/x/accounts v0.0.0-20240913065641-0064ccbce64e
+	cosmossdk.io/x/accounts v0.0.0-20241112091912-96a1c1c833ea
 	cosmossdk.io/x/tx v1.0.0-alpha.1
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0

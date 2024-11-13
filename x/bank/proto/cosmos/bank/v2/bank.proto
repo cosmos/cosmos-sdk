@@ -24,6 +24,8 @@ message Params {
   // See: https://github.com/CosmWasm/token-factory/issues/11
   uint64 denom_creation_gas_consume = 2
       [(gogoproto.moretags) = "yaml:\"denom_creation_gas_consume\"", (gogoproto.nullable) = true];
+
+  bool admin_disable = 3;
 }
 
 // DenomUnit represents a struct that describes a given

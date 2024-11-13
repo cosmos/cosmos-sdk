@@ -9,16 +9,17 @@ import (
 )
 
 // NewParams creates a new parameter configuration for the bank/v2 module
-func NewParams(denomCreationFee sdk.Coins, gasConsume uint64) Params {
+func NewParams(denomCreationFee sdk.Coins, gasConsume uint64, adminDisable bool) Params {
 	return Params{
 		DenomCreationFee:        denomCreationFee,
 		DenomCreationGasConsume: gasConsume,
+		AdminDisable:            adminDisable,
 	}
 }
 
 // DefaultParams is the default parameter configuration for the bank/v2 module
 func DefaultParams() Params {
-	return NewParams(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))), 1_000_000)
+	return NewParams(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))), 1_000_000, false)
 }
 
 // Validate all bank/v2 module parameters

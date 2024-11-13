@@ -2,9 +2,11 @@ package offchain
 
 import (
 	"cosmossdk.io/client/v2/autocli/keyring"
+	"cosmossdk.io/client/v2/broadcast/comet"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"os"
@@ -15,7 +17,6 @@ import (
 	"cosmossdk.io/client/v2/autocli/config"
 	v2flags "cosmossdk.io/client/v2/internal/flags"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
@@ -52,6 +53,7 @@ func SignFile() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ir := types.NewInterfaceRegistry()
+			cryptocodec.RegisterInterfaces(ir)
 			cdc := codec.NewProtoCodec(ir)
 
 			c, err := config.CreateClientConfigFromFlags(cmd.Flags())
@@ -63,8 +65,6 @@ func SignFile() *cobra.Command {
 			if !cmd.Flags().Changed(flags.FlagKeyringBackend) {
 				cmd.Flags().Set(flags.FlagKeyringBackend, keyringBackend)
 			}
-
-			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			bz, err := os.ReadFile(args[1])
 			if err != nil {
@@ -79,13 +79,18 @@ func SignFile() *cobra.Command {
 
 			ac := address.NewBech32Codec(bech32Prefix)
 			vc := address.NewBech32Codec(sdk.GetBech32PrefixValAddr(bech32Prefix))
-			k, err := keyring.NewKeyringFromFlags(cmd.Flags(), clientCtx.AddressCodec, cmd.InOrStdin(), clientCtx.Codec)
+			k, err := keyring.NewKeyringFromFlags(cmd.Flags(), ac, cmd.InOrStdin(), cdc)
 			if err != nil {
 				return err
 			}
 
-			signedTx, err := Sign(bz, clientCtx, k, cdc, ac,
-				vc, ir, args[0], encoding, signMode, outputFormat)
+			// off-chain does not need to query any information
+			conn, err := comet.NewCometBFTBroadcaster("", comet.BroadcastSync, cdc, ir)
+			if err != nil {
+				return err
+			}
+
+			signedTx, err := Sign(bz, conn, k, cdc, ac, vc, ir, args[0], encoding, signMode, outputFormat)
 			if err != nil {
 				return err
 			}

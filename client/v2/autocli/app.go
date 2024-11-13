@@ -47,7 +47,6 @@ type AppOptions struct {
 
 	Cdc          codec.Codec
 	TxConfigOpts authtx.ConfigOptions
-	// Keyring      keyring.Keyring
 
 	skipValidation bool
 }

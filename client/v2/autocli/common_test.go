@@ -57,7 +57,7 @@ func initFixture(t *testing.T) *fixture {
 	assert.NilError(t, err)
 
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(testutil.CodecOptions{}, bank.AppModule{})
-	kr, err := sdkkeyring.New(sdk.KeyringServiceName(), sdkkeyring.BackendTest, home, nil, encodingConfig.Codec)
+	kr, err := sdkkeyring.New(sdk.KeyringServiceName(), sdkkeyring.BackendMemory, home, nil, encodingConfig.Codec)
 	assert.NilError(t, err)
 
 	interfaceRegistry := encodingConfig.Codec.InterfaceRegistry()
@@ -101,7 +101,7 @@ func initFixture(t *testing.T) *fixture {
 
 		home:     home,
 		chainID:  "autocli-test",
-		kBackend: sdkkeyring.BackendTest,
+		kBackend: sdkkeyring.BackendMemory,
 	}
 }
 

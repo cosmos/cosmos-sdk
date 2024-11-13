@@ -18,7 +18,12 @@ import (
 	banktestutil "cosmossdk.io/x/bank/v2/testutil"
 	"cosmossdk.io/x/bank/v2/types"
 
+	accountskeeper "cosmossdk.io/x/accounts"
+	"cosmossdk.io/x/accounts/accountstd"
+	"cosmossdk.io/x/accounts/defaults/admin"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -76,11 +81,17 @@ func (suite *KeeperTestSuite) SetupTest() {
 	authority := authtypes.NewModuleAddress("gov")
 
 	suite.ctx = ctx
+
+	ir := codectypes.NewInterfaceRegistry()
+
+	accountsKeeper, err := accountskeeper.NewKeeper(codec.NewProtoCodec(ir), env, suite.addressCodec, ir, nil, accountstd.AddAccount(admin.Type, admin.NewAdmin))
+	suite.Require().NoError(err)
 	suite.bankKeeper = *keeper.NewKeeper(
 		authority,
 		ac,
 		env,
 		encCfg.Codec,
+		accountsKeeper,
 	)
 	suite.addressCodec = ac
 }
@@ -394,7 +405,7 @@ func (s *KeeperTestSuite) TestCreateDenom_GasConsume() {
 		s.SetupTest()
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			// set params with the gas consume amount
-			s.Require().NoError(s.bankKeeper.SetParams(s.ctx, types.NewParams(nil, tc.gasConsume)))
+			s.Require().NoError(s.bankKeeper.SetParams(s.ctx, types.NewParams(nil, tc.gasConsume, false)))
 
 			// amount of gas consumed prior to the denom creation
 			gasConsumedBefore := s.bankKeeper.Environment.GasService.GasMeter(s.ctx).Consumed()
@@ -434,9 +445,10 @@ func (s *KeeperTestSuite) TestMintHandler() {
 	authority := authtypes.NewModuleAddress("gov")
 
 	for _, tc := range []struct {
-		desc   string
-		msg    *types.MsgMint
-		expErr bool
+		desc         string
+		msg          *types.MsgMint
+		adminDisable bool
+		expErr       bool
 	}{
 		{
 			desc: "Mint bar denom, valid",
@@ -446,6 +458,7 @@ func (s *KeeperTestSuite) TestMintHandler() {
 				Amount:    sdk.NewCoin(barDenom, math.NewInt(100)),
 			},
 			expErr: false,
+			adminDisable: false,
 		},
 		{
 			desc: "Mint bar denom, invalid authority",
@@ -455,24 +468,47 @@ func (s *KeeperTestSuite) TestMintHandler() {
 				Amount:    sdk.NewCoin(barDenom, math.NewInt(100)),
 			},
 			expErr: true,
+			adminDisable: false,
 		},
 		{
-			desc: "Mint tokenfatory denom, valid",
+			desc: "Mint tokenfatory denom, admin enable, valid",
 			msg: &types.MsgMint{
 				Authority: accAddrs[0].String(),
 				ToAddress: accAddrs[1].String(),
 				Amount:    sdk.NewCoin(newDenom, math.NewInt(100)),
 			},
 			expErr: false,
+			adminDisable: false,
 		},
 		{
-			desc: "Mint tokenfatory denom, invalid admin",
+			desc: "Mint tokenfatory denom, admin enable, invalid admin",
 			msg: &types.MsgMint{
 				Authority: authority.String(),
 				ToAddress: accAddrs[1].String(),
 				Amount:    sdk.NewCoin(newDenom, math.NewInt(100)),
 			},
 			expErr: true,
+			adminDisable: false,
+		},
+		{
+			desc: "Mint tokenfatory denom, admin disable, valid authority",
+			msg: &types.MsgMint{
+				Authority: authority.String(),
+				ToAddress: accAddrs[1].String(),
+				Amount:    sdk.NewCoin(newDenom, math.NewInt(100)),
+			},
+			expErr: false,
+			adminDisable: true,
+		},
+		{
+			desc: "Mint tokenfatory denom, admin enable, invalid authority",
+			msg: &types.MsgMint{
+				Authority: accAddrs[0].String(),
+				ToAddress: accAddrs[1].String(),
+				Amount:    sdk.NewCoin(newDenom, math.NewInt(100)),
+			},
+			expErr: true,
+			adminDisable: true,
 		},
 		{
 			desc: "Mint tokenfatory denom, denom not created",
@@ -482,19 +518,23 @@ func (s *KeeperTestSuite) TestMintHandler() {
 				Amount:    sdk.NewCoin(newDenom+"s", math.NewInt(100)),
 			},
 			expErr: true,
+			adminDisable: true,
 		},
 	} {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			_, err := handler.MsgMint(s.ctx, tc.msg)
+
+			require.NoError(handler.Keeper.SetParams(s.ctx, types.NewParams(sdk.NewCoins(), 0, tc.adminDisable)))
+			toAddr, err := s.addressCodec.StringToBytes(tc.msg.ToAddress)
+			require.NoError(err)
+			balanceBefore := s.bankKeeper.GetBalance(s.ctx, toAddr, tc.msg.Amount.Denom)
+			_, err = handler.MsgMint(s.ctx, tc.msg)
 			if tc.expErr {
 				require.Error(err)
 			} else {
 				require.NoError(err)
 				// Check ToAddress balance after
-				toAddr, err := s.addressCodec.StringToBytes(tc.msg.ToAddress)
-				require.NoError(err)
-				balance := s.bankKeeper.GetBalance(s.ctx, toAddr, tc.msg.Amount.Denom)
-				require.Equal(balance, tc.msg.Amount)
+				balanceAfter := s.bankKeeper.GetBalance(s.ctx, toAddr, tc.msg.Amount.Denom)
+				require.Equal(balanceAfter.Sub(balanceBefore), tc.msg.Amount)
 			}
 		})
 	}
@@ -529,6 +569,7 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 	for _, tc := range []struct {
 		desc   string
 		msg    *types.MsgBurn
+		adminDisable bool
 		expErr bool
 	}{
 		{
@@ -538,6 +579,7 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				BurnFromAddress: accAddrs[0].String(),
 				Amount:          sdk.NewCoin(fooDenom, math.NewInt(50)),
 			},
+			adminDisable: false,
 			expErr: false,
 		},
 		{
@@ -547,6 +589,7 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				BurnFromAddress: accAddrs[0].String(),
 				Amount:          sdk.NewCoin(fooDenom, math.NewInt(50)),
 			},
+			adminDisable: false,
 			expErr: true,
 		},
 		{
@@ -556,6 +599,7 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				BurnFromAddress: accAddrs[0].String(),
 				Amount:          sdk.NewCoin(fooDenom, math.NewInt(200)),
 			},
+			adminDisable: false,
 			expErr: true,
 		},
 		{
@@ -565,24 +609,47 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				BurnFromAddress: accAddrs[0].String(),
 				Amount:          sdk.NewCoin(barDenom, math.NewInt(50)),
 			},
+			adminDisable: false,
 			expErr: true,
 		},
 		{
-			desc: "Burn tokenfactory denom, valid",
+			desc: "Burn tokenfactory denom, admin enable, valid",
 			msg: &types.MsgBurn{
 				Authority:       accAddrs[0].String(),
 				BurnFromAddress: accAddrs[0].String(),
 				Amount:          sdk.NewCoin(newDenom, math.NewInt(50)),
 			},
+			adminDisable: false,
 			expErr: false,
 		},
 		{
-			desc: "Burn tokenfactory denom, invalid admin",
+			desc: "Burn tokenfactory denom, admin enable, invalid admin",
 			msg: &types.MsgBurn{
 				Authority:       authority.String(),
 				BurnFromAddress: accAddrs[0].String(),
 				Amount:          sdk.NewCoin(newDenom, math.NewInt(50)),
 			},
+			adminDisable: false,
+			expErr: true,
+		},
+		{
+			desc: "Burn tokenfactory denom, admin disable, valid authority",
+			msg: &types.MsgBurn{
+				Authority:       authority.String(),
+				BurnFromAddress: accAddrs[0].String(),
+				Amount:          sdk.NewCoin(newDenom, math.NewInt(50)),
+			},
+			adminDisable: true,
+			expErr: false,
+		},
+		{
+			desc: "Burn tokenfactory denom, admin disable, invalid authority",
+			msg: &types.MsgBurn{
+				Authority:       accAddrs[0].String(),
+				BurnFromAddress: accAddrs[0].String(),
+				Amount:          sdk.NewCoin(newDenom, math.NewInt(50)),
+			},
+			adminDisable: true,
 			expErr: true,
 		},
 		{
@@ -592,6 +659,7 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				BurnFromAddress: accAddrs[0].String(),
 				Amount:          sdk.NewCoin(newDenom, math.NewInt(150)),
 			},
+			adminDisable: false,
 			expErr: true,
 		},
 		{
@@ -601,10 +669,12 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				BurnFromAddress: accAddrs[0].String(),
 				Amount:          sdk.NewCoin(newDenom+"s", math.NewInt(50)),
 			},
+			adminDisable: false,
 			expErr: true,
 		},
 	} {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			require.NoError(handler.Keeper.SetParams(s.ctx, types.NewParams(sdk.NewCoins(), 0, tc.adminDisable)))
 			// Get balance before burn
 			fromAddr, err := s.addressCodec.StringToBytes(tc.msg.BurnFromAddress)
 			require.NoError(err)

@@ -33,7 +33,8 @@ func (c *CometBFTBroadcaster) NewStream(_ context.Context, _ *grpc.StreamDesc, _
 	return nil, errors.New("not implemented")
 }
 
-// TODO: godoc
+// Invoke implements the gRPC ClientConn interface by forwarding the RPC call to CometBFT's ABCI Query.
+// It marshals the request, sends it as an ABCI query, and unmarshals the response.
 func (c *CometBFTBroadcaster) Invoke(ctx context.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
 	reqBz, err := c.getRPCCodec().Marshal(req)
 	if err != nil {
@@ -93,7 +94,9 @@ func (c *CometBFTBroadcaster) Invoke(ctx context.Context, method string, req, re
 	return nil
 }
 
-// TODO: godoc
+// queryABCI performs an ABCI query request to the CometBFT RPC client.
+// If the RPC query fails or returns a non-OK response, it will return an error.
+// The response is converted from ABCI error codes to gRPC status errors.
 func (c *CometBFTBroadcaster) queryABCI(req abci.QueryRequest) (abci.QueryResponse, error) {
 	opts := rpcclient.ABCIQueryOptions{
 		Height: req.Height,
@@ -112,7 +115,12 @@ func (c *CometBFTBroadcaster) queryABCI(req abci.QueryRequest) (abci.QueryRespon
 	return result.Response, nil
 }
 
-// TODO: godoc
+// sdkErrorToGRPCError converts an ABCI query response error code to an appropriate gRPC status error.
+// It maps common SDK error codes to their gRPC equivalents:
+// - ErrInvalidRequest -> InvalidArgument
+// - ErrUnauthorized -> Unauthenticated
+// - ErrKeyNotFound -> NotFound
+// Any other error codes are mapped to Unknown.
 func sdkErrorToGRPCError(resp abci.QueryResponse) error {
 	switch resp.Code {
 	case sdkerrors.ErrInvalidRequest.ABCICode():
@@ -126,7 +134,9 @@ func sdkErrorToGRPCError(resp abci.QueryResponse) error {
 	}
 }
 
-// TODO: godoc
+// getRPCCodec returns the gRPC codec for the CometBFT broadcaster.
+// If the broadcaster's codec implements GRPCCodecProvider, it returns its gRPC codec.
+// Otherwise, it creates a new ProtoCodec with the broadcaster's interface registry and returns its gRPC codec.
 func (c *CometBFTBroadcaster) getRPCCodec() encoding.Codec {
 	cdc, ok := c.cdc.(codec.GRPCCodecProvider)
 	if !ok {

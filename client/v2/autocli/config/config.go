@@ -64,7 +64,7 @@ func CreateClientConfig(homeDir, chainID string, v *viper.Viper, customClientTem
 
 			if chainID != "" {
 				// chain-id will be written to the client.toml while initiating the chain.
-				v.Set("chain-id", chainID) // TODO: use FlagChainId
+				v.Set("chain-id", chainID)
 			}
 
 			if err = v.Unmarshal(&customConfig); err != nil {

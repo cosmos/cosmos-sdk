@@ -33,7 +33,9 @@ func NewKeyringInContext(ctx context.Context, k Keyring) context.Context {
 	return context.WithValue(ctx, KeyringContextKey, NewKeyringImpl(k))
 }
 
-// TODO: godoc
+// NewKeyringFromFlags creates a new Keyring instance based on command-line flags.
+// It retrieves the keyring backend and directory from flags, creates a new keyring,
+// and wraps it with an AutoCLI-compatible interface.
 func NewKeyringFromFlags(flagSet *pflag.FlagSet, ac address.Codec, input io.Reader, cdc codec.Codec, opts ...keyring.Option) (Keyring, error) {
 	backEnd, err := flagSet.GetString("keyring-backend")
 	if err != nil {

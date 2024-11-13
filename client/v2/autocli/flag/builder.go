@@ -33,7 +33,6 @@ const (
 // keybase is a global variable that holds the keyring instance used for key management
 // and signing operations across the autocli flag package. It must be set in PreRunE
 // of the root command.
-// TODO: this is super hacky :/
 var keybase keyring.Keyring
 
 // Builder manages options for building pflag flags for protobuf messages.

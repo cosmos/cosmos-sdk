@@ -301,7 +301,9 @@ func (b *Builder) setFlagsFromConfig(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// TODO: godoc
+// getQueryClientConn returns a function that creates a gRPC client connection based on command flags.
+// It handles the creation of secure or insecure connections and falls back to a CometBFT broadcaster
+// if no gRPC address is specified.
 func getQueryClientConn(cdc codec.Codec, ir types.InterfaceRegistry) func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 	return func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 		var err error

@@ -28,6 +28,7 @@ import (
 // GenerateOrBroadcastTxCLIWithBroadcaster will either generate and print an unsigned transaction
 // or sign it and broadcast it with the specified broadcaster returning an error upon failure.
 func GenerateOrBroadcastTxCLIWithBroadcaster(
+	ctx context.Context,
 	flagSet *pflag.FlagSet,
 	printer *print.Printer,
 	keybase keyring.Keyring,
@@ -58,12 +59,13 @@ func GenerateOrBroadcastTxCLIWithBroadcaster(
 	}
 
 	skipConfirm, _ := flagSet.GetBool("yes")
-	return BroadcastTx(printer, txf, broadcaster, skipConfirm, msgs...)
+	return BroadcastTx(ctx, printer, txf, broadcaster, skipConfirm, msgs...)
 }
 
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
 // or sign it and broadcast it using default CometBFT broadcaster, returning an error upon failure.
 func GenerateOrBroadcastTxCLI(
+	ctx context.Context,
 	flagSet *pflag.FlagSet,
 	printer *print.Printer,
 	keybase keyring.Keyring,
@@ -78,7 +80,7 @@ func GenerateOrBroadcastTxCLI(
 		return err
 	}
 
-	return GenerateOrBroadcastTxCLIWithBroadcaster(flagSet, printer, keybase, cdc, addressCodec, validatorCodec, enablesSignModes, conn, cometBroadcaster, msgs...)
+	return GenerateOrBroadcastTxCLIWithBroadcaster(ctx, flagSet, printer, keybase, cdc, addressCodec, validatorCodec, enablesSignModes, conn, cometBroadcaster, msgs...)
 }
 
 // getCometBroadcaster returns a new CometBFT broadcaster based on the provided context and flag set.
@@ -183,7 +185,7 @@ func SimulateTx(
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
-func BroadcastTx(printer *print.Printer, txf Factory, broadcaster broadcast.Broadcaster, skipConfirm bool, msgs ...transaction.Msg) error {
+func BroadcastTx(ctx context.Context, printer *print.Printer, txf Factory, broadcaster broadcast.Broadcaster, skipConfirm bool, msgs ...transaction.Msg) error {
 	if txf.simulateAndExecute() {
 		err := txf.calculateGas(msgs...)
 		if err != nil {
@@ -227,7 +229,7 @@ func BroadcastTx(printer *print.Printer, txf Factory, broadcaster broadcast.Broa
 		}
 	}
 
-	signedTx, err := txf.sign(context.Background(), true) // TODO: pass ctx from upper call
+	signedTx, err := txf.sign(ctx, true)
 	if err != nil {
 		return err
 	}

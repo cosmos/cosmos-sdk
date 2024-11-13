@@ -107,32 +107,39 @@ func CreateClientConfig(ctx client.Context, customClientTemplate string, customC
 	if err != nil {
 		return ctx, fmt.Errorf("couldn't get client config: %w", err)
 	}
+
 	// we need to update KeyringDir field on client.Context first cause it is used in NewKeyringFromBackend
 	ctx = ctx.WithOutputFormat(conf.Output).
 		WithChainID(conf.ChainID).
 		WithKeyringDir(ctx.HomeDir).
 		WithKeyringDefaultKeyName(conf.KeyringDefaultKeyName)
+
 	keyring, err := client.NewKeyringFromBackend(ctx, conf.KeyringBackend)
 	if err != nil {
 		return ctx, fmt.Errorf("couldn't get keyring: %w", err)
 	}
+
 	// https://github.com/cosmos/cosmos-sdk/issues/8986
 	client, err := client.NewClientFromNode(conf.Node)
 	if err != nil {
 		return ctx, fmt.Errorf("couldn't get client from nodeURI: %w", err)
 	}
+
 	ctx = ctx.
 		WithNodeURI(conf.Node).
 		WithBroadcastMode(conf.BroadcastMode).
 		WithClient(client).
 		WithKeyring(keyring)
+
 	if conf.GRPC.Address != "" {
 		grpcClient, err := getGRPCClient(conf.GRPC)
 		if err != nil {
 			return ctx, fmt.Errorf("couldn't get grpc client: %w", err)
 		}
+
 		ctx = ctx.WithGRPCClient(grpcClient)
 	}
+
 	return ctx, nil
 }
 
@@ -143,13 +150,16 @@ func getGRPCClient(grpcConfig GRPCConfig) (*grpc.ClientConn, error) {
 	transport := grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
 		MinVersion: tls.VersionTLS12,
 	}))
+
 	if grpcConfig.Insecure {
 		transport = grpc.WithTransportCredentials(insecure.NewCredentials())
 	}
+
 	dialOptions := []grpc.DialOption{transport}
 	grpcClient, err := grpc.NewClient(grpcConfig.Address, dialOptions...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial gRPC server at %s: %w", grpcConfig.Address, err)
 	}
+
 	return grpcClient, nil
 }

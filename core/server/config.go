@@ -91,9 +91,10 @@ func (c ConfigMap) GetSliceOfInts(key string) []int {
 	return getValue(c, key, []int{}).([]int)
 }
 
-func (c ConfigMap) GetString(key string) string {
-	return getValue(c, key, "").(string)
-}
+// ConfigMap cannot implement DynamicConfig yet or there are cyclic dependencies in simapp/v1
+//func (c ConfigMap) GetString(key string) string {
+//	return getValue(c, key, "").(string)
+//}
 
 func (c ConfigMap) GetBool(key string) bool {
 	return getValue(c, key, false).(bool)

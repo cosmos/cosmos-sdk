@@ -16,6 +16,7 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/registry"
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/core/telemetry"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/log"
@@ -24,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime/services"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -106,6 +108,7 @@ func init() {
 			ProvideModuleConfigMaps,
 			ProvideModuleScopedConfigMap,
 			ProvideKVStoreFactory,
+			ProvideTelemetryService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -304,4 +307,21 @@ func ProvideKVStoreFactory(app *AppBuilder) store.KVStoreServiceFactory {
 		registerStoreKey(app, sk)
 		return kvStoreService{key: sk}
 	}
+}
+
+// func ProvideTelemetryService(config server.DynamicConfig) telemetry.Service {
+func ProvideTelemetryService() telemetry.Service {
+	//labels, ok := config.Get("telemetry.global-labels").([][]string)
+	//if !ok {
+	//	return services.NewGlobalTelemetryService(nil)
+	//}
+	//globalLabels := make([]telemetry.Label, len(labels))
+	//for i, label := range labels {
+	//	if len(label) != 2 {
+	//		continue
+	//	}
+	//	globalLabels[i] = telemetry.Label{Name: label[0], Value: label[1]}
+	//}
+	//return services.NewGlobalTelemetryService(globalLabels)
+	return services.NewGlobalTelemetryService(nil)
 }

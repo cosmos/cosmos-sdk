@@ -309,16 +309,20 @@ func (svd SigVerificationDecorator) verifySig(ctx context.Context, tx sdk.Tx, ac
 	execMode := svd.ak.GetEnvironment().TransactionService.ExecMode(ctx)
 	if execMode == transaction.ExecModeCheck {
 		if sig.Sequence < acc.GetSequence() {
-			return errorsmod.Wrapf(
+			err := errorsmod.Wrapf(
 				sdkerrors.ErrWrongSequence,
 				"account sequence mismatch, expected higher than or equal to %d, got %d", acc.GetSequence(), sig.Sequence,
 			)
+			fmt.Printf("CheckTx ERROR: %s\n", err)
+			return err
 		}
 	} else if sig.Sequence != acc.GetSequence() {
-		return errorsmod.Wrapf(
+		err := errorsmod.Wrapf(
 			sdkerrors.ErrWrongSequence,
 			"account sequence mismatch: expected %d, got %d", acc.GetSequence(), sig.Sequence,
 		)
+		fmt.Printf("DeliverTx ERROR: %s\n", err)
+		return err
 	}
 
 	// we're in simulation mode, or in ReCheckTx, or context is not

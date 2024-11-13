@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	modulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	"cosmossdk.io/x/benchmark"
@@ -16,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewTxCmd() *cobra.Command {
+func NewTxCmd(params *modulev1.GeneratorParams) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        "benchmark",
 		Short:                      "benchmark transaction subcommands",
@@ -26,17 +27,21 @@ func NewTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		NewLoadTestCmd(),
+		NewLoadTestCmd(params),
 	)
 
 	return txCmd
 }
 
-func NewLoadTestCmd() *cobra.Command {
-	var verbose bool
+func NewLoadTestCmd(params *modulev1.GeneratorParams) *cobra.Command {
+	var (
+		verbose bool
+		pause   int64
+		numOps  uint64
+	)
 	cmd := &cobra.Command{
 		Use: "load-test",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) (runErr error) {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -58,6 +63,7 @@ func NewLoadTestCmd() *cobra.Command {
 			var (
 				successCount uint64
 				errCount     uint64
+				since        = time.Now()
 			)
 			defer func() {
 				cmd.Printf("done! success_tx=%d err_tx=%d\n", successCount, errCount)
@@ -70,87 +76,103 @@ func NewLoadTestCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			txf = txf.WithAccountNumber(accNum).WithChainID(clientCtx.ChainID)
+			txf = txf.WithAccountNumber(accNum).WithChainID(clientCtx.ChainID).WithGas(1_000_000_000)
 
-			// TODO: fetch or share state from genesis
-			seed := uint64(34)
-			storeKeyCount := uint64(10)
-			storeKeys, err := gen.StoreKeys("benchmark", seed, storeKeyCount)
+			storeKeys, err := gen.StoreKeys("benchmark", params.Seed, params.BucketCount)
 			if err != nil {
 				return err
 			}
+			var seed uint64
 			for _, c := range clientCtx.FromAddress {
+				// root the generator seed in the account address
 				seed += uint64(c)
 			}
 			g := gen.NewGenerator(gen.Options{
-				GeneratorParams: &modulev1.GeneratorParams{
-					Seed:         seed,
-					KeyMean:      64,
-					KeyStdDev:    8,
-					ValueMean:    1024,
-					ValueStdDev:  256,
-					BucketCount:  storeKeyCount,
-					GenesisCount: 500_000,
-				},
-				InsertWeight: 0.25,
-				DeleteWeight: 0.05,
-				UpdateWeight: 0.50,
-				GetWeight:    0.20,
-			})
-			g.Load()
+				HomeDir:         clientCtx.HomeDir,
+				GeneratorParams: params,
+				InsertWeight:    0.25,
+				DeleteWeight:    0.05,
+				UpdateWeight:    0.50,
+				GetWeight:       0.20,
+			},
+				gen.WithGenesis(),
+				gen.WithSeed(seed),
+			)
+			//if err = g.Load(); err != nil {
+			//	return err
+			//}
+			//defer func() {
+			//	if err = g.Close(); err != nil {
+			//		runErr = errors.Join(runErr, err)
+			//	}
+			//}()
 
 			i := 0
+			ops := make([]*benchmark.Op, numOps)
 			for {
 				select {
 				case <-ctx.Done():
 					return nil
 				default:
-					if i != 0 && i%1000 == 0 {
-						cmd.Printf("success_tx=%d err_tx=%d seq=%d\n", successCount, errCount, accSeq)
-					}
+				}
+				if time.Since(since) > 5*time.Second {
+					cmd.Printf("success_tx=%d err_tx=%d seq=%d\n", successCount, errCount, accSeq)
+					since = time.Now()
+				}
+
+				for j := range numOps {
 					bucket, op, err := g.Next()
 					if err != nil {
 						return err
 					}
 					op.Actor = storeKeys[bucket]
-					msg := &benchmark.MsgLoadTest{
-						Caller: clientCtx.FromAddress,
-						Ops:    []*benchmark.Op{op},
-					}
-					txf = txf.WithSequence(accSeq)
-					tx, err := txf.BuildUnsignedTx(msg)
-					if err != nil {
-						return err
-					}
-					err = clienttx.Sign(clientCtx, txf, clientCtx.From, tx, true)
-					if err != nil {
-						return err
-					}
-					txBytes, err := clientCtx.TxConfig.TxEncoder()(tx.GetTx())
-					if err != nil {
-						return err
-					}
-					res, err := clientCtx.BroadcastTxAsync(txBytes)
-					if err != nil {
-						return err
-					}
-					if res.Code != 0 {
-						if verbose {
-							clientCtx.PrintProto(res)
+					ops[j] = op
+				}
+				msg := &benchmark.MsgLoadTest{
+					Caller: clientCtx.FromAddress,
+					Ops:    ops,
+				}
+				txf = txf.WithSequence(accSeq)
+				tx, err := txf.BuildUnsignedTx(msg)
+				if err != nil {
+					return err
+				}
+				err = clienttx.Sign(clientCtx, txf, clientCtx.From, tx, true)
+				if err != nil {
+					return err
+				}
+				txBytes, err := clientCtx.TxConfig.TxEncoder()(tx.GetTx())
+				if err != nil {
+					return err
+				}
+				res, err := clientCtx.BroadcastTxSync(txBytes)
+				if err != nil {
+					return err
+				}
+				if res.Code != 0 {
+					if verbose {
+						err = clientCtx.PrintProto(res)
+						if err != nil {
+							return err
 						}
-						errCount++
-					} else {
-						accSeq++
-						successCount++
 					}
-					i++
+					errCount++
+				} else {
+					accSeq++
+					successCount++
+				}
+				i++
+				if pause > 0 {
+					time.Sleep(time.Duration(pause) * time.Millisecond)
 				}
 			}
 		},
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
-	cmd.Flags().BoolVar(&verbose, "verbose", false, "print the response")
+	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "print the response")
+	cmd.Flags().Uint64Var(&numOps, "ops", 1, "number of operations per transaction")
+	cmd.Flags().Int64Var(&pause, "pause", 0, "pause between transactions in milliseconds")
 
 	return cmd
 }

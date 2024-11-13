@@ -184,7 +184,7 @@ var (
 					// OrderMigrations: []string{},
 					// TODO GasConfig was added to the config in runtimev2.  Where/how was it set in v1?
 					GasConfig: &runtimev2.GasConfig{
-						ValidateTxGasLimit: 100_000,
+						ValidateTxGasLimit: 10_000_000,
 						QueryGasLimit:      100_000,
 						SimulationGasLimit: 100_000,
 					},
@@ -309,8 +309,8 @@ var (
 				Config: appconfig.WrapAny(&benchmarkmodulev1.Module{
 					GenesisParams: &benchmarkmodulev1.GeneratorParams{
 						Seed:         34,
-						BucketCount:  10,
-						GenesisCount: 500_000,
+						BucketCount:  2,
+						GenesisCount: 10_000_000,
 						KeyMean:      64,
 						KeyStdDev:    12,
 						ValueMean:    1024,

@@ -3,6 +3,7 @@ package module
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"cosmossdk.io/core/telemetry"
 	"cosmossdk.io/core/transaction"
@@ -70,11 +71,12 @@ func (a *AppModule) InitGenesis(ctx context.Context, _ json.RawMessage) error {
 	for kv := range g.GenesisSet() {
 		i++
 		if i%100_000 == 0 {
+			fmt.Printf("init genesis: %d/%d\n", i, a.genesisParams.GenesisCount)
 			a.log.Warn("init genesis", "progress", i, "total", a.genesisParams.GenesisCount)
 		}
 		sk := a.storeKeys[kv.StoreKey]
-		key := gen.Bytes(kv.Key[0], kv.Key[1])
-		value := gen.Bytes(kv.Value[0], kv.Value[1])
+		key := gen.Bytes(kv.Key.Seed(), kv.Key.Length())
+		value := gen.Bytes(kv.Value.Seed(), kv.Value.Length())
 		err := a.keeper.set(ctx, sk, key, value)
 		if err != nil {
 			return err
@@ -103,7 +105,7 @@ func (a *AppModule) RegisterInterfaces(registrar registry.InterfaceRegistrar) {
 }
 
 func (a *AppModule) GetTxCmd() *cobra.Command {
-	return cli.NewTxCmd()
+	return cli.NewTxCmd(a.genesisParams)
 }
 
 func (a *AppModule) IsOnePerModuleType() {}

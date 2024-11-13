@@ -41,6 +41,9 @@ type Config struct {
 	// It defines the retention duration in seconds.
 	PrometheusRetentionTime int64 `mapstructure:"prometheus-retention-time" toml:"prometheus-retention-time" comment:"PrometheusRetentionTime, when positive, enables a Prometheus metrics sink. It defines the retention duration in seconds."`
 
+	// PrometheusHistograms enables the use of Prometheus histograms instead summary metrics.
+	PrometheusHistograms bool `mapstructure:"prometheus-histograms" toml:"prometheus-histograms" comment:"PrometheusHistograms enables the use of Prometheus histograms instead summary metrics.  The default behavior is to use summary metrics."`
+
 	// GlobalLabels defines a global set of name/value label tuples applied to all
 	// metrics emitted using the wrapper functions defined in telemetry package.
 	//

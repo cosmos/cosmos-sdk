@@ -2,8 +2,6 @@ package autocli
 
 import (
 	"context"
-	"cosmossdk.io/client/v2/autocli/keyring"
-	"cosmossdk.io/client/v2/tx"
 	"fmt"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
@@ -14,10 +12,13 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
+	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/autocli/print"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
+	v2tx "cosmossdk.io/client/v2/tx"
 	addresscodec "cosmossdk.io/core/address"
+	"cosmossdk.io/core/transaction"
 
 	// the following will be extracted to a separate module
 	// https://github.com/cosmos/cosmos-sdk/issues/14403
@@ -169,22 +170,6 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		msg := dynamicpb.NewMessage(input.Descriptor())
 		proto.Merge(msg, input.Interface())
 
-		k, err := keyring.NewKeyringFromFlags(cmd.Flags(), b.AddressCodec, cmd.InOrStdin(), b.Cdc)
-		if err != nil {
-			return err
-		}
-
-		cConn, err := b.GetClientConn(cmd)
-		if err != nil {
-			return err
-		}
-
-		printer, err := print.NewPrinter(cmd)
-		if err != nil {
-			return err
-		}
-
-		return tx.GenerateOrBroadcastTxCLI(cmd.Flags(), printer, k, b.Cdc, b.AddressCodec, b.ValidatorAddressCodec, b.EnablesSignModes, cConn, msg)
 		return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 	}
 
@@ -213,7 +198,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 func (b *Builder) handleGovProposal(
 	cmd *cobra.Command,
 	input protoreflect.Message,
-	clientCtx client.Context, // TODO: this could be just the address
+	clientCtx client.Context,
 	addressCodec addresscodec.Codec,
 	fd protoreflect.FieldDescriptor,
 ) error {
@@ -246,4 +231,24 @@ func (b *Builder) handleGovProposal(
 	}
 
 	return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
+}
+
+// generateOrBroadcastTxWithV2 generates or broadcasts a transaction with the provided messages using v2 transaction handling.
+func (b *Builder) generateOrBroadcastTxWithV2(cmd *cobra.Command, msgs ...transaction.Msg) error {
+	k, err := keyring.NewKeyringFromFlags(cmd.Flags(), b.AddressCodec, cmd.InOrStdin(), b.Cdc)
+	if err != nil {
+		return err
+	}
+
+	cConn, err := b.GetClientConn(cmd)
+	if err != nil {
+		return err
+	}
+
+	printer, err := print.NewPrinter(cmd)
+	if err != nil {
+		return err
+	}
+
+	return v2tx.GenerateOrBroadcastTxCLI(cmd.Flags(), printer, k, b.Cdc, b.AddressCodec, b.ValidatorAddressCodec, b.EnablesSignModes, cConn, msgs...)
 }

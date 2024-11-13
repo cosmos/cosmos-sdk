@@ -34,7 +34,7 @@ func NewKeyringInContext(ctx context.Context, k Keyring) context.Context {
 }
 
 // TODO: godoc
-func NewKeyringFromFlags(flagSet *pflag.FlagSet, ac address.Codec, input io.Reader, cdc codec.Codec) (Keyring, error) {
+func NewKeyringFromFlags(flagSet *pflag.FlagSet, ac address.Codec, input io.Reader, cdc codec.Codec, opts ...keyring.Option) (Keyring, error) {
 	backEnd, err := flagSet.GetString("keyring-backend")
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func NewKeyringFromFlags(flagSet *pflag.FlagSet, ac address.Codec, input io.Read
 		}
 	}
 
-	k, err := keyring.New(sdk.KeyringServiceName(), backEnd, keyringDir, input, cdc)
+	k, err := keyring.New(sdk.KeyringServiceName(), backEnd, keyringDir, input, cdc, opts...)
 	if err != nil {
 		return nil, err
 	}

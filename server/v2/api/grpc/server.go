@@ -70,14 +70,14 @@ func New[T transaction.Tx](
 		grpc.UnknownServiceHandler(makeUnknownServiceHandler(queryHandlers, queryable)),
 	)
 
-	// reflection allows external clients to see what services and methods the gRPC server exposes.
-	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(queryHandlers)), logger.With("sub-module", "grpc-reflection"))
-
 	// register V2 grpc handlers
 	RegisterServiceServer(grpcSrv, &v2Service{queryHandlers, queryable})
 
 	// register node service
 	nodeservice.RegisterServiceServer(grpcSrv, nodeservice.NewQueryServer(cfg))
+
+	// reflection allows external clients to see what services and methods the gRPC server exposes.
+	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(queryHandlers)), logger.With("sub-module", "grpc-reflection"))
 
 	// register extra handlers on the grpc server
 	for _, fn := range extraGRPCHandlers {

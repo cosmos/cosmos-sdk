@@ -99,7 +99,14 @@ func (a *AppBuilder) registerIndexer() error {
 	if indexerOpts := a.appOptions.Get("indexer"); indexerOpts != nil {
 		moduleSet := map[string]any{}
 		for modName, mod := range a.app.ModuleManager.Modules {
-			moduleSet[modName] = mod
+			storeKey := modName
+			for _, cfg := range a.app.config.OverrideStoreKeys {
+				if cfg.ModuleName == modName {
+					storeKey = cfg.KvStoreKey
+					break
+				}
+			}
+			moduleSet[storeKey] = mod
 		}
 
 		return a.app.EnableIndexer(indexerOpts, a.kvStoreKeys(), moduleSet)

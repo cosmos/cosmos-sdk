@@ -157,7 +157,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		return nil, err
 	}
 
-	err = k.RecipientFundDistribution.Set(ctx, recipient, math.ZeroInt())
+	err = k.RecipientFundDistribution.Set(ctx, recipient, types.DistributionAmount{Amount: sdk.NewCoins()})
 	if err != nil {
 		return nil, err
 	}
@@ -223,6 +223,18 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 		RecipientAddress:       msg.RecipientAddress,
 		WithdrawnAllocatedFund: withdrawnFunds,
 	}, nil
+}
+
+func (k MsgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if err := k.validateAuthority(msg.GetAuthority()); err != nil {
+		return nil, err
+	}
+
+	if err := k.Params.Set(ctx, msg.Params); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateParamsResponse{}, nil
 }
 
 func (k *Keeper) validateAuthority(authority string) error {

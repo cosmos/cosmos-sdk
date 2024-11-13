@@ -25,7 +25,6 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/api"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
@@ -48,9 +47,7 @@ func New[T transaction.Tx](
 	logger log.Logger,
 	interfaceRegistry server.InterfaceRegistry,
 	queryHandlers map[string]appmodulev2.Handler,
-	queryable interface {
-		Query(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error)
-	},
+	queryable func(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error),
 	cfg server.ConfigMap,
 	cfgOptions ...CfgOption,
 ) (*Server[T], error) {
@@ -74,7 +71,7 @@ func New[T transaction.Tx](
 	// Reflection allows external clients to see what services and methods the gRPC server exposes.
 	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(queryHandlers)), logger.With("sub-module", "grpc-reflection"))
 
-	// Register V2
+	// Register V2 grpc handlers
 	RegisterServiceServer(grpcSrv, &v2Service{queryHandlers, queryable})
 
 	srv.grpcSrv = grpcSrv
@@ -99,9 +96,9 @@ func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 	return flags
 }
 
-func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier interface {
-	Query(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error)
-},
+func makeUnknownServiceHandler(
+	handlers map[string]appmodulev2.Handler,
+	queryable func(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error),
 ) grpc.StreamHandler {
 	getRegistry := sync.OnceValues(gogoproto.MergedRegistry)
 
@@ -149,7 +146,7 @@ func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier 
 			if err != nil {
 				return status.Errorf(codes.InvalidArgument, "invalid get height from context: %v", err)
 			}
-			resp, err := querier.Query(ctx, height, req)
+			resp, err := queryable(ctx, height, req)
 			if err != nil {
 				return err
 			}
@@ -226,7 +223,9 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	}
 
 	s.logger.Info("stopping gRPC server...", "address", s.config.Address)
-	return api.DoUntilCtxExpired(ctx, s.grpcSrv.GracefulStop)
+	s.grpcSrv.GracefulStop()
+
+	return nil
 }
 
 // GetGRPCServer returns the underlying gRPC server.

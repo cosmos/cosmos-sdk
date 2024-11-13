@@ -13,6 +13,7 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/store/v2"
 	dbm "cosmossdk.io/store/v2/db"
+	"cosmossdk.io/store/v2/proof"
 	"cosmossdk.io/store/v2/snapshots"
 	snapshotstypes "cosmossdk.io/store/v2/snapshots/types"
 )
@@ -37,6 +38,7 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 
 	latestVersion := uint64(10)
 	kvCount := 10
+	var cInfo *proof.CommitInfo
 	for i := uint64(1); i <= latestVersion; i++ {
 		kvPairs := make(map[string]corestore.KVPairs)
 		for _, storeKey := range storeKeys {
@@ -47,13 +49,12 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
 			}
 		}
-		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(i, kvPairs)))
 
-		_, err = commitStore.Commit(i)
+		cInfo, err = commitStore.Commit(i)
 		s.Require().NoError(err)
 	}
 
-	cInfo := commitStore.WorkingCommitInfo(latestVersion)
 	s.Require().Equal(len(storeKeys), len(cInfo.StoreInfos))
 
 	// create a snapshot
@@ -112,7 +113,8 @@ func (s *CommitStoreTestSuite) TestStore_Snapshotter() {
 	}
 
 	// check the restored tree hash
-	targetCommitInfo := targetStore.WorkingCommitInfo(latestVersion)
+	targetCommitInfo, err := targetStore.GetCommitInfo(latestVersion)
+	s.Require().NoError(err)
 	for _, storeInfo := range targetCommitInfo.StoreInfos {
 		matched := false
 		for _, latestStoreInfo := range cInfo.StoreInfos {
@@ -143,7 +145,7 @@ func (s *CommitStoreTestSuite) TestStore_LoadVersion() {
 				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
 			}
 		}
-		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(i, kvPairs)))
 		_, err = commitStore.Commit(i)
 		s.Require().NoError(err)
 	}
@@ -198,7 +200,7 @@ func (s *CommitStoreTestSuite) TestStore_Pruning() {
 				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
 			}
 		}
-		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(i, kvPairs)))
 
 		_, err = commitStore.Commit(i)
 		s.Require().NoError(err)
@@ -231,7 +233,7 @@ func (s *CommitStoreTestSuite) TestStore_GetProof() {
 
 	// commit some changes
 	for version := uint64(1); version <= toVersion; version++ {
-		cs := corestore.NewChangeset()
+		cs := corestore.NewChangeset(version)
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
@@ -274,7 +276,7 @@ func (s *CommitStoreTestSuite) TestStore_Get() {
 
 	// commit some changes
 	for version := uint64(1); version <= toVersion; version++ {
-		cs := corestore.NewChangeset()
+		cs := corestore.NewChangeset(version)
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
@@ -316,7 +318,7 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
 			}
 		}
-		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(i, kvPairs)))
 		_, err = commitStore.Commit(i)
 		s.Require().NoError(err)
 	}
@@ -365,7 +367,7 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
 			}
 		}
-		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(i, kvPairs)))
 		commitInfo, err := commitStore.Commit(i)
 		s.Require().NoError(err)
 		s.Require().NotNil(commitInfo)
@@ -418,7 +420,7 @@ func (s *CommitStoreTestSuite) TestStore_Upgrades() {
 				kvPairs[storeKey] = append(kvPairs[storeKey], corestore.KVPair{Key: key, Value: value})
 			}
 		}
-		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(kvPairs)))
+		s.Require().NoError(commitStore.WriteChangeset(corestore.NewChangesetWithPairs(i, kvPairs)))
 		commitInfo, err := commitStore.Commit(i)
 		s.Require().NoError(err)
 		s.Require().NotNil(commitInfo)

@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/core v1.0.0 // main
 	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // indirect; main
 	cosmossdk.io/depinject v1.1.0
-	cosmossdk.io/log v1.4.1
+	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.3.0
 	cosmossdk.io/runtime/v2 v2.0.0-20241105073932-55f7cfcebae4 // main
 	cosmossdk.io/server/v2 v2.0.0-20241108144957-78b5cd4dbd08 // main
@@ -47,6 +47,16 @@ require (
 	cosmossdk.io/x/accounts/defaults/base v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/accounts/defaults/lockup v0.0.0-20240417181816-5e7aae0db1f5
 	cosmossdk.io/x/accounts/defaults/multisig v0.0.0-00010101000000-000000000000
+)
+
+require (
+	github.com/bytedance/sonic v1.12.4 // indirect
+	github.com/bytedance/sonic/loader v0.2.1 // indirect
+	github.com/cloudwego/base64x v0.1.4 // indirect
+	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
+	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
+	golang.org/x/arch v0.12.0 // indirect
 )
 
 require (

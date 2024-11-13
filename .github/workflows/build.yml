@@ -18,7 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-arch: ["amd64", "arm", "arm64"]
+        # go-arch: ["amd64", "arm", "arm64"]
+        go-arch: ["amd64", "arm64"] # drop 32 bit support for now (and maybe forever)
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5

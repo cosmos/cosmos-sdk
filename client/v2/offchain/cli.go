@@ -62,7 +62,7 @@ func SignFile() *cobra.Command {
 
 			keyringBackend := c.KeyringBackend
 			if !cmd.Flags().Changed(flags.FlagKeyringBackend) {
-				cmd.Flags().Set(flags.FlagKeyringBackend, keyringBackend)
+				_ = cmd.Flags().Set(flags.FlagKeyringBackend, keyringBackend)
 			}
 
 			bz, err := os.ReadFile(args[1])

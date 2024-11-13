@@ -234,6 +234,8 @@ func (b *Builder) handleGovProposal(
 }
 
 // generateOrBroadcastTxWithV2 generates or broadcasts a transaction with the provided messages using v2 transaction handling.
+//
+//nolint:unused // It'll be used once BuildMsgMethodCommand is updated to use factory v2.
 func (b *Builder) generateOrBroadcastTxWithV2(cmd *cobra.Command, msgs ...transaction.Msg) error {
 	k, err := keyring.NewKeyringFromFlags(cmd.Flags(), b.AddressCodec, cmd.InOrStdin(), b.Cdc)
 	if err != nil {

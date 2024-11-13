@@ -108,10 +108,8 @@ func validateFlagSet(flags *pflag.FlagSet, offline bool) error {
 		if gasSetting.Simulate {
 			return errors.New("simulate and offline flags cannot be set at the same time")
 		}
-	} else {
-		if chainID == "" {
-			return errors.New("chain ID required but not specified")
-		}
+	} else if chainID == "" {
+		return errors.New("chain ID required but not specified")
 	}
 
 	return nil

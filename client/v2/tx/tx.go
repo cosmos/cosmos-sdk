@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 
-
 	"github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"

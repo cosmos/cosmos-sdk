@@ -60,6 +60,10 @@ func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Env
 	return k
 }
 
+func (k Keeper) GetAccountsKeeper() types.AccountsModKeeper {
+	return k.accountsKeeper
+}
+
 // MintCoins creates new coins from thin air and adds it to the module account.
 // An error is returned if the module account does not exist or is unauthorized.
 func (k Keeper) MintCoins(ctx context.Context, addr []byte, amounts sdk.Coins) error {

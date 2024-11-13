@@ -29,6 +29,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	adminv1 "cosmossdk.io/x/accounts/defaults/admin/v1"
 )
 
 const (
@@ -334,9 +335,16 @@ func (s *KeeperTestSuite) TestCreateDenom() {
 
 				// Make sure that the admin is set correctly
 				authority, err := s.bankKeeper.GetAuthorityMetadata(s.ctx, newDenom)
+				require.NoError(err)
 
-				s.Require().NoError(err)
-				s.Require().Equal(accAddrs[0].String(), authority.Admin)
+				accountsKeeper := s.bankKeeper.GetAccountsKeeper()
+
+				resp, err := accountsKeeper.Query(s.ctx, authority.Admin, &adminv1.QueryOwner{})
+				require.NoError(err)
+				v1Resp, ok := resp.(*adminv1.QueryOwnerResponse)
+				require.True(ok)
+
+				s.Require().Equal(accAddrs[0].String(), v1Resp.Owner)
 
 				// Make sure that the denom metadata is initialized correctly
 				metadata, found := s.bankKeeper.GetDenomMetaData(s.ctx, newDenom)

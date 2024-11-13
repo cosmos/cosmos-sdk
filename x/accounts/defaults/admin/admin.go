@@ -145,4 +145,5 @@ func (a *Admin) RegisterInitHandler(builder *accountstd.InitBuilder) {
 func (a *Admin) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, a.HaveMintPerm)
 	accountstd.RegisterQueryHandler(builder, a.HaveBurnPerm)
+	accountstd.RegisterQueryHandler(builder, a.QueryOwner)
 }

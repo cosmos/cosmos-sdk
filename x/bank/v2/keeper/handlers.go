@@ -12,9 +12,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/bank/v2/types"
 
+	adminv1 "cosmossdk.io/x/accounts/defaults/admin/v1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	adminv1 "cosmossdk.io/x/accounts/defaults/admin/v1"
 )
 
 type handlers struct {

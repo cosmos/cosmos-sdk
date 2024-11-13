@@ -2,10 +2,10 @@ package print
 
 import (
 	"encoding/json"
-	"github.com/spf13/cobra"
 	"io"
 	"os"
 
+	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 )
 

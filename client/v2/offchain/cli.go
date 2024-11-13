@@ -1,23 +1,22 @@
 package offchain
 
 import (
-	"cosmossdk.io/client/v2/autocli/keyring"
-	"cosmossdk.io/client/v2/broadcast/comet"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/client/v2/autocli/config"
+	"cosmossdk.io/client/v2/autocli/keyring"
+	"cosmossdk.io/client/v2/broadcast/comet"
 	v2flags "cosmossdk.io/client/v2/internal/flags"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (

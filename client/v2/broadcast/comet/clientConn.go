@@ -7,8 +7,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/encoding"
@@ -16,10 +15,11 @@ import (
 	"google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
-	gogogrpc "github.com/cosmos/gogoproto/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
 const grpcBlockHeightHeader = "x-cosmos-block-height"

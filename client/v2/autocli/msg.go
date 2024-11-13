@@ -250,5 +250,5 @@ func (b *Builder) generateOrBroadcastTxWithV2(cmd *cobra.Command, msgs ...transa
 		return err
 	}
 
-	return v2tx.GenerateOrBroadcastTxCLI(cmd.Flags(), printer, k, b.Cdc, b.AddressCodec, b.ValidatorAddressCodec, b.EnablesSignModes, cConn, msgs...)
+	return v2tx.GenerateOrBroadcastTxCLI(cmd.Context(), cmd.Flags(), printer, k, b.Cdc, b.AddressCodec, b.ValidatorAddressCodec, b.EnablesSignModes, cConn, msgs...)
 }

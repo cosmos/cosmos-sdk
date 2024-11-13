@@ -1,13 +1,12 @@
 package autocli
 
 import (
-	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -16,6 +15,7 @@ import (
 	"cosmossdk.io/x/tx/signing"
 
 	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
@@ -47,7 +47,7 @@ type AppOptions struct {
 
 	Cdc          codec.Codec
 	TxConfigOpts authtx.ConfigOptions
-	//Keyring      keyring.Keyring
+	// Keyring      keyring.Keyring
 
 	skipValidation bool
 }

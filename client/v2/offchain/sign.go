@@ -3,6 +3,7 @@ package offchain
 import (
 	"context"
 	"fmt"
+
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"

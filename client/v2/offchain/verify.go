@@ -3,16 +3,16 @@ package offchain
 import (
 	"bytes"
 	"context"
-	"cosmossdk.io/core/address"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 
 	"google.golang.org/protobuf/types/known/anypb"
 
 	clitx "cosmossdk.io/client/v2/tx"
+	"cosmossdk.io/core/address"
 	txsigning "cosmossdk.io/x/tx/signing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )

@@ -3,6 +3,7 @@ package offchain
 import (
 	"context"
 	"errors"
+
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc"
 

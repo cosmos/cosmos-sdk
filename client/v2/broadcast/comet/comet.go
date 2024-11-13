@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"strings"
 
 	"github.com/cometbft/cometbft/mempool"
@@ -18,6 +17,7 @@ import (
 	"cosmossdk.io/client/v2/broadcast"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 

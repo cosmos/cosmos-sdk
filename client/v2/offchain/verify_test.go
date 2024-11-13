@@ -62,7 +62,7 @@ func Test_SignVerify(t *testing.T) {
 	k := keyring.NewInMemory(getCodec())
 	_, err := k.NewAccount("signVerify", mnemonic, "", "m/44'/118'/0'/0/0", hd.Secp256k1)
 	require.NoError(t, err)
-	
+
 	autoKeyring, err := keyring.NewAutoCLIKeyring(k, ac)
 	require.NoError(t, err)
 

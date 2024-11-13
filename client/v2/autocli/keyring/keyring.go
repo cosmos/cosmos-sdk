@@ -4,16 +4,15 @@ import (
 	"context"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"github.com/spf13/pflag"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/core/address"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // KeyringContextKey is the key used to store the keyring in the context.

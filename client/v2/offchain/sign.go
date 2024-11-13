@@ -3,14 +3,17 @@ package offchain
 import (
 	"context"
 	"fmt"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/internal/account"
 	"cosmossdk.io/client/v2/internal/offchain"
 	clitx "cosmossdk.io/client/v2/tx"
+	"cosmossdk.io/core/address"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -29,28 +32,30 @@ var enabledSignModes = []apisigning.SignMode{
 }
 
 // Sign signs given bytes using the specified encoder and SignMode.
-func Sign(ctx client.Context, rawBytes []byte, fromName, encoding, signMode, output string) (string, error) {
+func Sign(
+	rawBytes []byte,
+	conn gogogrpc.ClientConn,
+	keybase keyring.Keyring,
+	cdc codec.BinaryCodec, addressCodec, validatorAddressCodec address.Codec,
+	ir types.InterfaceRegistry,
+	fromName, encoding, signMode, output string,
+) (string, error) {
 	digest, err := encodeDigest(encoding, rawBytes)
 	if err != nil {
 		return "", err
 	}
 
-	keybase, err := keyring.NewAutoCLIKeyring(ctx.Keyring, ctx.AddressCodec)
-	if err != nil {
-		return "", err
-	}
-
 	txConfig, err := clitx.NewTxConfig(clitx.ConfigOptions{
-		AddressCodec:          ctx.AddressCodec,
-		Cdc:                   ctx.Codec,
-		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
+		AddressCodec:          addressCodec,
+		Cdc:                   cdc,
+		ValidatorAddressCodec: validatorAddressCodec,
 		EnabledSignModes:      enabledSignModes,
 	})
 	if err != nil {
 		return "", err
 	}
 
-	accRetriever := account.NewAccountRetriever(ctx.AddressCodec, ctx, ctx.InterfaceRegistry)
+	accRetriever := account.NewAccountRetriever(addressCodec, conn, ir)
 
 	sm, err := getSignMode(signMode)
 	if err != nil {
@@ -66,7 +71,7 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, encoding, signMode, out
 		},
 	}
 
-	txf, err := clitx.NewFactory(keybase, ctx.Codec, accRetriever, txConfig, ctx.AddressCodec, ctx, params)
+	txf, err := clitx.NewFactory(keybase, cdc, accRetriever, txConfig, addressCodec, conn, params)
 	if err != nil {
 		return "", err
 	}
@@ -76,7 +81,7 @@ func Sign(ctx client.Context, rawBytes []byte, fromName, encoding, signMode, out
 		return "", err
 	}
 
-	addr, err := ctx.AddressCodec.BytesToString(pubKey.Address())
+	addr, err := addressCodec.BytesToString(pubKey.Address())
 	if err != nil {
 		return "", err
 	}

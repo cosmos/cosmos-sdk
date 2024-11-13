@@ -1,11 +1,18 @@
 package offchain
 
 import (
+	"cosmossdk.io/client/v2/autocli/keyring"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/client/v2/autocli/config"
 	v2flags "cosmossdk.io/client/v2/internal/flags"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -15,6 +22,7 @@ import (
 const (
 	flagEncoding   = "encoding"
 	flagFileFormat = "file-format"
+	flagBech32     = "bech32"
 )
 
 // OffChain off-chain utilities.
@@ -31,6 +39,7 @@ func OffChain() *cobra.Command {
 	)
 
 	flags.AddKeyringFlags(cmd.PersistentFlags())
+	cmd.PersistentFlags().String(flagBech32, "cosmos", "address bech32 prefix")
 	return cmd
 }
 
@@ -42,6 +51,19 @@ func SignFile() *cobra.Command {
 		Long:  "Sign a file using a given key.",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ir := types.NewInterfaceRegistry()
+			cdc := codec.NewProtoCodec(ir)
+
+			c, err := config.CreateClientConfigFromFlags(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			keyringBackend := c.KeyringBackend
+			if !cmd.Flags().Changed(flags.FlagKeyringBackend) {
+				cmd.Flags().Set(flags.FlagKeyringBackend, keyringBackend)
+			}
+
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			bz, err := os.ReadFile(args[1])
@@ -53,8 +75,17 @@ func SignFile() *cobra.Command {
 			outputFormat, _ := cmd.Flags().GetString(v2flags.FlagOutput)
 			outputFile, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 			signMode, _ := cmd.Flags().GetString(flags.FlagSignMode)
+			bech32Prefix, _ := cmd.Flags().GetString(flagBech32)
 
-			signedTx, err := Sign(clientCtx, bz, args[0], encoding, signMode, outputFormat)
+			ac := address.NewBech32Codec(bech32Prefix)
+			vc := address.NewBech32Codec(sdk.GetBech32PrefixValAddr(bech32Prefix))
+			k, err := keyring.NewKeyringFromFlags(cmd.Flags(), clientCtx.AddressCodec, cmd.InOrStdin(), clientCtx.Codec)
+			if err != nil {
+				return err
+			}
+
+			signedTx, err := Sign(bz, clientCtx, k, cdc, ac,
+				vc, ir, args[0], encoding, signMode, outputFormat)
 			if err != nil {
 				return err
 			}
@@ -87,10 +118,8 @@ func VerifyFile() *cobra.Command {
 		Long:  "Verify a previously signed file with the given key.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
+			ir := types.NewInterfaceRegistry()
+			cdc := codec.NewProtoCodec(ir)
 
 			bz, err := os.ReadFile(args[0])
 			if err != nil {
@@ -98,8 +127,12 @@ func VerifyFile() *cobra.Command {
 			}
 
 			fileFormat, _ := cmd.Flags().GetString(flagFileFormat)
+			bech32Prefix, _ := cmd.Flags().GetString(flagBech32)
 
-			err = Verify(clientCtx, bz, fileFormat)
+			ac := address.NewBech32Codec(bech32Prefix)
+			vc := address.NewBech32Codec(sdk.GetBech32PrefixValAddr(bech32Prefix))
+
+			err = Verify(cdc, ac, vc, bz, fileFormat)
 			if err == nil {
 				cmd.Println("Verification OK!")
 			}

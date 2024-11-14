@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/runtime/protoimpl"
 	"google.golang.org/protobuf/types/descriptorpb"
 
@@ -103,13 +104,17 @@ func (enc Encoder) getMessageEncoder(message protoreflect.Message) MessageEncode
 	return nil
 }
 
-var customTypeExtension = protoimpl.ExtensionInfo{
+var customTypeExtension = &protoimpl.ExtensionInfo{
 	ExtendedType:  (*descriptorpb.FieldOptions)(nil),
 	ExtensionType: gogo.E_Customtype.ExtensionType,
 	Field:         gogo.E_Customtype.Field,
 	Name:          gogo.E_Customtype.Name,
 	Tag:           gogo.E_Customtype.Tag,
 	Filename:      gogo.E_Customtype.Filename,
+}
+
+func init() {
+	protoregistry.GlobalTypes.RegisterExtension(customTypeExtension)
 }
 
 func (enc Encoder) getFieldEncoder(field protoreflect.FieldDescriptor) FieldEncoder {
@@ -129,7 +134,7 @@ func (enc Encoder) getFieldEncoder(field protoreflect.FieldDescriptor) FieldEnco
 		// For example:
 		// https://github.com/cosmos/cosmos-sdk/blob/9076487d035e43d39fe54e8498da1ce31b9c845c/x/gov/proto/cosmos/gov/v1/gov.proto#L274
 		if scalar == cosmosDecType {
-			customType := proto.GetExtension(opts, &customTypeExtension)
+			customType := proto.GetExtension(opts, customTypeExtension)
 			if customType != "cosmossdk.io/math.LegacyDec" {
 				return nil
 			}

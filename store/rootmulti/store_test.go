@@ -791,6 +791,30 @@ func TestMultiStore_PruningWithIntervalUpdates(t *testing.T) {
 	}
 }
 
+var _ types.PausablePruner = &pauseableCommitKVStoreStub{}
+
+type pauseableCommitKVStoreStub struct {
+	types.CommitKVStore
+	pauseCalled []bool
+}
+
+func (p *pauseableCommitKVStoreStub) PausePruning(b bool) {
+	p.pauseCalled = append(p.pauseCalled, b)
+}
+
+func TestPausePruningOnCommit(t *testing.T) {
+	store := NewStore(dbm.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store.SetPruning(pruningtypes.NewCustomPruningOptions(2, 11))
+	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
+	require.NoError(t, store.LoadLatestVersion())
+	myStub := &pauseableCommitKVStoreStub{CommitKVStore: store.stores[testStoreKey1].(types.CommitKVStore)}
+	store.stores[testStoreKey1] = myStub
+	// when
+	store.Commit()
+	// then
+	require.Equal(t, []bool{true, false}, myStub.pauseCalled)
+}
+
 // TestUnevenStoresHeightCheck tests if loading root store correctly errors when
 // there's any module store with the wrong height
 func TestUnevenStoresHeightCheck(t *testing.T) {

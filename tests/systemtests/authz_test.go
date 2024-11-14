@@ -91,7 +91,7 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 			"delegate authorization without allow or deny list",
 			grantee1Addr,
 			[]string{"delegate"},
-			"both allowed & deny list cannot be empty",
+			"",
 			false,
 		},
 		{

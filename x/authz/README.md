@@ -84,7 +84,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/bank/types/send_autho
 
 #### StakeAuthorization
 
-`StakeAuthorization` implements the `Authorization` interface for messages in the [staking module](https://docs.cosmos.network/main/build/modules/staking). It takes an `AuthorizationType` to specify whether you want to authorize delegation, undelegation, redelegation or cancel unbonding delegation, each of which must be authorized separately. It also takes an optional `MaxTokens` that keeps track of a limit to the amount of tokens that can be delegated/undelegated/redelegated. If left empty, the amount is unlimited. Additionally, this Msg takes an `AllowList` or a `DenyList`, enabling you to specify which validators the grantee can or cannot stake with.
+`StakeAuthorization` implements the `Authorization` interface for messages in the [staking module](https://docs.cosmos.network/main/build/modules/staking). It takes an `AuthorizationType` to specify whether you want to authorize delegation, undelegation, redelegation or cancel unbonding delegation, each of which must be authorized separately. It also takes an optional `MaxTokens` that keeps track of a limit to the amount of tokens that can be delegated/undelegated/redelegated. If left empty, the amount is unlimited. Additionally, this Msg takes an `AllowList` or a `DenyList`, enabling you to specify which validators the grantee can or cannot stake with. If both `AllowList` and `DenyList` are empty delegation to all validators is allowed.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-beta.1/x/staking/proto/cosmos/staking/v1beta1/authz.proto#L11-L34

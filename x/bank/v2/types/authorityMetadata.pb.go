@@ -4,7 +4,6 @@
 package types
 
 import (
-	bytes "bytes"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -30,7 +29,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // permission, but is planned to be extended to the future.
 type DenomAuthorityMetadata struct {
 	// Can be empty for no admin, or a valid osmosis address
-	Admin []byte `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 }
 
 func (m *DenomAuthorityMetadata) Reset()         { *m = DenomAuthorityMetadata{} }
@@ -66,11 +65,11 @@ func (m *DenomAuthorityMetadata) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DenomAuthorityMetadata proto.InternalMessageInfo
 
-func (m *DenomAuthorityMetadata) GetAdmin() []byte {
+func (m *DenomAuthorityMetadata) GetAdmin() string {
 	if m != nil {
 		return m.Admin
 	}
-	return nil
+	return ""
 }
 
 func init() {
@@ -90,11 +89,11 @@ var fileDescriptor_c2b6286975ab0e3f = []byte{
 	0x4f, 0xcf, 0x07, 0x4b, 0xe9, 0x83, 0x58, 0x10, 0x55, 0x52, 0x72, 0x70, 0xd3, 0x8a, 0x53, 0xf5,
 	0xcb, 0x0c, 0x93, 0x52, 0x4b, 0x12, 0x0d, 0xf5, 0x93, 0xf3, 0x33, 0xf3, 0x20, 0xf2, 0x4a, 0x26,
 	0x5c, 0x62, 0x2e, 0xa9, 0x79, 0xf9, 0xb9, 0x8e, 0xe8, 0xb6, 0x08, 0x89, 0x70, 0xb1, 0x26, 0xa6,
-	0xe4, 0x66, 0xe6, 0x49, 0x30, 0x2a, 0x30, 0x6a, 0xf0, 0x04, 0x41, 0x38, 0x56, 0x2c, 0x2f, 0x16,
+	0xe4, 0x66, 0xe6, 0x49, 0x30, 0x2a, 0x30, 0x6a, 0x70, 0x06, 0x41, 0x38, 0x56, 0x2c, 0x2f, 0x16,
 	0xc8, 0x33, 0x3a, 0x99, 0x9d, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72,
 	0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x94, 0x0c,
 	0xc4, 0xbe, 0xe2, 0x94, 0x6c, 0xbd, 0xcc, 0x7c, 0xfd, 0x0a, 0xb8, 0x2f, 0x4a, 0x2a, 0x0b, 0x52,
-	0x8b, 0x93, 0xd8, 0xc0, 0x96, 0x1a, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x6e, 0x2a, 0x92, 0xf4,
+	0x8b, 0x93, 0xd8, 0xc0, 0x96, 0x1a, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x5d, 0x68, 0x5f, 0x49,
 	0xe4, 0x00, 0x00, 0x00,
 }
 
@@ -117,7 +116,7 @@ func (this *DenomAuthorityMetadata) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if !bytes.Equal(this.Admin, that1.Admin) {
+	if this.Admin != that1.Admin {
 		return false
 	}
 	return true
@@ -215,7 +214,7 @@ func (m *DenomAuthorityMetadata) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAuthorityMetadata
@@ -225,25 +224,23 @@ func (m *DenomAuthorityMetadata) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthAuthorityMetadata
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthAuthorityMetadata
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Admin = append(m.Admin[:0], dAtA[iNdEx:postIndex]...)
-			if m.Admin == nil {
-				m.Admin = []byte{}
-			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

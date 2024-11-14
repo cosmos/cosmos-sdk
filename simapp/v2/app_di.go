@@ -16,6 +16,7 @@ import (
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
 	lockupdepinject "cosmossdk.io/x/accounts/defaults/lockup/depinject"
 	multisigdepinject "cosmossdk.io/x/accounts/defaults/multisig/depinject"
+	admindepinject "cosmossdk.io/x/accounts/defaults/admin/depinject"
 	stakingkeeper "cosmossdk.io/x/staking/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
@@ -55,6 +56,7 @@ func AppConfig() depinject.Config {
 			multisigdepinject.ProvideAccount,
 			basedepinject.ProvideAccount,
 			lockupdepinject.ProvideAllLockupAccounts,
+			admindepinject.ProvideAccount,
 
 			// provide base account options
 			basedepinject.ProvideSecp256K1PubKey,

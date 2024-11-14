@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
+	adminv1 "cosmossdk.io/x/accounts/defaults/admin/v1"
 	"cosmossdk.io/x/bank/v2/types"
 
-	adminv1 "cosmossdk.io/x/accounts/defaults/admin/v1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -112,15 +112,17 @@ func (h handlers) MsgMint(ctx context.Context, msg *types.MsgMint) (*types.MsgMi
 				return nil, err
 			}
 
-			adminAccAddr := authorityMetadata.Admin
+			adminAccAddr, err := h.addressCodec.StringToBytes(authorityMetadata.Admin)
+			if err != nil {
+				return nil, err
+			}
 
 			// Query if sender have mint perm
 
 			_, err = h.accountsKeeper.Query(ctx, adminAccAddr, &adminv1.QueryMintPerm{
 				Sender: msg.Authority,
-				Denom: msg.Amount.Denom,
+				Denom:  msg.Amount.Denom,
 			})
-
 			if err != nil {
 				return nil, err
 			}
@@ -181,15 +183,17 @@ func (h handlers) MsgBurn(ctx context.Context, msg *types.MsgBurn) (*types.MsgBu
 				return nil, err
 			}
 
-			adminAccAddr := authorityMetadata.Admin
+			adminAccAddr, err := h.addressCodec.StringToBytes(authorityMetadata.Admin)
+			if err != nil {
+				return nil, err
+			}
 
 			// Query if sender have mint perm
 
 			_, err = h.accountsKeeper.Query(ctx, adminAccAddr, &adminv1.QueryBurnPerm{
 				Sender: msg.Authority,
-				Denom: msg.Amount.Denom,
+				Denom:  msg.Amount.Denom,
 			})
-
 			if err != nil {
 				return nil, err
 			}
@@ -292,7 +296,11 @@ func (h handlers) QueryDenomsFromCreator(ctx context.Context, req *types.QueryDe
 	denoms := []string{}
 
 	err := h.Keeper.denomAuthority.Walk(ctx, nil, func(denom string, authority types.DenomAuthorityMetadata) (stop bool, err error) {
-		resp, err := h.accountsKeeper.Query(ctx, authority.Admin, &adminv1.QueryOwner{})
+		adminAccAddr, err := h.addressCodec.StringToBytes(authority.Admin)
+		if err != nil {
+			return true, err
+		}
+		resp, err := h.accountsKeeper.Query(ctx, adminAccAddr, &adminv1.QueryOwner{})
 		if err != nil {
 			return true, err
 		}

@@ -14,13 +14,14 @@ import (
 	coretesting "cosmossdk.io/core/testing"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	accountskeeper "cosmossdk.io/x/accounts"
+	"cosmossdk.io/x/accounts/accountstd"
+	"cosmossdk.io/x/accounts/defaults/admin"
+	adminv1 "cosmossdk.io/x/accounts/defaults/admin/v1"
 	"cosmossdk.io/x/bank/v2/keeper"
 	banktestutil "cosmossdk.io/x/bank/v2/testutil"
 	"cosmossdk.io/x/bank/v2/types"
 
-	accountskeeper "cosmossdk.io/x/accounts"
-	"cosmossdk.io/x/accounts/accountstd"
-	"cosmossdk.io/x/accounts/defaults/admin"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -29,7 +30,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	adminv1 "cosmossdk.io/x/accounts/defaults/admin/v1"
 )
 
 const (
@@ -339,7 +339,10 @@ func (s *KeeperTestSuite) TestCreateDenom() {
 
 				accountsKeeper := s.bankKeeper.GetAccountsKeeper()
 
-				resp, err := accountsKeeper.Query(s.ctx, authority.Admin, &adminv1.QueryOwner{})
+				adminAccAddr, err := s.addressCodec.StringToBytes(authority.Admin)
+				require.NoError(err)
+
+				resp, err := accountsKeeper.Query(s.ctx, adminAccAddr, &adminv1.QueryOwner{})
 				require.NoError(err)
 				v1Resp, ok := resp.(*adminv1.QueryOwnerResponse)
 				require.True(ok)
@@ -465,7 +468,7 @@ func (s *KeeperTestSuite) TestMintHandler() {
 				ToAddress: accAddrs[1].String(),
 				Amount:    sdk.NewCoin(barDenom, math.NewInt(100)),
 			},
-			expErr: false,
+			expErr:       false,
 			adminDisable: false,
 		},
 		{
@@ -475,7 +478,7 @@ func (s *KeeperTestSuite) TestMintHandler() {
 				ToAddress: accAddrs[1].String(),
 				Amount:    sdk.NewCoin(barDenom, math.NewInt(100)),
 			},
-			expErr: true,
+			expErr:       true,
 			adminDisable: false,
 		},
 		{
@@ -485,7 +488,7 @@ func (s *KeeperTestSuite) TestMintHandler() {
 				ToAddress: accAddrs[1].String(),
 				Amount:    sdk.NewCoin(newDenom, math.NewInt(100)),
 			},
-			expErr: false,
+			expErr:       false,
 			adminDisable: false,
 		},
 		{
@@ -495,7 +498,7 @@ func (s *KeeperTestSuite) TestMintHandler() {
 				ToAddress: accAddrs[1].String(),
 				Amount:    sdk.NewCoin(newDenom, math.NewInt(100)),
 			},
-			expErr: true,
+			expErr:       true,
 			adminDisable: false,
 		},
 		{
@@ -505,7 +508,7 @@ func (s *KeeperTestSuite) TestMintHandler() {
 				ToAddress: accAddrs[1].String(),
 				Amount:    sdk.NewCoin(newDenom, math.NewInt(100)),
 			},
-			expErr: false,
+			expErr:       false,
 			adminDisable: true,
 		},
 		{
@@ -515,7 +518,7 @@ func (s *KeeperTestSuite) TestMintHandler() {
 				ToAddress: accAddrs[1].String(),
 				Amount:    sdk.NewCoin(newDenom, math.NewInt(100)),
 			},
-			expErr: true,
+			expErr:       true,
 			adminDisable: true,
 		},
 		{
@@ -525,12 +528,11 @@ func (s *KeeperTestSuite) TestMintHandler() {
 				ToAddress: accAddrs[1].String(),
 				Amount:    sdk.NewCoin(newDenom+"s", math.NewInt(100)),
 			},
-			expErr: true,
+			expErr:       true,
 			adminDisable: true,
 		},
 	} {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-
 			require.NoError(handler.Keeper.SetParams(s.ctx, types.NewParams(sdk.NewCoins(), 0, tc.adminDisable)))
 			toAddr, err := s.addressCodec.StringToBytes(tc.msg.ToAddress)
 			require.NoError(err)
@@ -575,10 +577,10 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 	require.NoError(err)
 
 	for _, tc := range []struct {
-		desc   string
-		msg    *types.MsgBurn
+		desc         string
+		msg          *types.MsgBurn
 		adminDisable bool
-		expErr bool
+		expErr       bool
 	}{
 		{
 			desc: "Burn foo denom, valid",
@@ -588,7 +590,7 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				Amount:          sdk.NewCoin(fooDenom, math.NewInt(50)),
 			},
 			adminDisable: false,
-			expErr: false,
+			expErr:       false,
 		},
 		{
 			desc: "Burn foo denom, invalid authority",
@@ -598,7 +600,7 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				Amount:          sdk.NewCoin(fooDenom, math.NewInt(50)),
 			},
 			adminDisable: false,
-			expErr: true,
+			expErr:       true,
 		},
 		{
 			desc: "Burn foo denom, insufficient funds",
@@ -608,7 +610,7 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				Amount:          sdk.NewCoin(fooDenom, math.NewInt(200)),
 			},
 			adminDisable: false,
-			expErr: true,
+			expErr:       true,
 		},
 		{
 			desc: "Burn bar denom, invalid denom",
@@ -618,7 +620,7 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				Amount:          sdk.NewCoin(barDenom, math.NewInt(50)),
 			},
 			adminDisable: false,
-			expErr: true,
+			expErr:       true,
 		},
 		{
 			desc: "Burn tokenfactory denom, admin enable, valid",
@@ -628,7 +630,7 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				Amount:          sdk.NewCoin(newDenom, math.NewInt(50)),
 			},
 			adminDisable: false,
-			expErr: false,
+			expErr:       false,
 		},
 		{
 			desc: "Burn tokenfactory denom, admin enable, invalid admin",
@@ -638,7 +640,7 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				Amount:          sdk.NewCoin(newDenom, math.NewInt(50)),
 			},
 			adminDisable: false,
-			expErr: true,
+			expErr:       true,
 		},
 		{
 			desc: "Burn tokenfactory denom, admin disable, valid authority",
@@ -648,7 +650,7 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				Amount:          sdk.NewCoin(newDenom, math.NewInt(50)),
 			},
 			adminDisable: true,
-			expErr: false,
+			expErr:       false,
 		},
 		{
 			desc: "Burn tokenfactory denom, admin disable, invalid authority",
@@ -658,7 +660,7 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				Amount:          sdk.NewCoin(newDenom, math.NewInt(50)),
 			},
 			adminDisable: true,
-			expErr: true,
+			expErr:       true,
 		},
 		{
 			desc: "Burn tokenfactory denom, insufficient funds",
@@ -668,7 +670,7 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				Amount:          sdk.NewCoin(newDenom, math.NewInt(150)),
 			},
 			adminDisable: false,
-			expErr: true,
+			expErr:       true,
 		},
 		{
 			desc: "Burn tokenfactory denom, token not exist",
@@ -678,7 +680,7 @@ func (s *KeeperTestSuite) TestBurnHandler() {
 				Amount:          sdk.NewCoin(newDenom+"s", math.NewInt(50)),
 			},
 			adminDisable: false,
-			expErr: true,
+			expErr:       true,
 		},
 	} {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {

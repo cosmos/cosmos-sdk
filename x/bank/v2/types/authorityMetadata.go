@@ -1,12 +1,11 @@
 package types
 
 import (
-	"bytes"
 	"errors"
 )
 
 func (metadata DenomAuthorityMetadata) Validate() error {
-	if bytes.Equal(metadata.Admin, []byte{}) {
+	if metadata.Admin == "" {
 		return errors.New("empty admin")
 	}
 	return nil

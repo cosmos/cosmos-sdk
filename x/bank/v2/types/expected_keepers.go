@@ -4,12 +4,12 @@ import (
 	"context"
 
 	"cosmossdk.io/core/transaction"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // AccountsModKeeper defines the contract for x/accounts APIs
 type AccountsModKeeper interface {
-
 	// Query is used to query an account
 	Query(
 		ctx context.Context,

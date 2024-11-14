@@ -42,8 +42,8 @@ type AppOptions struct {
 
 	InterfaceRegistry     types.InterfaceRegistry
 	AddressCodec          address.Codec
-	ValidatorAddressCodec address.Codec
-	ConsensusAddressCodec address.Codec
+	ValidatorAddressCodec address.ValidatorAddressCodec
+	ConsensusAddressCodec address.ConsensusAddressCodec
 
 	Cdc          codec.Codec
 	TxConfigOpts authtx.ConfigOptions
@@ -180,6 +180,7 @@ func NewAppOptionsFromConfig(
 		InterfaceRegistry: interfaceRegistry,
 		ModuleOptions:     moduleOptions,
 		skipValidation:    true,
+		Cdc:               codec.NewProtoCodec(interfaceRegistry),
 	}, nil
 }
 

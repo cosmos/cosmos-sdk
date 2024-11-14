@@ -487,14 +487,6 @@ func (c *Consensus[T]) FinalizeBlock(
 	ctx context.Context,
 	req *abciproto.FinalizeBlockRequest,
 ) (*abciproto.FinalizeBlockResponse, error) {
-	if err := c.validateFinalizeBlockHeight(req); err != nil {
-		return nil, err
-	}
-
-	if err := c.checkHalt(req.Height, req.Time); err != nil {
-		return nil, err
-	}
-
 	if c.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
 		aborted := c.optimisticExec.AbortIfNeeded(req.Hash)
@@ -513,6 +505,21 @@ func (c *Consensus[T]) FinalizeBlock(
 		// if it was aborted, we need to reset the state
 		c.finalizeBlockState = nil
 		c.optimisticExec.Reset()
+	}
+
+	return c.internalFinalizeBlock(ctx, req)
+}
+
+func (c *Consensus[T]) internalFinalizeBlock(
+	ctx context.Context,
+	req *abciproto.FinalizeBlockRequest,
+) (*abciproto.FinalizeBlockResponse, error) {
+	if err := c.validateFinalizeBlockHeight(req); err != nil {
+		return nil, err
+	}
+
+	if err := c.checkHalt(req.Height, req.Time); err != nil {
+		return nil, err
 	}
 
 	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,

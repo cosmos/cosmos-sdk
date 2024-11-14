@@ -343,6 +343,9 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogo: &gov_v1_types.Params{
 				Quorum: math.LegacyMustNewDecFromStr("0.33").String(),
 			},
+			pulsar: &gov_v1_api.Params{
+				Quorum: "0.33",
+			},
 		},
 		"slashing/params/dec": {
 			gogo: &slashingtypes.Params{

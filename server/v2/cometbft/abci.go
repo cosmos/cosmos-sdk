@@ -2,10 +2,10 @@ package cometbft
 
 import (
 	"context"
+	"cosmossdk.io/server/v2/cometbft/oe"
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -496,10 +496,6 @@ func (c *Consensus[T]) FinalizeBlock(
 
 		// only return if we are not aborting
 		if !aborted {
-			if res != nil {
-				res.AppHash = c.workingHash()
-			}
-
 			return res, err
 		}
 

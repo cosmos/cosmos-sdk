@@ -13,7 +13,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	gogoproto "github.com/cosmos/gogoproto/proto"
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	"cosmossdk.io/collections"
@@ -490,6 +490,7 @@ func (c *Consensus[T]) FinalizeBlock(
 	if c.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
 		aborted := c.optimisticExec.AbortIfNeeded(req.Hash)
+
 		// Wait for the OE to finish, regardless of whether it was aborted or not
 		res, err := c.optimisticExec.WaitResult()
 
@@ -503,7 +504,6 @@ func (c *Consensus[T]) FinalizeBlock(
 		}
 
 		// if it was aborted, we need to reset the state
-		c.finalizeBlockState = nil
 		c.optimisticExec.Reset()
 	}
 

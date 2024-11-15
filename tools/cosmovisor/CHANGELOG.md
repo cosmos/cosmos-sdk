@@ -49,7 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   
 ### Bug Fixes
 
-* [#22528] (https://github.com/cosmos/cosmos-sdk/pull/22528) Fix premature upgrades on restarting cosmovisor.
+* [#22528](https://github.com/cosmos/cosmos-sdk/pull/22528) Fix premature upgrades on restarting cosmovisor.
 
 ## v1.6.0 - 2024-08-12
 

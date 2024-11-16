@@ -86,6 +86,7 @@ func (sb *builder) Build(
 		Options:   config.Options,
 		StoreKeys: storeKeys,
 		SCRawDB:   scRawDb,
+		Telemetry: sb.telemetryService,
 	}
 
 	rs, err := CreateRootStore(factoryOptions)

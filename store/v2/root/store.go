@@ -20,8 +20,9 @@ import (
 )
 
 var (
-	_ store.RootStore        = (*Store)(nil)
-	_ store.UpgradeableStore = (*Store)(nil)
+	_    store.RootStore        = (*Store)(nil)
+	_    store.UpgradeableStore = (*Store)(nil)
+	once sync.Once
 )
 
 // Store defines the SDK's default RootStore implementation. It contains a single
@@ -73,6 +74,15 @@ func New(
 	mm *migration.Manager,
 	m telemetry.Service,
 ) (store.RootStore, error) {
+	once.Do(func() {
+		if m != nil {
+			m.RegisterMeasure([]string{"root", "store", "query"})
+			m.RegisterMeasure([]string{"root_store", "load_latest_version"})
+			m.RegisterMeasure([]string{"root_store", "load_version"})
+			m.RegisterMeasure([]string{"root_store", "load_version_and_upgrade"})
+			m.RegisterMeasure([]string{"root_store", "commit"})
+		}
+	})
 	return &Store{
 		dbCloser:         dbCloser,
 		logger:           logger,

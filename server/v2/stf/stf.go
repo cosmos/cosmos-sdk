@@ -2,6 +2,7 @@ package stf
 
 import (
 	"context"
+	"cosmossdk.io/core/telemetry"
 	"errors"
 	"fmt"
 
@@ -22,11 +23,17 @@ import (
 
 type eContextKey struct{}
 
-var executionContextKey = eContextKey{}
+var (
+	executionContextKey = eContextKey{}
+	metricTxCount       = []string{"stf", "tx", "count"}
+	metricTxSuccess     = []string{"stf", "tx", "success"}
+	metricTxFail        = []string{"stf", "tx", "fail"}
+)
 
 // STF is a struct that manages the state transition component of the app.
 type STF[T transaction.Tx] struct {
-	logger log.Logger
+	logger    log.Logger
+	telemetry telemetry.Service
 
 	msgRouter   coreRouterImpl
 	queryRouter coreRouterImpl
@@ -47,6 +54,7 @@ type STF[T transaction.Tx] struct {
 // New returns a new STF instance.
 func New[T transaction.Tx](
 	logger log.Logger,
+	telemetry telemetry.Service,
 	msgRouterBuilder *MsgRouterBuilder,
 	queryRouterBuilder *MsgRouterBuilder,
 	doPreBlock func(ctx context.Context, txs []T) error,
@@ -66,8 +74,13 @@ func New[T transaction.Tx](
 		return nil, fmt.Errorf("build query router: %w", err)
 	}
 
+	telemetry.RegisterCounter(metricTxCount)
+	telemetry.RegisterCounter(metricTxSuccess)
+	telemetry.RegisterCounter(metricTxFail)
+
 	return &STF[T]{
 		logger:              logger,
+		telemetry:           telemetry,
 		msgRouter:           msgRouter,
 		queryRouter:         queryRouter,
 		doPreBlock:          doPreBlock,
@@ -212,6 +225,12 @@ func (s STF[T]) deliverTx(
 	}
 
 	execResp, execGas, execEvents, err := s.execTx(ctx, state, gasLimit-validateGas, tx, execMode, hi)
+	s.telemetry.IncrCounter(metricTxCount, 1)
+	if err == nil {
+		s.telemetry.IncrCounter(metricTxSuccess, 1)
+	} else {
+		s.telemetry.IncrCounter(metricTxFail, 1)
+	}
 	// set the TxIndex in the exec events
 	for _, e := range execEvents {
 		e.BlockStage = appdata.TxProcessingStage

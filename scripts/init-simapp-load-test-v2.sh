@@ -14,6 +14,7 @@ $SIMD_BIN config set client keyring-backend test
 $SIMD_BIN config set client keyring-default-keyname alice
 $SIMD_BIN config set app rest.enable true
 $SIMD_BIN config set app telemetry.prometheus-retention-time 600
+$SIMD_BIN config set app store.options.ss-type pebble
 $SIMD_BIN keys add alice --indiscreet
 $SIMD_BIN keys add bob --indiscreet
 

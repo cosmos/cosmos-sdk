@@ -1,12 +1,12 @@
 package services
 
 import (
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-metrics"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"cosmossdk.io/core/telemetry"
 )
@@ -53,24 +53,27 @@ type PrometheusTelemetryService struct {
 	metrics      map[string]prometheus.Collector
 }
 
+var prometheusInst = &PrometheusTelemetryService{
+	metrics: make(map[string]prometheus.Collector),
+}
+
 func NewPrometheusTelemetryService(globalLabels []telemetry.Label) *PrometheusTelemetryService {
 	labels := make([]metrics.Label, len(globalLabels))
 	for i, label := range globalLabels {
 		labels[i] = metrics.Label{Name: label.Name, Value: label.Value}
 	}
-	return &PrometheusTelemetryService{
-		globalLabels: labels,
-		metrics:      make(map[string]prometheus.Collector),
-	}
+	prometheusInst.globalLabels = labels
+	return prometheusInst
 }
 
 func (p *PrometheusTelemetryService) MeasureSince(start time.Time, key []string, labels ...telemetry.Label) {
+	dur := time.Since(start)
 	name := strings.Join(key, "_")
 	m, ok := p.metrics[name]
 	if !ok {
 		return
 	}
-	h, ok := m.(prometheus.HistogramVec)
+	h, ok := m.(*prometheus.HistogramVec)
 	if !ok {
 		return
 	}
@@ -78,7 +81,8 @@ func (p *PrometheusTelemetryService) MeasureSince(start time.Time, key []string,
 	for _, label := range labels {
 		ls[label.Name] = label.Value
 	}
-	h.With(ls).Observe(time.Since(start).Seconds())
+	//fmt.Printf("MeasureSince: %s, %v, %v\n", name, ls, dur.Seconds())
+	h.With(ls).Observe(dur.Seconds())
 }
 
 func (p *PrometheusTelemetryService) IncrCounter(key []string, val float32, labels ...telemetry.Label) {
@@ -87,7 +91,7 @@ func (p *PrometheusTelemetryService) IncrCounter(key []string, val float32, labe
 	if !ok {
 		return
 	}
-	c, ok := m.(prometheus.CounterVec)
+	c, ok := m.(*prometheus.CounterVec)
 	if !ok {
 		return
 	}
@@ -101,8 +105,9 @@ func (p *PrometheusTelemetryService) IncrCounter(key []string, val float32, labe
 func (p *PrometheusTelemetryService) RegisterMeasure(key []string, labels ...string) {
 	name := strings.Join(key, "_")
 	p.metrics[name] = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: name,
-		Help: "Histogram for " + name,
+		Name:    name,
+		Help:    "Histogram for " + name,
+		Buckets: []float64{0.5e-6, 1e-6, 1e-5, .0005, .025, .1, .5, 1, 5, 10, 30, 120},
 	}, labels)
 }
 

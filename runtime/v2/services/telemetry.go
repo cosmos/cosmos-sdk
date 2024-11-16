@@ -1,12 +1,12 @@
 package services
 
 import (
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-metrics"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"cosmossdk.io/core/telemetry"
 )
@@ -83,6 +83,7 @@ func (p *PrometheusTelemetryService) MeasureSince(start time.Time, key []string,
 	for _, label := range labels {
 		ls[label.Name] = label.Value
 	}
+	//fmt.Printf("MeasureSince: %s, %v, %v\n", name, ls, dur.Seconds())
 	h.With(ls).Observe(dur.Seconds())
 }
 
@@ -106,8 +107,9 @@ func (p *PrometheusTelemetryService) IncrCounter(key []string, val float32, labe
 func (p *PrometheusTelemetryService) RegisterMeasure(key []string, labels ...string) {
 	name := strings.Join(key, "_")
 	p.metrics[name] = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name: name,
-		Help: "Histogram for " + name,
+		Name:    name,
+		Help:    "Histogram for " + name,
+		Buckets: []float64{0.5e-6, 1e-6, 1e-5, .0005, .025, .1, .5, 1, 5, 10, 30, 120},
 	}, labels)
 }
 

@@ -309,7 +309,6 @@ func ProvideKVStoreFactory(app *AppBuilder) store.KVStoreServiceFactory {
 	}
 }
 
-// func ProvideTelemetryService(config server.DynamicConfig) telemetry.Service {
 func ProvideTelemetryService() telemetry.Service {
 	//labels, ok := config.Get("telemetry.global-labels").([][]string)
 	//if !ok {

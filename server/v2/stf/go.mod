@@ -2,6 +2,8 @@ module cosmossdk.io/server/v2/stf
 
 go 1.23
 
+replace cosmossdk.io/core => ../../../core
+
 require (
 	cosmossdk.io/core v1.0.0-alpha.6
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e

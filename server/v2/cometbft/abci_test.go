@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"context"
+	"cosmossdk.io/core/telemetry"
 	"crypto/sha256"
 	"encoding/json"
 	"io"
@@ -660,6 +661,7 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 
 	s, err := stf.New(
 		log.NewNopLogger().With("module", "stf"),
+		&mockTelemetryService{},
 		msgRouterBuilder,
 		queryRouterBuilder,
 		func(ctx context.Context, txs []mock.Tx) error { return nil },
@@ -714,4 +716,18 @@ func assertStoreLatestVersion(t *testing.T, store types.Store, target uint64) {
 	commitInfo, err := store.GetStateCommitment().GetCommitInfo(version)
 	require.NoError(t, err)
 	require.Equal(t, target, commitInfo.Version)
+}
+
+type mockTelemetryService struct{}
+
+func (m mockTelemetryService) MeasureSince(start time.Time, key []string, labels ...telemetry.Label) {
+}
+
+func (m mockTelemetryService) IncrCounter(key []string, val float32, labels ...telemetry.Label) {
+}
+
+func (m mockTelemetryService) RegisterMeasure(key []string, labels ...string) {
+}
+
+func (m mockTelemetryService) RegisterCounter(key []string, labels ...string) {
 }

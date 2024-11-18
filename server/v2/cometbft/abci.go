@@ -288,7 +288,7 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 
 		txResult, _, err := c.app.Simulate(ctx, tx)
 		if err != nil {
-			return nil, false, fmt.Errorf("%v with gas used: '%d'", err, txResult.GasUsed)
+			return nil, true, fmt.Errorf("%v with gas used: '%d'", err, txResult.GasUsed)
 		}
 
 		msgResponses := make([]*codectypes.Any, 0, len(txResult.Resp))

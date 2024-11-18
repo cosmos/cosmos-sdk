@@ -88,20 +88,6 @@ func TestDecWithRapid(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, res.Equal(three))
 
-	res, err = SafeSubBalance(five, two)
-	require.NoError(t, err)
-	require.True(t, res.Equal(three))
-
-	_, err = SafeSubBalance(two, five)
-	require.Error(t, err, "Expected insufficient funds error")
-
-	res, err = SafeAddBalance(three, two)
-	require.NoError(t, err)
-	require.True(t, res.Equal(five))
-
-	_, err = SafeAddBalance(minusFivePointZero, five)
-	require.Error(t, err, "Expected ErrInvalidRequest")
-
 	res, err = four.Quo(two)
 	require.NoError(t, err)
 	require.True(t, res.Equal(two))

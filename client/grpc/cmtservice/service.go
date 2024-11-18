@@ -284,7 +284,7 @@ func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABC
 func RegisterTendermintService(
 	clientCtx client.Context,
 	server gogogrpc.Server,
-	iRegistry codectypes.InterfaceRegistry,
+	_ codectypes.InterfaceRegistry,
 	queryFn abciQueryFn,
 ) {
 	node, err := clientCtx.GetNode()

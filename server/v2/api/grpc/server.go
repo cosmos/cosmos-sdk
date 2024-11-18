@@ -49,7 +49,7 @@ func New[T transaction.Tx](
 	interfaceRegistry server.InterfaceRegistry,
 	queryHandlers map[string]appmodulev2.Handler,
 	queryable func(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error),
-	extraGRPCHandlers []func(*grpc.Server),
+	extraGRPCHandlers []func(*grpc.Server) error,
 	cfg server.ConfigMap,
 	cfgOptions ...CfgOption,
 ) (*Server[T], error) {
@@ -70,7 +70,7 @@ func New[T transaction.Tx](
 		grpc.UnknownServiceHandler(makeUnknownServiceHandler(queryHandlers, queryable)),
 	)
 
-	// register V2 grpc handlers
+	// register grpc query handler v2
 	RegisterServiceServer(grpcSrv, &v2Service{queryHandlers, queryable})
 
 	// register node service
@@ -80,8 +80,12 @@ func New[T transaction.Tx](
 	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(queryHandlers)), logger.With("sub-module", "grpc-reflection"))
 
 	// register extra handlers on the grpc server
+	var err error
 	for _, fn := range extraGRPCHandlers {
-		fn(grpcSrv)
+		err = errors.Join(err, fn(grpcSrv))
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to register extra gRPC handlers: %w", err)
 	}
 
 	srv.grpcSrv = grpcSrv

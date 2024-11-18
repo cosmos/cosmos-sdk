@@ -1,10 +1,28 @@
-package grpc
+package cometbft
 
 import (
+	"google.golang.org/grpc"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	cmtv1beta1 "cosmossdk.io/api/cosmos/base/tendermint/v1beta1"
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/server/v2/cometbft/client/rpc"
+
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 )
 
+// GRPCServiceRegistrar returns a function that registers the CometBFT gRPC service
+func (c *Consensus[T]) GRPCServiceRegistrar(
+	cometRPC rpc.CometRPC,
+	consensusAddressCodec address.ConsensusAddressCodec,
+) func(srv *grpc.Server) error {
+	return func(srv *grpc.Server) error {
+		cmtservice.RegisterServiceServer(srv, cmtservice.NewQueryServer(cometRPC, c.Query, consensusAddressCodec))
+		return nil
+	}
+}
+
+// CometBFTAutoCLIDescriptor is the auto-generated CLI descriptor for the CometBFT service
 var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 	Service: cmtv1beta1.Service_ServiceDesc.ServiceName,
 	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
@@ -47,25 +65,4 @@ var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 			Skip:      true,
 		},
 	},
-}
-
-// NewCometBFTCommands is a fake `appmodule.Module` to be considered as a module
-// and be added in AutoCLI.
-func NewCometBFTCommands() *cometModule {
-	return &cometModule{}
-}
-
-type cometModule struct{}
-
-func (m cometModule) IsOnePerModuleType() {}
-func (m cometModule) IsAppModule()        {}
-
-func (m cometModule) Name() string {
-	return "comet"
-}
-
-func (m cometModule) AutoCLIOptions() *autocliv1.ModuleOptions {
-	return &autocliv1.ModuleOptions{
-		Query: CometBFTAutoCLIDescriptor,
-	}
 }

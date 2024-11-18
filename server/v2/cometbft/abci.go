@@ -230,7 +230,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 		resp, err = c.handlerQueryApp(ctx, path, req)
 
 	case QueryPathStore:
-		resp, err = c.handleQueryStore(path, c.store, req)
+		resp, err = c.handleQueryStore(path, req)
 
 	case QueryPathP2P:
 		resp, err = c.handleQueryP2P(path)

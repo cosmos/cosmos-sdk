@@ -4,13 +4,14 @@ import (
 	gocontext "context"
 	"errors"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/spf13/pflag"
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/autocli/print"
 	"cosmossdk.io/core/address"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // ContextKey is the key used to store and retrieve the autocli.Context from a context.Context.

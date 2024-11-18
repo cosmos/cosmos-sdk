@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"cosmossdk.io/client/v2/autocli/keyring"
-
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -17,6 +15,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/config"
 	clientcontext "cosmossdk.io/client/v2/autocli/context"
+	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/autocli/print"
 	"cosmossdk.io/client/v2/broadcast/comet"
 	"cosmossdk.io/client/v2/internal/flags"

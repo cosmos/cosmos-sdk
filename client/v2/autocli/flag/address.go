@@ -6,6 +6,8 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	clientcontext "cosmossdk.io/client/v2/autocli/context"
+	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -38,16 +40,11 @@ type addressValue struct {
 	ctx          *context.Context
 	addressCodec address.Codec
 
-	cachedValue string
-	value       string
+	value string
 }
 
 func (a *addressValue) Get(protoreflect.Value) (protoreflect.Value, error) {
-	if a.isEmpty() {
-		return protoreflect.ValueOfString(""), nil
-	}
-
-	return a.get()
+	return protoreflect.ValueOfString(a.value), nil
 }
 
 func (a *addressValue) String() string {
@@ -56,10 +53,24 @@ func (a *addressValue) String() string {
 
 // Set implements the flag.Value interface for addressValue.
 func (a *addressValue) Set(s string) error {
-	_, err := a.addressCodec.StringToBytes(s)
+	// we get the keyring on set, as in NewValue the context is the parent context (before RunE)
+	k := getKeyringFromCtx(a.ctx)
+	addr, err := k.LookupAddressByKeyName(s)
 	if err == nil {
-		a.cachedValue = s
+		addrStr, err := a.addressCodec.BytesToString(addr)
+		if err != nil {
+			return fmt.Errorf("invalid account address got from keyring: %w", err)
+		}
+
+		a.value = addrStr
+		return nil
 	}
+
+	_, err = a.addressCodec.StringToBytes(s)
+	if err != nil {
+		return fmt.Errorf("invalid account address or key name: %w", err)
+	}
+
 	a.value = s
 
 	return nil
@@ -67,24 +78,6 @@ func (a *addressValue) Set(s string) error {
 
 func (a *addressValue) Type() string {
 	return "account address or key name"
-}
-
-func (a *addressValue) isEmpty() bool {
-	return a.value == "" && a.cachedValue == ""
-}
-
-func (a *addressValue) get() (protoreflect.Value, error) {
-	if a.cachedValue != "" {
-		return protoreflect.ValueOfString(a.cachedValue), nil
-	}
-
-	addr, err := getKey(a.value, a.addressCodec)
-	if err != nil {
-		return protoreflect.Value{}, err
-	}
-	a.cachedValue = addr
-
-	return protoreflect.ValueOfString(addr), nil
 }
 
 type consensusAddressStringType struct{}
@@ -107,32 +100,6 @@ type consensusAddressValue struct {
 }
 
 func (a consensusAddressValue) Get(protoreflect.Value) (protoreflect.Value, error) {
-	if a.isEmpty() {
-		return protoreflect.ValueOfString(""), nil
-	}
-
-	addr, err := a.get()
-	if err == nil {
-		return addr, nil
-	}
-
-	// fallback to pubkey parsing
-	registry := types.NewInterfaceRegistry()
-	cryptocodec.RegisterInterfaces(registry)
-	cdc := codec.NewProtoCodec(registry)
-
-	var pk cryptotypes.PubKey
-	err2 := cdc.UnmarshalInterfaceJSON([]byte(a.value), &pk)
-	if err2 != nil {
-		return protoreflect.Value{}, fmt.Errorf("input isn't a pubkey (%w) or is an invalid account address (%w)", err, err2)
-	}
-
-	a.value, err = a.addressCodec.BytesToString(pk.Address())
-	if err != nil {
-		return protoreflect.Value{}, fmt.Errorf("invalid pubkey address: %w", err)
-	}
-	a.cachedValue = a.value
-
 	return protoreflect.ValueOfString(a.value), nil
 }
 
@@ -141,32 +108,56 @@ func (a consensusAddressValue) String() string {
 }
 
 func (a *consensusAddressValue) Set(s string) error {
-	_, err := a.addressCodec.StringToBytes(s)
+	// we get the keyring on set, as in NewValue the context is the parent context (before RunE)
+	k := getKeyringFromCtx(a.ctx)
+	addr, err := k.LookupAddressByKeyName(s)
 	if err == nil {
-		a.cachedValue = s
+		addrStr, err := a.addressCodec.BytesToString(addr)
+		if err != nil {
+			return fmt.Errorf("invalid consensus address got from keyring: %w", err)
+		}
+
+		a.value = addrStr
+		return nil
 	}
 
-	a.value = s
+	_, err = a.addressCodec.StringToBytes(s)
+	if err == nil {
+		a.value = s
+		return nil
+	}
+
+	// fallback to pubkey parsing
+	registry := types.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+
+	var pk cryptotypes.PubKey
+	err2 := cdc.UnmarshalInterfaceJSON([]byte(s), &pk)
+	if err2 != nil {
+		return fmt.Errorf("input isn't a pubkey (%w) or is an invalid account address (%w)", err, err2)
+	}
+
+	a.value, err = a.addressCodec.BytesToString(pk.Address())
+	if err != nil {
+		return fmt.Errorf("invalid pubkey address: %w", err)
+	}
 
 	return nil
 }
 
-func getKey(k string, ac address.Codec) (string, error) {
-	if keybase != nil {
-		addr, err := keybase.LookupAddressByKeyName(k)
-		if err == nil {
-			addrStr, err := ac.BytesToString(addr)
-			if err != nil {
-				return "", fmt.Errorf("invalid account address got from keyring: %w", err)
-			}
-			return addrStr, nil
-		}
+// getKeyringFromCtx retrieves the keyring from the provided context.
+// If the context is nil or does not contain a valid client context,
+// it returns a no-op keyring implementation.
+func getKeyringFromCtx(ctx *context.Context) keyring.Keyring {
+	if *ctx == nil {
+		return keyring.NoKeyring{}
 	}
 
-	_, err := ac.StringToBytes(k)
+	c, err := clientcontext.ClientContextFromGoContext(*ctx)
 	if err != nil {
-		return "", fmt.Errorf("invalid account address or key name: %w", err)
+		return keyring.NoKeyring{}
 	}
 
-	return k, nil
+	return c.Keyring
 }

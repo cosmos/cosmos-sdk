@@ -121,7 +121,6 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	autoCliOpts := tempApp.AutoCliOpts()
-	autoCliOpts.InterfaceRegistry = initClientCtx.InterfaceRegistry
 	autoCliOpts.AddressCodec = initClientCtx.AddressCodec
 	autoCliOpts.ValidatorAddressCodec = initClientCtx.ValidatorAddressCodec
 	autoCliOpts.ConsensusAddressCodec = initClientCtx.ConsensusAddressCodec

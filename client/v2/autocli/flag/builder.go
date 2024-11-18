@@ -16,7 +16,6 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
-	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
 	"cosmossdk.io/core/address"
@@ -29,11 +28,6 @@ const (
 	PubkeyScalarType                 = "cosmos.Pubkey"
 	DecScalarType                    = "cosmos.Dec"
 )
-
-// keybase is a global variable that holds the keyring instance used for key management
-// and signing operations across the autocli flag package. It must be set in PreRunE
-// of the root command.
-var keybase keyring.Keyring
 
 // Builder manages options for building pflag flags for protobuf messages.
 type Builder struct {
@@ -58,12 +52,6 @@ type Builder struct {
 	AddressCodec          address.Codec
 	ValidatorAddressCodec address.ValidatorAddressCodec
 	ConsensusAddressCodec address.ConsensusAddressCodec
-}
-
-// SetKeyring sets the global keyring instance used for key management and signing operations.
-// The keyring must be set in PreRunE of the root command.
-func (b *Builder) SetKeyring(k keyring.Keyring) {
-	keybase = k
 }
 
 func (b *Builder) init() {

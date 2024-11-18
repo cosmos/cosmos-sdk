@@ -40,7 +40,6 @@ type AppOptions struct {
 	// module or need to be improved.
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
 
-	InterfaceRegistry     types.InterfaceRegistry
 	AddressCodec          address.Codec
 	ValidatorAddressCodec address.ValidatorAddressCodec
 	ConsensusAddressCodec address.ConsensusAddressCodec
@@ -70,7 +69,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
-			FileResolver:          appOptions.InterfaceRegistry,
+			FileResolver:          appOptions.Cdc.InterfaceRegistry(),
 			AddressCodec:          appOptions.AddressCodec,
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
@@ -82,7 +81,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 		},
 		AddTxConnFlags:   sdkflags.AddTxFlagsToCmd,
 		Cdc:              appOptions.Cdc,
-		EnablesSignModes: []apitxsigning.SignMode{apitxsigning.SignMode_SIGN_MODE_DIRECT},
+		EnabledSignModes: []apitxsigning.SignMode{apitxsigning.SignMode_SIGN_MODE_DIRECT},
 	}
 
 	return appOptions.EnhanceRootCommandWithBuilder(rootCmd, builder)
@@ -176,11 +175,10 @@ func NewAppOptionsFromConfig(
 	}
 
 	return AppOptions{
-		Modules:           cfg.Modules,
-		InterfaceRegistry: interfaceRegistry,
-		ModuleOptions:     moduleOptions,
-		skipValidation:    true,
-		Cdc:               codec.NewProtoCodec(interfaceRegistry),
+		Modules:        cfg.Modules,
+		ModuleOptions:  moduleOptions,
+		skipValidation: true,
+		Cdc:            codec.NewProtoCodec(interfaceRegistry),
 	}, nil
 }
 

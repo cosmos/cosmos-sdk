@@ -12,14 +12,11 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
-	"cosmossdk.io/client/v2/autocli/keyring"
-	"cosmossdk.io/client/v2/autocli/print"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
 	v2tx "cosmossdk.io/client/v2/tx"
 	addresscodec "cosmossdk.io/core/address"
 	"cosmossdk.io/core/transaction"
-
 	// the following will be extracted to a separate module
 	// https://github.com/cosmos/cosmos-sdk/issues/14403
 	govcli "cosmossdk.io/x/gov/client/cli"
@@ -236,21 +233,11 @@ func (b *Builder) handleGovProposal(
 // generateOrBroadcastTxWithV2 generates or broadcasts a transaction with the provided messages using v2 transaction handling.
 //
 //nolint:unused // It'll be used once BuildMsgMethodCommand is updated to use factory v2.
-func (b *Builder) generateOrBroadcastTxWithV2(cmd *cobra.Command, msgs ...transaction.Msg) error {
-	k, err := keyring.NewKeyringFromFlags(cmd.Flags(), b.AddressCodec, cmd.InOrStdin(), b.Cdc)
-	if err != nil {
-		return err
-	}
-
+func (b *Builder) generateOrBroadcastTxWithV2(ctx context.Context, cmd *cobra.Command, msgs ...transaction.Msg) error {
 	cConn, err := b.GetClientConn(cmd)
 	if err != nil {
 		return err
 	}
 
-	printer, err := print.NewPrinter(cmd)
-	if err != nil {
-		return err
-	}
-
-	return v2tx.GenerateOrBroadcastTxCLI(cmd.Context(), cmd.Flags(), printer, k, b.Cdc, b.AddressCodec, b.ValidatorAddressCodec, b.EnablesSignModes, cConn, msgs...)
+	return v2tx.GenerateOrBroadcastTxCLI(ctx, cConn, msgs...)
 }

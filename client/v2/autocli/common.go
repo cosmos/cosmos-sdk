@@ -1,9 +1,12 @@
 package autocli
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"strconv"
+
+	"cosmossdk.io/client/v2/autocli/keyring"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -13,7 +16,7 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/config"
-	"cosmossdk.io/client/v2/autocli/keyring"
+	clientcontext "cosmossdk.io/client/v2/autocli/context"
 	"cosmossdk.io/client/v2/autocli/print"
 	"cosmossdk.io/client/v2/broadcast/comet"
 	"cosmossdk.io/client/v2/internal/flags"
@@ -73,7 +76,10 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 	cmd.PreRunE = b.preRunE()
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		ctx = cmd.Context()
+		ctx, err = b.getContext(cmd)
+		if err != nil {
+			return err
+		}
 
 		input, err := binder.BuildMessage(args)
 		if err != nil {
@@ -245,20 +251,45 @@ func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
 	return p.PrintBytes(out)
 }
 
+// getContext creates and returns a new context.Context with a clientcontext.Context value.
+// It initializes a printer and, if necessary, a keyring based on command flags.
+func (b *Builder) getContext(cmd *cobra.Command) (context.Context, error) {
+	printer, err := print.NewPrinter(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	// if the command uses the keyring this must be set
+	var k keyring.Keyring
+	if cmd.Flags().Lookup("keyring-dir") != nil && cmd.Flags().Lookup("keyring-backend") != nil {
+		k, err = keyring.NewKeyringFromFlags(cmd.Flags(), b.AddressCodec, cmd.InOrStdin(), b.Cdc)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	clientCtx := clientcontext.Context{
+		Flags:                 cmd.Flags(),
+		AddressCodec:          b.AddressCodec,
+		ValidatorAddressCodec: b.ValidatorAddressCodec,
+		ConsensusAddressCodec: b.ConsensusAddressCodec,
+		Cdc:                   b.Cdc,
+		Printer:               printer,
+		Keyring:               k,
+		EnabledSignmodes:      b.EnabledSignModes,
+	}
+
+	return context.WithValue(cmd.Context(), clientcontext.ContextKey, clientCtx), nil
+}
+
+// preRunE returns a function that sets flags from the configuration before running a command.
+// It is used as a PreRunE hook for cobra commands to ensure flags are properly initialized
+// from the configuration before command execution.
 func (b *Builder) preRunE() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		err := b.setFlagsFromConfig(cmd, args)
 		if err != nil {
 			return err
-		}
-
-		// if the command uses the keyring this must be set
-		if cmd.Flags().Lookup("keyring-dir") != nil && cmd.Flags().Lookup("keyring-backend") != nil {
-			k, err := keyring.NewKeyringFromFlags(cmd.Flags(), b.AddressCodec, cmd.InOrStdin(), b.Cdc)
-			if err != nil {
-				return err
-			}
-			b.SetKeyring(k) // global flag keyring must be set on PreRunE.
 		}
 
 		return nil

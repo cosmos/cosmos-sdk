@@ -24,7 +24,7 @@ type Builder struct {
 	AddTxConnFlags    func(*cobra.Command)
 
 	Cdc              codec.Codec
-	EnablesSignModes []apisigning.SignMode
+	EnabledSignModes []apisigning.SignMode
 }
 
 // ValidateAndComplete the builder fields.

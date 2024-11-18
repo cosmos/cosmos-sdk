@@ -40,11 +40,14 @@ type AppOptions struct {
 	// module or need to be improved.
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
 
-	AddressCodec          address.Codec
-	ValidatorAddressCodec address.ValidatorAddressCodec
-	ConsensusAddressCodec address.ConsensusAddressCodec
+	AddressCodec          address.Codec                 // AddressCodec is used to encode/decode account addresses.
+	ValidatorAddressCodec address.ValidatorAddressCodec // ValidatorAddressCodec is used to encode/decode validator addresses.
+	ConsensusAddressCodec address.ConsensusAddressCodec // ConsensusAddressCodec is used to encode/decode consensus addresses.
 
-	Cdc          codec.Codec
+	// Cdc is the codec used for binary encoding/decoding of messages.
+	Cdc codec.Codec
+
+	// TxConfigOpts contains options for configuring transaction handling.
 	TxConfigOpts authtx.ConfigOptions
 
 	skipValidation bool

@@ -1,7 +1,6 @@
 package keyring
 
 import (
-	"context"
 	"io"
 
 	"github.com/spf13/pflag"
@@ -12,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // KeyringContextKey is the key used to store the keyring in the context.
@@ -25,11 +23,6 @@ var _ Keyring = &KeyringImpl{}
 
 type KeyringImpl struct {
 	k Keyring
-}
-
-// NewKeyringInContext returns a new context with the keyring set.
-func NewKeyringInContext(ctx context.Context, k Keyring) context.Context {
-	return context.WithValue(ctx, KeyringContextKey, NewKeyringImpl(k))
 }
 
 // NewKeyringFromFlags creates a new Keyring instance based on command-line flags.
@@ -52,7 +45,7 @@ func NewKeyringFromFlags(flagSet *pflag.FlagSet, ac address.Codec, input io.Read
 		}
 	}
 
-	k, err := keyring.New(sdk.KeyringServiceName(), backEnd, keyringDir, input, cdc, opts...)
+	k, err := keyring.New("autoclikeyring", backEnd, keyringDir, input, cdc, opts...)
 	if err != nil {
 		return nil, err
 	}

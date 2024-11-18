@@ -21,7 +21,7 @@ jobs:
           sudo apt-get install codespell -y
           codespell -w --skip="*.pulsar.go,*.pb.go,*.pb.gw.go,*.cosmos_orm.go,*.json,*.git,*.js,crypto/keys,fuzz,*.h,proto/tendermint,*.bin,go.sum,go.mod" --ignore-words=.github/.codespellignore
       - uses: peter-evans/create-pull-request@v7
-        if: github.event_name != 'pull_request'
+        # if: github.event_name != 'pull_request'
         with:
           commit-message: "chore: spelling errors fixes"
           title: "chore: fix spelling errors"

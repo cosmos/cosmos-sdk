@@ -1305,13 +1305,13 @@ var (
 
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "bank", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DenomMetadata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1beta1", "denoms_metadata", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_DenomMetadata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 3, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1beta1", "denoms_metadata", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_DenomMetadataByQueryString_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "bank", "v1beta1", "denoms_metadata_by_query_string"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_DenomsMetadata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "bank", "v1beta1", "denoms_metadata"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DenomOwners_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1beta1", "denom_owners", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_DenomOwners_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 3, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1beta1", "denom_owners", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_DenomOwnersByQuery_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "bank", "v1beta1", "denom_owners_by_query"}, "", runtime.AssumeColonVerbOpt(false)))
 

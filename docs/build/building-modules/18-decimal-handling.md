@@ -21,8 +21,10 @@ These changes require a state migration to update existing decimal values to the
 
 ## Using `Dec` in Modules that haven't used `LegacyDec`
 
-If you are creating a new module or updating an existing module that has not used `LegacyDec`, you can directly use `Dec` without any changes.
-
+If you are creating a new module or updating an existing module that has not used `LegacyDec`, you can directly use `Dec`.
+Ensure proper error handling.
+  
+```
 -- math.NewLegacyDecFromInt64(100)
 ++ math.NewDecFromInt64(100)
 
@@ -30,17 +32,20 @@ If you are creating a new module or updating an existing module that has not use
 ++ math.NewDecWithPrec(100, 18)
 
 -- math.LegacyNewDecFromStr("100")
-++ math.NewDecFromStr("100")
+++ math.NewDecFromString("100")
 
 -- math.LegacyNewDecFromStr("100.000000000000000000").Quo(math.LegacyNewDecFromInt(2))
-++ math.NewDecFromStr("100.000000000000000000").Quo(math.NewDecFromInt(2))
+++ foo, err := math.NewDecFromString("100.000000000000000000")
+++ foo.Quo(math.NewDecFromInt(2))
 
 -- math.LegacyNewDecFromStr("100.000000000000000000").Add(math.LegacyNewDecFromInt(2))
-++ math.NewDecFromStr("100.000000000000000000").Add(math.NewDecFromInt(2))
+++ foo, err := math.NewDecFromString("100.000000000000000000")
+++ foo.Add(math.NewDecFromInt(2))
 
 -- math.LegacyNewDecFromStr("100.000000000000000000").Sub(math.LegacyNewDecFromInt(2))
-++ math.NewDecFromStr("100.000000000000000000").Sub(math.NewDecFromInt(2))
-
+++ foo, err := math.NewDecFromString("100.000000000000000000")
+++ foo.Sub(math.NewDecFromInt(2))
+```
 
 ## Modules migrating from `LegacyDec` to `Dec`
 

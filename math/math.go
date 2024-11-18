@@ -7,8 +7,6 @@ import (
 	"github.com/cockroachdb/apd/v3"
 
 	"cosmossdk.io/errors"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var exactContext = apd.Context{
@@ -38,17 +36,19 @@ func SubNonNegative(x, y Dec) (Dec, error) {
 	return z, nil
 }
 
+var ErrInsufficientFunds = errors.New("insufficient balance")
+
 // SafeSubBalance subtracts the value of y from x and returns the result with arbitrary precision.
 // Returns with ErrInsufficientFunds error if the result is negative.
 func SafeSubBalance(x, y Dec) (Dec, error) {
 	var z Dec
 	_, err := exactContext.Sub(&z.dec, &x.dec, &y.dec)
 	if err != nil {
-		return z, errors.Wrap(err, "decimal subtraction error")
+		return z, fmt.Errorf("decimal subtraction error: %w", err)
 	}
 
 	if z.IsNegative() {
-		return z, sdkerrors.ErrInsufficientFunds
+		return z, ErrInsufficientFunds
 	}
 
 	return z, nil
@@ -60,9 +60,8 @@ func SafeAddBalance(x, y Dec) (Dec, error) {
 	var z Dec
 
 	if x.IsNegative() || y.IsNegative() {
-		return z, errors.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			fmt.Sprintf("AddBalance() requires two non-negative Dec parameters, but received %s and %s", x, y))
+		return z,
+			fmt.Errorf("AddBalance() requires two non-negative Dec parameters, but received %s and %s", x, y)
 	}
 
 	_, err := exactContext.Add(&z.dec, &x.dec, &y.dec)

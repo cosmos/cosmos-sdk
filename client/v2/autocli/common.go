@@ -286,7 +286,7 @@ func (b *Builder) getContext(cmd *cobra.Command) (context.Context, error) {
 // from the configuration before command execution.
 func (b *Builder) preRunE() func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := b.setFlagsFromConfig(cmd, args)
+		err := b.setFlagsFromConfig(cmd)
 		if err != nil {
 			return err
 		}
@@ -295,7 +295,7 @@ func (b *Builder) preRunE() func(cmd *cobra.Command, args []string) error {
 	}
 }
 
-func (b *Builder) setFlagsFromConfig(cmd *cobra.Command, args []string) error {
+func (b *Builder) setFlagsFromConfig(cmd *cobra.Command) error {
 	conf, err := config.CreateClientConfigFromFlags(cmd.Flags())
 	if err != nil {
 		return err

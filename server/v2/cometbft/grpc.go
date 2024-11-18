@@ -1,23 +1,36 @@
 package cometbft
 
 import (
+	"context"
+
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	cmtv1beta1 "cosmossdk.io/api/cosmos/base/tendermint/v1beta1"
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/server/v2/cometbft/client/rpc"
+	"cosmossdk.io/core/transaction"
+	errorsmod "cosmossdk.io/errors/v2"
 
+	"github.com/cosmos/gogoproto/proto"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // GRPCServiceRegistrar returns a function that registers the CometBFT gRPC service
+// Those services are defined for backward compatibility.
+// Eventually, they will be removed in favor of the new gRPC services.
 func (c *Consensus[T]) GRPCServiceRegistrar(
-	cometRPC rpc.CometRPC,
-	consensusAddressCodec address.ConsensusAddressCodec,
+	clientCtx client.Context,
 ) func(srv *grpc.Server) error {
 	return func(srv *grpc.Server) error {
-		cmtservice.RegisterServiceServer(srv, cmtservice.NewQueryServer(cometRPC, c.Query, consensusAddressCodec))
+		cmtservice.RegisterServiceServer(srv, cmtservice.NewQueryServer(clientCtx.Client, c.Query, clientCtx.ConsensusAddressCodec))
+		txtypes.RegisterServiceServer(srv, txServer[T]{clientCtx, c})
+
 		return nil
 	}
 }
@@ -66,3 +79,104 @@ var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 		},
 	},
 }
+
+type txServer[T transaction.Tx] struct {
+	clientCtx client.Context
+	consensus *Consensus[T]
+}
+
+// BroadcastTx implements tx.ServiceServer.
+func (t txServer[T]) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {
+	return client.TxServiceBroadcast(ctx, t.clientCtx, req)
+}
+
+// GetBlockWithTxs implements tx.ServiceServer.
+func (t txServer[T]) GetBlockWithTxs(context.Context, *txtypes.GetBlockWithTxsRequest) (*txtypes.GetBlockWithTxsResponse, error) {
+	panic("unimplemented")
+}
+
+// GetTx implements tx.ServiceServer.
+func (t txServer[T]) GetTx(context.Context, *txtypes.GetTxRequest) (*txtypes.GetTxResponse, error) {
+	panic("unimplemented")
+}
+
+// GetTxsEvent implements tx.ServiceServer.
+func (t txServer[T]) GetTxsEvent(context.Context, *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
+	panic("unimplemented")
+}
+
+// Simulate implements tx.ServiceServer.
+func (t txServer[T]) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*txtypes.SimulateResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
+	}
+
+	txBytes := req.TxBytes
+	if txBytes == nil && req.Tx != nil {
+		// This block is for backwards-compatibility.
+		// We used to support passing a `Tx` in req. But if we do that, sig
+		// verification might not pass, because the .Marshal() below might not
+		// be the same marshaling done by the client.
+		var err error
+		txBytes, err = proto.Marshal(req.Tx)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid tx; %v", err)
+		}
+	}
+
+	if txBytes == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty txBytes is not allowed")
+	}
+
+	tx, err := t.consensus.txCodec.Decode(txBytes)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "failed to decode tx")
+	}
+
+	txResult, _, err := t.consensus.app.Simulate(ctx, tx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unknown, "%v with gas used: '%d'", err, txResult.GasUsed)
+	}
+
+	msgResponses := make([]*codectypes.Any, 0, len(txResult.Resp))
+	// pack the messages into Any
+	for _, msg := range txResult.Resp {
+		anyMsg, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			return nil, status.Errorf(codes.Unknown, "failed to pack message response: %v", err)
+		}
+		msgResponses = append(msgResponses, anyMsg)
+	}
+
+	return &txtypes.SimulateResponse{
+		GasInfo: &sdk.GasInfo{
+			GasUsed:   txResult.GasUsed,
+			GasWanted: txResult.GasWanted,
+		},
+		Result: &sdk.Result{
+			MsgResponses: msgResponses,
+		},
+	}, nil
+}
+
+// TxDecode implements tx.ServiceServer.
+func (t txServer[T]) TxDecode(context.Context, *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
+	panic("unimplemented")
+}
+
+// TxDecodeAmino implements tx.ServiceServer.
+func (t txServer[T]) TxDecodeAmino(context.Context, *txtypes.TxDecodeAminoRequest) (*txtypes.TxDecodeAminoResponse, error) {
+	panic("unimplemented")
+}
+
+// TxEncode implements tx.ServiceServer.
+func (t txServer[T]) TxEncode(context.Context, *txtypes.TxEncodeRequest) (*txtypes.TxEncodeResponse, error) {
+	panic("unimplemented")
+}
+
+// TxEncodeAmino implements tx.ServiceServer.
+func (t txServer[T]) TxEncodeAmino(context.Context, *txtypes.TxEncodeAminoRequest) (*txtypes.TxEncodeAminoResponse, error) {
+	panic("unimplemented")
+}
+
+var _ txtypes.ServiceServer = txServer[transaction.Tx]{}

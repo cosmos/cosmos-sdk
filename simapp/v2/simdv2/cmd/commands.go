@@ -130,7 +130,9 @@ func InitRootCmd[T transaction.Tx](
 		simApp.QueryHandlers(),
 		simApp.Query,
 		[]func(*grpc.Server) error{
-			deps.ConsensusServer.Consensus.GRPCServiceRegistrar(deps.ClientContext.Client, deps.ClientContext.ConsensusAddressCodec),
+			deps.ConsensusServer.Consensus.GRPCServiceRegistrar(
+				deps.ClientContext,
+			),
 		},
 		deps.GlobalConfig,
 	)

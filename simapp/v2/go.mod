@@ -259,7 +259,7 @@ require (
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
 	// pseudo version lower than the latest tag
-	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20240924065902-eb7653cfecdf // main
+	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20241111180559-13c234f421e8 // main
 	cosmossdk.io/client/v2 => ../../client/v2
 	// pseudo version lower than the latest tag
 	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.6 // main

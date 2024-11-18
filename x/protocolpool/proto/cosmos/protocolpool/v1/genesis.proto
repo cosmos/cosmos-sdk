@@ -17,24 +17,24 @@ message GenesisState {
 
   // last_balance contains the amount of tokens yet to be distributed, will be zero if
   // there are no funds to distribute.
-  string last_balance = 3 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
-  ];
+  DistributionAmount last_balance = 3 [(gogoproto.nullable) = false];
 
   // distributions contains the list of distributions to be made to continuous
   // funds and budgets. It contains time in order to distribute to non-expired
   // funds only.
   repeated Distribution distributions = 4;
+
+  // params defines the parameters of this module, currently only contains the
+  // denoms that will be used for continuous fund distributions.
+  Params params = 5;
 }
 
 message Distribution {
-  string amount = 3 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
-  ];
+  // time at which this distribution was made, in order to distribute to non-expired funds only
+  // and funds that existed at that time. Because we don't distribute right away, we keep track
+  // of the time of distribution.
+  google.protobuf.Timestamp time = 1 [(gogoproto.stdtime) = true];
 
-  google.protobuf.Timestamp time = 6 [(gogoproto.stdtime) = true];
+  // amount is the list of coins to be distributed.
+  DistributionAmount amount = 2 [(gogoproto.nullable) = false];
 }

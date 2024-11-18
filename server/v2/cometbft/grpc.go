@@ -3,6 +3,8 @@ package cometbft
 import (
 	"context"
 
+	v1 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -12,9 +14,6 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors/v2"
-
-	v1 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"

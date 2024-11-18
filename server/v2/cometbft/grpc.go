@@ -92,17 +92,17 @@ func (t txServer[T]) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRe
 
 // GetBlockWithTxs implements tx.ServiceServer.
 func (t txServer[T]) GetBlockWithTxs(context.Context, *txtypes.GetBlockWithTxsRequest) (*txtypes.GetBlockWithTxsResponse, error) {
-	panic("unimplemented")
+	return nil, status.Error(codes.Unimplemented, "not implemented")
 }
 
 // GetTx implements tx.ServiceServer.
 func (t txServer[T]) GetTx(context.Context, *txtypes.GetTxRequest) (*txtypes.GetTxResponse, error) {
-	panic("unimplemented")
+	return nil, status.Error(codes.Unimplemented, "not implemented")
 }
 
 // GetTxsEvent implements tx.ServiceServer.
 func (t txServer[T]) GetTxsEvent(context.Context, *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
-	panic("unimplemented")
+	return nil, status.Error(codes.Unimplemented, "not implemented")
 }
 
 // Simulate implements tx.ServiceServer.
@@ -161,22 +161,22 @@ func (t txServer[T]) Simulate(ctx context.Context, req *txtypes.SimulateRequest)
 
 // TxDecode implements tx.ServiceServer.
 func (t txServer[T]) TxDecode(context.Context, *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
-	panic("unimplemented")
+	return nil, status.Error(codes.Unimplemented, "not implemented")
 }
 
 // TxDecodeAmino implements tx.ServiceServer.
 func (t txServer[T]) TxDecodeAmino(context.Context, *txtypes.TxDecodeAminoRequest) (*txtypes.TxDecodeAminoResponse, error) {
-	panic("unimplemented")
+	return nil, status.Error(codes.Unimplemented, "not implemented")
 }
 
 // TxEncode implements tx.ServiceServer.
 func (t txServer[T]) TxEncode(context.Context, *txtypes.TxEncodeRequest) (*txtypes.TxEncodeResponse, error) {
-	panic("unimplemented")
+	return nil, status.Error(codes.Unimplemented, "not implemented")
 }
 
 // TxEncodeAmino implements tx.ServiceServer.
 func (t txServer[T]) TxEncodeAmino(context.Context, *txtypes.TxEncodeAminoRequest) (*txtypes.TxEncodeAminoResponse, error) {
-	panic("unimplemented")
+	return nil, status.Error(codes.Unimplemented, "not implemented")
 }
 
 var _ txtypes.ServiceServer = txServer[transaction.Tx]{}

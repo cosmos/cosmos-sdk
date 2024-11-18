@@ -113,7 +113,6 @@ func InitRootCmd[T transaction.Tx](
 			deps.GlobalConfig,
 			initCometOptions[T](),
 		)
-
 		if err != nil {
 			return nil, err
 		}

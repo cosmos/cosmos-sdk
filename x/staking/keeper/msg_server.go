@@ -1006,19 +1006,6 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 		return nil, types.ErrTinyRedemptionAmount
 	}
 
-	// EDGECASE: tokenized share was transferred to a delegator with validator bond
-	// -> must increase validator bond shares
-	if delegation.ValidatorBond {
-		if err := k.IncreaseValidatorBondShares(ctx, valAddr, shares); err != nil {
-			return nil, err
-		}
-		// refetch the validator because the ValidatorBondShares have been updated
-		validator, err = k.GetValidator(ctx, valAddr)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	// If this redemption is NOT from a liquid staking provider, decrement the total liquid staked
 	// If the redemption was from a liquid staking provider, the shares are still considered
 	// liquid, even in their non-tokenized form (since they are owned by a liquid staking provider)

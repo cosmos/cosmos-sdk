@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
+	clientcontext "cosmossdk.io/client/v2/autocli/context"
 	clitx "cosmossdk.io/client/v2/tx"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -14,6 +15,12 @@ import (
 )
 
 func Test_Verify(t *testing.T) {
+	ctx := clientcontext.Context{
+		AddressCodec:          address.NewBech32Codec("cosmos"),
+		ValidatorAddressCodec: address.NewBech32Codec("cosmosvaloper"),
+		Cdc:                   getCodec(),
+	}
+
 	tests := []struct {
 		name       string
 		digest     []byte
@@ -45,7 +52,7 @@ func Test_Verify(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := Verify(getCodec(), address.NewBech32Codec("cosmos"), address.NewBech32Codec("cosmosvaloper"), tt.digest, tt.fileFormat)
+			err := Verify(ctx, tt.digest, tt.fileFormat)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {
@@ -57,7 +64,6 @@ func Test_Verify(t *testing.T) {
 
 func Test_SignVerify(t *testing.T) {
 	ac := address.NewBech32Codec("cosmos")
-	vc := address.NewBech32Codec("cosmosvaloper")
 
 	k := keyring.NewInMemory(getCodec())
 	_, err := k.NewAccount("signVerify", mnemonic, "", "m/44'/118'/0'/0/0", hd.Secp256k1)
@@ -66,10 +72,17 @@ func Test_SignVerify(t *testing.T) {
 	autoKeyring, err := keyring.NewAutoCLIKeyring(k, ac)
 	require.NoError(t, err)
 
-	tx, err := Sign([]byte("Hello World!"), mockClientConn{}, autoKeyring, getCodec(), ac, vc, getCodec().InterfaceRegistry(), "signVerify", "no-encoding", "direct", "json")
+	ctx := clientcontext.Context{
+		AddressCodec:          address.NewBech32Codec("cosmos"),
+		ValidatorAddressCodec: address.NewBech32Codec("cosmosvaloper"),
+		Cdc:                   getCodec(),
+		Keyring:               autoKeyring,
+	}
+
+	tx, err := Sign(ctx, []byte("Hello World!"), mockClientConn{}, "signVerify", "no-encoding", "direct", "json")
 	require.NoError(t, err)
 
-	err = Verify(getCodec(), ac, vc, []byte(tx), "json")
+	err = Verify(ctx, []byte(tx), "json")
 	require.NoError(t, err)
 }
 

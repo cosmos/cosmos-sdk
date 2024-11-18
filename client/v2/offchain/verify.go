@@ -8,21 +8,21 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
+	clientcontext "cosmossdk.io/client/v2/autocli/context"
 	clitx "cosmossdk.io/client/v2/tx"
 	"cosmossdk.io/core/address"
 	txsigning "cosmossdk.io/x/tx/signing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // Verify verifies a digest after unmarshalling it.
-func Verify(cdc codec.Codec, addressCodec, validatorAddressCodec address.Codec, digest []byte, fileFormat string) error {
+func Verify(ctx clientcontext.Context, digest []byte, fileFormat string) error {
 	txConfig, err := clitx.NewTxConfig(clitx.ConfigOptions{
-		AddressCodec:          addressCodec,
-		Cdc:                   cdc,
-		ValidatorAddressCodec: validatorAddressCodec,
+		AddressCodec:          ctx.AddressCodec,
+		Cdc:                   ctx.Cdc,
+		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
 		EnabledSignModes:      enabledSignModes,
 	})
 	if err != nil {
@@ -34,7 +34,7 @@ func Verify(cdc codec.Codec, addressCodec, validatorAddressCodec address.Codec, 
 		return err
 	}
 
-	return verify(addressCodec, txConfig, dTx)
+	return verify(ctx.AddressCodec, txConfig, dTx)
 }
 
 // verify verifies given Tx.

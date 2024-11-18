@@ -5,6 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	clientcontext "cosmossdk.io/client/v2/autocli/context"
+
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -20,6 +22,12 @@ func TestSign(t *testing.T) {
 	autoKeyring, err := keyring.NewAutoCLIKeyring(k, ac)
 	require.NoError(t, err)
 
+	ctx := clientcontext.Context{
+		AddressCodec:          ac,
+		ValidatorAddressCodec: vc,
+		Cdc:                   getCodec(),
+		Keyring:               autoKeyring,
+	}
 	tests := []struct {
 		name     string
 		rawBytes []byte
@@ -49,8 +57,7 @@ func TestSign(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Sign(tt.rawBytes, mockClientConn{}, autoKeyring, getCodec(), ac, vc, getCodec().InterfaceRegistry(),
-				"signVerify", tt.encoding, tt.signMode, "json")
+			got, err := Sign(ctx, tt.rawBytes, mockClientConn{}, "signVerify", tt.encoding, tt.signMode, "json")
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {

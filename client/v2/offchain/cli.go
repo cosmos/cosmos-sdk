@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/client/v2/autocli/config"
+	clientcontext "cosmossdk.io/client/v2/autocli/context"
 	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/client/v2/broadcast/comet"
 	v2flags "cosmossdk.io/client/v2/internal/flags"
@@ -77,7 +78,6 @@ func SignFile() *cobra.Command {
 			bech32Prefix, _ := cmd.Flags().GetString(flagBech32)
 
 			ac := address.NewBech32Codec(bech32Prefix)
-			vc := address.NewBech32Codec(sdk.GetBech32PrefixValAddr(bech32Prefix))
 			k, err := keyring.NewKeyringFromFlags(cmd.Flags(), ac, cmd.InOrStdin(), cdc)
 			if err != nil {
 				return err
@@ -89,7 +89,15 @@ func SignFile() *cobra.Command {
 				return err
 			}
 
-			signedTx, err := Sign(bz, conn, k, cdc, ac, vc, ir, args[0], encoding, signMode, outputFormat)
+			ctx := clientcontext.Context{
+				Flags:                 cmd.Flags(),
+				AddressCodec:          ac,
+				ValidatorAddressCodec: address.NewBech32Codec(sdk.GetBech32PrefixValAddr(bech32Prefix)),
+				Cdc:                   cdc,
+				Keyring:               k,
+			}
+
+			signedTx, err := Sign(ctx, bz, conn, args[0], encoding, signMode, outputFormat)
 			if err != nil {
 				return err
 			}
@@ -134,9 +142,15 @@ func VerifyFile() *cobra.Command {
 			bech32Prefix, _ := cmd.Flags().GetString(flagBech32)
 
 			ac := address.NewBech32Codec(bech32Prefix)
-			vc := address.NewBech32Codec(sdk.GetBech32PrefixValAddr(bech32Prefix))
 
-			err = Verify(cdc, ac, vc, bz, fileFormat)
+			ctx := clientcontext.Context{
+				Flags:                 cmd.Flags(),
+				AddressCodec:          ac,
+				ValidatorAddressCodec: address.NewBech32Codec(sdk.GetBech32PrefixValAddr(bech32Prefix)),
+				Cdc:                   cdc,
+			}
+
+			err = Verify(ctx, bz, fileFormat)
 			if err == nil {
 				cmd.Println("Verification OK!")
 			}

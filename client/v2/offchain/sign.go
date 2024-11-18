@@ -7,14 +7,11 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	"cosmossdk.io/client/v2/autocli/keyring"
+	clientcontext "cosmossdk.io/client/v2/autocli/context"
 	"cosmossdk.io/client/v2/internal/account"
 	"cosmossdk.io/client/v2/internal/offchain"
 	clitx "cosmossdk.io/client/v2/tx"
-	"cosmossdk.io/core/address"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -34,11 +31,9 @@ var enabledSignModes = []apisigning.SignMode{
 
 // Sign signs given bytes using the specified encoder and SignMode.
 func Sign(
+	ctx clientcontext.Context,
 	rawBytes []byte,
 	conn gogogrpc.ClientConn,
-	keybase keyring.Keyring,
-	cdc codec.BinaryCodec, addressCodec, validatorAddressCodec address.Codec,
-	ir types.InterfaceRegistry,
 	fromName, encoding, signMode, output string,
 ) (string, error) {
 	digest, err := encodeDigest(encoding, rawBytes)
@@ -47,16 +42,16 @@ func Sign(
 	}
 
 	txConfig, err := clitx.NewTxConfig(clitx.ConfigOptions{
-		AddressCodec:          addressCodec,
-		Cdc:                   cdc,
-		ValidatorAddressCodec: validatorAddressCodec,
+		AddressCodec:          ctx.AddressCodec,
+		Cdc:                   ctx.Cdc,
+		ValidatorAddressCodec: ctx.ValidatorAddressCodec,
 		EnabledSignModes:      enabledSignModes,
 	})
 	if err != nil {
 		return "", err
 	}
 
-	accRetriever := account.NewAccountRetriever(addressCodec, conn, ir)
+	accRetriever := account.NewAccountRetriever(ctx.AddressCodec, conn, ctx.Cdc.InterfaceRegistry())
 
 	sm, err := getSignMode(signMode)
 	if err != nil {
@@ -72,17 +67,17 @@ func Sign(
 		},
 	}
 
-	txf, err := clitx.NewFactory(keybase, cdc, accRetriever, txConfig, addressCodec, conn, params)
+	txf, err := clitx.NewFactory(ctx.Keyring, ctx.Cdc, accRetriever, txConfig, ctx.AddressCodec, conn, params)
 	if err != nil {
 		return "", err
 	}
 
-	pubKey, err := keybase.GetPubKey(fromName)
+	pubKey, err := ctx.Keyring.GetPubKey(fromName)
 	if err != nil {
 		return "", err
 	}
 
-	addr, err := addressCodec.BytesToString(pubKey.Address())
+	addr, err := ctx.AddressCodec.BytesToString(pubKey.Address())
 	if err != nil {
 		return "", err
 	}

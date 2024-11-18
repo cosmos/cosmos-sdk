@@ -2,10 +2,8 @@ package nodeservice
 
 import (
 	context "context"
-	"errors"
+	fmt "fmt"
 
-	"cosmossdk.io/core/appmodule"
-	corecontext "cosmossdk.io/core/context"
 	"cosmossdk.io/core/server"
 )
 
@@ -21,8 +19,8 @@ func NewQueryServer(cfg server.ConfigMap) ServiceServer {
 
 func (s queryServer) Config(ctx context.Context, _ *ConfigRequest) (*ConfigResponse, error) {
 	minGasPricesStr := ""
-	minGasPrices, ok := s.cfg["server.minimum_gas_price"]
-	if !ok {
+	minGasPrices, ok := s.cfg["server"].(map[string]interface{})["minimum-gas-prices"]
+	if ok {
 		minGasPricesStr = minGasPrices.(string)
 	}
 
@@ -32,17 +30,14 @@ func (s queryServer) Config(ctx context.Context, _ *ConfigRequest) (*ConfigRespo
 }
 
 func (s queryServer) Status(ctx context.Context, _ *StatusRequest) (*StatusResponse, error) {
-	environment, ok := ctx.Value(corecontext.EnvironmentContextKey).(appmodule.Environment)
-	if !ok {
-		return nil, errors.New("environment not set")
-	}
+	// note, environment nor execution context isn't available in the context
 
-	headerInfo := environment.HeaderService.HeaderInfo(ctx)
+	// return &StatusResponse{
+	// 	Height:        uint64(headerInfo.Height),
+	// 	Timestamp:     &headerInfo.Time,
+	// 	AppHash:       headerInfo.AppHash,
+	// 	ValidatorHash: headerInfo.Hash,
+	// }, nil
 
-	return &StatusResponse{
-		Height:        uint64(headerInfo.Height),
-		Timestamp:     &headerInfo.Time,
-		AppHash:       headerInfo.AppHash,
-		ValidatorHash: headerInfo.Hash,
-	}, nil
+	return &StatusResponse{}, fmt.Errorf("not implemented")
 }

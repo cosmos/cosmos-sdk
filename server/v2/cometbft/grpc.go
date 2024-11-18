@@ -12,10 +12,12 @@ import (
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors/v2"
 
+	v1 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
@@ -30,6 +32,7 @@ func (c *Consensus[T]) GRPCServiceRegistrar(
 	return func(srv *grpc.Server) error {
 		cmtservice.RegisterServiceServer(srv, cmtservice.NewQueryServer(clientCtx.Client, c.Query, clientCtx.ConsensusAddressCodec))
 		txtypes.RegisterServiceServer(srv, txServer[T]{clientCtx, c})
+		nodeservice.RegisterServiceServer(srv, nodeServer[T]{c})
 
 		return nil
 	}
@@ -180,3 +183,30 @@ func (t txServer[T]) TxEncodeAmino(context.Context, *txtypes.TxEncodeAminoReques
 }
 
 var _ txtypes.ServiceServer = txServer[transaction.Tx]{}
+
+type nodeServer[T transaction.Tx] struct {
+	consensus *Consensus[T]
+}
+
+func (s nodeServer[T]) Config(ctx context.Context, _ *nodeservice.ConfigRequest) (*nodeservice.ConfigResponse, error) {
+	return &nodeservice.ConfigResponse{
+		MinimumGasPrice:   "check cosmos.base.v2.Service/Config",
+		PruningKeepRecent: "ambiguous in v2",
+		PruningInterval:   "ambiguous in v2",
+		HaltHeight:        s.consensus.cfg.AppTomlConfig.HaltHeight,
+	}, nil
+}
+
+func (s nodeServer[T]) Status(ctx context.Context, _ *nodeservice.StatusRequest) (*nodeservice.StatusResponse, error) {
+	nodeInfo, err := s.consensus.Info(ctx, &v1.InfoRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	return &nodeservice.StatusResponse{
+		Height:        uint64(nodeInfo.LastBlockHeight),
+		Timestamp:     nil,
+		AppHash:       nil,
+		ValidatorHash: nodeInfo.LastBlockAppHash,
+	}, nil
+}

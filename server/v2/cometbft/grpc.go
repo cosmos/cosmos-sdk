@@ -9,6 +9,7 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	cmtv1beta1 "cosmossdk.io/api/cosmos/base/tendermint/v1beta1"
+	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors/v2"
 
@@ -28,11 +29,12 @@ import (
 // Eventually, they will be removed in favor of the new gRPC services.
 func (c *Consensus[T]) GRPCServiceRegistrar(
 	clientCtx client.Context,
+	cfg server.ConfigMap,
 ) func(srv *grpc.Server) error {
 	return func(srv *grpc.Server) error {
 		cmtservice.RegisterServiceServer(srv, cmtservice.NewQueryServer(clientCtx.Client, c.Query, clientCtx.ConsensusAddressCodec))
 		txtypes.RegisterServiceServer(srv, txServer[T]{clientCtx, c})
-		nodeservice.RegisterServiceServer(srv, nodeServer[T]{c})
+		nodeservice.RegisterServiceServer(srv, nodeServer[T]{cfg, c})
 
 		return nil
 	}
@@ -185,12 +187,19 @@ func (t txServer[T]) TxEncodeAmino(context.Context, *txtypes.TxEncodeAminoReques
 var _ txtypes.ServiceServer = txServer[transaction.Tx]{}
 
 type nodeServer[T transaction.Tx] struct {
+	cfg       server.ConfigMap
 	consensus *Consensus[T]
 }
 
 func (s nodeServer[T]) Config(ctx context.Context, _ *nodeservice.ConfigRequest) (*nodeservice.ConfigResponse, error) {
+	minGasPricesStr := ""
+	minGasPrices, ok := s.cfg["server"].(map[string]interface{})["minimum-gas-prices"]
+	if ok {
+		minGasPricesStr = minGasPrices.(string)
+	}
+
 	return &nodeservice.ConfigResponse{
-		MinimumGasPrice:   "check cosmos.base.v2.Service/Config",
+		MinimumGasPrice:   minGasPricesStr,
 		PruningKeepRecent: "ambiguous in v2",
 		PruningInterval:   "ambiguous in v2",
 		HaltHeight:        s.consensus.cfg.AppTomlConfig.HaltHeight,

@@ -132,6 +132,7 @@ func InitRootCmd[T transaction.Tx](
 		[]func(*grpc.Server) error{
 			deps.ConsensusServer.Consensus.GRPCServiceRegistrar(
 				deps.ClientContext,
+				deps.GlobalConfig,
 			),
 		},
 		deps.GlobalConfig,

@@ -414,6 +414,29 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 		}
 	}
 
+	delegation, err := k.GetDelegation(ctx, delegatorAddress, valDstAddr)
+	if err != nil {
+		return math.ZeroInt(), err
+	}
+
+	// if the delegator holds a validator bond to destination validator, decrease the destination validator bond shares
+	if delegation.ValidatorBond {
+		if err := k.SafelyDecreaseValidatorBond(ctx, valDstAddr, math.LegacyDec(totalSlashAmount)); err != nil {
+			return math.ZeroInt(), err
+		}
+	}
+
+	// if this delegation is from a liquid staking provider (identified if the delegator
+	// is an ICA account), the global and validator liquid totals should be decremented
+	if k.DelegatorIsLiquidStaker(delegatorAddress) {
+		if err := k.DecreaseTotalLiquidStakedTokens(ctx, totalSlashAmount); err != nil {
+			return math.ZeroInt(), err
+		}
+		if _, err := k.DecreaseValidatorLiquidShares(ctx, valDstAddr, math.LegacyDec(totalSlashAmount)); err != nil {
+			return math.ZeroInt(), err
+		}
+	}
+
 	if err := k.burnBondedTokens(ctx, bondedBurnedAmount); err != nil {
 		return math.ZeroInt(), err
 	}

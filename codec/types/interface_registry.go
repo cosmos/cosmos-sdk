@@ -230,7 +230,6 @@ func (registry *interfaceRegistry) ListImplementations(ifaceName string) []strin
 }
 
 func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error {
-	fmt.Println("HERE??!!! 4444", reflect.TypeOf(iface))
 	// here we gracefully handle the case in which `any` itself is `nil`, which may occur in message decoding
 	if any == nil {
 		return nil
@@ -240,7 +239,6 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 		// if TypeUrl is empty return nil because without it we can't actually unpack anything
 		return nil
 	}
-	fmt.Println("HERE??!!! 6666", reflect.TypeOf(iface))
 
 	rv := reflect.ValueOf(iface)
 	if rv.Kind() != reflect.Ptr {
@@ -251,14 +249,11 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 
 	cachedValue := any.GetCachedValue()
 	if cachedValue != nil {
-		fmt.Println("HERE??!!! 8888eee")
 		if reflect.TypeOf(cachedValue).AssignableTo(rt) {
 			rv.Elem().Set(reflect.ValueOf(cachedValue))
 			return nil
 		}
 	}
-
-	fmt.Println("HERE??!!! 7777", reflect.TypeOf(iface))
 
 	imap, found := registry.interfaceImpls[rt]
 	if !found {
@@ -281,7 +276,6 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 	if err != nil {
 		return err
 	}
-	fmt.Println("HERE??!!! 8888", reflect.TypeOf(iface))
 
 	err = UnpackInterfaces(msg, registry)
 	if err != nil {
@@ -295,7 +289,6 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface interface{}) error 
 		return err
 	}
 
-	fmt.Println("HERE??!!! 5555", newAnyWithCache)
 	*any = *newAnyWithCache
 	return nil
 }

@@ -291,7 +291,6 @@ func (pc *ProtoCodec) UnmarshalInterfaceJSON(bz []byte, iface interface{}) error
 // it unpacks the value in any to the interface pointer passed in as
 // iface.
 func (pc *ProtoCodec) UnpackAny(any *types.Any, iface interface{}) error {
-	fmt.Println("HERE?? aaaaa")
 	return pc.interfaceRegistry.UnpackAny(any, iface)
 }
 

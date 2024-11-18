@@ -104,20 +104,6 @@ type hasUnpackInterfaces interface {
 }
 
 func (c collValue[T, PT]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
-	return FallbackSchemaCodec[T](
-		func(v T) error {
-			if unpackable, ok := any(v).(hasUnpackInterfaces); ok {
-				return unpackable.UnpackInterfaces(c.cdc)
-			}
-			return nil
-		},
-	), nil
-}
-
-// FallbackSchemaCodec returns a fallback schema codec for T when one isn't explicitly
-// specified with HasSchemaCodec. It maps all simple types directly to schema kinds
-// and converts everything else to JSON String.
-func FallbackSchemaCodec[T any](unpacker func(T) error) collcodec.SchemaCodec[T] {
 	var t T
 	kind := schema.KindForGoValue(t)
 	if err := kind.Validate(); err == nil {
@@ -128,21 +114,17 @@ func FallbackSchemaCodec[T any](unpacker func(T) error) collcodec.SchemaCodec[T]
 				Kind: kind,
 			}},
 			// these can be nil because T maps directly to a schema value for this kind
-			ToSchemaType:   nil,
+			ToSchemaType: func(t T) (any, error) {
+				return nil, nil
+			},
 			FromSchemaType: nil,
-		}
+		}, nil
 	} else {
 		// we default to encoding everything to JSON String
 		return collcodec.SchemaCodec[T]{
 			Fields: []schema.Field{{Kind: schema.StringKind}},
 			ToSchemaType: func(t T) (any, error) {
-				fmt.Println("type of t: ", reflect.TypeOf(t))
-				if unpacker != nil {
-					if err := unpacker(t); err != nil {
-						return nil, err
-					}
-				}
-				bz, err := json.Marshal(t)
+				bz, err := c.EncodeJSON(t)
 				return string(json.RawMessage(bz)), err
 			},
 			FromSchemaType: func(a any) (T, error) {
@@ -154,7 +136,7 @@ func FallbackSchemaCodec[T any](unpacker func(T) error) collcodec.SchemaCodec[T]
 				err := json.Unmarshal([]byte(sz), &t)
 				return t, err
 			},
-		}
+		}, nil
 	}
 }
 

@@ -2,6 +2,7 @@ package print
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 
@@ -26,6 +27,11 @@ func NewPrinter(cmd *cobra.Command) (*Printer, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if outputFormat != jsonOutput && outputFormat != textOutput {
+		return nil, fmt.Errorf("unsupported output format: %s", outputFormat)
+	}
+
 	return &Printer{
 		Output:       cmd.OutOrStdout(),
 		OutputFormat: outputFormat,
@@ -46,6 +52,9 @@ func (p *Printer) PrintRaw(toPrint json.RawMessage) error {
 func (p *Printer) PrintBytes(out []byte) error {
 	var err error
 	if p.OutputFormat == textOutput {
+		if !json.Valid(out) {
+			return fmt.Errorf("invalid JSON")
+		}
 		out, err = yaml.JSONToYAML(out)
 		if err != nil {
 			return err

@@ -62,7 +62,7 @@ func (c *CometBFTBroadcaster) Invoke(ctx context.Context, method string, req, re
 		Height: height,
 	}
 
-	res, err := c.queryABCI(abciR)
+	res, err := c.queryABCI(ctx, abciR)
 	if err != nil {
 		return err
 	}
@@ -97,13 +97,13 @@ func (c *CometBFTBroadcaster) Invoke(ctx context.Context, method string, req, re
 // queryABCI performs an ABCI query request to the CometBFT RPC client.
 // If the RPC query fails or returns a non-OK response, it will return an error.
 // The response is converted from ABCI error codes to gRPC status errors.
-func (c *CometBFTBroadcaster) queryABCI(req abci.QueryRequest) (abci.QueryResponse, error) {
+func (c *CometBFTBroadcaster) queryABCI(ctx context.Context, req abci.QueryRequest) (abci.QueryResponse, error) {
 	opts := rpcclient.ABCIQueryOptions{
 		Height: req.Height,
 		Prove:  req.Prove,
 	}
 
-	result, err := c.rpcClient.ABCIQueryWithOptions(context.Background(), req.Path, req.Data, opts)
+	result, err := c.rpcClient.ABCIQueryWithOptions(ctx, req.Path, req.Data, opts)
 	if err != nil {
 		return abci.QueryResponse{}, err
 	}

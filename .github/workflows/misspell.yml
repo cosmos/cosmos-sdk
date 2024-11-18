@@ -25,7 +25,8 @@ jobs:
         with:
           commit-message: "chore: spelling errors fixes"
           title: "chore: fix spelling errors"
-          branch: "bot/fix-typos"
+          branch: "claude/fix-typos"
+          base: claude/spellcheck
           delete-branch: true
           body: |
             This PR fixes typos in the codebase.

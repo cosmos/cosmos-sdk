@@ -750,7 +750,11 @@ func (k msgServer) UnbondValidator(ctx context.Context, msg *types.MsgUnbondVali
 		return nil, err
 	}
 
-	k.jailValidator(ctx, validator)
+	err = k.jailValidator(ctx, validator)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.MsgUnbondValidatorResponse{}, nil
 }
 
@@ -796,6 +800,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
+	// ValidatorBond delegation is not allowed for tokenize share
 	if delegation.ValidatorBond {
 		return nil, types.ErrValidatorBondNotAllowedForTokenizeShare
 	}
@@ -828,6 +833,11 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// sanity check to avoid creating a tokenized share record with zero shares
+	if shares.IsZero() {
+		return nil, errorsmod.Wrap(types.ErrInsufficientShares, "cannot tokenize zero shares")
 	}
 
 	// Check that the delegator has no ongoing redelegations to the validator
@@ -871,7 +881,10 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}
 
 	if validator.IsBonded() {
-		k.bondedTokensToNotBonded(ctx, returnAmount)
+		err = k.bondedTokensToNotBonded(ctx, returnAmount)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Note: UndelegateCoinsFromModuleToAccount is internally calling TrackUndelegation for vesting account
@@ -1012,7 +1025,10 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 	}
 
 	if validator.IsBonded() {
-		k.bondedTokensToNotBonded(ctx, returnAmount)
+		err = k.bondedTokensToNotBonded(ctx, returnAmount)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Note: since delegation object has been changed from unbond call, it gets latest delegation
@@ -1066,6 +1082,19 @@ func (k msgServer) RedeemTokensForShares(goCtx context.Context, msg *types.MsgRe
 	_, err = k.Keeper.Delegate(ctx, delegatorAddress, returnAmount, types.Unbonded, validator, true)
 	if err != nil {
 		return nil, err
+	}
+
+	// tokenized shares can be transferred from a validator that does not have validator bond to a delegator with validator bond
+	// in that case we need to increase the validator bond shares (same as during msgServer.Delegate)
+	newDelegation, err := k.GetDelegation(ctx, delegatorAddress, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if newDelegation.ValidatorBond {
+		if err := k.IncreaseValidatorBondShares(ctx, valAddr, shares); err != nil {
+			return nil, err
+		}
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -1208,9 +1237,15 @@ func (k msgServer) ValidatorBond(goCtx context.Context, msg *types.MsgValidatorB
 
 	if !delegation.ValidatorBond {
 		delegation.ValidatorBond = true
-		k.SetDelegation(ctx, delegation)
+		err = k.SetDelegation(ctx, delegation)
+		if err != nil {
+			return nil, err
+		}
 		validator.ValidatorBondShares = validator.ValidatorBondShares.Add(delegation.Shares)
-		k.SetValidator(ctx, validator)
+		err = k.SetValidator(ctx, validator)
+		if err != nil {
+			return nil, err
+		}
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -905,6 +906,9 @@ func (app *BaseApp) FinalizeBlock(req *abci.FinalizeBlockRequest) (res *abci.Fin
 		for _, streamingListener := range app.streamingManager.ABCIListeners {
 			if err := streamingListener.ListenFinalizeBlock(app.finalizeBlockState.Context(), *req, *res); err != nil {
 				app.logger.Error("ListenFinalizeBlock listening hook failed", "height", req.Height, "err", err)
+				if app.streamingManager.StopNodeOnErr {
+					os.Exit(1)
+				}
 			}
 		}
 	}()
@@ -976,8 +980,6 @@ func (app *BaseApp) Commit() (*abci.CommitResponse, error) {
 		rms.SetCommitHeader(header)
 	}
 
-	app.cms.Commit()
-
 	resp := &abci.CommitResponse{
 		RetainHeight: retainHeight,
 	}
@@ -991,9 +993,16 @@ func (app *BaseApp) Commit() (*abci.CommitResponse, error) {
 		for _, abciListener := range abciListeners {
 			if err := abciListener.ListenCommit(ctx, *resp, changeSet); err != nil {
 				app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
+				if app.streamingManager.StopNodeOnErr {
+					os.Exit(1)
+				}
 			}
 		}
 	}
+
+	// Commit after all listeners have been called, in case they error and we
+	// need to stop before committing.
+	app.cms.Commit()
 
 	// Reset the CheckTx state to the latest committed.
 	//

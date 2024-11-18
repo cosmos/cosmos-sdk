@@ -1,16 +1,19 @@
 package codec
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 
 	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
+	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
+	"cosmossdk.io/schema"
 )
 
 // BoolValue implements a ValueCodec that saves the bool value
@@ -51,12 +54,17 @@ type protoMessage[T any] interface {
 	proto.Message
 }
 
+type protoCollValueCodec[T any] interface {
+	collcodec.HasSchemaCodec[T]
+	collcodec.ValueCodec[T]
+}
+
 // CollValue inits a collections.ValueCodec for a generic gogo protobuf message.
 func CollValue[T any, PT protoMessage[T]](cdc interface {
 	Marshal(proto.Message) ([]byte, error)
 	Unmarshal([]byte, proto.Message) error
 },
-) collcodec.ValueCodec[T] {
+) protoCollValueCodec[T] {
 	return &collValue[T, PT]{cdc.(Codec), proto.MessageName(PT(new(T)))}
 }
 
@@ -89,6 +97,65 @@ func (c collValue[T, PT]) Stringify(value T) string {
 
 func (c collValue[T, PT]) ValueType() string {
 	return "github.com/cosmos/gogoproto/" + c.messageName
+}
+
+type hasUnpackInterfaces interface {
+	UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error // Replace `AnyUnpacker` with the actual type from gogoprotoany
+}
+
+func (c collValue[T, PT]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
+	return FallbackSchemaCodec[T](
+		func(v T) error {
+			if unpackable, ok := any(v).(hasUnpackInterfaces); ok {
+				return unpackable.UnpackInterfaces(c.cdc)
+			}
+			return nil
+		},
+	), nil
+}
+
+// FallbackSchemaCodec returns a fallback schema codec for T when one isn't explicitly
+// specified with HasSchemaCodec. It maps all simple types directly to schema kinds
+// and converts everything else to JSON String.
+func FallbackSchemaCodec[T any](unpacker func(T) error) collcodec.SchemaCodec[T] {
+	var t T
+	kind := schema.KindForGoValue(t)
+	if err := kind.Validate(); err == nil {
+		return collcodec.SchemaCodec[T]{
+			Fields: []schema.Field{{
+				// we don't set any name so that this can be set to a good default by the caller
+				Name: "",
+				Kind: kind,
+			}},
+			// these can be nil because T maps directly to a schema value for this kind
+			ToSchemaType:   nil,
+			FromSchemaType: nil,
+		}
+	} else {
+		// we default to encoding everything to JSON String
+		return collcodec.SchemaCodec[T]{
+			Fields: []schema.Field{{Kind: schema.StringKind}},
+			ToSchemaType: func(t T) (any, error) {
+				fmt.Println("type of t: ", reflect.TypeOf(t))
+				if unpacker != nil {
+					if err := unpacker(t); err != nil {
+						return nil, err
+					}
+				}
+				bz, err := json.Marshal(t)
+				return string(json.RawMessage(bz)), err
+			},
+			FromSchemaType: func(a any) (T, error) {
+				var t T
+				sz, ok := a.(string)
+				if !ok {
+					return t, fmt.Errorf("expected string, got %T", a)
+				}
+				err := json.Unmarshal([]byte(sz), &t)
+				return t, err
+			},
+		}
+	}
 }
 
 type protoMessageV2[T any] interface {

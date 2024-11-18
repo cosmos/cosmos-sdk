@@ -22,7 +22,26 @@ func (i *indexerImpl) listener() appdata.Listener {
 			return mm.initializeSchema(i.ctx, i.tx)
 		},
 		StartBlock: func(data appdata.StartBlockData) error {
-			_, err := i.tx.Exec("INSERT INTO block (number) VALUES ($1)", data.Height)
+			var (
+				headerBz []byte
+				err      error
+			)
+
+			if data.HeaderJSON != nil {
+				headerBz, err = data.HeaderJSON()
+				if err != nil {
+					return err
+				}
+			} else if data.HeaderBytes != nil {
+				headerBz, err = data.HeaderBytes()
+				if err != nil {
+					return err
+				}
+			}
+
+			// TODO: verify the format of headerBz, otherwise we'll get `ERROR: invalid input syntax for type json (SQLSTATE 22P02)`
+			_, err = i.tx.Exec("INSERT INTO block (number, header) VALUES ($1, $2)", data.Height, headerBz)
+
 			return err
 		},
 		OnObjectUpdate: func(data appdata.ObjectUpdateData) error {
@@ -54,12 +73,15 @@ func (i *indexerImpl) listener() appdata.Listener {
 			return nil
 		},
 		Commit: func(data appdata.CommitData) (func() error, error) {
+			fmt.Println("Commit ERROR 000")
 			err := i.tx.Commit()
+			fmt.Println("Commit ERROR 111", err)
 			if err != nil {
 				return nil, err
 			}
 
 			i.tx, err = i.db.BeginTx(i.ctx, nil)
+			fmt.Println("Commit ERROR 2222", err)
 			return nil, err
 		},
 	}

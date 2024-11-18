@@ -539,5 +539,6 @@ func (v Validator) GetDelegatorShares() math.LegacyDec { return v.DelegatorShare
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (v Validator) UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error {
 	var pk cryptotypes.PubKey
+	fmt.Println("CALLING UNPACK INTERFACES")
 	return unpacker.UnpackAny(v.ConsensusPubkey, &pk)
 }

@@ -106,6 +106,7 @@ func (c collectionSchemaCodec) decodeKVPair(update schema.KVPairUpdate) ([]schem
 	}
 
 	v, err := c.valueDecoder(update.Value)
+	fmt.Println("HERE??", err, k, c.coll.GetName())
 	if err != nil {
 		return []schema.StateObjectUpdate{
 			{TypeName: c.coll.GetName(), Key: k},
@@ -146,6 +147,14 @@ func (c collectionImpl[K, V]) schemaCodec() (*collectionSchemaCodec, error) {
 	}
 	res.objectType.ValueFields = valueDecoder.Fields
 	res.valueDecoder = func(i []byte) (any, error) {
+		// gogoprotoany "github.com/cosmos/gogoproto/types/any"		gogoprotoany.AnyUnpacker
+		// if unpacker, ok := c.m.vc.(gogoprotoany.AnyUnpacker); ok {
+		// 	err := unpacker.UnpackAny(i, V)
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// }
+
 		x, err := c.m.vc.Decode(i)
 		if err != nil {
 			return nil, err

@@ -56,7 +56,7 @@ The alternative to doing a rewrite is to spend more time cleaning up baseapp. Th
 
 ## Decision
 
-The Descision is to rewrite the core componenets (baseapp, server, store) of the SDK into smaller modules. 
+The Decision is to rewrite the core components (baseapp, server, store) of the SDK into smaller modules. 
 
 These components will be broken into separate go.mods. The modules consist of the following:
 
@@ -135,7 +135,7 @@ The state transition function interface is simple and meant to be as light weigh
 
 ```mermaid
 graph TD    
-    subgraph STF[State Transition Funciton]
+    subgraph STF[State Transition Function]
         BR --> DB
         subgraph DB[DeliverBlock]
             PB[PreBlock]
@@ -205,9 +205,9 @@ The design of the node comes with a number of tradeoffs.
 
 ### Backwards Compatibility
 
-The state machine was made to not affect modules that are not using the state transition function. If a user would like to migrate to v2 they will need to migrate to `appmodule.Environment` from `sdk.Context`.  `sdk.Context` is a struct which is a global in the state machine, this desing limits the concurrency. 
+The state machine was made to not affect modules that are not using the state transition function. If a user would like to migrate to v2 they will need to migrate to `appmodule.Environment` from `sdk.Context`.  `sdk.Context` is a struct which is a global in the state machine, this design limits the concurrency. 
 
-V2 will have a breaking changes in regards to how CometBFT handles certain fields in ABCI. Previously, the Cosmos SDK paniced and recovered in the case of out of gas, providing an error to CometBFT which we do not return in the new design. 
+V2 will have a breaking changes in regards to how CometBFT handles certain fields in ABCI. Previously, the Cosmos SDK panicked and recovered in the case of out of gas, providing an error to CometBFT which we do not return in the new design. 
 
 V2 only works with `Store/v2`, `IAVL V1` can be used with `Store/v2`. This allows chains to continue with existing databases. There will be a migration happening to convert the database to the separation of Storage and Commitment. Once the migration is completed the state machine will query information from the rawDB unless otherwise specified. 
 

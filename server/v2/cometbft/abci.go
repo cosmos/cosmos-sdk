@@ -11,6 +11,9 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -269,6 +272,50 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 		handlerFullName = string(md.Input().FullName())
 	}
 
+	// special case for simulation as it is an external gRPC registered on the grpc server component
+	// and not on the app itself, so it won't pass the router afterwards.
+	if req.Path == "/cosmos.tx.v1beta1.Service/Simulate" {
+		simulateRequest := &txtypes.SimulateRequest{}
+		err = gogoproto.Unmarshal(req.Data, simulateRequest)
+		if err != nil {
+			return nil, true, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
+		}
+
+		tx, err := c.txCodec.Decode(simulateRequest.TxBytes)
+		if err != nil {
+			return nil, true, fmt.Errorf("failed to decode tx: %w", err)
+		}
+
+		txResult, _, err := c.app.Simulate(ctx, tx)
+		if err != nil {
+			return nil, false, fmt.Errorf("%v with gas used: '%d'", err, txResult.GasUsed)
+		}
+
+		msgResponses := make([]*codectypes.Any, 0, len(txResult.Resp))
+		// pack the messages into Any
+		for _, msg := range txResult.Resp {
+			anyMsg, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, true, fmt.Errorf("failed to pack message response: %w", err)
+			}
+
+			msgResponses = append(msgResponses, anyMsg)
+		}
+
+		resp := &txtypes.SimulateResponse{
+			GasInfo: &sdk.GasInfo{
+				GasUsed:   txResult.GasUsed,
+				GasWanted: txResult.GasWanted,
+			},
+			Result: &sdk.Result{
+				MsgResponses: msgResponses,
+			},
+		}
+
+		res, err := queryResponse(resp, req.Height)
+		return res, true, err
+	}
+
 	handler, found := c.queryHandlersMap[handlerFullName]
 	if !found {
 		return nil, true, fmt.Errorf("no query handler found for %s", req.Path)
@@ -283,7 +330,6 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 		resp := QueryResult(err, c.cfg.AppTomlConfig.Trace)
 		resp.Height = req.Height
 		return resp, true, err
-
 	}
 
 	resp, err = queryResponse(res, req.Height)

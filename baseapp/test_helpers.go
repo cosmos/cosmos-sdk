@@ -3,6 +3,7 @@ package baseapp
 import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
+	coreheader "cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,7 +51,8 @@ func (app *BaseApp) SimWriteState() {
 func (app *BaseApp) NewContextLegacy(isCheckTx bool, header cmtproto.Header) sdk.Context {
 	if isCheckTx {
 		return sdk.NewContext(app.checkState.ms, true, app.logger).
-			WithMinGasPrices(app.minGasPrices).WithBlockHeader(header)
+			WithMinGasPrices(app.minGasPrices).
+			WithBlockHeader(header)
 	}
 
 	return sdk.NewContext(app.finalizeBlockState.ms, false, app.logger).WithBlockHeader(header)
@@ -62,7 +64,12 @@ func (app *BaseApp) NewContext(isCheckTx bool) sdk.Context {
 }
 
 func (app *BaseApp) NewUncachedContext(isCheckTx bool, header cmtproto.Header) sdk.Context {
-	return sdk.NewContext(app.cms, isCheckTx, app.logger).WithBlockHeader(header)
+	return sdk.NewContext(app.cms, isCheckTx, app.logger).
+		WithBlockHeader(header).
+		WithHeaderInfo(coreheader.Info{
+			Height: header.Height,
+			Time:   header.Time,
+		})
 }
 
 func (app *BaseApp) GetContextForFinalizeBlock(txBytes []byte) sdk.Context {

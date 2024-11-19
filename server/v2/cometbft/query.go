@@ -8,7 +8,6 @@ import (
 	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 
 	errorsmod "cosmossdk.io/errors/v2"
-	"cosmossdk.io/server/v2/cometbft/types"
 	cometerrors "cosmossdk.io/server/v2/cometbft/types/errors"
 )
 
@@ -84,7 +83,7 @@ func (c *Consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *
 	return nil, errorsmod.Wrapf(cometerrors.ErrUnknownRequest, "unknown query: %s", path)
 }
 
-func (c *Consensus[T]) handleQueryStore(path []string, _ types.Store, req *abci.QueryRequest) (*abci.QueryResponse, error) {
+func (c *Consensus[T]) handleQueryStore(path []string, req *abci.QueryRequest) (*abci.QueryResponse, error) {
 	req.Path = "/" + strings.Join(path[1:], "/")
 	if req.Height <= 1 && req.Prove {
 		return nil, errorsmod.Wrap(

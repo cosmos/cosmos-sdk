@@ -6,12 +6,12 @@ require (
 	cosmossdk.io/api v0.8.0 // main
 	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/core v1.0.0 // main
-	cosmossdk.io/core/testing v0.0.0-20240923163230-04da382a9f29 // indirect; main
+	cosmossdk.io/core/testing v0.0.0 // indirect; main
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.3.0
-	cosmossdk.io/runtime/v2 v2.0.0-20241105073932-55f7cfcebae4 // main
-	cosmossdk.io/server/v2 v2.0.0-20241108144957-78b5cd4dbd08 // main
+	cosmossdk.io/runtime/v2 v2.0.0-20241119134933-d697a3de0f95 // main
+	cosmossdk.io/server/v2 v2.0.0-20241119134933-d697a3de0f95 // main
 	cosmossdk.io/server/v2/cometbft v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store/v2 v2.0.0-20241108144957-78b5cd4dbd08 // main
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
@@ -40,7 +40,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.35.2
 )
 
 require (
@@ -72,8 +72,8 @@ require (
 	cosmossdk.io/errors v1.0.1 // indirect
 	cosmossdk.io/errors/v2 v2.0.0-20240731132947-df72853b3ca5 // indirect
 	cosmossdk.io/schema v0.3.1-0.20241010135032-192601639cac // indirect
-	cosmossdk.io/server/v2/appmanager v0.0.0-20241029092041-78cfc68c83af // indirect; main
-	cosmossdk.io/server/v2/stf v0.0.0-20241029092041-78cfc68c83af // indirect; main
+	cosmossdk.io/server/v2/appmanager v0.0.0-20241119134933-d697a3de0f95 // indirect; main
+	cosmossdk.io/server/v2/stf v0.0.0-20241119134933-d697a3de0f95 // indirect; main
 	cosmossdk.io/store v1.1.1-0.20240909133312-50288938d1b6 // indirect; main
 	cosmossdk.io/x/tx v1.0.0-alpha.2 // indirect; main
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -226,14 +226,14 @@ require (
 	go.opentelemetry.io/otel/metric v1.27.0 // indirect
 	go.opentelemetry.io/otel/trace v1.27.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.28.0 // indirect
+	golang.org/x/crypto v0.29.0 // indirect
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
 	golang.org/x/mod v0.21.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.9.0 // indirect
 	golang.org/x/sys v0.27.0 // indirect
-	golang.org/x/term v0.25.0 // indirect
+	golang.org/x/term v0.26.0 // indirect
 	golang.org/x/text v0.20.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.25.0 // indirect
@@ -259,13 +259,14 @@ require (
 // SimApp on main always tests the latest extracted SDK modules importing the sdk
 replace (
 	// pseudo version lower than the latest tag
-	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20241111180559-13c234f421e8 // main
+	cosmossdk.io/api => cosmossdk.io/api v0.7.3-0.20241119134933-d697a3de0f95 // main
 	cosmossdk.io/client/v2 => ../../client/v2
 	// pseudo version lower than the latest tag
 	cosmossdk.io/core => cosmossdk.io/core v1.0.0-alpha.6 // main
+	cosmossdk.io/core/testing => cosmossdk.io/core/testing v0.0.0-20241119134933-d697a3de0f95 // main
 	cosmossdk.io/server/v2/cometbft => ../../server/v2/cometbft
 	// pseudo version lower than the latest tag
-	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241108140525-43e28b43ad7a // main
+	cosmossdk.io/store => cosmossdk.io/store v1.0.0-rc.0.0.20241119134933-d697a3de0f95 // main
 	cosmossdk.io/tools/confix => ../../tools/confix
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../../x/accounts/defaults/base

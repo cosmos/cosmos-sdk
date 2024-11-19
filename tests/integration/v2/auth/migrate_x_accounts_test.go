@@ -16,7 +16,7 @@ import (
 )
 
 func TestMigrateToAccounts(t *testing.T) {
-	f := createTestSuite(t, nil)
+	f := createTestSuite(t)
 
 	// create a module account
 	modAcc := &authtypes.ModuleAccount{

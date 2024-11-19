@@ -8,34 +8,22 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"cosmossdk.io/core/transaction"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/x/bank/testutil"
 	banktypes "cosmossdk.io/x/bank/types"
-	"cosmossdk.io/x/tx/signing"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/integration/v2"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-var _ signing.SignModeHandler = directHandler{}
-
-type directHandler struct{}
-
-func (s directHandler) Mode() signingv1beta1.SignMode {
-	return signingv1beta1.SignMode_SIGN_MODE_DIRECT
-}
-
-func (s directHandler) GetSignBytes(_ context.Context, _ signing.SignerData, _ signing.TxData) ([]byte, error) {
-	panic("not implemented")
-}
-
 func TestAsyncExec(t *testing.T) {
 	t.Parallel()
-	s := createTestSuite(t, nil)
+	s := createTestSuite(t)
 
 	addrs := simtestutil.CreateIncrementalAccounts(2)
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(10)))
@@ -136,12 +124,19 @@ func TestAsyncExec(t *testing.T) {
 		},
 	}
 
+	msgServer := authkeeper.NewMsgServerImpl(s.authKeeper)
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := s.app.RunMsg(
-				tc.req,
-				integration.WithAutomaticFinalizeBlock(),
+				t,
+				s.ctx,
+				func(ctx context.Context) (transaction.Msg, error) {
+					resp, e := msgServer.NonAtomicExec(ctx, tc.req)
+					return resp, e
+				},
 				integration.WithAutomaticCommit(),
+				integration.WithAutomaticDeliverBlock(),
 			)
 			if tc.expectErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)
@@ -150,9 +145,8 @@ func TestAsyncExec(t *testing.T) {
 				assert.Assert(t, res != nil)
 
 				// check the result
-				result := authtypes.MsgNonAtomicExecResponse{}
-				err = s.cdc.Unmarshal(res.Value, &result)
-				assert.NilError(t, err)
+				result, ok := res.(*authtypes.MsgNonAtomicExecResponse)
+				assert.Assert(t, ok)
 
 				if tc.expErrMsg != "" {
 					for _, res := range result.Results {

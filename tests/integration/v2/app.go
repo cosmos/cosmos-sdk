@@ -53,6 +53,8 @@ const (
 
 type stateMachineTx = transaction.Tx
 
+type handler = func(ctx context.Context) (transaction.Msg, error)
+
 // DefaultConsensusParams defines the default CometBFT consensus params used in
 // SimApp testing.
 var DefaultConsensusParams = &cmtproto.ConsensusParams{
@@ -113,6 +115,30 @@ func DefaultStartUpConfig(t *testing.T) StartupConfig {
 		GenesisBehavior: Genesis_COMMIT,
 		GenesisAccounts: []GenesisAccount{ga},
 		HomeDir:         homedir,
+	}
+}
+
+// RunMsgConfig defines the run message configuration.
+type RunMsgConfig struct {
+	AutomaticDeliverBlock bool
+	AutomaticCommit       bool
+}
+
+// Option is a function that can be used to configure the integration app.
+type Option func(*RunMsgConfig)
+
+// WithAutomaticDeliverBlock calls deliver block after each msg.
+func WithAutomaticDeliverBlock() Option {
+	return func(cfg *RunMsgConfig) {
+		cfg.AutomaticDeliverBlock = true
+	}
+}
+
+// WithAutomaticCommit enables automatic commit.
+// This means that the integration app will automatically commit the state after each msg.
+func WithAutomaticCommit() Option {
+	return func(cfg *RunMsgConfig) {
+		cfg.AutomaticCommit = true
 	}
 }
 
@@ -397,52 +423,32 @@ func (a *App) SignCheckDeliver(
 	return txResult
 }
 
-func (app *App) RunMsg(msg sdk.Msg) (*codectypes.Any, error) {
+func (app *App) RunMsg(t *testing.T, ctx context.Context, handler handler, option ...Option) (resp transaction.Msg, err error) {
 	// set options
-	cfg := &Config{}
+	cfg := &RunMsgConfig{}
 	for _, opt := range option {
 		opt(cfg)
 	}
 
+	// need to have integration context
+	integrationCtx, ok := ctx.Value(contextKey).(*integrationContext)
+	require.True(t, ok)
+
+	resp, err = handler(ctx)
+
 	if cfg.AutomaticCommit {
-		defer func() {
-			_, err := app.Commit()
-			if err != nil {
-				panic(err)
-			}
-		}()
+		_, err := app.Commit(integrationCtx.state)
+		require.NoError(t, err)
 	}
 
-	if cfg.AutomaticFinalizeBlock {
-		height := app.LastBlockHeight() + 1
-		if _, err := app.FinalizeBlock(&cmtabcitypes.FinalizeBlockRequest{Height: height, DecidedLastCommit: cmtabcitypes.CommitInfo{Votes: []cmtabcitypes.VoteInfo{{}}}}); err != nil {
-			return nil, fmt.Errorf("failed to run finalize block: %w", err)
-		}
+	if cfg.AutomaticDeliverBlock {
+		app.lastHeight++
+		latestVersion, err := app.Store.GetLatestVersion()
+		require.NoError(t, err)
+		require.Equal(t, latestVersion, app.lastHeight)
 	}
 
-	app.logger.Info("Running msg", "msg", msg.String())
-
-	handler := app.MsgServiceRouter().Handler(msg)
-	if handler == nil {
-		return nil, fmt.Errorf("handler is nil, can't route message %s: %+v", sdk.MsgTypeURL(msg), msg)
-	}
-
-	msgResult, err := handler(app.ctx, msg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute message %s: %w", sdk.MsgTypeURL(msg), err)
-	}
-
-	var response *codectypes.Any
-	if len(msgResult.MsgResponses) > 0 {
-		msgResponse := msgResult.MsgResponses[0]
-		if msgResponse == nil {
-			return nil, fmt.Errorf("got nil msg response %s in message result: %s", sdk.MsgTypeURL(msg), msgResult.String())
-		}
-
-		response = msgResponse
-	}
-
-	return response, nil
+	return resp, err
 }
 
 // CheckBalance checks the balance of the given address.

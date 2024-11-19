@@ -26,14 +26,49 @@ type mockRetroCompatAccount struct {
 	address     []byte
 }
 
-func newMockAccountsModKeeper(name string, acc accountstd.Interface) accountstd.AccountCreatorFunc {
-	return func(deps accountstd.Dependencies) (string, accountstd.Interface, error) {
+var (
+	valid = &mockRetroCompatAccount{
+		retroCompat: &authtypes.QueryLegacyAccountResponse{
+			Account: &codectypes.Any{},
+			Base: &authtypes.BaseAccount{
+				Address:       "test",
+				PubKey:        nil,
+				AccountNumber: 10,
+				Sequence:      20,
+			},
+		},
+	}
+
+	noInfo = &mockRetroCompatAccount{
+		retroCompat: &authtypes.QueryLegacyAccountResponse{
+			Account: &codectypes.Any{},
+		},
+	}
+	noImplement = &mockRetroCompatAccount{
+		retroCompat: nil,
+	}
+)
+
+func newMockRetroCompatAccount(name string, acc accountstd.Interface) accountstd.AccountCreatorFunc {
+	return func(_ accountstd.Dependencies) (string, accountstd.Interface, error) {
 		_, ok := acc.(*mockRetroCompatAccount)
 		if !ok {
 			return name, nil, errors.New("invalid account type")
 		}
 		return name, acc, nil
 	}
+}
+
+func ProvideMockRetroCompatAccountValid() accountstd.DepinjectAccount {
+	return accountstd.DepinjectAccount{MakeAccount: newMockRetroCompatAccount("valid", valid)}
+}
+
+func ProvideMockRetroCompatAccountNoInfo() accountstd.DepinjectAccount {
+	return accountstd.DepinjectAccount{MakeAccount: newMockRetroCompatAccount("no_info", noInfo)}
+}
+
+func ProvideMockRetroCompatAccountNoImplement() accountstd.DepinjectAccount {
+	return accountstd.DepinjectAccount{MakeAccount: newMockRetroCompatAccount("no_implement", noImplement)}
 }
 
 func (m mockRetroCompatAccount) RegisterInitHandler(builder *accountstd.InitBuilder) {
@@ -54,34 +89,13 @@ func (m mockRetroCompatAccount) RegisterQueryHandlers(builder *accountstd.QueryB
 }
 
 func TestAuthToAccountsGRPCCompat(t *testing.T) {
-	valid := &mockRetroCompatAccount{
-		retroCompat: &authtypes.QueryLegacyAccountResponse{
-			Account: &codectypes.Any{},
-			Base: &authtypes.BaseAccount{
-				Address:       "test",
-				PubKey:        nil,
-				AccountNumber: 10,
-				Sequence:      20,
-			},
-		},
-	}
-
-	noInfo := &mockRetroCompatAccount{
-		retroCompat: &authtypes.QueryLegacyAccountResponse{
-			Account: &codectypes.Any{},
-		},
-	}
-	noImplement := &mockRetroCompatAccount{
-		retroCompat: nil,
-	}
-
 	accs := map[string]accountstd.Interface{
 		"valid":        valid,
 		"no_info":      noInfo,
 		"no_implement": noImplement,
 	}
 
-	f := createTestSuite(t, accs)
+	f := createTestSuite(t)
 
 	// init three accounts
 	for n, a := range accs {
@@ -137,7 +151,7 @@ func TestAuthToAccountsGRPCCompat(t *testing.T) {
 }
 
 func TestAccountsBaseAccountRetroCompat(t *testing.T) {
-	f := createTestSuite(t, nil)
+	f := createTestSuite(t)
 	// init a base acc
 	anyPk, err := codectypes.NewAnyWithValue(secp256k1.GenPrivKey().PubKey())
 	require.NoError(t, err)

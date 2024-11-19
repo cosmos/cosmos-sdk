@@ -15,10 +15,12 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	appmodulev2 "cosmossdk.io/core/appmodule/v2"
+	"cosmossdk.io/core/branch"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/registry"
+	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
@@ -213,15 +215,26 @@ func ProvideEnvironment(
 	memKvService store.MemoryStoreService,
 	headerService header.Service,
 	eventService event.Service,
+	branchService branch.Service,
+	msgRouterService router.Service,
 ) appmodulev2.Environment {
+	// provide stf branch service as default if empty
+	if branchService == nil {
+		branchService = stf.BranchService{}
+	}
+
+	// provide stf msg router service as default if empty
+	if msgRouterService == nil {
+		msgRouterService = stf.NewMsgRouterService([]byte(key.Name()))
+	}
 	return appmodulev2.Environment{
 		Logger:             logger,
-		BranchService:      stf.BranchService{},
+		BranchService:      branchService,
 		EventService:       eventService,
 		GasService:         stf.NewGasMeterService(),
 		HeaderService:      headerService,
 		QueryRouterService: stf.NewQueryRouterService(),
-		MsgRouterService:   stf.NewMsgRouterService([]byte(key.Name())),
+		MsgRouterService:   msgRouterService,
 		TransactionService: services.NewContextAwareTransactionService(),
 		KVStoreService:     kvService,
 		MemStoreService:    memKvService,

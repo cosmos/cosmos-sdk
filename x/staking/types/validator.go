@@ -189,7 +189,7 @@ func (v Validator) IsUnbonding() bool {
 // constant used in flags to indicate that description field should not be updated
 const DoNotModifyDesc = "[do-not-modify]"
 
-func NewDescription(moniker, identity, website, securityContact, details string, metadata Metadata) Description {
+func NewDescription(moniker, identity, website, securityContact, details string, metadata *Metadata) Description {
 	return Description{
 		Moniker:         moniker,
 		Identity:        identity,

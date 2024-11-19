@@ -112,8 +112,8 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 			"unbond authorization without allow or deny list",
 			grantee1Addr,
 			[]string{"unbond"},
-			"both allowed & deny list cannot be empty",
-			false,
+			"",
+			true,
 		},
 		{
 			"unbond authorization with invalid allowed validator address",
@@ -133,8 +133,8 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 			"redelegate authorization without allow or deny list",
 			grantee1Addr,
 			[]string{"redelegate"},
-			"both allowed & deny list cannot be empty",
-			false,
+			"",
+			true,
 		},
 		{
 			"redelegate authorization with invalid allowed validator address",

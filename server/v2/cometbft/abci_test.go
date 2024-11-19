@@ -5,6 +5,7 @@ import (
 	"cosmossdk.io/server/v2/cometbft/oe"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -719,7 +720,17 @@ func assertStoreLatestVersion(t *testing.T, store types.Store, target uint64) {
 
 func TestOptimisticExecution(t *testing.T) {
 	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
-	c.SetOptimisticExecution(oe.NewOptimisticExecution(log.NewNopLogger(), c.internalFinalizeBlock))
+	// Set up handlers
+	c.processProposalHandler = DefaultServerOptions[mock.Tx]().ProcessProposalHandler
+
+	// mock optimistic execution
+	calledTimes := 0
+	optimisticMockFunc := func(_ context.Context, _ *abciproto.FinalizeBlockRequest) (*abciproto.FinalizeBlockResponse, error) {
+		calledTimes++
+		return nil, errors.New("test error")
+	}
+
+	c.SetOptimisticExecution(oe.NewOptimisticExecution(log.NewNopLogger(), optimisticMockFunc))
 
 	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
 		Time:          time.Now(),
@@ -736,12 +747,10 @@ func TestOptimisticExecution(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// Set up handlers
-	c.processProposalHandler = DefaultServerOptions[mock.Tx]().ProcessProposalHandler
-
+	theHash := sha256.Sum256([]byte("test"))
 	ppReq := &abciproto.ProcessProposalRequest{
 		Height: 2,
-		Hash:   []byte("test"),
+		Hash:   theHash[:],
 		Time:   time.Now(),
 		Txs:    [][]byte{mockTx.Bytes()},
 	}
@@ -752,7 +761,7 @@ func TestOptimisticExecution(t *testing.T) {
 	require.Equal(t, resp.Status, abciproto.PROCESS_PROPOSAL_STATUS_ACCEPT)
 
 	// Initialize FinalizeBlock with correct hash - should use optimistic result
-	theHash := sha256.Sum256([]byte("test"))
+	theHash = sha256.Sum256([]byte("test"))
 	fbReq := &abciproto.FinalizeBlockRequest{
 		Height: 2,
 		Hash:   theHash[:],
@@ -760,15 +769,23 @@ func TestOptimisticExecution(t *testing.T) {
 		Txs:    ppReq.Txs,
 	}
 	fbResp, err := c.FinalizeBlock(context.Background(), fbReq)
-	require.NoError(t, err)
+	require.Error(t, err)
+	require.ErrorContains(t, err, "test error") // from optimisticMockFunc
+	require.Equal(t, 1, calledTimes)
 
-	// Initialize FinalizeBlock with wrong hash - should abort optimistic execution
+	resp, err = c.ProcessProposal(context.Background(), ppReq)
+	require.NoError(t, err)
+	require.Equal(t, resp.Status, abciproto.PROCESS_PROPOSAL_STATUS_ACCEPT)
+
 	theWrongHash := sha256.Sum256([]byte("wrong_hash"))
 	fbReq.Hash = theWrongHash[:]
-	fbReq.Height = 3
+
+	// Initialize FinalizeBlock with wrong hash - should abort optimistic execution
+	// Because is aborted, the result comes from the normal execution
 	fbResp, err = c.FinalizeBlock(context.Background(), fbReq)
-	require.Nil(t, fbResp)
-	require.Error(t, err)
+	require.NotNil(t, fbResp)
+	require.NoError(t, err)
+	require.Equal(t, 2, calledTimes)
 
 	// Verify optimistic execution was reset
 	require.False(t, c.optimisticExec.Initialized())

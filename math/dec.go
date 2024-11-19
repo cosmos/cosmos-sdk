@@ -2,6 +2,7 @@ package math
 
 import (
 	"encoding/json"
+	stderrors "errors"
 	"math/big"
 
 	"github.com/cockroachdb/apd/v3"
@@ -149,10 +150,13 @@ func (x Dec) Sub(y Dec) (Dec, error) {
 	var z Dec
 	_, err := apd.BaseContext.Sub(&z.dec, &x.dec, &y.dec)
 	if err != nil {
-		return Dec{}, ErrInvalidDec.Wrap(err.Error())
+		if err2 := stderrors.Unwrap(err); err2 != nil {
+			// use unwrapped error to not return "add:" prefix from raw apd error
+			err = err2
+		}
+		return Dec{}, ErrInvalidDec.Wrap("sub: " + err.Error())
 	}
-
-	return z, errors.Wrap(err, "decimal subtraction error")
+	return z, nil
 }
 
 // Quo performs division of x by y using the decimal128 context with 34 digits of precision.
@@ -295,8 +299,7 @@ func (x Dec) Int64() (int64, error) {
 // fit precisely into an *big.Int.
 func (x Dec) BigInt() (*big.Int, error) {
 	y, _ := x.Reduce()
-	z := &big.Int{}
-	z, ok := z.SetString(y.String(), 10)
+	z, ok := new(big.Int).SetString(y.String(), 10)
 	if !ok {
 		return nil, ErrNonIntegral
 	}
@@ -405,10 +408,12 @@ func (x Dec) Reduce() (Dec, int) {
 }
 
 func (x Dec) Marshal() ([]byte, error) {
+	// implemented in a new PR. See: https://github.com/cosmos/cosmos-sdk/issues/22525
 	panic("not implemented")
 }
 
 func (x *Dec) Unmarshal(data []byte) error {
+	// implemented in a new PR. See: https://github.com/cosmos/cosmos-sdk/issues/22525
 	panic("not implemented")
 }
 

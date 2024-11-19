@@ -135,9 +135,8 @@ func TestNewDecFromString(t *testing.T) {
 
 func TestNewDecFromInt64(t *testing.T) {
 	specs := map[string]struct {
-		src    int64
-		exp    string
-		expErr error
+		src int64
+		exp string
 	}{
 		"zero value": {
 			src: 0,
@@ -152,18 +151,17 @@ func TestNewDecFromInt64(t *testing.T) {
 			exp: "-123",
 		},
 		"max value": {
-			src: math.MaxInt32,
-			exp: strconv.Itoa(math.MaxInt32),
+			src: math.MaxInt64,
+			exp: strconv.Itoa(math.MaxInt64),
 		},
 		"min value": {
-			src: -9223372036854775808,
-			exp: "-9223372036854775808",
+			src: math.MinInt64,
+			exp: strconv.Itoa(math.MinInt64),
 		},
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			got := NewDecFromInt64(spec.src)
-			require.NoError(t, spec.expErr)
 			assert.Equal(t, spec.exp, got.String())
 		})
 	}
@@ -588,10 +586,6 @@ func TestQuo(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			got, gotErr := spec.x.Quo(spec.y)
-			if name == "1.234 / -123 = 1.111" {
-				t.Log("got", got)
-			}
-
 			if spec.expErr != nil {
 				require.ErrorIs(t, gotErr, spec.expErr)
 				return
@@ -1087,47 +1081,39 @@ func TestReduce(t *testing.T) {
 		src       string
 		exp       string
 		decPlaces int
-		expErr    error
 	}{
 		"positive value": {
 			src:       "10",
 			exp:       "10",
 			decPlaces: 1,
-			expErr:    ErrInvalidDec,
 		},
 		"negative value": {
 			src:       "-10",
 			exp:       "-10",
 			decPlaces: 1,
-			expErr:    ErrInvalidDec,
 		},
 		"positive decimal": {
 			src:       "1.30000",
 			exp:       "1.3",
 			decPlaces: 4,
-			expErr:    ErrInvalidDec,
 		},
 		"negative decimal": {
 			src:       "-1.30000",
 			exp:       "-1.3",
 			decPlaces: 4,
-			expErr:    ErrInvalidDec,
 		},
 		"zero decimal and decimal places": {
 			src:       "0.00000",
 			exp:       "0",
 			decPlaces: 0,
-			expErr:    ErrInvalidDec,
 		},
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
-			src, _ := NewDecFromString(spec.src)
-			got, gotErr := src.Reduce()
-			require.Equal(t, spec.exp, got.String())
-			if spec.expErr != nil {
-				require.Equal(t, spec.decPlaces, gotErr)
-			}
+			src := must(NewDecFromString(spec.src))
+			got, gotZerosRemoved := src.Reduce()
+			assert.Equal(t, spec.decPlaces, gotZerosRemoved)
+			assert.Equal(t, spec.exp, got.String())
 		})
 	}
 }

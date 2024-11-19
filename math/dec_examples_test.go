@@ -77,7 +77,6 @@ func ExampleDec_Add() {
 	// add: exponent out of range: invalid decimal
 	// add: exponent out of range: invalid decimal
 	// add: exponent out of range: invalid decimal
-
 }
 
 func ExampleDec_Sub() {
@@ -119,9 +118,9 @@ func ExampleDec_Sub() {
 
 	// Output: 1
 	// 0E+100000
-	// add: exponent out of range: invalid decimal
-	// add: exponent out of range: invalid decimal
-	// add: exponent out of range: invalid decimal
+	// sub: exponent out of range: invalid decimal
+	// sub: exponent out of range: invalid decimal
+	// sub: exponent out of range: invalid decimal
 }
 
 func ExampleDec_Quo() {

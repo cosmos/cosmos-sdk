@@ -65,7 +65,7 @@ func (o StateObjectType) Validate(typeSet TypeSet) error {
 		}
 
 		if fieldNames[field.Name] {
-			return fmt.Errorf("duplicate field name %q", field.Name)
+			return fmt.Errorf("duplicate key field name %q for stateObjectType: %s", field.Name, o.Name)
 		}
 		fieldNames[field.Name] = true
 	}
@@ -76,7 +76,7 @@ func (o StateObjectType) Validate(typeSet TypeSet) error {
 		}
 
 		if fieldNames[field.Name] {
-			return fmt.Errorf("duplicate field name %q", field.Name)
+			return fmt.Errorf("duplicate field name %q for stateObjectType: %s", field.Name, o.Name)
 		}
 		fieldNames[field.Name] = true
 	}

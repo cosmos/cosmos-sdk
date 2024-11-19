@@ -162,7 +162,7 @@ func NewKeeper(
 			collections.NamedPairKeyCodec(
 				"delegator",
 				sdk.LengthPrefixedAddressKey(sdk.AccAddressKey), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
-				"validator_address",
+				"validator_address_key",
 				sdk.LengthPrefixedAddressKey(sdk.ValAddressKey), //nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 			),
 			codec.CollValue[types.Delegation](cdc),
@@ -324,7 +324,7 @@ func NewKeeper(
 			collections.NamedPairKeyCodec(
 				"validator_address",
 				collections.BytesKey,
-				"height",
+				"height_key",
 				collections.Uint64Key),
 			codec.CollValue[types.ConsPubKeyRotationHistory](cdc),
 			NewRotationHistoryIndexes(sb),

@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"context"
+	"cosmossdk.io/server/v2/cometbft/oe"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -132,6 +133,8 @@ func New[T transaction.Tx](
 	consensus.extendVote = srv.serverOptions.ExtendVoteHandler
 	consensus.addrPeerFilter = srv.serverOptions.AddrPeerFilter
 	consensus.idPeerFilter = srv.serverOptions.IdPeerFilter
+
+	consensus.SetOptimisticExecution(oe.NewOptimisticExecution(logger, consensus.internalFinalizeBlock))
 
 	ss := store.GetStateStorage().(snapshots.StorageSnapshotter)
 	sc := store.GetStateCommitment().(snapshots.CommitSnapshotter)

@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
-	gogoprotoany "github.com/cosmos/gogoproto/types/any"
 	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -101,10 +100,6 @@ func (c collValue[T, PT]) Stringify(value T) string {
 
 func (c collValue[T, PT]) ValueType() string {
 	return "github.com/cosmos/gogoproto/" + c.messageName
-}
-
-type hasUnpackInterfaces interface {
-	UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error // Replace `AnyUnpacker` with the actual type from gogoprotoany
 }
 
 func (c collValue[T, PT]) SchemaCodec() (collcodec.SchemaCodec[T], error) {

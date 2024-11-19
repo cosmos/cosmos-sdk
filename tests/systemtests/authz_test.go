@@ -90,9 +90,9 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 		{
 			"delegate authorization without allow or deny list",
 			grantee1Addr,
-			[]string{"delegate"},
+			[]string{"delegate", "--spend-limit=1000" + testDenom},
 			"",
-			false,
+			true,
 		},
 		{
 			"delegate authorization with invalid allowed validator address",
@@ -111,7 +111,7 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 		{
 			"unbond authorization without allow or deny list",
 			grantee1Addr,
-			[]string{"unbond"},
+			[]string{"unbond", "--spend-limit=1000" + testDenom},
 			"",
 			true,
 		},
@@ -132,7 +132,7 @@ func TestAuthzGrantTxCmd(t *testing.T) {
 		{
 			"redelegate authorization without allow or deny list",
 			grantee1Addr,
-			[]string{"redelegate"},
+			[]string{"redelegate", "--spend-limit=1000" + testDenom},
 			"",
 			true,
 		},

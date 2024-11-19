@@ -115,7 +115,7 @@ func (c collValue[T, PT]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
 	msgName := proto.MessageName(pt)
 	desc, err := proto.HybridResolver.FindDescriptorByName(protoreflect.FullName(msgName))
 	if err != nil {
-		panic(fmt.Errorf("could not find descriptor for %s: %w", msgName, err))
+		return collcodec.SchemaCodec[T]{}, fmt.Errorf("could not find descriptor for %s: %w", msgName, err)
 	}
 	schemaFields := protoCols(desc.(protoreflect.MessageDescriptor))
 
@@ -137,7 +137,12 @@ func (c collValue[T, PT]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
 			Fields: schemaFields,
 			ToSchemaType: func(t T) (any, error) {
 				values := []interface{}{}
-				nm := dynamicpb.NewMessage(desc.(protoreflect.MessageDescriptor))
+				msgDesc, ok := desc.(protoreflect.MessageDescriptor)
+				if !ok {
+					return nil, fmt.Errorf("expected message descriptor, got %T", desc)
+				}
+
+				nm := dynamicpb.NewMessage(msgDesc)
 				bz, err := c.cdc.Marshal(any(&t).(PT))
 				if err != nil {
 					return nil, err
@@ -150,16 +155,15 @@ func (c collValue[T, PT]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
 
 				for _, field := range schemaFields {
 					// Find the field descriptor by the Protobuf field name
-					fieldDesc := desc.(protoreflect.MessageDescriptor).Fields().ByName(protoreflect.Name(field.Name))
+					fieldDesc := msgDesc.Fields().ByName(protoreflect.Name(field.Name))
 					if fieldDesc == nil {
 						return nil, fmt.Errorf("field %q not found in message %s", field.Name, desc.FullName())
 					}
 
 					val := nm.ProtoReflect().Get(fieldDesc)
 
-					// convert to the right type
+					// if the field is a map or list, we need to convert it to a slice of values
 					if fieldDesc.IsList() {
-						// figure out this
 						repeatedVals := []interface{}{}
 						list := val.List()
 						for i := 0; i < list.Len(); i++ {
@@ -185,10 +189,9 @@ func (c collValue[T, PT]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
 					case protoreflect.BytesKind:
 						values = append(values, val.Bytes())
 					case protoreflect.EnumKind:
-						// TODO: support enums
+						// TODO: support enums better, with actual enums
 						values = append(values, string(fieldDesc.Enum().Values().ByNumber(val.Enum()).Name()))
 					case protoreflect.MessageKind:
-						// figure out this
 						msg := val.Interface().(*dynamicpb.Message)
 						msgbz, err := c.cdc.Marshal(msg)
 						if err != nil {
@@ -372,7 +375,6 @@ func protoCol(f protoreflect.FieldDescriptor) schema.Field {
 			// for now we'll use a string for enums.
 			col.Kind = schema.StringKind
 			// TODO: support enums
-			// ERROR: "invalid value field \"status\": can't find enum type \"BondStatus\" referenced by field \"status\""
 			// col.Kind = schema.EnumKind
 			// enumDesc := f.Enum()
 			// var vals []string

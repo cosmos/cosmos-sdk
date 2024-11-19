@@ -40,7 +40,8 @@ type Server[T transaction.Tx] struct {
 	config     *Config
 	cfgOptions []CfgOption
 
-	grpcSrv *grpc.Server
+	grpcSrv           *grpc.Server
+	extraGRPCHandlers []func(*grpc.Server) error
 }
 
 // New creates a new grpc server.
@@ -49,13 +50,14 @@ func New[T transaction.Tx](
 	interfaceRegistry server.InterfaceRegistry,
 	queryHandlers map[string]appmodulev2.Handler,
 	queryable func(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error),
-	extraGRPCHandlers []func(*grpc.Server) error,
 	cfg server.ConfigMap,
-	cfgOptions ...CfgOption,
+	opts ...OptionFunc[T],
 ) (*Server[T], error) {
-	srv := &Server[T]{
-		cfgOptions: cfgOptions,
+	srv := &Server[T]{}
+	for _, opt := range opts {
+		opt(srv)
 	}
+
 	serverCfg := srv.Config().(*Config)
 	if len(cfg) > 0 {
 		if err := serverv2.UnmarshalSubConfig(cfg, srv.Name(), &serverCfg); err != nil {
@@ -81,7 +83,7 @@ func New[T transaction.Tx](
 
 	// register extra handlers on the grpc server
 	var err error
-	for _, fn := range extraGRPCHandlers {
+	for _, fn := range srv.extraGRPCHandlers {
 		err = errors.Join(err, fn(grpcSrv))
 	}
 	if err != nil {
@@ -93,6 +95,22 @@ func New[T transaction.Tx](
 	srv.logger = logger.With(log.ModuleKey, srv.Name())
 
 	return srv, nil
+}
+
+type OptionFunc[T transaction.Tx] func(*Server[T])
+
+// WithCfgOptions allows to overwrite the default server configuration.
+func WithCfgOptions[T transaction.Tx](cfgOptions ...CfgOption) OptionFunc[T] {
+	return func(srv *Server[T]) {
+		srv.cfgOptions = cfgOptions
+	}
+}
+
+// WithExtraGRPCHandlers allows to register extra handlers on the grpc server.
+func WithExtraGRPCHandlers[T transaction.Tx](handlers ...func(*grpc.Server) error) OptionFunc[T] {
+	return func(srv *Server[T]) {
+		srv.extraGRPCHandlers = handlers
+	}
 }
 
 // NewWithConfigOptions creates a new GRPC server with the provided config options.

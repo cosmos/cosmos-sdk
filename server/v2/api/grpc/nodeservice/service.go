@@ -2,7 +2,6 @@ package nodeservice
 
 import (
 	context "context"
-	fmt "fmt"
 
 	"cosmossdk.io/core/server"
 )
@@ -27,17 +26,4 @@ func (s queryServer) Config(ctx context.Context, _ *ConfigRequest) (*ConfigRespo
 	return &ConfigResponse{
 		MinimumGasPrice: minGasPricesStr,
 	}, nil
-}
-
-func (s queryServer) Status(ctx context.Context, _ *StatusRequest) (*StatusResponse, error) {
-	// note, environment nor execution context isn't available in the context
-
-	// return &StatusResponse{
-	// 	Height:        uint64(headerInfo.Height),
-	// 	Timestamp:     &headerInfo.Time,
-	// 	AppHash:       headerInfo.AppHash,
-	// 	ValidatorHash: headerInfo.Hash,
-	// }, nil
-
-	return &StatusResponse{}, fmt.Errorf("not implemented")
 }

@@ -2,8 +2,6 @@ syntax = "proto3";
 package cosmos.base.node.v2;
 
 import "google/api/annotations.proto";
-import "google/protobuf/timestamp.proto";
-import "gogoproto/gogo.proto";
 
 option go_package = "cosmossdk.io/server/v2/api/grpc/nodeservice";
 
@@ -13,10 +11,6 @@ service Service {
   rpc Config(ConfigRequest) returns (ConfigResponse) {
     option (google.api.http).get = "/cosmos/base/node/v2/config";
   }
-  // Status queries for the node status.
-  rpc Status(StatusRequest) returns (StatusResponse) {
-    option (google.api.http).get = "/cosmos/base/node/v2/status";
-  }
 }
 
 // ConfigRequest defines the request structure for the Config gRPC query.
@@ -25,15 +19,4 @@ message ConfigRequest {}
 // ConfigResponse defines the response structure for the Config gRPC query.
 message ConfigResponse {
   string minimum_gas_price = 1;
-}
-
-// StatusRequest defines the request structure for the status of a node.
-message StatusRequest {}
-
-// StatusResponse defines the response structure for the status of a node.
-message StatusResponse {
-  uint64                    height         = 1;                              // current block height
-  google.protobuf.Timestamp timestamp      = 2 [(gogoproto.stdtime) = true]; // block height timestamp
-  bytes                     app_hash       = 3;                              // app hash of the current block
-  bytes                     validator_hash = 4; // validator hash provided by the consensus header
 }

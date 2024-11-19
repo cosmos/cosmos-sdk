@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 
 	"cosmossdk.io/client/v2/offchain"
 	coreserver "cosmossdk.io/core/server"
@@ -128,13 +127,13 @@ func InitRootCmd[T transaction.Tx](
 		simApp.InterfaceRegistry(),
 		simApp.QueryHandlers(),
 		simApp.Query,
-		[]func(*grpc.Server) error{
+		deps.GlobalConfig,
+		grpcserver.WithExtraGRPCHandlers[T](
 			deps.ConsensusServer.Consensus.GRPCServiceRegistrar(
 				deps.ClientContext,
 				deps.GlobalConfig,
 			),
-		},
-		deps.GlobalConfig,
+		),
 	)
 	if err != nil {
 		return nil, err

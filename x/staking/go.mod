@@ -25,11 +25,11 @@ require (
 	go.uber.org/mock v0.5.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1
 	google.golang.org/grpc v1.68.0
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.35.2
 )
 
 require (
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.1-20240130113600-88ef6483f90f.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -150,7 +150,7 @@ require (
 )
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.1-20240701160653-fedbb9acfd2f.1 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20240701160653-fedbb9acfd2f.1 // indirect
 	cosmossdk.io/log v1.5.0
 	github.com/cosmos/crypto v0.1.2 // indirect
 	github.com/dgraph-io/badger/v4 v4.3.0 // indirect

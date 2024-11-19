@@ -12,12 +12,12 @@ require (
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/stretchr/testify v1.9.0
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.35.2
 )
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.1-20240701160653-fedbb9acfd2f.1 // indirect
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.1-20240130113600-88ef6483f90f.1 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20240701160653-fedbb9acfd2f.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/api v0.7.6 // indirect
 	cosmossdk.io/core/testing v0.0.0-20241108153815-606544c7be7e // indirect
 	cosmossdk.io/depinject v1.1.0 // indirect

@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	github.com/cosmos/cosmos-sdk v0.50.10
-	github.com/creachadair/atomicfile v0.3.5
+	github.com/creachadair/atomicfile v0.3.6
 	github.com/creachadair/tomledit v0.0.26
 	github.com/pelletier/go-toml/v2 v2.2.3
 	github.com/spf13/cobra v1.8.1
@@ -157,7 +157,7 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241104194629-dd2ea8efbc28 // indirect
 	google.golang.org/grpc v1.68.0 // indirect
-	google.golang.org/protobuf v1.35.1 // indirect
+	google.golang.org/protobuf v1.35.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect

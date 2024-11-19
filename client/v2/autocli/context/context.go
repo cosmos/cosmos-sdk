@@ -14,8 +14,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
+// key is a custom type used as a context key to prevent collisions in the context.Context value store.
+type key string
+
 // ContextKey is the key used to store and retrieve the autocli.Context from a context.Context.
-const ContextKey = "autocli.context"
+const ContextKey key = "autocli.context"
 
 // Context represents the client context used in autocli commands.
 // It contains various components needed for command execution.

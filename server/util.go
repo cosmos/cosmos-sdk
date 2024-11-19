@@ -507,7 +507,12 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
 		// fallback to genesis chain-id
-		reader, err := os.Open(filepath.Join(homeDir, "config", "genesis.json"))
+		genesisPath := filepath.Join(homeDir, "config", "genesis.json")
+		if _, err := os.Stat(genesisPath); os.IsNotExist(err) {
+			genesisPath = filepath.Join(homeDir, appOpts.GetString("genesis_file"))
+		}
+
+		reader, err := os.Open(genesisPath)
 		if err != nil {
 			panic(err)
 		}

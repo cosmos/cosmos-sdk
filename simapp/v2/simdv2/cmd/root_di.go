@@ -94,6 +94,7 @@ func NewRootCmd[T transaction.Tx](
 		TxConfig:      clientCtx.TxConfig,
 		ModuleManager: moduleManager,
 		SimApp:        simApp,
+		ClientContext: clientCtx,
 	}
 	rootCommand = &cobra.Command{
 		Use:               "simdv2",

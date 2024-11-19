@@ -699,7 +699,7 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		nil,
 	)
 
-	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", am, func() error { return nil },
+	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", am,
 		mempool, map[string]struct{}{}, nil, mockStore,
 		Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
 }

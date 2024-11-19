@@ -116,7 +116,6 @@ func New[T transaction.Tx](
 		logger,
 		appName,
 		appManager,
-		nil,
 		srv.serverOptions.Mempool(cfg),
 		indexEvents,
 		queryHandlers,

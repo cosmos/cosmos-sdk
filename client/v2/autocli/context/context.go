@@ -23,8 +23,6 @@ const ContextKey key = "autocli.context"
 // Context represents the client context used in autocli commands.
 // It contains various components needed for command execution.
 type Context struct {
-	gocontext.Context
-
 	Flags *pflag.FlagSet
 
 	AddressCodec          address.Codec
@@ -46,9 +44,9 @@ func ClientContextFromGoContext(ctx gocontext.Context) (*Context, error) {
 	if c := ctx.Value(ContextKey); c != nil {
 		cliCtx, ok := c.(Context)
 		if !ok {
-			return nil, errors.New("invalid context")
+			return nil, errors.New("context value is not of type autocli.Context")
 		}
 		return &cliCtx, nil
 	}
-	return nil, errors.New("invalid context")
+	return nil, errors.New("context does not contain autocli.Context value")
 }

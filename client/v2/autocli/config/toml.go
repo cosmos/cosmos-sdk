@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/viper"
@@ -15,8 +16,8 @@ func writeConfigFile(configFilePath string, config *Config) error {
 		return err
 	}
 
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		if err := os.MkdirAll(configFilePath, os.ModePerm); err != nil {
+	if dir := filepath.Dir(configFilePath); dir != "" {
+		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 			return err
 		}
 	}
@@ -29,7 +30,6 @@ func readConfig(configPath string, v *viper.Viper) (*Config, error) {
 	v.AddConfigPath(configPath)
 	v.SetConfigName("client")
 	v.SetConfigType("toml")
-	v.AddConfigPath(configPath)
 
 	if err := v.ReadInConfig(); err != nil {
 		return nil, err

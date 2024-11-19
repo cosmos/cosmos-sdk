@@ -250,7 +250,7 @@ func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
 	return p.PrintBytes(out)
 }
 
-// getContext creates and returns a new context.Context with a clientcontext.Context value.
+// getContext creates and returns a new context.Context with an autocli.Context value.
 // It initializes a printer and, if necessary, a keyring based on command flags.
 func (b *Builder) getContext(cmd *cobra.Command) (context.Context, error) {
 	printer, err := print.NewPrinter(cmd)
@@ -302,35 +302,51 @@ func (b *Builder) setFlagsFromConfig(cmd *cobra.Command) error {
 	}
 
 	if cmd.Flags().Lookup("chain-id") != nil && !cmd.Flags().Changed("chain-id") {
-		_ = cmd.Flags().Set("chain-id", conf.ChainID)
+		if err = cmd.Flags().Set("chain-id", conf.ChainID); err != nil {
+			return err
+		}
 	}
 
 	if cmd.Flags().Lookup("keyring-backend") != nil && !cmd.Flags().Changed("keyring-backend") {
-		_ = cmd.Flags().Set("keyring-backend", conf.KeyringBackend)
+		if err = cmd.Flags().Set("keyring-backend", conf.KeyringBackend); err != nil {
+			return err
+		}
 	}
 
 	if cmd.Flags().Lookup("from") != nil && !cmd.Flags().Changed("from") {
-		_ = cmd.Flags().Set("from", conf.KeyringDefaultKeyName)
+		if err = cmd.Flags().Set("from", conf.KeyringDefaultKeyName); err != nil {
+			return err
+		}
 	}
 
 	if cmd.Flags().Lookup("output") != nil && !cmd.Flags().Changed("output") {
-		_ = cmd.Flags().Set("output", conf.Output)
+		if err = cmd.Flags().Set("output", conf.Output); err != nil {
+			return err
+		}
 	}
 
 	if cmd.Flags().Lookup("node") != nil && !cmd.Flags().Changed("node") {
-		_ = cmd.Flags().Set("node", conf.Node)
+		if err = cmd.Flags().Set("node", conf.Node); err != nil {
+			return err
+		}
 	}
 
 	if cmd.Flags().Lookup("broadcast-mode") != nil && !cmd.Flags().Changed("broadcast-mode") {
-		_ = cmd.Flags().Set("broadcast-mode", conf.BroadcastMode)
+		if err = cmd.Flags().Set("broadcast-mode", conf.BroadcastMode); err != nil {
+			return err
+		}
 	}
 
 	if cmd.Flags().Lookup("grpc-addr") != nil && !cmd.Flags().Changed("grpc-addr") {
-		_ = cmd.Flags().Set("grpc-addr", conf.GRPC.Address)
+		if err = cmd.Flags().Set("grpc-addr", conf.GRPC.Address); err != nil {
+			return err
+		}
 	}
 
 	if cmd.Flags().Lookup("grpc-insecure") != nil && !cmd.Flags().Changed("grpc-insecure") {
-		_ = cmd.Flags().Set("grpc-insecure", strconv.FormatBool(conf.GRPC.Insecure))
+		if err = cmd.Flags().Set("grpc-insecure", strconv.FormatBool(conf.GRPC.Insecure)); err != nil {
+			return err
+		}
 	}
 
 	return nil

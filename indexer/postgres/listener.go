@@ -73,15 +73,12 @@ func (i *indexerImpl) listener() appdata.Listener {
 			return nil
 		},
 		Commit: func(data appdata.CommitData) (func() error, error) {
-			fmt.Println("Commit ERROR 000")
 			err := i.tx.Commit()
-			fmt.Println("Commit ERROR 111", err)
 			if err != nil {
 				return nil, err
 			}
 
 			i.tx, err = i.db.BeginTx(i.ctx, nil)
-			fmt.Println("Commit ERROR 2222", err)
 			return nil, err
 		},
 	}

@@ -673,7 +673,6 @@ func (f *Factory) getFee() (fee *apitx.Fee, err error) {
 }
 
 // setFeePayer sets the fee payer for the transaction.
-// The feePayer MUST also sign the transaction.
 func (f *Factory) setFeePayer(feePayer string) error {
 	if feePayer == "" {
 		return nil
@@ -688,9 +687,6 @@ func (f *Factory) setFeePayer(feePayer string) error {
 }
 
 // setFeeGranter sets the fee granter's address in the transaction builder.
-// The feeGranter is the address that will pay the fees for the transaction.
-// The Feegrant module is used to grant the feeGranter permission to pay for the transaction.
-// The feeGranter is NOT required to sign the transaction.
 // If the feeGranter string is empty, the function returns nil without setting an address.
 // It converts the feeGranter string to bytes using the address codec and sets it as the granter address.
 // Returns an error if the conversion fails.

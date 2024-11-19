@@ -238,11 +238,14 @@ func (db *Database) Prune(version uint64) (err error) {
 			return fmt.Errorf("invalid PebbleDB MVCC key: %s", prefixedKey)
 		}
 
-		keyVersion, err := decodeUint64Ascending(verBz)
-		if err != nil {
-			return fmt.Errorf("failed to decode key version: %w", err)
+		var keyVersion uint64
+		// handle version 0 (no version prefix)
+		if len(verBz) > 0 {
+			keyVersion, err = decodeUint64Ascending(verBz)
+			if err != nil {
+				return fmt.Errorf("failed to decode key version: %w", err)
+			}
 		}
-
 		// seek to next key if we are at a version which is higher than prune height
 		if keyVersion > version {
 			itr.NextPrefix()
@@ -432,9 +435,13 @@ func getMVCCSlice(db *pebble.DB, storeKey, key []byte, version uint64) ([]byte, 
 		return nil, fmt.Errorf("invalid PebbleDB MVCC key: %s", itr.Key())
 	}
 
-	keyVersion, err := decodeUint64Ascending(vBz)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode key version: %w", err)
+	var keyVersion uint64
+	// handle version 0 (no version prefix)
+	if len(vBz) > 0 {
+		keyVersion, err = decodeUint64Ascending(vBz)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode key version: %w", err)
+		}
 	}
 	if keyVersion > version {
 		return nil, fmt.Errorf("key version too large: %d", keyVersion)

@@ -19,10 +19,6 @@ type Store interface {
 	// SetInitialVersion sets the initial version of the store.
 	SetInitialVersion(uint64) error
 
-	// WorkingHash writes the provided changeset to the state and returns
-	// the working hash of the state.
-	WorkingHash(*store.Changeset) (store.Hash, error)
-
 	// Commit commits the provided changeset and returns
 	// the new state root of the state.
 	Commit(*store.Changeset) (store.Hash, error)

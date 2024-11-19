@@ -51,7 +51,14 @@ func (t *IavlTree) Hash() []byte {
 	return t.tree.Hash()
 }
 
+// Version returns the current version of the tree.
+func (t *IavlTree) Version() uint64 {
+	return uint64(t.tree.Version())
+}
+
 // WorkingHash returns the working hash of the tree.
+// Danger! iavl.MutableTree.WorkingHash() is a mutating operation!
+// It advances the tree version by 1.
 func (t *IavlTree) WorkingHash() []byte {
 	return t.tree.WorkingHash()
 }

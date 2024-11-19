@@ -25,7 +25,6 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/api"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
 )
 
@@ -224,7 +223,9 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	}
 
 	s.logger.Info("stopping gRPC server...", "address", s.config.Address)
-	return api.DoUntilCtxExpired(ctx, s.grpcSrv.GracefulStop)
+	s.grpcSrv.GracefulStop()
+
+	return nil
 }
 
 // GetGRPCServer returns the underlying gRPC server.

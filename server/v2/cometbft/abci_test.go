@@ -2,6 +2,7 @@ package cometbft
 
 import (
 	"context"
+	"cosmossdk.io/server/v2/cometbft/oe"
 	"crypto/sha256"
 	"encoding/json"
 	"io"
@@ -55,10 +56,10 @@ func getQueryRouterBuilder[T any, PT interface {
 	*T
 	proto.Message
 },
-	U any, UT interface {
-		*U
-		proto.Message
-	}](
+U any, UT interface {
+	*U
+	proto.Message
+}](
 	t *testing.T,
 	handler func(ctx context.Context, msg PT) (UT, error),
 ) *stf.MsgRouterBuilder {
@@ -85,10 +86,10 @@ func getMsgRouterBuilder[T any, PT interface {
 	*T
 	transaction.Msg
 },
-	U any, UT interface {
-		*U
-		transaction.Msg
-	}](
+U any, UT interface {
+	*U
+	transaction.Msg
+}](
 	t *testing.T,
 	handler func(ctx context.Context, msg PT) (UT, error),
 ) *stf.MsgRouterBuilder {
@@ -714,4 +715,61 @@ func assertStoreLatestVersion(t *testing.T, store types.Store, target uint64) {
 	commitInfo, err := store.GetStateCommitment().GetCommitInfo(version)
 	require.NoError(t, err)
 	require.Equal(t, target, commitInfo.Version)
+}
+
+func TestOptimisticExecution(t *testing.T) {
+	c := setUpConsensus(t, 100_000, mempool.NoOpMempool[mock.Tx]{})
+	c.SetOptimisticExecution(oe.NewOptimisticExecution(log.NewNopLogger(), c.internalFinalizeBlock))
+
+	_, err := c.InitChain(context.Background(), &abciproto.InitChainRequest{
+		Time:          time.Now(),
+		ChainId:       "test",
+		InitialHeight: 1,
+	})
+	require.NoError(t, err)
+
+	_, err = c.FinalizeBlock(context.Background(), &abciproto.FinalizeBlockRequest{
+		Time:   time.Now(),
+		Height: 1,
+		Txs:    [][]byte{mockTx.Bytes()},
+		Hash:   emptyHash[:],
+	})
+	require.NoError(t, err)
+
+	// Set up handlers
+	c.processProposalHandler = DefaultServerOptions[mock.Tx]().ProcessProposalHandler
+
+	ppReq := &abciproto.ProcessProposalRequest{
+		Height: 2,
+		Hash:   []byte("test"),
+		Time:   time.Now(),
+		Txs:    [][]byte{mockTx.Bytes()},
+	}
+
+	// Start optimistic execution
+	resp, err := c.ProcessProposal(context.Background(), ppReq)
+	require.NoError(t, err)
+	require.Equal(t, resp.Status, abciproto.PROCESS_PROPOSAL_STATUS_ACCEPT)
+
+	// Initialize FinalizeBlock with correct hash - should use optimistic result
+	theHash := sha256.Sum256([]byte("test"))
+	fbReq := &abciproto.FinalizeBlockRequest{
+		Height: 2,
+		Hash:   theHash[:],
+		Time:   ppReq.Time,
+		Txs:    ppReq.Txs,
+	}
+	fbResp, err := c.FinalizeBlock(context.Background(), fbReq)
+	require.NoError(t, err)
+
+	// Initialize FinalizeBlock with wrong hash - should abort optimistic execution
+	theWrongHash := sha256.Sum256([]byte("wrong_hash"))
+	fbReq.Hash = theWrongHash[:]
+	fbReq.Height = 3
+	fbResp, err = c.FinalizeBlock(context.Background(), fbReq)
+	require.Nil(t, fbResp)
+	require.Error(t, err)
+
+	// Verify optimistic execution was reset
+	require.False(t, c.optimisticExec.Initialized())
 }

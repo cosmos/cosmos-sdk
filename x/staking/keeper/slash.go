@@ -402,6 +402,24 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 			return math.ZeroInt(), err
 		}
 
+		// if the delegator holds a validator bond to destination validator, decrease the destination validator bond shares
+		if delegation.ValidatorBond {
+			if err := k.SafelyDecreaseValidatorBond(ctx, valDstAddr, math.LegacyDec(tokensToBurn)); err != nil {
+				return math.ZeroInt(), err
+			}
+		}
+
+		// if this delegation is from a liquid staking provider (identified if the delegator
+		// is an ICA account), the global and validator liquid totals should be decremented
+		if k.DelegatorIsLiquidStaker(delegatorAddress) {
+			if err := k.DecreaseTotalLiquidStakedTokens(ctx, tokensToBurn); err != nil {
+				return math.ZeroInt(), err
+			}
+			if _, err := k.DecreaseValidatorLiquidShares(ctx, valDstAddr, math.LegacyDec(tokensToBurn)); err != nil {
+				return math.ZeroInt(), err
+			}
+		}
+
 		// tokens of a redelegation currently live in the destination validator
 		// therefor we must burn tokens from the destination-validator's bonding status
 		switch {
@@ -411,29 +429,6 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 			notBondedBurnedAmount = notBondedBurnedAmount.Add(tokensToBurn)
 		default:
 			panic("unknown validator status")
-		}
-	}
-
-	delegation, err := k.GetDelegation(ctx, delegatorAddress, valDstAddr)
-	if err != nil {
-		return math.ZeroInt(), err
-	}
-
-	// if the delegator holds a validator bond to destination validator, decrease the destination validator bond shares
-	if delegation.ValidatorBond {
-		if err := k.SafelyDecreaseValidatorBond(ctx, valDstAddr, math.LegacyDec(totalSlashAmount)); err != nil {
-			return math.ZeroInt(), err
-		}
-	}
-
-	// if this delegation is from a liquid staking provider (identified if the delegator
-	// is an ICA account), the global and validator liquid totals should be decremented
-	if k.DelegatorIsLiquidStaker(delegatorAddress) {
-		if err := k.DecreaseTotalLiquidStakedTokens(ctx, totalSlashAmount); err != nil {
-			return math.ZeroInt(), err
-		}
-		if _, err := k.DecreaseValidatorLiquidShares(ctx, valDstAddr, math.LegacyDec(totalSlashAmount)); err != nil {
-			return math.ZeroInt(), err
 		}
 	}
 

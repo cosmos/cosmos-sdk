@@ -206,12 +206,12 @@ func NewApp(
 	if store == nil {
 		return nil, fmt.Errorf("failed to build store: %w", err)
 	}
-	err = store.SetInitialVersion(1)
+	err = store.SetInitialVersion(0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to set initial version: %w", err)
 	}
 
-	integrationApp := &App{App: app, Store: store, txConfig: txConfig, lastHeight: 1}
+	integrationApp := &App{App: app, Store: store, txConfig: txConfig, lastHeight: 0}
 	if startupConfig.GenesisBehavior == Genesis_SKIP {
 		return integrationApp, nil
 	}
@@ -342,7 +342,7 @@ func (a *App) Commit(state corestore.WriterMap) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get state changes: %w", err)
 	}
-	cs := &corestore.Changeset{Changes: changes}
+	cs := &corestore.Changeset{Version: a.lastHeight, Changes: changes}
 	return a.Store.Commit(cs)
 }
 

@@ -149,3 +149,7 @@ func (a Account) RegisterExecuteHandlers(builder *accountstd.ExecuteBuilder) {
 func (a Account) RegisterQueryHandlers(builder *accountstd.QueryBuilder) {
 	accountstd.RegisterQueryHandler(builder, a.QueryCounter)
 }
+
+func ProvideAccount() accountstd.DepinjectAccount {
+	return accountstd.DIAccount("counter", NewAccount)
+}

@@ -404,7 +404,7 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 
 		// if the delegator holds a validator bond to destination validator, decrease the destination validator bond shares
 		if delegation.ValidatorBond {
-			if err := k.SafelyDecreaseValidatorBond(ctx, valDstAddr, math.LegacyDec(tokensToBurn)); err != nil {
+			if err := k.SafelyDecreaseValidatorBond(ctx, valDstAddr, sharesToUnbond); err != nil {
 				return math.ZeroInt(), err
 			}
 		}
@@ -415,7 +415,7 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 			if err := k.DecreaseTotalLiquidStakedTokens(ctx, tokensToBurn); err != nil {
 				return math.ZeroInt(), err
 			}
-			if _, err := k.DecreaseValidatorLiquidShares(ctx, valDstAddr, math.LegacyDec(tokensToBurn)); err != nil {
+			if _, err := k.DecreaseValidatorLiquidShares(ctx, valDstAddr, sharesToUnbond); err != nil {
 				return math.ZeroInt(), err
 			}
 		}

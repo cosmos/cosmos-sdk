@@ -24,7 +24,7 @@ func IsTelemetryEnabled() bool {
 	return globalTelemetryEnabled
 }
 
-// SetTelemetryEnabled allows for the global telemetry enabled state to be set.
+// EnableTelemetry allows for the global telemetry enabled state to be set.
 func EnableTelemetry() {
 	globalTelemetryEnabled = true
 }

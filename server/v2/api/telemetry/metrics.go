@@ -59,9 +59,6 @@ type GatherResponse struct {
 
 // NewMetrics creates a new instance of Metrics
 func NewMetrics(cfg *Config) (*Metrics, error) {
-	if !cfg.Enable {
-		return nil, nil
-	}
 
 	if numGlobalLabels := len(cfg.GlobalLabels); numGlobalLabels > 0 {
 		parsedGlobalLabels := make([]metrics.Label, numGlobalLabels)

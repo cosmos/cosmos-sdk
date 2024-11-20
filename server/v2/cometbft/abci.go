@@ -11,9 +11,6 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -37,6 +34,10 @@ import (
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
 	consensustypes "cosmossdk.io/x/consensus/types"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 const (
@@ -288,7 +289,7 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 
 		txResult, _, err := c.app.Simulate(ctx, tx)
 		if err != nil {
-			return nil, true, fmt.Errorf("%v with gas used: '%d'", err, txResult.GasUsed)
+			return nil, true, fmt.Errorf("%w with gas used: '%d'", err, txResult.GasUsed)
 		}
 
 		msgResponses := make([]*codectypes.Any, 0, len(txResult.Resp))

@@ -450,8 +450,8 @@ func (s *decimalTestSuite) TestApproxRoot() {
 		expected math.LegacyDec
 	}{
 		{math.LegacyNewDecFromInt(math.NewInt(2)), 0, math.LegacyOneDec()},                                   // 2 ^ 0 => 1.0
-		{math.LegacyNewDecWithPrec(4, 2), 0, math.LegacyOneDec()},                                           // 0.04 ^ 0 => 1.0
-		{math.LegacyNewDec(0), 1, math.LegacyNewDec(0)},                                                       // 0 ^ 1 => 0
+		{math.LegacyNewDecWithPrec(4, 2), 0, math.LegacyOneDec()},                                            // 0.04 ^ 0 => 1.0
+		{math.LegacyNewDec(0), 1, math.LegacyNewDec(0)},                                                      // 0 ^ 1 => 0
 		{math.LegacyOneDec(), 10, math.LegacyOneDec()},                                                       // 1.0 ^ (0.1) => 1.0
 		{math.LegacyNewDecWithPrec(25, 2), 2, math.LegacyNewDecWithPrec(5, 1)},                               // 0.25 ^ (0.5) => 0.5
 		{math.LegacyNewDecWithPrec(4, 2), 2, math.LegacyNewDecWithPrec(2, 1)},                                // 0.04 ^ (0.5) => 0.2

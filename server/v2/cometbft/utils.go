@@ -19,7 +19,7 @@ import (
 	"cosmossdk.io/core/server"
 	"cosmossdk.io/core/transaction"
 	errorsmod "cosmossdk.io/errors/v2"
-	consensus "cosmossdk.io/x/consensus/types"
+	"cosmossdk.io/x/consensus/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -268,7 +268,7 @@ func QueryResult(err error, debug bool) *abci.QueryResponse {
 	}
 }
 
-func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.FinalizeBlockRequest) error {
+func (c *consensus[T]) validateFinalizeBlockHeight(req *abci.FinalizeBlockRequest) error {
 	if req.Height < 1 {
 		return fmt.Errorf("invalid height: %d", req.Height)
 	}
@@ -302,18 +302,18 @@ func (c *Consensus[T]) validateFinalizeBlockHeight(req *abci.FinalizeBlockReques
 
 // GetConsensusParams makes a query to the consensus module in order to get the latest consensus
 // parameters from committed state
-func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.ConsensusParams, error) {
+func (c *consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.ConsensusParams, error) {
 	latestVersion, err := c.store.GetLatestVersion()
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := c.app.Query(ctx, latestVersion, &consensus.QueryParamsRequest{})
+	res, err := c.app.Query(ctx, latestVersion, &types.QueryParamsRequest{})
 	if err != nil {
 		return nil, err
 	}
 
-	if r, ok := res.(*consensus.QueryParamsResponse); !ok {
+	if r, ok := res.(*types.QueryParamsResponse); !ok {
 		return nil, errors.New("failed to query consensus params")
 	} else {
 		// convert our params to cometbft params
@@ -321,7 +321,7 @@ func (c *Consensus[T]) GetConsensusParams(ctx context.Context) (*cmtproto.Consen
 	}
 }
 
-func (c *Consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, commitHeight int64) int64 {
+func (c *consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, commitHeight int64) int64 {
 	// pruning is disabled if minRetainBlocks is zero
 	if c.cfg.AppTomlConfig.MinRetainBlocks == 0 {
 		return 0
@@ -376,7 +376,7 @@ func (c *Consensus[T]) GetBlockRetentionHeight(cp *cmtproto.ConsensusParams, com
 }
 
 // checkHalt checks if height or time exceeds halt-height or halt-time respectively.
-func (c *Consensus[T]) checkHalt(height int64, time time.Time) error {
+func (c *consensus[T]) checkHalt(height int64, time time.Time) error {
 	var halt bool
 	switch {
 	case c.cfg.AppTomlConfig.HaltHeight > 0 && uint64(height) >= c.cfg.AppTomlConfig.HaltHeight:

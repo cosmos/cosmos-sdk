@@ -257,6 +257,7 @@ require (
 replace (
 	cosmossdk.io/client/v2 => ../../client/v2
 	cosmossdk.io/collections => ../../collections
+	cosmossdk.io/core => ../../core
 	cosmossdk.io/tools/confix => ../../tools/confix
 	cosmossdk.io/x/accounts => ../../x/accounts
 	cosmossdk.io/x/accounts/defaults/base => ../../x/accounts/defaults/base

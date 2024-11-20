@@ -12,7 +12,7 @@ import (
 )
 
 // streamDeliverBlockChanges will stream all the changes happened during deliver block.
-func (c *Consensus[T]) streamDeliverBlockChanges(
+func (c *consensus[T]) streamDeliverBlockChanges(
 	ctx context.Context,
 	height int64,
 	txs [][]byte,

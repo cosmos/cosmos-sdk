@@ -150,25 +150,33 @@ func New[T transaction.Tx](
 		listener = &indexingTarget.Listener
 	}
 
-	srv.Consensus = &Consensus[T]{
-		appName:   appName,
-		version:   getCometBFTServerVersion(),
-		app:       app,
-		cfg:       srv.config,
-		store:     store,
-		logger:    logger,
-		txCodec:   txCodec,
-		appCodec:  appCodec,
-		streaming: streaming.Manager{},
-		listener:  listener,
-		snapshotManager: snapshots.NewManager(
-			snapshotStore,
-			srv.serverOptions.SnapshotOptions(cfg),
-			sc,
-			ss,
-			srv.serverOptions.SnapshotExtensions,
-			logger,
-		),
+	// snapshot manager
+	snapshotManager := snapshots.NewManager(
+		snapshotStore,
+		srv.serverOptions.SnapshotOptions(cfg),
+		sc,
+		ss,
+		nil, // extensions snapshotter registered below
+		logger,
+	)
+	if exts := serverOptions.SnapshotExtensions; len(exts) > 0 {
+		if err := snapshotManager.RegisterExtensions(serverOptions.SnapshotExtensions...); err != nil {
+			return nil, fmt.Errorf("failed to register snapshot extensions: %w", err)
+		}
+	}
+
+	srv.Consensus = &consensus[T]{
+		appName:                appName,
+		version:                getCometBFTServerVersion(),
+		app:                    app,
+		cfg:                    srv.config,
+		store:                  store,
+		logger:                 logger,
+		txCodec:                txCodec,
+		appCodec:               appCodec,
+		streaming:              streaming.Manager{},
+		listener:               listener,
+		snapshotManager:        snapshotManager,
 		mempool:                srv.serverOptions.Mempool(cfg),
 		lastCommittedHeight:    atomic.Int64{},
 		prepareProposalHandler: srv.serverOptions.PrepareProposalHandler,

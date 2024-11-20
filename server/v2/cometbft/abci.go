@@ -56,9 +56,9 @@ type consensus[T transaction.Tx] struct {
 	appCodec         codec.Codec
 	txCodec          transaction.Codec[T]
 	store            types.Store
-	streaming        streaming.Manager
 	listener         *appdata.Listener
 	snapshotManager  *snapshots.Manager
+	streamingManager streaming.Manager
 	mempool          mempool.Mempool[T]
 
 	cfg           Config

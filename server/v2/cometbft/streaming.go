@@ -40,7 +40,7 @@ func (c *consensus[T]) streamDeliverBlockChanges(
 		}
 	}
 
-	for _, streamingListener := range c.streaming.Listeners {
+	for _, streamingListener := range c.streamingManager.Listeners {
 		events, err := streaming.IntoStreamingEvents(events)
 		if err != nil {
 			return err

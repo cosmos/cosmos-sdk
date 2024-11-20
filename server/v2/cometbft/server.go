@@ -35,7 +35,6 @@ import (
 	cometlog "cosmossdk.io/server/v2/cometbft/log"
 	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/cometbft/types"
-	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -174,9 +173,9 @@ func New[T transaction.Tx](
 		logger:                 logger,
 		txCodec:                txCodec,
 		appCodec:               appCodec,
-		streaming:              streaming.Manager{},
 		listener:               listener,
 		snapshotManager:        snapshotManager,
+		streamingManager:       srv.serverOptions.StreamingManager,
 		mempool:                srv.serverOptions.Mempool(cfg),
 		lastCommittedHeight:    atomic.Int64{},
 		prepareProposalHandler: srv.serverOptions.PrepareProposalHandler,

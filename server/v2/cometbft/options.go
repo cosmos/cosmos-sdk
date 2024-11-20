@@ -47,6 +47,7 @@ func DefaultServerOptions[T transaction.Tx]() ServerOptions[T] {
 		VerifyVoteExtensionHandler: handlers.NoOpVerifyVoteExtensionHandler(),
 		ExtendVoteHandler:          handlers.NoOpExtendVote(),
 		Mempool:                    func(cfg map[string]any) mempool.Mempool[T] { return mempool.NoOpMempool[T]{} },
+		StreamingManager:           streaming.Manager{},
 		SnapshotOptions:            func(cfg map[string]any) snapshots.SnapshotOptions { return snapshots.NewSnapshotOptions(0, 0) },
 		SnapshotExtensions:         []snapshots.ExtensionSnapshotter{},
 		AddrPeerFilter:             nil,

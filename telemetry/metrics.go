@@ -24,6 +24,11 @@ func IsTelemetryEnabled() bool {
 	return globalTelemetryEnabled
 }
 
+// SetTelemetryEnabled allows for the global telemetry enabled state to be set.
+func SetTelemetryEnabled(enabled bool) {
+	globalTelemetryEnabled = enabled
+}
+
 // globalLabels defines the set of global labels that will be applied to all
 // metrics emitted using the telemetry package function wrappers.
 var globalLabels = []metrics.Label{}

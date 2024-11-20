@@ -62,6 +62,7 @@ func IncrCounter(val float32, keys ...string) {
 // metric with global labels (if any) along with the provided labels.
 func IncrCounterWithLabels(keys []string, val float32, labels []metrics.Label) {
 	if !IsTelemetryEnabled() {
+
 		return
 	}
 

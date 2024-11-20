@@ -40,6 +40,7 @@ func DefaultConfig() *Config {
 	}
 }
 
+// CreateClientConfig creates a new client configuration or reads an existing one.
 func CreateClientConfig(homeDir, chainID string, v *viper.Viper) (*Config, error) {
 	if homeDir == "" {
 		return nil, errors.New("home dir can't be empty")
@@ -73,12 +74,19 @@ func CreateClientConfig(homeDir, chainID string, v *viper.Viper) (*Config, error
 	return conf, nil
 }
 
+// CreateClientConfigFromFlags creates a client configuration from command-line flags.
 func CreateClientConfigFromFlags(set *pflag.FlagSet) (*Config, error) {
-	homeDir, _ := set.GetString("home")
+	homeDir, err := set.GetString("home")
+	if err != nil {
+		return nil, err
+	}
 	if homeDir == "" {
 		return DefaultConfig(), nil
 	}
-	chainID, _ := set.GetString("chain-id")
+	chainID, err := set.GetString("chain-id")
+	if err != nil {
+		return nil, err
+	}
 
 	v := viper.New()
 	executableName, err := os.Executable()

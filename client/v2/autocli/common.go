@@ -278,7 +278,7 @@ func (b *Builder) getContext(cmd *cobra.Command) (context.Context, error) {
 		Cdc:                   b.Cdc,
 		Printer:               printer,
 		Keyring:               k,
-		EnabledSignmodes:      signModesToApiSingModes(b.EnabledSignModes),
+		EnabledSignmodes:      signModesToApiSignModes(b.EnabledSignModes),
 	}
 
 	return context.WithValue(cmd.Context(), clientcontext.ContextKey, clientCtx), nil
@@ -396,7 +396,7 @@ func getQueryClientConn(cdc codec.Codec) func(cmd *cobra.Command) (grpc.ClientCo
 }
 
 // signModesToApiSingModes converts a slice of signing.SignMode to a slice of apitxsigning.SignMode.
-func signModesToApiSingModes(modes []signing.SignMode) []apitxsigning.SignMode {
+func signModesToApiSignModes(modes []signing.SignMode) []apitxsigning.SignMode {
 	r := make([]apitxsigning.SignMode, len(modes))
 	for i, m := range modes {
 		r[i] = apitxsigning.SignMode(m)

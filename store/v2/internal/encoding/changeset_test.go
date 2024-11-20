@@ -17,7 +17,7 @@ func TestChangesetMarshal(t *testing.T) {
 	}{
 		{
 			name:         "empty",
-			changeset:    corestore.NewChangeset(),
+			changeset:    corestore.NewChangeset(1),
 			encodedSize:  1,
 			encodedBytes: []byte{0x0},
 		},
@@ -80,7 +80,7 @@ func TestChangesetMarshal(t *testing.T) {
 				require.Equal(t, encodedBytes, tc.encodedBytes, "encoded bytes mismatch")
 			}
 			// check the unmarshaled changeset
-			cs := corestore.NewChangeset()
+			cs := corestore.NewChangeset(1)
 			require.NoError(t, UnmarshalChangeset(cs, encodedBytes), "unmarshal error")
 			require.Equal(t, len(tc.changeset.Changes), len(cs.Changes), "unmarshaled changeset store size mismatch")
 			for i, changes := range tc.changeset.Changes {

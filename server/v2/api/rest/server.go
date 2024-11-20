@@ -18,23 +18,22 @@ const (
 )
 
 type Server[T transaction.Tx] struct {
-	logger log.Logger
-	router *http.ServeMux
-
+	logger     log.Logger
+	router     *http.ServeMux
 	httpServer *http.Server
 	config     *Config
 	cfgOptions []CfgOption
 }
 
 func New[T transaction.Tx](
-	appManager appmanager.AppManager[T],
 	logger log.Logger,
+	appManager appmanager.AppManager[T],
 	cfg server.ConfigMap,
 	cfgOptions ...CfgOption,
 ) (*Server[T], error) {
 	srv := &Server[T]{
-		cfgOptions: cfgOptions,
 		logger:     logger.With(log.ModuleKey, ServerName),
+		cfgOptions: cfgOptions,
 		router:     http.NewServeMux(),
 	}
 
@@ -90,7 +89,6 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	}
 
 	s.logger.Info("stopping HTTP server")
-
 	return s.httpServer.Shutdown(ctx)
 }
 

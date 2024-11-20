@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"io"
 
 	"github.com/spf13/cobra"
 
@@ -11,7 +12,7 @@ import (
 	"cosmossdk.io/log"
 	runtimev2 "cosmossdk.io/runtime/v2"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/api/grpc"
+	grpcserver "cosmossdk.io/server/v2/api/grpc"
 	"cosmossdk.io/server/v2/api/rest"
 	"cosmossdk.io/server/v2/api/telemetry"
 	"cosmossdk.io/server/v2/cometbft"
@@ -39,7 +40,10 @@ type CommandDependencies[T transaction.Tx] struct {
 	TxConfig      client.TxConfig
 	ModuleManager *runtimev2.MM[T]
 	SimApp        *simapp.SimApp[T]
-	Consensus     serverv2.ServerComponent[T]
+	// could be more generic with serverv2.ServerComponent[T]
+	// however, we want to register extra grpc handlers
+	ConsensusServer *cometbft.CometBFTServer[T]
+	ClientContext   client.Context
 }
 
 func InitRootCmd[T transaction.Tx](
@@ -65,16 +69,17 @@ func InitRootCmd[T transaction.Tx](
 
 	// build CLI skeleton for initial config parsing or a client application invocation
 	if deps.SimApp == nil {
-		if deps.Consensus == nil {
-			deps.Consensus = cometbft.NewWithConfigOptions[T](initCometConfig())
+		if deps.ConsensusServer == nil {
+			deps.ConsensusServer = cometbft.NewWithConfigOptions[T](initCometConfig())
 		}
 		return serverv2.AddCommands[T](
 			rootCmd,
 			logger,
+			io.NopCloser(nil),
 			deps.GlobalConfig,
 			initServerConfig(),
-			deps.Consensus,
-			&grpc.Server[T]{},
+			deps.ConsensusServer,
+			&grpcserver.Server[T]{},
 			&serverstore.Server[T]{},
 			&telemetry.Server[T]{},
 			&rest.Server[T]{},
@@ -83,23 +88,20 @@ func InitRootCmd[T transaction.Tx](
 
 	// build full app!
 	simApp := deps.SimApp
-	grpcServer, err := grpc.New[T](logger, simApp.InterfaceRegistry(), simApp.QueryHandlers(), simApp.Query, deps.GlobalConfig)
-	if err != nil {
-		return nil, err
-	}
+
 	// store component (not a server)
 	storeComponent, err := serverstore.New[T](simApp.Store(), deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}
-	restServer, err := rest.New[T](simApp.App.AppManager, logger, deps.GlobalConfig)
+	restServer, err := rest.New[T](logger, simApp.App.AppManager, deps.GlobalConfig)
 	if err != nil {
 		return nil, err
 	}
 
 	// consensus component
-	if deps.Consensus == nil {
-		deps.Consensus, err = cometbft.New(
+	if deps.ConsensusServer == nil {
+		deps.ConsensusServer, err = cometbft.New(
 			logger,
 			simApp.Name(),
 			simApp.Store(),
@@ -114,7 +116,25 @@ func InitRootCmd[T transaction.Tx](
 			return nil, err
 		}
 	}
+
 	telemetryServer, err := telemetry.New[T](deps.GlobalConfig, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	grpcServer, err := grpcserver.New[T](
+		logger,
+		simApp.InterfaceRegistry(),
+		simApp.QueryHandlers(),
+		simApp.Query,
+		deps.GlobalConfig,
+		grpcserver.WithExtraGRPCHandlers[T](
+			deps.ConsensusServer.Consensus.GRPCServiceRegistrar(
+				deps.ClientContext,
+				deps.GlobalConfig,
+			),
+		),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -123,9 +143,10 @@ func InitRootCmd[T transaction.Tx](
 	return serverv2.AddCommands[T](
 		rootCmd,
 		logger,
+		simApp,
 		deps.GlobalConfig,
 		initServerConfig(),
-		deps.Consensus,
+		deps.ConsensusServer,
 		grpcServer,
 		storeComponent,
 		telemetryServer,

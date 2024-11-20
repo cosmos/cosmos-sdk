@@ -7,7 +7,8 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 concurrency:
   group: ci-${{ github.ref }}-tests
@@ -322,8 +323,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.20"
-          check-latest: true
+          go-version: "1.21"
+          check-latest: false
           cache: true
           cache-dependency-path: depinject/go.sum
       - uses: technote-space/get-diff-action@v6.1.2

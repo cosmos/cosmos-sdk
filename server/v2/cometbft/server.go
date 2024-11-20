@@ -94,15 +94,15 @@ func New[T transaction.Tx](
 	chainID, _ := cfg[FlagChainID].(string)
 	if chainID == "" {
 		// fallback to genesis chain-id
-		reader, err := os.Open(filepath.Join(home, "config", "genesis.json"))
+		reader, err := os.Open(srv.config.ConfigTomlConfig.GenesisFile())
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("failed to open genesis file: %w", err)
 		}
 		defer reader.Close()
 
 		chainID, err = genutiltypes.ParseChainIDFromGenesis(reader)
 		if err != nil {
-			panic(fmt.Errorf("failed to parse chain-id from genesis file: %w", err))
+			return nil, fmt.Errorf("failed to parse chain-id from genesis file: %w", err)
 		}
 	}
 
@@ -116,7 +116,6 @@ func New[T transaction.Tx](
 		logger,
 		appName,
 		appManager,
-		nil,
 		srv.serverOptions.Mempool(cfg),
 		indexEvents,
 		queryHandlers,
@@ -216,11 +215,13 @@ func (s *CometBFTServer[T]) Start(ctx context.Context) error {
 		return err
 	}
 
+	s.logger.Info("starting consensus server")
 	return s.Node.Start()
 }
 
 func (s *CometBFTServer[T]) Stop(context.Context) error {
 	if s.Node != nil && s.Node.IsRunning() {
+		s.logger.Info("stopping consensus server")
 		return s.Node.Stop()
 	}
 

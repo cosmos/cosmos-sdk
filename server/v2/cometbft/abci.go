@@ -11,6 +11,9 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -27,7 +30,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/server/v2/appmanager"
-	"cosmossdk.io/server/v2/cometbft/client/grpc/cmtservice"
 	"cosmossdk.io/server/v2/cometbft/handlers"
 	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/cometbft/types"
@@ -37,13 +39,18 @@ import (
 	consensustypes "cosmossdk.io/x/consensus/types"
 )
 
+const (
+	QueryPathApp   = "app"
+	QueryPathP2P   = "p2p"
+	QueryPathStore = "store"
+)
+
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
 type Consensus[T transaction.Tx] struct {
 	logger           log.Logger
 	appName, version string
 	app              appmanager.AppManager[T]
-	appCloser        func() error
 	txCodec          transaction.Codec[T]
 	store            types.Store
 	streaming        streaming.Manager
@@ -78,7 +85,6 @@ func NewConsensus[T transaction.Tx](
 	logger log.Logger,
 	appName string,
 	app appmanager.AppManager[T],
-	appCloser func() error,
 	mp mempool.Mempool[T],
 	indexedEvents map[string]struct{},
 	queryHandlersMap map[string]appmodulev2.Handler,
@@ -91,7 +97,6 @@ func NewConsensus[T transaction.Tx](
 		appName:                appName,
 		version:                getCometBFTServerVersion(),
 		app:                    app,
-		appCloser:              appCloser,
 		cfg:                    cfg,
 		store:                  store,
 		logger:                 logger,
@@ -221,17 +226,17 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 	}
 
 	switch path[0] {
-	case cmtservice.QueryPathApp:
+	case QueryPathApp:
 		resp, err = c.handlerQueryApp(ctx, path, req)
 
-	case cmtservice.QueryPathStore:
-		resp, err = c.handleQueryStore(path, c.store, req)
+	case QueryPathStore:
+		resp, err = c.handleQueryStore(path, req)
 
-	case cmtservice.QueryPathP2P:
+	case QueryPathP2P:
 		resp, err = c.handleQueryP2P(path)
 
 	default:
-		resp = QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "unknown query path"), c.cfg.AppTomlConfig.Trace)
+		resp = QueryResult(errorsmod.Wrapf(cometerrors.ErrUnknownRequest, "unknown query path %s", req.Path), c.cfg.AppTomlConfig.Trace)
 	}
 
 	if err != nil {
@@ -267,6 +272,50 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 		handlerFullName = string(md.Input().FullName())
 	}
 
+	// special case for simulation as it is an external gRPC registered on the grpc server component
+	// and not on the app itself, so it won't pass the router afterwards.
+	if req.Path == "/cosmos.tx.v1beta1.Service/Simulate" {
+		simulateRequest := &txtypes.SimulateRequest{}
+		err = gogoproto.Unmarshal(req.Data, simulateRequest)
+		if err != nil {
+			return nil, true, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
+		}
+
+		tx, err := c.txCodec.Decode(simulateRequest.TxBytes)
+		if err != nil {
+			return nil, true, fmt.Errorf("failed to decode tx: %w", err)
+		}
+
+		txResult, _, err := c.app.Simulate(ctx, tx)
+		if err != nil {
+			return nil, true, fmt.Errorf("%v with gas used: '%d'", err, txResult.GasUsed)
+		}
+
+		msgResponses := make([]*codectypes.Any, 0, len(txResult.Resp))
+		// pack the messages into Any
+		for _, msg := range txResult.Resp {
+			anyMsg, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, true, fmt.Errorf("failed to pack message response: %w", err)
+			}
+
+			msgResponses = append(msgResponses, anyMsg)
+		}
+
+		resp := &txtypes.SimulateResponse{
+			GasInfo: &sdk.GasInfo{
+				GasUsed:   txResult.GasUsed,
+				GasWanted: txResult.GasWanted,
+			},
+			Result: &sdk.Result{
+				MsgResponses: msgResponses,
+			},
+		}
+
+		res, err := queryResponse(resp, req.Height)
+		return res, true, err
+	}
+
 	handler, found := c.queryHandlersMap[handlerFullName]
 	if !found {
 		return nil, true, fmt.Errorf("no query handler found for %s", req.Path)
@@ -281,7 +330,6 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 		resp := QueryResult(err, c.cfg.AppTomlConfig.Trace)
 		resp.Height = req.Height
 		return resp, true, err
-
 	}
 
 	resp, err = queryResponse(res, req.Height)
@@ -329,7 +377,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		IsGenesis: true,
 	}
 
-	blockresponse, genesisState, err := c.app.InitGenesis(
+	blockResponse, genesisState, err := c.app.InitGenesis(
 		ctx,
 		br,
 		req.AppStateBytes,
@@ -338,17 +386,16 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		return nil, fmt.Errorf("genesis state init failure: %w", err)
 	}
 
-	for _, txRes := range blockresponse.TxResults {
+	for _, txRes := range blockResponse.TxResults {
 		if err := txRes.Error; err != nil {
-			space, code, log := errorsmod.ABCIInfo(err, c.cfg.AppTomlConfig.Trace)
-			c.logger.Warn("genesis tx failed", "codespace", space, "code", code, "log", log)
+			space, code, txLog := errorsmod.ABCIInfo(err, c.cfg.AppTomlConfig.Trace)
+			c.logger.Warn("genesis tx failed", "codespace", space, "code", code, "log", txLog)
 		}
 	}
 
-	validatorUpdates := intoABCIValidatorUpdates(blockresponse.ValidatorUpdates)
+	validatorUpdates := intoABCIValidatorUpdates(blockResponse.ValidatorUpdates)
 
-	// set the initial version of the store
-	if err := c.store.SetInitialVersion(uint64(req.InitialHeight)); err != nil {
+	if err := c.store.SetInitialVersion(uint64(req.InitialHeight - 1)); err != nil {
 		return nil, fmt.Errorf("failed to set initial version: %w", err)
 	}
 
@@ -357,9 +404,10 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 		return nil, err
 	}
 	cs := &store.Changeset{
+		Version: uint64(req.InitialHeight - 1),
 		Changes: stateChanges,
 	}
-	stateRoot, err := c.store.WorkingHash(cs)
+	stateRoot, err := c.store.Commit(cs)
 	if err != nil {
 		return nil, fmt.Errorf("unable to write the changeset: %w", err)
 	}
@@ -455,18 +503,6 @@ func (c *Consensus[T]) FinalizeBlock(
 		return nil, err
 	}
 
-	// we don't need to deliver the block in the genesis block
-	if req.Height == int64(c.initialHeight) {
-		appHash, err := c.store.Commit(store.NewChangeset())
-		if err != nil {
-			return nil, fmt.Errorf("unable to commit the changeset: %w", err)
-		}
-		c.lastCommittedHeight.Store(req.Height)
-		return &abciproto.FinalizeBlockResponse{
-			AppHash: appHash,
-		}, nil
-	}
-
 	// TODO(tip): can we expect some txs to not decode? if so, what we do in this case? this does not seem to be the case,
 	// considering that prepare and process always decode txs, assuming they're the ones providing txs we should never
 	// have a tx that fails decoding.
@@ -507,7 +543,7 @@ func (c *Consensus[T]) FinalizeBlock(
 	if err != nil {
 		return nil, err
 	}
-	appHash, err := c.store.Commit(&store.Changeset{Changes: stateChanges})
+	appHash, err := c.store.Commit(&store.Changeset{Version: uint64(req.Height), Changes: stateChanges})
 	if err != nil {
 		return nil, fmt.Errorf("unable to commit the changeset: %w", err)
 	}

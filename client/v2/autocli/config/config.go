@@ -80,10 +80,7 @@ func CreateClientConfigFromFlags(set *pflag.FlagSet) (*Config, error) {
 	if homeDir == "" {
 		return DefaultConfig(), nil
 	}
-	chainID, err := set.GetString("chain-id")
-	if err != nil {
-		return nil, err
-	}
+	chainID, _ := set.GetString("chain-id")
 
 	v := viper.New()
 	executableName, err := os.Executable()

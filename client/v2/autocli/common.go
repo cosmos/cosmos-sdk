@@ -6,9 +6,6 @@ import (
 	"fmt"
 	"strconv"
 
-	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -16,6 +13,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/client/v2/autocli/config"
 	clientcontext "cosmossdk.io/client/v2/autocli/context"
 	"cosmossdk.io/client/v2/autocli/keyring"
@@ -25,6 +23,7 @@ import (
 	"cosmossdk.io/client/v2/internal/util"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 type cmdType int

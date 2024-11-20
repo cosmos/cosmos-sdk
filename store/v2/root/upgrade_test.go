@@ -57,7 +57,7 @@ func (s *UpgradeStoreTestSuite) SetupTest() {
 	toVersion := uint64(20)
 	keyCount := 10
 	for version := uint64(1); version <= toVersion; version++ {
-		cs := corestore.NewChangeset()
+		cs := corestore.NewChangeset(version)
 		for _, storeKey := range storeKeys {
 			for i := 0; i < keyCount; i++ {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)
@@ -127,7 +127,7 @@ func (s *UpgradeStoreTestSuite) TestLoadVersionAndUpgrade() {
 	newStoreKeys := []string{"newStore1", "newStore2"}
 	toVersion := uint64(40)
 	for version := v + 1; version <= toVersion; version++ {
-		cs := corestore.NewChangeset()
+		cs := corestore.NewChangeset(version)
 		for _, storeKey := range newStoreKeys {
 			for i := 0; i < keyCount; i++ {
 				cs.Add([]byte(storeKey), []byte(fmt.Sprintf("key-%d-%d", version, i)), []byte(fmt.Sprintf("value-%d-%d", version, i)), false)

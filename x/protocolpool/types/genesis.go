@@ -6,6 +6,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -13,8 +14,9 @@ func NewGenesisState(cf []*ContinuousFund, budget []*Budget) *GenesisState {
 	return &GenesisState{
 		ContinuousFund: cf,
 		Budget:         budget,
-		LastBalance:    math.ZeroInt(),
+		LastBalance:    DistributionAmount{Amount: sdk.NewCoins()},
 		Distributions:  []*Distribution{},
+		Params:         &Params{},
 	}
 }
 
@@ -22,6 +24,9 @@ func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
 		ContinuousFund: []*ContinuousFund{},
 		Budget:         []*Budget{},
+		Params: &Params{
+			EnabledDistributionDenoms: []string{sdk.DefaultBondDenom},
+		},
 	}
 }
 

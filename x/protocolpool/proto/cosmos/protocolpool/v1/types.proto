@@ -8,6 +8,7 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
+import "amino/amino.proto";
 
 // Budget defines the fields of a budget proposal.
 message Budget {
@@ -40,4 +41,21 @@ message ContinuousFund {
   ];
   // Optional, if expiry is set, removes the state object when expired.
   google.protobuf.Timestamp expiry = 3 [(gogoproto.stdtime) = true];
+}
+
+// DistributionAmount is used to store the coins of periodic distributions.
+message DistributionAmount {
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins"
+  ];
+}
+
+// Params defines the parameters for the protocolpool module.
+message Params {
+  // enabled_distribution_denoms lists the denoms that are allowed to be distributed.
+  // This is to avoid spending time distributing undesired tokens to continuous funds and budgets.
+  repeated string enabled_distribution_denoms = 1;
 }

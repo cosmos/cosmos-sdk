@@ -21,8 +21,8 @@ var (
 const ServerName = "telemetry"
 
 type Server[T transaction.Tx] struct {
-	config  *Config
 	logger  log.Logger
+	config  *Config
 	server  *http.Server
 	metrics *Metrics
 }
@@ -67,10 +67,10 @@ func (s *Server[T]) Start(ctx context.Context) error {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", s.metricsHandler)
-	// keeping /metrics for backwards compatibility
-	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/", http.StatusMovedPermanently)
+	// /metrics is the default standard path for Prometheus metrics.
+	mux.HandleFunc("/metrics", s.metricsHandler)
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/metrics", http.StatusMovedPermanently)
 	})
 
 	s.server = &http.Server{

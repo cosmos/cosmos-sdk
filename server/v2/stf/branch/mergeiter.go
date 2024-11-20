@@ -7,9 +7,7 @@ import (
 	corestore "cosmossdk.io/core/store"
 )
 
-var (
-	errInvalidIterator = errors.New("invalid iterator")
-)
+var errInvalidIterator = errors.New("invalid iterator")
 
 // mergedIterator merges a parent Iterator and a child Iterator.
 // The child iterator may contain items that shadow or override items in the parent iterator.

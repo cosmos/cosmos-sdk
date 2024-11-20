@@ -4,11 +4,11 @@ go 1.23.2
 
 require (
 	cosmossdk.io/collections v0.4.0
-	cosmossdk.io/core v1.0.0-alpha.5.0.20241108140525-43e28b43ad7a
+	cosmossdk.io/core v1.0.0-alpha.6
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/google/go-cmp v0.6.0
 	github.com/stretchr/testify v1.9.0
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.35.2
 )
 
 require (

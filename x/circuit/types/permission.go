@@ -12,7 +12,7 @@ func (p *Permissions) Validation() error {
 
 		p.LimitTypeUrls = MsgTypeURLValidation(p.LimitTypeUrls)
 	case p.Level == Permissions_LEVEL_ALL_MSGS || p.Level == Permissions_LEVEL_SUPER_ADMIN:
-		// if permission is all msg or super addmin, LimitTypeUrls array clear
+		// if permission is all msg or super admin, LimitTypeUrls array clear
 		// all p.LimitTypeUrls since we not use this field
 		p.LimitTypeUrls = nil
 	default:

@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -64,8 +65,12 @@ func createTestSuite(t *testing.T) *suite {
 	var err error
 	startupCfg := integration.DefaultStartUpConfig(t)
 
-	res.routerService = integration.NewRouterService()
-	res.registerRouterService()
+	routerService := integration.NewRouterService()
+	res.registerRouterService(routerService)
+
+	var routerFactory router.RouterServiceFactory = func(_ []byte) router.Service {
+		return routerService
+	}
 
 	res.app, err = integration.NewApp(
 		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Provide(
@@ -79,8 +84,8 @@ func createTestSuite(t *testing.T) *suite {
 			ProvideMockRetroCompatAccountValid,
 			ProvideMockRetroCompatAccountNoInfo,
 			ProvideMockRetroCompatAccountNoImplement,
-		), depinject.Supply(log.NewNopLogger(), &integration.BranchService{}, res.routerService)),
-		startupCfg,
+		), depinject.Supply(log.NewNopLogger())),
+		startupCfg, &integration.BranchService{}, routerFactory,
 		&res.bankKeeper, &res.accountsKeeper, &res.authKeeper)
 	require.NoError(t, err)
 
@@ -89,7 +94,7 @@ func createTestSuite(t *testing.T) *suite {
 	return &res
 }
 
-func (s *suite) registerRouterService() {
+func (s *suite) registerRouterService(router *integration.RouterService) {
 	// register custom router service
 	bankSendHandler := func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
 		msg, ok := req.(*banktypes.MsgSend)
@@ -101,5 +106,5 @@ func (s *suite) registerRouterService() {
 		return resp, err
 	}
 
-	s.routerService.RegisterHandler(bankSendHandler, "cosmos.bank.v1beta1.MsgSend")
+	router.RegisterHandler(bankSendHandler, "cosmos.bank.v1beta1.MsgSend")
 }

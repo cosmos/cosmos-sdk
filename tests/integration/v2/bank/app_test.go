@@ -96,7 +96,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 	startupCfg.GenesisAccounts = genAccounts
 	res.App, err = integration.NewApp(
 		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Supply(log.NewNopLogger())),
-		startupCfg,
+		startupCfg, nil, nil,
 		&res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper, &res.TxConfig)
 	require.NoError(t, err)
 

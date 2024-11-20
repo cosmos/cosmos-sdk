@@ -103,6 +103,7 @@ func init() {
 			ProvideKVService,
 			ProvideModuleConfigMaps,
 			ProvideModuleScopedConfigMap,
+			ProvideRouterService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -198,6 +199,13 @@ func ProvideKVService(
 	return kvFactory([]byte(kvStoreKey)), stf.NewMemoryStoreService([]byte(fmt.Sprintf("memory:%s", kvStoreKey)))
 }
 
+func ProvideRouterService(
+	key depinject.ModuleKey,
+	routerFactory router.RouterServiceFactory,
+) router.Service {
+	return routerFactory([]byte(key.Name()))
+}
+
 func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.StoreKeyConfig {
 	for _, cfg := range config.OverrideStoreKeys {
 		if cfg.ModuleName == moduleName {
@@ -216,17 +224,9 @@ func ProvideEnvironment(
 	headerService header.Service,
 	eventService event.Service,
 	branchService branch.Service,
-	msgRouterService router.Service,
+	routerService router.Service,
 ) appmodulev2.Environment {
-	// provide stf branch service as default if empty
-	if branchService == nil {
-		branchService = stf.BranchService{}
-	}
 
-	// provide stf msg router service as default if empty
-	if msgRouterService == nil {
-		msgRouterService = stf.NewMsgRouterService([]byte(key.Name()))
-	}
 	return appmodulev2.Environment{
 		Logger:             logger,
 		BranchService:      branchService,
@@ -234,7 +234,7 @@ func ProvideEnvironment(
 		GasService:         stf.NewGasMeterService(),
 		HeaderService:      headerService,
 		QueryRouterService: stf.NewQueryRouterService(),
-		MsgRouterService:   msgRouterService,
+		MsgRouterService:   routerService,
 		TransactionService: services.NewContextAwareTransactionService(),
 		KVStoreService:     kvService,
 		MemStoreService:    memKvService,
@@ -247,6 +247,8 @@ func ProvideEnvironment(
 // - comet.Service
 // - event.Service
 // - store/v2/root.Builder
+// - branch.Service
+// - router.ServiceFactory
 //
 // They are all required.  For most use cases these default services bindings should be sufficient.
 // Power users (or tests) may wish to provide their own services bindings, in which case they must
@@ -259,16 +261,22 @@ func DefaultServiceBindings() depinject.Config {
 				stf.NewKVStoreService(actor),
 			)
 		}
-		cometService  comet.Service = &services.ContextAwareCometInfoService{}
-		headerService               = services.NewGenesisHeaderService(stf.HeaderService{})
-		eventService                = services.NewGenesisEventService(stf.NewEventService())
-		storeBuilder                = root.NewBuilder()
+		cometService         comet.Service = &services.ContextAwareCometInfoService{}
+		headerService                      = services.NewGenesisHeaderService(stf.HeaderService{})
+		eventService                       = services.NewGenesisEventService(stf.NewEventService())
+		storeBuilder                       = root.NewBuilder()
+		branchService                      = stf.BranchService{}
+		routerServiceFactory               = func(key []byte) router.Service {
+			return stf.NewMsgRouterService(key)
+		}
 	)
 	return depinject.Supply(
+		routerServiceFactory,
 		kvServiceFactory,
 		headerService,
 		cometService,
 		eventService,
 		storeBuilder,
+		branchService,
 	)
 }

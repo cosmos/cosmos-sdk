@@ -14,8 +14,10 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
+	corebranch "cosmossdk.io/core/branch"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
+	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -148,6 +150,8 @@ func WithAutomaticCommit() Option {
 func NewApp(
 	appConfig depinject.Config,
 	startupConfig StartupConfig,
+	branchService corebranch.Service,
+	routerServiceFactory router.RouterServiceFactory,
 	extraOutputs ...interface{},
 ) (*App, error) {
 	// create the app with depinject
@@ -164,6 +168,17 @@ func NewApp(
 		cdc codec.Codec
 		err error
 	)
+
+	// set default branch and msg router service
+	if routerServiceFactory == nil {
+		routerServiceFactory = func(key []byte) router.Service {
+			return stf.NewMsgRouterService(key)
+		}
+	}
+
+	if branchService == nil {
+		branchService = stf.BranchService{}
+	}
 
 	if err := depinject.Inject(
 		depinject.Configs(
@@ -185,6 +200,8 @@ func NewApp(
 				kvFactory,
 				&eventService{},
 				storeBuilder,
+				branchService,
+				routerServiceFactory,
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,

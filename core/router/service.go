@@ -14,3 +14,5 @@ type Service interface {
 	// Invoke execute a message or query. The response should be type casted by the caller to the expected response.
 	Invoke(ctx context.Context, req transaction.Msg) (res transaction.Msg, err error)
 }
+
+type RouterServiceFactory func([]byte) Service

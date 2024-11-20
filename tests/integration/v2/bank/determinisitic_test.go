@@ -109,7 +109,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 
 	var bankKeeper bankkeeper.Keeper
 	diConfig = depinject.Configs(diConfig, depinject.Supply(acctsModKeeper, log.NewNopLogger()))
-	app, err := integration.NewApp(diConfig, startupConfig, &bankKeeper)
+	app, err := integration.NewApp(diConfig, startupConfig, nil, nil, &bankKeeper)
 	require.NoError(t, err)
 	require.NotNil(t, app)
 	return &deterministicFixture{app: app, bankKeeper: bankKeeper, T: t}

@@ -233,10 +233,10 @@ func (b *Builder) handleGovProposal(
 // generateOrBroadcastTxWithV2 generates or broadcasts a transaction with the provided messages using v2 transaction handling.
 //
 //nolint:unused // It'll be used once BuildMsgMethodCommand is updated to use factory v2.
-func (b *Builder) generateOrBroadcastTxWithV2(ctx context.Context, cmd *cobra.Command, msgs ...transaction.Msg) error {
+func (b *Builder) generateOrBroadcastTxWithV2(ctx context.Context, cmd *cobra.Command, msgs ...transaction.Msg) ([]byte, error) {
 	cConn, err := b.GetClientConn(cmd)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	return v2tx.GenerateOrBroadcastTxCLI(ctx, cConn, msgs...)

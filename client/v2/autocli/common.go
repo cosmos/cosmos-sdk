@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"strconv"
 
+	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -16,9 +19,9 @@ import (
 	"cosmossdk.io/client/v2/autocli/config"
 	clientcontext "cosmossdk.io/client/v2/autocli/context"
 	"cosmossdk.io/client/v2/autocli/keyring"
-	"cosmossdk.io/client/v2/autocli/print"
 	"cosmossdk.io/client/v2/broadcast/comet"
 	"cosmossdk.io/client/v2/internal/flags"
+	"cosmossdk.io/client/v2/internal/print"
 	"cosmossdk.io/client/v2/internal/util"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -264,6 +267,8 @@ func (b *Builder) getContext(cmd *cobra.Command) (context.Context, error) {
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		k = keyring.NoKeyring{}
 	}
 
 	clientCtx := clientcontext.Context{
@@ -274,7 +279,7 @@ func (b *Builder) getContext(cmd *cobra.Command) (context.Context, error) {
 		Cdc:                   b.Cdc,
 		Printer:               printer,
 		Keyring:               k,
-		EnabledSignmodes:      b.EnabledSignModes,
+		EnabledSignmodes:      signModesToApiSingModes(b.EnabledSignModes),
 	}
 
 	return context.WithValue(cmd.Context(), clientcontext.ContextKey, clientCtx), nil
@@ -389,4 +394,13 @@ func getQueryClientConn(cdc codec.Codec) func(cmd *cobra.Command) (grpc.ClientCo
 
 		return grpc.NewClient(addr, []grpc.DialOption{grpc.WithTransportCredentials(creds)}...)
 	}
+}
+
+// signModesToApiSingModes converts a slice of signing.SignMode to a slice of apitxsigning.SignMode.
+func signModesToApiSingModes(modes []signing.SignMode) []apitxsigning.SignMode {
+	r := make([]apitxsigning.SignMode, len(modes))
+	for i, m := range modes {
+		r[i] = apitxsigning.SignMode(m)
+	}
+	return r
 }

@@ -6,7 +6,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	apitxsigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -84,7 +83,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 		},
 		AddTxConnFlags:   sdkflags.AddTxFlagsToCmd,
 		Cdc:              appOptions.Cdc,
-		EnabledSignModes: []apitxsigning.SignMode{apitxsigning.SignMode_SIGN_MODE_DIRECT},
+		EnabledSignModes: appOptions.TxConfigOpts.EnabledSignModes,
 	}
 
 	return appOptions.EnhanceRootCommandWithBuilder(rootCmd, builder)

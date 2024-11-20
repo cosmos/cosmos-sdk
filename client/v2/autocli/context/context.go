@@ -8,17 +8,17 @@ import (
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/client/v2/autocli/keyring"
-	"cosmossdk.io/client/v2/autocli/print"
+	"cosmossdk.io/client/v2/internal/print"
 	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// key is a custom type used as a context key to prevent collisions in the context.Context value store.
-type key string
+// ContextKey is a key used to store and retrieve Context from a Go context.Context.
+var ContextKey contextKey
 
-// ContextKey is the key used to store and retrieve the autocli.Context from a context.Context.
-const ContextKey key = "autocli.context"
+// contextKey is an empty struct used as a key type for storing Context in a context.Context.
+type contextKey struct{}
 
 // Context represents the client context used in autocli commands.
 // It contains various components needed for command execution.

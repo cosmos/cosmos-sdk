@@ -8,24 +8,25 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 type Config struct {
-	ChainID               string     `mapstructure:"chain-id" toml:"chain-id"`
-	KeyringBackend        string     `mapstructure:"keyring-backend" toml:"keyring-backend"`
-	KeyringDefaultKeyName string     `mapstructure:"keyring-default-keyname" toml:"keyring-default-keyname"`
-	Output                string     `mapstructure:"output" toml:"output"`
-	Node                  string     `mapstructure:"node" toml:"node"`
-	BroadcastMode         string     `mapstructure:"broadcast-mode" toml:"broadcast-mode"`
-	GRPC                  GRPCConfig `mapstructure:",squash"`
+	ChainID               string     `mapstructure:"chain-id" toml:"chain-id" comment:"The chain ID of the blockchain network"`
+	KeyringBackend        string     `mapstructure:"keyring-backend" toml:"keyring-backend" comment:"The keyring backend to use (os|file|kwallet|pass|test|memory)"`
+	KeyringDefaultKeyName string     `mapstructure:"keyring-default-keyname" toml:"keyring-default-keyname" comment:"The default key name to use for signing transactions"`
+	Output                string     `mapstructure:"output" toml:"output" comment:"The output format for queries (text|json)"`
+	Node                  string     `mapstructure:"node" toml:"node" comment:"The RPC endpoint URL for the node to connect to"`
+	BroadcastMode         string     `mapstructure:"broadcast-mode" toml:"broadcast-mode" comment:"How transactions are broadcast to the network (sync|async|block)"`
+	GRPC                  GRPCConfig `mapstructure:",squash" comment:"The gRPC client configuration"`
 }
 
 // GRPCConfig holds the gRPC client configuration.
 type GRPCConfig struct {
-	Address  string `mapstructure:"grpc-address"  toml:"grpc-address"`
-	Insecure bool   `mapstructure:"grpc-insecure"  toml:"grpc-insecure"`
+	Address  string `mapstructure:"grpc-address"  toml:"grpc-address" comment:"The gRPC server address to connect to"`
+	Insecure bool   `mapstructure:"grpc-insecure"  toml:"grpc-insecure" comment:"Allow gRPC over insecure connections"`
 }
 
 func DefaultConfig() *Config {
@@ -90,4 +91,39 @@ func CreateClientConfigFromFlags(set *pflag.FlagSet) (*Config, error) {
 	v.AutomaticEnv()
 
 	return CreateClientConfig(homeDir, chainID, v)
+}
+
+// writeConfigFile renders config using the template and writes it to
+// configFilePath.
+func writeConfigFile(configFilePath string, config *Config) error {
+	b, err := toml.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	if dir := filepath.Dir(configFilePath); dir != "" {
+		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+			return err
+		}
+	}
+
+	return os.WriteFile(configFilePath, b, 0o600)
+}
+
+// readConfig reads values from client.toml file and unmarshalls them into ClientConfig
+func readConfig(configPath string, v *viper.Viper) (*Config, error) {
+	v.AddConfigPath(configPath)
+	v.SetConfigName("client")
+	v.SetConfigType("toml")
+
+	if err := v.ReadInConfig(); err != nil {
+		return nil, err
+	}
+
+	conf := DefaultConfig()
+	if err := v.Unmarshal(conf); err != nil {
+		return nil, err
+	}
+
+	return conf, nil
 }

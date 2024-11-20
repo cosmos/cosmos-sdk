@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -637,7 +638,7 @@ func TestConsensus_Query(t *testing.T) {
 	require.Equal(t, res.Value, []byte(nil))
 }
 
-func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.Tx]) *Consensus[mock.Tx] {
+func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.Tx]) *consensus[mock.Tx] {
 	t.Helper()
 
 	msgRouterBuilder := getMsgRouterBuilder(t, func(ctx context.Context, msg *gogotypes.BoolValue) (*gogotypes.BoolValue, error) {
@@ -699,9 +700,17 @@ func setUpConsensus(t *testing.T, gasLimit uint64, mempool mempool.Mempool[mock.
 		nil,
 	)
 
-	return NewConsensus[mock.Tx](log.NewNopLogger(), "testing-app", am,
-		mempool, map[string]struct{}{}, nil, mockStore,
-		Config{AppTomlConfig: DefaultAppTomlConfig()}, mock.TxCodec{}, "test")
+	return &consensus[mock.Tx]{
+		logger:           log.NewNopLogger(),
+		appName:          "testing-app",
+		app:              am,
+		mempool:          mempool,
+		store:            mockStore,
+		cfg:              Config{AppTomlConfig: DefaultAppTomlConfig()},
+		txCodec:          mock.TxCodec{},
+		chainID:          "test",
+		getProtoRegistry: sync.OnceValues(proto.MergedRegistry),
+	}
 }
 
 // Check target version same with store's latest version

@@ -3,7 +3,8 @@ package cometbft
 import (
 	"context"
 
-	v1 "github.com/cometbft/cometbft/api/cometbft/abci/v1"
+	abci "github.com/cometbft/cometbft/abci/types"
+	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -12,8 +13,8 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	cmtv1beta1 "cosmossdk.io/api/cosmos/base/tendermint/v1beta1"
 	"cosmossdk.io/core/server"
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	errorsmod "cosmossdk.io/errors/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -23,17 +24,25 @@ import (
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-// GRPCServiceRegistrar returns a function that registers the CometBFT gRPC service
+type appSimulator[T transaction.Tx] interface {
+	Simulate(ctx context.Context, tx T) (server.TxResult, corestore.WriterMap, error)
+}
+
+// gRPCServiceRegistrar returns a function that registers the CometBFT gRPC service
 // Those services are defined for backward compatibility.
 // Eventually, they will be removed in favor of the new gRPC services.
-func (c *Consensus[T]) GRPCServiceRegistrar(
+func gRPCServiceRegistrar[T transaction.Tx](
 	clientCtx client.Context,
 	cfg server.ConfigMap,
+	cometBFTAppConfig *AppTomlConfig,
+	txCodec transaction.Codec[T],
+	consensus abci.Application,
+	app appSimulator[T],
 ) func(srv *grpc.Server) error {
 	return func(srv *grpc.Server) error {
-		cmtservice.RegisterServiceServer(srv, cmtservice.NewQueryServer(clientCtx.Client, c.Query, clientCtx.ConsensusAddressCodec))
-		txtypes.RegisterServiceServer(srv, txServer[T]{clientCtx, c})
-		nodeservice.RegisterServiceServer(srv, nodeServer[T]{cfg, c})
+		cmtservice.RegisterServiceServer(srv, cmtservice.NewQueryServer(clientCtx.Client, consensus.Query, clientCtx.ConsensusAddressCodec))
+		txtypes.RegisterServiceServer(srv, txServer[T]{clientCtx, txCodec, app})
+		nodeservice.RegisterServiceServer(srv, nodeServer[T]{cfg, cometBFTAppConfig, consensus})
 
 		return nil
 	}
@@ -86,7 +95,8 @@ var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 
 type txServer[T transaction.Tx] struct {
 	clientCtx client.Context
-	consensus *Consensus[T]
+	txCodec   transaction.Codec[T]
+	app       appSimulator[T]
 }
 
 // BroadcastTx implements tx.ServiceServer.
@@ -132,12 +142,12 @@ func (t txServer[T]) Simulate(ctx context.Context, req *txtypes.SimulateRequest)
 		return nil, status.Errorf(codes.InvalidArgument, "empty txBytes is not allowed")
 	}
 
-	tx, err := t.consensus.txCodec.Decode(txBytes)
+	tx, err := t.txCodec.Decode(txBytes)
 	if err != nil {
-		return nil, errorsmod.Wrap(err, "failed to decode tx")
+		return nil, status.Errorf(codes.InvalidArgument, "failed to decode tx: %v", err)
 	}
 
-	txResult, _, err := t.consensus.app.Simulate(ctx, tx)
+	txResult, _, err := t.app.Simulate(ctx, tx)
 	if err != nil {
 		return nil, status.Errorf(codes.Unknown, "%v with gas used: '%d'", err, txResult.GasUsed)
 	}
@@ -186,8 +196,9 @@ func (t txServer[T]) TxEncodeAmino(context.Context, *txtypes.TxEncodeAminoReques
 var _ txtypes.ServiceServer = txServer[transaction.Tx]{}
 
 type nodeServer[T transaction.Tx] struct {
-	cfg       server.ConfigMap
-	consensus *Consensus[T]
+	cfg               server.ConfigMap
+	cometBFTAppConfig *AppTomlConfig
+	consensus         abci.Application
 }
 
 func (s nodeServer[T]) Config(ctx context.Context, _ *nodeservice.ConfigRequest) (*nodeservice.ConfigResponse, error) {
@@ -201,12 +212,12 @@ func (s nodeServer[T]) Config(ctx context.Context, _ *nodeservice.ConfigRequest)
 		MinimumGasPrice:   minGasPricesStr,
 		PruningKeepRecent: "ambiguous in v2",
 		PruningInterval:   "ambiguous in v2",
-		HaltHeight:        s.consensus.cfg.AppTomlConfig.HaltHeight,
+		HaltHeight:        s.cometBFTAppConfig.HaltHeight,
 	}, nil
 }
 
 func (s nodeServer[T]) Status(ctx context.Context, _ *nodeservice.StatusRequest) (*nodeservice.StatusResponse, error) {
-	nodeInfo, err := s.consensus.Info(ctx, &v1.InfoRequest{})
+	nodeInfo, err := s.consensus.Info(ctx, &abciproto.InfoRequest{})
 	if err != nil {
 		return nil, err
 	}

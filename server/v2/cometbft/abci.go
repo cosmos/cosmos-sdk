@@ -6,14 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"sync/atomic"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	abciproto "github.com/cometbft/cometbft/api/cometbft/abci/v1"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -37,6 +33,11 @@ import (
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
 	consensustypes "cosmossdk.io/x/consensus/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 const (
@@ -47,10 +48,12 @@ const (
 
 var _ abci.Application = (*Consensus[transaction.Tx])(nil)
 
+// Consensus contains the implementation of the ABCI interface for CometBFT.
 type Consensus[T transaction.Tx] struct {
 	logger           log.Logger
 	appName, version string
 	app              appmanager.AppManager[T]
+	appCodec         codec.Codec
 	txCodec          transaction.Codec[T]
 	store            types.Store
 	streaming        streaming.Manager
@@ -59,8 +62,8 @@ type Consensus[T transaction.Tx] struct {
 	mempool          mempool.Mempool[T]
 
 	cfg           Config
-	indexedEvents map[string]struct{}
 	chainID       string
+	indexedEvents map[string]struct{}
 
 	initialHeight uint64
 	// this is only available after this node has committed a block (in FinalizeBlock),
@@ -79,42 +82,6 @@ type Consensus[T transaction.Tx] struct {
 
 	queryHandlersMap map[string]appmodulev2.Handler
 	getProtoRegistry func() (*protoregistry.Files, error)
-}
-
-func NewConsensus[T transaction.Tx](
-	logger log.Logger,
-	appName string,
-	app appmanager.AppManager[T],
-	mp mempool.Mempool[T],
-	indexedEvents map[string]struct{},
-	queryHandlersMap map[string]appmodulev2.Handler,
-	store types.Store,
-	cfg Config,
-	txCodec transaction.Codec[T],
-	chainId string,
-) *Consensus[T] {
-	return &Consensus[T]{
-		appName:                appName,
-		version:                getCometBFTServerVersion(),
-		app:                    app,
-		cfg:                    cfg,
-		store:                  store,
-		logger:                 logger,
-		txCodec:                txCodec,
-		streaming:              streaming.Manager{},
-		snapshotManager:        nil,
-		mempool:                mp,
-		lastCommittedHeight:    atomic.Int64{},
-		prepareProposalHandler: nil,
-		processProposalHandler: nil,
-		verifyVoteExt:          nil,
-		extendVote:             nil,
-		chainID:                chainId,
-		indexedEvents:          indexedEvents,
-		initialHeight:          0,
-		queryHandlersMap:       queryHandlersMap,
-		getProtoRegistry:       sync.OnceValues(gogoproto.MergedRegistry),
-	}
 }
 
 // SetStreamingManager sets the streaming manager for the consensus module.
@@ -288,7 +255,7 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 
 		txResult, _, err := c.app.Simulate(ctx, tx)
 		if err != nil {
-			return nil, true, fmt.Errorf("%v with gas used: '%d'", err, txResult.GasUsed)
+			return nil, true, fmt.Errorf("%w with gas used: '%d'", err, txResult.GasUsed)
 		}
 
 		msgResponses := make([]*codectypes.Any, 0, len(txResult.Resp))

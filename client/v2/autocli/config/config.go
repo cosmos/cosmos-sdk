@@ -76,10 +76,7 @@ func CreateClientConfig(homeDir, chainID string, v *viper.Viper) (*Config, error
 
 // CreateClientConfigFromFlags creates a client configuration from command-line flags.
 func CreateClientConfigFromFlags(set *pflag.FlagSet) (*Config, error) {
-	homeDir, err := set.GetString("home")
-	if err != nil {
-		return nil, err
-	}
+	homeDir, _ := set.GetString("home")
 	if homeDir == "" {
 		return DefaultConfig(), nil
 	}

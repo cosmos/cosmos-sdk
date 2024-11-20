@@ -28,7 +28,7 @@ type Server[T transaction.Tx] struct {
 }
 
 // New creates a new telemetry server.
-func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger, setTelemetryEnabled func(bool)) (*Server[T], error) {
+func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger, enableTelemetry func()) (*Server[T], error) {
 	srv := &Server[T]{}
 	serverCfg := srv.Config().(*Config)
 	if len(cfg) > 0 {
@@ -39,12 +39,12 @@ func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger, setTelemetry
 	srv.config = serverCfg
 	srv.logger = logger.With(log.ModuleKey, srv.Name())
 
-	if setTelemetryEnabled == nil {
-		panic("setTelemetryEnabled must be provided")
+	if enableTelemetry == nil {
+		panic("enableTelemetry must be provided")
 	}
 
 	if srv.config.Enable {
-		setTelemetryEnabled(true)
+		enableTelemetry()
 	}
 
 	metrics, err := NewMetrics(srv.config)

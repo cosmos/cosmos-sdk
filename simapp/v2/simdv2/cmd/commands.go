@@ -118,7 +118,7 @@ func InitRootCmd[T transaction.Tx](
 		}
 	}
 
-	telemetryServer, err := telemetry.New[T](deps.GlobalConfig, logger, sdktelemetry.SetTelemetryEnabled)
+	telemetryServer, err := telemetry.New[T](deps.GlobalConfig, logger, sdktelemetry.EnableTelemetry)
 	if err != nil {
 		return nil, err
 	}

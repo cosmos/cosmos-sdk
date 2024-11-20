@@ -1,6 +1,7 @@
 package systemtests
 
 import (
+	systest "cosmossdk.io/systemtests"
 	"fmt"
 	"net/http"
 	"testing"
@@ -13,10 +14,10 @@ func TestMintQueries(t *testing.T) {
 	// scenario: test mint grpc queries
 	// given a running chain
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
-	sut.ModifyGenesisJSON(t,
+	systest.Sut.ModifyGenesisJSON(t,
 		func(genesis []byte) []byte {
 			state, err := sjson.Set(string(genesis), "app_state.mint.minter.inflation", "1.00")
 			require.NoError(t, err)
@@ -29,17 +30,17 @@ func TestMintQueries(t *testing.T) {
 		},
 	)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
-	sut.AwaitNextBlock(t)
+	systest.Sut.AwaitNextBlock(t)
 
-	baseurl := sut.APIAddress()
+	baseurl := systest.Sut.APIAddress()
 	blockHeightHeader := "x-cosmos-block-height"
 	queryAtHeight := "1"
 
 	// TODO: check why difference in values when querying with height between v1 and v2
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/22302
-	if isV2() {
+	if systest.IsV2() {
 		queryAtHeight = "2"
 	}
 
@@ -78,10 +79,10 @@ func TestMintQueries(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// TODO: remove below check once grpc gateway is implemented in v2
-			if isV2() {
+			if systest.IsV2() {
 				return
 			}
-			resp := GetRequestWithHeaders(t, tc.url, tc.headers, http.StatusOK)
+			resp := systest.GetRequestWithHeaders(t, tc.url, tc.headers, http.StatusOK)
 			require.JSONEq(t, tc.expOut, string(resp))
 		})
 	}

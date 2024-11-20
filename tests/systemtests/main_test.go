@@ -2,8 +2,11 @@
 
 package systemtests
 
-import "testing"
+import (
+	systest "cosmossdk.io/systemtests"
+	"testing"
+)
 
 func TestMain(m *testing.M) {
-	RunTests(m)
+	systest.RunTests(m)
 }

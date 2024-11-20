@@ -3,6 +3,7 @@
 package systemtests
 
 import (
+	systest "cosmossdk.io/systemtests"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -19,10 +20,10 @@ func TestCircuitCommands(t *testing.T) {
 	// scenario: test circuit commands
 	// given a running chain
 
-	sut.ResetChain(t)
-	require.GreaterOrEqual(t, sut.NodesCount(), 2)
+	systest.Sut.ResetChain(t)
+	require.GreaterOrEqual(t, systest.Sut.NodesCount(), 2)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// get validator addresses
 	superAdmin := cli.GetKeyAddr("node0")
@@ -33,13 +34,14 @@ func TestCircuitCommands(t *testing.T) {
 
 	// short voting period
 	// update expedited voting period to avoid validation error
-	sut.ModifyGenesisJSON(
+	votingPeriod := 5 * time.Second
+	systest.Sut.ModifyGenesisJSON(
 		t,
-		SetGovVotingPeriod(t, time.Second*8),
-		SetGovExpeditedVotingPeriod(t, time.Second*7),
+		systest.SetGovVotingPeriod(t, votingPeriod),
+		systest.SetGovExpeditedVotingPeriod(t, votingPeriod-time.Second),
 	)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	allMsgsAcc := cli.AddKey("allMsgsAcc")
 	require.NotEmpty(t, allMsgsAcc)
@@ -51,11 +53,11 @@ func TestCircuitCommands(t *testing.T) {
 	var amount int64 = 100000
 	denom := "stake"
 	rsp := cli.FundAddress(allMsgsAcc, fmt.Sprintf("%d%s", amount, denom))
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 	require.Equal(t, amount, cli.QueryBalance(allMsgsAcc, denom))
 
 	rsp = cli.FundAddress(someMsgsAcc, fmt.Sprintf("%d%s", amount, denom))
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 	require.Equal(t, amount, cli.QueryBalance(someMsgsAcc, denom))
 
 	// query gov module account address
@@ -77,24 +79,23 @@ func TestCircuitCommands(t *testing.T) {
   		"deposit": "10000000stake",
   		"summary": "A short summary of my proposal"
 	}`, govModAddr, superAdmin)
-	proposalFile := StoreTempFile(t, []byte(validProposal))
+	proposalFile := systest.StoreTempFile(t, []byte(validProposal))
 
 	rsp = cli.RunAndWait("tx", "gov", "submit-proposal", proposalFile.Name(), "--from="+superAdmin)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	// vote to proposal from two validators
 	rsp = cli.RunAndWait("tx", "gov", "vote", "1", "yes", "--from="+superAdmin)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 	rsp = cli.RunAndWait("tx", "gov", "vote", "1", "yes", "--from="+superAdmin2)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	// wait for proposal to pass
-	time.Sleep(time.Second * 8)
-
-	rsp = cli.CustomQuery("q", "circuit", "accounts")
-
-	level := gjson.Get(rsp, fmt.Sprintf("accounts.#(address==%s).permissions.level", superAdmin)).String()
-	require.Equal(t, "LEVEL_SUPER_ADMIN", level)
+	require.Eventually(t, func() bool {
+		rsp = cli.CustomQuery("q", "circuit", "accounts")
+		level := gjson.Get(rsp, fmt.Sprintf("accounts.#(address==%s).permissions.level", superAdmin)).String()
+		return "LEVEL_SUPER_ADMIN" == level
+	}, votingPeriod+systest.Sut.BlockTime(), 200*time.Millisecond)
 
 	authorizeTestCases := []struct {
 		name          string
@@ -133,7 +134,7 @@ func TestCircuitCommands(t *testing.T) {
 				permissionJSON = fmt.Sprintf(`{"level":%d,"limit_type_urls":["%s"]}`, tc.level, strings.Join(tc.limtTypeURLs[:], `","`))
 			}
 			rsp = cli.RunAndWait("tx", "circuit", "authorize", tc.address, permissionJSON, "--from="+superAdmin)
-			RequireTxSuccess(t, rsp)
+			systest.RequireTxSuccess(t, rsp)
 
 			// query account permissions
 			rsp = cli.CustomQuery("q", "circuit", "account", tc.address)
@@ -157,7 +158,7 @@ func TestCircuitCommands(t *testing.T) {
 	testCircuitTxCommand(t, cli, "reset", superAdmin, superAdmin2, allMsgsAcc, someMsgsAcc)
 }
 
-func testCircuitTxCommand(t *testing.T, cli *CLIWrapper, txType, superAdmin, superAdmin2, allMsgsAcc, someMsgsAcc string) {
+func testCircuitTxCommand(t *testing.T, cli *systest.CLIWrapper, txType, superAdmin, superAdmin2, allMsgsAcc, someMsgsAcc string) {
 	t.Helper()
 
 	disableTestCases := []struct {
@@ -206,7 +207,7 @@ func testCircuitTxCommand(t *testing.T, cli *CLIWrapper, txType, superAdmin, sup
 			cmd := []string{"tx", "circuit", txType, "--from=" + tc.fromAddr}
 			cmd = append(cmd, tc.disableMsgs...)
 			rsp := cli.RunAndWait(cmd...)
-			RequireTxSuccess(t, rsp)
+			systest.RequireTxSuccess(t, rsp)
 
 			// execute given type transaction
 			rsp = cli.CustomQuery("q", "circuit", "disabled-list")
@@ -228,15 +229,16 @@ func testCircuitTxCommand(t *testing.T, cli *CLIWrapper, txType, superAdmin, sup
 			// test given msg transaction to confirm
 			for _, tx := range tc.executeTxs {
 				tx = append(tx, "--fees=2stake")
-				rsp = cli.RunCommandWithArgs(cli.withTXFlags(tx...)...)
+				rsp = cli.RunCommandWithArgs(cli.WithTXFlags(tx...)...)
 				if txType == "disable" {
-					RequireTxFailure(t, rsp)
+					systest.RequireTxFailure(t, rsp)
 					require.Contains(t, gjson.Get(rsp, "raw_log").String(), "tx type not allowed")
-				} else {
-					RequireTxSuccess(t, rsp)
+					continue
 				}
+				systest.RequireTxSuccess(t, rsp)
 				// wait for sometime to avoid sequence error
-				time.Sleep(time.Second * 2)
+				_, found := cli.AwaitTxCommitted(rsp)
+				require.True(t, found)
 			}
 		})
 	}

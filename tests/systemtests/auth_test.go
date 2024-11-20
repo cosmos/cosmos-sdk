@@ -3,6 +3,7 @@
 package systemtests
 
 import (
+	systest "cosmossdk.io/systemtests"
 	"fmt"
 	"testing"
 
@@ -20,10 +21,10 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 	// scenario: test auth sign and broadcast commands
 	// given a running chain
 
-	sut.ResetChain(t)
-	require.GreaterOrEqual(t, sut.NodesCount(), 2)
+	systest.Sut.ResetChain(t)
+	require.GreaterOrEqual(t, systest.Sut.NodesCount(), 2)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// get validator addresses
 	val1Addr := cli.GetKeyAddr("node0")
@@ -32,7 +33,7 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 	val2Addr := cli.GetKeyAddr("node1")
 	require.NotEmpty(t, val2Addr)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	var transferAmount, feeAmount int64 = 1000, 1
 
@@ -40,37 +41,37 @@ func TestAuthSignAndBroadcastTxCmd(t *testing.T) {
 
 	// run bank tx send with --generate-only flag
 	sendTx := generateBankSendTx(t, cli, val1Addr, val2Addr, transferAmount, feeAmount, "")
-	txFile := StoreTempFile(t, []byte(fmt.Sprintf("%s\n", sendTx)))
+	txFile := systest.StoreTempFile(t, []byte(fmt.Sprintf("%s\n", sendTx)))
 
 	// query node0 account details
-	signTxCmd := []string{"tx", "sign", txFile.Name(), "--from=" + val1Addr, "--chain-id=" + cli.chainID}
+	signTxCmd := []string{"tx", "sign", txFile.Name(), "--from=" + val1Addr, "--chain-id=" + cli.ChainID()}
 	testSignTxBroadcast(t, cli, signTxCmd, "sign tx", val1Addr, val2Addr, transferAmount, feeAmount)
 
 	// test broadcast with empty public key in signed tx
-	rsp := cli.RunCommandWithArgs(cli.withTXFlags("tx", "sign", txFile.Name(), "--from="+val1Addr)...)
+	rsp := cli.RunCommandWithArgs(cli.WithTXFlags("tx", "sign", txFile.Name(), "--from="+val1Addr)...)
 	updated, err := sjson.Set(rsp, "auth_info.signer_infos.0.public_key", nil)
 	require.NoError(t, err)
-	newSignFile := StoreTempFile(t, []byte(updated))
+	newSignFile := systest.StoreTempFile(t, []byte(updated))
 
 	broadcastCmd := []string{"tx", "broadcast", newSignFile.Name()}
-	rsp = cli.RunCommandWithArgs(cli.withTXFlags(broadcastCmd...)...)
-	RequireTxFailure(t, rsp)
+	rsp = cli.RunCommandWithArgs(cli.WithTXFlags(broadcastCmd...)...)
+	systest.RequireTxFailure(t, rsp)
 
 	// test sign-batch tx command
 
 	// generate another bank send tx with less amount
 	newAmount := int64(100)
 	sendTx2 := generateBankSendTx(t, cli, val1Addr, val2Addr, newAmount, feeAmount, "")
-	tx2File := StoreTempFile(t, []byte(fmt.Sprintf("%s\n", sendTx2)))
+	tx2File := systest.StoreTempFile(t, []byte(fmt.Sprintf("%s\n", sendTx2)))
 
-	signBatchCmd := []string{"tx", "sign-batch", txFile.Name(), tx2File.Name(), "--from=" + val1Addr, "--chain-id=" + cli.chainID}
+	signBatchCmd := []string{"tx", "sign-batch", txFile.Name(), tx2File.Name(), "--from=" + val1Addr, "--chain-id=" + cli.ChainID()}
 	sendAmount := transferAmount + newAmount
 	fees := feeAmount * 2
 
 	testSignTxBroadcast(t, cli, signBatchCmd, "sign-batch tx", val1Addr, val2Addr, sendAmount, fees)
 }
 
-func testSignTxBroadcast(t *testing.T, cli *CLIWrapper, txCmd []string, prefix, fromAddr, toAddr string, amount, fees int64) {
+func testSignTxBroadcast(t *testing.T, cli *systest.CLIWrapper, txCmd []string, prefix, fromAddr, toAddr string, amount, fees int64) {
 	t.Helper()
 
 	fromAddrBal := cli.QueryBalance(fromAddr, authTestDenom)
@@ -109,21 +110,21 @@ func testSignTxBroadcast(t *testing.T, cli *CLIWrapper, txCmd []string, prefix, 
 			cmd := append(txCmd, tc.extraArgs...)
 
 			// run tx sign command and verify signatures count
-			rsp = cli.RunCommandWithArgs(cli.withKeyringFlags(cmd...)...)
+			rsp = cli.RunCommandWithArgs(cli.WithKeyringFlags(cmd...)...)
 
 			signatures := gjson.Get(rsp, "signatures").Array()
 			require.Len(t, signatures, 1)
 
-			signFile := StoreTempFile(t, []byte(rsp))
+			signFile := systest.StoreTempFile(t, []byte(rsp))
 
 			// validate signature
-			rsp = cli.RunCommandWithArgs(cli.withKeyringFlags("tx", "validate-signatures", signFile.Name(), "--from="+fromAddr, "--chain-id="+cli.chainID)...)
+			rsp = cli.RunCommandWithArgs(cli.WithKeyringFlags("tx", "validate-signatures", signFile.Name(), "--from="+fromAddr, "--chain-id="+cli.ChainID())...)
 			require.Contains(t, rsp, "[OK]")
 
 			// run broadcast tx command
 			broadcastCmd := []string{"tx", "broadcast", signFile.Name()}
 			rsp = cli.RunAndWait(broadcastCmd...)
-			RequireTxSuccess(t, rsp)
+			systest.RequireTxSuccess(t, rsp)
 
 			// query balance and confirm transaction
 			expVal1Bal := fromAddrBal - amount - fees
@@ -141,10 +142,10 @@ func TestAuthQueryTxCmds(t *testing.T) {
 	// scenario: test query tx and txs commands
 	// given a running chain
 
-	sut.ResetChain(t)
-	require.GreaterOrEqual(t, sut.NodesCount(), 2)
+	systest.Sut.ResetChain(t)
+	require.GreaterOrEqual(t, systest.Sut.NodesCount(), 2)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// get validator addresses
 	val1Addr := cli.GetKeyAddr("node0")
@@ -153,12 +154,12 @@ func TestAuthQueryTxCmds(t *testing.T) {
 	val2Addr := cli.GetKeyAddr("node1")
 	require.NotEmpty(t, val2Addr)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	// do a bank transfer and use it for query txs
 	feeAmount := "2stake"
 	rsp := cli.RunAndWait("tx", "bank", "send", val1Addr, val2Addr, "10000stake", "--fees="+feeAmount)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	// parse values from above tx
 	height := gjson.Get(rsp, "height").String()
@@ -231,8 +232,8 @@ func TestAuthMultisigTxCmds(t *testing.T) {
 	// scenario: test auth multisig related tx commands
 	// given a running chain
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose)
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
@@ -248,11 +249,11 @@ func TestAuthMultisigTxCmds(t *testing.T) {
 	acc3Addr := cli.AddKey("acc3")
 	require.NotEqual(t, acc1Addr, acc3Addr)
 
-	out := cli.RunCommandWithArgs(cli.withKeyringFlags("keys", "add", "multi", "--multisig=acc1,acc2,acc3", "--multisig-threshold=2")...)
+	out := cli.RunCommandWithArgs(cli.WithKeyringFlags("keys", "add", "multi", "--multisig=acc1,acc2,acc3", "--multisig-threshold=2")...)
 	multiAddr := gjson.Get(out, "address").String()
 	require.NotEmpty(t, multiAddr)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	// fund multisig address some amount
 	var initialAmount, transferAmount, feeAmount int64 = 10000, 100, 1
@@ -265,10 +266,10 @@ func TestAuthMultisigTxCmds(t *testing.T) {
 
 	// run bank tx send with --generate-only flag
 	sendTx := generateBankSendTx(t, cli, multiAddr, valAddr, transferAmount, feeAmount, "")
-	txFile := StoreTempFile(t, []byte(sendTx))
+	txFile := systest.StoreTempFile(t, []byte(sendTx))
 
-	signTxCmd := cli.withKeyringFlags("tx", "sign", txFile.Name(), "--multisig="+multiAddr, "--chain-id="+cli.chainID)
-	multiSignTxCmd := cli.withKeyringFlags("tx", "multisign", txFile.Name(), "multi", "--chain-id="+cli.chainID)
+	signTxCmd := cli.WithKeyringFlags("tx", "sign", txFile.Name(), "--multisig="+multiAddr, "--chain-id="+cli.ChainID())
+	multiSignTxCmd := cli.WithKeyringFlags("tx", "multisign", txFile.Name(), "multi", "--chain-id="+cli.ChainID())
 
 	testMultisigTxBroadcast(t, cli, multiSigTxInput{
 		"multisign",
@@ -287,10 +288,10 @@ func TestAuthMultisigTxCmds(t *testing.T) {
 
 	// generate two send transactions in single file
 	multiSendTx := fmt.Sprintf("%s\n%s", sendTx, sendTx)
-	multiTxFile := StoreTempFile(t, []byte(multiSendTx))
+	multiTxFile := systest.StoreTempFile(t, []byte(multiSendTx))
 
-	signBatchTxCmd := cli.withKeyringFlags("tx", "sign-batch", multiTxFile.Name(), "--multisig="+multiAddr, "--signature-only", "--chain-id="+cli.chainID)
-	multiSignBatchTxCmd := cli.withKeyringFlags("tx", "multisign-batch", multiTxFile.Name(), "multi", "--chain-id="+cli.chainID)
+	signBatchTxCmd := cli.WithKeyringFlags("tx", "sign-batch", multiTxFile.Name(), "--multisig="+multiAddr, "--signature-only", "--chain-id="+cli.ChainID())
+	multiSignBatchTxCmd := cli.WithKeyringFlags("tx", "multisign-batch", multiTxFile.Name(), "multi", "--chain-id="+cli.ChainID())
 
 	// as we done couple of bank transactions as batch,
 	// transferred amount will be twice
@@ -311,7 +312,7 @@ func TestAuthMultisigTxCmds(t *testing.T) {
 	})
 }
 
-func generateBankSendTx(t *testing.T, cli *CLIWrapper, fromAddr, toAddr string, amount, fees int64, memo string) string {
+func generateBankSendTx(t *testing.T, cli *systest.CLIWrapper, fromAddr, toAddr string, amount, fees int64, memo string) string {
 	t.Helper()
 
 	bankSendGenCmd := []string{
@@ -322,7 +323,7 @@ func generateBankSendTx(t *testing.T, cli *CLIWrapper, fromAddr, toAddr string, 
 		"--note=" + memo,
 	}
 
-	return cli.RunCommandWithArgs(cli.withTXFlags(bankSendGenCmd...)...)
+	return cli.RunCommandWithArgs(cli.WithTXFlags(bankSendGenCmd...)...)
 }
 
 type multiSigTxInput struct {
@@ -338,7 +339,7 @@ type multiSigTxInput struct {
 	feeAmount      int64
 }
 
-func testMultisigTxBroadcast(t *testing.T, cli *CLIWrapper, i multiSigTxInput) {
+func testMultisigTxBroadcast(t *testing.T, cli *systest.CLIWrapper, i multiSigTxInput) {
 	t.Helper()
 
 	multiAddrBal := cli.QueryBalance(i.multiAddr, authTestDenom)
@@ -372,23 +373,23 @@ func testMultisigTxBroadcast(t *testing.T, cli *CLIWrapper, i multiSigTxInput) {
 			cmd := i.multiSignCmd
 			for _, acc := range tc.signingAccs {
 				rsp := cli.RunCommandWithArgs(append(i.signCmd, "--from="+acc)...)
-				signFile := StoreTempFile(t, []byte(rsp))
+				signFile := systest.StoreTempFile(t, []byte(rsp))
 				cmd = append(cmd, signFile.Name())
 			}
 			rsp := cli.RunCommandWithArgs(cmd...)
-			multiSignFile := StoreTempFile(t, []byte(rsp))
+			multiSignFile := systest.StoreTempFile(t, []byte(rsp))
 
 			// run broadcast tx command
 			broadcastCmd := []string{"tx", "broadcast", multiSignFile.Name()}
 			if tc.expErrMsg != "" {
-				rsp = cli.RunCommandWithArgs(cli.withTXFlags(broadcastCmd...)...)
-				RequireTxFailure(t, rsp)
+				rsp = cli.RunCommandWithArgs(cli.WithTXFlags(broadcastCmd...)...)
+				systest.RequireTxFailure(t, rsp)
 				require.Contains(t, rsp, tc.expErrMsg)
 				return
 			}
 
 			rsp = cli.RunAndWait(broadcastCmd...)
-			RequireTxSuccess(t, rsp)
+			systest.RequireTxSuccess(t, rsp)
 
 			// query balance and confirm transaction
 			expMultiBal := multiAddrBal - i.transferAmount - i.feeAmount
@@ -406,10 +407,10 @@ func TestAuxSigner(t *testing.T) {
 	// scenario: test tx with direct aux sign mode
 	// given a running chain
 
-	sut.ResetChain(t)
-	require.GreaterOrEqual(t, sut.NodesCount(), 2)
+	systest.Sut.ResetChain(t)
+	require.GreaterOrEqual(t, systest.Sut.NodesCount(), 2)
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// get validator addresses
 	val1Addr := cli.GetKeyAddr("node0")
@@ -418,7 +419,7 @@ func TestAuxSigner(t *testing.T) {
 	val2Addr := cli.GetKeyAddr("node1")
 	require.NotEmpty(t, val2Addr)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	bankSendCmd := []string{"tx", "bank", "send", val1Addr, val2Addr, "10000stake", "--from=" + val1Addr}
 
@@ -467,7 +468,7 @@ func TestAuxSigner(t *testing.T) {
 				return false
 			}
 
-			_ = cli.WithRunErrorMatcher(assertTxOutput).Run(cli.withTXFlags(cmd...)...)
+			_ = cli.WithRunErrorMatcher(assertTxOutput).Run(cli.WithTXFlags(cmd...)...)
 		})
 	}
 }
@@ -475,7 +476,7 @@ func TestAuxSigner(t *testing.T) {
 func TestTxEncodeandDecode(t *testing.T) {
 	// scenario: test tx encode and decode commands
 
-	cli := NewCLIWrapper(t, sut, verbose)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// get validator address
 	val1Addr := cli.GetKeyAddr("node0")
@@ -483,7 +484,7 @@ func TestTxEncodeandDecode(t *testing.T) {
 
 	memoText := "testmemo"
 	sendTx := generateBankSendTx(t, cli, val1Addr, val1Addr, 100, 1, memoText)
-	txFile := StoreTempFile(t, []byte(sendTx))
+	txFile := systest.StoreTempFile(t, []byte(sendTx))
 
 	// run encode command
 	encodedText := cli.RunCommandWithArgs("tx", "encode", txFile.Name())
@@ -501,45 +502,45 @@ func TestTxWithFeePayer(t *testing.T) {
 	// check tx executed ok
 	// check fees had been deducted from feePayers balance
 
-	sut.ResetChain(t)
-	cli := NewCLIWrapper(t, sut, verbose).WithRunErrorsIgnored()
+	systest.Sut.ResetChain(t)
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose).WithRunErrorsIgnored()
 
 	// add sender and feePayer accounts
 	senderAddr := cli.AddKey("sender")
-	sut.ModifyGenesisCLI(t,
+	systest.Sut.ModifyGenesisCLI(t,
 		[]string{"genesis", "add-genesis-account", senderAddr, "10000000stake"},
 	)
 	feePayerAddr := cli.AddKey("feePayer")
-	sut.ModifyGenesisCLI(t,
+	systest.Sut.ModifyGenesisCLI(t,
 		[]string{"genesis", "add-genesis-account", feePayerAddr, "10000000stake"},
 	)
 
-	sut.StartChain(t)
+	systest.Sut.StartChain(t)
 
 	// send a tx with FeePayer without his signature
-	rsp := cli.RunCommandWithArgs(cli.withTXFlags(
+	rsp := cli.RunCommandWithArgs(cli.WithTXFlags(
 		"tx", "bank", "send", senderAddr, "cosmos108jsm625z3ejy63uef2ke7t67h6nukt4ty93nr", "1000stake", "--fees", "1000000stake", "--fee-payer", feePayerAddr,
 	)...)
-	RequireTxFailure(t, rsp, "invalid number of signatures")
+	systest.RequireTxFailure(t, rsp, "invalid number of signatures")
 
 	// send tx with feePayers signature
-	rsp = cli.RunCommandWithArgs(cli.withTXFlags(
+	rsp = cli.RunCommandWithArgs(cli.WithTXFlags(
 		"tx", "bank", "send", senderAddr, "cosmos108jsm625z3ejy63uef2ke7t67h6nukt4ty93nr", "1000stake", "--fees", "1000000stake", "--fee-payer", feePayerAddr, "--generate-only",
 	)...)
-	tempFile := StoreTempFile(t, []byte(rsp))
+	tempFile := systest.StoreTempFile(t, []byte(rsp))
 
-	rsp = cli.RunCommandWithArgs(cli.withTXFlags(
+	rsp = cli.RunCommandWithArgs(cli.WithTXFlags(
 		"tx", "sign", tempFile.Name(), "--from", senderAddr, "--sign-mode", "amino-json",
 	)...)
-	tempFile = StoreTempFile(t, []byte(rsp))
+	tempFile = systest.StoreTempFile(t, []byte(rsp))
 
-	rsp = cli.RunCommandWithArgs(cli.withTXFlags(
+	rsp = cli.RunCommandWithArgs(cli.WithTXFlags(
 		"tx", "sign", tempFile.Name(), "--from", feePayerAddr, "--sign-mode", "amino-json",
 	)...)
-	tempFile = StoreTempFile(t, []byte(rsp))
+	tempFile = systest.StoreTempFile(t, []byte(rsp))
 
 	rsp = cli.RunAndWait([]string{"tx", "broadcast", tempFile.Name()}...)
-	RequireTxSuccess(t, rsp)
+	systest.RequireTxSuccess(t, rsp)
 
 	// Query to check fee has been deducted from feePayer
 	balance := cli.QueryBalance(feePayerAddr, authTestDenom)

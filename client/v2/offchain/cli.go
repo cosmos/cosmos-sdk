@@ -84,7 +84,7 @@ func SignFile() *cobra.Command {
 			}
 
 			// off-chain does not need to query any information
-			conn, err := comet.NewCometBFTBroadcaster("", comet.BroadcastSync, cdc, ir)
+			conn, err := comet.NewCometBFTBroadcaster("", comet.BroadcastSync, cdc)
 			if err != nil {
 				return err
 			}

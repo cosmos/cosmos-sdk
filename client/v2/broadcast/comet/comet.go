@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/client/v2/broadcast"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -68,11 +67,10 @@ type CometBFTBroadcaster struct {
 	rpcClient CometRPC
 	mode      string
 	cdc       codec.Codec
-	ir        types.InterfaceRegistry
 }
 
 // NewCometBFTBroadcaster creates a new CometBFTBroadcaster.
-func NewCometBFTBroadcaster(rpcURL, mode string, cdc codec.Codec, ir types.InterfaceRegistry) (*CometBFTBroadcaster, error) {
+func NewCometBFTBroadcaster(rpcURL, mode string, cdc codec.Codec) (*CometBFTBroadcaster, error) {
 	if cdc == nil {
 		return nil, errors.New("codec can't be nil")
 	}
@@ -90,7 +88,6 @@ func NewCometBFTBroadcaster(rpcURL, mode string, cdc codec.Codec, ir types.Inter
 		rpcClient: rpcClient,
 		mode:      mode,
 		cdc:       cdc,
-		ir:        ir,
 	}, nil
 }
 

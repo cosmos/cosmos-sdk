@@ -87,8 +87,8 @@ func (c *CometBFTBroadcaster) Invoke(ctx context.Context, method string, req, re
 		*header.HeaderAddr = md
 	}
 
-	if c.ir != nil {
-		return types.UnpackInterfaces(reply, c.ir)
+	if c.cdc.InterfaceRegistry() != nil {
+		return types.UnpackInterfaces(reply, c.cdc.InterfaceRegistry())
 	}
 
 	return nil
@@ -140,7 +140,7 @@ func sdkErrorToGRPCError(resp abci.QueryResponse) error {
 func (c *CometBFTBroadcaster) getRPCCodec() encoding.Codec {
 	cdc, ok := c.cdc.(codec.GRPCCodecProvider)
 	if !ok {
-		return codec.NewProtoCodec(c.ir).GRPCCodec()
+		return codec.NewProtoCodec(c.cdc.InterfaceRegistry()).GRPCCodec()
 	}
 
 	return cdc.GRPCCodec()

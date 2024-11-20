@@ -21,7 +21,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // GenerateOrBroadcastTxCLIWithBroadcaster will either generate and print an unsigned transaction
@@ -72,7 +71,7 @@ func GenerateOrBroadcastTxCLI(
 		return err
 	}
 
-	cometBroadcaster, err := getCometBroadcaster(c.Cdc, c.Cdc.InterfaceRegistry(), c.Flags)
+	cometBroadcaster, err := getCometBroadcaster(c.Cdc, c.Flags)
 	if err != nil {
 		return err
 	}
@@ -81,10 +80,10 @@ func GenerateOrBroadcastTxCLI(
 }
 
 // getCometBroadcaster returns a new CometBFT broadcaster based on the provided context and flag set.
-func getCometBroadcaster(cdc codec.Codec, ir types.InterfaceRegistry, flagSet *pflag.FlagSet) (broadcast.Broadcaster, error) {
+func getCometBroadcaster(cdc codec.Codec, flagSet *pflag.FlagSet) (broadcast.Broadcaster, error) {
 	url, _ := flagSet.GetString("node")
 	mode, _ := flagSet.GetString("broadcast-mode")
-	return comet.NewCometBFTBroadcaster(url, mode, cdc, ir)
+	return comet.NewCometBFTBroadcaster(url, mode, cdc)
 }
 
 // newFactory creates a new transaction Factory based on the provided context and flag set.

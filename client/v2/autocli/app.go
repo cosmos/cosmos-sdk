@@ -77,7 +77,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
 		},
-		GetClientConn: getQueryClientConn(appOptions.Cdc, appOptions.Cdc.InterfaceRegistry()),
+		GetClientConn: getQueryClientConn(appOptions.Cdc),
 		AddQueryConnFlags: func(c *cobra.Command) {
 			sdkflags.AddQueryFlagsToCmd(c)
 			sdkflags.AddKeyringFlags(c.Flags())

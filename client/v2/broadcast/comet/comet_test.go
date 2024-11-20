@@ -45,7 +45,7 @@ func TestNewCometBftBroadcaster(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewCometBFTBroadcaster("localhost:26657", tt.mode, tt.cdc, testutil.CodecOptions{}.NewInterfaceRegistry())
+			got, err := NewCometBFTBroadcaster("localhost:26657", tt.mode, tt.cdc)
 			if tt.wantErr {
 				require.Error(t, err)
 				require.Nil(t, got)

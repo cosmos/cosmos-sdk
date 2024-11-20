@@ -30,7 +30,6 @@ func Benchmark_CacheStack_Set(b *testing.B) {
 
 // Gets the same key from the branch store.
 func Benchmark_Get(b *testing.B) {
-	var sink any
 	for _, stackSize := range stackSizes {
 		b.Run(fmt.Sprintf("StackSize%d", stackSize), func(b *testing.B) {
 			bs := makeBranchStack(b, stackSize)
@@ -44,11 +43,11 @@ func Benchmark_Get(b *testing.B) {
 	if sink == nil {
 		b.Fatal("prevent compiler optimization")
 	}
+	sink = nil
 }
 
 // Gets always different keys.
 func Benchmark_GetSparse(b *testing.B) {
-	var sink any
 	for _, stackSize := range stackSizes {
 		b.Run(fmt.Sprintf("StackSize%d", stackSize), func(b *testing.B) {
 			bs := makeBranchStack(b, stackSize)
@@ -67,12 +66,14 @@ func Benchmark_GetSparse(b *testing.B) {
 		})
 	}
 	if sink == nil {
-		b.Fatal("prevent compiler optimization")
+		b.Fatal("Benchmark did not run")
 	}
+	sink = nil
 }
 
+var keySink, valueSink any
+
 func Benchmark_Iterate(b *testing.B) {
-	var keySink, valueSink any
 
 	for _, stackSize := range stackSizes {
 		b.Run(fmt.Sprintf("StackSize%d", stackSize), func(b *testing.B) {
@@ -91,8 +92,11 @@ func Benchmark_Iterate(b *testing.B) {
 		})
 	}
 
-	_ = keySink
-	_ = valueSink
+	if keySink == nil || valueSink == nil {
+		b.Fatal("Benchmark did not run")
+	}
+	keySink = nil
+	valueSink = nil
 }
 
 // makeBranchStack creates a branch stack of the given size and initializes it with unique key-value pairs.

@@ -1,17 +1,17 @@
 syntax = "proto3";
 package cosmos.base.tendermint.v1beta1;
 
-import "gogoproto/gogo.proto";
-import "google/protobuf/any.proto";
-import "google/api/annotations.proto";
+import "amino/amino.proto";
+import "cometbft/crypto/v1/proof.proto";
 import "cometbft/p2p/v1/types.proto";
+import "cometbft/types/v1/block.proto";
 import "cometbft/types/v1/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/tendermint/v1beta1/types.proto";
 import "cosmos_proto/cosmos.proto";
-import "cometbft/types/v1/block.proto";
-import "cometbft/crypto/v1/proof.proto";
-import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice";
 
@@ -59,7 +59,8 @@ service Service {
 // GetValidatorSetByHeightRequest is the request type for the Query/GetValidatorSetByHeight RPC method.
 message GetValidatorSetByHeightRequest {
   int64 height = 1;
-  // pagination defines an pagination for the request.
+  // pagination defines an pagination for the request. offset and limit are used for pagination, next_key is not
+  // supported for this query.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
@@ -67,7 +68,8 @@ message GetValidatorSetByHeightRequest {
 message GetValidatorSetByHeightResponse {
   int64              block_height = 1;
   repeated Validator validators   = 2;
-  // pagination defines an pagination for the response.
+  // pagination defines an pagination for the response. offset and limit are used for pagination, next_key is not
+  // supported for this query.
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 
@@ -81,7 +83,8 @@ message GetLatestValidatorSetRequest {
 message GetLatestValidatorSetResponse {
   int64              block_height = 1;
   repeated Validator validators   = 2;
-  // pagination defines an pagination for the response.
+  // pagination defines an pagination for the response. offset and limit are used for pagination, next_key is not
+  // supported for this query.
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 

@@ -179,7 +179,7 @@ func (c *consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 
 	switch path[0] {
 	case QueryPathApp:
-		resp, err = c.handlerQueryApp(ctx, path, req)
+		resp, err = c.handleQueryApp(ctx, path, req)
 
 	case QueryPathStore:
 		resp, err = c.handleQueryStore(path, req)
@@ -240,7 +240,7 @@ func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 
 		txResult, _, err := c.app.Simulate(ctx, tx)
 		if err != nil {
-			return nil, true, fmt.Errorf("%w with gas used: '%d'", err, txResult.GasUsed)
+			return nil, true, fmt.Errorf("failed with gas used: '%d': %w", txResult.GasUsed, err)
 		}
 
 		msgResponses := make([]*codectypes.Any, 0, len(txResult.Resp))

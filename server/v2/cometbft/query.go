@@ -34,14 +34,14 @@ func (c *consensus[T]) handleQueryP2P(path []string) (*abci.QueryResponse, error
 	return nil, errorsmod.Wrap(cometerrors.ErrUnknownRequest, "expected second parameter to be 'filter'")
 }
 
-// handlerQueryApp handles the query requests for the application.
+// handleQueryApp handles the query requests for the application.
 // It expects the path parameter to have at least two elements.
 // The second element of the path can be either 'simulate' or 'version'.
 // If the second element is 'simulate', it decodes the request data into a transaction,
 // simulates the transaction using the application, and returns the simulation result.
 // If the second element is 'version', it returns the version of the application.
 // If the second element is neither 'simulate' nor 'version', it returns an error indicating an unknown query.
-func (c *consensus[T]) handlerQueryApp(ctx context.Context, path []string, req *abci.QueryRequest) (*abci.QueryResponse, error) {
+func (c *consensus[T]) handleQueryApp(ctx context.Context, path []string, req *abci.QueryRequest) (*abci.QueryResponse, error) {
 	if len(path) < 2 {
 		return nil, errorsmod.Wrap(
 			cometerrors.ErrUnknownRequest,

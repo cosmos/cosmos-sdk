@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
-	errorsmod "cosmossdk.io/errors/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -145,7 +144,7 @@ func (t txServer[T]) Simulate(ctx context.Context, req *txtypes.SimulateRequest)
 
 	tx, err := t.txCodec.Decode(txBytes)
 	if err != nil {
-		return nil, errorsmod.Wrap(err, "failed to decode tx")
+		return nil, status.Errorf(codes.InvalidArgument, "failed to decode tx: %v", err)
 	}
 
 	txResult, _, err := t.app.Simulate(ctx, tx)

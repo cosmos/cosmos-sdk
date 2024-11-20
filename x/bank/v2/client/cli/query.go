@@ -31,6 +31,8 @@ func GetQueryCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		GetBalanceCmd(),
+		GetDenomAuthorityMetadataCmd(),
+		GetDenomsFromCreatorCmd(),
 	)
 
 	return cmd
@@ -74,6 +76,80 @@ func GetBalanceCmd() *cobra.Command {
 	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all balances")
+
+	return cmd
+}
+
+func GetDenomAuthorityMetadataCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "denom-authority-metadata [denom]",
+		Short: "Query denom authority metadata",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			denom := args[0]
+			if denom == "" {
+				return errors.New("empty denom")
+			}
+
+			ctx := cmd.Context()
+
+			req := &types.QueryDenomAuthorityMetadataRequest{
+				Denom: denom,
+			}
+			out := new(types.QueryDenomAuthorityMetadataResponse)
+
+			err = clientCtx.Invoke(ctx, gogoproto.MessageName(&types.QueryDenomAuthorityMetadataRequest{}), req, out)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(out)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func GetDenomsFromCreatorCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "denoms-from-creator [creator]",
+		Short: "Query all denoms created by creator",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			creator := args[0]
+			if creator == "" {
+				return errors.New("empty creator")
+			}
+
+			ctx := cmd.Context()
+
+			req := &types.QueryDenomsFromCreatorRequest{
+				Creator: creator,
+			}
+			out := new(types.QueryDenomsFromCreatorResponse)
+
+			err = clientCtx.Invoke(ctx, gogoproto.MessageName(&types.QueryDenomsFromCreatorRequest{}), req, out)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(out)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }

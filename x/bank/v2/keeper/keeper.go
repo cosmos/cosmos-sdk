@@ -22,26 +22,32 @@ import (
 type Keeper struct {
 	appmodulev2.Environment
 
-	authority    []byte
-	addressCodec address.Codec
-	schema       collections.Schema
-	params       collections.Item[types.Params]
-	balances     *collections.IndexedMap[collections.Pair[[]byte, string], math.Int, BalancesIndexes]
-	supply       collections.Map[string, math.Int]
+	accountsKeeper types.AccountsModKeeper
+	authority      []byte
+	addressCodec   address.Codec
+	schema         collections.Schema
+	params         collections.Item[types.Params]
+	balances       *collections.IndexedMap[collections.Pair[[]byte, string], math.Int, BalancesIndexes]
+	supply         collections.Map[string, math.Int]
+	denomMetadata  collections.Map[string, types.Metadata]
+	denomAuthority collections.Map[string, types.DenomAuthorityMetadata]
 
 	sendRestriction *sendRestriction
 }
 
-func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec) *Keeper {
+func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Environment, cdc codec.BinaryCodec, accountsKeeper types.AccountsModKeeper) *Keeper {
 	sb := collections.NewSchemaBuilder(env.KVStoreService)
 
 	k := &Keeper{
 		Environment:     env,
+		accountsKeeper:  accountsKeeper,
 		authority:       authority,
 		addressCodec:    addressCodec, // TODO(@julienrbrt): Should we add address codec to the environment?
 		params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		balances:        collections.NewIndexedMap(sb, types.BalancesPrefix, "balances", collections.PairKeyCodec(collections.BytesKey, collections.StringKey), sdk.IntValue, newBalancesIndexes(sb)),
 		supply:          collections.NewMap(sb, types.SupplyKey, "supply", collections.StringKey, sdk.IntValue),
+		denomMetadata:   collections.NewMap(sb, types.DenomMetadataPrefix, "denom_metadata", collections.StringKey, codec.CollValue[types.Metadata](cdc)),
+		denomAuthority:  collections.NewMap(sb, types.DenomAuthorityPrefix, "denom_authority", collections.StringKey, codec.CollValue[types.DenomAuthorityMetadata](cdc)),
 		sendRestriction: newSendRestriction(),
 	}
 
@@ -52,6 +58,10 @@ func NewKeeper(authority []byte, addressCodec address.Codec, env appmodulev2.Env
 	k.schema = schema
 
 	return k
+}
+
+func (k Keeper) GetAccountsKeeper() types.AccountsModKeeper {
+	return k.accountsKeeper
 }
 
 // MintCoins creates new coins from thin air and adds it to the module account.
@@ -83,6 +93,41 @@ func (k Keeper) MintCoins(ctx context.Context, addr []byte, amounts sdk.Coins) e
 	return k.EventService.EventManager(ctx).EmitKV(
 		types.EventTypeCoinMint,
 		event.NewAttribute(types.AttributeKeyMinter, addrStr),
+		event.NewAttribute(sdk.AttributeKeyAmount, amounts.String()),
+	)
+}
+
+// BurnCoins burns coins deletes coins from the balance of an account.
+// An error is returned if the module account does not exist or is unauthorized.
+func (k Keeper) BurnCoins(ctx context.Context, address []byte, amounts sdk.Coins) error {
+	// TODO: Burn restriction & permission
+
+	if !amounts.IsValid() {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amounts.String())
+	}
+
+	err := k.subUnlockedCoins(ctx, address, amounts)
+	if err != nil {
+		return err
+	}
+
+	for _, amount := range amounts {
+		supply := k.GetSupply(ctx, amount.GetDenom())
+		supply = supply.Sub(amount)
+		k.setSupply(ctx, supply)
+	}
+
+	addrStr, err := k.addressCodec.BytesToString(address)
+	if err != nil {
+		return err
+	}
+
+	k.Logger.Debug("burned tokens from account", "amount", amounts.String(), "from", addrStr)
+
+	// emit burn event
+	return k.EventService.EventManager(ctx).EmitKV(
+		types.EventTypeCoinBurn,
+		event.NewAttribute(types.AttributeKeyBurner, addrStr),
 		event.NewAttribute(sdk.AttributeKeyAmount, amounts.String()),
 	)
 }
@@ -138,6 +183,12 @@ func (k Keeper) GetSupply(ctx context.Context, denom string) sdk.Coin {
 	return sdk.NewCoin(denom, amt)
 }
 
+// HasSupply checks if the supply coin exists in store.
+func (k Keeper) HasSupply(ctx context.Context, denom string) bool {
+	has, err := k.supply.Has(ctx, denom)
+	return has && err == nil
+}
+
 // GetBalance returns the balance of a specific denomination for a given account
 // by address.
 func (k Keeper) GetBalance(ctx context.Context, addr []byte, denom string) sdk.Coin {
@@ -146,6 +197,70 @@ func (k Keeper) GetBalance(ctx context.Context, addr []byte, denom string) sdk.C
 		return sdk.NewCoin(denom, math.ZeroInt())
 	}
 	return sdk.NewCoin(denom, amt)
+}
+
+// GetAllBalances returns all the account balances for the given account address.
+func (k Keeper) GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
+	balances := sdk.NewCoins()
+	k.IterateAccountBalances(ctx, addr, func(balance sdk.Coin) bool {
+		balances = balances.Add(balance)
+		return false
+	})
+
+	return balances.Sort()
+}
+
+// IterateAccountBalances iterates over the balances of a single account and
+// provides the token balance to a callback. If true is returned from the
+// callback, iteration is halted.
+func (k Keeper) IterateAccountBalances(ctx context.Context, addr sdk.AccAddress, cb func(sdk.Coin) bool) {
+	err := k.balances.Walk(ctx, collections.NewPrefixedPairRange[[]byte, string](addr), func(key collections.Pair[[]byte, string], value math.Int) (stop bool, err error) {
+		return cb(sdk.NewCoin(key.K2(), value)), nil
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
+// GetDenomMetaData retrieves the denomination metadata. returns the metadata and true if the denom exists,
+// false otherwise.
+func (k Keeper) GetDenomMetaData(ctx context.Context, denom string) (types.Metadata, bool) {
+	m, err := k.denomMetadata.Get(ctx, denom)
+	return m, err == nil
+}
+
+// HasDenomMetaData checks if the denomination metadata exists in store.
+func (k Keeper) HasDenomMetaData(ctx context.Context, denom string) bool {
+	has, err := k.denomMetadata.Has(ctx, denom)
+	return has && err == nil
+}
+
+// GetAllDenomMetaData retrieves all denominations metadata
+func (k Keeper) GetAllDenomMetaData(ctx context.Context) []types.Metadata {
+	denomMetaData := make([]types.Metadata, 0)
+	k.IterateAllDenomMetaData(ctx, func(metadata types.Metadata) bool {
+		denomMetaData = append(denomMetaData, metadata)
+		return false
+	})
+
+	return denomMetaData
+}
+
+// IterateAllDenomMetaData iterates over all the denominations metadata and
+// provides the metadata to a callback. If true is returned from the
+// callback, iteration is halted.
+func (k Keeper) IterateAllDenomMetaData(ctx context.Context, cb func(types.Metadata) bool) {
+	err := k.denomMetadata.Walk(ctx, nil, func(_ string, metadata types.Metadata) (stop bool, err error) {
+		return cb(metadata), nil
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
+// SetDenomMetaData sets the denominations metadata
+func (k Keeper) SetDenomMetaData(ctx context.Context, denomMetaData types.Metadata) error {
+	return k.denomMetadata.Set(ctx, denomMetaData.Base, denomMetaData)
 }
 
 // subUnlockedCoins removes the unlocked amt coins of the given account.

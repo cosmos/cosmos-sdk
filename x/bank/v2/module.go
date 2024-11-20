@@ -98,6 +98,8 @@ func (am AppModule) RegisterMsgHandlers(router appmodulev2.MsgRouter) {
 	appmodulev2.RegisterMsgHandler(router, handlers.MsgUpdateParams)
 	appmodulev2.RegisterMsgHandler(router, handlers.MsgSend)
 	appmodulev2.RegisterMsgHandler(router, handlers.MsgMint)
+	appmodulev2.RegisterMsgHandler(router, handlers.MsgBurn)
+	appmodulev2.RegisterMsgHandler(router, handlers.MsgCreateDenom)
 }
 
 // RegisterQueryHandlers registers the query handlers for the bank module.
@@ -106,6 +108,8 @@ func (am AppModule) RegisterQueryHandlers(router appmodulev2.QueryRouter) {
 
 	appmodulev2.RegisterMsgHandler(router, handlers.QueryParams)
 	appmodulev2.RegisterMsgHandler(router, handlers.QueryBalance)
+	appmodulev2.RegisterMsgHandler(router, handlers.QueryDenomAuthorityMetadata)
+	appmodulev2.RegisterMsgHandler(router, handlers.QueryDenomsFromCreator)
 }
 
 // GetTxCmd returns the root tx command for the bank/v2 module.

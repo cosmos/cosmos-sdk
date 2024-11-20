@@ -9,7 +9,7 @@ import (
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -42,13 +42,22 @@ func SetGovExpeditedVotingPeriod(t *testing.T, period time.Duration) GenesisMuta
 	}
 }
 
+func SetDenomCreationFee(t *testing.T, denom string, amount math.Int) GenesisMutator {
+	t.Helper()
+	return func(genesis []byte) []byte {
+		state, err := sjson.SetBytes(genesis, "app_state.bankv2.params.denom_creation_fee", sdk.NewCoins(sdk.NewCoin(denom, amount)))
+		require.NoError(t, err)
+		return state
+	}
+}
+
 // GetGenesisBalance return the balance amount for an address from the given genesis json
 func GetGenesisBalance(rawGenesis []byte, addr string) sdk.Coins {
 	var r []sdk.Coin
 	balances := gjson.GetBytes(rawGenesis, fmt.Sprintf(`app_state.bank.balances.#[address==%q]#.coins`, addr)).Array()
 	for _, coins := range balances {
 		for _, coin := range coins.Array() {
-			r = append(r, sdk.NewCoin(coin.Get("denom").String(), sdkmath.NewInt(coin.Get("amount").Int())))
+			r = append(r, sdk.NewCoin(coin.Get("denom").String(), math.NewInt(coin.Get("amount").Int())))
 		}
 	}
 	return r

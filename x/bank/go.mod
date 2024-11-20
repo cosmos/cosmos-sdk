@@ -160,7 +160,11 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-require cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9
+require (
+	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9
+	cosmossdk.io/x/accounts v0.0.0-20241112091912-96a1c1c833ea
+	cosmossdk.io/x/accounts/defaults/admin v0.0.0-00010101000000-000000000000
+)
 
 require (
 	github.com/bytedance/sonic v1.12.4 // indirect
@@ -183,6 +187,8 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/collections => ../../collections
 	cosmossdk.io/store => ../../store
+	cosmossdk.io/x/accounts => ../accounts
+	cosmossdk.io/x/accounts/defaults/admin => ../accounts/defaults/admin
 	cosmossdk.io/x/staking => ../staking
 	cosmossdk.io/x/tx => ../tx
 )

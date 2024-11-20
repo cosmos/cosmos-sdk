@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
+	adminv1 "cosmossdk.io/x/accounts/defaults/admin/v1"
 	"cosmossdk.io/x/bank/v2/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -52,6 +53,17 @@ func (h handlers) MsgUpdateParams(ctx context.Context, msg *types.MsgUpdateParam
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
+func (h handlers) MsgCreateDenom(ctx context.Context, msg *types.MsgCreateDenom) (*types.MsgCreateDenomResponse, error) {
+	denom, err := h.Keeper.CreateDenom(ctx, msg.Sender, msg.Subdenom)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCreateDenomResponse{
+		NewTokenDenom: denom,
+	}, nil
+}
+
 func (h handlers) MsgSend(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
 	var (
 		from, to []byte
@@ -87,18 +99,52 @@ func (h handlers) MsgSend(ctx context.Context, msg *types.MsgSend) (*types.MsgSe
 }
 
 func (h handlers) MsgMint(ctx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
-	authorityBytes, err := h.addressCodec.StringToBytes(msg.Authority)
-	if err != nil {
-		return nil, err
+	// Check if disable admin role or not
+	params := h.GetParams(ctx)
+
+	isGov := false
+	if !params.AdminDisable {
+		// Check if a tokenfactory denom
+		_, _, err := types.DeconstructDenom(msg.Amount.Denom)
+		if err == nil {
+			authorityMetadata, err := h.GetAuthorityMetadata(ctx, msg.Amount.Denom)
+			if err != nil {
+				return nil, err
+			}
+
+			adminAccAddr, err := h.addressCodec.StringToBytes(authorityMetadata.Admin)
+			if err != nil {
+				return nil, err
+			}
+
+			// Query if sender have mint perm
+
+			_, err = h.accountsKeeper.Query(ctx, adminAccAddr, &adminv1.QueryMintPerm{
+				Sender: msg.Authority,
+				Denom:  msg.Amount.Denom,
+			})
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			isGov = true
+		}
 	}
 
-	if !bytes.Equal(h.authority, authorityBytes) {
-		expectedAuthority, err := h.addressCodec.BytesToString(h.authority)
+	if params.AdminDisable || isGov {
+		authorityBytes, err := h.addressCodec.StringToBytes(msg.Authority)
 		if err != nil {
 			return nil, err
 		}
 
-		return nil, fmt.Errorf("invalid authority; expected %s, got %s", expectedAuthority, msg.Authority)
+		if !bytes.Equal(h.authority, authorityBytes) {
+			expectedAuthority, err := h.addressCodec.BytesToString(h.authority)
+			if err != nil {
+				return nil, err
+			}
+
+			return nil, fmt.Errorf("invalid authority; expected %s, got %s", expectedAuthority, msg.Authority)
+		}
 	}
 
 	to, err := h.addressCodec.StringToBytes(msg.ToAddress)
@@ -110,17 +156,87 @@ func (h handlers) MsgMint(ctx context.Context, msg *types.MsgMint) (*types.MsgMi
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 
-	if !msg.Amount.IsAllPositive() {
+	if !msg.Amount.IsPositive() {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 
 	// TODO: should mint to mint module then transfer?
-	err = h.MintCoins(ctx, to, msg.Amount)
+	err = h.MintCoins(ctx, to, sdk.NewCoins(msg.Amount))
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.MsgMintResponse{}, nil
+}
+
+func (h handlers) MsgBurn(ctx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
+	// Check if disable admin role or not
+	params := h.GetParams(ctx)
+
+	isGov := false
+	if !params.AdminDisable {
+		// Check if a tokenfactory denom
+		_, _, err := types.DeconstructDenom(msg.Amount.Denom)
+		if err == nil {
+			authorityMetadata, err := h.GetAuthorityMetadata(ctx, msg.Amount.Denom)
+			if err != nil {
+				return nil, err
+			}
+
+			adminAccAddr, err := h.addressCodec.StringToBytes(authorityMetadata.Admin)
+			if err != nil {
+				return nil, err
+			}
+
+			// Query if sender have mint perm
+
+			_, err = h.accountsKeeper.Query(ctx, adminAccAddr, &adminv1.QueryBurnPerm{
+				Sender: msg.Authority,
+				Denom:  msg.Amount.Denom,
+			})
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			isGov = true
+		}
+	}
+
+	if params.AdminDisable || isGov {
+		authorityBytes, err := h.addressCodec.StringToBytes(msg.Authority)
+		if err != nil {
+			return nil, err
+		}
+
+		if !bytes.Equal(h.authority, authorityBytes) {
+			expectedAuthority, err := h.addressCodec.BytesToString(h.authority)
+			if err != nil {
+				return nil, err
+			}
+
+			return nil, fmt.Errorf("invalid authority; expected %s, got %s", expectedAuthority, msg.Authority)
+		}
+	}
+
+	from, err := h.addressCodec.StringToBytes(msg.BurnFromAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %s", err)
+	}
+
+	if !msg.Amount.IsValid() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	}
+
+	if !msg.Amount.IsPositive() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	}
+
+	err = h.BurnCoins(ctx, from, sdk.NewCoins(msg.Amount))
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgBurnResponse{}, nil
 }
 
 // QueryParams queries the parameters of the bank/v2 module.
@@ -155,4 +271,51 @@ func (h handlers) QueryBalance(ctx context.Context, req *types.QueryBalanceReque
 	balance := h.Keeper.GetBalance(ctx, addr, req.Denom)
 
 	return &types.QueryBalanceResponse{Balance: &balance}, nil
+}
+
+// DenomAuthorityMetadata queries the authority metadata of a denom.
+func (h handlers) QueryDenomAuthorityMetadata(ctx context.Context, req *types.QueryDenomAuthorityMetadataRequest) (*types.QueryDenomAuthorityMetadataResponse, error) {
+	if req == nil {
+		return nil, errors.New("empty request")
+	}
+
+	authorityMetadata, err := h.GetAuthorityMetadata(ctx, req.GetDenom())
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryDenomAuthorityMetadataResponse{AuthorityMetadata: authorityMetadata}, nil
+}
+
+// DenomsFromCreator queries all denom created by creator.
+func (h handlers) QueryDenomsFromCreator(ctx context.Context, req *types.QueryDenomsFromCreatorRequest) (*types.QueryDenomsFromCreatorResponse, error) {
+	if req == nil {
+		return nil, errors.New("empty request")
+	}
+
+	denoms := []string{}
+
+	err := h.Keeper.denomAuthority.Walk(ctx, nil, func(denom string, authority types.DenomAuthorityMetadata) (stop bool, err error) {
+		adminAccAddr, err := h.addressCodec.StringToBytes(authority.Admin)
+		if err != nil {
+			return true, err
+		}
+		resp, err := h.accountsKeeper.Query(ctx, adminAccAddr, &adminv1.QueryOwner{})
+		if err != nil {
+			return true, err
+		}
+		v1Resp, ok := resp.(*adminv1.QueryOwnerResponse)
+		if !ok {
+			return true, errors.New("invalid response")
+		}
+		if v1Resp.Owner == req.Creator {
+			denoms = append(denoms, denom)
+		}
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryDenomsFromCreatorResponse{Denoms: denoms}, nil
 }

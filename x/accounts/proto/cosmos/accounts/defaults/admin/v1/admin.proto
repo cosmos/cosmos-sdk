@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package cosmos.accounts.defaults.admin.v1;
+
+option go_package = "cosmossdk.io/x/accounts/defaults/admin/v1";
+
+import "google/protobuf/any.proto";
+
+// MsgInit is used to initialize a denom admin account.
+message MsgInit {
+  // owner defines the owner of denom.
+  string owner = 1;
+  // denom defines the denom owner by address.
+  string denom = 2;
+}
+
+// MsgInitResponse is the response returned after denom admin account initialization.
+// This is empty.
+message MsgInitResponse {}
+
+// MsgSwapOwner is used to change the owner of denom.
+message MsgSwapOwner {
+  // new_owner defines the new owner.
+  string new_owner = 1;
+}
+
+// MsgSwapOwnerResponse is the response for the MsgSwapOwner message.
+// This is empty.
+message MsgSwapOwnerResponse {}
+
+// QueryMintPerm is used to query if address have mint permission to denom.
+message QueryMintPerm {
+  string sender = 1;
+  string denom  = 2;
+}
+
+// QueryMintPermResponse is the response for the QueryMintPerm message.
+// This is empty.
+message QueryMintPermResponse {
+  bool should_mint = 1;
+}
+
+// QueryBurnPerm is used to query if address have burn permission to denom.
+message QueryBurnPerm {
+  string sender = 1;
+  string denom  = 2;
+}
+
+// QueryBurnPermResponse is the response for the QueryBurnPerm message.
+// This is empty.
+message QueryBurnPermResponse {
+  bool should_burn = 1;
+}
+
+// QueryOwner is used to query owner of account.
+message QueryOwner {}
+
+// QueryOwnerResponse is the response for the QueryOwner message.
+// This is empty.
+message QueryOwnerResponse {
+  string owner = 1;
+}

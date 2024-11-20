@@ -94,7 +94,7 @@ func New[T transaction.Tx](
 	chainID, _ := cfg[FlagChainID].(string)
 	if chainID == "" {
 		// fallback to genesis chain-id
-		reader, err := os.Open(filepath.Join(home, "config", "genesis.json"))
+		reader, err := os.Open(srv.config.ConfigTomlConfig.GenesisFile())
 		if err != nil {
 			return nil, fmt.Errorf("failed to open genesis file: %w", err)
 		}

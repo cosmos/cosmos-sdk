@@ -50,9 +50,15 @@ func QueryBlocks(ctx context.Context, rpcClient CometRPC, page, limit int, query
 		return nil, err
 	}
 
-	result := NewSearchBlocksResult(int64(resBlocks.TotalCount), int64(len(blocks)), int64(page), int64(limit), blocks)
-
-	return result, nil
+	totalPages := calcTotalPages(int64(resBlocks.TotalCount), int64(limit))
+	return &sdk.SearchBlocksResult{
+		TotalCount: int64(resBlocks.TotalCount),
+		Count:      int64(len(blocks)),
+		PageNumber: int64(page),
+		PageTotal:  totalPages,
+		Limit:      int64(limit),
+		Blocks:     blocks,
+	}, nil
 }
 
 // GetBlockByHeight gets block by height
@@ -65,7 +71,7 @@ func GetBlockByHeight(ctx context.Context, rpcClient CometRPC, height *int64) (*
 		return nil, err
 	}
 
-	out, err := NewResponseResultBlock(resBlock)
+	out, err := responseResultBlock(resBlock)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +96,7 @@ func GetBlockByHash(ctx context.Context, rpcClient CometRPC, hashHexString strin
 	} else if resBlock.Block == nil {
 		return nil, fmt.Errorf("block not found with hash: %s", hashHexString)
 	}
-	out, err := NewResponseResultBlock(resBlock)
+	out, err := responseResultBlock(resBlock)
 	if err != nil {
 		return nil, err
 	}

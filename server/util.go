@@ -513,7 +513,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
 		// fallback to genesis chain-id
-		genesisPathCfg := appOpts.GetString("genesis_file")
+		genesisPathCfg, _ := appOpts.Get("genesis_file").(string)
 		if genesisPathCfg == "" {
 			genesisPathCfg = filepath.Join("config", "genesis.json")
 		}

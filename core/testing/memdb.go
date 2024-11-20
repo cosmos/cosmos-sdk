@@ -258,9 +258,7 @@ func (mi *memIterator) assertValid() {
 	}
 }
 
-var (
-	_ store.KVStoreWithBatch = (*MemDB)(nil)
-)
+var _ store.KVStoreWithBatch = (*MemDB)(nil)
 
 // MemDB is a simple in-memory key-value store with Batch support.
 type MemDB struct {

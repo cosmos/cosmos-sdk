@@ -50,26 +50,31 @@ func TestSlashRedelegation(t *testing.T) {
 	// test acc 1, 2 and 3 delegated to evil val, all acc should be slashed when evil val is slashed
 	// test acc 1 use the "undelegation after redelegation" trick (redelegate to good val and then undelegate) to avoid slashing
 	// test acc 2 only undelegate from evil val
-	// test acc 3 redelegates to good val and stays bonded
+	// test acc 3 redelegate to good val and stays bonded
+	// test acc 4 redelegates liquid staked tokens
 	testAcc1 := sdk.AccAddress([]byte("addr1_______________"))
 	testAcc2 := sdk.AccAddress([]byte("addr2_______________"))
 	testAcc3 := sdk.AccAddress([]byte("addr3_______________"))
+	testAcc4 := sdk.AccAddress([]byte("addr4_______________"))
 
-	// fund acc 1, 2 and acc 3
+	// fund accounts
 	testCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, stakingKeeper.TokensFromConsensusPower(ctx, 10)))
 	validatorFundCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, stakingKeeper.TokensFromConsensusPower(ctx, 20)))
 	banktestutil.FundAccount(ctx, bankKeeper, testAcc1, testCoins)
 	banktestutil.FundAccount(ctx, bankKeeper, testAcc2, testCoins)
 	banktestutil.FundAccount(ctx, bankKeeper, testAcc3, testCoins)
+	banktestutil.FundAccount(ctx, bankKeeper, testAcc4, testCoins)
 
 	balance1Before := bankKeeper.GetBalance(ctx, testAcc1, bondDenom)
 	balance2Before := bankKeeper.GetBalance(ctx, testAcc2, bondDenom)
 	balance3Before := bankKeeper.GetBalance(ctx, testAcc3, bondDenom)
+	balance4Before := bankKeeper.GetBalance(ctx, testAcc3, bondDenom)
 
-	// assert acc 1, 2 and acc 3 balance
+	// assert acc balances
 	require.Equal(t, balance1Before.Amount.String(), testCoins[0].Amount.String())
 	require.Equal(t, balance2Before.Amount.String(), testCoins[0].Amount.String())
 	require.Equal(t, balance3Before.Amount.String(), testCoins[0].Amount.String())
+	require.Equal(t, balance4Before.Amount.String(), testCoins[0].Amount.String())
 
 	// creating evil val
 	evilValAddr := sdk.ValAddress(evilValPubKey.Address())
@@ -98,7 +103,7 @@ func TestSlashRedelegation(t *testing.T) {
 	goodValSelfBondInitial := goodVal.ValidatorBondShares
 
 	// next block, commit height 2, move to height 3
-	// acc 1, 2, 3 and good validator delegate to evil val
+	// acc 1, 2, 3, 4 and good validator delegate to evil val
 	ctx = ctx.WithBlockHeight(app.LastBlockHeight() + 1).WithHeaderInfo(header.Info{Height: app.LastBlockHeight() + 1})
 	fmt.Println()
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Duration(1))
@@ -119,10 +124,24 @@ func TestSlashRedelegation(t *testing.T) {
 	_, err = stakingMsgServer.Delegate(ctx, delMsg)
 	require.NoError(t, err)
 
+	// Acc 4 delegate
+	delMsg = stakingtypes.NewMsgDelegate(testAcc4.String(), evilValAddr.String(), testCoins[0])
+	_, err = stakingMsgServer.Delegate(ctx, delMsg)
+	require.NoError(t, err)
+
 	// Good validator delegates to evil validator
 	delMsg = stakingtypes.NewMsgDelegate(goodValAccAddr.String(), evilValAddr.String(), testCoins[0])
 	_, err = stakingMsgServer.Delegate(ctx, delMsg)
 	require.NoError(t, err)
+
+	// Acc 4 liquid stake stokens
+	tokenizeMsg := stakingtypes.NewMsgTokenizeShares(testAcc4.String(), evilValAddr.String(), testCoins[0], testAcc4.String())
+	res, err := stakingMsgServer.TokenizeShares(ctx, tokenizeMsg)
+	require.NoError(t, err)
+
+	tokenizeSharedRcd, err := stakingKeeper.GetTokenizeShareRecordByDenom(ctx, res.Amount.Denom)
+	require.NoError(t, err)
+	moduleAddr := tokenizeSharedRcd.GetModuleAddress()
 
 	// next block, commit height 3, move to height 4
 	// with the new delegations, evil val increases in voting power and commit byzantine behavior at height 4 consensus
@@ -146,6 +165,13 @@ func TestSlashRedelegation(t *testing.T) {
 	_, err = stakingMsgServer.BeginRedelegate(ctx, redelMsg)
 	require.NoError(t, err)
 
+	// Acc 4 redelegates tokenized shares from evil val to good val
+	// we set moduleAddr as a delegator because delegator of a tokenize share is lsm module. This is hack for testing,
+	// in normal scenario this will be ica address that liquid staked some tokens
+	redelMsg = stakingtypes.NewMsgBeginRedelegate(moduleAddr.String(), evilValAddr.String(), goodValAddr.String(), testCoins[0])
+	_, err = stakingMsgServer.BeginRedelegate(ctx, redelMsg)
+	require.NoError(t, err)
+
 	// Good validator redelegates to itself
 	redelMsg = stakingtypes.NewMsgBeginRedelegate(goodValAccAddr.String(), evilValAddr.String(), goodValAddr.String(), testCoins[0])
 	_, err = stakingMsgServer.BeginRedelegate(ctx, redelMsg)
@@ -161,12 +187,14 @@ func TestSlashRedelegation(t *testing.T) {
 	_, err = stakingMsgServer.Undelegate(ctx, undelMsg)
 	require.NoError(t, err)
 
+	// get states before slashing
 	delegation3BeforeSlashing, err := stakingKeeper.GetDelegatorBonded(ctx, testAcc3)
 	require.NoError(t, err)
 
 	goodVal, err = stakingKeeper.GetValidator(ctx, goodValAddr)
 	require.NoError(t, err)
 	goodValSelfBondAfterRedelegation := goodVal.ValidatorBondShares
+	goodValLiquidSharesAfterRedelegation := goodVal.LiquidShares
 
 	// next block, commit height 4, move to height 5
 	// Slash evil val for byzantine behavior at height 4 consensus,
@@ -219,4 +247,7 @@ func TestSlashRedelegation(t *testing.T) {
 	redelegatedAmountBeforeSlashing := goodValSelfBondAfterRedelegation.Sub(goodValSelfBondInitial) // unslashed redelegated amount
 	redelegatedAmountAfterSlashing := goodVal.ValidatorBondShares.Sub(goodValSelfBondInitial)       // slashed redelegated amount
 	require.Equal(t, redelegatedAmountAfterSlashing.Mul(math.LegacyNewDec(10)), redelegatedAmountBeforeSlashing)
+
+	// check liquid shares
+	require.Equal(t, goodVal.LiquidShares.Mul(math.LegacyNewDec(10)), goodValLiquidSharesAfterRedelegation)
 }

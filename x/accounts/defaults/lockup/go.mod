@@ -31,7 +31,7 @@ require (
 	cosmossdk.io/depinject v1.1.0 // indirect
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
-	cosmossdk.io/math v1.3.0
+	cosmossdk.io/math v1.4.0
 	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
 	cosmossdk.io/store v1.1.1-0.20240418092142-896cdf1971bc // indirect
 	cosmossdk.io/x/tx v1.0.0-alpha.1 // indirect
@@ -135,8 +135,8 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.29.0 // indirect
-	golang.org/x/exp v0.0.0-20240531132922-fd00a4e0eefc // indirect
-	golang.org/x/net v0.30.0 // indirect
+	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
+	golang.org/x/net v0.31.0 // indirect
 	golang.org/x/sync v0.9.0 // indirect
 	golang.org/x/sys v0.27.0 // indirect
 	golang.org/x/term v0.26.0 // indirect

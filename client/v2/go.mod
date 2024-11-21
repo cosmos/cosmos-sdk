@@ -1,4 +1,4 @@
-module cosmossdk.io/client/v2
+module cosmossdk.io/client/v
 
 go 1.23.1
 

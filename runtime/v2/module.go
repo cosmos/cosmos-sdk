@@ -261,14 +261,14 @@ func DefaultServiceBindings() depinject.Config {
 				stf.NewKVStoreService(actor),
 			)
 		}
-		cometService         comet.Service               = &services.ContextAwareCometInfoService{}
-		headerService                                    = services.NewGenesisHeaderService(stf.HeaderService{})
-		eventService                                     = services.NewGenesisEventService(stf.NewEventService())
-		storeBuilder                                     = root.NewBuilder()
-		branchService                                    = stf.BranchService{}
 		routerServiceFactory router.RouterServiceFactory = func(key []byte) router.Service {
 			return stf.NewMsgRouterService(key)
 		}
+		cometService  comet.Service = &services.ContextAwareCometInfoService{}
+		headerService               = services.NewGenesisHeaderService(stf.HeaderService{})
+		eventService                = services.NewGenesisEventService(stf.NewEventService())
+		storeBuilder                = root.NewBuilder()
+		branchService               = stf.BranchService{}
 	)
 	return depinject.Supply(
 		routerServiceFactory,

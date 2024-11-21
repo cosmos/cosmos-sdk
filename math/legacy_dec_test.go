@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"sigs.k8s.io/yaml"
@@ -96,6 +97,7 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 		{"8888888888888888888888888888888888888888888888888888888888888888888844444440", false, math.LegacyNewDecFromBigInt(largerBigInt)},
 		{"33499189745056880149688856635597007162669032647290798121690100488888732861290.034376435130433535", false, math.LegacyNewDecFromBigIntWithPrec(largestBigInt, 18)},
 		{"133499189745056880149688856635597007162669032647290798121690100488888732861291", true, math.LegacyDec{}},
+		{"115792089237316195423570985008687907853269984665640564039457584007913129639936", true, math.LegacyDec{}}, // 2^256
 	}
 
 	for tcIndex, tc := range tests {
@@ -267,24 +269,24 @@ func (s *decimalTestSuite) TestArithmetic() {
 		resMul := tc.d1.Mul(tc.d2)
 		resMulTruncate := tc.d1.MulTruncate(tc.d2)
 		resMulRoundUp := tc.d1.MulRoundUp(tc.d2)
-		s.Require().True(tc.expAdd.Equal(resAdd), "exp %v, res %v, tc %d", tc.expAdd, resAdd, tcIndex)
-		s.Require().True(tc.expSub.Equal(resSub), "exp %v, res %v, tc %d", tc.expSub, resSub, tcIndex)
-		s.Require().True(tc.expMul.Equal(resMul), "exp %v, res %v, tc %d", tc.expMul, resMul, tcIndex)
-		s.Require().True(tc.expMulTruncate.Equal(resMulTruncate), "exp %v, res %v, tc %d", tc.expMulTruncate, resMulTruncate, tcIndex)
-		s.Require().True(tc.expMulRoundUp.Equal(resMulRoundUp), "exp %v, res %v, tc %d", tc.expMulRoundUp, resMulRoundUp, tcIndex)
+		s.Require().True(tc.expAdd.Equal(resAdd), "expTruncated %v, res %v, tc %d", tc.expAdd, resAdd, tcIndex)
+		s.Require().True(tc.expSub.Equal(resSub), "expTruncated %v, res %v, tc %d", tc.expSub, resSub, tcIndex)
+		s.Require().True(tc.expMul.Equal(resMul), "expTruncated %v, res %v, tc %d", tc.expMul, resMul, tcIndex)
+		s.Require().True(tc.expMulTruncate.Equal(resMulTruncate), "expTruncated %v, res %v, tc %d", tc.expMulTruncate, resMulTruncate, tcIndex)
+		s.Require().True(tc.expMulRoundUp.Equal(resMulRoundUp), "expTruncated %v, res %v, tc %d", tc.expMulRoundUp, resMulRoundUp, tcIndex)
 
 		if tc.d2.IsZero() { // panic for divide by zero
 			s.Require().Panics(func() { tc.d1.Quo(tc.d2) })
 		} else {
 			resQuo := tc.d1.Quo(tc.d2)
-			s.Require().True(tc.expQuo.Equal(resQuo), "exp %v, res %v, tc %d", tc.expQuo.String(), resQuo.String(), tcIndex)
+			s.Require().True(tc.expQuo.Equal(resQuo), "expTruncated %v, res %v, tc %d", tc.expQuo.String(), resQuo.String(), tcIndex)
 
 			resQuoRoundUp := tc.d1.QuoRoundUp(tc.d2)
-			s.Require().True(tc.expQuoRoundUp.Equal(resQuoRoundUp), "exp %v, res %v, tc %d",
+			s.Require().True(tc.expQuoRoundUp.Equal(resQuoRoundUp), "expTruncated %v, res %v, tc %d",
 				tc.expQuoRoundUp.String(), resQuoRoundUp.String(), tcIndex)
 
 			resQuoTruncate := tc.d1.QuoTruncate(tc.d2)
-			s.Require().True(tc.expQuoTruncate.Equal(resQuoTruncate), "exp %v, res %v, tc %d",
+			s.Require().True(tc.expQuoTruncate.Equal(resQuoTruncate), "expTruncated %v, res %v, tc %d",
 				tc.expQuoTruncate.String(), resQuoTruncate.String(), tcIndex)
 		}
 	}
@@ -299,10 +301,10 @@ func (s *decimalTestSuite) TestMulRoundUp_RoundingAtPrecisionEnd() {
 	)
 
 	actualRoundUp := a.MulRoundUp(b)
-	s.Require().Equal(expectedRoundUp.String(), actualRoundUp.String(), "exp %v, res %v", expectedRoundUp, actualRoundUp)
+	s.Require().Equal(expectedRoundUp.String(), actualRoundUp.String(), "expTruncated %v, res %v", expectedRoundUp, actualRoundUp)
 
 	actualTruncate := a.MulTruncate(b)
-	s.Require().Equal(expectedTruncate.String(), actualTruncate.String(), "exp %v, res %v", expectedRoundUp, actualTruncate)
+	s.Require().Equal(expectedTruncate.String(), actualTruncate.String(), "expTruncated %v, res %v", expectedRoundUp, actualTruncate)
 }
 
 func (s *decimalTestSuite) TestBankerRoundChop() {
@@ -409,9 +411,10 @@ func (s *decimalTestSuite) TestDecCeil() {
 }
 
 func (s *decimalTestSuite) TestCeilOverflow() {
-	d, err := math.LegacyNewDecFromStr("66749594872528440074844428317798503581334516323645399060845050244444366430645.000000000000000001")
+	// (2^256 * 10^18 -1) / 10^18
+	d, err := math.LegacyNewDecFromStr("115792089237316195423570985008687907853269984665640564039457584007913129639935.999999999999999999")
 	s.Require().NoError(err)
-	s.Require().True(d.BigInt().BitLen() <= 315, "d is too large")
+	s.Require().True(d.IsInValidRange())
 	// this call panics because the value is too large
 	s.Require().Panics(func() { d.Ceil() }, "Ceil should panic on overflow")
 }
@@ -449,6 +452,9 @@ func (s *decimalTestSuite) TestApproxRoot() {
 		root     uint64
 		expected math.LegacyDec
 	}{
+		{math.LegacyNewDecFromInt(math.NewInt(2)), 0, math.LegacyOneDec()},                                   // 2 ^ 0 => 1.0
+		{math.LegacyNewDecWithPrec(4, 2), 0, math.LegacyOneDec()},                                            // 0.04 ^ 0 => 1.0
+		{math.LegacyNewDec(0), 1, math.LegacyNewDec(0)},                                                      // 0 ^ 1 => 0
 		{math.LegacyOneDec(), 10, math.LegacyOneDec()},                                                       // 1.0 ^ (0.1) => 1.0
 		{math.LegacyNewDecWithPrec(25, 2), 2, math.LegacyNewDecWithPrec(5, 1)},                               // 0.25 ^ (0.5) => 0.5
 		{math.LegacyNewDecWithPrec(4, 2), 2, math.LegacyNewDecWithPrec(2, 1)},                                // 0.04 ^ (0.5) => 0.2
@@ -626,10 +632,10 @@ func BenchmarkMarshalTo(b *testing.B) {
 	}{
 		{
 			math.LegacyNewDec(1e8), []byte{
-				0x31, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
-				0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
-				0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
-			},
+			0x31, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
+			0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
+			0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,
+		},
 		},
 		{math.LegacyNewDec(0), []byte{0x30}},
 	}
@@ -668,11 +674,15 @@ func BenchmarkLegacyQuoMut(b *testing.B) {
 
 func BenchmarkLegacyQuoTruncateMut(b *testing.B) {
 	b1 := math.LegacyNewDec(17e2 + 8371)
+	baseArr := make([]math.LegacyDec, b.N)
+	for i := 0; i < b.N; i++ {
+		baseArr[i] = b1.Clone()
+	}
 	b2 := math.LegacyNewDec(4371)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		sink = b1.QuoTruncateMut(b2)
+		sink = baseArr[i].QuoTruncateMut(b2)
 	}
 
 	if sink == nil {
@@ -697,11 +707,15 @@ func BenchmarkLegacySqrtOnMersennePrime(b *testing.B) {
 
 func BenchmarkLegacyQuoRoundupMut(b *testing.B) {
 	b1 := math.LegacyNewDec(17e2 + 8371)
+	baseArr := make([]math.LegacyDec, b.N)
+	for i := 0; i < b.N; i++ {
+		baseArr[i] = b1.Clone()
+	}
 	b2 := math.LegacyNewDec(4371)
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		sink = b1.QuoRoundupMut(b2)
+		sink = baseArr[i].QuoRoundupMut(b2)
 	}
 
 	if sink == nil {
@@ -740,6 +754,7 @@ func TestFormatDecNonDigits(t *testing.T) {
 	}
 
 	for _, value := range badCases {
+		value := value
 		t.Run(value, func(t *testing.T) {
 			s, err := math.FormatDec(value)
 			if err == nil {
@@ -1055,4 +1070,260 @@ func Test_DocumentLegacyAsymmetry(t *testing.T) {
 	// !!! this is the key point, they are not equal, it looks like a bug
 	require.NotEqual(t, emptyDecJSON, emptyDecRoundTripJSON)
 	require.NotEqual(t, emptyDec, emptyDecRoundTrip)
+}
+
+// 2^256 * 10^18 -1
+const maxValidDecNumber = "115792089237316195423570985008687907853269984665640564039457584007913129639935999999999999999999"
+
+func TestDecOpsWithinLimits(t *testing.T) {
+	maxValid, ok := new(big.Int).SetString(maxValidDecNumber, 10)
+	require.True(t, ok)
+	minValid := new(big.Int).Neg(maxValid)
+	specs := map[string]struct {
+		src    *big.Int
+		expErr bool
+	}{
+		"max": {
+			src: maxValid,
+		},
+		"max + 1": {
+			src:    new(big.Int).Add(maxValid, big.NewInt(1)),
+			expErr: true,
+		},
+		"min": {
+			src: minValid,
+		},
+		"min - 1": {
+			src:    new(big.Int).Sub(minValid, big.NewInt(1)),
+			expErr: true,
+		},
+		"max Int": {
+			// max Int is 2^256 -1
+			src: math.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(256), nil), big.NewInt(1))).BigIntMut(),
+		},
+		"min Int": {
+			// max Int is -1 *(2^256 -1)
+			src: math.NewIntFromBigInt(new(big.Int).Neg(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(256), nil), big.NewInt(1)))).BigIntMut(),
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			src := math.LegacyNewDecFromBigIntWithPrec(spec.src, 18)
+
+			ops := map[string]struct {
+				fn func(src math.LegacyDec) math.LegacyDec
+			}{
+				"AddMut": {
+					fn: func(src math.LegacyDec) math.LegacyDec { return src.AddMut(math.LegacyNewDec(0)) },
+				},
+				"SubMut": {
+					fn: func(src math.LegacyDec) math.LegacyDec { return src.SubMut(math.LegacyNewDec(0)) },
+				},
+				"MulMut": {
+					fn: func(src math.LegacyDec) math.LegacyDec { return src.MulMut(math.LegacyNewDec(1)) },
+				},
+				"MulTruncateMut": {
+					fn: func(src math.LegacyDec) math.LegacyDec { return src.MulTruncateMut(math.LegacyNewDec(1)) },
+				},
+				"MulRoundUpMut": {
+					fn: func(src math.LegacyDec) math.LegacyDec { return src.MulRoundUpMut(math.LegacyNewDec(1)) },
+				},
+				"MulIntMut": {
+					fn: func(src math.LegacyDec) math.LegacyDec { return src.MulIntMut(math.NewInt(1)) },
+				},
+				"MulInt64Mut": {
+					fn: func(src math.LegacyDec) math.LegacyDec { return src.MulInt64Mut(1) },
+				},
+				"QuoMut": {
+					fn: func(src math.LegacyDec) math.LegacyDec { return src.QuoMut(math.LegacyNewDec(1)) },
+				},
+				"QuoTruncateMut": {
+					fn: func(src math.LegacyDec) math.LegacyDec { return src.QuoTruncateMut(math.LegacyNewDec(1)) },
+				},
+				"QuoRoundupMut": {
+					fn: func(src math.LegacyDec) math.LegacyDec { return src.QuoRoundupMut(math.LegacyNewDec(1)) },
+				},
+			}
+			for name, op := range ops {
+				t.Run(name, func(t *testing.T) {
+					if spec.expErr {
+						assert.Panics(t, func() {
+							got := op.fn(src)
+							t.Log(got.String())
+						})
+						return
+					}
+					exp := src.String()
+					// exp no panics
+					got := op.fn(src)
+					assert.Equal(t, exp, got.String())
+				})
+			}
+		})
+	}
+}
+
+func TestDecCeilLimits(t *testing.T) {
+	maxValid, ok := new(big.Int).SetString(maxValidDecNumber, 10)
+	require.True(t, ok)
+	minValid := new(big.Int).Neg(maxValid)
+
+	specs := map[string]struct {
+		src    *big.Int
+		exp    string
+		expErr bool
+	}{
+		"max": {
+			src:    maxValid,
+			expErr: true,
+		},
+		"max + 1": {
+			src:    new(big.Int).Add(maxValid, big.NewInt(1)),
+			expErr: true,
+		},
+		"max - 1e18, previous full number": {
+			src: new(big.Int).Sub(maxValid, new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)),
+			exp: "115792089237316195423570985008687907853269984665640564039457584007913129639935.000000000000000000",
+		},
+		"min": {
+			src: minValid,
+			exp: "-115792089237316195423570985008687907853269984665640564039457584007913129639935.000000000000000000",
+		},
+		"min - 1": {
+			src:    new(big.Int).Sub(minValid, big.NewInt(1)),
+			expErr: true,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			src := math.LegacyNewDecFromBigIntWithPrec(spec.src, 18)
+			if spec.expErr {
+				assert.Panics(t, func() {
+					got := src.Ceil()
+					t.Log(got.String())
+				})
+				return
+			}
+			got := src.Ceil()
+			assert.Equal(t, spec.exp, got.String())
+		})
+	}
+}
+
+func TestTruncateIntLimits(t *testing.T) {
+	maxValid, ok := new(big.Int).SetString(maxValidDecNumber, 10)
+	require.True(t, ok)
+	minValid := new(big.Int).Neg(maxValid)
+
+	specs := map[string]struct {
+		src    *big.Int
+		exp    string
+		expErr bool
+	}{
+		"max": {
+			src: maxValid,
+			exp: "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+		},
+		"max + 1": {
+			src:    new(big.Int).Add(maxValid, big.NewInt(1)),
+			expErr: true,
+		},
+		"min": {
+			src: minValid,
+			exp: "-115792089237316195423570985008687907853269984665640564039457584007913129639935",
+		},
+		"min - 1": {
+			src:    new(big.Int).Sub(minValid, big.NewInt(1)),
+			expErr: true,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			src := math.LegacyNewDecFromBigIntWithPrec(spec.src, 18)
+			if spec.expErr {
+				assert.Panics(t, func() {
+					got := src.TruncateInt()
+					t.Log(got.String())
+				})
+				return
+			}
+			got := src.TruncateInt()
+			assert.Equal(t, spec.exp, got.String())
+		})
+	}
+}
+
+func TestRoundIntLimits(t *testing.T) {
+	maxValid, ok := new(big.Int).SetString(maxValidDecNumber, 10)
+	require.True(t, ok)
+	minValid := new(big.Int).Neg(maxValid)
+	oneE18 := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
+
+	specs := map[string]struct {
+		src    *big.Int
+		exp    string
+		expErr bool
+	}{
+		"max -1e18; previous full number": {
+			src: new(big.Int).Sub(maxValid, oneE18),
+			exp: "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+		},
+		"max": {
+			src:    maxValid,
+			expErr: true,
+		},
+		"max + 1": {
+			src:    new(big.Int).Add(maxValid, big.NewInt(1)),
+			expErr: true,
+		},
+		"min + 1e18; previous full number": {
+			src: new(big.Int).Add(minValid, oneE18),
+			exp: "-115792089237316195423570985008687907853269984665640564039457584007913129639935",
+		},
+		"min": {
+			src:    minValid,
+			expErr: true,
+		},
+		"min - 1": {
+			src:    new(big.Int).Sub(minValid, big.NewInt(1)),
+			expErr: true,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			src := math.LegacyNewDecFromBigIntWithPrec(spec.src, 18)
+			t.Log(src.String())
+			if spec.expErr {
+				assert.Panics(t, func() {
+					got := src.RoundInt()
+					t.Log(got.String())
+				})
+				return
+			}
+			got := src.RoundInt()
+			assert.Equal(t, spec.exp, got.String())
+		})
+	}
+}
+
+func BenchmarkIsInValidRange(b *testing.B) {
+	maxValid, ok := new(big.Int).SetString(maxValidDecNumber, 10)
+	require.True(b, ok)
+	souceMax := math.LegacyNewDecFromBigIntWithPrec(maxValid, 18)
+	b.ResetTimer()
+	specs := map[string]math.LegacyDec{
+		"max":         souceMax,
+		"greater max": math.LegacyNewDecFromBigIntWithPrec(maxValid, 16),
+		"min":         souceMax.Neg(),
+		"lower min":   math.LegacyNewDecFromBigIntWithPrec(new(big.Int).Neg(maxValid), 16),
+		"zero":        math.LegacyZeroDec(),
+		"one":         math.LegacyOneDec(),
+	}
+	for name, source := range specs {
+		b.Run(name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				_ = source.IsInValidRange()
+			}
+		})
+	}
 }

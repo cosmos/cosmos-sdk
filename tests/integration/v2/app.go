@@ -143,7 +143,7 @@ func NewApp(
 	appConfig depinject.Config,
 	startupConfig StartupConfig,
 	branchService corebranch.Service,
-	routerServiceFactory router.RouterServiceFactory,
+	routerServiceBuilder router.ServiceBuilder,
 	extraOutputs ...interface{},
 ) (*App, error) {
 	// create the app with depinject
@@ -161,11 +161,14 @@ func NewApp(
 		err error
 	)
 
-	// set default branch and msg router service
-	if routerServiceFactory == nil {
-		routerServiceFactory = stf.NewMsgRouterService
+	// set default router service builder if not provided
+	if routerServiceBuilder == nil {
+		routerServiceBuilder = runtime.NewRouterBuilder(
+			stf.NewMsgRouterService, stf.NewQueryRouterService(),
+		)
 	}
 
+	// set default branch service if not provided
 	if branchService == nil {
 		branchService = stf.BranchService{}
 	}
@@ -191,7 +194,7 @@ func NewApp(
 				&eventService{},
 				storeBuilder,
 				branchService,
-				routerServiceFactory,
+				routerServiceBuilder,
 			),
 			depinject.Invoke(
 				std.RegisterInterfaces,

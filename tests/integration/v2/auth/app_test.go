@@ -8,9 +8,10 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"cosmossdk.io/runtime/v2"
 	"cosmossdk.io/x/accounts"
-	_ "cosmossdk.io/x/accounts" // import as blank for app wiring
 	basedepinject "cosmossdk.io/x/accounts/defaults/base/depinject"
+	accountsv1 "cosmossdk.io/x/accounts/v1"
 	_ "cosmossdk.io/x/bank" // import as blank for app wiring
 	bankkeeper "cosmossdk.io/x/bank/keeper"
 	banktypes "cosmossdk.io/x/bank/types"
@@ -37,8 +38,6 @@ type suite struct {
 	authKeeper     authkeeper.AccountKeeper
 	accountsKeeper accounts.Keeper
 	bankKeeper     bankkeeper.Keeper
-
-	routerService *integration.RouterService
 }
 
 func (s suite) mustAddr(address []byte) string {
@@ -65,12 +64,17 @@ func createTestSuite(t *testing.T) *suite {
 	var err error
 	startupCfg := integration.DefaultStartUpConfig(t)
 
-	routerService := integration.NewRouterService()
-	res.registerRouterService(routerService)
+	msgRouterService := integration.NewRouterService()
+	res.registerMsgRouterService(msgRouterService)
 
 	var routerFactory router.RouterServiceFactory = func(_ []byte) router.Service {
-		return routerService
+		return msgRouterService
 	}
+
+	queryRouterService := integration.NewRouterService()
+	res.registerQueryRouterService(queryRouterService)
+
+	serviceBuilder := runtime.NewRouterBuilder(routerFactory, queryRouterService)
 
 	res.app, err = integration.NewApp(
 		depinject.Configs(configurator.NewAppV2Config(moduleConfigs...), depinject.Provide(
@@ -85,7 +89,7 @@ func createTestSuite(t *testing.T) *suite {
 			ProvideMockRetroCompatAccountNoInfo,
 			ProvideMockRetroCompatAccountNoImplement,
 		), depinject.Supply(log.NewNopLogger())),
-		startupCfg, &integration.BranchService{}, routerFactory,
+		startupCfg, &integration.BranchService{}, serviceBuilder,
 		&res.bankKeeper, &res.accountsKeeper, &res.authKeeper)
 	require.NoError(t, err)
 
@@ -94,7 +98,7 @@ func createTestSuite(t *testing.T) *suite {
 	return &res
 }
 
-func (s *suite) registerRouterService(router *integration.RouterService) {
+func (s *suite) registerMsgRouterService(router *integration.RouterService) {
 	// register custom router service
 	bankSendHandler := func(ctx context.Context, req transaction.Msg) (transaction.Msg, error) {
 		msg, ok := req.(*banktypes.MsgSend)
@@ -107,4 +111,19 @@ func (s *suite) registerRouterService(router *integration.RouterService) {
 	}
 
 	router.RegisterHandler(bankSendHandler, "cosmos.bank.v1beta1.MsgSend")
+}
+
+func (s *suite) registerQueryRouterService(router *integration.RouterService) {
+	// register custom router service
+	queryHandler := func(ctx context.Context, msg transaction.Msg) (transaction.Msg, error) {
+		req, ok := msg.(*accountsv1.AccountNumberRequest)
+		if !ok {
+			return nil, integration.ErrInvalidMsgType
+		}
+		qs := accounts.NewQueryServer(s.accountsKeeper)
+		resp, err := qs.AccountNumber(ctx, req)
+		return resp, err
+	}
+
+	router.RegisterHandler(queryHandler, "cosmos.accounts.v1.AccountNumberRequest")
 }

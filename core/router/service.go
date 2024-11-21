@@ -15,4 +15,9 @@ type Service interface {
 	Invoke(ctx context.Context, req transaction.Msg) (res transaction.Msg, err error)
 }
 
+type ServiceBuilder interface {
+	BuildMsgRouter([]byte) Service
+	BuildQueryRouter() Service
+}
+
 type RouterServiceFactory func([]byte) Service

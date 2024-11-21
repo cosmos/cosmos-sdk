@@ -34,6 +34,7 @@ func (ak AccountKeeper) InitGenesis(ctx context.Context, data types.GenesisState
 			}
 			lastAccNum = &n
 		}
+		fmt.Println(accNum)
 		ak.SetAccount(ctx, acc)
 	}
 

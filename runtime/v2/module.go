@@ -103,7 +103,6 @@ func init() {
 			ProvideKVService,
 			ProvideModuleConfigMaps,
 			ProvideModuleScopedConfigMap,
-			ProvideRouterService,
 		),
 		appconfig.Invoke(SetupAppBuilder),
 	)
@@ -199,13 +198,6 @@ func ProvideKVService(
 	return kvFactory([]byte(kvStoreKey)), stf.NewMemoryStoreService([]byte(fmt.Sprintf("memory:%s", kvStoreKey)))
 }
 
-func ProvideRouterService(
-	key depinject.ModuleKey,
-	routerFactory router.RouterServiceFactory,
-) router.Service {
-	return routerFactory([]byte(key.Name()))
-}
-
 func storeKeyOverride(config *runtimev2.Module, moduleName string) *runtimev2.StoreKeyConfig {
 	for _, cfg := range config.OverrideStoreKeys {
 		if cfg.ModuleName == moduleName {
@@ -224,7 +216,7 @@ func ProvideEnvironment(
 	headerService header.Service,
 	eventService event.Service,
 	branchService branch.Service,
-	routerService router.Service,
+	routerBuilder router.ServiceBuilder,
 ) appmodulev2.Environment {
 	return appmodulev2.Environment{
 		Logger:             logger,
@@ -232,12 +224,35 @@ func ProvideEnvironment(
 		EventService:       eventService,
 		GasService:         stf.NewGasMeterService(),
 		HeaderService:      headerService,
-		QueryRouterService: stf.NewQueryRouterService(),
-		MsgRouterService:   routerService,
+		QueryRouterService: routerBuilder.BuildQueryRouter(),
+		MsgRouterService:   routerBuilder.BuildMsgRouter([]byte(key.Name())),
 		TransactionService: services.NewContextAwareTransactionService(),
 		KVStoreService:     kvService,
 		MemStoreService:    memKvService,
 	}
+}
+
+type RouterBuilder struct {
+	msgRouterServiceFactory router.RouterServiceFactory
+	queryRouter             router.Service
+}
+
+func NewRouterBuilder(
+	msgRouterServiceFactory router.RouterServiceFactory,
+	queryRouter router.Service,
+) RouterBuilder {
+	return RouterBuilder{
+		msgRouterServiceFactory: msgRouterServiceFactory,
+		queryRouter:             queryRouter,
+	}
+}
+
+func (b RouterBuilder) BuildMsgRouter(actor []byte) router.Service {
+	return b.msgRouterServiceFactory(actor)
+}
+
+func (b RouterBuilder) BuildQueryRouter() router.Service {
+	return b.queryRouter
 }
 
 // DefaultServiceBindings provides default services for the following service interfaces:
@@ -247,7 +262,7 @@ func ProvideEnvironment(
 // - event.Service
 // - store/v2/root.Builder
 // - branch.Service
-// - router.ServiceFactory
+// - router.ServiceBuilder
 //
 // They are all required.  For most use cases these default services bindings should be sufficient.
 // Power users (or tests) may wish to provide their own services bindings, in which case they must
@@ -260,16 +275,19 @@ func DefaultServiceBindings() depinject.Config {
 				stf.NewKVStoreService(actor),
 			)
 		}
-		routerServiceFactory router.RouterServiceFactory = stf.NewMsgRouterService
-		cometService         comet.Service               = &services.ContextAwareCometInfoService{}
-		headerService                                    = services.NewGenesisHeaderService(stf.HeaderService{})
-		eventService                                     = services.NewGenesisEventService(stf.NewEventService())
-		storeBuilder                                     = root.NewBuilder()
-		branchService                                    = stf.BranchService{}
+		routerBuilder router.ServiceBuilder = RouterBuilder{
+			msgRouterServiceFactory: stf.NewMsgRouterService,
+			queryRouter:             stf.NewQueryRouterService(),
+		}
+		cometService  comet.Service = &services.ContextAwareCometInfoService{}
+		headerService               = services.NewGenesisHeaderService(stf.HeaderService{})
+		eventService                = services.NewGenesisEventService(stf.NewEventService())
+		storeBuilder                = root.NewBuilder()
+		branchService               = stf.BranchService{}
 	)
 	return depinject.Supply(
-		routerServiceFactory,
 		kvServiceFactory,
+		routerBuilder,
 		headerService,
 		cometService,
 		eventService,

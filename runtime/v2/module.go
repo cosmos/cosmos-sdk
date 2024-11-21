@@ -226,7 +226,6 @@ func ProvideEnvironment(
 	branchService branch.Service,
 	routerService router.Service,
 ) appmodulev2.Environment {
-
 	return appmodulev2.Environment{
 		Logger:             logger,
 		BranchService:      branchService,

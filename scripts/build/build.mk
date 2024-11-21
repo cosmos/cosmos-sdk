@@ -73,9 +73,9 @@ ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
 endif
 
 # handle blst
-ifeq (blst,$(findstring blst,$(COSMOS_BUILD_OPTIONS)))
+ifeq (bls12381,$(findstring bls12381,$(COSMOS_BUILD_OPTIONS)))
   CGO_ENABLED=1
-  build_tags += blst
+  build_tags += bls12381
 endif
 
 whitespace :=

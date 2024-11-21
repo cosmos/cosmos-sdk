@@ -9,10 +9,8 @@ import (
 	"fmt"
 
 	"github.com/cometbft/cometbft/crypto"
-	bls "github.com/cometbft/cometbft/crypto/bls12381"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-
-	bls12381 "github.com/cometbft/cometbft/crypto/bls12381"
+	"github.com/cometbft/cometbft/crypto/bls12381"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -75,7 +73,7 @@ func (privKey PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 
 // Type returns the type.
 func (PrivKey) Type() string {
-	return bls.KeyType
+	return bls12381.KeyType
 }
 
 // Sign signs the given byte array. If msg is larger than

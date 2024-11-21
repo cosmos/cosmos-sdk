@@ -60,9 +60,7 @@ type fixture struct {
 	t *testing.T
 
 	app *integration.App
-
 	cdc codec.Codec
-	ctx sdk.Context
 
 	authKeeper     authkeeper.AccountKeeper
 	accountsKeeper accounts.Keeper
@@ -82,7 +80,7 @@ func (f fixture) runBundle(txBytes ...[]byte) *accountsv1.MsgExecuteBundleRespon
 
 	msgSrv := accounts.NewMsgServer(f.accountsKeeper)
 
-	resp, err := msgSrv.ExecuteBundle(f.ctx, &accountsv1.MsgExecuteBundle{
+	resp, err := msgSrv.ExecuteBundle(f.app.Context(), &accountsv1.MsgExecuteBundle{
 		Bundler: f.bundler,
 		Txs:     txBytes,
 	})
@@ -93,16 +91,16 @@ func (f fixture) runBundle(txBytes ...[]byte) *accountsv1.MsgExecuteBundleRespon
 func (f fixture) mint(address []byte, coins ...sdk.Coin) {
 	f.t.Helper()
 	for _, coin := range coins {
-		err := f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, sdk.NewCoins(coin))
+		err := f.bankKeeper.MintCoins(f.app.Context(), minttypes.ModuleName, sdk.NewCoins(coin))
 		require.NoError(f.t, err)
-		err = f.bankKeeper.SendCoinsFromModuleToAccount(f.ctx, minttypes.ModuleName, address, sdk.NewCoins(coin))
+		err = f.bankKeeper.SendCoinsFromModuleToAccount(f.app.Context(), minttypes.ModuleName, address, sdk.NewCoins(coin))
 		require.NoError(f.t, err)
 	}
 }
 
 func (f fixture) balance(recipient, denom string) sdk.Coin {
 	f.t.Helper()
-	balances, err := f.bankKeeper.Balance(f.ctx, &banktypes.QueryBalanceRequest{
+	balances, err := f.bankKeeper.Balance(f.app.Context(), &banktypes.QueryBalanceRequest{
 		Address: recipient,
 		Denom:   denom,
 	})
@@ -194,7 +192,6 @@ func initFixture(t *testing.T, f func(ctx context.Context, msg *account_abstract
 		t:                  t,
 		app:                integrationApp,
 		cdc:                cdc,
-		ctx:                sdk.UnwrapSDKContext(integrationApp.Context()),
 		authKeeper:         authKeeper,
 		accountsKeeper:     accountsKeeper,
 		bankKeeper:         bankKeeper,

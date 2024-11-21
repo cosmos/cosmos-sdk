@@ -36,7 +36,6 @@ type fixture struct {
 	app *integration.App
 
 	cdc codec.Codec
-	ctx sdk.Context
 
 	authKeeper     authkeeper.AccountKeeper
 	accountsKeeper accounts.Keeper
@@ -130,7 +129,6 @@ func initFixture(t *testing.T, extraAccs map[string]accountstd.Interface) *fixtu
 	return &fixture{
 		app:            integrationApp,
 		cdc:            cdc,
-		ctx:            sdk.UnwrapSDKContext(integrationApp.Context()),
 		accountsKeeper: accountsKeeper,
 		authKeeper:     authKeeper,
 		bankKeeper:     bankKeeper,

@@ -1,9 +1,10 @@
 package codec
 
 import (
+	"github.com/cometbft/cometbft/crypto/bls12381"
+
 	"cosmossdk.io/core/registry"
 
-	"github.com/cometbft/cometbft/crypto/bls12381"
 	bls12_381 "github.com/cosmos/cosmos-sdk/crypto/keys/bls12_381"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"

@@ -232,7 +232,7 @@ func ProvideEnvironment(
 	}
 }
 
-type RouterBuilder struct {
+type routerBuilder struct {
 	msgRouterServiceFactory router.RouterServiceFactory
 	queryRouter             router.Service
 }
@@ -240,18 +240,18 @@ type RouterBuilder struct {
 func NewRouterBuilder(
 	msgRouterServiceFactory router.RouterServiceFactory,
 	queryRouter router.Service,
-) RouterBuilder {
-	return RouterBuilder{
+) routerBuilder {
+	return routerBuilder{
 		msgRouterServiceFactory: msgRouterServiceFactory,
 		queryRouter:             queryRouter,
 	}
 }
 
-func (b RouterBuilder) BuildMsgRouter(actor []byte) router.Service {
+func (b routerBuilder) BuildMsgRouter(actor []byte) router.Service {
 	return b.msgRouterServiceFactory(actor)
 }
 
-func (b RouterBuilder) BuildQueryRouter() router.Service {
+func (b routerBuilder) BuildQueryRouter() router.Service {
 	return b.queryRouter
 }
 
@@ -275,7 +275,7 @@ func DefaultServiceBindings() depinject.Config {
 				stf.NewKVStoreService(actor),
 			)
 		}
-		routerBuilder router.ServiceBuilder = RouterBuilder{
+		routerBuilder router.ServiceBuilder = routerBuilder{
 			msgRouterServiceFactory: stf.NewMsgRouterService,
 			queryRouter:             stf.NewQueryRouterService(),
 		}

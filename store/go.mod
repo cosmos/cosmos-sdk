@@ -1,6 +1,8 @@
 module cosmossdk.io/store
 
-go 1.23
+go 1.23.1
+
+toolchain go1.23.3
 
 require (
 	cosmossdk.io/core v1.0.0-alpha.6
@@ -9,7 +11,7 @@ require (
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/math v1.3.0
 	github.com/cometbft/cometbft v1.0.0-rc1
-	github.com/cometbft/cometbft/api v1.0.0-rc.1
+	github.com/cometbft/cometbft/api v1.0.0-rc2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/iavl v1.3.1

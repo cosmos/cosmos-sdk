@@ -1,7 +1,6 @@
 package systemtests
 
 import (
-	systest "cosmossdk.io/systemtests"
 	"fmt"
 	"strings"
 	"testing"
@@ -9,6 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	systest "cosmossdk.io/systemtests"
 )
 
 func TestAccountCreation(t *testing.T) {

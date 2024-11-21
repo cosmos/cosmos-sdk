@@ -3,7 +3,6 @@
 package systemtests
 
 import (
-	systest "cosmossdk.io/systemtests"
 	"encoding/base64"
 	"fmt"
 	"testing"
@@ -14,6 +13,7 @@ import (
 	"github.com/tidwall/gjson"
 
 	"cosmossdk.io/math"
+	systest "cosmossdk.io/systemtests"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"

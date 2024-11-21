@@ -3,12 +3,13 @@
 package systemtests
 
 import (
-	systest "cosmossdk.io/systemtests"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	systest "cosmossdk.io/systemtests"
 )
 
 func TestSnapshots(t *testing.T) {

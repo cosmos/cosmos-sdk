@@ -1,13 +1,14 @@
 package systemtests
 
 import (
-	systest "cosmossdk.io/systemtests"
 	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/sjson"
+
+	systest "cosmossdk.io/systemtests"
 )
 
 func TestMintQueries(t *testing.T) {

@@ -27,7 +27,7 @@ Therefore, we focus on the **critical path** and do not cover every condition.
 
 ## How to use
 
-Read the [getting_started.md](getting_started.md) guide to get started.
+Read the [getting_started.md](../tests/systemtests/getting_started.md) guide to get started.
 
 ### Execute a single test
 

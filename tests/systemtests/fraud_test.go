@@ -3,7 +3,6 @@
 package systemtests
 
 import (
-	systest "cosmossdk.io/systemtests"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,6 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	systest "cosmossdk.io/systemtests"
 )
 
 func TestValidatorDoubleSign(t *testing.T) {

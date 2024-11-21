@@ -3,13 +3,15 @@
 package systemtests
 
 import (
-	systest "cosmossdk.io/systemtests"
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
-	"os"
-	"testing"
+
+	systest "cosmossdk.io/systemtests"
 )
 
 func TestExportCmd_WithHeight(t *testing.T) {

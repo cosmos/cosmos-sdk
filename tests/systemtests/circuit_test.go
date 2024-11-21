@@ -3,7 +3,6 @@
 package systemtests
 
 import (
-	systest "cosmossdk.io/systemtests"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -12,6 +11,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	systest "cosmossdk.io/systemtests"
 )
 
 var someMsgs = []string{"/cosmos.bank.v1beta1.MsgSend", "/cosmos.bank.v1beta1.MsgMultiSend"}

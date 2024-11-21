@@ -24,7 +24,7 @@ require (
 )
 
 require (
-	cosmossdk.io/math v1.3.0
+	cosmossdk.io/math v1.4.0
 	github.com/cometbft/cometbft v0.38.15
 	github.com/cometbft/cometbft/api v1.0.0-rc.1
 	github.com/creachadair/tomledit v0.0.26

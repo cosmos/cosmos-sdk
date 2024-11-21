@@ -116,6 +116,7 @@ func (c CLIWrapper) WithAssertTXUncommitted() CLIWrapper {
 		r.expTXCommitted = false
 	})
 }
+
 func (c CLIWrapper) WithChainID(newChainID string) CLIWrapper {
 	return c.clone(func(r *CLIWrapper) {
 		r.chainID = newChainID

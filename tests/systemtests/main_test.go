@@ -3,8 +3,9 @@
 package systemtests
 
 import (
-	systest "cosmossdk.io/systemtests"
 	"testing"
+
+	systest "cosmossdk.io/systemtests"
 )
 
 func TestMain(m *testing.M) {

@@ -3,7 +3,6 @@
 package systemtests
 
 import (
-	systest "cosmossdk.io/systemtests"
 	"fmt"
 	"testing"
 
@@ -11,6 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+
+	systest "cosmossdk.io/systemtests"
 )
 
 const (

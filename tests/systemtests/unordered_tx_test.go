@@ -3,13 +3,14 @@
 package systemtests
 
 import (
-	systest "cosmossdk.io/systemtests"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	systest "cosmossdk.io/systemtests"
 )
 
 func TestUnorderedTXDuplicate(t *testing.T) {

@@ -3,11 +3,12 @@
 package systemtests
 
 import (
-	systest "cosmossdk.io/systemtests"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
+
+	systest "cosmossdk.io/systemtests"
 )
 
 func TestStakeUnstake(t *testing.T) {

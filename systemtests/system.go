@@ -780,6 +780,7 @@ func (s *SystemUnderTest) CurrentHeight() int64 {
 func (s *SystemUnderTest) NodesCount() int {
 	return s.nodesCount
 }
+
 func (s *SystemUnderTest) BlockTime() time.Duration {
 	return s.blockTime
 }

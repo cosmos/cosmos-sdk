@@ -4,7 +4,6 @@ package systemtests
 
 import (
 	"context"
-	systest "cosmossdk.io/systemtests"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,6 +12,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
+
+	systest "cosmossdk.io/systemtests"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec"

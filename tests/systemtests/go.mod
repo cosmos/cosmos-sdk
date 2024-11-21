@@ -1,4 +1,4 @@
-module cosmossdk.io/tests/systemtests
+module github.com/cosmos/tests/systemtests
 
 go 1.23
 
@@ -24,7 +24,7 @@ require (
 )
 
 require (
-	cosmossdk.io/math v1.3.0
+	cosmossdk.io/math v1.4.0
 	cosmossdk.io/systemtests v0.0.0-00010101000000-000000000000
 	github.com/tidwall/gjson v1.14.2
 	github.com/tidwall/sjson v1.2.5

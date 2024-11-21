@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"sync/atomic"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -27,7 +26,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/schema/appdata"
 	"cosmossdk.io/server/v2/appmanager"
-	"cosmossdk.io/server/v2/cometbft/client/grpc/cmtservice"
 	"cosmossdk.io/server/v2/cometbft/handlers"
 	"cosmossdk.io/server/v2/cometbft/mempool"
 	"cosmossdk.io/server/v2/cometbft/types"
@@ -35,25 +33,37 @@ import (
 	"cosmossdk.io/server/v2/streaming"
 	"cosmossdk.io/store/v2/snapshots"
 	consensustypes "cosmossdk.io/x/consensus/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-var _ abci.Application = (*Consensus[transaction.Tx])(nil)
+const (
+	QueryPathApp   = "app"
+	QueryPathP2P   = "p2p"
+	QueryPathStore = "store"
+)
 
-type Consensus[T transaction.Tx] struct {
+var _ abci.Application = (*consensus[transaction.Tx])(nil)
+
+// consensus contains the implementation of the ABCI interface for CometBFT.
+type consensus[T transaction.Tx] struct {
 	logger           log.Logger
 	appName, version string
 	app              appmanager.AppManager[T]
-	appCloser        func() error
+	appCodec         codec.Codec
 	txCodec          transaction.Codec[T]
 	store            types.Store
-	streaming        streaming.Manager
 	listener         *appdata.Listener
 	snapshotManager  *snapshots.Manager
+	streamingManager streaming.Manager
 	mempool          mempool.Mempool[T]
 
 	cfg           Config
-	indexedEvents map[string]struct{}
 	chainID       string
+	indexedEvents map[string]struct{}
 
 	initialHeight uint64
 	// this is only available after this node has committed a block (in FinalizeBlock),
@@ -74,62 +84,9 @@ type Consensus[T transaction.Tx] struct {
 	getProtoRegistry func() (*protoregistry.Files, error)
 }
 
-func NewConsensus[T transaction.Tx](
-	logger log.Logger,
-	appName string,
-	app appmanager.AppManager[T],
-	appCloser func() error,
-	mp mempool.Mempool[T],
-	indexedEvents map[string]struct{},
-	queryHandlersMap map[string]appmodulev2.Handler,
-	store types.Store,
-	cfg Config,
-	txCodec transaction.Codec[T],
-	chainId string,
-) *Consensus[T] {
-	return &Consensus[T]{
-		appName:                appName,
-		version:                getCometBFTServerVersion(),
-		app:                    app,
-		appCloser:              appCloser,
-		cfg:                    cfg,
-		store:                  store,
-		logger:                 logger,
-		txCodec:                txCodec,
-		streaming:              streaming.Manager{},
-		snapshotManager:        nil,
-		mempool:                mp,
-		lastCommittedHeight:    atomic.Int64{},
-		prepareProposalHandler: nil,
-		processProposalHandler: nil,
-		verifyVoteExt:          nil,
-		extendVote:             nil,
-		chainID:                chainId,
-		indexedEvents:          indexedEvents,
-		initialHeight:          0,
-		queryHandlersMap:       queryHandlersMap,
-		getProtoRegistry:       sync.OnceValues(gogoproto.MergedRegistry),
-	}
-}
-
-// SetStreamingManager sets the streaming manager for the consensus module.
-func (c *Consensus[T]) SetStreamingManager(sm streaming.Manager) {
-	c.streaming = sm
-}
-
-// RegisterSnapshotExtensions registers the given extensions with the consensus module's snapshot manager.
-// It allows additional snapshotter implementations to be used for creating and restoring snapshots.
-func (c *Consensus[T]) RegisterSnapshotExtensions(extensions ...snapshots.ExtensionSnapshotter) error {
-	if err := c.snapshotManager.RegisterExtensions(extensions...); err != nil {
-		return fmt.Errorf("failed to register snapshot extensions: %w", err)
-	}
-
-	return nil
-}
-
 // CheckTx implements types.Application.
 // It is called by cometbft to verify transaction validity
-func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxRequest) (*abciproto.CheckTxResponse, error) {
+func (c *consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxRequest) (*abciproto.CheckTxResponse, error) {
 	decodedTx, err := c.txCodec.Decode(req.Tx)
 	if err != nil {
 		return nil, err
@@ -167,7 +124,7 @@ func (c *Consensus[T]) CheckTx(ctx context.Context, req *abciproto.CheckTxReques
 }
 
 // Info implements types.Application.
-func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abciproto.InfoResponse, error) {
+func (c *consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abciproto.InfoResponse, error) {
 	version, _, err := c.store.StateLatest()
 	if err != nil {
 		return nil, err
@@ -207,7 +164,7 @@ func (c *Consensus[T]) Info(ctx context.Context, _ *abciproto.InfoRequest) (*abc
 
 // Query implements types.Application.
 // It is called by cometbft to query application state.
-func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (resp *abciproto.QueryResponse, err error) {
+func (c *consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (resp *abciproto.QueryResponse, err error) {
 	resp, isGRPC, err := c.maybeRunGRPCQuery(ctx, req)
 	if isGRPC {
 		return resp, err
@@ -221,17 +178,17 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 	}
 
 	switch path[0] {
-	case cmtservice.QueryPathApp:
-		resp, err = c.handlerQueryApp(ctx, path, req)
+	case QueryPathApp:
+		resp, err = c.handleQueryApp(ctx, path, req)
 
-	case cmtservice.QueryPathStore:
-		resp, err = c.handleQueryStore(path, c.store, req)
+	case QueryPathStore:
+		resp, err = c.handleQueryStore(path, req)
 
-	case cmtservice.QueryPathP2P:
+	case QueryPathP2P:
 		resp, err = c.handleQueryP2P(path)
 
 	default:
-		resp = QueryResult(errorsmod.Wrap(cometerrors.ErrUnknownRequest, "unknown query path"), c.cfg.AppTomlConfig.Trace)
+		resp = QueryResult(errorsmod.Wrapf(cometerrors.ErrUnknownRequest, "unknown query path %s", req.Path), c.cfg.AppTomlConfig.Trace)
 	}
 
 	if err != nil {
@@ -241,7 +198,7 @@ func (c *Consensus[T]) Query(ctx context.Context, req *abciproto.QueryRequest) (
 	return resp, nil
 }
 
-func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryRequest) (resp *abciproto.QueryResponse, isGRPC bool, err error) {
+func (c *consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryRequest) (resp *abciproto.QueryResponse, isGRPC bool, err error) {
 	// if this fails then we cannot serve queries anymore
 	registry, err := c.getProtoRegistry()
 	if err != nil {
@@ -267,6 +224,50 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 		handlerFullName = string(md.Input().FullName())
 	}
 
+	// special case for simulation as it is an external gRPC registered on the grpc server component
+	// and not on the app itself, so it won't pass the router afterwards.
+	if req.Path == "/cosmos.tx.v1beta1.Service/Simulate" {
+		simulateRequest := &txtypes.SimulateRequest{}
+		err = gogoproto.Unmarshal(req.Data, simulateRequest)
+		if err != nil {
+			return nil, true, fmt.Errorf("unable to decode gRPC request with path %s from ABCI.Query: %w", req.Path, err)
+		}
+
+		tx, err := c.txCodec.Decode(simulateRequest.TxBytes)
+		if err != nil {
+			return nil, true, fmt.Errorf("failed to decode tx: %w", err)
+		}
+
+		txResult, _, err := c.app.Simulate(ctx, tx)
+		if err != nil {
+			return nil, true, fmt.Errorf("failed with gas used: '%d': %w", txResult.GasUsed, err)
+		}
+
+		msgResponses := make([]*codectypes.Any, 0, len(txResult.Resp))
+		// pack the messages into Any
+		for _, msg := range txResult.Resp {
+			anyMsg, err := codectypes.NewAnyWithValue(msg)
+			if err != nil {
+				return nil, true, fmt.Errorf("failed to pack message response: %w", err)
+			}
+
+			msgResponses = append(msgResponses, anyMsg)
+		}
+
+		resp := &txtypes.SimulateResponse{
+			GasInfo: &sdk.GasInfo{
+				GasUsed:   txResult.GasUsed,
+				GasWanted: txResult.GasWanted,
+			},
+			Result: &sdk.Result{
+				MsgResponses: msgResponses,
+			},
+		}
+
+		res, err := queryResponse(resp, req.Height)
+		return res, true, err
+	}
+
 	handler, found := c.queryHandlersMap[handlerFullName]
 	if !found {
 		return nil, true, fmt.Errorf("no query handler found for %s", req.Path)
@@ -281,7 +282,6 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 		resp := QueryResult(err, c.cfg.AppTomlConfig.Trace)
 		resp.Height = req.Height
 		return resp, true, err
-
 	}
 
 	resp, err = queryResponse(res, req.Height)
@@ -289,7 +289,7 @@ func (c *Consensus[T]) maybeRunGRPCQuery(ctx context.Context, req *abci.QueryReq
 }
 
 // InitChain implements types.Application.
-func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRequest) (*abciproto.InitChainResponse, error) {
+func (c *consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRequest) (*abciproto.InitChainResponse, error) {
 	c.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
 	// store chainID to be used later on in execution
@@ -373,7 +373,7 @@ func (c *Consensus[T]) InitChain(ctx context.Context, req *abciproto.InitChainRe
 
 // PrepareProposal implements types.Application.
 // It is called by cometbft to prepare a proposal block.
-func (c *Consensus[T]) PrepareProposal(
+func (c *consensus[T]) PrepareProposal(
 	ctx context.Context,
 	req *abciproto.PrepareProposalRequest,
 ) (resp *abciproto.PrepareProposalResponse, err error) {
@@ -409,7 +409,7 @@ func (c *Consensus[T]) PrepareProposal(
 
 // ProcessProposal implements types.Application.
 // It is called by cometbft to process/verify a proposal block.
-func (c *Consensus[T]) ProcessProposal(
+func (c *consensus[T]) ProcessProposal(
 	ctx context.Context,
 	req *abciproto.ProcessProposalRequest,
 ) (*abciproto.ProcessProposalResponse, error) {
@@ -443,7 +443,7 @@ func (c *Consensus[T]) ProcessProposal(
 
 // FinalizeBlock implements types.Application.
 // It is called by cometbft to finalize a block.
-func (c *Consensus[T]) FinalizeBlock(
+func (c *consensus[T]) FinalizeBlock(
 	ctx context.Context,
 	req *abciproto.FinalizeBlockRequest,
 ) (*abciproto.FinalizeBlockResponse, error) {
@@ -533,7 +533,7 @@ func (c *Consensus[T]) FinalizeBlock(
 
 // Commit implements types.Application.
 // It is called by cometbft to notify the application that a block was committed.
-func (c *Consensus[T]) Commit(ctx context.Context, _ *abciproto.CommitRequest) (*abciproto.CommitResponse, error) {
+func (c *consensus[T]) Commit(ctx context.Context, _ *abciproto.CommitRequest) (*abciproto.CommitResponse, error) {
 	lastCommittedHeight := c.lastCommittedHeight.Load()
 
 	c.snapshotManager.SnapshotIfApplicable(lastCommittedHeight)
@@ -551,7 +551,7 @@ func (c *Consensus[T]) Commit(ctx context.Context, _ *abciproto.CommitRequest) (
 // Vote extensions
 
 // VerifyVoteExtension implements types.Application.
-func (c *Consensus[T]) VerifyVoteExtension(
+func (c *consensus[T]) VerifyVoteExtension(
 	ctx context.Context,
 	req *abciproto.VerifyVoteExtensionRequest,
 ) (*abciproto.VerifyVoteExtensionResponse, error) {
@@ -593,7 +593,7 @@ func (c *Consensus[T]) VerifyVoteExtension(
 }
 
 // ExtendVote implements types.Application.
-func (c *Consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVoteRequest) (*abciproto.ExtendVoteResponse, error) {
+func (c *consensus[T]) ExtendVote(ctx context.Context, req *abciproto.ExtendVoteRequest) (*abciproto.ExtendVoteResponse, error) {
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp, err := c.GetConsensusParams(ctx)

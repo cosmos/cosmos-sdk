@@ -1,0 +1,30 @@
+syntax = "proto3";
+package cosmos.accounts.defaults.asset.v1;
+
+import "amino/amino.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "cosmossdk.io/x/accounts/defaults/asset/v1";
+
+// MsgInitAssetAccount defines a message that enables creating a asset account.
+message MsgInitAssetAccount {
+  option (amino.name)      = "cosmos-sdk/MsgInitAssetAccount";
+  option (gogoproto.equal) = true;
+
+  // owner of the asset account
+  string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // denom
+  string denom = 2;
+
+  string symbol = 3;
+
+  uint64 decimals = 4;
+}
+
+// MsgInitAssetAccountResponse defines the Msg/InitLockupAccount response type.
+message MsgInitAssetAccountResponse {}

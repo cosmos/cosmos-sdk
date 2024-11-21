@@ -36,6 +36,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v2.0.0-beta.6] - 2024-11-21
+
 ### Improvements
 
 * [#22443](https://github.com/cosmos/cosmos-sdk/pull/22443) Add keyring flags in query commands.
@@ -43,12 +45,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-<<<<<<< HEAD
 * [#21809](https://github.com/cosmos/cosmos-sdk/pull/21809) Correctly handle enhanced sub commands.
-=======
 * [#21853](https://github.com/cosmos/cosmos-sdk/pull/21853) Fix `*big.Int` unmarshalling in txs.
 * [#22576](https://github.com/cosmos/cosmos-sdk/pull/22576) Fix duplicate command addition in `autocli` when custom enhanced command has a different name than module name
->>>>>>> 685218e53 (fix(client/v2/autocli): prevent duplicate addition of customCommands (#22576))
 
 ## [v2.0.0-beta.5] - 2024-09-18
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -184,7 +185,7 @@ func (c collValue[T, PT]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
 					case protoreflect.BytesKind:
 						values = append(values, val.Bytes())
 					case protoreflect.EnumKind:
-						// TODO: support enums better, with actual enums
+						// TODO: postgres uses the enum name, not the number
 						values = append(values, string(fieldDesc.Enum().Values().ByNumber(val.Enum()).Name()))
 					case protoreflect.MessageKind:
 						msg := val.Interface().(*dynamicpb.Message)
@@ -367,17 +368,11 @@ func protoCol(f protoreflect.FieldDescriptor) schema.Field {
 		case protoreflect.BytesKind:
 			col.Kind = schema.BytesKind
 		case protoreflect.EnumKind:
-			// for now we'll use a string for enums.
-			col.Kind = schema.StringKind
 			// TODO: support enums
-			// col.Kind = schema.EnumKind
-			// enumDesc := f.Enum()
-			// var vals []string
-			// n := enumDesc.Values().Len()
-			// for i := 0; i < n; i++ {
-			// 	vals = append(vals, string(enumDesc.Values().Get(i).Name()))
-			// }
-			// col.ReferencedType = string(enumDesc.Name())
+			col.Kind = schema.EnumKind
+			// use the full name to avoid collissions
+			col.ReferencedType = string(f.Enum().FullName())
+			col.ReferencedType = strings.ReplaceAll(col.ReferencedType, ".", "_")
 		case protoreflect.MessageKind:
 			col.Nullable = true
 			fullName := f.Message().FullName()

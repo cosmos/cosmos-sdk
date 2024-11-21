@@ -25,8 +25,8 @@ import (
 	"cosmossdk.io/core/transaction"
 	"cosmossdk.io/log"
 	serverv2 "cosmossdk.io/server/v2"
-	"cosmossdk.io/server/v2/api"
 	"cosmossdk.io/server/v2/api/grpc/gogoreflection"
+	"cosmossdk.io/server/v2/api/grpc/nodeservice"
 )
 
 const (
@@ -40,7 +40,8 @@ type Server[T transaction.Tx] struct {
 	config     *Config
 	cfgOptions []CfgOption
 
-	grpcSrv *grpc.Server
+	grpcSrv           *grpc.Server
+	extraGRPCHandlers []func(*grpc.Server) error
 }
 
 // New creates a new grpc server.
@@ -48,15 +49,15 @@ func New[T transaction.Tx](
 	logger log.Logger,
 	interfaceRegistry server.InterfaceRegistry,
 	queryHandlers map[string]appmodulev2.Handler,
-	queryable interface {
-		Query(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error)
-	},
+	queryable func(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error),
 	cfg server.ConfigMap,
-	cfgOptions ...CfgOption,
+	opts ...OptionFunc[T],
 ) (*Server[T], error) {
-	srv := &Server[T]{
-		cfgOptions: cfgOptions,
+	srv := &Server[T]{}
+	for _, opt := range opts {
+		opt(srv)
 	}
+
 	serverCfg := srv.Config().(*Config)
 	if len(cfg) > 0 {
 		if err := serverv2.UnmarshalSubConfig(cfg, srv.Name(), &serverCfg); err != nil {
@@ -71,14 +72,45 @@ func New[T transaction.Tx](
 		grpc.UnknownServiceHandler(makeUnknownServiceHandler(queryHandlers, queryable)),
 	)
 
-	// Reflection allows external clients to see what services and methods the gRPC server exposes.
+	// register grpc query handler v2
+	RegisterServiceServer(grpcSrv, &v2Service{queryHandlers, queryable})
+
+	// register node service
+	nodeservice.RegisterServiceServer(grpcSrv, nodeservice.NewQueryServer(cfg))
+
+	// reflection allows external clients to see what services and methods the gRPC server exposes.
 	gogoreflection.Register(grpcSrv, slices.Collect(maps.Keys(queryHandlers)), logger.With("sub-module", "grpc-reflection"))
+
+	// register extra handlers on the grpc server
+	var err error
+	for _, fn := range srv.extraGRPCHandlers {
+		err = errors.Join(err, fn(grpcSrv))
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to register extra gRPC handlers: %w", err)
+	}
 
 	srv.grpcSrv = grpcSrv
 	srv.config = serverCfg
 	srv.logger = logger.With(log.ModuleKey, srv.Name())
 
 	return srv, nil
+}
+
+type OptionFunc[T transaction.Tx] func(*Server[T])
+
+// WithCfgOptions allows to overwrite the default server configuration.
+func WithCfgOptions[T transaction.Tx](cfgOptions ...CfgOption) OptionFunc[T] {
+	return func(srv *Server[T]) {
+		srv.cfgOptions = cfgOptions
+	}
+}
+
+// WithExtraGRPCHandlers allows to register extra handlers on the grpc server.
+func WithExtraGRPCHandlers[T transaction.Tx](handlers ...func(*grpc.Server) error) OptionFunc[T] {
+	return func(srv *Server[T]) {
+		srv.extraGRPCHandlers = handlers
+	}
 }
 
 // NewWithConfigOptions creates a new GRPC server with the provided config options.
@@ -96,9 +128,9 @@ func (s *Server[T]) StartCmdFlags() *pflag.FlagSet {
 	return flags
 }
 
-func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier interface {
-	Query(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error)
-},
+func makeUnknownServiceHandler(
+	handlers map[string]appmodulev2.Handler,
+	queryable func(ctx context.Context, version uint64, msg transaction.Msg) (transaction.Msg, error),
 ) grpc.StreamHandler {
 	getRegistry := sync.OnceValues(gogoproto.MergedRegistry)
 
@@ -146,7 +178,7 @@ func makeUnknownServiceHandler(handlers map[string]appmodulev2.Handler, querier 
 			if err != nil {
 				return status.Errorf(codes.InvalidArgument, "invalid get height from context: %v", err)
 			}
-			resp, err := querier.Query(ctx, height, req)
+			resp, err := queryable(ctx, height, req)
 			if err != nil {
 				return err
 			}
@@ -223,10 +255,7 @@ func (s *Server[T]) Stop(ctx context.Context) error {
 	}
 
 	s.logger.Info("stopping gRPC server...", "address", s.config.Address)
-	return api.DoUntilCtxExpired(ctx, s.grpcSrv.GracefulStop)
-}
+	s.grpcSrv.GracefulStop()
 
-// GetGRPCServer returns the underlying gRPC server.
-func (s *Server[T]) GetGRPCServer() *grpc.Server {
-	return s.grpcSrv
+	return nil
 }

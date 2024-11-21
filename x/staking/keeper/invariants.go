@@ -20,6 +20,8 @@ func RegisterInvariants(ir sdk.InvariantRegistry, k *Keeper) {
 		PositiveDelegationInvariant(k))
 	ir.RegisterRoute(types.ModuleName, "delegator-shares",
 		DelegatorSharesInvariant(k))
+	ir.RegisterRoute(types.ModuleName, "liquid-stake",
+		LiquidStakeInvariant(k))
 }
 
 // AllInvariants runs all invariants of the staking module.
@@ -40,7 +42,12 @@ func AllInvariants(k *Keeper) sdk.Invariant {
 			return res, stop
 		}
 
-		return DelegatorSharesInvariant(k)(ctx)
+		res, stop = DelegatorSharesInvariant(k)(ctx)
+		if stop {
+			return res, stop
+		}
+
+		return LiquidStakeInvariant(k)(ctx)
 	}
 }
 
@@ -186,10 +193,13 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 		}
 
 		validatorsDelegationShares := map[string]math.LegacyDec{}
+		allValidatorBondShares := math.LegacyNewDec(0)
+		allValidatorBondDelegations := math.LegacyNewDec(0)
 
 		// initialize a map: validator -> its delegation shares
 		for _, validator := range validators {
 			validatorsDelegationShares[validator.GetOperator()] = math.LegacyZeroDec()
+			allValidatorBondShares = allValidatorBondShares.Add(validator.ValidatorBondShares)
 		}
 
 		// iterate through all the delegations to calculate the total delegation shares for each validator
@@ -202,6 +212,9 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 			delegationValidatorAddr := delegation.GetValidatorAddr()
 			validatorDelegationShares := validatorsDelegationShares[delegationValidatorAddr]
 			validatorsDelegationShares[delegationValidatorAddr] = validatorDelegationShares.Add(delegation.Shares)
+			if delegation.ValidatorBond {
+				allValidatorBondDelegations = allValidatorBondDelegations.Add(delegation.Shares)
+			}
 		}
 
 		// for each validator, check if its total delegation shares calculated from the step above equals to its expected delegation shares
@@ -216,6 +229,46 @@ func DelegatorSharesInvariant(k *Keeper) sdk.Invariant {
 			}
 		}
 
+		// compare bonded shares
+		if !allValidatorBondShares.Equal(allValidatorBondDelegations) {
+			broken = true
+			msg += fmt.Sprintf("broken delegator shares invariance:\n"+
+				"\t sum of validator.ValidatorBondShares: %v\n"+
+				"\tsum of validator bonded delegation.Shares: %v\n", allValidatorBondShares, allValidatorBondDelegations)
+		}
+
 		return sdk.FormatInvariant(types.ModuleName, "delegator shares", msg), broken
+	}
+}
+
+func LiquidStakeInvariant(k *Keeper) sdk.Invariant {
+	return func(ctx sdk.Context) (string, bool) {
+		var (
+			msg    string
+			broken bool
+		)
+
+		validators, err := k.GetAllValidators(ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		totalLiquidStake := k.GetTotalLiquidStakedTokens(ctx)
+
+		// check if its total liquid staked tokens equals to liquid stake of all validators
+		calculatedTotalLiquidStake := math.NewInt(0)
+
+		for _, validator := range validators {
+			calculatedTotalLiquidStake = calculatedTotalLiquidStake.Add(validator.TokensFromShares(validator.LiquidShares).TruncateInt())
+		}
+
+		if !totalLiquidStake.Equal(calculatedTotalLiquidStake) {
+			broken = true
+			msg += fmt.Sprintf("broken liquid stake invariant:\n"+
+				"\tk.GetTotalLiquidStakedTokens: %v\n"+
+				"\tsum of validator.LiquidShares: %v\n", totalLiquidStake, calculatedTotalLiquidStake)
+		}
+
+		return sdk.FormatInvariant(types.ModuleName, "liquid stake", msg), broken
 	}
 }

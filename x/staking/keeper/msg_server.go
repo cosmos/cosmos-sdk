@@ -369,7 +369,7 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 	}
 
 	// If this is a validator self-bond, the new liquid delegation cannot fall below the self-bond * bond factor
-	// The delegation on the new validator will not a validator bond
+	// The delegation on the new validator will not be a validator bond
 	if srcDelegation.ValidatorBond {
 		if err := k.SafelyDecreaseValidatorBond(ctx, valSrcAddr, srcShares); err != nil {
 			return nil, err

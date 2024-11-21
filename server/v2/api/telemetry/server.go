@@ -28,7 +28,7 @@ type Server[T transaction.Tx] struct {
 }
 
 // New creates a new telemetry server.
-func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger) (*Server[T], error) {
+func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger, enableTelemetry func()) (*Server[T], error) {
 	srv := &Server[T]{}
 	serverCfg := srv.Config().(*Config)
 	if len(cfg) > 0 {
@@ -38,6 +38,14 @@ func New[T transaction.Tx](cfg server.ConfigMap, logger log.Logger) (*Server[T],
 	}
 	srv.config = serverCfg
 	srv.logger = logger.With(log.ModuleKey, srv.Name())
+
+	if enableTelemetry == nil {
+		panic("enableTelemetry must be provided")
+	}
+
+	if srv.config.Enable {
+		enableTelemetry()
+	}
 
 	metrics, err := NewMetrics(srv.config)
 	if err != nil {
@@ -67,10 +75,10 @@ func (s *Server[T]) Start(ctx context.Context) error {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", s.metricsHandler)
-	// keeping /metrics for backwards compatibility
-	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/", http.StatusMovedPermanently)
+	// /metrics is the default standard path for Prometheus metrics.
+	mux.HandleFunc("/metrics", s.metricsHandler)
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/metrics", http.StatusMovedPermanently)
 	})
 
 	s.server = &http.Server{

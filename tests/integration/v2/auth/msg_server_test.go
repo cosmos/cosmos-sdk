@@ -136,7 +136,6 @@ func TestAsyncExec(t *testing.T) {
 					return resp, e
 				},
 				integration.WithAutomaticCommit(),
-				integration.WithAutomaticDeliverBlock(),
 			)
 			if tc.expectErr {
 				assert.ErrorContains(t, err, tc.expErrMsg)

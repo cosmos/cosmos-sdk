@@ -122,25 +122,17 @@ func DefaultStartUpConfig(t *testing.T) StartupConfig {
 
 // RunMsgConfig defines the run message configuration.
 type RunMsgConfig struct {
-	DeliverBlock bool
-	Commit       bool
+	Commit bool
 }
 
 // Option is a function that can be used to configure the integration app.
 type Option func(*RunMsgConfig)
 
-// WithAutomaticDeliverBlock calls deliver block after each msg.
-func WithAutomaticDeliverBlock() Option {
-	return func(cfg *RunMsgConfig) {
-		cfg.Commit = true
-	}
-}
-
 // WithAutomaticCommit enables automatic commit.
 // This means that the integration app will automatically commit the state after each msg.
 func WithAutomaticCommit() Option {
 	return func(cfg *RunMsgConfig) {
-		cfg.DeliverBlock = true
+		cfg.Commit = true
 	}
 }
 
@@ -171,9 +163,7 @@ func NewApp(
 
 	// set default branch and msg router service
 	if routerServiceFactory == nil {
-		routerServiceFactory = func(key []byte) router.Service {
-			return stf.NewMsgRouterService(key)
-		}
+		routerServiceFactory = stf.NewMsgRouterService
 	}
 
 	if branchService == nil {
@@ -454,15 +444,9 @@ func (app *App) RunMsg(t *testing.T, ctx context.Context, handler handler, optio
 	resp, err = handler(ctx)
 
 	if cfg.Commit {
+		app.lastHeight++
 		_, err := app.Commit(integrationCtx.state)
 		require.NoError(t, err)
-	}
-
-	if cfg.DeliverBlock {
-		app.lastHeight++
-		latestVersion, err := app.Store.GetLatestVersion()
-		require.NoError(t, err)
-		require.Equal(t, latestVersion, app.lastHeight)
 	}
 
 	return resp, err

@@ -254,13 +254,11 @@ func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
 // getContext creates and returns a new context.Context with an autocli.Context value.
 // It initializes a printer and, if necessary, a keyring based on command flags.
 func (b *Builder) getContext(cmd *cobra.Command) (context.Context, error) {
-	printer, err := print.NewPrinter(cmd)
-	if err != nil {
-		return nil, err
-	}
-
 	// if the command uses the keyring this must be set
-	var k keyring.Keyring
+	var (
+		k   keyring.Keyring
+		err error
+	)
 	if cmd.Flags().Lookup("keyring-dir") != nil && cmd.Flags().Lookup("keyring-backend") != nil {
 		k, err = keyring.NewKeyringFromFlags(cmd.Flags(), b.AddressCodec, cmd.InOrStdin(), b.Cdc)
 		if err != nil {
@@ -276,7 +274,7 @@ func (b *Builder) getContext(cmd *cobra.Command) (context.Context, error) {
 		ValidatorAddressCodec: b.ValidatorAddressCodec,
 		ConsensusAddressCodec: b.ConsensusAddressCodec,
 		Cdc:                   b.Cdc,
-		Printer:               printer,
+		OutputWriter:          cmd.OutOrStdout(),
 		Keyring:               k,
 		EnabledSignmodes:      signModesToApiSignModes(b.EnabledSignModes),
 	}

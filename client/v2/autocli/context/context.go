@@ -3,12 +3,12 @@ package context
 import (
 	gocontext "context"
 	"errors"
+	"io"
 
 	"github.com/spf13/pflag"
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	"cosmossdk.io/client/v2/autocli/keyring"
-	"cosmossdk.io/client/v2/internal/print"
 	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -31,7 +31,7 @@ type Context struct {
 
 	Cdc codec.Codec
 
-	Printer *print.Printer
+	OutputWriter io.Writer
 
 	Keyring keyring.Keyring
 

@@ -56,7 +56,7 @@ func GenerateOrBroadcastTxCLIWithBroadcaster(
 	}
 
 	skipConfirm, _ := clientCtx.Flags.GetBool("yes")
-	return BroadcastTx(ctx, clientCtx.Printer, txf, broadcaster, skipConfirm, msgs...)
+	return BroadcastTx(ctx, txf, broadcaster, skipConfirm, msgs...)
 }
 
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
@@ -168,7 +168,6 @@ func SimulateTx(ctx *clientcontext.Context, conn grpc.ClientConn, msgs ...transa
 // It will return an error upon failure.
 func BroadcastTx(
 	ctx context.Context,
-	printer *print.Printer,
 	txf Factory,
 	broadcaster broadcast.Broadcaster,
 	skipConfirm bool,
@@ -201,8 +200,26 @@ func BroadcastTx(
 			return nil, fmt.Errorf("failed to encode transaction: %w", err)
 		}
 
-		if err := printer.PrintRaw(txBytes); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error: %v\n%s\n", err, txBytes)
+		clientCtx, err := clientcontext.ClientContextFromGoContext(ctx)
+		if err == nil {
+			format, err := clientCtx.Flags.GetString("format")
+			if err != nil {
+				return nil, err
+			}
+			printer := print.Printer{
+				Output:       clientCtx.OutputWriter,
+				OutputFormat: format,
+			}
+			if err := printer.PrintRaw(txBytes); err != nil {
+				_, err = fmt.Fprintf(os.Stderr, "error: %v\n%s\n", err, txBytes)
+				return nil, err
+			}
+		} else {
+			//	default output writer and format
+			_, err = os.Stdout.Write(txBytes)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		buf := bufio.NewReader(os.Stdin)

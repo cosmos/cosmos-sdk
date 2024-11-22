@@ -8,11 +8,13 @@ import (
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
+
+	"cosmossdk.io/client/v2/internal/flags"
 )
 
 const (
-	jsonOutput = "json"
-	textOutput = "text"
+	jsonOutput = flags.OutputFormatJSON
+	textOutput = flags.OutputFormatText
 )
 
 // Printer handles formatted output of different types of data

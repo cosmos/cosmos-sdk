@@ -1,12 +1,8 @@
 package tx
 
 import (
-	"bufio"
 	"context"
-	"errors"
 	"fmt"
-	"os"
-
 	"github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/pflag"
@@ -16,10 +12,9 @@ import (
 	"cosmossdk.io/client/v2/broadcast"
 	"cosmossdk.io/client/v2/broadcast/comet"
 	"cosmossdk.io/client/v2/internal/account"
-	"cosmossdk.io/client/v2/internal/print"
+	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/core/transaction"
 
-	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
@@ -55,8 +50,7 @@ func GenerateOrBroadcastTxCLIWithBroadcaster(
 		return dryRun(txf, msgs...)
 	}
 
-	skipConfirm, _ := clientCtx.Flags.GetBool("yes")
-	return BroadcastTx(ctx, txf, broadcaster, skipConfirm, msgs...)
+	return BroadcastTx(ctx, txf, broadcaster, msgs...)
 }
 
 // GenerateOrBroadcastTxCLI will either generate and print an unsigned transaction
@@ -81,8 +75,8 @@ func GenerateOrBroadcastTxCLI(
 
 // getCometBroadcaster returns a new CometBFT broadcaster based on the provided context and flag set.
 func getCometBroadcaster(cdc codec.Codec, flagSet *pflag.FlagSet) (broadcast.Broadcaster, error) {
-	url, _ := flagSet.GetString("node")
-	mode, _ := flagSet.GetString("broadcast-mode")
+	url, _ := flagSet.GetString(flags.FlagNode)
+	mode, _ := flagSet.GetString(flags.FlagBroadcastMode)
 	return comet.NewCometBFTBroadcaster(url, mode, cdc)
 }
 
@@ -166,13 +160,7 @@ func SimulateTx(ctx clientcontext.Context, conn grpc.ClientConn, msgs ...transac
 // BroadcastTx attempts to generate, sign and broadcast a transaction with the
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
-func BroadcastTx(
-	ctx context.Context,
-	txf Factory,
-	broadcaster broadcast.Broadcaster,
-	skipConfirm bool,
-	msgs ...transaction.Msg,
-) ([]byte, error) {
+func BroadcastTx(ctx context.Context, txf Factory, broadcaster broadcast.Broadcaster, msgs ...transaction.Msg) ([]byte, error) {
 	if txf.simulateAndExecute() {
 		err := txf.calculateGas(msgs...)
 		if err != nil {
@@ -183,55 +171,6 @@ func BroadcastTx(
 	err := txf.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return nil, err
-	}
-
-	if !skipConfirm {
-		encoder := txf.txConfig.TxJSONEncoder()
-		if encoder == nil {
-			return nil, errors.New("failed to encode transaction: tx json encoder is nil")
-		}
-
-		unsigTx, err := txf.getTx()
-		if err != nil {
-			return nil, err
-		}
-		txBytes, err := encoder(unsigTx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to encode transaction: %w", err)
-		}
-
-		clientCtx, err := clientcontext.ClientContextFromGoContext(ctx)
-		if err == nil {
-			format, err := clientCtx.Flags.GetString("format")
-			if err != nil {
-				return nil, err
-			}
-			printer := print.Printer{
-				Output:       clientCtx.OutputWriter,
-				OutputFormat: format,
-			}
-			if err := printer.PrintRaw(txBytes); err != nil {
-				_, err = fmt.Fprintf(os.Stderr, "error: %v\n%s\n", err, txBytes)
-				return nil, err
-			}
-		} else {
-			//	default output writer and format
-			_, err = os.Stdout.Write(txBytes)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		buf := bufio.NewReader(os.Stdin)
-		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
-		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error: %v\ncanceled transaction\n", err)
-			return nil, err
-		}
-		if !ok {
-			_, _ = fmt.Fprintln(os.Stderr, "canceled transaction")
-			return nil, nil
-		}
 	}
 
 	signedTx, err := txf.sign(ctx, true)

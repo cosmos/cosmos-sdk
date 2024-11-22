@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strconv"
 
+	flags2 "github.com/cosmos/cosmos-sdk/client/flags"
+
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -268,7 +270,7 @@ func (b *Builder) getContext(cmd *cobra.Command) (context.Context, error) {
 		k   keyring.Keyring
 		err error
 	)
-	if cmd.Flags().Lookup("keyring-dir") != nil && cmd.Flags().Lookup("keyring-backend") != nil {
+	if cmd.Flags().Lookup(flags.FlagKeyringDir) != nil && cmd.Flags().Lookup(flags.FlagKeyringBackend) != nil {
 		k, err = keyring.NewKeyringFromFlags(cmd.Flags(), b.AddressCodec, cmd.InOrStdin(), b.Cdc)
 		if err != nil {
 			return nil, err
@@ -283,7 +285,6 @@ func (b *Builder) getContext(cmd *cobra.Command) (context.Context, error) {
 		ValidatorAddressCodec: b.ValidatorAddressCodec,
 		ConsensusAddressCodec: b.ConsensusAddressCodec,
 		Cdc:                   b.Cdc,
-		OutputWriter:          cmd.OutOrStdout(),
 		Keyring:               k,
 		EnabledSignmodes:      signModesToApiSignModes(b.EnabledSignModes),
 	}
@@ -305,57 +306,30 @@ func (b *Builder) preRunE() func(cmd *cobra.Command, args []string) error {
 	}
 }
 
+// setFlagsFromConfig sets command flags from the provided configuration.
+// It only sets flags that haven't been explicitly changed by the user.
 func (b *Builder) setFlagsFromConfig(cmd *cobra.Command) error {
 	conf, err := config.CreateClientConfigFromFlags(cmd.Flags())
 	if err != nil {
 		return err
 	}
 
-	if cmd.Flags().Lookup("chain-id") != nil && !cmd.Flags().Changed("chain-id") {
-		if err = cmd.Flags().Set("chain-id", conf.ChainID); err != nil {
-			return err
-		}
+	flagsToSet := map[string]string{
+		flags.FlagChainID:        conf.ChainID,
+		flags.FlagKeyringBackend: conf.KeyringBackend,
+		flags.FlagFrom:           conf.KeyringDefaultKeyName,
+		flags.FlagOutput:         conf.Output,
+		flags.FlagNode:           conf.Node,
+		flags.FlagBroadcastMode:  conf.BroadcastMode,
+		flags.FlagGrpcAddress:    conf.GRPC.Address,
+		flags2.FlagGRPCInsecure:  strconv.FormatBool(conf.GRPC.Insecure),
 	}
 
-	if cmd.Flags().Lookup("keyring-backend") != nil && !cmd.Flags().Changed("keyring-backend") {
-		if err = cmd.Flags().Set("keyring-backend", conf.KeyringBackend); err != nil {
-			return err
-		}
-	}
-
-	if cmd.Flags().Lookup("from") != nil && !cmd.Flags().Changed("from") {
-		if err = cmd.Flags().Set("from", conf.KeyringDefaultKeyName); err != nil {
-			return err
-		}
-	}
-
-	if cmd.Flags().Lookup("output") != nil && !cmd.Flags().Changed("output") {
-		if err = cmd.Flags().Set("output", conf.Output); err != nil {
-			return err
-		}
-	}
-
-	if cmd.Flags().Lookup("node") != nil && !cmd.Flags().Changed("node") {
-		if err = cmd.Flags().Set("node", conf.Node); err != nil {
-			return err
-		}
-	}
-
-	if cmd.Flags().Lookup("broadcast-mode") != nil && !cmd.Flags().Changed("broadcast-mode") {
-		if err = cmd.Flags().Set("broadcast-mode", conf.BroadcastMode); err != nil {
-			return err
-		}
-	}
-
-	if cmd.Flags().Lookup("grpc-addr") != nil && !cmd.Flags().Changed("grpc-addr") {
-		if err = cmd.Flags().Set("grpc-addr", conf.GRPC.Address); err != nil {
-			return err
-		}
-	}
-
-	if cmd.Flags().Lookup("grpc-insecure") != nil && !cmd.Flags().Changed("grpc-insecure") {
-		if err = cmd.Flags().Set("grpc-insecure", strconv.FormatBool(conf.GRPC.Insecure)); err != nil {
-			return err
+	for flagName, value := range flagsToSet {
+		if flag := cmd.Flags().Lookup(flagName); flag != nil && !cmd.Flags().Changed(flagName) {
+			if err := cmd.Flags().Set(flagName, value); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -371,8 +345,8 @@ func getQueryClientConn(cdc codec.Codec) func(cmd *cobra.Command) (grpc.ClientCo
 		creds := grpcinsecure.NewCredentials()
 
 		insecure := true
-		if cmd.Flags().Lookup("grpc-insecure") != nil {
-			insecure, err = cmd.Flags().GetBool("grpc-insecure")
+		if cmd.Flags().Lookup(flags.FlagGrpcInsecure) != nil {
+			insecure, err = cmd.Flags().GetBool(flags.FlagGrpcInsecure)
 			if err != nil {
 				return nil, err
 			}
@@ -382,8 +356,8 @@ func getQueryClientConn(cdc codec.Codec) func(cmd *cobra.Command) (grpc.ClientCo
 		}
 
 		var addr string
-		if cmd.Flags().Lookup("grpc-addr") != nil {
-			addr, err = cmd.Flags().GetString("grpc-addr")
+		if cmd.Flags().Lookup(flags.FlagGrpcAddress) != nil {
+			addr, err = cmd.Flags().GetString(flags.FlagGrpcAddress)
 			if err != nil {
 				return nil, err
 			}
@@ -391,7 +365,7 @@ func getQueryClientConn(cdc codec.Codec) func(cmd *cobra.Command) (grpc.ClientCo
 		if addr == "" {
 			// if grpc-addr has not been set, use the default clientConn
 			// TODO: default is comet
-			node, err := cmd.Flags().GetString("node")
+			node, err := cmd.Flags().GetString(flags.FlagNode)
 			if err != nil {
 				return nil, err
 			}

@@ -3,8 +3,6 @@ package context
 import (
 	gocontext "context"
 	"errors"
-	"io"
-
 	"github.com/spf13/pflag"
 
 	apisigning "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -30,8 +28,6 @@ type Context struct {
 	ConsensusAddressCodec address.ConsensusAddressCodec
 
 	Cdc codec.Codec
-
-	OutputWriter io.Writer
 
 	Keyring keyring.Keyring
 

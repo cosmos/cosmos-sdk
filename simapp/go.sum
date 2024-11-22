@@ -320,8 +320,8 @@ github.com/containerd/continuity v0.3.0/go.mod h1:wJEAIwKOm/pBZuBd0JmeTvnLquTB1A
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/cosmos/btcutil v1.0.5 h1:t+ZFcX77LpKtDBhjucvnOH8C2l2ioGsBNEQ3jef8xFk=
 github.com/cosmos/btcutil v1.0.5/go.mod h1:IyB7iuqZMJlthe2tkIFL33xPyzbFYP0XVdS8P5lUPis=
-github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22 h1:V3WlarcZwlYYt3dUsStxm0FAFXVeEcvgwfmR6upxm5M=
-github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22/go.mod h1:Z8IXcFJ9PqKK6BIsVOB3QXtkKoqUOp1vRvPT39kOXEA=
+github.com/cosmos/cosmos-db v1.0.3-0.20241122154242-de82b5a3bffd h1:kCagaJPOQCN8KBDzEn69cqTo34/KK8nuybBpXgj6K8U=
+github.com/cosmos/cosmos-db v1.0.3-0.20241122154242-de82b5a3bffd/go.mod h1:buoJAISQjossrYGc0bw/2XtQtt0YzRyngpDKpNVY8hg=
 github.com/cosmos/cosmos-proto v1.0.0-beta.5 h1:eNcayDLpip+zVLRLYafhzLvQlSmyab+RC5W7ZfmxJLA=
 github.com/cosmos/cosmos-proto v1.0.0-beta.5/go.mod h1:hQGLpiIUloJBMdQMMWb/4wRApmI9hjHH05nefC0Ojec=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=

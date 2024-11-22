@@ -1,12 +1,13 @@
-package branch
+package cachekv_test
 
 import (
 	"encoding/binary"
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/core/store"
 	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/store/cachekv"
+	"cosmossdk.io/store/dbadapter"
 )
 
 var (
@@ -21,17 +22,13 @@ func Benchmark_CacheStack_Set(b *testing.B) {
 			b.ResetTimer()
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				err := bs.Set([]byte{0}, []byte{0})
-				if err != nil {
-					b.Fatal(err)
-				}
+				bs.Set([]byte{0}, []byte{0})
 			}
 		})
 	}
 }
 
-var sink any
-
+// Gets the same key from the branch store.
 func Benchmark_Get(b *testing.B) {
 	for _, stackSize := range stackSizes {
 		b.Run(fmt.Sprintf("StackSize%d", stackSize), func(b *testing.B) {
@@ -39,18 +36,18 @@ func Benchmark_Get(b *testing.B) {
 			b.ResetTimer()
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				sink, _ = bs.Get([]byte{0})
+				sink = bs.Get([]byte{0})
 			}
 		})
 	}
 	if sink == nil {
-		b.Fatal("benchmark did not run")
+		b.Fatal("prevent compiler optimization")
 	}
 	sink = nil
 }
 
+// Gets always different keys.
 func Benchmark_GetSparse(b *testing.B) {
-	var sink any
 	for _, stackSize := range stackSizes {
 		b.Run(fmt.Sprintf("StackSize%d", stackSize), func(b *testing.B) {
 			bs := makeBranchStack(b, stackSize)
@@ -64,29 +61,27 @@ func Benchmark_GetSparse(b *testing.B) {
 			b.ResetTimer()
 			b.ReportAllocs()
 			for _, key := range keys {
-				sink, _ = bs.Get(key)
+				sink = bs.Get(key)
 			}
 		})
 	}
 	if sink == nil {
-		b.Fatal("benchmark did not run")
+		b.Fatal("Benchmark did not run")
 	}
 	sink = nil
 }
 
-var (
-	keySink   any
-	valueSink any
-)
+var keySink, valueSink any
 
 func Benchmark_Iterate(b *testing.B) {
+
 	for _, stackSize := range stackSizes {
 		b.Run(fmt.Sprintf("StackSize%d", stackSize), func(b *testing.B) {
 			bs := makeBranchStack(b, stackSize)
 			b.ResetTimer()
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				iter, _ := bs.Iterator(nil, nil)
+				iter := bs.Iterator(nil, nil)
 				for iter.Valid() {
 					keySink = iter.Key()
 					valueSink = iter.Value()
@@ -96,27 +91,25 @@ func Benchmark_Iterate(b *testing.B) {
 			}
 		})
 	}
-	if valueSink == nil || keySink == nil {
-		b.Fatal("benchmark did not run")
+
+	if keySink == nil || valueSink == nil {
+		b.Fatal("Benchmark did not run")
 	}
-	valueSink = nil
 	keySink = nil
+	valueSink = nil
 }
 
 // makeBranchStack creates a branch stack of the given size and initializes it with unique key-value pairs.
-func makeBranchStack(b *testing.B, stackSize int) Store[store.KVStore] {
-	parent := coretesting.NewMemKV()
-	branch := NewStore[store.KVStore](parent)
+func makeBranchStack(_ *testing.B, stackSize int) *cachekv.Store {
+	parent := dbadapter.Store{DB: coretesting.NewMemDB()}
+	branch := cachekv.NewStore(parent)
 	for i := 1; i < stackSize; i++ {
-		branch = NewStore[store.KVStore](branch)
+		branch = cachekv.NewStore(branch)
 		for j := 0; j < elemsInStack; j++ {
 			// create unique keys by including the branch index.
 			key := append(numToBytes(i), numToBytes(j)...)
 			value := []byte{byte(j)}
-			err := branch.Set(key, value)
-			if err != nil {
-				b.Fatal(err)
-			}
+			branch.Set(key, value)
 		}
 	}
 	return branch

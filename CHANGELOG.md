@@ -48,6 +48,8 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 
 ### Improvements
 
+* RocksDB libraries have been upgraded to support RockDB v9 instead of v8.
+
 ### Bug Fixes
 
 * (sims) [#21906](https://github.com/cosmos/cosmos-sdk/pull/21906) Skip sims test when running dry on validators

@@ -25,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	sdktelemetry "github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -118,7 +119,7 @@ func InitRootCmd[T transaction.Tx](
 		}
 	}
 
-	telemetryServer, err := telemetry.New[T](deps.GlobalConfig, logger)
+	telemetryServer, err := telemetry.New[T](deps.GlobalConfig, logger, sdktelemetry.EnableTelemetry)
 	if err != nil {
 		return nil, err
 	}

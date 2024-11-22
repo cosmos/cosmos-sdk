@@ -232,7 +232,8 @@ func ProvideEnvironment(
 	}
 }
 
-// ServiceBuilder builds the msg router and query router service during app initialization.
+// RouterServiceBuilder builds the msg router and query router service during app initialization.
+// this is mainly use for testing to override message router service in the environment and not in stf.
 type RouterServiceBuilder interface {
 	// BuildMsgRouter return a msg router service.
 	// - actor is the module store key.

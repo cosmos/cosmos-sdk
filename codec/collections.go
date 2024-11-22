@@ -128,7 +128,6 @@ func (c collValue[T, PT]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
 			FromSchemaType: nil,
 		}, nil
 	} else {
-		// we default to encoding everything to JSON String
 		return collcodec.SchemaCodec[T]{
 			Fields: schemaFields,
 			ToSchemaType: func(t T) (any, error) {
@@ -231,13 +230,7 @@ func (c collValue[T, PT]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
 				return values, nil
 			},
 			FromSchemaType: func(a any) (T, error) {
-				var t T
-				sz, ok := a.(string)
-				if !ok {
-					return t, fmt.Errorf("expected string, got %T", a)
-				}
-				err := json.Unmarshal([]byte(sz), &t)
-				return t, err
+				panic("not implemented")
 			},
 		}, nil
 	}
@@ -330,6 +323,47 @@ func (c collInterfaceValue[T]) Stringify(value T) string {
 func (c collInterfaceValue[T]) ValueType() string {
 	var t T
 	return fmt.Sprintf("%T", t)
+}
+
+// SchemaCodec returns a schema codec, which will always have a single JSON field
+// as there is no way to know in advance the necessary fields for an interface.
+func (c collInterfaceValue[T]) SchemaCodec() (collcodec.SchemaCodec[T], error) {
+	var (
+		pt T
+	)
+
+	kind := schema.KindForGoValue(pt)
+	if err := kind.Validate(); err == nil {
+		return collcodec.SchemaCodec[T]{
+			Fields: []schema.Field{{
+				// we don't set any name so that this can be set to a good default by the caller
+				Name: "",
+				Kind: kind,
+			}},
+			// these can be nil because T maps directly to a schema value for this kind
+			ToSchemaType:   nil,
+			FromSchemaType: nil,
+		}, nil
+	} else {
+		return collcodec.SchemaCodec[T]{
+			Fields: []schema.Field{{
+				Name: "value",
+				Kind: schema.JSONKind,
+			}},
+			ToSchemaType: func(t T) (any, error) {
+				bz, err := c.codec.MarshalInterfaceJSON(t)
+				if err != nil {
+					return nil, err
+				}
+
+				return json.RawMessage(bz), nil
+			},
+			FromSchemaType: func(a any) (T, error) {
+				panic("not implemented")
+			},
+		}, nil
+	}
+
 }
 
 func protoCols(desc protoreflect.MessageDescriptor) []schema.Field {

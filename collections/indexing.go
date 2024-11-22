@@ -64,10 +64,7 @@ func (s Schema) ModuleCodec(opts IndexingOptions) (schema.ModuleCodec, error) {
 				msgDesc := desc.(protoreflect.MessageDescriptor)
 
 				// go through enum descriptors and add them to types
-				fmt.Println("msgDesc", msgDesc.FullName())
-
 				for i := 0; i < msgDesc.Fields().Len(); i++ {
-
 					field := msgDesc.Fields().Get(i)
 					enum := field.Enum()
 					if enum == nil {

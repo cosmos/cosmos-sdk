@@ -46,6 +46,7 @@ func Benchmark_Get(b *testing.B) {
 	if sink == nil {
 		b.Fatal("benchmark did not run")
 	}
+	sink = nil
 }
 
 func Benchmark_GetSparse(b *testing.B) {

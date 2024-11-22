@@ -25,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	sdktelemetry "github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -40,7 +41,7 @@ type CommandDependencies[T transaction.Tx] struct {
 	TxConfig      client.TxConfig
 	ModuleManager *runtimev2.MM[T]
 	SimApp        *simapp.SimApp[T]
-	// could be more generic with serverv2.ServerComponent[T]
+	// could generally be more generic with serverv2.ServerComponent[T]
 	// however, we want to register extra grpc handlers
 	ConsensusServer *cometbft.CometBFTServer[T]
 	ClientContext   client.Context
@@ -106,18 +107,19 @@ func InitRootCmd[T transaction.Tx](
 			simApp.Name(),
 			simApp.Store(),
 			simApp.App.AppManager,
+			simApp.AppCodec(),
+			&genericTxDecoder[T]{deps.TxConfig},
 			simApp.App.QueryHandlers(),
 			simApp.App.SchemaDecoderResolver(),
-			&genericTxDecoder[T]{deps.TxConfig},
-			deps.GlobalConfig,
 			initCometOptions[T](),
+			deps.GlobalConfig,
 		)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	telemetryServer, err := telemetry.New[T](deps.GlobalConfig, logger)
+	telemetryServer, err := telemetry.New[T](deps.GlobalConfig, logger, sdktelemetry.EnableTelemetry)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +131,7 @@ func InitRootCmd[T transaction.Tx](
 		simApp.Query,
 		deps.GlobalConfig,
 		grpcserver.WithExtraGRPCHandlers[T](
-			deps.ConsensusServer.Consensus.GRPCServiceRegistrar(
+			deps.ConsensusServer.GRPCServiceRegistrar(
 				deps.ClientContext,
 				deps.GlobalConfig,
 			),

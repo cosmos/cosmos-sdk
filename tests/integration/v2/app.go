@@ -17,7 +17,6 @@ import (
 	corebranch "cosmossdk.io/core/branch"
 	"cosmossdk.io/core/comet"
 	corecontext "cosmossdk.io/core/context"
-	"cosmossdk.io/core/router"
 	"cosmossdk.io/core/server"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/core/transaction"
@@ -143,7 +142,7 @@ func NewApp(
 	appConfig depinject.Config,
 	startupConfig StartupConfig,
 	branchService corebranch.Service,
-	routerServiceBuilder router.ServiceBuilder,
+	routerServiceBuilder runtime.ServiceBuilder,
 	extraOutputs ...interface{},
 ) (*App, error) {
 	// create the app with depinject

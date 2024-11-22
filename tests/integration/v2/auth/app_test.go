@@ -67,7 +67,7 @@ func createTestSuite(t *testing.T) *suite {
 	msgRouterService := integration.NewRouterService()
 	res.registerMsgRouterService(msgRouterService)
 
-	var routerFactory router.RouterServiceFactory = func(_ []byte) router.Service {
+	var routerFactory runtime.RouterServiceFactory = func(_ []byte) router.Service {
 		return msgRouterService
 	}
 

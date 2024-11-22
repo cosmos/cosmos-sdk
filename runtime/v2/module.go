@@ -216,7 +216,7 @@ func ProvideEnvironment(
 	headerService header.Service,
 	eventService event.Service,
 	branchService branch.Service,
-	routerBuilder router.ServiceBuilder,
+	routerBuilder ServiceBuilder,
 ) appmodulev2.Environment {
 	return appmodulev2.Environment{
 		Logger:             logger,
@@ -232,15 +232,22 @@ func ProvideEnvironment(
 	}
 }
 
+type ServiceBuilder interface {
+	BuildMsgRouter([]byte) router.Service
+	BuildQueryRouter() router.Service
+}
+
+type RouterServiceFactory func([]byte) router.Service
+
 type routerBuilder struct {
-	msgRouterServiceFactory router.RouterServiceFactory
+	msgRouterServiceFactory RouterServiceFactory
 	queryRouter             router.Service
 }
 
 func NewRouterBuilder(
-	msgRouterServiceFactory router.RouterServiceFactory,
+	msgRouterServiceFactory RouterServiceFactory,
 	queryRouter router.Service,
-) routerBuilder {
+) ServiceBuilder {
 	return routerBuilder{
 		msgRouterServiceFactory: msgRouterServiceFactory,
 		queryRouter:             queryRouter,
@@ -275,7 +282,7 @@ func DefaultServiceBindings() depinject.Config {
 				stf.NewKVStoreService(actor),
 			)
 		}
-		routerBuilder router.ServiceBuilder = routerBuilder{
+		routerBuilder ServiceBuilder = routerBuilder{
 			msgRouterServiceFactory: stf.NewMsgRouterService,
 			queryRouter:             stf.NewQueryRouterService(),
 		}

@@ -166,6 +166,21 @@ require (
 )
 
 require (
+<<<<<<< HEAD
+=======
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20240701160653-fedbb9acfd2f.1 // indirect
+	cosmossdk.io/log v1.5.0
+	github.com/dgraph-io/badger/v4 v4.3.0 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/google/flatbuffers v2.0.8+incompatible // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
+	github.com/supranational/blst v0.3.13 // indirect
+	go.opencensus.io v0.24.0 // indirect
+)
+
+require (
+	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
+>>>>>>> 9d6d1067b (fix: match comets bls implmentation (#22613))
 	github.com/bytedance/sonic v1.12.4 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect

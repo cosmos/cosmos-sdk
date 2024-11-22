@@ -402,7 +402,7 @@ func getQueryClientConn(cdc codec.Codec) func(cmd *cobra.Command) (grpc.ClientCo
 	}
 }
 
-// signModesToApiSingModes converts a slice of signing.SignMode to a slice of apitxsigning.SignMode.
+// signModesToApiSignModes converts a slice of signing.SignMode to a slice of apitxsigning.SignMode.
 func signModesToApiSignModes(modes []signing.SignMode) []apitxsigning.SignMode {
 	r := make([]apitxsigning.SignMode, len(modes))
 	for i, m := range modes {

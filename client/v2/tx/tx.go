@@ -40,7 +40,7 @@ func GenerateOrBroadcastTxCLIWithBroadcaster(
 		return nil, err
 	}
 
-	txf, err := newFactory(clientCtx, conn)
+	txf, err := newFactory(*clientCtx, conn)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func getCometBroadcaster(cdc codec.Codec, flagSet *pflag.FlagSet) (broadcast.Bro
 // newFactory creates a new transaction Factory based on the provided context and flag set.
 // It initializes a new CLI keyring, extracts transaction parameters from the flag set,
 // configures transaction settings, and sets up an account retriever for the transaction Factory.
-func newFactory(ctx *clientcontext.Context, conn grpc.ClientConn) (Factory, error) {
+func newFactory(ctx clientcontext.Context, conn grpc.ClientConn) (Factory, error) {
 	txConfig, err := NewTxConfig(ConfigOptions{
 		AddressCodec:          ctx.AddressCodec,
 		Cdc:                   ctx.Cdc,
@@ -153,7 +153,7 @@ func dryRun(txf Factory, msgs ...transaction.Msg) ([]byte, error) {
 }
 
 // SimulateTx simulates a tx and returns the simulation response obtained by the query.
-func SimulateTx(ctx *clientcontext.Context, conn grpc.ClientConn, msgs ...transaction.Msg) (proto.Message, error) {
+func SimulateTx(ctx clientcontext.Context, conn grpc.ClientConn, msgs ...transaction.Msg) (proto.Message, error) {
 	txf, err := newFactory(ctx, conn)
 	if err != nil {
 		return nil, err
@@ -244,7 +244,7 @@ func BroadcastTx(
 		return nil, err
 	}
 
-	return broadcaster.Broadcast(context.Background(), txBytes)
+	return broadcaster.Broadcast(ctx, txBytes)
 }
 
 // countDirectSigners counts the number of DIRECT signers in a signature data.

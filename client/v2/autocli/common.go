@@ -140,7 +140,16 @@ func (b *Builder) enhanceCommandCommon(
 
 		// if we have a custom command use that instead of generating one
 		if custom, ok := customCmds[moduleName]; ok {
-			if hasModuleOptions { // check if we need to enhance the existing command
+			// Custom may not be called the same as its module, so we need to have a separate check here
+			if subCmd := findSubCommand(cmd, custom.Name()); subCmd != nil {
+				if hasModuleOptions { // check if we need to enhance the existing command
+					if err := enhanceCustomCmd(b, subCmd, cmdType, modOpts); err != nil {
+						return err
+					}
+				}
+				continue
+			}
+			if hasModuleOptions { // check if we need to enhance the new command
 				if err := enhanceCustomCmd(b, custom, cmdType, modOpts); err != nil {
 					return err
 				}

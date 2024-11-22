@@ -1,6 +1,8 @@
 package keys
 
 import (
+	bls "github.com/cometbft/cometbft/crypto/bls12381"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bls12_381"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -26,7 +28,7 @@ func (pk JSONPubkey) Address() types.Address {
 			Key: pk.Value,
 		}
 		return secp256k1.Address()
-	case bls12_381.PubKeyName:
+	case bls.PubKeyName:
 		bls12_381 := bls12_381.PubKey{
 			Key: pk.Value,
 		}

@@ -1,4 +1,4 @@
-module github.com/cosmos/tests/systemtests
+module cosmossdk.io/tests/systemtests
 
 go 1.23
 
@@ -20,12 +20,15 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
-	google.golang.org/grpc v1.68.0 // indirect
+	google.golang.org/grpc v1.68.0
 )
 
 require (
 	cosmossdk.io/math v1.4.0
 	cosmossdk.io/systemtests v0.0.0-00010101000000-000000000000
+	github.com/cometbft/cometbft v0.38.15
+	github.com/cometbft/cometbft/api v1.0.0-rc.1
+	github.com/creachadair/tomledit v0.0.26
 	github.com/tidwall/gjson v1.14.2
 	github.com/tidwall/sjson v1.2.5
 )
@@ -58,15 +61,12 @@ require (
 	github.com/cockroachdb/pebble v1.1.1 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft v0.38.15 // indirect
 	github.com/cometbft/cometbft-db v0.14.1 // indirect
-	github.com/cometbft/cometbft/api v1.0.0-rc.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.3-0.20240829004618-717cba019b33 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
-	github.com/creachadair/tomledit v0.0.26 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect

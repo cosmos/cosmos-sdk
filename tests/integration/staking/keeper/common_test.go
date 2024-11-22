@@ -135,6 +135,11 @@ func initFixture(tb testing.TB) *fixture {
 	// gomock initializations
 	ctrl := gomock.NewController(tb)
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
+	var lastAccNum uint64
+	acctsModKeeper.EXPECT().NextAccountNumber(gomock.Any()).AnyTimes().DoAndReturn(func(ctx context.Context) (uint64, error) {
+		lastAccNum++
+		return lastAccNum, nil
+	})
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		runtime.NewEnvironment(runtime.NewKVStoreService(keys[authtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(msgRouter)),

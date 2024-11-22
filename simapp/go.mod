@@ -1,6 +1,8 @@
 module cosmossdk.io/simapp
 
-go 1.23.1
+go 1.23.2
+
+toolchain go1.23.3
 
 require (
 	cosmossdk.io/api v0.7.6
@@ -47,7 +49,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/mock v0.5.0
 	google.golang.org/grpc v1.68.0
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.35.2
 )
 
 require github.com/jackc/pgx/v5 v5.7.1
@@ -253,7 +255,6 @@ replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/collections => ../collections
-	cosmossdk.io/indexer/postgres => ../indexer/postgres
 	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/accounts => ../x/accounts
@@ -282,12 +283,12 @@ replace (
 
 // Below are the long-lived replace of the SimApp
 replace (
+	cosmossdk.io/indexer/postgres => ../indexer/postgres
+	cosmossdk.io/schema => ../schema
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.
-	cosmossdk.io/schema => ../schema
-	cosmossdk.io/indexer/postgres => ../indexer/postgres
 	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1

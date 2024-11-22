@@ -1,6 +1,8 @@
 module cosmossdk.io/x/accounts/defaults/base
 
-go 1.23.1
+go 1.23.2
+
+toolchain go1.23.3
 
 require (
 	cosmossdk.io/api v0.7.6
@@ -13,7 +15,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0
 	github.com/stretchr/testify v1.9.0
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.35.2
 )
 
 require (

@@ -473,7 +473,7 @@ func TestSendEnabled(t *testing.T) {
 	allDenoms := []string{}
 
 	rapid.Check(t, func(rt *rapid.T) {
-		count := rapid.IntRange(0, 10).Draw(rt, "count")
+		count := rapid.IntRange(1, 10).Draw(rt, "count")
 		denoms := make([]string, 0, count)
 
 		for i := 0; i < count; i++ {

@@ -25,13 +25,13 @@ require (
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1
 	google.golang.org/grpc v1.68.0
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.35.2
 	gotest.tools/v3 v3.5.1 // indirect
 )
 
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.1-20240701160653-fedbb9acfd2f.1 // indirect
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.1-20240130113600-88ef6483f90f.1 // indirect
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20240701160653-fedbb9acfd2f.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.35.2-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/log v1.5.0
 	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
 	cosmossdk.io/x/bank v0.0.0-20240226161501-23359a0b6d91 // indirect
@@ -55,7 +55,6 @@ require (
 	github.com/cometbft/cometbft-db v1.0.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.3-0.20240911104526-ddc3f09bfc22 // indirect
-	github.com/cosmos/crypto v0.1.2 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.3.1 // indirect
@@ -166,21 +165,6 @@ require (
 )
 
 require (
-<<<<<<< HEAD
-=======
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.35.2-20240701160653-fedbb9acfd2f.1 // indirect
-	cosmossdk.io/log v1.5.0
-	github.com/dgraph-io/badger/v4 v4.3.0 // indirect
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/google/flatbuffers v2.0.8+incompatible // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
-	github.com/supranational/blst v0.3.13 // indirect
-	go.opencensus.io v0.24.0 // indirect
-)
-
-require (
-	cosmossdk.io/schema v0.3.1-0.20240930054013-7c6e0388a3f9 // indirect
->>>>>>> 9d6d1067b (fix: match comets bls implmentation (#22613))
 	github.com/bytedance/sonic v1.12.4 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect

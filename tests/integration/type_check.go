@@ -1,9 +1,9 @@
 package integration
 
 import (
-	coretesting "cosmossdk.io/core/testing"
-
 	db "github.com/cosmos/cosmos-db"
+
+	coretesting "cosmossdk.io/core/testing"
 )
 
 // This file contains a list of type checks that are used to ensure that implementations

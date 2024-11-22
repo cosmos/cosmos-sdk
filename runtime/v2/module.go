@@ -216,7 +216,7 @@ func ProvideEnvironment(
 	headerService header.Service,
 	eventService event.Service,
 	branchService branch.Service,
-	routerBuilder ServiceBuilder,
+	routerBuilder RouterServiceBuilder,
 ) appmodulev2.Environment {
 	return appmodulev2.Environment{
 		Logger:             logger,
@@ -232,13 +232,17 @@ func ProvideEnvironment(
 	}
 }
 
-type ServiceBuilder interface {
-	BuildMsgRouter([]byte) router.Service
+// ServiceBuilder builds the msg router and query router service during app initialization.
+type RouterServiceBuilder interface {
+	// BuildMsgRouter return a msg router service.
+	// - actor is the module store key.
+	BuildMsgRouter(actor []byte) router.Service
 	BuildQueryRouter() router.Service
 }
 
 type RouterServiceFactory func([]byte) router.Service
 
+// routerBuilder implements RouterServiceBuilder
 type routerBuilder struct {
 	msgRouterServiceFactory RouterServiceFactory
 	queryRouter             router.Service
@@ -247,7 +251,7 @@ type routerBuilder struct {
 func NewRouterBuilder(
 	msgRouterServiceFactory RouterServiceFactory,
 	queryRouter router.Service,
-) ServiceBuilder {
+) RouterServiceBuilder {
 	return routerBuilder{
 		msgRouterServiceFactory: msgRouterServiceFactory,
 		queryRouter:             queryRouter,
@@ -269,7 +273,7 @@ func (b routerBuilder) BuildQueryRouter() router.Service {
 // - event.Service
 // - store/v2/root.Builder
 // - branch.Service
-// - router.ServiceBuilder
+// - RouterServiceBuilder
 //
 // They are all required.  For most use cases these default services bindings should be sufficient.
 // Power users (or tests) may wish to provide their own services bindings, in which case they must
@@ -282,7 +286,7 @@ func DefaultServiceBindings() depinject.Config {
 				stf.NewKVStoreService(actor),
 			)
 		}
-		routerBuilder ServiceBuilder = routerBuilder{
+		routerBuilder RouterServiceBuilder = routerBuilder{
 			msgRouterServiceFactory: stf.NewMsgRouterService,
 			queryRouter:             stf.NewQueryRouterService(),
 		}

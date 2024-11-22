@@ -142,7 +142,7 @@ func NewApp(
 	appConfig depinject.Config,
 	startupConfig StartupConfig,
 	branchService corebranch.Service,
-	routerServiceBuilder runtime.ServiceBuilder,
+	routerServiceBuilder runtime.RouterServiceBuilder,
 	extraOutputs ...interface{},
 ) (*App, error) {
 	// create the app with depinject

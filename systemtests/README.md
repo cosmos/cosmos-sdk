@@ -1,21 +1,23 @@
-# Testing
+# System Tests
 
-Test framework for system tests. 
-Starts and interacts with a (multi node) blockchain in Go.
-Supports
+This package contains the testing framework for black-box system tests. It includes a test runner that sets up a 
+multi-node blockchain locally for use in tests. The framework provides utilities and helpers for easy access and 
+setup in tests.
 
-* CLI
-* Servers
-* Events
-* RPC
+## Components
 
-Uses:
+- **CLI**: Command-line interface wrapper for interacting with the chain or keyring
+- **Servers**: Server instances to run the blockchain environment.
+- **Events**: Event listeners
+- **RPC**: Remote Procedure Call setup for communication.
 
-* testify
-* gjson
-* sjson
+## Dependencies
 
-Server and client side are executed on the host machine.
+- **testify**: Testing toolkit.
+- **gjson**: JSON parser.
+- **sjson**: JSON modifier.
+
+Server and client-side operations are executed on the host machine.
 
 ## Developer
 

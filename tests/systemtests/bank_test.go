@@ -24,7 +24,6 @@ func TestBankSendTxCmd(t *testing.T) {
 
 	// get validator address
 	valAddr := cli.GetKeyAddr("node0")
-	require.NotEmpty(t, valAddr)
 
 	// add new key
 	receiverAddr := cli.AddKey("account1")

@@ -53,10 +53,6 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 	cdc := encodingCfg.Codec
 
 	logger := log.NewTestLogger(s.T())
-	cms := integration.CreateMultiStore(keys, logger)
-
-	newCtx := sdk.NewContext(cms, true, logger)
-
 	authority := authtypes.NewModuleAddress("gov")
 
 	// gomock initializations
@@ -91,12 +87,10 @@ func (s *IntegrationTestOutOfGasSuite) SetupSuite() {
 		authority.String(),
 	)
 
-	s.Require().NoError(bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
-
 	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
+	integrationApp := integration.NewIntegrationApp(logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
 		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{

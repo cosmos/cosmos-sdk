@@ -45,9 +45,6 @@ func Example() {
 	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
 	logger := log.NewNopLogger()
 
-	cms := integration.CreateMultiStore(keys, logger)
-	newCtx := sdk.NewContext(cms, true, logger)
-
 	// gomock initializations
 	ctrl := gomock.NewController(&testing.T{})
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
@@ -79,7 +76,6 @@ func Example() {
 
 	// create the application and register all the modules from the previous step
 	integrationApp := integration.NewIntegrationApp(
-		newCtx,
 		logger,
 		keys,
 		encodingCfg.Codec,
@@ -149,9 +145,6 @@ func Example_oneModule() {
 	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
 	logger := log.NewLogger(io.Discard)
 
-	cms := integration.CreateMultiStore(keys, logger)
-	newCtx := sdk.NewContext(cms, true, logger)
-
 	// gomock initializations
 	ctrl := gomock.NewController(&testing.T{})
 	acctsModKeeper := authtestutil.NewMockAccountsModKeeper(ctrl)
@@ -178,7 +171,6 @@ func Example_oneModule() {
 
 	// create the application and register all the modules from the previous step
 	integrationApp := integration.NewIntegrationApp(
-		newCtx,
 		logger,
 		keys,
 		encodingCfg.Codec,

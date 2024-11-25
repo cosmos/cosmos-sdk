@@ -18,7 +18,7 @@ require (
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/hashicorp/go-plugin v1.6.2
 	github.com/hashicorp/golang-lru v1.0.2
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/btree v1.7.0
 	go.uber.org/mock v0.5.0
 	google.golang.org/grpc v1.68.0

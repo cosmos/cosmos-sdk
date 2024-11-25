@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"go.uber.org/mock/gomock"
-	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
@@ -63,10 +62,6 @@ func initFixture(tb testing.TB) *fixture {
 	cdc := encodingCfg.Codec
 
 	logger := log.NewTestLogger(tb)
-	cms := integration.CreateMultiStore(keys, logger)
-
-	newCtx := sdk.NewContext(cms, true, logger)
-
 	authority := authtypes.NewModuleAddress(types.ModuleName)
 
 	maccPerms := map[string][]string{
@@ -111,8 +106,6 @@ func initFixture(tb testing.TB) *fixture {
 		authority.String(),
 	)
 
-	assert.NilError(tb, bankKeeper.SetParams(newCtx, banktypes.DefaultParams()))
-
 	router := baseapp.NewMsgServiceRouter()
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	consensusParamsKeeper := consensusparamkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), log.NewNopLogger(), runtime.EnvWithQueryRouterService(queryRouter), runtime.EnvWithMsgRouterService(router)), authtypes.NewModuleAddress("gov").String())
@@ -120,10 +113,6 @@ func initFixture(tb testing.TB) *fixture {
 	stakingKeeper := stakingkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, consensusParamsKeeper, authority.String(), addresscodec.NewBech32Codec(sdk.Bech32PrefixValAddr), addresscodec.NewBech32Codec(sdk.Bech32PrefixConsAddr), runtime.NewContextAwareCometInfoService())
 
 	poolKeeper := poolkeeper.NewKeeper(cdc, runtime.NewEnvironment(runtime.NewKVStoreService(keys[pooltypes.StoreKey]), log.NewNopLogger()), accountKeeper, bankKeeper, authority.String())
-
-	// set default staking params
-	err := stakingKeeper.Params.Set(newCtx, stakingtypes.DefaultParams())
-	assert.NilError(tb, err)
 
 	// Create MsgServiceRouter, but don't populate it before creating the gov
 	// keeper.
@@ -140,12 +129,9 @@ func initFixture(tb testing.TB) *fixture {
 		keeper.DefaultConfig(),
 		authority.String(),
 	)
-	assert.NilError(tb, govKeeper.ProposalID.Set(newCtx, 1))
 	govRouter := v1beta1.NewRouter()
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
 	govKeeper.SetLegacyRouter(govRouter)
-	err = govKeeper.Params.Set(newCtx, v1.DefaultParams())
-	assert.NilError(tb, err)
 
 	authModule := auth.NewAppModule(cdc, accountKeeper, acctsModKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
@@ -153,7 +139,7 @@ func initFixture(tb testing.TB) *fixture {
 	govModule := gov.NewAppModule(cdc, govKeeper, accountKeeper, bankKeeper, poolKeeper)
 	consensusModule := consensus.NewAppModule(cdc, consensusParamsKeeper)
 
-	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc,
+	integrationApp := integration.NewIntegrationApp(logger, keys, cdc,
 		encodingCfg.InterfaceRegistry.SigningContext().AddressCodec(),
 		encodingCfg.InterfaceRegistry.SigningContext().ValidatorAddressCodec(),
 		map[string]appmodule.AppModule{
